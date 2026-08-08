@@ -319,7 +319,13 @@ def overview_calendar(
         raise _no_active_profile_refusal()
     workflow_profile = _profile_to_taxpayer(current)
     evidence_notices: list[Notice] = []
-    live_events, live_notice = _local_live_calendar_events(bucket_id, rng, expected_tax_id=workflow_profile.tax_id)
+    calendar_today = today_madrid()
+    live_events, live_notice = _local_live_calendar_events(
+        bucket_id,
+        rng,
+        as_of=calendar_today,
+        expected_tax_id=workflow_profile.tax_id,
+    )
     modelo_record_events, modelo_events_notice = _local_modelo_record_calendar_events(
         bucket_id,
         rng,
@@ -340,7 +346,7 @@ def overview_calendar(
     cal: OverviewCalendar = build_overview_calendar(
         workflow_profile,
         rng,
-        today=today_madrid(),
+        today=calendar_today,
         raw_values=raw_values,
         show_suppressed=show_suppressed,
         events=events,
@@ -414,6 +420,7 @@ def _profile_calendar_inputs(
     bucket_id: str,
     *,
     rng: OverviewCalendarRange,
+    as_of: _date,
     label: str,
 ) -> _ProfileCalendarInputs | None:
     """Read one profile's calendar inputs, or ``None`` when the bucket is unreadable.
@@ -435,7 +442,12 @@ def _profile_calendar_inputs(
         with profile_storage_session(bucket_id):
             record = repository.load(bucket_id)
             taxpayer = projection_for_taxpayer(record.record)
-            live_events, _ = _local_live_calendar_events(bucket_id, rng, expected_tax_id=taxpayer.tax_id)
+            live_events, _ = _local_live_calendar_events(
+                bucket_id,
+                rng,
+                as_of=as_of,
+                expected_tax_id=taxpayer.tax_id,
+            )
             modelo_record_events, _ = _local_modelo_record_calendar_events(
                 bucket_id,
                 rng,
@@ -504,7 +516,13 @@ def _overview_calendar_all_profiles(
 
     repository = ProfileRepository()
     for bucket_id, pointer in sorted(active_buckets.items(), key=lambda kv: kv[1].label):
-        inputs = _profile_calendar_inputs(repository, bucket_id, rng=rng, label=pointer.label)
+        inputs = _profile_calendar_inputs(
+            repository,
+            bucket_id,
+            rng=rng,
+            as_of=today,
+            label=pointer.label,
+        )
         if inputs is None:
             all_lines.append(f"profile_skipped\t{bucket_id}\t{pointer.label}")
             continue

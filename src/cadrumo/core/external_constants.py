@@ -810,6 +810,15 @@ PRORRATA_ESPECIAL_MANDATORY_LEY_28_2014_FIRST_YEAR: Final[int] = 2015
 #: and lowest general prorrata across sectors exceeds fifty percentage points.
 PRORRATA_SECTORAL_SEPARATION_SPREAD_PP: Final[Decimal] = Decimal("50")
 
+#: Ley 39/2015 art. 43.2 (BOE-A-2015-10565) rechazo-tácito window for an electronic
+#: notification: "se entenderá rechazada cuando hayan transcurrido diez días naturales
+#: desde la puesta a disposición de la notificación sin que se acceda a su contenido".
+#: Días NATURALES, not hábiles — weekends, holidays and August count, so a
+#: días-hábiles reading would compute a later lapse date than the law allows and
+#: understate urgency to the taxpayer. The clock runs from the puesta a disposición,
+#: never from access.
+DEHU_RECHAZO_TACITO_DIAS_NATURALES: Final[int] = 10
+
 
 @lru_cache(maxsize=1)
 def load_external_constants(path: Path | None = None) -> ExternalConstants:

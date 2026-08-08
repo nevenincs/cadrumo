@@ -1,0 +1,9 @@
+{
+  "provenance": "synthetic_generated",
+  "kind": "xml_invoice_cii",
+  "source": "authored in-tree as the first standalone Cross Industry Invoice in this corpus",
+  "licence": "Apache-2.0",
+  "notes": "Hand-authored EN16931 CII (UN/CEFACT) invoice, fictional data. The only CII bytes previously bundled arrived embedded inside the ZUGFeRD PDF, so the shape probe reached CII only through the PDF-attachment branch and a bare .xml carrying a CrossIndustryInvoice root was classified by nothing. Declares UNTDID 5305 code G (export outside the Community, LIVA art. 21) at 0.00 percent AND prints both parties' countries in ram:CountryID, which is the deliberate complement of the UBL code-G fixture beside it: that one prints no country and the category is withheld, this one supplies the evidence the other lacks. The two countries differ (ES seller, CH buyer) so a reader that resolves the seller's element twice cannot pass. Declared synthetic rather than sourced because no bundled artefact carried a standalone CII document. Every asserted value is read off this document's own printed figures, never recomputed from the code under test.",
+  "sha256": "34355d2defe48022e38bd86f75ab9e442a25ad83f29f75e54ff26c4a7c444b27",
+  "bytes": 5560
+}

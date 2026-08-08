@@ -34,7 +34,7 @@ _RANGE = OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2025, 12
 
 
 def test_live_events_loader_degrades_to_notice() -> None:
-    events, notice = _local_live_calendar_events("bogus-bucket", _RANGE)
+    events, notice = _local_live_calendar_events("bogus-bucket", _RANGE, as_of=date(2025, 6, 1))
     assert events == ()
     assert notice is not None
     assert notice.severity is NoticeSeverity.WARNING

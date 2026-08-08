@@ -100,6 +100,20 @@ _UBL_CUSTOMER_ADDRESS = (
 # peninsula here.
 _CANARIAS_CODE = "35001"
 
+# The CII specimen states both parties' countries in its own element,
+# ram:PostalTradeAddress/ram:CountryID, in alpha-2 as UBL does. Unlike either
+# neighbouring format's specimen it needs no injected address block: the
+# document prints the whole thing, so these cases read the corpus file
+# unmodified.
+_CII_INVOICE = "en16931_cii_export_third_country_invoice.xml"
+
+# The two parties are in DIFFERENT countries, and that asymmetry is the test.
+# A reader resolving one party's element twice returns ES on both sides, which
+# every same-country fixture in this module would accept.
+_CII_SUPPLIER_COUNTRY = "ES"  # <ram:CountryID>ES -- Valencia
+_CII_CUSTOMER_COUNTRY = "CH"  # <ram:CountryID>CH -- Zuerich, outside the Community
+_CII_SUPPLIER_POSTAL = "46015"  # <ram:PostcodeCode>46015 -- Valencia, mainland
+
 
 def _stored(
     xml: str,
@@ -193,6 +207,87 @@ class TestTheCountryReachesTheDraft:
 
         assert draft.supplier_country_code == "ES"
         assert draft.customer_country_code == "ES"
+
+    def test_a_cii_document_carries_each_partys_own_country(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        tmp_path: Path,
+    ) -> None:
+        """The third syntax reaches the draft, and the two parties do not collapse.
+
+        CII was the format left behind: it read each party's postal code and no
+        country at all, so the country rung had no source from a Cross Industry
+        Invoice and the postal rung that country gates stayed shut. A syntax
+        this codebase classifies, parses field by field and routes to the exact
+        reader established neither party's territory.
+
+        The two countries deliberately differ. Every other case in this class
+        asserts ``ES`` on both sides, which a reader that resolved the seller's
+        element twice would satisfy; here that reader returns ``ES`` for a Swiss
+        customer and fails.
+        """
+        evidence_id = _stored(
+            _corpus(_CII_INVOICE),
+            settings=isolated_settings,
+            objects=secure_objects,
+            tmp_path=tmp_path,
+            name="cii_countries.xml",
+        )
+
+        draft = _draft(evidence_id, isolated_settings)
+
+        assert draft.supplier_country_code == _CII_SUPPLIER_COUNTRY
+        assert draft.customer_country_code == _CII_CUSTOMER_COUNTRY
+
+    def test_a_cii_country_comes_from_the_address_and_never_the_tax_registration(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        tmp_path: Path,
+    ) -> None:
+        """Where a party is REGISTERED is not where it is ESTABLISHED, and only one is read.
+
+        On the corpus specimen the two agree -- ``CHE116281277`` beside
+        ``CountryID`` ``CH`` -- as they do on realistic data generally, so that
+        document cannot tell an address read from a VAT-prefix read. Which
+        means the claim that the country is scoped to the address block is
+        untested exactly where it matters and would stay untested however many
+        realistic fixtures were added.
+
+        So the divergence is constructed: the same Swiss-established buyer,
+        carrying a German VAT registration. That is an ordinary arrangement --
+        a company registers for VAT wherever it must account for tax, which is
+        routinely not where it sits -- and it is the case that separates the two
+        readers. A prefix reader answers ``DE`` and settles an EU member; the
+        address reader answers ``CH`` and settles a third country. The rung
+        that follows is the difference between a domestic-Community treatment
+        and an export.
+
+        The corpus tree is never written to; the edit lands in a tmp copy.
+        """
+        xml = _corpus(_CII_INVOICE).replace(
+            '<ram:ID schemeID="VA">CHE116281277</ram:ID>',
+            '<ram:ID schemeID="VA">DE811569869</ram:ID>',
+            1,
+        )
+        # A replace that matched nothing yields the untouched document, which
+        # passes the address assertion for the wrong reason.
+        assert "DE811569869" in xml, "the fixture edit did not apply"
+        assert "CHE116281277" not in xml
+
+        evidence_id = _stored(
+            xml,
+            settings=isolated_settings,
+            objects=secure_objects,
+            tmp_path=tmp_path,
+            name="cii_registered_elsewhere.xml",
+        )
+
+        draft = _draft(evidence_id, isolated_settings)
+
+        assert draft.customer_country_code == "CH", "the ADDRESS country, never the VAT prefix"
+        assert draft.customer_tax_id == "DE811569869", "the registration is still read, just not as a place"
 
     def test_a_document_stating_no_country_carries_none(
         self,
@@ -355,6 +450,70 @@ class TestTheStructuredPathOpensThePostalRung:
 
         assert resolved.scope is IvaTerritorialScope.ES_MAINLAND
         assert resolved.rung is EstablishmentRung.SPANISH_POSTAL_CODE
+
+    def test_a_cii_document_resolves_a_spanish_counterparty_through_the_postal_rung(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        tmp_path: Path,
+    ) -> None:
+        """The received side reads the Spanish supplier, so country GATES postal and both fire.
+
+        This is the whole chain the missing country read broke. The postal code
+        was always recoverable from a CII document; it establishes nothing until
+        the country evidence positively names Spain, so before the country
+        element was read this document resolved no territory while carrying
+        every value needed to.
+        """
+        evidence_id = _stored(
+            _corpus(_CII_INVOICE),
+            settings=isolated_settings,
+            objects=secure_objects,
+            tmp_path=tmp_path,
+            name="cii_ladder_received.xml",
+        )
+
+        resolved = resolve_draft_counterparty_establishment(
+            bucket_id=_BUCKET_ID,
+            draft=_draft(evidence_id, isolated_settings),
+            kind=InvoiceKind.RECEIVED,
+            repository=None,
+        )
+
+        assert resolved.scope is IvaTerritorialScope.ES_MAINLAND
+        assert resolved.rung is EstablishmentRung.SPANISH_POSTAL_CODE
+
+    def test_a_cii_document_resolves_a_foreign_counterparty_through_the_country_rung(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        tmp_path: Path,
+    ) -> None:
+        """The issued side reads the Swiss customer, whose country settles it alone.
+
+        The complementary direction, and the one that proves the side selection
+        rather than the read: the same document resolves the mainland one way
+        round and a third country the other. A rung reaching for the wrong
+        party's block returns Spain here, which is the under-declaration
+        direction -- a domestic treatment for an export.
+        """
+        evidence_id = _stored(
+            _corpus(_CII_INVOICE),
+            settings=isolated_settings,
+            objects=secure_objects,
+            tmp_path=tmp_path,
+            name="cii_ladder_issued.xml",
+        )
+
+        resolved = resolve_draft_counterparty_establishment(
+            bucket_id=_BUCKET_ID,
+            draft=_draft(evidence_id, isolated_settings),
+            kind=InvoiceKind.ISSUED,
+            repository=None,
+        )
+
+        assert resolved.scope is IvaTerritorialScope.THIRD_COUNTRY
+        assert resolved.rung is EstablishmentRung.ADDRESS_COUNTRY
 
     def test_a_document_stating_no_country_still_exhausts(
         self,
@@ -572,6 +731,35 @@ class TestTheProvenanceTellsTheTwoApart:
         assert envelope.anchor == "ES"
         assert envelope.grounding is FieldGroundingOutcome.ANCHORED
 
+    def test_a_cii_country_anchors_to_the_alpha2_the_document_states(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        tmp_path: Path,
+    ) -> None:
+        """The customer side, whose anchor no other party's element could supply.
+
+        Taken from the CUSTOMER rather than the supplier on purpose. A supplier
+        assertion here would read ``ES``, a string this document states in
+        several places including the seller's VAT prefix, so an envelope
+        pointing anywhere would anchor. ``CH`` occurs in the buyer's country
+        element and in its VAT id and nowhere else, so the anchor has to come
+        from that party's own block.
+        """
+        evidence_id = _stored(
+            _corpus(_CII_INVOICE),
+            settings=isolated_settings,
+            objects=secure_objects,
+            tmp_path=tmp_path,
+            name="cii_provenance.xml",
+        )
+
+        envelope = self._envelope(_draft(evidence_id, isolated_settings), "customer_country_code")
+
+        assert envelope.anchor == _CII_CUSTOMER_COUNTRY
+        assert envelope.grounding is FieldGroundingOutcome.ANCHORED
+        assert envelope.origin is FieldOrigin.EXACT_STRUCTURED
+
     def test_a_country_the_record_does_not_state_gets_no_envelope(
         self,
         isolated_settings: Settings,
@@ -711,3 +899,42 @@ class TestTheProvenanceTellsTheTwoApart:
         envelope = self._envelope(_draft(evidence_id, isolated_settings), "supplier_country_code")
 
         assert "SellerParty/AddressInSpain/CountryCode" in envelope.note
+
+    def test_the_cii_envelope_names_the_cii_element_rather_than_the_shape(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        tmp_path: Path,
+    ) -> None:
+        """A syntax the path table does not cover degrades to naming the shape.
+
+        That fallback is silent and reads as a location -- "the xml_cii record's
+        supplier_country_code" is a sentence, not somewhere an operator can
+        navigate to -- so a newly-read field whose element path was never added
+        looks documented while pointing at nothing. Asserting the element
+        outright is what makes the omission fail rather than degrade.
+        """
+        evidence_id = _stored(
+            _corpus(_CII_INVOICE),
+            settings=isolated_settings,
+            objects=secure_objects,
+            tmp_path=tmp_path,
+            name="cii_note.xml",
+        )
+
+        draft = _draft(evidence_id, isolated_settings)
+
+        assert (
+            "ram:SellerTradeParty/ram:PostalTradeAddress/ram:CountryID"
+            in self._envelope(
+                draft,
+                "supplier_country_code",
+            ).note
+        )
+        assert (
+            "ram:BuyerTradeParty/ram:PostalTradeAddress/ram:CountryID"
+            in self._envelope(
+                draft,
+                "customer_country_code",
+            ).note
+        )

@@ -49,7 +49,7 @@ import typer
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.time import now
-from ...domain.iva import IvaTerritorialScope
+from ...domain.iva import EUMemberState, IvaTerritorialScope
 from ._common import _bad, _emit_envelope
 from ._common import active_bucket_id_or_refuse as _counterparty_bucket_id
 from ._ledger_counterparty_payloads import (
@@ -83,6 +83,7 @@ def _payload(fact: CounterpartyEstablishmentFact) -> CounterpartyEstablishmentPa
         counterparty_key=fact.counterparty_key,
         canonical_tax_identifier=fact.canonical_tax_identifier,
         territorial_scope=fact.territorial_scope,
+        identification_state=fact.identification_state,
         asserted_by=fact.asserted_by,
         asserted_at=fact.asserted_at,
         note=fact.note,
@@ -116,6 +117,22 @@ def counterparty_confirm(
         help=tr(
             "cli.app.ledger.counterparty.scope_help",
             default="The IVA territory the counterparty is established in.",
+        ),
+    ),
+    # A SECOND axis, not a synonym for --scope. Ley 37/1992 art. 25 exempts on
+    # where a counterparty is VAT-IDENTIFIED; arts. 69-70 govern where it is
+    # ESTABLISHED. They diverge in real trade, so the operator answers each.
+    # Declared as the enum for the same reason --scope is: a guessed Member
+    # State is precisely the invented fact this axis exists to prevent.
+    identification_state: EUMemberState | None = typer.Option(
+        None,
+        "--identification-state",
+        help=tr(
+            "cli.app.ledger.counterparty.identification_state_help",
+            default=(
+                "Member State that VAT-identifies the counterparty. A different fact from --scope: "
+                "art. 25 exempts on this, not on where the party is established."
+            ),
         ),
     ),
     country_code: str | None = typer.Option(
@@ -165,6 +182,7 @@ def counterparty_confirm(
             tax_identifier=tax_identifier,
             territorial_scope=scope,
             asserted_by=asserted_by,
+            identification_state=identification_state,
             country_code=country_code,
             note=note,
             asserted_at=stamped_at,

@@ -17,10 +17,15 @@ than one flattened "field not verified":
     Several readings competed and none was decidable. The operator picks.
 ``anchor_not_found``
     The reader pointed at a printed form that does not occur in the document's
-    transcription. Something was read that is not there.
+    transcription. Something was read that is not there. Selected on the
+    envelope's REFUSED anchor as well as its carried one: the grounding stage
+    clears an anchor it could not locate, so the refused form is the only
+    surviving trace that anything was offered at all.
 ``no_anchor``
     The reader offered nothing to point at. Different from the above: there is
-    no claim to check, rather than a claim that failed.
+    no claim to check, rather than a claim that failed — a reader limitation
+    against a possible misread or the wrong document, which are different
+    operator actions.
 ``anchor_self_reported``
     The anchor was asserted by the same reader that produced the value. **Not a
     failed check — an absent one.** The vision lane reads image to fields in one
@@ -142,7 +147,10 @@ def _self_reported_notice(envelope: FieldProvenance) -> Notice:
 
 
 def _anchor_not_found_notice(envelope: FieldProvenance) -> Notice:
-    seen = envelope.anchor or ""
+    # The refused form first: it is the one the check actually rejected, and on
+    # an envelope the grounding stage produced it is the ONLY one, because that
+    # stage clears the anchor it could not locate.
+    seen = envelope.refused_anchor or envelope.anchor or ""
     return Notice(
         severity=NoticeSeverity.INFO,
         code="ledger.evidence.field.anchor_not_found",
@@ -150,10 +158,11 @@ def _anchor_not_found_notice(envelope: FieldProvenance) -> Notice:
             "cli.app.ledger.evidence.field_anchor_not_found",
             field=envelope.field,
             anchor=seen,
+            detail=envelope.note,
             default=(
                 f"{envelope.field}: the reader points at {seen!r}, which does not occur in the "
                 "document's transcription. A normalised value can fail this search legitimately, so "
-                "check the field rather than assuming it was corroborated."
+                f"check the field rather than assuming it was corroborated. {envelope.note}"
             ),
         ),
         context={
@@ -161,6 +170,10 @@ def _anchor_not_found_notice(envelope: FieldProvenance) -> Notice:
             "outcome": envelope.grounding.value,
             "origin": envelope.origin.value,
             "anchor": seen,
+            # Carried rather than dropped: the check already computed WHY it
+            # refused, and an operator deciding between a misread and the wrong
+            # document is deciding on exactly that sentence.
+            "detail": envelope.note,
             "anchor_self_reported": "false",
         },
     )
@@ -214,7 +227,13 @@ def field_degradation_notices(provenance: Sequence[FieldProvenance]) -> list[Not
             # the check could not run, which is only meaningful once the outcomes
             # that mean a check ran and failed are already handled.
             notices.append(_self_reported_notice(envelope))
-        elif envelope.anchor:
+        elif envelope.refused_anchor or envelope.anchor:
+            # The refused form is tested BESIDE the carried one rather than
+            # instead of it. The grounding stage clears the anchor it could not
+            # locate, so without the first test a refused claim falls through to
+            # the no-anchor branch and the operator is told the reader offered
+            # nothing -- which is affirmatively false about a reader that
+            # offered a printed form the check rejected.
             notices.append(_anchor_not_found_notice(envelope))
         else:
             notices.append(_no_anchor_notice(envelope))

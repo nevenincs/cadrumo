@@ -93,7 +93,7 @@ def _row(provider_id: str, *, established_in: EUMemberState | None, identified_i
             "iva_rate": Decimal("0"),
             "iva_amount": Decimal("0"),
             "iva_category": IvaCategory.INTRA_COMMUNITY_SUPPLY,
-            "counterparty_eu_member_state": established_in,
+            "counterparty_country": (established_in.value.upper() if established_in is not None else None),
             "counterparty_identification_state": identified_in,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
         },

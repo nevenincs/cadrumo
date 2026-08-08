@@ -60,8 +60,15 @@ class IvaCategoryOutcome(StrEnum):
     therefore said something about itself that a blank country field did not
     retract.
 
-    It remains an inference and is recorded as one, so a later reader asking
-    which records rest on it can enumerate them.
+    It remains an inference and this member is what names it as one.
+
+    **Naming it is not yet showing it, and the gap is stated rather than
+    implied.** Nothing persists this outcome and no operator surface reads it:
+    the confirmed record carries the resolved category and not the rung it came
+    from, so a record resting on the inference is presently indistinguishable
+    from one the rule table placed outright. Enumerating them requires re-running
+    the resolution, not querying a store. Until a surface carries it, treat this
+    member as an internal distinction and not as a disclosure to the taxpayer.
     """
 
     DECLARED = "declared"
@@ -71,6 +78,29 @@ class IvaCategoryOutcome(StrEnum):
     on facts a printed page does not carry, so the table refuses; the code is
     the issuing system's own record-level declaration and is the only evidence
     that separates them from an ordinary zero-cuota supply.
+    """
+
+    UNSUPPORTED_RELIEF = "unsupported_relief"
+    """The document claimed a relief resting on an establishment nothing established.
+
+    Two declared treatments relieve a supply of Spanish output IVA purely on
+    where the counterparty is -- an entrega intracomunitaria under LIVA art. 25
+    and an export under art. 21. When the rule table cannot place the operation,
+    the document's own code would otherwise be taken at face value, and the
+    rate-tier corroboration is silent on every non-domestic category by
+    construction. So an unplaceable counterparty reached a relieved category
+    with nothing disagreeing anywhere.
+
+    **Distinct from** :attr:`CONTRADICTED` **because nothing disagrees.** A
+    contradiction says the document is wrong somewhere; this says the document
+    may be perfectly right and the evidence does not reach the claim. The two
+    take different remedies -- one asks which half to believe, the other asks
+    for the establishment -- so collapsing them would send an operator to
+    re-read a page that was never the problem.
+
+    Carries no category, on the same terms as its siblings: a relieved category
+    honoured on absent evidence is a zero-rated supply nobody could place, and
+    that is under-declaration produced by treating silence as proof.
     """
 
     CONTRADICTED = "contradicted"

@@ -103,7 +103,7 @@ def test_ledger_add_accepts_and_persists_iva_category() -> None:
     assert viewed_transaction["iva_category"] == "domestic_general"
 
 
-def test_ledger_add_accepts_and_persists_counterparty_eu_member_state() -> None:
+def test_ledger_add_accepts_and_persists_counterparty_country() -> None:
     _create_active_profile()
 
     added = _invoke(
@@ -131,8 +131,8 @@ def test_ledger_add_accepts_and_persists_counterparty_eu_member_state() -> None:
             "0",
             "--iva-category",
             "intra_community_supply",
-            "--counterparty-eu-member-state",
-            "de",
+            "--counterparty-country",
+            "DE",
             "--source-jurisdiction",
             "DE",
         ],
@@ -141,7 +141,7 @@ def test_ledger_add_accepts_and_persists_counterparty_eu_member_state() -> None:
     assert added.exit_code == 0, added.output
     transaction = _json(added)["transaction"]
     assert transaction["iva_category"] == "intra_community_supply"
-    assert transaction["counterparty_eu_member_state"] == "de"
+    assert transaction["counterparty_country"] == "DE"
     assert transaction["source_jurisdiction"] == "DE"
 
 

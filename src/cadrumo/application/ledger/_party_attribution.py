@@ -260,8 +260,8 @@ def party_attribution_advisory(draft: InvoiceDraft) -> PartyAttributionAdvisory 
                 # reach for this party.
                 scope_if_attributed=scope_printed_evidence_would_establish(
                     tax_identifier=getattr(draft, party.tax_id_field, None),
-                    printed_country_name=getattr(draft, party.country_field, None),
-                    printed_country_code=getattr(draft, party.country_code_field, None),
+                    stated_country_name=getattr(draft, party.country_field, None),
+                    stated_country_code=getattr(draft, party.country_code_field, None),
                     postal_code=getattr(draft, party.postal_field, None),
                 ),
             ),

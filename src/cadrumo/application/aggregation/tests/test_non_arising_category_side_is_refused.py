@@ -119,7 +119,7 @@ def _transaction(
         "iva_rate": iva_rate,
         "iva_amount": iva_amount,
         "iva_category": category,
-        "counterparty_eu_member_state": eu_member_state,
+        "counterparty_country": (eu_member_state.value.upper() if eu_member_state is not None else None),
         # The D5 gate reads the identification and runs BEFORE the side screen
         # these tests exercise. Supplied so an intra-community row reaches the
         # screen under test instead of being refused upstream.

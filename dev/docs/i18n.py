@@ -66,6 +66,41 @@ _EXCLUDED_TOP_DIRS: Final[frozenset[str]] = frozenset(
 #: Authored files under ``docs/`` that are not part of the published surface.
 _EXCLUDED_FILES: Final[frozenset[str]] = frozenset({"USERDOCS-KICKOFF-BRIEF.md"})
 
+#: The banner a generator writes into a page it owns. A page carrying it is
+#: English-only by policy and is excluded from the localized surface.
+#:
+#: Read from the ARTEFACT rather than from a list of page names, so a page joins
+#: the English-only set the moment it becomes generated and leaves it the moment
+#: it stops — there is no second registry to fall out of step. It is also the
+#: same signal that tells a human not to hand-edit the file, so "do not edit
+#: this" and "do not translate this" are one fact rather than two that can
+#: disagree. A directory rule would be wrong on the facts: generated and
+#: hand-authored pages share ``reference/``.
+_GENERATED_MARKER: Final[str] = "GENERATED FILE"
+
+#: How far into a page to look for :data:`_GENERATED_MARKER`. The banner is a
+#: header comment, so a bounded read is enough and keeps a page that merely
+#: DISCUSSES generated files from being excluded by a mention in its prose.
+_GENERATED_MARKER_SCAN_BYTES: Final[int] = 512
+
+
+def _is_generated_page(source: Path) -> bool:
+    """Return whether *source* declares itself generator-owned in its header.
+
+    A generated page's content is derived from code — variable names and field
+    docstrings — so any translation of it is stale the moment an unrelated
+    docstring changes, and several of its strings are bare identifiers that must
+    not be translated at all. A localized surface that guarantees permanent drift
+    is worse than an English-only one: it teaches readers the translations are
+    unreliable, which discredits the pages that ARE maintained.
+    """
+    try:
+        head = source.read_bytes()[:_GENERATED_MARKER_SCAN_BYTES]
+    except OSError:
+        return False
+    return _GENERATED_MARKER.encode() in head
+
+
 #: The BCP-47 tags translated as documentation targets: the OutputLanguage
 #: closed set minus English (the msgid source, which needs no catalogue).
 TARGET_LANGUAGES: Final[tuple[str, ...]] = tuple(
@@ -109,9 +144,12 @@ def user_scope_source_pages(docs_root: Path) -> list[str]:
 
     The result is the single definition of the localized surface: every authored
     ``.md`` / ``.rst`` source under ``docs/`` minus the generated, infrastructure,
-    and API trees in :data:`_EXCLUDED_TOP_DIRS`. Both :func:`extract_pot` and the
-    all-languages completeness gate consume this set, so the extracted templates
-    and the gate's page set are guaranteed identical.
+    and API trees in :data:`_EXCLUDED_TOP_DIRS`, and minus any page declaring
+    itself generator-owned (:func:`_is_generated_page`). Both :func:`extract_pot`
+    and the all-languages completeness gate consume this set, so the extracted
+    templates and the gate's page set are guaranteed identical — a page excluded
+    here is one nobody translates AND one nobody reports as untranslated, which
+    is only coherent because both follow from this one predicate.
 
     Args:
         docs_root: The documentation source root (the repository ``docs/``).
@@ -128,6 +166,8 @@ def user_scope_source_pages(docs_root: Path) -> list[str]:
         if relative.parts[0] in _EXCLUDED_TOP_DIRS:
             continue
         if relative.name in _EXCLUDED_FILES or relative.name.startswith(("test_", "_test_")):
+            continue
+        if _is_generated_page(source):
             continue
         pages.append(relative.as_posix())
     return sorted(pages)

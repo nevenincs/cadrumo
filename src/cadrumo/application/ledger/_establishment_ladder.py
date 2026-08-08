@@ -285,27 +285,33 @@ class CounterpartyEstablishment(BaseModel):
         return DeclaredFact[IvaTerritorialScope](value=self.scope, source=self.source)
 
 
-def _printed_country_code(
+def _stated_country_code(
     *,
-    printed_country_name: str | None,
-    printed_country_code: str | None,
+    stated_country_name: str | None,
+    stated_country_code: str | None,
 ) -> str | None:
-    """Return the country code the document's address block states, if any.
+    """Return the country code the document states about this party, if any.
 
     Both spellings are the same rung. The NAME is asked first because it is the
     form an address block actually prints -- in the document's own language, so
     asking a reading stage for the code would be asking it to translate, and
-    translation is inference. The already-printed code is the fallback for the
-    surfaces that carry one.
+    translation is inference. The code is the fallback for the surfaces that
+    carry one.
+
+    **Stated rather than printed, on both spellings.** A machine-readable
+    document reaches this rung too, and its country element was never set in
+    type: naming the parameters for typography would make the resolver assert a
+    provenance the structured lane never observed, which is the same conflation
+    that once shipped a derived value as printed evidence.
 
     A name outside the vocabulary does not fall through to the raw code as a
     country: an unrecognised name establishes nothing, and the code is consulted
     only where no name was recognised at all.
     """
-    from_name = country_code_for_printed_country_name(printed_country_name)
+    from_name = country_code_for_printed_country_name(stated_country_name)
     if from_name is not None:
         return from_name
-    return printed_country_code
+    return stated_country_code
 
 
 _PERCENT: Final[Decimal] = Decimal("100")
@@ -480,8 +486,8 @@ def _printed_evidence(
 def scope_printed_evidence_would_establish(
     *,
     tax_identifier: str | None = None,
-    printed_country_name: str | None = None,
-    printed_country_code: str | None = None,
+    stated_country_name: str | None = None,
+    stated_country_code: str | None = None,
     postal_code: str | None = None,
 ) -> IvaTerritorialScope | None:
     """Return the territory this printed evidence alone would settle, or ``None``.
@@ -513,8 +519,8 @@ def scope_printed_evidence_would_establish(
 
     Args:
         tax_identifier: The party's identifier as printed, if any.
-        printed_country_name: The country as printed in the address block.
-        printed_country_code: An already-printed alpha-2 country code.
+        stated_country_name: The country the document states for this party.
+        stated_country_code: An alpha-2 country code the document states.
         postal_code: The party's printed postal code.
 
     Returns:
@@ -522,9 +528,9 @@ def scope_printed_evidence_would_establish(
     """
     scope, _rung, _conflict = _printed_evidence(
         tax_identifier=tax_identifier,
-        country_code=_printed_country_code(
-            printed_country_name=printed_country_name,
-            printed_country_code=printed_country_code,
+        country_code=_stated_country_code(
+            stated_country_name=stated_country_name,
+            stated_country_code=stated_country_code,
         ),
         postal_code=postal_code,
     )
@@ -535,8 +541,8 @@ def resolve_counterparty_establishment_scope(
     *,
     bucket_id: str,
     tax_identifier: str | None = None,
-    printed_country_name: str | None = None,
-    printed_country_code: str | None = None,
+    stated_country_name: str | None = None,
+    stated_country_code: str | None = None,
     postal_code: str | None = None,
     regime_legend: str | None = None,
     charged_iva_rates: tuple[Decimal, ...] = (),
@@ -557,9 +563,12 @@ def resolve_counterparty_establishment_scope(
     Args:
         bucket_id: Active profile bucket, for the confirmed-fact rung.
         tax_identifier: The counterparty's identifier as printed, if any.
-        printed_country_name: The country as printed in the address block, in
-            whatever language the issuer set it.
-        printed_country_code: An already-printed alpha-2 country code, for
+        stated_country_name: The country the document states for this party, in
+            whatever language the issuer set it. Printed in an address block on
+            a rendered document, carried in a country element on a structured
+            one; the rung treats the two alike, so the parameter claims only
+            that the document stated it.
+        stated_country_code: An alpha-2 country code the document states, for
             surfaces that carry one instead of a name.
         postal_code: The counterparty's printed postal code. Consulted only
             where the country evidence positively named Spain.
@@ -596,9 +605,9 @@ def resolve_counterparty_establishment_scope(
             because none is caught: the store owns its own vocabulary and this
             function is transparent to it.
     """
-    country_code = _printed_country_code(
-        printed_country_name=printed_country_name,
-        printed_country_code=printed_country_code,
+    country_code = _stated_country_code(
+        stated_country_name=stated_country_name,
+        stated_country_code=stated_country_code,
     )
     identification = vat_identification_state_for_printed_tax_identifier(tax_identifier)
     evidenced, rung, conflict = _printed_evidence(
@@ -627,9 +636,23 @@ def resolve_counterparty_establishment_scope(
         evidenced_scope=evidenced,
         repository=repository,
     )
+    # The printed prefix is terminal where it reads, and the remembered
+    # assertion fills the gap where it does not. That precedence is the same one
+    # the territory takes -- the page outranks the memory -- and it is what makes
+    # one operator answer serve every later document rather than being asked
+    # again per invoice.
+    #
+    # A bare Spanish CIF prints no prefix at all, so this gap is the ordinary
+    # case rather than the exceptional one. Without the fallback the stored
+    # answer would be unreachable for exactly the counterparties an operator
+    # most often has to answer for.
+    settled_identification = identification
+    if settled_identification is None and remembered.identification is not None:
+        settled_identification = remembered.identification.value
+
     if remembered.contradiction is not None:
         return CounterpartyEstablishment(
-            identification_state=identification,
+            identification_state=settled_identification,
             contradiction=remembered.contradiction,
         )
 
@@ -638,7 +661,7 @@ def resolve_counterparty_establishment_scope(
             scope=evidenced,
             rung=rung,
             source=ClassifierInputSource.DOCUMENT_EVIDENCE,
-            identification_state=identification,
+            identification_state=settled_identification,
         )
 
     if remembered.fact is not None:
@@ -646,10 +669,10 @@ def resolve_counterparty_establishment_scope(
             scope=remembered.fact.value,
             rung=EstablishmentRung.CONFIRMED_COUNTERPARTY_FACT,
             source=remembered.fact.source,
-            identification_state=identification,
+            identification_state=settled_identification,
         )
 
-    return CounterpartyEstablishment(identification_state=identification)
+    return CounterpartyEstablishment(identification_state=settled_identification)
 
 
 def _charged_iva_rates(draft: InvoiceDraft) -> tuple[Decimal, ...]:
@@ -744,8 +767,8 @@ def resolve_draft_counterparty_establishment(
     return resolve_counterparty_establishment_scope(
         bucket_id=bucket_id,
         tax_identifier=side.tax_id,
-        printed_country_code=side.country_code,
-        printed_country_name=side.country,
+        stated_country_code=side.country_code,
+        stated_country_name=side.country,
         postal_code=side.postal_code,
         regime_legend=draft.regime_legend,
         charged_iva_rates=_charged_iva_rates(draft),

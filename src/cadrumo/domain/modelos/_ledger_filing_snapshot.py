@@ -169,7 +169,7 @@ class LedgerEvidenceRow(BaseModel):
     m210_payer_mode: str | None = None
     m210_payer_id: str | None = None
     m210_asset_or_right_id: str | None = None
-    counterparty_eu_member_state: str | None = None
+    counterparty_country: str | None = Field(default=None, min_length=2, max_length=2)
     fx_rate: Decimal | None = None
     value_in_eur: Decimal | None = None
     lifecycle_state: str = Field(min_length=1)

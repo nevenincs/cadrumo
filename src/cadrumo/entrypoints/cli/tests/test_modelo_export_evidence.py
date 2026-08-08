@@ -73,7 +73,7 @@ def _ledger_evidence() -> LedgerFilingEvidence:
                 iva_category="domestic_general",
                 category_id="material_oficina",
                 irpf_category="actividad_economica",
-                counterparty_eu_member_state="de",
+                counterparty_country="DE",
                 fx_rate=Decimal("1"),
                 value_in_eur=Decimal("121.00"),
                 lifecycle_state="ACTIVE",

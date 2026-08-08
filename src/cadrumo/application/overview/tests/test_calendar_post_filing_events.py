@@ -29,6 +29,12 @@ from .calendar_test_support import BUCKET_ID, SOURCE_URL
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _RANGE = OverviewCalendarRange(from_date=date(2025, 3, 1), to_date=date(2025, 3, 31))
+_AS_OF = date(2025, 3, 13)
+"""One day after every fixture's puesta a disposicion.
+
+Inside the art. 43.2 window, so the service-state axis stays EN_PLAZO and
+cannot influence the procedural-category assertions in this module.
+"""
 
 
 def _notification(
@@ -77,7 +83,7 @@ def test_notification_events_classify_requerimiento_kind() -> None:
         ),
     )
 
-    events = calendar_events_from_notification_snapshots((snapshot,), _RANGE)
+    events = calendar_events_from_notification_snapshots((snapshot,), _RANGE, as_of=_AS_OF)
 
     assert len(events) == 1
     assert events[0].post_filing_kind is PostFilingEventKind.REQUERIMIENTO
@@ -95,7 +101,7 @@ def test_notification_events_classify_informational_comunicacion_kind() -> None:
         ),
     )
 
-    events = calendar_events_from_notification_snapshots((snapshot,), _RANGE)
+    events = calendar_events_from_notification_snapshots((snapshot,), _RANGE, as_of=_AS_OF)
 
     assert len(events) == 1
     assert events[0].post_filing_kind is PostFilingEventKind.COMUNICACION
@@ -151,7 +157,7 @@ def test_actionable_filter_selects_only_demand_and_enforcement_events() -> None:
         ),
     )
 
-    events = calendar_events_from_notification_snapshots((snapshot,), _RANGE)
+    events = calendar_events_from_notification_snapshots((snapshot,), _RANGE, as_of=_AS_OF)
     actionable = actionable_post_filing_events(events)
 
     assert {event.post_filing_kind for event in actionable} == {
@@ -173,6 +179,6 @@ def test_actionable_filter_is_empty_when_no_demand_events_present() -> None:
         ),
     )
 
-    events = calendar_events_from_notification_snapshots((snapshot,), _RANGE)
+    events = calendar_events_from_notification_snapshots((snapshot,), _RANGE, as_of=_AS_OF)
 
     assert actionable_post_filing_events(events) == ()

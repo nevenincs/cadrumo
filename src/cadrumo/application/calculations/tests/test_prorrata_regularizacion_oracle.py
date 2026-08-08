@@ -36,17 +36,16 @@ See Also:
 
 from __future__ import annotations
 
-import json
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
-from typing import Any
 
 import pytest
 
 from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import (
     CasillaId,
+    ManualWorkedExamplePayload,
     calculate_registry_snapshot,
     resolve_bound_inputs_by_casilla_id,
     validated_casilla_id,
@@ -97,12 +96,8 @@ _MANUAL_FOURTH_QUARTER_NET_DEDUCTION = Decimal("-128.00")
 _MANUAL_ANNUAL_DEDUCTION = Decimal("806.40")
 
 
-def _oracle_payload() -> dict[str, Any]:
-    return json.loads(_ORACLE_PATH.read_text(encoding="utf-8"))
-
-
-def _oracle_expected(payload: dict[str, Any], casilla_id: CasillaId) -> Decimal:
-    raw = payload["expected_by_casilla_id"][str(casilla_id)]
+def _oracle_expected(payload: ManualWorkedExamplePayload, casilla_id: CasillaId) -> Decimal:
+    raw = payload.expected_by_casilla_id[casilla_id]
     return Decimal(raw)
 
 
@@ -140,13 +135,42 @@ def _m303_zero_bindings() -> dict[str, Decimal]:
     }
 
 
-def _m303_prorrata_percentage_from_manual_annual_volumes(payload: dict[str, Any]) -> Decimal:
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=payload["filing_year"], period="4T")
-    binding_values = _m303_zero_bindings()
-    manual_volume_inputs = {
-        _VOLUMEN_TOTAL_ID: _MANUAL_CURRENT_YEAR_TOTAL,
-        _VOLUMEN_CON_DERECHO_ID: _MANUAL_CURRENT_YEAR_CON_DERECHO,
+def _oracle_payload() -> ManualWorkedExamplePayload:
+    """Read the bundled oracle through the registry's own strict payload model.
+
+    Replaces a local ``json.loads`` of the same file. An untyped read here would let
+    this module accept a payload shape the grounding fold refuses, so the two could
+    disagree about what a valid oracle is -- and this module would be the one that
+    kept passing.
+    """
+    return ManualWorkedExamplePayload.model_validate_json(_ORACLE_PATH.read_text(encoding="utf-8"))
+
+
+def _declared_annual_volumes() -> dict[CasillaId, Decimal]:
+    """The manual's current-year volumes, read FROM the oracle rather than retyped here.
+
+    Only the two CASILLA-keyed givens are declared. The prior-year volumes and the
+    quarterly IVA soportado reach a domain function directly rather than a casilla, so
+    ``by_casilla_id`` has nowhere to put them and they stay local below.
+
+    The total, 45.000, is never printed as a figure on its own: it exists only inside
+    the definitive-prorrata arithmetic as ``Alquiler locales (25.000) + Alquiler
+    viviendas (20.000)``. Its locator therefore cites both the two line items it is made
+    of and the formula line that uses it, rather than pointing at a total the page does
+    not display.
+    """
+    declared = _oracle_payload().declared_inputs
+    assert declared is not None, f"{_ORACLE_PATH.name} must declare its scenario inputs"
+    return {
+        validated_casilla_id(casilla_id, surface=casilla_id): Decimal(value)
+        for casilla_id, value in declared.by_casilla_id.items()
     }
+
+
+def _m303_prorrata_percentage_from_manual_annual_volumes(payload: ManualWorkedExamplePayload) -> Decimal:
+    snapshot = resources().modelos.authority.snapshot("303", filing_year=payload.filing_year, period="4T")
+    binding_values = _m303_zero_bindings()
+    manual_volume_inputs = _declared_annual_volumes()
     inputs = {
         **resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
         **manual_volume_inputs,
@@ -155,7 +179,7 @@ def _m303_prorrata_percentage_from_manual_annual_volumes(payload: dict[str, Any]
         snapshot,
         inputs=inputs,
         binding_values=binding_values,
-        date_context={"filing_period": date(payload["filing_year"], 12, 31)},
+        date_context={"filing_period": date(payload.filing_year, 12, 31)},
     )
     return result.values[_PORCENTAJE_ID]
 
@@ -181,7 +205,7 @@ def test_m303_prorrata_regularizacion_reproduces_aeat_manual_oracle() -> None:
             operaciones_con_derecho_deduccion=_PRIOR_YEAR_CON_DERECHO,
             operaciones_sin_derecho_deduccion=_PRIOR_YEAR_SIN_DERECHO,
         ),
-        year=payload["filing_year"] - 1,
+        year=payload.filing_year - 1,
         kind=ProrrataKind.PROVISIONAL,
         period="Q4",
     )

@@ -12,6 +12,8 @@ multi-profile scan, and the ``backlog`` command's work-unit enrichment.
 
 from __future__ import annotations
 
+from datetime import date
+
 from ...application.overview import (
     OverviewCalendarEvent,
     OverviewCalendarFilingEvidence,
@@ -46,6 +48,7 @@ def _local_live_calendar_events(
     bucket_id: str,
     rng: OverviewCalendarRange,
     *,
+    as_of: date,
     expected_tax_id: str | None = None,
 ) -> tuple[tuple[OverviewCalendarEvent, ...], Notice | None]:
     """Return ``(persisted-live event rows, degradation-notice-or-None)``.
@@ -54,6 +57,14 @@ def _local_live_calendar_events(
     :func:`build_overview_calendar_events` builder performs the projection
     without contacting AEAT. A load failure degrades to no live-event rows plus a
     WARNING notice rather than refusing the whole calendar.
+
+    Args:
+        bucket_id: Active profile bucket to read evidence from.
+        rng: Inclusive calendar window.
+        as_of: Date the notification service-state window is evaluated against.
+            The command body owns the clock and passes it in; this loader never
+            reads one, so the projection stays reproducible.
+        expected_tax_id: Taxpayer identity rows must match, when known.
     """
     from ...adapters.persistence.profile.justificante import JustificanteRepository
     from ...application.live import ExpedientesService, JustificanteCaptureSnapshotService, NotificationsService
@@ -75,6 +86,7 @@ def _local_live_calendar_events(
         )
     events = build_overview_calendar_events(
         calendar_range=rng,
+        as_of=as_of,
         expedientes_snapshots=tuple(expedientes),
         notification_snapshots=tuple(notifications),
         justificante_capture_snapshots=tuple(justificante_captures),

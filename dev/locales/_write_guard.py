@@ -39,10 +39,10 @@ import hashlib
 import os
 import time
 from collections.abc import Generator
-from contextlib import contextmanager, suppress
+from contextlib import contextmanager
 from pathlib import Path
 
-from cadrumo.core import pid_is_alive
+from cadrumo.core import LOCKFILE_UNLINK_RETRY_SECONDS, pid_is_alive, unlink_lockfile
 from cadrumo.core.atomic_write import atomic_write_text
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.logging import get_logger
@@ -56,7 +56,6 @@ LOCK_FILENAME = ".catalogue-write.lock"
 
 _DEFAULT_WAIT_SECONDS = 60.0
 _POLL_SECONDS = 0.02
-_UNLINK_RETRY_SECONDS = 10.0
 _ABSENT_DIGEST = ""
 
 
@@ -220,8 +219,7 @@ def _reclaim_if_stale(lock: Path) -> None:
     _log.debug("reclaiming locale catalogue lock stamped with dead pid=%s", holder)
     # Best effort: a peer reclaiming the same stale lock, or reading its stamp,
     # can block the unlink briefly. Losing the race just means another poll.
-    with suppress(PermissionError):
-        lock.unlink(missing_ok=True)
+    unlink_lockfile(lock, reason="stale_reclaim")
 
 
 def _acquire(lock: Path, *, wait_seconds: float) -> None:
@@ -247,11 +245,13 @@ def _acquire(lock: Path, *, wait_seconds: float) -> None:
 def _release(lock: Path) -> None:
     """Drop the catalogue lock, never removing one stamped by another process.
 
-    The unlink is retried because Windows refuses to delete a file while any
-    handle is open, and every waiting writer opens the lockfile to read its
-    holder PID. Failing to release would be worse than slow: the stamped holder
-    is this live process, so no peer would ever reclaim the lock as stale and
-    every later writer would block until its own timeout.
+    The removal goes through :func:`~cadrumo.core.unlink_lockfile`, the shared
+    primitive the bucket and auth-acquisition locks use for the same reason:
+    Windows refuses to delete a file while any handle is open, and every waiting
+    writer opens the lockfile to read its holder PID. Failing to release would
+    be worse than slow: the stamped holder is this live process, so no peer
+    would ever reclaim the lock as stale and every later writer would block
+    until its own timeout.
 
     Raises:
         LocaleError: When the lock could not be removed within the retry window.
@@ -259,18 +259,12 @@ def _release(lock: Path) -> None:
     if _read_holder(lock) != os.getpid():
         _log.debug("locale catalogue lock not released; it is no longer stamped with this pid")
         return
-    deadline = time.monotonic() + _UNLINK_RETRY_SECONDS
-    while True:
-        try:
-            lock.unlink(missing_ok=True)
-            return
-        except PermissionError:
-            if time.monotonic() >= deadline:
-                raise LocaleError(
-                    f"Could not release the locale catalogue lock at {lock} within "
-                    f"{_UNLINK_RETRY_SECONDS:g}s. Delete it by hand once no catalogue edit is running."
-                ) from None
-            time.sleep(_POLL_SECONDS)
+    if unlink_lockfile(lock, retry_seconds=LOCKFILE_UNLINK_RETRY_SECONDS, reason="release"):
+        return
+    raise LocaleError(
+        f"Could not release the locale catalogue lock at {lock} within "
+        f"{LOCKFILE_UNLINK_RETRY_SECONDS:g}s. Delete it by hand once no catalogue edit is running."
+    )
 
 
 __all__ = ["LOCK_FILENAME", "CatalogueWriteGuard", "catalogue_write_guard"]

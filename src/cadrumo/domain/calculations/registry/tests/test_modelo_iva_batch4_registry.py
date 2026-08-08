@@ -96,10 +96,8 @@ def test_modelo_380_delegated_plazo_has_no_calendar_windows() -> None:
     assert [w.id for _, _, w in authority.deadline_windows(2025, modelos=("380",))] == []
 
 
-def test_both_registry_backed_and_out_of_unmodeled() -> None:
-    from .....core import UNMODELED_OBLIGATIONS
+def test_both_are_registry_backed() -> None:
     from .....core.access_gate import CANONICAL_MODELO_FLEET
 
     for mid in ("341", "380"):
         assert mid in CANONICAL_MODELO_FLEET
-        assert all(str(m) != mid for m in UNMODELED_OBLIGATIONS)

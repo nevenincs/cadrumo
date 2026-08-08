@@ -28,7 +28,7 @@ from pydantic import Field
 
 from ...core import ClassifierInputSource
 from ...core.json_contract import OutputSchema, register_schema
-from ...domain.iva import IvaTerritorialScope
+from ...domain.iva import EUMemberState, IvaTerritorialScope
 
 
 class CounterpartyEstablishmentPayload(OutputSchema):
@@ -48,6 +48,10 @@ class CounterpartyEstablishmentPayload(OutputSchema):
     counterparty_key: str = Field(min_length=1)
     canonical_tax_identifier: str = Field(min_length=1)
     territorial_scope: IvaTerritorialScope
+    # Emitted always, `None` included: a caller has to be able to tell an
+    # unanswered registration from one answered as Spain, and a field that
+    # vanished when absent would make those read alike.
+    identification_state: EUMemberState | None = None
     asserted_by: str = Field(min_length=1)
     asserted_at: datetime
     note: str = ""

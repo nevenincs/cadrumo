@@ -18,7 +18,7 @@ row is authored to project cleanly through the three aggregation pipelines:
 
 Projection axes (authored on every row, recorded in the manifest):
 `direction` × (`iva_category` / `iva_rate`) × (`business_classification` /
-`business_pct`) × `category_id` × `counterparty_eu_member_state` ×
+`business_pct`) × `category_id` × `counterparty_country` ×
 (`fx_rate` / `value_in_eur`) × period window.
 
 ## Taxpayer backstory
@@ -162,7 +162,7 @@ boundary (raised 2025-12, paid 2026-01).
         "taxable_base": "1020.30",
         "iva_amount": "214.26",
         "irpf_category": "actividades_economicas_directa_simplificada",
-        "counterparty_eu_member_state": null,
+        "counterparty_country": null,
         "source_jurisdiction": "ES",
         "fx_rate": null,
         "value_in_eur": null,

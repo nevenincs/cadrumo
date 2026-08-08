@@ -85,6 +85,7 @@ Submodules
    cadrumo.core._modelo
    cadrumo.core._modelo_232_codigos
    cadrumo.core._models
+   cadrumo.core._notificacion_estado_servicio
    cadrumo.core._objeto_tributario
    cadrumo.core._optional_extras
    cadrumo.core._period

@@ -127,11 +127,11 @@ class ParsedEInvoice:
         self.supplier_postal_code: str | None = None
         self.customer_postal_code: str | None = None
         # The country half, carried VERBATIM in whichever code system the format
-        # states it -- Facturae in ISO alpha-3, UBL in alpha-2. Left untranslated
-        # here on purpose: the correspondence between the two systems is registry
-        # data, and resolving it inside a syntax parser would make this module a
-        # second country authority. Absent stays None for the same reason the
-        # postal code does.
+        # states it -- Facturae in ISO alpha-3, UBL and CII in alpha-2. Left
+        # untranslated here on purpose: the correspondence between the two systems
+        # is registry data, and resolving it inside a syntax parser would make this
+        # module a second country authority. Absent stays None for the same reason
+        # the postal code does.
         self.supplier_country_code: str | None = None
         self.customer_country_code: str | None = None
         self.invoice_number: str | None = None
@@ -356,6 +356,29 @@ def _cii_postal_code(party: Element) -> str | None:
     return None
 
 
+def _cii_country_code(party: Element) -> str | None:
+    """Return a CII party's stated country code (EN16931 BT-40 / BT-55).
+
+    CII carries it in ``ram:PostalTradeAddress/ram:CountryID``, its own element
+    beside the ``PostcodeCode`` :func:`_cii_postal_code` already reads, and
+    states it in ISO 3166-1 alpha-2 -- the system UBL uses, not Facturae's
+    alpha-3. Carried verbatim regardless: resolving what a code MEANS belongs to
+    the country authority, and doing it here would make this module a second one.
+
+    Scoped to the address element rather than searched across the party subtree.
+    A CII party also carries ``ram:SpecifiedTaxRegistration``, whose id opens
+    with the two letters of a country for every EU VAT number, so a descendant
+    walk for a two-letter code would read a tax-scheme prefix as the party's
+    place of establishment -- a value that is usually right and silently wrong
+    exactly where a party is registered somewhere it is not established.
+    """
+    for address in _find_all(party, "PostalTradeAddress"):
+        found = _direct_child_text(address, "CountryID")
+        if found:
+            return found
+    return None
+
+
 def _decimal(raw: str | None) -> Decimal | None:
     """Parse a fixed-point amount from machine-produced e-invoice XML text.
 
@@ -436,6 +459,7 @@ def _parse_cii(root: Element) -> ParsedEInvoice:
             # name, neither of which is the party's own stated name.
             setattr(parsed, f"{target}_name", _direct_child_text(found[0], "Name"))
             setattr(parsed, f"{target}_postal_code", _cii_postal_code(found[0]))
+            setattr(parsed, f"{target}_country_code", _cii_country_code(found[0]))
     for settlement in _find_all(root, "ApplicableHeaderTradeSettlement"):
         parsed.currency = _first_text(settlement, "InvoiceCurrencyCode")
         for total in _find_all(settlement, "SpecifiedTradeSettlementHeaderMonetarySummation"):

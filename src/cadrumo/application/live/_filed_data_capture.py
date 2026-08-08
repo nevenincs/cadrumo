@@ -33,7 +33,8 @@ See Also:
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Mapping, Sequence
+from collections.abc import AsyncIterator, Awaitable, Mapping, Sequence
+from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from decimal import InvalidOperation
 from pathlib import Path
@@ -43,6 +44,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from ...adapters.outbound.aeat.sede import (
     Declaracion,
+    DeclaracionesRegisterSession,
     FiledDeclaracionObservation,
     FiledDeclaracionObservationStore,
     FiledDeclarationAvailabilityReport,
@@ -60,6 +62,7 @@ from ...core import (
     RegisterScopingSignal,
     require_active_bucket_id,
 )
+from ...core.config import load_settings
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.resources import bundled_path, resources
@@ -200,6 +203,40 @@ async def _await_filed_register_walk(
             timeout_ms=timeout_ms,
             progress_context={"modelo": modelo, "year": year},
         ) from exc
+
+
+@asynccontextmanager
+async def _resolved_declarations_register(
+    register: DeclaracionesRegisterSession | None,
+    *,
+    operation: str,
+) -> AsyncIterator[tuple[DeclaracionesRegisterSession, int]]:
+    """Yield an open register plus its walk timeout, resolving a session only when needed.
+
+    Shared by :func:`list_filed_data_bulk` and :func:`capture_filed_data_bulk`.
+    With no ``register`` supplied this is exactly what both functions did inline:
+    resolve a verified session, amortise one Playwright instance across the sweep,
+    and open the register against it.
+
+    An already-open register short-circuits SESSION RESOLUTION, which is the only
+    thing it can usefully bypass. The browser itself is reachable offline through
+    route interception with no production change at all; what is not reachable is
+    :func:`active_verified_session`, because it runs the live-read access gate and
+    then drives the central live-session writer, which wants an active bucket and
+    real credentials. Satisfying that gate to reach this code would ARM real AEAT
+    access, so the seam exists to let a caller never request live access at all.
+    The walk timeout still comes from :func:`load_settings`, which reads local
+    deployment configuration and contacts nothing.
+    """
+    if register is not None:
+        yield register, load_settings().cadrumo_live_filed_register_walk_timeout_ms
+        return
+    session, settings = await active_verified_session(operation=operation)
+    async with (
+        shared_playwright(session) as playwright,
+        open_declarations_register(session, settings=settings, playwright=playwright) as opened,
+    ):
+        yield opened, settings.cadrumo_live_filed_register_walk_timeout_ms
 
 
 async def _walk_or_failure_row(
@@ -375,8 +412,17 @@ async def list_filed_data_bulk(
     year_from: int,
     year_to: int,
     modelos: tuple[str, ...] | None = None,
+    register: DeclaracionesRegisterSession | None = None,
 ) -> BulkFiledDataListingReport:
     """List filed declarations across modelos with one authenticated register session.
+
+    Args:
+        year_from: First filing year to query.
+        year_to: Last filing year to query.
+        modelos: Modelo codes to walk; every registry modelo when omitted.
+        register: An already-open register to walk instead of resolving a session,
+            per :func:`_resolved_declarations_register`. Omitted by every
+            production caller, which keeps the session-resolving path.
 
     Returns:
         A :class:`BulkFiledDataListingReport` of the per-modelo rows and failures.
@@ -402,19 +448,13 @@ async def list_filed_data_bulk(
             failures=tuple(failures),
         )
 
-    session, settings = await active_verified_session(operation="live-expedientes-read")
-    walk_timeout_ms = settings.cadrumo_live_filed_register_walk_timeout_ms
-    async with (
-        shared_playwright(session) as playwright,
-        open_declarations_register(
-            session,
-            settings=settings,
-            playwright=playwright,
-        ) as register,
+    async with _resolved_declarations_register(register, operation="live-expedientes-read") as (
+        opened_register,
+        walk_timeout_ms,
     ):
         for code, year in query_pairs:
             declarations = await _walk_or_failure_row(
-                register.walk(modelo=code, ejercicio=year),
+                opened_register.walk(modelo=code, ejercicio=year),
                 modelo=code,
                 year=year,
                 timeout_ms=walk_timeout_ms,
@@ -507,6 +547,7 @@ async def capture_filed_data_bulk(
     output_root: Path,
     modelos: tuple[str, ...] | None = None,
     limit: int | None = None,
+    register: DeclaracionesRegisterSession | None = None,
 ) -> BulkFiledDataCaptureReport:
     """Capture filed declarations across a year range and return a :class:`BulkFiledDataCaptureReport`.
 
@@ -514,6 +555,16 @@ async def capture_filed_data_bulk(
     Supported pairs share one authenticated register session and then follow the
     same persistence, justificante enrolment, and calculation-observation path as
     :func:`capture_filed_data`.
+
+    Args:
+        year_from: First filing year to query.
+        year_to: Last filing year to query.
+        output_root: Root the captured observations and artefacts persist under.
+        modelos: Modelo codes to walk; every registry modelo when omitted.
+        limit: Cap on captured observations; unbounded when omitted.
+        register: An already-open register to walk instead of resolving a session,
+            per :func:`_resolved_declarations_register`. Omitted by every
+            production caller, which keeps the session-resolving path.
     """
     if year_from > year_to:
         raise LiveApplicationInputError(
@@ -548,21 +599,15 @@ async def capture_filed_data_bulk(
             failures=tuple(failures),
         )
 
-    session, settings = await active_verified_session(operation="live-expedientes-read")
-    walk_timeout_ms = settings.cadrumo_live_filed_register_walk_timeout_ms
     bucket_id = require_active_bucket_id()
 
-    async with (
-        shared_playwright(session) as playwright,
-        open_declarations_register(
-            session,
-            settings=settings,
-            playwright=playwright,
-        ) as register,
+    async with _resolved_declarations_register(register, operation="live-expedientes-read") as (
+        opened_register,
+        walk_timeout_ms,
     ):
         for code, year in query_pairs:
             declarations = await _walk_or_failure_row(
-                register.walk(modelo=code, ejercicio=year),
+                opened_register.walk(modelo=code, ejercicio=year),
                 modelo=code,
                 year=year,
                 timeout_ms=walk_timeout_ms,
@@ -577,7 +622,7 @@ async def capture_filed_data_bulk(
                 declarations = declarations[:remaining]
             for declaration in declarations:
                 try:
-                    observation = await register.capture_observation(
+                    observation = await opened_register.capture_observation(
                         declaration,
                         artefact_sink=store.persist_artefact,
                     )

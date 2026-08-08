@@ -23,6 +23,12 @@ detect nothing. The property is what is gated — every payload is in exactly on
 the two states, and every entry here names a payload that really exists and really
 has not migrated.
 
+**Not every entry is pending work.** Some are ruled permanently out of scope, and
+their reasons say so — see :data:`_NO_PRINTED_CASILLA_INPUT`, which covers the six
+whose consumed figures never reach a casilla. Read an entry's reason before
+treating it as a backlog item: the map holds both "not yet" and "not ever", and
+the difference is the whole reason each entry carries prose rather than a flag.
+
 What a declaration proves, and what it does not
 -----------------------------------------------
 
@@ -96,6 +102,22 @@ práctico at different lines, so copying a sibling's references is the mistake t
 is most likely to invite — and no case above would fail a test if got wrong. That
 is what the declaration is for: not catching a wrong locator, but putting it in one
 reviewable place beside the figure it claims.
+
+Why any of this matters
+------------------------
+
+**A literal that happens to match the oracle is not the oracle.** Everything above
+is that one sentence in different clothes. A fixture reaching the printed figure
+because a different term of a ``min`` binds; a child two years younger than the
+manual's, routed through a branch the real case never takes; a scenario whose
+literals are identical to the manual's and which is nonetheless a deliberate
+departure. In each the VALUE was right and its PROVENANCE was not, and provenance
+is the only thing that makes a number evidence rather than a coincidence.
+
+So when a scenario departs from the printed case on purpose, let it depart
+visibly — take the manual's figures from the declaration and pass arguments only
+for the departure. Three copies of one figure, one of which means something
+different, cannot be told apart by reading.
 """
 
 from __future__ import annotations
@@ -142,6 +164,43 @@ def _payload(name: str) -> ManualWorkedExamplePayload:
 #: fixture is itself the first step of migrating them; their reasons say so. No count
 #: is stated here for the same reason none is asserted: it would be wrong the moment a
 #: payload migrates, and the entries themselves are the inventory.
+#: The one reason six payloads are excluded, ruled once rather than six times.
+#:
+#: BY DESIGN, NOT A GAP. These payloads' consumed figures never reach a casilla: five
+#: drive the registry through IvaLedgerObservation rows the manual does not print, and
+#: the M202 scenario's figure arrives as a binding value. The manual states only the
+#: outcome aggregates, which are already those payloads' own expected_by_casilla_id, so
+#: declaring them would trip
+#: :func:`test_no_declared_input_is_also_an_expected_output` -- correctly.
+#:
+#: :class:`DeclaredScenarioInputs` was NOT widened to admit them, and that is the
+#: decision rather than an omission. The contract's whole guarantee is reviewability
+#: against a printed page: a locator lets a reviewer hold the declaration beside the
+#: manual and check it. A ledger row the manual never prints has nothing to point at,
+#: and neither does a binding value. Admitting them would mean declarations carrying no
+#: locator, or one aimed at the aggregate they roll into -- a reference that looks
+#: reviewable and is not. That would not extend the guarantee to six more payloads; it
+#: would weaken it for all twenty-one, because a reader could no longer assume a
+#: declared input is a printed fact. The contract meaning one thing is worth more than
+#: the coverage.
+#:
+#: WHAT THIS RULING DOES NOT SETTLE: these six still have the two-independent-
+#: transcriptions problem -- test and payload as separate copies of one truth with
+#: nothing checking they agree. That risk is real and is explicitly NOT addressed for
+#: them. Closing it needs a mechanism other than a locator-bearing declaration, which
+#: is a separate question and not a reason to reopen this one.
+#:
+#: The boundary is a property of individual INPUTS, not of whole payloads: the 2025
+#: prorrata payload migrated with two casilla-keyed givens declared while its
+#: prior-year volumes, which reach a domain function directly, stayed local.
+_NO_PRINTED_CASILLA_INPUT = (
+    "ruled out of scope by design, not pending: its consumed figures never reach a "
+    "casilla, so there is no printed input DeclaredScenarioInputs.by_casilla_id can key "
+    "and no page a locator could point at. Consumed by {test}. See "
+    "_NO_PRINTED_CASILLA_INPUT for the full rationale and for what this ruling does not "
+    "settle"
+)
+
 _UNMIGRATED_PAYLOADS: Mapping[str, str] = {
     "modelo-100-2024-minimo-descendientes-adopcion-mayor-de-tres-rioja.json": (
         "scenario facts still hand-written in test_minimo_descendientes_manual_oracles.py; that surface is "
@@ -157,25 +216,22 @@ _UNMIGRATED_PAYLOADS: Mapping[str, str] = {
         "mid-verification hold as the Rioja payload"
     ),
     "modelo-202-2025-primer-pago-modalidad-40-2.json": (
-        "scenario facts still hand-written in test_modelo_202_2025_pago_fraccionado_manual_worked_example.py"
+        _NO_PRINTED_CASILLA_INPUT.format(test="test_modelo_202_2025_pago_fraccionado_manual_worked_example.py")
     ),
     "modelo-303-2024-regimen-general-recargo-intracomunitaria-importacion.json": (
-        "the IVA manual ships as source.pdf with NO extracted text -- unlike the renta manuals, which carry source.pdf.extracted.md -- so a per-input line locator cannot be constructed at all, only the page reference this payload already holds as raw_evidence_locator. DeclaredScenarioInputs requires locator_by_casilla_id, and a locator that cannot point at the figure it claims would assert a reviewability that is not there. Blocked on extracting the IVA corpus, not on this contract's design. Separately, test_m303_2024_regimen_general_manual_worked_example.py drives the registry through constructed IvaLedgerObservation rows the manual does not print; it states only the outcome aggregates, which are already this payload's expected_by_casilla_id, so there is no printed INPUT to declare"
-    ),
-    "modelo-303-2025-prorrata-general-regularizacion.json": (
-        "the IVA manual ships as source.pdf with NO extracted text -- unlike the renta manuals, which carry source.pdf.extracted.md -- so a per-input line locator cannot be constructed at all, only the page reference this payload already holds as raw_evidence_locator. DeclaredScenarioInputs requires locator_by_casilla_id, and a locator that cannot point at the figure it claims would assert a reviewability that is not there. Blocked on extracting the IVA corpus, not on this contract's design. Its two consumers, test_prorrata_regularizacion_oracle.py and test_prorrata_regularizacion_source_resolver.py, are not ledger-driven and would migrate cleanly once the corpus is extracted; they must move together"
+        _NO_PRINTED_CASILLA_INPUT.format(test="test_m303_2024_regimen_general_manual_worked_example.py")
     ),
     "modelo-322-2024-grupo-entidades-delta.json": (
-        "the IVA manual ships as source.pdf with NO extracted text -- unlike the renta manuals, which carry source.pdf.extracted.md -- so a per-input line locator cannot be constructed at all, only the page reference this payload already holds as raw_evidence_locator. DeclaredScenarioInputs requires locator_by_casilla_id, and a locator that cannot point at the figure it claims would assert a reviewability that is not there. Blocked on extracting the IVA corpus, not on this contract's design. Separately, test_m322_2024_grupo_entidades_manual_worked_example.py drives the registry through constructed IvaLedgerObservation rows the manual does not print; it states only the outcome aggregates, which are already this payload's expected_by_casilla_id, so there is no printed INPUT to declare"
+        _NO_PRINTED_CASILLA_INPUT.format(test="test_m322_2024_grupo_entidades_manual_worked_example.py")
     ),
     "modelo-322-2024-grupo-entidades-omega.json": (
-        "the IVA manual ships as source.pdf with NO extracted text -- unlike the renta manuals, which carry source.pdf.extracted.md -- so a per-input line locator cannot be constructed at all, only the page reference this payload already holds as raw_evidence_locator. DeclaredScenarioInputs requires locator_by_casilla_id, and a locator that cannot point at the figure it claims would assert a reviewability that is not there. Blocked on extracting the IVA corpus, not on this contract's design. Separately, test_m322_2024_grupo_entidades_manual_worked_example.py drives the registry through constructed IvaLedgerObservation rows the manual does not print; it states only the outcome aggregates, which are already this payload's expected_by_casilla_id, so there is no printed INPUT to declare"
+        _NO_PRINTED_CASILLA_INPUT.format(test="test_m322_2024_grupo_entidades_manual_worked_example.py")
     ),
     "modelo-353-2024-grupo-entidades-agregado.json": (
-        "the IVA manual ships as source.pdf with NO extracted text -- unlike the renta manuals, which carry source.pdf.extracted.md -- so a per-input line locator cannot be constructed at all, only the page reference this payload already holds as raw_evidence_locator. DeclaredScenarioInputs requires locator_by_casilla_id, and a locator that cannot point at the figure it claims would assert a reviewability that is not there. Blocked on extracting the IVA corpus, not on this contract's design. Separately, test_m353_2024_grupo_entidades_manual_worked_example.py drives the registry through constructed IvaLedgerObservation rows the manual does not print; it states only the outcome aggregates, which are already this payload's expected_by_casilla_id, so there is no printed INPUT to declare"
+        _NO_PRINTED_CASILLA_INPUT.format(test="test_m353_2024_grupo_entidades_manual_worked_example.py")
     ),
     "modelo-390-2024-resumen-anual-cuatro-trimestres.json": (
-        "the IVA manual ships as source.pdf with NO extracted text -- unlike the renta manuals, which carry source.pdf.extracted.md -- so a per-input line locator cannot be constructed at all, only the page reference this payload already holds as raw_evidence_locator. DeclaredScenarioInputs requires locator_by_casilla_id, and a locator that cannot point at the figure it claims would assert a reviewability that is not there. Blocked on extracting the IVA corpus, not on this contract's design. Separately, test_m390_2024_annual_manual_worked_example.py drives the registry through constructed IvaLedgerObservation rows the manual does not print; it states only the outcome aggregates, which are already this payload's expected_by_casilla_id, so there is no printed INPUT to declare"
+        _NO_PRINTED_CASILLA_INPUT.format(test="test_m390_2024_annual_manual_worked_example.py")
     ),
 }
 

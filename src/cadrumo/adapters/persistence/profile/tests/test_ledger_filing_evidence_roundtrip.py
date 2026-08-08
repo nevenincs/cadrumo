@@ -71,7 +71,7 @@ def _evidence() -> LedgerFilingEvidence:
                 iva_category="domestic_general",
                 category_id="office-supplies",
                 irpf_category="professional-services",
-                counterparty_eu_member_state="DE",
+                counterparty_country="DE",
                 fx_rate=Decimal("1.08"),
                 value_in_eur=Decimal("112.04"),
                 lifecycle_state="active",

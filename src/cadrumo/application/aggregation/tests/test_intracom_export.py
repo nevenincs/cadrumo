@@ -132,7 +132,9 @@ def _inbound_tx(
             "iva_rate": iva_rate,
             "iva_amount": iva_amount,
             "iva_category": iva_category,
-            "counterparty_eu_member_state": counterparty_eu_member_state,
+            "counterparty_country": (
+                counterparty_eu_member_state.value.upper() if counterparty_eu_member_state is not None else None
+            ),
             "counterparty_identification_state": counterparty_identification_state,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
         },

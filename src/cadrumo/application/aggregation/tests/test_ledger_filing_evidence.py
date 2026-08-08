@@ -284,7 +284,7 @@ def test_evidence_row_strict_json_roundtrip_all_fields() -> None:
         iva_category="domestic_general",
         category_id="material_oficina",
         irpf_category="actividad_economica",
-        counterparty_eu_member_state="de",
+        counterparty_country="DE",
         fx_rate=Decimal("1.08"),
         value_in_eur=Decimal("112.04"),
         lifecycle_state="ACTIVE",

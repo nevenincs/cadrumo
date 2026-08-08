@@ -51,7 +51,7 @@ from ._document_direction import (
 )
 from ._document_transcription import DocumentTranscription
 from ._evidence_draft import DraftDiscrepancyFinding, FieldProvenance, InvoiceDraft
-from ._grounding_anchor import evaluate_anchor, printed_excerpt_occurs
+from ._grounding_anchor import evaluate_anchor, printed_excerpt_occurs, refused_anchor_of
 from ._identity_roles import IdentityCandidate, resolve_counterparty_identity
 from ._party_attribution import stamp_unverified_party_attribution
 from ._party_colocation import (
@@ -159,6 +159,13 @@ def _verified_envelope(
         update={
             "grounding": evaluation.outcome,
             "anchor": envelope.anchor if evaluation.anchor_found else None,
+            # The other half of the distinction the early return above protects.
+            # That branch keeps "the reader reported no printed form" legible;
+            # clearing the anchor here without recording the refusal would make
+            # a form the reader DID offer arrive looking exactly like one it
+            # never offered, and the operator surface would then read the
+            # refusal out as an absence.
+            "refused_anchor": refused_anchor_of(envelope.anchor, evaluation),
             "note": evaluation.detail,
         },
     )

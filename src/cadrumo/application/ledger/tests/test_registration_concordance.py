@@ -93,7 +93,7 @@ def _resolve(
     return resolve_counterparty_establishment_scope(
         bucket_id=_BUCKET_ID,
         tax_identifier=tax_identifier,
-        printed_country_name=country_name,
+        stated_country_name=country_name,
         postal_code=postal_code,
         regime_legend=regime_legend,
         charged_iva_rates=charged_iva_rates,

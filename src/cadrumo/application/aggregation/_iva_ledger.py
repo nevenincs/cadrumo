@@ -123,8 +123,12 @@ class IvaLedgerAggregationIssueReason(StrEnum):
     MISSING_IVA_AMOUNT = "missing_iva_amount"
     MISSING_IVA_RATE = "missing_iva_rate"
     UNSUPPORTED_IVA_RATE = "unsupported_iva_rate"
-    # The transaction's DATE falls outside every rate record the table holds,
-    # so no tier could match whatever rate the row carries. Distinct from
+    # The transaction's DATE is reached by no tier bearing a positive rate, so
+    # no tier could match whatever positive rate the row carries. Scoped to the
+    # positive tiers rather than to every record because a declared zero
+    # classifies through the zero-tier exemption and never arrives here, so the
+    # zero tier's own reach says nothing about whether this row was priceable.
+    # Distinct from
     # UNSUPPORTED_IVA_RATE, which means the date is covered and the rate still
     # matched no tier: there the operator's rate is what needs looking at, here
     # it is the year. Collapsing the two tells a taxpayer filing an
@@ -1300,10 +1304,11 @@ def _classify_iva_transaction(
                     f"IVA rate {transaction.iva_rate} is not a canonical substrate IVA rate"
                     if covered
                     else (
-                        f"no IVA rate is on record for {operation_date.isoformat()}: the rate table holds "
-                        f"current rates only, so a transaction dated before its earliest record cannot be "
-                        f"classified whatever rate it carries. The rate {transaction.iva_rate} is not what "
-                        f"needs correcting -- the filing year is outside the supported window"
+                        f"no IVA rate is on record for {operation_date.isoformat()}: the rate table "
+                        f"reaches no tier bearing a positive rate on that date, so a transaction dated "
+                        f"there cannot be classified whatever rate it carries. The rate "
+                        f"{transaction.iva_rate} is not what needs correcting -- the filing year is "
+                        f"outside the supported window"
                     )
                 ),
             ),

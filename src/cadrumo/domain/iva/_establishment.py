@@ -78,9 +78,10 @@ See Also:
 from __future__ import annotations
 
 import tomllib
+from collections.abc import Mapping
 from enum import StrEnum
 from functools import lru_cache
-from typing import Final, NamedTuple
+from typing import Any, Final, NamedTuple
 
 from ...core.identity import (
     NifIvaPrefix,
@@ -239,7 +240,6 @@ def _vat_territory_carve_outs() -> dict[str, _CarveOut]:
             anything other than exactly one disposition.
     """
     from ._errors import IvaCatalogueError
-    from ._grounding import verify_table_legal_refs
 
     target = bundled_path("registry", "aeat", "iva", "vat_territory_carve_outs.toml")
     try:
@@ -248,6 +248,33 @@ def _vat_territory_carve_outs() -> dict[str, _CarveOut]:
         raise IvaCatalogueError(f"{target}: cannot read the carve-out table: {exc}") from exc
     except tomllib.TOMLDecodeError as exc:
         raise IvaCatalogueError(f"{target}: malformed carve-out table: {exc}") from exc
+    return _carve_out_rows_from_payload(target, payload)
+
+
+def _carve_out_rows_from_payload(target: object, payload: Mapping[str, Any]) -> dict[str, _CarveOut]:
+    """Return the carve-out rows a parsed table declares, refusing a malformed one.
+
+    Every refusal the table can earn lives here rather than beside the file
+    read, so the parsed payload is the whole input: reading the bundled file and
+    judging what it says are separate jobs, and only the second can be exercised
+    against a table that does not exist on disk.
+
+    Args:
+        target: The table being judged, named in every diagnostic.
+        payload: The parsed table.
+
+    Returns:
+        Each alpha-2 code mapped to its disposition.
+
+    Raises:
+        IvaCatalogueError: When the table names a code or a scope outside the
+            closed sets, cites no provision, gives a row anything other than
+            exactly one disposition, carves a code out twice, points an
+            assimilation at a parent no catalogue names, or closes an
+            assimilation chain into a cycle.
+    """
+    from ._errors import IvaCatalogueError
+    from ._grounding import verify_table_legal_refs
 
     resolved: dict[str, _CarveOut] = {}
     citations: list[tuple[str, tuple[str, ...]]] = []
@@ -306,6 +333,23 @@ def _vat_territory_carve_outs() -> dict[str, _CarveOut]:
             f"{target}: assimilated to {', '.join(sorted(unresolvable))}, which no catalogue names; an "
             f"assimilation whose parent cannot be resolved establishes nothing while reading as a rule",
         )
+    # Beside the unresolvable-parent check because a chain is a property of the
+    # whole table, which the per-record loop above cannot see. The self-pointer
+    # refusal there is the length-one case of this one; both are kept, so the
+    # commonest mistake still earns the message that names it directly.
+    for start in resolved:
+        seen = {start}
+        step = resolved[start].assimilated_to
+        while step is not None and step in resolved:
+            if step in seen:
+                raise IvaCatalogueError(
+                    f"{target}: the assimilation chain from {start} closes into a cycle; a territory "
+                    f"assimilated in a ring is treated AS nothing, and following the pointer to answer "
+                    f"for it cannot terminate",
+                )
+            seen.add(step)
+            step = resolved[step].assimilated_to
+
     verify_table_legal_refs(str(target), citations)
     return resolved
 
@@ -483,8 +527,12 @@ def territorial_scope_for_country(country_code: str | None) -> IvaTerritorialSco
         # territory is treated as and never what that parent establishes, so
         # following the pointer is what keeps the answer true as the parent's
         # own status changes -- the Isle of Man left the Community without this
-        # row changing a word. The loader refuses a self-pointer and refuses a
-        # parent no catalogue names, so this cannot recurse without end.
+        # row changing a word. The loader refuses a parent no catalogue names
+        # and refuses a chain that closes into a cycle, of which a self-pointer
+        # is the shortest, so this cannot recurse without end. The cycle walk is
+        # what makes that true: excluding a self-pointer and an unknown parent
+        # leaves a two-row ring admissible, and the parent kind the table admits
+        # is exactly the kind that can form one.
         return territorial_scope_for_country(carve_out.assimilated_to)
     if normalised == SPAIN_COUNTRY_CODE:
         return None

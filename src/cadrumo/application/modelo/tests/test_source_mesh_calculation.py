@@ -16,7 +16,7 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....domain.calculations.registry import CasillaId
-from ....domain.iva import EUMemberState, IvaCategory
+from ....domain.iva import IvaCategory
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -148,7 +148,7 @@ def _intracom_ledger_transaction(provider_id: str, *, booked_date: date = date(2
             "iva_rate": Decimal("0"),
             "iva_amount": Decimal("0"),
             "iva_category": IvaCategory.INTRA_COMMUNITY_SUPPLY,
-            "counterparty_eu_member_state": EUMemberState.DE,
+            "counterparty_country": "DE",
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
             "classified_by": "manual",

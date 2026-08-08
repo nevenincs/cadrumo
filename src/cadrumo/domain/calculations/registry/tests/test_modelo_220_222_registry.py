@@ -117,10 +117,8 @@ def test_modelo_222_trimestral_windows_open_and_close_on_day_20() -> None:
         assert windows[window_id].closes_on == closes
 
 
-def test_modelo_220_222_are_registry_backed_and_out_of_unmodeled() -> None:
-    from .....core import UNMODELED_OBLIGATIONS
+def test_modelo_220_222_are_registry_backed() -> None:
     from .....core.access_gate import CANONICAL_MODELO_FLEET
 
     for modelo_id in ("220", "222"):
         assert modelo_id in CANONICAL_MODELO_FLEET
-        assert all(str(modelo) != modelo_id for modelo in UNMODELED_OBLIGATIONS)

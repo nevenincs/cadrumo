@@ -73,9 +73,13 @@ def test_locale_integrity(manager):
     errors = []
     for f in files:
         try:
-            # load_locale uses StrictUniqueKeyLoader, which throws ValueError on duplicates
+            # StrictUniqueKeyLoader refuses a duplicate key with LocaleError, which
+            # is not a ValueError; any other malformed catalogue surfaces as a
+            # yaml.YAMLError. Both are collected so one bad file does not hide the
+            # rest, and neither is widened to a bare Exception, which would report
+            # an unrelated failure as a catalogue-integrity finding.
             manager.load_locale(f)
-        except ValueError as e:
+        except LocaleError as e:
             errors.append(f"Integrity failure in {f.name}: {e}")
         except yaml.YAMLError as e:
             errors.append(f"YAML Parse error in {f.name}: {e}")

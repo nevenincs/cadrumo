@@ -68,6 +68,7 @@ import pytest
 from pydantic import ValidationError
 
 from .._html import build_outputs
+from .._parts import part_stand_in_path
 from .._schema import PreprocessOutput
 from .._sidecar import (
     EXTRACTED_JSON_SUFFIX,
@@ -381,3 +382,39 @@ def test_a_provenance_claiming_sidecar_that_will_not_validate_is_reported(tmp_pa
     assert len(unloadable) == 1
     assert "fails schema validation" in unloadable[0]
     assert json_path.name in unloadable[0]
+
+
+def test_the_part_infix_matches_what_the_producer_actually_emits() -> None:
+    """Pin the strip to the producer, so a naming change reds the consumer.
+
+    ``_PART_INFIX`` is the only thing tying this gate to the extractor's
+    part-naming scheme, and no committed sidecar carries the infix -- the whole
+    corpus is single-part -- so nothing in the tree would red if the producer
+    started naming parts differently. The gate would then either over-refuse,
+    resolving a real part to a payload that does not exist, or, if the new name
+    happened to strip clean, stop discriminating at all.
+
+    Asserting against the producer's own output rather than against a literal
+    is what makes it a contract instead of a convention observed twice.
+    """
+    source = Path("corpus") / "ley-37-1992-art-90.html"
+    total = 3
+
+    for index in range(total):
+        stand_in = part_stand_in_path(source, index, total)
+        # Non-vacuity, and the failure the row names: a producer that stopped
+        # infixing would satisfy the strip trivially, because stripping nothing
+        # from an unchanged name also yields the source name.
+        assert stand_in.name != source.name, (
+            f"the producer emitted no distinguishing name for part {index + 1} of {total}, so the "
+            f"strip below would pass by doing nothing and this gate would stop discriminating"
+        )
+        assert _PART_INFIX.sub("", stand_in.name) == source.name, (
+            f"the part infix the producer emits ({stand_in.name!r}) is not the one this gate strips, "
+            f"so every part sidecar would resolve to a payload that does not exist"
+        )
+
+    # A single-part source is named directly from the source, and the strip must
+    # leave that alone rather than eat a legitimate part of the filename.
+    assert part_stand_in_path(source, 0, 1).name == source.name
+    assert _PART_INFIX.sub("", source.name) == source.name

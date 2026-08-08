@@ -276,6 +276,74 @@ def test_zugferd_two_rate_document_does_not_collapse_to_one_pair() -> None:
     assert parsed.taxable_base + parsed.iva_amount == parsed.grand_total
 
 
+def test_zugferd_states_each_partys_country_and_the_reader_recovers_it() -> None:
+    """The country the bundled CII already printed is read rather than passed over.
+
+    Not a new capability's fixture but its oldest evidence: this document has
+    carried ``ram:CountryID`` for both parties since it was bundled, one element
+    away from the ``PostcodeCode`` the reader was already taking out of the same
+    address block. The value was present, parsed past, and established nothing.
+
+    Pinned here as well as against the purpose-authored specimen because a
+    fixture written alongside a reader can be written to suit it; this one
+    predates the read entirely, so agreeing with it is a fact about the format
+    rather than about the author.
+    """
+    parsed = parse_einvoice_document(_read("zugferd_en16931_invoice.pdf"))
+
+    assert parsed.supplier_country_code == "DE"
+    assert parsed.customer_country_code == "DE"
+
+
+def test_a_standalone_cii_document_is_classified_without_a_pdf_around_it() -> None:
+    """A bare ``.xml`` CII reaches the CII reader, not the unrecognised-XML refusal.
+
+    The shape probe had two routes to :attr:`DocumentShape.XML_CII` and only one
+    was ever travelled. Every CII byte in this corpus arrived embedded in the
+    ZUGFeRD PDF, so the probe classified CII through the PDF-attachment branch;
+    the standalone branch -- the same one that carries every UBL and Facturae
+    specimen -- had no CII document to classify and would have refused one as
+    unrecognised XML without anything noticing.
+    """
+    parsed = parse_einvoice_document(_read("en16931_cii_export_third_country_invoice.xml"))
+
+    assert parsed.shape is DocumentShape.XML_CII
+
+
+def test_the_cii_specimen_reads_to_its_own_printed_values() -> None:
+    """Field by field against the document's own figures, both parties kept apart.
+
+    The parties are asserted individually rather than as a pair. A CII party
+    subtree carries a ``SpecifiedTaxRegistration`` whose id opens with the two
+    letters of a country, so a reader searching the subtree for a short code
+    finds the VAT prefix and returns something that looks right -- and here
+    ``CHE116281277`` and ``CH`` agree, which is exactly why the postal code is
+    pinned beside the country: a VAT-prefix read recovers no postal code.
+    """
+    parsed = parse_einvoice_document(_read("en16931_cii_export_third_country_invoice.xml"))
+
+    assert parsed.invoice_number == "CII-2024-0042"
+    assert parsed.currency == "EUR"
+    assert parsed.taxable_base == Decimal("7400.00")
+    assert parsed.iva_amount == Decimal("0.00")
+    assert parsed.grand_total == Decimal("7400.00")
+
+    assert parsed.supplier_name == "Maquinaria Levantina SL"
+    assert parsed.supplier_tax_id == "ESB12345674"
+    assert parsed.supplier_country_code == "ES"
+    assert parsed.supplier_postal_code == "46015"
+
+    assert parsed.customer_name == "Alpine Packaging AG"
+    assert parsed.customer_tax_id == "CHE116281277"
+    assert parsed.customer_country_code == "CH"
+    assert parsed.customer_postal_code == "8004"
+
+    # The UNTDID 5305 code, and only the code, distinguishes an export from an
+    # exempt or a reverse-charge supply: all three print a base and no cuota.
+    assert parsed.iva_category == "export_third_country_zero_rated"
+    assert parsed.regime_legend == "Exportacion exenta - art. 21 LIVA"
+
+
 def test_malformed_structured_document_refuses_rather_than_partially_reading() -> None:
     """A truncated record raises and yields NO record, not a partial one.
 
