@@ -119,15 +119,7 @@ def test_a_carried_period_still_includes_the_generated_credit(extra: dict[Casill
 
 
 @pytest.mark.parametrize("refunded", [True, False])
-@pytest.mark.parametrize(
-    "extra",
-    [
-        {M303_COMPENSATION_RESULTADO_CASILLA: _NEGATIVE_RESULTADO},
-        {M303_COMPENSATION_GENERADA_CASILLA: _GENERATED},
-    ],
-)
 def test_the_available_carry_decomposes_into_the_posterior_and_the_generated_credit(
-    extra: dict[CasillaId, Decimal],
     refunded: bool,
 ) -> None:
     """The two amounts are one decomposition, so they cannot disagree about a refund.
@@ -136,13 +128,55 @@ def test_the_available_carry_decomposes_into_the_posterior_and_the_generated_cre
     period state by one constructor. Both depend on the disposition, so a
     consumer reading one from this derivation and computing the other itself
     produces a record that is internally inconsistent rather than uniformly
-    wrong -- and nothing downstream can then tell which field to believe. This
-    holds the pair to the identity on every basis and both dispositions.
+    wrong -- and nothing downstream can then tell which field to believe.
+
+    Scoped to the GENERADA basis deliberately. On the resultado basis the
+    derivation reads ``generated`` back out of the policy's answer as
+    ``available - posterior``, so the identity is an algebraic rearrangement of
+    that definition and holds whatever either figure is -- it cannot fail, and
+    asserting it there reads as coverage while proving nothing. On this basis
+    ``generated`` is the filed input and ``available`` is computed from it, so
+    the two are independent and the identity discriminates. The resultado basis
+    is held to the properties that do discriminate for it, below.
     """
-    derivation = derive_m303_compensation_available_from_casillas(_values(**extra), refunded=refunded)
+    derivation = derive_m303_compensation_available_from_casillas(
+        _values(**{M303_COMPENSATION_GENERADA_CASILLA: _GENERATED}),
+        refunded=refunded,
+    )
 
     assert derivation is not None
     assert derivation.available == _POSTERIOR + derivation.generated
+
+
+@pytest.mark.parametrize(
+    ("refunded", "carries_credit"),
+    [(True, False), (False, True)],
+)
+def test_the_resultado_basis_generated_credit_answers_to_the_disposition(
+    refunded: bool,
+    carries_credit: bool,
+) -> None:
+    """On the resultado basis the disposition alone decides whether credit is carried.
+
+    This replaces an identity assertion that could not fail here. What
+    discriminates on this basis is the SIGN behaviour: a refunded period must
+    report exactly zero generated credit, and a carried period with a negative
+    resultado must report a strictly positive one. A derivation that zeroed both
+    dispositions, or neither, fails one of these.
+    """
+    derivation = derive_m303_compensation_available_from_casillas(
+        _values(**{M303_COMPENSATION_RESULTADO_CASILLA: _NEGATIVE_RESULTADO}),
+        refunded=refunded,
+    )
+
+    assert derivation is not None
+    assert derivation.generated >= Decimal("0"), "a generated credit is never negative"
+    if carries_credit:
+        assert derivation.generated > Decimal("0")
+        assert derivation.available > _POSTERIOR
+    else:
+        assert derivation.generated == Decimal("0")
+        assert derivation.available == _POSTERIOR
 
 
 def test_the_refund_disposition_is_required_rather_than_defaulted() -> None:
