@@ -2473,7 +2473,10 @@ required_text = [
     "Concepto.",
     "Son ganancias y pérdidas patrimoniales",
     "variaciones en el valor del patrimonio",
-    "alteración en la composición",
+    "alteración en la composición",    # Operative phrase from apartado 5.f) (pérdidas por recompra de valores homogéneos), at 91%. The prior grounding sat
+    # inside the first 220 characters, so any truncation of the article
+    # passed the evidence check. Verified complete against live BOE.
+    "hubiera adquirido valores homogéneos dentro de los dos meses anteriores o posteriores",
 ]
 
 [legal."ley-35-2006:art-34"]
@@ -3394,7 +3397,10 @@ reviewed_at = 2026-06-15
 reviewed_by = "agent-authored from bundled ley-35-2006.html#a51; operator to re-stamp"
 notes = "LIRPF art 51: reducciones de la base imponible general por aportaciones y contribuciones a sistemas de previsión social (planes de pensiones, mutualidades de previsión social, planes de previsión asegurados, planes de previsión social empresarial, seguros de dependencia, y sistemas a favor de personas con discapacidad). Base legal de las casillas de reducción/exceso por previsión social en Modelo 100; el límite conjunto lo fija el art. 52. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a51; operator to confirm and re-stamp."
 required_text = [
-    "Reducciones por aportaciones y contribuciones a sistemas de previsión social",
+    "Reducciones por aportaciones y contribuciones a sistemas de previsión social",    # Operative phrase from apartado 8 (reposición de reducciones indebidas), at 96% of the article. The prior grounding sat
+    # inside the first 220 characters, so any truncation of the article
+    # passed the evidence check. Verified complete against live BOE.
+    "deberá reponer las reducciones en la base imponible indebidamente practicadas",
 ]
 
 [legal."ley-35-2006:art-52"]
