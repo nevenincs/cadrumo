@@ -420,12 +420,24 @@ def _render_param_table(language: OutputLanguage, params: list[click.Parameter])
         # for the noun's gender, so "Opción" takes "obligatoria" where
         # "Argumento" takes "obligatorio". Composing them would produce
         # agreement errors no English-shaped template can express.
+        #
+        # Each key is spelled out inside its own docs_chrome call rather than
+        # selected into a variable: the locale scanner reads call sites, and a
+        # key it cannot see is one scaffold deletes.
         if _is_click_argument(param):
-            kind_key = "docs.cli.param.argument_required" if required else "docs.cli.param.argument_optional"
+            label = (
+                docs_chrome("docs.cli.param.argument_required", language)
+                if required
+                else docs_chrome("docs.cli.param.argument_optional", language)
+            )
         else:
-            kind_key = "docs.cli.param.option_required" if required else "docs.cli.param.option_optional"
+            label = (
+                docs_chrome("docs.cli.param.option_required", language)
+                if required
+                else docs_chrome("docs.cli.param.option_optional", language)
+            )
         help_text = (param.help or "").strip() or docs_chrome("docs.cli.command.no_description", language)
-        sections.append(f"{opt_str}\n   *{docs_chrome(kind_key, language)}* {help_text}\n")
+        sections.append(f"{opt_str}\n   *{label}* {help_text}\n")
     return "\n".join(sections) if sections else ""
 
 
@@ -792,14 +804,14 @@ def _render_index_page(
     # Where to go next
     parts.append(_rst_heading(docs_chrome("docs.cli.index.where_next_heading", language), "-"))
     parts.append("\n")
-    for next_key in (
-        "docs.cli.index.next_app",
-        "docs.cli.index.next_config",
-        "docs.cli.index.next_automation",
-        "docs.cli.index.next_schemas",
-        "docs.cli.index.next_howto",
-    ):
-        parts.append("* " + docs_chrome(next_key, language) + "\n")
+    # One call per line rather than a loop over a key tuple: the locale scanner
+    # matches a literal key inside the accessor call, so a key that only ever
+    # appears in a collection is invisible to it and scaffold prunes it.
+    parts.append("* " + docs_chrome("docs.cli.index.next_app", language) + "\n")
+    parts.append("* " + docs_chrome("docs.cli.index.next_config", language) + "\n")
+    parts.append("* " + docs_chrome("docs.cli.index.next_automation", language) + "\n")
+    parts.append("* " + docs_chrome("docs.cli.index.next_schemas", language) + "\n")
+    parts.append("* " + docs_chrome("docs.cli.index.next_howto", language) + "\n")
     parts.append("\n")
 
     # toctree

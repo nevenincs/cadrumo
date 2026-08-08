@@ -22,6 +22,7 @@ machine and the freshness gate cannot flake.
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from enum import Enum
 from pathlib import Path
@@ -29,6 +30,11 @@ from typing import TYPE_CHECKING, Final
 
 from pydantic import SecretStr
 from pydantic_core import PydanticUndefined
+
+from cadrumo.core.external_constants import OutputLanguage
+
+from ._locale_chrome import docs_chrome
+from .build import docs_build_language
 
 _UTF_8: Final[str] = "utf-8"
 
@@ -58,14 +64,8 @@ value already present in your shell always wins.
 | --- | --- | --- | --- |
 """
 
-_FOOTER = """
-Secrets are never printed by the application and are marked `(secret)` above.
-Defaults marked `(derived)` are computed from the storage root or project
-location at runtime.
-"""
 
-
-def _default_cell(field: FieldInfo) -> str:
+def _default_cell(field: FieldInfo, language: OutputLanguage) -> str:
     """Render a machine-independent default cell for one settings field."""
     annotation = field.annotation
     if annotation is SecretStr or "SecretStr" in str(annotation):
@@ -74,7 +74,7 @@ def _default_cell(field: FieldInfo) -> str:
     if default is PydanticUndefined or field.default_factory is not None:
         return "(derived)"
     if default is None:
-        return "unset"
+        return docs_chrome("docs.cli.env.default_unset", language)
     if isinstance(default, bool):
         return "`true`" if default else "`false`"
     if isinstance(default, Enum):
@@ -82,7 +82,7 @@ def _default_cell(field: FieldInfo) -> str:
     if isinstance(default, (int, float)):
         return f"`{default}`"
     if isinstance(default, str):
-        return f"`{default}`" if default else "empty"
+        return f"`{default}`" if default else docs_chrome("docs.cli.env.default_empty", language)
     if isinstance(default, Path):
         return "(derived)"
     return "(derived)"
@@ -109,14 +109,18 @@ def render_environment_reference() -> str:
     # Keyed on the model's own environment inventory rather than every field:
     # a field whose environment source has been severed is still a field, but
     # no variable reaches it, so an environment reference must not list it.
+    language = docs_build_language(os.environ)
     environment_names = Settings.env_var_names()
     rows = []
     for name, field in sorted(Settings.model_fields.items()):
         if name.upper() not in environment_names:
             continue
         description = field.description or ""
-        rows.append(f"| `{name.upper()}` | {_type_cell(field)} | {_default_cell(field)} | {_escape(description)} |")
-    return _HEADER + "\n".join(rows) + "\n" + _FOOTER
+        rows.append(
+            f"| `{name.upper()}` | {_type_cell(field)} | {_default_cell(field, language)} | {_escape(description)} |",
+        )
+    footer = "\n" + docs_chrome("docs.cli.env.secrets_note", language) + "\n"
+    return _HEADER + "\n".join(rows) + "\n" + footer
 
 
 def target_path(repo_root: Path | None = None) -> Path:

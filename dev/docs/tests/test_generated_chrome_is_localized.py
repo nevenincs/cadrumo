@@ -18,6 +18,8 @@ from __future__ import annotations
 
 import ast
 import re
+import shutil
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -158,7 +160,12 @@ def _emitted_strings(path: Path) -> list[tuple[int, str]]:
     page, so the operator's rule is enforced where it bites: on the text the
     generator actually writes.
     """
-    tree = ast.parse(path.read_text(encoding="utf-8"))
+    return _emitted_strings_from_source(path.read_text(encoding="utf-8"))
+
+
+def _emitted_strings_from_source(source: str) -> list[tuple[int, str]]:
+    """The emitted-string scan over source text, wherever it was read from."""
+    tree = ast.parse(source)
     docstrings = {
         text
         for node in ast.walk(tree)
@@ -196,13 +203,26 @@ def test_the_casilla_exclusion_is_still_earned() -> None:
     A stale exclusion is how an allowlist rots into a permanent hole. When the
     casilla generator stops emitting em dashes this fails, and the fix is to
     move it into the tuple above rather than to weaken this.
+
+    Read from the COMMITTED file, not the working tree. Many agents hold
+    uncommitted work here at once, so a working-tree read measures whoever's
+    editor is open rather than the state of the project, and would flap between
+    green and red as a peer saves. The exclusion is earned or retired by what
+    has landed.
     """
-    casilla = _REPO_ROOT / "dev" / "docs" / "casilla_reference.py"
-    emitted = [(line, text) for line, text in _emitted_strings(casilla) if _EM_DASH in text]
+    git = shutil.which("git")
+    assert git is not None, "git is required to read the committed state of the excluded generator"
+    committed = subprocess.run(  # noqa: S603 - resolved executable, fixed argv, no shell
+        [git, "show", "HEAD:dev/docs/casilla_reference.py"],
+        capture_output=True,
+        check=True,
+        cwd=_REPO_ROOT,
+    ).stdout.decode("utf-8")
+    emitted = [(line, text) for line, text in _emitted_strings_from_source(committed) if _EM_DASH in text]
 
     assert emitted, (
-        "casilla_reference.py no longer emits an em dash, so its exclusion from "
-        "_EM_DASH_FREE_GENERATORS is stale; add it to the tuple and delete this test"
+        "casilla_reference.py no longer emits an em dash in HEAD, so its exclusion "
+        "from _EM_DASH_FREE_GENERATORS is stale; add it to the tuple and delete this test"
     )
 
 
