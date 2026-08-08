@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:cef3959279b630d514bba53bfa48240b9af5ea3d6703db9b5ff5273f4941b150'
+body_hash: 'sha256:5e13d032cc6f28c4aafb94836f8316458be67c3268bc50671e49213af070c2de'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
@@ -428,6 +428,11 @@ a declared-category flow map, and an issued reverse-charge invoice routes its
 base to casilla 122 at 2.000,00, verified against the live code. The recipient
 side is still open and produces no binding at all.
 
+Two errors of this audit's own are recorded in this finding rather than quietly
+corrected, because both are the same shape: a claim generalised past the evidence
+that was already in hand. The binding overgeneralisation above is one. The other
+follows.
+
 The near-miss is worth recording because it nearly became a finding. Measuring
 the recipient side and observing casilla 122 stay at zero, this audit almost
 reported that casilla as unreachable from either feed. It is not. Casilla 122
@@ -439,13 +444,31 @@ ask which side a gate is green from -- applies to a finding as much as to a gate
 What remains is the recipient half, and it is contained differently than first
 written. Preserving the declared category rather than overwriting it is a small
 change on the projection this sweep owns.
-Producing the self-assessed cuota is not, and a binding-level check now says why
-no partial win is available there either: the only two bindings that select the
-recipient side are cuota bindings requiring the general, reduced or
-super-reduced rate kinds. There is no recipient-side BASE binding to route to,
-unlike the supplier side. So the exempt-slot invoice line cannot reach either of
-them, the underlying rate the self-assessment needs is not on the record, and
-deriving it would mean asserting which rate the supply bore.
+Producing the self-assessed cuota is not, and the binding-level reason differs by
+family. CORRECTED after a peer enumerated it and this audit had overgeneralised
+past its own data: an earlier reading here said there is no recipient-side base
+binding at all. That holds for the DOMESTIC family only.
+
+Enumerating every binding on the self-assessment flow: the domestic recipient
+side has two, both cuota. The intra-community recipient side has four, and one of
+them IS a base binding. All six admit only the general, reduced and
+super-reduced tiers, so a cuota-less line reaches none of them either way -- the
+conclusion survives, but for a different reason per family, and with a different
+remedy. Widening the rate kinds on the intra-community base binding is at least
+on the table; for the domestic family there is no binding to widen.
+
+The structural reason the SUPPLIER half was closable is the same axis read the
+other way: the casilla 122 base binding admits the zero and exempt tiers, which
+is exactly why routing a base into it works for a document carrying no cuota.
+The difference between the halves lives in the registry, not in the projection.
+
+Whether the domestic recipient side SHOULD have a base binding is deliberately
+not ruled on here. Casilla 122 is the supplier's base, and where the recipient's
+base belongs on the form is a registry and AEAT question; inventing a box would
+be worse than the gap.
+
+The rate remains the blocker on both: it is not on the record, and deriving it
+would mean asserting which rate the supply bore.
 The bank row in the measurement above carried its own rate and cuota because the
 operator stated them; the invoice did not. Whether an invoice line may carry a
 real rate slot with a zero cuota, which would make the cuota derivable rather
