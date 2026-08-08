@@ -110,7 +110,14 @@ def _resolve_advisory_message_default(predicate_id: str) -> str | None:
             "Modelo 130 casilla 17 remains the official form subtraction; confirm that "
             "preparing an M130 draft is intentional for this profile before filing."
         )
-    if predicate_id == "modelo-100-2024-retenciones-trabajo-declaradas-cuando-ingresos-integros-trabajo-positivos":
+    if predicate_id in {
+        "modelo-100-2020-retenciones-trabajo-declaradas-cuando-ingresos-integros-trabajo-positivos",
+        "modelo-100-2021-retenciones-trabajo-declaradas-cuando-ingresos-integros-trabajo-positivos",
+        "modelo-100-2022-retenciones-trabajo-declaradas-cuando-ingresos-integros-trabajo-positivos",
+        "modelo-100-2023-retenciones-trabajo-declaradas-cuando-ingresos-integros-trabajo-positivos",
+        "modelo-100-2024-retenciones-trabajo-declaradas-cuando-ingresos-integros-trabajo-positivos",
+        "modelo-100-2025-retenciones-trabajo-declaradas-cuando-ingresos-integros-trabajo-positivos",
+    }:
         return (
             "Trabajo income is declared but no retención is credited on it. A retención the "
             "taxpayer suffered and does not credit is tax already paid and paid again. Enter it "
