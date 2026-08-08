@@ -72,6 +72,44 @@ def _named_tokens(module: ModuleType, *, authority: dict[str, str]) -> tuple[tup
     return tuple(found)
 
 
+def _twin_declarations(module: ModuleType, *, authority: dict[str, str]) -> tuple[str, ...]:
+    """The module attributes holding a SECOND object for an authority token.
+
+    The one verdict implementation, shared by the gate below and by the
+    restored-twin regression, so the regression cannot pass against a weakened
+    copy of the rule it exists to exercise.
+    """
+    return tuple(
+        attribute for attribute, value in _named_tokens(module, authority=authority) if value is not authority[value]
+    )
+
+
+def _namespace_with_restored_twin(module: ModuleType, *, attribute: str, value: str) -> ModuleType:
+    """Clone the real module's namespace with one token re-declared as a twin.
+
+    The clone carries the live module's own namespace, so the site under test is
+    the real one with its real attribute names rather than a shaped stand-in. The
+    twin is built by runtime slice concatenation because ``str()`` and a
+    one-element join both hand back the original object under CPython's
+    optimisations, which would make the restored defect no defect at all.
+    """
+    twin = value[:1] + value[1:]
+    assert twin == value, "the restored twin must compare equal, or it tests a different defect"
+    assert twin is not value, "the restored twin is the same object, so no drift was reintroduced"
+
+    clone = ModuleType(module.__name__)
+    clone.__dict__.update(vars(module))
+    if attribute.endswith("]"):
+        name, _, index_text = attribute.partition("[")
+        index = int(index_text.rstrip("]"))
+        container = list(vars(module)[name])
+        container[index] = twin
+        clone.__dict__[name] = tuple(container)
+    else:
+        clone.__dict__[attribute] = twin
+    return clone
+
+
 def _module_name_for(source: Path, *, package: ModuleType) -> str:
     root = Path(package.__file__).parent  # ty: ignore[invalid-argument-type]
     relative = source.relative_to(root).with_suffix("")
@@ -183,8 +221,48 @@ def test_no_module_declares_a_second_object_for_an_authority_token(module: Modul
     named = _named_tokens(module, authority=authority)
 
     assert named, "the module names no compensation casilla, so this parametrisation is vacuous"
-    for attribute, value in named:
-        assert value is authority[value], f"{module.__name__}.{attribute} is a second object for {value!r}"
+    twins = _twin_declarations(module, authority=authority)
+    assert not twins, f"{module.__name__} declares a second object for: {twins}"
+
+
+@pytest.mark.parametrize("module", _TOKEN_NAMING_MODULES, ids=lambda module: module.__name__.rsplit(".", 1)[-1])
+def test_the_verdict_catches_a_twin_restored_at_this_real_site(module: ModuleType) -> None:
+    """Restore the actual defect at a real site and confirm the verdict names it.
+
+    A detector can be right on shaped input while missing the site that matters.
+    The gate above passes because the twins were rebound, so on its own it proves
+    only that today's tree is clean -- it does not prove the check would still
+    fire if a twin came back. This restores one, in memory, at every module the
+    sweep actually found, using that module's own namespace and its own attribute
+    names, and requires the verdict to report it.
+
+    Both declaration shapes are covered, because the shape is chosen from what the
+    site really holds: a plain module-level constant at most sites, and a
+    container entry at the registry binding validator, which is where four twins
+    hid from an attribute-only scan.
+
+    Bare-numeric tokens are excluded from the restoration. CPython interns them,
+    so a "restored twin" of one is the same object and there is no defect to
+    catch -- asserting a red there would be asserting the impossible, and the
+    limitation is documented rather than tested away.
+    """
+    authority = _authority_by_token()
+    restorable = [
+        (attribute, value) for attribute, value in _named_tokens(module, authority=authority) if not value.isdigit()
+    ]
+
+    assert restorable, "no dotted token at this site, so nothing can be restored and the case is vacuous"
+    assert not _twin_declarations(module, authority=authority), (
+        "the site already carries a twin, so the restoration proves nothing"
+    )
+
+    attribute, value = restorable[0]
+    mutated = _namespace_with_restored_twin(module, attribute=attribute, value=value)
+
+    assert attribute.partition("[")[0] in vars(mutated), (
+        "the restored attribute vanished, so the case is keyed on a stale name"
+    )
+    assert _twin_declarations(mutated, authority=authority) == (attribute,)
 
 
 @pytest.mark.parametrize("name", (*_SHARED_M303_CONSTANTS, "M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA"))
