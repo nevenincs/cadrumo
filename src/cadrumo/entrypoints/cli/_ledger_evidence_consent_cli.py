@@ -101,7 +101,11 @@ def _register_consent_list_command() -> None:
     def consent_list(ctx: typer.Context) -> None:
         """List off-host dispatches and the artefacts derived from them."""
         bucket_id = _tx_repo(_state()).bucket_id
-        survey = survey_cloud_consent(bucket_id=bucket_id, settings=load_settings())
+        survey = survey_cloud_consent(
+            bucket_id=bucket_id,
+            settings=load_settings(),
+            consent_entries=_recorded_dispatches(bucket_id),
+        )
         payload = {
             "bucket_id": bucket_id,
             "transmitted_bytes_are_unrecallable": survey.transmitted_bytes_are_unrecallable,
@@ -136,6 +140,42 @@ def _register_consent_list_command() -> None:
             lines=lines,
             notices=notices,
         )
+
+
+def _recorded_dispatches(bucket_id: str) -> tuple[ConsentedDispatch, ...]:
+    """Project the profile's consent ledger onto the shape the survey enumerates.
+
+    This composition is the CLI's job and nowhere else's. The application layer
+    that owns the survey deliberately does not import the ledger -- it lives on
+    the adapter side and the dependency direction forbids the reach -- so the
+    entries arrive as an injected projection, and this is the one production
+    site that performs it. Absent it the survey enumerates an empty history
+    forever while the ledger fills up beside it, which is not a missing feature
+    but an affirmative false statement: the verb tells an operator nothing left
+    their machine.
+
+    Filtered on the entry's own recorded bucket rather than trusted from the
+    ambient session, because the survey is scoped to ``bucket_id`` and a row
+    belonging to another profile must never appear under this one. The ledger
+    stamps every entry with the bucket it ran under precisely so this
+    comparison is possible.
+
+    Deferred import, matching the on-host reader below: this module must stay
+    loadable on an install without the inference extra.
+    """
+    from ...adapters.outbound.llm import EvidenceConsentLedger
+
+    return tuple(
+        ConsentedDispatch(
+            evidence_content_address=entry.evidence_content_address,
+            provider=entry.provider,
+            model=entry.model,
+            surface=entry.surface,
+            recorded_at=entry.recorded_at,
+        )
+        for entry in EvidenceConsentLedger().load_entries()
+        if entry.profile_bucket_id == bucket_id
+    )
 
 
 def _dispatch_payload(dispatch: ConsentedDispatch) -> dict[str, str]:

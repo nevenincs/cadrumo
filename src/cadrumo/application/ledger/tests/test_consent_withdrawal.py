@@ -143,7 +143,7 @@ def test_the_survey_marks_a_cloud_derived_artefact_and_carries_its_stamp(profile
     """The cloud-read artefact is listed, with the stamp that classified it."""
     _seed_cloud_draft(profile)
 
-    survey = survey_cloud_consent(bucket_id=profile.bucket_id, settings=profile.settings)
+    survey = survey_cloud_consent(bucket_id=profile.bucket_id, settings=profile.settings, consent_entries=())
 
     assert [row.evidence_reference for row in survey.cloud_derived_artefacts] == ["ev-1"]
     marked = survey.cloud_derived_artefacts[0]
@@ -160,7 +160,7 @@ def test_the_survey_leaves_an_on_host_artefact_alone(profile: TestRuntimeProfile
     """
     _seed_cloud_draft(profile, reference="ev-local", stamp=_LOCAL_STAMP, transports=(LOCAL_TRANSPORT_LABEL,))
 
-    survey = survey_cloud_consent(bucket_id=profile.bucket_id, settings=profile.settings)
+    survey = survey_cloud_consent(bucket_id=profile.bucket_id, settings=profile.settings, consent_entries=())
 
     assert survey.cloud_derived_artefacts == ()
 
@@ -173,11 +173,11 @@ def test_the_survey_always_states_that_transmitted_bytes_cannot_be_recalled(prof
     rendering it conditionally would drop it exactly when an operator with no
     history concludes they are safe to enable the route.
     """
-    empty = survey_cloud_consent(bucket_id=profile.bucket_id, settings=profile.settings)
+    empty = survey_cloud_consent(bucket_id=profile.bucket_id, settings=profile.settings, consent_entries=())
     assert empty.transmitted_bytes_are_unrecallable is True
 
     _seed_cloud_draft(profile)
-    populated = survey_cloud_consent(bucket_id=profile.bucket_id, settings=profile.settings)
+    populated = survey_cloud_consent(bucket_id=profile.bucket_id, settings=profile.settings, consent_entries=())
     assert populated.transmitted_bytes_are_unrecallable is True
 
 
@@ -191,7 +191,7 @@ def test_re_derivability_is_unknown_rather_than_false_when_nobody_asked(profile:
     """
     _seed_cloud_draft(profile)
 
-    survey = survey_cloud_consent(bucket_id=profile.bucket_id, settings=profile.settings)
+    survey = survey_cloud_consent(bucket_id=profile.bucket_id, settings=profile.settings, consent_entries=())
 
     assert survey.cloud_derived_artefacts[0].rederivable_on_host is None
 
@@ -204,6 +204,7 @@ def test_re_derivability_resolves_true_and_false_once_a_resolver_is_supplied(pro
     resolved = survey_cloud_consent(
         bucket_id=profile.bucket_id,
         settings=profile.settings,
+        consent_entries=(),
         resolve_content_address=lambda _reference: _DIGEST,
         transcriber_cache_key=_TEXT_LAYER.cache_key,
     )
@@ -212,6 +213,7 @@ def test_re_derivability_resolves_true_and_false_once_a_resolver_is_supplied(pro
     unresolvable = survey_cloud_consent(
         bucket_id=profile.bucket_id,
         settings=profile.settings,
+        consent_entries=(),
         resolve_content_address=lambda _reference: None,
         transcriber_cache_key=_TEXT_LAYER.cache_key,
     )
@@ -230,7 +232,7 @@ def test_a_draft_with_no_recorded_transport_is_surfaced_not_assumed_local(
     """
     _seed_cloud_draft(profile, reference="ev-unknown", transports=())
 
-    survey = survey_cloud_consent(bucket_id=profile.bucket_id, settings=profile.settings)
+    survey = survey_cloud_consent(bucket_id=profile.bucket_id, settings=profile.settings, consent_entries=())
 
     assert [row.evidence_reference for row in survey.cloud_derived_artefacts] == ["ev-unknown"]
     assert survey.cloud_derived_artefacts[0].transport is None
@@ -273,7 +275,7 @@ def test_re_derivation_re_stamps_the_artefact_without_rewriting_its_history(prof
     assert stored is not None
     assert stored.extractor == _LOCAL_STAMP
 
-    survey = survey_cloud_consent(bucket_id=profile.bucket_id, settings=profile.settings)
+    survey = survey_cloud_consent(bucket_id=profile.bucket_id, settings=profile.settings, consent_entries=())
     assert survey.cloud_derived_artefacts == (), "the re-derived artefact must no longer be marked cloud-derived"
 
 

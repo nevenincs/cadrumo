@@ -26,6 +26,7 @@ from __future__ import annotations
 import json
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -70,6 +71,25 @@ def _seed_cloud_artefact(profile: TestRuntimeProfile, *, reference: str = _REFER
     )
 
 
+def _seed_consented_dispatch(profile: TestRuntimeProfile, *, address: str = _DIGEST) -> None:
+    """Record one real off-host dispatch in the real consent ledger.
+
+    The production append, not a constructed row: the ledger writes to the
+    profile's encrypted store through the active bucket session this fixture
+    opened, so what the verb reads back is what a consented dispatch actually
+    leaves behind.
+    """
+    from ....adapters.outbound.llm import EvidenceConsentLedger
+
+    _ = profile
+    EvidenceConsentLedger().append(
+        evidence_content_address=address,
+        provider="openai",
+        model="gpt-4.1",
+        surface="app.ledger.evidence.extract",
+    )
+
+
 def _seed_transcription(profile: TestRuntimeProfile) -> None:
     """Cache the transcription a re-derivation reads instead of the document."""
     write_cached_transcription(
@@ -84,8 +104,14 @@ def _seed_transcription(profile: TestRuntimeProfile) -> None:
     )
 
 
-def _envelope(args: list[str]) -> tuple[int, dict[str, object]]:
-    """Invoke the real tree with JSON output and return the exit code and envelope."""
+def _envelope(args: list[str]) -> tuple[int, dict[str, Any]]:
+    """Invoke the real tree with JSON output and return the exit code and envelope.
+
+    Typed ``Any`` at the value position rather than ``object``: the envelope is
+    a decoded JSON document whose members are nested lists and mappings, and
+    ``object`` made every ``envelope["result"][...]`` read a type error while
+    describing the shape no more accurately.
+    """
     # `--format` is a ROOT option, so it precedes the command path; the leaf
     # verbs declare no options of their own.
     result = invoke_cached_cli(["--format", "json", *args])
@@ -176,6 +202,117 @@ def test_the_survey_reports_a_cloud_derived_artefact_when_one_exists(profile: Te
     # satisfy a presence check while losing the only fact that matters.
     assert artefacts[0]["transport"] == "openai"
     assert artefacts[0]["provenance_stamp"] == _CLOUD_STAMP
+
+
+def test_the_survey_reports_a_recorded_dispatch(profile: TestRuntimeProfile) -> None:
+    """The ENUMERATION leg, which had no test and no production wiring.
+
+    The survey's three-part contract is enumerate, mark, offer. Every other case
+    in this module exercises the marking leg -- artefacts, transports, stamps --
+    and the empty case asserts ``consented_dispatches == []`` on a profile with
+    no history, which a verb that never reads the ledger satisfies identically.
+    So the leg that answers "what left this machine" was covered only by an
+    assertion that it was empty when it should be.
+
+    This differs from the empty case in ONE variable: a real appended ledger
+    entry. Its fields are asserted individually rather than by row count,
+    because a row that lost the provider or the surface tells an operator a
+    transmission happened without saying where it went.
+    """
+    _seed_consented_dispatch(profile)
+
+    exit_code, envelope = _envelope(["app", "ledger", "evidence", "consent", "list"])
+
+    assert exit_code == 0
+    dispatches = envelope["result"]["consented_dispatches"]
+    assert len(dispatches) == 1, "a recorded off-host dispatch must reach the operator surface"
+    assert dispatches[0]["evidence_content_address"] == _DIGEST
+    assert dispatches[0]["provider"] == "openai"
+    assert dispatches[0]["model"] == "gpt-4.1"
+    assert dispatches[0]["surface"] == "app.ledger.evidence.extract"
+
+
+def test_a_recorded_dispatch_denies_the_nothing_left_this_host_notice(profile: TestRuntimeProfile) -> None:
+    """The sharp case: history on record, no surviving artefact, and the verb must not say "clean".
+
+    This is the state a profile is in AFTER a successful re-derivation. The
+    artefact has been rewritten with an on-host stamp, so nothing is
+    cloud-derived any more -- and the consent ledger still holds the entry,
+    because re-derivation asserts a new derivation rather than claiming the
+    transmission never happened.
+
+    With the enumeration leg unwired the dispatch list is empty regardless, so
+    both halves of the emptiness test hold and the surface emits the
+    affirmative "nothing has been sent off-host" notice over a profile that
+    demonstrably did send something. An operator reading that has been told the
+    opposite of the truth by the one verb built to tell them.
+
+    Seeded with a dispatch and deliberately NO artefact, so the notice's
+    suppression can only come from the dispatch leg.
+    """
+    _seed_consented_dispatch(profile)
+
+    exit_code, envelope = _envelope(["app", "ledger", "evidence", "consent", "list"])
+
+    assert exit_code == 0
+    assert envelope["result"]["cloud_derived_artefacts"] == [], "this case must carry no surviving artefact"
+    codes = {notice["code"] for notice in envelope["notices"]}
+    assert "evidence_consent_no_history" not in codes, (
+        "a profile with a recorded off-host dispatch must never be told that nothing has left this host, "
+        "even once no cloud-derived artefact survives"
+    )
+
+
+def test_a_dispatch_recorded_under_another_profile_is_not_listed_here(profile: TestRuntimeProfile) -> None:
+    """The survey is scoped to one profile, and over-reporting is its own defect.
+
+    One machine can serve several taxpayers. The ledger reads the active
+    bucket's store, and every entry carries the bucket it ran under, so the
+    projection filters on that stamp rather than trusting the store it came
+    from. Without the filter, a row belonging to another profile would appear
+    on this profile's confidentiality surface -- an operator told that a
+    document left their machine when it was someone else's.
+
+    Written through the REAL secure-object repository at the ledger's own
+    namespace and key shape, so the row is indistinguishable from an appended
+    one except in the field under test. The own-profile row is seeded alongside
+    it, so this cannot pass by the verb reporting nothing at all.
+    """
+    from ....adapters.outbound.llm import EvidenceConsentLedgerEntry
+    from ....adapters.persistence.storage import (
+        LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE,
+        secure_object_repository_for_active_bucket,
+    )
+    from ....core.hashing import canonical_json_bytes
+    from ....core.time import now
+
+    _seed_consented_dispatch(profile)
+    foreign = EvidenceConsentLedgerEntry(
+        entry_id="ffffffffffffffffffffffffffffffff",
+        profile_bucket_id="99999999-9999-4999-8999-999999999999",
+        evidence_content_address="f" * 64,
+        provider="openai",
+        model="gpt-4.1",
+        surface="app.ledger.evidence.extract",
+        recorded_at=now(),
+    )
+    secure_object_repository_for_active_bucket().save(
+        namespace=LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE.namespace,
+        object_key="|".join((foreign.recorded_at.isoformat(), foreign.evidence_content_address, foreign.entry_id)),
+        classification=LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE.sensitivity,
+        schema_version=LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE.schema_version,
+        written_at=foreign.recorded_at,
+        payload=canonical_json_bytes({"entry": foreign.model_dump(mode="json")}),
+    )
+
+    exit_code, envelope = _envelope(["app", "ledger", "evidence", "consent", "list"])
+
+    assert exit_code == 0
+    addresses = [row["evidence_content_address"] for row in envelope["result"]["consented_dispatches"]]
+    assert addresses == [_DIGEST], (
+        "the survey must list this profile's dispatches only; a row stamped with another profile's "
+        f"bucket must not surface here, got {addresses}"
+    )
 
 
 def test_the_survey_states_the_bytes_cannot_be_recalled_even_with_no_history(profile: TestRuntimeProfile) -> None:

@@ -243,17 +243,26 @@ def survey_cloud_consent(
     *,
     bucket_id: str,
     settings: Settings,
-    consent_entries: tuple[ConsentedDispatch, ...] = (),
+    consent_entries: tuple[ConsentedDispatch, ...],
     resolve_content_address: ContentAddressResolver | None = None,
     transcriber_cache_key: str | None = None,
 ) -> ConsentWithdrawalSurvey:
     """Enumerate the profile's off-host history and its surviving artefacts.
 
+    ``consent_entries`` is REQUIRED and carries no default, because the only
+    plausible default is the empty tuple and the empty tuple is a claim: it
+    tells the operator nothing has left this host. A caller that omits it must
+    fail with a ``TypeError`` rather than silently produce a clean survey --
+    the same reason the eligibility bar upstream is keyword-only and
+    undefaultable. Passing ``()`` deliberately remains available, and is then a
+    statement the caller made rather than one it inherited.
+
     Args:
         bucket_id: The profile bucket to survey.
         settings: Deployment settings resolving the storage route.
         consent_entries: The profile's consent history, projected by the caller
-            from the adapter-side ledger this layer does not import.
+            from the adapter-side ledger this layer does not import. Required:
+            see above.
         resolve_content_address: Optional resolver from an evidence reference to
             the document's content address. Without it, re-derivability is
             reported as unknown rather than guessed.
