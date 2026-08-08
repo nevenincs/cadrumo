@@ -5,13 +5,12 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:a21fa52e63ec7927c3e4678739d4635311df8effed984bd5074616d4a2294963'
+body_hash: 'sha256:944e6c160f9bdcca69ca1e9e9146921489bf0adc3ade16c8fb57f7075c1d8116'
 step_id: 'S08'
 related:
   - "[[2026-08-08-synced-history-consumption-plan]]"
   - "[[2026-08-08-synced-history-consumption-pulled-fact-consumption-census-reference]]"
 ---
-
 # Establish what a Sociedades filer's unpullable carries do on the consumption side
 
 ## Scope
@@ -130,3 +129,60 @@ its suggestion string and reasoned about the population; I did not run a project
 to observe it. A data-driven surface is invisible to reading, so that reasoning is
 weaker than the M200 run above and is marked as such rather than presented
 alongside it.
+
+## Second run: the Modelo 202 half, and an independent confirmation of the Modelo 200 half
+
+Added by a second executor working the same Step after the first went offline.
+The first run's findings are confirmed, not restated, because the method differs:
+that run exercised the existing Modelo 200 live-path tests, this one built a
+fresh live operator calculate over a real isolated encrypted profile seeded as a
+Sociedades legal entity with an EMPTY observation store, supplying a zero for
+every binding on the revision EXCEPT the carry slots under test. Independence of
+agent is not independence of method, so a second run reading the same tests would
+have added nothing.
+
+MODELO 202 REFUSES, and it is the half the first run did not cover. Four of the
+seven unreachable factual-evidence slots sit on modelo 202, and the live calculate
+for 2025 period 1P raises `ModeloRequiredBindingsMissingError` naming
+`modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior`, with an instructive
+remedy pointing at the bindings-list verb. So the answer to the row splits by
+modelo as well as by mechanism: modelo 200 goes silent, modelo 202 refuses loudly.
+
+The refusal is caused by exactly that carry and nothing else. Supplying the carry
+bindings a value turns the same run into a returned result, which is the control
+that rules out an unrelated missing input as the cause.
+
+MODELO 200 CONFIRMED, with a discriminating control the first run did not need but
+which rules out a fixed constant. With the three carries absent the calculate
+returns a complete result of 3250 casilla values and NO diagnostics, and casillas
+00670, 01494 and 01495 each read `Decimal('0')`. Supplying those same three
+bindings a value of 12345 returns 12345 in all three casillas. The zero therefore
+tracks the absent carry rather than being a constant the formula would emit
+regardless, which is what makes "silent zero" a measurement instead of an
+inference.
+
+THE DIRECTION, from the casilla's own official label rather than from its id.
+Casilla 00670 is "Detalle compensacion bases imponibles negativas - TOTAL -
+Pendiente aplicacion a principio del periodo", grounded in `ley-27-2014:art-41`,
+`art-29`, `art-30` and `art-39`. A zero opening stock discards the loss
+carryforward, which raises the base imponible and the tax. This is the
+OVER-declaration direction, and it arrives as a clean number with an empty
+diagnostics channel. All three silent casillas are declared `required = false`
+with `input_kind = bound`, which is the present-or-zero semantics the first run
+identified, confirmed here from the compiled schema.
+
+THE NOTICE PREDICATE IS CONFIRMED against the code, closing half of what the first
+run marked as unmeasured. `no_aeat_history_notice` returns `None` on the FIRST
+observation whose source kind satisfies the official-AEAT predicate, so a single
+pulled row silences it. The other half stays open and is still not measured: nobody
+has run a projection to observe whether the notice is rendered to a Sociedades-only
+filer on a live operator surface, and reading a predicate is not running the
+surface.
+
+The row's own gate required that a missing distinguishing surface open its own row
+rather than remain a note. It is `P01.S14`. It is deliberately not folded into
+`P01.S10`, which owns giving the previous-filing RESOLVER a diagnostic channel: the
+three silent modelo 200 casillas are `relation_prefill` bound casillas, a different
+mechanism on different files, and the first run's suggestion that the diagnostic
+row's gate simply "be read as" covering both mechanisms is the shape where a
+ruling recorded in prose acquires no owner.
