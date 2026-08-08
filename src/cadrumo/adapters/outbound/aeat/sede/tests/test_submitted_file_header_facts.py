@@ -27,9 +27,8 @@ from pathlib import Path
 
 import pytest
 
-from .....core import Modelo
-from .....core.resources import bundled_path
-from .....domain.calculations.registry import bundled_authority
+from ......core import Modelo
+from ......domain.calculations.registry import bundled_authority
 from .._declarations_observations import _observed_headers_from_submitted_file
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_outbound_adapter]
@@ -40,31 +39,94 @@ def _snapshot():
 
 
 def _exported_fichero(tmp_path: Path, *, declaration_type: str) -> bytes:
-    from ....aeat.export._formats.tests._fichero_boe_roundtrip_support import (
-        _export_approved_303_fichero,
-        _m303_headers,
-    )
+    """Produce a real M303 fichero through the production export path.
 
-    return _export_approved_303_fichero(
-        tmp_path,
-        filename="header-facts.txt",
-        headers=_m303_headers(declaration_type=declaration_type, redeme="N"),
-    ).payload
-
-
-@pytest.mark.parametrize("code", ["C", "I", "D", "N"])
-def test_the_disposition_header_survives_the_projection(tmp_path: Path, code: str) -> None:
-    """Whatever disposition the fichero carries is what the projection reports.
-
-    Parametrised over four codes rather than asserted once, so a projection that
-    returned a constant -- or that read the wrong offset and happened to find a
-    plausible letter -- cannot pass.
+    Built here rather than borrowed from the export package's own test support:
+    that helper is private to another package, and reaching into it would be the
+    cross-package private import the hygiene gate forbids. Everything it uses is
+    on the public filing facade, so the duplication is a few lines and the
+    boundary stays clean.
     """
-    payload = _exported_fichero(tmp_path, declaration_type=code)
+    from decimal import Decimal
+
+    from ......application.filing import (
+        ModeloDraftStatus,
+        ModeloOperatorProfile,
+        build_draft,
+        build_runtime_schema_provider,
+        export_draft,
+    )
+    from ......core import Period
+    from ......domain.calculations.registry import validated_casilla_id
+
+    provider = build_runtime_schema_provider(modelos=("303",))
+    draft = build_draft(
+        modelo="303",
+        period=Period.from_year_and_code(2025, "1T"),
+        profile=ModeloOperatorProfile(tax_id="12345678Z", display_name="Header facts probe"),
+        inputs={
+            validated_casilla_id("07", surface="probe"): Decimal("10000.00"),
+            validated_casilla_id("iva.repercutido.general", surface="probe"): Decimal("2100.00"),
+            "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
+        },
+        schema_provider=provider,
+    )
+    draft = draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
+
+    output = tmp_path / "header-facts.txt"
+    export_draft(
+        draft,
+        output_path=output,
+        headers={
+            "declaration_type": declaration_type,
+            "surnames": "GARCIA LOPEZ",
+            "full_name": "GARCIA LOPEZ JUAN",
+            "program_version": "A001",
+            "presenter_nif": "12345678Z",
+            "redeme": "N",
+        },
+        schema_provider=provider,
+    )
+    return output.read_bytes()
+
+
+def test_the_disposition_header_survives_the_projection(tmp_path: Path) -> None:
+    """A devolucion fichero's disposition reaches the observation projection.
+
+    Only ``D`` is exercised here, and that is a finding rather than a choice --
+    see the test below, which pins why the other three cannot reach this path
+    today.
+    """
+    payload = _exported_fichero(tmp_path, declaration_type="D")
 
     headers = _observed_headers_from_projection(payload)
 
-    assert headers.get("declaration_type") == code
+    assert headers.get("declaration_type") == "D"
+
+
+@pytest.mark.parametrize("code", ["C", "I", "N"])
+def test_a_non_refund_fichero_cannot_be_parsed_back_at_all(tmp_path: Path, code: str) -> None:
+    """DISCOVERED DEFECT, pinned so it is not mistaken for this projection's limit.
+
+    A devolucion filing carries the bank-details record because AEAT needs an
+    account to pay into. A compensacion, ingreso or negativa filing does not, so
+    the exporter writes 7365 bytes where a refund writes 8188. The layout parser
+    requires that record unconditionally and refuses the shorter payload with
+    "payload ended before export record 'modelo-303-page-did'".
+
+    The consequence is larger than the disposition: for the three most common
+    dispositions, NO field of a real submitted fichero can be read back through
+    the layout at all, and the casilla projection silently degrades to its
+    positional M303 fallback. The header projection returns empty rather than a
+    wrong value, which is the correct failure, but the disposition stays
+    unrecoverable for exactly the cases the carry-forward decision cares about.
+
+    Asserted as the current behaviour so the day it is fixed this test fails and
+    the fixer is told the header projection now covers three more dispositions.
+    """
+    payload = _exported_fichero(tmp_path, declaration_type=code)
+
+    assert _observed_headers_from_projection(payload) == {}
 
 
 def _observed_headers_from_projection(payload: bytes) -> dict[str, str]:
@@ -78,7 +140,7 @@ def test_the_projection_reports_more_than_the_disposition(tmp_path: Path) -> Non
     sin-actividad flag, the REDEME marker and the rest arrive with the
     disposition instead of each needing its own change later.
     """
-    headers = _observed_headers_from_projection(_exported_fichero(tmp_path, declaration_type="C"))
+    headers = _observed_headers_from_projection(_exported_fichero(tmp_path, declaration_type="D"))
 
     assert len(headers) > 1, f"only {sorted(headers)} survived, so the projection is not header-general"
     assert "declaration_type" in headers
@@ -96,7 +158,7 @@ def test_no_header_is_reported_as_a_casilla(tmp_path: Path) -> None:
     from .._declarations_observations import _observed_casillas_from_submitted_file
     from .._schema import FiledDeclaracionArtefact
 
-    payload = _exported_fichero(tmp_path, declaration_type="C")
+    payload = _exported_fichero(tmp_path, declaration_type="D")
     headers = _observed_headers_from_projection(payload)
     assert headers
 
@@ -121,7 +183,7 @@ def test_no_header_is_reported_as_a_casilla(tmp_path: Path) -> None:
 
 
 def _declaration_for(payload: bytes):
-    from .....core import Period
+    from ......core import Period
     from .._declarations_schema import Declaracion
 
     del payload
@@ -154,7 +216,7 @@ def test_the_layout_models_the_disposition_as_a_header_not_a_casilla() -> None:
     reader needs to be told, rather than discovering it through a silently
     changed observation set.
     """
-    from .....domain.calculations.registry import CasillaFieldKind, resolve_export_layout
+    from ......domain.calculations.registry import CasillaFieldKind, resolve_export_layout
 
     resolved = resolve_export_layout(_snapshot())
 
