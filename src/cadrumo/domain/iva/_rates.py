@@ -190,7 +190,8 @@ def _source_ref_failures(
     hide repeat sources from :func:`_source_window_failure`, which would then
     refuse rows whose grounding is in fact present.
     """
-    # Keep this import local: see :func:`_legal_ref_failures`.
+    # Keep this import local: registry binding modules consume the public IVA
+    # facade, while the rate loader is also part of that facade.
     from ..calculations.registry import RegistryValidationError, verify_source_file
 
     failures: list[str] = []
