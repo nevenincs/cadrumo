@@ -141,9 +141,48 @@
 #     manufacturing counterparties sitting one tier below the Asian partners
 #     already carried; the Gulf states beyond the Emirates; Egypt and Nigeria;
 #     and the Vatican, whose sovereignty is not in question and whose invoicing
-#     population is. Any of these is a defensible addition the day somebody
-#     measures the traffic rather than the plausibility -- which is the standard
-#     the entries below were held to and the one this list fails.
+#     population is. Each is admissible on the test below.
+#
+# THE ADMISSION TEST, AND WHY THE PREVIOUS ONE WAS REPLACED. A country may be
+# added when BOTH of these hold:
+#
+#   1. Both of its codes verify against the bundled authorities -- the alpha-2
+#      against AEAT's SII CountryType2, the alpha-3 against the Facturae
+#      CountryType. Gates assert both, so this is checked rather than attested.
+#   2. It falls inside a bloc this table already declares: the Member States,
+#      the European non-EU neighbours, the large trading partners, Latin
+#      America, the Maghreb. Widening the BLOCS is a separate decision from
+#      admitting a country into one, and this test does not authorise it.
+#
+# The test this replaced said a country became defensible "the day somebody
+# measures the traffic rather than the plausibility". That cannot be performed
+# from this repository and never could: the only document population here is the
+# specimen corpus, sixteen of whose twenty items were authored in-tree, and
+# whose four real documents are two Wikimedia invoices, a derived scan and a
+# ZUGFeRD sample -- not one of them a Spanish taxpayer's invoice. A corpus we
+# wrote cannot measure population pressure on a boundary we drew. A criterion
+# nobody can perform never fails; it just never lifts, so it was a permanent
+# exclusion wearing a provisional label.
+#
+# WHAT THE NEW TEST DOES NOT DECIDE, stated because a criterion is read as
+# authority for years. It does not say a country SHOULD be added -- it says one
+# MAY be, and the blocs above are what make that a judgement rather than an
+# entitlement. It cannot rank countries by how often they actually appear,
+# because nothing here measures that; it replaces an unperformable question with
+# a performable one rather than answering the original. And passing it is not
+# evidence that a country belongs to a bloc: condition 2 is a reading of this
+# header, not a lookup, and it is the half a reviewer has to exercise.
+#
+# WHICH POPULATION IT GOVERNS. The [[country]] rows below and nothing else --
+# 78 of them at the time of writing. The country resolver's catalogued set is
+# larger, 91, and the difference is NOT more countries: it is the twelve
+# territories of the VAT carve-out table plus Northern Ireland, which reaches
+# the axis through the Member State catalogue. Those two surfaces have their own
+# admission rules -- a carve-out cites the LIVA provision that establishes its
+# treatment, and the Member State catalogue is closed -- so this test neither
+# governs them nor is satisfied by them. Reviewer attention, accent folding,
+# name collision and containment are costs of a NAME row, which is what the
+# boundary was argued about and what this test bounds.
 #
 #   * ANY JURISDICTION WHOSE IVA TREATMENT IS NOT ORDINARY THIRD-COUNTRY
 #     TREATMENT, and this is the load-bearing exclusion rather than a footnote.
