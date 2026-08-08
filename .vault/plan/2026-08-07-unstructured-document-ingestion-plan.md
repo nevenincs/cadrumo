@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-08'
-body_hash: 'sha256:72220a948201646bf39a7164deaa52c2fd4e0f4ed1ea2a252cc4c6eddf5b7fbf'
+body_hash: 'sha256:e357676e3620e532824444d71eaa3128f431c316098f476277f76f8d0db8e67d'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -190,7 +190,7 @@ Reinstates the cloud consent apparatus under the pipeline ADR D8a, partially sup
 
 Lands the consent gate, its CLI token, the re-scoped deletion gate and the corpus amendment as one coherent sequence.
 
-- [ ] `W05.P11.S40` - Re-scope the cloud-deletion gate and reinstate the consent apparatus in one atomic commit: subprocess symbols stay asserted deleted with the MCP positive control, the four consent symbols move to a presence assertion wired at the dispatch choke point, the non-vacuity floor re-bases, proven by mutation; `src/cadrumo/tests/test_cloud_transport_fully_deleted.py`.
+- [x] `W05.P11.S40` - Re-scope the cloud-deletion gate and reinstate the consent apparatus in one atomic commit: subprocess symbols stay asserted deleted with the MCP positive control, the four consent symbols move to a presence assertion wired at the dispatch choke point, the non-vacuity floor re-bases, proven by mutation; `src/cadrumo/tests/test_cloud_transport_fully_deleted.py`.
 - [x] `W05.P11.S41` - Enforce the consent gate at the dispatch choke point: an evidence-derived request refuses every cloud provider absent a per-invocation consent token, default-off and gestor-barred, gated by refusal tests including a reach-around attempt through the unpinned extract_invoice_fields_from_text; `src/cadrumo/llm/_client.py`.
 - [x] `W05.P11.S42` - Mint the consent token at the CLI boundary per invocation, never persisted, recorded in provenance, gated by the documented-command and JSON schema conformance suites; `src/cadrumo/entrypoints/cli`.
 - [x] `W05.P11.S43` - Narrow the minting-side provenance assertion to transports mintable without a consent token, keeping consented cloud stamps honest, with both directions red-green proven; `src/cadrumo/tests/test_cloud_transport_fully_deleted.py`.
@@ -426,6 +426,8 @@ Lands the review surface, the blocking-findings gate, assertion-shaped correctio
 - [ ] `W09.P17.S272` - Stop a blank CSV country column becoming Spain on invoice bulk import, since _bulk_import defaults country_code to ES and _source_resolver routes IVA on counterparty_country not equal to ES, so an EU supplier whose export left the column empty is silently reclassified as domestic and its intra-community treatment is never applied - this is the recordable-but-blank class rather than the unrecorded one so the honest treatment is to refuse the row and name the column, and the change carries operator-facing blast radius on existing CSVs which is why it is rowed separately rather than swept; `src/cadrumo/adapters/inbound/invoices/_bulk_import.py`.
 - [x] `W09.P17.S273` - Give the operator a verb that reads back the counterparty identification state, since show emits only territorial facts (territorial_scope, source, evidenced_scope, contradicted, confirmed_scope, contradiction_detail) while --identification-state is settable with no surface that displays it - so an operator can write a fact they can never read, and the establishment-versus-identification split stays invisible at the operator boundary; `src/cadrumo/entrypoints/cli/_ledger_evidence`.
 - [ ] `W09.P17.S276` - Let an operator record the identification without the territory, since --scope is required while --identification-state is optional so an operator who knows the identification and not the territorial establishment cannot record the half they know - an asymmetry on the very axis the establishment-versus-identification split separated because the two facts are independent - and making the territory optional is a behaviour change needing its own refusal semantics rather than a relaxed flag; `src/cadrumo/entrypoints/cli/_ledger_counterparty_cli.py`.
+- [ ] `W09.P17.S278` - Stop the NIF arm hashing the app own work-unit names, since admitting separators makes modelo-year-period normalise to eight digits plus a trailing letter which is the personal identity shape exactly - 303-2026-1T becomes 13020261T - so every modelo family and both period shapes are hashed and an operator is handed a digest where the export filename should be - the arm is unconditional SHA256_PREFIX on the stated premise that a long digit-led run rarely collides with ordinary text, which separators falsified, and validate_identity cleanly separates the two populations by refusing all fourteen collisions while accepting all eleven real identities; `src/cadrumo/core/redaction/__init__.py`.
+- [ ] `W09.P17.S279` - Gate the redaction funnel against the recorded sequence outputs, since those recordings ARE operator output and running the funnel over them found a live over-redaction that every hand-authored corpus missed - no recorded sequence line may change under the funnel except where it carries a real identity - which would have caught the work-unit collision at authoring time and catches the next widening too; `src/cadrumo/core/tests`.
 
 ## Wave `W10` - Consent lifecycle, deinstallation, and surface conformance
 
