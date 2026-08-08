@@ -298,7 +298,11 @@ def test_choosing_a_value_the_document_never_offered_refuses() -> None:
     )
     blockers = confirmation_blockers(draft)
 
-    with pytest.raises(ConfirmationBlockedError, match="ESA00000000"):
+    # The refusal no longer echoes the supplied value or the competing ones. It
+    # names the DIGESTS the review surface rendered, which is what the operator
+    # can check their answer against -- and printing the raw candidates put the
+    # very identity this blocker exists to protect into a refusal message.
+    with pytest.raises(ConfirmationBlockedError, match="was never offered that reading"):
         resolved_blockers(
             draft=draft,
             resolutions=(
