@@ -5,14 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:99fac80ba1c03072e477261e141ddc7abd81619aa3f2267a08f59f57ec0484e0'
+body_hash: 'sha256:c6b9f326bd9b7054457d28ead6b28e8aa68d3a42935c40fb0388120979ded4ba'
 step_id: 'S53'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-
-
 
 # Route every degradation refusal through a typed remediation naming the provision verb, never auto-falling back to the cloud route, gated by a test proving a local outage cannot reach a cloud dispatch without a consent token
 
@@ -48,4 +45,3 @@ Proven by mutation. Installing a real cloud fallback turned three cases red, inc
 ## Notes
 
 The anti-fallback gates are stated as properties over every failure handler in the package rather than as a count of dispatch sites, so a recovery path reaching for a second provider reds them even in a module that does not exist yet.
-

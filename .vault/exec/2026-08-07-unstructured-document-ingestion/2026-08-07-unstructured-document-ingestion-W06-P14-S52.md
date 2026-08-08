@@ -5,14 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:4d61d53a7e999e813b7d2a19c10b9e3cf090e11f24d1b16c3f7a93e94030d4c2'
+body_hash: 'sha256:4412a8ca506717406da2affd6aac8eb806a4ecc079ebdb8b0752a095eabd55a6'
 step_id: 'S52'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-
-
 
 # Add the typed transport retry policy with exponential backoff, jitter and a bounded budget scoped to transient failures only, never retrying schema, contention, consent or capability refusals, gated by tests against a real local HTTP server exhibiting each failure shape
 
@@ -50,4 +47,3 @@ Proven by three mutations from external plugins. Declaring everything retryable 
 The governing decision record asks for the policy to be visible in the request record. It is data on the client and appears in the retry log line, but it is not a field on the persisted run record: adding one would change a strict persisted model owned by another package and would pull its roundtrip coverage into this Step. Reported to the lead as a scoping deviation rather than absorbed silently.
 
 The contention refusal named in the row has no error class yet, because the Step wiring contention detection into the dispatch point has not landed. It is covered here by a property rather than by name: every retryable class must be a transport-boundary failure, so a contention refusal cannot become retryable without redding this gate.
-

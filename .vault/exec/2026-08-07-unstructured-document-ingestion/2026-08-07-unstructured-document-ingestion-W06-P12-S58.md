@@ -5,14 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:d07c6fae868b1f2b0034707b627d07796e8816d8891dc8bff80bc45a3ef34b29'
+body_hash: 'sha256:e0fdb502fa1237bd30aa3a1001970835d1af0b0fe03b976c3ca71fa74d485f03'
 step_id: 'S58'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-
-
 
 # Bound in-process inference concurrency (default one) with a typed busy refusal or deterministic queueing, gated by a two-concurrent-request test proving exactly one proceeds
 
@@ -50,4 +47,3 @@ Proven by mutation from an external pytest plugin, with nothing under the source
 The permitted-path assertions were blocked for part of the run by a live defect outside this Step: the diagnostic redaction funnel's tax-identity rule matched a Z-suffixed UTC timestamp, so every response-cache write failed its own bind guard and every completion raised. Reported to the campaign lead and to the owning lane; a peer fix landed in the working tree and the gate then ran clean. Nothing here works around it.
 
 The source landed through a tree-wide sweep commit rather than through a commit of mine, so this Step and the retry Step share one sweep commit rather than being separable.
-
