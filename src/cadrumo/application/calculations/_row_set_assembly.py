@@ -466,7 +466,13 @@ def assemble_foreign_asset_observations(
                 Modelo720RowObservation(
                     source_id=f"detalle:per_foreign_asset:row-{row_index}",
                     asset_class_code=_coerce_text(fields.get("asset_class_code"), default="C") or "C",
-                    country_code=_coerce_text(fields.get("country_code"), default="ES") or "ES",
+                    # No invented default, and Spain least of all: modelo 720
+                    # declares bienes y derechos situados en el EXTRANJERO, so
+                    # ES is not merely unstated here but the one value the
+                    # declaration cannot carry. The observation model already
+                    # requires the field; this fallback was the sole reason
+                    # that requirement never reached a row.
+                    **_optional_text_kwarg(fields, "country_code"),
                     currency_code=_coerce_text(fields.get("currency_code"), default=DEFAULT_CURRENCY)
                     or DEFAULT_CURRENCY,
                     asset_identifier=_coerce_text(fields.get("asset_identifier")),

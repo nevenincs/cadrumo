@@ -139,6 +139,27 @@ def test_assemble_foreign_asset_parses_iso_acquisition_date() -> None:
     assert obs.valuation_amount == Decimal("120000")
 
 
+def test_assemble_foreign_asset_refuses_a_row_with_no_country() -> None:
+    """Modelo 720 declares assets situated ABROAD, so Spain is not a usable fallback.
+
+    The observation model already requires the country; the assembler's ES
+    fallback was the only reason that requirement never reached a row. The
+    positive control is ``test_assemble_foreign_asset_parses_iso_acquisition_date``,
+    which is the identical row with the country cell present.
+    """
+    revision = _modelo("720", "2013-y-siguientes")
+    cells = (
+        RowSetCellEdit(binding="modelo-720-asset-row-class", row_index=1, value="C"),
+        RowSetCellEdit(binding="modelo-720-asset-row-currency", row_index=1, value="CHF"),
+        RowSetCellEdit(binding="modelo-720-asset-row-identifier", row_index=1, value="CH-iban-001"),
+        RowSetCellEdit(binding="modelo-720-asset-row-acquisition-date", row_index=1, value="2020-01-15"),
+        RowSetCellEdit(binding="modelo-720-asset-row-valuation", row_index=1, value=Decimal("120000")),
+    )
+
+    with pytest.raises(RegistryValidationError, match="country_code"):
+        assemble_foreign_asset_observations(cells, revision, filing_year=2025)
+
+
 def test_assemble_atribucion_caps_share_percentage_at_validation() -> None:
     """An out-of-range share triggers the AtributionMemberObservation validator."""
 
