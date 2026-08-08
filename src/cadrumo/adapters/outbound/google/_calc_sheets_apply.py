@@ -1094,6 +1094,7 @@ def _ensure_plan_tabs_and_grid(
 _TAB_TITLES: frozenset[str] = frozenset(tab.value for tab in TabName)
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets JSON response body.
 def _grid_by_tab(spreadsheet: Mapping[str, Any]) -> dict[str, tuple[int, int]]:
     """Map each existing tab title to its ``(rowCount, columnCount)`` grid."""
     grid: dict[str, tuple[int, int]] = {}
@@ -1107,6 +1108,7 @@ def _grid_by_tab(spreadsheet: Mapping[str, Any]) -> dict[str, tuple[int, int]]:
     return grid
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets Resource (dynamic discovery build).
 def _occupied_addresses(
     *,
     sheets: Any,
@@ -1154,6 +1156,7 @@ def _occupied_addresses(
     return frozenset(occupied)
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets Resource (dynamic discovery build).
 def _write_plan_values(
     *,
     sheets: Any,
@@ -1191,6 +1194,7 @@ def _write_plan_values(
     return payload_written_addresses(data)
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets Resource (dynamic discovery build).
 def _clear_stale_addresses(
     *,
     sheets: Any,

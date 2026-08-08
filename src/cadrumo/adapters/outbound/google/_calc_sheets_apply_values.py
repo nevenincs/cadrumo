@@ -139,6 +139,7 @@ def _build_guide_value_data(plan: SheetExportPlan) -> list[dict[str, Any]]:
     return data
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets values.batchUpdate payload entries.
 def payload_written_addresses(data: Sequence[Mapping[str, Any]]) -> frozenset[str]:
     """Return every qualified A1 address a ``values.batchUpdate`` payload writes.
 

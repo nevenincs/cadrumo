@@ -311,6 +311,8 @@ def _str_tuple_or_none(value: object) -> tuple[str, ...] | None:
     return tuple(widened)
 
 
+# KWARGS-ANY-RATIONALE-TOML-PAYLOAD: raw tomllib-parsed table; every value is
+# refused inline by the shape checks below rather than trusted from the type.
 def _carve_out_rows_from_payload(target: object, payload: Mapping[str, Any]) -> dict[str, _CarveOut]:
     """Return the carve-out rows a parsed table declares, refusing a malformed one.
 

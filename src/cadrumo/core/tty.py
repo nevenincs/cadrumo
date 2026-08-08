@@ -41,6 +41,9 @@ __all__ = [
 ]
 
 
+# ANY-RETURN-RATIONALE-STREAM-DUCK-TYPE: accepts any stream-like object by
+# design (real streams, closed streams, non-stream objects) and probes it
+# structurally via getattr/hasattr rather than a concrete stream protocol.
 def stream_is_tty(stream: IO[Any] | object | None) -> bool:
     """Return whether ``stream`` is attached to an interactive terminal.
 
