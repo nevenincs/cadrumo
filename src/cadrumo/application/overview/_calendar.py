@@ -38,6 +38,7 @@ from datetime import date
 from typing import TYPE_CHECKING
 
 from ...core import Modelo as _Modelo
+from ...core import NotificacionEstadoServicio as _NotificacionEstadoServicio
 from ...core import PostFilingEventKind as _PostFilingEventKind
 from ...core import classify_post_filing_event_kind as _classify_post_filing_event_kind
 from ...core import post_filing_event_is_actionable as _post_filing_event_is_actionable
@@ -599,6 +600,20 @@ def build_overview_calendar_events(
     return _dedupe_calendar_events(events)
 
 
+def _event_demands_attention(event: OverviewCalendarEvent) -> bool:
+    """Return whether one observed event demands operator attention.
+
+    Two independent limbs, deliberately not collapsed into one: the procedural
+    category the event was classified into, and the service state the art. 43.2
+    window computed. Either alone is sufficient, because a deemed-served
+    notification matters regardless of category and a requerimiento matters
+    regardless of whether it was read.
+    """
+    if event.post_filing_kind is not None and _post_filing_event_is_actionable(event.post_filing_kind):
+        return True
+    return event.notificacion_estado_servicio is _NotificacionEstadoServicio.RECHAZO_TACITO
+
+
 def actionable_post_filing_events(
     events: tuple[OverviewCalendarEvent, ...],
 ) -> tuple[OverviewCalendarEvent, ...]:
@@ -613,14 +628,21 @@ def actionable_post_filing_events(
     not miss; the overview surfaces them so a pulled requerimiento is not
     buried in an undifferentiated message list.
 
+    An event is ALSO actionable, independent of its procedural category, when
+    its :attr:`~cadrumo.application.overview.OverviewCalendarEvent.notificacion_estado_servicio`
+    is :attr:`~cadrumo.core.NotificacionEstadoServicio.RECHAZO_TACITO`. A plain
+    ``notificacion`` whose concepto matches no sharper pattern falls outside
+    every actionable category, so before this second limb a formal notification
+    that lapsed into deemed service under Ley 39/2015 art. 43.2 reached the
+    operator on no day at all — while the taxpayer already bore its
+    consequences. The limb is deliberately narrow: only the deemed-served state
+    qualifies, so an ordinary read receipt or an in-window notification stays
+    non-actionable and the surface does not regress to flagging every message.
+
     The result preserves the input order (the callers pass deduped,
     sort-stable event tuples).
     """
-    return tuple(
-        event
-        for event in events
-        if event.post_filing_kind is not None and _post_filing_event_is_actionable(event.post_filing_kind)
-    )
+    return tuple(event for event in events if _event_demands_attention(event))
 
 
 def calendar_events_from_modelo_records(
