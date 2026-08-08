@@ -551,8 +551,15 @@ data_type = "money"
 semantic_role = "dr303_120"
 continuidad_id = "dr303-120"
 required = false
-input_kind = "manual"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+input_kind = "bound"
+binding = "modelo-303-casilla-120-no-sujetas-localizacion-base"
+# Casilla 120 reports the base of operations Spain does not tax because the
+# place-of-supply rules locate them elsewhere. The substantive ground is LIVA
+# art. 69 (Uno.1), not the repercusión/deducción articles 88/92 that stood here
+# as a generic default: a NO SUJETA operation never entered the hecho imponible,
+# so nothing is repercutido and nothing is deducible. Same correction, and for
+# the same reason, as casillas 59 and 122.
+legal_refs = ["ley-37-1992:art-69", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-03-casilla-120"]
 

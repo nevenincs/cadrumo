@@ -1364,43 +1364,60 @@ def _counterparty_supports_the_declared_category(invoice: Invoice) -> bool:
     return country not in _EU_MEMBER_STATE_CODES
 
 
-def _supplier_side_reverse_charge_observation(
+#: Cuota-less ISSUED categories whose base is declared under the invoice's OWN
+#: declared category, each with the flow that category implies.
+#:
+#: Distinct from ``_BASE_ONLY_ROUTED_CATEGORIES`` below, and the difference is
+#: the point. That set feeds a branch which stamps ``rate_kind = ZERO`` and
+#: applies the intracom/export counterparty gate, both correct for a genuinely
+#: zero-rated cross-border supply and both FALSE here:
+#:
+#: * ``domestic_reverse_charge`` is sujeta y no exenta -- the recipient
+#:   self-assesses at the ordinary tier -- so it is not zero-rated, and its
+#:   counterparty is Spanish, so the EU-identification gate would withhold it
+#:   every time.
+#: * ``intra_community_service_supply`` is NOT SUBJECT in Spain by art.
+#:   69.Uno.1 rather than exempt, so it is not zero-rated either, and its
+#:   counterparty IS EU-established, which the gate's export arm rejects.
+_DECLARED_CATEGORY_BASE_ONLY_FLOWS: Mapping[IvaCategory, IvaFlowDirection] = {
+    # The SUPPLIER's side of a domestic reverse charge (LIVA art. 84.Uno.2.o).
+    # OPERACION_CON_INVERSION, never REPERCUTIDO: that distinction is the whole
+    # reason the fourth flow member exists, and collapsing them puts the
+    # supplier's turnover on the recipient's self-assessment line.
+    IvaCategory.DOMESTIC_REVERSE_CHARGE: IvaFlowDirection.OPERACION_CON_INVERSION,
+    # A B2B service located where the EU recipient is established (art.
+    # 69.Uno.1). REPERCUTIDO is correct: the taxpayer SUPPLIES, and unlike the
+    # reverse-charge case there is no separate supplier-side flow member,
+    # because the operation is simply outside the Spanish hecho imponible.
+    IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY: IvaFlowDirection.REPERCUTIDO,
+}
+
+
+def _declared_category_base_only_observation(
     *,
     ledger_id: str,
     invoice: Invoice,
     line: InvoiceLine,
     devengo_date: date,
     recargo_amount: Decimal,
+    flow_direction: IvaFlowDirection,
 ) -> IvaLedgerObservation:
-    """Project the SUPPLIER's side of a domestic reverse charge into its own row.
+    """Project a cuota-less line under the category the INVOICE declares.
 
-    LIVA art. 84.Uno.2.o makes the RECIPIENT the sujeto pasivo, so the supplier
-    makes a sujeta y no exenta supply and repercutes nothing. There is correctly
-    no cuota. But the operation is turnover, and Modelo 303 asks for it by name
-    in casilla 122, "Operaciones sujetas con inversion del sujeto pasivo".
+    Both members of ``_DECLARED_CATEGORY_BASE_ONLY_FLOWS`` reached nothing
+    before this arm, for one shared reason: the line carries no cuota, so it
+    fell past the standard branch, which classifies from the RATE SLOT and
+    therefore replaced the declared category with whatever tier the slot
+    printed. The identity the casilla binding selects on was destroyed upstream
+    of the binding, so adding a binding alone would have left the box blank and
+    looked like the registry was at fault.
 
-    Before this arm the row reached nothing. The line carries no cuota, so it
-    fell past the standard branch, which classifies from the RATE SLOT and so
-    replaced ``domestic_reverse_charge`` with whatever tier the slot printed.
-    The identity the casilla-122 binding selects on was destroyed upstream of
-    the binding, which is why adding the binding alone would have left the box
-    blank and looked like the registry was at fault.
-
-    Two axes are deliberately NOT taken from the base-only branch below, because
-    both would be false here:
-
-    * ``flow_direction`` is ``OPERACION_CON_INVERSION``, never ``REPERCUTIDO``.
-      That distinction is the whole reason the fourth flow member exists;
-      collapsing them puts the supplier's turnover on the recipient's line.
-    * ``rate_kind`` is read from the line's own slot rather than forced to
-      ``ZERO``. This operation is SUJETA Y NO EXENTA -- the recipient
-      self-assesses at the ordinary tier -- so calling it zero-rated would
-      assert a different legal treatment. Casilla 122 selects on category and
-      flow, not on rate, so nothing depends on a fabricated tier.
-
-    ``applied_rate`` is likewise taken from the standard projection rather than
-    stated as zero: it is what the line actually recorded, measured by the same
-    helper every other observation uses, so this producer invents no rate.
+    ``rate_kind`` and ``applied_rate`` are measured off the line's own slot
+    rather than stated. Neither category is zero-rated, so forcing ``ZERO``
+    would assert a legal treatment that does not apply; and the destination
+    casillas select on category and flow, not on rate, so nothing depends on a
+    fabricated tier. Measuring also means this producer invents no rate, which
+    the rate-less-row gate requires.
 
     Args:
         ledger_id: Identity already derived for this invoice line.
@@ -1408,13 +1425,14 @@ def _supplier_side_reverse_charge_observation(
         line: The line being projected.
         devengo_date: The date the observation is declared on.
         recargo_amount: Recargo attributable to this line, already resolved.
+        flow_direction: The flow this category implies, from the table above.
 
     Returns:
-        The supplier-side observation, carrying a real base and no cuota.
+        The observation, carrying a real base and no cuota.
     """
     # Built through the standard projection first purely to measure rate_kind
     # and applied_rate off the line's own slot, then re-stated with the two axes
-    # the slot cannot know: the declared category and the supplier-side flow.
+    # the slot cannot know: the declared category and its flow.
     measured = invoice_line_to_iva_observation(
         invoice_id=ledger_id,
         issued_at=devengo_date,
@@ -1427,10 +1445,10 @@ def _supplier_side_reverse_charge_observation(
     return IvaLedgerObservation(
         ledger_id=ledger_id,
         transaction_date=devengo_date,
-        category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
+        category=invoice.iva_category,
         rate_kind=measured.rate_kind,
         applied_rate=measured.applied_rate,
-        flow_direction=IvaFlowDirection.OPERACION_CON_INVERSION,
+        flow_direction=flow_direction,
         base_amount=line.subtotal,
         iva_amount=Decimal("0"),
         recargo_amount=recargo_amount,
@@ -1491,13 +1509,15 @@ def _invoice_line_iva_observation(
             recargo_amount=recargo_amount,
         )
     category = invoice.iva_category
-    if category is IvaCategory.DOMESTIC_REVERSE_CHARGE and invoice.kind is InvoiceKind.ISSUED:
-        return _supplier_side_reverse_charge_observation(
+    declared_flow = _DECLARED_CATEGORY_BASE_ONLY_FLOWS.get(category)
+    if declared_flow is not None and invoice.kind is InvoiceKind.ISSUED:
+        return _declared_category_base_only_observation(
             ledger_id=ledger_id,
             invoice=invoice,
             line=line,
             devengo_date=devengo_date,
             recargo_amount=recargo_amount,
+            flow_direction=declared_flow,
         )
     if category not in _BASE_ONLY_ROUTED_CATEGORIES:
         # Left on the standard path: it routes nowhere for a cuota-less line,
