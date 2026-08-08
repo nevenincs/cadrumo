@@ -5,44 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:c0fdb774517b69609dc05556102006cc4118694f9e1f176c92e440c0a023cbac'
+body_hash: 'sha256:df71a63540d6c405593317e95504d7c366bb22bb018b3e98664518cc54825d1f'
 step_id: 'S216'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S216 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The RULED. Narrow the counterparty role resolver so an ABSENT counterparty identifier is not a role failure while an UNVERIFIABLE one still is. Measured after the filer-id threading landed: every DraftDiscrepancyKind blocks by construction, nine of nine, so a document that simply does not print a counterparty NIF can no longer be confirmed without an individual resolution. A factura simplificada may legitimately omit it and the issuer-establishment module's own docstring calls an ordinary domestic ticket with no identified customer common and legitimate practice, while a receipt carrying no identifiers at all raises role_unresolved where there is nothing to resolve. That is a blocker firing across a large correct population, which trains the operator to clear it unread and destroys its value on the checksum-failure case where it is genuinely right. Rejected leaving it, which blocks legitimate documents, and rejected routing role_unresolved to the advisory channel, which also weakens the checksum case that is the genuine catch. CONDITION on the fix: absence must mean the question was not asked, never that the role is fine, so verify nothing downstream reads an unresolved role as a resolved one and ## Scope
-
-- `src/cadrumo/application/ledger` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # RULED. Narrow the counterparty role resolver so an ABSENT counterparty identifier is not a role failure while an UNVERIFIABLE one still is. Measured after the filer-id threading landed: every DraftDiscrepancyKind blocks by construction, nine of nine, so a document that simply does not print a counterparty NIF can no longer be confirmed without an individual resolution. A factura simplificada may legitimately omit it and the issuer-establishment module's own docstring calls an ordinary domestic ticket with no identified customer common and legitimate practice, while a receipt carrying no identifiers at all raises role_unresolved where there is nothing to resolve. That is a blocker firing across a large correct population, which trains the operator to clear it unread and destroys its value on the checksum-failure case where it is genuinely right. Rejected leaving it, which blocks legitimate documents, and rejected routing role_unresolved to the advisory channel, which also weakens the checksum case that is the genuine catch. CONDITION on the fix: absence must mean the question was not asked, never that the role is fine, so verify nothing downstream reads an unresolved role as a resolved one
 
