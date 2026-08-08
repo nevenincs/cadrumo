@@ -5,13 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:4e79b56124318b257481b76772aa3e61554ac0bdc19fc00383833c121e5ac50e'
+body_hash: 'sha256:b720a160e9673dfd037788fe938b1dd404de81fb9c33bcc8a780281e6a9fa6ff'
 step_id: 'S07'
 related:
   - "[[2026-08-07-dehu-notification-legal-effect-plan]]"
 ---
-
-
 
 # Widen the actionability predicate behind actionable_post_filing_events so an event is actionable when its post_filing_kind is in ACTIONABLE_POST_FILING_EVENT_KINDS or its notificacion_estado_servicio is RECHAZO_TACITO, then add a mutation-proof test proving a plain NOTIFICACION event carrying RECHAZO_TACITO state appears in actionable_post_filing_events and that reverting the widening back to a bare frozenset membership check fails the test
 

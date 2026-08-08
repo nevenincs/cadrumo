@@ -5,14 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:51445f000e26f2fe55ec5a57a63373f65333d1562d6a2e907cb2dbccb275de63'
+body_hash: 'sha256:7002945aac34239ae63002c00b4114481e8d8a2f911c8deea7b7371df8371441'
 step_id: 'S09'
 related:
   - "[[2026-08-08-m200-export-envelope-tag-plan]]"
 ---
-
-
-
 
 # add a closed-set guard test asserting no accounts-regime concept (aseguradora, entidad de credito, inversion colectiva, garantia reciproca, estado de cuentas) exists anywhere in the registry or domain model outside an explicit allowlist, so a future addition fails the gate until both hardcoded discriminante literal '0' sites are revisited together
 
@@ -63,7 +60,6 @@ the discriminante field, would not trip it. That residue is stated rather than
 papered over.
 
 ## Verification
-
 
 Both guards, both anti-vacuity controls, the fixture anchor and the cross-site
 agreement assertion, alongside every other test in the two modules they landed in:

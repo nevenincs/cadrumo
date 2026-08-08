@@ -5,14 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:43ed9e5e096164ce7e40a266337c25f04ba87112aa0f2d8d8d893e29fa865ff2'
+body_hash: 'sha256:48d6a2d807c02682464d19b925681fb9adc07e9738bdbfc8a0f04b0fab9a897b'
 step_id: 'S02'
 related:
   - "[[2026-08-08-m200-export-envelope-tag-plan]]"
 ---
-
-
-
 
 # replace the offset-1 filing_year draft field with the six-component open-tag composite
 
@@ -44,9 +41,7 @@ are not closed by this Step.
 
 ## Verification
 
-
     uv run --no-sync pytest src/cadrumo/application/filing/tests/test_export.py::test_export_writes_the_modelo_200_envelope_tags_aeat_publishes -n0 -q
     1 passed in 12.91s
 
 ## Notes
-

@@ -5,14 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:331868c075c4a41d648a4bd3cd54c25fb82a8bd352f55ad5c02012d656b56790'
+body_hash: 'sha256:d8faec41b01b6eb2e7185b2e8dbd6715a2d04e9cc301df128e885880bfdfa29f'
 step_id: 'S10'
 related:
   - "[[2026-08-07-justificante-identity-matching-plan]]"
 ---
-
-
-
 
 # Add a mutation-proof test confirming the reason-distinguishing branch fires per swallowed case and confirm the CLI report surfaces the Notice
 

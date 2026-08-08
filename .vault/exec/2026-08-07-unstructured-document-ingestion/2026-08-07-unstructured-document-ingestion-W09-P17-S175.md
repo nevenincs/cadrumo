@@ -5,14 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:34c6db92bdd8ed79d560e541d5e998f97060daf8e926ecd48e97b33afdd6b6da'
+body_hash: 'sha256:a9814400911c9620f5424f79853684be04a868a268e5027382b17cb85f33118c'
 step_id: 'S175'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-
-
 
 # Correct the consumes docstring which tells a reader that every row consuming territorial establishment is by design, since it describes the pre-split decision table accurately while the sibling party-fact docstring describes the intent and the law, and both cannot be true. Every later reader currently sees the split as in force while the table carries the pre-split design, and the four declarations of the identification fact read as evidence the migration happened. Lands with the migration rather than before it
 
@@ -41,7 +38,6 @@ predicate migration, so no interval exists in which a reader is told the split i
 in force while the table keeps the pre-split design.
 
 ## Verification
-
 
 Docstrings carry no gate of their own; what they must not do is break the build
 or the docstring cross-link gate. Both were exercised through the Step this rode

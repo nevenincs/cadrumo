@@ -5,14 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:74edd410b93d302617a2afc59276e5cebdceedc9fa61e7b4dea8ed7219d36bb7'
+body_hash: 'sha256:0d3adcf0f6bf43848f752fcfc62c3eace2d6eeadbd2f7e342b8ca7cfb9fcb4ed'
 step_id: 'S33'
 related:
   - "[[2026-08-07-history-onboarding-plan]]"
 ---
-
-
-
 
 # Enroll app live filed discover in the profile-bound write allowlist with a comment stating why a read-shaped verb writes: it persists nothing of the register it reads, which is why it is discover rather than pull, but it resolves its session through the central live-session writer, which opens an active-profile storage span and an auth mutation span. Its own docstring asserting that nothing is persisted is true of register data and false of session state, so enrolling on the docstring's word would be the error the census gate's own message warns against. Gate: the name-independent leaf census no longer reports the leaf as accounted for by no mechanism, and the MCP write-policy mutability parity gate still passes, since it requires every write-allowlist entry to map to a non-read-only family
 

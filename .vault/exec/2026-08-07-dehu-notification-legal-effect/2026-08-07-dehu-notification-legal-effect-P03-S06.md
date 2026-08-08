@@ -5,13 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:6b64c7cf542009780b027732029224acb1e7f61d4676516482e93f1b0fb2b132'
+body_hash: 'sha256:9b54a512e2c4cc0d4b377b8954f925f8522446a85a6f0f53104a5e37b936a3db'
 step_id: 'S06'
 related:
   - "[[2026-08-07-dehu-notification-legal-effect-plan]]"
 ---
-
-
 
 # Add a typed notificacion_estado_servicio field, typed NotificacionEstadoServicio or None, to OverviewCalendarEvent, and compute it per row in calendar_events_from_notification_snapshots from fecha_notificacion and leida against an explicit as_of parameter threaded from the caller, never an inline date.today call, then add a projection test proving a synthetic ten-day-lapsed row computes RECHAZO_TACITO
 

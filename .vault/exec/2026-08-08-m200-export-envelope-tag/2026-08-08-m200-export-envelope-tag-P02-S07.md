@@ -5,14 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:ea94789298374372285360149281f520b9f12314f39ebd8b3ef0e865ff3a21f6'
+body_hash: 'sha256:fc0ed7538a8afd0993b748ab85c1cfc0350218a66ac7c7b0c5bb520e5e53a710'
 step_id: 'S07'
 related:
   - "[[2026-08-08-m200-export-envelope-tag-plan]]"
 ---
-
-
-
 
 # run the fichero-BOE parity and completeness gates for M200 and confirm they stay green after the restructuring
 
@@ -67,7 +64,6 @@ count had risen from 26540 to 26685 -- peers landing work mid-run. Reporting the
 first reading as a result would have been wrong.
 
 ## Verification
-
 
 The named export-structure gates:
 

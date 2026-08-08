@@ -5,14 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:b14389e7f8af195b29e25a3e1200d71ace54d9ab078ba30bd4a25aeadd245a75'
+body_hash: 'sha256:e8acfd6320862cbf8f7274d9a566ef5d84e15c6d1f545e7a7caf9612b138dfbd'
 step_id: 'S10'
 related:
   - "[[2026-08-07-history-onboarding-plan]]"
 ---
-
-
-
 
 # enroll app live filed pull-all in PROFILE_BOUND_WRITE_VERB_PATHS, verified by the existing write-policy guard test asserting the new path is recognised as profile-bound
 

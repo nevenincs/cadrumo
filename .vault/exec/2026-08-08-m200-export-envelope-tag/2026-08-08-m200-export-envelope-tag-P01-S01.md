@@ -5,14 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:7e588b2c60cfe20bc62bb6c861f7cd3a8cf007a8b49792f820293c40be4ade8a'
+body_hash: 'sha256:40adb87e138112421b39c0762ec05d1a8c9e0679df5caba1bc9eec1184970dd7'
 step_id: 'S01'
 related:
   - "[[2026-08-08-m200-export-envelope-tag-plan]]"
 ---
-
-
-
 
 # write a byte-level test asserting the M200 open-tag composite against current output, confirmed red
 
@@ -50,7 +47,6 @@ shared tree, so the proof is the observation, not a published failing state.
 
 ## Verification
 
-
 Pre-fix run, against the unmodified registry declaration:
 
     uv run --no-sync pytest src/cadrumo/application/filing/tests/test_export.py::test_export_writes_the_modelo_200_envelope_tags_aeat_publishes -n0 -q
@@ -61,4 +57,3 @@ Pre-fix run, against the unmodified registry declaration:
 across worker processes.
 
 ## Notes
-

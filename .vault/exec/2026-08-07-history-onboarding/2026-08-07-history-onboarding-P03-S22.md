@@ -5,14 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:c9c453d5a865d082f7e20420b327d2d6e77914ba635fd5a7323e64580cf8ce5e'
+body_hash: 'sha256:ff913b6e1787444f5d02085422cecb08deef76e2dc3d7eddfa654dc3774fc9fc'
 step_id: 'S22'
 related:
   - "[[2026-08-07-history-onboarding-plan]]"
 ---
-
-
-
 
 # add the found-more-than-expected advisory emitting an INFO Notice for every period whose raw register count exceeds one, naming the modelo, period, winning expediente_id and superseded filing count, degrading gracefully to count-only wording when tipo_solicitud is absent from source metadata, verified by a test asserting INFO severity, never WARNING, and asserting the notice composes with rather than duplicates the re-capture divergence diff
 

@@ -5,14 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:2b8c09f6216278e297ad624e4a41a6bfd88d684034d2a31331691b1724b60953'
+body_hash: 'sha256:cac1c2158db9c56c9d1bcc6f164f3ea196b1a57f820350b48bb5a718ce9fadc1'
 step_id: 'S06'
 related:
   - "[[2026-08-07-history-onboarding-plan]]"
 ---
-
-
-
 
 # add the FiledHistoryOnboardingResult typed result model carrying per-pair outcomes, IVA wallet reconciliation status, notificaciones pull status, the divergence Notice list, the CoverageScopingSignal classification and a prose denominator_note field, and no numeric completeness percentage or fraction over AEAT_REGISTER_OPTIONS-tagged pairs, verified by a strict roundtrip test plus a test asserting the model schema carries no percentage or fraction field
 

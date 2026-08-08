@@ -5,14 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:f5eece8c67c50d7389a5e96974865c74336be9f1bc71b75dc32e1299f57f0f5f'
+body_hash: 'sha256:d8da73a97899708c5f8d8d9801c9d6cef28d3a70b62ead958970e7ee2388cb67'
 step_id: 'S08'
 related:
   - "[[2026-08-08-m200-export-envelope-tag-plan]]"
 ---
-
-
-
 
 # prove the byte-level test is load bearing by reverting the open-tag composite and the envelope-footer record, confirming the test reds, then restoring the fix
 
@@ -58,7 +55,6 @@ files, so there is no window in which a peer could sweep a mutation into the tre
 
 ## Verification
 
-
 Both locks green:
 
     uv run --no-sync pytest src/cadrumo/application/filing/tests/test_export.py -k "modelo_200" -n0 -q
@@ -70,4 +66,3 @@ The refusal proof reds when the abstention is restored from outside the reposito
     1 failed in 5.40s
 
 ## Notes
-

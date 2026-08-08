@@ -5,14 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:591b809b4c086fd456807ab1074170d0a982edd4d90dc8ca4a10c85492849350'
+body_hash: 'sha256:3081dfdb68ffe9d0df0d5538c1d6d57ccbd0b65df3ae4e3369d9d814c8b00f96'
 step_id: 'S03'
 related:
   - "[[2026-08-08-m200-export-envelope-tag-plan]]"
 ---
-
-
-
 
 # promote the AUX and header filler fields to literal and header kind
 
@@ -43,7 +40,6 @@ plumbing changed.
 
 ## Verification
 
-
 The same byte-level assertion covers this Step: its marker and EEDD assertions at
 bytes 17-21, 92-95, 100-108 and 322-327 are what prove the four promotions render.
 
@@ -51,4 +47,3 @@ bytes 17-21, 92-95, 100-108 and 322-327 are what prove the four promotions rende
     4 passed, 42 deselected in 18.08s
 
 ## Notes
-

@@ -5,14 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:a0856ea1c7d8aa072fc5a091bc70a99668ad75d404df8c3bc479aaf4c391e592'
+body_hash: 'sha256:d5e94812c2e908505f3e580e55f3b031f3eab8f05138c240f3eddeb577f19f77'
 step_id: 'S08'
 related:
   - "[[2026-08-07-history-onboarding-plan]]"
 ---
-
-
-
 
 # add the pull_filed_history orchestration service walking the FiledHistoryDiscoveryReport union grid, calling capture_filed_data_bulk over it, then capture_iva_compensation_wallet and reconcile_iva_compensation_wallet, then the existing notificaciones pull, verified by an integration test against synthetic fixtures for every stage asserting the composed FiledHistoryOnboardingResult reflects every stage's outcome
 

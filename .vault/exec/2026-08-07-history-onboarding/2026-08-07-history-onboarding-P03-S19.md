@@ -5,14 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:b81aae3827e8453bc0b5f3e7eb8ef262c56e4e0e4ba109a46614fc767d4d3d65'
+body_hash: 'sha256:8938750ad73f97c3384127e741e67ba189c17ade03df04fbf37af6ee0ecbf584'
 step_id: 'S19'
 related:
   - "[[2026-08-07-history-onboarding-plan]]"
 ---
-
-
-
 
 # add the expected-but-not-found advisory comparing captured rows against every PROFILE_APPLICABILITY-tagged pair, emitting a WARNING Notice naming each modelo and ejercicio the profile expects but no declaracion was captured for, verified by a test asserting the Notice fires only for PROFILE_APPLICABILITY pairs and never for pairs carrying only the AEAT_REGISTER_OPTIONS tag
 
@@ -51,4 +48,3 @@ Spanish ambient locale — the message is localised, so asserting on it would ha
 made the gate depend on the locale rather than on the behaviour.
 
 ## Notes
-

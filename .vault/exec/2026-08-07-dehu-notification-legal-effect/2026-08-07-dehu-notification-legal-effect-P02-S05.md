@@ -5,13 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:3a5c00112d7fcabdd6d5c794e481ede3e65b466ba3816d5e54ed40c6758158d2'
+body_hash: 'sha256:6dd95af82335150cfc926061c168bb0ae644ec810bba9885a01bd9db72e98aea'
 step_id: 'S05'
 related:
   - "[[2026-08-07-dehu-notification-legal-effect-plan]]"
 ---
-
-
 
 # Add a new core module declaring the NotificacionEstadoServicio StrEnum, with members NO_ENTREGADA, ACCEDIDA, EN_PLAZO and RECHAZO_TACITO, and a pure function computing it from fecha_notificacion, leida and an explicit as_of date against DEHU_RECHAZO_TACITO_DIAS_NATURALES, then add boundary tests covering day 9 EN_PLAZO, day 10 RECHAZO_TACITO, fecha_notificacion is None NO_ENTREGADA, and leida is True ACCEDIDA regardless of elapsed days, plus a mutation-proof test that flips the day-10 boundary comparison and confirms the boundary test fails
 

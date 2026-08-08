@@ -5,13 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:2b0fba2f1ad95c8451cc0e78d17c53ea86ba1af133dfea6c1674679bdb44175b'
+body_hash: 'sha256:44025624a04bc86f159a4a2117d1344cb3349625f1e131676737ef0c6c1286c0'
 step_id: 'S04'
 related:
   - "[[2026-08-07-dehu-notification-legal-effect-plan]]"
 ---
-
-
 
 # Add DEHU_RECHAZO_TACITO_DIAS_NATURALES as a Final int equal to 10 to external_constants.py, doc-commented with the Ley 39/2015 art. 43.2 provision citation and its BOE-A-2015-10565 document id in the same style as every sibling leaf constant in that file, and deliberately NOT naming any legal-catalogue entry id, because an entry id cited before the catalogue file exists ships a dangling reference into production source. Verified by the constant importing cleanly and by the external-constants centralisation AST gates staying green
 

@@ -5,14 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:a91a6ecb13f4658e153077e25e79a3ecc4d22edcaa5486a14e9475f4dc85aa33'
+body_hash: 'sha256:489c060ba22fe115946467f793cbb03726505e10c9324fd770877a67fc5367fc'
 step_id: 'S11'
 related:
   - "[[2026-08-07-history-onboarding-plan]]"
 ---
-
-
-
 
 # add the overview INFO Notice naming aeat app live filed pull-all when a workable profile has zero observations carrying an official ObservationSourceKind, verified by a calendar-overview test asserting the Notice fires for a zero-observation profile and is absent once one official observation exists
 

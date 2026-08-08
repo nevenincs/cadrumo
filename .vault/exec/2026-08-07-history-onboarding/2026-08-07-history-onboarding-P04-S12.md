@@ -5,14 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:fd2790e4d66a0a6f5f08ee9ec83d5d3bad59b6632d4f47455c4d33ceff3d713d'
+body_hash: 'sha256:b9d287028b997866610e5ea26a03bd1971028ccc9386fd62b85d93ef6a2fdac4'
 step_id: 'S12'
 related:
   - "[[2026-08-07-history-onboarding-plan]]"
 ---
-
-
-
 
 # land real es, en, ca and hu values for every new help string, Notice message key and result-field label the P01 through P03 verbs introduce, verified by dev.locales scaffold --check, gated on the shared locale catalogues being free of unrelated in-flight writes before landing
 

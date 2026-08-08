@@ -5,14 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:6cdc12873b5dfaef32e0286aac8858bc18672519148e36e3c71c7de66308eed2'
+body_hash: 'sha256:dd33e218edcd1463782d72db2e19d7cefb5a1b83dfd2d39d9bd45c9853c131e2'
 step_id: 'S06'
 related:
   - "[[2026-08-08-m200-export-envelope-tag-plan]]"
 ---
-
-
-
 
 # after P01 lands, flip the filing_year and period_code canonical-width gate abstentions to 4 and 2, rewriting the abstention comments to state what is now established
 
@@ -53,7 +50,6 @@ none of them exist. The wrong reading would have blocked this flip.
 
 ## Verification
 
-
 The width-ruling totality gate and both slot-width refusal proofs, which are the
 tests that read this table:
 
@@ -61,4 +57,3 @@ tests that read this table:
     5 passed, 46 deselected in 6.26s
 
 ## Notes
-

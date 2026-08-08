@@ -5,14 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:c09487dc7d067f0f18285c680ecb5242cf43ddcc02c594757ab22c195caf9c4e'
+body_hash: 'sha256:8508222c512eb276d476504ec01d41db68bd3e40d19fb6f3c164edbee7eca3d7'
 step_id: 'S21'
 related:
   - "[[2026-08-07-history-onboarding-plan]]"
 ---
-
-
-
 
 # extend FiledDataCaptureReport and BulkFiledDataCaptureReport with a per modelo ejercicio period breakdown of raw register row count versus the one persisted calculation observation, computed from the declarations and selected tuples already held before finalize_filed_capture runs, touching no persistence-boundary file, verified by a synthetic-fixture test asserting a two-row period reports raw count two and selected count one
 

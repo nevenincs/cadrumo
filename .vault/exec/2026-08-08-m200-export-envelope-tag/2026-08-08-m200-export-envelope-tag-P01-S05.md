@@ -5,14 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:91f0a40f802294d01ffe492261abea6de401bd1fa8786987a283c9f454e3b749'
+body_hash: 'sha256:0a28674a35c8c87ba0a341788bf1b11285ec45e32d9e2b7972a49d0e1d165bd4'
 step_id: 'S05'
 related:
   - "[[2026-08-08-m200-export-envelope-tag-plan]]"
 ---
-
-
-
 
 # confirm the byte-level test goes green for both the open tag and the close tag
 
@@ -42,9 +39,7 @@ position is measured from it.
 
 ## Verification
 
-
     uv run --no-sync pytest src/cadrumo/application/filing/tests/test_export.py -k "modelo_200" -n0 -q
     4 passed, 42 deselected in 18.08s
 
 ## Notes
-

@@ -5,14 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:89b645fda9d126ff817404dfbdfa716d7adf6e6c7d7a2a31ccd8e20a48b82405'
+body_hash: 'sha256:26b3dcf6476ec4f8732556da6a588d7ac578d820ae50c593c4f29e26afd996b5'
 step_id: 'S32'
 related:
   - "[[2026-08-07-history-onboarding-plan]]"
 ---
-
-
-
 
 # relay the justificante unreached-evidence reasons onto the same envelope notices channel this plan's own advisories use, absorbing the sibling justificante-identity plan's deliberately-unlanded forwarding row rather than growing a second advisory channel, declaring the evidence_notices field on BulkFiledDataCaptureReport that the sweep was already passing and whose absence made the orchestration read raise AttributeError on a session-only path, verified by a test driving the full reason enum and asserting one notice per member with its reason readable in context, with the expected set derived from the enum rather than hand-listed
 

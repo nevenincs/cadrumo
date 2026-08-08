@@ -5,14 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:0d28342a192ca58d47fb16fc194f222de4025988774f58822b5b1b3eefb9f5ff'
+body_hash: 'sha256:3b3b16c030d3c877e70060a057d0c1434160621326a4780ae92c88691e69250a'
 step_id: 'S15'
 related:
   - "[[2026-08-07-history-onboarding-plan]]"
 ---
-
-
-
 
 # update operator_surface/_help.py with the new discover and pull-all verb entries, verified by test_rule_surface_conformance.py
 
@@ -41,4 +38,3 @@ uv run --no-sync pytest src/cadrumo/application/live/tests/ src/cadrumo/applicat
     1147 passed, 2 deselected in 155.20s (0:02:35)
 
 ## Notes
-

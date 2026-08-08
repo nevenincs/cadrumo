@@ -5,14 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:1564efdf9e3b3d97ed69da83d3babe1cd252c014693e04675a813d297c617aa8'
+body_hash: 'sha256:9fb22b14fb81ef40f461d2f184e68d50bd579dbe8686d22575393262f012658a'
 step_id: 'S16'
 related:
   - "[[2026-08-07-history-onboarding-plan]]"
 ---
-
-
-
 
 # update the agent-harness docs under src/cadrumo/_data/agent that name the filed verb group to cite the new discover and pull-all verbs, verified by the harness-citation conformance check confirming every named verb resolves against the live operator-surface manifest
 

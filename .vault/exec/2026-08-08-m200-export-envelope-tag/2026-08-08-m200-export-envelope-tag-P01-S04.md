@@ -5,14 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:112655a9d9da6a77133b88ebc58bc025d556ddf60c49fca9445e8802e739be25'
+body_hash: 'sha256:a9ccaba34e1e43aeb9008cb8f104ed55afe54b31079522aad49782c4709e6672'
 step_id: 'S04'
 related:
   - "[[2026-08-08-m200-export-envelope-tag-plan]]"
 ---
-
-
-
 
 # add the envelope-footer export fragment reusing the existing computed closing-tag key
 
@@ -45,9 +42,7 @@ together.
 
 ## Verification
 
-
     uv run --no-sync pytest src/cadrumo/application/filing/tests/test_export.py -k "modelo_200" -n0 -q
     4 passed, 42 deselected in 18.08s
 
 ## Notes
-

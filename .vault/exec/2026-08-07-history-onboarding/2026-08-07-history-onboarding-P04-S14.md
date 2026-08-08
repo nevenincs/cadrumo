@@ -5,14 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:aea860fd2a2e4977df79c255c1a25849b23b80f56d4c24ab37852f9936dbb3ba'
+body_hash: 'sha256:35ccc7b7a6d7886a6f6fd3b6b3d9f4d6a67fb3584af0fed819d89e5ec5683bde'
 step_id: 'S14'
 related:
   - "[[2026-08-07-history-onboarding-plan]]"
 ---
-
-
-
 
 # add the cross-period next_action builder cases pointing at the new discover and pull-all verbs, verified by the existing next-action conformance coverage
 
@@ -44,4 +41,3 @@ uv run --no-sync pytest src/cadrumo/application/live/tests/ src/cadrumo/applicat
     1147 passed, 2 deselected in 155.20s (0:02:35)
 
 ## Notes
-

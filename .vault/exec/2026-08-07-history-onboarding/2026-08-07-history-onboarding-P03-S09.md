@@ -5,14 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:c33a3fec56f5bede2b6e48da8db9bcdafe5e1e5a0fa0c7100654542287a49aac'
+body_hash: 'sha256:6de3912cf456530fed372f1c832881ca332984fe0a5aad0e3c2a169fd6876546'
 step_id: 'S09'
 related:
   - "[[2026-08-07-history-onboarding-plan]]"
 ---
-
-
-
 
 # add the aeat app live filed pull-all verb, verified by test_documented_command_conformance.py and a new JSON-schema conformance case
 

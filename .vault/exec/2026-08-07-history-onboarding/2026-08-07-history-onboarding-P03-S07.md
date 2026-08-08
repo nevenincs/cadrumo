@@ -5,14 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:6576b30f6b89732b17258ce79cddd7c1af1ec9ace2680f9b9eefa5e5da6bc6e7'
+body_hash: 'sha256:c1a4ffa76009245c797b0cd488399aeb35424e86400e27dd290c7f6c9a9987b5'
 step_id: 'S07'
 related:
   - "[[2026-08-07-history-onboarding-plan]]"
 ---
-
-
-
 
 # add the re-capture divergence diff comparing a fresh FiledDeclaracionObservation against the prior stamped observation for the same modelo, ejercicio and period key, verified by a test that re-captures a fixture with one changed casilla value and asserts exactly one WARNING Notice naming that casilla
 
