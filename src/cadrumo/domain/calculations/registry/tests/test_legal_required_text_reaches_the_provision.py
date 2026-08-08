@@ -57,7 +57,7 @@ document and no gap exists. Counting those would inflate the population with
 entries that are correct, which is the over-claim this floor exists to avoid.
 """
 
-_HEADING_ONLY_CEILING: Final[int] = 43
+_HEADING_ONLY_CEILING: Final[int] = 42
 """Entries whose required_text is satisfied by the heading alone, measured 2026-08-07.
 
 Shrink-only. Every one is stamped ``review_status = "reviewed"``, which is what
@@ -111,8 +111,11 @@ recurring throughout the law.
 44 -> 43 corrects ``orden-hac-3625-2003:apartado-1`` (Modelo 309 approval),
 requoted onto its art. 80.Cinco.5.a case.
 
-The tail decides priority. The largest remaining is ``rd-1065-2007:art-42-bis``
-at 6,304 characters, grounded by a phrase that survives any truncation of it.
+43 -> 42 corrects ``rd-1065-2007:art-42-bis`` (Modelo 720 foreign accounts),
+requoted onto apartado 4.
+
+The tail decides priority. The largest remaining is ``rd-1065-2007:art-54-bis``
+at 6,004 characters, grounded by a phrase that survives any truncation of it.
 
 This counts SHAPE, not damage. Only ``ley-37-1992:art-94`` was confirmed
 truncated, because its tail was read against live BOE. ``ley-37-1992:art-20`` and
@@ -237,7 +240,7 @@ def test_the_measurement_would_notice_a_body_phrase() -> None:
     ``ley-37-1992:art-94`` is the worked example this gate was built from and
     is now the CORRECTED side: its excerpt was refreshed from live BOE and its
     required_text requoted onto the operative provision, so it must no longer
-    be selected. ``rd-1065-2007:art-42-bis`` is the uncorrected side, at 6,304
+    be selected. ``rd-1065-2007:art-54-bis`` is the uncorrected side, at 6,004
     characters, grounded by a phrase that survives any truncation of it -- so it
     must still be selected. An
     entry moving across that line without the ceiling moving is exactly the
@@ -276,7 +279,7 @@ def test_the_measurement_would_notice_a_body_phrase() -> None:
 
     # The other side: an entry still grounded on its title must still be selected,
     # or the predicate has stopped selecting anything and the ceiling is vacuous.
-    assert "rd-1065-2007:art-42-bis" in selected, (
+    assert "rd-1065-2007:art-54-bis" in selected, (
         "the predicate no longer selects a known heading-only entry, so the counts above "
         "would pass on an empty population. If art. 18 was corrected, move this to the "
         "next-largest remaining entry rather than deleting the assertion"

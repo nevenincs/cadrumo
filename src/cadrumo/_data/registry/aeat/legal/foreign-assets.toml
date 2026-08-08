@@ -54,7 +54,13 @@ notes = "Reglamento General de Gestion e Inspeccion (RGAT) art 42 bis: obligacio
 required_text = [
     "Obligación de informar acerca de cuentas en entidades financieras situadas en el extranjero",
     "personas físicas y jurídicas residentes en territorio español",
-    "cuentas en entidades financieras situadas en el extranjero",
+    "cuentas en entidades financieras situadas en el extranjero",    # Apartado 4 (what counts as a separate `dato` per account), the last
+    # operative provision, at 94% and above the amendment block. The three
+    # phrases above are the article title and two restatements of it, all
+    # inside the first 300 characters. Modelo 720 grounding, so a truncated
+    # excerpt would ground a reporting duty on a heading. Verified against
+    # live BOE: apartados 1-6 on both sides.
+    "tendrá la consideración de dato cada una de las fechas y saldos a los que se refieren los párrafos",
 ]
 
 [legal."rd-1065-2007:art-42-ter"]
