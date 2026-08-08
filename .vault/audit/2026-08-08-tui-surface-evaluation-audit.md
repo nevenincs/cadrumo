@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:d3ca67dca259cca8bfff58cdcfadf431cd8e641d4aaed12eb3b4508dfa5a52c0'
+body_hash: 'sha256:f2440840378dafad49f98de20855ae94664882eecc52751e247ce41cd07a8ffd'
 related: []
 ---
 
@@ -134,7 +134,7 @@ divergence axis is called. Deliberately scoped to this one namespace rather
 than generalised into an indexed-leaf translator, because sibling namespaces
 are repeatable sections with their own declared labels — a different shape.
 
-### manager-value-column-vanishes-at-the-floor | medium | a whole column disappears at eighty columns, and the geometry check cannot see it
+### manager-value-column-is-off-screen-at-the-floor | high | the value column sits past the right edge with no cue that it exists
 
 At eighty columns the profile manager's tables fail to show fact values, and
 two reviewers observed it differently on the same surface at the same width.
@@ -146,16 +146,29 @@ with no ellipsis, no overflow marker, and nothing signalling that the stored
 value is longer than what is painted. The stored value is intact in both cases;
 this is presentation only.
 
-**The discrepancy is recorded rather than resolved.** The two observations are
-consistent with a column that collapses toward zero width when its content is
-short and crops when it is long, but that is a hypothesis and no one measured
-the two states against each other. A third attempt to settle it was abandoned
-because at eighty by twenty-four the actions panel fills the visible fold and
-the tables sit below it, so the question needs a deliberate scroll walk rather
-than a single frame. Whoever picks this up should establish which behaviour is
-actually happening before choosing a remedy, because a width policy, a
-cell-level ellipsis and a wrap toggle are three different fixes and the right
-one depends on which of the two readings is the general case.
+**Resolved: the column is off-screen, not absent and not collapsed.** Neither
+first reading was the mechanism. The decisive evidence is behavioural — pressing
+the table's page-right binding brings the value column into view while status
+and most of the field name scroll off to the left, which a missing or
+zero-width column could not do. The cause is content-driven overflow: the table
+sizes every column to its own widest cell and sums those widths with no clamp
+against the container, and the field-name column on a section with long labels
+is wide enough on its own to push the value column past the right edge while
+the viewport sits at its default leftmost scroll position. Nothing computes a
+width that collapses, and no responsive rule drops the column by design.
+
+That makes it worse than the truncation it was first taken for, and a
+navigability defect rather than a cosmetic one: an operator on a long-label
+section at eighty columns sees a table that appears to have no value column at
+all, with no rendered horizontal scroll affordance cueing them that there is
+more to the right. Truncation at least shows that something is there.
+
+The remedy is therefore a design choice among three, and needs a decision
+rather than a patch: guarantee the value column space with a fixed or
+percentage width split, wrap the field-name label instead of letting it grow
+its column, or at minimum surface a visible horizontal-scroll affordance. The
+first changes the whole table's proportions, which is why it was left rather
+than improvised.
 
 The operator consequence is the same either way and is what matters: proofing a
 long razón social, address or note on a narrow terminal, there is no on-screen
