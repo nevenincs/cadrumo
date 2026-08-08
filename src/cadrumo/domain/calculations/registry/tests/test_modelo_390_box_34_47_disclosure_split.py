@@ -40,6 +40,7 @@ from pathlib import Path
 import pytest
 
 from .._loader import load_registry_tree
+from ._gate_support import fragment_declaring
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -149,8 +150,9 @@ def test_mutation_repointing_offset_1628_to_the_recargo_inclusive_total_reds_the
         elif source.exists():
             shutil.copy2(source, scratch_root / catalogue_dir)
 
-    export_layout_path = (
-        scratch_root / "modelos" / "390" / "revisions" / _REVISION_ID / "export_layouts" / "0001-export_layouts.toml"
+    export_layout_path = fragment_declaring(
+        scratch_root / "modelos" / "390" / "revisions" / _REVISION_ID / "export_layouts",
+        'casilla_id = "iva.anual.total-bases-cuotas-iva"',
     )
     original = export_layout_path.read_text(encoding="utf-8")
     mutated = original.replace(
