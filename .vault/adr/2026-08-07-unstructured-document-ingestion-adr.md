@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:87c5c586a04531423dacbc9bab222db890b9ebcbdc728aae63b773619357fa11'
+body_hash: 'sha256:290c0ed61123f455126e9ff06fd5aafa357d32cef0b70b19cb0e0220c526b323'
 related:
   - '[[2026-08-06-llm-invoice-read-reconciliation-research]]'
   - '[[2026-08-06-llm-package-split-measurement-basis-reference]]'
@@ -875,6 +875,93 @@ questions with one output:
   silently; and a conflict fixture (DE prefix, Spanish IVA charged at a
   registry rate) yielding the contradiction finding and never a silent
   `EU_MEMBER`.
+
+**Ruling (sixth amendment): party attribution is an axis, not a
+tax-id feature, and the ladder's address rungs state their precondition
+honestly.** A lane measured what role evidence does rather than what it
+is called: for tax ids the resolver has real teeth (a lone unevidenced
+survivor refuses), but the candidate set is hardcoded to the two
+identity fields, so the model's assignment of a postal code or address
+country to a party is final and unchecked — and the establishment
+ladder now consumes both. A clean supplier/customer transposition
+therefore yields a valid draft, every gate green, and both parties
+confidently mis-territoried: the `COM-2026-0005` failure class on the
+territory axis. Four parts:
+
+- **The axis is renamed to what it is.** The enrolled property is PARTY
+  ATTRIBUTION — which value belongs to which party — of which identity
+  resolution is one consumer, not the definition. The record's earlier
+  enrolment-by-example ("party tax ids, party names") is corrected: any
+  field the classification consumes per-party carries the attribution
+  requirement, and widening becomes a question of which fields deserve
+  a CONSUMER, never of which may carry a flag.
+- **Attribution for non-identity fields is deterministic co-location,
+  not more prompt.** The role-evidence keys do NOT widen from two to
+  six: the design-target model's context budget is a hard constraint,
+  and evidence keys without a consumer are review theatre. Instead the
+  attribution resolver for address fields is transcription-side
+  deterministic code — the address block containing a role-evidenced
+  identity anchors the block to that party, and postal and country
+  values inherit attribution by containment in it. The model keeps its
+  small job (copy, quote roles for identities); code attributes,
+  which is where every other attribution in this record already lives.
+  Its gate is the transposition fixture: swapped address blocks must
+  yield either correct attribution or a refusal, never silently
+  swapped territories.
+- **Until that resolver lands, the record states the honest interim as
+  a precondition, visibly.** Postal and country party attribution is
+  anchor-reviewed, not evidence-anchored: an operator can check it
+  from the anchor and no mechanism enforces it. The ladder may consume
+  such values only with the grounding outcome stamped
+  attribution-unverified in the provenance envelope, surfaced at the
+  review gate as an advisory on the territory it fed — and the
+  once-per-counterparty confirmation of the fourth amendment is the
+  working mitigation, since a confirmed counterparty fact makes the
+  fragile rungs moot for every later document. The interim is a stated
+  precondition, not an accepted design; the stamp is what stops the
+  checkbox reading as closed while the hole is open.
+- **The contract closes toward the record, not the reverse.** The
+  enrolled set names party names; the read-path contract carries
+  neither `supplier_name` nor `customer_name` today. They are added:
+  names are precisely what role evidence quotes, and a record
+  describing a contract the code does not have misleads every reader
+  until one of them moves.
+
+### D8c — the evidence marker is a stated judgement; column headers are not taxpayer evidence
+
+**Ruling: the header row of a tabular file is the file's schema, not the
+taxpayer's content, and the column-role mapping request therefore declares
+`evidence_derived = False`.** What crosses that seam is the set of labels a
+bank or a billing tool printed to name its own columns — `Fecha`, `Importe`,
+`Concepto`. The prompt compiler accepts headers and nothing else, so there is
+no channel for a cell value, and the instruction it writes forbids the model to
+reproduce data. Marking the request would put a schema-shaped payload behind a
+taxpayer-evidence consent token and close the gated hosted lane D9's tabular
+measurement runs through, buying no confidentiality.
+
+**The residual is acknowledged rather than argued away.** A bank export header
+can carry an account fragment or a holder name, and the mapper's parameter is a
+sequence of strings that would accept a row of values as readily as a header
+row. Both are real. Neither changes the ruling, because the marker declares
+what a builder *intends* to send and the header-only property is held at the
+prompt compiler's signature, which is now a gated tripwire rather than a habit.
+
+**What this record actually fixes is that the judgement was invisible.** The
+marker defaults to `False`, so a builder that judged its content non-evidential
+and a builder that forgot the keyword were byte-identical in source — and the
+diff adding a third caller passing rows would not have looked like a
+confidentiality change. Under this ruling **every production request states its
+posture explicitly**, and the sites stating `False` are enrolled with a reason
+in a gate that fails when the set changes. A sixth builder is then a decision
+someone took, not an omission nobody saw.
+
+**The gate is `llm/tests/test_evidence_marker_declared_at_every_builder.py`**:
+it walks the production AST for every `LLMRequest` construction, refuses any
+that omits the marker, refuses any constant `False` that is not enrolled,
+refuses a stale enrolment, and anchors the enrolment on the prompt compiler
+accepting `headers` and nothing else. It is non-vacuous by a scan-found-the-
+known-builders assertion, and mutation-proven: stripping the marker from the
+column-role builder reds two of its four cases.
 
 ### D9 — Stage-by-stage measurement: the map from stage to oracle
 
