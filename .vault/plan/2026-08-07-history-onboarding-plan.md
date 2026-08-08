@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#history-onboarding'
 date: '2026-08-07'
-modified: '2026-08-07'
-body_hash: 'sha256:1d1c0ac7e2cdb5c7ed9b8d54a059cdd0ffaf5166d1b1770998e5d3064913d7cf'
+modified: '2026-08-08'
+body_hash: 'sha256:179e3e7e290d45c90d49ac5d907036582f0dc499e66ccf6bea2e2208ba9df15f'
 tier: L2
 related:
   - '[[2026-08-07-history-onboarding-adr]]'
@@ -147,6 +147,8 @@ values in all four catalogues.
 - [ ] `P04.S14` - add the cross-period next_action builder cases pointing at the new discover and pull-all verbs, verified by the existing next-action conformance coverage; `src/cadrumo/application/modelo/_verification_cross_period.py`.
 - [ ] `P04.S15` - update operator_surface/_help.py with the new discover and pull-all verb entries, verified by test_rule_surface_conformance.py; `src/cadrumo/application/operator_surface/_help.py`.
 - [ ] `P04.S16` - update the agent-harness docs under src/cadrumo/_data/agent that name the filed verb group to cite the new discover and pull-all verbs, verified by the harness-citation conformance check confirming every named verb resolves against the live operator-surface manifest; `src/cadrumo/_data/agent`.
+- [ ] `P04.S30` - enroll the app.* payload modules into the JSON-schema conformance parametrisation in staged per-family batches, since SCHEMA_REGISTRY is populated at collection time from the config payload modules only and 73 of 73 parametrised cases are config or root with zero app, leaving app.live.filed.list and app.live.filed.pull uncovered by test_registered_schema_envelope_round_trips and test_registered_schema_has_no_bespoke_notice_field, and a one-line import of _app_live_payloads would sweep roughly 31 schemas into two gates at once and could red several concurrent campaigns, verified by each batch landing green and by a test asserting the parametrised case set contains at least one app.* key; `src/cadrumo/entrypoints/cli/tests/test_json_schema_conformance.py`.
+- [ ] `P04.S31` - add a fixture-anchor assertion beside every test that intersects a candidate set against UNMODELED_OBLIGATIONS, which is currently EMPTY so any such intersection assertion passes vacuously and keeps passing if the filter it guards is deleted, gating instead on the PROPERTY the filter guarantees so the test stays meaningful whether the collection is empty today or populated tomorrow, verified by the anchor failing when the constant is empty and by the property assertion failing when the filter is removed; `src/cadrumo/core/tests, src/cadrumo/application/live/tests`.
 
 The envelope command= identifier for each new verb is established by that verb's own Step
 (`P01.S04`, `P03.S09`) and verified by the same documented-command-conformance gate; it is not a

@@ -409,7 +409,7 @@ def _reject_overlapping_ranges(record_id: str, sorted_ranges: list[tuple[int, in
     The slot-geometry check that asks whether two fields claim the same bytes. Its
     slot-WIDTH sibling asks whether the bytes one field claims can hold what that
     field supplies, and lives at registry-build time rather than here: see
-    :func:`cadrumo.domain.calculations.registry._validate_exports._validate_draft_field_slot_width`.
+    :func:`cadrumo.domain.calculations.registry._validate_export_field_widths.validate_draft_field_slot_width`.
     """
     for index, current in enumerate(sorted_ranges):
         for other in sorted_ranges[index + 1 :]:

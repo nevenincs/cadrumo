@@ -100,6 +100,7 @@ class ParsedEInvoice:
         "iva_category",
         "lines",
         "recargo_amount",
+        "record_text",
         "regime_legend",
         "shape",
         "supplier_country_code",
@@ -148,8 +149,49 @@ class ParsedEInvoice:
         # WROTE. The two are read from different elements precisely so a
         # disagreement between them stays visible to the operator.
         self.regime_legend: str | None = None
+        # Every TEXT NODE the record carries, and no markup. This is what the
+        # anchor check must search: passing the whole decoded file lets a
+        # two-character value match a TAG name -- "ID" occurs in `<cbc:ID>` --
+        # so a document carrying no country element at all grounds one, and the
+        # check certifies markup while claiming to catch a reader that pointed
+        # at an element the document does not have. Every field read here comes
+        # from a text node, so narrowing the haystack weakens no case that was
+        # legitimately grounded before.
+        self.record_text: str = ""
         self.lines: list[ParsedEInvoiceLine] = []
         self.iva_breakdown: list[tuple[Decimal | None, Decimal | None, Decimal | None]] = []
+
+
+#: Separator between adjacent text nodes in a record's extracted text.
+#:
+#: A NUL rather than a newline, and that is load-bearing rather than exotic. The
+#: anchor search normalises whitespace runs to single spaces before matching, so
+#: joining on ANY whitespace makes two adjacent element values contiguous: a
+#: Facturae party name split across ``Name``, ``FirstSurname`` and
+#: ``SecondSurname`` reassembles into exactly the string the parser composes from
+#: them, and an ASSEMBLED value then anchors as though the document printed it
+#: verbatim. It does not -- the document prints three separate values -- and
+#: refusing that is a property the raw-file haystack had and a naive text-node
+#: haystack silently dropped. A NUL survives normalisation, so the boundary
+#: between two nodes stays a boundary.
+_TEXT_NODE_SEPARATOR = "\x00"
+
+
+def _record_text(root: Element) -> str:
+    """Return every text node in *root*, separated so no two of them merge.
+
+    The haystack the anchor check searches. Markup is excluded because a tag name
+    is not something the document states -- a two-character value would otherwise
+    match one, and a record carrying no such element at all would ground a value.
+    Adjacent nodes are kept apart by :data:`_TEXT_NODE_SEPARATOR`, because an
+    anchor spanning two of them is an assembled value rather than a printed one.
+    """
+    fragments: list[str] = []
+    for node in root.iter():
+        for raw in (node.text, node.tail):
+            if raw and raw.strip():
+                fragments.append(raw.strip())
+    return _TEXT_NODE_SEPARATOR.join(fragments)
 
 
 def _local(tag: str) -> str:
@@ -629,8 +671,13 @@ def parse_einvoice_document(data: bytes) -> ParsedEInvoice:
                 continue
             inner_shape = probe_document_shape(candidate)
             if inner_shape in _PARSERS:
-                return _PARSERS[inner_shape](inner)
+                embedded = _PARSERS[inner_shape](inner)
+                embedded.record_text = _record_text(inner)
+                return embedded
         raise EInvoiceXmlParseError("PDF carries an embedded file but no readable e-invoice record")
     if shape not in _PARSERS:
         raise EInvoiceXmlParseError(f"document shape {shape.value!r} carries no structured invoice record")
-    return _PARSERS[shape](parse_hardened_xml(payload))
+    root = parse_hardened_xml(payload)
+    parsed = _PARSERS[shape](root)
+    parsed.record_text = _record_text(root)
+    return parsed

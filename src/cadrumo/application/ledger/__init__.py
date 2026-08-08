@@ -150,6 +150,15 @@ if TYPE_CHECKING:
         run_evidence_batch,
         summarise_batch,
     )
+    from ._classification_assembly import (
+        ClassificationAssembly,
+        DeclaredFact,
+        DeclaredFacts,
+        MissingClassifierInput,
+        assemble_classification_criteria,
+        classify_from_assembled_criteria,
+    )
+    from ._classifier_inputs import ClassifierInputs, collect_classifier_inputs
     from ._closure_findings import (
         ROUNDING_ALLOWANCE_PER_TERM,
         closure_findings,
@@ -163,42 +172,6 @@ if TYPE_CHECKING:
         FindingResolution,
         confirmation_blockers,
         resolved_blockers,
-    )
-    from ._classification_assembly import (
-        ClassificationAssembly,
-        DeclaredFact,
-        DeclaredFacts,
-        MissingClassifierInput,
-        assemble_classification_criteria,
-        classify_from_assembled_criteria,
-    )
-    from ._classifier_inputs import ClassifierInputs, collect_classifier_inputs
-    from ._establishment_ladder import (
-        CounterpartyEstablishment,
-        EstablishmentRung,
-        resolve_counterparty_establishment_scope,
-        resolve_draft_counterparty_establishment,
-        scope_printed_evidence_would_establish,
-    )
-    from ._party_attribution import (
-        ATTRIBUTION_ESTABLISHING_ORIGINS,
-        PARTY_ATTRIBUTED_ADDRESS_FIELDS,
-        PartyAttributionAdvisory,
-        PartyAttributionWarning,
-        party_attribution_advisory,
-        stamp_unverified_party_attribution,
-    )
-    from ._counterparty_establishment import (
-        CounterpartyEstablishmentConflictError,
-        CounterpartyEstablishmentContradiction,
-        CounterpartyEstablishmentFact,
-        CounterpartyEstablishmentInputError,
-        CounterpartyEstablishmentRepository,
-        CounterpartyEstablishmentResolution,
-        counterparty_establishment_key,
-        forget_counterparty_establishment,
-        record_counterparty_establishment,
-        resolve_counterparty_establishment,
     )
     from ._confirmation_record import (
         ConfirmationRecordDocument,
@@ -224,6 +197,18 @@ if TYPE_CHECKING:
         rederive_artefact_on_host,
         survey_cloud_consent,
     )
+    from ._counterparty_establishment import (
+        CounterpartyEstablishmentConflictError,
+        CounterpartyEstablishmentContradiction,
+        CounterpartyEstablishmentFact,
+        CounterpartyEstablishmentInputError,
+        CounterpartyEstablishmentRepository,
+        CounterpartyEstablishmentResolution,
+        counterparty_establishment_key,
+        forget_counterparty_establishment,
+        record_counterparty_establishment,
+        resolve_counterparty_establishment,
+    )
     from ._deterministic_findings import (
         DETERMINISTIC_CHECKS,
         DeterministicCheck,
@@ -231,6 +216,14 @@ if TYPE_CHECKING:
         deterministic_findings,
     )
     from ._document_transcription import DocumentTranscription, TranscriberIdentity
+    from ._establishment_ladder import (
+        CounterpartyEstablishment,
+        EstablishmentRung,
+        RegistrationEstablishmentConflict,
+        resolve_counterparty_establishment_scope,
+        resolve_draft_counterparty_establishment,
+        scope_printed_evidence_would_establish,
+    )
     from ._evidence import (
         MediaKind,
         PurchaseInvoiceEvidence,
@@ -265,6 +258,7 @@ if TYPE_CHECKING:
         read_extraction_draft,
         write_extraction_draft,
     )
+    from ._filer_establishment import FILER_POSTCODE_FACT_PATH, resolve_filer_territorial_scope
     from ._grounded_reading import (
         GROUNDABLE_ORIGINS,
         ground_draft_against_transcription,
@@ -280,7 +274,6 @@ if TYPE_CHECKING:
         printed_excerpt_occurs,
         strip_printed_unit,
     )
-    from ._filer_establishment import FILER_POSTCODE_FACT_PATH, resolve_filer_territorial_scope
     from ._id_resolution import (
         MINIMUM_DISPLAY_ID_WIDTH,
         compute_display_id_width,
@@ -356,6 +349,14 @@ if TYPE_CHECKING:
         SplitTransactionResult,
     )
     from ._participation_read import get_transaction_participation
+    from ._party_attribution import (
+        ATTRIBUTION_ESTABLISHING_ORIGINS,
+        PARTY_ATTRIBUTED_ADDRESS_FIELDS,
+        PartyAttributionAdvisory,
+        PartyAttributionWarning,
+        party_attribution_advisory,
+        stamp_unverified_party_attribution,
+    )
     from ._preflight import (
         LedgerPreflightIssue,
         LedgerPreflightIssueReason,
@@ -424,6 +425,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "collect_classifier_inputs": "._classifier_inputs",
     "CounterpartyEstablishment": "._establishment_ladder",
     "EstablishmentRung": "._establishment_ladder",
+    "RegistrationEstablishmentConflict": "._establishment_ladder",
     "resolve_counterparty_establishment_scope": "._establishment_ladder",
     "resolve_draft_counterparty_establishment": "._establishment_ladder",
     "scope_printed_evidence_would_establish": "._establishment_ladder",
@@ -656,6 +658,7 @@ def __dir__() -> list[str]:
 
 
 __all__ = [
+    "ATTRIBUTION_ESTABLISHING_ORIGINS",
     "BATCH_ITEM_STATUSES",
     "BLOCKING_REASON_BY_DISCREPANCY_KIND",
     "BULK_CLASSIFY_ALLOWED_COLUMNS",
@@ -666,6 +669,7 @@ __all__ = [
     "GROUNDABLE_ORIGINS",
     "IDENTITY_FIELDS",
     "MINIMUM_DISPLAY_ID_WIDTH",
+    "PARTY_ATTRIBUTED_ADDRESS_FIELDS",
     "ROUNDING_ALLOWANCE_PER_TERM",
     "AeatRecordProjectionError",
     "AnchorEvaluation",
@@ -681,6 +685,10 @@ __all__ = [
     "CloudDerivedArtefact",
     "ConfirmationBlockedError",
     "ConfirmationBlocker",
+    "ConfirmationRecordDocument",
+    "ConfirmationRecordRepository",
+    "ConsentWithdrawalSurvey",
+    "ConsentedDispatch",
     "CounterpartyDraftSide",
     "CounterpartyEstablishment",
     "CounterpartyEstablishmentConflictError",
@@ -689,18 +697,13 @@ __all__ = [
     "CounterpartyEstablishmentInputError",
     "CounterpartyEstablishmentRepository",
     "CounterpartyEstablishmentResolution",
-    "ConfirmationRecordDocument",
-    "ConfirmationRecordRepository",
-    "ConsentWithdrawalSurvey",
-    "ConsentedDispatch",
     "DeclaredFact",
     "DeclaredFacts",
     "DeterministicCheck",
     "DocumentTranscription",
-    "EstablishmentRung",
-    "MissingClassifierInput",
     "DraftDiscrepancyFinding",
     "EligibleCategoryRow",
+    "EstablishmentRung",
     "EvidenceInput",
     "ExportSerializationFormat",
     "ExtractionDraftDocument",
@@ -756,7 +759,10 @@ __all__ = [
     "ManualLedgerTransactionResult",
     "MediaKind",
     "MergeTransactionsResult",
+    "MissingClassifierInput",
     "OnHostReader",
+    "PartyAttributionAdvisory",
+    "PartyAttributionWarning",
     "PrintedTotalDiscrepancy",
     "PurchaseInvoiceEvidence",
     "PurchaseInvoiceEvidenceDocument",
@@ -768,6 +774,7 @@ __all__ = [
     "RatiosCensoOverrideWarning",
     "RatiosValidationFinding",
     "RatiosValidationReport",
+    "RegistrationEstablishmentConflict",
     "ResolvedFinding",
     "ReviewedInvoiceDraft",
     "ReviewedSuggestion",
@@ -784,13 +791,13 @@ __all__ = [
     "apply_saturated_llm_classification",
     "archive_manual_transaction",
     "artefact_is_cloud_derived",
+    "assemble_classification_criteria",
     "attach_manual_transaction_evidence",
     "batch_item_identity",
     "build_confirmation_record",
     "build_llm_diagnostics_report",
     "bulk_classify_from_csv",
     "canonical_identity_token",
-    "assemble_classification_criteria",
     "censo_business_pct_for",
     "censo_override_warning",
     "classify_from_assembled_criteria",
@@ -801,18 +808,6 @@ __all__ = [
     "confirmation_blockers",
     "counterparty_draft_side",
     "counterparty_establishment_key",
-    "forget_counterparty_establishment",
-    "record_counterparty_establishment",
-    "resolve_counterparty_establishment",
-    "resolve_counterparty_establishment_scope",
-    "resolve_draft_counterparty_establishment",
-    "scope_printed_evidence_would_establish",
-    "ATTRIBUTION_ESTABLISHING_ORIGINS",
-    "PARTY_ATTRIBUTED_ADDRESS_FIELDS",
-    "PartyAttributionAdvisory",
-    "PartyAttributionWarning",
-    "party_attribution_advisory",
-    "stamp_unverified_party_attribution",
     "create_manual_transaction",
     "derive_confirmation_id",
     "derive_operator_iva_substrate",
@@ -827,6 +822,7 @@ __all__ = [
     "export_ledger_transactions",
     "extract_invoice_draft_from_evidence",
     "field_assertions",
+    "forget_counterparty_establishment",
     "get_manual_transaction",
     "get_transaction_participation",
     "ground_ambiguous_candidates",
@@ -850,6 +846,7 @@ __all__ = [
     "normalise_for_anchor_search",
     "order_batch_items",
     "order_batch_sources",
+    "party_attribution_advisory",
     "preflight_ledger_tax_readiness",
     "preflight_transaction_catalogue",
     "printed_excerpt_occurs",
@@ -859,12 +856,16 @@ __all__ = [
     "re_stamped_provenance",
     "read_confirmation_record",
     "read_extraction_draft",
+    "record_counterparty_establishment",
     "rederive_artefact_on_host",
     "regime_contradiction_finding",
     "reject_llm_suggestion",
     "remove_manual_transaction",
     "reset_ledger_catalogue",
+    "resolve_counterparty_establishment",
+    "resolve_counterparty_establishment_scope",
     "resolve_counterparty_identity",
+    "resolve_draft_counterparty_establishment",
     "resolve_filer_territorial_scope",
     "resolve_lineage_transaction_id",
     "resolve_transaction_id",
@@ -872,9 +873,11 @@ __all__ = [
     "restore_manual_transaction",
     "run_evidence_batch",
     "saturate_llm_classification",
+    "scope_printed_evidence_would_establish",
     "set_usage_ratio",
     "split_transaction",
     "split_transaction_with_classified_children",
+    "stamp_unverified_party_attribution",
     "stash_manual_transaction",
     "strip_printed_unit",
     "suggest_evidence_split",

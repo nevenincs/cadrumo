@@ -1047,7 +1047,13 @@ def _structured_provenance(
     # the envelope types. Read it exactly as if it were at module scope.
     from ._grounding_anchor import ground_structured_value
 
-    source_text = evidence.data.decode("utf-8", errors="replace")
+    # The record's TEXT NODES, never the raw file. Searching the whole decoded
+    # document lets a short value match a TAG name -- `ID` occurs in `<cbc:ID>`
+    # -- so a record carrying no country element at all grounded one, and the
+    # anchor check certified markup while claiming to catch a reader pointing at
+    # an element the document does not have. Every structured field is read from
+    # a text node, so this narrows the haystack without weakening any case.
+    source_text = parsed.record_text
     envelopes: list[FieldProvenance] = []
     for field in _STRUCTURED_ENVELOPE_FIELDS:
         value = getattr(parsed, field, None)
@@ -1078,6 +1084,11 @@ def _structured_provenance(
                 field=field,
                 value=value,
                 anchor=stated,
+                # The derivation that produced the value, handed back so the
+                # envelope re-derives rather than trusting the pair. Without it
+                # `the anchor occurs` is a fact about the anchor alone and the
+                # value could be anything.
+                derive=country_code_for_stated_country_code,
                 element_path=_structured_element_path(field, shape=parsed.shape),
                 source_text=source_text,
             ),

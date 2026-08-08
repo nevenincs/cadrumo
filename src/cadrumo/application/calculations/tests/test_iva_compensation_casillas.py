@@ -19,6 +19,7 @@ import pytest
 
 from .... import application, domain
 from ....core import validated_casilla_id
+from ....domain import iva_compensation as iva_compensation_policy
 from .. import _iva_compensation_casillas
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -99,10 +100,18 @@ def _discover_token_naming_modules() -> tuple[ModuleType, ...]:
     # stays in the authority set, so a module discovered for another reason is
     # still checked against it.
     literal_tokens = {token for token in _authority_by_token() if not token.isdigit()}
-    authority_names = set(_iva_compensation_casillas.__all__)
+    # Both declaring authorities, because the vocabulary is declared across two
+    # layers: the domain policy owns the tokens it decides figures from, and the
+    # calculations authority binds those rather than re-typing them. A sweep that
+    # knew only the calculations names missed every consumer that imports the
+    # domain constants directly -- including the registry's binding validator.
+    authority_names = {
+        *_iva_compensation_casillas.__all__,
+        *(name for name in dir(iva_compensation_policy) if name.startswith("M303_COMPENSATION_")),
+    }
     discovered: dict[str, ModuleType] = {}
     for package in _SWEPT_PACKAGES:
-        root = Path(package.__file__).parent  # ty: ignore[invalid-argument-type]
+        root = Path(package.__file__).parent
         for source in sorted(root.rglob("*.py")):
             if "tests" in source.parts:
                 continue

@@ -1469,13 +1469,17 @@ def test_each_unreached_justificante_outcome_reports_its_own_reason(tmp_path: Pa
             assert notice.context["expediente_id"] == observation.expediente_id, case_id
             reasons[case_id] = notice.context["reason"]
 
-    assert set(reasons.values()) == {
-        FiledJustificanteUnreachedReason.MANIFEST_MISMATCH.value,
-        FiledJustificanteUnreachedReason.UNPARSABLE_PDF.value,
-        FiledJustificanteUnreachedReason.CSV_UNRESOLVABLE.value,
-        FiledJustificanteUnreachedReason.CSV_MISMATCH.value,
-        FiledJustificanteUnreachedReason.FILING_TARGET_MISMATCH.value,
-    }, reasons
+    # Derived from the enum, never a hand-listed copy of it: a member added
+    # without a case here fails this assertion instead of going unwatched. Only
+    # UNREADABLE_ARTEFACT is excluded, because reaching it means secure storage
+    # failed to return bytes it holds, which this harness cannot stage without a
+    # test double standing in for the real store.
+    expected = {
+        reason.value
+        for reason in FiledJustificanteUnreachedReason
+        if reason is not FiledJustificanteUnreachedReason.UNREADABLE_ARTEFACT
+    }
+    assert set(reasons.values()) == expected, reasons
     assert len(set(reasons.values())) == len(reasons), (
         f"two cases reported the same reason, so the outcomes are not distinguished: {reasons}"
     )

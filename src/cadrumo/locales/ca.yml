@@ -2096,6 +2096,11 @@ cli:
           group_help: Reviseu els esborranys d'extraccio pendents abans de confirmar-los
             com a factures.
           list_help: Llisteu els esborranys d'extraccio pendents de revisio humana.
+          party_attribution_unverified_message: Res no verifica a quina part pertanyen
+            aquestes dades d'adreça. Si es llegissin dos blocs d'adreça a l'inrevés,
+            ambdues parts quedarien situades en un territori d'IVA on cap no està
+            establerta i cap comprovació no ho detectaria. Contrasteu cada valor amb
+            el document abans de confirmar aquest esborrany.
           reason_help: Mostreu nomes els esborranys blocats per aquest motiu.
           reference_help: Referencia d'evidencia o adjunt de la qual s'ha llegit l'esborrany
             pendent.
@@ -2104,7 +2109,6 @@ cli:
           show_help: Mostreu un esborrany pendent camp per camp, amb les seves troballes
             i blocatges.
           unknown_reference: No hi ha cap esborrany pendent per a aquesta referencia.
-          party_attribution_unverified_message: 'Res no verifica a quina part pertanyen aquestes dades d''adreça. Si es llegissin dos blocs d''adreça a l''inrevés, ambdues parts quedarien situades en un territori d''IVA on cap no està establerta i cap comprovació no ho detectaria. Contrasteu cada valor amb el document abans de confirmar aquest esborrany.'
         source_path_help: Ruta al PDF o imatge de la factura
         supplier_help: Nom del proveïdor
         taxable_base_help: Base imposable de la factura
@@ -66750,14 +66754,16 @@ modelo:
               label: Tipus de declaració (original / substitutiva / complementària)
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma.label
+              label: Base imposable d'adquisicions intracomunitàries de béns al tipus
+                general, sense desglossament per tipus - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma.help
               label: Base imposable d'adquisicions intracomunitàries de béns al tipus
                 reduït, sense desglossament per tipus - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8.label
+              label: Base imposable d'adquisicions intracomunitàries de béns al tipus
+                superreduït, sense desglossament per tipus - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig.help
               label: Base imposable d'adquisicions intracomunitàries de béns al tipus
@@ -66816,7 +66822,8 @@ modelo:
                 del 7,5% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5.label
+              label: Base imposable d'adquisicions intracomunitàries de béns al tipus
+                zero, sense desglossament per tipus - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck.help
               label: Base imposable d'adquisicions intracomunitàries de serveis al

@@ -43,12 +43,14 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.inbound.einvoice import parse_einvoice_document
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import FieldGroundingOutcome, FieldOrigin
 from ....core.config import Settings
-from ....domain.iva import InvoiceKind, IvaTerritorialScope
+from ....domain.iva import InvoiceKind, IvaTerritorialScope, country_code_for_stated_country_code
 from .._establishment_ladder import EstablishmentRung, resolve_draft_counterparty_establishment
 from .._evidence_draft import FieldProvenance, InvoiceDraft, extract_invoice_draft_from_evidence
+from .._grounding_anchor import ground_structured_value
 from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import isolated_settings as isolated_settings
 from ._evidence_test_support import runtime_profile as runtime_profile
@@ -471,6 +473,104 @@ class TestTheProvenanceTellsTheTwoApart:
         draft = _draft(evidence_id, isolated_settings)
 
         assert not [envelope for envelope in draft.provenance if envelope.field.endswith("_country_code")]
+
+    def test_a_value_the_anchor_does_not_derive_to_is_contradicted(self) -> None:
+        """An explicit anchor checks the value; it does not merely accompany it.
+
+        The anchor occurring in the record is a fact about the ANCHOR. Once the
+        value stopped being its own anchor, nothing tied the two together, and
+        the envelope would have asserted that a document stating ``ESP``
+        evidences a country it never mentions. The derivation is what closes
+        that, and it is the textual counterpart of the decimal re-parse the
+        printed lanes already run.
+        """
+        contradicted = ground_structured_value(
+            field="supplier_country_code",
+            value="ZW",
+            anchor=_STATED_ALPHA3,
+            derive=country_code_for_stated_country_code,
+            element_path="SellerParty/AddressInSpain/CountryCode",
+            source_text=_STATED_ALPHA3,
+        )
+
+        assert contradicted.grounding is FieldGroundingOutcome.CONTRADICTED
+
+    def test_an_explicit_anchor_without_a_derivation_is_refused(self) -> None:
+        """The unverifiable pair cannot be expressed, rather than being caught later.
+
+        A caller contract rather than a document condition, so it raises: an
+        envelope says what the document says, and "the caller supplied a pair
+        nothing checks" is not one of the things it can say.
+        """
+        with pytest.raises(ValueError, match="derivation"):
+            ground_structured_value(
+                field="supplier_country_code",
+                value="ES",
+                anchor=_STATED_ALPHA3,
+                element_path="SellerParty/AddressInSpain/CountryCode",
+                source_text=_STATED_ALPHA3,
+            )
+
+    def test_markup_cannot_ground_a_country_the_record_does_not_state(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        tmp_path: Path,
+    ) -> None:
+        """A tag name is not something the document states.
+
+        The anchor search once ran over the whole decoded file, so a
+        two-character value could match markup: ``ID`` is Indonesia and it occurs
+        in ``<cbc:ID>``, which meant a record carrying no country element at all
+        grounded one. The check claimed to catch a reader pointing at an element
+        the document does not have, and for short codes it certified the schema
+        instead. Asserted against the real specimen, which genuinely states no
+        country.
+        """
+        assert "IdentificationCode" not in _corpus(_UBL_INVOICE)
+        evidence_id = _stored(
+            _corpus(_UBL_INVOICE),
+            settings=isolated_settings,
+            objects=secure_objects,
+            tmp_path=tmp_path,
+            name="ubl_no_country.xml",
+        )
+
+        draft = _draft(evidence_id, isolated_settings)
+
+        assert draft.supplier_country_code is None
+        assert not [envelope for envelope in draft.provenance if envelope.field.endswith("_country_code")]
+
+        # The haystack itself, so the property is stated where it is enforced
+        # rather than inferred from the absence above.
+        parsed = parse_einvoice_document(_corpus(_UBL_INVOICE).encode("utf-8"))
+        assert "<" not in parsed.record_text
+        grounded = ground_structured_value(
+            field="supplier_country_code",
+            value="ID",
+            element_path="p",
+            source_text=parsed.record_text,
+        )
+        assert grounded.grounding is FieldGroundingOutcome.UNANCHORED
+
+    def test_an_assembled_name_still_does_not_anchor_as_verbatim(self) -> None:
+        """Narrowing the haystack must not merge adjacent element values.
+
+        A Facturae party name is composed from three sibling elements, and the
+        composed string is not printed anywhere in the record. Joining the text
+        nodes on whitespace would make it appear, because the anchor search
+        collapses whitespace runs before matching -- so an assembled value would
+        anchor as though the document stated it. That refusal was a property of
+        the raw-file haystack and is easy to drop silently when narrowing it.
+        """
+        parsed = parse_einvoice_document(_corpus(_FACTURAE_WITH_ADDRESSES).encode("utf-8"))
+
+        assert parsed.supplier_name == "Marta Iglesias Ferrer"
+        assert parsed.supplier_name not in parsed.record_text
+        # Each part IS stated, so this is a statement about the join and not
+        # about the parts being absent.
+        for part in ("Marta", "Iglesias", "Ferrer"):
+            assert part in parsed.record_text
 
     def test_the_envelope_names_the_element_it_was_read_from(
         self,

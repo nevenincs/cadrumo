@@ -1950,6 +1950,11 @@ cli:
           group_help: Review pending extraction drafts before confirming them into
             invoices.
           list_help: List pending extraction drafts awaiting human review.
+          party_attribution_unverified_message: Nothing verifies which party these
+            address values belong to. Were two address blocks read the wrong way round,
+            both parties would be placed in an IVA territory neither is established
+            in and no check would catch it. Confirm each value against the document
+            before confirming this draft.
           reason_help: Show only drafts blocked for this reason.
           reference_help: Evidence or attachment reference the pending draft was read
             from.
@@ -1958,7 +1963,6 @@ cli:
           show_help: Show one pending draft field by field, with its findings and
             blockers.
           unknown_reference: No pending draft for that reference.
-          party_attribution_unverified_message: 'Nothing verifies which party these address values belong to. Were two address blocks read the wrong way round, both parties would be placed in an IVA territory neither is established in and no check would catch it. Confirm each value against the document before confirming this draft.'
         source_path_help: Path to the invoice PDF or image
         supplier_help: Supplier name
         taxable_base_help: Invoice taxable base
@@ -6350,6 +6354,11 @@ errors:
       violate a required invariant. Check the wallet age configuration and retry.
     refused_ledger_confirmation_blocked: This document has findings a human must answer
       before it can be confirmed.
+    refused_ledger_counterparty_establishment_conflict: This counterparty is already
+      confirmed as established in a different territory; withdraw the confirmed fact
+      before replacing it.
+    refused_ledger_counterparty_establishment_input: An establishment fact cannot
+      be confirmed against a counterparty identifier that does not verify.
     refused_ledger_evidence_input: An evidence input provided violates the purchase-invoice
       contract. Correct the input and try again.
     refused_ledger_evidence_not_found: No purchase-invoice evidence exists with the
@@ -6500,8 +6509,6 @@ errors:
     submission_preflight_error_findings: Draft has {finding_count} ERROR-severity
       finding(s); resolve them before submission.
     unsupported_currency: The currency code provided is not supported.
-    refused_ledger_counterparty_establishment_input: 'An establishment fact cannot be confirmed against a counterparty identifier that does not verify.'
-    refused_ledger_counterparty_establishment_conflict: 'This counterparty is already confirmed as established in a different territory; withdraw the confirmed fact before replacing it.'
   snapshot:
     ambiguous_revision_selection: 'More than one registry revision matches modelo
       %{modelo_id}: %{candidate_ids}.'
@@ -64763,7 +64770,7 @@ modelo:
             label: Self-assessment tax year
           iva-base-autorepercutida-intracomunitaria-devengado:
             help: modelo.schema.303.casilla.continuidad.iva-base-autorepercutida-intracomunitaria-devengado.help
-            label: modelo.schema.303.casilla.continuidad.iva-base-autorepercutida-intracomunitaria-devengado.label
+            label: Taxable base of accrued reverse-charge VAT on intra-Community acquisitions
           iva-compensacion-aplicada-periodo:
             help: null
             label: Prior-period offsets applied in this period

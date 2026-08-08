@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:290c0ed61123f455126e9ff06fd5aafa357d32cef0b70b19cb0e0220c526b323'
+body_hash: 'sha256:240499c99fa3c73bc32a259a3785722bc0d018d758b04a1bc65799966bcbedf6'
 related:
   - '[[2026-08-06-llm-invoice-read-reconciliation-research]]'
   - '[[2026-08-06-llm-package-split-measurement-basis-reference]]'
@@ -926,6 +926,63 @@ territory axis. Four parts:
   names are precisely what role evidence quotes, and a record
   describing a contract the code does not have misleads every reader
   until one of them moves.
+
+**Ruling (seventh amendment): a well-formed but unassigned country code
+is not evidence, and the country rung fires only through the closed
+vocabulary — both legs together.** Measured at HEAD:
+`territorial_scope_for_country` resolves any shape-valid alpha-2 outside
+its catalogue to `THIRD_COUNTRY` by documented design, the ladder takes
+that as a decisive rung, and the structured country read has now put
+machine-stated strings in front of it — so a typo, placeholder or
+truncation (`XX`, `ZZ`, `QQ`) settles a party outside the EU and, on the
+issued side, zero-rates the operation silently. That is the
+under-declaration direction, and it is the founding failure of this
+record wearing the country axis: a checksum-valid NIF of the wrong
+entity taught that shape-validity is not reference, and a shape-valid
+code of no country is the same lesson. The ruling:
+
+- **The rung consumes the closed vocabulary, not the shape check.** The
+  fourth amendment already defined the country rung as a match "against
+  a bounded registry country vocabulary — deterministic lookup, never
+  translation"; a code outside that vocabulary is an unmatched token,
+  the rung does not fire, and the ladder walks on or exhausts to
+  UNKNOWN. A document stating `XX` has stated a string, not a country:
+  the ISO user-assigned ranges denote nothing by construction, so
+  treating them as decisive third-country evidence derives a tax
+  treatment from a value with no referent. The resolver's
+  shape-based `THIRD_COUNTRY` default is **superseded** for every
+  consumer, not just the ladder — any caller inheriting it inherits the
+  same silent zero-rating — and the property is stated at the
+  authority: an unassigned code resolves to no scope, anywhere.
+- **Both legs move together.** The reviewer's asymmetry argument is
+  upheld: printed and structured country evidence share one vocabulary
+  authority, and a structured leg stricter than the printed one would
+  make the machine-read document establish less than the identical
+  printed code. The printed leg's acceptance of shape-valid non-members
+  is the same defect, merely older; both narrow in the same change.
+- **The favourability-asymmetric shape is rejected**, with the reason
+  recorded: making evidence decisiveness depend on which outcome it
+  produces inverts the fact-to-derivation direction — the ladder would
+  need the tax consequence before deciding whether the evidence exists
+  — and it leaves a wrong `THIRD_COUNTRY` standing wherever the outcome
+  is "unfavourable", which is the over-payment direction nothing else
+  watches. Direction-aware design in this record governs FAILURE
+  handling (act fail-closed, report fail-open), never the validity of
+  evidence.
+- **The unmatched token is not silently dropped either.** A stated code
+  outside the vocabulary surfaces as an advisory naming the string (the
+  operator's typo signal), distinguishable from a catalogue gap: a code
+  that IS ISO-assigned but missing from the registry vocabulary
+  surfaces as a catalogue-gap advisory so the data is fixable, and
+  still fires no rung until it is. Conflict with another rung routes
+  through the existing contradiction channel unchanged. Downstream, the
+  issued-side consequence is the designed one: no decisive country, no
+  export treatment — UNKNOWN, review gate, once per counterparty.
+- **Gates:** the three measured probes become the fixture (`XX`, `ZZ`,
+  `QQ` each yielding no scope from any consumer, mutation-proven at the
+  resolver); an issued-side fixture with an unassigned code must reach
+  the review gate and never a zero-rated category; and an
+  assigned-but-uncatalogued code must emit the catalogue-gap advisory.
 
 ### D8c — the evidence marker is a stated judgement; column headers are not taxpayer evidence
 

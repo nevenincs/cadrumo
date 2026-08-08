@@ -5,44 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:6bb667baa673e66f4caa8dd60a805a38998c0057d34566772060e5695544d126'
+body_hash: 'sha256:b9032f7a31345df306270982862f862234b4fbfdba920d52f419f2a0734191e3'
 step_id: 'S143'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S143 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Surface a populated postal code that is not five digits as a draft discrepancy, since the free-text grounder passes an address blob through verbatim into the draft and the operator payload where the surface labels it a postal code. Not a safety defect because the domain resolver returns nothing for it rather than the mainland, and the grounder must stay permissive because dropping the value would destroy the anchor the operator reviews. Add the check at the layer that already owns deterministic read-time findings rather than a second copy of the rule upstream of the domain authority and ## Scope
-
-- `src/cadrumo/application/ledger` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Surface a populated postal code that is not five digits as a draft discrepancy, since the free-text grounder passes an address blob through verbatim into the draft and the operator payload where the surface labels it a postal code. Not a safety defect because the domain resolver returns nothing for it rather than the mainland, and the grounder must stay permissive because dropping the value would destroy the anchor the operator reviews. Add the check at the layer that already owns deterministic read-time findings rather than a second copy of the rule upstream of the domain authority
 
@@ -111,17 +78,6 @@ out of this change and stated rather than assumed.
 
 ## Verification
 
-<!-- Where the evidence is that something RAN, quote the instrument rather than
-     summarising it: the invocation, then the runner's verbatim summary line.
-
-         uv run --no-sync pytest <paths> -m integration -n 0
-         15 passed in 10.35s
-
-     The invocation shows the selection (marker expression and path scope); the
-     summary line shows what that selection produced. A run that selected nothing
-     exits zero and reads as green, so a paraphrase such as "the tests pass"
-     discards exactly the part a reader needs. Quote, do not summarise. -->
-
 The new suite, thirteen cases over the real check and the real domain
 authorities:
 
@@ -165,8 +121,6 @@ reddened the three customer-side tests. All three positive controls confirmed
 invocation.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 The silencing arm reached only the two tests that route through the shared
 deterministic list; the other eleven bind the check function directly at import

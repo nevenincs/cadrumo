@@ -14,7 +14,7 @@ from .. import BboxAnchorSpec, CasillaId, RegistrySnapshot, validated_casilla_id
 from .._authority import ValidatedRegistryAuthority
 from .._binding_selector_utils import selector_as_dict
 from .._schema import DataBindingDefinition
-from .._validate_exports import _DRAFT_ATTRIBUTE_CANONICAL_WIDTHS
+from .._validate_export_field_widths import DRAFT_ATTRIBUTE_CANONICAL_WIDTHS
 from ._registry_schema_support import (
     _EXPECTED_DEADLINE_WINDOWS,
     _EXPECTED_LIVE_CROSS_REFERENCES,
@@ -760,8 +760,8 @@ def test_draft_attribute_width_ruling_covers_every_declarable_attribute() -> Non
     }
 
     assert declarable
-    assert set(_DRAFT_ATTRIBUTE_CANONICAL_WIDTHS) == declarable
-    assert _DRAFT_ATTRIBUTE_CANONICAL_WIDTHS["profile_tax_id"] == SPANISH_TAX_ID_WIDTH
+    assert set(DRAFT_ATTRIBUTE_CANONICAL_WIDTHS) == declarable
+    assert DRAFT_ATTRIBUTE_CANONICAL_WIDTHS["profile_tax_id"] == SPANISH_TAX_ID_WIDTH
 
 
 def test_validator_rejects_declarant_nif_draft_field_bound_to_a_wider_slot() -> None:

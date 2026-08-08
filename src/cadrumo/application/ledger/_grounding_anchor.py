@@ -79,6 +79,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
+from collections.abc import Callable
 from decimal import Decimal
 
 from pydantic import BaseModel
@@ -308,6 +309,7 @@ def _evaluate_anchor_against(
     anchor: str,
     source_text: str,
     source: str,
+    derive: Callable[[str], str | None] | None = None,
 ) -> AnchorEvaluation:
     """Run the anchor check against any source text, naming it in the detail.
 
@@ -323,6 +325,11 @@ def _evaluate_anchor_against(
         anchor: The verbatim form claimed as its source.
         source_text: The authoritative text to look for the anchor in.
         source: What that text is, for the operator-facing detail line.
+        derive: For a TEXTUAL value that differs from its anchor, the
+            deterministic function re-deriving the value from the anchor. The
+            textual counterpart of the decimal coercion this function already
+            applies, and required for the same reason: without it "the anchor
+            occurs" is a fact about the anchor and says nothing about the value.
     """
     if not anchor.strip():
         return AnchorEvaluation(
@@ -343,9 +350,33 @@ def _evaluate_anchor_against(
         )
 
     if isinstance(value, str):
-        # A textual field grounds on the anchor alone: there is no deterministic
-        # parse to re-derive it from, and inventing one here would put this
-        # module's idea of normalisation in place of the document's own text.
+        if derive is not None:
+            # The textual counterpart of the decimal re-derivation below, and it
+            # exists for exactly the same reason. A value that does not equal its
+            # own anchor is a DERIVED value, and "the anchor occurs" then says
+            # nothing about it: the anchor could be real and the value arbitrary.
+            # Re-deriving from the anchor is what ties the two back together.
+            rederived = derive(anchor)
+            if rederived != value:
+                return AnchorEvaluation(
+                    outcome=FieldGroundingOutcome.CONTRADICTED,
+                    anchor_found=True,
+                    detail=(
+                        f"the anchor {anchor!r} derives to {rederived!r}, which is not the proposed value {value!r}"
+                    ),
+                )
+            return AnchorEvaluation(
+                outcome=FieldGroundingOutcome.ANCHORED,
+                anchor_found=True,
+                parse_was_vacuous=normalise_for_anchor_search(value) == needle,
+                detail=f"anchored to {anchor!r}, which derives to {value!r}",
+            )
+
+        # A value that IS its own anchor grounds on the anchor alone: there is no
+        # deterministic parse to re-derive it from, and inventing one here would
+        # put this module's idea of normalisation in place of the document's own
+        # text. Sound only because anchor-found then implies value-present, which
+        # is why a derived value may not take this branch.
         rendered = normalise_for_anchor_search(value)
         return AnchorEvaluation(
             outcome=FieldGroundingOutcome.ANCHORED,
@@ -389,6 +420,7 @@ def ground_structured_value(
     element_path: str,
     source_text: str,
     anchor: str | None = None,
+    derive: Callable[[str], str | None] | None = None,
 ) -> FieldProvenance:
     """Return the envelope for one value read from a document's own record.
 
@@ -431,20 +463,40 @@ def ground_structured_value(
 
             This is the same relation :attr:`FieldProvenance.anchor` already
             documents for the printed lanes -- ``"1.234,56 €"`` anchoring the
-            value ``1234.56`` -- reaching the structured lane for the first time.
-            Passing it does not weaken the check: the anchor must still occur in
-            the record, so a normalisation with no stated source still fails.
+            value ``1234.56``. **The shape is the same and the guarantee is not
+            inherited**: that relation is checked by a parse that resolves
+            CONTRADICTED on disagreement, so an explicit anchor here must supply
+            its own equivalent through *derive*. Requiring it is not ceremony --
+            without it the anchor could be real while the value was arbitrary,
+            and the envelope would assert the document evidences a value it
+            never mentions.
+        derive: How to re-derive *value* from *anchor*, REQUIRED whenever an
+            explicit anchor is given for a textual value. Refused rather than
+            defaulted, because a silent default would be this module choosing a
+            normalisation on the caller's behalf, which is the thing the anchor
+            check exists to avoid.
 
     Returns:
         The envelope, stamped :attr:`~core.FieldOrigin.EXACT_STRUCTURED`.
     """
     if anchor is None:
         anchor = value if isinstance(value, str) else str(value)
+    elif isinstance(value, str) and derive is None:
+        # A caller contract, not a document condition, so it raises rather than
+        # resolving to an outcome: an envelope is about what the document says,
+        # and "the caller passed an unverifiable pair" is not one of the things
+        # it can say.
+        raise ValueError(
+            f"{field}: an explicit anchor for a textual value needs a derivation to check it against; "
+            f"without one the envelope would assert the record evidences {value!r} on the strength of "
+            f"a different string occurring in it",
+        )
     evaluation = _evaluate_anchor_against(
         value=value,
         anchor=anchor,
         source_text=source_text,
         source="record",
+        derive=derive,
     )
     return FieldProvenance(
         field=field,
