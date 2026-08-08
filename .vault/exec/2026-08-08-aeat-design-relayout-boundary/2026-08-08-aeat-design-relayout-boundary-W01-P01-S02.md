@@ -5,46 +5,12 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:0e36da872d6b432dc207829ea9308f9be8718e3b43d31e382a6da98140d992d7'
+body_hash: 'sha256:b384392cdc8458b70dc13dd2ac2000106aa5ecb8927752a6d90f33e64ff57969'
 step_id: 'S02'
 related:
   - "[[2026-08-08-aeat-design-relayout-boundary-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace aeat-design-relayout-boundary with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S02 and 2026-08-08-aeat-design-relayout-boundary-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Compute the prescripcion-reachable filing window per modelo at the execution date from each period's voluntary filing deadline plus four years, ground the rule against the bundled BOE corpus rather than reusing the record's approximate figure, and record the earliest in-window boundary per modelo and ## Scope
-
-- `src/cadrumo/_data/corpus/normatives/html/` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
-# Compute the prescripcion-reachable filing window per modelo at the execution date from each period's voluntary filing deadline plus four years, ground the rule against the bundled BOE corpus rather than reusing the record's approximate figure, and record the earliest in-window boundary per modelo
+# Compute the prescripcion-reachable filing window per modelo at the execution date
 
 ## Scope
 
@@ -52,23 +18,43 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Search the bundled consolidated corpus for the prescripcion provision and inventory which Ley 58-2003 articles ship.
+- Locate the tree's existing canonical four-year prescription constant and its declared binding provision rather than restating the figure.
+- Ground the voluntary filing deadline for each modelo against the bundled orden that fixes it.
+- Compute, per modelo and per filing year, the deadline plus four whole years and compare against the execution date.
 
 ## Outcome
 
+The window is **filing year 2022 onward for Modelo 303 and Modelo 390, and 2024 onward for Modelo 200**, measured at 2026-08-08. That confirms the working assumption the plan carried for Modelo 303 and **contradicts it for Modelo 390**, where the plan assumed 2021.
+
+Grounding is split and the split matters. The four-year period itself is **not verifiable against the bundled corpus**: the bundled Ley 58-2003 set is articles 5, 26, 27, 93, 98, 99, 119, 120, 122 and 213 plus disposicion adicional 18, and **articles 66 and 67 are absent**. No corpus excerpt was authored and no legal-catalogue entry was created. The figure instead has an existing canonical home in the tree, `TAX_RECORD_RETENTION_FLOOR_YEARS` in `src/cadrumo/domain/retention/_floor.py`, which declares its binding provision as Ley 58-2003 article 66 for the four years and article 67 for the day-after-the-deadline start, with BOE-A-2003-23186 as the locator. This Step reuses that constant and its date helper `add_prescription_years` rather than minting a second figure. The grounding gap is inherited, not introduced, and is recorded here as an open item.
+
+The deadline anchor, by contrast, **is** grounded in the bundled corpus. Orden EHA-3786-2008 article 7 fixes the Modelo 303 deadline as the first twenty natural days of the month following each liquidation period, except the year's last period which is due in the first thirty natural days of the following January, for the monthly case in apartado 1 and the quarterly case in apartado 2. Orden EHA-3111-2009 article 8 fixes the Modelo 390 annual summary at the first thirty natural days of the January following the ejercicio.
+
+The registry's own deadline windows were probed first and **cannot answer this question for the years that decide it**. Modelo 303 declares no deadline window before 2024 and Modelo 200 none before 2024, so absence there means the registry cannot say, never that the year prescribed. Modelo 390 does declare windows from 2020 and those confirm the computation directly: ejercicio 2021 closes 2021-01-30 plus four years, prescribing 2026-01-30, already elapsed; ejercicio 2022 closes 2023-01-30, prescribing 2027-01-30, still open.
+
+Per modelo, as of 2026-08-08:
+
+- **Modelo 303.** Filing year 2021 is fully prescribed, its last period 4T closing 2022-01-30 and prescribing 2026-01-30. Filing year 2022 is **partially** open: quarterly 1T prescribed 2026-04-20 and 2T prescribed 2026-07-20, while 3T prescribes 2026-10-20 and 4T prescribes 2027-01-30. Filing years 2023 onward are fully open. The partial openness of 2022 needs **no period-token partition**, because AEAT bundles a single design for the whole of 2022 and the gate's own mid-course assertion names only 2018, 2021 and 2024 as split ejercicios, so one revision at valid_from 2022 serves every open period of that year at its correct offsets.
+- **Modelo 390.** Ejercicio 2021 prescribed 2026-01-30 and 2022 prescribes 2027-01-30, so the earliest in-window filing year is 2022, not the 2021 the plan assumed.
+- **Modelo 200.** Filing years 2024 and 2025 both remain open, prescribing 2029-07-25 and 2030-07-27, so both boundaries the campaign acts on sit inside the window.
+
+Weekend and holiday displacement of a deadline moves a prescription date by at most a few days and changes no year-level verdict here: the nearest call is Modelo 303 monthly period 06 of 2022, which prescribed 2026-07-30, nine days before the execution date, and period 07 of 2022, which prescribes 2026-08-30.
+
+Applied to the live boundary set, the window **excludes six named boundaries and includes six**. Excluded because they sit entirely below the edge: Modelo 303 2014/2015, 2016/2017 and 2020/2021, and Modelo 390 2017/2018 and 2020/2021. Included: Modelo 303 2023/2024, 2024/2025 and 2025/2026 plus the mid-2024 boundary the gate is structurally blind to, and Modelo 390 2022/2023, 2023/2024 and 2024/2025, and Modelo 200 2024/2025. Two further boundaries, Modelo 303 2021/2022 and Modelo 390 2021/2022, are **the window edge itself** rather than splits between authored revisions: each becomes a valid_from with no earlier sibling, so every year below refuses. The mid-course Modelo 303 ejercicios 2018 and 2021 are likewise outside.
+
 ## Verification
 
-<!-- Where the evidence is that something RAN, quote the instrument rather than
-     summarising it: the invocation, then the runner's verbatim summary line.
+    uv run --no-sync python <scratch>/probe_prescripcion.py
+    modelo 390: 2021 FULLY PRESCRIBED (0A closes 2021-01-30 prescribes 2026-01-30 closed)
+    modelo 390: 2022 FULLY OPEN (0A closes 2023-01-30 prescribes 2027-01-30 OPEN)
+    modelo 303: NO registry deadline window for 2009 through 2023
+    modelo 200: 2024 FULLY OPEN, 2025 FULLY OPEN
 
-         uv run --no-sync pytest <paths> -m integration -n 0
-         15 passed in 10.35s
-
-     The invocation shows the selection (marker expression and path scope); the
-     summary line shows what that selection produced. A run that selected nothing
-     exits zero and reads as green, so a paraphrase such as "the tests pass"
-     discards exactly the part a reader needs. Quote, do not summarise. -->
+The probe resolves every window through the production `ValidatedRegistryAuthority` deadline-window surface and applies the shipped `add_prescription_years` helper, so the arithmetic is the tree's own rather than the author's. The Modelo 303 and Modelo 200 pre-2024 rows read as `NO registry deadline window`, which is the honest negative that forced the corpus-grounded derivation above.
 
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+**Open honesty item, inherited rather than introduced.** The four-year period is cited from a Python constant whose grounding is a BOE URL, not a bundled corpus file, because Ley 58-2003 articles 66 and 67 are not bundled. Fetching them requires taking the **last** consolidated version rather than the first, asserting the amending norm's identifier, and never passing the legal text through a shell. That work was deliberately not attempted here: this Step is a decision row, an agent must not author a legal-catalogue entry because its review status forges a human attestation, and a corpus excerpt written from a secondary source would pass a self-referential required-text check while proving nothing.
+
+**The window decays in the dangerous direction.** Modelo 303 filing year 2022 loses periods as the year advances, 3T of 2022 prescribing on 2026-10-20, so a later executor must recompute rather than read this record's edge.
