@@ -125,14 +125,62 @@ modified by this Step. A production edit made on the retracted premise was rever
 by hand, hunk by hand-written hunk, because the module carries eighteen peer hunks
 and writing HEAD bytes over it was not available.
 
+## Category resolution: instrumented, not concluded
+
+The runtime instrument the anchor axis could not provide now exists. It intercepts
+every construction of the classification criteria model wherever it happens, and
+splits the constructions in two by call stack: those passing through the assembly,
+which production really emits, and every other, which is a test stating a
+combination itself. A combination asserted but never emitted is the candidate.
+
+**Its first version reported a clean zero over 1949 passing tests and was measuring
+nothing.** It wrapped the pydantic post-init hook, which the model binds once at
+class construction and never re-reads, so the rebinding took hold and never fired.
+A dead hook is indistinguishable from a tree with nothing to find. The instrument
+now proves itself before the suite runs: it constructs one criteria object and
+requires the counter to move, and aborts if it does not.
+
+**The headline number is dominated by a test doing exactly the right thing.** Of 287
+asserted-but-never-emitted combinations, 275 come from ONE site: a deliberate
+exhaustive product sweep over the whole criteria space, which exists to prove no
+rule in the table reads the customer status. Visiting shapes the assembly may never
+produce is that test's purpose, not its defect. Reading the members rather than the
+count is what separates the two, and the count alone would have produced 275 false
+findings.
+
+**The remaining twelve are candidates the instrument cannot adjudicate, and the
+limit is the denominator.** They are domain rule-table tests, whose contract is
+criteria in and category out, and the combinations they state look emittable -- one
+is a domestic Spanish pair whose customer holds a German VAT identification, which
+is precisely the establishment-versus-identification split this campaign established
+as real. The producer set they were measured against holds 52 combinations harvested
+from four test modules, so "never emitted" here means "not emitted by those four",
+which is not the question.
+
+**That is a design fault in the instrument, not a gap in the run.** Harvesting the
+producer's output from incidental test execution makes the denominator a property of
+whichever suite was run. The suite-independent denominator is the assembly's own
+output space: drive the assembly across the cross-product of its INPUTS and collect
+what it emits. Until that lands, no combination should be called unreachable.
+
+## Verification, category axis
+
+    control: the hook fired (0 -> 1), counters reset
+    1949 passed, 26 deselected, 16 warnings in 318.84s   [unit lane]
+
+    producer-emitted : 52 distinct, 210 constructions
+    test-asserted    : 303 distinct, 355 constructions
+    unreachable      : 287 distinct, 333 constructions
+      275 distinct at test_classification_assembly.py:848   (the exhaustive sweep)
+       12 distinct across domain rule-table tests           (candidates, denominator-limited)
+
 ## Notes
 
-**This Step is NOT complete and the row stays open.** What is finished is the anchor
-axis, exhaustively and with controls. What is not started is the rest of what the row
-asks for: category resolution and relief fixtures were not audited, and the export
-axis was reached through a production probe rather than through its fixtures. Naming
-that here rather than closing the row is the point -- an audit that measured one axis
-well and reported a clean tree would read as a completed sweep.
+**This Step is NOT complete and the row stays open.** The anchor axis is finished,
+exhaustively and with controls. The category axis is instrumented but not concluded:
+the instrument needs a suite-independent denominator before any of its twelve
+candidates may be called findings. The relief axis is not started, and the export
+axis produced a retracted claim rather than an audit.
 
 The instrument generalises only where a producer invariant can be written down. The
 anchor axis had two, because the grounding stage states them. Category resolution
