@@ -4,11 +4,11 @@ Materialises the full Click command tree from ``typer.main.get_command(app)``,
 walks every group and leaf command (forcing lazy-module imports), and renders
 the reference organised by major verb group under ``docs/cli/``. Each
 top-level family (``app``, ``config``) gets a landing page
-(``docs/cli/app.rst``) that is navigation only — a grid linking to each major
+(``docs/cli/app.rst``) that is navigation only - a grid linking to each major
 verb group's own page, plus any command mounted directly on the family root
 with no intervening group. Each verb group gets its own page
 (``docs/cli/app/ledger.rst``) that OPENS with that group's real ``--help``
-rendering (usage, description, options, subcommand summary — Click's classic
+rendering (usage, description, options, subcommand summary - Click's classic
 formatter, not Typer's Rich styling, so the text is byte-stable across
 machines; see :func:`_captured_help_text`), then walks its subtree: every leaf
 command gets a full section, and every nested subgroup (``ledger rule``,
@@ -29,7 +29,7 @@ Help strings are ``tr()`` values resolved at module-import time and stored as
 plain strings on the Typer objects, so the output language MUST be pinned to
 ``en`` *before* any CLI command module is imported.  Call
 :func:`generate_cli_reference` from a subprocess with
-``CADRUMO_OUTPUT_LANGUAGE=en`` in its environment (the clean guarantee — mirroring
+``CADRUMO_OUTPUT_LANGUAGE=en`` in its environment (the clean guarantee - mirroring
 the lazy-tree subprocess tests) or set the variable before importing
 :mod:`cadrumo.entrypoints.cli`.
 
@@ -82,7 +82,7 @@ if TYPE_CHECKING:
 #: the apoderado ``check`` live-read verb).
 _FALLBACK_MARKER: str = "unavailable: "
 
-#: Group-callback emit sites — keys registered under a group callback rather
+#: Group-callback emit sites - keys registered under a group callback rather
 #: than a leaf command.  These are excluded from the per-command reference
 #: pages (they are group landing surfaces, not operator-invokable leaves) but
 #: are listed on the output-schema registry page (``schemas.rst``).
@@ -97,7 +97,7 @@ _GROUP_HELP_WIDTH: int = 100
 
 #: RST section-underline characters keyed by tree depth relative to a verb-group
 #: page's own title (depth 0). A node's heading character is determined by its
-#: depth alone — never by whether it is a group or a leaf — so a direct leaf
+#: depth alone - never by whether it is a group or a leaf - so a direct leaf
 #: command and a nested subgroup at the same depth render as RST siblings.
 _HEADING_CHARS_BY_DEPTH: tuple[str, ...] = ("=", "-", "^", "~", '"', "'")
 
@@ -108,7 +108,7 @@ def _heading_char_for_depth(depth: int) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Page-routing authority — the single source of "which page renders a command"
+# Page-routing authority - the single source of "which page renders a command"
 # ---------------------------------------------------------------------------
 #
 # The reference is organised into per-family and per-verb-group pages. Both the
@@ -150,7 +150,7 @@ def cli_reference_page_for_command(command_path: tuple[str, ...]) -> str:
     (``cli/config``); a leaf under a verb group (length >= 4, e.g.
     ``aeat app ledger add`` or the deeper ``aeat app ledger evidence add``)
     renders on that group's own page (``cli/app/ledger``), keyed on the group
-    segment ``command_path[2]`` — because a group page renders its entire
+    segment ``command_path[2]`` - because a group page renders its entire
     subtree, however deep.
 
     Args:
@@ -192,7 +192,7 @@ def _reference_subprocess_environment(storage_root: Path) -> dict[str, str]:
 
 
 # ---------------------------------------------------------------------------
-# Internal helpers — tree materialisation
+# Internal helpers - tree materialisation
 # ---------------------------------------------------------------------------
 
 
@@ -256,7 +256,7 @@ def _assert_no_fallback_surfaces(root: click.Command) -> None:  # type: ignore[n
 
 
 # ---------------------------------------------------------------------------
-# Internal helpers — command-path normalisation
+# Internal helpers - command-path normalisation
 # ---------------------------------------------------------------------------
 
 
@@ -264,7 +264,7 @@ _normalise_command_path = normalise_cli_path_to_schema_key
 
 
 # ---------------------------------------------------------------------------
-# Internal helpers — tree walking
+# Internal helpers - tree walking
 # ---------------------------------------------------------------------------
 
 
@@ -335,7 +335,7 @@ def _collect_leaf_paths(
 
 
 # ---------------------------------------------------------------------------
-# Internal helpers — RST rendering
+# Internal helpers - RST rendering
 # ---------------------------------------------------------------------------
 
 
@@ -437,10 +437,10 @@ def _captured_help_text(
 ) -> str:
     """Return the real ``--help`` rendering for the group at ``path``.
 
-    Calls Click's base :meth:`~click.Command.format_help` directly on ``cmd`` —
+    Calls Click's base :meth:`~click.Command.format_help` directly on ``cmd`` -
     bypassing Typer's Rich-based override (``TyperCommand``/``TyperGroup`` both
     subclass the real ``click.Command`` and override ``format_help`` to render
-    through Rich) — so the captured usage/description/options/commands text is
+    through Rich) - so the captured usage/description/options/commands text is
     the classic plain-text rendering: deterministic across machines, unlike
     Rich's box-drawing style, which auto-detects the host console's legacy/VT
     capability and therefore differs between an interactive terminal and a
@@ -460,9 +460,9 @@ def _captured_help_text(
 
     # Both `terminal_width` and `max_content_width` are pinned: Click's
     # `Context.make_formatter` uses `width=self.terminal_width` verbatim, and an
-    # unset `terminal_width` falls back to `shutil.get_terminal_size()` — which
+    # unset `terminal_width` falls back to `shutil.get_terminal_size()` - which
     # is itself environment-dependent (a real console vs. a subprocess with none
-    # attached) — so pinning only `max_content_width` (a ceiling) is not enough
+    # attached) - so pinning only `max_content_width` (a ceiling) is not enough
     # to make the wrap width deterministic across machines.
     ctx = click.Context(
         cmd,
@@ -533,7 +533,7 @@ def _render_command_section(
 
 
 # ---------------------------------------------------------------------------
-# Internal helpers — per-verb-group page rendering
+# Internal helpers - per-verb-group page rendering
 # ---------------------------------------------------------------------------
 
 

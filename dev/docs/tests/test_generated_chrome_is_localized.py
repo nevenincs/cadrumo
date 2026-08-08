@@ -134,6 +134,78 @@ def test_no_display_prose_is_hardcoded_in_the_generator(generator: str) -> None:
     )
 
 
+#: Generators whose emitted strings are held em-dash free.
+#:
+#: ``casilla_reference.py`` is absent DELIBERATELY and this is not a mute: it
+#: emits two em dashes today, in the ``Modelo {n} - {title}`` headings at lines
+#: 917 and 982, and its owner is mid-redesign on that file. Adding it here would
+#: red a peer's work rather than the author's own. It goes in the moment those
+#: two are fixed, and the entry below fails if this exclusion outlives them.
+_EM_DASH_FREE_GENERATORS: tuple[str, ...] = (
+    "legal_reference.py",
+    "glossary_reference.py",
+    "cli_reference.py",
+    "cli_tree.py",
+)
+
+_EM_DASH = "—"
+
+
+def _emitted_strings(path: Path) -> list[tuple[int, str]]:
+    """String constants that reach rendered output, excluding developer prose.
+
+    Docstrings and comments describe the code to a maintainer and never reach a
+    page, so the operator's rule is enforced where it bites: on the text the
+    generator actually writes.
+    """
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    docstrings = {
+        text
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Module | ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef)
+        and (text := ast.get_docstring(node, clean=False))
+    }
+    return [
+        (node.lineno, node.value)
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value not in docstrings
+    ]
+
+
+@pytest.mark.parametrize("generator", _EM_DASH_FREE_GENERATORS)
+def test_no_generator_emits_an_em_dash(generator: str) -> None:
+    """No generated page carries an em dash, by operator instruction.
+
+    Enforced on emitted strings rather than on the whole file: a maintainer's
+    comment reaches no reader, and gating source-wide would fail a peer over
+    prose about their own code instead of over what a taxpayer sees.
+    """
+    offenders = [
+        (line, text) for line, text in _emitted_strings(_REPO_ROOT / "dev" / "docs" / generator) if _EM_DASH in text
+    ]
+
+    assert offenders == [], (
+        f"{generator} emits an em dash; use a plain hyphen or restructure the sentence:\n"
+        + "\n".join(f"  line {line}: {text!r}" for line, text in offenders)
+    )
+
+
+def test_the_casilla_exclusion_is_still_earned() -> None:
+    """The one excluded generator is excluded for a reason that still holds.
+
+    A stale exclusion is how an allowlist rots into a permanent hole. When the
+    casilla generator stops emitting em dashes this fails, and the fix is to
+    move it into the tuple above rather than to weaken this.
+    """
+    casilla = _REPO_ROOT / "dev" / "docs" / "casilla_reference.py"
+    emitted = [(line, text) for line, text in _emitted_strings(casilla) if _EM_DASH in text]
+
+    assert emitted, (
+        "casilla_reference.py no longer emits an em dash, so its exclusion from "
+        "_EM_DASH_FREE_GENERATORS is stale; add it to the tuple and delete this test"
+    )
+
+
 def test_the_detector_would_catch_a_reintroduced_literal() -> None:
     """The AST detector fires on a literal of exactly the shape it must catch.
 
