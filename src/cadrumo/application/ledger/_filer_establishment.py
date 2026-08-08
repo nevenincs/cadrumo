@@ -50,7 +50,20 @@ from ._evidence_draft import PurchaseInvoiceEvidenceInputError
 if TYPE_CHECKING:
     from ...domain.user_profile import UserProfileRecord
 
-__all__ = ["FILER_POSTCODE_FACT_PATH", "resolve_filer_territorial_scope"]
+__all__ = [
+    "FILER_POSTCODE_FACT_PATH",
+    "FILER_TAX_ID_FACT_PATH",
+    "resolve_filer_tax_id",
+    "resolve_filer_territorial_scope",
+]
+
+FILER_TAX_ID_FACT_PATH: Final[str] = "tax.id"
+"""Profile fact path carrying the taxpayer's own tax identifier.
+
+Declared beside the postcode path for the same reason it is: the reading path
+reads it, and spelling it at each use site is how a fact comes to be read at a
+path nothing writes.
+"""
 
 FILER_POSTCODE_FACT_PATH: Final[str] = "contact.postcode"
 """Profile fact path carrying the taxpayer's own fiscal-address postcode.
@@ -112,6 +125,39 @@ def resolve_filer_territorial_scope(
             suggestion=_SUPPLYING_VERB,
         )
     return scope
+
+
+def resolve_filer_tax_id(*, profile_record: UserProfileRecord | None) -> str | None:
+    """Return the taxpayer's own tax identifier, or ``None`` when none is declared.
+
+    **Answers ``None`` rather than refusing, unlike its sibling above, and the
+    asymmetry is deliberate.** The filer's territory is required to classify an
+    operation at all, so a profile that declares no postcode must stop the
+    confirm. The filer's IDENTIFIER is required only to do BETTER: without it
+    the counterparty role resolution declines to run and the direction
+    derivation reports that it was never supplied. Both degrade to exactly the
+    behaviour that shipped before either existed, so refusing here would turn a
+    profile gap into a refusal to read a document that reads perfectly well.
+
+    Args:
+        profile_record: The taxpayer's :class:`UserProfileRecord`, or ``None``
+            when none was resolvable.
+
+    Returns:
+        The declared identifier, trimmed, or ``None``. A blank value is
+        undeclared rather than unreadable -- nothing was stated.
+    """
+    # Imported here rather than at module scope for the cycle-break the sibling
+    # below documents: the user-profile application package reaches back into
+    # this one. Read exactly as if written at module scope.
+    from ..user_profile import fact_value
+
+    if profile_record is None:
+        return None
+    declared = fact_value(profile_record, FILER_TAX_ID_FACT_PATH)
+    if declared is None:
+        return None
+    return declared.strip() or None
 
 
 def _declared_postcode(profile_record: UserProfileRecord | None) -> str | None:

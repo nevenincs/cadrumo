@@ -728,6 +728,13 @@ def extract_invoice_draft_from_evidence(
         )
 
     resolved_settings = settings or _load_settings()
+    # Resolved HERE, once, and handed down. The filer's own identifier is a
+    # PROFILE fact, never read off the invoice, and both consumers of it live at
+    # the far end of the reading chain: the counterparty role resolution excludes
+    # it from candidacy, and the direction derivation asks which party's block
+    # prints it. Neither could reach it before, so both were structurally
+    # unreachable on the live path however completely they were built.
+    filer_tax_id = _active_filer_tax_id()
     store = AttachmentStore(objects=secure_object_repository_for_bucket(bucket_id, resolved_settings))
     if evidence_id is not None:
         # Both id spaces are consulted so the refusal can be precise: only the
@@ -791,12 +798,14 @@ def extract_invoice_draft_from_evidence(
                 settings=resolved_settings,
                 off_host_provider=off_host_provider,
                 consent_token=consent_token,
+                taxpayer_tax_id=filer_tax_id,
             )
     return _extract_invoice_fields_via_vision(
         evidence_input,
         settings=resolved_settings,
         off_host_provider=off_host_provider,
         consent_token=consent_token,
+        taxpayer_tax_id=filer_tax_id,
     )
 
 
@@ -834,6 +843,31 @@ def _refuse_a_text_read_with_no_reader(exc: Exception) -> NoReturn:
     ) from exc
 
 
+def _active_filer_tax_id() -> str | None:
+    """Return the active profile's own tax identifier, or ``None``.
+
+    Answers ``None`` for every reason a profile might not yield one -- none
+    active, none declared, the workflow state unreadable -- rather than
+    propagating. That direction is deliberate and it is the conservative one:
+    without the identifier the counterparty role resolution declines to run and
+    the direction derivation reports that it was never supplied, which is
+    exactly the behaviour that shipped before either existed. Letting a profile
+    gap raise here would refuse to READ a document over a fact the document does
+    not contain.
+    """
+    # Both imported at call time: the workflow package reaches this one, and the
+    # filer-fact reader reaches the user-profile package which reaches back. The
+    # sanctioned cycle breaks, read as if written at module scope.
+    from ..workflow import workflow_state_repository
+    from ._filer_establishment import resolve_filer_tax_id
+
+    try:
+        state = workflow_state_repository().load()
+    except Exception:
+        return None
+    return resolve_filer_tax_id(profile_record=state.active_profile_record())
+
+
 def _read_transcription_semantically(
     evidence: EvidenceInput,
     transcription: DocumentTranscription,
@@ -841,6 +875,7 @@ def _read_transcription_semantically(
     settings: Settings,
     off_host_provider: LLMProvider | None = None,
     consent_token: EvidenceConsentToken | None = None,
+    taxpayer_tax_id: str | None = None,
 ) -> InvoiceDraft:
     """Read a text-native PDF through the transcribe-extract-ground chain.
 
@@ -877,6 +912,10 @@ def _read_transcription_semantically(
         off_host_provider: Provider to route the SEMANTIC stage at, or ``None``
             for the on-host default.
         consent_token: Per-invocation off-host consent proof, or ``None``.
+        taxpayer_tax_id: The filer's own identifier, resolved once at the public
+            entry from the active profile. Handed down rather than looked up
+            here so one read of one document consults one profile, and so this
+            function stays a pure reader of what it was given.
 
     Returns:
         The grounded draft.
@@ -938,6 +977,7 @@ def _read_transcription_semantically(
     return ground_draft_against_transcription(
         draft=read.model_copy(update={"transcription_sha256": transcription.source_content_sha256}),
         transcription=transcription,
+        taxpayer_tax_id=taxpayer_tax_id,
     )
 
 
@@ -1222,6 +1262,7 @@ def _extract_invoice_fields_via_vision(
     settings: Settings,
     off_host_provider: LLMProvider | None = None,
     consent_token: EvidenceConsentToken | None = None,
+    taxpayer_tax_id: str | None = None,
 ) -> InvoiceDraft:
     """Rasterise/encode *evidence*, TRANSCRIBE it with the on-host vision model, then read it.
 
@@ -1329,6 +1370,7 @@ def _extract_invoice_fields_via_vision(
         settings=settings,
         off_host_provider=off_host_provider,
         consent_token=consent_token,
+        taxpayer_tax_id=taxpayer_tax_id,
     )
 
 
