@@ -29,6 +29,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 
@@ -263,11 +264,7 @@ class LedgerIvaAggregationSourceResolver:
             aggregation.observations,
             prorrata_apportionment=aggregation.prorrata_apportionment,
         )
-        (
-            devengo_compared_invoices,
-            category_counterparty_mismatches,
-            reverse_charge_underivable,
-        ) = _raise_if_invoice_iva_would_be_silent(
+        silence_report = _raise_if_invoice_iva_would_be_silent(
             context=context,
             period=aggregation_period,
             transaction_binding_values=binding_values,
@@ -317,16 +314,16 @@ class LedgerIvaAggregationSourceResolver:
                 resolver_id=self.resolver_id,
             )
             + devengo_proxy_attribution_diagnostics(
-                devengo_compared_invoices,
+                silence_report.compared,
                 source_kind="ledger_iva_aggregation",
                 resolver_id=self.resolver_id,
             )
             + _reverse_charge_underivable_diagnostics(
-                reverse_charge_underivable,
+                silence_report.reverse_charge_underivable,
                 resolver_id=self.resolver_id,
             )
             + _category_counterparty_mismatch_diagnostics(
-                category_counterparty_mismatches,
+                silence_report.category_counterparty_mismatches,
                 resolver_id=self.resolver_id,
             )
             + tuple(
@@ -1206,7 +1203,7 @@ def _raise_if_invoice_iva_would_be_silent(
     transaction_binding_values: Mapping[BindingId, Decimal],
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
     prorrata_apportionment: IvaLedgerProrrataApportionment | None,
-) -> tuple[tuple[Invoice, ...], tuple[Invoice, ...]]:
+) -> _InvoiceIvaSilenceReport:
     """Refuse a filing whose invoice IVA would be absent from its ledger totals.
 
     The IVA cuota boxes are sourced from ``ledger_iva_aggregation``: the
@@ -1247,23 +1244,20 @@ def _raise_if_invoice_iva_would_be_silent(
     """
     screened_bindings = _INVOICE_LEDGER_SCREEN_BINDINGS.get(str(context.modelo))
     if screened_bindings is None:
-        return (), (), ()
-    (
-        invoice_observations,
-        invoice_ids,
-        compared_invoices,
-        category_counterparty_mismatches,
-        reverse_charge_underivable,
-    ) = _screened_invoice_iva_observations(
+        return _InvoiceIvaSilenceReport()
+    screened = _screened_invoice_iva_observations(
         context=context,
         period=period,
         invoice_repository=invoice_repository,
     )
-    if not invoice_observations:
-        return (), category_counterparty_mismatches, reverse_charge_underivable
+    if not screened.observations:
+        return _InvoiceIvaSilenceReport(
+            category_counterparty_mismatches=screened.category_counterparty_mismatches,
+            reverse_charge_underivable=screened.reverse_charge_underivable,
+        )
     invoice_binding_values = resolve_iva_ledger_binding_values(
         context.revision,
-        invoice_observations,
+        screened.observations,
         prorrata_apportionment=prorrata_apportionment,
     )
     missing_binding_values = {
@@ -1273,7 +1267,11 @@ def _raise_if_invoice_iva_would_be_silent(
         > (transaction_value := transaction_binding_values.get(binding_id, Decimal("0")))
     }
     if not missing_binding_values:
-        return compared_invoices, category_counterparty_mismatches, reverse_charge_underivable
+        return _InvoiceIvaSilenceReport(
+            compared=screened.compared,
+            category_counterparty_mismatches=screened.category_counterparty_mismatches,
+            reverse_charge_underivable=screened.reverse_charge_underivable,
+        )
     raise AggregationValidationError(
         t("errors.error.error_modelo_aggregation_binding"),
         context={
@@ -1285,8 +1283,8 @@ def _raise_if_invoice_iva_would_be_silent(
             "invoice_domestic_iva_excess_by_binding": {
                 str(binding_id): str(amount) for binding_id, amount in missing_binding_values.items()
             },
-            "invoice_ids": tuple(sorted(invoice_ids)[:_M303_INVOICE_EVIDENCE_SAMPLE_LIMIT]),
-            "invoice_count": str(len(invoice_ids)),
+            "invoice_ids": tuple(sorted(screened.invoice_ids)[:_M303_INVOICE_EVIDENCE_SAMPLE_LIMIT]),
+            "invoice_count": str(len(screened.invoice_ids)),
         },
         suggestion=(
             "Link and classify the domestic IVA invoices into the transaction ledger "
@@ -1757,23 +1755,63 @@ def _reverse_charge_underivable_diagnostics(
     )
 
 
+@dataclass(frozen=True, slots=True)
+class _ScreenedInvoiceIva:
+    """What the invoice IVA screen found, named rather than positional.
+
+    Three of these five fields are ``tuple[Invoice, ...]`` and one more is a
+    tuple of ids, so as a positional return they were mutually substitutable
+    and a type checker could not tell a mis-ordering from correct code. That is
+    not hypothetical: the tuple was widened from three slots to four and then to
+    five as findings landed, the annotation fell out of step with the returns on
+    the way, and every widening broke unpack sites in unrelated test modules.
+
+    Fields:
+        observations: the IVA observations the screen built.
+        invoice_ids: source invoice ids behind those observations.
+        compared: invoices whose IVA was compared against the ledger, so the
+            caller can disclose how their period placement was arrived at.
+        category_counterparty_mismatches: invoices withheld because the declared
+            category and the counterparty country contradict each other.
+        reverse_charge_underivable: invoices declaring a reverse charge whose
+            line carries no rate slot, so no cuota can be derived without
+            inventing one.
+    """
+
+    observations: tuple[IvaLedgerObservation, ...] = ()
+    invoice_ids: tuple[str, ...] = ()
+    compared: tuple[Invoice, ...] = ()
+    category_counterparty_mismatches: tuple[Invoice, ...] = ()
+    reverse_charge_underivable: tuple[Invoice, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class _InvoiceIvaSilenceReport:
+    """The advisory surfaces the silence screen hands back to the resolver.
+
+    Same reasoning as :class:`_ScreenedInvoiceIva`: all three fields are
+    ``tuple[Invoice, ...]``, so positionally they were interchangeable. The
+    annotation on the previous tuple form had already drifted to two slots while
+    the code returned three, which is what an unchecked positional widening
+    looks like just before it goes wrong.
+    """
+
+    compared: tuple[Invoice, ...] = ()
+    category_counterparty_mismatches: tuple[Invoice, ...] = ()
+    reverse_charge_underivable: tuple[Invoice, ...] = ()
+
+
 def _screened_invoice_iva_observations(
     *,
     context: CalculationSourceContext,
     period: Period,
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
-) -> tuple[
-    tuple[IvaLedgerObservation, ...],
-    tuple[str, ...],
-    tuple[Invoice, ...],
-    tuple[Invoice, ...],
-    tuple[Invoice, ...],
-]:
+) -> _ScreenedInvoiceIva:
     try:
         repository = invoice_repository or InvoiceCatalogueRepository(bucket_id=context.bucket_id)
         catalogue = repository.load()
     except _STORAGE_DEGRADATION_ERRORS:
-        return (), (), (), (), ()
+        return _ScreenedInvoiceIva()
     observations: list[IvaLedgerObservation] = []
     invoice_ids: set[str] = set()
     compared_invoices: list[Invoice] = []
@@ -1818,12 +1856,12 @@ def _screened_invoice_iva_observations(
             # declaration without the operator being told is the shape this
             # whole screen exists to prevent.
             category_counterparty_mismatches.append(invoice)
-    return (
-        tuple(observations),
-        tuple(invoice_ids),
-        tuple(compared_invoices),
-        tuple(category_counterparty_mismatches),
-        tuple(reverse_charge_underivable),
+    return _ScreenedInvoiceIva(
+        observations=tuple(observations),
+        invoice_ids=tuple(invoice_ids),
+        compared=tuple(compared_invoices),
+        category_counterparty_mismatches=tuple(category_counterparty_mismatches),
+        reverse_charge_underivable=tuple(reverse_charge_underivable),
     )
 
 
