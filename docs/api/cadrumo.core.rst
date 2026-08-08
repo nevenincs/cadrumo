@@ -81,6 +81,7 @@ Submodules
    cadrumo.core._irnr
    cadrumo.core._iva_category_resolution
    cadrumo.core._ledger_sort
+   cadrumo.core._lockfile_unlink
    cadrumo.core._model_catalogue
    cadrumo.core._modelo
    cadrumo.core._modelo_232_codigos

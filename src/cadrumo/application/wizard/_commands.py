@@ -629,7 +629,7 @@ def _missing_filing_baseline_flags(flow: WizardFlow, answers: BaseModel) -> tupl
     return _missing_profile_filing_baseline_flags(serialise_answers(flow, answers))
 
 
-def _setup_flow_definition(
+def setup_flow_definition(
     flow: WizardFlow,
     *,
     attach_descendants: bool = True,
@@ -775,7 +775,7 @@ def _run_scripted_walk(
     """
     flow_mode = _FLOW_MODE_BY_WIZARD_MODE[mode]
     definition = _force_pages_visible(
-        _setup_flow_definition(flow, attach_descendants=mode == "create"),
+        setup_flow_definition(flow, attach_descendants=mode == "create"),
         explicit_question_ids,
     )
     tokens, intended = _project_scripted_answers(definition, canonical, mode=flow_mode)

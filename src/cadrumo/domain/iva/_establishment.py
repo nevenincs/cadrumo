@@ -101,6 +101,7 @@ __all__ = [
     "country_code_for_printed_country_name",
     "country_code_for_printed_tax_identifier",
     "country_code_for_stated_country_code",
+    "record_country_code_status",
     "stated_country_code_status",
     "territorial_scope_for_country",
     "territorial_scope_for_printed_country_name",
@@ -110,6 +111,8 @@ __all__ = [
 
 _ALPHA2_LENGTH: Final[int] = 2
 _ALPHA3_LENGTH: Final[int] = 3
+
+_ASCII_UPPERCASE: Final[str] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 SPAIN_COUNTRY_CODE: Final[str] = "ES"
 """The one code this module deliberately refuses to resolve.
@@ -153,6 +156,32 @@ of :class:`EUMemberState` for goods under the Protocol, which is exactly why
 membership is asked BEFORE this set is consulted. A reader that checked the
 ranges first would drop Northern Ireland out of the intra-community branch as a
 placeholder.
+"""
+
+
+_USER_ASSIGNED_ALPHA3: Final[frozenset[str]] = frozenset(
+    {f"AA{letter}" for letter in _ASCII_UPPERCASE}
+    | {f"Q{first}{second}" for first in "MNOPQRSTUVWXYZ" for second in _ASCII_UPPERCASE}
+    | {f"X{first}{second}" for first in _ASCII_UPPERCASE for second in _ASCII_UPPERCASE}
+    | {f"ZZ{letter}" for letter in _ASCII_UPPERCASE},
+)
+"""The alpha-3 codes ISO 3166-1 reserves for private use: ``AAA``-``AAZ``,
+``QMA``-``QZZ``, ``XAA``-``XZZ`` and ``ZZA``-``ZZZ``.
+
+The alpha-3 counterpart of :data:`_USER_ASSIGNED_ALPHA2`, and it exists because
+the record axis admits both spellings while only one of them was being judged.
+``ZZ`` reported as the placeholder it is and ``ZZZ`` -- the same placeholder,
+one letter longer -- reported as a jurisdiction our vocabulary might simply be
+missing, which is the OPPOSITE operator instruction: go and enrol it. Enrolling
+a reserved code in the country vocabulary would be ungrounded registry data.
+
+That asymmetry lands on the format it can least afford. Facturae states the
+country in alpha-3 and is the Spanish national format, so it is the spelling most
+of this corpus arrives in; the alpha-2 half of the axis was gated and this half
+was not.
+
+Written as ranges for the same reason its sibling is: that is what the standard
+reserves, and a hand-expanded list would be a second statement of one rule.
 """
 
 
@@ -983,6 +1012,95 @@ def country_code_for_stated_country_code(stated_code: str | None) -> str | None:
         return normalised
     if len(candidate) == _ALPHA3_LENGTH:
         return _country_codes_by_alpha3().get(candidate)
+    return None
+
+
+def record_country_code_status(stated_code: str | None) -> StatedCountryCodeStatus | None:
+    """Return what a country code a RECORD states is, in either ISO spelling.
+
+    The structured sibling of :func:`stated_country_code_status`, and here for
+    the reason that one exists at all: an unmatched token has to reach the caller
+    as a string it can act on rather than as a blank. What differs is which
+    spellings are admitted. That function is handed values read off a printed
+    page, where the country slot may hold anything the reader found, so it
+    answers only about alpha-2 and declines everything else -- correctly, because
+    calling an address line a bad country code would spend an operator's
+    attention naming a string nobody claimed was a country.
+
+    A machine-readable record's country ELEMENT is not that. The schema has
+    already said the token is a country code, and the formats disagree only about
+    which spelling they state it in: EN16931 states alpha-2 (BT-40 / BT-55) and
+    Facturae -- the Spanish national format, so the majority of this corpus --
+    states alpha-3. So this admits both, exactly as
+    :func:`country_code_for_stated_country_code` already does for the resolution
+    question, and the two stay in step by construction because this asks that
+    function first.
+
+    Four answers, in the order the evidence narrows:
+
+    * a token the bundled correspondence places -- ``ES``, ``ESP``, ``DEU`` --
+      is ``CATALOGUED``;
+    * an alpha-2 token keeps whatever :func:`stated_country_code_status` calls
+      it, so the ISO user-assigned pairs stay the issuer's error and a real
+      jurisdiction the vocabulary omits stays this codebase's own gap;
+    * an alpha-3 token in the ISO user-assigned ranges is ``UNASSIGNED``, on
+      exactly the terms its alpha-2 sibling is. Judged from
+      :data:`_USER_ASSIGNED_ALPHA3` rather than from length, because the
+      catch-all below would otherwise report ``ZZZ`` as a gap in our data while
+      ``ZZ`` -- the same placeholder -- reports as the issuer's;
+    * any other three-letter alphabetic token is ``UNCATALOGUED``. This is the
+      answer the alpha-2 authority structurally cannot give: a three-letter
+      string is outside its domain entirely.
+
+    **The two failure kinds must stay apart, because they are opposite
+    instructions.** A consumer sparing a declared relief on a catalogue gap and
+    refusing it on an ISO-unassigned code depends on this distinction:
+    collapsing them either rejects a legitimate export over a row nobody has
+    written, or honours a relief claimed on a code with no referent. The same
+    split decides whether the operator is sent to re-read the document or to
+    enrol a country -- and enrolling a reserved code would be ungrounded
+    registry data.
+
+    **Any three-letter token in a country element is read as a country claim**,
+    including one that is plainly something else -- ``EUR`` from a currency
+    field, ``TOT`` from a totals row. That is deliberate rather than an
+    oversight: the schema said this element holds a country code, so a token
+    that is not one is a document defect worth naming, and the alternative is
+    the silence this function exists to remove. It is the one place this axis is
+    less cautious than its printed-value sibling, and it can afford to be
+    because the element is typed.
+
+    Args:
+        stated_code: The token the record's country element carries, or ``None``.
+            Surrounding whitespace and letter case are normalised, the way every
+            reader of this axis normalises them.
+
+    Returns:
+        The status, or ``None`` when the element stated nothing -- absent or
+        blank -- or stated something of no country-code shape at all. Absence is
+        not a kind of failure.
+
+    Raises:
+        IvaCatalogueError: When the bundled vocabulary cannot be read.
+    """
+    if stated_code is None:
+        return None
+    candidate = stated_code.strip().upper()
+    if not candidate:
+        return None
+    if country_code_for_stated_country_code(candidate) is not None:
+        return StatedCountryCodeStatus.CATALOGUED
+    alpha2_status = stated_country_code_status(candidate)
+    if alpha2_status is not None:
+        return alpha2_status
+    if candidate in _USER_ASSIGNED_ALPHA3:
+        # Asked BEFORE the catch-all below, or the reserved ranges fall through
+        # it and are reported as a gap in OUR vocabulary. That is the opposite
+        # instruction: it sends the operator to enrol a code ISO reserved so
+        # that no country will ever be allocated to it.
+        return StatedCountryCodeStatus.UNASSIGNED
+    if len(candidate) == _ALPHA3_LENGTH and candidate.isalpha():
+        return StatedCountryCodeStatus.UNCATALOGUED
     return None
 
 

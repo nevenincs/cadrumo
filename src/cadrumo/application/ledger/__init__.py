@@ -382,7 +382,6 @@ if TYPE_CHECKING:
         party_attribution_advisory,
         stamp_unverified_party_attribution,
     )
-    from ._review_advisories import review_advisory_kinds
     from ._party_colocation import (
         PartyAttributionOutcome,
         PartyColocationResolution,
@@ -412,6 +411,7 @@ if TYPE_CHECKING:
         validate_ratios_profile,
     )
     from ._regime_contradiction import draft_prints_a_repercutido_line, regime_contradiction_finding
+    from ._review_advisories import review_advisory_kinds
     from ._review_projection import ledger_transaction_review_status
     from ._rule_repository import LedgerClassificationRuleRepository
 
@@ -938,7 +938,6 @@ __all__ = [
     "re_stamped_provenance",
     "read_confirmation_record",
     "read_extraction_draft",
-    "review_advisory_kinds",
     "record_counterparty_establishment",
     "rederive_artefact_on_host",
     "regime_contradiction_finding",
@@ -959,6 +958,7 @@ __all__ = [
     "resolve_transaction_id",
     "resolved_blockers",
     "restore_manual_transaction",
+    "review_advisory_kinds",
     "run_evidence_batch",
     "saturate_llm_classification",
     "scope_printed_evidence_would_establish",

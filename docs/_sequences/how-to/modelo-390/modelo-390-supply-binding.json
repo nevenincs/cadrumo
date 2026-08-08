@@ -44,12 +44,12 @@
           "revision_id": "2010-y-siguientes",
           "short_current_calculation_revision_id": null,
           "short_filed_calculation_revision_id": null,
-          "short_work_unit_id": "091db9a258b0",
+          "short_work_unit_id": "ee0cc8470a35",
           "state": "borrador",
           "status": "created",
           "status_message": "New work unit created.",
           "updated_at": "2026-04-01T09:00:00+00:00",
-          "work_unit_id": "5b6bdbabd5046fbc51c421f923195de69c254c1b7267146b1082091db9a258b0"
+          "work_unit_id": "5d44a12df9fbfde2cc01d25544edca04aaa8e2741cbcbdc133e8ee0cc8470a35"
         },
         "schema_version": "2",
         "status": "success"
@@ -161,23 +161,126 @@
           "authorization_state": null,
           "binding_overrides": {
             "modelo-390-bienes-inversion-regularizacion-casilla-63": "0",
+            "modelo-390-iva-aic-bienes-general-blind-base": "0",
+            "modelo-390-iva-aic-bienes-reduced-blind-base": "0",
+            "modelo-390-iva-aic-bienes-super-reduced-blind-base": "0",
+            "modelo-390-iva-aic-bienes-tipo-0-base": "0",
+            "modelo-390-iva-aic-bienes-tipo-0-cuota": "0",
+            "modelo-390-iva-aic-bienes-tipo-10-base": "0",
+            "modelo-390-iva-aic-bienes-tipo-10-cuota": "0",
+            "modelo-390-iva-aic-bienes-tipo-2-base": "0",
+            "modelo-390-iva-aic-bienes-tipo-2-cuota": "0",
+            "modelo-390-iva-aic-bienes-tipo-21-base": "0",
+            "modelo-390-iva-aic-bienes-tipo-21-cuota": "0",
+            "modelo-390-iva-aic-bienes-tipo-4-base": "0",
+            "modelo-390-iva-aic-bienes-tipo-4-cuota": "0",
+            "modelo-390-iva-aic-bienes-tipo-5-base": "0",
+            "modelo-390-iva-aic-bienes-tipo-5-cuota": "0",
+            "modelo-390-iva-aic-bienes-tipo-7-5-base": "0",
+            "modelo-390-iva-aic-bienes-tipo-7-5-cuota": "0",
+            "modelo-390-iva-aic-bienes-zero-blind-base": "0",
+            "modelo-390-iva-aic-servicios-general-blind-base": "0",
+            "modelo-390-iva-aic-servicios-reduced-blind-base": "0",
+            "modelo-390-iva-aic-servicios-super-reduced-blind-base": "0",
+            "modelo-390-iva-aic-servicios-tipo-0-base": "0",
+            "modelo-390-iva-aic-servicios-tipo-0-cuota": "0",
+            "modelo-390-iva-aic-servicios-tipo-10-base": "0",
+            "modelo-390-iva-aic-servicios-tipo-10-cuota": "0",
+            "modelo-390-iva-aic-servicios-tipo-2-base": "0",
+            "modelo-390-iva-aic-servicios-tipo-2-cuota": "0",
+            "modelo-390-iva-aic-servicios-tipo-21-base": "0",
+            "modelo-390-iva-aic-servicios-tipo-21-cuota": "0",
+            "modelo-390-iva-aic-servicios-tipo-4-base": "0",
+            "modelo-390-iva-aic-servicios-tipo-4-cuota": "0",
+            "modelo-390-iva-aic-servicios-tipo-5-base": "0",
+            "modelo-390-iva-aic-servicios-tipo-5-cuota": "0",
+            "modelo-390-iva-aic-servicios-tipo-7-5-base": "0",
+            "modelo-390-iva-aic-servicios-tipo-7-5-cuota": "0",
+            "modelo-390-iva-aic-servicios-zero-blind-base": "0",
+            "modelo-390-iva-autorepercutido-interior-base": "0",
+            "modelo-390-iva-autorepercutido-interior-cuota": "0",
             "modelo-390-iva-autorepercutido-intracomunitaria-cuota": "0",
             "modelo-390-iva-recargo-equivalencia-general-cuota": "0",
             "modelo-390-iva-recargo-equivalencia-reducido-cuota": "0",
             "modelo-390-iva-recargo-equivalencia-super-reducido-cuota": "0",
+            "modelo-390-iva-recargo-equivalencia-tipo-0-26-cuota": "0",
+            "modelo-390-iva-recargo-equivalencia-tipo-0-5-cuota": "0",
+            "modelo-390-iva-recargo-equivalencia-tipo-0-62-cuota": "0",
+            "modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota": "0",
+            "modelo-390-iva-recargo-equivalencia-tipo-1-cuota": "0",
+            "modelo-390-iva-recargo-equivalencia-tipo-5-2-cuota": "0",
+            "modelo-390-iva-repercutido-general-base": "0",
             "modelo-390-iva-repercutido-general-cuota": "0",
+            "modelo-390-iva-repercutido-reducido-base": "0",
             "modelo-390-iva-repercutido-reducido-cuota": "0",
+            "modelo-390-iva-repercutido-super-reducido-base": "0",
             "modelo-390-iva-repercutido-super-reducido-cuota": "0",
+            "modelo-390-iva-repercutido-tipo-0-base": "0",
+            "modelo-390-iva-repercutido-tipo-0-cuota": "0",
+            "modelo-390-iva-repercutido-tipo-10-base": "0",
+            "modelo-390-iva-repercutido-tipo-10-cuota": "0",
+            "modelo-390-iva-repercutido-tipo-2-base": "0",
+            "modelo-390-iva-repercutido-tipo-2-cuota": "0",
+            "modelo-390-iva-repercutido-tipo-21-base": "0",
+            "modelo-390-iva-repercutido-tipo-21-cuota": "0",
+            "modelo-390-iva-repercutido-tipo-4-base": "0",
+            "modelo-390-iva-repercutido-tipo-4-cuota": "0",
+            "modelo-390-iva-repercutido-tipo-5-base": "0",
+            "modelo-390-iva-repercutido-tipo-5-cuota": "0",
+            "modelo-390-iva-repercutido-tipo-7-5-base": "0",
+            "modelo-390-iva-repercutido-tipo-7-5-cuota": "0",
+            "modelo-390-iva-repercutido-zero-base": "0",
             "modelo-390-iva-soportado-importaciones-cuota": "0",
+            "modelo-390-iva-soportado-interiores-base": "0",
             "modelo-390-iva-soportado-interiores-cuota": "0",
             "modelo-390-prev-303-cuota-deducible-total": "105",
             "modelo-390-prev-303-cuota-devengada-total": "1470",
-            "modelo-390-prev-303-resultado-regimen-general": "1365"
+            "modelo-390-prev-303-resultado-regimen-general": "1365",
+            "modelo-390-volumen-entregas-intracomunitarias-base": "0",
+            "modelo-390-volumen-exportaciones-exentas-base": "0"
           },
-          "calculation_revision_id": "49b3f35df2631d6d425c7f9a4deccf3b68a225af64560131da5f170486a8c681",
+          "calculation_revision_id": "cc2a015a8a65d782ac9ab0e16c6ff82c984c94bb1163e122b14121489695a314",
           "casilla_values": {
             "decl.ejercicio": "2025",
             "decl.tipo-declaracion": "0",
+            "iva.anual.aic.bienes.general.base": "0",
+            "iva.anual.aic.bienes.reduced.base": "0",
+            "iva.anual.aic.bienes.super_reduced.base": "0",
+            "iva.anual.aic.bienes.tipo-0.base": "0",
+            "iva.anual.aic.bienes.tipo-0.cuota": "0",
+            "iva.anual.aic.bienes.tipo-10.base": "0",
+            "iva.anual.aic.bienes.tipo-10.cuota": "0",
+            "iva.anual.aic.bienes.tipo-2.base": "0",
+            "iva.anual.aic.bienes.tipo-2.cuota": "0",
+            "iva.anual.aic.bienes.tipo-21.base": "0",
+            "iva.anual.aic.bienes.tipo-21.cuota": "0",
+            "iva.anual.aic.bienes.tipo-4.base": "0",
+            "iva.anual.aic.bienes.tipo-4.cuota": "0",
+            "iva.anual.aic.bienes.tipo-5.base": "0",
+            "iva.anual.aic.bienes.tipo-5.cuota": "0",
+            "iva.anual.aic.bienes.tipo-7-5.base": "0",
+            "iva.anual.aic.bienes.tipo-7-5.cuota": "0",
+            "iva.anual.aic.bienes.zero.base": "0",
+            "iva.anual.aic.servicios.general.base": "0",
+            "iva.anual.aic.servicios.reduced.base": "0",
+            "iva.anual.aic.servicios.super_reduced.base": "0",
+            "iva.anual.aic.servicios.tipo-0.base": "0",
+            "iva.anual.aic.servicios.tipo-0.cuota": "0",
+            "iva.anual.aic.servicios.tipo-10.base": "0",
+            "iva.anual.aic.servicios.tipo-10.cuota": "0",
+            "iva.anual.aic.servicios.tipo-2.base": "0",
+            "iva.anual.aic.servicios.tipo-2.cuota": "0",
+            "iva.anual.aic.servicios.tipo-21.base": "0",
+            "iva.anual.aic.servicios.tipo-21.cuota": "0",
+            "iva.anual.aic.servicios.tipo-4.base": "0",
+            "iva.anual.aic.servicios.tipo-4.cuota": "0",
+            "iva.anual.aic.servicios.tipo-5.base": "0",
+            "iva.anual.aic.servicios.tipo-5.cuota": "0",
+            "iva.anual.aic.servicios.tipo-7-5.base": "0",
+            "iva.anual.aic.servicios.tipo-7-5.cuota": "0",
+            "iva.anual.aic.servicios.zero.base": "0",
+            "iva.anual.autorepercutido.interior.base": "0",
+            "iva.anual.autorepercutido.interior.cuota": "0",
             "iva.anual.autorepercutido.intracomunitaria": "0",
             "iva.anual.compensacion-generada-ejercicio-no-97": "0",
             "iva.anual.compensacion-ultimo-periodo-97": "0",
@@ -190,14 +293,42 @@
             "iva.anual.regularizacion-bienes-inversion": "0.00",
             "iva.anual.regularizacion-prorrata-definitiva": "0",
             "iva.anual.repercutido.general": "0",
+            "iva.anual.repercutido.general.base": "0",
             "iva.anual.repercutido.recargo.general": "0",
             "iva.anual.repercutido.recargo.reducido": "0",
             "iva.anual.repercutido.recargo.super-reducido": "0",
+            "iva.anual.repercutido.recargo.tipo-0-26.cuota": "0",
+            "iva.anual.repercutido.recargo.tipo-0-5.cuota": "0",
+            "iva.anual.repercutido.recargo.tipo-0-62.cuota": "0",
+            "iva.anual.repercutido.recargo.tipo-1-4.cuota": "0",
+            "iva.anual.repercutido.recargo.tipo-1.cuota": "0",
+            "iva.anual.repercutido.recargo.tipo-5-2.cuota": "0",
             "iva.anual.repercutido.reducido": "0",
+            "iva.anual.repercutido.reducido.base": "0",
             "iva.anual.repercutido.super-reducido": "0",
+            "iva.anual.repercutido.super-reducido.base": "0",
+            "iva.anual.repercutido.tipo-0.base": "0",
+            "iva.anual.repercutido.tipo-0.cuota": "0",
+            "iva.anual.repercutido.tipo-10.base": "0",
+            "iva.anual.repercutido.tipo-10.cuota": "0",
+            "iva.anual.repercutido.tipo-2.base": "0",
+            "iva.anual.repercutido.tipo-2.cuota": "0",
+            "iva.anual.repercutido.tipo-21.base": "0",
+            "iva.anual.repercutido.tipo-21.cuota": "0",
+            "iva.anual.repercutido.tipo-4.base": "0",
+            "iva.anual.repercutido.tipo-4.cuota": "0",
+            "iva.anual.repercutido.tipo-5.base": "0",
+            "iva.anual.repercutido.tipo-5.cuota": "0",
+            "iva.anual.repercutido.tipo-7-5.base": "0",
+            "iva.anual.repercutido.tipo-7-5.cuota": "0",
+            "iva.anual.repercutido.zero.base": "0",
             "iva.anual.resultado-regimen-general": "0.00",
             "iva.anual.soportado.importaciones": "0",
-            "iva.anual.soportado.interiores": "0"
+            "iva.anual.soportado.interiores": "0",
+            "iva.anual.soportado.interiores.base": "0",
+            "iva.anual.total-bases-cuotas-iva": "0.00",
+            "iva.anual.volumen.entregas-intracomunitarias": "0",
+            "iva.anual.volumen.exportaciones-exentas": "0"
           },
           "created_at": "2026-04-01T09:00:00+00:00",
           "deadline": {
@@ -218,19 +349,84 @@
           "filed_by": null,
           "input_values_by_casilla_id": {
             "decl.ejercicio": "2025",
+            "iva.anual.aic.bienes.general.base": "0",
+            "iva.anual.aic.bienes.reduced.base": "0",
+            "iva.anual.aic.bienes.super_reduced.base": "0",
+            "iva.anual.aic.bienes.tipo-0.base": "0",
+            "iva.anual.aic.bienes.tipo-0.cuota": "0",
+            "iva.anual.aic.bienes.tipo-10.base": "0",
+            "iva.anual.aic.bienes.tipo-10.cuota": "0",
+            "iva.anual.aic.bienes.tipo-2.base": "0",
+            "iva.anual.aic.bienes.tipo-2.cuota": "0",
+            "iva.anual.aic.bienes.tipo-21.base": "0",
+            "iva.anual.aic.bienes.tipo-21.cuota": "0",
+            "iva.anual.aic.bienes.tipo-4.base": "0",
+            "iva.anual.aic.bienes.tipo-4.cuota": "0",
+            "iva.anual.aic.bienes.tipo-5.base": "0",
+            "iva.anual.aic.bienes.tipo-5.cuota": "0",
+            "iva.anual.aic.bienes.tipo-7-5.base": "0",
+            "iva.anual.aic.bienes.tipo-7-5.cuota": "0",
+            "iva.anual.aic.bienes.zero.base": "0",
+            "iva.anual.aic.servicios.general.base": "0",
+            "iva.anual.aic.servicios.reduced.base": "0",
+            "iva.anual.aic.servicios.super_reduced.base": "0",
+            "iva.anual.aic.servicios.tipo-0.base": "0",
+            "iva.anual.aic.servicios.tipo-0.cuota": "0",
+            "iva.anual.aic.servicios.tipo-10.base": "0",
+            "iva.anual.aic.servicios.tipo-10.cuota": "0",
+            "iva.anual.aic.servicios.tipo-2.base": "0",
+            "iva.anual.aic.servicios.tipo-2.cuota": "0",
+            "iva.anual.aic.servicios.tipo-21.base": "0",
+            "iva.anual.aic.servicios.tipo-21.cuota": "0",
+            "iva.anual.aic.servicios.tipo-4.base": "0",
+            "iva.anual.aic.servicios.tipo-4.cuota": "0",
+            "iva.anual.aic.servicios.tipo-5.base": "0",
+            "iva.anual.aic.servicios.tipo-5.cuota": "0",
+            "iva.anual.aic.servicios.tipo-7-5.base": "0",
+            "iva.anual.aic.servicios.tipo-7-5.cuota": "0",
+            "iva.anual.aic.servicios.zero.base": "0",
+            "iva.anual.autorepercutido.interior.base": "0",
+            "iva.anual.autorepercutido.interior.cuota": "0",
             "iva.anual.autorepercutido.intracomunitaria": "0",
             "iva.anual.reconciliacion.deducible-303": "105",
             "iva.anual.reconciliacion.devengada-303": "1470",
             "iva.anual.reconciliacion.resultado-303": "1365",
             "iva.anual.regularizacion-bienes-inversion": "0",
             "iva.anual.repercutido.general": "0",
+            "iva.anual.repercutido.general.base": "0",
             "iva.anual.repercutido.recargo.general": "0",
             "iva.anual.repercutido.recargo.reducido": "0",
             "iva.anual.repercutido.recargo.super-reducido": "0",
+            "iva.anual.repercutido.recargo.tipo-0-26.cuota": "0",
+            "iva.anual.repercutido.recargo.tipo-0-5.cuota": "0",
+            "iva.anual.repercutido.recargo.tipo-0-62.cuota": "0",
+            "iva.anual.repercutido.recargo.tipo-1-4.cuota": "0",
+            "iva.anual.repercutido.recargo.tipo-1.cuota": "0",
+            "iva.anual.repercutido.recargo.tipo-5-2.cuota": "0",
             "iva.anual.repercutido.reducido": "0",
+            "iva.anual.repercutido.reducido.base": "0",
             "iva.anual.repercutido.super-reducido": "0",
+            "iva.anual.repercutido.super-reducido.base": "0",
+            "iva.anual.repercutido.tipo-0.base": "0",
+            "iva.anual.repercutido.tipo-0.cuota": "0",
+            "iva.anual.repercutido.tipo-10.base": "0",
+            "iva.anual.repercutido.tipo-10.cuota": "0",
+            "iva.anual.repercutido.tipo-2.base": "0",
+            "iva.anual.repercutido.tipo-2.cuota": "0",
+            "iva.anual.repercutido.tipo-21.base": "0",
+            "iva.anual.repercutido.tipo-21.cuota": "0",
+            "iva.anual.repercutido.tipo-4.base": "0",
+            "iva.anual.repercutido.tipo-4.cuota": "0",
+            "iva.anual.repercutido.tipo-5.base": "0",
+            "iva.anual.repercutido.tipo-5.cuota": "0",
+            "iva.anual.repercutido.tipo-7-5.base": "0",
+            "iva.anual.repercutido.tipo-7-5.cuota": "0",
+            "iva.anual.repercutido.zero.base": "0",
             "iva.anual.soportado.importaciones": "0",
-            "iva.anual.soportado.interiores": "0"
+            "iva.anual.soportado.interiores": "0",
+            "iva.anual.soportado.interiores.base": "0",
+            "iva.anual.volumen.entregas-intracomunitarias": "0",
+            "iva.anual.volumen.exportaciones-exentas": "0"
           },
           "modality": null,
           "modality_reason": null,
@@ -273,12 +469,881 @@
             },
             {
               "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.bienes.general.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.bienes.reduced.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.bienes.super_reduced.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.bienes.tipo-0.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.bienes.tipo-0.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.bienes.tipo-10.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.bienes.tipo-10.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.bienes.tipo-2.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.bienes.tipo-2.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.bienes.tipo-21.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.bienes.tipo-21.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.bienes.tipo-4.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.bienes.tipo-4.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.bienes.tipo-5.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.bienes.tipo-5.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.bienes.tipo-7-5.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.bienes.tipo-7-5.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.bienes.zero.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.servicios.general.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.servicios.reduced.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.servicios.super_reduced.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.servicios.tipo-0.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.servicios.tipo-0.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.servicios.tipo-10.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.servicios.tipo-10.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.servicios.tipo-2.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.servicios.tipo-2.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.servicios.tipo-21.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.servicios.tipo-21.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.servicios.tipo-4.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.servicios.tipo-4.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.servicios.tipo-5.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.servicios.tipo-5.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.servicios.tipo-7-5.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.servicios.tipo-7-5.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.servicios.zero.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.autorepercutido.interior.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-84",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.autorepercutido.interior.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-84",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
               "casilla_id": "iva.anual.autorepercutido.intracomunitaria",
               "formula_id": null,
               "legal_refs": [
+                "ley-37-1992:art-13",
                 "ley-37-1992:art-69",
                 "ley-37-1992:art-70",
-                "ley-37-1992:art-84",
+                "ley-37-1992:art-85",
                 "rd-1624-1992:art-71",
                 "orden-eha-3111-2009:art-1"
               ],
@@ -573,6 +1638,24 @@
             },
             {
               "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.general.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
               "casilla_id": "iva.anual.repercutido.recargo.general",
               "formula_id": null,
               "legal_refs": [
@@ -627,6 +1710,123 @@
             },
             {
               "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.recargo.tipo-0-26.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-161",
+                "ley-37-1992:art-91",
+                "real-decreto-ley-4-2024:art-1",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.recargo.tipo-0-5.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-161",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.recargo.tipo-0-62.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-161",
+                "ley-37-1992:art-91",
+                "real-decreto-ley-4-2024:art-1",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.recargo.tipo-1-4.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-161",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.recargo.tipo-1.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-161",
+                "ley-37-1992:art-91",
+                "real-decreto-ley-4-2024:art-1",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.recargo.tipo-5-2.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-161",
+                "ley-37-1992:art-90",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
               "casilla_id": "iva.anual.repercutido.reducido",
               "formula_id": null,
               "legal_refs": [
@@ -645,7 +1845,347 @@
             },
             {
               "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.reducido.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
               "casilla_id": "iva.anual.repercutido.super-reducido",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.super-reducido.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.tipo-0.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.tipo-0.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.tipo-10.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.tipo-10.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.tipo-2.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "real-decreto-ley-4-2024:art-1",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.tipo-2.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "real-decreto-ley-4-2024:art-1",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.tipo-21.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.tipo-21.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.tipo-4.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.tipo-4.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.tipo-5.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "real-decreto-ley-4-2024:art-1",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.tipo-5.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "real-decreto-ley-4-2024:art-1",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.tipo-7-5.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "real-decreto-ley-4-2024:art-1",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.tipo-7-5.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "real-decreto-ley-4-2024:art-1",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.zero.base",
               "formula_id": null,
               "legal_refs": [
                 "ley-37-1992:art-88",
@@ -727,6 +2267,101 @@
                 "aeat-dr-390-2025"
               ],
               "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.soportado.interiores.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.total-bases-cuotas-iva",
+              "formula_id": "modelo-390-iva-anual-total-bases-cuotas-iva",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-84",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": "add",
+              "operand_casilla_refs": [
+                "iva.anual.repercutido.general",
+                "iva.anual.repercutido.reducido",
+                "iva.anual.repercutido.super-reducido",
+                "iva.anual.autorepercutido.intracomunitaria"
+              ],
+              "operand_refs": [
+                "iva.anual.repercutido.general",
+                "iva.anual.repercutido.reducido",
+                "iva.anual.repercutido.super-reducido",
+                "iva.anual.autorepercutido.intracomunitaria"
+              ],
+              "operand_values": [
+                "0",
+                "0",
+                "0",
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0.00"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.volumen.entregas-intracomunitarias",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-25",
+                "ley-37-1992:art-121",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.volumen.exportaciones-exentas",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-21",
+                "ley-37-1992:art-22",
+                "ley-37-1992:art-121",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
             }
           ],
           "operation": "modelo.work.calculate",
@@ -756,13 +2391,13 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 49b3f35df2631d6d425c7f9a4deccf3b68a225af64560131da5f170486a8c681 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 390 --year 2025 --period 0A` and re-inspect this one with `aeat app modelo work revision 49b3f35df2631d6d425c7f9a4deccf3b68a225af64560131da5f170486a8c681`.",
+          "saved_confirmation": "Saved as draft calculation revision cc2a015a8a65d782ac9ab0e16c6ff82c984c94bb1163e122b14121489695a314 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 390 --year 2025 --period 0A` and re-inspect this one with `aeat app modelo work revision cc2a015a8a65d782ac9ab0e16c6ff82c984c94bb1163e122b14121489695a314`.",
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
           "verified_at": null,
           "verified_by": null,
-          "work_unit_id": "5b6bdbabd5046fbc51c421f923195de69c254c1b7267146b1082091db9a258b0"
+          "work_unit_id": "5d44a12df9fbfde2cc01d25544edca04aaa8e2741cbcbdc133e8ee0cc8470a35"
         },
         "schema_version": "2",
         "status": "warning"

@@ -46,7 +46,7 @@ from typing import Final
 from pydantic import BaseModel, TypeAdapter
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Modelo, Period
+from ...core import BindingSourceKind, Modelo, Period
 from ...core.resources import resources
 from ...core.time import now
 from ...domain.calculations.registry import (
@@ -225,6 +225,25 @@ class PrefilledBinding(BaseModel):
     resolved_at: datetime
 
 
+class UnsatisfiedBinding(BaseModel):
+    """One ``previous_filing`` binding the local store could not supply a value for.
+
+    Carries the coordinates the operator needs to act: which prior filing was
+    looked for, and for which year and periods. Emitted so an unsatisfiable carry
+    is reported rather than dropped -- every ``previous_filing`` carry is a
+    liability-reducing quantity (a payment already made, a loss carried forward,
+    a prior valuation baseline), so a silent one produces a return declaring more
+    tax than is owed and looking entirely ordinary while it does so.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    binding_id: BindingId
+    source_modelo: str
+    source_filing_year: int
+    source_periods: tuple[str, ...]
+
+
 class BindingPrefillReport(BaseModel):
     """Outcome of one direct previous-filing binding-prefill pass.
 
@@ -232,13 +251,16 @@ class BindingPrefillReport(BaseModel):
     :func:`~domain.calculations.registry.calculate_registry_snapshot`;
     ``prefilled`` keeps the :class:`PrefilledBinding` provenance used by
     :class:`~._multi_year.PreviousFilingSourceResolver` when stamping source-mesh
-    results.
+    results; ``unsatisfied`` names the declared ``previous_filing`` bindings the
+    store supplied nothing for, which the same resolver projects onto the
+    diagnostics channel.
     """
 
     model_config = _STRICT_FROZEN
 
     prefilled: tuple[PrefilledBinding, ...]
     binding_values: Mapping[BindingId, Decimal]
+    unsatisfied: tuple[UnsatisfiedBinding, ...] = ()
 
 
 class LocalIvaCompensationRecurrence(BaseModel):
@@ -544,6 +566,50 @@ def _requirements_by_binding(
     }
 
 
+def _unsatisfied_previous_filing_bindings(
+    snapshot: RegistrySnapshot,
+    *,
+    resolved_binding_ids: frozenset[BindingId],
+    excluded_binding_ids: frozenset[BindingId] | None,
+) -> tuple[UnsatisfiedBinding, ...]:
+    """Name every declared ``previous_filing`` binding this pass supplied no value for.
+
+    Derived from the revision's own declared bindings rather than from the
+    requirement index, so a binding whose requirement produced no row at all -- the
+    case where nothing was even looked for -- is reported rather than being
+    invisible for the same reason it failed.
+
+    Bindings another authority owns (``excluded_binding_ids``, the IVA wallet's
+    compensación slot being the standing case) are not this resolver's to report.
+    """
+    excluded = excluded_binding_ids or frozenset()
+    requirement_index = _requirements_by_binding(snapshot)
+    unsatisfied: list[UnsatisfiedBinding] = []
+    for binding in snapshot.revision.bindings:
+        if binding.source != BindingSourceKind.PREVIOUS_FILING:
+            continue
+        if binding.id in resolved_binding_ids or binding.id in excluded:
+            continue
+        selector = binding.selector
+        source_modelo, source_filing_year, source_periods = requirement_index.get(
+            binding.id,
+            (
+                str(_selector_value(selector, "source_modelo", "") or ""),
+                snapshot.filing_year + _selector_year_delta(_selector_value(selector, "filing_year_delta", 0)),
+                _selector_periods(_selector_value(selector, "source_periods", ())),
+            ),
+        )
+        unsatisfied.append(
+            UnsatisfiedBinding(
+                binding_id=binding.id,
+                source_modelo=source_modelo,
+                source_filing_year=source_filing_year,
+                source_periods=source_periods,
+            ),
+        )
+    return tuple(unsatisfied)
+
+
 def _requirement_strictly_before_activity_start(
     requirement: RegistryFoldRequirement,
     activity_start_date: date,
@@ -689,7 +755,17 @@ def resolve_bindings_from_local_store(
     )
 
     if not observations and activity_start_date is None:
-        return BindingPrefillReport(prefilled=(), binding_values={})
+        # The most consequential path, and the one that used to return in silence:
+        # nothing is in the store, so every declared carry is unsatisfied.
+        return BindingPrefillReport(
+            prefilled=(),
+            binding_values={},
+            unsatisfied=_unsatisfied_previous_filing_bindings(
+                snapshot,
+                resolved_binding_ids=frozenset(),
+                excluded_binding_ids=excluded_binding_ids,
+            ),
+        )
 
     resolved_map = resolve_previous_filing_binding_values(
         snapshot.revision,
@@ -743,6 +819,11 @@ def resolve_bindings_from_local_store(
     return BindingPrefillReport(
         prefilled=tuple(prefilled),
         binding_values=dict(resolved_map),
+        unsatisfied=_unsatisfied_previous_filing_bindings(
+            snapshot,
+            resolved_binding_ids=frozenset(resolved_map),
+            excluded_binding_ids=excluded_binding_ids,
+        ),
     )
 
 

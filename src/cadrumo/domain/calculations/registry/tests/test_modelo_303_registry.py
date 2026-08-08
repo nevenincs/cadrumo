@@ -671,6 +671,9 @@ def test_modelo_303_compensation_calculation_applies_available_balance_and_carri
         # same reason 59 and 60 are: a bound casilla demands its fact, and the
         # absence of contributing rows is stated rather than left missing.
         "modelo-303-casilla-122-inversion-sujeto-pasivo-base": Decimal("0"),
+        # And no EU B2B service located outside the TAI, so the sibling
+        # informacion-adicional box 120 resolves to zero for the same reason.
+        "modelo-303-casilla-120-no-sujetas-localizacion-base": Decimal("0"),
         "modelo-303-iva-repercutido-general-base": Decimal("0"),
         "modelo-303-iva-repercutido-reducido-base": Decimal("0"),
         "modelo-303-iva-repercutido-super-reducido-base": Decimal("0"),
@@ -844,6 +847,9 @@ def test_modelo_303_autoconsumo_promotor_art9_oracle_1400k_base_yields_294k_cuot
         # same reason 59 and 60 are: a bound casilla demands its fact, and the
         # absence of contributing rows is stated rather than left missing.
         "modelo-303-casilla-122-inversion-sujeto-pasivo-base": Decimal("0"),
+        # And no EU B2B service located outside the TAI, so the sibling
+        # informacion-adicional box 120 resolves to zero for the same reason.
+        "modelo-303-casilla-120-no-sujetas-localizacion-base": Decimal("0"),
         "modelo-303-iva-repercutido-general-base": Decimal("0"),
         "modelo-303-iva-repercutido-reducido-base": Decimal("0"),
         "modelo-303-iva-repercutido-super-reducido-base": Decimal("0"),
@@ -920,6 +926,9 @@ def test_modelo_303_autoconsumo_promotor_cuota_proportional_to_base() -> None:
         # same reason 59 and 60 are: a bound casilla demands its fact, and the
         # absence of contributing rows is stated rather than left missing.
         "modelo-303-casilla-122-inversion-sujeto-pasivo-base": Decimal("0"),
+        # And no EU B2B service located outside the TAI, so the sibling
+        # informacion-adicional box 120 resolves to zero for the same reason.
+        "modelo-303-casilla-120-no-sujetas-localizacion-base": Decimal("0"),
         "modelo-303-iva-repercutido-general-base": Decimal("0"),
         "modelo-303-iva-repercutido-reducido-base": Decimal("0"),
         "modelo-303-iva-repercutido-super-reducido-base": Decimal("0"),

@@ -43,6 +43,7 @@ import pytest
 from ....application.ledger import InvoiceDraft, deterministic_findings, write_extraction_draft
 from ....core import resolve_active_bucket_id
 from ....core.config import load_settings
+from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2
 from ._ledger_ux_support import _invoke, _open_ledger_ux_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -62,7 +63,7 @@ def seeded_draft(tmp_path: Path) -> Iterator[None]:
     """
     read = InvoiceDraft(
         supplier_tax_id="B12345674",
-        supplier_stated_country_code="TH",
+        supplier_stated_country_code=an_uncatalogued_alpha2(),
         customer_stated_country_code="XX",
         taxable_base=Decimal("100.00"),
     )
@@ -142,7 +143,7 @@ def test_each_notice_names_the_code_the_document_stated_and_the_party() -> None:
     assert isinstance(uncatalogued, dict)
     assert unassigned["billed_country_code"] == "XX"
     assert unassigned["fields"] == "customer_stated_country_code"
-    assert uncatalogued["issuing_country_code"] == "TH"
+    assert uncatalogued["issuing_country_code"] == an_uncatalogued_alpha2()
     assert uncatalogued["fields"] == "supplier_stated_country_code"
 
 
@@ -155,7 +156,7 @@ def test_the_text_surface_carries_the_same_advisories_as_the_json_one() -> None:
     assert _UNASSIGNED_CODE in result.output
     assert _UNCATALOGUED_CODE in result.output
     assert "country_code_unresolved\tbilled\tXX" in result.output
-    assert "country_code_unresolved\tissuing\tTH" in result.output
+    assert f"country_code_unresolved\tissuing\t{an_uncatalogued_alpha2()}" in result.output
 
 
 @pytest.mark.usefixtures("seeded_draft")

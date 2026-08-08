@@ -43,7 +43,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "profile\t<profile-id>\ncapability\tllm_vision\tdisabled\tprofile\ncapability\tgoogle_export\tenabled\tdefault\ndependency\tollama-vision\tmissing\tstart Ollama (ollama serve) and ensure it listens on cadrumo_llm_ollama_chat_url\ndependency\tmodel-runtime-hardware-floor\tavailable\ndependency\tplaywright-chromium\tmissing\tplaywright install chromium\ndependency\textra:google\tavailable\ndependency\textra:browser\tavailable\ndependency\textra:anthropic\tavailable\ndependency\textra:ofx\tavailable\ndependency\textra:llm\tavailable\npreflight\tauth-provider:certificate\tok\tNo certificate file has been selected.\npreflight\tauth-provider:clave_movil\tok\tNo DNI/NIE has been configured for Cl@ve Móvil.\npreflight\tauth-provider:clave_permanente\tok\tNo auth provider is configured; nothing to probe locally.\npreflight\tstorage:local-root\tok\tsecure-storage root <sandbox-storage-root> is reachable and writable (present)\npreflight\tcorpus:normatives\tok\tthe bundled legal normatives corpus is present at <repo-root>/src/cadrumo/_data/corpus/normatives\npreflight\tcorpus:manuals\tok\tthe bundled Manual práctico corpus is present at <repo-root>/src/cadrumo/_data/corpus/manuals\npreflight\tenv:configuration\tok\tdeployment configuration loaded and a master-key passphrase is configured\npreflight\tstorage:windows-long-path\tok\t<masked>\npreflight\tregistry:referential-integrity\tok\tall 90 registry revisions pass the typed-ID referential-integrity gate\npreflight\tportal-registry:health\tok\t41 portals registered; no portal drift recorded\n"
+      "text": "profile\t<profile-id>\ncapability\tllm_vision\tdisabled\tprofile\ncapability\tgoogle_export\tenabled\tdefault\ncapability\tcloud_evidence_upload\tdisabled\tdefault\ndependency\tollama-vision\tmissing\tstart Ollama (ollama serve) and ensure it listens on cadrumo_llm_ollama_chat_url\ndependency\tmodel-runtime-hardware-floor\tavailable\ndependency\tlocal-inference-hardware\tavailable\tinstall the NVML reader (pip install cadrumo[llm]) to measure device headroom; until then a local model load is refused rather than guessed\ndependency\tlocal-inference-contention\tavailable\tinstall the NVML reader (pip install cadrumo[llm]) so device headroom can be measured, or set cadrumo_llm_contention_check_override on a machine known to have capacity this build cannot read\ndependency\tlocal_model_provisioning\tmissing\tstart the local model runtime with 'ollama serve', then re-run this check\ndependency\tplaywright-chromium\tmissing\tplaywright install chromium\ndependency\textra:google\tavailable\ndependency\textra:browser\tavailable\ndependency\textra:anthropic\tavailable\ndependency\textra:ofx\tavailable\ndependency\textra:llm\tavailable\npreflight\tauth-provider:certificate\tok\tNo certificate file has been selected.\npreflight\tauth-provider:clave_movil\tok\tNo DNI/NIE has been configured for Cl@ve Móvil.\npreflight\tauth-provider:clave_permanente\tok\tNo auth provider is configured; nothing to probe locally.\npreflight\tstorage:local-root\tok\tsecure-storage root <sandbox-storage-root> is reachable and writable (present)\npreflight\tcorpus:normatives\tok\tthe bundled legal normatives corpus is present at <repo-root>/src/cadrumo/_data/corpus/normatives\npreflight\tcorpus:manuals\tok\tthe bundled Manual práctico corpus is present at <repo-root>/src/cadrumo/_data/corpus/manuals\npreflight\tenv:configuration\tok\tdeployment configuration loaded and a master-key passphrase is configured\npreflight\tstorage:windows-long-path\tok\t<masked>\npreflight\tregistry:referential-integrity\tok\tall 90 registry revisions pass the typed-ID referential-integrity gate\npreflight\tportal-registry:health\tok\t41 portals registered; no portal drift recorded\n"
     },
     {
       "argv": [
@@ -69,6 +69,11 @@
               "capability": "google_export",
               "enabled": true,
               "source": "default"
+            },
+            {
+              "capability": "cloud_evidence_upload",
+              "enabled": false,
+              "source": "default"
             }
           ],
           "dependencies": [
@@ -83,6 +88,24 @@
               "detail": "total system memory 127.9 GiB meets the 8.0 GiB local model runtime floor",
               "remediation": "",
               "service": "model-runtime-hardware-floor"
+            },
+            {
+              "available": true,
+              "detail": "system memory 61.2 GiB free of 127.9 GiB; accelerator unknown; VRAM unverified free of unverified (NVML is not installed, so device memory could not be measured)",
+              "remediation": "install the NVML reader (pip install cadrumo[llm]) to measure device headroom; until then a local model load is refused rather than guessed",
+              "service": "local-inference-hardware"
+            },
+            {
+              "available": true,
+              "detail": "unverified: free memory could not be measured (accelerator unknown), so the 2.8 GiB needed for 'qwen3-vl:2b' cannot be shown to be available",
+              "remediation": "install the NVML reader (pip install cadrumo[llm]) so device headroom can be measured, or set cadrumo_llm_contention_check_override on a machine known to have capacity this build cannot read",
+              "service": "local-inference-contention"
+            },
+            {
+              "available": false,
+              "detail": "the 'llm' extra is installed but the runtime's model inventory could not be read, so neither half of the local-inference posture could be confirmed",
+              "remediation": "start the local model runtime with 'ollama serve', then re-run this check",
+              "service": "local_model_provisioning"
             },
             {
               "available": false,

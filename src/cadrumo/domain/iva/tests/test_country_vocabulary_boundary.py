@@ -35,6 +35,7 @@ from __future__ import annotations
 
 import pytest
 
+from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2
 from .._classification import IvaTerritorialScope
 from .._establishment import (
     StatedCountryCodeStatus,
@@ -123,13 +124,20 @@ def test_an_unassigned_code_is_reported_as_unassigned(code: str) -> None:
 def test_an_assigned_code_the_vocabulary_omits_is_a_catalogue_gap() -> None:
     """A data gap must be fixable rather than indistinguishable from garbage.
 
-    Thailand is a real ISO jurisdiction outside the bundled vocabulary, so the
-    honest report is that this codebase cannot yet say what ``TH`` establishes
-    -- not that the issuer typed nonsense. It still fires no rung until the
-    catalogue carries it.
+    The specimen is DERIVED from the vocabulary rather than named, because the
+    property under test is the boundary and any particular country outside it is
+    an accident of when this was written. A pinned country reds this case the day
+    it is admitted, which says nothing about the behaviour and everything about
+    the fixture.
+
+    The honest report for such a code is that this codebase cannot yet say what
+    it establishes -- not that the issuer typed nonsense. It fires no rung until
+    the catalogue carries it.
     """
-    assert stated_country_code_status("TH") is StatedCountryCodeStatus.UNCATALOGUED
-    assert territorial_scope_for_country("TH") is None
+    specimen = an_uncatalogued_alpha2()
+
+    assert stated_country_code_status(specimen) is StatedCountryCodeStatus.UNCATALOGUED
+    assert territorial_scope_for_country(specimen) is None
 
 
 @pytest.mark.parametrize("code", CATALOGUED_THIRD_COUNTRIES)
@@ -148,8 +156,13 @@ def test_nothing_that_is_not_an_alpha2_code_gets_a_status(stated: str | None) ->
     assert stated_country_code_status(stated) is None
 
 
-@pytest.mark.parametrize("code", [*UNASSIGNED_PROBES, "TH", "QM", "AA", "XA"])
+@pytest.mark.parametrize("code", [*UNASSIGNED_PROBES, "QM", "AA", "XA"])
 def test_no_unmatched_code_degrades_to_spain(code: str) -> None:
-    """The failure every rung on this axis refuses, restated at the new boundary."""
+    """The failure every rung on this axis refuses, restated at the new boundary.
+
+    The derived catalogue-gap specimen is checked alongside the reserved codes,
+    so both ways of being unmatched are covered without either being pinned.
+    """
+    assert country_code_for_stated_country_code(an_uncatalogued_alpha2()) != "ES"
     assert country_code_for_stated_country_code(code) != "ES"
     assert territorial_scope_for_country(code) is not IvaTerritorialScope.ES_MAINLAND

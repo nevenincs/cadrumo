@@ -165,18 +165,62 @@ def _is_numeric_edge(character: str) -> bool:
     return character in _NUMBER_CONTINUATION
 
 
+def _continues_the_token(edge: str, neighbour: str) -> bool:
+    """Return whether *neighbour* makes *edge* a fragment rather than a token.
+
+    Asked per EDGE, and **deliberately asymmetric between the two kinds of
+    edge**, because what continues a printed NUMBER is not what continues a
+    printed WORD.
+
+    A numeric edge continues only into another number character. A letter beside
+    a digit is a UNIT, not more of the figure: documents print ``EUR100,00`` and
+    ``100,00EUR``, and treating the currency code as a continuation would refuse
+    an anchor the document plainly carries. That is the pre-existing rule and it
+    is right.
+
+    A letter edge continues into any alphanumeric, digits included, because a
+    word running into a digit is exactly how identifiers are built: ``ES``
+    against ``ESB12345674`` is a fragment of a VAT identifier, not an occurrence
+    of the country code. The symmetric rule was tried first and refused
+    ``EUR100,00``, which is how the asymmetry was found rather than reasoned.
+
+    An edge that is neither -- a currency symbol, a percent sign, a parenthesis,
+    a hyphen -- continues into nothing, which keeps ``21%`` matching inside
+    ``IVA (21%)``.
+    """
+    if _is_numeric_edge(edge):
+        return _is_numeric_edge(neighbour)
+    return edge.isalnum() and neighbour.isalnum()
+
+
 def _occurs_as_a_whole_printed_token(needle: str, haystack: str) -> bool:
     """Return whether *needle* occurs in *haystack* as a complete printed token.
 
     Boundary-aware rather than substring: an occurrence counts only when the
-    anchor is not a fragment of a longer number. The rule is applied per EDGE
-    and only where that edge is numeric, so non-numeric anchors (an invoice
-    number, a party name) keep ordinary substring behaviour and a figure carrying
-    a currency symbol or a trailing percent still matches.
+    anchor is not a fragment of a longer printed token. The rule is applied per
+    EDGE, so an anchor abutting punctuation, a currency symbol or a percent sign
+    still matches, and only an edge that runs on into more of the same kind of
+    character is refused.
+
+    **Alphanumeric, not merely numeric, and the widening is the point.** The rule
+    was numeric-only, on the reasoning that a word-shaped anchor is distinctive
+    enough for substring matching to be safe. That holds for an invoice number or
+    a party name and fails completely for a SHORT CODE: a two-letter country code
+    is a fragment of half the strings on an invoice, and ``ES`` is the worst case
+    in this domain because it prefixes every Spanish VAT identifier. A record
+    stating no country at all had ``ES`` anchor against ``ESB12345674`` and the
+    envelope reported the document as evidence for a value the document never
+    states -- which is precisely the fabrication this check exists to refuse, and
+    precisely the property its own contract claims to enforce.
 
     Every occurrence is examined, and one clean occurrence is enough: a document
     may print the same figure as a fragment in one place and as a whole token in
     another, and the second is a genuine anchor.
+
+    What this still cannot do is prove the reader chose the RIGHT occurrence. A
+    two-letter code appearing as a genuine standalone token somewhere unrelated
+    matches, and that limit is stated on the entry points rather than papered
+    over here.
 
     Args:
         needle: The normalised anchor.
@@ -188,14 +232,13 @@ def _occurs_as_a_whole_printed_token(needle: str, haystack: str) -> bool:
     if not needle:
         return False
 
-    leading_is_numeric = _is_numeric_edge(needle[0])
-    trailing_is_numeric = _is_numeric_edge(needle[-1])
+    leading, trailing = needle[0], needle[-1]
 
     start = haystack.find(needle)
     while start != -1:
         end = start + len(needle)
-        before_ok = not (leading_is_numeric and start > 0 and _is_numeric_edge(haystack[start - 1]))
-        after_ok = not (trailing_is_numeric and end < len(haystack) and _is_numeric_edge(haystack[end]))
+        before_ok = start == 0 or not _continues_the_token(leading, haystack[start - 1])
+        after_ok = end >= len(haystack) or not _continues_the_token(trailing, haystack[end])
         if before_ok and after_ok:
             return True
         start = haystack.find(needle, start + 1)
@@ -496,12 +539,24 @@ def ground_structured_value(
     a printed form.
 
     **The check is real, not ceremonial.** The parser produced the value; this
-    looks for its verbatim form in the source bytes independently, and re-derives
-    a numeric value from the anchor. A projection that mangled a figure on the way
-    through, or a reader that pointed at an element the document does not carry,
-    fails it. What it cannot do is prove the reader chose the RIGHT element -- the
+    looks for its verbatim form in the record's own text independently, and
+    re-derives a numeric value from the anchor. A projection that mangled a figure
+    on the way through, or a reader that pointed at an element the document does
+    not carry, fails it.
+
+    **That second claim is enforced HERE and no longer only upstream.** It was
+    once true only because every structured country reader returns its own
+    element's text or ``None`` -- a guard in a different module entirely -- while
+    this check would happily locate a two-letter code inside a longer token, so a
+    record stating no country at all anchored ``ES`` against ``ESB12345674``. The
+    search is boundary-aware for word-shaped anchors as well as numeric ones, so
+    the property this paragraph asserts is now a property of this function.
+
+    What it still cannot do is prove the reader chose the RIGHT element -- the
     same limit the transcription lane has, where an anchor found somewhere in the
-    page does not prove it was found in the right place.
+    page does not prove it was found in the right place. A short code occurring
+    as a genuine standalone token somewhere unrelated matches, and only the
+    element path in the note distinguishes that.
 
     Args:
         field: Name of the :class:`~application.ledger.InvoiceDraft` field.

@@ -86,6 +86,11 @@ class LedgerPreflightIssueReason(StrEnum):
     # Union, so the question is where the counterparty IS, not who VAT-identifies
     # it. The narrowing above is one concept, not a global substitution.
     EU_MEMBER_STATE_ON_EXPORT_TRANSACTION = "eu_member_state_on_export_transaction"
+    # The other half of the same establishment question, and the direction that
+    # cost money: an EU member state on an export is a wrong place, while NO
+    # place at all was silently accepted as a third country. The operator is
+    # sent to the same field either way, which is why both name establishment.
+    MISSING_COUNTERPARTY_ESTABLISHMENT_ON_EXPORT = "missing_counterparty_establishment_on_export"
     MISSING_PROPORTIONALITY_REFERENCE = "missing_proportionality_reference"
     UNSUPPORTED_CURRENCY = "unsupported_currency"
     UNSUPPORTED_PERIOD = "unsupported_period"
@@ -554,6 +559,9 @@ _PREFLIGHT_REASON_BY_IVA_ISSUE: Final[Mapping[IvaLedgerAggregationIssueReason, L
     ),
     IvaLedgerAggregationIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION: (
         LedgerPreflightIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION
+    ),
+    IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_ESTABLISHMENT_ON_EXPORT: (
+        LedgerPreflightIssueReason.MISSING_COUNTERPARTY_ESTABLISHMENT_ON_EXPORT
     ),
 }
 

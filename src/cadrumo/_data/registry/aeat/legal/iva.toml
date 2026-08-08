@@ -1803,7 +1803,10 @@ reviewed_by = "agent-review"
 notes = "Articulo 75 LIVA: regla general de devengo del impuesto para entregas de bienes y prestaciones de servicios. Es la proyeccion informativa que Modelo 303 casillas 62/63 declaran para operaciones afectadas por el criterio de caja."
 required_text = [
     "Artículo 75. Devengo del impuesto.",
-    "Se devengará el Impuesto",
+    "Se devengará el Impuesto",    # Operative phrase from apartado Uno.8 closing rule, at 71%. The prior grounding sat
+    # inside the first 220 characters, so any truncation of the article
+    # passed the evidence check. Verified complete against live BOE.
+    "no será aplicable a las entregas de bienes comprendidas en el artículo",
 ]
 
 [legal."ley-37-1992:art-163-decies"]
@@ -2003,7 +2006,10 @@ effective_from below records 1993-01-01, the article's original entry into force
 the redaction date of the text actually bundled."""
 required_text = [
     "Artículo 68. Lugar de realización de las entregas de bienes.",
-    "El lugar de realización de las entregas de bienes",
+    "El lugar de realización de las entregas de bienes",    # Operative phrase from apartado Siete (uso o consumo efectivos), at 89%. The prior grounding sat
+    # inside the first 220 characters, so any truncation of the article
+    # passed the evidence check. Verified complete against live BOE.
+    "cuando el adquirente efectúe el uso o consumo efectivos de dichos bienes",
 ]
 
 [legal."ley-37-1992:art-89"]

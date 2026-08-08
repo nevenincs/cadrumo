@@ -18,8 +18,10 @@ from ....application.ledger import (
     DocumentTranscription,
     FieldAmbiguityCandidate,
     FieldProvenance,
+    IdentityCandidate,
     InvoiceDraft,
     TranscriberIdentity,
+    resolve_counterparty_identity,
     verified_provenance,
 )
 from ....core import LOCAL_TRANSPORT_LABEL, FieldGroundingOutcome, FieldOrigin
@@ -59,11 +61,35 @@ def _self_reported() -> FieldProvenance:
 
 
 def _anchor_not_found() -> FieldProvenance:
+    """A form the reader offered and the check reported absent from the document.
+
+    Shaped as the grounding stage really leaves one -- the anchor cleared, the
+    refusal recorded -- rather than as a carried anchor under an unanchored
+    outcome. That earlier shape was never emitted by any producer at this
+    surface, and building the fixture that way was how a THIRD state came to
+    share this notice: an anchor the check had located, reported to the operator
+    as not occurring in the document.
+    """
     return FieldProvenance(
         field="grand_total",
         origin=FieldOrigin.TEXT_LAYER,
         grounding=FieldGroundingOutcome.UNANCHORED,
-        anchor="4.528,32",
+        refused_anchor="4.528,32",
+    )
+
+
+def _uncorroborated_anchor() -> FieldProvenance:
+    """A located printed form on a field something OTHER than the form unsettled.
+
+    The identity resolver's shape: the identifier verified and its anchor is on
+    the page, and what is missing is anything assigning it to a party.
+    """
+    return FieldProvenance(
+        field="supplier_tax_id",
+        origin=FieldOrigin.TEXT_LAYER,
+        grounding=FieldGroundingOutcome.UNANCHORED,
+        anchor="B12345674",
+        note="one identifier verified but nothing on the document establishes it as the counterparty's",
     )
 
 
@@ -137,11 +163,40 @@ def test_every_degraded_field_produces_exactly_one_notice() -> None:
     Without this, a builder that returned nothing at all would satisfy the
     no-notice-for-intact-fields assertion perfectly.
     """
-    degraded = [_contradicted(), _ambiguous(), _self_reported(), _anchor_not_found(), _no_anchor()]
+    degraded = [
+        _contradicted(),
+        _ambiguous(),
+        _self_reported(),
+        _anchor_not_found(),
+        _uncorroborated_anchor(),
+        _no_anchor(),
+    ]
     notices = field_degradation_notices(degraded)
 
     assert len(notices) == len(degraded)
     assert [_context(notice)["field"] for notice in notices] == [envelope.field for envelope in degraded]
+
+
+def test_every_degraded_shape_reaches_a_notice_of_its_own() -> None:
+    """No two shapes share a code, and none is unreachable.
+
+    The defect this pins is not a wrong message but a shape that cannot reach
+    its own notice: a producer emitting one thing while the selection tests for
+    another leaves a code correct, present and dead, and every other case here
+    goes on passing. Asserted as a bijection rather than as a tally, so a shape
+    added later without its own code fails instead of being counted.
+    """
+    shapes = {
+        "contradicted": _contradicted(),
+        "ambiguous": _ambiguous(),
+        "self_reported": _self_reported(),
+        "anchor_not_found": _anchor_not_found(),
+        "uncorroborated": _uncorroborated_anchor(),
+        "no_anchor": _no_anchor(),
+    }
+    codes = {name: field_degradation_notices([envelope])[0].code for name, envelope in shapes.items()}
+
+    assert len(set(codes.values())) == len(codes), f"two shapes share one code: {codes}"
 
 
 def test_an_unchecked_anchor_is_never_reported_as_a_failed_check() -> None:
@@ -178,21 +233,60 @@ def test_a_missing_anchor_is_distinct_from_an_anchor_that_was_not_found() -> Non
     assert "anchor" not in _context(offered_nothing)
 
 
-def _grounded_against(
-    text: str,
-    *,
-    envelopes: tuple[FieldProvenance, ...],
-    **values: object,
-) -> tuple[FieldProvenance, ...]:
-    """Return *envelopes* as the REAL grounding stage leaves them.
+def test_a_located_anchor_is_never_reported_as_absent_from_the_document() -> None:
+    """The third state, and the reason it cannot share the not-found notice.
+
+    An identifier that verified while nothing on the page assigns it to a party
+    keeps its anchor: the check LOCATED that printed form. Telling the operator
+    it "does not occur in the document's transcription" sends them to re-read a
+    page which says exactly what the reader claimed, and closes the question
+    that is actually open.
+    """
+    located = field_degradation_notices([_uncorroborated_anchor()])[0]
+    refused = field_degradation_notices([_anchor_not_found()])[0]
+
+    assert located.code == "ledger.evidence.field.anchor_uncorroborated"
+    assert located.code != refused.code
+    assert "does not occur" not in located.message
+    assert "does not occur" in refused.message
+
+    # The printed form and the reason both reach the operator: the message can
+    # only say the form is not the problem, so the reason is the whole content.
+    assert "B12345674" in located.message
+    assert _context(located)["anchor"] == "B12345674"
+    assert _context(located)["detail"] == _uncorroborated_anchor().note
+    assert _uncorroborated_anchor().note in located.message
+
+
+def test_the_not_found_notice_names_the_refused_form_and_never_a_carried_one() -> None:
+    """Anti-regression on the selection, from the other side.
+
+    The not-found notice reads the REFUSED anchor alone. If it fell back to the
+    carried one, the third state above would render under this notice's text
+    again the moment anything routed it here, and the fallback would look like
+    defensive coding rather than the re-conflation it is.
+    """
+    refused = field_degradation_notices([_anchor_not_found()])[0]
+
+    assert _anchor_not_found().anchor is None, "the producer clears the anchor it could not locate"
+    assert _context(refused)["anchor"] == "4.528,32"
+    assert "4.528,32" in refused.message
+
+
+def _grounded_against(text: str, *, draft: InvoiceDraft) -> tuple[FieldProvenance, ...]:
+    """Return *draft*'s envelopes as the REAL grounding stage leaves them.
 
     Hand-built envelopes prove which branch a selector takes; they cannot prove
     the producer ever emits that shape. The defect these cases pin lived exactly
     there -- the branch was correct and the producer emitted a shape that could
     not reach it -- so the envelopes below are put through the same function the
     reading path calls, against a real transcription.
+
+    Takes the built draft rather than field keywords to splat: a ``**values:
+    object`` signature erases every field's declared type on the way in, so the
+    checker can no longer tell a Decimal field from a string one and the fixture
+    stops being checked at exactly the boundary it is exercising.
     """
-    draft = InvoiceDraft(provenance=envelopes, **values)
     transcription = DocumentTranscription(
         text=text,
         page_count=1,
@@ -222,21 +316,23 @@ def test_a_refused_anchor_is_not_reported_as_an_absent_one() -> None:
     """
     grounded = _grounded_against(
         "FACTURA 2026-0142\nTOTAL 121,00 EUR\n",
-        envelopes=(
-            FieldProvenance(
-                field="grand_total",
-                origin=FieldOrigin.TEXT_LAYER,
-                grounding=FieldGroundingOutcome.UNANCHORED,
-                anchor="4.528,32",
-            ),
-            FieldProvenance(
-                field="currency",
-                origin=FieldOrigin.TEXT_LAYER,
-                grounding=FieldGroundingOutcome.UNANCHORED,
+        draft=InvoiceDraft(
+            grand_total=Decimal("4528.32"),
+            currency="EUR",
+            provenance=(
+                FieldProvenance(
+                    field="grand_total",
+                    origin=FieldOrigin.TEXT_LAYER,
+                    grounding=FieldGroundingOutcome.UNANCHORED,
+                    anchor="4.528,32",
+                ),
+                FieldProvenance(
+                    field="currency",
+                    origin=FieldOrigin.TEXT_LAYER,
+                    grounding=FieldGroundingOutcome.UNANCHORED,
+                ),
             ),
         ),
-        grand_total=Decimal("4528.32"),
-        currency="EUR",
     )
 
     notices = field_degradation_notices(grounded)
@@ -261,21 +357,55 @@ def test_the_refusal_reaches_the_operator_with_the_reason_the_check_computed() -
     """
     grounded = _grounded_against(
         "FACTURA 2026-0142\nTOTAL 121,00 EUR\n",
-        envelopes=(
-            FieldProvenance(
-                field="grand_total",
-                origin=FieldOrigin.TEXT_LAYER,
-                grounding=FieldGroundingOutcome.UNANCHORED,
-                anchor="4.528,32",
+        draft=InvoiceDraft(
+            grand_total=Decimal("4528.32"),
+            provenance=(
+                FieldProvenance(
+                    field="grand_total",
+                    origin=FieldOrigin.TEXT_LAYER,
+                    grounding=FieldGroundingOutcome.UNANCHORED,
+                    anchor="4.528,32",
+                ),
             ),
         ),
-        grand_total=Decimal("4528.32"),
     )
     notice = field_degradation_notices(grounded)[0]
 
     assert grounded[0].note, "the check must have computed a reason to carry"
     assert _context(notice)["detail"] == grounded[0].note
     assert grounded[0].note in notice.message
+
+
+def test_the_identity_resolver_really_emits_the_located_but_unroled_shape() -> None:
+    """Reachability, from the producer rather than from a fixture.
+
+    The shape above is only worth a notice of its own if something actually
+    emits it. A hand-built envelope proves which branch the selection takes and
+    nothing about whether the producer ever hands it one -- and this campaign's
+    dominant defect is precisely a correct branch a producer cannot reach.
+
+    So the envelope here comes from the real resolver: one identifier that
+    verified, its anchor located on the page, and nothing printed that assigns
+    it to a party.
+    """
+    resolution = resolve_counterparty_identity(
+        field="supplier_tax_id",
+        candidates=(IdentityCandidate(value="B12345674", anchor="B-12345674", role_evidence=""),),
+        taxpayer_tax_id="A82645177",
+        origin=FieldOrigin.TEXT_LAYER,
+    )
+    envelope = resolution.provenance
+
+    # The producer's own shape, asserted before the notice is asked for: an
+    # anchor carried under a degraded outcome, with no refusal recorded.
+    assert envelope.grounding in DEGRADED_GROUNDING_OUTCOMES
+    assert envelope.anchor is not None, "the resolver keeps the anchor it located"
+    assert envelope.refused_anchor is None, "nothing was refused here"
+
+    notice = field_degradation_notices([envelope])[0]
+
+    assert notice.code == "ledger.evidence.field.anchor_uncorroborated"
+    assert "does not occur" not in notice.message
 
 
 def test_each_notice_names_what_was_seen() -> None:

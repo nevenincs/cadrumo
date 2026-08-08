@@ -64,12 +64,12 @@
           "revision_id": "2010-y-siguientes",
           "short_current_calculation_revision_id": null,
           "short_filed_calculation_revision_id": null,
-          "short_work_unit_id": "091db9a258b0",
+          "short_work_unit_id": "ee0cc8470a35",
           "state": "borrador",
           "status": "created",
           "status_message": "New work unit created.",
           "updated_at": "2026-04-01T09:00:00+00:00",
-          "work_unit_id": "5b6bdbabd5046fbc51c421f923195de69c254c1b7267146b1082091db9a258b0"
+          "work_unit_id": "5d44a12df9fbfde2cc01d25544edca04aaa8e2741cbcbdc133e8ee0cc8470a35"
         },
         "schema_version": "2",
         "status": "success"
@@ -175,20 +175,123 @@
           "authorization_state": null,
           "binding_overrides": {
             "modelo-390-bienes-inversion-regularizacion-casilla-63": "0",
+            "modelo-390-iva-aic-bienes-general-blind-base": "0",
+            "modelo-390-iva-aic-bienes-reduced-blind-base": "0",
+            "modelo-390-iva-aic-bienes-super-reduced-blind-base": "0",
+            "modelo-390-iva-aic-bienes-tipo-0-base": "0",
+            "modelo-390-iva-aic-bienes-tipo-0-cuota": "0",
+            "modelo-390-iva-aic-bienes-tipo-10-base": "0",
+            "modelo-390-iva-aic-bienes-tipo-10-cuota": "0",
+            "modelo-390-iva-aic-bienes-tipo-2-base": "0",
+            "modelo-390-iva-aic-bienes-tipo-2-cuota": "0",
+            "modelo-390-iva-aic-bienes-tipo-21-base": "0",
+            "modelo-390-iva-aic-bienes-tipo-21-cuota": "0",
+            "modelo-390-iva-aic-bienes-tipo-4-base": "0",
+            "modelo-390-iva-aic-bienes-tipo-4-cuota": "0",
+            "modelo-390-iva-aic-bienes-tipo-5-base": "0",
+            "modelo-390-iva-aic-bienes-tipo-5-cuota": "0",
+            "modelo-390-iva-aic-bienes-tipo-7-5-base": "0",
+            "modelo-390-iva-aic-bienes-tipo-7-5-cuota": "0",
+            "modelo-390-iva-aic-bienes-zero-blind-base": "0",
+            "modelo-390-iva-aic-servicios-general-blind-base": "0",
+            "modelo-390-iva-aic-servicios-reduced-blind-base": "0",
+            "modelo-390-iva-aic-servicios-super-reduced-blind-base": "0",
+            "modelo-390-iva-aic-servicios-tipo-0-base": "0",
+            "modelo-390-iva-aic-servicios-tipo-0-cuota": "0",
+            "modelo-390-iva-aic-servicios-tipo-10-base": "0",
+            "modelo-390-iva-aic-servicios-tipo-10-cuota": "0",
+            "modelo-390-iva-aic-servicios-tipo-2-base": "0",
+            "modelo-390-iva-aic-servicios-tipo-2-cuota": "0",
+            "modelo-390-iva-aic-servicios-tipo-21-base": "0",
+            "modelo-390-iva-aic-servicios-tipo-21-cuota": "0",
+            "modelo-390-iva-aic-servicios-tipo-4-base": "0",
+            "modelo-390-iva-aic-servicios-tipo-4-cuota": "0",
+            "modelo-390-iva-aic-servicios-tipo-5-base": "0",
+            "modelo-390-iva-aic-servicios-tipo-5-cuota": "0",
+            "modelo-390-iva-aic-servicios-tipo-7-5-base": "0",
+            "modelo-390-iva-aic-servicios-tipo-7-5-cuota": "0",
+            "modelo-390-iva-aic-servicios-zero-blind-base": "0",
+            "modelo-390-iva-autorepercutido-interior-base": "0",
+            "modelo-390-iva-autorepercutido-interior-cuota": "0",
             "modelo-390-iva-autorepercutido-intracomunitaria-cuota": "0",
             "modelo-390-iva-recargo-equivalencia-general-cuota": "0",
             "modelo-390-iva-recargo-equivalencia-reducido-cuota": "0",
             "modelo-390-iva-recargo-equivalencia-super-reducido-cuota": "0",
+            "modelo-390-iva-recargo-equivalencia-tipo-0-26-cuota": "0",
+            "modelo-390-iva-recargo-equivalencia-tipo-0-5-cuota": "0",
+            "modelo-390-iva-recargo-equivalencia-tipo-0-62-cuota": "0",
+            "modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota": "0",
+            "modelo-390-iva-recargo-equivalencia-tipo-1-cuota": "0",
+            "modelo-390-iva-recargo-equivalencia-tipo-5-2-cuota": "0",
+            "modelo-390-iva-repercutido-general-base": "0",
             "modelo-390-iva-repercutido-general-cuota": "0",
+            "modelo-390-iva-repercutido-reducido-base": "0",
             "modelo-390-iva-repercutido-reducido-cuota": "0",
+            "modelo-390-iva-repercutido-super-reducido-base": "0",
             "modelo-390-iva-repercutido-super-reducido-cuota": "0",
+            "modelo-390-iva-repercutido-tipo-0-base": "0",
+            "modelo-390-iva-repercutido-tipo-0-cuota": "0",
+            "modelo-390-iva-repercutido-tipo-10-base": "0",
+            "modelo-390-iva-repercutido-tipo-10-cuota": "0",
+            "modelo-390-iva-repercutido-tipo-2-base": "0",
+            "modelo-390-iva-repercutido-tipo-2-cuota": "0",
+            "modelo-390-iva-repercutido-tipo-21-base": "0",
+            "modelo-390-iva-repercutido-tipo-21-cuota": "0",
+            "modelo-390-iva-repercutido-tipo-4-base": "0",
+            "modelo-390-iva-repercutido-tipo-4-cuota": "0",
+            "modelo-390-iva-repercutido-tipo-5-base": "0",
+            "modelo-390-iva-repercutido-tipo-5-cuota": "0",
+            "modelo-390-iva-repercutido-tipo-7-5-base": "0",
+            "modelo-390-iva-repercutido-tipo-7-5-cuota": "0",
+            "modelo-390-iva-repercutido-zero-base": "0",
             "modelo-390-iva-soportado-importaciones-cuota": "0",
-            "modelo-390-iva-soportado-interiores-cuota": "0"
+            "modelo-390-iva-soportado-interiores-base": "0",
+            "modelo-390-iva-soportado-interiores-cuota": "0",
+            "modelo-390-volumen-entregas-intracomunitarias-base": "0",
+            "modelo-390-volumen-exportaciones-exentas-base": "0"
           },
-          "calculation_revision_id": "e0de0b50f3bebd5d4430b9e4bc53093267a1bfe8b764544d4e7cbbbee5b87476",
+          "calculation_revision_id": "b2bec4ef08db99d6662dbe88e964e3c9bbe9aa711b2f1ef451472d0933eb70d7",
           "casilla_values": {
             "decl.ejercicio": "2025",
             "decl.tipo-declaracion": "0",
+            "iva.anual.aic.bienes.general.base": "0",
+            "iva.anual.aic.bienes.reduced.base": "0",
+            "iva.anual.aic.bienes.super_reduced.base": "0",
+            "iva.anual.aic.bienes.tipo-0.base": "0",
+            "iva.anual.aic.bienes.tipo-0.cuota": "0",
+            "iva.anual.aic.bienes.tipo-10.base": "0",
+            "iva.anual.aic.bienes.tipo-10.cuota": "0",
+            "iva.anual.aic.bienes.tipo-2.base": "0",
+            "iva.anual.aic.bienes.tipo-2.cuota": "0",
+            "iva.anual.aic.bienes.tipo-21.base": "0",
+            "iva.anual.aic.bienes.tipo-21.cuota": "0",
+            "iva.anual.aic.bienes.tipo-4.base": "0",
+            "iva.anual.aic.bienes.tipo-4.cuota": "0",
+            "iva.anual.aic.bienes.tipo-5.base": "0",
+            "iva.anual.aic.bienes.tipo-5.cuota": "0",
+            "iva.anual.aic.bienes.tipo-7-5.base": "0",
+            "iva.anual.aic.bienes.tipo-7-5.cuota": "0",
+            "iva.anual.aic.bienes.zero.base": "0",
+            "iva.anual.aic.servicios.general.base": "0",
+            "iva.anual.aic.servicios.reduced.base": "0",
+            "iva.anual.aic.servicios.super_reduced.base": "0",
+            "iva.anual.aic.servicios.tipo-0.base": "0",
+            "iva.anual.aic.servicios.tipo-0.cuota": "0",
+            "iva.anual.aic.servicios.tipo-10.base": "0",
+            "iva.anual.aic.servicios.tipo-10.cuota": "0",
+            "iva.anual.aic.servicios.tipo-2.base": "0",
+            "iva.anual.aic.servicios.tipo-2.cuota": "0",
+            "iva.anual.aic.servicios.tipo-21.base": "0",
+            "iva.anual.aic.servicios.tipo-21.cuota": "0",
+            "iva.anual.aic.servicios.tipo-4.base": "0",
+            "iva.anual.aic.servicios.tipo-4.cuota": "0",
+            "iva.anual.aic.servicios.tipo-5.base": "0",
+            "iva.anual.aic.servicios.tipo-5.cuota": "0",
+            "iva.anual.aic.servicios.tipo-7-5.base": "0",
+            "iva.anual.aic.servicios.tipo-7-5.cuota": "0",
+            "iva.anual.aic.servicios.zero.base": "0",
+            "iva.anual.autorepercutido.interior.base": "0",
+            "iva.anual.autorepercutido.interior.cuota": "0",
             "iva.anual.autorepercutido.intracomunitaria": "0",
             "iva.anual.compensacion-generada-ejercicio-no-97": "0",
             "iva.anual.compensacion-ultimo-periodo-97": "0",
@@ -201,14 +304,42 @@
             "iva.anual.regularizacion-bienes-inversion": "0.00",
             "iva.anual.regularizacion-prorrata-definitiva": "0",
             "iva.anual.repercutido.general": "0",
+            "iva.anual.repercutido.general.base": "0",
             "iva.anual.repercutido.recargo.general": "0",
             "iva.anual.repercutido.recargo.reducido": "0",
             "iva.anual.repercutido.recargo.super-reducido": "0",
+            "iva.anual.repercutido.recargo.tipo-0-26.cuota": "0",
+            "iva.anual.repercutido.recargo.tipo-0-5.cuota": "0",
+            "iva.anual.repercutido.recargo.tipo-0-62.cuota": "0",
+            "iva.anual.repercutido.recargo.tipo-1-4.cuota": "0",
+            "iva.anual.repercutido.recargo.tipo-1.cuota": "0",
+            "iva.anual.repercutido.recargo.tipo-5-2.cuota": "0",
             "iva.anual.repercutido.reducido": "0",
+            "iva.anual.repercutido.reducido.base": "0",
             "iva.anual.repercutido.super-reducido": "0",
+            "iva.anual.repercutido.super-reducido.base": "0",
+            "iva.anual.repercutido.tipo-0.base": "0",
+            "iva.anual.repercutido.tipo-0.cuota": "0",
+            "iva.anual.repercutido.tipo-10.base": "0",
+            "iva.anual.repercutido.tipo-10.cuota": "0",
+            "iva.anual.repercutido.tipo-2.base": "0",
+            "iva.anual.repercutido.tipo-2.cuota": "0",
+            "iva.anual.repercutido.tipo-21.base": "0",
+            "iva.anual.repercutido.tipo-21.cuota": "0",
+            "iva.anual.repercutido.tipo-4.base": "0",
+            "iva.anual.repercutido.tipo-4.cuota": "0",
+            "iva.anual.repercutido.tipo-5.base": "0",
+            "iva.anual.repercutido.tipo-5.cuota": "0",
+            "iva.anual.repercutido.tipo-7-5.base": "0",
+            "iva.anual.repercutido.tipo-7-5.cuota": "0",
+            "iva.anual.repercutido.zero.base": "0",
             "iva.anual.resultado-regimen-general": "0.00",
             "iva.anual.soportado.importaciones": "0",
-            "iva.anual.soportado.interiores": "0"
+            "iva.anual.soportado.interiores": "0",
+            "iva.anual.soportado.interiores.base": "0",
+            "iva.anual.total-bases-cuotas-iva": "0.00",
+            "iva.anual.volumen.entregas-intracomunitarias": "0",
+            "iva.anual.volumen.exportaciones-exentas": "0"
           },
           "created_at": "2026-04-01T09:00:00+00:00",
           "deadline": {
@@ -229,16 +360,81 @@
           "filed_by": null,
           "input_values_by_casilla_id": {
             "decl.ejercicio": "2025",
+            "iva.anual.aic.bienes.general.base": "0",
+            "iva.anual.aic.bienes.reduced.base": "0",
+            "iva.anual.aic.bienes.super_reduced.base": "0",
+            "iva.anual.aic.bienes.tipo-0.base": "0",
+            "iva.anual.aic.bienes.tipo-0.cuota": "0",
+            "iva.anual.aic.bienes.tipo-10.base": "0",
+            "iva.anual.aic.bienes.tipo-10.cuota": "0",
+            "iva.anual.aic.bienes.tipo-2.base": "0",
+            "iva.anual.aic.bienes.tipo-2.cuota": "0",
+            "iva.anual.aic.bienes.tipo-21.base": "0",
+            "iva.anual.aic.bienes.tipo-21.cuota": "0",
+            "iva.anual.aic.bienes.tipo-4.base": "0",
+            "iva.anual.aic.bienes.tipo-4.cuota": "0",
+            "iva.anual.aic.bienes.tipo-5.base": "0",
+            "iva.anual.aic.bienes.tipo-5.cuota": "0",
+            "iva.anual.aic.bienes.tipo-7-5.base": "0",
+            "iva.anual.aic.bienes.tipo-7-5.cuota": "0",
+            "iva.anual.aic.bienes.zero.base": "0",
+            "iva.anual.aic.servicios.general.base": "0",
+            "iva.anual.aic.servicios.reduced.base": "0",
+            "iva.anual.aic.servicios.super_reduced.base": "0",
+            "iva.anual.aic.servicios.tipo-0.base": "0",
+            "iva.anual.aic.servicios.tipo-0.cuota": "0",
+            "iva.anual.aic.servicios.tipo-10.base": "0",
+            "iva.anual.aic.servicios.tipo-10.cuota": "0",
+            "iva.anual.aic.servicios.tipo-2.base": "0",
+            "iva.anual.aic.servicios.tipo-2.cuota": "0",
+            "iva.anual.aic.servicios.tipo-21.base": "0",
+            "iva.anual.aic.servicios.tipo-21.cuota": "0",
+            "iva.anual.aic.servicios.tipo-4.base": "0",
+            "iva.anual.aic.servicios.tipo-4.cuota": "0",
+            "iva.anual.aic.servicios.tipo-5.base": "0",
+            "iva.anual.aic.servicios.tipo-5.cuota": "0",
+            "iva.anual.aic.servicios.tipo-7-5.base": "0",
+            "iva.anual.aic.servicios.tipo-7-5.cuota": "0",
+            "iva.anual.aic.servicios.zero.base": "0",
+            "iva.anual.autorepercutido.interior.base": "0",
+            "iva.anual.autorepercutido.interior.cuota": "0",
             "iva.anual.autorepercutido.intracomunitaria": "0",
             "iva.anual.regularizacion-bienes-inversion": "0",
             "iva.anual.repercutido.general": "0",
+            "iva.anual.repercutido.general.base": "0",
             "iva.anual.repercutido.recargo.general": "0",
             "iva.anual.repercutido.recargo.reducido": "0",
             "iva.anual.repercutido.recargo.super-reducido": "0",
+            "iva.anual.repercutido.recargo.tipo-0-26.cuota": "0",
+            "iva.anual.repercutido.recargo.tipo-0-5.cuota": "0",
+            "iva.anual.repercutido.recargo.tipo-0-62.cuota": "0",
+            "iva.anual.repercutido.recargo.tipo-1-4.cuota": "0",
+            "iva.anual.repercutido.recargo.tipo-1.cuota": "0",
+            "iva.anual.repercutido.recargo.tipo-5-2.cuota": "0",
             "iva.anual.repercutido.reducido": "0",
+            "iva.anual.repercutido.reducido.base": "0",
             "iva.anual.repercutido.super-reducido": "0",
+            "iva.anual.repercutido.super-reducido.base": "0",
+            "iva.anual.repercutido.tipo-0.base": "0",
+            "iva.anual.repercutido.tipo-0.cuota": "0",
+            "iva.anual.repercutido.tipo-10.base": "0",
+            "iva.anual.repercutido.tipo-10.cuota": "0",
+            "iva.anual.repercutido.tipo-2.base": "0",
+            "iva.anual.repercutido.tipo-2.cuota": "0",
+            "iva.anual.repercutido.tipo-21.base": "0",
+            "iva.anual.repercutido.tipo-21.cuota": "0",
+            "iva.anual.repercutido.tipo-4.base": "0",
+            "iva.anual.repercutido.tipo-4.cuota": "0",
+            "iva.anual.repercutido.tipo-5.base": "0",
+            "iva.anual.repercutido.tipo-5.cuota": "0",
+            "iva.anual.repercutido.tipo-7-5.base": "0",
+            "iva.anual.repercutido.tipo-7-5.cuota": "0",
+            "iva.anual.repercutido.zero.base": "0",
             "iva.anual.soportado.importaciones": "0",
-            "iva.anual.soportado.interiores": "0"
+            "iva.anual.soportado.interiores": "0",
+            "iva.anual.soportado.interiores.base": "0",
+            "iva.anual.volumen.entregas-intracomunitarias": "0",
+            "iva.anual.volumen.exportaciones-exentas": "0"
           },
           "modality": null,
           "modality_reason": null,
@@ -281,12 +477,881 @@
             },
             {
               "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.bienes.general.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.bienes.reduced.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.bienes.super_reduced.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.bienes.tipo-0.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.bienes.tipo-0.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.bienes.tipo-10.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.bienes.tipo-10.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.bienes.tipo-2.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.bienes.tipo-2.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.bienes.tipo-21.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.bienes.tipo-21.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.bienes.tipo-4.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.bienes.tipo-4.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.bienes.tipo-5.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.bienes.tipo-5.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.bienes.tipo-7-5.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.bienes.tipo-7-5.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.bienes.zero.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.servicios.general.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.servicios.reduced.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.servicios.super_reduced.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.servicios.tipo-0.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.servicios.tipo-0.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.servicios.tipo-10.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.servicios.tipo-10.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.servicios.tipo-2.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.servicios.tipo-2.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.servicios.tipo-21.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.servicios.tipo-21.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.servicios.tipo-4.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.servicios.tipo-4.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.servicios.tipo-5.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.servicios.tipo-5.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.servicios.tipo-7-5.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.servicios.tipo-7-5.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.aic.servicios.zero.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-85",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.autorepercutido.interior.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-84",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.autorepercutido.interior.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-84",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
               "casilla_id": "iva.anual.autorepercutido.intracomunitaria",
               "formula_id": null,
               "legal_refs": [
+                "ley-37-1992:art-13",
                 "ley-37-1992:art-69",
                 "ley-37-1992:art-70",
-                "ley-37-1992:art-84",
+                "ley-37-1992:art-85",
                 "rd-1624-1992:art-71",
                 "orden-eha-3111-2009:art-1"
               ],
@@ -581,6 +1646,24 @@
             },
             {
               "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.general.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
               "casilla_id": "iva.anual.repercutido.recargo.general",
               "formula_id": null,
               "legal_refs": [
@@ -635,6 +1718,123 @@
             },
             {
               "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.recargo.tipo-0-26.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-161",
+                "ley-37-1992:art-91",
+                "real-decreto-ley-4-2024:art-1",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.recargo.tipo-0-5.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-161",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.recargo.tipo-0-62.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-161",
+                "ley-37-1992:art-91",
+                "real-decreto-ley-4-2024:art-1",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.recargo.tipo-1-4.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-161",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.recargo.tipo-1.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-161",
+                "ley-37-1992:art-91",
+                "real-decreto-ley-4-2024:art-1",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.recargo.tipo-5-2.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-161",
+                "ley-37-1992:art-90",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
               "casilla_id": "iva.anual.repercutido.reducido",
               "formula_id": null,
               "legal_refs": [
@@ -653,7 +1853,347 @@
             },
             {
               "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.reducido.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
               "casilla_id": "iva.anual.repercutido.super-reducido",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.super-reducido.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.tipo-0.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.tipo-0.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.tipo-10.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.tipo-10.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.tipo-2.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "real-decreto-ley-4-2024:art-1",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.tipo-2.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "real-decreto-ley-4-2024:art-1",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.tipo-21.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.tipo-21.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.tipo-4.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.tipo-4.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.tipo-5.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "real-decreto-ley-4-2024:art-1",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.tipo-5.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "real-decreto-ley-4-2024:art-1",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.tipo-7-5.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "real-decreto-ley-4-2024:art-1",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.tipo-7-5.cuota",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "real-decreto-ley-4-2024:art-1",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.repercutido.zero.base",
               "formula_id": null,
               "legal_refs": [
                 "ley-37-1992:art-88",
@@ -735,6 +2275,101 @@
                 "aeat-dr-390-2025"
               ],
               "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.soportado.interiores.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.total-bases-cuotas-iva",
+              "formula_id": "modelo-390-iva-anual-total-bases-cuotas-iva",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-84",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": "add",
+              "operand_casilla_refs": [
+                "iva.anual.repercutido.general",
+                "iva.anual.repercutido.reducido",
+                "iva.anual.repercutido.super-reducido",
+                "iva.anual.autorepercutido.intracomunitaria"
+              ],
+              "operand_refs": [
+                "iva.anual.repercutido.general",
+                "iva.anual.repercutido.reducido",
+                "iva.anual.repercutido.super-reducido",
+                "iva.anual.autorepercutido.intracomunitaria"
+              ],
+              "operand_values": [
+                "0",
+                "0",
+                "0",
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "value": "0.00"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.volumen.entregas-intracomunitarias",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-25",
+                "ley-37-1992:art-121",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.anual.volumen.exportaciones-exentas",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-21",
+                "ley-37-1992:art-22",
+                "ley-37-1992:art-121",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-390-2025"
+              ],
+              "value": "0"
             }
           ],
           "operation": "modelo.work.calculate",
@@ -760,13 +2395,13 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision e0de0b50f3bebd5d4430b9e4bc53093267a1bfe8b764544d4e7cbbbee5b87476 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 390 --year 2025 --period 0A` and re-inspect this one with `aeat app modelo work revision e0de0b50f3bebd5d4430b9e4bc53093267a1bfe8b764544d4e7cbbbee5b87476`.",
+          "saved_confirmation": "Saved as draft calculation revision b2bec4ef08db99d6662dbe88e964e3c9bbe9aa711b2f1ef451472d0933eb70d7 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 390 --year 2025 --period 0A` and re-inspect this one with `aeat app modelo work revision b2bec4ef08db99d6662dbe88e964e3c9bbe9aa711b2f1ef451472d0933eb70d7`.",
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
           "verified_at": null,
           "verified_by": null,
-          "work_unit_id": "5b6bdbabd5046fbc51c421f923195de69c254c1b7267146b1082091db9a258b0"
+          "work_unit_id": "5d44a12df9fbfde2cc01d25544edca04aaa8e2741cbcbdc133e8ee0cc8470a35"
         },
         "schema_version": "2",
         "status": "warning"
@@ -791,7 +2426,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.list\nbucket_id_filter\t\ninclude_discarded\tFalse\nwork_unit_count\t1\nshort_work_unit_id\twork_unit_id\tbucket_id\tmodelo\tyear\tperiod\trevision_id\tstate\tcurrent_revision\tfiled_revision\tname\n091db9a258b0\t5b6bdbabd5046fbc51c421f923195de69c254c1b7267146b1082091db9a258b0\t<profile-id>\t390\t2025\t0A\t2010-y-siguientes\tdraft\tbbbee5b87476\t\t390-2025-0A\n"
+      "text": "operation\tmodelo.work.list\nbucket_id_filter\t\ninclude_discarded\tFalse\nwork_unit_count\t1\nshort_work_unit_id\twork_unit_id\tbucket_id\tmodelo\tyear\tperiod\trevision_id\tstate\tcurrent_revision\tfiled_revision\tname\nee0cc8470a35\t5d44a12df9fbfde2cc01d25544edca04aaa8e2741cbcbdc133e8ee0cc8470a35\t<profile-id>\t390\t2025\t0A\t2010-y-siguientes\tdraft\t2d0933eb70d7\t\t390-2025-0A\n"
     },
     {
       "argv": [
@@ -851,7 +2486,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.status\nwork_unit_id\t5b6bdbabd5046fbc51c421f923195de69c254c1b7267146b1082091db9a258b0\nshort_work_unit_id\t091db9a258b0\nbucket_id\t<bucket-id>\nmodelo\t390\nfiling_year\t2025\nperiod\t0A\nrevision_id\t2010-y-siguientes\nname\t390-2025-0A\nstate\tdraft\ncurrent_calculation_revision_id\te0de0b50f3bebd5d4430b9e4bc53093267a1bfe8b764544d4e7cbbbee5b87476\nshort_current_calculation_revision_id\tbbbee5b87476\nfiled_calculation_revision_id\t\nshort_filed_calculation_revision_id\t\ncurrent_filing_record_id\t\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nplazo_closes_on\t2026-01-30\ndays_overdue\t61\nconditional_recargo_preview_band\tcompleted_months_2\nconditional_recargo_preview_pct\t3.00\nconditional_recargo_preview_interest_applies\tFalse\nconditional_recargo_preview_reference_on\t2026-04-01\nconditional_recargo_preview_assessment_status\tunassessed\nconditional_recargo_preview_legal_ref\tley-58-2003:art-27.2\nWARNING: voluntary filing period expired (Art. 27 LGT). The displayed rate is an unassessed preview; this application does not determine surcharge or interest liability.\n"
+      "text": "operation\tmodelo.work.status\nwork_unit_id\t5d44a12df9fbfde2cc01d25544edca04aaa8e2741cbcbdc133e8ee0cc8470a35\nshort_work_unit_id\tee0cc8470a35\nbucket_id\t<bucket-id>\nmodelo\t390\nfiling_year\t2025\nperiod\t0A\nrevision_id\t2010-y-siguientes\nname\t390-2025-0A\nstate\tdraft\ncurrent_calculation_revision_id\tb2bec4ef08db99d6662dbe88e964e3c9bbe9aa711b2f1ef451472d0933eb70d7\nshort_current_calculation_revision_id\t2d0933eb70d7\nfiled_calculation_revision_id\t\nshort_filed_calculation_revision_id\t\ncurrent_filing_record_id\t\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nplazo_closes_on\t2026-01-30\ndays_overdue\t61\nconditional_recargo_preview_band\tcompleted_months_2\nconditional_recargo_preview_pct\t3.00\nconditional_recargo_preview_interest_applies\tFalse\nconditional_recargo_preview_reference_on\t2026-04-01\nconditional_recargo_preview_assessment_status\tunassessed\nconditional_recargo_preview_legal_ref\tley-58-2003:art-27.2\nWARNING: voluntary filing period expired (Art. 27 LGT). The displayed rate is an unassessed preview; this application does not determine surcharge or interest liability.\n"
     },
     {
       "argv": [
@@ -874,7 +2509,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tregistry.modelo.bindings.list\nmodelo_filter\t390\nyear_filter\t2025\nperiod_filter\t0A\nmissing_filter\tTrue\nbinding_count\t17\nmodelo\trevision\tperiod\tbinding_id\tsource\treadiness\ttyped_enum\tinput_channel\tborrador_capable\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-repercutido-general-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-repercutido-reducido-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-repercutido-super-reducido-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-soportado-interiores-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-soportado-importaciones-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-prorrata-regularizacion-anual\tprorrata_regularizacion\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-bienes-inversion-regularizacion-casilla-63\tbienes_inversion_regularizacion\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-autorepercutido-intracomunitaria-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-recargo-equivalencia-general-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-recargo-equivalencia-reducido-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-recargo-equivalencia-super-reducido-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-prev-303-cuota-devengada-total\trelation_prefill\trelation input\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-prev-303-cuota-deducible-total\trelation_prefill\trelation input\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-prev-303-resultado-regimen-general\trelation_prefill\trelation input\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-prev-303-cuota-devengada-simplificado\trelation_prefill\trelation input\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-prev-303-compensacion-ultimo-periodo\tiva_compensation_annual_partition\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-prev-303-compensacion-generada-ejercicio-no-97\tiva_compensation_annual_partition\tledger source\t-\tdecimal\tFalse\nrelation_guidance\tSome bindings below are fed by registry relations (cross-modelo or cross-period fold-ins), not direct --binding values. Supply each with --relation RELATION_ID=VALUE before calculating.\nrelation_input\tmodelo-390-prev-303-cuota-devengada-total\tfed by relation modelo-390-rel-303-cuota-devengada-total\tuse --relation modelo-390-rel-303-cuota-devengada-total=VALUE\nrelation_input\tmodelo-390-prev-303-cuota-deducible-total\tfed by relation modelo-390-rel-303-cuota-deducible-total\tuse --relation modelo-390-rel-303-cuota-deducible-total=VALUE\nrelation_input\tmodelo-390-prev-303-resultado-regimen-general\tfed by relation modelo-390-rel-303-resultado-regimen-general\tuse --relation modelo-390-rel-303-resultado-regimen-general=VALUE\nrelation_input\tmodelo-390-prev-303-cuota-devengada-simplificado\tfed by relation modelo-390-rel-303-cuota-devengada-simplificado\tuse --relation modelo-390-rel-303-cuota-devengada-simplificado=VALUE\n"
+      "text": "operation\tregistry.modelo.bindings.list\nmodelo_filter\t390\nyear_filter\t2025\nperiod_filter\t0A\nmissing_filter\tTrue\nbinding_count\t82\nmodelo\trevision\tperiod\tbinding_id\tsource\treadiness\ttyped_enum\tinput_channel\tborrador_capable\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-repercutido-general-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-repercutido-reducido-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-repercutido-super-reducido-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-soportado-interiores-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-soportado-importaciones-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-prorrata-regularizacion-anual\tprorrata_regularizacion\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-bienes-inversion-regularizacion-casilla-63\tbienes_inversion_regularizacion\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-autorepercutido-intracomunitaria-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-recargo-equivalencia-general-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-recargo-equivalencia-reducido-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-recargo-equivalencia-super-reducido-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-prev-303-cuota-devengada-total\trelation_prefill\trelation input\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-prev-303-cuota-deducible-total\trelation_prefill\trelation input\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-prev-303-resultado-regimen-general\trelation_prefill\trelation input\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-prev-303-cuota-devengada-simplificado\trelation_prefill\trelation input\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-prev-303-compensacion-ultimo-periodo\tiva_compensation_annual_partition\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-prev-303-compensacion-generada-ejercicio-no-97\tiva_compensation_annual_partition\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-repercutido-general-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-repercutido-reducido-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-repercutido-super-reducido-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-repercutido-zero-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-soportado-interiores-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-repercutido-tipo-21-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-repercutido-tipo-21-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-repercutido-tipo-10-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-repercutido-tipo-10-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-repercutido-tipo-7-5-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-repercutido-tipo-7-5-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-repercutido-tipo-5-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-repercutido-tipo-5-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-repercutido-tipo-4-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-repercutido-tipo-4-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-repercutido-tipo-2-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-repercutido-tipo-2-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-repercutido-tipo-0-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-repercutido-tipo-0-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-recargo-equivalencia-tipo-5-2-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-recargo-equivalencia-tipo-1-4-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-recargo-equivalencia-tipo-1-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-recargo-equivalencia-tipo-0-62-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-recargo-equivalencia-tipo-0-5-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-recargo-equivalencia-tipo-0-26-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-volumen-entregas-intracomunitarias-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-volumen-exportaciones-exentas-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-aic-bienes-tipo-0-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-aic-bienes-tipo-0-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-aic-bienes-tipo-2-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-aic-bienes-tipo-2-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-aic-bienes-tipo-4-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-aic-bienes-tipo-4-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-aic-bienes-tipo-5-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-aic-bienes-tipo-5-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-aic-bienes-tipo-7-5-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-aic-bienes-tipo-7-5-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-aic-bienes-tipo-10-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-aic-bienes-tipo-10-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-aic-bienes-tipo-21-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-aic-bienes-tipo-21-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-aic-servicios-tipo-0-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-aic-servicios-tipo-0-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-aic-servicios-tipo-2-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-aic-servicios-tipo-2-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-aic-servicios-tipo-4-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-aic-servicios-tipo-4-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-aic-servicios-tipo-5-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-aic-servicios-tipo-5-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-aic-servicios-tipo-7-5-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-aic-servicios-tipo-7-5-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-aic-servicios-tipo-10-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-aic-servicios-tipo-10-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-aic-servicios-tipo-21-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-aic-servicios-tipo-21-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-autorepercutido-interior-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-autorepercutido-interior-cuota\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-aic-bienes-zero-blind-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-aic-bienes-super-reduced-blind-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-aic-bienes-reduced-blind-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-aic-bienes-general-blind-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-aic-servicios-zero-blind-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-aic-servicios-super-reduced-blind-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-aic-servicios-reduced-blind-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\n390\t2010-y-siguientes\t0A\tmodelo-390-iva-aic-servicios-general-blind-base\tledger_iva_aggregation\tledger source\t-\tdecimal\tFalse\nrelation_guidance\tSome bindings below are fed by registry relations (cross-modelo or cross-period fold-ins), not direct --binding values. Supply each with --relation RELATION_ID=VALUE before calculating.\nrelation_input\tmodelo-390-prev-303-cuota-devengada-total\tfed by relation modelo-390-rel-303-cuota-devengada-total\tuse --relation modelo-390-rel-303-cuota-devengada-total=VALUE\nrelation_input\tmodelo-390-prev-303-cuota-deducible-total\tfed by relation modelo-390-rel-303-cuota-deducible-total\tuse --relation modelo-390-rel-303-cuota-deducible-total=VALUE\nrelation_input\tmodelo-390-prev-303-resultado-regimen-general\tfed by relation modelo-390-rel-303-resultado-regimen-general\tuse --relation modelo-390-rel-303-resultado-regimen-general=VALUE\nrelation_input\tmodelo-390-prev-303-cuota-devengada-simplificado\tfed by relation modelo-390-rel-303-cuota-devengada-simplificado\tuse --relation modelo-390-rel-303-cuota-devengada-simplificado=VALUE\n"
     },
     {
       "argv": [
@@ -892,7 +2527,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "casilla_id\tnumber\tinput\trequired\tlabel\ndecl.ejercicio\tejercicio\tinformational\ttrue\tTax year the annual summary return relates to\ndecl.tipo-declaracion\ttipo-declaracion\tinformational\ttrue\tReturn type (original / substitute / supplementary)\niva.anual.repercutido.general\tiva.anual.repercutido.general\tbound\tfalse\tVAT charged at the standard rate (21%) - annual\niva.anual.repercutido.reducido\tiva.anual.repercutido.reducido\tbound\tfalse\tVAT charged at the reduced rate (10%) - annual\niva.anual.repercutido.super-reducido\tiva.anual.repercutido.super-reducido\tbound\tfalse\tVAT charged at the super-reduced rate (4%) - annual\niva.anual.soportado.interiores\tiva.anual.soportado.interiores\tbound\tfalse\tVAT borne on ordinary domestic transactions - annual\niva.anual.soportado.importaciones\tiva.anual.soportado.importaciones\tbound\tfalse\tDeductible VAT borne on imports of ordinary goods - annual\niva.anual.regularizacion-prorrata-definitiva\t522\tmanual\tfalse\tAdjustment for applying the definitive pro-rata percentage - annual\niva.anual.regularizacion-bienes-inversion\t63\tbound\tfalse\tCapital goods adjustment - annual\niva.anual.autorepercutido.intracomunitaria\tiva.anual.autorepercutido.intracomunitaria\tbound\tfalse\tSelf-charged VAT on intra-Community acquisitions - annual\niva.anual.repercutido.recargo.general\tiva.anual.repercutido.recargo.general\tbound\tfalse\tEquivalence surcharge at 5.2% - annual VAT due\niva.anual.repercutido.recargo.reducido\tiva.anual.repercutido.recargo.reducido\tbound\tfalse\tEquivalence surcharge at 1.4% - annual VAT due\niva.anual.repercutido.recargo.super-reducido\tiva.anual.repercutido.recargo.super-reducido\tbound\tfalse\tEquivalence surcharge at 0.5% - annual VAT due\niva.anual.reconciliacion.devengada-303\tiva.anual.reconciliacion.devengada-303\tbound\tfalse\tAnnual VAT due reconciled from the four quarterly Modelo 303 returns\niva.anual.reconciliacion.deducible-303\tiva.anual.reconciliacion.deducible-303\tbound\tfalse\tAnnual deductible amount reconciled from the four quarterly Modelo 303 returns\niva.anual.reconciliacion.resultado-303\tiva.anual.reconciliacion.resultado-303\tbound\tfalse\tAnnual result reconciled from the four quarterly Modelo 303 returns\niva.anual.reconciliacion.devengada-simplificado-303\t79\tbound\tfalse\tVAT due under the simplified regime - resulting total (annual, from Modelo 303 Q4)\niva.anual.compensacion-ultimo-periodo-97\t97\tbound\tfalse\tResult of the last period's return - to be offset\niva.anual.compensacion-generada-ejercicio-no-97\t662\tbound\tfalse\tAmounts pending offset generated in the year, other than those included in box 97\niva.anual.cuota-devengada-total\tiva.anual.cuota-devengada-total\tcomputed\tfalse\tTotal annual VAT due (charged + self-charged)\niva.anual.cuota-deducible-total\tiva.anual.cuota-deducible-total\tcomputed\tfalse\tTotal annual deductible VAT (borne + self-charged)\niva.anual.resultado-regimen-general\tiva.anual.resultado-regimen-general\tcomputed\tfalse\tAnnual result under the standard regime (VAT due minus deductible VAT)\n"
+      "text": "casilla_id\tnumber\tinput\trequired\tlabel\ndecl.ejercicio\tejercicio\tinformational\ttrue\tTax year the annual summary return relates to\ndecl.tipo-declaracion\ttipo-declaracion\tinformational\ttrue\tReturn type (original / substitute / supplementary)\niva.anual.aic.bienes.tipo-0.base\t716\tbound\tfalse\tTaxable base of intra-Community acquisitions of goods at the 0% rate - annual\niva.anual.aic.bienes.tipo-0.cuota\t717\tbound\tfalse\tVAT amount of intra-Community acquisitions of goods at the 0% rate - annual\niva.anual.aic.bienes.tipo-2.base\t683\tbound\tfalse\tTaxable base of intra-Community acquisitions of goods at the 2% rate - annual\niva.anual.aic.bienes.tipo-2.cuota\t684\tbound\tfalse\tVAT amount of intra-Community acquisitions of goods at the 2% rate - annual\niva.anual.aic.bienes.tipo-4.base\t21\tbound\tfalse\tTaxable base of intra-Community acquisitions of goods at the 4% rate - annual\niva.anual.aic.bienes.tipo-4.cuota\t22\tbound\tfalse\tVAT amount of intra-Community acquisitions of goods at the 4% rate - annual\niva.anual.aic.bienes.tipo-5.base\t718\tbound\tfalse\tTaxable base of intra-Community acquisitions of goods at the 5% rate - annual\niva.anual.aic.bienes.tipo-5.cuota\t719\tbound\tfalse\tVAT amount of intra-Community acquisitions of goods at the 5% rate - annual\niva.anual.aic.bienes.tipo-7-5.base\t685\tbound\tfalse\tTaxable base of intra-Community acquisitions of goods at the 7.5% rate - annual\niva.anual.aic.bienes.tipo-7-5.cuota\t686\tbound\tfalse\tVAT amount of intra-Community acquisitions of goods at the 7.5% rate - annual\niva.anual.aic.bienes.tipo-10.base\t23\tbound\tfalse\tTaxable base of intra-Community acquisitions of goods at the 10% rate - annual\niva.anual.aic.bienes.tipo-10.cuota\t24\tbound\tfalse\tVAT amount of intra-Community acquisitions of goods at the 10% rate - annual\niva.anual.aic.bienes.tipo-21.base\t25\tbound\tfalse\tTaxable base of intra-Community acquisitions of goods at the 21% rate - annual\niva.anual.aic.bienes.tipo-21.cuota\t26\tbound\tfalse\tVAT amount of intra-Community acquisitions of goods at the 21% rate - annual\niva.anual.aic.servicios.tipo-0.base\t720\tbound\tfalse\tTaxable base of intra-Community acquisitions of services at the 0% rate - annual\niva.anual.aic.servicios.tipo-0.cuota\t721\tbound\tfalse\tVAT amount of intra-Community acquisitions of services at the 0% rate - annual\niva.anual.aic.servicios.tipo-2.base\t687\tbound\tfalse\tTaxable base of intra-Community acquisitions of services at the 2% rate - annual\niva.anual.aic.servicios.tipo-2.cuota\t688\tbound\tfalse\tVAT amount of intra-Community acquisitions of services at the 2% rate - annual\niva.anual.aic.servicios.tipo-4.base\t545\tbound\tfalse\tTaxable base of intra-Community acquisitions of services at the 4% rate - annual\niva.anual.aic.servicios.tipo-4.cuota\t546\tbound\tfalse\tVAT amount of intra-Community acquisitions of services at the 4% rate - annual\niva.anual.aic.servicios.tipo-5.base\t722\tbound\tfalse\tTaxable base of intra-Community acquisitions of services at the 5% rate - annual\niva.anual.aic.servicios.tipo-5.cuota\t723\tbound\tfalse\tVAT amount of intra-Community acquisitions of services at the 5% rate - annual\niva.anual.aic.servicios.tipo-7-5.base\t689\tbound\tfalse\tTaxable base of intra-Community acquisitions of services at the 7.5% rate - annual\niva.anual.aic.servicios.tipo-7-5.cuota\t690\tbound\tfalse\tVAT amount of intra-Community acquisitions of services at the 7.5% rate - annual\niva.anual.aic.servicios.tipo-10.base\t547\tbound\tfalse\tTaxable base of intra-Community acquisitions of services at the 10% rate - annual\niva.anual.aic.servicios.tipo-10.cuota\t548\tbound\tfalse\tVAT amount of intra-Community acquisitions of services at the 10% rate - annual\niva.anual.aic.servicios.tipo-21.base\t551\tbound\tfalse\tTaxable base of intra-Community acquisitions of services at the 21% rate - annual\niva.anual.aic.servicios.tipo-21.cuota\t552\tbound\tfalse\tVAT amount of intra-Community acquisitions of services at the 21% rate - annual\niva.anual.aic.bienes.zero.base\tiva.anual.aic.bienes.zero.base\tbound\tfalse\tTaxable base of intra-Community acquisitions of goods at the zero rate, no rate breakdown - annual\niva.anual.aic.bienes.super_reduced.base\tiva.anual.aic.bienes.super_reduced.base\tbound\tfalse\tTaxable base of intra-Community acquisitions of goods at the super-reduced rate, no rate breakdown - annual\niva.anual.aic.bienes.reduced.base\tiva.anual.aic.bienes.reduced.base\tbound\tfalse\tTaxable base of intra-Community acquisitions of goods at the reduced rate, no rate breakdown - annual\niva.anual.aic.bienes.general.base\tiva.anual.aic.bienes.general.base\tbound\tfalse\tTaxable base of intra-Community acquisitions of goods at the general rate, no rate breakdown - annual\niva.anual.aic.servicios.zero.base\tiva.anual.aic.servicios.zero.base\tbound\tfalse\tTaxable base of intra-Community acquisitions of services at the zero rate, no rate breakdown - annual\niva.anual.aic.servicios.super_reduced.base\tiva.anual.aic.servicios.super_reduced.base\tbound\tfalse\tTaxable base of intra-Community acquisitions of services at the super-reduced rate, no rate breakdown - annual\niva.anual.aic.servicios.reduced.base\tiva.anual.aic.servicios.reduced.base\tbound\tfalse\tTaxable base of intra-Community acquisitions of services at the reduced rate, no rate breakdown - annual\niva.anual.aic.servicios.general.base\tiva.anual.aic.servicios.general.base\tbound\tfalse\tTaxable base of intra-Community acquisitions of services at the general rate, no rate breakdown - annual\niva.anual.autorepercutido.interior.base\t27\tbound\tfalse\tTaxable base of reverse-charge domestic transactions - annual\niva.anual.autorepercutido.interior.cuota\t28\tbound\tfalse\tReverse-charge VAT amount on domestic transactions - annual\niva.anual.repercutido.general.base\tiva.anual.repercutido.general.base\tbound\tfalse\tTaxable base of output VAT - standard regime - 21% rate - annual\niva.anual.repercutido.reducido.base\tiva.anual.repercutido.reducido.base\tbound\tfalse\tTaxable base of output VAT - standard regime - 10% rate - annual\niva.anual.repercutido.super-reducido.base\tiva.anual.repercutido.super-reducido.base\tbound\tfalse\tTaxable base of output VAT - standard regime - 4% rate - annual\niva.anual.repercutido.zero.base\tiva.anual.repercutido.zero.base\tbound\tfalse\tOutput VAT, general regime, zero tier - Taxable base\niva.anual.soportado.interiores.base\t48\tbound\tfalse\tTaxable base of deductible VAT - total current domestic purchases of goods and services - annual\niva.anual.repercutido.general\tiva.anual.repercutido.general\tbound\tfalse\tVAT charged at the standard rate (21%) - annual\niva.anual.repercutido.reducido\tiva.anual.repercutido.reducido\tbound\tfalse\tVAT charged at the reduced rate (10%) - annual\niva.anual.repercutido.super-reducido\tiva.anual.repercutido.super-reducido\tbound\tfalse\tVAT charged at the super-reduced rate (4%) - annual\niva.anual.soportado.interiores\tiva.anual.soportado.interiores\tbound\tfalse\tVAT borne on ordinary domestic transactions - annual\niva.anual.soportado.importaciones\tiva.anual.soportado.importaciones\tbound\tfalse\tDeductible VAT borne on imports of ordinary goods - annual\niva.anual.regularizacion-prorrata-definitiva\t522\tmanual\tfalse\tAdjustment for applying the definitive pro-rata percentage - annual\niva.anual.regularizacion-bienes-inversion\t63\tbound\tfalse\tCapital goods adjustment - annual\niva.anual.autorepercutido.intracomunitaria\tiva.anual.autorepercutido.intracomunitaria\tbound\tfalse\tSelf-charged VAT on intra-Community acquisitions - annual\niva.anual.repercutido.recargo.general\tiva.anual.repercutido.recargo.general\tbound\tfalse\tEquivalence surcharge at 5.2% - annual VAT due\niva.anual.repercutido.recargo.reducido\tiva.anual.repercutido.recargo.reducido\tbound\tfalse\tEquivalence surcharge at 1.4% - annual VAT due\niva.anual.repercutido.recargo.super-reducido\tiva.anual.repercutido.recargo.super-reducido\tbound\tfalse\tEquivalence surcharge at 0.5% - annual VAT due\niva.anual.reconciliacion.devengada-303\tiva.anual.reconciliacion.devengada-303\tbound\tfalse\tAnnual VAT due reconciled from the four quarterly Modelo 303 returns\niva.anual.reconciliacion.deducible-303\tiva.anual.reconciliacion.deducible-303\tbound\tfalse\tAnnual deductible amount reconciled from the four quarterly Modelo 303 returns\niva.anual.reconciliacion.resultado-303\tiva.anual.reconciliacion.resultado-303\tbound\tfalse\tAnnual result reconciled from the four quarterly Modelo 303 returns\niva.anual.reconciliacion.devengada-simplificado-303\t79\tbound\tfalse\tVAT due under the simplified regime - resulting total (annual, from Modelo 303 Q4)\niva.anual.compensacion-ultimo-periodo-97\t97\tbound\tfalse\tResult of the last period's return - to be offset\niva.anual.compensacion-generada-ejercicio-no-97\t662\tbound\tfalse\tAmounts pending offset generated in the year, other than those included in box 97\niva.anual.total-bases-cuotas-iva\t34\tcomputed\tfalse\tTotal IVA bases and cuotas - Cuota (Reg. ordinario) - annual\niva.anual.cuota-devengada-total\tiva.anual.cuota-devengada-total\tcomputed\tfalse\tTotal annual VAT due (charged + self-charged)\niva.anual.cuota-deducible-total\tiva.anual.cuota-deducible-total\tcomputed\tfalse\tTotal annual deductible VAT (borne + self-charged)\niva.anual.resultado-regimen-general\tiva.anual.resultado-regimen-general\tcomputed\tfalse\tAnnual result under the standard regime (VAT due minus deductible VAT)\niva.anual.repercutido.recargo.tipo-5-2.cuota\t602\tbound\tfalse\tEquivalence surcharge at 5.2 % - annual output amount\niva.anual.repercutido.recargo.tipo-1-4.cuota\t600\tbound\tfalse\tEquivalence surcharge at 1.4 % - annual output amount\niva.anual.repercutido.recargo.tipo-1.cuota\t694\tbound\tfalse\tEquivalence surcharge at 1 % - annual output amount\niva.anual.repercutido.recargo.tipo-0-62.cuota\t666\tbound\tfalse\tEquivalence surcharge at 0.62 % - annual output amount\niva.anual.repercutido.recargo.tipo-0-5.cuota\t36\tbound\tfalse\tEquivalence surcharge at 0.5 % - annual output amount\niva.anual.repercutido.recargo.tipo-0-26.cuota\t692\tbound\tfalse\tEquivalence surcharge at 0.26 % - annual output amount\niva.anual.repercutido.tipo-21.base\t05\tbound\tfalse\tTaxable base of output VAT - standard regime - 21% rate - annual\niva.anual.repercutido.tipo-21.cuota\t06\tbound\tfalse\tOutput VAT amount - standard regime - 21% rate - annual\niva.anual.repercutido.tipo-10.base\t03\tbound\tfalse\tTaxable base of output VAT - standard regime - 10% rate - annual\niva.anual.repercutido.tipo-10.cuota\t04\tbound\tfalse\tOutput VAT amount - standard regime - 10% rate - annual\niva.anual.repercutido.tipo-7-5.base\t669\tbound\tfalse\tTaxable base of output VAT - standard regime - 7,5% rate - annual\niva.anual.repercutido.tipo-7-5.cuota\t670\tbound\tfalse\tOutput VAT amount - standard regime - 7,5% rate - annual\niva.anual.repercutido.tipo-5.base\t702\tbound\tfalse\tTaxable base of output VAT - standard regime - 5% rate - annual\niva.anual.repercutido.tipo-5.cuota\t703\tbound\tfalse\tOutput VAT amount - standard regime - 5% rate - annual\niva.anual.repercutido.tipo-4.base\t01\tbound\tfalse\tTaxable base of output VAT - standard regime - 4% rate - annual\niva.anual.repercutido.tipo-4.cuota\t02\tbound\tfalse\tOutput VAT amount - standard regime - 4% rate - annual\niva.anual.repercutido.tipo-2.base\t667\tbound\tfalse\tTaxable base of output VAT - standard regime - 2% rate - annual\niva.anual.repercutido.tipo-2.cuota\t668\tbound\tfalse\tOutput VAT amount - standard regime - 2% rate - annual\niva.anual.repercutido.tipo-0.base\t700\tbound\tfalse\tTaxable base of output VAT - standard regime - 0% rate - annual\niva.anual.repercutido.tipo-0.cuota\t701\tbound\tfalse\tOutput VAT amount - standard regime - 0% rate - annual\niva.anual.volumen.entregas-intracomunitarias\t103\tbound\tfalse\tIntra-Community supplies of goods\niva.anual.volumen.exportaciones-exentas\t104\tbound\tfalse\tExports and other exempt operations carrying a right to deduct\n"
     },
     {
       "argv": [
@@ -914,7 +2549,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.revisions\nwork_unit_id_filter\t5b6bdbabd5046fbc51c421f923195de69c254c1b7267146b1082091db9a258b0\nrevision_count\t1\nshort_calculation_revision_id\tcalculation_revision_id\tshort_work_unit_id\twork_unit_id\tstate\tcreated_at\nbbbee5b87476\te0de0b50f3bebd5d4430b9e4bc53093267a1bfe8b764544d4e7cbbbee5b87476\t091db9a258b0\t5b6bdbabd5046fbc51c421f923195de69c254c1b7267146b1082091db9a258b0\tborrador\t2026-04-01T09:00:00+00:00\n"
+      "text": "operation\tmodelo.work.revisions\nwork_unit_id_filter\t5d44a12df9fbfde2cc01d25544edca04aaa8e2741cbcbdc133e8ee0cc8470a35\nrevision_count\t1\nshort_calculation_revision_id\tcalculation_revision_id\tshort_work_unit_id\twork_unit_id\tstate\tcreated_at\n2d0933eb70d7\tb2bec4ef08db99d6662dbe88e964e3c9bbe9aa711b2f1ef451472d0933eb70d7\tee0cc8470a35\t5d44a12df9fbfde2cc01d25544edca04aaa8e2741cbcbdc133e8ee0cc8470a35\tborrador\t2026-04-01T09:00:00+00:00\n"
     },
     {
       "argv": [
@@ -936,7 +2571,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.revision\ncalculation_revision_id\te0de0b50f3bebd5d4430b9e4bc53093267a1bfe8b764544d4e7cbbbee5b87476\nwork_unit_id\t5b6bdbabd5046fbc51c421f923195de69c254c1b7267146b1082091db9a258b0\nstate\tdraft\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nresult summary  Modelo 390 2025 0A\nrole\tcasilla\tvalue\tlabel\nkey_figure\tiva.anual.cuota-devengada-total\t0.00\tTotal annual VAT due (charged + self-charged)\nkey_figure\tiva.anual.cuota-deducible-total\t0.00\tTotal annual deductible VAT (borne + self-charged)\nkey_figure\tiva.anual.resultado-regimen-general\t0.00\tAnnual result under the standard regime (VAT due minus deductible VAT)\ncasilla\tdecl.ejercicio\t2025\ncasilla\tdecl.tipo-declaracion\t0\ncasilla\tiva.anual.autorepercutido.intracomunitaria\t0\ncasilla\tiva.anual.compensacion-generada-ejercicio-no-97\t0\ncasilla\tiva.anual.compensacion-ultimo-periodo-97\t0\ncasilla\tiva.anual.cuota-deducible-total\t0.00\tsum(iva.anual.soportado.interiores, iva.anual.soportado.importaciones, iva.anual.regularizacion-bienes-inversion, iva.anual.regularizacion-prorrata-definitiva, iva.anual.autorepercutido.intracomunitaria) = sum(0, 0, 0.00, 0, 0) = 0.00\ncasilla\tiva.anual.cuota-devengada-total\t0.00\tsum(iva.anual.repercutido.general, iva.anual.repercutido.reducido, iva.anual.repercutido.super-reducido, iva.anual.autorepercutido.intracomunitaria, iva.anual.repercutido.recargo.general, iva.anual.repercutido.recargo.reducido, iva.anual.repercutido.recargo.super-reducido) = sum(0, 0, 0, 0, 0, 0, 0) = 0.00\ncasilla\tiva.anual.reconciliacion.deducible-303\t0\ncasilla\tiva.anual.reconciliacion.devengada-303\t0\ncasilla\tiva.anual.reconciliacion.devengada-simplificado-303\t0\ncasilla\tiva.anual.reconciliacion.resultado-303\t0\ncasilla\tiva.anual.regularizacion-bienes-inversion\t0.00\ncasilla\tiva.anual.regularizacion-prorrata-definitiva\t0\ncasilla\tiva.anual.repercutido.general\t0\ncasilla\tiva.anual.repercutido.recargo.general\t0\ncasilla\tiva.anual.repercutido.recargo.reducido\t0\ncasilla\tiva.anual.repercutido.recargo.super-reducido\t0\ncasilla\tiva.anual.repercutido.reducido\t0\ncasilla\tiva.anual.repercutido.super-reducido\t0\ncasilla\tiva.anual.resultado-regimen-general\t0.00\tsubtract(iva.anual.cuota-devengada-total, iva.anual.cuota-deducible-total) = subtract(0.00, 0.00) = 0.00\ncasilla\tiva.anual.soportado.importaciones\t0\ncasilla\tiva.anual.soportado.interiores\t0\n"
+      "text": "operation\tmodelo.work.revision\ncalculation_revision_id\tb2bec4ef08db99d6662dbe88e964e3c9bbe9aa711b2f1ef451472d0933eb70d7\nwork_unit_id\t5d44a12df9fbfde2cc01d25544edca04aaa8e2741cbcbdc133e8ee0cc8470a35\nstate\tdraft\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nresult summary  Modelo 390 2025 0A\nrole\tcasilla\tvalue\tlabel\nkey_figure\tiva.anual.cuota-devengada-total\t0.00\tTotal annual VAT due (charged + self-charged)\nkey_figure\tiva.anual.cuota-deducible-total\t0.00\tTotal annual deductible VAT (borne + self-charged)\nkey_figure\tiva.anual.resultado-regimen-general\t0.00\tAnnual result under the standard regime (VAT due minus deductible VAT)\ncasilla\tdecl.ejercicio\t2025\ncasilla\tdecl.tipo-declaracion\t0\ncasilla\tiva.anual.aic.bienes.general.base\t0\ncasilla\tiva.anual.aic.bienes.reduced.base\t0\ncasilla\tiva.anual.aic.bienes.super_reduced.base\t0\ncasilla\tiva.anual.aic.bienes.tipo-0.base\t0\ncasilla\tiva.anual.aic.bienes.tipo-0.cuota\t0\ncasilla\tiva.anual.aic.bienes.tipo-10.base\t0\ncasilla\tiva.anual.aic.bienes.tipo-10.cuota\t0\ncasilla\tiva.anual.aic.bienes.tipo-2.base\t0\ncasilla\tiva.anual.aic.bienes.tipo-2.cuota\t0\ncasilla\tiva.anual.aic.bienes.tipo-21.base\t0\ncasilla\tiva.anual.aic.bienes.tipo-21.cuota\t0\ncasilla\tiva.anual.aic.bienes.tipo-4.base\t0\ncasilla\tiva.anual.aic.bienes.tipo-4.cuota\t0\ncasilla\tiva.anual.aic.bienes.tipo-5.base\t0\ncasilla\tiva.anual.aic.bienes.tipo-5.cuota\t0\ncasilla\tiva.anual.aic.bienes.tipo-7-5.base\t0\ncasilla\tiva.anual.aic.bienes.tipo-7-5.cuota\t0\ncasilla\tiva.anual.aic.bienes.zero.base\t0\ncasilla\tiva.anual.aic.servicios.general.base\t0\ncasilla\tiva.anual.aic.servicios.reduced.base\t0\ncasilla\tiva.anual.aic.servicios.super_reduced.base\t0\ncasilla\tiva.anual.aic.servicios.tipo-0.base\t0\ncasilla\tiva.anual.aic.servicios.tipo-0.cuota\t0\ncasilla\tiva.anual.aic.servicios.tipo-10.base\t0\ncasilla\tiva.anual.aic.servicios.tipo-10.cuota\t0\ncasilla\tiva.anual.aic.servicios.tipo-2.base\t0\ncasilla\tiva.anual.aic.servicios.tipo-2.cuota\t0\ncasilla\tiva.anual.aic.servicios.tipo-21.base\t0\ncasilla\tiva.anual.aic.servicios.tipo-21.cuota\t0\ncasilla\tiva.anual.aic.servicios.tipo-4.base\t0\ncasilla\tiva.anual.aic.servicios.tipo-4.cuota\t0\ncasilla\tiva.anual.aic.servicios.tipo-5.base\t0\ncasilla\tiva.anual.aic.servicios.tipo-5.cuota\t0\ncasilla\tiva.anual.aic.servicios.tipo-7-5.base\t0\ncasilla\tiva.anual.aic.servicios.tipo-7-5.cuota\t0\ncasilla\tiva.anual.aic.servicios.zero.base\t0\ncasilla\tiva.anual.autorepercutido.interior.base\t0\ncasilla\tiva.anual.autorepercutido.interior.cuota\t0\ncasilla\tiva.anual.autorepercutido.intracomunitaria\t0\ncasilla\tiva.anual.compensacion-generada-ejercicio-no-97\t0\ncasilla\tiva.anual.compensacion-ultimo-periodo-97\t0\ncasilla\tiva.anual.cuota-deducible-total\t0.00\tsum(iva.anual.soportado.interiores, iva.anual.soportado.importaciones, iva.anual.regularizacion-bienes-inversion, iva.anual.regularizacion-prorrata-definitiva, iva.anual.autorepercutido.intracomunitaria) = sum(0, 0, 0.00, 0, 0) = 0.00\ncasilla\tiva.anual.cuota-devengada-total\t0.00\tsum(iva.anual.repercutido.general, iva.anual.repercutido.reducido, iva.anual.repercutido.super-reducido, iva.anual.autorepercutido.intracomunitaria, iva.anual.repercutido.recargo.general, iva.anual.repercutido.recargo.reducido, iva.anual.repercutido.recargo.super-reducido) = sum(0, 0, 0, 0, 0, 0, 0) = 0.00\ncasilla\tiva.anual.reconciliacion.deducible-303\t0\ncasilla\tiva.anual.reconciliacion.devengada-303\t0\ncasilla\tiva.anual.reconciliacion.devengada-simplificado-303\t0\ncasilla\tiva.anual.reconciliacion.resultado-303\t0\ncasilla\tiva.anual.regularizacion-bienes-inversion\t0.00\ncasilla\tiva.anual.regularizacion-prorrata-definitiva\t0\ncasilla\tiva.anual.repercutido.general\t0\ncasilla\tiva.anual.repercutido.general.base\t0\ncasilla\tiva.anual.repercutido.recargo.general\t0\ncasilla\tiva.anual.repercutido.recargo.reducido\t0\ncasilla\tiva.anual.repercutido.recargo.super-reducido\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-0-26.cuota\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-0-5.cuota\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-0-62.cuota\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-1-4.cuota\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-1.cuota\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-5-2.cuota\t0\ncasilla\tiva.anual.repercutido.reducido\t0\ncasilla\tiva.anual.repercutido.reducido.base\t0\ncasilla\tiva.anual.repercutido.super-reducido\t0\ncasilla\tiva.anual.repercutido.super-reducido.base\t0\ncasilla\tiva.anual.repercutido.tipo-0.base\t0\ncasilla\tiva.anual.repercutido.tipo-0.cuota\t0\ncasilla\tiva.anual.repercutido.tipo-10.base\t0\ncasilla\tiva.anual.repercutido.tipo-10.cuota\t0\ncasilla\tiva.anual.repercutido.tipo-2.base\t0\ncasilla\tiva.anual.repercutido.tipo-2.cuota\t0\ncasilla\tiva.anual.repercutido.tipo-21.base\t0\ncasilla\tiva.anual.repercutido.tipo-21.cuota\t0\ncasilla\tiva.anual.repercutido.tipo-4.base\t0\ncasilla\tiva.anual.repercutido.tipo-4.cuota\t0\ncasilla\tiva.anual.repercutido.tipo-5.base\t0\ncasilla\tiva.anual.repercutido.tipo-5.cuota\t0\ncasilla\tiva.anual.repercutido.tipo-7-5.base\t0\ncasilla\tiva.anual.repercutido.tipo-7-5.cuota\t0\ncasilla\tiva.anual.repercutido.zero.base\t0\ncasilla\tiva.anual.resultado-regimen-general\t0.00\tsubtract(iva.anual.cuota-devengada-total, iva.anual.cuota-deducible-total) = subtract(0.00, 0.00) = 0.00\ncasilla\tiva.anual.soportado.importaciones\t0\ncasilla\tiva.anual.soportado.interiores\t0\ncasilla\tiva.anual.soportado.interiores.base\t0\ncasilla\tiva.anual.total-bases-cuotas-iva\t0.00\tsum(iva.anual.repercutido.general, iva.anual.repercutido.reducido, iva.anual.repercutido.super-reducido, iva.anual.autorepercutido.intracomunitaria) = sum(0, 0, 0, 0) = 0.00\ncasilla\tiva.anual.volumen.entregas-intracomunitarias\t0\ncasilla\tiva.anual.volumen.exportaciones-exentas\t0\n"
     },
     {
       "argv": [
@@ -995,7 +2630,7 @@
         "result": {
           "code": "390",
           "filing_year": null,
-          "formula_count": 3,
+          "formula_count": 4,
           "operation": "modelo.formulas",
           "period": "0A",
           "revision": "2010-y-siguientes",
@@ -1117,6 +2752,88 @@
                 "boe-modelo-390-2009-form"
               ],
               "target_casilla_id": "iva.anual.cuota-devengada-total"
+            },
+            {
+              "expression": {
+                "args": [
+                  {
+                    "args": [],
+                    "binding": null,
+                    "casilla_id": "iva.anual.repercutido.general",
+                    "date_binding": null,
+                    "dispatch_table": null,
+                    "literal": null,
+                    "op": null,
+                    "parameter": null,
+                    "relation": null
+                  },
+                  {
+                    "args": [],
+                    "binding": null,
+                    "casilla_id": "iva.anual.repercutido.reducido",
+                    "date_binding": null,
+                    "dispatch_table": null,
+                    "literal": null,
+                    "op": null,
+                    "parameter": null,
+                    "relation": null
+                  },
+                  {
+                    "args": [],
+                    "binding": null,
+                    "casilla_id": "iva.anual.repercutido.super-reducido",
+                    "date_binding": null,
+                    "dispatch_table": null,
+                    "literal": null,
+                    "op": null,
+                    "parameter": null,
+                    "relation": null
+                  },
+                  {
+                    "args": [],
+                    "binding": null,
+                    "casilla_id": "iva.anual.autorepercutido.intracomunitaria",
+                    "date_binding": null,
+                    "dispatch_table": null,
+                    "literal": null,
+                    "op": null,
+                    "parameter": null,
+                    "relation": null
+                  }
+                ],
+                "binding": null,
+                "casilla_id": null,
+                "date_binding": null,
+                "dispatch_table": null,
+                "literal": null,
+                "op": "add",
+                "parameter": null,
+                "relation": null
+              },
+              "formula_id": "modelo-390-iva-anual-total-bases-cuotas-iva",
+              "input_bindings": [],
+              "input_casilla_ids": [
+                "iva.anual.repercutido.general",
+                "iva.anual.repercutido.reducido",
+                "iva.anual.repercutido.super-reducido",
+                "iva.anual.autorepercutido.intracomunitaria"
+              ],
+              "input_parameters": [],
+              "input_relations": [],
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-84",
+                "rd-1624-1992:art-71",
+                "orden-eha-3111-2009:art-1"
+              ],
+              "source_refs": [
+                "aeat-dr-390-2025",
+                "aeat-modelo-390-procedure",
+                "boe-modelo-390-2009-form"
+              ],
+              "target_casilla_id": "iva.anual.total-bases-cuotas-iva"
             },
             {
               "expression": {

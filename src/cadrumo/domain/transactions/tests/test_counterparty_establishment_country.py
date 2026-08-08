@@ -26,6 +26,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2
 from ...iva import (
     EUMemberState,
     IvaTerritorialScope,
@@ -110,7 +111,7 @@ def test_the_member_state_is_derived_and_never_stored_twice() -> None:
         ("DE", IvaTerritorialScope.EU_MEMBER, StatedCountryCodeStatus.CATALOGUED),
         ("US", IvaTerritorialScope.THIRD_COUNTRY, StatedCountryCodeStatus.CATALOGUED),
         ("XX", None, StatedCountryCodeStatus.UNASSIGNED),
-        ("TH", None, StatedCountryCodeStatus.UNCATALOGUED),
+        (an_uncatalogued_alpha2(), None, StatedCountryCodeStatus.UNCATALOGUED),
         (None, None, None),
     ),
 )

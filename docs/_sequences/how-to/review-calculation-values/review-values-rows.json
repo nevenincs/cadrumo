@@ -41,7 +41,7 @@
         {
           "json_path": "result.work_unit_id",
           "name": "work_unit_id",
-          "value": "752b0a6641a6bbd10b51bbfc5ffbbaf83ccedd8eb5797f2d43f57dafa4840b6c"
+          "value": "e6d37b4817a7a146c0e75f2c69fe7b705a747befdd63692d7e6a31c6fc5b7cbd"
         }
       ],
       "envelope": {
@@ -71,12 +71,12 @@
           "revision_id": "2015-y-siguientes",
           "short_current_calculation_revision_id": null,
           "short_filed_calculation_revision_id": null,
-          "short_work_unit_id": "7dafa4840b6c",
+          "short_work_unit_id": "31c6fc5b7cbd",
           "state": "borrador",
           "status": "created",
           "status_message": "New work unit created.",
           "updated_at": "2026-04-01T09:00:00+00:00",
-          "work_unit_id": "752b0a6641a6bbd10b51bbfc5ffbbaf83ccedd8eb5797f2d43f57dafa4840b6c"
+          "work_unit_id": "e6d37b4817a7a146c0e75f2c69fe7b705a747befdd63692d7e6a31c6fc5b7cbd"
         },
         "schema_version": "2",
         "status": "success"
@@ -96,7 +96,7 @@
         "modelo",
         "work",
         "calculate",
-        "752b0a6641a6bbd10b51bbfc5ffbbaf83ccedd8eb5797f2d43f57dafa4840b6c",
+        "e6d37b4817a7a146c0e75f2c69fe7b705a747befdd63692d7e6a31c6fc5b7cbd",
         "--row",
         "miembro nif=45678912S porcentaje=60 importe=10000",
         "--row",
@@ -127,7 +127,7 @@
         "result": {
           "authorization_state": null,
           "binding_overrides": {},
-          "calculation_revision_id": "54c0d3277e8e3bdde2bd2de304e61b331191191adcc4d0e42a205dbf0c6d46ab",
+          "calculation_revision_id": "436043c9f33bea3a6bdbfdebac568dce53b84164d358c286615f4c187375012a",
           "casilla_values": {
             "decl.ejercicio": "2024",
             "decl.tipo-declaracion": "0",
@@ -338,13 +338,13 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 54c0d3277e8e3bdde2bd2de304e61b331191191adcc4d0e42a205dbf0c6d46ab (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 184 --year 2024 --period 0A` and re-inspect this one with `aeat app modelo work revision 54c0d3277e8e3bdde2bd2de304e61b331191191adcc4d0e42a205dbf0c6d46ab`.",
+          "saved_confirmation": "Saved as draft calculation revision 436043c9f33bea3a6bdbfdebac568dce53b84164d358c286615f4c187375012a (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 184 --year 2024 --period 0A` and re-inspect this one with `aeat app modelo work revision 436043c9f33bea3a6bdbfdebac568dce53b84164d358c286615f4c187375012a`.",
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
           "verified_at": null,
           "verified_by": null,
-          "work_unit_id": "752b0a6641a6bbd10b51bbfc5ffbbaf83ccedd8eb5797f2d43f57dafa4840b6c"
+          "work_unit_id": "e6d37b4817a7a146c0e75f2c69fe7b705a747befdd63692d7e6a31c6fc5b7cbd"
         },
         "schema_version": "2",
         "status": "warning"

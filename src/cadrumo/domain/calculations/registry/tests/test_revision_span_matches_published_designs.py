@@ -122,6 +122,7 @@ makes the coverage guard refuse instead of passing on an empty parse.
 from __future__ import annotations
 
 import re
+import unicodedata
 from itertools import pairwise
 from pathlib import Path
 
@@ -135,6 +136,7 @@ from .._record_design import (
     extract_record_design_workbook,
     extract_record_design_xls_workbook,
 )
+from .._record_design_coverage import _CASILLA_TAG_RE
 from .._record_design_schema import RecordDesignSheet
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -142,9 +144,28 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _DESIGN_ROOT_PARTS = ("corpus", "aeat_official", "disenos_registro")
 
-# The extracted design tables render one field per row as
-# "order | offset | length | kind | description [box] | ... ".
-_BOX_MARKER = re.compile(r"\[(\d{1,4})\]")
+#: The bracketed box number AEAT embeds in a design field description, IMPORTED from the
+#: registry's canonical definition rather than re-declared here.
+#:
+#: This module carried its own copy capped at FOUR digits, and Modelo 200 numbers its
+#: boxes with FIVE. Measured on its newest bundled design: 5538 of 5561 bracketed tokens
+#: are five digits, so the private copy keyed 23 boxes -- under 0.4% of the modelo -- and
+#: the box-offset and box-set signals were effectively switched off there while reporting
+#: nothing wrong. The description-keyed population is defined as the slots carrying NO
+#: box number, so the same cap also mis-classified those 5538 numbered fields as
+#: unnumbered.
+#:
+#: The worst part was not the blindness but that it presented as agreement: an
+#: independently derived boundary union and this gate's verdict both said Modelo 200 had
+#: exactly one boundary and no gap, because BOTH used a four-digit marker. Agreement
+#: between two instruments sharing one blind spot is worth nothing, and unlike a wrong
+#: answer it offers nothing to notice.
+#:
+#: The canonical definition is bounded at five digits deliberately rather than left open:
+#: its own rationale records that an unbounded ``\d+`` would admit amounts, NIF fragments
+#: and position offsets that appear bracketed in the same columns. That reasoning is not
+#: restated here, because restating it is how a third copy begins.
+_BOX_MARKER = _CASILLA_TAG_RE
 _DESIGN_YEAR = re.compile(r"ejercicios?-(\d{4})(?:-(y|a|hasta)-(\d{4}))?")
 #: A design filename may name TWO explicit ejercicios ("ejercicio-2015-y-2016"),
 #: and the corpus holds four such spans (2007-y-2008, 2008-y-2009, 2015-y-2016,
@@ -674,6 +695,113 @@ def _box_set_evidence(before_boxes: dict[str, int], after_boxes: dict[str, int])
     )
 
 
+#: Marks a boundary whose ONLY evidence is the description-keyed pass, which is the
+#: least precise signal here. Used by the verdict text and by the review assertion.
+_DESCRIPTION_ONLY = "DESCRIPTION-KEYED PASS ONLY"
+
+#: AEAT joins the containing block to a field's own name with this separator, so the
+#: final segment is the slot's own label and everything before it is context.
+_LABEL_SEPARATOR = " - "
+
+
+def _unnumbered_labels(path: Path) -> dict[tuple[str, int, int], str]:
+    """``(sheet, offset, length) -> description`` for slots carrying NO box number.
+
+    ABSTAINS on a flattened PDF parse by returning nothing. The PDF backend collapses a
+    document to one synthetic sheet, so ``(sheet, offset, length)`` stops identifying a
+    slot and starts colliding across pages -- measured, a corpus-wide run without this
+    abstention returned 15366 "changes" that were overwhelmingly unrelated fields
+    compared against each other.
+    """
+    sheets = _design_sheets(path)
+    if len(sheets) == 1 and sheets[0].name == _PDF_FLATTENED_SHEET:
+        return {}
+    table: dict[tuple[str, int, int], str] = {}
+    for sheet in sheets:
+        for field in sheet.fields:
+            if _BOX_MARKER.findall(field.description):
+                continue
+            table.setdefault((sheet.name, field.offset, field.length), " ".join(field.description.split()))
+    return table
+
+
+def _description_flip_evidence(earlier: Path, later: Path) -> str | None:
+    """FOURTH SIGNAL: an UNNUMBERED slot whose declared meaning changes at a fixed position.
+
+    The box-number key is structurally blind to a slot carrying no bracketed number, and
+    two such slots on Modelo 303 do change meaning between the 2024 halves -- a one-byte
+    flag and the reference beside it go from declaring a complementaria and its prior
+    receipt to declaring an autoliquidacion rectificativa and its identifying receipt.
+    Byte-valid, length-valid, digest-valid, and declaring something else.
+
+    THE DISCRIMINATION, which is what makes this shippable. A text diff cannot tell a
+    changed meaning from a reworded label, and the accepted sub-year record says so.
+    AEAT writes these descriptions hierarchically, so this compares the FINAL segment: a
+    changed leaf is the slot's own meaning, while an unchanged leaf under a changed
+    prefix is the containing block being relabelled and is NOT reported. Validated
+    against three hand-judged cases -- Modelo 390's ``Lorca`` becoming
+    ``Reducciones (nota 2)`` at a fixed 17-byte slot is reported, Modelo 131 dropping La
+    Palma from a one-byte deduction flag is reported, and Modelo 111's
+    ``Identificacion. Ejercicio`` becoming ``Devengo. Ejercicio`` is correctly NOT, since
+    only the heading above the field moved.
+
+    WHERE IT CANNOT SEPARATE, IT REFUSES. A description with no separable leaf on both
+    sides is counted and printed for review rather than asserted, because a boundary
+    named by a signal that cannot justify it is worse than a gap reported honestly.
+
+    PRECISION, stated so the verdict is read correctly. On individual verdicts this pass
+    runs roughly one false positive in three, and a measured example survives in the
+    corpus: Modelo 303's 2014/2015 pair reports a leaf going from
+    ``regimen simplificado`` to ``Regimen Simplificado (RS)``, which is a rewording. That
+    costs nothing THERE because three other signals already name that boundary -- a false
+    positive on an already-named boundary adds noise to evidence, not a wrong split. The
+    case that matters is a boundary this pass names ALONE, which the verdict marks so a
+    reader knows it rests on the weakest instrument.
+
+    Reserved transitions are excluded: those belong to the occupancy signal, and counting
+    them here would double-report one event under two headings.
+    """
+    before, after = _unnumbered_labels(earlier), _unnumbered_labels(later)
+    flipped: list[tuple[tuple[str, int, int], str, str]] = []
+    unseparable = 0
+    for slot in sorted(set(before) & set(after)):
+        was, now = before[slot], after[slot]
+        if _normalised(was) == _normalised(now):
+            continue
+        if _RESERVED_FIELD.search(was) or _RESERVED_FIELD.search(now):
+            continue
+        if _LABEL_SEPARATOR in was and _LABEL_SEPARATOR in now:
+            leaf_was = was.rsplit(_LABEL_SEPARATOR, 1)[1]
+            leaf_now = now.rsplit(_LABEL_SEPARATOR, 1)[1]
+            if _normalised(leaf_was) == _normalised(leaf_now):
+                continue
+            flipped.append((slot, leaf_was, leaf_now))
+        else:
+            unseparable += 1
+    if not flipped:
+        return None
+    shown = "; ".join(
+        f"{sheet} offset {offset} len {length}: {was!r} -> {now!r}" for (sheet, offset, length), was, now in flipped[:3]
+    )
+    note = (
+        f"{len(flipped)} unnumbered slot(s) re-described at an unchanged position and width "
+        f"(e.g. {shown}) -- the box-number key cannot see these, and no offset, length or "
+        "digest check detects a slot that keeps its place while declaring something else"
+    )
+    if unseparable:
+        note += (
+            f" [plus {unseparable} slot(s) whose text changed but carries no separable leaf, "
+            "NOT asserted and listed for review]"
+        )
+    return note
+
+
+def _normalised(text: str) -> str:
+    """Case- and diacritic-insensitive form, so an accent or casing fix is not a flip."""
+    folded = unicodedata.normalize("NFKD", " ".join(text.split()).casefold())
+    return "".join(char for char in folded if not unicodedata.combining(char))
+
+
 def _boundary_label(earlier: Path, later: Path) -> tuple[int, int]:
     """``(left year, right year)``; the two are EQUAL for a mid-course split."""
     return max(_design_years(earlier.name)), min(_design_years(later.name))
@@ -758,6 +886,10 @@ def _boundaries_for(modelo_id: str, revision) -> dict[tuple[int, int], list[str]
 
         _append_occupancy_evidence(boundaries, key, earlier, later)
 
+        description = _description_flip_evidence(earlier, later)
+        if description:
+            boundaries.setdefault(key, []).append(description)
+
     return boundaries
 
 
@@ -840,7 +972,14 @@ def test_no_revision_spans_a_design_relayout() -> None:
             # A key whose years are EQUAL is a mid-course split. Rendering it as
             # "2024/2024" reads as a typo and hides the finding the design-file keying
             # exists to surface, so it is named for what it is.
-            f"{f'{earlier} mid-year' if earlier == later else f'{earlier}/{later}'} ({' + '.join(evidence)})"
+            f"{f'{earlier} mid-year' if earlier == later else f'{earlier}/{later}'}"
+            # A boundary resting solely on the description-keyed pass is marked, because
+            # that pass runs roughly one false positive in three on individual verdicts.
+            # A false positive on a boundary other signals already name costs nothing; one
+            # that NAMES a boundary alone is the case a reader must judge rather than act
+            # on, and it is invisible unless the verdict says so.
+            f"{' ' + _DESCRIPTION_ONLY if len(evidence) == 1 and 'unnumbered slot(s) re-described' in evidence[0] else ''}"
+            f" ({' + '.join(evidence)})"
             for (earlier, later), evidence in sorted(boundaries.items())
         )
         violations.append(
@@ -942,6 +1081,113 @@ def test_a_year_aeat_split_mid_course_keeps_both_of_its_designs() -> None:
         assert len(distinct) >= 2, (
             f"{year} should carry two distinct Modelo 303 designs (AEAT split it mid-course) "
             f"but {len(distinct)} distinct payload(s) survived enumeration"
+        )
+
+
+def test_the_box_marker_is_the_registry_canonical_one_and_reads_every_modelo() -> None:
+    """This module must not hold its own box-number pattern, and must read every modelo.
+
+    ASSERTS IDENTITY WITH THE CANONICAL DEFINITION, NOT A DIGIT WIDTH. Pinning "five
+    digits" here would recreate the defect one modelo later and would train the next
+    author to bump a literal; worse, it would make this module an independent authority
+    on the pattern again, which is what went wrong. The durable property is that there is
+    ONE definition and this module uses it.
+
+    The concrete failure it closes: this module's private copy was capped at four digits
+    while Modelo 200 numbers its boxes with five, so the box-offset and box-set signals
+    read 23 of that modelo's 5561 bracketed tokens and reported nothing amiss. The
+    canonical definition had already been widened to five for exactly this reason, and
+    its own docstring records the same failure shape -- a matchless sweep reading as
+    "0 casillas, 0 gap" for 36 of 38 revisions.
+
+    The second assertion is the one that would have caught it: every modelo whose designs
+    bracket a box number at all must yield boxes here. A modelo that parses designs but
+    keys zero boxes is not clean, it is unread, and it reports identically to a modelo
+    with nothing to find.
+    """
+    from .._record_design_coverage import _CASILLA_TAG_RE as _CANONICAL_TAG_RE
+
+    assert _BOX_MARKER is _CANONICAL_TAG_RE, (
+        "this module re-declared the bracketed box-number pattern instead of using the registry's "
+        "canonical one; two definitions of one concept is how the four-digit cap survived while "
+        "production already read five"
+    )
+
+    unread: list[str] = []
+    measured = 0
+    for modelo_id in sorted({modelo.id for modelo, _, _ in _exporting_revisions()}):
+        ordered, _unorderable = _designs_in_publication_order(modelo_id)
+        for path in ordered:
+            bracketed = any(
+                re.search(r"\[\d+\]", field.description) for sheet in _design_sheets(path) for field in sheet.fields
+            )
+            if not bracketed:
+                continue
+            measured += 1
+            if not _parse_design(path):
+                unread.append(f"modelo {modelo_id} design {path.name!r}")
+    assert measured, "no bundled design brackets a box number at all; the assertion below would be vacuous"
+    assert not unread, (
+        "these designs bracket box numbers that this module's marker does not match, so every box "
+        "signal is silently switched off for them and reports identically to a design with no "
+        "divergence:\n  " + "\n  ".join(sorted(set(unread)))
+    )
+
+
+def test_a_boundary_only_the_description_pass_sees_is_reported_and_marked_for_review() -> None:
+    """The least precise signal must still reach the verdict, and must say when it is alone.
+
+    A slot carrying no bracketed box number can change what it declares while keeping its
+    offset and its width. Modelo 303 does exactly that between the 2024 halves, where a
+    one-byte flag and the reference beside it stop declaring a complementaria and start
+    declaring an autoliquidacion rectificativa. No offset check, length check, occupancy
+    check or digest detects it, and the box-number key structurally cannot.
+
+    TWO PROPERTIES, NEITHER A COUNT. First, the pass must have a positive case somewhere,
+    or it has become unfalsifiable and its silence means nothing. Second, every boundary
+    resting SOLELY on it must be marked in the verdict text.
+
+    The marking is the honest part. This pass runs roughly one false positive in three on
+    individual verdicts -- a measured example survives at Modelo 303 2014/2015, where a
+    leaf goes from ``regimen simplificado`` to ``Regimen Simplificado (RS)``, a rewording
+    rather than a meaning change. That costs nothing there, because three other signals
+    already name that boundary and a false positive on an already-named boundary adds
+    noise to the evidence rather than a wrong split. The case a reader must judge is a
+    boundary this pass names ALONE, and that case is invisible unless the verdict says so.
+    """
+    positive: list[str] = []
+    alone: list[tuple[str, str, tuple[int, int]]] = []
+    for modelo, revision_id, revision in _exporting_revisions():
+        for earlier, later in pairwise(_designs_claimed_by(modelo.id, revision)):
+            if _description_flip_evidence(earlier, later):
+                positive.append(f"modelo {modelo.id} {_boundary_label(earlier, later)}")
+        for key, evidence in _boundaries_for(modelo.id, revision).items():
+            if len(evidence) == 1 and "unnumbered slot(s) re-described" in evidence[0]:
+                alone.append((modelo.id, revision_id, key))
+
+    assert positive, (
+        "no design pair anywhere re-describes an unnumbered slot at an unchanged position and "
+        "width, so this pass can no longer fail and its silence about the complementaria-to-"
+        "rectificativa class means nothing"
+    )
+
+    for modelo_id, revision_id, key in alone:
+        modelo, revision = next(
+            (candidate, current)
+            for candidate, current_id, current in _exporting_revisions()
+            if candidate.id == modelo_id and current_id == revision_id
+        )
+        boundaries = _boundaries_for(modelo.id, revision)
+        rendered = "; ".join(
+            f"{f'{a} mid-year' if a == b else f'{a}/{b}'}"
+            f"{' ' + _DESCRIPTION_ONLY if len(ev) == 1 and 'unnumbered slot(s) re-described' in ev[0] else ''}"
+            for (a, b), ev in sorted(boundaries.items())
+        )
+        assert _DESCRIPTION_ONLY in rendered, (
+            f"modelo {modelo_id} revision {revision_id!r} boundary {key} rests only on the "
+            "description-keyed pass, which runs roughly one false positive in three, and the "
+            "verdict does not mark it as such -- a reader cannot tell which boundaries to judge "
+            "rather than act on"
         )
 
 

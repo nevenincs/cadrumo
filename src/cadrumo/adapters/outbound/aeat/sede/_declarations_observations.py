@@ -90,6 +90,7 @@ __all__ = [
     "_with_derived_303_compensation_available_observation",
     "non_numeric_observed_casillas",
     "observed_casillas_from_submitted_file",
+    "observed_headers_from_submitted_file",
     "registry_observation_from_filed_declaration",
     "resolve_previous_filing_bindings_from_filed_declarations",
     "resolve_relation_values_from_filed_declarations",
@@ -245,6 +246,60 @@ def _observed_value_token(casilla: ParsedExportFieldValue) -> str:
     return str(casilla.value)
 
 
+def _observed_headers_from_submitted_file(
+    *,
+    snapshot: RegistrySnapshot,
+    body: bytes,
+) -> dict[str, str]:
+    """Return the header facts AEAT states in the submitted fichero, keyed by header key.
+
+    The disposition is one of these. AEAT models the tipo de declaración as a
+    header field in its diseño de registro, the export layout models it as a
+    header, and the parser returns it as a header -- the only place it stopped
+    being a header was this module, which read ``parsed.casillas`` and discarded
+    ``parsed.fields`` entirely. The code was already in the bytes and already
+    decoded before being dropped.
+
+    Deliberately NOT projected as an :class:`ObservedCasillaValue`. A header is
+    not a casilla, and the boxes AEAT prints for these elections are absent from
+    the record design precisely because AEAT encodes them here instead; giving
+    them a synthetic casilla id would put this registry and the official
+    structure in disagreement about the concept's kind.
+
+    Returns an empty mapping rather than raising when the payload cannot be
+    parsed against the layout. The casilla projection is the caller's primary
+    result and already reports its own failure; a header read that fails must not
+    take the casillas down with it.
+    """
+    try:
+        resolved = resolve_export_layout(snapshot)
+        parsed = parse_export_payload(
+            resolved.layout,
+            body,
+            source_root=bundled_path(),
+            sources=snapshot.sources,
+        )
+    except RegistryValidationError:
+        return {}
+
+    headers: dict[str, str] = {}
+    for field_value in parsed.fields:
+        definition = resolved.fields_by_id.get(field_value.field_id)
+        if definition is None or definition.kind is not CasillaFieldKind.HEADER:
+            continue
+        header_key = definition.header_key
+        if header_key is None or field_value.value is None:
+            continue
+        token = str(field_value.value).strip()
+        if not token:
+            # An unset one-byte flag is blank. Recording it empty would be
+            # indistinguishable from AEAT stating a value, so it is omitted --
+            # the same honesty the register's request-type projection applies.
+            continue
+        headers[header_key] = token
+    return headers
+
+
 def _observed_casillas_from_submitted_file(
     *,
     snapshot: RegistrySnapshot,
@@ -298,6 +353,7 @@ def _observed_casillas_from_submitted_file(
 
 
 observed_casillas_from_submitted_file = _observed_casillas_from_submitted_file
+observed_headers_from_submitted_file = _observed_headers_from_submitted_file
 
 
 def _is_modelo_303_page_03_fallback(casillas: tuple[ObservedCasillaValue, ...]) -> bool:

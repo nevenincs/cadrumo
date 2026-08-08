@@ -20,7 +20,7 @@
         {
           "json_path": "result.work_unit_id",
           "name": "another_work_unit_id",
-          "value": "68ac82488d419a6676a5a4d0a504ee568aacd64dbca76707c202fb1d8af721b7"
+          "value": "48784394e30d393c1368cfa28174775ce169a92e78303bd6eea8ba41620fbe79"
         }
       ],
       "envelope": {
@@ -50,12 +50,12 @@
           "revision_id": "2023-y-siguientes",
           "short_current_calculation_revision_id": null,
           "short_filed_calculation_revision_id": null,
-          "short_work_unit_id": "fb1d8af721b7",
+          "short_work_unit_id": "ba41620fbe79",
           "state": "borrador",
           "status": "created",
           "status_message": "New work unit created.",
           "updated_at": "2026-04-01T09:00:00+00:00",
-          "work_unit_id": "68ac82488d419a6676a5a4d0a504ee568aacd64dbca76707c202fb1d8af721b7"
+          "work_unit_id": "48784394e30d393c1368cfa28174775ce169a92e78303bd6eea8ba41620fbe79"
         },
         "schema_version": "2",
         "status": "success"
@@ -92,7 +92,7 @@
             "context": null,
             "message": "Draft or recalculate this unit with `aeat app modelo work calculate`, then verify the draft with `aeat app modelo work verify`.",
             "severity": "info",
-            "suggestion": "aeat app modelo work calculate 68ac82488d419a6676a5a4d0a504ee568aacd64dbca76707c202fb1d8af721b7"
+            "suggestion": "aeat app modelo work calculate 48784394e30d393c1368cfa28174775ce169a92e78303bd6eea8ba41620fbe79"
           }
         ],
         "result": {
@@ -116,10 +116,10 @@
           "revision_id": "2023-y-siguientes",
           "short_current_calculation_revision_id": null,
           "short_filed_calculation_revision_id": null,
-          "short_work_unit_id": "fb1d8af721b7",
+          "short_work_unit_id": "ba41620fbe79",
           "state": "borrador",
           "updated_at": "2026-04-01T09:00:00+00:00",
-          "work_unit_id": "68ac82488d419a6676a5a4d0a504ee568aacd64dbca76707c202fb1d8af721b7"
+          "work_unit_id": "48784394e30d393c1368cfa28174775ce169a92e78303bd6eea8ba41620fbe79"
         },
         "schema_version": "2",
         "status": "success"
@@ -139,7 +139,7 @@
         "modelo",
         "work",
         "status",
-        "68ac82488d419a6676a5a4d0a504ee568aacd64dbca76707c202fb1d8af721b7"
+        "48784394e30d393c1368cfa28174775ce169a92e78303bd6eea8ba41620fbe79"
       ],
       "captures": [],
       "envelope": {
@@ -151,7 +151,7 @@
             "context": null,
             "message": "Draft or recalculate this unit with `aeat app modelo work calculate`, then verify the draft with `aeat app modelo work verify`.",
             "severity": "info",
-            "suggestion": "aeat app modelo work calculate 68ac82488d419a6676a5a4d0a504ee568aacd64dbca76707c202fb1d8af721b7"
+            "suggestion": "aeat app modelo work calculate 48784394e30d393c1368cfa28174775ce169a92e78303bd6eea8ba41620fbe79"
           }
         ],
         "result": {
@@ -175,10 +175,10 @@
           "revision_id": "2023-y-siguientes",
           "short_current_calculation_revision_id": null,
           "short_filed_calculation_revision_id": null,
-          "short_work_unit_id": "fb1d8af721b7",
+          "short_work_unit_id": "ba41620fbe79",
           "state": "borrador",
           "updated_at": "2026-04-01T09:00:00+00:00",
-          "work_unit_id": "68ac82488d419a6676a5a4d0a504ee568aacd64dbca76707c202fb1d8af721b7"
+          "work_unit_id": "48784394e30d393c1368cfa28174775ce169a92e78303bd6eea8ba41620fbe79"
         },
         "schema_version": "2",
         "status": "success"

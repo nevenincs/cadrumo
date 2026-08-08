@@ -1,0 +1,351 @@
+"""Real-CLI proof that what a confirm RESOLVED reaches the operator.
+
+The confirm path settles which IVA treatment an invoice gets, on which rung that
+treatment stands, and what territorial questions it leaves open. All of it was
+computed on every confirm and read by no production caller: the payload was built
+from the invoice, the draft, the provenance and the confirmation id, and never
+touched the resolution. So a record whose category rested on the weakest rung
+available was indistinguishable from one the rule table placed outright, and a
+document whose category was WITHHELD reached the catalogue with no treatment and
+nothing said about it.
+
+**The trap this suite exists to avoid.** Asserting that a notice was constructed
+reproduces the exact defect: every one of these signals was constructed correctly
+and read by nobody. So each case drives the real Typer tree end to end and reads
+the shipped envelope --- the notices an operator receives and the result fields a
+consumer parses --- never the resolution model.
+
+The documents are structured e-invoices, and that is not incidental: the IVA
+treatment a document DECLARES is a UNTDID 5305 code only a structured reader can
+recover, so the withheld-relief case is unreachable from a text-read page.
+
+Assertions are on codes, severities and structure --- never on prose, which is
+localised.
+
+See Also:
+    :func:`~entrypoints.cli._ledger_evidence_confirm_notices.confirm_resolution_notices`
+        The projection under test.
+    :class:`~core.IvaCategoryOutcome`
+        The rung axis the outcome field reports.
+"""
+
+from __future__ import annotations
+
+import json
+from collections.abc import Iterator
+from pathlib import Path
+from typing import Final
+
+import pytest
+
+from ....core import IvaCategoryOutcome
+from ....domain.iva import IvaCategory
+from ._ledger_ux_support import _invoke, _open_ledger_ux_session
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_RELIEF_NOTICE: Final = "ledger.evidence.confirm.category_unsupported_relief"
+_INFERRED_NOTICE: Final = "ledger.evidence.confirm.category_rate_inferred"
+_ESTABLISHMENT_NOTICE: Final = "ledger.evidence.confirm.review_undetermined_establishment"
+
+_SUPPLIER_NAME: Final = "Acme Suministros SL"
+_SUPPLIER_VAT: Final = "ESB12345674"
+
+
+def _ubl(*, category: str, percent: str, cuota: str, payable: str, number: str) -> str:
+    """Return one EN16931 UBL invoice stating a tax category and no country.
+
+    No party address block at all, which is the shape that matters here: the
+    country and postal evidence the establishment ladder consults is genuinely
+    absent, exactly as it is on the bundled intra-community specimen, so the
+    counterparty's territory is a gap rather than a wrong value.
+    """
+    return f"""<?xml version="1.0" encoding="UTF-8"?>
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
+         xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+         xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
+  <cbc:CustomizationID>urn:cen.eu:en16931:2017</cbc:CustomizationID>
+  <cbc:ID>{number}</cbc:ID>
+  <cbc:IssueDate>2026-03-11</cbc:IssueDate>
+  <cbc:InvoiceTypeCode>380</cbc:InvoiceTypeCode>
+  <cbc:DocumentCurrencyCode>EUR</cbc:DocumentCurrencyCode>
+  <cac:AccountingSupplierParty><cac:Party>
+    <cac:PartyName><cbc:Name>{_SUPPLIER_NAME}</cbc:Name></cac:PartyName>
+    <cac:PartyTaxScheme><cbc:CompanyID schemeID="VA">{_SUPPLIER_VAT}</cbc:CompanyID>
+      <cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme></cac:PartyTaxScheme>
+  </cac:Party></cac:AccountingSupplierParty>
+  <cac:AccountingCustomerParty><cac:Party>
+    <cac:PartyName><cbc:Name>Nordiska Verkstad AB</cbc:Name></cac:PartyName>
+  </cac:Party></cac:AccountingCustomerParty>
+  <cac:TaxTotal>
+    <cbc:TaxAmount currencyID="EUR">{cuota}</cbc:TaxAmount>
+    <cac:TaxSubtotal>
+      <cbc:TaxableAmount currencyID="EUR">1000.00</cbc:TaxableAmount>
+      <cbc:TaxAmount currencyID="EUR">{cuota}</cbc:TaxAmount>
+      <cac:TaxCategory><cbc:ID>{category}</cbc:ID><cbc:Percent>{percent}</cbc:Percent>
+        <cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme></cac:TaxCategory>
+    </cac:TaxSubtotal>
+  </cac:TaxTotal>
+  <cac:LegalMonetaryTotal>
+    <cbc:LineExtensionAmount currencyID="EUR">1000.00</cbc:LineExtensionAmount>
+    <cbc:TaxExclusiveAmount currencyID="EUR">1000.00</cbc:TaxExclusiveAmount>
+    <cbc:TaxInclusiveAmount currencyID="EUR">{payable}</cbc:TaxInclusiveAmount>
+    <cbc:PayableAmount currencyID="EUR">{payable}</cbc:PayableAmount>
+  </cac:LegalMonetaryTotal>
+  <cac:InvoiceLine>
+    <cbc:ID>1</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="C62">1</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="EUR">1000.00</cbc:LineExtensionAmount>
+    <cac:Item><cbc:Name>Komponenter</cbc:Name>
+      <cac:ClassifiedTaxCategory><cbc:ID>{category}</cbc:ID><cbc:Percent>{percent}</cbc:Percent>
+        <cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme></cac:ClassifiedTaxCategory></cac:Item>
+    <cac:Price><cbc:PriceAmount currencyID="EUR">1000.00</cbc:PriceAmount></cac:Price>
+  </cac:InvoiceLine>
+</Invoice>
+"""
+
+
+_INTRA_COMMUNITY = _ubl(category="K", percent="0.00", cuota="0.00", payable="1000.00", number="IC-2026-000019")
+"""UNTDID 5305 ``K``: the intra-community exemption of LIVA art. 25.
+
+A relief from Spanish output IVA that rests entirely on where the counterparty is
+established --- and this document establishes nothing about that.
+"""
+
+_DOMESTIC_STANDARD = _ubl(category="S", percent="21.00", cuota="210.00", payable="1210.00", number="ES-2026-000019")
+"""UNTDID 5305 ``S`` at the standard tier: the ordinary domestic document.
+
+The control for every severity assertion below. It reaches the SAME unestablished
+counterparty --- it prints no country either --- so the two cases differ only in
+what the document declared, which is exactly the axis under test.
+"""
+
+
+@pytest.fixture(autouse=True)
+def _open_bucket_session(tmp_path: Path) -> Iterator[None]:
+    with _open_ledger_ux_session(tmp_path):
+        yield
+
+
+def _confirmed(tmp_path: Path, document: str, *, name: str) -> dict[str, object]:
+    """Add one structured document as evidence and confirm it, returning the envelope."""
+    path = tmp_path / f"{name}.xml"
+    path.write_text(document, encoding="utf-8")
+    added = _invoke(["--format", "json", "app", "ledger", "evidence", "add", str(path), "--supplier", _SUPPLIER_NAME])
+    assert added.exit_code == 0, added.output
+    evidence_id = json.loads(added.output)["result"]["evidence_id"]
+    confirmed = _invoke(
+        [
+            "--format", "json", "app", "ledger", "evidence", "confirm",
+            "--country-code", "ES",
+            "--evidence-id", evidence_id,
+            "--kind", "received",
+            "--counterparty-name", _SUPPLIER_NAME,
+        ],
+    )  # fmt: skip
+    assert confirmed.exit_code == 0, confirmed.output
+    payload = json.loads(confirmed.output)
+    assert isinstance(payload, dict)
+    return payload
+
+
+def _notices(envelope: dict[str, object], code: str) -> list[dict[str, object]]:
+    notices = envelope["notices"]
+    assert isinstance(notices, list)
+    return [notice for notice in notices if isinstance(notice, dict) and notice.get("code") == code]
+
+
+def _notice(envelope: dict[str, object], code: str) -> dict[str, object]:
+    matching = _notices(envelope, code)
+    assert len(matching) == 1, matching
+    return matching[0]
+
+
+def _by_field(envelope: dict[str, object], code: str, field: str) -> dict[str, object]:
+    """Return the one notice of *code* raised about *field*.
+
+    The establishment questions arrive one per party, and they are different
+    questions: the counterparty's territory is a document fact and the filer's
+    own is a profile fact. Selecting on the field keeps a case that means one of
+    them from passing on the other.
+    """
+    matching = [notice for notice in _notices(envelope, code) if _context(notice).get("field") == field]
+    assert len(matching) == 1, matching
+    return matching[0]
+
+
+def _context(notice: dict[str, object]) -> dict[str, object]:
+    """Return one notice's context, asserting the envelope actually carried one."""
+    context = notice["context"]
+    assert isinstance(context, dict), notice
+    return context
+
+
+def _codes(envelope: dict[str, object]) -> set[str]:
+    notices = envelope["notices"]
+    assert isinstance(notices, list)
+    return {str(notice["code"]) for notice in notices if isinstance(notice, dict)}
+
+
+def test_a_withheld_relief_reaches_the_operator_as_a_warning(tmp_path: Path) -> None:
+    """The signal the whole row is about: a real, correct document told nothing.
+
+    This shape confirms cleanly and lands on record with NO IVA treatment, so
+    before this the only evidence anything happened was a category that silently
+    was not there.
+    """
+    envelope = _confirmed(tmp_path, _INTRA_COMMUNITY, name="intracom")
+
+    notice = _notice(envelope, _RELIEF_NOTICE)
+    assert notice["severity"] == "warning"
+    assert envelope["status"] == "warning"
+    context = notice["context"]
+    assert isinstance(context, dict)
+    # The claim the operator has to contest is named, not merely alluded to.
+    assert context["outcome"] == IvaCategoryOutcome.UNSUPPORTED_RELIEF.value
+    assert context["declared_category"] == IvaCategory.INTRA_COMMUNITY_SUPPLY.value
+    assert str(context["note"]).strip()
+
+
+def test_the_withheld_treatment_is_readable_from_the_result_not_only_the_prose(tmp_path: Path) -> None:
+    """A consumer enumerating untreated records must not have to parse a sentence."""
+    body = _confirmed(tmp_path, _INTRA_COMMUNITY, name="intracom")["result"]
+
+    assert isinstance(body, dict)
+    assert body["created"] is True
+    assert body["iva_category"] is None
+    assert body["iva_category_outcome"] == IvaCategoryOutcome.UNSUPPORTED_RELIEF.value
+
+
+def test_a_rate_inferred_category_is_distinguishable_from_a_placed_one(tmp_path: Path) -> None:
+    """The rung is the whole point: both records carry `domestic_general`.
+
+    Only the outcome tells an inferred placement from a rule-table one, and
+    before this field the difference existed nowhere an operator could query.
+    """
+    body = _confirmed(tmp_path, _DOMESTIC_STANDARD, name="domestic")["result"]
+
+    assert isinstance(body, dict)
+    assert body["iva_category"] == IvaCategory.DOMESTIC_GENERAL.value
+    assert body["iva_category_outcome"] == IvaCategoryOutcome.RATE_INFERRED.value
+
+
+def test_an_ordinary_document_reports_its_rung_without_raising_a_warning(tmp_path: Path) -> None:
+    """Visibility without fatigue, and the two cases prove it is not a constant.
+
+    A Spanish invoice printing no postal code is the commonest document there
+    is, and it reaches the same unestablished counterparty as the case above. A
+    warning on every one of them would train an operator to skip the channel the
+    withheld-relief case needs. So the severity tracks whether the record ended
+    up with a treatment --- and this pins the INFO side against the WARNING side.
+    """
+    envelope = _confirmed(tmp_path, _DOMESTIC_STANDARD, name="domestic")
+
+    assert _notice(envelope, _INFERRED_NOTICE)["severity"] == "info"
+    assert _by_field(envelope, _ESTABLISHMENT_NOTICE, "supplier_tax_id")["severity"] == "info"
+    assert envelope["status"] == "success"
+
+
+def test_the_unread_establishment_question_reaches_the_operator_naming_the_party(tmp_path: Path) -> None:
+    """The ladder's carried items had no reader at all; this is that reader.
+
+    The detail is asserted to NAME the counterparty rather than merely to exist:
+    an item that cannot say who it is about is one an operator cannot answer.
+    """
+    envelope = _confirmed(tmp_path, _INTRA_COMMUNITY, name="intracom")
+
+    notice = _by_field(envelope, _ESTABLISHMENT_NOTICE, "supplier_tax_id")
+    assert notice["severity"] == "warning"
+    context = notice["context"]
+    assert isinstance(context, dict)
+    assert context["reason"] == "undetermined_establishment"
+    assert _SUPPLIER_VAT in str(context["detail"])
+    # The id is the review gate's own derivation, so an item raised here
+    # addresses identically to one a deterministic check raised.
+    assert str(context["finding_id"]).strip()
+
+
+def test_the_filer_s_own_profile_gap_reaches_the_operator_as_a_separate_question(tmp_path: Path) -> None:
+    """The second carried item, and it is not about the document at all.
+
+    The taxpayer's own IVA territory is a profile fact that separates the
+    peninsula from Canarias and from Ceuta y Melilla, and an incomplete profile
+    silently disables the rule table for EVERY document. It was carried on the
+    same unread field as the counterparty's, so an operator re-reading invoices
+    would never find the setup gap that was actually stopping them.
+    """
+    envelope = _confirmed(tmp_path, _INTRA_COMMUNITY, name="intracom")
+
+    context = _by_field(envelope, _ESTABLISHMENT_NOTICE, "contact.postcode")["context"]
+    assert isinstance(context, dict)
+    assert context["reason"] == "undetermined_establishment"
+    assert "contact.postcode" in str(context["detail"])
+
+
+def test_a_document_that_places_its_counterparty_raises_neither_question(tmp_path: Path) -> None:
+    """The negative control: these notices are not emitted unconditionally.
+
+    The bundled Facturae specimen carries a full address block, so the ladder
+    settles the counterparty's territory and neither the withheld-relief notice
+    nor the counterparty establishment question fires. The FILER's own profile
+    question is deliberately not asserted absent here: this session's profile
+    declares no fiscal-address postcode, so that item is genuinely open and
+    suppressing it would be the wrong assertion.
+    """
+    corpus = Path(__file__).resolve().parents[3] / "application" / "ledger" / "tests" / "_evidence_corpus"
+    document = (corpus / "facturae_32_series_and_parties_invoice.xml").read_text(encoding="utf-8")
+    path = tmp_path / "placed.xml"
+    path.write_text(document, encoding="utf-8")
+    added = _invoke(["--format", "json", "app", "ledger", "evidence", "add", str(path), "--supplier", "Emisor"])
+    assert added.exit_code == 0, added.output
+    evidence_id = json.loads(added.output)["result"]["evidence_id"]
+    confirmed = _invoke(
+        [
+            "--format", "json", "app", "ledger", "evidence", "confirm",
+            "--country-code", "ES",
+            "--evidence-id", evidence_id,
+            "--kind", "received",
+            "--counterparty-name", "Emisor",
+        ],
+    )  # fmt: skip
+    assert confirmed.exit_code == 0, confirmed.output
+
+    envelope = json.loads(confirmed.output)
+    assert _RELIEF_NOTICE not in _codes(envelope)
+    raised_about = {str(_context(notice).get("field")) for notice in _notices(envelope, _ESTABLISHMENT_NOTICE)}
+    assert "supplier_tax_id" not in raised_about
+
+
+def test_the_text_surface_carries_the_same_resolution_as_the_json_one(tmp_path: Path) -> None:
+    """A terminal operator is told what a JSON consumer is told."""
+    path = tmp_path / "intracom.xml"
+    path.write_text(_INTRA_COMMUNITY, encoding="utf-8")
+    added = _invoke(["--format", "json", "app", "ledger", "evidence", "add", str(path), "--supplier", _SUPPLIER_NAME])
+    assert added.exit_code == 0, added.output
+    evidence_id = json.loads(added.output)["result"]["evidence_id"]
+    result = _invoke(
+        [
+            "app", "ledger", "evidence", "confirm",
+            "--country-code", "ES",
+            "--evidence-id", evidence_id,
+            "--kind", "received",
+            "--counterparty-name", _SUPPLIER_NAME,
+        ],
+    )  # fmt: skip
+
+    assert result.exit_code == 0, result.output
+    assert f"iva_category\t-\t{IvaCategoryOutcome.UNSUPPORTED_RELIEF.value}" in result.output
+    assert "review_item\tundetermined_establishment\tsupplier_tax_id\t" in result.output
+
+
+def test_no_bespoke_advisory_field_appears_on_the_confirm_payload(tmp_path: Path) -> None:
+    """The notice channel stayed the only diagnostic channel.
+
+    ``iva_category`` and its outcome are the write's own data --- what treatment
+    the record got --- while the operator's instruction about it rides
+    ``notices``. A ``*_advisory`` bag beside them would be the forked contract.
+    """
+    body = _confirmed(tmp_path, _INTRA_COMMUNITY, name="intracom")["result"]
+
+    assert isinstance(body, dict)
+    assert not [key for key in body if "advisor" in key or key in {"next", "suggestion"}]

@@ -101,8 +101,14 @@ def _persist_contradicted_supply(secure_objects: SecureObjectRepository) -> str:
 
 def _screen(
     secure_objects: SecureObjectRepository,
-) -> tuple[tuple[IvaLedgerObservation, ...], tuple[str, ...], tuple[Invoice, ...], tuple[Invoice, ...]]:
-    """Run the real screen, returning its four channels as the types they are."""
+) -> tuple[
+    tuple[IvaLedgerObservation, ...],
+    tuple[str, ...],
+    tuple[Invoice, ...],
+    tuple[Invoice, ...],
+    tuple[Invoice, ...],
+]:
+    """Run the real screen, returning its channels as the types they are."""
     snapshot = resources().modelos.authority.snapshot("303", filing_year=_YEAR, period=_PERIOD)
     context = CalculationSourceContext(
         bucket_id=_BUCKET_ID,
@@ -127,7 +133,7 @@ def test_the_withheld_invoice_is_collected_not_dropped(secure_objects: SecureObj
     """
     invoice_id = _persist_contradicted_supply(secure_objects)
 
-    _observations, _ids, compared, mismatches = _screen(secure_objects)
+    _observations, _ids, compared, mismatches, _underivable = _screen(secure_objects)
 
     assert [invoice.invoice_id for invoice in mismatches] == [invoice_id], (
         "the contradicted supply must be reported as withheld; dropping it silently is the "
@@ -149,7 +155,7 @@ def test_the_advisory_names_the_invoice_and_both_candidate_fields(
     rather than guessing and sending the operator to the wrong correction.
     """
     _persist_contradicted_supply(secure_objects)
-    _observations, _ids, _compared, mismatches = _screen(secure_objects)
+    _observations, _ids, _compared, mismatches, _underivable = _screen(secure_objects)
 
     diagnostics = _category_counterparty_mismatch_diagnostics(mismatches, resolver_id="probe")
 
@@ -191,7 +197,7 @@ def test_a_supportable_supply_produces_no_advisory(secure_objects: SecureObjectR
         InvoiceCatalogue.model_validate({invoice.invoice_id: invoice}),
     )
 
-    _observations, _ids, _compared, mismatches = _screen(secure_objects)
+    _observations, _ids, _compared, mismatches, _underivable = _screen(secure_objects)
 
     assert mismatches == (), "a Portuguese counterparty supports an intra-community supply"
 

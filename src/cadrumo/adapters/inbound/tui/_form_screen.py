@@ -96,6 +96,14 @@ class FormField:
     validate: Callable[[str], str | None] | None = None
     """Per-field check, owned by the caller — this screen has no opinion on
     what any particular value means."""
+    secret: bool = False
+    """Whether the typed value is masked as it is entered.
+
+    Only meaningful on a ``TEXT`` field. A passphrase or recovery word is
+    read off the same terminal a shoulder can see, the same way the
+    dedicated login and registration screens already mask their password
+    inputs — a plain :class:`~textual.widgets.Input` here would be the one
+    place on this page a secret is shown back in clear while it is typed."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -154,7 +162,7 @@ class TextEditScreen(ModalScreen[str | None]):
             yield Label(self._field.label, id="edit-label")
             if self._field.hint:
                 yield Static(self._field.hint, id="edit-path")
-            yield Input(value=self._field.value, id="edit-input")
+            yield Input(value=self._field.value, password=self._field.secret, id="edit-input")
             yield Static(id="edit-refusal")
             with Horizontal(id="edit-actions"):
                 yield Button(tr("flows.manager.edit.cancel"), id="btn-edit-cancel")

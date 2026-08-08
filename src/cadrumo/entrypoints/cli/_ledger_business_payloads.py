@@ -578,6 +578,13 @@ class EvidenceReviewFieldPayload(OutputSchema):
     was read from -- ``"1.234,56 EUR"`` against a ``1234.56`` value. A field with
     no anchor and an ``unanchored`` outcome is the anti-fabrication signal
     reaching the operator intact: nobody can point at it in the document.
+
+    ``refused_anchor`` is what keeps that signal from meaning two things at once.
+    A blank anchor is reached both by a reader that offered nothing and by a
+    reader whose offered form the check could not find, and this is the row where
+    an operator reads a field's grounding -- so without the refusal beside the
+    blank, the two arrive here identical and the operator cannot tell a reader
+    limitation from a possible misread.
     """
 
     field: str
@@ -585,6 +592,7 @@ class EvidenceReviewFieldPayload(OutputSchema):
     origin: str | None = None
     grounding: str | None = None
     anchor: str | None = None
+    refused_anchor: str | None = None
     anchor_self_reported: bool = False
     candidates: list[EvidenceFieldAmbiguityCandidatePayload] = []
     # The printed context assigning an identity field to its party role, shown

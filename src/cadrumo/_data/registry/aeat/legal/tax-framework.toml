@@ -260,7 +260,15 @@ review_status = "reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "RGAT art. 3: formación de los censos tributarios (Censo de Obligados Tributarios)."
-required_text = ["El Censo de Obligados Tributarios estará formado por la totalidad"]
+required_text = [
+    "El Censo de Obligados Tributarios estará formado por la totalidad",
+    # Apartado 12 (registro de otros operadores de plataforma), the last
+    # operative provision, at 89% of the article. The phrase above comes from
+    # apartado 1's first sentence, inside the heading window, so a truncation
+    # of the twelve apartados passed silently. Verified complete against live
+    # BOE: apartados 1-12 on both sides.
+    "el registro de otros operadores de plataforma obligados a comunicar información estará integrado",
+]
 
 [legal."rd-1065-2007:art-18"]
 evidence_tier = "legal_authority"

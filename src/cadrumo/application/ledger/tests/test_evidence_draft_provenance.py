@@ -27,6 +27,7 @@ from pydantic import ValidationError
 
 from ....core import DraftDiscrepancyKind, FieldGroundingOutcome, FieldOrigin
 from ....domain.iva import InvoiceKind
+from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha3
 from .._evidence_draft import (
     DraftDiscrepancyFinding,
     FieldAmbiguityCandidate,
@@ -73,7 +74,7 @@ def _fully_populated_draft() -> InvoiceDraft:
         # dropped either and re-derived it from its neighbour would satisfy a
         # comparison against matching values, and none of these four match.
         supplier_stated_country_code="PRT",
-        customer_stated_country_code="THA",
+        customer_stated_country_code=an_uncatalogued_alpha3(),
         invoice_number="0042",
         invoice_series="FA",
         invoice_date="2026-03-14",

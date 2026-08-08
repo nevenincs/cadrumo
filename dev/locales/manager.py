@@ -737,6 +737,12 @@ def _append_yaml_leaf(guard: CatalogueWriteGuard, path: Path, parts: list[str], 
                 raise LocaleError(f"Cannot append {'.'.join(parts)!r}: parent resolves to a leaf")
             insertion_index = _yaml_leaf_end(lines, index, indent)
             newline = _preferred_newline(lines, index)
+            if insertion_index == len(lines) and lines and not lines[-1].endswith("\n"):
+                # The parent's last child is the file's final line, and that
+                # line carries no trailing newline. Inserting below it as-is
+                # would run the new leaf onto the same physical line as its
+                # predecessor, corrupting the YAML.
+                lines[-1] += newline
             lines.insert(
                 insertion_index,
                 " " * (indent + 2) + leaf + ": " + _yaml_quoted_scalar(value) + newline,

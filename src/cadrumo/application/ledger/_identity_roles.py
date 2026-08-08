@@ -85,6 +85,7 @@ from ...core.identity import (
     same_tax_identifier,
     validate_spanish_tax_id,
 )
+from ...domain.iva import country_code_for_printed_tax_identifier
 from ._evidence_draft import DraftDiscrepancyFinding, FieldAmbiguityCandidate, FieldProvenance
 from ._grounding_anchor import ground_ambiguous_candidates
 
@@ -153,10 +154,33 @@ def canonical_identity_token(value: str, *, country_code: str | None = None) -> 
     malformed identifier is an ordinary case the caller reports, not an
     exception it must catch per candidate.
 
+    **An absent country asks the identifier's own prefix before assuming Spain.**
+    An intra-community VAT number leads with its Member State's prefix, so a
+    document printing ``SE556677889901`` states its country in the number
+    itself -- and that is exactly the document whose address block often states
+    none. Defaulting the absence to Spain measured such a number against the
+    AEAT control-character rule, which it cannot satisfy, so a perfectly
+    well-formed foreign identifier yielded no verdict at all. The country the
+    default assumed is the very thing the establishment ladder exists to
+    determine, and the ladder's own first rung already reads this prefix.
+
+    The prefix is read through
+    :func:`~domain.iva.country_code_for_printed_tax_identifier`, the single
+    authority on which country a printed number names, rather than by matching
+    two leading letters here: the prefix alone is not evidence, and that
+    authority requires the body to match the structure its own prefix claims.
+
+    A SUPPLIED country still decides, unchanged. A caller that names one is
+    asserting it, and a supplied country disagreeing with the printed prefix is
+    a disagreement to surface rather than to resolve silently in the prefix's
+    favour -- so only the absence position moves.
+
     Args:
         value: The identifier as printed.
-        country_code: ISO country it is stated under. ``None`` or ``ES`` takes
-            the Spanish path.
+        country_code: ISO country it is stated under. When ``None``, the
+            identifier's own prefix answers; an identifier carrying no
+            recognisable prefix takes the Spanish path, which is right because
+            a bare ``B``-CIF is what an unqualified Spanish invoice prints.
 
     Returns:
         The canonical identifier, or ``None`` when it fails verification.
@@ -165,7 +189,7 @@ def canonical_identity_token(value: str, *, country_code: str | None = None) -> 
     if not stripped:
         return None
 
-    country = (country_code or "ES").strip().upper()
+    country = (country_code or country_code_for_printed_tax_identifier(stripped) or "ES").strip().upper()
     if country == "ES":
         try:
             return validate_spanish_tax_id(stripped)

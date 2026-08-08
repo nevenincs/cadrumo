@@ -94,6 +94,7 @@ from ._declarations_observations import (
     _declaration_pdf_extraction_profile_provisional,
     _observed_casillas_from_declaration_pdf,
     _observed_casillas_from_submitted_file,
+    _observed_headers_from_submitted_file,
     _read_guard_policy_from_snapshot,
     _register_row_artefact,
     _registry_snapshot_for_declaration,
@@ -1235,6 +1236,16 @@ async def _capture_filed_declaration_observation_from_row(
                     body=submitted_body,
                     casillas=casillas,
                 )
+                # AEAT states the tipo de declaracion and the sin-actividad flag as
+                # HEADER fields in the same fichero these casillas came from. They are
+                # carried, deliberately not elected on: which identifier a disposition-
+                # aware read should key on is a separate decision, and the point here is
+                # that the evidence survives instead of being parsed and dropped.
+                for header_key, header_value in _observed_headers_from_submitted_file(
+                    snapshot=snapshot,
+                    body=submitted_body,
+                ).items():
+                    metadata[f"aeat_{header_key}"] = header_value
             except (RegistryValidationError, SedeParseError) as exc:
                 metadata["submitted_file_extraction_error"] = str(exc)
 

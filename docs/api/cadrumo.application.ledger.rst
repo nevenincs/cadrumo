@@ -62,5 +62,6 @@ Submodules
    cadrumo.application.ledger._protocols
    cadrumo.application.ledger._ratios
    cadrumo.application.ledger._regime_contradiction
+   cadrumo.application.ledger._review_advisories
    cadrumo.application.ledger._review_projection
    cadrumo.application.ledger._rule_repository

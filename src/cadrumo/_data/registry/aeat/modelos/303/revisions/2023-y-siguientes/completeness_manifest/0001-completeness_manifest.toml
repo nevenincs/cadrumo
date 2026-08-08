@@ -270,6 +270,14 @@ number = "60"
 casilla_id = "122"
 number = "122"
 
+# Casilla 120 joins on the same línea de información adicional and for the same
+# reason: a B2B service located where the EU recipient is established (LIVA art.
+# 69.Uno.1) is base-only volumen with no cuota, and became a computed projection
+# target when its ledger_iva_aggregation binding landed.
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "120"
+number = "120"
+
 # Recargo de equivalencia cuota casillas join the calculation closure once their
 # ledger_iva_aggregation recargo_amount_sum bindings landed (LIVA art. 161 tiers:
 # general 5.2%, reducido 1.4%, super-reducido 0.5%).

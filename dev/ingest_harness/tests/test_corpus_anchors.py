@@ -13,9 +13,12 @@ Report collected-versus-deselected counts when quoting a run of this file.
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from .._caveats import SPANISH_OPTIMISM_BIAS_CAVEAT, normalise_whitespace
+from .._colocation_ceiling import CeilingOutcome, colocation_ceiling
 from .._key import CORPUS_ROOT, EXPECTED_KEY_BYTES, EXPECTED_KEY_SHA256, CorpusKey, CorpusKeyError, load_corpus_key
 from .._reference_points import SONNET_4_6_REC_DOM_IMG_008, reference_points_with_key_context
 
@@ -158,3 +161,49 @@ def test_the_reference_point_inherits_the_spanish_caveat_from_the_key(key: Corpu
 
     assert point is SONNET_4_6_REC_DOM_IMG_008
     assert SPANISH_OPTIMISM_BIAS_CAVEAT in document_caveats
+
+
+def test_the_colocation_ceiling_is_measurable_and_every_failure_is_explained() -> None:
+    """The party-attribution ceiling over the corpus, asserted as a property not a rate.
+
+    Deliberately pins no figure. A tally encodes a moment: the day a
+    stacked-header document is added the ceiling rises, and a gate asserting the
+    current value would fail on an improvement. What must hold is that the
+    measurement is possible at all -- a non-empty population, a non-empty
+    denominator -- and that every document failing to partition does so for a
+    cause the instrument actually MEASURED.
+
+    ``UNPARTITIONED_FOR_ANOTHER_REASON`` exists to stay empty. A member means
+    the shared-line reading has stopped explaining the corpus, and the figure
+    must be re-derived before anyone quotes it again. Without that population a
+    new cause would arrive silently, folded into a total that was already large
+    enough that nobody would look twice.
+
+    **This assertion is structurally unable to detect a broken instrument, and
+    that is measured rather than suspected.** Mutating the partition to answer
+    "never" leaves every population here unchanged, because nothing in the
+    corpus partitions to begin with; mutating it to answer "always" moves every
+    document into ``PARTITIONED`` and still satisfies every property asserted
+    below, because none of them pins a rate. So a green here is a statement
+    about explainability and non-vacuity ONLY. The claim that the instrument can
+    tell a partitionable document from an unpartitionable one rests entirely on
+    the controls in ``test_colocation_ceiling.py``, on the unit lane, which do
+    red under both of those mutations. Read the two together or neither means
+    much.
+    """
+    documents = json.loads((CORPUS_ROOT / "GROUND_TRUTH.json").read_text(encoding="utf-8"))["documents"]
+
+    report = colocation_ceiling(documents)
+
+    assert report.transcribed > 0, "no authored transcriptions; the measurement would be vacuous"
+    assert report.testable > 0, "no document carries an authored anchor for both parties"
+    assert report.by_outcome(CeilingOutcome.UNPARTITIONED_FOR_ANOTHER_REASON) == (), (
+        "a document failed to partition for a cause this instrument does not measure; "
+        "re-derive the ceiling before quoting it"
+    )
+    accounted = (
+        report.partitioned
+        + len(report.by_outcome(CeilingOutcome.ANCHORS_SHARE_A_LINE))
+        + len(report.by_outcome(CeilingOutcome.ANCHOR_NOT_PRINTED))
+    )
+    assert accounted == report.testable, "the outcome populations do not account for the denominator"

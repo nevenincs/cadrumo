@@ -57,6 +57,11 @@ def _manual_worked_child() -> DescendantInfo:
         birth_date=date(2021, 9, 2),
         meses_madre_trabajo=(5, 6, 7, 8),
         gastos_guarderia_mensuales=parse_guarderia_mensual("1-6:1145", field="test"),
+        # The manual's own child turns three in September, and states that month as
+        # the second-cycle ceiling: "hasta el mes previo al inicio del segundo ciclo
+        # de educación infantil (septiembre)". Declared rather than defaulted, because
+        # the application never infers it -- see DescendantInfo._segundo_ciclo_window.
+        segundo_ciclo_infantil_inicio_mes=9,
     )
 
 

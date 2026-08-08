@@ -109,7 +109,7 @@
         {
           "json_path": "result.work_unit_id",
           "name": "work_unit_id",
-          "value": "98001b25b2e8cda589a3c69cf943ade7698965c32334048724fa41987b138584"
+          "value": "ca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204"
         }
       ],
       "envelope": {
@@ -139,12 +139,12 @@
           "revision_id": "2019-y-siguientes",
           "short_current_calculation_revision_id": null,
           "short_filed_calculation_revision_id": null,
-          "short_work_unit_id": "41987b138584",
+          "short_work_unit_id": "3d88172f4204",
           "state": "borrador",
           "status": "created",
           "status_message": "New work unit created.",
           "updated_at": "2026-04-01T09:00:00+00:00",
-          "work_unit_id": "98001b25b2e8cda589a3c69cf943ade7698965c32334048724fa41987b138584"
+          "work_unit_id": "ca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204"
         },
         "schema_version": "2",
         "status": "success"
@@ -164,7 +164,7 @@
         "modelo",
         "work",
         "calculate",
-        "98001b25b2e8cda589a3c69cf943ade7698965c32334048724fa41987b138584",
+        "ca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204",
         "--binding",
         "modelo-130-resultados-negativos-anteriores=0",
         "--binding",
@@ -176,7 +176,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "0e0ccf423d63a8179381936685e304a5a64573dccdfba6061678b4a2c8123769"
+          "value": "8d8f54d4a861485b2991a45d6dbd4374fc7a984c84bc637161239fdfc311bdd9"
         }
       ],
       "envelope": {
@@ -195,7 +195,7 @@
             "modelo-130-pagos-fraccionados-anteriores": "0",
             "modelo-130-resultados-negativos-anteriores": "0"
           },
-          "calculation_revision_id": "0e0ccf423d63a8179381936685e304a5a64573dccdfba6061678b4a2c8123769",
+          "calculation_revision_id": "8d8f54d4a861485b2991a45d6dbd4374fc7a984c84bc637161239fdfc311bdd9",
           "casilla_values": {
             "01": "1000",
             "02": "500",
@@ -810,13 +810,13 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 0e0ccf423d63a8179381936685e304a5a64573dccdfba6061678b4a2c8123769 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 130 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision 0e0ccf423d63a8179381936685e304a5a64573dccdfba6061678b4a2c8123769`.",
+          "saved_confirmation": "Saved as draft calculation revision 8d8f54d4a861485b2991a45d6dbd4374fc7a984c84bc637161239fdfc311bdd9 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 130 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision 8d8f54d4a861485b2991a45d6dbd4374fc7a984c84bc637161239fdfc311bdd9`.",
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
           "verified_at": null,
           "verified_by": null,
-          "work_unit_id": "98001b25b2e8cda589a3c69cf943ade7698965c32334048724fa41987b138584"
+          "work_unit_id": "ca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204"
         },
         "schema_version": "2",
         "status": "success"
@@ -917,7 +917,7 @@
         "modelo",
         "work",
         "verify",
-        "0e0ccf423d63a8179381936685e304a5a64573dccdfba6061678b4a2c8123769"
+        "8d8f54d4a861485b2991a45d6dbd4374fc7a984c84bc637161239fdfc311bdd9"
       ],
       "captures": [],
       "envelope": {
@@ -957,7 +957,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "0e0ccf423d63a8179381936685e304a5a64573dccdfba6061678b4a2c8123769",
+          "calculation_revision_id": "8d8f54d4a861485b2991a45d6dbd4374fc7a984c84bc637161239fdfc311bdd9",
           "completeness_status": "complete",
           "findings": [
             {
@@ -997,7 +997,7 @@
           "operation": "modelo.work.verify",
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "9ca924378ac4cfd8a10be991664c0055ae1847c122bb04a18bde0e7ab13b0750",
+          "verification_report_id": "77cfb84b08e279f39b6a48e7860be2b53558aef757e56c0061c1690cf34850d3",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

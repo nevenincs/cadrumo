@@ -23,7 +23,7 @@ from .._commands import (
     _answers_model_from_canonical,
     _force_pages_visible,
     _project_scripted_answers,
-    _setup_flow_definition,
+    setup_flow_definition,
 )
 from .._models import WizardWidget
 from .._persistence import project_answers, serialise_answers
@@ -60,7 +60,7 @@ def _drive_scripted(
     a question the walk visited carries a key in the map, a gate-hidden
     question is absent.
     """
-    definition = _force_pages_visible(_setup_flow_definition(SETUP_FLOW), force_visible)
+    definition = _force_pages_visible(setup_flow_definition(SETUP_FLOW), force_visible)
     tokens, _intended = _project_scripted_answers(definition, canonical, mode=FlowMode.CREATE)
     state, _projection = run_scripted_flow(
         definition,
@@ -87,7 +87,7 @@ def _scripted_answers_for_individual_declaration() -> deque[str]:
     """
 
     canonical = _individual_declaration_canonical()
-    definition = _setup_flow_definition(SETUP_FLOW)
+    definition = setup_flow_definition(SETUP_FLOW)
     _tokens, intended = _project_scripted_answers(definition, canonical, mode=FlowMode.CREATE)
     # The shared fixture carries no token for the descendant count page:
     # the sibling scripted-walk helper defaults that page in walk order, so
@@ -200,7 +200,7 @@ def test_scripted_walk_skips_spouse_questions_when_declaration_is_individual() -
 def test_scripted_driver_rejects_unconsumed_tokens() -> None:
     """A queue longer than the visible walk raises overflow, counts only."""
 
-    definition = _setup_flow_definition(SETUP_FLOW)
+    definition = setup_flow_definition(SETUP_FLOW)
     tokens, _intended = _project_scripted_answers(
         definition,
         _individual_declaration_canonical(),

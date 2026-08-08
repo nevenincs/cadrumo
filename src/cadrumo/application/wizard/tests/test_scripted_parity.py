@@ -13,7 +13,7 @@ starved required page and a trailing unconsumed token both raise
 
 No mocks: the real ``SETUP_FLOW`` descriptor, the real substrate bridge and
 decorators (through the production
-:func:`~cadrumo.application.wizard._commands._setup_flow_definition`), and
+:func:`~cadrumo.application.wizard._commands.setup_flow_definition`), and
 the real engine transitions. The intended answers are the specification
 (operator inputs), never a copy of a driver's output.
 """
@@ -38,7 +38,7 @@ from ...flows import (
     visible_sequence,
 )
 from .._catalogue import SETUP_FLOW
-from .._commands import _project_scripted_answers, _setup_flow_definition
+from .._commands import _project_scripted_answers, setup_flow_definition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -111,7 +111,7 @@ def _drive_interactive(definition: FlowDefinition, intended: Mapping[str, str], 
 )
 def test_scripted_and_interactive_walks_agree(canonical: dict[str, str]) -> None:
     """The scripted driver and a page-by-page walk agree on answers and eligibility."""
-    definition = _setup_flow_definition(SETUP_FLOW)
+    definition = setup_flow_definition(SETUP_FLOW)
     tokens, intended = _project_scripted_answers(definition, canonical, mode=FlowMode.CREATE)
 
     scripted_state, scripted_projection = run_scripted_flow(definition, tokens, mode=FlowMode.CREATE)
@@ -131,7 +131,7 @@ def test_scripted_and_interactive_walks_agree(canonical: dict[str, str]) -> None
 
 def test_scripted_walk_refuses_a_starved_required_page() -> None:
     """An empty queue that reaches a required page raises the underflow refusal."""
-    definition = _setup_flow_definition(SETUP_FLOW)
+    definition = setup_flow_definition(SETUP_FLOW)
 
     with pytest.raises(FlowAnswerError) as caught:
         # ``tax-id`` is the first unconditionally-required page and carries no
@@ -145,7 +145,7 @@ def test_scripted_walk_refuses_a_starved_required_page() -> None:
 
 def test_scripted_walk_refuses_trailing_unconsumed_tokens() -> None:
     """A queue longer than the visible sequence raises the overflow refusal."""
-    definition = _setup_flow_definition(SETUP_FLOW)
+    definition = setup_flow_definition(SETUP_FLOW)
     tokens, _intended = _project_scripted_answers(definition, _INDIVIDUAL_CANONICAL, mode=FlowMode.CREATE)
 
     with pytest.raises(FlowAnswerError) as caught:

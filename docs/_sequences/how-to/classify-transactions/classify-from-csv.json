@@ -59,7 +59,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "Bucket\t<profile-id>\nExport ID\t43892fa5a11089b1770c689d4e3a96d24fb53d61fb899414a3c65dc7a9cd9950\nRows\t2\nSHA-256\t6aac89c113e83ea14bb8268062d66bd0881208a6969c503c2220b44b9e18438f\nOutput\tledger-2026-q1.csv\n"
+      "text": "Bucket\t<profile-id>\nExport ID\t5f0ddcff2e977990b1b5fd3fc6e107cf9b3cb3b5f7ac82e87d072c77fed11cf4\nRows\t2\nSHA-256\t0becceaa2ef5f6edba6a89f5fee123b09f1a044d477005dd381cecb52f66213d\nOutput\tledger-2026-q1.csv\n"
     },
     {
       "argv": [
@@ -108,7 +108,8 @@
             "classified_at": "2026-04-01T09:00:00+00:00",
             "classified_by": "manual",
             "counterparty": "",
-            "counterparty_eu_member_state": null,
+            "counterparty_country": null,
+            "counterparty_identification_state": null,
             "created_at": "2026-04-01T09:00:00+00:00",
             "currency": "EUR",
             "date": "2026-02-11",

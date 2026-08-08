@@ -33,7 +33,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "ID\te3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d\nDate\t2026-02-11\nValue date\t2026-02-11\nAmount\t605\nCurrency\tEUR\nDirection\tOUTGOING\nDescription\tCompra de material de oficina proveedor local\nCounterparty\t-\nClassification\tNOT_YET_PROCESSED\nBusiness %\t-\nCategory\t-\nUsage ratio id\t-\nTaxable base\t-\nIVA rate\t-\nIVA amount\t-\nIVA category\t-\nEU counterparty\t-\nIRPF category\t-\nNotes\t-\nPurchase invoice evidence\t-\nAttachments\t-\nLifecycle state\tACTIVE\nClassified by\tauto\nClassified at\t-\nClassification confidence\t-\nClassification reason\t-\nReview status\tpending\n"
+      "text": "ID\te3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d\nDate\t2026-02-11\nValue date\t2026-02-11\nAmount\t605\nCurrency\tEUR\nDirection\tOUTGOING\nDescription\tCompra de material de oficina proveedor local\nCounterparty\t-\nClassification\tNOT_YET_PROCESSED\nBusiness %\t-\nCategory\t-\nUsage ratio id\t-\nTaxable base\t-\nIVA rate\t-\nIVA amount\t-\nIVA category\t-\nEstablished in\t-\nVAT identified in\t-\nIRPF category\t-\nNotes\t-\nPurchase invoice evidence\t-\nAttachments\t-\nLifecycle state\tACTIVE\nClassified by\tauto\nClassified at\t-\nClassification confidence\t-\nClassification reason\t-\nReview status\tpending\n"
     },
     {
       "argv": [

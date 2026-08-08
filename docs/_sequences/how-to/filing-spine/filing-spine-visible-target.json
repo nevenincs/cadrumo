@@ -109,7 +109,7 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.create\nstatus\tcreated\nwork_unit_id\t98f076c6ff3f4ab123206dc06d9bf9a6dbfe1d9c0b213ae4483b87619640518f\nshort_work_unit_id\t87619640518f\nbucket_id\t<bucket-id>\nmodelo\t303\nfiling_year\t2026\nperiod\t1T\nrevision_id\t2023-y-siguientes\nname\t303-2026-1T\nstate\tdraft\ncurrent_calculation_revision_id\t\nshort_current_calculation_revision_id\t\nfiled_calculation_revision_id\t\nshort_filed_calculation_revision_id\t\ncurrent_filing_record_id\t\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nplazo_closes_on\t2026-04-20\ndays_remaining\t19\nNew work unit created.\n"
+      "text": "operation\tmodelo.work.create\nstatus\tcreated\nwork_unit_id\t8f0c67734152d161da3519c86d15b19ad105967a20d34cab3982f713b22348af\nshort_work_unit_id\tf713b22348af\nbucket_id\t<bucket-id>\nmodelo\t303\nfiling_year\t2026\nperiod\t1T\nrevision_id\t2023-y-siguientes\nname\t303-2026-1T\nstate\tdraft\ncurrent_calculation_revision_id\t\nshort_current_calculation_revision_id\t\nfiled_calculation_revision_id\t\nshort_filed_calculation_revision_id\t\ncurrent_filing_record_id\t\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nplazo_closes_on\t2026-04-20\ndays_remaining\t19\nNew work unit created.\n"
     },
     {
       "argv": [
@@ -131,7 +131,7 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.calculate\ncalculation_revision_id\t4108835b14e9338343bd396e3d5a543c8845405770f8f5e368e2d6658ff715b6\nwork_unit_id\t98f076c6ff3f4ab123206dc06d9bf9a6dbfe1d9c0b213ae4483b87619640518f\nstate\tdraft\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nresult summary  Modelo 303 2026 1T\nrole\tcasilla\tvalue\tlabel\nkey_figure\tiva.cuota-devengada-total\t210.00\tTotal accrued VAT amount\nkey_figure\tiva.cuota-deducible-total\t105.00\tTotal deductible VAT amount\nkey_figure\tiva.resultado-regimen-general\t105.00\tGeneral regime result\nkey_figure\t64\t105.00\tResult - sum of results ([46] + [58] + [76])\nkey_figure\t66\t105.00\tResult - amount attributable to the State Tax Administration ([64] x [65] / 100)\nkey_figure\tiva.compensacion-aplicada-periodo\t0.00\tPrior-period offsets applied in this period\nkey_figure\tiva.compensacion-pendiente-periodos-posteriores\t0.00\tPrior-period offsets pending for later periods\nkey_figure\tiva.resultado\t105.00\tSelf-assessment result\nkey_figure\t71\t105.00\tFinal result ([69] - [70] + [109])\nkey_figure\tiva.compensacion-generada-periodo\t0.00\tOffset balance generated in this period\nkey_figure\tiva.compensacion-disponible-fin-periodo\t0.00\tOffset balance available at period end\nkey_figure\t27\t210.00\tTotal accrued VAT amount\nkey_figure\t45\t105.00\tTotal deductible amount\ncasilla\t01\t0\ncasilla\t02\t0\ncasilla\t03\t0.00\tcalculation(iva.repercutido.super-reducido) = calculation(0) = 0.00\ncasilla\t04\t0\ncasilla\t05\t0\ncasilla\t06\t0.00\tcalculation(iva.repercutido.reducido) = calculation(0) = 0.00\ncasilla\t07\t1000\ncasilla\t08\t0\ncasilla\t09\t210.00\tcalculation(iva.repercutido.general) = calculation(210) = 210.00\ncasilla\t10\t0\ncasilla\t108\t0\ncasilla\t109\t0\ncasilla\t11\t0.00\tcalculation(iva.autorepercutido.intracomunitaria.devengado) = calculation(0) = 0.00\ncasilla\t111\t0\ncasilla\t12\t0\ncasilla\t120\t0\ncasilla\t122\t0\ncasilla\t123\t0\ncasilla\t124\t0\ncasilla\t13\t0.00\tcalculation(iva.autorepercutido.interior.devengado) = calculation(0) = 0.00\ncasilla\t14\t0\ncasilla\t15\t0\ncasilla\t150\t0\ncasilla\t151\t0\ncasilla\t152\t0\ncasilla\t153\t0\ncasilla\t154\t0\ncasilla\t155\t0\ncasilla\t156\t0\ncasilla\t157\t0\ncasilla\t158\t0\ncasilla\t16\t0\ncasilla\t165\t0\ncasilla\t166\t0\ncasilla\t167\t0\ncasilla\t168\t0\ncasilla\t169\t0\ncasilla\t17\t0\ncasilla\t170\t0\ncasilla\t18\t0\ncasilla\t19\t0\ncasilla\t20\t0\ncasilla\t21\t0\ncasilla\t22\t0\ncasilla\t23\t0\ncasilla\t24\t0\ncasilla\t25\t0\ncasilla\t26\t0\ncasilla\t27\t210.00\tcalculation(iva.cuota-devengada-total) = calculation(210.00) = 210.00\ncasilla\t28\t500\ncasilla\t29\t105.00\tcalculation(iva.soportado.interiores) = calculation(105) = 105.00\ncasilla\t30\t0\ncasilla\t31\t0\ncasilla\t32\t0\ncasilla\t33\t0.00\tcalculation(iva.soportado.importaciones) = calculation(0) = 0.00\ncasilla\t34\t0\ncasilla\t35\t0\ncasilla\t36\t0\ncasilla\t37\t0.00\tcalculation(iva.autorepercutido.intracomunitaria.deducible) = calculation(0) = 0.00\ncasilla\t38\t0\ncasilla\t39\t0\ncasilla\t40\t0\ncasilla\t41\t0\ncasilla\t42\t0\ncasilla\t43\t0.00\ncasilla\t44\t0.00\ncasilla\t45\t105.00\tcalculation(iva.cuota-deducible-total) = calculation(105.00) = 105.00\ncasilla\t47\t0\ncasilla\t48\t0\ncasilla\t49\t0\ncasilla\t50\t0\ncasilla\t51\t0\ncasilla\t52\t0\ncasilla\t53\t0\ncasilla\t54\t0\ncasilla\t55\t0\ncasilla\t56\t0\ncasilla\t57\t0\ncasilla\t58\t0\ncasilla\t59\t0\ncasilla\t60\t0\ncasilla\t62\t0\ncasilla\t63\t0\ncasilla\t64\t105.00\tsum(iva.resultado-regimen-general, 58, 76) = sum(105.00, 0, 0) = 105.00\ncasilla\t65\t100\ncasilla\t66\t105.00\tdivide(64, 65) = divide(105.00, 100) = 105.00\ncasilla\t68\t0\ncasilla\t70\t0\ncasilla\t71\t105.00\tsum(iva.resultado, 70, 109) = sum(105.00, 0, 0) = 105.00\ncasilla\t74\t0\ncasilla\t75\t0\ncasilla\t76\t0\ncasilla\t77\t0\ncasilla\tdecl.ejercicio\t2026\ncasilla\tdecl.periodo\t0\ncasilla\tiva.autoconsumo.promotor.base\t0\ncasilla\tiva.autoconsumo.promotor.cuota\t0.00\tmultiply(iva.autoconsumo.promotor.base) = multiply(0) = 0.00\ncasilla\tiva.autorepercutido.interior.deducible\t0\ncasilla\tiva.autorepercutido.interior.devengado\t0\ncasilla\tiva.autorepercutido.intracomunitaria\t0\ncasilla\tiva.autorepercutido.intracomunitaria.deducible\t0\ncasilla\tiva.autorepercutido.intracomunitaria.devengado\t0\ncasilla\tiva.compensacion-aplicada-periodo\t0.00\tminimum(iva.compensacion-pendiente-periodos-anteriores, iva.resultado-regimen-general) = minimum(0, 105.00) = 0.00\ncasilla\tiva.compensacion-disponible-fin-periodo\t0.00\tsum(iva.compensacion-pendiente-periodos-posteriores, iva.compensacion-generada-periodo) = sum(0.00, 0.00) = 0.00\ncasilla\tiva.compensacion-generada-periodo\t0.00\tmaximum(iva.resultado) = maximum(105.00) = 0.00\ncasilla\tiva.compensacion-pendiente-periodos-anteriores\t0\ncasilla\tiva.compensacion-pendiente-periodos-posteriores\t0.00\tsubtract(iva.compensacion-pendiente-periodos-anteriores, iva.compensacion-aplicada-periodo) = subtract(0, 0.00) = 0.00\ncasilla\tiva.cuota-deducible-total\t105.00\tsum(iva.soportado.interiores, iva.soportado.importaciones, iva.autorepercutido.intracomunitaria, iva.autorepercutido.interior.deducible, 43, 44) = sum(105, 0, 0, 0, 0.00, 0.00) = 105.00\ncasilla\tiva.cuota-devengada-total\t210.00\tsum(iva.repercutido.general, iva.repercutido.reducido, iva.repercutido.super-reducido, iva.autorepercutido.intracomunitaria, iva.autorepercutido.interior.devengado, iva.autoconsumo.promotor.cuota, 18, 21, 24) = sum(210, 0, 0, 0, 0, 0.00, 0, 0, 0) = 210.00\ncasilla\tiva.prorrata-porcentaje\t100\tconditional(iva.prorrata-volumen-total) = conditional(0) = 100\ncasilla\tiva.prorrata-volumen-con-derecho\t0\ncasilla\tiva.prorrata-volumen-total\t0\ncasilla\tiva.regularizacion-inversiones\t0\ncasilla\tiva.repercutido.general\t210\ncasilla\tiva.repercutido.reducido\t0\ncasilla\tiva.repercutido.super-reducido\t0\ncasilla\tiva.resultado\t105.00\tsubtract(66, 77, 68, iva.compensacion-aplicada-periodo) = subtract(105.00, 0, 0, 0.00) = 105.00\ncasilla\tiva.resultado-regimen-general\t105.00\tsubtract(iva.cuota-devengada-total, iva.cuota-deducible-total) = subtract(210.00, 105.00) = 105.00\ncasilla\tiva.soportado.importaciones\t0\ncasilla\tiva.soportado.interiores\t105\ncasilla\tmodulos-iva-1-unidades\t0\ncasilla\tmodulos-iva-2-unidades\t0\ncasilla\tmodulos-iva-3-unidades\t0\ncasilla\tmodulos-iva-cuota-derivada\t0.00\tmaximum(modulos-iva-cuota-devengada, modulos-iva-cuota-devengada, m303-modulos-iva-dificil-justificacion-forfait, modulos-iva-cuota-devengada, modulos-iva-epigrafe, m303-modulos-iva-cuota-minima-pct-2025) = maximum(0.00, 0.00, 1, 0.00) = 0.00\ncasilla\tmodulos-iva-cuota-devengada\t0.00\tcalculation(modulos-iva-epigrafe, m303-modulos-iva-coeficientes-2025) = calculation() = 0.00\ncasilla\tmodulos-iva-epigrafe\t0\nplazo_closes_on\t2026-04-20\ndays_remaining\t19\nSaved as draft calculation revision 4108835b14e9338343bd396e3d5a543c8845405770f8f5e368e2d6658ff715b6 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 303 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision 4108835b14e9338343bd396e3d5a543c8845405770f8f5e368e2d6658ff715b6`.\n"
+      "text": "operation\tmodelo.work.calculate\ncalculation_revision_id\t3015f0d8f3f18272950e9fae426a8337559375f0e2731490016a6de9c1937064\nwork_unit_id\t8f0c67734152d161da3519c86d15b19ad105967a20d34cab3982f713b22348af\nstate\tdraft\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nresult summary  Modelo 303 2026 1T\nrole\tcasilla\tvalue\tlabel\nkey_figure\tiva.cuota-devengada-total\t210.00\tTotal accrued VAT amount\nkey_figure\tiva.cuota-deducible-total\t105.00\tTotal deductible VAT amount\nkey_figure\tiva.resultado-regimen-general\t105.00\tGeneral regime result\nkey_figure\t64\t105.00\tResult - sum of results ([46] + [58] + [76])\nkey_figure\t66\t105.00\tResult - amount attributable to the State Tax Administration ([64] x [65] / 100)\nkey_figure\tiva.compensacion-aplicada-periodo\t0.00\tPrior-period offsets applied in this period\nkey_figure\tiva.compensacion-pendiente-periodos-posteriores\t0.00\tPrior-period offsets pending for later periods\nkey_figure\tiva.resultado\t105.00\tSelf-assessment result\nkey_figure\t71\t105.00\tFinal result ([69] - [70] + [109])\nkey_figure\tiva.compensacion-generada-periodo\t0.00\tOffset balance generated in this period\nkey_figure\tiva.compensacion-disponible-fin-periodo\t0.00\tOffset balance available at period end\nkey_figure\t27\t210.00\tTotal accrued VAT amount\nkey_figure\t45\t105.00\tTotal deductible amount\ncasilla\t01\t0\ncasilla\t02\t0\ncasilla\t03\t0.00\tcalculation(iva.repercutido.super-reducido) = calculation(0) = 0.00\ncasilla\t04\t0\ncasilla\t05\t0\ncasilla\t06\t0.00\tcalculation(iva.repercutido.reducido) = calculation(0) = 0.00\ncasilla\t07\t1000\ncasilla\t08\t0\ncasilla\t09\t210.00\tcalculation(iva.repercutido.general) = calculation(210) = 210.00\ncasilla\t10\t0.00\tcalculation(iva.autorepercutido.intracomunitaria.devengado.base) = calculation(0) = 0.00\ncasilla\t108\t0\ncasilla\t109\t0\ncasilla\t11\t0.00\tcalculation(iva.autorepercutido.intracomunitaria.devengado) = calculation(0) = 0.00\ncasilla\t111\t0\ncasilla\t12\t0\ncasilla\t120\t0\ncasilla\t122\t0\ncasilla\t123\t0\ncasilla\t124\t0\ncasilla\t13\t0.00\tcalculation(iva.autorepercutido.interior.devengado) = calculation(0) = 0.00\ncasilla\t14\t0\ncasilla\t15\t0\ncasilla\t150\t0\ncasilla\t151\t0\ncasilla\t152\t0\ncasilla\t153\t0\ncasilla\t154\t0.00\tcalculation(m303-dr303-154-transitional-rate-percent) = calculation(0.00) = 0.00\ncasilla\t155\t0.00\tcalculation(iva.repercutido.reducido.transitorio) = calculation(0) = 0.00\ncasilla\t156\t0\ncasilla\t157\t0\ncasilla\t158\t0\ncasilla\t16\t0\ncasilla\t165\t0\ncasilla\t166\t0.00\tcalculation(m303-dr303-166-transitional-rate-percent) = calculation(0.00) = 0.00\ncasilla\t167\t0.00\tcalculation(iva.repercutido.super-reducido.transitorio) = calculation(0) = 0.00\ncasilla\t168\t0\ncasilla\t169\t0\ncasilla\t17\t0\ncasilla\t170\t0\ncasilla\t18\t0\ncasilla\t19\t0\ncasilla\t20\t0\ncasilla\t21\t0\ncasilla\t22\t0\ncasilla\t23\t0\ncasilla\t24\t0\ncasilla\t25\t0\ncasilla\t26\t0\ncasilla\t27\t210.00\tcalculation(iva.cuota-devengada-total) = calculation(210.00) = 210.00\ncasilla\t28\t500\ncasilla\t29\t105.00\tcalculation(iva.soportado.interiores) = calculation(105) = 105.00\ncasilla\t30\t0\ncasilla\t31\t0\ncasilla\t32\t0\ncasilla\t33\t0.00\tcalculation(iva.soportado.importaciones) = calculation(0) = 0.00\ncasilla\t34\t0\ncasilla\t35\t0\ncasilla\t36\t0\ncasilla\t37\t0.00\tcalculation(iva.autorepercutido.intracomunitaria.deducible) = calculation(0) = 0.00\ncasilla\t38\t0\ncasilla\t39\t0\ncasilla\t40\t0\ncasilla\t41\t0\ncasilla\t42\t0\ncasilla\t43\t0.00\ncasilla\t44\t0.00\ncasilla\t45\t105.00\tcalculation(iva.cuota-deducible-total) = calculation(105.00) = 105.00\ncasilla\t47\t0\ncasilla\t48\t0\ncasilla\t49\t0\ncasilla\t50\t0\ncasilla\t51\t0\ncasilla\t52\t0\ncasilla\t53\t0\ncasilla\t54\t0\ncasilla\t55\t0\ncasilla\t56\t0\ncasilla\t57\t0\ncasilla\t58\t0\ncasilla\t59\t0\ncasilla\t60\t0\ncasilla\t62\t0\ncasilla\t63\t0\ncasilla\t64\t105.00\tsum(iva.resultado-regimen-general, 58, 76) = sum(105.00, 0, 0) = 105.00\ncasilla\t65\t100\ncasilla\t66\t105.00\tdivide(64, 65) = divide(105.00, 100) = 105.00\ncasilla\t68\t0\ncasilla\t70\t0\ncasilla\t71\t105.00\tsum(iva.resultado, 70, 109) = sum(105.00, 0, 0) = 105.00\ncasilla\t74\t0\ncasilla\t75\t0\ncasilla\t76\t0\ncasilla\t77\t0\ncasilla\tdecl.ejercicio\t2026\ncasilla\tdecl.periodo\t0\ncasilla\tiva.autoconsumo.promotor.base\t0\ncasilla\tiva.autoconsumo.promotor.cuota\t0.00\tmultiply(iva.autoconsumo.promotor.base) = multiply(0) = 0.00\ncasilla\tiva.autorepercutido.interior.deducible\t0\ncasilla\tiva.autorepercutido.interior.devengado\t0\ncasilla\tiva.autorepercutido.intracomunitaria\t0\ncasilla\tiva.autorepercutido.intracomunitaria.deducible\t0\ncasilla\tiva.autorepercutido.intracomunitaria.devengado\t0\ncasilla\tiva.autorepercutido.intracomunitaria.devengado.base\t0\ncasilla\tiva.compensacion-aplicada-periodo\t0.00\tminimum(iva.compensacion-pendiente-periodos-anteriores, iva.resultado-regimen-general) = minimum(0, 105.00) = 0.00\ncasilla\tiva.compensacion-disponible-fin-periodo\t0.00\tsum(iva.compensacion-pendiente-periodos-posteriores, iva.compensacion-generada-periodo) = sum(0.00, 0.00) = 0.00\ncasilla\tiva.compensacion-generada-periodo\t0.00\tmaximum(iva.resultado) = maximum(105.00) = 0.00\ncasilla\tiva.compensacion-pendiente-periodos-anteriores\t0\ncasilla\tiva.compensacion-pendiente-periodos-posteriores\t0.00\tsubtract(iva.compensacion-pendiente-periodos-anteriores, iva.compensacion-aplicada-periodo) = subtract(0, 0.00) = 0.00\ncasilla\tiva.cuota-deducible-total\t105.00\tsum(iva.soportado.interiores, iva.soportado.importaciones, iva.autorepercutido.intracomunitaria, iva.autorepercutido.interior.deducible, 43, 44) = sum(105, 0, 0, 0, 0.00, 0.00) = 105.00\ncasilla\tiva.cuota-devengada-total\t210.00\tsum(iva.repercutido.general, iva.repercutido.reducido, iva.repercutido.super-reducido, iva.repercutido.reducido.transitorio, iva.repercutido.super-reducido.transitorio, iva.autorepercutido.intracomunitaria, iva.autorepercutido.interior.devengado, iva.autoconsumo.promotor.cuota, 18, 21, 24, 158, 170, 26, 15, 152) = sum(210, 0, 0, 0, 0, 0, 0, 0.00, 0, 0, 0, 0, 0, 0, 0, 0) = 210.00\ncasilla\tiva.prorrata-porcentaje\t100\tconditional(iva.prorrata-volumen-total) = conditional(0) = 100\ncasilla\tiva.prorrata-volumen-con-derecho\t0\ncasilla\tiva.prorrata-volumen-total\t0\ncasilla\tiva.regularizacion-inversiones\t0\ncasilla\tiva.repercutido.general\t210\ncasilla\tiva.repercutido.reducido\t0\ncasilla\tiva.repercutido.reducido.transitorio\t0\ncasilla\tiva.repercutido.super-reducido\t0\ncasilla\tiva.repercutido.super-reducido.transitorio\t0\ncasilla\tiva.resultado\t105.00\tsubtract(66, 77, 68, iva.compensacion-aplicada-periodo) = subtract(105.00, 0, 0, 0.00) = 105.00\ncasilla\tiva.resultado-regimen-general\t105.00\tsubtract(iva.cuota-devengada-total, iva.cuota-deducible-total) = subtract(210.00, 105.00) = 105.00\ncasilla\tiva.soportado.importaciones\t0\ncasilla\tiva.soportado.interiores\t105\ncasilla\tmodulos-iva-1-unidades\t0\ncasilla\tmodulos-iva-2-unidades\t0\ncasilla\tmodulos-iva-3-unidades\t0\ncasilla\tmodulos-iva-cuota-derivada\t0.00\tmaximum(modulos-iva-cuota-devengada, modulos-iva-cuota-devengada, m303-modulos-iva-dificil-justificacion-forfait, modulos-iva-cuota-devengada, modulos-iva-epigrafe, m303-modulos-iva-cuota-minima-pct-2025) = maximum(0.00, 0.00, 1, 0.00) = 0.00\ncasilla\tmodulos-iva-cuota-devengada\t0.00\tcalculation(modulos-iva-epigrafe, m303-modulos-iva-coeficientes-2025) = calculation() = 0.00\ncasilla\tmodulos-iva-epigrafe\t0\nplazo_closes_on\t2026-04-20\ndays_remaining\t19\nSaved as draft calculation revision 3015f0d8f3f18272950e9fae426a8337559375f0e2731490016a6de9c1937064 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 303 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision 3015f0d8f3f18272950e9fae426a8337559375f0e2731490016a6de9c1937064`.\n"
     },
     {
       "argv": [
@@ -159,14 +159,14 @@
             "context": null,
             "message": "Draft or recalculate this unit with `aeat app modelo work calculate`, then verify the draft with `aeat app modelo work verify`.",
             "severity": "info",
-            "suggestion": "aeat app modelo work calculate 98f076c6ff3f4ab123206dc06d9bf9a6dbfe1d9c0b213ae4483b87619640518f"
+            "suggestion": "aeat app modelo work calculate 8f0c67734152d161da3519c86d15b19ad105967a20d34cab3982f713b22348af"
           }
         ],
         "result": {
           "bucket_id": "<bucket-id>",
           "causante_ccaa": null,
           "created_at": "2026-04-01T09:00:00+00:00",
-          "current_calculation_revision_id": "4108835b14e9338343bd396e3d5a543c8845405770f8f5e368e2d6658ff715b6",
+          "current_calculation_revision_id": "3015f0d8f3f18272950e9fae426a8337559375f0e2731490016a6de9c1937064",
           "current_filing_record_id": null,
           "discard_reason": null,
           "discarded_at": null,
@@ -181,12 +181,12 @@
             "filing_year": 2026
           },
           "revision_id": "2023-y-siguientes",
-          "short_current_calculation_revision_id": "d6658ff715b6",
+          "short_current_calculation_revision_id": "6de9c1937064",
           "short_filed_calculation_revision_id": null,
-          "short_work_unit_id": "87619640518f",
+          "short_work_unit_id": "f713b22348af",
           "state": "borrador",
           "updated_at": "2026-04-01T09:00:00+00:00",
-          "work_unit_id": "98f076c6ff3f4ab123206dc06d9bf9a6dbfe1d9c0b213ae4483b87619640518f"
+          "work_unit_id": "8f0c67734152d161da3519c86d15b19ad105967a20d34cab3982f713b22348af"
         },
         "schema_version": "2",
         "status": "success"
@@ -225,6 +225,8 @@
             {
               "binding_overrides": {
                 "modelo-303-bienes-inversion-regularizacion-casilla-43": "0",
+                "modelo-303-casilla-120-no-sujetas-localizacion-base": "0",
+                "modelo-303-casilla-122-inversion-sujeto-pasivo-base": "0",
                 "modelo-303-casilla-59-entregas-intracomunitarias-base": "0",
                 "modelo-303-casilla-60-exportaciones-base": "0",
                 "modelo-303-compensacion-pendiente-anteriores": "0",
@@ -236,13 +238,18 @@
                 "modelo-303-iva-autorepercutido-interior-devengado-cuota": "0",
                 "modelo-303-iva-autorepercutido-intracomunitaria-cuota": "0",
                 "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota": "0",
+                "modelo-303-iva-autorepercutido-intracomunitaria-devengado-base": "0",
                 "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota": "0",
                 "modelo-303-iva-repercutido-general-base": "1000",
                 "modelo-303-iva-repercutido-general-cuota": "210",
                 "modelo-303-iva-repercutido-reducido-base": "0",
                 "modelo-303-iva-repercutido-reducido-cuota": "0",
+                "modelo-303-iva-repercutido-reducido-transitorio-base": "0",
+                "modelo-303-iva-repercutido-reducido-transitorio-cuota": "0",
                 "modelo-303-iva-repercutido-super-reducido-base": "0",
                 "modelo-303-iva-repercutido-super-reducido-cuota": "0",
+                "modelo-303-iva-repercutido-super-reducido-transitorio-base": "0",
+                "modelo-303-iva-repercutido-super-reducido-transitorio-cuota": "0",
                 "modelo-303-iva-soportado-importaciones-cuota": "0",
                 "modelo-303-iva-soportado-interiores-base": "500",
                 "modelo-303-iva-soportado-interiores-cuota": "105",
@@ -252,7 +259,7 @@
                 "modelo-303-recargo-equivalencia-reducido-cuota": "0",
                 "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
               },
-              "calculation_revision_id": "4108835b14e9338343bd396e3d5a543c8845405770f8f5e368e2d6658ff715b6",
+              "calculation_revision_id": "3015f0d8f3f18272950e9fae426a8337559375f0e2731490016a6de9c1937064",
               "casilla_values": {
                 "01": "0",
                 "02": "0",
@@ -263,7 +270,7 @@
                 "07": "1000",
                 "08": "0",
                 "09": "210.00",
-                "10": "0",
+                "10": "0.00",
                 "108": "0",
                 "109": "0",
                 "11": "0.00",
@@ -280,15 +287,15 @@
                 "151": "0",
                 "152": "0",
                 "153": "0",
-                "154": "0",
-                "155": "0",
+                "154": "0.00",
+                "155": "0.00",
                 "156": "0",
                 "157": "0",
                 "158": "0",
                 "16": "0",
                 "165": "0",
-                "166": "0",
-                "167": "0",
+                "166": "0.00",
+                "167": "0.00",
                 "168": "0",
                 "169": "0",
                 "17": "0",
@@ -356,6 +363,7 @@
                 "iva.autorepercutido.intracomunitaria": "0",
                 "iva.autorepercutido.intracomunitaria.deducible": "0",
                 "iva.autorepercutido.intracomunitaria.devengado": "0",
+                "iva.autorepercutido.intracomunitaria.devengado.base": "0",
                 "iva.compensacion-aplicada-periodo": "0.00",
                 "iva.compensacion-disponible-fin-periodo": "0.00",
                 "iva.compensacion-generada-periodo": "0.00",
@@ -369,7 +377,9 @@
                 "iva.regularizacion-inversiones": "0",
                 "iva.repercutido.general": "210",
                 "iva.repercutido.reducido": "0",
+                "iva.repercutido.reducido.transitorio": "0",
                 "iva.repercutido.super-reducido": "0",
+                "iva.repercutido.super-reducido.transitorio": "0",
                 "iva.resultado": "105.00",
                 "iva.resultado-regimen-general": "105.00",
                 "iva.soportado.importaciones": "0",
@@ -389,7 +399,11 @@
                 "01": "0",
                 "04": "0",
                 "07": "1000",
-                "158": "0",
+                "120": "0",
+                "122": "0",
+                "153": "0",
+                "165": "0",
+                "170": "0",
                 "21": "0",
                 "24": "0",
                 "28": "500",
@@ -409,10 +423,13 @@
                 "iva.autorepercutido.intracomunitaria": "0",
                 "iva.autorepercutido.intracomunitaria.deducible": "0",
                 "iva.autorepercutido.intracomunitaria.devengado": "0",
+                "iva.autorepercutido.intracomunitaria.devengado.base": "0",
                 "iva.compensacion-pendiente-periodos-anteriores": "0",
                 "iva.repercutido.general": "210",
                 "iva.repercutido.reducido": "0",
+                "iva.repercutido.reducido.transitorio": "0",
                 "iva.repercutido.super-reducido": "0",
+                "iva.repercutido.super-reducido.transitorio": "0",
                 "iva.soportado.importaciones": "0",
                 "iva.soportado.interiores": "105"
               },
@@ -624,22 +641,32 @@
                 {
                   "absent_by_design": false,
                   "casilla_id": "10",
-                  "formula_id": null,
+                  "formula_id": "modelo-303-dr303-10-projection",
                   "legal_refs": [
-                    "ley-37-1992:art-88",
-                    "ley-37-1992:art-90",
-                    "ley-37-1992:art-91",
+                    "ley-37-1992:art-13",
+                    "ley-37-1992:art-15",
+                    "ley-37-1992:art-69",
+                    "ley-37-1992:art-70",
+                    "ley-37-1992:art-84",
                     "rd-1624-1992:art-71",
                     "orden-eha-3786-2008:art-1"
                   ],
-                  "op": null,
-                  "operand_casilla_refs": [],
-                  "operand_refs": [],
-                  "operand_values": [],
-                  "source_refs": [
-                    "aeat-dr-303-2025"
+                  "op": "value",
+                  "operand_casilla_refs": [
+                    "iva.autorepercutido.intracomunitaria.devengado.base"
                   ],
-                  "value": "0"
+                  "operand_refs": [
+                    "iva.autorepercutido.intracomunitaria.devengado.base"
+                  ],
+                  "operand_values": [
+                    "0"
+                  ],
+                  "source_refs": [
+                    "aeat-dr-303-2025",
+                    "aeat-modelo-303-procedure",
+                    "boe-modelo-303-2008-form"
+                  ],
+                  "value": "0.00"
                 },
                 {
                   "absent_by_design": false,
@@ -754,8 +781,7 @@
                   "casilla_id": "120",
                   "formula_id": null,
                   "legal_refs": [
-                    "ley-37-1992:art-88",
-                    "ley-37-1992:art-92",
+                    "ley-37-1992:art-69",
                     "rd-1624-1992:art-71",
                     "orden-eha-3786-2008:art-1"
                   ],
@@ -773,8 +799,7 @@
                   "casilla_id": "122",
                   "formula_id": null,
                   "legal_refs": [
-                    "ley-37-1992:art-88",
-                    "ley-37-1992:art-92",
+                    "ley-37-1992:art-84",
                     "rd-1624-1992:art-71",
                     "orden-eha-3786-2008:art-1"
                   ],
@@ -961,6 +986,7 @@
                     "ley-37-1992:art-88",
                     "ley-37-1992:art-90",
                     "ley-37-1992:art-91",
+                    "real-decreto-ley-4-2024:art-1",
                     "rd-1624-1992:art-71",
                     "orden-eha-3786-2008:art-1"
                   ],
@@ -976,42 +1002,57 @@
                 {
                   "absent_by_design": false,
                   "casilla_id": "154",
-                  "formula_id": null,
+                  "formula_id": "modelo-303-dr303-154-rate",
                   "legal_refs": [
                     "ley-37-1992:art-88",
-                    "ley-37-1992:art-90",
                     "ley-37-1992:art-91",
+                    "real-decreto-ley-20-2022:art-72",
+                    "real-decreto-ley-4-2024:art-1",
                     "rd-1624-1992:art-71",
                     "orden-eha-3786-2008:art-1"
                   ],
-                  "op": null,
+                  "op": "value",
                   "operand_casilla_refs": [],
-                  "operand_refs": [],
-                  "operand_values": [],
-                  "source_refs": [
-                    "aeat-dr-303-2025"
+                  "operand_refs": [
+                    "m303-dr303-154-transitional-rate-percent"
                   ],
-                  "value": "0"
+                  "operand_values": [
+                    "0.00"
+                  ],
+                  "source_refs": [
+                    "aeat-dr-303-2025",
+                    "aeat-modelo-303-procedure"
+                  ],
+                  "value": "0.00"
                 },
                 {
                   "absent_by_design": false,
                   "casilla_id": "155",
-                  "formula_id": null,
+                  "formula_id": "modelo-303-dr303-155-projection",
                   "legal_refs": [
                     "ley-37-1992:art-88",
                     "ley-37-1992:art-90",
                     "ley-37-1992:art-91",
+                    "real-decreto-ley-4-2024:art-1",
                     "rd-1624-1992:art-71",
                     "orden-eha-3786-2008:art-1"
                   ],
-                  "op": null,
-                  "operand_casilla_refs": [],
-                  "operand_refs": [],
-                  "operand_values": [],
-                  "source_refs": [
-                    "aeat-dr-303-2025"
+                  "op": "value",
+                  "operand_casilla_refs": [
+                    "iva.repercutido.reducido.transitorio"
                   ],
-                  "value": "0"
+                  "operand_refs": [
+                    "iva.repercutido.reducido.transitorio"
+                  ],
+                  "operand_values": [
+                    "0"
+                  ],
+                  "source_refs": [
+                    "aeat-dr-303-2025",
+                    "aeat-modelo-303-procedure",
+                    "boe-modelo-303-2008-form"
+                  ],
+                  "value": "0.00"
                 },
                 {
                   "absent_by_design": false,
@@ -1102,6 +1143,7 @@
                     "ley-37-1992:art-88",
                     "ley-37-1992:art-90",
                     "ley-37-1992:art-91",
+                    "real-decreto-ley-4-2024:art-1",
                     "rd-1624-1992:art-71",
                     "orden-eha-3786-2008:art-1"
                   ],
@@ -1117,42 +1159,57 @@
                 {
                   "absent_by_design": false,
                   "casilla_id": "166",
-                  "formula_id": null,
+                  "formula_id": "modelo-303-dr303-166-rate",
                   "legal_refs": [
                     "ley-37-1992:art-88",
-                    "ley-37-1992:art-90",
                     "ley-37-1992:art-91",
+                    "real-decreto-ley-20-2022:art-72",
+                    "real-decreto-ley-4-2024:art-1",
                     "rd-1624-1992:art-71",
                     "orden-eha-3786-2008:art-1"
                   ],
-                  "op": null,
+                  "op": "value",
                   "operand_casilla_refs": [],
-                  "operand_refs": [],
-                  "operand_values": [],
-                  "source_refs": [
-                    "aeat-dr-303-2025"
+                  "operand_refs": [
+                    "m303-dr303-166-transitional-rate-percent"
                   ],
-                  "value": "0"
+                  "operand_values": [
+                    "0.00"
+                  ],
+                  "source_refs": [
+                    "aeat-dr-303-2025",
+                    "aeat-modelo-303-procedure"
+                  ],
+                  "value": "0.00"
                 },
                 {
                   "absent_by_design": false,
                   "casilla_id": "167",
-                  "formula_id": null,
+                  "formula_id": "modelo-303-dr303-167-projection",
                   "legal_refs": [
                     "ley-37-1992:art-88",
                     "ley-37-1992:art-90",
                     "ley-37-1992:art-91",
+                    "real-decreto-ley-4-2024:art-1",
                     "rd-1624-1992:art-71",
                     "orden-eha-3786-2008:art-1"
                   ],
-                  "op": null,
-                  "operand_casilla_refs": [],
-                  "operand_refs": [],
-                  "operand_values": [],
-                  "source_refs": [
-                    "aeat-dr-303-2025"
+                  "op": "value",
+                  "operand_casilla_refs": [
+                    "iva.repercutido.super-reducido.transitorio"
                   ],
-                  "value": "0"
+                  "operand_refs": [
+                    "iva.repercutido.super-reducido.transitorio"
+                  ],
+                  "operand_values": [
+                    "0"
+                  ],
+                  "source_refs": [
+                    "aeat-dr-303-2025",
+                    "aeat-modelo-303-procedure",
+                    "boe-modelo-303-2008-form"
+                  ],
+                  "value": "0.00"
                 },
                 {
                   "absent_by_design": false,
@@ -1222,6 +1279,7 @@
                     "ley-37-1992:art-88",
                     "ley-37-1992:art-90",
                     "ley-37-1992:art-91",
+                    "ley-37-1992:art-161",
                     "rd-1624-1992:art-71",
                     "orden-eha-3786-2008:art-1"
                   ],
@@ -2590,6 +2648,28 @@
                 },
                 {
                   "absent_by_design": false,
+                  "casilla_id": "iva.autorepercutido.intracomunitaria.devengado.base",
+                  "formula_id": null,
+                  "legal_refs": [
+                    "ley-37-1992:art-13",
+                    "ley-37-1992:art-15",
+                    "ley-37-1992:art-69",
+                    "ley-37-1992:art-70",
+                    "ley-37-1992:art-84",
+                    "rd-1624-1992:art-71",
+                    "orden-eha-3786-2008:art-1"
+                  ],
+                  "op": null,
+                  "operand_casilla_refs": [],
+                  "operand_refs": [],
+                  "operand_values": [],
+                  "source_refs": [
+                    "aeat-dr-303-2025"
+                  ],
+                  "value": "0"
+                },
+                {
+                  "absent_by_design": false,
                   "casilla_id": "iva.compensacion-aplicada-periodo",
                   "formula_id": "modelo-303-compensacion-aplicada-periodo",
                   "legal_refs": [
@@ -2799,23 +2879,37 @@
                     "iva.repercutido.general",
                     "iva.repercutido.reducido",
                     "iva.repercutido.super-reducido",
+                    "iva.repercutido.reducido.transitorio",
+                    "iva.repercutido.super-reducido.transitorio",
                     "iva.autorepercutido.intracomunitaria",
                     "iva.autorepercutido.interior.devengado",
                     "iva.autoconsumo.promotor.cuota",
                     "18",
                     "21",
-                    "24"
+                    "24",
+                    "158",
+                    "170",
+                    "26",
+                    "15",
+                    "152"
                   ],
                   "operand_refs": [
                     "iva.repercutido.general",
                     "iva.repercutido.reducido",
                     "iva.repercutido.super-reducido",
+                    "iva.repercutido.reducido.transitorio",
+                    "iva.repercutido.super-reducido.transitorio",
                     "iva.autorepercutido.intracomunitaria",
                     "iva.autorepercutido.interior.devengado",
                     "iva.autoconsumo.promotor.cuota",
                     "18",
                     "21",
-                    "24"
+                    "24",
+                    "158",
+                    "170",
+                    "26",
+                    "15",
+                    "152"
                   ],
                   "operand_values": [
                     "210",
@@ -2823,7 +2917,14 @@
                     "0",
                     "0",
                     "0",
+                    "0",
+                    "0",
                     "0.00",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
                     "0",
                     "0",
                     "0"
@@ -2963,10 +3064,50 @@
                 },
                 {
                   "absent_by_design": false,
+                  "casilla_id": "iva.repercutido.reducido.transitorio",
+                  "formula_id": null,
+                  "legal_refs": [
+                    "ley-37-1992:art-88",
+                    "ley-37-1992:art-91",
+                    "real-decreto-ley-4-2024:art-1",
+                    "rd-1624-1992:art-71",
+                    "orden-eha-3786-2008:art-1"
+                  ],
+                  "op": null,
+                  "operand_casilla_refs": [],
+                  "operand_refs": [],
+                  "operand_values": [],
+                  "source_refs": [
+                    "aeat-dr-303-2025"
+                  ],
+                  "value": "0"
+                },
+                {
+                  "absent_by_design": false,
                   "casilla_id": "iva.repercutido.super-reducido",
                   "formula_id": null,
                   "legal_refs": [
                     "ley-37-1992:art-88",
+                    "rd-1624-1992:art-71",
+                    "orden-eha-3786-2008:art-1"
+                  ],
+                  "op": null,
+                  "operand_casilla_refs": [],
+                  "operand_refs": [],
+                  "operand_values": [],
+                  "source_refs": [
+                    "aeat-dr-303-2025"
+                  ],
+                  "value": "0"
+                },
+                {
+                  "absent_by_design": false,
+                  "casilla_id": "iva.repercutido.super-reducido.transitorio",
+                  "formula_id": null,
+                  "legal_refs": [
+                    "ley-37-1992:art-88",
+                    "ley-37-1992:art-91",
+                    "real-decreto-ley-4-2024:art-1",
                     "rd-1624-1992:art-71",
                     "orden-eha-3786-2008:art-1"
                   ],
@@ -3300,10 +3441,10 @@
               "updated_at": "2026-04-01T09:00:00+00:00",
               "verified_at": null,
               "verified_by": null,
-              "work_unit_id": "98f076c6ff3f4ab123206dc06d9bf9a6dbfe1d9c0b213ae4483b87619640518f"
+              "work_unit_id": "8f0c67734152d161da3519c86d15b19ad105967a20d34cab3982f713b22348af"
             }
           ],
-          "work_unit_id_filter": "98f076c6ff3f4ab123206dc06d9bf9a6dbfe1d9c0b213ae4483b87619640518f"
+          "work_unit_id_filter": "8f0c67734152d161da3519c86d15b19ad105967a20d34cab3982f713b22348af"
         },
         "schema_version": "2",
         "status": "success"
@@ -3338,6 +3479,8 @@
         "result": {
           "binding_overrides": {
             "modelo-303-bienes-inversion-regularizacion-casilla-43": "0",
+            "modelo-303-casilla-120-no-sujetas-localizacion-base": "0",
+            "modelo-303-casilla-122-inversion-sujeto-pasivo-base": "0",
             "modelo-303-casilla-59-entregas-intracomunitarias-base": "0",
             "modelo-303-casilla-60-exportaciones-base": "0",
             "modelo-303-compensacion-pendiente-anteriores": "0",
@@ -3349,13 +3492,18 @@
             "modelo-303-iva-autorepercutido-interior-devengado-cuota": "0",
             "modelo-303-iva-autorepercutido-intracomunitaria-cuota": "0",
             "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota": "0",
+            "modelo-303-iva-autorepercutido-intracomunitaria-devengado-base": "0",
             "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota": "0",
             "modelo-303-iva-repercutido-general-base": "1000",
             "modelo-303-iva-repercutido-general-cuota": "210",
             "modelo-303-iva-repercutido-reducido-base": "0",
             "modelo-303-iva-repercutido-reducido-cuota": "0",
+            "modelo-303-iva-repercutido-reducido-transitorio-base": "0",
+            "modelo-303-iva-repercutido-reducido-transitorio-cuota": "0",
             "modelo-303-iva-repercutido-super-reducido-base": "0",
             "modelo-303-iva-repercutido-super-reducido-cuota": "0",
+            "modelo-303-iva-repercutido-super-reducido-transitorio-base": "0",
+            "modelo-303-iva-repercutido-super-reducido-transitorio-cuota": "0",
             "modelo-303-iva-soportado-importaciones-cuota": "0",
             "modelo-303-iva-soportado-interiores-base": "500",
             "modelo-303-iva-soportado-interiores-cuota": "105",
@@ -3365,7 +3513,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "4108835b14e9338343bd396e3d5a543c8845405770f8f5e368e2d6658ff715b6",
+          "calculation_revision_id": "3015f0d8f3f18272950e9fae426a8337559375f0e2731490016a6de9c1937064",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -3376,7 +3524,7 @@
             "07": "1000",
             "08": "0",
             "09": "210.00",
-            "10": "0",
+            "10": "0.00",
             "108": "0",
             "109": "0",
             "11": "0.00",
@@ -3393,15 +3541,15 @@
             "151": "0",
             "152": "0",
             "153": "0",
-            "154": "0",
-            "155": "0",
+            "154": "0.00",
+            "155": "0.00",
             "156": "0",
             "157": "0",
             "158": "0",
             "16": "0",
             "165": "0",
-            "166": "0",
-            "167": "0",
+            "166": "0.00",
+            "167": "0.00",
             "168": "0",
             "169": "0",
             "17": "0",
@@ -3469,6 +3617,7 @@
             "iva.autorepercutido.intracomunitaria": "0",
             "iva.autorepercutido.intracomunitaria.deducible": "0",
             "iva.autorepercutido.intracomunitaria.devengado": "0",
+            "iva.autorepercutido.intracomunitaria.devengado.base": "0",
             "iva.compensacion-aplicada-periodo": "0.00",
             "iva.compensacion-disponible-fin-periodo": "0.00",
             "iva.compensacion-generada-periodo": "0.00",
@@ -3482,7 +3631,9 @@
             "iva.regularizacion-inversiones": "0",
             "iva.repercutido.general": "210",
             "iva.repercutido.reducido": "0",
+            "iva.repercutido.reducido.transitorio": "0",
             "iva.repercutido.super-reducido": "0",
+            "iva.repercutido.super-reducido.transitorio": "0",
             "iva.resultado": "105.00",
             "iva.resultado-regimen-general": "105.00",
             "iva.soportado.importaciones": "0",
@@ -3502,7 +3653,11 @@
             "01": "0",
             "04": "0",
             "07": "1000",
-            "158": "0",
+            "120": "0",
+            "122": "0",
+            "153": "0",
+            "165": "0",
+            "170": "0",
             "21": "0",
             "24": "0",
             "28": "500",
@@ -3522,10 +3677,13 @@
             "iva.autorepercutido.intracomunitaria": "0",
             "iva.autorepercutido.intracomunitaria.deducible": "0",
             "iva.autorepercutido.intracomunitaria.devengado": "0",
+            "iva.autorepercutido.intracomunitaria.devengado.base": "0",
             "iva.compensacion-pendiente-periodos-anteriores": "0",
             "iva.repercutido.general": "210",
             "iva.repercutido.reducido": "0",
+            "iva.repercutido.reducido.transitorio": "0",
             "iva.repercutido.super-reducido": "0",
+            "iva.repercutido.super-reducido.transitorio": "0",
             "iva.soportado.importaciones": "0",
             "iva.soportado.interiores": "105"
           },
@@ -3739,22 +3897,32 @@
             {
               "absent_by_design": false,
               "casilla_id": "10",
-              "formula_id": null,
+              "formula_id": "modelo-303-dr303-10-projection",
               "legal_refs": [
-                "ley-37-1992:art-88",
-                "ley-37-1992:art-90",
-                "ley-37-1992:art-91",
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-15",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-84",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
-              "op": null,
-              "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "aeat-dr-303-2025"
+              "op": "value",
+              "operand_casilla_refs": [
+                "iva.autorepercutido.intracomunitaria.devengado.base"
               ],
-              "value": "0"
+              "operand_refs": [
+                "iva.autorepercutido.intracomunitaria.devengado.base"
+              ],
+              "operand_values": [
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "value": "0.00"
             },
             {
               "absent_by_design": false,
@@ -3869,8 +4037,7 @@
               "casilla_id": "120",
               "formula_id": null,
               "legal_refs": [
-                "ley-37-1992:art-88",
-                "ley-37-1992:art-92",
+                "ley-37-1992:art-69",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
@@ -3888,8 +4055,7 @@
               "casilla_id": "122",
               "formula_id": null,
               "legal_refs": [
-                "ley-37-1992:art-88",
-                "ley-37-1992:art-92",
+                "ley-37-1992:art-84",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
@@ -4076,6 +4242,7 @@
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
                 "ley-37-1992:art-91",
+                "real-decreto-ley-4-2024:art-1",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
@@ -4091,42 +4258,57 @@
             {
               "absent_by_design": false,
               "casilla_id": "154",
-              "formula_id": null,
+              "formula_id": "modelo-303-dr303-154-rate",
               "legal_refs": [
                 "ley-37-1992:art-88",
-                "ley-37-1992:art-90",
                 "ley-37-1992:art-91",
+                "real-decreto-ley-20-2022:art-72",
+                "real-decreto-ley-4-2024:art-1",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
-              "op": null,
+              "op": "value",
               "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "aeat-dr-303-2025"
+              "operand_refs": [
+                "m303-dr303-154-transitional-rate-percent"
               ],
-              "value": "0"
+              "operand_values": [
+                "0.00"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "0.00"
             },
             {
               "absent_by_design": false,
               "casilla_id": "155",
-              "formula_id": null,
+              "formula_id": "modelo-303-dr303-155-projection",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
                 "ley-37-1992:art-91",
+                "real-decreto-ley-4-2024:art-1",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
-              "op": null,
-              "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "aeat-dr-303-2025"
+              "op": "value",
+              "operand_casilla_refs": [
+                "iva.repercutido.reducido.transitorio"
               ],
-              "value": "0"
+              "operand_refs": [
+                "iva.repercutido.reducido.transitorio"
+              ],
+              "operand_values": [
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "value": "0.00"
             },
             {
               "absent_by_design": false,
@@ -4217,6 +4399,7 @@
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
                 "ley-37-1992:art-91",
+                "real-decreto-ley-4-2024:art-1",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
@@ -4232,42 +4415,57 @@
             {
               "absent_by_design": false,
               "casilla_id": "166",
-              "formula_id": null,
+              "formula_id": "modelo-303-dr303-166-rate",
               "legal_refs": [
                 "ley-37-1992:art-88",
-                "ley-37-1992:art-90",
                 "ley-37-1992:art-91",
+                "real-decreto-ley-20-2022:art-72",
+                "real-decreto-ley-4-2024:art-1",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
-              "op": null,
+              "op": "value",
               "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "aeat-dr-303-2025"
+              "operand_refs": [
+                "m303-dr303-166-transitional-rate-percent"
               ],
-              "value": "0"
+              "operand_values": [
+                "0.00"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "0.00"
             },
             {
               "absent_by_design": false,
               "casilla_id": "167",
-              "formula_id": null,
+              "formula_id": "modelo-303-dr303-167-projection",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
                 "ley-37-1992:art-91",
+                "real-decreto-ley-4-2024:art-1",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
-              "op": null,
-              "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "aeat-dr-303-2025"
+              "op": "value",
+              "operand_casilla_refs": [
+                "iva.repercutido.super-reducido.transitorio"
               ],
-              "value": "0"
+              "operand_refs": [
+                "iva.repercutido.super-reducido.transitorio"
+              ],
+              "operand_values": [
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "value": "0.00"
             },
             {
               "absent_by_design": false,
@@ -4337,6 +4535,7 @@
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
                 "ley-37-1992:art-91",
+                "ley-37-1992:art-161",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
@@ -5705,6 +5904,28 @@
             },
             {
               "absent_by_design": false,
+              "casilla_id": "iva.autorepercutido.intracomunitaria.devengado.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-15",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-84",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
               "casilla_id": "iva.compensacion-aplicada-periodo",
               "formula_id": "modelo-303-compensacion-aplicada-periodo",
               "legal_refs": [
@@ -5914,23 +6135,37 @@
                 "iva.repercutido.general",
                 "iva.repercutido.reducido",
                 "iva.repercutido.super-reducido",
+                "iva.repercutido.reducido.transitorio",
+                "iva.repercutido.super-reducido.transitorio",
                 "iva.autorepercutido.intracomunitaria",
                 "iva.autorepercutido.interior.devengado",
                 "iva.autoconsumo.promotor.cuota",
                 "18",
                 "21",
-                "24"
+                "24",
+                "158",
+                "170",
+                "26",
+                "15",
+                "152"
               ],
               "operand_refs": [
                 "iva.repercutido.general",
                 "iva.repercutido.reducido",
                 "iva.repercutido.super-reducido",
+                "iva.repercutido.reducido.transitorio",
+                "iva.repercutido.super-reducido.transitorio",
                 "iva.autorepercutido.intracomunitaria",
                 "iva.autorepercutido.interior.devengado",
                 "iva.autoconsumo.promotor.cuota",
                 "18",
                 "21",
-                "24"
+                "24",
+                "158",
+                "170",
+                "26",
+                "15",
+                "152"
               ],
               "operand_values": [
                 "210",
@@ -5938,7 +6173,14 @@
                 "0",
                 "0",
                 "0",
+                "0",
+                "0",
                 "0.00",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
                 "0",
                 "0",
                 "0"
@@ -6078,10 +6320,50 @@
             },
             {
               "absent_by_design": false,
+              "casilla_id": "iva.repercutido.reducido.transitorio",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-91",
+                "real-decreto-ley-4-2024:art-1",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
               "casilla_id": "iva.repercutido.super-reducido",
               "formula_id": null,
               "legal_refs": [
                 "ley-37-1992:art-88",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.repercutido.super-reducido.transitorio",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-91",
+                "real-decreto-ley-4-2024:art-1",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
@@ -6416,7 +6698,7 @@
           "updated_at": "2026-04-01T09:00:00+00:00",
           "verified_at": null,
           "verified_by": null,
-          "work_unit_id": "98f076c6ff3f4ab123206dc06d9bf9a6dbfe1d9c0b213ae4483b87619640518f"
+          "work_unit_id": "8f0c67734152d161da3519c86d15b19ad105967a20d34cab3982f713b22348af"
         },
         "schema_version": "2",
         "status": "success"

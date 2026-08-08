@@ -140,3 +140,55 @@ def test_multiple_divergences_are_ordered_by_casilla_id() -> None:
 
 def test_empty_inputs_produce_no_divergences() -> None:
     assert detect_casilla_divergences(computed={}, filed={}) == ()
+
+
+class TestExportExemptCasillasAreOutOfPdfScope:
+    """An export-exempt casilla files no slot, so a printed declaración cannot carry it.
+
+    The reconcile path narrows ``computed_casilla_ids`` by this predicate before
+    comparing. These tests pin the predicate's two directions against the live
+    registry rather than a synthetic fixture, because the property being asserted
+    is that the REAL enrolled set is reconcilable — a hand-built pair of casillas
+    would prove the arithmetic and nothing about the registry.
+    """
+
+    @staticmethod
+    def _m303_revision() -> object:
+        from ....domain.calculations.registry._authority import bundled_authority
+
+        return next(m for m in bundled_authority().modelos if m.id == "303").revisions["2023-y-siguientes"]
+
+    def test_no_enrolled_casilla_is_both_exempt_and_extractable(self) -> None:
+        """The predicate never excludes something the extractor can actually supply.
+
+        This is the precision half: if an exempt casilla were extractable, the
+        exclusion would silence an observable comparison.
+        """
+        revision = self._m303_revision()
+        exempt = {c.id for c in revision.casillas if getattr(c, "export_exemption_reason", None) is not None}
+        targets = {getattr(t, "casilla_id", None) or t for p in revision.extraction_profiles for t in p.target_casillas}
+
+        assert exempt & targets == set(), (
+            f"casillas are both export-exempt and extraction targets: {sorted(exempt & targets)}. "
+            "The exclusion would drop an observable comparison."
+        )
+
+    def test_every_reconcilable_enrolled_casilla_is_extractable(self) -> None:
+        """The completeness half: after excluding exempt ids, the scope is fully comparable.
+
+        Precision alone would not prove the fix sufficient — it would still allow
+        an enrolled, non-exempt casilla that no profile targets, which would go on
+        raising MISSING_IN_FILED whatever the taxpayer filed.
+        """
+        revision = self._m303_revision()
+        enrolled: set[str] = set()
+        for expectation in revision.verification_expectations:
+            enrolled |= set(getattr(expectation, "computed_casilla_ids", ()) or ())
+        by_id = {c.id: c for c in revision.casillas}
+        reconcilable = {c for c in enrolled if getattr(by_id.get(c), "export_exemption_reason", None) is None}
+        targets = {getattr(t, "casilla_id", None) or t for p in revision.extraction_profiles for t in p.target_casillas}
+
+        assert reconcilable - targets == set(), (
+            f"enrolled and non-exempt but never extracted: {sorted(reconcilable - targets)}. "
+            "These raise MISSING_IN_FILED regardless of what was filed."
+        )

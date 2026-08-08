@@ -26,25 +26,25 @@
         "command": "modelo.describe",
         "notices": [],
         "result": {
-          "binding_count": 28,
-          "bound_casilla_count": 26,
+          "binding_count": 35,
+          "bound_casilla_count": 33,
           "cadence": "quarterly",
-          "casilla_count": 126,
+          "casilla_count": 129,
           "code": "303",
-          "computed_casilla_count": 25,
+          "computed_casilla_count": 30,
           "filing_period": {
             "code": "1T",
             "filing_year": 2026
           },
           "filing_year": 2026,
-          "formula_count": 25,
+          "formula_count": 30,
           "jurisdiction": "ES-AEAT",
           "legal_refs": [
             "rd-1624-1992:art-71",
             "orden-eha-3786-2008:art-1",
             "orden-eha-3786-2008:art-7"
           ],
-          "manual_casilla_count": 73,
+          "manual_casilla_count": 64,
           "official_name": "Modelo 303. Impuesto sobre el Valor Añadido. Autoliquidación.",
           "operation": "modelo.describe",
           "period": "1T",

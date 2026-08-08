@@ -2,12 +2,16 @@
 
 The manager page answers "what does my profile hold". These are the
 operations an operator reaches for while looking at that answer: say how
-they identify to AEAT, fill the profile in from what AEAT already holds,
-add a row to a section that holds several, and take a copy of it away.
-They are offered in that order because it is the order they depend on each
-other in - the pull cannot run until the authentication mode is complete,
-and says so rather than failing at the browser, and a row is worth adding
-by hand once the pull has filled in what AEAT already knows.
+they identify to AEAT, rotate the passphrase guarding the profile itself,
+fill the profile in from what AEAT already holds, add a row to a section
+that holds several, and take a copy of it away. They are offered in that
+order because it is the order they depend on each other in - the pull
+cannot run until the authentication mode is complete, and says so rather
+than failing at the browser, and a row is worth adding by hand once the
+pull has filled in what AEAT already knows. The passphrase action sits
+beside authentication rather than after it: both are custody of how the
+operator reaches this profile, not facts the profile records about the
+taxpayer.
 
 Adding a row is an action rather than a gesture on the table because a
 repeatable section's row is all-or-nothing at the write door: every
@@ -384,6 +388,7 @@ def _run_export() -> ManagerActionOutcome:
             FormField(
                 key="passphrase",
                 label=tr("flows.manager.action.export_passphrase"),
+                secret=True,
                 validate=lambda value: None if value.strip() else tr("flows.manager.action.export_passphrase"),
             ),
         ),
@@ -401,6 +406,107 @@ def _run_export() -> ManagerActionOutcome:
         ),
     )
     return ManagerActionOutcome(message=tr("flows.manager.action.export_done", destination=str(destination)))
+
+
+_PASSPHRASE_CURRENT_KEY = "current"
+_PASSPHRASE_NEW_KEY = "new"
+_PASSPHRASE_CONFIRM_KEY = "confirm"
+
+
+def passphrase_action() -> ManagerAction:
+    """Rotate the passphrase protecting this profile's secret store.
+
+    The application door this drives is
+    :func:`~cadrumo.application.user_profile.change_passphrase`, the exact
+    verb behind ``aeat config passphrase change`` — it re-verifies the
+    current passphrase by unwrapping the stored master key before
+    rewrapping under the new one, so a wrong current answer changes
+    nothing.
+    """
+    from ....adapters.inbound.tui import ManagerAction
+
+    return ManagerAction(
+        key="passphrase",
+        label=tr("flows.manager.action.passphrase"),
+        label_key="flows.manager.action.passphrase",
+        run=_run_passphrase_change,
+    )
+
+
+def _run_passphrase_change() -> ManagerActionOutcome:
+    """Collect the current and a new passphrase, then rotate the secret store.
+
+    Three fields rather than two: the new passphrase is retyped so a typo
+    in it is caught here rather than discovered at the next login, when
+    the only recourse left is the recovery code. All three are masked —
+    :attr:`~cadrumo.adapters.inbound.tui.FormField.secret` — because a
+    passphrase read back in clear on a shared screen defeats the point of
+    asking for one.
+
+    The confirmation check happens here rather than as a per-field
+    validator: a field is checked against its own rule as it is typed, but
+    "does this equal the other field" can only be judged once both are on
+    the page, so it is judged once, on the collected batch, the same way
+    the certificate action judges its Cl@ve pair.
+
+    A wrong current passphrase is reported by name rather than folded into
+    a generic failure, because it is the one answer this door can actually
+    tell apart from a defect: ``change_passphrase`` unwraps the stored
+    master key under the typed value before it does anything else, so a
+    mismatch there is the operator's own typo, not a torn write.
+    """
+    from ....adapters.inbound.tui import FormField, FormPage, ManagerActionOutcome
+    from ....adapters.persistence.storage import (
+        MasterKeyMaterialMissingError,
+        MasterKeyPassphraseMismatchError,
+        SecretStoreError,
+    )
+    from ....application.user_profile import change_passphrase
+    from ._manager_frontend import present_form
+
+    page = FormPage(
+        title=tr("flows.manager.action.passphrase"),
+        section=tr("flows.manager.action.passphrase"),
+        fields=(
+            FormField(
+                key=_PASSPHRASE_CURRENT_KEY,
+                label=tr("flows.manager.action.passphrase_current"),
+                secret=True,
+                validate=lambda value: None if value else tr("flows.manager.action.passphrase_current"),
+            ),
+            FormField(
+                key=_PASSPHRASE_NEW_KEY,
+                label=tr("flows.manager.action.passphrase_new"),
+                secret=True,
+                validate=lambda value: None if value else tr("flows.manager.action.passphrase_new"),
+            ),
+            FormField(
+                key=_PASSPHRASE_CONFIRM_KEY,
+                label=tr("flows.manager.action.passphrase_confirm"),
+                secret=True,
+                validate=lambda value: None if value else tr("flows.manager.action.passphrase_confirm"),
+            ),
+        ),
+    )
+    collected = present_form(page)
+    if collected is None:
+        return ManagerActionOutcome(message=tr("flows.manager.action.abandoned"))
+
+    new_value = collected[_PASSPHRASE_NEW_KEY]
+    if new_value != collected[_PASSPHRASE_CONFIRM_KEY]:
+        return ManagerActionOutcome(message=tr("flows.manager.action.passphrase_mismatch"))
+
+    try:
+        change_passphrase(
+            current_passphrase=collected[_PASSPHRASE_CURRENT_KEY],
+            new_passphrase=new_value,
+        )
+    except MasterKeyPassphraseMismatchError:
+        return ManagerActionOutcome(message=tr("flows.manager.action.passphrase_wrong_current"))
+    except (MasterKeyMaterialMissingError, SecretStoreError) as exc:
+        return ManagerActionOutcome(message=str(exc))
+
+    return ManagerActionOutcome(message=tr("flows.manager.action.passphrase_done"))
 
 
 def certificate_action() -> ManagerAction:
@@ -1097,7 +1203,13 @@ def _row_value_check(
 
 def manager_actions() -> tuple[ManagerAction, ...]:
     """Every action the manager offers, in the order it offers them."""
-    return (certificate_action(), censal_pull_action(), add_row_action(), export_action())
+    return (
+        certificate_action(),
+        passphrase_action(),
+        censal_pull_action(),
+        add_row_action(),
+        export_action(),
+    )
 
 
 __all__ = [
@@ -1106,4 +1218,5 @@ __all__ = [
     "certificate_action",
     "export_action",
     "manager_actions",
+    "passphrase_action",
 ]

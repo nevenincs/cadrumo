@@ -63,12 +63,12 @@
           "revision_id": "2025",
           "short_current_calculation_revision_id": null,
           "short_filed_calculation_revision_id": null,
-          "short_work_unit_id": "28667392b7ba",
+          "short_work_unit_id": "cdafd119d9fd",
           "state": "borrador",
           "status": "created",
           "status_message": "New work unit created.",
           "updated_at": "2026-04-01T09:00:00+00:00",
-          "work_unit_id": "23dd9f2506c3295a8ba8eb6f0c5c3f2eaa1fead98c53d24196e728667392b7ba"
+          "work_unit_id": "d36dd9ebe261dac47a36150e43ff53fdb815d4d1a45c0adbd4b8cdafd119d9fd"
         },
         "schema_version": "2",
         "status": "success"

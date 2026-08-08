@@ -85,7 +85,7 @@ class Modelo184MemberRow(BaseModel):
     * ``nombre`` → ``member_legal_name`` (binding: modelo-184-member-row-name)
     * ``porcentaje`` → ``share_percentage`` (binding: modelo-184-member-row-share)
     * ``importe`` → ``base_imponible_assigned`` (binding: modelo-184-member-row-base-assigned)
-    * ``pais`` → ``country_code`` (ES default)
+    * ``pais`` → ``country_code`` (required; never inferred)
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -93,7 +93,13 @@ class Modelo184MemberRow(BaseModel):
     row_type: Literal["miembro"] = "miembro"
     nif: _NifStr
     nombre: _NameStr = Field(default="")
-    pais: _IsoCountryCode = Field(default="ES")
+    # Required, and deliberately not defaulted to Spain. The row is built from
+    # operator-supplied key-value pairs, so a default is an INFERENCE about a
+    # fact the operator did not state -- and it inferred the one value that
+    # makes the row domestic. A foreign member or a cross-border related-party
+    # operation silently declared as Spanish is the direction AEAT reconciles
+    # against what the counterparty itself declared.
+    pais: _IsoCountryCode
     porcentaje: Decimal = Field(description="Share percentage in the entity [0, 100]")
     importe: Decimal = Field(description="Attributed income/base imponible in EUR")
 
@@ -168,7 +174,13 @@ class Modelo232VinculadaRow(BaseModel):
     row_type: Literal["vinculada"] = "vinculada"
     nif: _NifStr
     nombre: _NameStr = Field(default="")
-    pais: _IsoCountryCode = Field(default="ES")
+    # Required, and deliberately not defaulted to Spain. The row is built from
+    # operator-supplied key-value pairs, so a default is an INFERENCE about a
+    # fact the operator did not state -- and it inferred the one value that
+    # makes the row domestic. A foreign member or a cross-border related-party
+    # operation silently declared as Spanish is the direction AEAT reconciles
+    # against what the counterparty itself declared.
+    pais: _IsoCountryCode
     tipo_vinculacion: TipoVinculacion = TipoVinculacion.NO_DECLARADO
     tipo_operacion: TipoOperacionVinculada = TipoOperacionVinculada.NO_DECLARADO
     metodo: MetodoValoracion = MetodoValoracion.NO_DECLARADO

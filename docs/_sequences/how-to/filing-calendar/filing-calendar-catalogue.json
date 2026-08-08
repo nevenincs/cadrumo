@@ -166,7 +166,7 @@
               "local_work_supported": true,
               "revision_count": 1,
               "tax_domain": "irpf",
-              "title": "IRPF deducción por maternidad — solicitud de abono anticipado"
+              "title": "IRPF deducción por maternidad - solicitud de abono anticipado"
             },
             {
               "cadence": "profile_based",
@@ -176,7 +176,7 @@
               "local_work_supported": true,
               "revision_count": 1,
               "tax_domain": "irpf",
-              "title": "IRPF deducciones familia numerosa/discapacidad — solicitud de abono anticipado"
+              "title": "IRPF deducciones familia numerosa/discapacidad - solicitud de abono anticipado"
             },
             {
               "cadence": "ad_hoc",
@@ -656,7 +656,7 @@
               "local_work_supported": true,
               "revision_count": 1,
               "tax_domain": "idsd",
-              "title": "Impuesto sobre Determinados Servicios Digitales — autoliquidación"
+              "title": "Impuesto sobre Determinados Servicios Digitales - autoliquidación"
             },
             {
               "cadence": "profile_based",
@@ -666,7 +666,7 @@
               "local_work_supported": true,
               "revision_count": 1,
               "tax_domain": "iedmt",
-              "title": "IEDMT — autoliquidación por matriculación de determinados medios de transporte"
+              "title": "IEDMT - autoliquidación por matriculación de determinados medios de transporte"
             },
             {
               "cadence": "profile_based",
@@ -676,7 +676,7 @@
               "local_work_supported": true,
               "revision_count": 1,
               "tax_domain": "plastico",
-              "title": "Impuesto especial sobre envases de plástico no reutilizables — autoliquidación"
+              "title": "Impuesto especial sobre envases de plástico no reutilizables - autoliquidación"
             },
             {
               "cadence": "monthly",
@@ -686,7 +686,7 @@
               "local_work_supported": true,
               "revision_count": 1,
               "tax_domain": "itf",
-              "title": "Impuesto sobre las Transacciones Financieras — autoliquidación"
+              "title": "Impuesto sobre las Transacciones Financieras - autoliquidación"
             },
             {
               "cadence": "annual",
@@ -726,7 +726,7 @@
               "local_work_supported": true,
               "revision_count": 1,
               "tax_domain": "juego",
-              "title": "Impuesto sobre actividades de juego — autoliquidación (anuales/plurianuales)"
+              "title": "Impuesto sobre actividades de juego - autoliquidación (anuales/plurianuales)"
             },
             {
               "cadence": "ad_hoc",
@@ -919,7 +919,7 @@
               "local_work_supported": true,
               "revision_count": 1,
               "tax_domain": "irpf",
-              "title": "IRPF deducción por maternidad — solicitud de abono anticipado"
+              "title": "IRPF deducción por maternidad - solicitud de abono anticipado"
             },
             {
               "cadence": "profile_based",
@@ -929,7 +929,7 @@
               "local_work_supported": true,
               "revision_count": 1,
               "tax_domain": "irpf",
-              "title": "IRPF deducciones familia numerosa/discapacidad — solicitud de abono anticipado"
+              "title": "IRPF deducciones familia numerosa/discapacidad - solicitud de abono anticipado"
             },
             {
               "cadence": "ad_hoc",
@@ -1369,7 +1369,7 @@
               "local_work_supported": true,
               "revision_count": 1,
               "tax_domain": "idsd",
-              "title": "Impuesto sobre Determinados Servicios Digitales — autoliquidación"
+              "title": "Impuesto sobre Determinados Servicios Digitales - autoliquidación"
             },
             {
               "cadence": "profile_based",
@@ -1379,7 +1379,7 @@
               "local_work_supported": true,
               "revision_count": 1,
               "tax_domain": "iedmt",
-              "title": "IEDMT — autoliquidación por matriculación de determinados medios de transporte"
+              "title": "IEDMT - autoliquidación por matriculación de determinados medios de transporte"
             },
             {
               "cadence": "profile_based",
@@ -1389,7 +1389,7 @@
               "local_work_supported": true,
               "revision_count": 1,
               "tax_domain": "plastico",
-              "title": "Impuesto especial sobre envases de plástico no reutilizables — autoliquidación"
+              "title": "Impuesto especial sobre envases de plástico no reutilizables - autoliquidación"
             },
             {
               "cadence": "monthly",
@@ -1399,7 +1399,7 @@
               "local_work_supported": true,
               "revision_count": 1,
               "tax_domain": "itf",
-              "title": "Impuesto sobre las Transacciones Financieras — autoliquidación"
+              "title": "Impuesto sobre las Transacciones Financieras - autoliquidación"
             },
             {
               "cadence": "annual",
@@ -1429,7 +1429,7 @@
               "local_work_supported": true,
               "revision_count": 1,
               "tax_domain": "juego",
-              "title": "Impuesto sobre actividades de juego — autoliquidación (anuales/plurianuales)"
+              "title": "Impuesto sobre actividades de juego - autoliquidación (anuales/plurianuales)"
             },
             {
               "cadence": "ad_hoc",

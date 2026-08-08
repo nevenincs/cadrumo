@@ -1118,10 +1118,13 @@ class Transaction(BaseModel):
         authority -- :func:`~domain.iva.territorial_scope_for_country` and
         :func:`~domain.iva.stated_country_code_status` -- and asking it here
         would refuse a real jurisdiction the bundled vocabulary has simply not
-        catalogued yet. Thailand is the live example: ``TH`` names a genuine
-        third country the vocabulary omits, so a membership check at
-        construction would make a true establishment unrecordable while a
-        shape check records it and lets the gate report the catalogue gap.
+        catalogued yet. Those exist at any given moment -- the vocabulary is a
+        bounded subset that grows -- so a membership check at construction would
+        make a true establishment unrecordable, while a shape check records it
+        and lets the gate report the catalogue gap. Naming whichever country
+        happens to be outside today would date this paragraph the moment that
+        row is written, which is the same coupling the specimen helpers exist to
+        remove.
 
         The shape policy is the same
         :func:`~core.parsing.normalise_iso_3166_alpha2_jurisdiction` that owns

@@ -101,7 +101,7 @@ def _resolve(
         bucket_id=_BUCKET_ID,
         tax_identifier=tax_identifier,
         stated_country_name=country_name,
-        stated_country_code=country_code,
+        resolved_country_code=country_code,
         postal_code=postal_code,
         repository=repository,
     )

@@ -84,7 +84,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "ID\t71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518\nDate\t2026-02-10\nValue date\t2026-02-10\nAmount\t1210\nCurrency\tEUR\nDirection\tINCOMING\nDescription\tCobro factura F-2026-001 servicios de consultoria\nCounterparty\t-\nClassification\tNOT_YET_PROCESSED\nBusiness %\t-\nCategory\t-\nUsage ratio id\t-\nTaxable base\t-\nIVA rate\t-\nIVA amount\t-\nIVA category\t-\nEU counterparty\t-\nIRPF category\t-\nNotes\t-\nPurchase invoice evidence\t-\nAttachments\t-\nLifecycle state\tACTIVE\nClassified by\tauto\nClassified at\t-\nClassification confidence\t-\nClassification reason\t-\nReview status\tpending\n"
+      "text": "ID\t71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518\nDate\t2026-02-10\nValue date\t2026-02-10\nAmount\t1210\nCurrency\tEUR\nDirection\tINCOMING\nDescription\tCobro factura F-2026-001 servicios de consultoria\nCounterparty\t-\nClassification\tNOT_YET_PROCESSED\nBusiness %\t-\nCategory\t-\nUsage ratio id\t-\nTaxable base\t-\nIVA rate\t-\nIVA amount\t-\nIVA category\t-\nEstablished in\t-\nVAT identified in\t-\nIRPF category\t-\nNotes\t-\nPurchase invoice evidence\t-\nAttachments\t-\nLifecycle state\tACTIVE\nClassified by\tauto\nClassified at\t-\nClassification confidence\t-\nClassification reason\t-\nReview status\tpending\n"
     },
     {
       "argv": [
@@ -148,7 +148,8 @@
             "classified_at": null,
             "classified_by": "auto",
             "counterparty": "",
-            "counterparty_eu_member_state": null,
+            "counterparty_country": null,
+            "counterparty_identification_state": null,
             "created_at": "2026-04-01T09:00:00+00:00",
             "currency": "EUR",
             "date": "2026-02-10",

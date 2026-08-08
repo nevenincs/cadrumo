@@ -466,3 +466,6 @@ cache/
 # lives beside the catalogues because that is what the writers contend over,
 # and is reclaimed on the next attempt if its holder died.
 /src/cadrumo/locales/.catalogue-write.lock
+
+# TUI evaluation harness: sessions, storage root, screenshots (dev/tui)
+dev/tui/.state/

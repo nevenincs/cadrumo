@@ -42,7 +42,7 @@ from ._checkpoint_store import (
     checkpoint_answers_from_record,
     checkpoint_facts_from_answers,
 )
-from ._commands import build_wizard_command
+from ._commands import build_wizard_command, setup_flow_definition
 from ._compiler import ensure_profile_keys_registered
 from ._copy_sources import (
     register_profile_copy_sources,
@@ -147,6 +147,7 @@ __all__ = [
     "register_taxpayer_projection_validator",
     "resolve_profile_schema_copy",
     "resolve_profile_terminology_copy",
+    "setup_flow_definition",
     "validate_unidad_familiar_conjunta",
     "validate_widget_answer",
 ]

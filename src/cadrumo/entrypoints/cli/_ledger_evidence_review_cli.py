@@ -110,6 +110,12 @@ def _field_payloads(draft: InvoiceDraft) -> list[EvidenceReviewFieldPayload]:
                     "origin": envelope.origin.value if envelope is not None else None,
                     "grounding": envelope.grounding.value if envelope is not None else None,
                     "anchor": envelope.anchor if envelope is not None else None,
+                    # Passed beside the anchor rather than folded into it. The
+                    # grounding stage clears an anchor it could not locate, so a
+                    # row showing only the anchor renders a refused claim and an
+                    # absent one identically -- which is the distinction the
+                    # envelope records this form to preserve.
+                    "refused_anchor": envelope.refused_anchor if envelope is not None else None,
                     "anchor_self_reported": bool(envelope is not None and envelope.anchor_self_reported),
                     "candidates": _candidate_payloads(envelope) if envelope is not None else [],
                     "note": envelope.note if envelope is not None else "",
