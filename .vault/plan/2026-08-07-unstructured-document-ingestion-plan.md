@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-08'
-body_hash: 'sha256:b2f144ea8521960073734e6b25bccf8b1f36859ffa2c0ef11149e395adb8fdd3'
+body_hash: 'sha256:72220a948201646bf39a7164deaa52c2fd4e0f4ed1ea2a252cc4c6eddf5b7fbf'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -179,7 +179,8 @@ Builds the key-pinned harness and produces the stage baselines and recorded acce
 - [ ] `W04.P10.S39` - Record the acceptance floors from the first measured baselines with the key hash, and wire subsequent harness runs to compare against them; `dev`.
 - [x] `W04.P10.S81` - Report the model tier beside every harness figure, record the claude-sonnet-4-6 REC-DOM-IMG-008 result (7 of 8, zero fabricated) as an upper reference point, and re-establish the baseline at the Haiku-tier proxy and the 2B-4B on-host class, gated by the harness refusing a result row missing its tier; `dev`.
 - [ ] `W04.P10.S82` - Measure whether fewer fields per call outperforms all fields at once at the design-target tier, resolving the S2 call-shape question by a recorded comparison at fixed key hash and tier rather than by assertion; `dev`.
-- [ ] `W04.P10.S274` - Build the scoring arm the harness lacks, since _runner.py does not read documents and Scored takes matched wrong and fabricated as caller-supplied integers with nothing anywhere comparing a model emitted fields against scorable_fields and fabrication_trap_fields to produce them - so fabrication on null-truth has a place to be recorded and no code that computes it - and the arm must prove it can return non-zero before any zero it reports counts as a measurement; `dev/ingest_harness`.
+- [x] `W04.P10.S274` - Build the scoring arm the harness lacks, since _runner.py does not read documents and Scored takes matched wrong and fabricated as caller-supplied integers with nothing anywhere comparing a model emitted fields against scorable_fields and fabrication_trap_fields to produce them - so fabrication on null-truth has a place to be recorded and no code that computes it - and the arm must prove it can return non-zero before any zero it reports counts as a measurement; `dev/ingest_harness`.
+- [ ] `W04.P10.S277` - Give the extraction prompt compiler a field-subset parameter so the fewer-fields-per-call arm can exist at all, since _field_lines takes no arguments and neither entry point accepts a selection (build takes period only, render takes values only) so every call emits all 18 field contracts - which means W04.P10.S82 is blocked on a compiler capability rather than on a harness run, and the split-call arm cannot be constructed let alone compared; `src/cadrumo/llm/_invoice_extraction_prompt.py`.
 
 ## Wave `W05` - The reinstated consent gate
 

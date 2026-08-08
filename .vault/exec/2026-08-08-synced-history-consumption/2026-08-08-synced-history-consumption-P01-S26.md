@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:aa80f4c037e50b2727639abd2f7fb47ae5aeea603ada2ef120ce7cc6171cfe8b'
+body_hash: 'sha256:9f40aa53ab8f32d19adc711cd2f50f2ce017187f3d2a03e9ab3f7f8ddd0d9e00'
 step_id: 'S26'
 related:
   - "[[2026-08-08-synced-history-consumption-plan]]"
@@ -131,6 +131,46 @@ lift than this row carried.
 The remedy text itself is not asserted for correctness anywhere, only that it
 reaches `suggestion`. Whether the binding-override instruction is actually
 followable for each affected casilla is untested.
+
+TWO OF MY OWN DIAGNOSES OF PEER STATE NEEDED CORRECTING, and both are the same
+hazard: the cause you name is the one that gets quoted afterwards.
+
+The held `index.lock` was reported with its mtime frozen across three checks over
+roughly two minutes, and the rule's reading of frozen is that the holder may have
+died. It later ADVANCED — 12:12:21, then 12:14:56, then 12:23:26 — so the holder
+was alive throughout and this was contention, not death. The observation was
+correct and the inference it invited was wrong. A frozen mtime over two minutes is
+not enough to conclude a holder died in a tree this busy; only a longer window is.
+
+The registry-validation refusal was quoted verbatim rather than inferred — the
+message named a missing extracted corpus sidecar for
+`corpus/normatives/html/ley-41-1994-art-78.html` — and that file plus both its
+`.extracted.md` and `.extracted.json` sidecars are present now. Whether they were
+absent at probe time cannot be established retroactively, so the underlying cause
+stays UNKNOWN rather than being recorded as a missing sidecar. A legal-reference
+refusal has several distinct shapes with different owners: a missing sidecar, a
+`required_text` that does not match the resolved unit, and a `corpus_ref` naming a
+file that exists under another name. The verbatim message names one of them; it is
+not proof the named one was the defect.
+
+THE RE-RUN ON THE FINAL TEXT, once registry validation was clean:
+
+    uv run --no-sync pytest <five modules> -n0 -q -m ""
+    3 failed, 23 passed in 213.31s
+
+All three failures are one peer condition, and none touches this change:
+
+    E   NoRevisionForPeriodError: modelo 200: no revision for year=2024 period='0A'
+
+Modelo 200's `revision.toml` is UNCOMMITTED peer WIP and its `2024-y-siguientes`
+revision now covers 2025 through 2030 but no longer 2024, so any test seeding a
+prior-year 2024 Modelo 200 filing fails at snapshot resolution before reaching any
+advisory. The two gates that pin this campaign's behaviour — the self-carries-advised
+case and the first-ejercicio silence control — both PASS, confirmed by running them
+in isolation:
+
+    uv run --no-sync pytest <M200 live> -k "no_prior_filing or first_ejercicio"
+    2 passed, 2 deselected
 
 FOLLOW-ON READ. The grouping row should be re-read now rather than built on
 today's assumption: with the subject on the context, ten Modelo 190 notices are at

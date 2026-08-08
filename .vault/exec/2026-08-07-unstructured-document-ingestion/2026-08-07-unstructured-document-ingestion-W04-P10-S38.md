@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:c3960933c8a07b0716badf210b95d94a0e8dbd8f5015903ded72383aeaa854b0'
+body_hash: 'sha256:8a9342518070ca06bfb25b1f9309cd5db6afc4398ccf4241ca33f6821a07000c'
 step_id: 'S38'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -99,24 +99,39 @@ load-bearing rather than a convenience, and it is measured rather than asserted.
 
 ### The model-dependent arm — BLOCKED, no figure reported
 
-Three independent blockers, each probed rather than inferred:
+**The credential blocker is resolved; one blocker remains.** With the Anthropic
+credential exported into the process environment, the mapping call resolves the
+design-proxy runtime correctly — the provenance stamp reads
+`llm:anthropic-column-role-map:claude-haiku-4-5` — and then fails at the profile-bound
+response cache: *no active bucket session*. The credential is present, the tier is
+right, and the transport is never reached.
 
-1. No cloud credential exists in this environment. The Anthropic, OpenAI and
-   Gemini key settings all resolve unset, and no equivalent is present in the
-   environment.
-2. No bucket session can be unlocked. The one profile reports `setup_incomplete`,
-   so the profile-bound response cache refuses before any request is built — the
-   call fails at the cache, not at the transport.
-3. **The design-target tier is correctly configured**: provider ANTHROPIC, mapping
-   model `claude-haiku-4-5`. So the tier is not the obstacle; the credential and
-   the session are.
+Opening that session needs the operator's passphrase. The one profile reports
+`setup_incomplete` and the configured secret passphrase resolves unset, so there is
+no provisioned route to a session on this machine. **No passphrase was guessed, and
+the profile-bound store was not bypassed** — injecting a null cache would dodge the
+audit trail the session exists to create, which is worse than the blockage.
 
-Local inference was not attempted: the operator recorded 1.83 GiB free VRAM
-against a 4 GiB threshold, and an overflow would destroy concurrent work across
-the tree.
+Local inference was not attempted: headroom read 1.83 then 10.34 GiB inside twenty
+minutes, and it is that volatility rather than either reading that bars it.
 
 No mapping accuracy is reported. A ratio over zero recorded calls is the exact
 shape this campaign has already mistaken for a clean result once.
+
+### The scoring arm cannot score this lane at all
+
+The harness scoring arm now exists and is correct. It is nevertheless unusable
+here, and the reason is the corpus rather than the scorer: `score_emission`
+refuses a document that authors no truth, and **all nine tabular documents author
+none**. Probed directly, the refusal rate is **9 of 9**.
+
+So the tabular path does not carry the same missing-scorer hole as the vision
+path. It carries a different and more fundamental one: there is nothing for a
+scorer to score. **No mapping-quality figure over this corpus can ever be
+key-grounded**, however the transport is resolved. Any such figure must be scored
+against an operator-authored expected mapping and labelled as the weaker claim —
+which also means an acceptance floor derived from it is a floor against an
+operator's judgement, not against the corpus.
 
 ## Verification
 
@@ -163,6 +178,30 @@ Controls for Arm C, so 2/71 is a measurement and not a broken instrument:
 
       canonical importer headers -> exact-resolved 10/10
       nonsense headers           -> exact-resolved 0/3
+
+The credentialed attempt, showing the credential is no longer the blocker and
+naming the gate that is. The key itself is never echoed:
+
+    credential present: True
+    provider: ANTHROPIC model: claude-haiku-4-5
+    decided_by: llm:anthropic-column-role-map:claude-haiku-4-5
+    FAILED at: StorageValidationError
+      storage runtime is not ready for profile-bound storage: no active bucket
+      session; run `aeat config login NAME` to unlock a profile before invoking
+      profile-bound storage.
+
+The scoring arm probed against every tabular document, all nine refusing:
+
+    Can score_emission score ANY of the nine tabular documents?
+      OP-ISS-libro_facturas_expedidas_2025_2026      REFUSED
+      OP-ISS-pos_zreport_20260514                    REFUSED
+      OP-PUR-bank_bbva_2026Q1                        REFUSED
+      OP-PUR-bank_caixa_excel_export_2026Q1          REFUSED
+      OP-PUR-bank_neobank_2026Q1                     REFUSED
+      OP-PUR-bank_statement_2026Q1_Q2                REFUSED
+      OP-PUR-expenses_app_export_2026                REFUSED
+      OP-REC-ledger_erp_export_2026Q1                REFUSED
+      OP-REC-libro_facturas_recibidas_2025_2026      REFUSED
 
 ## Notes
 
