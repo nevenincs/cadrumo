@@ -69385,23 +69385,28 @@ modelo:
               label: Cuota IVA de adquisiciones intracomunitarias de bienes al tipo
                 del 2% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma.help
+              help: Suma la base imponible de las adquisiciones intracomunitarias
+                de bienes gravadas al tipo del 21 %.
               label: Base imponible de adquisiciones intracomunitarias de bienes al
                 tipo del 21% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8.help
+              help: Declara la cuota de IVA de las adquisiciones intracomunitarias
+                de bienes gravadas al tipo del 21 %.
               label: Cuota IVA de adquisiciones intracomunitarias de bienes al tipo
                 del 21% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig.help
+              help: Suma la base imponible de las adquisiciones intracomunitarias
+                de bienes gravadas al tipo del 4 %.
               label: Base imponible de adquisiciones intracomunitarias de bienes al
                 tipo del 4% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62.help
+              help: Declara la cuota de IVA de las adquisiciones intracomunitarias
+                de bienes gravadas al tipo del 4 %.
               label: Cuota IVA de adquisiciones intracomunitarias de bienes al tipo
                 del 4% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig.help
+              help: Suma la base imponible de las adquisiciones intracomunitarias
+                de bienes gravadas al tipo del 5 %.
               label: Base imponible de adquisiciones intracomunitarias de bienes al
                 tipo del 5% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62:

@@ -7395,11 +7395,11 @@ flows:
     title: Állapot
   tui:
     binding_back: Vissza
-    binding_reset: Visszaállítás
-    binding_restart: Újraindítás
+    binding_reset: Törlés
+    binding_restart: Újrakezd
     binding_return: Vissza a kérdésekhez
     binding_review: Áttekintés
-    binding_save_exit: Mentés és kilépés
+    binding_save_exit: Ment és kilép
     binding_submit: Beküldés
     button_back: Vissza
     button_next: Tovább
@@ -67193,23 +67193,28 @@ modelo:
               label: Közösségen belüli termékbeszerzések adóalapja 2%-os kulcson -
                 éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62.help
+              help: Vallja be a Közösségen belüli, 2 %-os adókulccsal adózó termékbeszerzések
+                áfaösszegét.
               label: Közösségen belüli termékbeszerzések ÁFA összege 2%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma.help
+              help: Adja össze a Közösségen belüli, 21 %-os adókulccsal adózó termékbeszerzések
+                adóalapját.
               label: Közösségen belüli termékbeszerzések adóalapja 21%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8.help
+              help: Vallja be a Közösségen belüli, 21 %-os adókulccsal adózó termékbeszerzések
+                áfaösszegét.
               label: Közösségen belüli termékbeszerzések ÁFA összege 21%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig.help
+              help: Adja össze a Közösségen belüli, 4 %-os adókulccsal adózó termékbeszerzések
+                adóalapját.
               label: Közösségen belüli termékbeszerzések adóalapja 4%-os kulcson -
                 éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62.help
+              help: Vallja be a Közösségen belüli, 4 %-os adókulccsal adózó termékbeszerzések
+                áfaösszegét.
               label: Közösségen belüli termékbeszerzések ÁFA összege 4%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig:

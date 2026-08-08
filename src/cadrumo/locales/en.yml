@@ -66630,23 +66630,28 @@ modelo:
               label: Taxable base of intra-Community acquisitions of goods at the
                 2% rate - annual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62.help
+              help: Declare the VAT amount on intra-Community acquisitions of goods
+                taxed at 2 %.
               label: VAT amount of intra-Community acquisitions of goods at the 2%
                 rate - annual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma.help
+              help: Add up the taxable base of intra-Community acquisitions of goods
+                taxed at 21 %.
               label: Taxable base of intra-Community acquisitions of goods at the
                 21% rate - annual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8.help
+              help: Declare the VAT amount on intra-Community acquisitions of goods
+                taxed at 21 %.
               label: VAT amount of intra-Community acquisitions of goods at the 21%
                 rate - annual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig.help
+              help: Add up the taxable base of intra-Community acquisitions of goods
+                taxed at 4 %.
               label: Taxable base of intra-Community acquisitions of goods at the
                 4% rate - annual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62.help
+              help: Declare the VAT amount on intra-Community acquisitions of goods
+                taxed at 4 %.
               label: VAT amount of intra-Community acquisitions of goods at the 4%
                 rate - annual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig:

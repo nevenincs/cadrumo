@@ -67080,11 +67080,13 @@ modelo:
               label: Base imposable d'adquisicions intracomunitàries de béns al tipus
                 del 2% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62.help
+              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
+                béns gravades al tipus del 2 %.
               label: Quota d'IVA d'adquisicions intracomunitàries de béns al tipus
                 del 2% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                béns gravades al tipus del 21 %.
               label: Base imposable d'adquisicions intracomunitàries de béns al tipus
                 del 21% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8:
@@ -67092,11 +67094,13 @@ modelo:
               label: Quota d'IVA d'adquisicions intracomunitàries de béns al tipus
                 del 21% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                béns gravades al tipus del 4 %.
               label: Base imposable d'adquisicions intracomunitàries de béns al tipus
                 del 4% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62.help
+              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
+                béns gravades al tipus del 4 %.
               label: Quota d'IVA d'adquisicions intracomunitàries de béns al tipus
                 del 4% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig:
