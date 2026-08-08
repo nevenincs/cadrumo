@@ -9,70 +9,124 @@ body_hash: 'sha256:a21fa52e63ec7927c3e4678739d4635311df8effed984bd5074616d4a2294
 step_id: 'S08'
 related:
   - "[[2026-08-08-synced-history-consumption-plan]]"
+  - "[[2026-08-08-synced-history-consumption-pulled-fact-consumption-census-reference]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace synced-history-consumption with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S08 and 2026-08-08-synced-history-consumption-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Establish what a Sociedades filer unpullable carries actually do on the CONSUMPTION side, which is a different defect class from the FETCH-coverage question S09 asks and must not be ruled on as the same thing. The census found 9 carry slots whose every feeder modelo the declarations register does not serve - 5 on Modelo 200 and 4 on Modelo 202 - and these are silent in exactly the way the campaign was opened to investigate. A prior pago fraccionado or prior-year base imponible negativa cannot arrive by pull at all, so the divergence regression S02 built cannot be written for them: there is no history pole to build. Establish instead whether the absence produces a plausible figure or a refusal, and whether any operator-facing surface distinguishes a Sociedades filer who has no prior filings from one whose prior filings exist at AEAT and are unreachable. Note that the existing no-AEAT-history notice cannot serve here because it fires only when NOT ONE observation carries an official AEAT source kind, so it goes quiet as soon as any single pulled row lands. Gate: the finding states which of the two the tree does today, backed by a real run rather than by reading the resolver, and if no surface distinguishes them it opens its own row rather than being left as a note and ## Scope
-
-- `src/cadrumo/application/calculations`
-- `src/cadrumo/application/modelo`
-- `src/cadrumo/application/live` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
-# Establish what a Sociedades filer unpullable carries actually do on the CONSUMPTION side, which is a different defect class from the FETCH-coverage question S09 asks and must not be ruled on as the same thing. The census found 9 carry slots whose every feeder modelo the declarations register does not serve - 5 on Modelo 200 and 4 on Modelo 202 - and these are silent in exactly the way the campaign was opened to investigate. A prior pago fraccionado or prior-year base imponible negativa cannot arrive by pull at all, so the divergence regression S02 built cannot be written for them: there is no history pole to build. Establish instead whether the absence produces a plausible figure or a refusal, and whether any operator-facing surface distinguishes a Sociedades filer who has no prior filings from one whose prior filings exist at AEAT and are unreachable. Note that the existing no-AEAT-history notice cannot serve here because it fires only when NOT ONE observation carries an official AEAT source kind, so it goes quiet as soon as any single pulled row lands. Gate: the finding states which of the two the tree does today, backed by a real run rather than by reading the resolver, and if no surface distinguishes them it opens its own row rather than being left as a note
+# Establish what a Sociedades filer's unpullable carries do on the consumption side
 
 ## Scope
 
 - `src/cadrumo/application/calculations`
 - `src/cadrumo/application/modelo`
-- `src/cadrumo/application/live`
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Check whether the behaviour is already characterised before writing anything,
+  since an unchecked row is not evidence the work is undone.
+- Run the existing Modelo 200 live-path tests to confirm the current behaviour by
+  execution rather than by reading the resolver.
+- Determine what distinguishes the slots that go silent from the slots that
+  advise.
+- Establish whether any operator-facing surface separates a filer with no prior
+  filings from one whose prior filings exist at AEAT and cannot be fetched.
 
 ## Outcome
 
+BOTH, and the nine slots split — which is a finer answer than the row's
+either-or framing anticipated, and the dividing line is not the one the earlier
+rows suggested.
+
+THREE SLOTS PRODUCE A PLAUSIBLE FIGURE, SILENTLY. The Modelo 200 self-carries —
+bases imponibles negativas pendientes at opening, and both dotaciones-por-
+deterioro opening stocks — resolve to ZERO with no prior filing in the store, and
+the live calculate emits NO diagnostic whatsoever. The existing test asserts
+`result.source_diagnostics == ()` on that path, and it passes. A zero opening BIN
+stock means no loss carryforward is applied, which raises the base imponible. So
+this is the over-payment direction, arriving as a clean number with an empty
+diagnostics channel.
+
+TWO SLOTS ADVISE. The Modelo 200 carries fed by Modelo 202 pagos fraccionados
+leave the dependent cuota-diferencial formula UNRESOLVED and emit one
+`source_issue` relation-prefill diagnostic naming modelo 202, the filing year and
+each missing period. Nothing is silently zeroed there.
+
+THE DIVIDING LINE IS FORMULA OPERAND VERSUS BOUND CASILLA, not source kind. All
+five Modelo 200 slots declare `source = "relation_prefill"`. The two that advise
+are formula operands; the three that go silent bind a casilla directly and take
+the present-or-zero semantics. This refines the split recorded in the
+over-payment row: the silence is not only a previous-filing-versus-relation-prefill
+divide. Within one source kind, a directly-bound carry is silent because it
+resolves to a zero, and a formula-operand carry is loud because it resolves to
+nothing. Any fix that keys on the source kind alone would leave these three
+untouched.
+
+NO SURFACE DISTINGUISHES THE TWO POPULATIONS. The zero is byte-identical whether
+the taxpayer is a genuine first-ejercicio company with no prior stock or a company
+whose prior Modelo 200 exists at AEAT and cannot be fetched, and no diagnostic
+accompanies either. Nothing on the resolution path consults pull-reachability, so
+there is no fact available to distinguish them with.
+
+The one surface that speaks to the absence of AEAT history makes it worse for this
+population specifically. The no-AEAT-history notice fires when not one persisted
+observation carries an official AEAT source kind, and its suggestion is
+`aeat app live filed pull-all`. For a Sociedades-only filer that remedy cannot
+ever succeed: the capture planner diverts modelo 200 and modelo 202 into typed
+unsupported failure rows because neither declares the filed-declarations read
+surface. So the notice points at a verb that structurally cannot fetch what it is
+telling the operator to fetch. And for a mixed filer, one successfully pulled
+Modelo 303 row satisfies the notice's predicate and silences it, while the
+Sociedades history has still never arrived.
+
 ## Verification
 
-<!-- Where the evidence is that something RAN, quote the instrument rather than
-     summarising it: the invocation, then the runner's verbatim summary line.
+    uv run --no-sync pytest src/cadrumo/application/modelo/tests/test_modelo_200_fold_in_live.py -n0 -q
+    3 passed in 17.29s
 
-         uv run --no-sync pytest <paths> -m integration -n 0
-         15 passed in 10.35s
+That run is the real-run evidence the gate asks for. The three tests are the
+prior-filing carry, the no-prior-filing carry, and the missing-M202 relation, so
+one invocation exercises both poles of the split plus the populated control.
 
-     The invocation shows the selection (marker expression and path scope); the
-     summary line shows what that selection produced. A run that selected nothing
-     exits zero and reads as green, so a paraphrase such as "the tests pass"
-     discards exactly the part a reader needs. Quote, do not summarise. -->
+The behaviour was NOT re-derived by reading resolvers: the zero and the empty
+diagnostics tuple are the existing test's own assertions, and they pass against
+HEAD today.
+
+    uv run --no-sync python -c "<probe over the loaded authority>"
+    M200 bindings by source: {'relation_prefill': 5, 'profile': 6}
+
+That is what establishes the dividing line is not source kind: all five carry
+slots share one `source`, and they behave two different ways.
+
+No production file was changed and no new test was written. The row is an
+investigation, and the fix it argues for belongs to the row that owns the
+diagnostic gap.
 
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+A TEST BLESSES THE SILENT ZERO, and a fix has to dispose of that rather than trip
+over it. `test_m200_self_carries_resolve_zero_with_no_prior_filing_on_live_calculate`
+states in its own docstring that it "documents the status quo and fails loudly if
+it drifts", and its rationale is that a first-ejercicio filer has no prior stock,
+so the zero is "a correct zero, not a silent under-declaration of a declared
+prior".
+
+That reasoning is correct for the population it names and silent about the other
+one. The test is not wrong and should not be called a defect: it is scoped to a
+first-ejercicio filer and never claims to cover an unreachable prior. But it WILL
+fail the moment anyone turns that zero into an advisory or a refusal, so whoever
+implements the diagnostic must amend this test in the same change rather than
+discover it as a surprise red.
+
+CORRECTION TO MY OWN EARLIER RECORD. The over-payment row framed the silent
+channel as the previous-filing channel, on the ground that its resolver emits no
+diagnostics. That remains true and is unchanged. What that framing missed is these
+three `relation_prefill` slots, which are silent for a DIFFERENT reason —
+present-or-zero binding semantics rather than an absent diagnostics channel. The
+silent set is therefore larger than that row implied, and the diagnostic row's gate
+should be read as covering both mechanisms.
+
+WHAT I COULD NOT MEASURE. Whether the no-AEAT-history notice is in fact rendered
+to a Sociedades-only filer on any live operator surface. I read its predicate and
+its suggestion string and reasoned about the population; I did not run a projection
+to observe it. A data-driven surface is invisible to reading, so that reasoning is
+weaker than the M200 run above and is marked as such rather than presented
+alongside it.
