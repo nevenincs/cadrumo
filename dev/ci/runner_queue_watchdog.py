@@ -299,7 +299,7 @@ def _announce(verdicts: Sequence[Verdict], threshold_seconds: float) -> None:
             print(f"note: skipping '{verdict.job_name}' [{labels}] - {verdict.reason}")
     summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
     if summary_path:
-        with open(summary_path, "a", encoding=_UTF_8) as handle:
+        with open(summary_path, "a", encoding=_UTF_8, newline="\n") as handle:
             handle.write("\n".join(lines) + "\n")
 
 

@@ -112,7 +112,7 @@ def write_session(path: Path, session: Session) -> None:
     header = session.model_dump(mode="json", exclude={"gestures"})
     lines = [json.dumps(header, ensure_ascii=False)]
     lines.extend(json.dumps(g.model_dump(mode="json"), ensure_ascii=False) for g in session.gestures)
-    path.write_text("\n".join(lines) + "\n", encoding=_UTF_8)
+    path.write_text("\n".join(lines) + "\n", encoding=_UTF_8, newline="\n")
 
 
 def describe(gesture: Gesture) -> str:

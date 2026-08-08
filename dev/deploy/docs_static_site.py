@@ -468,6 +468,7 @@ def _write_language_entry(html_root: Path) -> Path:
         + "".join(f'<li><a href="{language}/">{language}</a></li>\n' for language in _localized_languages())
         + "</ul>\n</noscript>\n</body>\n</html>\n",
         encoding=_UTF_8,
+        newline="\n",
     )
     print(f"Wrote language entry: {entry}", flush=True)
     return entry

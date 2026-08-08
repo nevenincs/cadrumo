@@ -62,6 +62,16 @@ EXEMPTIONS: dict[tuple[str, str], str] = {
         "src/cadrumo/adapters/persistence/storage/bucket/_sealed_archive_writer.py",
         "write_sealed_archive",
     ): ("tarfile.open(mode='w:gz') is a BINARY archive handle, not a text stream. It takes no newline argument."),
+    ("dev/locales/manager.py", "LocaleManager.allow_identical"): (
+        "guard.write_text() is CatalogueWriteGuard.write_text, not Path.write_text -- the "
+        "AST matcher keys on the attribute name alone. It delegates to atomic_write_text, "
+        "which encodes the string to bytes in Python and writes them through a BINARY "
+        "NamedTemporaryFile handle, so no newline argument applies and no translation occurs."
+    ),
+    ("dev/locales/manager.py", "_rewrite_locale_mapping"): (
+        "Same guard.write_text() shape as LocaleManager.allow_identical above: a binary "
+        "atomic-write handle underneath, immune to the CRLF-drift this gate guards against."
+    ),
 }
 
 
@@ -138,6 +148,30 @@ def unpinned_writers(path: str, tree: ast.Module) -> list[Finding]:
                 _record(child, scope)
             stack.append((child, scope))
     return findings
+
+
+def _qualified_function_names(tree: ast.Module) -> set[str]:
+    """Return every function's dotted scope name, matching ``unpinned_writers``'s stack walk.
+
+    A bare ``{node.name for node in ast.walk(tree) if isinstance(node, FunctionDef...)}``
+    cannot distinguish a class method from a module-level function of the same
+    name, and never produces the ``Class.method`` spelling ``unpinned_writers``
+    keys its findings by. Reusing the identical scope-stack algorithm keeps the
+    two name spaces from silently diverging.
+    """
+    names: set[str] = set()
+    stack: list[tuple[ast.AST, tuple[str, ...]]] = [(tree, ())]
+    while stack:
+        node, scope = stack.pop()
+        for child in ast.iter_child_nodes(node):
+            if isinstance(child, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+                child_scope = (*scope, child.name)
+                if isinstance(child, ast.FunctionDef | ast.AsyncFunctionDef):
+                    names.add(".".join(child_scope))
+                stack.append((child, child_scope))
+                continue
+            stack.append((child, scope))
+    return names
 
 
 def _tracked_python_modules() -> list[str]:
@@ -282,7 +316,7 @@ def test_every_exemption_is_still_live() -> None:
             stale.append(f"{name} (file absent)")
             continue
         tree = ast.parse(path.read_bytes().decode("utf-8"))
-        names = {node.name for node in ast.walk(tree) if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef)}
+        names = _qualified_function_names(tree)
         if function not in names:
             stale.append(f"{name}::{function} (function absent)")
             continue
