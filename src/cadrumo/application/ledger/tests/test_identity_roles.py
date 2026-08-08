@@ -308,12 +308,25 @@ def test_an_unknown_own_identifier_is_reported_rather_than_passed_over() -> None
     assert "could not be excluded" in resolution.provenance.note
 
 
-def test_a_document_stating_no_identifier_resolves_to_an_unresolved_role() -> None:
+def test_a_document_stating_no_identifier_resolves_to_nothing_without_blaming_the_role() -> None:
+    """An ABSENT identifier states no role, so there is no failed role to report.
+
+    This case previously asserted a ``ROLE_UNRESOLVED`` finding. Every
+    discrepancy kind blocks the confirm by construction, so that fired a blocker
+    on every document printing no counterparty identifier -- which a factura
+    simplificada and an ordinary domestic ticket both legitimately do.
+
+    What must NOT weaken with it is the outcome: the resolution still carries no
+    value and an unanchored envelope, so withholding the finding says the
+    question was not asked rather than that the role is fine. The unverifiable
+    case, which is the one this resolver was built for, still raises -- see
+    ``test_absent_identity_is_not_a_failed_role.py``.
+    """
     resolution = _resolve(())
 
     assert resolution.resolved is None
     assert resolution.provenance.grounding is FieldGroundingOutcome.UNANCHORED
-    assert any(f.kind is DraftDiscrepancyKind.ROLE_UNRESOLVED for f in resolution.findings)
+    assert not any(f.kind is DraftDiscrepancyKind.ROLE_UNRESOLVED for f in resolution.findings)
 
 
 def test_an_intra_eu_counterparty_verifies_rather_than_being_discarded() -> None:
