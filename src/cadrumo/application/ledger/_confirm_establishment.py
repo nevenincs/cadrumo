@@ -258,12 +258,23 @@ def _declared_facts(
 def _contradiction_item(resolution: IvaCategoryResolution) -> tuple[ConfirmationBlocker, ...]:
     """Return the review item a self-contradicting IVA declaration raises.
 
-    Surfaced rather than refused, on the stated interim terms the establishment
-    items already run under, and carried under the shipped
-    ``CONTRADICTED_REGIME`` reason rather than a new one: that reason already
-    names "the document's stated regime and the tax it charged cannot both be
-    true", which is exactly this conflict. Declaring a second reason for it
-    would give an operator two id schemes for one class of question.
+    Carried under the shipped ``CONTRADICTED_REGIME`` reason rather than a new
+    one: that reason already names "the document's stated regime and the tax it
+    charged cannot both be true", which is exactly this conflict. Declaring a
+    second reason for it would give an operator two id schemes for one class of
+    question.
+
+    **"Carried" is the honest verb, and it is not "surfaced".** Every item on
+    :attr:`ConfirmedEstablishment.review_items` reaches no operator: no
+    production caller reads that field, and the confirm command's payload is
+    built from the invoice, the draft and the confirmation id alone. So the
+    conflict is constructed, attached, and seen by nobody.
+
+    That is why the CATEGORY is withheld as well as the item raised. The
+    withholding is the half that currently has teeth -- a contradicted document
+    reaches the record with no treatment, which the decomposition contract
+    refuses out loud -- while the explanatory item waits for a surface to read
+    it. Were the item the only consequence, a contradiction would be silent.
     """
     if resolution.outcome is not IvaCategoryOutcome.CONTRADICTED:
         return ()

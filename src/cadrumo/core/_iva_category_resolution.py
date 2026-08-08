@@ -60,8 +60,15 @@ class IvaCategoryOutcome(StrEnum):
     therefore said something about itself that a blank country field did not
     retract.
 
-    It remains an inference and is recorded as one, so a later reader asking
-    which records rest on it can enumerate them.
+    It remains an inference and this member is what names it as one.
+
+    **Naming it is not yet showing it, and the gap is stated rather than
+    implied.** Nothing persists this outcome and no operator surface reads it:
+    the confirmed record carries the resolved category and not the rung it came
+    from, so a record resting on the inference is presently indistinguishable
+    from one the rule table placed outright. Enumerating them requires re-running
+    the resolution, not querying a store. Until a surface carries it, treat this
+    member as an internal distinction and not as a disclosure to the taxpayer.
     """
 
     DECLARED = "declared"

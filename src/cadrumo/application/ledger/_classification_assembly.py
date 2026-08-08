@@ -1003,8 +1003,10 @@ def resolve_ingestion_iva_category(
       records reach the invoice decomposition contract undeclared and the renta
       income path contributes their bank cash instead of their ingresos
       íntegros. What carries it is the charged tax rather than a default --
-      Canarias and Ceuta y Melilla levy IGIC and IPSI, not IVA -- and the
-      outcome records that the record rests on an inference.
+      Canarias and Ceuta y Melilla levy IGIC and IPSI, not IVA. **The outcome
+      names the inference but nothing yet shows it to an operator**: it is
+      neither persisted nor emitted, so a record resting on it currently reads
+      exactly like one the rule table placed.
     * Nothing established one -- ``UNRESOLVED``. An honest blank, never a
       restrictive provision applied as a default.
 
@@ -1043,8 +1045,7 @@ def resolve_ingestion_iva_category(
             classified=classified,
             declared=stated_fact,
             note=(
-                f"{tier_conflict}; the document disagrees with itself and the category cannot be "
-                "taken from either side"
+                f"{tier_conflict}; the document disagrees with itself and the category cannot be taken from either side"
             ),
         )
     if classified is None:
