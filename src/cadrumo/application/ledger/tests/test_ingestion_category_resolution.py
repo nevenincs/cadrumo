@@ -274,6 +274,42 @@ def test_an_unplaceable_operation_charging_a_registered_tier_stays_declarable() 
     assert resolution.classified is None, "nothing was classified; the tier alone carried this"
 
 
+def test_a_domestic_case_derives_with_the_supply_nature_unknown_and_asks_nothing() -> None:
+    """The laziness rule, exercised rather than described.
+
+    The rule table consults the supply kind ONLY to route the three
+    reverse-charge kinds and the exempt immovable supply, and the customer's
+    status only for the same branches -- none of which a printed
+    goods-or-services reading can produce. So on an ordinary domestic invoice
+    every value of both axes reaches the identical category, and demanding
+    either would ask the operator a question with no consequence on the
+    commonest document there is.
+
+    Asserted as a fixture because the laziness otherwise ships as prose: the
+    ``missing`` list must be EMPTY, not merely short. A regression that started
+    demanding the nature would still return a category here and would only be
+    visible as an operator prompt nobody could answer from the page.
+    """
+    declared = DeclaredFacts(issuer_scope=_fact(_ES), customer_scope=_fact(_ES))
+    assembly = assemble_classification_criteria(
+        transaction_date=_WHEN,
+        direction=InvoiceKind.RECEIVED,
+        inputs=collect_classifier_inputs(InvoiceDraft(), profile=None),
+        declared=declared,
+        rate_tier=IvaRateKind.GENERAL,
+    )
+    resolution = resolve_ingestion_iva_category(assembly, declared=declared, rate_tier=IvaRateKind.GENERAL)
+
+    assert [gap.field for gap in assembly.missing] == [], (
+        "a domestic operation asked the operator for an axis its treatment cannot turn on"
+    )
+    assert assembly.assembled
+    assert resolution.outcome is IvaCategoryOutcome.CLASSIFIED, (
+        "the domestic case must reach the rule table, not fall back to the tier inference"
+    )
+    assert resolution.category is not None
+
+
 def test_the_inference_never_displaces_a_verdict_or_a_declaration() -> None:
     """Anti-vacuity for the fallback: it is reached only when nothing else answers.
 
