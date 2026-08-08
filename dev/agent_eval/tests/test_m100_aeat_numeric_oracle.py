@@ -21,11 +21,11 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core.resources import resources
+from cadrumo.core.resources import bundled_path, resources
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 
-_REPLAY_DIR = Path(__file__).resolve().parents[3] / "_data" / "corpus" / "parity_replays" / "renta_web_open"
+_REPLAY_DIR = bundled_path("corpus", "parity_replays", "renta_web_open")
 
 
 def _oracle_payloads() -> list[Path]:

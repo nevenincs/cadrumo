@@ -15,7 +15,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def _resolver():
-    from ....entrypoints.mcp import (
+    from cadrumo.entrypoints.mcp import (
         build_tool_descriptors,
         command_key_for_tool,
         tool_request_argv,
