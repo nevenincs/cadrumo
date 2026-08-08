@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:0699fa378d138be8b9db87b92d55c9491919b76b26f9eb8fdfb6e588a0ed6044'
+body_hash: 'sha256:17451d6b1a03f984d00c56d3c54723d020f181a217c1e5727a9bafc2fd618da6'
 related:
   - "[[2026-08-07-invoice-canonical-structure-iva-treatment-axis-adr]]"
 ---
@@ -311,6 +311,12 @@ a reverse-charge one, to a catalogue invoice.
 **The structured confirm path now carries it.** A test at HEAD asserts that a Facturae tax
 category reaches a real catalogue invoice as `DOMESTIC_REVERSE_CHARGE`. That test exists
 because the category used to be DROPPED at the confirm boundary and was recently fixed.
+
+These two paths bound the population from BELOW, not above. Neither
+`_llm_classification.py` nor the manual ledger edit paths were audited by anyone in this
+thread, so "reachable by two paths" is a floor on how often a catalogue invoice carries a
+reverse-charge category, never a census of it. The finding needs only the floor - one
+reachable path makes it live - but a reader should not read two as the total.
 
 The sequencing point is worth stating plainly: closing the dropped-category hole is what
 populated the field, so the population of reverse-charge catalogue invoices went from
