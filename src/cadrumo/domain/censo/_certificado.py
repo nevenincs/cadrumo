@@ -83,6 +83,20 @@ def censo_facts_from_certificado(certificado: CertificadoSituacionCensal) -> tup
     stamped with the artefact provenance token. Axes without an unambiguous
     profile counterpart are deliberately absent (display-only evidence on
     the cotejo page); see the module docstring for the per-axis rationale.
+
+    Every certified ``actividad`` is projected, not only the first. The
+    ``activities`` section is schema-declared ``repeatable``, and
+    :func:`~cadrumo.application.user_profile.profile_section_rows` already
+    treats a repeatable fact written WITHOUT an index as the implicit first
+    row -- the shape every other single-activity producer in this codebase
+    writes -- so the primary activity keeps that unindexed address for
+    compatibility, and every activity after it is projected at its own
+    numeric index (``activities.1.description``, ``activities.2.description``,
+    ...), which is the addressing scheme the manager and status surfaces
+    already read repeatable rows through. A taxpayer with a second local or
+    a second IAE epígrafe on the certificate used to lose it here silently:
+    ``actividades[0]`` with no loop, no warning, and a cotejo that still
+    reported success.
     """
     facts: list[UserProfileFact] = [
         UserProfileFact(
@@ -91,20 +105,20 @@ def censo_facts_from_certificado(certificado: CertificadoSituacionCensal) -> tup
             source=PROVENANCE_SOURCE_CENSO_ARTEFACT,
         ),
     ]
-    if certificado.actividades:
-        primary = certificado.actividades[0]
+    for index, actividad in enumerate(certificado.actividades):
+        prefix = "activities" if index == 0 else f"activities.{index}"
         facts.append(
             UserProfileFact(
-                path="activities.description",
-                value=primary.descripcion,
+                path=f"{prefix}.description",
+                value=actividad.descripcion,
                 source=PROVENANCE_SOURCE_CENSO_ARTEFACT,
             ),
         )
-        if primary.epigrafe_iae:
+        if actividad.epigrafe_iae:
             facts.append(
                 UserProfileFact(
-                    path="activities.iae_epigraph",
-                    value=primary.epigrafe_iae,
+                    path=f"{prefix}.iae_epigraph",
+                    value=actividad.epigrafe_iae,
                     source=PROVENANCE_SOURCE_CENSO_ARTEFACT,
                 ),
             )

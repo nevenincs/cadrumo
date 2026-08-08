@@ -26,7 +26,7 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.iva import EUMemberState, IvaRateKind, rate_kinds_for_declared_rate
+from .. import EUMemberState, IvaRateKind, rate_kinds_for_declared_rate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

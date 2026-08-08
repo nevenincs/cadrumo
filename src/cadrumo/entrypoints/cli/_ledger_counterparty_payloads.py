@@ -14,7 +14,7 @@ distinctions are on the envelope: the fact carries its own provenance, and the
 retry is named by an info notice rather than by a field.
 
 See Also:
-    :class:`~application.ledger.CounterpartyEstablishmentFact`
+    :class:`~application.ledger.ConfirmedCounterpartyFacts`
         The persisted record these payloads project.
     :class:`~domain.iva.IvaTerritorialScope`
         The closed territory axis the answer settles.
@@ -34,7 +34,7 @@ from ...domain.iva import EUMemberState, IvaTerritorialScope
 class CounterpartyEstablishmentPayload(OutputSchema):
     """One confirmed statement of where a counterparty is established.
 
-    Mirrors :class:`~application.ledger.CounterpartyEstablishmentFact`. The
+    Mirrors :class:`~application.ledger.ConfirmedCounterpartyFacts`. The
     canonical identifier travels beside the key because the key alone is a
     digest: an operator reading the payload back has to be able to see whom the
     record is about, and a caller reconciling two answers has to compare
@@ -47,7 +47,7 @@ class CounterpartyEstablishmentPayload(OutputSchema):
 
     counterparty_key: str = Field(min_length=1)
     canonical_tax_identifier: str = Field(min_length=1)
-    territorial_scope: IvaTerritorialScope
+    territorial_scope: IvaTerritorialScope | None = None
     # Emitted always, `None` included: a caller has to be able to tell an
     # unanswered registration from one answered as Spain, and a field that
     # vanished when absent would make those read alike.
@@ -123,6 +123,20 @@ class CounterpartyShowResult(OutputSchema):
     remedies are opposite, one asking for a first answer and the other asking
     which of two existing claims to withdraw.
 
+    **Both confirmed facts are reported, because both are settable.** The verb
+    emitted the territorial side alone while ``--identification-state`` was
+    already accepted, so an operator could write a fact and never read it back.
+    A write-only value at the operator boundary is worse than an absent one: it
+    cannot be reviewed, corrected with confidence, or told apart from a value
+    nobody ever supplied.
+
+    ``confirmed`` stays the TERRITORIAL answer rather than becoming a summary of
+    both, because it is what the establishment rung fires on and what callers
+    branch on. A record carrying only an identification therefore reports
+    ``confirmed = false`` beside a populated ``identification_state``, which is
+    the honest shape: the ladder settles nothing and the operator has still told
+    us something.
+
     Attributes:
         tax_identifier: Whom the question was asked about, as supplied.
         confirmed: Whether the rung will answer. ``False`` is the ordinary state
@@ -151,6 +165,8 @@ class CounterpartyShowResult(OutputSchema):
     confirmed: bool
     territorial_scope: IvaTerritorialScope | None = None
     source: ClassifierInputSource | None = None
+    identification_state: EUMemberState | None = None
+    identification_source: ClassifierInputSource | None = None
     evidenced_scope: IvaTerritorialScope | None = None
     contradicted: bool = False
     confirmed_scope: IvaTerritorialScope | None = None

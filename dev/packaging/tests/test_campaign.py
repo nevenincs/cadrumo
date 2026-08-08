@@ -37,6 +37,7 @@ _EXPECTED_EXECUTION: dict[str, tuple[tuple[str, tuple[str, ...]], ...]] = {
         ("dev.packaging.smoke_extras", ()),
         ("dev.packaging.smoke_split_install", ()),
         ("dev.packaging.smoke_browser", ()),
+        ("dev.packaging.smoke_absent_llm", ()),
     ),
     "ci": (
         ("dev.packaging.smoke_dev", ()),
@@ -48,6 +49,7 @@ _EXPECTED_EXECUTION: dict[str, tuple[tuple[str, tuple[str, ...]], ...]] = {
         ("dev.packaging.smoke_browser", ("--with-deps",)),
         ("dev.packaging.smoke_docker", ()),
         ("dev.packaging.smoke_docker", ("--browser",)),
+        ("dev.packaging.smoke_absent_llm", ()),
     ),
 }
 
@@ -121,6 +123,7 @@ def test_portable_profile_matches_the_host_portable_aggregate() -> None:
         "core/extras",
         "core/joined-cohort",
         "browser/host",
+        "inference-boundary/wheel",
     }
     assert "core/container" not in _PROFILES["portable"]
     assert "browser/host-with-deps" not in _PROFILES["portable"]
@@ -136,6 +139,7 @@ def test_ci_profile_is_the_ubuntu_superset() -> None:
         "core/sdist",
         "core/extras",
         "core/joined-cohort",
+        "inference-boundary/wheel",
     } <= ci
     assert "browser/host-with-deps" in ci
     assert {"core/container", "browser/container"} <= ci

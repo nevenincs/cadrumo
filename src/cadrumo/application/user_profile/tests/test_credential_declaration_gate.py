@@ -119,6 +119,25 @@ _EXEMPT: Final[Mapping[str, str]] = {
         "while the indexed censo.divergencia.{n}.* subpaths that do carry the content "
         "resolve to no schema field and render unmasked."
     ),
+    "attribution_entity_socios.participe_clave": (
+        "Matches on 'clave', which is the keyword's weakest case: in Spanish it means both "
+        "PASSWORD and CODE, and AEAT uses the second sense throughout. This is literally the "
+        "Modelo 184 record layout's 'CLAVE TIPO DE PARTICIPE' at position 81, a one-digit "
+        "enum over residente / no residente sin establecimiento permanente / no residente con "
+        "establecimiento permanente. It authenticates nothing and grants no capability; "
+        "someone holding it learns only which of three residency classes a declared member "
+        "falls into, which the declaration publishes to AEAT by design. Renaming it to dodge "
+        "the keyword would drop the official term this codebase requires for AEAT concepts, "
+        "so the exemption is the honest resolution rather than a workaround."
+    ),
+    "attribution_entity_socios.country_of_residence": (
+        "Matches on 'clave' only through its DESCRIPTION, which names the clave that governs "
+        "it -- the field itself is an ISO country code written at positions 79-80 of the same "
+        "record. Rewording the description to avoid the keyword would remove exactly the "
+        "sentence a reader needs to know the field is conditional, so the reference stays and "
+        "the field is exempted here. It is identity-class rather than secret for the same "
+        "reason the tax identifier is: it names a party rather than authenticating one."
+    ),
 }
 """Fields whose credential-shaped wording is a false positive.
 

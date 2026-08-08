@@ -54,7 +54,13 @@ notes = "Reglamento General de Gestion e Inspeccion (RGAT) art 42 bis: obligacio
 required_text = [
     "Obligación de informar acerca de cuentas en entidades financieras situadas en el extranjero",
     "personas físicas y jurídicas residentes en territorio español",
-    "cuentas en entidades financieras situadas en el extranjero",
+    "cuentas en entidades financieras situadas en el extranjero",    # Apartado 4 (what counts as a separate `dato` per account), the last
+    # operative provision, at 94% and above the amendment block. The three
+    # phrases above are the article title and two restatements of it, all
+    # inside the first 300 characters. Modelo 720 grounding, so a truncated
+    # excerpt would ground a reporting duty on a heading. Verified against
+    # live BOE: apartados 1-6 on both sides.
+    "tendrá la consideración de dato cada una de las fechas y saldos a los que se refieren los párrafos",
 ]
 
 [legal."rd-1065-2007:art-42-ter"]
@@ -74,7 +80,15 @@ notes = "RGAT art 42 ter: obligacion de informar sobre valores, derechos, seguro
 required_text = [
     "valores",
     "rentas",
-    "extranjero",
+    "extranjero",    # Apartado 7 (what counts as a `dato` for each asset class), the last
+    # operative provision, at 95% of the article and above the amendment
+    # block. The three phrases above are single words from the article TITLE:
+    # any document mentioning valores, rentas and extranjero satisfies them,
+    # so they identified neither the article nor its completeness. This is the
+    # Modelo 720 foreign-asset obligation, where a truncated excerpt would
+    # ground a reporting duty on a heading. Verified complete against live
+    # BOE: apartados 1-7 on both sides.
+    "también tendrá la consideración de dato cada uno de los saldos a que se refieren el último párrafo",
 ]
 
 [legal."rd-1065-2007:art-54-bis"]
@@ -93,7 +107,12 @@ reviewed_by = "operator"
 notes = "RGAT art 54 bis: obligacion de informar sobre bienes inmuebles y derechos sobre bienes inmuebles situados en el extranjero (Modelo 720, seccion de inmuebles)."
 required_text = [
     "Obligación de informar sobre bienes inmuebles y derechos sobre bienes inmuebles situados en el extranjero",
-    "extranjero",
+    "extranjero",    # Apartado 6.d) (each transmission date and value as a separate `dato`),
+    # the last operative provision, at 92% and above the amendment block.
+    # The phrases above are the article title and the bare word `extranjero`,
+    # which appears in every sibling article in this file. Modelo 720
+    # grounding. Verified against live BOE: apartados 1-7 on both sides.
+    "cada fecha y valor de transmisión a que se refiere el apartado 5, en relación con cada uno de los inmuebles",
 ]
 
 [legal."orden-hap-72-2013:art-1"]

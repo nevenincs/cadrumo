@@ -36,9 +36,29 @@ def _load() -> Session:
     return read_session(SESSION_PATH)
 
 
-def _advance(session: Session) -> None:
+def _attempt(session: Session, *, refusal_note: str) -> int:
+    """Replay ``session`` and persist it only once the replay has succeeded.
+
+    Every command rebuilds the app from birth and replays the WHOLE
+    gesture list, so a mutation under test here is always the LAST entry:
+    every gesture before it already passed this same check on an earlier
+    command. A raise during replay can therefore only originate from this
+    session's own new state (the mutation itself, or pre-existing
+    environmental flakiness no ordering fix changes) — never from a
+    gesture that already ran clean and got silently dropped mid-walk.
+    That is what makes "persist only on success" safe here: nothing this
+    replay would have done differently gets lost by not writing it, because
+    the app that ran it is discarded either way and no later command can
+    observe a partial walk.
+    """
+    try:
+        frame = replay(session)
+    except Exception as exc:  # a harness refusal, not a bug to hide — the harness has no gate to satisfy
+        _emit(f"refused: {exc}\n{refusal_note}; the session on disk is unchanged.")
+        return 1
     write_session(SESSION_PATH, session)
-    _show(session)
+    _emit(frame.render())
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -50,7 +70,12 @@ def main(argv: list[str] | None = None) -> int:
     p_open.add_argument("surface", choices=sorted(SURFACES))
     p_open.add_argument("--size", default="100x30", help="terminal size, WxH")
     p_open.add_argument("--theme", default="dark", choices=["dark", "light"])
-    p_open.add_argument("--locale", default="es", choices=sorted(SUPPORTED_OUTPUT_LANGUAGES))
+    p_open.add_argument(
+        "--locale",
+        default=None,
+        choices=sorted(SUPPORTED_OUTPUT_LANGUAGES),
+        help="force the output language; omit to resolve ambiently (profile preference, then default)",
+    )
 
     p_press = sub.add_parser("press", help="send key chords")
     p_press.add_argument("keys", nargs="+")
@@ -80,7 +105,11 @@ def main(argv: list[str] | None = None) -> int:
     p_theme.add_argument("theme", choices=["dark", "light"])
 
     p_locale = sub.add_parser("locale", help="re-render the same walk under another output language")
-    p_locale.add_argument("locale", choices=sorted(SUPPORTED_OUTPUT_LANGUAGES))
+    p_locale.add_argument(
+        "locale",
+        choices=(*sorted(SUPPORTED_OUTPUT_LANGUAGES), "auto"),
+        help="a forced language, or 'auto' to drop back to ambient resolution",
+    )
 
     args = parser.parse_args(argv)
 
@@ -101,44 +130,46 @@ def main(argv: list[str] | None = None) -> int:
             theme=args.theme,
             locale=args.locale,
         )
-        _advance(session)
-        return 0
+        return _attempt(session, refusal_note="the surface did not open")
 
     session = _load()
 
     match args.command:
         case "press":
             session.gestures.append(Press(keys=tuple(args.keys)))
-            _advance(session)
+            return _attempt(session, refusal_note="the press was not recorded")
         case "type":
             session.gestures.append(Type(text=args.text))
-            _advance(session)
+            return _attempt(session, refusal_note="the type was not recorded")
         case "fill":
             session.gestures.append(Fill(selector=args.selector, value=args.value))
-            _advance(session)
+            return _attempt(session, refusal_note="the fill was not recorded")
         case "click":
             session.gestures.append(Click(selector=args.selector))
-            _advance(session)
+            return _attempt(session, refusal_note="the click was not recorded")
         case "undo":
             if not session.gestures:
                 _emit("nothing to undo: the session is at its first frame")
                 return 1
             session.gestures.pop()
-            _advance(session)
+            return _attempt(session, refusal_note="the undo was not recorded")
         case "size":
             width, _, height = args.size.partition("x")
             session.width, session.height = int(width), int(height)
-            _advance(session)
+            return _attempt(session, refusal_note="the resize was not recorded")
         case "theme":
             session.theme = args.theme
-            _advance(session)
+            return _attempt(session, refusal_note="the theme change was not recorded")
         case "locale":
-            session.locale = args.locale
-            _advance(session)
+            session.locale = None if args.locale == "auto" else args.locale
+            return _attempt(session, refusal_note="the locale change was not recorded")
         case "show":
             _show(session)
         case "journal":
-            _emit(f"{session.surface} · {session.width}x{session.height} · {session.theme} · {session.locale}")
+            _emit(
+                f"{session.surface} · {session.width}x{session.height} · "
+                f"{session.theme} · {session.locale or 'auto'}",
+            )
             for index, gesture in enumerate(session.gestures, start=1):
                 _emit(f"{index:>3}. {describe(gesture)}")
         case "shot":

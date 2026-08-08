@@ -10,6 +10,7 @@ from typing import Any, override
 import pytest
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from ....adapters.persistence.profile.snapshots import SecureSnapshotRepository
 from ....adapters.persistence.storage import (
     TEST_SNAPSHOT_BASE_PROBE_NAMESPACE,
     Envelope,
@@ -23,7 +24,6 @@ from ....tests.secure_sql import isolated_runtime_profile
 from .._borrador_100 import Borrador100SnapshotRepository, BorradorSnapshotNotFoundError
 from .._errors import LiveApplicationInputError
 from .._snapshot_base import (
-    SecureSnapshotRepository,
     SnapshotLifecycleState,
     SnapshotNotFoundError,
     SnapshotRepository,
@@ -467,6 +467,7 @@ def test_secure_snapshot_repository_conforms_to_protocol(
         not_found_factory=lambda sid: KeyError(sid),
         ambiguous_prefix_factory=lambda sid, ids: KeyError(sid),
         domain_label="expedientes",
+        input_error_cls=LiveApplicationInputError,
         objects=secure_objects,
     )
     assert isinstance(repo, SnapshotRepository)
@@ -507,6 +508,7 @@ def test_secure_snapshot_repository_list_rejects_payload_bucket_mismatch(
             f"probe snapshot prefix {sid!r} is ambiguous",
         ),
         domain_label="probe",
+        input_error_cls=LiveApplicationInputError,
         objects=secure_objects,
     )
 
@@ -533,6 +535,7 @@ def _probe_secure_repository(secure_objects: SecureObjectRepository) -> SecureSn
             f"probe snapshot prefix {sid!r} is ambiguous",
         ),
         domain_label="probe",
+        input_error_cls=LiveApplicationInputError,
         objects=secure_objects,
     )
 

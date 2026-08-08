@@ -56,6 +56,12 @@ _SAMPLE_ROW: Mapping[str, object] = {
     "name": "Member Two",
     "share_pct": Decimal("40"),
     "base_imponible_assigned": Decimal("4000"),
+    # Clave 2 is the one clave whose Modelo 184 record carries a country, so it
+    # is the only combination that exercises both fields at once. A resident
+    # sample would leave the country slot legitimately empty and the row would
+    # stop covering it.
+    "participe_clave": "2",
+    "country_of_residence": "US",
     "role": "comunero",
 }
 

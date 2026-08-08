@@ -733,6 +733,7 @@ def _register_evidence_confirm_command() -> None:
                 "cli.app.ledger.evidence.confirm_resolve_help",
                 default=(
                     "Answer one blocking finding: <finding-id>=<choose|supply|attest>:<value-or-reason>. "
+                    "For choose, name the reading by its value or by the digest review showed. "
                     "Repeat once per finding; there is no bulk flag."
                 ),
             ),

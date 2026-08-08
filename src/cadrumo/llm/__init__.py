@@ -73,7 +73,7 @@ if TYPE_CHECKING:
     )
     from ._vision_classifier import LocalVisionLLMClassifier
 
-from ._client import LLMClient
+from ._client import LLMClient, LLMRetryPolicy, transport_retry_permitted
 from ._column_role_mapping import (
     COLUMN_ROLE_MAPPING_PROMPT_ID,
     ColumnRoleProposal,
@@ -93,6 +93,7 @@ from ._consent import (
     mint_evidence_consent_token,
 )
 from ._errors import (
+    LLMBusyError,
     LLMCacheError,
     LLMConfigError,
     LLMConsentError,
@@ -100,6 +101,7 @@ from ._errors import (
     LLMPdfRasterisationError,
     LLMProviderError,
     LLMRateLimitError,
+    LLMTransientTransportError,
     LLMValidationError,
 )
 from ._invoice_extraction_prompt import render_invoice_extraction_prompt
@@ -131,6 +133,7 @@ __all__ = [
     "EvidenceConsentToken",
     "ExtractionPayload",
     "ExtractionProducer",
+    "LLMBusyError",
     "LLMCacheError",
     "LLMClassificationSuggestion",
     "LLMClient",
@@ -143,11 +146,13 @@ __all__ = [
     "LLMRateLimitError",
     "LLMRequest",
     "LLMResponse",
+    "LLMRetryPolicy",
     "LLMSaturatedSuggestion",
     "LLMSplitApplyResult",
     "LLMSplitChildSuggestion",
     "LLMSplitSuggestion",
     "LLMSuggestionRejectionResult",
+    "LLMTransientTransportError",
     "LLMValidationError",
     "LocalTextLLMClassifier",
     "LocalVisionDocumentTranscriber",
@@ -178,6 +183,7 @@ __all__ = [
     "render_invoice_extraction_prompt",
     "select_retention_removal_keys",
     "transcribe_document_images",
+    "transport_retry_permitted",
 ]
 
 

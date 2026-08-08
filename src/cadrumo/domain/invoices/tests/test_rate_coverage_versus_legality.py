@@ -33,8 +33,8 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.invoices import IvaRate, iva_rate_percentage
-from cadrumo.domain.iva import (
+from .. import IvaRate, iva_rate_percentage
+from ...iva import (
     EUMemberState,
     IvaRateKind,
     IvaRateNotFoundError,

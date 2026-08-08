@@ -28,6 +28,7 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict
 
 from ...core.resources import bundled_path as _bundled_path
+from ...domain.calculations.registry import AmbiguousRevisionSelectionError as _AmbiguousRevisionSelectionError
 from ...domain.calculations.registry import (
     CasillaDefinition as _CasillaDefinition,
 )
@@ -165,6 +166,24 @@ def _revision_for_year(
     """
     try:
         return _select_revision_for_year(definition, filing_year=filing_year, on=on)
+    except _AmbiguousRevisionSelectionError as exc:
+        # A filing year carrying a mid-year AEAT design boundary is covered by more
+        # than one revision, so there is no single "the revision for this year" to
+        # diff against and picking either side would silently diff the wrong pair.
+        #
+        # The remedy is SURFACED, not restated: the selector's own suggestion and its
+        # candidate-id tuple ride on the error, so this refusal quotes them rather
+        # than composing a second copy of the advice that could drift from the
+        # selector's.
+        raise RegistryApplicationInputError(
+            translated_message="application.registry.errors.no_revision_for_diff_year",
+            context={
+                "modelo": str(definition.id),
+                "filing_year": filing_year,
+                "available_revisions": ", ".join(exc.candidate_ids),
+            },
+            suggestion=exc.suggestion,
+        ) from exc
     except _NoRevisionForPeriodError as exc:
         available = ", ".join(sorted(definition.revisions))
         raise RegistryApplicationInputError(

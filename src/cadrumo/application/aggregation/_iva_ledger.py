@@ -1669,11 +1669,12 @@ def _export_establishment_is_answerable(counterparty_country: str | None) -> boo
     A code the vocabulary does NOT carry is also allowed through, and that
     carve-out is what separates a guard from a trap. The scope resolver answers
     from a closed table, so a well-formed code naming a real jurisdiction it
-    does not list resolves to nothing; ``TH`` is measurably exactly this. The
-    establishment is then a gap in OUR data rather than in the operator's, and
-    refusing there would reject a legitimate Thai export over a row nobody has
-    written. A refusal an operator cannot act on is how they learn to skip
-    refusals, which costs more than the case it catches. The ingestion path's
+    does not list resolves to nothing, and such jurisdictions exist at any
+    moment because the table is a bounded subset that grows. The establishment
+    is then a gap in OUR data rather than in the operator's, and refusing there
+    would reject a legitimate export over a row nobody has written. A refusal an
+    operator cannot act on is how they learn to skip refusals, which costs more
+    than the case it catches. The ingestion path's
     declared-relief guard spares the same status on the same authority, so the
     two surfaces cannot disagree about what evidence an export needs.
 

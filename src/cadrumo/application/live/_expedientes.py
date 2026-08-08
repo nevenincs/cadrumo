@@ -29,6 +29,7 @@ from typing import override
 from pydantic import BaseModel, Field
 
 from ...adapters.outbound.aeat.sede import Declaracion
+from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
 from ...adapters.persistence.storage import LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE, secure_object_repository_for_bucket
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings, load_settings
@@ -37,7 +38,6 @@ from ...core.identity import BucketId, SnapshotId
 from ...core.time import now
 from ._errors import LiveApplicationInputError
 from ._snapshot_base import (
-    SecureSnapshotRepository,
     SnapshotNotFoundError,
     StatelessSnapshotService,
 )
@@ -121,6 +121,7 @@ def _expedientes_repository(
             context={"snapshot_id": snapshot_id, "match_count": len(full_ids)},
         ),
         domain_label="expedientes",
+        input_error_cls=LiveApplicationInputError,
         objects=secure_object_repository_for_bucket(bucket_id, settings),
     )
 

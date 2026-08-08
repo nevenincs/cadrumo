@@ -118,7 +118,7 @@ def test_bulk_import_creates_one_invoice_per_valid_row(tmp_path: Path) -> None:
         [
             "--format", "json",
             "app", "ledger", "invoice", "import",
-            "--file", str(csv_path), "--kind", "received",
+            "--file", str(csv_path), "--kind", "received", "--country", "ES",
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
@@ -159,7 +159,7 @@ def test_bulk_import_reimport_of_identical_file_is_idempotent_no_op(tmp_path: Pa
         [
             "--format", "json",
             "app", "ledger", "invoice", "import",
-            "--file", str(csv_path), "--kind", "received",
+            "--file", str(csv_path), "--kind", "received", "--country", "ES",
         ],
     )  # fmt: skip
     assert first.exit_code == 0, first.output
@@ -171,7 +171,7 @@ def test_bulk_import_reimport_of_identical_file_is_idempotent_no_op(tmp_path: Pa
         [
             "--format", "json",
             "app", "ledger", "invoice", "import",
-            "--file", str(csv_path), "--kind", "received",
+            "--file", str(csv_path), "--kind", "received", "--country", "ES",
         ],
     )  # fmt: skip
     assert second.exit_code == 0, second.output
@@ -205,7 +205,7 @@ def test_bulk_import_refuses_malformed_row_with_row_number_and_field(tmp_path: P
         [
             "--format", "json",
             "app", "ledger", "invoice", "import",
-            "--file", str(csv_path), "--kind", "received",
+            "--file", str(csv_path), "--kind", "received", "--country", "ES",
         ],
     )  # fmt: skip
     # Notices with WARNING severity surface a non-zero exit only when every row
@@ -243,7 +243,7 @@ def test_bulk_import_all_rows_refused_exits_nonzero_with_notice(tmp_path: Path) 
         [
             "--format", "json",
             "app", "ledger", "invoice", "import",
-            "--file", str(csv_path), "--kind", "received",
+            "--file", str(csv_path), "--kind", "received", "--country", "ES",
         ],
     )  # fmt: skip
     assert result.exit_code == 1, result.output
@@ -267,7 +267,7 @@ def test_bulk_import_kind_issued_routes_to_collectible_invoices(tmp_path: Path) 
         [
             "--format", "json",
             "app", "ledger", "invoice", "import",
-            "--file", str(csv_path), "--kind", "issued",
+            "--file", str(csv_path), "--kind", "issued", "--country", "ES",
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
@@ -318,7 +318,7 @@ def test_bulk_import_unknown_column_is_reported_and_the_row_still_imports(tmp_pa
     )
 
     result = invoke_cached_cli(
-        ["--format", "json", "app", "ledger", "invoice", "import", "--file", str(csv_path), "--kind", "received"],
+        ["--format", "json", "app", "ledger", "invoice", "import", "--file", str(csv_path), "--kind", "received", "--country", "ES"],
     )
     assert result.exit_code == 0, result.output
     assert "bogus_column" in result.output
@@ -345,6 +345,6 @@ def test_bulk_import_still_refuses_a_file_with_no_required_column(tmp_path: Path
     )
 
     result = invoke_cached_cli(
-        ["app", "ledger", "invoice", "import", "--file", str(csv_path), "--kind", "received"],
+        ["app", "ledger", "invoice", "import", "--file", str(csv_path), "--kind", "received", "--country", "ES"],
     )
     assert result.exit_code != 0

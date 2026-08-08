@@ -627,6 +627,12 @@ def test_lirpf_capital_gains_foundation_links_to_full_boe_corpus() -> None:
                 "Son ganancias y pérdidas patrimoniales",
                 "variaciones en el valor del patrimonio",
                 "alteración en la composición",
+                # Art. 33.5.f: a loss is not computable where homogeneous
+                # securities were acquired inside the two-month window. It is
+                # part of the same article and belongs in its anchor proof, so
+                # the pin tracks the entry rather than the entry being trimmed
+                # back to match a stale pin.
+                "hubiera adquirido valores homogéneos dentro de los dos meses anteriores o posteriores",
             ),
         ),
         (

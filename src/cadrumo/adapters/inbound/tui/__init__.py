@@ -12,6 +12,7 @@ degrades to the line-mode frontend.
 from __future__ import annotations
 
 from ._app import FlowTuiApp, run_flow_tui
+from ._confirm_screen import ConfirmScreen, confirm_restart_dialog
 from ._credential_screen import (
     CREDENTIAL_PANEL_CSS,
     CredentialApp,
@@ -70,6 +71,8 @@ from ._theme import (
     CADRUMO_LIGHT_THEME_NAME,
     CADRUMO_THEMES,
     CONTENT_WIDTH_PERCENT,
+    NOTICE_BAND_CSS,
+    NoticeBand,
     install_cadrumo_themes,
     resolve_theme_name,
     toggle_appearance,
@@ -84,7 +87,9 @@ __all__ = [
     "CADRUMO_THEMES",
     "CONTENT_WIDTH_PERCENT",
     "CREDENTIAL_PANEL_CSS",
+    "NOTICE_BAND_CSS",
     "ChoiceEditScreen",
+    "ConfirmScreen",
     "CredentialApp",
     "CredentialAttempt",
     "FieldEditScreen",
@@ -101,6 +106,7 @@ __all__ = [
     "LoginChoice",
     "ManagerAction",
     "ManagerActionOutcome",
+    "NoticeBand",
     "PassphraseVerdict",
     "ProfileManagerApp",
     "RegistrationApp",
@@ -114,6 +120,7 @@ __all__ = [
     "TextEditScreen",
     "accepted_shape_hint",
     "active_form_presenter",
+    "confirm_restart_dialog",
     "form_choices",
     "install_cadrumo_themes",
     "multi_choice_tokens",

@@ -364,8 +364,7 @@ def test_a_missing_reader_does_not_fall_through_to_the_vision_engine(
     reader is the ENVIRONMENT this case is about, and making it unavailable is
     the condition being reproduced. Nothing about the router is stubbed.
     """
-    import cadrumo.llm as llm_module
-
+    from .... import llm as llm_module
     from .._evidence_draft import _read_transcription_semantically
 
     def unavailable(*args: object, **kwargs: object) -> object:

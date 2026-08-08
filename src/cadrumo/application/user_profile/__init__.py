@@ -178,11 +178,14 @@ if TYPE_CHECKING:
     )
     from ._completeness import iva_regime_required, profile_section_rows
     from ._cotejo_apply import (
+        CENSO_CERTIFICATE_AXIS_PREFIX,
         CENSO_DIVERGENCE_NOTICE_CODE,
         CENSO_DIVERGENCE_PREFIX,
+        CENSO_UNADOPTED_EVIDENCE_FIELDS,
         CensoDivergence,
         apply_cotejo,
         censo_divergence_notice,
+        censo_unadopted_evidence,
         divergence_facts,
         open_censo_divergences,
     )
@@ -255,6 +258,7 @@ if TYPE_CHECKING:
         build_profile_overview,
         mask_profile_field,
         profile_field_choices,
+        resolve_profile_field_label_for_path,
     )
     from ._preflight import ProfilePreflightService
     from ._profile_pointer_transaction import active_profile_pointer_transaction
@@ -429,11 +433,14 @@ _LAZY_EXPORTS: dict[str, str] = {
         (
             "._cotejo_apply",
             (
+                "CENSO_CERTIFICATE_AXIS_PREFIX",
                 "CENSO_DIVERGENCE_NOTICE_CODE",
                 "CENSO_DIVERGENCE_PREFIX",
+                "CENSO_UNADOPTED_EVIDENCE_FIELDS",
                 "CensoDivergence",
                 "apply_cotejo",
                 "censo_divergence_notice",
+                "censo_unadopted_evidence",
                 "divergence_facts",
                 "open_censo_divergences",
             ),
@@ -466,6 +473,7 @@ _LAZY_EXPORTS: dict[str, str] = {
                 "build_profile_overview",
                 "mask_profile_field",
                 "profile_field_choices",
+                "resolve_profile_field_label_for_path",
             ),
         ),
         (
@@ -556,9 +564,11 @@ def __getattr__(name: str):
 
 __all__ = [
     "CENSAL_ADOPTABLE_PATHS",
+    "CENSO_CERTIFICATE_AXIS_PREFIX",
     "CENSO_DIVERGENCE_NOTICE_CODE",
     "CENSO_DIVERGENCE_PREFIX",
     "CENSO_SOURCE_TAG",
+    "CENSO_UNADOPTED_EVIDENCE_FIELDS",
     "MASKED_PLACEHOLDER",
     "PASSPHRASE_MINIMUM_LENGTH",
     "SUPPORTED_BUNDLE_SCHEMA_VERSIONS",
@@ -644,6 +654,7 @@ __all__ = [
     "carried_namespace_definitions",
     "censal_facts_from_read",
     "censo_divergence_notice",
+    "censo_unadopted_evidence",
     "change_passphrase",
     "close_profile_session_artefacts",
     "cloud_evidence_upload_eligible_for_active_profile",
@@ -694,6 +705,7 @@ __all__ = [
     "resolve_active_capability",
     "resolve_capability",
     "resolve_login_target",
+    "resolve_profile_field_label_for_path",
     "resolve_profile_output_language_hint",
     "restore_carried_objects",
     "resume_active_profile_session",

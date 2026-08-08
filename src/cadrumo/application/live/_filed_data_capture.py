@@ -33,7 +33,7 @@ See Also:
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator, Awaitable, Mapping, Sequence
+from collections.abc import AsyncGenerator, Awaitable, Mapping, Sequence
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from decimal import InvalidOperation
@@ -147,9 +147,16 @@ def _filed_capture_unsupported_reason(*, modelo: str, year: int) -> str | None:
     )
     if filed_read_refs:
         return None
+    # States only what is knowable here. Whether AEAT serves a modelo at the
+    # consulta view is not derivable from our own registry's silence, and the
+    # previous wording asserted it was, so an operator read a claim about AEAT's
+    # coverage that nothing in this tree supports. The register's own modelo
+    # combobox is the authority, and the discovery verb reads it.
     return (
-        f"AEAT declarations register does not offer modelo {modelo!r}; "
-        "registry revision declares no filed-declarations live read surface"
+        f"modelo {modelo!r} declares no authenticated filed-declarations read surface in this "
+        "deployment's registry, so the declarations register was not queried for it. Whether AEAT "
+        "serves this modelo at the consulta view is not recorded here. Run "
+        "`aeat app live filed discover` to read the register's own modelo list and settle it"
     )
 
 
@@ -210,7 +217,7 @@ async def _resolved_declarations_register(
     register: DeclaracionesRegisterSession | None,
     *,
     operation: str,
-) -> AsyncIterator[tuple[DeclaracionesRegisterSession, int]]:
+) -> AsyncGenerator[tuple[DeclaracionesRegisterSession, int]]:
     """Yield an open register plus its walk timeout, resolving a session only when needed.
 
     Shared by :func:`list_filed_data_bulk` and :func:`capture_filed_data_bulk`.

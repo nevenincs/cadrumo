@@ -7,7 +7,7 @@ person, then records that fact locally through ``aeat app modelo m036
 that surface: it persists encrypted
 :data:`~cadrumo.adapters.persistence.storage.LIVE_M036_DECLARATION_NAMESPACE` rows,
 emits the matching ``modelo.036.declaration.*`` bucket event, and exposes the
-same :class:`~cadrumo.application.live.SecureSnapshotRepository` path for list/view
+same :class:`~cadrumo.adapters.persistence.profile.snapshots.SecureSnapshotRepository` path for list/view
 read-back.
 
 The closed event-kind axis comes from
@@ -47,9 +47,10 @@ from ...domain.buckets import (
     build_bucket_event,
 )
 from ...domain.calculations.registry import CensoModeloEventKind
+from ...domain.modelos import Modelo036PriorAltaRequiredError, Modelo036TerminalStateError
 
 if TYPE_CHECKING:
-    from ..live import SecureSnapshotRepository
+    from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
 
 
 def derive_m036_declaration_id(
@@ -126,7 +127,7 @@ class M036DeclarationResult(BaseModel):
     re-derivation) read these fields to decide what to recompute.
 
     The record is the payload model for
-    :class:`~cadrumo.application.live.SecureSnapshotRepository` rows stored under
+    :class:`~cadrumo.adapters.persistence.profile.snapshots.SecureSnapshotRepository` rows stored under
     :data:`~cadrumo.adapters.persistence.storage.LIVE_M036_DECLARATION_NAMESPACE`.
     """
 
@@ -194,11 +195,12 @@ def _m036_declaration_repository(bucket_id: BucketId) -> SecureSnapshotRepositor
     :data:`LIVE_M036_DECLARATION_NAMESPACE` rows keyed by
     ``m036-declaration:<bucket_id>:<declaration_id>``.
     """
-    # Local import avoids the import cycle between this module (in
-    # application.modelo) and SecureSnapshotRepository (in application.live,
-    # which depends transitively on application.modelo for the work-unit
-    # aggregations).
-    from ..live import SecureSnapshotRepository
+    # The repository class itself is adapter-side and imports nothing from
+    # application, so it needs no deferral. The error class still does: it is
+    # owned by application.live, which depends transitively on this package for
+    # the work-unit aggregations.
+    from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
+    from ..live import LiveApplicationInputError
 
     return SecureSnapshotRepository(
         bucket_id=bucket_id,
@@ -208,6 +210,7 @@ def _m036_declaration_repository(bucket_id: BucketId) -> SecureSnapshotRepositor
         not_found_factory=_m036_declaration_not_found,
         ambiguous_prefix_factory=_m036_declaration_ambiguous_prefix,
         domain_label="m036_declaration",
+        input_error_cls=LiveApplicationInputError,
     )
 
 
@@ -242,7 +245,7 @@ def read_m036_declaration(declaration_id: str, *, bucket_id: BucketId) -> M036De
 
     See Also:
         :func:`list_m036_declarations`
-        :class:`~cadrumo.application.live.SecureSnapshotRepository`
+        :class:`~cadrumo.adapters.persistence.profile.snapshots.SecureSnapshotRepository`
     """
     return _m036_declaration_repository(bucket_id).resolve(declaration_id)
 
@@ -280,6 +283,66 @@ def _require_profile_owns_bucket(*, profile_id: ProfileId, bucket_id: BucketId) 
         )
 
 
+def _latest_m036_declaration(
+    declarations: tuple[M036DeclarationResult, ...],
+) -> M036DeclarationResult | None:
+    """Return the chronologically latest declaration, or ``None`` when there are none.
+
+    Ordered by ``declared_on`` (the AEAT-facing filing date) with
+    ``recorded_at`` as the tiebreak for two declarations filed the same day,
+    matching the read order an operator reviewing their own filing history
+    would use.
+    """
+    if not declarations:
+        return None
+    return max(declarations, key=lambda d: (d.declared_on, d.recorded_at))
+
+
+def _require_m036_sequence_valid(
+    *,
+    command: M036DeclarationCommand,
+    declaration_id: str,
+    existing: tuple[M036DeclarationResult, ...],
+) -> None:
+    """Refuse a declaration that violates the alta / modificación / baja ordering.
+
+    AEAT's Modelo 036 is event-triggered: ``modificacion`` and ``baja`` amend
+    or close a registration that has to already exist, and ``baja`` is
+    terminal — nothing more is recorded against a deregistered taxpayer
+    until a fresh ``alta`` opens a new registration, which is exactly what a
+    record already in a terminal state refuses (:class:`Modelo036TerminalStateError`
+    covers every event kind, ``alta`` included, once the latest declaration is
+    a ``baja``).
+
+    An exact repeat of an already-recorded declaration (same content-address)
+    is exempted rather than refused: :func:`record_m036_declaration` derives
+    ``declaration_id`` so a retry of the identical tuple is idempotent, and a
+    retry is not a new transition to validate against the sequence.
+    """
+    if any(existing_declaration.declaration_id == declaration_id for existing_declaration in existing):
+        return
+    latest = _latest_m036_declaration(existing)
+    if latest is not None and latest.event_kind is CensoModeloEventKind.BAJA:
+        raise Modelo036TerminalStateError(
+            f"m036 declaration_id={declaration_id!r} refused: prior declaration "
+            f"{latest.declaration_id!r} is a terminal baja",
+            context={
+                "declaration_id": declaration_id,
+                "prior_declaration_id": latest.declaration_id,
+                "requested_event_kind": command.event_kind.value,
+            },
+        )
+    if latest is None and command.event_kind is not CensoModeloEventKind.ALTA:
+        raise Modelo036PriorAltaRequiredError(
+            f"m036 declaration_id={declaration_id!r} refused: no prior alta on record "
+            f"for {command.event_kind.value!r}",
+            context={
+                "declaration_id": declaration_id,
+                "requested_event_kind": command.event_kind.value,
+            },
+        )
+
+
 def record_m036_declaration(
     command: M036DeclarationCommand,
     *,
@@ -312,6 +375,13 @@ def record_m036_declaration(
             profile than ``bucket_id``. A bucket identity IS the profile UUID
             that owns it, so the two must agree before anything is derived,
             stored, or emitted.
+        Modelo036PriorAltaRequiredError: If ``modificacion`` or ``baja`` is
+            requested with no declaration on record yet. Checked, and
+            refused, before anything is derived, stored or emitted.
+        Modelo036TerminalStateError: If the latest recorded declaration is
+            already a ``baja`` — a terminal state no further declaration
+            (``alta`` included) may follow. Checked, and refused, before
+            anything is derived, stored or emitted.
 
     See Also:
         :class:`~cadrumo.domain.calculations.registry.CensoModeloEventKind`
@@ -324,6 +394,11 @@ def record_m036_declaration(
         event_kind=command.event_kind,
         declared_on=command.declared_on,
         sede_justificante=command.sede_justificante,
+    )
+    _require_m036_sequence_valid(
+        command=command,
+        declaration_id=declaration_id,
+        existing=list_m036_declarations(bucket_id=bucket_id),
     )
     occurred_at = now()
     result = M036DeclarationResult(

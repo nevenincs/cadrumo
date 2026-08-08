@@ -44,10 +44,12 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date
 from functools import lru_cache
 from pathlib import Path
 from types import MappingProxyType
+from typing import TypeGuard
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -153,6 +155,20 @@ def load_place_of_supply_rules(root: Path | None = None) -> dict[int, dict[str, 
     return _load_cached(str(resolved), fingerprint)
 
 
+def _is_object_list(value: object) -> TypeGuard[list[object]]:
+    """Narrow an unparameterized runtime list to untrusted object entries."""
+    return isinstance(value, list)
+
+
+def _is_str_keyed_mapping(value: object) -> TypeGuard[Mapping[str, object]]:
+    """Narrow an unparameterized runtime dict to a string-keyed mapping.
+
+    True by construction for a table parsed from TOML: ``tomllib`` always
+    produces string keys.
+    """
+    return isinstance(value, dict)
+
+
 @lru_cache(maxsize=8)
 def _load_cached(
     root: str,
@@ -168,17 +184,17 @@ def _load_cached(
             raise IvaCatalogueError(f"{path}: place-of-supply filename must be a year") from exc
         payload = read_toml(path, error_factory=IvaCatalogueError)
         raw_rules = payload.get("place_of_supply_rules")
-        if not isinstance(raw_rules, list) or not raw_rules:
+        if not _is_object_list(raw_rules) or not raw_rules:
             raise IvaCatalogueError(f"{path}: missing [[place_of_supply_rules]] entries")
         rules: dict[str, IvaPlaceOfSupplyRule] = {}
         for index, raw_rule in enumerate(raw_rules, start=1):
-            if not isinstance(raw_rule, dict):
+            if not _is_str_keyed_mapping(raw_rule):
                 raise IvaCatalogueError(f"{path}: place_of_supply_rules[{index}] must be a table")
             # Shape only. WHETHER a row may cite nothing is the model's call, so
             # that the legal-basis exemption is decided in one place rather than
             # half here and half there.
             raw_references = raw_rule.get("legal_references", [])
-            if not isinstance(raw_references, list):
+            if not _is_object_list(raw_references):
                 raise IvaCatalogueError(
                     f"{path}: place_of_supply_rules[{index}] legal_references must be an array",
                 )

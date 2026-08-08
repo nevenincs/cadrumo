@@ -17,7 +17,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, override
 
-from .._errors import LLMConfigError, LLMProviderError
+from .._errors import LLMConfigError, LLMProviderError, LLMTransientTransportError
 from .._models import LLMProvider
 from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter, raise_rate_limit
 
@@ -209,8 +209,13 @@ class AnthropicAdapter(_ProviderAdapter):
             echoed by the server, token usage, and the provider's request id.
 
         Raises:
-            LLMProviderError: On authentication failures, bad requests, connection
-                or timeout failures, and non-2xx API status codes.
+            LLMTransientTransportError: On connection and timeout failures, and
+                on 5xx API status codes -- the retryable half of the boundary,
+                classified here exactly as the httpx adapters classify the same
+                two conditions, so the retry decision does not depend on which
+                vendor happened to be configured.
+            LLMProviderError: On authentication failures, bad requests, and
+                other non-2xx API status codes.
         """
         sdk = self._sdk
         response: Any = None
@@ -222,8 +227,10 @@ class AnthropicAdapter(_ProviderAdapter):
         except (sdk.AuthenticationError, sdk.BadRequestError) as exc:
             raise LLMProviderError(str(exc)) from exc
         except (sdk.APIConnectionError, sdk.APITimeoutError) as exc:
-            raise LLMProviderError(f"Anthropic connection failure: {exc}") from exc
+            raise LLMTransientTransportError(f"Anthropic connection failure: {exc}") from exc
         except sdk.APIStatusError as exc:
+            if exc.status_code >= 500:
+                raise LLMTransientTransportError(f"Anthropic API failure ({exc.status_code}).") from exc
             raise LLMProviderError(f"Anthropic API failure ({exc.status_code}).") from exc
 
         assert response is not None

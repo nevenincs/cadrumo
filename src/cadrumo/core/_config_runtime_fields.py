@@ -154,6 +154,23 @@ class CadrumoRuntimeSettings(CadrumoTimeoutSettings):
             "regardless of this setting"
         ),
     )
+    cadrumo_llm_local_inference_concurrency: int = Field(
+        default=1,
+        ge=1,
+        description=(
+            "How many on-host inference requests this process may run at once. "
+            "Default one, because two concurrent reads on consumer hardware are "
+            "the same out-of-memory kill the contention check exists to prevent, "
+            "reached by another route: each load individually fits the measured "
+            "headroom, and together they do not. A request arriving while the "
+            "arena is full is REFUSED rather than queued -- a queued request "
+            "would wait holding its decoded pages in the memory under pressure, "
+            "and would run against headroom measured before it waited. Raise it "
+            "only on a machine with headroom for a second concurrent model load; "
+            "it does not bound off-host dispatch, which occupies none of this "
+            "machine's device memory"
+        ),
+    )
     cadrumo_llm_default_max_tokens: int = Field(
         default=1024,
         gt=0,

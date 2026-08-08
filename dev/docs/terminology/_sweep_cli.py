@@ -20,7 +20,7 @@ from typing import Annotated, Final
 
 import typer
 
-from ._rung2_query_authority import load_query_alias_authority
+from ._query_aliases import load_query_alias_authority
 from ._sweep import (
     DEFAULT_MAX_RESULTS,
     ServiceRagSearchClient,

@@ -57,7 +57,7 @@ document and no gap exists. Counting those would inflate the population with
 entries that are correct, which is the over-claim this floor exists to avoid.
 """
 
-_HEADING_ONLY_CEILING: Final[int] = 48
+_HEADING_ONLY_CEILING: Final[int] = 39
 """Entries whose required_text is satisfied by the heading alone, measured 2026-08-07.
 
 Shrink-only. Every one is stamped ``review_status = "reviewed"``, which is what
@@ -95,9 +95,36 @@ disposición at 11,879 characters, requoted onto apartado 6.
 49 -> 48 corrects ``rd-1065-2007:art-3``, the censos tributarios article at
 9,552 characters, requoted onto apartado 12.
 
-The tail decides priority. The largest remaining is ``rd-1065-2007:art-42-ter``,
-the informative-declaration article at 9,396 characters, grounded by a phrase
-that survives any truncation of it.
+48 -> 47 corrects ``rd-1065-2007:art-42-ter``, the Modelo 720 foreign-asset
+obligation at 9,396 characters, whose three required phrases were single words
+from its own title.
+
+47 -> 46 corrects ``ley-35-2006:da-58`` (deducción vehículos eléctricos),
+requoted onto apartado 6.
+
+46 -> 45 corrects ``ley-35-2006:art-92`` (cesión de derechos de imagen),
+requoted onto apartado 8.
+
+45 -> 44 corrects ``ley-35-2006:dt-9``, whose sole phrase was a date fragment
+recurring throughout the law.
+
+44 -> 43 corrects ``orden-hac-3625-2003:apartado-1`` (Modelo 309 approval),
+requoted onto its art. 80.Cinco.5.a case.
+
+43 -> 42 corrects ``rd-1065-2007:art-42-bis`` (Modelo 720 foreign accounts),
+requoted onto apartado 4.
+
+42 -> 41 corrects ``rd-1065-2007:art-54-bis`` (Modelo 720 foreign property),
+requoted onto apartado 6.d).
+
+41 -> 40 corrects ``ley-35-2006:art-54`` (patrimonios protegidos), requoted
+onto apartado 5.
+
+40 -> 39 corrects ``ley-35-2006:art-93`` (régimen de impatriados), pinned onto
+both escala tranche boundaries.
+
+The tail decides priority. The largest remaining is ``ley-35-2006:art-97``
+at 5,259 characters, grounded by a phrase that survives any truncation of it.
 
 This counts SHAPE, not damage. Only ``ley-37-1992:art-94`` was confirmed
 truncated, because its tail was read against live BOE. ``ley-37-1992:art-20`` and
@@ -222,9 +249,9 @@ def test_the_measurement_would_notice_a_body_phrase() -> None:
     ``ley-37-1992:art-94`` is the worked example this gate was built from and
     is now the CORRECTED side: its excerpt was refreshed from live BOE and its
     required_text requoted onto the operative provision, so it must no longer
-    be selected. ``rd-1065-2007:art-42-ter`` is the uncorrected side -- the
-    informative-declaration article at 9,396 characters, grounded by a phrase
-    that survives any truncation of it -- so it must still be selected. An
+    be selected. ``ley-35-2006:art-97`` is the uncorrected side, at 5,259
+    characters, grounded by a phrase that survives any truncation of it -- so it
+    must still be selected. An
     entry moving across that line without the ceiling moving is exactly the
     drift the ratchet exists to catch.
 
@@ -261,7 +288,7 @@ def test_the_measurement_would_notice_a_body_phrase() -> None:
 
     # The other side: an entry still grounded on its title must still be selected,
     # or the predicate has stopped selecting anything and the ceiling is vacuous.
-    assert "rd-1065-2007:art-42-ter" in selected, (
+    assert "ley-35-2006:art-97" in selected, (
         "the predicate no longer selects a known heading-only entry, so the counts above "
         "would pass on an empty population. If art. 18 was corrected, move this to the "
         "next-largest remaining entry rather than deleting the assertion"

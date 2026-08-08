@@ -324,6 +324,10 @@ adapters:
       session_expired_nav_failed: Az AEAT nyilatkozatnyilvántartó nem töltött be;
         a munkamenet valószínűleg lejárt. Futtassa a 'aeat config auth test' parancsot
         és próbálja újra.
+      submitted_file_layout_parse_failed: A benyújtott fájlt nem sikerült beolvasni
+        a modell hivatalos rekordszerkezete szerint, így egyetlen rovatérték sem került
+        ki belőle. A szerkezet és a benyújtott fájl nem ért egyet abban, hogy a fájl
+        mely rekordokat tartalmazza.
 aggregation:
   grouping:
     errors:
@@ -751,6 +755,9 @@ application:
   invoices:
     bulk_import:
       errors:
+        country_unanswerable: 'Az importfájlban nincs partnerország oszlop, és az
+          importáláshoz sem adtak meg országot. Vegyen fel egy country_code oszlopot,
+          vagy adjon meg egy országot az egész fájlhoz. Fel nem ismert oszlopok: {unmapped_columns}'
         file_read_failed: A számlák tömeges importálási fájlja nem olvasható.
         formula_cell: A számlák tömeges importálási fájlja képletet tartalmazó cellát
           tartalmaz a(z) {row}. sor {column}. oszlopában; a képletek gyorsítótárazott
@@ -1568,8 +1575,8 @@ application:
       unsupported_bundle_schema_version: A csomag sémaverziója nem támogatott ebben
         az alkalmazásverzióban.
     notices:
-      censo_divergences_open: '{count} profiladat továbbra is eltér a Certificado
-        de Situación Censal tanúsítványtól és megoldatlan: {axes}.'
+      censo_divergences_open: '{count} profil- vagy tanúsítványadat továbbra is eltér
+        a Certificado de Situación Censal tanúsítványtól és megoldatlan: {axes}.'
   verification:
     errors:
       missing_binding_values: A registry-ellenőrzéshez külső kötési értékek szükségesek.
@@ -1914,13 +1921,14 @@ cli:
           {accepted}'
       counterparty:
         actor_help: A kijelentést tevő kezelő azonosítója, amelyet rögzítünk.
-        confirm_help: Erősítse meg, mely területen letelepedett az ügyfél.
+        confirm_help: Erősítse meg, hol letelepedett az ügyfél, és melyik tagállam
+          adja áfa-azonosítóját.
         country_code_help: Az ország, amely alatt az azonosítót megadták, ha nem spanyol.
         evidenced_scope_help: Az a terület, ahová a kezében lévő dokumentum ezt a
           felet helyezi. Adja meg, hogy megkérdezze, mit válaszol a létra erre a dokumentumra;
           csak így láthatja az eltérést attól, amit korábban megerősített, mielőtt
           egy megerősítés elutasítaná.
-        group_help: Erősítse meg, hol letelepedett az ügyfél – egyszer, minden későbbi
+        group_help: Erősítse meg, mit tudunk az ügyfélről – egyszer, minden későbbi
           bizonylathoz.
         identification_state_help: 'Az a tagállam, amely a partnert ÁFA szempontjából
           azonosítja. Ez más adat, mint a --scope: a 25. cikk ez alapján mentesít,
@@ -1930,8 +1938,8 @@ cli:
         scope_help: Az áfa szempontjából irányadó terület, ahol az ügyfél letelepedett.
         show_help: Mutassa meg az ügyfélhez megerősített letelepedést, ha van ilyen.
         tax_identifier_help: Az ügyfél adóazonosítója a bizonylaton nyomtatott formában.
-        withdraw_help: Vonja vissza a megerősített letelepedést, kijelentve, hogy
-          a korábbi válasz téves volt.
+        withdraw_help: Vonja vissza az ügyfélről rögzített megerősítést, kijelentve,
+          hogy a korábbi válasz téves volt.
       evidence:
         add_help: Vásárlásiszámla-bizonyíték regisztrálása PDF-ből vagy képből.
         batch_directory_help: A könyvtár, amelynek fájljait feldolgozza. Kombinálható
@@ -1994,8 +2002,9 @@ cli:
           olyan összeget tartalmaz, amelyet ez a nyilvántartás nem, például egyenértékűségi
           felárat (recargo de equivalencia), vagy valamelyik érték félreolvasásra
           került. Ellenőrizze a dokumentumot.
-        confirm_resolve_help: 'Valaszoljon meg egy blokkolo eszrevetelt: <eszrevetel-azonosito>=<choose|supply|attest>:<ertek-vagy-indok>.
-          Eszrevetelenkent ismetelje; tomeges kapcsolo nincs.'
+        confirm_resolve_help: 'Válaszoljon egy blokkoló észrevételre: <finding-id>=<choose|supply|attest>:<érték-vagy-indok>.
+          A choose esetén az olvasatot az értékével vagy a review által mutatott kivonattal
+          nevezze meg. Észrevételenként egyszer ismételje; nincs tömeges kapcsoló.'
         confirm_review_contradicted_regime_message: Ez a dokumentum ellentmond önmagának
           abban, hogyan adózik. Az alábbi részlet megnevezi, mi mivel volt ellentmondásban.
         confirm_review_undetermined_establishment_message: A dokumentum a beolvasott
@@ -2122,7 +2131,9 @@ cli:
           reference_help: A fuggo piszkozat forrasakent szolgalo bizonyitek- vagy
             mellekletazonosito.
           resolve_action: Ismeretlen feloldasi muvelet.
-          resolve_shape: Minden --resolve alakja <eszrevetel-azonosito>=<choose|supply|attest>:<ertek-vagy-indok>.
+          resolve_shape: Minden --resolve alakja <finding-id>=<choose|supply|attest>:<érték-vagy-indok>.
+            A choose az olvasatot az értékével vagy a review által mutatott kivonattal
+            nevezi meg.
           show_help: Jelenitsen meg egy fuggo piszkozatot mezonkent, eszrevetelekkel
             es akadalyokkal.
           unknown_reference: Nincs fuggo piszkozat ehhez az azonositohoz.
@@ -2163,6 +2174,9 @@ cli:
           elutasításra került; nem jött létre számla'
         import_column_role_not_applied: 'egy javasolt oszlopszerep nem lett alkalmazva:
           {detail}'
+        import_country_help: A partner országa (ISO 3166-1 alfa-2) a teljes importáláshoz.
+          Csak akkor kötelező, ha a fájlban nincs country_code oszlop; a saját országot
+          megadó soroknál figyelmen kívül marad.
         import_file_help: Elérési út egy CSV vagy XLSX fájlhoz, amely számlasorokat
           tartalmaz (counterparty_nif, counterparty_name, invoice_number, invoice_date,
           taxable_base, valamint opcionálisan iva_rate/currency/country_code/notes).
@@ -3844,6 +3858,9 @@ cli:
         apply_help: 'A beolvasott censal adatok rögzítése az aktív profilban (alapértelmezés:
           csak előnézet).'
         compare_help: Az AEAT nyilvántartás és a profil mezőnkénti összehasonlítása.
+        divergencia_leaf_artefact_value: AEAT-érték
+        divergencia_leaf_axis: mező
+        divergencia_leaf_source: eredet
         dropped_fields_notice: 'Az AEAT censo már nem tartalmaz olyan mezőket, amelyek
           a legutóbbi pillanatfelvételben szerepeltek: {dropped_fields}. Ha nem változtattad
           meg és nem szüntetted meg ezeket a bejegyzéseket, előfordulhat, hogy részleges
@@ -4739,15 +4756,19 @@ cli:
         modellt használja.
     counterparty:
       errors:
+        nothing_asserted: 'A(z) ''{identifier}'' megerősítéséhez legalább egy válasz
+          kell: a ''--scope'' azt adja meg, hol letelepedett az ügyfél, az ''--identification-state''
+          pedig azt, melyik tagállam adja áfa-azonosítóját; bármelyik önmagában is
+          megadható.'
         scope_conflict: A(z) '{identifier}' esetében már más terület van megerősítve,
           ezért a(z) '{asserted}' megerősítése eldobná a korábbi választ. Előbb vonja
           vissza az 'aeat app ledger counterparty withdraw' paranccsal. {detail}
         unverifiable_identifier: A(z) '{identifier}' nem ellenőrizhető adóazonosító,
-          ezért nincs olyan ügyfél, amelynek letelepedését meg lehetne erősíteni.
+          ezért nincs olyan ügyfél, amelyről bármit meg lehetne erősíteni.
       notices:
-        already_confirmed: 'A(z) ''{identifier}'' letelepedését ''{asserted_by}''
-          már megerősítette itt: ''{scope}''; ez a hívás nem hozott létre új megerősítést,
-          és az eredeti forrásadat marad érvényben.'
+        already_confirmed: 'A(z) ''{identifier}'' megerősítését ''{asserted_by}''
+          már elvégezte, letelepedés: ''{scope}''; ez a hívás nem hozott létre új
+          megerősítést, és az eredeti forrásadat marad érvényben.'
         evidence_contradicts_confirmation: 'A(z) ''{identifier}'' megerősítetten itt
           telepedett le: {confirmed}, de az Ön által megadott bizonyíték ugyanezt
           a felet ide helyezi: {evidenced}. A létra nem állapít meg területet ehhez
@@ -4755,7 +4776,7 @@ cli:
         not_confirmed: A(z) '{identifier}' esetében nincs megerősített letelepedés,
           ezért ez a fokozat semmit nem dönt el, és egy nem egyértelmű bizonylat felveti
           a kérdést.
-        nothing_to_withdraw: A(z) '{identifier}' esetében nem volt megerősített letelepedés,
+        nothing_to_withdraw: A(z) '{identifier}' esetében semmi nem volt megerősítve,
           ezért semmi nem került visszavonásra, és a tároló már a kért állapotban
           van.
     doclink:
@@ -6456,6 +6477,8 @@ errors:
       vissza.
     fail_llm_rate_limit: A nyelvi modell szolgáltatója sebességkorlátozás miatt elutasította
       a kérést. Várjon néhány percet, és próbálja újra.
+    fail_llm_transient_transport: A kérés nem jutott el a nyelvi modell futtatókörnyezetéhez,
+      és az újrapróbálkozási keret elfogyott.
     fail_manuals_manual_parse: Egy kézikönyv-rekord nem ment át a sémaérvényesítésen.
     fail_mcp_launch: Az MCP-kiszolgálót nem sikerült elindítani.
     fail_modelo_calculation_revision_persistence: A számítás-revízió katalógust nem
@@ -6766,9 +6789,6 @@ errors:
       revízióra illeszkedik; pontosítsa a választót.
     modelo_calculation_revision_selector_state: A kiválasztott számítási revízió nincs
       ehhez a művelethez használható állapotban.
-    modelo_censo_stale: 'A műveletet elutasítottuk, mert új censot alkalmazott az
-      után, hogy ez a munka elkészült. Az AEAT a kötelező jogi forrás: generálja újra
-      a legfrissebb censo alapján.'
     modelo_compare_need_two_years: Az összehasonlításhoz két különböző benyújtási
       év szükséges.
     modelo_export_cross_bucket: A megcímzett revízió egy másik bucket-hez tartozik,
@@ -6937,9 +6957,13 @@ errors:
     refused_live_portal_not_found: Nem létezik AEAT portál a megadott azonosítóval.
     refused_live_verify_observation_not_found: Nem létezik ellenőrzési megfigyelés
       a megadott azonosítóval.
+    refused_llm_busy: Ez a gép már a beállított maximális számú helyi nyelvi modell
+      kérést futtatja.
     refused_llm_config: A nyelvi modell kliens konfigurációja érvénytelen vagy hiányos.
     refused_llm_consent: A dokumentum gépen kívüli olvasása elutasítva, mert a külső
       továbbításhoz nem történt hozzájárulás.
+    refused_llm_contention: Ezen a gépen jelenleg nincs mért szabad memória a nyelvi
+      modell betöltéséhez.
     refused_llm_validation: Egy nyelvi modell objektum nem ment át az érvényesítésen.
     refused_modelo_100_borrador_binding: A Modelo 100 tervezet értékei nem vehetők
       fel a számításhoz.
@@ -6993,7 +7017,7 @@ errors:
     refused_profile_lifo_forbidden: A LIFO készletértékelés adózási célból nem megengedett.
       Használjon FIFO-t, súlyozott átlagárat vagy átlagköltséget.
     refused_profile_login_throttled: Túl sok sikertelen bejelentkezési kísérlet. Várj
-      %{seconds} másodpercet, mielőtt újra futtatnád az `aeat config login` parancsot.
+      %{seconds} másodpercet, mielőtt újra próbálkoznál.
     refused_profile_logout_override: A kijelentkezés nem módosíthat --profile használatával
       kiválasztott aktív profilt. Hagyja el a --profile kapcsolót, majd próbálja újra.
     refused_profile_not_configured: A RENTA-ellenőrzéshez adóügyi illetőségi profil
@@ -7204,17 +7228,17 @@ flows:
       auth_tax_id_invalid: Ez a NIF vagy NIE nem érvényes. Ellenőrizze a záró betűt,
         és úgy adja meg, ahogy az okmányán szerepel, például 12345678Z.
       busy: Egy másik művelet még mindig fut. Várja meg, amíg befejeződik.
-      censal_pull: Kitöltés az AEAT censusadataiból
+      censal_pull: Kitöltés az AEAT nyilvántartási adataiból
       censal_pull_auth_incomplete: Az azonosítása hiányos, ezért az AEAT még nem olvasható.
         Előbb egészítse ki.
       censal_pull_cleared: 'Az AEAT-nál még szerepel érték az Ön által kiürített mezőkhöz:
         %{paths}. Ezek üresen maradtak; a kiürítés itt nem módosítja az AEAT nyilvántartását.'
       censal_pull_contested: 'Az AEAT eltér az Ön bevallásától itt: %{paths}. Az Ön
         válasza marad érvényben; oldja meg egyenként.'
-      censal_pull_done: 'AEAT censusadatok beolvasva: %{adopted} mező kitöltve, %{unchanged}
-        már egyezett, %{diverging} eltér.'
-      censal_pull_no_provider: A censusadatok beolvasása előtt válassza ki, hogyan
-        azonosítja magát az AEAT felé.
+      censal_pull_done: 'AEAT nyilvántartási adatok beolvasva: %{adopted} mező kitöltve,
+        %{unchanged} már egyezett, %{diverging} eltér.'
+      censal_pull_no_provider: A nyilvántartási adatok beolvasása előtt válassza ki,
+        hogyan azonosítja magát az AEAT felé.
       certificate: Tanúsítvány
       certificate_active: Aktív tanúsítvány
       certificate_done: 'Azonosítás: %{provider}; aktív tanúsítvány: %{name}.'
@@ -7224,6 +7248,24 @@ flows:
       export_done: 'A titkosított másolat ide került: %{destination}.'
       export_passphrase: A másolatot védő jelszó
       failed: A művelet nem fejeződött be.
+      filed_history_pull_all: AEAT bevallási előzmények lekérése
+      filed_history_pull_all_done: '{captured} bevallás rögzítve, {refused} elutasítva;
+        ÁFA-egyenleg: {iva_wallet_status}; értesítések: {notificaciones_status}.'
+      filed_history_pull_all_refused: 'Ezeket a párokat nem sikerült beolvasni, és
+        NEM lettek üresként jelentve: {pairs}. Az újbóli próbálkozáshoz futtassa újra.'
+      google_export: flows.manager.action.google_export
+      google_export_done: flows.manager.action.google_export_done
+      google_export_modelo: flows.manager.action.google_export_modelo
+      google_export_period: flows.manager.action.google_export_period
+      google_export_year: flows.manager.action.google_export_year
+      google_export_year_invalid: flows.manager.action.google_export_year_invalid
+      passphrase: Jelmondat módosítása
+      passphrase_confirm: Új jelmondat megerősítése
+      passphrase_current: Jelenlegi jelmondat
+      passphrase_done: Jelmondat módosítva.
+      passphrase_mismatch: Az új jelmondat és a megerősítése nem egyezik.
+      passphrase_new: Új jelmondat
+      passphrase_wrong_current: Ez nem a jelenlegi jelmondat.
       provider:
         certificate: Elektronikus tanúsítvány
         clave_movil: Cl@ve Móvil
@@ -7365,21 +7407,28 @@ flows:
       state: Helyreállítási kód
     section:
       auth: Hitelesítés
+      notices: Figyelmeztetések
       profile: Aktív profil
       profiles: Profilok
       recovery: Helyreállítás
     title: Állapot
   tui:
     binding_back: Vissza
-    binding_reset: Visszaállítás
-    binding_restart: Újraindítás
+    binding_reset: Törlés
+    binding_restart: Újrakezd
     binding_return: Vissza a kérdésekhez
     binding_review: Áttekintés
-    binding_save_exit: Mentés és kilépés
+    binding_save_exit: Ment és kilép
     binding_submit: Beküldés
     button_back: Vissza
     button_next: Tovább
     button_review: Áttekintés
+    confirm_restart:
+      cancel: Mégse
+      confirm: Újraindítás
+      message: Ez törli az eddig megadott összes választ, és visszatér az első oldalra.
+        Ez nem vonható vissza.
+      title: Újraindítja a teljes folyamatot?
     header: '{flow} - {position}. kérdés a(z) {total} közül, {section} szakasz'
 live:
   errors:
@@ -7399,9 +7448,15 @@ live:
         {offered_only} bejárt pár az AEAT felkínált választéklistájából származik,
         amelynek ehhez a NIF-hez való tartozása nem igazolt. Ez a futás semmit nem
         mér.'
-      expected_but_not_found: live.filed.pull_all.expected_but_not_found
-      found_more_than_expected: live.filed.pull_all.found_more_than_expected
-      recapture_divergence: live.filed.pull_all.recapture_divergence
+      expected_but_not_found: 'A bevallott profil {count} modelo/év párra vár benyújtást,
+        amelyekre az AEAT nyilvántartása egyet sem adott vissza: {pairs}. Ellenőrizze,
+        benyújtották-e ezeket.'
+      found_more_than_expected: Az AEAT nyilvántartása {raw_count} benyújtást tart
+        nyilván a(z) {modelo} modelóhoz ({period} {ejercicio}); a legutóbbi iktatás
+        ({expediente}) maradt meg, és {superseded} korábbi felülírásra került.
+      recapture_divergence: 'A(z) {modelo} modelo {period} {ejercicio} ismételt lekérése
+        {count} korábban megfigyelt casilla-értéket változtatott meg: {casillas}.
+        Az AEAT helyesbített bevallást tarthat nyilván.'
 llm:
   evidence:
     consent:
@@ -22218,10 +22273,12 @@ modelo:
               label: null
             '1075':
               help: null
-              label: modelo.schema.100.revision.2022.casilla.1075.label
+              label: 0-3 éves gyermekenként, La Rioja bármely településén lévő bölcsődék
+                vagy kisgyermeknevelési központok kiadásai után
             '1076':
-              help: modelo.schema.100.revision.2022.casilla.1076.help
-              label: modelo.schema.100.revision.2022.casilla.1076.label
+              help: Adja meg annak az iskolának, központnak vagy bölcsődének az adóazonosító
+                számát, amelynek a kiadásait a levonáshoz elszámolja.
+              label: Az iskola, központ vagy bölcsőde adóazonosító száma
             '1077':
               help: null
               label: null
@@ -65520,7 +65577,8 @@ modelo:
             help: null
             label: Az önbevallás adóéve
           iva-base-autorepercutida-intracomunitaria-devengado:
-            help: modelo.schema.303.casilla.continuidad.iva-base-autorepercutida-intracomunitaria-devengado.help
+            help: Adja össze a Közösségen belüli beszerzések után önszámlázással keletkezett
+              adóalapot.
             label: Keletkezett fordított adózású ÁFA adóalapja Közösségen belüli beszerzéseknél
           iva-compensacion-aplicada-periodo:
             help: null
@@ -66445,7 +66503,8 @@ modelo:
                 önadózott ÁFA.
               label: Keletkezett fordított adózású ÁFA Közösségen belüli beszerzéseknél
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
-              help: modelo.schema.303.revision.2023-y-siguientes.casilla.x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck.help
+              help: Adja össze a Közösségen belüli beszerzések után önszámlázással
+                keletkezett adóalapot.
               label: Keletkezett fordított adózású ÁFA adóalapja Közösségen belüli
                 beszerzéseknél
             x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
@@ -67103,6 +67162,272 @@ modelo:
           field:
             label: null
     '390':
+      casilla:
+        continuidad:
+          filing-year:
+            help: modelo.schema.390.casilla.continuidad.filing-year.help
+            label: modelo.schema.390.casilla.continuidad.filing-year.label
+          iva-aic-bienes-tipo-0-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-0-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-0-base.label
+          iva-aic-bienes-tipo-0-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-0-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-0-cuota.label
+          iva-aic-bienes-tipo-10-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-10-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-10-base.label
+          iva-aic-bienes-tipo-10-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-10-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-10-cuota.label
+          iva-aic-bienes-tipo-2-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-2-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-2-base.label
+          iva-aic-bienes-tipo-2-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-2-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-2-cuota.label
+          iva-aic-bienes-tipo-21-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-21-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-21-base.label
+          iva-aic-bienes-tipo-21-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-21-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-21-cuota.label
+          iva-aic-bienes-tipo-4-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-4-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-4-base.label
+          iva-aic-bienes-tipo-4-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-4-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-4-cuota.label
+          iva-aic-bienes-tipo-5-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-5-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-5-base.label
+          iva-aic-bienes-tipo-5-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-5-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-5-cuota.label
+          iva-aic-bienes-tipo-7-5-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-7-5-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-7-5-base.label
+          iva-aic-bienes-tipo-7-5-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-7-5-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-7-5-cuota.label
+          iva-aic-servicios-tipo-0-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-0-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-0-base.label
+          iva-aic-servicios-tipo-0-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-0-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-0-cuota.label
+          iva-aic-servicios-tipo-10-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-10-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-10-base.label
+          iva-aic-servicios-tipo-10-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-10-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-10-cuota.label
+          iva-aic-servicios-tipo-2-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-2-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-2-base.label
+          iva-aic-servicios-tipo-2-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-2-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-2-cuota.label
+          iva-aic-servicios-tipo-21-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-21-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-21-base.label
+          iva-aic-servicios-tipo-21-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-21-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-21-cuota.label
+          iva-aic-servicios-tipo-4-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-4-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-4-base.label
+          iva-aic-servicios-tipo-4-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-4-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-4-cuota.label
+          iva-aic-servicios-tipo-5-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-5-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-5-base.label
+          iva-aic-servicios-tipo-5-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-5-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-5-cuota.label
+          iva-aic-servicios-tipo-7-5-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-7-5-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-7-5-base.label
+          iva-aic-servicios-tipo-7-5-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-7-5-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-7-5-cuota.label
+          iva-anual-compensacion-generada-ejercicio:
+            help: modelo.schema.390.casilla.continuidad.iva-anual-compensacion-generada-ejercicio.help
+            label: modelo.schema.390.casilla.continuidad.iva-anual-compensacion-generada-ejercicio.label
+          iva-anual-compensacion-ultimo-periodo:
+            help: modelo.schema.390.casilla.continuidad.iva-anual-compensacion-ultimo-periodo.help
+            label: modelo.schema.390.casilla.continuidad.iva-anual-compensacion-ultimo-periodo.label
+          iva-anual-cuota-deducible-total:
+            help: modelo.schema.390.casilla.continuidad.iva-anual-cuota-deducible-total.help
+            label: modelo.schema.390.casilla.continuidad.iva-anual-cuota-deducible-total.label
+          iva-anual-cuota-devengada-total:
+            help: modelo.schema.390.casilla.continuidad.iva-anual-cuota-devengada-total.help
+            label: modelo.schema.390.casilla.continuidad.iva-anual-cuota-devengada-total.label
+          iva-anual-reconciliacion-deducible-303:
+            help: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-deducible-303.help
+            label: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-deducible-303.label
+          iva-anual-reconciliacion-devengada-303:
+            help: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-devengada-303.help
+            label: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-devengada-303.label
+          iva-anual-reconciliacion-devengada-simplificado-303:
+            help: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-devengada-simplificado-303.help
+            label: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-devengada-simplificado-303.label
+          iva-anual-reconciliacion-resultado-303:
+            help: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-resultado-303.help
+            label: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-resultado-303.label
+          iva-anual-regularizacion-bienes-inversion:
+            help: modelo.schema.390.casilla.continuidad.iva-anual-regularizacion-bienes-inversion.help
+            label: modelo.schema.390.casilla.continuidad.iva-anual-regularizacion-bienes-inversion.label
+          iva-anual-regularizacion-prorrata-definitiva:
+            help: modelo.schema.390.casilla.continuidad.iva-anual-regularizacion-prorrata-definitiva.help
+            label: modelo.schema.390.casilla.continuidad.iva-anual-regularizacion-prorrata-definitiva.label
+          iva-anual-resultado-regimen-general:
+            help: modelo.schema.390.casilla.continuidad.iva-anual-resultado-regimen-general.help
+            label: modelo.schema.390.casilla.continuidad.iva-anual-resultado-regimen-general.label
+          iva-anual-total-bases-cuotas-iva:
+            help: modelo.schema.390.casilla.continuidad.iva-anual-total-bases-cuotas-iva.help
+            label: modelo.schema.390.casilla.continuidad.iva-anual-total-bases-cuotas-iva.label
+          iva-base-imponible-aic-bienes-general:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-general.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-general.label
+          iva-base-imponible-aic-bienes-reduced:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-reduced.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-reduced.label
+          iva-base-imponible-aic-bienes-super-reduced:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-super-reduced.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-super-reduced.label
+          iva-base-imponible-aic-bienes-zero:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-zero.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-zero.label
+          iva-base-imponible-aic-servicios-general:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-general.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-general.label
+          iva-base-imponible-aic-servicios-reduced:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-reduced.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-reduced.label
+          iva-base-imponible-aic-servicios-super-reduced:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-super-reduced.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-super-reduced.label
+          iva-base-imponible-aic-servicios-zero:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-zero.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-zero.label
+          iva-base-imponible-repercutida-general:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-general.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-general.label
+          iva-base-imponible-repercutida-reducido:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-reducido.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-reducido.label
+          iva-base-imponible-repercutida-super-reducido:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-super-reducido.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-super-reducido.label
+          iva-base-imponible-repercutida-tipo-0:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-0.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-0.label
+          iva-base-imponible-repercutida-tipo-10:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-10.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-10.label
+          iva-base-imponible-repercutida-tipo-2:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-2.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-2.label
+          iva-base-imponible-repercutida-tipo-21:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-21.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-21.label
+          iva-base-imponible-repercutida-tipo-4:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-4.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-4.label
+          iva-base-imponible-repercutida-tipo-5:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-5.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-5.label
+          iva-base-imponible-repercutida-tipo-7-5:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-7-5.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-7-5.label
+          iva-base-imponible-repercutida-zero:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-zero.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-zero.label
+          iva-base-imponible-soportada-interiores:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-soportada-interiores.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-soportada-interiores.label
+          iva-cuota-autorepercutida-intracomunitaria:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-autorepercutida-intracomunitaria.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-autorepercutida-intracomunitaria.label
+          iva-cuota-recargo-equivalencia-general:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-general.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-general.label
+          iva-cuota-recargo-equivalencia-reducido:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-reducido.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-reducido.label
+          iva-cuota-recargo-equivalencia-super-reducido:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-super-reducido.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-super-reducido.label
+          iva-cuota-recargo-equivalencia-tipo-0-26:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-0-26.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-0-26.label
+          iva-cuota-recargo-equivalencia-tipo-0-5:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-0-5.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-0-5.label
+          iva-cuota-recargo-equivalencia-tipo-0-62:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-0-62.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-0-62.label
+          iva-cuota-recargo-equivalencia-tipo-1:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-1.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-1.label
+          iva-cuota-recargo-equivalencia-tipo-1-4:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-1-4.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-1-4.label
+          iva-cuota-recargo-equivalencia-tipo-5-2:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-5-2.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-5-2.label
+          iva-cuota-repercutida-general:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-general.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-general.label
+          iva-cuota-repercutida-reducido:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-reducido.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-reducido.label
+          iva-cuota-repercutida-super-reducido:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-super-reducido.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-super-reducido.label
+          iva-cuota-repercutida-tipo-0:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-0.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-0.label
+          iva-cuota-repercutida-tipo-10:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-10.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-10.label
+          iva-cuota-repercutida-tipo-2:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-2.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-2.label
+          iva-cuota-repercutida-tipo-21:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-21.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-21.label
+          iva-cuota-repercutida-tipo-4:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-4.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-4.label
+          iva-cuota-repercutida-tipo-5:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-5.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-5.label
+          iva-cuota-repercutida-tipo-7-5:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-7-5.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-7-5.label
+          iva-cuota-soportada-importaciones:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-soportada-importaciones.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-soportada-importaciones.label
+          iva-cuota-soportada-interiores:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-soportada-interiores.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-soportada-interiores.label
+          iva-isp-interior-base:
+            help: modelo.schema.390.casilla.continuidad.iva-isp-interior-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-isp-interior-base.label
+          iva-isp-interior-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-isp-interior-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-isp-interior-cuota.label
+          iva-volumen-operaciones-entregas-intracomunitarias:
+            help: modelo.schema.390.casilla.continuidad.iva-volumen-operaciones-entregas-intracomunitarias.help
+            label: modelo.schema.390.casilla.continuidad.iva-volumen-operaciones-entregas-intracomunitarias.label
+          iva-volumen-operaciones-exportaciones-exentas:
+            help: modelo.schema.390.casilla.continuidad.iva-volumen-operaciones-exportaciones-exentas.help
+            label: modelo.schema.390.casilla.continuidad.iva-volumen-operaciones-exportaciones-exentas.label
+          tipo-declaracion:
+            help: modelo.schema.390.casilla.continuidad.tipo-declaracion.help
+            label: modelo.schema.390.casilla.continuidad.tipo-declaracion.label
       field:
         official_name: null
         title: null
@@ -67116,154 +67441,192 @@ modelo:
               help: null
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma.help
+              help: Adja össze a Közösségen belüli, általános adókulcsú termékbeszerzések
+                adóalapját, függetlenül az egyes ügyletekre alkalmazott százaléktól.
               label: Közösségen belüli termékbeszerzések adóalapja általános kulcson,
                 kulcsbontás nélkül - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma.help
+              help: Adja össze a Közösségen belüli, kedvezményes adókulcsú termékbeszerzések
+                adóalapját, függetlenül az egyes ügyletekre alkalmazott százaléktól.
               label: Közösségen belüli termékbeszerzések adóalapja kedvezményes kulcson,
                 kulcsbontás nélkül - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8.help
+              help: Adja össze a Közösségen belüli, szupercsökkentett adókulcsú termékbeszerzések
+                adóalapját, függetlenül az egyes ügyletekre alkalmazott százaléktól.
               label: Közösségen belüli termékbeszerzések adóalapja szupercsökkentett
                 kulcson, kulcsbontás nélkül - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig.help
+              help: Adja össze a Közösségen belüli, 0 %-os adókulccsal adózó termékbeszerzések
+                adóalapját.
               label: Közösségen belüli termékbeszerzések adóalapja 0%-os kulcson -
                 éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62.help
+              help: Vallja be a Közösségen belüli, 0 %-os adókulccsal adózó termékbeszerzések
+                áfaösszegét.
               label: Közösségen belüli termékbeszerzések ÁFA összege 0%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma.help
+              help: Adja össze a Közösségen belüli, 10 %-os adókulccsal adózó termékbeszerzések
+                adóalapját.
               label: Közösségen belüli termékbeszerzések adóalapja 10%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8.help
+              help: Vallja be a Közösségen belüli, 10 %-os adókulccsal adózó termékbeszerzések
+                áfaösszegét.
               label: Közösségen belüli termékbeszerzések ÁFA összege 10%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig.help
+              help: Adja össze a Közösségen belüli, 2 %-os adókulccsal adózó termékbeszerzések
+                adóalapját.
               label: Közösségen belüli termékbeszerzések adóalapja 2%-os kulcson -
                 éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62.help
+              help: Vallja be a Közösségen belüli, 2 %-os adókulccsal adózó termékbeszerzések
+                áfaösszegét.
               label: Közösségen belüli termékbeszerzések ÁFA összege 2%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma.help
+              help: Adja össze a Közösségen belüli, 21 %-os adókulccsal adózó termékbeszerzések
+                adóalapját.
               label: Közösségen belüli termékbeszerzések adóalapja 21%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8.help
+              help: Vallja be a Közösségen belüli, 21 %-os adókulccsal adózó termékbeszerzések
+                áfaösszegét.
               label: Közösségen belüli termékbeszerzések ÁFA összege 21%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig.help
+              help: Adja össze a Közösségen belüli, 4 %-os adókulccsal adózó termékbeszerzések
+                adóalapját.
               label: Közösségen belüli termékbeszerzések adóalapja 4%-os kulcson -
                 éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62.help
+              help: Vallja be a Közösségen belüli, 4 %-os adókulccsal adózó termékbeszerzések
+                áfaösszegét.
               label: Közösségen belüli termékbeszerzések ÁFA összege 4%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig.help
+              help: Adja össze a Közösségen belüli, 5 %-os adókulccsal adózó termékbeszerzések
+                adóalapját.
               label: Közösségen belüli termékbeszerzések adóalapja 5%-os kulcson -
                 éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62.help
+              help: Vallja be a Közösségen belüli, 5 %-os adókulccsal adózó termékbeszerzések
+                áfaösszegét.
               label: Közösségen belüli termékbeszerzések ÁFA összege 5%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8.help
+              help: Adja össze a Közösségen belüli, 7.5 %-os adókulccsal adózó termékbeszerzések
+                adóalapját.
               label: Közösségen belüli termékbeszerzések adóalapja 7,5%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31.help
+              help: Vallja be a Közösségen belüli, 7.5 %-os adókulccsal adózó termékbeszerzések
+                áfaösszegét.
               label: Közösségen belüli termékbeszerzések ÁFA összege 7,5%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5.help
+              help: Adja össze a Közösségen belüli, nulla adókulcsú termékbeszerzések
+                adóalapját, függetlenül az egyes ügyletekre alkalmazott százaléktól.
               label: Közösségen belüli termékbeszerzések adóalapja nulla kulcson,
                 kulcsbontás nélkül - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck.help
+              help: Adja össze a Közösségen belüli, általános adókulcsú szolgáltatásbeszerzések
+                adóalapját, függetlenül az egyes ügyletekre alkalmazott százaléktól.
               label: Közösségen belüli szolgáltatásbeszerzések adóalapja általános
                 kulcson, kulcsbontás nélkül - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck.help
+              help: Adja össze a Közösségen belüli, kedvezményes adókulcsú szolgáltatásbeszerzések
+                adóalapját, függetlenül az egyes ügyletekre alkalmazott százaléktól.
               label: Közösségen belüli szolgáltatásbeszerzések adóalapja kedvezményes
                 kulcson, kulcsbontás nélkül - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjjelo6asive9im8tb3cli2soj1edig:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjjelo6asive9im8tb3cli2soj1edig.help
+              help: Adja össze a Közösségen belüli, szupercsökkentett adókulcsú szolgáltatásbeszerzések
+                adóalapját, függetlenül az egyes ügyletekre alkalmazott százaléktól.
               label: Közösségen belüli szolgáltatásbeszerzések adóalapja szupercsökkentett
                 kulcson, kulcsbontás nélkül - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5ph62sr5.help
+              help: Adja össze a Közösségen belüli, 0 %-os adókulccsal adózó szolgáltatásbeszerzések
+                adóalapját.
               label: Közösségen belüli szolgáltatásbeszerzések adóalapja 0%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4.help
+              help: Vallja be a Közösségen belüli, 0 %-os adókulccsal adózó szolgáltatásbeszerzések
+                áfaösszegét.
               label: Közösségen belüli szolgáltatásbeszerzések ÁFA összege 0%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck.help
+              help: Adja össze a Közösségen belüli, 10 %-os adókulccsal adózó szolgáltatásbeszerzések
+                adóalapját.
               label: Közösségen belüli szolgáltatásbeszerzések adóalapja 10%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg.help
+              help: Vallja be a Közösségen belüli, 10 %-os adókulccsal adózó szolgáltatásbeszerzések
+                áfaösszegét.
               label: Közösségen belüli szolgáltatásbeszerzések ÁFA összege 10%-os
                 kulcson - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5.help
+              help: Adja össze a Közösségen belüli, 2 %-os adókulccsal adózó szolgáltatásbeszerzések
+                adóalapját.
               label: Közösségen belüli szolgáltatásbeszerzések adóalapja 2%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4.help
+              help: Vallja be a Közösségen belüli, 2 %-os adókulccsal adózó szolgáltatásbeszerzések
+                áfaösszegét.
               label: Közösségen belüli szolgáltatásbeszerzések ÁFA összege 2%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck.help
+              help: Adja össze a Közösségen belüli, 21 %-os adókulccsal adózó szolgáltatásbeszerzések
+                adóalapját.
               label: Közösségen belüli szolgáltatásbeszerzések adóalapja 21%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg.help
+              help: Vallja be a Közösségen belüli, 21 %-os adókulccsal adózó szolgáltatásbeszerzések
+                áfaösszegét.
               label: Közösségen belüli szolgáltatásbeszerzések ÁFA összege 21%-os
                 kulcson - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5.help
+              help: Adja össze a Közösségen belüli, 4 %-os adókulccsal adózó szolgáltatásbeszerzések
+                adóalapját.
               label: Közösségen belüli szolgáltatásbeszerzések adóalapja 4%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4.help
+              help: Vallja be a Közösségen belüli, 4 %-os adókulccsal adózó szolgáltatásbeszerzések
+                áfaösszegét.
               label: Közösségen belüli szolgáltatásbeszerzések ÁFA összege 4%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5.help
+              help: Adja össze a Közösségen belüli, 5 %-os adókulccsal adózó szolgáltatásbeszerzések
+                adóalapját.
               label: Közösségen belüli szolgáltatásbeszerzések adóalapja 5%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4.help
+              help: Vallja be a Közösségen belüli, 5 %-os adókulccsal adózó szolgáltatásbeszerzések
+                áfaösszegét.
               label: Közösségen belüli szolgáltatásbeszerzések ÁFA összege 5%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig.help
+              help: Adja össze a Közösségen belüli, 7.5 %-os adókulccsal adózó szolgáltatásbeszerzések
+                adóalapját.
               label: Közösségen belüli szolgáltatásbeszerzések adóalapja 7,5%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62.help
+              help: Vallja be a Közösségen belüli, 7.5 %-os adókulccsal adózó szolgáltatásbeszerzések
+                áfaösszegét.
               label: Közösségen belüli szolgáltatásbeszerzések ÁFA összege 7,5%-os
                 kulcson - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma.help
+              help: Adja össze a Közösségen belüli, nulla adókulcsú szolgáltatásbeszerzések
+                adóalapját, függetlenül az egyes ügyletekre alkalmazott százaléktól.
               label: Közösségen belüli szolgáltatásbeszerzések adóalapja nulla kulcson,
                 kulcsbontás nélkül - éves
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8.help
+              help: Adja össze az adóévben belföldi ügyletek után önszámlázással megállapított
+                adóalapot.
               label: Belföldi fordított adózású ügyletek adóalapja - éves
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31.help
+              help: Vallja be az adóévben belföldi ügyletek után önszámlázással megállapított
+                áfaösszeget.
               label: Belföldi fordított adózású ügyletek ÁFA összege - éves
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst3ic5hmurbldpkn8obid5gg:
               help: null
@@ -67772,7 +68135,8 @@ modelo:
           field:
             label: null
 overview:
-  no_aeat_history: overview.no_aeat_history
+  no_aeat_history: Ehhez a profilhoz nincs az AEAT által megerősített benyújtás. Futtassa
+    az `aeat app live filed pull-all` parancsot az AEAT által őrzött előzmények lekéréséhez.
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: 50%-os arányosítás alkalmazva (LIRPF 61.
@@ -67805,10 +68169,15 @@ profile:
       attribution_entity_socios:
         base_imponible_assigned:
           label: Tagra jutó adóalap
+        country_of_residence:
+          label: Illetőség szerinti ország (csak állandó telephely nélküli külföldi
+            illetőségű esetén)
         name:
           label: Tag neve
         nif:
           label: Tag NIF-je
+        participe_clave:
+          label: Tagsági típus kódja
         role:
           label: Tagi szerepkör
         share_pct:

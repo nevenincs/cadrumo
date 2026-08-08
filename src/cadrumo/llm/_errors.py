@@ -22,6 +22,27 @@ class LLMProviderError(LLMError):
     """Raised when a provider adapter cannot return a completion."""
 
 
+class LLMTransientTransportError(LLMProviderError):
+    """Raised when a dispatch failed on the way to the model, not at it.
+
+    A connection refused or reset while the runtime loads a model, a 5xx from
+    the runtime, a read timeout on a model still coming up: the request never
+    produced an answer, and the same request sent again may well produce one.
+
+    Split out of :exc:`~adapters.outbound.llm.LLMProviderError` because that
+    class covers both directions and the retry decision needs them apart. A 4xx
+    and a malformed 2xx body are deterministic -- the identical request fails
+    identically forever -- so retrying them burns the budget and delays the real
+    refusal. Retryability is declared once, on the registered
+    :class:`~core.errors.ErrorCode` for each class, and the transport reads it
+    from there rather than keeping a second list of its own.
+
+    A subclass rather than a sibling, so every existing ``except
+    LLMProviderError`` handler keeps catching it: the split refines the
+    boundary, it does not move it.
+    """
+
+
 class LLMPdfRasterisationError(LLMError):
     """Raised when :func:`~adapters.outbound.llm.rasterise_pdf_pages_to_base64_png` fails."""
 
@@ -48,6 +69,23 @@ class LLMRateLimitError(LLMProviderError):
 
 class LLMConfigError(LLMError):
     """Raised when :class:`~adapters.outbound.llm.LLMClient` configuration is invalid."""
+
+
+class LLMBusyError(LLMError):
+    """Raised when an on-host inference slot is not free and the request is refused.
+
+    The admission half of the local-resource boundary, and deliberately NOT a
+    subclass of :exc:`~adapters.outbound.llm.LLMProviderError`: nothing failed,
+    and no request reached a runtime. The machine is already running as much
+    inference as it was configured to run at once, and a second concurrent load
+    on consumer hardware is an out-of-memory kill that takes the FIRST read down
+    with it.
+
+    Distinct from a contention refusal, which reports measured headroom against
+    one model's requirement. This one reports occupancy: the arena is full
+    regardless of what the figures say, because two loads that each fit
+    individually still do not fit together.
+    """
 
 
 class LLMConsentError(LLMError):

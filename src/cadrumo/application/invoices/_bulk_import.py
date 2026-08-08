@@ -152,7 +152,15 @@ class BulkInvoiceImportRow(BaseModel):
     iva_rate: Decimal | None = None
     retencion_amount: Decimal | None = None
     currency: str = DEFAULT_CURRENCY
-    country_code: str = "ES"
+    # Required, and deliberately not defaulted to Spain. The counterparty's
+    # country decides whether the invoice is treated as domestic or as an
+    # intra-community operation, so inferring ES for a row that never stated
+    # one silently reclassifies a foreign supplier as domestic and drops the
+    # treatment that classification carries. A file that cannot state a
+    # country per row makes the operator declare one for the whole import
+    # instead; the inference is then theirs and explicit, never ours and
+    # silent.
+    country_code: str = Field(min_length=2, max_length=2)
     notes: str = ""
 
 
@@ -289,12 +297,19 @@ def _parse_bulk_invoice_row(
     *,
     row_number: int,
     decimal_separator: Literal[",", "."] = ".",
+    declared_country: str | None = None,
 ) -> BulkInvoiceImportRow:
     """Return a validated :class:`BulkInvoiceImportRow`, or raise :class:`_RowParseError`.
 
     Every field failure is attributed to its originating column name so a
     refusal names both the row number and the field that failed
     (``no-silent-under-declaration``) rather than a bare "row invalid".
+
+    ``declared_country`` is the whole-import country the caller supplies when
+    the source carries no country column at all. It is a fallback for a file
+    that cannot express the fact, never for a row that simply left the cell
+    empty: a blank cell in a file that HAS the column is an omission specific
+    to that row, and is refused as one.
     """
     missing = [column for column in BULK_INVOICE_IMPORT_REQUIRED_COLUMNS if not coerce_cell_text(raw_row.get(column))]
     if missing:
@@ -335,7 +350,13 @@ def _parse_bulk_invoice_row(
     )
 
     currency_raw = coerce_cell_text(raw_row.get("currency")) or DEFAULT_CURRENCY
-    country_code_raw = coerce_cell_text(raw_row.get("country_code")) or "ES"
+    country_code_raw = coerce_cell_text(raw_row.get("country_code")) or declared_country or ""
+    if not country_code_raw:
+        raise _RowParseError(
+            row_number=row_number,
+            field="country_code",
+            reason="counterparty country is missing or blank; state it in the row or declare one for the import",
+        )
 
     try:
         return BulkInvoiceImportRow(
@@ -373,6 +394,33 @@ def _assert_required_fields_present(resolution: BulkImportColumnResolution) -> N
         translated_message="application.invoices.bulk_import.errors.missing_columns",
         context={
             "missing_columns": ", ".join(sorted(missing)),
+            "unmapped_columns": ", ".join(column.header for column in resolution.unmapped_columns) or "none",
+        },
+    )
+
+
+def _assert_country_is_answerable(
+    resolution: BulkImportColumnResolution,
+    *,
+    declared_country: str | None,
+) -> None:
+    """Refuse a file that can state no counterparty country, before any row is read.
+
+    A book with no country column cannot answer the question for any row, so
+    letting the import run would produce one identical refusal per row and
+    bury the single fact the operator needs. This raises once, up front, and
+    names the recourse: add the column, or declare one country for the whole
+    import. A file that HAS the column is not refused here even when cells are
+    blank -- those are per-row omissions and stay per-row refusals, so the
+    rows that do state a country still import.
+    """
+    if declared_country or "country_code" in resolution.fields_present:
+        return
+    raise InvoiceValidationError(
+        "bulk invoice import file supplies no counterparty country column and no country was declared "
+        "for the import; add a country_code column or declare one country for the whole file",
+        translated_message="application.invoices.bulk_import.errors.country_unanswerable",
+        context={
             "unmapped_columns": ", ".join(column.header for column in resolution.unmapped_columns) or "none",
         },
     )
@@ -533,6 +581,7 @@ def import_invoices_from_rows(
     *,
     bucket_id: str,
     kind: InvoiceKind,
+    declared_country: str | None = None,
     repository: InvoiceCatalogueRepositoryProtocol | None = None,
 ) -> BulkInvoiceImportResult:
     """Create one catalogue :class:`Invoice` per valid row in *rows*.
@@ -554,7 +603,14 @@ def import_invoices_from_rows(
     IVA rate percentage, invalid NIF) is collected in ``refused`` with its row
     number and the failing field name; the remaining valid rows still import
     (partial-success semantics).
+
+    ``declared_country`` states one counterparty country for the whole import.
+    It is required only when the source carries no country column at all, and
+    a source that carries the column ignores it row by row: an operator whose
+    book cannot express the fact declares it once and consciously, rather than
+    having Spain inferred for a foreign counterparty.
     """
+    _assert_country_is_answerable(source.resolution, declared_country=declared_country)
     repo = repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
     catalogue = repo.load()
     existing_ids = set(catalogue.invoices)
@@ -571,6 +627,7 @@ def import_invoices_from_rows(
                 source_row.values,
                 row_number=row_number,
                 decimal_separator=source.decimal_separator,
+                declared_country=declared_country,
             )
         except _RowParseError as exc:
             refused.append(BulkInvoiceImportRowFailure(row_number=exc.row_number, field=exc.field, reason=exc.reason))

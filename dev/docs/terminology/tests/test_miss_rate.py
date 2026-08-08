@@ -5,11 +5,8 @@ from __future__ import annotations
 import pytest
 
 from dev.docs.terminology._miss_rate import (
-    DEFAULT_RUNG2_MISS_RATE_THRESHOLD,
     HeldOutCaseKind,
     MissReason,
-    Rung2Decision,
-    adjudicate_rung2,
     evaluate_held_out_miss_rate,
     held_out_query_set_path,
     load_committed_relevance,
@@ -102,24 +99,14 @@ def test_held_out_miss_rate_measures_the_committed_relevance_mapping() -> None:
     assert not [row for row in evaluation.rows if row.reason is MissReason.NO_TARGETS]
 
 
-def test_rung2_adjudication_is_consistent_with_the_ratified_gate() -> None:
-    """The adjudication applies the RATIFIED threshold and follows the number.
+def test_the_relevance_artifact_records_no_failed_sweep_queries() -> None:
+    """The committed mapping was produced by a clean sweep, not a degraded one.
 
-    The gate does not pin the verdict (the close-review found the previous
-    version asserted keep-deferred, which made the measurement decorative).
-    It pins consistency: the default threshold IS the ratified ten percent,
-    and the decision is exactly what the measured rate demands on either
-    side of it.
+    Kept from the retired rung-2 adjudication, which measured this on its way to
+    a decision that no longer exists. The property still matters on its own: the
+    mapping boosts LEXICAL results, and a mapping built from a sweep that failed
+    queries is boosting on partial evidence.
     """
     evaluation = evaluate_held_out_miss_rate()
-    adjudication = adjudicate_rung2(evaluation)
 
-    assert adjudication.miss_rate_threshold == DEFAULT_RUNG2_MISS_RATE_THRESHOLD == 0.10
     assert evaluation.compiled_failed_query_count == 0
-    assert adjudication.measured_miss_rate == evaluation.miss_rate
-    expected = (
-        Rung2Decision.IMPLEMENT_RUNG2
-        if evaluation.miss_rate > adjudication.miss_rate_threshold
-        else Rung2Decision.KEEP_DEFERRED
-    )
-    assert adjudication.decision is expected

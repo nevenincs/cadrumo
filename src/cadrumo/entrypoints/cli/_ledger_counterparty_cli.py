@@ -34,9 +34,9 @@ confirmation. The caller is told through an info notice and a ``recorded`` flag
 rather than being left to infer it from an unchanged timestamp.
 
 See Also:
-    :func:`~application.ledger.record_counterparty_establishment`
+    :func:`~application.ledger.record_confirmed_counterparty_facts`
         The single writer this delegates to, which owns the idempotency rules.
-    :func:`~application.ledger.resolve_counterparty_establishment`
+    :func:`~application.ledger.resolve_confirmed_counterparty_facts`
         The ladder rung that reads what this writes.
 """
 
@@ -60,13 +60,13 @@ from ._ledger_counterparty_payloads import (
 )
 
 if TYPE_CHECKING:
-    from ...application.ledger import CounterpartyEstablishmentFact
+    from ...application.ledger import ConfirmedCounterpartyFacts
 
 counterparty_app = typer.Typer(
     name="counterparty",
     help=tr(
         "cli.app.ledger.counterparty.group_help",
-        default="Confirm where a counterparty is established, once, for every later document.",
+        default="Confirm what is known about a counterparty, once, for every later document.",
     ),
     no_args_is_help=True,
 )
@@ -77,7 +77,7 @@ def register_counterparty_commands(app: typer.Typer) -> None:
     app.add_typer(counterparty_app, name="counterparty")
 
 
-def _payload(fact: CounterpartyEstablishmentFact) -> CounterpartyEstablishmentPayload:
+def _payload(fact: ConfirmedCounterpartyFacts) -> CounterpartyEstablishmentPayload:
     """Project the persisted fact onto its wire shape."""
     return CounterpartyEstablishmentPayload(
         counterparty_key=fact.counterparty_key,
@@ -94,7 +94,7 @@ def _payload(fact: CounterpartyEstablishmentFact) -> CounterpartyEstablishmentPa
     "confirm",
     help=tr(
         "cli.app.ledger.counterparty.confirm_help",
-        default="Confirm the territory a counterparty is established in.",
+        default="Confirm where a counterparty is established and which State VAT-identifies it.",
     ),
 )
 def counterparty_confirm(
@@ -111,8 +111,8 @@ def counterparty_confirm(
     ),
     # Declared as the enum so click renders the accepted set on a parse failure,
     # rather than the operator meeting a late refusal that names no alternatives.
-    scope: IvaTerritorialScope = typer.Option(
-        ...,
+    scope: IvaTerritorialScope | None = typer.Option(
+        None,
         "--scope",
         help=tr(
             "cli.app.ledger.counterparty.scope_help",
@@ -162,11 +162,24 @@ def counterparty_confirm(
 ) -> None:
     """Persist the operator's answer, or report the stored one unchanged."""
     from ...application.ledger import (
+        ConfirmedCounterpartyFactsInputError,
         CounterpartyEstablishmentConflictError,
-        CounterpartyEstablishmentInputError,
-        record_counterparty_establishment,
+        record_confirmed_counterparty_facts,
     )
 
+    if scope is None and identification_state is None:
+        raise _bad(
+            tr(
+                "cli.ledger.counterparty.errors.nothing_asserted",
+                identifier=tax_identifier,
+                default=(
+                    f"Confirming '{tax_identifier}' needs at least one answer: '--scope' for where the "
+                    f"counterparty is established, '--identification-state' for which Member State "
+                    f"VAT-identifies it, or both. They are independent facts and either may be supplied "
+                    f"alone."
+                ),
+            ),
+        )
     bucket_id = _counterparty_bucket_id()
     asserted_by = actor or bucket_id or "operator"
     # The stamp is supplied rather than left to the writer's clock so this call
@@ -177,7 +190,7 @@ def counterparty_confirm(
     # stamp on a retry precisely so a repeat cannot look like a fresh answer.
     stamped_at = now()
     try:
-        fact = record_counterparty_establishment(
+        fact = record_confirmed_counterparty_facts(
             bucket_id=bucket_id,
             tax_identifier=tax_identifier,
             territorial_scope=scope,
@@ -187,14 +200,14 @@ def counterparty_confirm(
             note=note,
             asserted_at=stamped_at,
         )
-    except CounterpartyEstablishmentInputError as exc:
+    except ConfirmedCounterpartyFactsInputError as exc:
         raise _bad(
             tr(
                 "cli.ledger.counterparty.errors.unverifiable_identifier",
                 identifier=tax_identifier,
                 default=(
                     f"'{tax_identifier}' is not a verifiable tax identifier, so there is no counterparty "
-                    f"to confirm an establishment for."
+                    f"to confirm anything about."
                 ),
             ),
         ) from exc
@@ -226,8 +239,8 @@ def counterparty_confirm(
                     scope=fact.territorial_scope.value,
                     asserted_by=fact.asserted_by,
                     default=(
-                        f"'{fact.canonical_tax_identifier}' was already confirmed as established in "
-                        f"'{fact.territorial_scope.value}' by '{fact.asserted_by}'; this call created no new "
+                        f"'{fact.canonical_tax_identifier}' was already confirmed by '{fact.asserted_by}', "
+                        f"established in '{fact.territorial_scope.value}'; this call created no new "
                         f"confirmation and the original provenance stands."
                     ),
                 ),
@@ -244,9 +257,19 @@ def counterparty_confirm(
         ctx,
         command="ledger.counterparty.confirm",
         result=CounterpartyConfirmResult(counterparty=_payload(fact), recorded=recorded),
+        # Both facts are optional and either may stand alone, so the line names
+        # what was answered rather than assuming a territory is present.
         lines=[
-            f"{fact.canonical_tax_identifier}: {fact.territorial_scope.value}"
-            f"{'' if recorded else ' (already confirmed)'}",
+            f"{fact.canonical_tax_identifier}: "
+            + ", ".join(
+                part
+                for part in (
+                    fact.territorial_scope.value if fact.territorial_scope is not None else None,
+                    fact.identification_state.value if fact.identification_state is not None else None,
+                )
+                if part is not None
+            )
+            + f"{'' if recorded else ' (already confirmed)'}",
         ],
         notices=notices,
     )
@@ -256,7 +279,7 @@ def counterparty_confirm(
     "withdraw",
     help=tr(
         "cli.app.ledger.counterparty.withdraw_help",
-        default="Withdraw a confirmed establishment, stating the earlier answer was wrong.",
+        default="Withdraw what was confirmed about a counterparty, stating the earlier answer was wrong.",
     ),
 )
 def counterparty_withdraw(
@@ -278,21 +301,21 @@ def counterparty_withdraw(
     ),
 ) -> None:
     """Remove a confirmed fact so a corrected one can be confirmed."""
-    from ...application.ledger import counterparty_establishment_key, forget_counterparty_establishment
+    from ...application.ledger import confirmed_counterparty_facts_key, forget_confirmed_counterparty_facts
 
     bucket_id = _counterparty_bucket_id()
-    if counterparty_establishment_key(tax_identifier, country_code=country_code) is None:
+    if confirmed_counterparty_facts_key(tax_identifier, country_code=country_code) is None:
         raise _bad(
             tr(
                 "cli.ledger.counterparty.errors.unverifiable_identifier",
                 identifier=tax_identifier,
                 default=(
                     f"'{tax_identifier}' is not a verifiable tax identifier, so there is no counterparty "
-                    f"to confirm an establishment for."
+                    f"to confirm anything about."
                 ),
             ),
         )
-    withdrawn = forget_counterparty_establishment(
+    withdrawn = forget_confirmed_counterparty_facts(
         bucket_id=bucket_id,
         tax_identifier=tax_identifier,
         country_code=country_code,
@@ -307,7 +330,7 @@ def counterparty_withdraw(
                     "cli.ledger.counterparty.notices.nothing_to_withdraw",
                     identifier=tax_identifier,
                     default=(
-                        f"No confirmed establishment was held for '{tax_identifier}', so nothing was "
+                        f"Nothing was confirmed for '{tax_identifier}', so nothing was "
                         f"withdrawn and the store is already in the state you asked for."
                     ),
                 ),
@@ -384,15 +407,16 @@ def counterparty_show(
     nothing indicating that a confirm would refuse to use it -- the two surfaces
     diverging in exactly the case the verb exists for, invisibly.
     """
-    from ...application.ledger import resolve_counterparty_establishment
+    from ...application.ledger import resolve_confirmed_counterparty_facts
 
-    resolution = resolve_counterparty_establishment(
+    resolution = resolve_confirmed_counterparty_facts(
         bucket_id=_counterparty_bucket_id(),
         tax_identifier=tax_identifier,
         country_code=country_code,
         evidenced_scope=evidenced_scope,
     )
     fact = resolution.fact
+    identification = resolution.identification
     contradiction = resolution.contradiction
     notices: list[Notice] = []
     if contradiction is not None:
@@ -448,6 +472,13 @@ def counterparty_show(
             confirmed=fact is not None,
             territorial_scope=fact.value if fact is not None else None,
             source=fact.source if fact is not None else None,
+            # Read from the resolution rather than from the stored record, so
+            # what an operator is shown and what a later document consumes
+            # cannot drift: the resolver withholds a fact the evidence
+            # contradicts, and a payload read straight from the repository would
+            # show a value no document will actually use.
+            identification_state=identification.value if identification is not None else None,
+            identification_source=identification.source if identification is not None else None,
             evidenced_scope=evidenced_scope,
             contradicted=contradiction is not None,
             # Carried only here and deliberately NOT in `territorial_scope`:

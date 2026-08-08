@@ -687,6 +687,18 @@ def invoice_import(
             default="Invoice kind: issued (a customer owes us) or received (we owe a vendor).",
         ),
     ),
+    country: str | None = typer.Option(
+        None,
+        "--country",
+        help=tr(
+            "cli.app.ledger.invoice.import_country_help",
+            default=(
+                "Counterparty country (ISO 3166-1 alpha-2) for the whole import. "
+                "Required only when the file carries no country_code column; "
+                "ignored when it does, because those rows state their own."
+            ),
+        ),
+    ),
 ) -> None:
     """Bulk-create reconciliation catalogue invoices from a CSV/XLSX file.
 
@@ -714,7 +726,12 @@ def invoice_import(
     try:
         mapper, mapping_reasons = _invoice_column_role_mapper()
         source = read_bulk_invoice_import_source(file, mapper=mapper)
-        result = import_invoices_from_rows(source, bucket_id=bucket_id, kind=kind)
+        result = import_invoices_from_rows(
+            source,
+            bucket_id=bucket_id,
+            kind=kind,
+            declared_country=country.strip().upper() if country else None,
+        )
     except InvoiceValidationError as exc:
         raise _bad(str(exc)) from exc
 

@@ -343,6 +343,10 @@ adapters:
       session_expired_nav_failed: El registre de declaracions d'AEAT no s'ha carregat;
         la sessió probablement ha caducat. Executeu 'aeat config auth test' i torneu-ho
         a intentar.
+      submitted_file_layout_parse_failed: No s'ha pogut llegir el fitxer presentat
+        amb el disseny de registre oficial del model, de manera que no s'ha recuperat
+        cap valor de casella. El disseny i el fitxer presentat no coincideixen en
+        quins registres conté el fitxer.
 aggregation:
   grouping:
     errors:
@@ -801,6 +805,10 @@ application:
   invoices:
     bulk_import:
       errors:
+        country_unanswerable: 'El fitxer d''importació no té columna de país de la
+          contrapart i no s''ha indicat cap país per a la importació. Afegiu una columna
+          country_code o indiqueu un país per a tot el fitxer. Columnes no reconegudes:
+          {unmapped_columns}'
         file_read_failed: No s'ha pogut llegir el fitxer d'importació massiva de factures.
         formula_cell: El fitxer d'importació massiva de factures conté una cel·la
           amb fórmula a la fila {row}, columna {column}; no s'accepten els valors
@@ -1635,8 +1643,8 @@ application:
       unsupported_bundle_schema_version: La versió de l'esquema del paquet no és compatible
         amb aquesta versió de l'aplicació.
     notices:
-      censo_divergences_open: '{count} dada/es del perfil encara difereixen del Certificat
-        de Situació Censal i resten sense resoldre: {axes}.'
+      censo_divergences_open: '{count} dada/es del perfil o del certificat encara
+        difereixen del Certificat de Situació Censal i resten sense resoldre: {axes}.'
   verification:
     errors:
       missing_binding_values: La verificació del registre requereix valors de vinculació
@@ -1977,14 +1985,15 @@ cli:
           {accepted}'
       counterparty:
         actor_help: Identificador de l'operador que es registra com a autor de l'afirmació.
-        confirm_help: Confirma el territori on està establerta una contrapart.
+        confirm_help: Confirma on està establerta una contrapart i quin Estat la identifica
+          a efectes d'IVA.
         country_code_help: País sota el qual es declara l'identificador, quan no és
           espanyol.
         evidenced_scope_help: Territori on un document que teniu situa aquesta part.
           Indiqueu-lo per preguntar què respondrà l'escala per a aquest document,
           que és l'única manera de veure una discrepància amb el que vau confirmar
           abans que una confirmació la rebutgi.
-        group_help: Confirma on està establerta una contrapart, una sola vegada, per
+        group_help: Confirma el que se sap d'una contrapart, una sola vegada, per
           a tots els documents posteriors.
         identification_state_help: 'Estat membre que identifica a efectes d''IVA la
           contrapart. És una dada diferent de --scope: l''art. 25 exempta per aquesta,
@@ -1995,8 +2004,8 @@ cli:
         show_help: Mostra l'establiment confirmat per a una contrapart, si n'hi ha.
         tax_identifier_help: L'identificador fiscal de la contrapart tal com apareix
           imprès al document.
-        withdraw_help: Retira un establiment confirmat, declarant que la resposta
-          anterior era incorrecta.
+        withdraw_help: Retira el que es va confirmar sobre una contrapart, declarant
+          que la resposta anterior era incorrecta.
       evidence:
         add_help: Registra un justificant de factura de compra des de PDF o imatge
         batch_directory_help: Directori els fitxers del qual s'ingressen. Combina'l
@@ -2059,8 +2068,9 @@ cli:
           i del tipus d'IVA, de manera que una diferència significa que el document
           inclou un import que aquest registre no recull, com ara un recàrrec d'equivalència,
           o que s'ha llegit malament alguna xifra. Reviseu el document.
-        confirm_resolve_help: 'Respongueu una troballa blocant: <id-troballa>=<choose|supply|attest>:<valor-o-motiu>.
-          Repetiu-ho per cada troballa; no hi ha cap opcio massiva.'
+        confirm_resolve_help: 'Respongui a una troballa bloquejant: <finding-id>=<choose|supply|attest>:<valor-o-motiu>.
+          Per a choose, indiqui la lectura pel seu valor o pel resum que va mostrar
+          review. Repeteixi un cop per troballa; no hi ha opció massiva.'
         confirm_review_contradicted_regime_message: Aquest document es contradiu a
           si mateix sobre com tributa. El detall següent anomena què discrepava amb
           què.
@@ -2186,7 +2196,8 @@ cli:
           reference_help: Referencia d'evidencia o adjunt de la qual s'ha llegit l'esborrany
             pendent.
           resolve_action: Accio de resolucio desconeguda.
-          resolve_shape: Cada --resolve es <id-troballa>=<choose|supply|attest>:<valor-o-motiu>.
+          resolve_shape: Cada --resolve és <finding-id>=<choose|supply|attest>:<valor-o-motiu>.
+            Un choose indica la lectura pel seu valor o pel resum que va mostrar review.
           show_help: Mostreu un esborrany pendent camp per camp, amb les seves troballes
             i blocatges.
           unknown_reference: No hi ha cap esborrany pendent per a aquesta referencia.
@@ -2227,6 +2238,9 @@ cli:
           van ser rebutjades; no es va crear cap factura'
         import_column_role_not_applied: 'no s''ha aplicat un rol de columna proposat:
           {detail}'
+        import_country_help: País de la contrapart (ISO 3166-1 alfa-2) per a tota
+          la importació. Només és obligatori quan el fitxer no té columna country_code;
+          s'ignora a les files que indiquen el seu.
         import_file_help: Camí a un fitxer CSV o XLSX amb files de factures (counterparty_nif,
           counterparty_name, invoice_number, invoice_date, taxable_base, i opcionalment
           iva_rate/currency/country_code/notes).
@@ -3898,6 +3912,9 @@ cli:
         apply_help: Registra les dades censals analitzades al perfil actiu (per defecte
           només previsualitza).
         compare_help: Compara camp a camp el cens AEAT amb aquest perfil
+        divergencia_leaf_artefact_value: valor de l'AEAT
+        divergencia_leaf_axis: camp
+        divergencia_leaf_source: origen
         dropped_fields_notice: 'El cens de l''AEAT ja no inclou camps que tenia la
           teva darrera instantània: {dropped_fields}. Si no has canviat ni donat de
           baixa aquestes dades, pot tractar-se d''una descàrrega parcial: torna a
@@ -4792,15 +4809,19 @@ cli:
         el model configurat.
     counterparty:
       errors:
+        nothing_asserted: 'Per confirmar ''{identifier}'' cal almenys una resposta:
+          ''--scope'' per a on està establerta la contrapart, ''--identification-state''
+          per a quin Estat membre la identifica a efectes d''IVA, o totes dues. Són
+          fets independents i qualsevol d''ells es pot indicar per separat.'
         scope_conflict: Ja hi ha confirmat un territori diferent per a '{identifier}',
           de manera que confirmar '{asserted}' descartaria la resposta anterior. Retireu-la
           primer amb 'aeat app ledger counterparty withdraw'. {detail}
         unverifiable_identifier: '''{identifier}'' no és un identificador fiscal verificable,
-          per la qual cosa no hi ha cap contrapart de la qual es pugui confirmar l''establiment.'
+          per la qual cosa no hi ha cap contrapart sobre la qual confirmar res.'
       notices:
-        already_confirmed: '''{identifier}'' ja estava confirmada com a establerta
-          a ''{scope}'' per ''{asserted_by}''; aquesta crida no ha creat cap confirmació
-          nova i es manté la procedència original.'
+        already_confirmed: '''{identifier}'' ja havia estat confirmada per ''{asserted_by}'',
+          establerta a ''{scope}''; aquesta crida no ha creat cap confirmació nova
+          i es manté la procedència original.'
         evidence_contradicts_confirmation: '''{identifier}'' es va confirmar com a
           establert a {confirmed}, però l''evidència que heu aportat situa la mateixa
           part a {evidenced}. L''escala no fixarà cap territori per a aquesta contrapart
@@ -4808,8 +4829,8 @@ cli:
         not_confirmed: No hi ha cap establiment confirmat per a '{identifier}', de
           manera que aquest esglaó no resol res i un document el paper del qual no
           sigui concloent plantejarà la pregunta.
-        nothing_to_withdraw: No hi havia cap establiment confirmat per a '{identifier}',
-          de manera que no s'ha retirat res i el magatzem ja es troba en l'estat sol·licitat.
+        nothing_to_withdraw: No hi havia res confirmat per a '{identifier}', de manera
+          que no s'ha retirat res i el magatzem ja es troba en l'estat sol·licitat.
     doclink:
       actor_help: Etiqueta de l'operador.
       help: Descàrrega un enllaç de document de Drive i desa'n els bytes com a evidència
@@ -6539,6 +6560,8 @@ errors:
     fail_llm_provider: El proveïdor del model de llenguatge ha retornat un error irrecuperable.
     fail_llm_rate_limit: El proveïdor del model de llenguatge ha rebutjat la sol·licitud
       per límit d'ús. Espera uns minuts i torna-ho a provar.
+    fail_llm_transient_transport: La petició no ha arribat al motor del model de llenguatge
+      i s'ha exhaurit el pressupost de reintents.
     fail_manuals_manual_parse: Un registre de manual no ha superat la validació de
       l'esquema.
     fail_mcp_launch: No s'ha pogut iniciar el servidor MCP.
@@ -6865,9 +6888,6 @@ errors:
       coincideix amb més d'una revisió; refineu el selector.
     modelo_calculation_revision_selector_state: La revisió de càlcul seleccionada
       no està en un estat utilitzable per a aquesta operació.
-    modelo_censo_stale: 'L''operació es rebutja perquè has aplicat un cens nou després
-      de generar aquesta feina. L''AEAT és la font legal vinculant: torna a generar-la
-      amb el cens actual.'
     modelo_compare_need_two_years: La comparació requereix dos exercicis fiscals diferents.
     modelo_export_cross_bucket: La revisió apuntada pertany a un bucket diferent del
       perfil actiu. L'exportació només opera dins el bucket del perfil actiu.
@@ -7045,10 +7065,14 @@ errors:
       indicat.
     refused_live_verify_observation_not_found: No existeix cap observació de verificació
       amb l'identificador indicat.
+    refused_llm_busy: Aquest equip ja executa el màxim configurat de peticions al
+      model de llenguatge en local.
     refused_llm_config: La configuració del client de model de llenguatge no és vàlida
       o està incompleta.
     refused_llm_consent: S'ha rebutjat la lectura del document fora de l'equip perquè
       no s'ha atorgat el consentiment per a la transmissió externa.
+    refused_llm_contention: Aquest equip no té memòria lliure mesurada per carregar
+      el model de llenguatge ara mateix.
     refused_llm_validation: Un objecte del model de llenguatge no ha superat la validació.
     refused_modelo_100_borrador_binding: Els valors de l'esborrany del Model 100 no
       es poden fer servir per al càlcul.
@@ -7103,7 +7127,7 @@ errors:
     refused_profile_lifo_forbidden: La valoració d'existències pel mètode LIFO no
       està admesa fiscalment. Fes servir FIFO, preu mitjà ponderat o cost mitjà.
     refused_profile_login_throttled: Massa intents d'inici de sessió fallits. Espera
-      %{seconds} segons abans de tornar a executar `aeat config login`.
+      %{seconds} segons abans de tornar-ho a intentar.
     refused_profile_logout_override: El tancament de sessió no pot canviar un perfil
       actiu seleccionat mitjançant --profile. Treu l'opció --profile i torna-ho a
       provar.
@@ -7341,6 +7365,24 @@ flows:
       export_done: Còpia xifrada escrita a %{destination}.
       export_passphrase: Contrasenya que protegirà la còpia
       failed: L'operació no s'ha completat.
+      filed_history_pull_all: Recollir l'historial de declaracions de l'AEAT
+      filed_history_pull_all_done: '{captured} declaració(ns) capturada(es), {refused}
+        rebutjada(es); cartera d''IVA: {iva_wallet_status}; notificacions: {notificaciones_status}.'
+      filed_history_pull_all_refused: 'No s''han pogut llegir aquests parells i NO
+        s''han declarat buits: {pairs}. Torneu a executar per reintentar-ho.'
+      google_export: flows.manager.action.google_export
+      google_export_done: flows.manager.action.google_export_done
+      google_export_modelo: flows.manager.action.google_export_modelo
+      google_export_period: flows.manager.action.google_export_period
+      google_export_year: flows.manager.action.google_export_year
+      google_export_year_invalid: flows.manager.action.google_export_year_invalid
+      passphrase: Canviar la contrasenya
+      passphrase_confirm: Confirma la nova contrasenya
+      passphrase_current: Contrasenya actual
+      passphrase_done: Contrasenya canviada.
+      passphrase_mismatch: La nova contrasenya i la seva confirmació no coincideixen.
+      passphrase_new: Nova contrasenya
+      passphrase_wrong_current: Aquesta no és la contrasenya actual.
       provider:
         certificate: Certificat electrònic
         clave_movil: Cl@ve Mòbil
@@ -7480,6 +7522,7 @@ flows:
       state: Codi de recuperació
     section:
       auth: Autenticació
+      notices: Avisos
       profile: Perfil actiu
       profiles: Perfils
       recovery: Recuperació
@@ -7495,6 +7538,12 @@ flows:
     button_back: Enrere
     button_next: Següent
     button_review: Revisió
+    confirm_restart:
+      cancel: Cancel·lar
+      confirm: Reiniciar
+      message: Això esborra totes les respostes donades fins ara i torna a la primera
+        pàgina. No es pot desfer.
+      title: Reiniciar tot el procés?
     header: '{flow} - pregunta {position} de {total}, secció {section}'
 live:
   errors:
@@ -7514,9 +7563,15 @@ live:
         {offered_only} parells recorreguts provenen de la llista d''opcions que ofereix
         l''AEAT, la vinculació de la qual a aquest NIF no està confirmada. Aquesta
         execució no mesura res.'
-      expected_but_not_found: live.filed.pull_all.expected_but_not_found
-      found_more_than_expected: live.filed.pull_all.found_more_than_expected
-      recapture_divergence: live.filed.pull_all.recapture_divergence
+      expected_but_not_found: 'El vostre perfil declarat espera una declaració en
+        {count} parell(s) model/exercici per als quals el registre de l''AEAT no en
+        va retornar cap: {pairs}. Comproveu si es van arribar a presentar.'
+      found_more_than_expected: El registre de l'AEAT conté {raw_count} declaracions
+        del model {modelo} {period} {ejercicio}; s'ha conservat el registre més recent
+        ({expediente}) i s'han substituït {superseded} d'anterior(s).
+      recapture_divergence: 'Tornar a capturar el model {modelo} {period} {ejercicio}
+        ha canviat {count} valor(s) de casella observats anteriorment: {casillas}.
+        L''AEAT pot tenir una declaració rectificada.'
 llm:
   evidence:
     consent:
@@ -65420,7 +65475,8 @@ modelo:
             help: null
             label: Exercici fiscal de l'autoliquidació
           iva-base-autorepercutida-intracomunitaria-devengado:
-            help: modelo.schema.303.casilla.continuidad.iva-base-autorepercutida-intracomunitaria-devengado.help
+            help: Suma la base imposable autorepercutida meritada en adquisicions
+              intracomunitàries.
             label: Base imposable autorepercutida meritada en adquisicions intracomunitàries
           iva-compensacion-aplicada-periodo:
             help: null
@@ -66337,7 +66393,8 @@ modelo:
                 béns i serveis.
               label: IVA autorepercutit meritat en adquisicions intracomunitàries
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
-              help: modelo.schema.303.revision.2023-y-siguientes.casilla.x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck.help
+              help: Suma la base imposable autorepercutida meritada en adquisicions
+                intracomunitàries.
               label: Base imposable autorepercutida meritada en adquisicions intracomunitàries
             x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
               help: Quotes pendents de períodes anteriors aplicades en aquest període.
@@ -66392,7 +66449,8 @@ modelo:
               help: Total d'IVA repercutit calculat al tipus superreduït del 4%.
               label: Quota d'IVA repercutit al tipus superreduït (4%)
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
-              help: modelo.schema.303.revision.2023-y-siguientes.casilla.x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng.help
+              help: Casella transitòria del RDL 4/2024 per al tipus superreduït, que
+                conviu amb el tipus superreduït ordinari del 4%.
               label: Quota d’IVA repercutit al tipus superreduït transitori (2%)
             x-d5r62bjiclpnar3kc5i6u:
               help: Resultat de l'autoliquidació després de la fórmula d'ajust del
@@ -66988,6 +67046,272 @@ modelo:
           field:
             label: null
     '390':
+      casilla:
+        continuidad:
+          filing-year:
+            help: modelo.schema.390.casilla.continuidad.filing-year.help
+            label: modelo.schema.390.casilla.continuidad.filing-year.label
+          iva-aic-bienes-tipo-0-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-0-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-0-base.label
+          iva-aic-bienes-tipo-0-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-0-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-0-cuota.label
+          iva-aic-bienes-tipo-10-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-10-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-10-base.label
+          iva-aic-bienes-tipo-10-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-10-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-10-cuota.label
+          iva-aic-bienes-tipo-2-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-2-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-2-base.label
+          iva-aic-bienes-tipo-2-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-2-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-2-cuota.label
+          iva-aic-bienes-tipo-21-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-21-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-21-base.label
+          iva-aic-bienes-tipo-21-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-21-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-21-cuota.label
+          iva-aic-bienes-tipo-4-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-4-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-4-base.label
+          iva-aic-bienes-tipo-4-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-4-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-4-cuota.label
+          iva-aic-bienes-tipo-5-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-5-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-5-base.label
+          iva-aic-bienes-tipo-5-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-5-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-5-cuota.label
+          iva-aic-bienes-tipo-7-5-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-7-5-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-7-5-base.label
+          iva-aic-bienes-tipo-7-5-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-7-5-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-7-5-cuota.label
+          iva-aic-servicios-tipo-0-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-0-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-0-base.label
+          iva-aic-servicios-tipo-0-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-0-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-0-cuota.label
+          iva-aic-servicios-tipo-10-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-10-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-10-base.label
+          iva-aic-servicios-tipo-10-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-10-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-10-cuota.label
+          iva-aic-servicios-tipo-2-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-2-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-2-base.label
+          iva-aic-servicios-tipo-2-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-2-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-2-cuota.label
+          iva-aic-servicios-tipo-21-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-21-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-21-base.label
+          iva-aic-servicios-tipo-21-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-21-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-21-cuota.label
+          iva-aic-servicios-tipo-4-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-4-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-4-base.label
+          iva-aic-servicios-tipo-4-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-4-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-4-cuota.label
+          iva-aic-servicios-tipo-5-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-5-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-5-base.label
+          iva-aic-servicios-tipo-5-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-5-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-5-cuota.label
+          iva-aic-servicios-tipo-7-5-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-7-5-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-7-5-base.label
+          iva-aic-servicios-tipo-7-5-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-7-5-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-7-5-cuota.label
+          iva-anual-compensacion-generada-ejercicio:
+            help: modelo.schema.390.casilla.continuidad.iva-anual-compensacion-generada-ejercicio.help
+            label: modelo.schema.390.casilla.continuidad.iva-anual-compensacion-generada-ejercicio.label
+          iva-anual-compensacion-ultimo-periodo:
+            help: modelo.schema.390.casilla.continuidad.iva-anual-compensacion-ultimo-periodo.help
+            label: modelo.schema.390.casilla.continuidad.iva-anual-compensacion-ultimo-periodo.label
+          iva-anual-cuota-deducible-total:
+            help: modelo.schema.390.casilla.continuidad.iva-anual-cuota-deducible-total.help
+            label: modelo.schema.390.casilla.continuidad.iva-anual-cuota-deducible-total.label
+          iva-anual-cuota-devengada-total:
+            help: modelo.schema.390.casilla.continuidad.iva-anual-cuota-devengada-total.help
+            label: modelo.schema.390.casilla.continuidad.iva-anual-cuota-devengada-total.label
+          iva-anual-reconciliacion-deducible-303:
+            help: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-deducible-303.help
+            label: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-deducible-303.label
+          iva-anual-reconciliacion-devengada-303:
+            help: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-devengada-303.help
+            label: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-devengada-303.label
+          iva-anual-reconciliacion-devengada-simplificado-303:
+            help: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-devengada-simplificado-303.help
+            label: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-devengada-simplificado-303.label
+          iva-anual-reconciliacion-resultado-303:
+            help: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-resultado-303.help
+            label: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-resultado-303.label
+          iva-anual-regularizacion-bienes-inversion:
+            help: modelo.schema.390.casilla.continuidad.iva-anual-regularizacion-bienes-inversion.help
+            label: modelo.schema.390.casilla.continuidad.iva-anual-regularizacion-bienes-inversion.label
+          iva-anual-regularizacion-prorrata-definitiva:
+            help: modelo.schema.390.casilla.continuidad.iva-anual-regularizacion-prorrata-definitiva.help
+            label: modelo.schema.390.casilla.continuidad.iva-anual-regularizacion-prorrata-definitiva.label
+          iva-anual-resultado-regimen-general:
+            help: modelo.schema.390.casilla.continuidad.iva-anual-resultado-regimen-general.help
+            label: modelo.schema.390.casilla.continuidad.iva-anual-resultado-regimen-general.label
+          iva-anual-total-bases-cuotas-iva:
+            help: modelo.schema.390.casilla.continuidad.iva-anual-total-bases-cuotas-iva.help
+            label: modelo.schema.390.casilla.continuidad.iva-anual-total-bases-cuotas-iva.label
+          iva-base-imponible-aic-bienes-general:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-general.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-general.label
+          iva-base-imponible-aic-bienes-reduced:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-reduced.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-reduced.label
+          iva-base-imponible-aic-bienes-super-reduced:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-super-reduced.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-super-reduced.label
+          iva-base-imponible-aic-bienes-zero:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-zero.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-zero.label
+          iva-base-imponible-aic-servicios-general:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-general.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-general.label
+          iva-base-imponible-aic-servicios-reduced:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-reduced.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-reduced.label
+          iva-base-imponible-aic-servicios-super-reduced:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-super-reduced.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-super-reduced.label
+          iva-base-imponible-aic-servicios-zero:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-zero.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-zero.label
+          iva-base-imponible-repercutida-general:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-general.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-general.label
+          iva-base-imponible-repercutida-reducido:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-reducido.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-reducido.label
+          iva-base-imponible-repercutida-super-reducido:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-super-reducido.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-super-reducido.label
+          iva-base-imponible-repercutida-tipo-0:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-0.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-0.label
+          iva-base-imponible-repercutida-tipo-10:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-10.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-10.label
+          iva-base-imponible-repercutida-tipo-2:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-2.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-2.label
+          iva-base-imponible-repercutida-tipo-21:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-21.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-21.label
+          iva-base-imponible-repercutida-tipo-4:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-4.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-4.label
+          iva-base-imponible-repercutida-tipo-5:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-5.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-5.label
+          iva-base-imponible-repercutida-tipo-7-5:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-7-5.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-7-5.label
+          iva-base-imponible-repercutida-zero:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-zero.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-zero.label
+          iva-base-imponible-soportada-interiores:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-soportada-interiores.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-soportada-interiores.label
+          iva-cuota-autorepercutida-intracomunitaria:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-autorepercutida-intracomunitaria.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-autorepercutida-intracomunitaria.label
+          iva-cuota-recargo-equivalencia-general:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-general.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-general.label
+          iva-cuota-recargo-equivalencia-reducido:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-reducido.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-reducido.label
+          iva-cuota-recargo-equivalencia-super-reducido:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-super-reducido.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-super-reducido.label
+          iva-cuota-recargo-equivalencia-tipo-0-26:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-0-26.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-0-26.label
+          iva-cuota-recargo-equivalencia-tipo-0-5:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-0-5.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-0-5.label
+          iva-cuota-recargo-equivalencia-tipo-0-62:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-0-62.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-0-62.label
+          iva-cuota-recargo-equivalencia-tipo-1:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-1.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-1.label
+          iva-cuota-recargo-equivalencia-tipo-1-4:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-1-4.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-1-4.label
+          iva-cuota-recargo-equivalencia-tipo-5-2:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-5-2.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-5-2.label
+          iva-cuota-repercutida-general:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-general.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-general.label
+          iva-cuota-repercutida-reducido:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-reducido.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-reducido.label
+          iva-cuota-repercutida-super-reducido:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-super-reducido.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-super-reducido.label
+          iva-cuota-repercutida-tipo-0:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-0.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-0.label
+          iva-cuota-repercutida-tipo-10:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-10.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-10.label
+          iva-cuota-repercutida-tipo-2:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-2.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-2.label
+          iva-cuota-repercutida-tipo-21:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-21.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-21.label
+          iva-cuota-repercutida-tipo-4:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-4.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-4.label
+          iva-cuota-repercutida-tipo-5:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-5.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-5.label
+          iva-cuota-repercutida-tipo-7-5:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-7-5.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-7-5.label
+          iva-cuota-soportada-importaciones:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-soportada-importaciones.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-soportada-importaciones.label
+          iva-cuota-soportada-interiores:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-soportada-interiores.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-soportada-interiores.label
+          iva-isp-interior-base:
+            help: modelo.schema.390.casilla.continuidad.iva-isp-interior-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-isp-interior-base.label
+          iva-isp-interior-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-isp-interior-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-isp-interior-cuota.label
+          iva-volumen-operaciones-entregas-intracomunitarias:
+            help: modelo.schema.390.casilla.continuidad.iva-volumen-operaciones-entregas-intracomunitarias.help
+            label: modelo.schema.390.casilla.continuidad.iva-volumen-operaciones-entregas-intracomunitarias.label
+          iva-volumen-operaciones-exportaciones-exentas:
+            help: modelo.schema.390.casilla.continuidad.iva-volumen-operaciones-exportaciones-exentas.help
+            label: modelo.schema.390.casilla.continuidad.iva-volumen-operaciones-exportaciones-exentas.label
+          tipo-declaracion:
+            help: modelo.schema.390.casilla.continuidad.tipo-declaracion.help
+            label: modelo.schema.390.casilla.continuidad.tipo-declaracion.label
       field:
         official_name: null
         title: null
@@ -67001,154 +67325,200 @@ modelo:
               help: null
               label: Tipus de declaració (original / substitutiva / complementària)
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                béns al tipus general, sigui quin sigui el percentatge aplicat a cada
+                operació.
               label: Base imposable d'adquisicions intracomunitàries de béns al tipus
                 general, sense desglossament per tipus - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                béns al tipus reduït, sigui quin sigui el percentatge aplicat a cada
+                operació.
               label: Base imposable d'adquisicions intracomunitàries de béns al tipus
                 reduït, sense desglossament per tipus - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                béns al tipus superreduït, sigui quin sigui el percentatge aplicat
+                a cada operació.
               label: Base imposable d'adquisicions intracomunitàries de béns al tipus
                 superreduït, sense desglossament per tipus - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                béns gravades al tipus del 0 %.
               label: Base imposable d'adquisicions intracomunitàries de béns al tipus
                 del 0% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62.help
+              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
+                béns gravades al tipus del 0 %.
               label: Quota d'IVA d'adquisicions intracomunitàries de béns al tipus
                 del 0% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                béns gravades al tipus del 10 %.
               label: Base imposable d'adquisicions intracomunitàries de béns al tipus
                 del 10% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8.help
+              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
+                béns gravades al tipus del 10 %.
               label: Quota d'IVA d'adquisicions intracomunitàries de béns al tipus
                 del 10% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                béns gravades al tipus del 2 %.
               label: Base imposable d'adquisicions intracomunitàries de béns al tipus
                 del 2% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62.help
+              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
+                béns gravades al tipus del 2 %.
               label: Quota d'IVA d'adquisicions intracomunitàries de béns al tipus
                 del 2% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                béns gravades al tipus del 21 %.
               label: Base imposable d'adquisicions intracomunitàries de béns al tipus
                 del 21% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8.help
+              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
+                béns gravades al tipus del 21 %.
               label: Quota d'IVA d'adquisicions intracomunitàries de béns al tipus
                 del 21% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                béns gravades al tipus del 4 %.
               label: Base imposable d'adquisicions intracomunitàries de béns al tipus
                 del 4% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62.help
+              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
+                béns gravades al tipus del 4 %.
               label: Quota d'IVA d'adquisicions intracomunitàries de béns al tipus
                 del 4% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                béns gravades al tipus del 5 %.
               label: Base imposable d'adquisicions intracomunitàries de béns al tipus
                 del 5% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62.help
+              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
+                béns gravades al tipus del 5 %.
               label: Quota d'IVA d'adquisicions intracomunitàries de béns al tipus
                 del 5% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                béns gravades al tipus del 7,5 %.
               label: Base imposable d'adquisicions intracomunitàries de béns al tipus
                 del 7,5% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31.help
+              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
+                béns gravades al tipus del 7,5 %.
               label: Quota d'IVA d'adquisicions intracomunitàries de béns al tipus
                 del 7,5% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                béns al tipus zero, sigui quin sigui el percentatge aplicat a cada
+                operació.
               label: Base imposable d'adquisicions intracomunitàries de béns al tipus
                 zero, sense desglossament per tipus - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                serveis al tipus general, sigui quin sigui el percentatge aplicat
+                a cada operació.
               label: Base imposable d'adquisicions intracomunitàries de serveis al
                 tipus general, sense desglossament per tipus - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                serveis al tipus reduït, sigui quin sigui el percentatge aplicat a
+                cada operació.
               label: Base imposable d'adquisicions intracomunitàries de serveis al
                 tipus reduït, sense desglossament per tipus - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjjelo6asive9im8tb3cli2soj1edig:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjjelo6asive9im8tb3cli2soj1edig.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                serveis al tipus superreduït, sigui quin sigui el percentatge aplicat
+                a cada operació.
               label: Base imposable d'adquisicions intracomunitàries de serveis al
                 tipus superreduït, sense desglossament per tipus - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5ph62sr5.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                serveis gravades al tipus del 0 %.
               label: Base imposable d'adquisicions intracomunitàries de serveis al
                 tipus del 0% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4.help
+              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
+                serveis gravades al tipus del 0 %.
               label: Quota d'IVA d'adquisicions intracomunitàries de serveis al tipus
                 del 0% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                serveis gravades al tipus del 10 %.
               label: Base imposable d'adquisicions intracomunitàries de serveis al
                 tipus del 10% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg.help
+              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
+                serveis gravades al tipus del 10 %.
               label: Quota d'IVA d'adquisicions intracomunitàries de serveis al tipus
                 del 10% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                serveis gravades al tipus del 2 %.
               label: Base imposable d'adquisicions intracomunitàries de serveis al
                 tipus del 2% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4.help
+              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
+                serveis gravades al tipus del 2 %.
               label: Quota d'IVA d'adquisicions intracomunitàries de serveis al tipus
                 del 2% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                serveis gravades al tipus del 21 %.
               label: Base imposable d'adquisicions intracomunitàries de serveis al
                 tipus del 21% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg.help
+              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
+                serveis gravades al tipus del 21 %.
               label: Quota d'IVA d'adquisicions intracomunitàries de serveis al tipus
                 del 21% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                serveis gravades al tipus del 4 %.
               label: Base imposable d'adquisicions intracomunitàries de serveis al
                 tipus del 4% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4.help
+              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
+                serveis gravades al tipus del 4 %.
               label: Quota d'IVA d'adquisicions intracomunitàries de serveis al tipus
                 del 4% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                serveis gravades al tipus del 5 %.
               label: Base imposable d'adquisicions intracomunitàries de serveis al
                 tipus del 5% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4.help
+              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
+                serveis gravades al tipus del 5 %.
               label: Quota d'IVA d'adquisicions intracomunitàries de serveis al tipus
                 del 5% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                serveis gravades al tipus del 7,5 %.
               label: Base imposable d'adquisicions intracomunitàries de serveis al
                 tipus del 7,5% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62.help
+              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
+                serveis gravades al tipus del 7,5 %.
               label: Quota d'IVA d'adquisicions intracomunitàries de serveis al tipus
                 del 7,5% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                serveis al tipus zero, sigui quin sigui el percentatge aplicat a cada
+                operació.
               label: Base imposable d'adquisicions intracomunitàries de serveis al
                 tipus zero, sense desglossament per tipus - anual
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8.help
+              help: Suma la base imposable autorepercutida en operacions interiors
+                durant l'exercici.
               label: Base imposable autorepercutida en operacions interiors - anual
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31.help
+              help: Declara la quota d'IVA autorepercutida en operacions interiors
+                durant l'exercici.
               label: Quota d'IVA autorepercutida en operacions interiors - anual
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst3ic5hmurbldpkn8obid5gg:
               help: null
@@ -67645,7 +68015,8 @@ modelo:
           field:
             label: null
 overview:
-  no_aeat_history: overview.no_aeat_history
+  no_aeat_history: Aquest perfil no té cap presentació confirmada per l'AEAT. Executeu
+    `aeat app live filed pull-all` per obtenir l'historial que l'AEAT conserva.
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: S'ha aplicat prorrata 50 %% (Art. 61 LIRPF)
@@ -67677,10 +68048,14 @@ profile:
       attribution_entity_socios:
         base_imponible_assigned:
           label: Base imposable atribuïda al soci
+        country_of_residence:
+          label: País de residència (només no resident sense establiment permanent)
         name:
           label: Nom del soci
         nif:
           label: NIF del soci
+        participe_clave:
+          label: Clau tipus de partícip
         role:
           label: Paper del membre
         share_pct:

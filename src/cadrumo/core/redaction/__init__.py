@@ -59,13 +59,14 @@ The redaction strategies, defined in
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from types import MappingProxyType
 from typing import overload
 from urllib.parse import urlparse
 
 from .._iban import IBAN_SHAPE_RE as _IBAN_SHAPE_RE
 from .._iban import iban_mod_97 as _iban_mod_97
+from .._iban import normalise_iban as _normalise_iban
 from ..classification import (
     ClassificationPolicy as _ClassificationPolicy,
 )
@@ -117,11 +118,71 @@ term silently missing from one composing site can leak a NIF the other site
 already knew to redact.
 """
 
+# Separators a document prints INSIDE a tax identity. Admitted between body
+# characters and never at an edge, so a run is joined only where real characters
+# stand on both sides of the separator and the scan can never consume a leading
+# or trailing hyphen belonging to the surrounding text.
+#
+# **This widens the SCAN, not the RULE.** Both admission gates below already
+# normalise the span they are handed -- ``validate_identity`` documents that it
+# tolerates dashes and spaces, and the NIF-IVA arm calls ``normalise_nif_iva``
+# before asking the per-State table -- so the separator-bearing spelling was
+# never rejected by a rule. It simply never reached one, because a scan anchored
+# on unbroken word characters cannot produce a span containing a hyphen. The
+# tolerant half and the intolerant half were on opposite sides of the same
+# funnel.
+#
+# The alternative shape, matching a wider bare pattern, was rejected on the
+# evidence: ``SE-2026-000412`` survives today precisely BECAUSE the hyphen
+# breaks the token, so a pattern that simply admits more characters starts
+# eating ordinary hyphenated operator output. Normalising and then asking the
+# existing gate keeps the shape as weak evidence and the checksum or per-State
+# structure as the decision, which is the arrangement this module already
+# documents for the CIF and IBAN arms.
+#
+# **Punctuation only, and the exclusion of the space is measured rather than
+# cautious.** A space is what separates TOKENS in prose, so admitting it lets the
+# scan join a word to the number beside it. Running the four shipped locale
+# catalogues through the funnel with the space admitted produced two real
+# false positives on operator text: a Hungarian date range ``A 2020-2024``
+# normalised to ``A20202024``, which is a checksum-VALID CIF and was therefore
+# admitted by the gate, and ``6 000 000-t`` matched the personal-identity arm.
+# Neither survives once the space is out, because no punctuation joins those
+# tokens.
+_IDENTITY_SEPARATOR = r"[.\-]?"
+
+# The prefixed arm alone admits the space, and only because two things constrain
+# it that constrain no other arm: a match must begin with two letters naming a
+# real Member State, and the per-State structural table then has to accept the
+# whole normalised number. ``SE 556677889901`` -- the printed rendering this row
+# exists for -- is caught here; the same string cannot be caught by the arms
+# above, since its body carries no leading letter for the CIF shape and no
+# trailing one for the personal shape.
+#
+# Both constraints are GATE-time, and a gate cannot defend against a SCAN that
+# swallowed the identity before it ran. A space separates tokens in prose, so
+# this arm's scan joins the neighbouring word to the number -- ``ESB12345674 is``
+# in one direction, ``de SE556677889901`` in the other -- and the joined span
+# normalises to nothing any authority recognises, so the gate correctly refuses
+# it and the identity inside is never asked about. The space survives here only
+# because :func:`_gated_sub` now re-reads a refused span instead of spending it;
+# without that mechanism this separator MUST come out.
+_PREFIXED_IDENTITY_SEPARATOR = r"[ .\-]?"
+
 # NIF / NIE — Spanish personal identity numbers. Eight digits + check letter
 # with optional leading X / Y / Z for foreigners. Matched on shape alone: a
 # digit-led run this long rarely collides with ordinary text, so the rule errs
 # wide and hashes a lookalike rather than risk missing a mistyped identity.
-_NIF_PATTERN = r"\b[XYZxyz]?\d{7,8}[A-Za-z]\b"
+# The separator after the optional X/Y/Z sits INSIDE the optional group, and
+# that placement is load-bearing rather than stylistic. Written outside it, the
+# group can match empty and the separator then stands at the START of the
+# pattern, so the scan consumes the space in front of the number: "for example
+# 12345678Z" was redacted to "for examplesha256:..." and the operator's sentence
+# lost a word boundary. Found by running the shipped locale catalogues through
+# the funnel, not by reading the regex.
+_NIF_PATTERN = (
+    rf"\b(?:[XYZxyz]{_IDENTITY_SEPARATOR})?\d(?:{_IDENTITY_SEPARATOR}\d){{6,7}}{_IDENTITY_SEPARATOR}[A-Za-z]\b"
+)
 
 # CIF — the tax identity of a legal entity: a kind letter (A-H, J, N, P-S,
 # U, V, W), seven digits, and a check character that is a digit or a letter
@@ -131,7 +192,31 @@ _NIF_PATTERN = r"\b[XYZxyz]?\d{7,8}[A-Za-z]\b"
 # is paired with ``SHA256_PREFIX_IF_IDENTITY``: the check character decides.
 # Widening the personal pattern's leading class instead would have admitted
 # every such reference.
-_CIF_PATTERN = r"\b[A-HJNPQRSUVWa-hjnpqrsuvw]\d{7}[0-9A-Ja-j]\b"
+_CIF_PATTERN = (
+    rf"\b[A-HJNPQRSUVWa-hjnpqrsuvw]{_IDENTITY_SEPARATOR}"
+    rf"\d(?:{_IDENTITY_SEPARATOR}\d){{6}}{_IDENTITY_SEPARATOR}[0-9A-Ja-j]\b"
+)
+
+# NIF-IVA — the PREFIXED form of a tax identity, which the two rules above
+# cannot see. Both anchor on `\b`, and a country prefix is a word character, so
+# `ESB12345674` presents no boundary before the CIF body and the rule that
+# redacts the bare `B12345674` does not fire. That is not only the foreign case:
+# it is a SPANISH taxpayer's own identifier in the form this app's own
+# structured readers recover and its own parsers emit.
+#
+# Every Member State, not just the foreign ones, for the reason the IBAN arm
+# below states in the other direction: an ES-only arm protects the domestic
+# spelling and leaks the prefixed one, and both name the same taxpayer.
+#
+# Deliberately a WIDE scan admitted by a STRICT gate, following the IBAN arm
+# rather than the identity arms: two leading letters plus an alphanumeric run
+# collides with hashes, opaque ids and document references, so the shape cannot
+# be the evidence. `SHA256_PREFIX_IF_NIF_IVA` decides on the per-State
+# structure, and a prefix naming no State admits nothing at all.
+_NIF_IVA_PATTERN = (
+    rf"\b[A-Za-z]{_PREFIXED_IDENTITY_SEPARATOR}[A-Za-z]{_PREFIXED_IDENTITY_SEPARATOR}"
+    rf"[0-9A-Za-z](?:{_PREFIXED_IDENTITY_SEPARATOR}[0-9A-Za-z]){{1,12}}\b"
+)
 
 # IBAN — a bank account number is sensitive financial data, so it is hashed
 # out of operator-facing output by operator decision. That decision is BROADER
@@ -142,9 +227,18 @@ _CIF_PATTERN = r"\b[A-HJNPQRSUVWa-hjnpqrsuvw]\d{7}[0-9A-Ja-j]\b"
 #
 # Scanning form of the anchored :data:`IBAN_SHAPE_RE` in ``core._iban``, which
 # stays the authority on what an IBAN looks like. Two country letters, two
-# check digits, then an 11-30 character BBAN. Uppercase and separator-free is
-# the canonical form the app itself validates and stores; a grouped
-# ``ES79 2100 ...`` rendering is not matched, and no surface here emits one.
+# check digits, then an 11-30 character BBAN.
+#
+# **The separators are the arm, not a widening of it.** An IBAN is essentially
+# always PRINTED in groups of four -- that is how it leaves a bank statement and
+# an invoice footer, which is exactly where this app reads one from -- so the
+# separator-free spelling the arm used to require is the one that does not
+# arrive. The gate does not move: the span is folded onto canonical form with
+# ``normalise_iban``, the same function the registry and refund-account
+# validators use, and the mod-97 checksum still decides. Admitting a space is
+# safe here only because :func:`_gated_sub` re-reads a span the checksum
+# refuses; a scan this wide would otherwise carry a neighbouring uppercase word
+# into the match and lose the account with it.
 #
 # Every country, not just ES: foreign accounts are declarable (Modelo 720
 # exists for assets held abroad) and refund accounts may be non-SEPA, so an
@@ -153,7 +247,8 @@ _CIF_PATTERN = r"\b[A-HJNPQRSUVWa-hjnpqrsuvw]\d{7}[0-9A-Ja-j]\b"
 # match — a long alphanumeric run otherwise collides with hashes and opaque
 # ids, and a real 32-character hex digest in the bundled corpus is rejected
 # by the checksum exactly as intended.
-_IBAN_PATTERN = r"\b[A-Z]{2}\d{2}[A-Z0-9]{11,30}\b"
+_IBAN_SEPARATOR = r"[ \-]?"
+_IBAN_PATTERN = rf"\b[A-Z]{{2}}{_IBAN_SEPARATOR}\d{_IBAN_SEPARATOR}\d(?:{_IBAN_SEPARATOR}[A-Z0-9]){{11,30}}\b"
 
 # Bearer / OAuth tokens commonly start with ``ey`` (JWT).
 _BEARER_PATTERN = r"(?i)\b(?:bearer\s+)?(eyJ[A-Za-z0-9_\-]{20,}\.[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,})"
@@ -273,6 +368,11 @@ _DEFAULT_RULES: Mapping[str, _RedactionRule] = MappingProxyType(
             pattern=_CIF_PATTERN,
             strategy=_RedactionStrategy.SHA256_PREFIX_IF_IDENTITY,
         ),
+        "nif-iva-hash": _RedactionRule(
+            name="nif-iva-hash",
+            pattern=_NIF_IVA_PATTERN,
+            strategy=_RedactionStrategy.SHA256_PREFIX_IF_NIF_IVA,
+        ),
         "iban-hash": _RedactionRule(
             name="iban-hash",
             pattern=_IBAN_PATTERN,
@@ -372,40 +472,191 @@ def default_rules_for_class(sensitivity: _SensitivityClass) -> tuple[_RedactionR
     return default_rules_for(_default_policy_for(sensitivity))
 
 
+#: An ISO-8601 instant, matched whole. The fractional-second form is what
+#: ``model_dump(mode="json")`` writes, and it collides with the identity
+#: shapes: the seconds and microseconds of ``...T09:32:12.345678Z`` are seven
+#: digits with separators and a trailing letter, which is a NIF, and
+#: ``12345678Z`` even carries a valid check character -- so validating the
+#: match cannot tell the two apart. Only the surrounding span can.
+_ISO_INSTANT_RE = re.compile(
+    r"\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|z|[+-]\d{2}:?\d{2})?",
+)
+
+
+def _timestamp_spans(value: str) -> tuple[tuple[int, int], ...]:
+    """Return the spans of ``value`` that are complete ISO-8601 instants."""
+    return tuple(match.span() for match in _ISO_INSTANT_RE.finditer(value))
+
+
+def _outside_timestamps(
+    replace: Callable[[re.Match[str]], str],
+    spans: tuple[tuple[int, int], ...],
+) -> Callable[[re.Match[str]], str]:
+    """Wrap ``replace`` so a match overlapping a timestamp is left alone.
+
+    A timestamp is not a tax identity, an IBAN or a token, so no rule has
+    anything to redact inside one. Exempting the span is safe in a way that
+    narrowing the identity patterns would not be: the patterns legitimately
+    allow ``.`` and ``-`` separators, and an exclusion tight enough to spare a
+    microsecond field would also spare a genuine dotted identity.
+
+    Redacting one was not cosmetic. The rewritten stamp no longer parses, so a
+    model that re-validates it on the way to storage refuses the whole record.
+    """
+
+    def _replace_outside(match: re.Match[str]) -> str:
+        start, end = match.span()
+        if any(span_start < end and start < span_end for span_start, span_end in spans):
+            return match.group(0)
+        return replace(match)
+
+    return _replace_outside
+
+
+def _is_word_character(character: str) -> bool:
+    return character.isalnum() or character == "_"
+
+
+def _gated_sub(
+    pattern: re.Pattern[str],
+    value: str,
+    protected: tuple[tuple[int, int], ...],
+    admit: Callable[[str], str | None],
+) -> str:
+    """Substitute every span ``admit`` accepts, RE-READING one it refuses.
+
+    Three arms here are deliberately built as a wide scan admitted by a strict
+    gate, so that the checksum or the per-State structure decides and the shape
+    is only weak evidence. :func:`re.sub` breaks that arrangement: it spends the
+    span it matched whether or not the strategy rewrote it. The scan is greedy
+    and its separator classes admit characters that also separate WORDS, so a
+    match can carry a neighbouring word into the span. The joined span then
+    normalises to something no authority recognises, the gate refuses it
+    **correctly**, and the identity inside it is already consumed -- no later
+    pass reaches it. The gate was never wrong; it was never asked about the
+    right string.
+
+    A refusal therefore does not end the span's life here. Candidates are tried
+    longest-first from the same start, each required to end where a real token
+    ends, and only once every one is refused does the scan advance a single
+    character instead of past the whole match -- which lets a start further in
+    (``de SE556677889901`` -> ``SE556677889901``) be reached in turn. The gate
+    still decides everything; what changed is that it is consulted on every
+    plausible reading of the span rather than only the greediest one.
+
+    A span overlapping an ISO-8601 instant keeps the behaviour
+    :func:`_outside_timestamps` documents: it is passed over whole, because
+    nothing inside a timestamp is an identity and a rewritten stamp no longer
+    parses.
+    """
+    out: list[str] = []
+    pos = 0
+    length = len(value)
+    while pos < length:
+        match = pattern.search(value, pos)
+        if match is None:
+            break
+        start, end = match.span()
+        if any(span_start < end and start < span_end for span_start, span_end in protected):
+            out.append(value[pos:end])
+            pos = max(end, start + 1)
+            continue
+        replacement: str | None = None
+        stop = end
+        while stop > start:
+            # A candidate must end where a token ends. ``endpos`` makes ``\b``
+            # see an end-of-string it does not have, so without this guard the
+            # scan could hash a PREFIX of a longer opaque token.
+            if stop < length and _is_word_character(value[stop]):
+                stop -= 1
+                continue
+            candidate = pattern.match(value, start, stop)
+            if candidate is not None and candidate.end() == stop:
+                replacement = admit(value[start:stop])
+                if replacement is not None:
+                    break
+            stop -= 1
+        if replacement is None:
+            out.append(value[pos : start + 1])
+            pos = start + 1
+            continue
+        out.append(value[pos:start])
+        out.append(replacement)
+        pos = stop
+    out.append(value[pos:])
+    return "".join(out)
+
+
 def _apply_one(rule: _RedactionRule, value: str) -> str:
     pattern = re.compile(rule.pattern, re.MULTILINE)
+    protected = _timestamp_spans(value)
+
+    def _sub(replace: Callable[[re.Match[str]], str]) -> str:
+        return pattern.sub(_outside_timestamps(replace, protected), value)
+
     if rule.strategy is _RedactionStrategy.ELLIPSIS:
-        return pattern.sub("...", value)
+        return _sub(lambda m: "...")
     if rule.strategy is _RedactionStrategy.SHA256_PREFIX:
-        return pattern.sub(lambda m: _sha256_prefix(m.group(0)), value)
+        return _sub(lambda m: _sha256_prefix(m.group(0)))
     if rule.strategy is _RedactionStrategy.SHA256_PREFIX_IF_IDENTITY:
         # Imported here, not at module scope: ``core.identity`` reaches
         # ``core.errors``, which reaches this module — the same cycle the
         # lazy ``..errors`` imports below step around.
-        from ..identity import IdentityError, validate_identity
+        from ..identity import IdentityError, normalise_nif_iva, validate_identity
 
-        def _hash_if_identity(match: re.Match[str]) -> str:
-            span = match.group(0)
+        def _hash_if_identity(span: str) -> str | None:
+            # Normalise through the SAME function the codebase's canonical
+            # same-bearer predicate uses (``same_tax_identifier``), so pattern
+            # and gate agree by construction rather than by coincidence. They
+            # did not: this scan admits a dot as an internal separator while
+            # ``validate_identity`` strips only spaces and dashes, so the
+            # printed ``B.1234567.4`` matched the scan, was refused by the gate
+            # and reached the operator raw -- while ``same_tax_identifier``
+            # answered that it is the very same bearer as the ``B12345674``
+            # this funnel hashes.
             try:
-                validate_identity(span)
+                validate_identity(normalise_nif_iva(span))
             except IdentityError:
-                return span
+                return None
             return _sha256_prefix(span)
 
-        return pattern.sub(_hash_if_identity, value)
+        return _gated_sub(pattern, value, protected, _hash_if_identity)
+    if rule.strategy is _RedactionStrategy.SHA256_PREFIX_IF_NIF_IVA:
+        # Imported at call time for the reason the identity arm above states.
+        from ..identity import IdentityError, nif_iva_format_for_country, normalise_nif_iva, validate_identity
+
+        def _hash_if_nif_iva(span: str) -> str | None:
+            normalised = normalise_nif_iva(span)
+            prefix, body = normalised[:2], normalised[2:]
+            if prefix == "ES":
+                # Spain is absent from the per-State VAT table, because its own
+                # identities are the AEAT control-character authority's. So the
+                # ES arm asks that authority about the BODY -- which is the
+                # whole of what the prefixed spelling adds.
+                try:
+                    validate_identity(body)
+                except IdentityError:
+                    return None
+                return _sha256_prefix(span)
+            spec = nif_iva_format_for_country(prefix)
+            if spec is None or not spec.pattern.match(normalised):
+                return None
+            return _sha256_prefix(span)
+
+        return _gated_sub(pattern, value, protected, _hash_if_nif_iva)
     if rule.strategy is _RedactionStrategy.SHA256_PREFIX_IF_IBAN:
 
-        def _hash_if_iban(match: re.Match[str]) -> str:
-            span = match.group(0)
-            if _IBAN_SHAPE_RE.match(span) and _iban_mod_97(span) == 1:
+        def _hash_if_iban(span: str) -> str | None:
+            canonical = _normalise_iban(span)
+            if _IBAN_SHAPE_RE.match(canonical) and _iban_mod_97(canonical) == 1:
                 return _sha256_prefix(span)
-            return span
+            return None
 
-        return pattern.sub(_hash_if_iban, value)
+        return _gated_sub(pattern, value, protected, _hash_if_iban)
     if rule.strategy is _RedactionStrategy.HOST_ONLY:
-        return pattern.sub(lambda m: _host_only(m.group(0)), value)
+        return _sub(lambda m: _host_only(m.group(0)))
     if rule.strategy is _RedactionStrategy.FINGERPRINT:
-        return pattern.sub(lambda m: _fingerprint(m.group(0)), value)
+        return _sub(lambda m: _fingerprint(m.group(0)))
     return value  # pragma: no cover - exhaustive enum
 
 

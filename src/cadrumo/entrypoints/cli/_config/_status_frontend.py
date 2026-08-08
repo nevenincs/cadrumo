@@ -35,6 +35,7 @@ if TYPE_CHECKING:
         StatusRecoveryView,
     )
     from ....application.workflow import WorkflowState
+    from ....core.json_contract import Notice
     from ....domain.user_profile import ProfileSchemaDefinition, UserProfileRecord
 
 
@@ -81,6 +82,7 @@ def build_status_page_data() -> StatusPageData:
         profiles=_build_profile_rows(active_uuid),
         auth=_build_auth_view(state),
         recovery=_build_recovery_view(),
+        notices=_build_notices(active_uuid),
     )
 
 
@@ -192,6 +194,45 @@ def _build_recovery_view() -> StatusRecoveryView:
     )
 
 
+def _build_notices(active_uuid: str | None) -> tuple[Notice, ...]:
+    """Project application-layer advisories onto the status page's notices zone.
+
+    The status page is where an operator checks in on a profile's health,
+    so this is the natural landing spot for the same typed
+    :class:`~cadrumo.core.json_contract.Notice` values a CLI envelope
+    already carries — never a second, TUI-only advisory vocabulary.
+    Degrades to no notices for a locked or absent bucket, matching every
+    other zone this page builds.
+    """
+    if active_uuid is None:
+        return ()
+    notices: list[Notice] = []
+    history_notice = _no_aeat_history_notice()
+    if history_notice is not None:
+        notices.append(history_notice)
+    return tuple(notices)
+
+
+def _no_aeat_history_notice() -> Notice | None:
+    """Point an operator at the filing-history pull when the bucket holds no AEAT-sourced observation.
+
+    Reads the same persisted calculation observations
+    :func:`~cadrumo.application.overview.no_aeat_history_notice` was built
+    to judge, gathered across every modelo through
+    :meth:`~cadrumo.application.calculations.CalculationObservationRepository.iter_records`
+    rather than one modelo at a time — the status page asks about the
+    profile as a whole, not one filing.
+    """
+    from ....application.calculations import CalculationObservationRepository
+    from ....application.overview import no_aeat_history_notice
+
+    try:
+        observations = tuple(CalculationObservationRepository().iter_records())
+    except _guarded_read_errors():
+        return None
+    return no_aeat_history_notice(observations)
+
+
 def _build_fact_rows(
     record: UserProfileRecord | None,
     *,
@@ -255,7 +296,12 @@ def _build_fact_rows(
             would be vacuous.
     """
     from ....adapters.inbound.tui import StatusFactRow
-    from ....application.user_profile import mask_profile_field, record_to_path_values
+    from ....application.user_profile import (
+        mask_profile_field,
+        record_to_path_values,
+        resolve_profile_field_label_for_path,
+    )
+    from ....core.i18n import tr
     from ....domain.user_profile import (
         UserProfileError,
         load_user_profile_schema,
@@ -287,8 +333,44 @@ def _build_fact_rows(
                 label=field_def.description or path,
                 sensitivity=field_def.sensitivity,
             )
+            leaf_label_key = _censo_divergencia_leaf_label_key(path)
+            if leaf_label_key is not None:
+                # Otherwise a cotejo divergence renders as
+                # "censo.divergencia.0.axis -> contact.fiscal_address": two
+                # raw internal identifiers naming which field AEAT disputes,
+                # legible only to whoever wrote this code. Restated as
+                # "Divergencias del cotejo censal (campo) -> Domicilio
+                # fiscal" through the SAME field-label authority the manager
+                # overview uses, so the two profile-facts surfaces agree on
+                # what a divergence axis is called.
+                field_label = profile_field_label(section_key, field_def) or declared_path
+                leaf_suffix = tr(leaf_label_key, default=leaf_label_key)
+                label = f"{field_label} ({leaf_suffix})"
+                if path.endswith(".axis"):
+                    resolved_axis = resolve_profile_field_label_for_path(resolved_schema, value)
+                    if resolved_axis is not None:
+                        value = resolved_axis
         rows.append(StatusFactRow(label=label, value=value, masked=masked))
     return tuple(rows)
+
+
+def _censo_divergencia_leaf_label_key(path: str) -> str | None:
+    """Return the locale key for one ``censo.divergencia.{n}.{leaf}`` row's leaf, or ``None``.
+
+    Scoped to this one namespace rather than a generic indexed-leaf
+    translator: the leaf name is chosen by whichever family writes a given
+    namespace field, and ``censo.divergencia`` is the only one whose leaves
+    (``axis`` / ``artefact_value`` / ``source``) name a concept an operator
+    needs read off this read-only page.
+    """
+    if not path.startswith("censo.divergencia."):
+        return None
+    leaf = path.rsplit(".", 1)[-1]
+    return {
+        "axis": "cli.config.profile.censo.divergencia_leaf_axis",
+        "artefact_value": "cli.config.profile.censo.divergencia_leaf_artefact_value",
+        "source": "cli.config.profile.censo.divergencia_leaf_source",
+    }.get(leaf)
 
 
 __all__ = ["build_status_page_data", "present_status_tui"]

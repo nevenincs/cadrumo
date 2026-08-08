@@ -369,13 +369,25 @@ def _decline_invoice_draft(
 
     So the trace is the event, scoped to the evidence rather than to a
     transaction, because a declined draft never became one.
+
+    The audit sink is resolved through the ledger's one default-resolution
+    helper, the same way every sibling branch of the dispatch above resolves
+    its own. Constructing the concrete repository here would both name an
+    adapter from the application layer and reproduce the bare
+    ``BucketEventHistoryRepository()`` form -- which, unlike the sibling reject
+    path, is saved to DIRECTLY here rather than riding a transaction
+    repository's secure-write batch, so it would not bind to the operation
+    bucket's store at all.
     """
-    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ...domain.buckets import BucketEventType
+    from ._actions_common import _bucket_event_repository
     from ._evidence import _emit_evidence_event
 
     event_id = _emit_evidence_event(
-        event_repository=bucket_event_repository or BucketEventHistoryRepository(),
+        event_repository=_bucket_event_repository(
+            bucket_id=bucket_id,
+            repository=bucket_event_repository,
+        ),
         bucket_id=bucket_id,
         event_type=BucketEventType.PURCHASE_INVOICE_EVIDENCE_DRAFT_DECLINED,
         evidence_id=suggestion.evidence_reference,

@@ -48,9 +48,20 @@ def select_revision_for_year(
             revision_id=None,
         )
     if len(candidates) > 1:
+        # A year-only answer for a year covered by more than one revision is wrong
+        # in whichever direction it is given, so this refuses rather than picking.
+        # The REMEDY rides with the raiser rather than in the shared message: the
+        # period-scoped selector raises the same error, and telling that caller to
+        # supply a period would send it to redo what it already did.
         raise AmbiguousRevisionSelectionError(
             modelo_id=modelo.id,
             candidate_ids=tuple(revision.id for revision in candidates),
+            filing_year=filing_year,
+            reason=(
+                "this filing year carries a mid-year AEAT design boundary, so more than one "
+                "revision covers it and no year-only answer is correct"
+            ),
+            suggestion="supply the filing period, or an as-of date, to select one of these revisions",
         )
     return candidates[0]
 

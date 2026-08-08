@@ -139,6 +139,27 @@ def test_assemble_foreign_asset_parses_iso_acquisition_date() -> None:
     assert obs.valuation_amount == Decimal("120000")
 
 
+def test_assemble_foreign_asset_refuses_a_row_with_no_country() -> None:
+    """Modelo 720 declares assets situated ABROAD, so Spain is not a usable fallback.
+
+    The observation model already requires the country; the assembler's ES
+    fallback was the only reason that requirement never reached a row. The
+    positive control is ``test_assemble_foreign_asset_parses_iso_acquisition_date``,
+    which is the identical row with the country cell present.
+    """
+    revision = _modelo("720", "2013-y-siguientes")
+    cells = (
+        RowSetCellEdit(binding="modelo-720-asset-row-class", row_index=1, value="C"),
+        RowSetCellEdit(binding="modelo-720-asset-row-currency", row_index=1, value="CHF"),
+        RowSetCellEdit(binding="modelo-720-asset-row-identifier", row_index=1, value="CH-iban-001"),
+        RowSetCellEdit(binding="modelo-720-asset-row-acquisition-date", row_index=1, value="2020-01-15"),
+        RowSetCellEdit(binding="modelo-720-asset-row-valuation", row_index=1, value=Decimal("120000")),
+    )
+
+    with pytest.raises(RegistryValidationError, match="country_code"):
+        assemble_foreign_asset_observations(cells, revision, filing_year=2025)
+
+
 def test_assemble_atribucion_caps_share_percentage_at_validation() -> None:
     """An out-of-range share triggers the AtributionMemberObservation validator."""
 
@@ -172,6 +193,52 @@ def test_assemble_related_party_reads_operation_kind_and_method() -> None:
     assert obs.operation_kind_code == "01"
     assert obs.transfer_pricing_method_code == "1A"
     assert obs.amount == Decimal("50000")
+    assert obs.country_code == "ES"
+
+
+def _related_party_cells(*, country: str | None) -> tuple[RowSetCellEdit, ...]:
+    """Build one complete related-party row, optionally omitting the country cell.
+
+    Every other cell is a value the assembler accepts, so a refusal can only
+    have come from the missing country.
+    """
+    cells = [
+        RowSetCellEdit(binding="modelo-232-related-party-row-nif", row_index=1, value="A12345678"),
+        RowSetCellEdit(binding="modelo-232-related-party-row-name", row_index=1, value="Counter SL"),
+        RowSetCellEdit(binding="modelo-232-related-party-row-operation-kind", row_index=1, value="01"),
+        RowSetCellEdit(binding="modelo-232-related-party-row-tpr-method", row_index=1, value="1A"),
+        RowSetCellEdit(binding="modelo-232-related-party-row-amount", row_index=1, value=Decimal("50000")),
+    ]
+    if country is not None:
+        cells.insert(
+            2,
+            RowSetCellEdit(binding="modelo-232-related-party-row-country", row_index=1, value=country),
+        )
+    return tuple(cells)
+
+
+def test_assemble_related_party_refuses_a_row_with_no_country() -> None:
+    """A blank country cell must refuse rather than resolve the row to Spain.
+
+    The assembler is the boundary where an operator's cleared workbook cell
+    reaches the typed observation, and modelo 232 declares paraíso-fiscal
+    operations, so substituting Spain here declares a domestic counterparty
+    the row never stated.
+    """
+    revision = _modelo("232", "2018-y-siguientes")
+
+    with pytest.raises(RegistryValidationError, match="country_code"):
+        assemble_related_party_observations(_related_party_cells(country=None), revision, filing_year=2025)
+
+
+def test_assemble_related_party_carries_a_tax_haven_country_through() -> None:
+    """Positive control for the refusal above, and the case the ES default masked."""
+    revision = _modelo("232", "2018-y-siguientes")
+
+    observations = assemble_related_party_observations(_related_party_cells(country="KY"), revision, filing_year=2025)
+
+    assert len(observations) == 1
+    assert observations[0].country_code == "KY"
 
 
 def test_assemble_refund_parses_iso_operation_date() -> None:

@@ -1351,6 +1351,14 @@ def _extract_invoice_fields_from_structured_record(evidence: EvidenceInput) -> I
         grand_total=parsed.grand_total,
         currency=parsed.currency,
         recargo_amount=parsed.recargo_amount,
+        # The other two terms of the closure identity, which the structured
+        # reader recovers from the format's own dedicated elements. Carried here
+        # or the read is unreachable: the identity is checked on the DRAFT, so a
+        # parser that recovers a suplido the draft drops leaves the check
+        # computing a total short by exactly it -- which is the shape this
+        # mapping exists to close rather than to reproduce one field along.
+        retencion_amount=parsed.retencion_amount,
+        suplidos_amount=parsed.suplidos_amount,
         iva_category=parsed.iva_category,
         # The mention the document prints, carried on the model-free path too.
         # It was reaching the operator only from the reading model, so the one

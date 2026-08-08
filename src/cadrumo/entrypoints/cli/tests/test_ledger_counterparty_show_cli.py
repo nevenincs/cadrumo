@@ -22,7 +22,7 @@ consumer must act on differently -- never a tax figure, which this verb does not
 compute.
 
 See Also:
-    :func:`~application.ledger.resolve_counterparty_establishment`
+    :func:`~application.ledger.resolve_confirmed_counterparty_facts`
         The single resolver both this verb and the ladder ask.
     :class:`~entrypoints.cli._ledger_counterparty_payloads.CounterpartyShowResult`
         The payload whose three-state contract is pinned here.
@@ -211,3 +211,125 @@ def test_an_unknown_territory_is_refused_with_the_accepted_set(tmp_path: Path) -
 
     assert result.exit_code != 0
     assert "es_canarias" in result.output, result.output
+
+
+def test_the_identification_an_operator_confirmed_is_readable(tmp_path: Path) -> None:
+    """A settable fact must be readable, or it cannot be reviewed or corrected.
+
+    ``--identification-state`` was accepted by confirm while show emitted the
+    territorial side alone, so the value could be written and never read back.
+    A write-only fact at the operator boundary is worse than an absent one: it
+    cannot be told apart from a value nobody supplied.
+    """
+    with _open_ledger_ux_session(tmp_path):
+        recorded = _invoke(
+            [
+                "app",
+                "ledger",
+                "counterparty",
+                "confirm",
+                _COUNTERPARTY_CIF,
+                "--scope",
+                _CONFIRMED,
+                "--identification-state",
+                "de",
+            ],
+        )
+        assert recorded.exit_code == 0, recorded.output
+        shown = _show(_COUNTERPARTY_CIF)
+
+    assert shown["identification_state"] == "de"
+    assert shown["identification_source"] is not None
+
+
+def test_an_unconfirmed_identification_reads_as_absent_not_as_a_default(tmp_path: Path) -> None:
+    """The control. Without it the field could be reporting a constant.
+
+    Confirming only a territory must leave the identification empty rather than
+    inventing one, which is the same refusal every rung on this axis makes: an
+    unstated fact is absent, never a default.
+    """
+    with _open_ledger_ux_session(tmp_path):
+        _confirm_canarias()
+        shown = _show(_COUNTERPARTY_CIF)
+
+    assert shown["identification_state"] is None
+    assert shown["territorial_scope"] == _CONFIRMED
+
+
+def test_an_identification_can_be_confirmed_without_a_territory(tmp_path: Path) -> None:
+    """The two facts are independent, so either may be answered alone.
+
+    An operator may know which State VAT-identifies a counterparty without
+    knowing where it is established -- that is the whole reason the axis was
+    split -- and requiring the territory made the half they knew unrecordable.
+    """
+    with _open_ledger_ux_session(tmp_path):
+        recorded = _invoke(
+            [
+                "app",
+                "ledger",
+                "counterparty",
+                "confirm",
+                _COUNTERPARTY_CIF,
+                "--identification-state",
+                "fr",
+            ],
+        )
+        assert recorded.exit_code == 0, recorded.output
+        shown = _show(_COUNTERPARTY_CIF)
+
+    assert shown["identification_state"] == "fr"
+
+
+def test_an_unanswered_territory_settles_nothing_and_never_defaults(tmp_path: Path) -> None:
+    """The load-bearing half. Absence must mean not asked, never Spain.
+
+    The mainland is the majority answer, so a default there is invisible in
+    testing while placing Canarian and Ceutan counterparties inside a territory
+    their operations are not subject to. A record answering only the
+    identification must leave the rung settling nothing.
+    """
+    with _open_ledger_ux_session(tmp_path):
+        _invoke(
+            [
+                "app",
+                "ledger",
+                "counterparty",
+                "confirm",
+                _COUNTERPARTY_CIF,
+                "--identification-state",
+                "fr",
+            ],
+        )
+        shown = _show(_COUNTERPARTY_CIF)
+
+    assert shown["territorial_scope"] is None
+    assert shown["confirmed"] is False
+
+
+def test_a_confirmation_asserting_neither_fact_is_refused(tmp_path: Path) -> None:
+    """An empty record is worse than no record.
+
+    It addresses a counterparty, occupies the key, and answers every later
+    question with a silence that reads as a confirmed absence. The refusal names
+    both flags, so an operator who supplied neither learns what either would do.
+    """
+    with _open_ledger_ux_session(tmp_path):
+        refused = _invoke(
+            ["app", "ledger", "counterparty", "confirm", _COUNTERPARTY_CIF],
+        )
+
+    assert refused.exit_code != 0
+    assert "--identification-state" in refused.output
+
+
+def test_a_territory_only_confirmation_still_works(tmp_path: Path) -> None:
+    """Positive control on the relaxation: the original shape is unaffected."""
+    with _open_ledger_ux_session(tmp_path):
+        _confirm_canarias()
+        shown = _show(_COUNTERPARTY_CIF)
+
+    assert shown["confirmed"] is True
+    assert shown["territorial_scope"] == _CONFIRMED
+    assert shown["identification_state"] is None

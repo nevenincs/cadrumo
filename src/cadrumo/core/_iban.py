@@ -7,11 +7,19 @@ casillas declaring ``data_type = "iban"`` and by the secure-storage
 :class:`~domain.deadlines.RefundAccount` model. Keeping the primitives in
 ``core`` lets each domain validate an IBAN without importing the other.
 
-This module does not canonicalise operator input, decide whether a blank IBAN is
-allowed, or choose the public error type. Registry casilla validation rejects
-blank IBAN data, while the refund-account model treats ``None`` and blank input
-as "no account on file"; both call these primitives after applying their own
-boundary policy.
+Canonicalising the printed form is :func:`normalise_iban`, which lives here
+beside the shape and the checksum because every consumer needs the same answer
+before it can ask either of them: an IBAN is printed in groups of four on a bank
+statement and an invoice footer, so the separator-free spelling the shape gate
+accepts is the one that does NOT arrive. Two validators open-coded the same
+three-call canonicalisation and a third consumer -- the confidentiality funnel
+-- had no canonicalisation at all, which is what made the grouped rendering
+readable in operator output.
+
+This module still does not decide whether a blank IBAN is allowed or choose the
+public error type. Registry casilla validation rejects blank IBAN data, while
+the refund-account model treats ``None`` and blank input as "no account on
+file"; both call these primitives after applying their own boundary policy.
 """
 
 from __future__ import annotations
@@ -25,6 +33,26 @@ The pattern checks uppercase canonical text only: country code, two check
 digits, and an alphanumeric BBAN for a total length of 15-34 characters. It is
 only the structural gate; callers must also run :func:`iban_mod_97`.
 """
+
+
+def normalise_iban(value: str) -> str:
+    """Return the uppercase, separator-free form of a printed IBAN.
+
+    An IBAN is essentially always printed in groups of four -- that is how it
+    leaves a bank statement, an invoice footer and an operator's clipboard --
+    and hyphenated renderings are common too. :data:`IBAN_SHAPE_RE` matches only
+    the canonical spelling, so every consumer must fold the printed form onto it
+    before asking the shape or :func:`iban_mod_97` anything.
+
+    Args:
+        value: An IBAN as printed, with or without separators.
+
+    Returns:
+        The uppercased value with spaces and hyphens removed. The result is not
+        asserted to be a valid IBAN; the caller still runs the shape gate and
+        the checksum.
+    """
+    return value.replace(" ", "").replace("-", "").upper()
 
 
 def iban_mod_97(canonical: str) -> int:

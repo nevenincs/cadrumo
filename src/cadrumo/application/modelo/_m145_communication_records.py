@@ -73,7 +73,7 @@ from ._revision_persistence import build_modelo_bucket_event as _build_bucket_ev
 from ._revision_persistence import emit_modelo_bucket_event as _emit_bucket_event
 
 if TYPE_CHECKING:
-    from ..live import SecureSnapshotRepository
+    from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
 
 _HEX_64_PATTERN = r"^[0-9a-f]{64}$"
 _FOUR_DIGIT_YEAR_PATTERN = re.compile(r"^\d{4}$")
@@ -368,7 +368,11 @@ def _m145_communication_record_ambiguous_prefix(
 
 
 def _m145_communication_record_repository(bucket_id: BucketId):
-    from ..live import SecureSnapshotRepository
+    # The repository class is adapter-side and imports nothing from
+    # application, so it needs no deferral. The error class still does: it is
+    # owned by application.live, which depends transitively on this package.
+    from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
+    from ..live import LiveApplicationInputError
 
     return SecureSnapshotRepository(
         bucket_id=bucket_id,
@@ -378,6 +382,7 @@ def _m145_communication_record_repository(bucket_id: BucketId):
         not_found_factory=_m145_communication_record_not_found,
         ambiguous_prefix_factory=_m145_communication_record_ambiguous_prefix,
         domain_label="m145_communication_record",
+        input_error_cls=LiveApplicationInputError,
     )
 
 

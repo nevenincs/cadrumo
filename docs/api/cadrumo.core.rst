@@ -88,6 +88,7 @@ Submodules
    cadrumo.core._models
    cadrumo.core._notificacion_estado_servicio
    cadrumo.core._objeto_tributario
+   cadrumo.core._observed_header_fact
    cadrumo.core._optional_extras
    cadrumo.core._period
    cadrumo.core._pid_liveness

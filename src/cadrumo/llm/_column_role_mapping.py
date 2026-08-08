@@ -52,7 +52,7 @@ from functools import cache
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ..core import FieldRole, ModelRole, build_provenance_stamp
+from ..core import LLM_EXTRA, FieldRole, ModelRole, build_provenance_stamp, require_optional_extra
 from ..core.config import Settings, load_settings
 from ._client import LLMClient
 from ._errors import LLMConfigError, LLMValidationError
@@ -464,6 +464,13 @@ class SemanticColumnRoleMapper:
         client: LLMClient | None = None,
         settings: Settings | None = None,
     ) -> None:
+        # Ahead of every other statement, so the refusal is what an operator
+        # without the extra sees rather than a settings or model-resolution
+        # error raised on the way to it. This is the point the tabular lane
+        # splits at: a known fixed-layout file never reaches here and imports
+        # fully on a core install, while an unknown header vocabulary needs the
+        # mapping call and refuses with the install hint.
+        require_optional_extra(LLM_EXTRA)
         resolved_settings = settings if settings is not None else load_settings()
         self._model = model if model is not None else self._role_model(resolved_settings)
         self._provider = provider if provider is not None else (None if model is not None else LLMProvider.LOCAL)

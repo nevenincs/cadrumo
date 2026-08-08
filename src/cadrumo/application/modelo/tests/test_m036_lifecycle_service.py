@@ -99,13 +99,20 @@ def test_record_alta_emits_bucket_event_of_matching_kind(tmp_path: Path) -> None
 
 
 def test_record_modificacion_emits_modificacion_event(tmp_path: Path) -> None:
-    """Each event_kind maps to its matching BucketEventType."""
+    """Each event_kind maps to its matching BucketEventType.
+
+    A ``modificacion`` amends an existing registration, so this records
+    the requisite alta first (a later, distinct filing date) — the
+    sequence guard now refuses a bare ``modificacion`` with nothing on
+    record, exercised on its own in ``test_m036_lifecycle_sequence.py``.
+    """
     command = M036DeclarationCommand(
         profile_id=_PROFILE_ID,
         event_kind=CensoModeloEventKind.MODIFICACION,
-        declared_on=date(2026, 6, 4),
+        declared_on=date(2026, 6, 5),
     )
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
+        record_m036_declaration(_alta_command(), bucket_id=runtime.bucket_id)
         result = record_m036_declaration(command, bucket_id=runtime.bucket_id)
         catalogue = BucketEventHistoryRepository().load()
 
@@ -115,13 +122,20 @@ def test_record_modificacion_emits_modificacion_event(tmp_path: Path) -> None:
 
 
 def test_record_baja_emits_baja_event(tmp_path: Path) -> None:
-    """BAJA event_kind maps to CENSO_DECLARATION_BAJA."""
+    """BAJA event_kind maps to CENSO_DECLARATION_BAJA.
+
+    A ``baja`` deregisters an existing registration, so this records the
+    requisite alta first — the sequence guard now refuses a bare ``baja``
+    with nothing on record, exercised on its own in
+    ``test_m036_lifecycle_sequence.py``.
+    """
     command = M036DeclarationCommand(
         profile_id=_PROFILE_ID,
         event_kind=CensoModeloEventKind.BAJA,
-        declared_on=date(2026, 6, 4),
+        declared_on=date(2026, 6, 5),
     )
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
+        record_m036_declaration(_alta_command(), bucket_id=runtime.bucket_id)
         result = record_m036_declaration(command, bucket_id=runtime.bucket_id)
         catalogue = BucketEventHistoryRepository().load()
 

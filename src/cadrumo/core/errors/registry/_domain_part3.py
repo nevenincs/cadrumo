@@ -492,17 +492,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.modelos._errors.CensoStaleRefusedError",
-        ErrorCode(
-            code="REFUSED_MODELO_CENSO_STALE",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.modelo_censo_stale",
-            default_suggestion="aeat app modelo work calculate",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.domain.filing.reconciliation._errors.ReconciliationDeclaracionParseError",
         ErrorCode(
             code="FAIL_DECLARATION_PARSE",

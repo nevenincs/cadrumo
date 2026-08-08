@@ -2609,7 +2609,12 @@ reviewed_at = 2026-06-15
 reviewed_by = "agent-authored from bundled ley-35-2006.html#dtnovena; operator to re-stamp"
 notes = "LIRPF disposición transitoria 9ª: régimen transitorio (coeficientes de abatimiento) de las ganancias patrimoniales derivadas de elementos patrimoniales adquiridos antes del 31-12-1994, con el límite acumulado de 400.000 € de valor de transmisión. Base legal de la reducción DT-9ª en las casillas de ganancia patrimonial por transmisión de inmuebles en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#dtnovena; operator to confirm and re-stamp."
 required_text = [
-    "adquiridos con anterioridad a 31 de diciembre de 1994",
+    "adquiridos con anterioridad a 31 de diciembre de 1994",    # The three-year desafectación rule, at 97% and above the amendment
+    # block. The phrase above is a date fragment that appears throughout the
+    # law, so it identified neither this disposición nor its completeness.
+    # Verified against live BOE apartado by apartado: 1 and 2 on both sides,
+    # 3 on neither.
+    "la desafectación de estas actividades se haya producido con más de tres años",
 ]
 
 [legal."ley-35-2006:art-82"]
@@ -3446,7 +3451,10 @@ reviewed_at = 2026-06-15
 reviewed_by = "agent-authored from bundled ley-35-2006.html#a54; operator to re-stamp"
 notes = "LIRPF art 54: reducciones de la base imponible general por aportaciones a patrimonios protegidos de las personas con discapacidad (límite 10.000 € por aportante, 24.250 € conjunto). Base legal de las casillas de reducción/exceso por patrimonio protegido en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a54; operator to confirm and re-stamp."
 required_text = [
-    "Reducciones por aportaciones a patrimonios protegidos de las personas con discapacidad",
+    "Reducciones por aportaciones a patrimonios protegidos de las personas con discapacidad",    # Apartado 5 (the death exception to the disposal clawback), the last
+    # operative provision, at 95%. The title alone previously grounded it.
+    # Verified against live BOE: apartados 1-5 on both sides, 6 on neither.
+    "en caso de fallecimiento del titular del patrimonio protegido, del aportante o de los trabajadores",
 ]
 
 [legal."ley-35-2006:art-64"]
@@ -3621,7 +3629,11 @@ reviewed_at = 2026-06-15
 reviewed_by = "agent-authored from bundled ley-35-2006.html#da-11; operator to re-stamp"
 notes = "LIRPF disposición adicional 58ª: deducción por la adquisición de vehículos eléctricos enchufables y de pila de combustible y por la instalación de puntos de recarga (15% sobre el valor de adquisición, con límites). Base legal de las casillas de deducción por vehículos eléctricos y puntos de recarga en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#da-11 (DA quincuagésima octava); operator to confirm and re-stamp."
 required_text = [
-    "Deducción por la adquisición de vehículos eléctricos",
+    "Deducción por la adquisición de vehículos eléctricos",    # Apartado 6 (reglamentary reporting duty on the vendor), the last
+    # operative provision, at 74% and above the amendment block -- 18% of
+    # this excerpt is amendment chrome. The title alone previously grounded
+    # it. Verified complete against live BOE: apartados 1-6 on both sides.
+    "reglamentariamente se regularán las obligaciones de información a cumplir por los concesionarios",
 ]
 
 [legal."ley-35-2006:da-60"]
@@ -5413,7 +5425,11 @@ reviewed_at = 2026-06-15
 reviewed_by = "agent-authored from bundled ley-35-2006.html#a92; operator to re-stamp"
 notes = "LIRPF art 92: imputación de rentas por la cesión de derechos de imagen. Base legal de las casillas del régimen especial de imputación por cesión de derechos de imagen en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a92; operator to confirm and re-stamp."
 required_text = [
-    "Imputación de rentas por la cesión de derechos de imagen",
+    "Imputación de rentas por la cesión de derechos de imagen",    # Apartado 8 (the ingreso a cuenta declaration duty), the last operative
+    # provision, at 97%. The title alone previously grounded it. Verified
+    # against live BOE apartado by apartado: 1 through 8 present on both
+    # sides, 9 on neither.
+    "al tiempo de presentar la declaración deberá determinar su importe y efectuar su ingreso en el Tesoro",
 ]
 
 [legal."ley-35-2006:art-95"]

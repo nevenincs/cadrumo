@@ -71,6 +71,7 @@ def _complete_socio_row(index: int) -> tuple[UserProfileFact, ...]:
         UserProfileFact(path=f"{_SOCIOS}.{index}.share_pct", value=Decimal("50")),
         UserProfileFact(path=f"{_SOCIOS}.{index}.base_imponible_assigned", value=Decimal("1000")),
         UserProfileFact(path=f"{_SOCIOS}.{index}.role", value="socio"),
+        UserProfileFact(path=f"{_SOCIOS}.{index}.participe_clave", value="1"),
     )
 
 

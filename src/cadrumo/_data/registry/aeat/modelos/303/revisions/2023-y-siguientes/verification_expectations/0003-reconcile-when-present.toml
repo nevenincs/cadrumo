@@ -18,6 +18,26 @@ reconcile_when_present_casilla_ids = [
     "29",
     "33",
     "37",
+    # Situational boxes, added to close the enrolment gate's exhaustive
+    # invariant. Each is export required=true, so the FICHERO always carries a
+    # zero for it; the printed declaracion leaves it BLANK when the activity is
+    # absent (measured: the annex quarters print box numbers "153 154 155" and
+    # "165 166 167" with no values). Reconcile-when-present is the class the
+    # enrolment gate names for exactly this shape -- "coverage-gated if it is an
+    # always-present final, reconcile-when-present otherwise".
+    #
+    # HONEST NOW, NOT COMPLETE. Reconcile-when-present never surfaces
+    # MISSING_IN_FILED. Today that costs nothing because no extraction profile
+    # targets these ids, so neither side ever carries them and nothing is
+    # checked either way. IF A PROFILE LATER TARGETS THEM, an omission INSIDE
+    # the transitional window -- where the box should carry a value -- will read
+    # as legitimately absent rather than under-declared. That is the silent
+    # direction, and whoever adds the extraction coverage owns the question.
+    "10",
+    "154",
+    "155",
+    "166",
+    "167",
     "iva.autoconsumo.promotor.cuota",
     "iva.prorrata-porcentaje",
     "modulos-iva-cuota-derivada",

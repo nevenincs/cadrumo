@@ -18,6 +18,7 @@ and uniform :class:`~cadrumo.core.json_contract.Notice` rows into
 from __future__ import annotations
 
 import re as _re
+from typing import TYPE_CHECKING
 
 from ...application.modelo import (
     ModeloWorkDeadlinePosture,
@@ -42,6 +43,12 @@ from ._modelo_payloads import (
     WorkUnitPayload,
 )
 from ._modelo_revision_payload_parts import DetailRowPayload
+
+if TYPE_CHECKING:
+    # Annotation-only: `from __future__ import annotations` keeps this lazy so the
+    # state-free CLI surface pays no runtime aggregation-import cost, matching the
+    # calculate module's own deferral of the same type.
+    from ...application.aggregation import CalculationSourceDiagnostic
 
 _EXTEMPORANEOUS_RECARGO_LEGAL_REF = "ley-58-2003:art-27.2"
 _M349_ROW_FIELD_TEMPLATE_PREFIXES = ("op.", "rect.")
@@ -189,6 +196,40 @@ def advisory_notice(
         suggestion=suggestion,
         context=context,
     )
+
+
+def source_diagnostic_notice(diagnostic: CalculationSourceDiagnostic, *, code: str) -> Notice:
+    """Project one source diagnostic onto a notice whose context is routable.
+
+    The single projection for source-resolution advisories, shared by every
+    command that emits them so their context cannot diverge per call site.
+
+    Every field an operator would otherwise have to recover by parsing the
+    message is carried as a structured context key. That is the point rather than
+    a convenience: this CLI's operator is an autonomous agent directed to route on
+    fields, and a context of only ``reason`` / ``source_kind`` / ``resolver_id`` is
+    IDENTICAL across every carry advisory on a revision, so two advisories about
+    two different casillas were indistinguishable except by prose. A typed channel
+    whose context never varies is typed in shape only.
+
+    Keys are omitted rather than written empty when the diagnostic does not carry
+    them, so absence means "this diagnostic has no such subject" rather than "the
+    subject is blank".
+    """
+    context = {
+        "reason": str(diagnostic.reason),
+        "source_kind": diagnostic.source_kind,
+    }
+    optional: dict[str, str | None] = {
+        "resolver_id": diagnostic.resolver_id,
+        "binding_source": diagnostic.binding_source.value if diagnostic.binding_source else None,
+        "binding_id": diagnostic.binding_id,
+        "relation_id": diagnostic.relation_id,
+        "casilla_id": diagnostic.casilla_id,
+        "source_ref": diagnostic.source_ref,
+    }
+    context.update({key: value for key, value in optional.items() if value})
+    return advisory_notice(code, diagnostic.message, suggestion=diagnostic.remedy, context=context)
 
 
 def next_action_notice(

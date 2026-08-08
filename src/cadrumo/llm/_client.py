@@ -9,20 +9,26 @@ Coordinates :class:`~adapters.outbound.llm.LLMRequest` inputs,
 
 from __future__ import annotations
 
+import asyncio
+import secrets
+import threading
 import time
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import uuid4
 
-from pydantic import SecretStr
+from pydantic import BaseModel, ConfigDict, Field, SecretStr
 
 from ..core.config import Settings
+from ..core.errors import get_registered_error_code
 from ..core.hashing import content_hash_hex
 from ..core.i18n import tr
 from ..core.logging import get_logger
 from ..core.time import now
 from ._consent import EVIDENCE_CONSENT_REFUSAL_LOCALE_KEY, provider_reads_off_host
-from ._errors import LLMCacheError, LLMConfigError, LLMConsentError
+from ._errors import LLMBusyError, LLMCacheError, LLMConfigError, LLMConsentError, LLMError
 
 if TYPE_CHECKING:
     # The three persistence-touching stores stay on the CORE side of the
@@ -46,7 +52,7 @@ from ._providers import (
     OpenAIAdapter,
     ProviderRequest,
 )
-from ._providers.base import _ProviderAdapter
+from ._providers.base import ProviderCompletion, _ProviderAdapter
 
 # AnthropicAdapter stays lazy here so provider construction remains behind the
 # optional-extra guard in _build_adapter.
@@ -59,6 +65,212 @@ _EVIDENCE_CONSENT_DISPATCH_REFUSAL_LOCALE_KEY = "llm.evidence.consent.dispatch_r
 def _elapsed_ms(monotonic_start: float) -> int:
     """Return the whole-millisecond elapsed duration since ``monotonic_start``."""
     return max(0, round((time.monotonic() - monotonic_start) * 1000))
+
+
+def transport_retry_permitted(exc: BaseException) -> bool:
+    """Whether ``exc`` may be retried by re-sending the identical request.
+
+    **Derived from the error taxonomy, never listed here.** Every
+    :class:`~core.errors.CadrumoError` subclass is required to carry a
+    registered :class:`~core.errors.ErrorCode`, and that record already declares
+    ``retryable`` for the operator-facing envelope. Reading the answer from
+    there means a new failure class cannot be silently omitted from a retry set:
+    it cannot exist at all without declaring the answer, because the registry
+    bind refuses an unregistered subclass at class-creation time. A hand-kept
+    set is the shape that has already shipped in this repository carrying half
+    its members.
+
+    Anything that is not a registered error is NOT retryable. That is the
+    fail-closed direction: an exception leaking from a dependency has made no
+    statement about whether re-sending is safe, and inventing one for it is how
+    a contention or consent refusal would end up retried by accident.
+
+    Args:
+        exc: The exception raised by the provider adapter.
+
+    Returns:
+        True only when the taxonomy declares this failure class retryable.
+    """
+    try:
+        return get_registered_error_code(exc).retryable
+    except ValueError:
+        # An unregistered exception type. Not a retry decision to guess at.
+        return False
+
+
+class LLMRetryPolicy(BaseModel):
+    """The typed, bounded retry policy applied to one transport dispatch.
+
+    Data on the client rather than behaviour scattered through the adapters, so
+    the answer to "how many times, how long, and for which failures" is one
+    readable record instead of four vendor-specific loops.
+
+    **Scoped by the taxonomy, not by this model.** Which failures are eligible
+    is :func:`transport_retry_permitted`'s answer, read from the registered
+    error code; this model only decides how often and how long. That separation
+    is deliberate: the eligibility question has exactly one right answer for the
+    whole process, while the timing is a deployment tuning knob.
+
+    Attributes:
+        max_attempts: Total attempts including the first. One disables retrying.
+        initial_backoff_s: The first backoff, doubling per subsequent attempt.
+        max_backoff_s: Ceiling on a single backoff, before jitter.
+        budget_s: Total wall-clock ceiling across every attempt and every wait.
+            A bounded budget, not merely a bounded count: a retry schedule whose
+            waits grow can otherwise outlive the operator's patience while
+            technically respecting its attempt limit.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True)
+
+    max_attempts: int = Field(default=3, ge=1)
+    initial_backoff_s: float = Field(default=0.5, gt=0.0)
+    max_backoff_s: float = Field(default=8.0, gt=0.0)
+    budget_s: float = Field(default=30.0, gt=0.0)
+
+    def backoff_for(self, attempt: int, *, retry_after_s: float | None = None) -> float:
+        """Return the wait before the attempt following ``attempt``.
+
+        Exponential from :attr:`initial_backoff_s`, capped at
+        :attr:`max_backoff_s`, then jittered into the upper half of that
+        interval. Jitter is not decoration: without it, a batch that failed
+        together retries together, and the synchronised burst is itself a
+        plausible cause of the next failure.
+
+        A server-supplied ``Retry-After`` wins whenever it asks for LONGER than
+        the computed backoff. It is never allowed to shorten the wait, because a
+        vendor's hint about its own rate window says nothing about this
+        machine's recovery.
+
+        Args:
+            attempt: The 1-based number of the attempt that just failed.
+            retry_after_s: A server-supplied delay hint, when the failure
+                carried one.
+
+        Returns:
+            Seconds to wait before the next attempt.
+        """
+        exponential = self.initial_backoff_s * (2 ** (attempt - 1))
+        capped = min(exponential, self.max_backoff_s)
+        # Full-jitter in the upper half: still spreads a synchronised batch,
+        # while never collapsing the backoff toward zero the way [0, capped)
+        # would on an unlucky draw.
+        jittered = capped * (0.5 + secrets.randbelow(501) / 1000)
+        if retry_after_s is not None:
+            return max(jittered, retry_after_s)
+        return jittered
+
+
+class _OnHostInferenceArena:
+    """The process-wide occupancy bound on concurrent on-host inference.
+
+    **Refusal, not queueing, and the choice is argued from the failure
+    direction rather than from ergonomics.** A queue does not help when the
+    bound is too permissive -- both designs admit whatever the bound says -- and
+    it actively hurts when the bound is right: a waiting request holds its
+    decoded pages in the very memory under pressure for as long as it waits, so
+    the queue itself becomes an allocation that grows with load, and it runs
+    against headroom that was measured *before* it waited, which is the one
+    reading the contention check exists to keep fresh. A refusal is synchronous,
+    typed, and observable at the caller; the caller retries after quiesce, which
+    is the same remediation a contention refusal already names.
+
+    Loop-agnostic on purpose. A :class:`asyncio.Semaphore` binds to the event
+    loop that created it, and this process runs LLM work under several
+    short-lived loops (each ``asyncio.run`` from a synchronous CLI path opens a
+    new one), so a loop-bound primitive would silently bound nothing across
+    them. The occupancy count is guarded by a plain
+    :class:`threading.Lock` instead, which holds across loops and threads
+    alike, and is only ever held for the duration of an integer comparison --
+    never across an await.
+    """
+
+    def __init__(self, limit: int) -> None:
+        self._limit = limit
+        self._held = 0
+        self._lock = threading.Lock()
+
+    @property
+    def limit(self) -> int:
+        """Return the configured number of simultaneous on-host inference slots."""
+        return self._limit
+
+    @property
+    def held(self) -> int:
+        """Return how many slots are occupied right now."""
+        with self._lock:
+            return self._held
+
+    def try_acquire(self) -> bool:
+        """Take a slot if one is free, without ever blocking.
+
+        Returns:
+            True when a slot was taken and the caller must release it; False
+            when the arena is full and the caller must refuse.
+        """
+        with self._lock:
+            if self._held >= self._limit:
+                return False
+            self._held += 1
+            return True
+
+    def release(self) -> None:
+        """Give a slot back.
+
+        Raises:
+            RuntimeError: When more releases than acquisitions have run. This is
+                a bug in the dispatch path rather than an operator condition,
+                and it must be loud: a release that silently underflows would
+                let the arena admit more than its limit forever after, which is
+                the failure this whole class exists to prevent.
+        """
+        with self._lock:
+            if self._held <= 0:
+                msg = "on-host inference arena released more slots than it holds"
+                raise RuntimeError(msg)
+            self._held -= 1
+
+
+_ON_HOST_ARENA: _OnHostInferenceArena | None = None
+_ON_HOST_ARENA_LOCK = threading.Lock()
+
+
+def _on_host_inference_arena(settings: Settings) -> _OnHostInferenceArena:
+    """Return the process-wide on-host inference arena, sized on first use.
+
+    A singleton for the reason the bound exists at all: the resource it protects
+    is the machine, not the client object, so two :class:`LLMClient` instances
+    -- which production builds freely, one per caller -- must contend for the
+    same slots. Sized from settings at first use rather than rebuilt per client,
+    because a rebuild would hand a fresh, empty arena to the second client and
+    the bound would hold for neither.
+    """
+    global _ON_HOST_ARENA
+    with _ON_HOST_ARENA_LOCK:
+        if _ON_HOST_ARENA is None:
+            _ON_HOST_ARENA = _OnHostInferenceArena(settings.cadrumo_llm_local_inference_concurrency)
+        return _ON_HOST_ARENA
+
+
+def reset_on_host_inference_arena() -> None:
+    """Drop the process-wide arena so the next dispatch rebuilds it from settings.
+
+    Exists because the arena is sized once per process while settings are
+    per-configuration: a test (or a genuine settings reload) that changes the
+    concurrency bound would otherwise keep the first size forever.
+
+    Raises:
+        RuntimeError: When a slot is currently held. Rebuilding under an
+            in-flight request would hand the next arrival an empty arena while
+            a real inference is still resident, which is precisely the double
+            load the bound prevents -- so this refuses rather than resetting.
+    """
+    global _ON_HOST_ARENA
+    with _ON_HOST_ARENA_LOCK:
+        if _ON_HOST_ARENA is not None and _ON_HOST_ARENA.held:
+            msg = "cannot reset the on-host inference arena while a slot is held"
+            raise RuntimeError(msg)
+        _ON_HOST_ARENA = None
 
 
 class LLMClient:
@@ -75,6 +287,10 @@ class LLMClient:
             :class:`~adapters.outbound.llm.LLMRunTelemetryRecorder` override.
         prompt_registry: Optional
             :class:`~adapters.outbound.llm.PromptRegistry` override.
+        retry_policy: Optional :class:`LLMRetryPolicy` override governing how
+            often and how long a transient transport failure is re-sent. Which
+            failures qualify is not tunable here -- that is the error taxonomy's
+            answer, read through :func:`transport_retry_permitted`.
         caller: Stable caller identifier recorded in usage logs.
         prompt_id: Stable prompt identifier recorded in usage logs.
     """
@@ -88,6 +304,7 @@ class LLMClient:
         run_telemetry_recorder: LLMRunTelemetryRecorder | None = None,
         consent_ledger: EvidenceConsentLedger | None = None,
         prompt_registry: PromptRegistry | None = None,
+        retry_policy: LLMRetryPolicy | None = None,
         caller: str = "cadrumo.llm.client",
         prompt_id: str = "adhoc",
     ) -> None:
@@ -114,6 +331,7 @@ class LLMClient:
         # store, so it has no prune to call.
         self.consent_ledger = consent_ledger or EvidenceConsentLedger()
         self.prompt_registry = prompt_registry or PromptRegistry.seeded()
+        self.retry_policy = retry_policy or LLMRetryPolicy()
         self.caller = caller
         self.prompt_id = prompt_id
         self._sweep_retention_stores()
@@ -182,8 +400,10 @@ class LLMClient:
         run_started_at = now()
         run_clock_start = time.monotonic()
         try:
-            completion = await adapter.complete(provider_request)
+            with self._on_host_admission(provider):
+                completion = await self._complete_with_retries(adapter, provider_request)
         except Exception as exc:  # LLM provider adapters surface heterogeneous exceptions; log+re-raise here
+            self._attach_local_degradation_remediation(exc, provider=provider, model=model)
             _LOGGER.error(
                 "llm request failed provider=%s model=%s request_id=%s",
                 provider.value,
@@ -234,6 +454,160 @@ class LLMClient:
             completion.output_tokens,
         )
         return response
+
+    @staticmethod
+    def _attach_local_degradation_remediation(
+        exc: BaseException,
+        *,
+        provider: LLMProvider,
+        model: str,
+    ) -> None:
+        """Give an on-host degradation the remediation that resolves it.
+
+        Local degradation -- the runtime is not running, the model was never
+        pulled, it is still loading, it died mid-read -- reaches the operator as
+        a transport failure whose text says a connection failed. That is true
+        and useless: the operator needs the verb, and this CLI's operator is an
+        agent that will follow whatever next step it is given, or invent one if
+        given none.
+
+        **The remediation names the provision verb and nothing else.** Where the
+        deployment has a cloud route configured, naming it here would read as
+        the offered next step, and the agent-operator would take it -- turning a
+        local outage into an off-host read of a taxpayer's document that nobody
+        chose. The consent gate would still refuse an evidence-marked request,
+        but a refusal is not the right last line of defence for a suggestion
+        that should never have been written; a non-evidence request would not
+        even meet that gate.
+
+        ``verify`` leads because it DIAGNOSES: this layer cannot tell an absent
+        model from a stopped runtime from a slow load, and ``verify`` reports
+        exactly which of the three it is, while ``pull`` would be wrong advice
+        in two of the three cases and would start a multi-gigabyte download in
+        one of them.
+
+        Attaches rather than wraps. The failure's type is the transport's honest
+        answer and callers already dispatch on it; replacing it to add a string
+        would trade a true classification for a presentational one. An error
+        that already carries its own suggestion keeps it -- a nearer layer knew
+        something more specific.
+
+        Args:
+            exc: The failure about to be re-raised.
+            provider: The provider this dispatch ran at.
+            model: The resolved model, named in the remediation.
+        """
+        if provider_reads_off_host(provider) or not isinstance(exc, LLMError):
+            return
+        if getattr(exc, "suggestion", None):
+            return
+        exc.suggestion = (
+            f"aeat config provision verify --model {model}  "
+            f"(then 'aeat config provision pull --model {model}' if it is not installed)"
+        )
+
+    async def _complete_with_retries(
+        self,
+        adapter: _ProviderAdapter,
+        provider_request: ProviderRequest,
+    ) -> ProviderCompletion:
+        """Run one dispatch, re-sending it only while the taxonomy permits.
+
+        **Inside the admission slot, not around it.** A retrying request keeps
+        its on-host slot across its waits, which is the safe direction:
+        releasing it would let a second request take the arena and turn this
+        one's next attempt into a busy refusal -- converting a transient
+        failure into a different refusal for no reason. The bounded budget is
+        what keeps holding the slot honest.
+
+        The budget is checked BEFORE sleeping, so a wait that would outlive the
+        budget is not taken at all: the caller gets the real failure at the
+        moment the budget is spent rather than after one last pointless pause.
+
+        Args:
+            adapter: The resolved provider adapter.
+            provider_request: The normalized request, re-sent unchanged on every
+                attempt -- an attempt that altered the request would be a
+                different question, and its success would not mean the first one
+                would have worked.
+
+        Returns:
+            The provider completion from whichever attempt succeeded.
+
+        Raises:
+            Exception: The final attempt's failure, re-raised unchanged, so a
+                caller still sees the typed refusal it would have seen with no
+                retry policy at all.
+        """
+        policy = self.retry_policy
+        started = time.monotonic()
+        attempt = 1
+        while True:
+            try:
+                return await adapter.complete(provider_request)
+            except Exception as exc:  # classification is the taxonomy's job, not this loop's
+                if attempt >= policy.max_attempts or not transport_retry_permitted(exc):
+                    raise
+                delay = policy.backoff_for(attempt, retry_after_s=getattr(exc, "retry_after_seconds", None))
+                if time.monotonic() - started + delay > policy.budget_s:
+                    raise
+                _LOGGER.info(
+                    "llm transport retry attempt=%d/%d after=%s in=%.2fs",
+                    attempt,
+                    policy.max_attempts,
+                    type(exc).__name__,
+                    delay,
+                )
+                await asyncio.sleep(delay)
+                attempt += 1
+
+    @contextmanager
+    def _on_host_admission(self, provider: LLMProvider) -> Iterator[None]:
+        """Hold one on-host inference slot for the duration of a dispatch.
+
+        Applied at the client's single dispatch point, like every other boundary
+        on this path, and scoped to on-host providers through
+        :func:`~adapters.outbound.llm.provider_reads_off_host` rather than a
+        hand-kept list of local transports -- so a provider added later is
+        off-host by construction, and correctly unbounded here, because an
+        off-host dispatch occupies none of this machine's device memory. The
+        resource this bound protects is local, so the bound is local too.
+
+        Wrapped around the adapter call ONLY, not around the whole method: a
+        cache hit runs no inference and returns before this point, and holding a
+        slot through a cache read would refuse a second request over work that
+        never touches the device.
+
+        Args:
+            provider: The resolved provider this dispatch runs at.
+
+        Yields:
+            Nothing; the slot is held for the body and released on any exit.
+
+        Raises:
+            LLMBusyError: When every on-host slot is already occupied.
+        """
+        if provider_reads_off_host(provider):
+            yield
+            return
+        arena = _on_host_inference_arena(self.settings)
+        if not arena.try_acquire():
+            msg = (
+                f"This process already runs {arena.limit} on-host inference request(s), "
+                f"its configured maximum, so this one was refused rather than queued."
+            )
+            raise LLMBusyError(
+                message=msg,
+                suggestion=(
+                    "Retry once the running read finishes. Raise "
+                    "CADRUMO_LLM_LOCAL_INFERENCE_CONCURRENCY only on a machine with "
+                    "headroom for a second simultaneous model load."
+                ),
+            )
+        try:
+            yield
+        finally:
+            arena.release()
 
     def _require_evidence_consent(self, provider: LLMProvider, model: str, request: LLMRequest) -> None:
         """Refuse an off-host dispatch of taxpayer evidence without consent.

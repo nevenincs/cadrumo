@@ -24,7 +24,19 @@ reviewed_by = "operator"
 notes = "LIRPF Art. 93 — régimen especial aplicable a los trabajadores desplazados a territorio español. Permite optar por tributar por IRNR durante el período impositivo del desplazamiento y los cinco siguientes. Desarrollado por RD 439/2007 (RIRPF) Art. 113-120 y presentado mediante Modelo 151 (Orden EHA/2887/2008)."
 required_text = [
     "desplazados",
-    "territorio español",
+    "territorio español",    # The two escala tranches this entry exists to ground (apartado
+    # 2.e).1.o). The phrases above are the bare words `desplazados` and
+    # `territorio español`, both in the article title.
+    #
+    # This excerpt is CURATED rather than a whole-article extract -- it is
+    # scoped to the escala and carries its own `fuente:` note -- so its
+    # apartado set legitimately differs from the live article and a
+    # completeness comparison against the full article would be meaningless.
+    # What matters here is the NUMBERS, so both tranche boundaries are
+    # pinned and both were cross-checked against the live BOE consolidated
+    # text: 24 % to 600.000 euros, 47 % above it.
+    "hasta 600.000 euros",
+    "desde 600.000,01 euros en adelante",
 ]
 
 [legal."ley-35-2006:art-93-ahorro"]

@@ -17,7 +17,6 @@ from ....adapters.outbound.aeat.sede import (
     FiledDeclaracionObservation,
     FiledDeclaracionObservationStore,
     ObservedCasillaValue,
-    observed_casillas_from_submitted_file,
 )
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -139,20 +138,27 @@ def _parsed_303_submitted_file_observation(
     period: str,
     expediente_id: str,
     presented_at: datetime,
-    casilla_110: str,
-    casilla_78: str,
-    casilla_87: str,
-    casilla_69: str,
-    casilla_71: str,
+    casilla_110: Decimal,
+    casilla_78: Decimal,
+    casilla_87: Decimal,
+    casilla_69: Decimal,
+    casilla_71: Decimal,
 ) -> FiledDeclaracionObservation:
+    """Build a submitted-file observation carrying the five carry-bearing casillas.
+
+    The five values are stated directly rather than encoded into a fichero and
+    read back out. What these tests exercise is the carry arithmetic downstream
+    of the observation -- lot allocation, applied amounts, availability at
+    period end -- and each scenario needs a specific combination of the five,
+    which are calculation OUTPUTS no realistic set of inputs can be steered to.
+    The round-trip this replaced ran through a page-03 byte-offset reader that
+    no longer exists, and it never touched the export layout a real capture
+    reads, so nothing about real parsing is lost here. The layout read itself is
+    covered where it belongs, against exporter-produced ficheros, by the sede
+    adapter's own submitted-file tests.
+    """
     observation_period = Period.from_year_and_code(year, period)
-    body = _modelo_303_page_03_payload(
-        casilla_110=casilla_110,
-        casilla_78=casilla_78,
-        casilla_87=casilla_87,
-        casilla_69=casilla_69,
-        casilla_71=casilla_71,
-    )
+    body = f"303-{year}-{period}-submitted-file".encode("ascii")
     external = _aeat_external_constants()
     declarations_url = f"{external.domains.www6}{external.sede_paths.declarations_listing}"
     artefact = FiledDeclaracionArtefact(
@@ -163,24 +169,22 @@ def _parsed_303_submitted_file_observation(
         sha256=hashlib.sha256(body).hexdigest(),
         captured_at=presented_at,
     )
-    declaration = Declaracion(
-        modelo="303",
-        ejercicio=year,
-        period=observation_period,
-        expediente_id=expediente_id,
-        estado="ALTA",
-        tipo_solicitud=None,
-        observaciones=None,
-        presented_at=presented_at,
-        justificante_link_text="Ver",
-        archive_link_text="Ver",
-        declaration_copy_link_text=None,
-    )
-    observed = observed_casillas_from_submitted_file(
-        snapshot=_registry_snapshot("303", year, period),
-        declaration=declaration,
-        body=body,
-        artefact=artefact,
+    observed = tuple(
+        ObservedCasillaValue(
+            casilla_id=casilla_id,
+            value=str(value),
+            value_kind=CasillaValueKind.NUMERIC,
+            source_artefact_kind="submitted_file",
+            source_locator=f"submitted-file:{official_number}",
+            confidence=1.0,
+        )
+        for casilla_id, official_number, value in (
+            (_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA, "110", casilla_110),
+            (_M303_APLICADA_CASILLA, "78", casilla_78),
+            (_M303_POSTERIOR_CASILLA, "87", casilla_87),
+            (_M303_RESULTADO_CASILLA, "69", casilla_69),
+            (_M303_RESULTADO_FINAL_CASILLA, "71", casilla_71),
+        )
     )
     return FiledDeclaracionObservation(
         modelo="303",
@@ -354,27 +358,6 @@ def _seed_current_filing(
     filing_repo = ModeloRecordCatalogueRepository()
     filing_repo.save(upsert_filing_record(filing_repo.load(), filing))
     return filing
-
-
-def _modelo_303_page_03_payload(
-    *,
-    casilla_110: str,
-    casilla_78: str,
-    casilla_87: str,
-    casilla_69: str,
-    casilla_71: str,
-) -> bytes:
-    page = list("<T30303000>" + (" " * (1017 - len("<T30303000>"))))
-    for position, raw in (
-        (255, casilla_110),
-        (272, casilla_78),
-        (289, casilla_87),
-        (323, casilla_69),
-        (374, casilla_71),
-    ):
-        page[position - 1 : position - 1 + len(raw)] = raw
-    page[1005:1017] = list("</T30303000>")
-    return "".join(page).encode("latin-1")
 
 
 def _prior_303_observation(

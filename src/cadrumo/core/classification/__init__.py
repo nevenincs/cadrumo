@@ -176,6 +176,16 @@ class RedactionStrategy(StrEnum):
             is a long alphanumeric run that collides freely with hashes,
             opaque ids, and tokens; the checksum is what makes matching
             one safe.
+        SHA256_PREFIX_IF_NIF_IVA: As ``SHA256_PREFIX``, but only when the
+            matched span is a VAT identification number -- an ``ES``-prefixed
+            Spanish identity, or another Member State's number matching the
+            structure its own prefix claims. The bare Spanish shapes are
+            covered by the two strategies above and this one covers the
+            PREFIXED form, which they miss: the prefix defeats the word
+            boundary their patterns anchor on, so ``ESB12345674`` survived
+            a funnel that redacts ``B12345674``. The prefix is a claim and
+            not evidence, so the per-State structure decides, exactly as the
+            checksum decides for an IBAN.
         HOST_ONLY: For URL-shaped values, retain only the host
             component; drop path, query, and fragment.
         FINGERPRINT: Replace bearer / OAuth token-shaped values with
@@ -188,6 +198,7 @@ class RedactionStrategy(StrEnum):
     SHA256_PREFIX = "sha256_prefix"
     SHA256_PREFIX_IF_IDENTITY = "sha256_prefix_if_identity"
     SHA256_PREFIX_IF_IBAN = "sha256_prefix_if_iban"
+    SHA256_PREFIX_IF_NIF_IVA = "sha256_prefix_if_nif_iva"
     HOST_ONLY = "host_only"
     FINGERPRINT = "fingerprint"
     ELLIPSIS = "ellipsis"
@@ -293,6 +304,7 @@ _DIAGNOSTIC_RETENTION = timedelta(days=7)
 _AUDIT_REDACTION_RULES = (
     "nif-hash",
     "cif-hash",
+    "nif-iva-hash",
     "iban-hash",
     "url-host-only",
     "token-fingerprint",
@@ -321,13 +333,13 @@ _DEFAULT_POLICY_TABLE: Mapping[SensitivityClass, ClassificationPolicy] = Mapping
             sensitivity=SensitivityClass.IDENTITY,
             at_rest=AtRestTreatment.CIPHERTEXT_REQUIRED,
             retention=RetentionPolicy(max_age=_FISCAL_YEAR_RETENTION),
-            redaction_rules=("nif-hash", "cif-hash", "iban-hash"),
+            redaction_rules=("nif-hash", "cif-hash", "nif-iva-hash", "iban-hash"),
         ),
         SensitivityClass.FINANCIAL: ClassificationPolicy(
             sensitivity=SensitivityClass.FINANCIAL,
             at_rest=AtRestTreatment.CIPHERTEXT_REQUIRED,
             retention=RetentionPolicy(max_age=_FISCAL_YEAR_RETENTION),
-            redaction_rules=("nif-hash", "cif-hash", "iban-hash"),
+            redaction_rules=("nif-hash", "cif-hash", "nif-iva-hash", "iban-hash"),
         ),
         SensitivityClass.AUDIT: ClassificationPolicy(
             sensitivity=SensitivityClass.AUDIT,

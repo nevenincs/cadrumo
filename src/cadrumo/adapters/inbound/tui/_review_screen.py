@@ -36,6 +36,7 @@ from ....application.flows import (
 )
 from ....core.flows import PageStatus
 from ....core.i18n import tr
+from ._confirm_screen import confirm_restart_dialog
 
 if TYPE_CHECKING:
     from ._app import FlowTuiApp
@@ -218,7 +219,17 @@ class ReviewScreen(Screen[None]):
         self.flow_app.action_save_exit()
 
     def action_restart_flow(self) -> None:
-        self.flow_app.action_restart()
+        """Ask before wiping every answer; mirrors the question screen's guard.
+
+        The review page is where every answer is finally visible at once —
+        exactly where an accidental ``ctrl+n`` is costliest, since the
+        operator may have just reached the end of a long walk.
+        """
+        self.app.push_screen(confirm_restart_dialog(), self._apply_restart_decision)
+
+    def _apply_restart_decision(self, confirmed: bool | None) -> None:
+        if confirmed:
+            self.flow_app.action_restart()
 
 
 __all__ = ["ReviewScreen"]

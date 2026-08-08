@@ -65,7 +65,7 @@ def test_import_invoices_from_rows_persists_through_create_catalogue_invoice(tmp
             f"{_CIF},Papeleria Sol SL,BULK-A-002,2026-05-02,50.00,10\n",
             tmp_path,
         )
-        result = import_invoices_from_rows(rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED)
+        result = import_invoices_from_rows(rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED, declared_country="ES")
 
         assert result.rows == 2
         assert result.created == 2
@@ -88,10 +88,10 @@ def test_import_invoices_from_rows_reimport_is_idempotent_no_op(tmp_path: Path) 
             f"{_CIF},Papeleria Sol SL,BULK-B-001,2026-05-01,100.00,21\n",
             tmp_path,
         )
-        first = import_invoices_from_rows(rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED)
+        first = import_invoices_from_rows(rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED, declared_country="ES")
         assert first.created == 1
 
-        second = import_invoices_from_rows(rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED)
+        second = import_invoices_from_rows(rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED, declared_country="ES")
         assert second.created == 0
         assert second.skipped_duplicate == 1
         assert second.refused == ()
@@ -110,7 +110,7 @@ def test_import_invoices_from_rows_refuses_malformed_row_names_field(tmp_path: P
             f"{_CIF},Papeleria Sol SL,BULK-C-002,not-a-date,50.00,10\n",
             tmp_path,
         )
-        result = import_invoices_from_rows(rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED)
+        result = import_invoices_from_rows(rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED, declared_country="ES")
 
         assert result.created == 1
         assert len(result.refused) == 1
@@ -127,7 +127,7 @@ def test_import_invoices_from_rows_refuses_unsupported_iva_rate(tmp_path: Path) 
             f"{_CIF},Papeleria Sol SL,BULK-D-001,2026-05-01,100.00,13\n",
             tmp_path,
         )
-        result = import_invoices_from_rows(rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED)
+        result = import_invoices_from_rows(rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED, declared_country="ES")
         assert result.created == 0
         assert len(result.refused) == 1
         assert result.refused[0].field == "invoice"
@@ -154,7 +154,7 @@ def test_import_refuses_the_spanish_thousands_amount_instead_of_reading_it_as_ce
             f"{_CIF},Papeleria Sol SL,BULK-ES-001,2026-05-01,1.234,21\n",
             tmp_path,
         )
-        result = import_invoices_from_rows(rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED)
+        result = import_invoices_from_rows(rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED, declared_country="ES")
 
         assert result.created == 0
         assert len(result.refused) == 1
@@ -183,7 +183,7 @@ def test_import_refuses_every_spanish_amount_grammar(taxable_base: str, tmp_path
             f'{_CIF},Papeleria Sol SL,BULK-ES-002,2026-05-01,"{taxable_base}",21\n',
             tmp_path,
         )
-        result = import_invoices_from_rows(rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED)
+        result = import_invoices_from_rows(rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED, declared_country="ES")
 
         assert result.created == 0
         assert [failure.field for failure in result.refused] == ["taxable_base"]
@@ -205,7 +205,7 @@ def test_the_amount_refusal_teaches_the_grammar_it_wants(tmp_path: Path) -> None
             f"{_CIF},Papeleria Sol SL,BULK-ES-005,2026-05-01,1.234,21\n",
             tmp_path,
         )
-        result = import_invoices_from_rows(rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED)
+        result = import_invoices_from_rows(rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED, declared_country="ES")
 
         reason = result.refused[0].reason
         assert "1234.56" in reason, "the refusal must show a correctly-written amount"
@@ -225,7 +225,7 @@ def test_import_still_accepts_the_canonical_euro_amount(tmp_path: Path) -> None:
             f"{_CIF},Papeleria Sol SL,BULK-ES-003,2026-05-01,1234.56,21\n",
             tmp_path,
         )
-        result = import_invoices_from_rows(rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED)
+        result = import_invoices_from_rows(rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED, declared_country="ES")
 
         assert result.refused == ()
         assert result.created == 1
@@ -251,7 +251,7 @@ def test_import_keeps_an_already_numeric_workbook_cell_unjudged(tmp_path: Path) 
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         rows = read_bulk_invoice_import_source(xlsx_path)
-        result = import_invoices_from_rows(rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED)
+        result = import_invoices_from_rows(rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED, declared_country="ES")
 
         assert result.refused == ()
         assert result.created == 1
@@ -322,7 +322,7 @@ def test_an_unrecognised_column_is_reported_and_the_file_still_imports(tmp_path:
     assert "bogus" not in source.rows[0].values
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        result = import_invoices_from_rows(source, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED)
+        result = import_invoices_from_rows(source, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED, declared_country="ES")
         assert result.created == 1
         assert result.refused == ()
 
@@ -420,3 +420,108 @@ def test_import_refuses_an_uncomputed_formula_naming_the_formula_not_the_amount(
     message = str(exc_info.value)
     assert "formula cached values are not accepted" in message
     assert "decimal separator" not in message
+
+
+# ---------------------------------------------------------------------------
+# Counterparty country: recordable-but-blank refuses, unanswerable is declared
+# ---------------------------------------------------------------------------
+
+# A minimal accounting export: the shape every fixture above already uses, and
+# the shape a book that predates any country column has. It can state no
+# country for any row, which is what makes it the unanswerable case rather
+# than a blank-cell one.
+_EXPORT_WITHOUT_COUNTRY_COLUMN = (
+    "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\n"
+    f"{_CIF},Papeleria Sol SL,BULK-CTY-001,2026-05-01,100.00,21\n"
+)
+
+# The same export from a book that DOES carry the column, with one EU supplier
+# whose country the export left empty -- the row-level omission.
+_EXPORT_WITH_COUNTRY_COLUMN_ONE_BLANK = (
+    "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate,country_code\n"
+    f"{_CIF},Papeleria Sol SL,BULK-CTY-010,2026-05-01,100.00,21,ES\n"
+    "DE811907980,Papier Nord GmbH,BULK-CTY-011,2026-05-02,200.00,21,\n"
+)
+
+
+def test_import_refuses_a_file_that_can_state_no_country_at_all(tmp_path: Path) -> None:
+    """A book with no country column is refused once, before any row is read.
+
+    Inferring Spain here would silently reclassify a foreign supplier as
+    domestic, and the invoice source resolver routes IVA on exactly that
+    comparison. Refusing per-row instead would emit one identical failure per
+    row and bury the single fact the operator needs.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        source = _csv_source(_EXPORT_WITHOUT_COUNTRY_COLUMN, tmp_path)
+
+        with pytest.raises(InvoiceValidationError, match="country"):
+            import_invoices_from_rows(source, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED)
+
+
+def test_a_declared_country_lets_a_book_without_the_column_import(tmp_path: Path) -> None:
+    """Positive control: the same file imports once the operator states a country.
+
+    Without this the refusal above is indistinguishable from an importer that
+    refuses this file for some unrelated reason, and the recourse the refusal
+    names would be unproven.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        source = _csv_source(_EXPORT_WITHOUT_COUNTRY_COLUMN, tmp_path)
+
+        result = import_invoices_from_rows(
+            source,
+            bucket_id=_BUCKET_ID,
+            kind=InvoiceKind.RECEIVED,
+            declared_country="ES",
+        )
+
+        assert result.created == 1
+        assert result.refused == ()
+
+
+def test_a_blank_country_cell_refuses_only_its_own_row(tmp_path: Path) -> None:
+    """A file that HAS the column is not refused whole; the blank row is.
+
+    This is the recordable-but-blank class: the book demonstrably can carry the
+    fact, so an empty cell is an omission specific to that row. Partial-success
+    semantics keep every row that did state a country.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        source = _csv_source(_EXPORT_WITH_COUNTRY_COLUMN_ONE_BLANK, tmp_path)
+
+        result = import_invoices_from_rows(source, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED)
+
+        assert result.created == 1
+        assert [(f.row_number, f.field) for f in result.refused] == [(3, "country_code")]
+
+
+def test_a_declared_country_never_overrides_a_row_that_states_one(tmp_path: Path) -> None:
+    """The whole-import country is a fallback for an unanswerable file, not an override.
+
+    If it silently won over a stated cell, declaring ES to get a legacy book
+    moving would rewrite every foreign counterparty in a book that had them
+    right -- the same reclassification the default caused, reintroduced through
+    the recourse.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        source = _csv_source(_EXPORT_WITH_COUNTRY_COLUMN_ONE_BLANK, tmp_path)
+
+        result = import_invoices_from_rows(
+            source,
+            bucket_id=_BUCKET_ID,
+            kind=InvoiceKind.RECEIVED,
+            declared_country="DE",
+        )
+
+        assert result.created == 2
+        assert result.refused == ()
+
+        # The stated ES row kept ES rather than taking the declared DE, and
+        # the blank row took DE rather than refusing. Read back through the
+        # real repository, so this is what was persisted and not what the
+        # in-memory result happened to carry.
+        catalogue = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID).load()
+        by_number = {inv.invoice_number: inv.counterparty_country for inv in catalogue.invoices.values()}
+        assert by_number["BULK-CTY-010"] == "ES"
+        assert by_number["BULK-CTY-011"] == "DE"

@@ -27,17 +27,17 @@ import pytest
 
 from cadrumo.core.external_constants import OutputLanguage
 from dev.docs.pagefind_inject import SearchRecordProjection, materialise_search_records
+from dev.docs.terminology._query_aliases import (
+    QUERY_ALIAS_AUTHORITY_SCHEMA_VERSION,
+    QueryAliasAuthority,
+    QueryAliasEntry,
+)
 from dev.docs.terminology._resolution import (
     ChunkHit,
     GroundingSurface,
     ResolutionResult,
     TargetResolver,
     resolve_chunk_hits,
-)
-from dev.docs.terminology._rung2_query_authority import (
-    QUERY_ALIAS_AUTHORITY_SCHEMA_VERSION,
-    Rung2QueryAliasAuthority,
-    Rung2QueryAliasEntry,
 )
 from dev.docs.terminology._search_record import SearchRecordKind
 from dev.docs.terminology._sweep import (
@@ -150,7 +150,7 @@ def test_enumerate_vocabulary_covers_prorrata_terms_translations_and_hidden_form
     assert "prorrateo" in by_text  # es admitted
     assert "pro rata" in by_text  # en preferred
     assert "deductible proportion" in by_text  # en admitted
-    assert "aranyositas" in by_text  # hu admitted
+    assert "arányosítás" in by_text  # hu admitted; arány is ratio, arany is gold
     # The hidden search form is enumerated and flagged.
     assert "prorateo" in by_text
     assert by_text["prorateo"].is_hidden_form is True
@@ -159,7 +159,7 @@ def test_enumerate_vocabulary_covers_prorrata_terms_translations_and_hidden_form
     assert all(q.concept_id == "prorrata" for q in queries)
     # Language tagging is correct.
     assert by_text["pro rata"].language is OutputLanguage.EN
-    assert by_text["aranyositas"].language is OutputLanguage.HU
+    assert by_text["arányosítás"].language is OutputLanguage.HU
 
 
 def test_enumerate_vocabulary_dedupes_identical_query_strings() -> None:
@@ -197,11 +197,11 @@ def test_run_sweep_uses_explicit_alias_authority_for_the_same_pipeline(
     proves the authority is threaded through enumeration rather than copied
     into a separate mapping path.
     """
-    authority = Rung2QueryAliasAuthority(
+    authority = QueryAliasAuthority(
         schema_version=QUERY_ALIAS_AUTHORITY_SCHEMA_VERSION,
         authority_version=2,
         entries=(
-            Rung2QueryAliasEntry(
+            QueryAliasEntry(
                 concept_id="prorrata",
                 language=OutputLanguage.EN,
                 query="pro-rata",

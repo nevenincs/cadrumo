@@ -35,6 +35,7 @@ from .....domain.user_profile import (
     UserProfileRecord,
     UserProfileStatus,
     load_user_profile_schema,
+    profile_field_label,
     section_field_key,
 )
 from .._status_frontend import _build_fact_rows
@@ -108,6 +109,62 @@ def test_an_indexed_row_keeps_its_path_as_its_label() -> None:
     labels = [row.label for row in rows]
     assert "vaults.0.passphrase_hint" in labels
     assert "vaults.1.passphrase_hint" in labels
+
+
+def test_a_censo_divergencia_axis_row_resolves_to_the_disputed_fields_label() -> None:
+    """A cotejo divergence names WHICH field disagrees, not its raw schema path.
+
+    Before this, ``censo.divergencia.0.axis`` rendered its stored value
+    verbatim -- the dotted schema path AEAT and the operator disagree on
+    (``contact.fiscal_address``) -- which no operator reading the status
+    page can act on. The axis leaf now resolves through the same
+    field-label authority the manager overview reads, against the real
+    shipped schema so the assertion is against what an operator actually
+    meets.
+    """
+    rows = _rows_for_schema_free(
+        UserProfileFact(path="censo.divergencia.0.axis", value="contact.fiscal_address"),
+        UserProfileFact(path="censo.divergencia.0.artefact_value", value="CALLE REAL 2"),
+    )
+
+    values = {row.value for row in rows}
+    expected_label = profile_field_label("contact", load_user_profile_schema().field("contact.fiscal_address"))
+    assert "contact.fiscal_address" not in values, "the raw internal schema path leaked to the operator"
+    assert expected_label in values
+    assert "CALLE REAL 2" in values, "the sibling artefact_value leaf must render untouched"
+
+
+def test_a_censo_divergencia_axis_row_falls_back_to_the_raw_path_when_unresolvable() -> None:
+    """Anti-tautology: an axis the schema does not declare is not silently invented a label.
+
+    Without this, a resolver that always returned SOME string regardless of
+    input would pass the test above by accident.
+    """
+    rows = _rows_for_schema_free(
+        UserProfileFact(path="censo.divergencia.0.axis", value="no.such.schema.path"),
+    )
+
+    assert {row.value for row in rows} == {"no.such.schema.path"}
+
+
+def test_a_censo_divergencia_leaf_label_is_translated_not_raw() -> None:
+    """The leaf suffix is operator prose, not the stored internal field name.
+
+    ``(axis)`` / ``(artefact_value)`` / ``(source)`` are the leaf keys the
+    writing family chose for the record, not words an operator was ever
+    meant to read on a localized Spanish screen.
+    """
+    rows = _rows_for_schema_free(
+        UserProfileFact(path="censo.divergencia.0.axis", value="contact.fiscal_address"),
+        UserProfileFact(path="censo.divergencia.0.artefact_value", value="CALLE REAL 2"),
+        UserProfileFact(path="censo.divergencia.0.source", value="censo_artefact_g313"),
+    )
+    field_label = profile_field_label("censo", load_user_profile_schema().field("censo.divergencia"))
+
+    labels = {row.label for row in rows if row.label.startswith(field_label)}
+    assert labels, f"no censo.divergencia rows rendered under label {field_label!r}: {[r.label for r in rows]}"
+    for raw_leaf in ("(axis)", "(artefact_value)", "(source)"):
+        assert not any(raw_leaf in label for label in labels), f"raw leaf key {raw_leaf!r} leaked into a label"
 
 
 def test_an_unindexed_row_still_reads_its_description() -> None:

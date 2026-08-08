@@ -43,8 +43,7 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import IntracomOperationType, Period
 from ....core.resources import resources
-from ....domain.calculations.registry import IvaLedgerObservation
-from ....domain.invoices import Invoice, InvoiceCatalogue
+from ....domain.invoices import InvoiceCatalogue
 from ....domain.iva import InvoiceKind, IvaCategory
 from ....tests.secure_sql import isolated_runtime_profile
 from ...invoices import build_catalogue_invoice
@@ -52,6 +51,7 @@ from .._modelo_bindings import (
     _category_counterparty_mismatch_diagnostics,
     _claims_a_base_only_category,
     _screened_invoice_iva_observations,
+    _ScreenedInvoiceIva,
 )
 from .._source_mesh import CalculationSourceContext
 
@@ -99,15 +99,7 @@ def _persist_contradicted_supply(secure_objects: SecureObjectRepository) -> str:
     return invoice.invoice_id
 
 
-def _screen(
-    secure_objects: SecureObjectRepository,
-) -> tuple[
-    tuple[IvaLedgerObservation, ...],
-    tuple[str, ...],
-    tuple[Invoice, ...],
-    tuple[Invoice, ...],
-    tuple[Invoice, ...],
-]:
+def _screen(secure_objects: SecureObjectRepository) -> _ScreenedInvoiceIva:
     """Run the real screen, returning its channels as the types they are."""
     snapshot = resources().modelos.authority.snapshot("303", filing_year=_YEAR, period=_PERIOD)
     context = CalculationSourceContext(
@@ -133,7 +125,8 @@ def test_the_withheld_invoice_is_collected_not_dropped(secure_objects: SecureObj
     """
     invoice_id = _persist_contradicted_supply(secure_objects)
 
-    _observations, _ids, compared, mismatches, _underivable = _screen(secure_objects)
+    screened = _screen(secure_objects)
+    compared, mismatches = screened.compared, screened.category_counterparty_mismatches
 
     assert [invoice.invoice_id for invoice in mismatches] == [invoice_id], (
         "the contradicted supply must be reported as withheld; dropping it silently is the "
@@ -155,7 +148,7 @@ def test_the_advisory_names_the_invoice_and_both_candidate_fields(
     rather than guessing and sending the operator to the wrong correction.
     """
     _persist_contradicted_supply(secure_objects)
-    _observations, _ids, _compared, mismatches, _underivable = _screen(secure_objects)
+    mismatches = _screen(secure_objects).category_counterparty_mismatches
 
     diagnostics = _category_counterparty_mismatch_diagnostics(mismatches, resolver_id="probe")
 
@@ -197,7 +190,7 @@ def test_a_supportable_supply_produces_no_advisory(secure_objects: SecureObjectR
         InvoiceCatalogue.model_validate({invoice.invoice_id: invoice}),
     )
 
-    _observations, _ids, _compared, mismatches, _underivable = _screen(secure_objects)
+    mismatches = _screen(secure_objects).category_counterparty_mismatches
 
     assert mismatches == (), "a Portuguese counterparty supports an intra-community supply"
 

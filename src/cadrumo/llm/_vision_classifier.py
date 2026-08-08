@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import asyncio
 
-from ..core import build_provenance_stamp
+from ..core import LLM_EXTRA, build_provenance_stamp, require_optional_extra
 from ..core.config import Settings, load_settings
 from ..domain.transactions import (
     LLMClassificationResponse,
@@ -57,6 +57,10 @@ class LocalVisionLLMClassifier:
         client: LLMClient | None = None,
         settings: Settings | None = None,
     ) -> None:
+        # Ahead of every other statement, so the refusal is what an operator
+        # without the extra sees rather than a settings or model-resolution
+        # error raised on the way to it.
+        require_optional_extra(LLM_EXTRA)
         resolved_settings = settings if settings is not None else load_settings()
         self._spec = spec
         self._model = model if model is not None else resolved_settings.cadrumo_llm_ollama_vision_model

@@ -70,7 +70,7 @@ from ..application.ledger import (
     PurchaseInvoiceEvidenceInputError,
     resolve_invoice_extraction_authority_values,
 )
-from ..core import build_provenance_stamp
+from ..core import LLM_EXTRA, build_provenance_stamp, require_optional_extra
 from ..core.config import Settings, load_settings
 from ._client import LLMClient
 from ._consent import EvidenceConsentToken
@@ -190,6 +190,10 @@ class TextInvoiceFieldExtractor:
         consent_token: EvidenceConsentToken | None = None,
         public_corpus: bool = False,
     ) -> None:
+        # Ahead of every other statement, so the refusal is what an operator
+        # without the extra sees rather than a settings or model-resolution
+        # error raised on the way to it.
+        require_optional_extra(LLM_EXTRA)
         resolved_settings = settings if settings is not None else load_settings()
         self._provider = provider
         self._consent_token = consent_token

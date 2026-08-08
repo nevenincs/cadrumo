@@ -72,6 +72,7 @@
     "cli.registry.metrics.modelos": "AEAT domain term (Modelos) with no translation",
     "cli.review.labels.id": "universal technical token (ID)",
     "docs.casilla.chrome.general_section": "General is spelled identically in this language and English.",
+    "docs.casilla.chrome.page_heading": "Modelo is the official AEAT surface name and keeps its Spanish stem in English per the domain-naming rule, so the English and Spanish headings are identical by design; translating it would rename the form.",
     "docs.casilla.chrome.segmento": "Segmento is the AEAT record-segment term, kept in Spanish on every surface.",
     "docs.casilla.data_type.bic": "BIC is an ISO standard identifier and is never translated.",
     "docs.casilla.data_type.iban": "IBAN is an ISO standard identifier and is never translated.",

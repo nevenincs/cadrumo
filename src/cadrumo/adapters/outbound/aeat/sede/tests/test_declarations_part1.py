@@ -9,12 +9,9 @@ from ._declarations_support import (
     _COTEJO_QUERY_URL,
     _DECLARATIONS_LISTING_URL,
     _FIXTURE_ROOT,
-    _MODELO_303_2022_RECORD_DESIGN,
     UTC,
-    AnyHttpUrl,
     Decimal,
     Declaracion,
-    FiledDeclaracionArtefact,
     Path,
     Period,
     Profile,
@@ -25,10 +22,7 @@ from ._declarations_support import (
     _extract_csv_from_url,
     _filed_observation,
     _modelo_130_snapshot,
-    _modelo_303_design_position,
-    _modelo_303_page_03_payload,
     _modelo_snapshot,
-    _observed_casillas_from_submitted_file,
     _parse_listbox,
     _parse_presented_at,
     _select_authoritative_declaration,
@@ -58,7 +52,6 @@ _M303_COMPENSACION_APLICADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-a
 _M303_POSTERIOR_CASILLA: CasillaId = _casilla_id("iva.compensacion-pendiente-periodos-posteriores")
 _M303_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
 _M303_GENERADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-generada-periodo")
-_M303_RESULTADO_FINAL_CASILLA: CasillaId = _casilla_id("71")
 _M303_DISPONIBLE_CASILLA: CasillaId = _casilla_id("iva.compensacion-disponible-fin-periodo")
 _M303_PRINTED_COMPENSATION_REFERENCE_CASILLA: CasillaId = _casilla_id("87")
 
@@ -118,115 +111,6 @@ def test_declarations_page_shape_context_redacts_url_query_and_input_values() ->
     assert "QUERY-CANARY" not in str(context)
     assert "ROW-CANARY" not in str(context)
     assert context["raw_sha256"]
-
-
-def test_modelo_303_submitted_file_fallback_extracts_result_casillas() -> None:
-    snapshot = _modelo_snapshot("303", filing_year=2025, period="1T")
-    artefact = FiledDeclaracionArtefact(
-        kind="submitted_file",
-        source_url=AnyHttpUrl(_DECLARATIONS_LISTING_URL),
-        content_type="application/octet-stream",
-        byte_count=600,
-        sha256="0" * 64,
-        captured_at=datetime(2025, 3, 28, 13, 7, 33, tzinfo=UTC),
-    )
-
-    observed = _observed_casillas_from_submitted_file(
-        snapshot=snapshot,
-        declaration=_declaration_row(
-            expediente_id="202430313521429A",
-            presented_at=datetime(2025, 3, 28, 13, 7, 33, tzinfo=UTC),
-        ),
-        body=_modelo_303_page_03_payload(
-            casilla_110="00000000000000000",
-            casilla_78="00000000000000000",
-            casilla_87="00000000000000000",
-            casilla_69="N0000000000025802",
-            casilla_71="N0000000000025802",
-        ),
-        artefact=artefact,
-    )
-
-    assert {casilla.casilla_id: casilla.value for casilla in observed} == {
-        _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: "0",
-        _M303_COMPENSACION_APLICADA_CASILLA: "0",
-        _M303_POSTERIOR_CASILLA: "0",
-        _M303_RESULTADO_CASILLA: "-258.02",
-        _M303_RESULTADO_FINAL_CASILLA: "-258.02",
-    }
-
-
-def test_modelo_303_2022_submitted_file_fallback_uses_2022_result_position() -> None:
-    snapshot = _modelo_snapshot("303", filing_year=2022, period="1T")
-    casilla_71_position = _modelo_303_design_position(
-        _MODELO_303_2022_RECORD_DESIGN,
-        casilla_id=_M303_RESULTADO_FINAL_CASILLA,
-    )
-    artefact = FiledDeclaracionArtefact(
-        kind="submitted_file",
-        source_url=AnyHttpUrl(_DECLARATIONS_LISTING_URL),
-        content_type="application/octet-stream",
-        byte_count=1017,
-        sha256="0" * 64,
-        captured_at=datetime(2022, 4, 20, 13, 7, 33, tzinfo=UTC),
-    )
-
-    observed = _observed_casillas_from_submitted_file(
-        snapshot=snapshot,
-        declaration=_declaration_row(
-            ejercicio=2022,
-            period="1T",
-            expediente_id="202230313521429A",
-            presented_at=datetime(2022, 4, 20, 13, 7, 33, tzinfo=UTC),
-        ),
-        body=_modelo_303_page_03_payload(
-            casilla_110="00000000000000000",
-            casilla_78="00000000000000000",
-            casilla_87="00000000000000000",
-            casilla_69="N0000000000025802",
-            casilla_71="N0000000000025802",
-            casilla_71_position=casilla_71_position,
-            filler_at_374="X",
-        ),
-        artefact=artefact,
-    )
-
-    assert {casilla.casilla_id: casilla.value for casilla in observed}[_M303_RESULTADO_FINAL_CASILLA] == "-258.02"
-    observed_result = next(casilla for casilla in observed if casilla.casilla_id == _M303_RESULTADO_FINAL_CASILLA)
-    assert observed_result.source_locator == f"record:T30303:pos:{casilla_71_position}:width:17"
-
-
-def test_modelo_303_submitted_file_fallback_refuses_invalid_page_record_footer() -> None:
-    snapshot = _modelo_snapshot("303", filing_year=2025, period="1T")
-    artefact = FiledDeclaracionArtefact(
-        kind="submitted_file",
-        source_url=AnyHttpUrl(_DECLARATIONS_LISTING_URL),
-        content_type="application/octet-stream",
-        byte_count=1017,
-        sha256="0" * 64,
-        captured_at=datetime(2025, 3, 28, 13, 7, 33, tzinfo=UTC),
-    )
-    body = bytearray(
-        _modelo_303_page_03_payload(
-            casilla_110="00000000000000000",
-            casilla_78="00000000000000000",
-            casilla_87="00000000000000000",
-            casilla_69="N0000000000025802",
-            casilla_71="N0000000000025802",
-        ),
-    )
-    body[1005:1017] = b"</T30303001>"
-
-    with pytest.raises(SedeParseError, match="invalid page-03 footer"):
-        _observed_casillas_from_submitted_file(
-            snapshot=snapshot,
-            declaration=_declaration_row(
-                expediente_id="202430313521429A",
-                presented_at=datetime(2025, 3, 28, 13, 7, 33, tzinfo=UTC),
-            ),
-            body=bytes(body),
-            artefact=artefact,
-        )
 
 
 def test_modelo_303_filed_observation_derives_compensation_available() -> None:

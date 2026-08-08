@@ -47,6 +47,11 @@ See Also:
         The ladder this module routes the counterparty into.
     :func:`~application.ledger.resolve_filer_territorial_scope`
         The profile authority for the filer's own side.
+    :class:`UserProfileRecord`
+        The record that authority reads the filer's territory out of, and the
+        reason the filer's side is never asked of the paper: it is a declared
+        system-authoritative fact, so an absent record is a setup gap rather
+        than an unreadable document.
     :func:`~application.ledger.assemble_classification_criteria`
         What the resolved scopes are carried into.
     :class:`~application.ledger.DeclaredFacts`
@@ -80,8 +85,8 @@ from ._classification_assembly import (
     resolve_ingestion_iva_category,
 )
 from ._classifier_inputs import collect_classifier_inputs
-from ._confirmation_gate import ConfirmationBlocker, _blocker_id
-from ._counterparty_establishment import CounterpartyEstablishmentRepository
+from ._confirmation_gate import ConfirmationBlocker, blocker_id
+from ._counterparty_establishment import ConfirmedCounterpartyFactsRepository
 from ._establishment_ladder import CounterpartyEstablishment, resolve_draft_counterparty_establishment
 from ._filer_establishment import FILER_POSTCODE_FACT_PATH, resolve_filer_territorial_scope
 
@@ -146,7 +151,7 @@ def _review_item(*, field: str | None, detail: str) -> ConfirmationBlocker:
     """
     reason = ConfirmationBlockReason.UNDETERMINED_ESTABLISHMENT
     return ConfirmationBlocker(
-        blocker_id=_blocker_id(reason=reason, field=field, detail=detail),
+        blocker_id=blocker_id(reason=reason, field=field, detail=detail),
         reason=reason,
         field=field,
         detail=detail,
@@ -287,7 +292,7 @@ def _contradiction_item(resolution: IvaCategoryResolution) -> tuple[Confirmation
     reason = ConfirmationBlockReason.CONTRADICTED_REGIME
     return (
         ConfirmationBlocker(
-            blocker_id=_blocker_id(reason=reason, field="iva_category", detail=resolution.note),
+            blocker_id=blocker_id(reason=reason, field="iva_category", detail=resolution.note),
             reason=reason,
             field="iva_category",
             detail=resolution.note,
@@ -302,7 +307,7 @@ def resolve_confirmed_establishment(
     kind: InvoiceKind,
     invoice_date: date | None = None,
     rate_tier: IvaRateKind | None = None,
-    repository: CounterpartyEstablishmentRepository | None = None,
+    repository: ConfirmedCounterpartyFactsRepository | None = None,
 ) -> ConfirmedEstablishment:
     """Resolve both parties' territories for one confirm, and classify the operation.
 

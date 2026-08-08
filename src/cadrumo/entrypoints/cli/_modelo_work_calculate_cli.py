@@ -48,6 +48,7 @@ from ._modelo_rendering import (
     calculation_revision_lines,
     calculation_revision_payload,
     calculation_revision_state_label,
+    source_diagnostic_notice,
     work_unit_deadline_output,
     work_unit_plazo_lines,
 )
@@ -492,7 +493,11 @@ def _run_work_calculate(
             },
         )
     except ValidationError as exc:
-        raise CliOutboundPayloadBoundaryError(exc) from exc
+        # The model is named here because this block validates exactly one, so the
+        # fault can report its field path instead of redacting every component. The
+        # block above guards a call that validates several and cannot say which
+        # failed, so it deliberately names none.
+        raise CliOutboundPayloadBoundaryError(exc, record=WorkCalculateResult) from exc
     lines = [
         "operation\tmodelo.work.calculate",
         *calculation_revision_lines(calculation_revision),
@@ -627,17 +632,7 @@ def _work_calculate_source_advisory_output(
     if not diagnostics:
         return [], []
     notices = [
-        advisory_notice(
-            "modelo.work.calculate.source_advisory",
-            diagnostic.message,
-            suggestion=diagnostic.remedy,
-            context={
-                "reason": str(diagnostic.reason),
-                "source_kind": diagnostic.source_kind,
-                **({"resolver_id": diagnostic.resolver_id} if diagnostic.resolver_id else {}),
-            },
-        )
-        for diagnostic in diagnostics
+        source_diagnostic_notice(diagnostic, code="modelo.work.calculate.source_advisory") for diagnostic in diagnostics
     ]
     lines = [
         tr(

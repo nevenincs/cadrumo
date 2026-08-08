@@ -648,6 +648,33 @@ description = "Importe de renta o base imponible atribuido a este socio en el Mo
 model_selectors = ["attribution_entity_socios.base_imponible_assigned"]
 legal_refs = ["ley-35-2006:art-87", "ley-35-2006:art-89", "orden-hap-2250-2015:art-3"]
 
+[[sections.fields]]
+key = "participe_clave"
+type = "enum"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Clave tipo de partícipe del Modelo 184 (posición 81 del registro de declarado): 1 residente, 2 no residente sin establecimiento permanente, 3 no residente con establecimiento permanente. Gobierna si el registro lleva clave país: sólo la clave 2 la consigna, y las claves 1 y 3 exigen BLANCOS."
+enum_values = ["1", "2", "3"]
+model_selectors = ["attribution_entity_socios.participe_clave"]
+legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "orden-hap-2250-2015:art-3"]
+
+# Conditionally required, and conditionally FORBIDDEN. The record layout fills
+# positions 79-80 only for clave 2 and requires BLANCOS for claves 1 and 3, so
+# this field is not a country that happens to be optional -- it is a country the
+# form prohibits on two of its three claves. A default here wrote a value the
+# layout forbids on the majority case, which is why it is captured beside the
+# clave that governs it rather than alone.
+[[sections.fields]]
+key = "country_of_residence"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Código del país de residencia del socio, comunero o partícipe, consignado en las posiciones 79-80 del registro de declarado del Modelo 184. Sólo se consigna cuando la clave tipo de partícipe es 2 (no residente sin establecimiento permanente); en las claves 1 y 3 el campo va en BLANCOS."
+model_selectors = ["attribution_entity_socios.country_of_residence"]
+legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "orden-hap-2250-2015:art-3"]
+
 # NOT required, deliberately. Modelo 184's socio record carries no per-member
 # legal role: its "clave tipo de partícipe" is residency (residente, no
 # residente sin establecimiento permanente, con establecimiento permanente),

@@ -42,9 +42,10 @@ See Also:
     :func:`enroll_filed_justificante_evidence`
         Filed-history path that persists justificante metadata and stamps
         current filing records with live-capture evidence.
-    :class:`SecureSnapshotRepository`
-        Bucket-scoped encrypted snapshot repository base used by live snapshot
-        services.
+    :class:`SnapshotRepository`
+        Bucket-scoped snapshot persistence port the live snapshot services
+        depend on; its encrypted secure-object backend lives in the
+        persistence adapter.
     :mod:`application.overview`
         Local-only summary surface that reads captured live evidence without
         contacting AEAT and filters calendar events by active-profile identity.
@@ -204,7 +205,6 @@ from ._remote_state_models import (
 from ._remote_state_outcomes import bounded_context_text as _bounded_context_text
 from ._session import active_verified_session as _active_verified_session
 from ._snapshot_base import (
-    SecureSnapshotRepository,
     SnapshotLifecycleState,
     SnapshotNotFoundError,
     SnapshotRepository,
@@ -613,7 +613,6 @@ __all__ = [
     "PersistedDeudasSnapshot",
     "PersistedExpedientesSnapshot",
     "PersistedNotificationsSnapshot",
-    "SecureSnapshotRepository",
     "SnapshotLifecycleState",
     "SnapshotNotFoundError",
     "SnapshotRepository",

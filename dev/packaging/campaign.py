@@ -149,6 +149,25 @@ _LANES: Final[dict[str, Lane]] = {
         invariant="the frozen lock materialises a working developer toolchain",
         forms=(Form("frozen-lock", "dev.packaging.smoke_dev", takes_cohort=False),),
     ),
+    # Standalone for the same reason as ``dev``, by a different axis: every core
+    # form asks whether the product WORKS once installed, and this one asks what
+    # it SAYS when a model-bearing surface is reached without the model-bearing
+    # dependencies. Folding it in as a core form would file a refusal proof under
+    # an installability invariant it does not test.
+    #
+    # It consumes the cohort (unlike ``dev``) because the absent state must be
+    # reached through the SHIPPED artifact: an extra whose requirements all
+    # arrive in the core closure anyway is nominal, and only the built wheel's
+    # own metadata can settle that. The lane is host-portable — two stdlib venvs
+    # and pip, no host package manager and no container — and the extra it
+    # installs and removes is small, so it belongs in every OS leg rather than
+    # in the Linux-only superset alone.
+    "inference-boundary": Lane(
+        name="inference-boundary",
+        invariant="the inference boundary refuses instructively without the llm extra, "
+        "and that refusal tracks what is installed rather than being a property of the build",
+        forms=(Form("wheel", "dev.packaging.smoke_absent_llm"),),
+    ),
 }
 
 # Profiles select executable units, so they name qualified ``lane/form``
@@ -161,6 +180,7 @@ _PROFILES: Final[dict[str, tuple[str, ...]]] = {
         "core/extras",
         "core/joined-cohort",
         "browser/host",
+        "inference-boundary/wheel",
     ),
     "ci": (
         "dev/frozen-lock",
@@ -172,6 +192,7 @@ _PROFILES: Final[dict[str, tuple[str, ...]]] = {
         "browser/host-with-deps",
         "core/container",
         "browser/container",
+        "inference-boundary/wheel",
     ),
     "quick": ("core/uv-venv",),
 }

@@ -176,8 +176,21 @@ def test_it_reaches_the_operator_through_the_coordinator() -> None:
 
 
 def test_silent_when_the_monthly_detail_is_already_on_record() -> None:
-    """The shape is already the one that works; there is nothing to correct."""
-    _write(DescendantInfo(birth_date=_TURNS_THREE, gastos_guarderia_mensuales=_monthly("5-8:210")))
+    """The shape is already the one that works; there is nothing to correct.
+
+    The second-cycle month is declared too, so this asserts the SHAPE advisory's
+    silence rather than an empty channel. Without it the sibling advisory fires --
+    correctly, because a turning-three window with no declared month is withheld --
+    and an unqualified ``== ()`` here would then be asserting that no guardería
+    advisory of any kind exists, which is a different and weaker claim.
+    """
+    _write(
+        DescendantInfo(
+            birth_date=_TURNS_THREE,
+            gastos_guarderia_mensuales=_monthly("5-8:210"),
+            segundo_ciclo_infantil_inicio_mes=9,
+        ),
+    )
 
     assert _collect() == ()
 
@@ -246,3 +259,52 @@ def test_it_names_every_affected_child_in_a_mixed_household() -> None:
 
     assert "renta_family.descendiente.1" in message
     assert "renta_family.descendiente.0" not in message
+
+
+# ---------------------------------------------------------------------------
+# The second-cycle ceiling's two disclosures, which share this collector.
+# ---------------------------------------------------------------------------
+
+
+def test_the_undeclared_second_cycle_month_reaches_the_operator() -> None:
+    """A withheld turning-three window must be visible, not merely correct.
+
+    The window is refused when the month is undeclared, which is the safe
+    direction — but a refusal the operator cannot see is indistinguishable from
+    the child simply not qualifying. This is the assertion that makes the refusal
+    recoverable rather than silent, and it is the one the domain predicate alone
+    does not give: a predicate nothing emits reaches nobody.
+    """
+    _write(DescendantInfo(birth_date=_TURNS_THREE, gastos_guarderia_mensuales=_monthly("5-8:210")))
+
+    kinds = {diagnostic.source_kind for diagnostic in _collect()}
+
+    assert "guarderia_segundo_ciclo_month_undeclared" in kinds
+
+
+def test_the_month_advisory_is_silent_once_the_month_is_declared() -> None:
+    """Declared, there is nothing to ask for and the channel stays quiet."""
+    _write(
+        DescendantInfo(
+            birth_date=_TURNS_THREE,
+            gastos_guarderia_mensuales=_monthly("5-8:210"),
+            segundo_ciclo_infantil_inicio_mes=9,
+        ),
+    )
+
+    kinds = {diagnostic.source_kind for diagnostic in _collect()}
+
+    assert "guarderia_segundo_ciclo_month_undeclared" not in kinds
+
+
+def test_the_month_advisory_is_silent_for_a_child_who_never_turns_three() -> None:
+    """No ceiling applies outside the turning-three período, so no month is wanted.
+
+    Pins the advisory against the noise failure: a guardería question asked on
+    every filing is what teaches operators to stop reading the channel.
+    """
+    _write(DescendantInfo(birth_date=_UNDER_THREE, gastos_guarderia_mensuales=_monthly("5-8:210")))
+
+    kinds = {diagnostic.source_kind for diagnostic in _collect()}
+
+    assert "guarderia_segundo_ciclo_month_undeclared" not in kinds

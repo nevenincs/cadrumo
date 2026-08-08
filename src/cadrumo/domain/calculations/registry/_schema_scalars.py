@@ -9,7 +9,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, BeforeValidator, Field, SerializeAsAny
 
-from ....core import IBAN_SHAPE_RE, StandardPeriodCode, iban_mod_97
+from ....core import IBAN_SHAPE_RE, StandardPeriodCode, iban_mod_97, normalise_iban
 from ....core.decimal import coerce_decimal
 from ....core.identity import IdentityError, validate_spanish_tax_id
 from ._errors import RegistryValidationError
@@ -203,7 +203,7 @@ def _validate_iban_string(value: object) -> object:
     """
     if not isinstance(value, str):
         raise RegistryValidationError(f"iban value must be a string, got {type(value).__name__}")
-    canonical = value.replace(" ", "").replace("-", "").upper()
+    canonical = normalise_iban(value)
     if not canonical:
         raise RegistryValidationError("iban value must not be blank")
     if not IBAN_SHAPE_RE.match(canonical):

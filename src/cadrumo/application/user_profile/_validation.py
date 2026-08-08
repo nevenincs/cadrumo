@@ -28,6 +28,8 @@ from . import (
 )
 from ._completeness import (
     IVA_REGIME_PATH,
+    atribucion_socio_forbidden_country_paths,
+    atribucion_socio_missing_country_paths,
     conditional_profile_missing_required,
     iva_regime_required,
     missing_required_field_paths,
@@ -39,6 +41,19 @@ REQUIRED_FIELD_MISSING_CODE: Final[str] = "required_field_missing"
 
 CONDITIONAL_REQUIRED_FIELD_MISSING_CODE: Final[str] = "conditional_required_field_missing"
 """Issue code for a field required only under some other fact's value."""
+
+CONDITIONALLY_FORBIDDEN_FIELD_CODE: Final[str] = "conditionally_forbidden_field"
+"""Issue code for a field carrying a value some other fact's value prohibits.
+
+The mirror of the code above, and deliberately NOT a completeness code. A
+missing conditional field is an unfinished profile and may be deferred to the
+ACTIVE promotion; a field the record layout forbids is a value that must never
+reach an export, so it refuses at registration like any other malformed value.
+
+The distinction is the whole reason this is its own code. Reporting a
+prohibited value as a missing one would send the operator to supply MORE of
+exactly the thing the form does not allow.
+"""
 
 NUMERIC_VALUE_ISSUE_CODE: Final[str] = "numeric_field_invalid"
 """Issue code for a numeric field carrying a non-number or an out-of-range value.
@@ -175,6 +190,7 @@ class ProfileValidationService:
             issues.extend(self._validate_one_fact(fact))
         issues.extend(self._required_field_issues(facts))
         issues.extend(self._conditional_completeness_issues(facts))
+        issues.extend(self._atribucion_socio_country_issues(facts))
         issues.extend(self._unenforced_expiry_issues(facts))
         return ProfileValidationReport(
             profile_id=profile_id,
@@ -367,6 +383,53 @@ class ProfileValidationService:
             for path in conditional_profile_missing_required(values)
         )
 
+    def _atribucion_socio_country_issues(
+        self,
+        facts: tuple[UserProfileFact, ...],
+    ) -> tuple[ProfileValidationIssue, ...]:
+        """Enforce the Modelo 184 clave/country coupling, in both directions.
+
+        Positions 79-80 of the declarado record carry the socio's country only
+        under clave 2; claves 1 and 3 require BLANCOS. So the country is owed
+        on one clave and PROHIBITED on the other two, and a rule enforcing only
+        the first half would leave the prohibited case to whatever was typed --
+        which is how a Spanish default came to write a value the layout forbids
+        on the majority case.
+
+        Enforced here, at the door, rather than left to a reader. A conditional
+        that two surfaces could apply and neither does is the shape that
+        produced the double-defaulted country elsewhere in this tree: a green
+        suite is then consistent with nothing being enforced at all.
+        """
+        values = {fact.path: self._render_fact_value(fact.value) for fact in facts if fact.value is not None}
+        return (
+            *(
+                ProfileValidationIssue(
+                    severity=BaseSeverity.ERROR,
+                    code=CONDITIONAL_REQUIRED_FIELD_MISSING_CODE,
+                    path=path,
+                    message=(
+                        f"conditionally required field {path} is missing; a socio declared under clave 2 "
+                        f"(no residente sin establecimiento permanente) states its country of residence"
+                    ),
+                )
+                for path in atribucion_socio_missing_country_paths(values)
+            ),
+            *(
+                ProfileValidationIssue(
+                    severity=BaseSeverity.ERROR,
+                    code=CONDITIONALLY_FORBIDDEN_FIELD_CODE,
+                    path=path,
+                    message=(
+                        f"field {path} must be empty; Modelo 184 fills the country only under clave 2, and "
+                        f"a socio declared residente or no residente con establecimiento permanente "
+                        f"requires BLANCOS there"
+                    ),
+                )
+                for path in atribucion_socio_forbidden_country_paths(values)
+            ),
+        )
+
     @staticmethod
     def _render_fact_value(value: object) -> str:
         if isinstance(value, bool):
@@ -377,6 +440,7 @@ class ProfileValidationService:
 __all__ = [
     "BOOLEAN_VALUE_ISSUE_CODE",
     "COMPLETENESS_ISSUE_CODES",
+    "CONDITIONALLY_FORBIDDEN_FIELD_CODE",
     "CONDITIONAL_REQUIRED_FIELD_MISSING_CODE",
     "DATE_VALUE_ISSUE_CODE",
     "EMAIL_VALUE_ISSUE_CODE",

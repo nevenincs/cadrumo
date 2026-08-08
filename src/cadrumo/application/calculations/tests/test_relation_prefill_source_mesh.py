@@ -214,14 +214,27 @@ def _diagnosed_relation_ids(resolution: CalculationSourceResolution) -> set[str]
     }
 
 
-def test_unresolved_non_formula_relation_with_materialised_slot_is_not_flagged(tmp_path: Path) -> None:
-    """False-fire guard: a cold-start non-formula relation is silent.
+def test_unresolved_bound_carry_the_taxpayer_files_is_advised(tmp_path: Path) -> None:
+    """A bound carry whose source the taxpayer FILES is advised when it is absent.
 
-    Modelo 202's relations are referenced by no formula but each materialises a
-    declared ``target_binding`` slot the engine threads (resolving to the
-    cold-start zero). An empty local store leaves them unresolved, which is the
-    intended cross-modelo carry cold-start — it MUST NOT surface a diagnostic, or
-    the M200/M202/M100 fold-in contract breaks.
+    This reverses what this module previously pinned. The old contract was that a
+    non-formula relation materialising a declared ``target_binding`` must never
+    surface a diagnostic, on the ground that its unresolved state is the intended
+    cross-modelo cold start.
+
+    That rationale was measured and does not hold. Cold start is already handled
+    upstream: ``_scoped_relation_source_requirements`` removes source periods the
+    taxpayer had no obligation for, against the declared activity start, so a
+    genuine first-ejercicio filer's carries never reach the advisory at all (pinned
+    by the sibling first-ejercicio test in the Modelo 200 live module). What the
+    blanket silence additionally hid was the filer who DID have the obligation and
+    whose filing is simply absent — and there the engine threads the slot as a
+    zero, which reduces no liability and over-declares.
+
+    Two narrowings keep it honest and are asserted below: the source period must
+    have survived activity-start scoping, and the source modelo must be one the
+    taxpayer FILES. A retención the payer files is unactionable for this taxpayer
+    and stays silent.
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = CalculationObservationRepository()  # empty store
@@ -248,9 +261,31 @@ def test_unresolved_non_formula_relation_with_materialised_slot_is_not_flagged(t
             ),
         )
 
-    assert non_formula.isdisjoint(_diagnosed_relation_ids(source_resolution)), (
-        "a cold-start non-formula relation whose target_binding materialises an observable slot "
-        "must NOT fire the cold-start advisory — that would regress the cross-modelo carry contract"
+    advised = _diagnosed_relation_ids(source_resolution)
+    taxpayer_filed = {
+        classification.source_modelo
+        for classification in snapshot.revision.dependency_classifications
+        if classification.taxpayer_files_source
+    }
+    relation_source = {relation.id: relation.source_modelo for relation in snapshot.revision.relations}
+    expected = {
+        relation_id
+        for relation_id in non_formula
+        if relation_source.get(relation_id) in taxpayer_filed and relation_id in advised
+    }
+    assert expected, (
+        "this fixture must exercise at least one bound carry whose source the taxpayer files, "
+        "or the advisory it pins is never reached"
+    )
+    # No carry whose source the taxpayer does NOT file may be advised: that filer
+    # cannot act on it, so it would be unactionable noise.
+    unactionable = {
+        relation_id
+        for relation_id in advised
+        if relation_source.get(relation_id) is not None and relation_source[relation_id] not in taxpayer_filed
+    }
+    assert not unactionable, (
+        f"a carry whose source modelo the taxpayer does not file must stay silent; got {unactionable}"
     )
 
 

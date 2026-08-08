@@ -41,13 +41,36 @@ effective_from = 2012-09-01
 effective_until = 2024-12-31
 legal_refs = ["ley-37-1992:art-91", "real-decreto-ley-20-2012:art-23-tres"]
 
+# El tipo super-reducido es del 4 % de forma CONTINUA desde el 1 de enero de 1995,
+# fecha y cifra que fija Ley 41/1994 art. 78 apartado Segundo al dar nueva
+# redaccion al art. 91 LIVA. El art. 91 es el articulo marco que aloja el valor.
+#
+# ES ANTERIOR A RDL 20/2012 Y NO PODIA HEREDARLO POR PROXIMIDAD. Las dos entradas
+# de 2012 lo dicen en sus propias notas: aquella norma fija el general (Dos) y el
+# reducido (Tres), y deja el super-reducido intacto. Por eso esta fila necesitaba
+# su propia provision, y hasta ahora no la tenia.
+#
+# EL effective_from ANTERIOR ERA 2024-01-01, el mismo defecto que ya se corrigio
+# en general y reducido: una frontera de refresco leida como efecto legal. Con el
+# campo definido como "First date the rate applies" y todos los consumidores
+# comprobando por ventana, una linea al 4 % de 2022 o 2023 no se podia valorar
+# mientras las de 21 % y 10 % si -- de modo que una factura de tipos mixtos se
+# resolvia a medias. Ambos ejercicios estan dentro del plazo de prescripcion.
+#
+# LA FECHA ES LA DEL TEXTO, NO LA DEL ATRIBUTO. El encabezado del articulo dice
+# "Con efectos a partir del dia 1 de enero de 1995"; el atributo fecha_vigencia
+# del endpoint consolidado marca 19950120, diecinueve dias mas tarde. Tomar el
+# atributo habria fechado mal la ventana.
+#
+# El corte 2024/2025 se conserva, igual que en general y reducido: ambos tramos
+# son ciertos y contiguos, y la fila de 2025 sigue citando solo el articulo marco.
 [[rates]]
 member_state = "es"
 kind = "super_reduced"
 pct = "4"
-effective_from = 2024-01-01
+effective_from = 1995-01-01
 effective_until = 2024-12-31
-legal_refs = ["ley-37-1992:art-91"]
+legal_refs = ["ley-37-1992:art-91", "ley-41-1994:art-78-segundo"]
 
 # Tipo del 0 % sobre alimentos de primera necesidad, RDL 4/2024 art. 1.Dos.1.
 # Es un TIPO IMPOSITIVO, no una exencion: la rubrica del articulo dice "Tipo

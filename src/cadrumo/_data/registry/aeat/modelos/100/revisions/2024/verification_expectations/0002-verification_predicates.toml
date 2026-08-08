@@ -45,3 +45,35 @@ predicate_id = "modelo-100-2024-deduccion-vivienda-habitual-requiere-adquisicion
 expression = 'deduccion_requires_adquisicion_before(["0547", "0708", "0690", "2013-01-01"])'
 finding_kind = "ADVISORY"
 legal_refs = ["ley-35-2006:dt-18"]
+
+# Suffered-retencion completeness advisory (no-silent-under-declaration, in the
+# OVER-declaration direction this apparatus otherwise does not watch). casilla
+# 0596 is the retencion the taxpayer SUFFERED on rendimientos del trabajo, which
+# the payer declares on Modelo 111 and the taxpayer credits against the cuota. It
+# is a BOUND casilla, so when no observation resolves it the engine threads an
+# absent slot as a zero and emits nothing: an uncredited retencion is tax the
+# taxpayer already paid and pays again, arriving as a clean number.
+#
+# The antecedent is 0012 (total ingresos integros computables del trabajo), the
+# GROSS total, because retencion is computed on gross income. The neto reducido
+# total (0025) was rejected as the antecedent: it is post-deducciones and can be
+# zero for a filer who did suffer withholding, which would suppress the advisory
+# in exactly the cases it exists for.
+#
+# ADVISORY, not BLOCKING, and this is what distinguishes it from a signal keyed
+# on the declared income CATEGORY, which was measured and refused: withholding on
+# rendimientos del trabajo is scaled to the payer's projected annual rate and is
+# lawfully ZERO below the withholding thresholds, so a low-income employee or
+# pensioner declares trabajo income and correctly reports no retencion. A
+# category-keyed rule would fire on precisely those filers. implies_nonzero holds
+# trivially when the antecedent <= 0, so a filer with no trabajo income at all
+# never fires.
+#
+# The remedy is an income-certificate value, NOT a filing to capture: the taxpayer
+# never filed Modelo 111 and the pull cannot fetch a return somebody else filed
+# about them. Any surface rendering this must not tell them to pull anything.
+[[revisions."2024".verification_predicates]]
+predicate_id = "modelo-100-2024-retenciones-trabajo-declaradas-cuando-ingresos-integros-trabajo-positivos"
+expression = 'implies_nonzero(["0012", "0596"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-35-2006:art-99", "ley-35-2006:art-101", "rd-439-2007:art-80"]

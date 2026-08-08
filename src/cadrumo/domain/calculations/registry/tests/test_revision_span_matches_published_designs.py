@@ -1249,6 +1249,55 @@ def test_a_box_added_or_removed_without_movement_reaches_the_verdict() -> None:
         )
 
 
+def test_no_bundled_design_file_disappears_from_the_inventory() -> None:
+    """A design the corpus holds but the inventory does not enumerate must FAIL, not vanish.
+
+    THE FAILURE THIS CLOSES IS SILENT PROGRESS. Every other guard in this module asks
+    whether the designs it was given disagree. None of them asks whether it was given
+    all of them. Withhold a design file and the boundary it formed simply stops being
+    reported: the verdict names fewer violations, which reads as a split landing rather
+    than as an instrument going blind. That is the most dangerous direction for this
+    gate, because the whole campaign measures its own progress by this verdict getting
+    shorter.
+
+    THE ENUMERATION IS DERIVED INDEPENDENTLY, which is what makes the check possible at
+    all. It globs the corpus directory itself rather than asking the inventory under
+    test what exists -- a guard built on ``_design_sources`` would be blind to
+    ``_design_sources`` dropping a file, which is precisely the defect. Two derivations
+    of one fact, deliberately, in the one place where sharing an implementation destroys
+    the check.
+
+    GATED ON THE PROPERTY: every accepted-suffix file on disk is either enumerated, or
+    named as unparseable by the sibling coverage guard. No count is pinned, so the
+    corpus can grow without touching this.
+    """
+    missing: list[str] = []
+    seen_any = 0
+    # DELIBERATELY DOES NOT LOAD THE REGISTRY AUTHORITY. Whether a bundled file is
+    # enumerated is a fact about the corpus and the inventory; nothing about it depends
+    # on a legal catalogue validating or a revision declaring an export layout. An
+    # earlier draft derived its modelo list from the exporting revisions and was taken
+    # down by an unrelated peer condition -- a legal reference whose corpus sidecar had
+    # not been generated yet. That is a blind spot rather than bad luck: a guard that
+    # cannot run while another part of the tree is mid-edit is unavailable exactly when
+    # a withheld file is most likely to slip in unnoticed.
+    design_root = bundled_path(*_DESIGN_ROOT_PARTS)
+    for directory in sorted(path for path in design_root.glob("modelo_*") if path.is_dir()):
+        modelo_id = directory.name.removeprefix("modelo_")
+        on_disk = {path for path in directory.glob("files/*") if path.suffix.lower() in _DESIGN_SUFFIXES}
+        if not on_disk:
+            continue
+        seen_any += len(on_disk)
+        enumerated = set(_design_sources(modelo_id))
+        missing.extend(f"modelo {modelo_id} design {path.name!r}" for path in sorted(on_disk - enumerated))
+    assert seen_any, "no bundled design file was found on disk at all; the corpus path has moved"
+    assert not missing, (
+        "these design files exist in the bundled corpus but the inventory does not enumerate them, so "
+        "every boundary they form is silently absent from the verdict and the gate getting shorter "
+        "would read as progress:\n  " + "\n  ".join(missing)
+    )
+
+
 def test_the_verdict_names_a_mid_course_boundary_where_aeat_split_an_ejercicio() -> None:
     """A boundary INSIDE one ejercicio must reach the verdict, not just the ones between years.
 

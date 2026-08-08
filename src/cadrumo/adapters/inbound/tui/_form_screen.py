@@ -119,6 +119,18 @@ _MULTI_CHOICE_SEPARATOR = ","
 """Token separator for a multi-choice value, matching the CHECKBOX
 convention the profile facts already store."""
 
+_MASKED_TABLE_VALUE = "••••••••"
+"""What a ``secret`` field's row shows once it holds a value.
+
+Fixed-length rather than one bullet per character: this page owns no
+application concept of confidentiality (its own docstring is explicit that
+it "owns no application logic"), so it does not reach for
+``application.user_profile.MASKED_PLACEHOLDER`` and instead states the
+same convention locally, the way :class:`TextEditScreen` already masks its
+own ``Input`` via ``password=`` rather than importing anything to do it.
+Fixed length avoids leaking how long the secret is, which a per-character
+mask would not."""
+
 
 _EDIT_DIALOG_CSS = """
 #edit-dialog {
@@ -376,7 +388,9 @@ class FormScreen(Screen["Mapping[str, str] | None"]):
         table: DataTable[str] = self.query_one("#form-table", DataTable)
         table.clear()
         for form_field in self._page.fields:
-            table.add_row(form_field.label, self._values.get(form_field.key, ""), key=form_field.key)
+            value = self._values.get(form_field.key, "")
+            shown = _MASKED_TABLE_VALUE if form_field.secret and value else value
+            table.add_row(form_field.label, shown, key=form_field.key)
 
     def _field(self, key: str) -> FormField | None:
         return next((form_field for form_field in self._page.fields if form_field.key == key), None)
@@ -396,6 +410,7 @@ class FormScreen(Screen["Mapping[str, str] | None"]):
             choices=form_field.choices,
             hint=form_field.hint,
             validate=form_field.validate,
+            secret=form_field.secret,
         )
         screen = _edit_screen_for(current)
         # The stack belongs to the application, not to a screen on it, so
