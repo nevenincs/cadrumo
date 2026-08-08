@@ -26,13 +26,22 @@ from pathlib import Path
 import pytest
 
 from ....application.ledger import (
+    DocumentTranscription,
     DraftDiscrepancyFinding,
     FieldAmbiguityCandidate,
     FieldProvenance,
     InvoiceDraft,
+    TranscriberIdentity,
+    verified_provenance,
     write_extraction_draft,
 )
-from ....core import DraftDiscrepancyKind, FieldGroundingOutcome, FieldOrigin, resolve_active_bucket_id
+from ....core import (
+    LOCAL_TRANSPORT_LABEL,
+    DraftDiscrepancyKind,
+    FieldGroundingOutcome,
+    FieldOrigin,
+    resolve_active_bucket_id,
+)
 from ....core.config import load_settings
 from ._ledger_ux_support import _invoke, _open_ledger_ux_session
 
@@ -40,6 +49,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _CLEAN_REFERENCE = "ev-clean-001"
 _BLOCKED_REFERENCE = "ev-blocked-001"
+_GROUNDED_REFERENCE = "ev-grounded-001"
 
 
 def _clean_draft() -> InvoiceDraft:
@@ -108,6 +118,68 @@ def seeded_queue(tmp_path: Path) -> Iterator[None]:
             draft=_blocked_draft(),
             extractor="text_layer",
             settings=settings,
+        )
+        yield
+
+
+def _grounded_draft() -> InvoiceDraft:
+    """Return a draft whose envelopes the REAL grounding stage produced.
+
+    Hand-set envelopes would carry whatever this file wrote into them, proving
+    the row builder passes a field through and nothing about whether the
+    producer ever emits it. One field offers a printed form the transcription
+    does not carry; the other offers nothing. Both come out with a blank anchor,
+    which is precisely why the row needs a second axis to tell them apart.
+    """
+    draft = InvoiceDraft(
+        grand_total=Decimal("4528.32"),
+        currency="EUR",
+        provenance=(
+            FieldProvenance(
+                field="grand_total",
+                origin=FieldOrigin.TEXT_LAYER,
+                grounding=FieldGroundingOutcome.UNANCHORED,
+                anchor="4.528,32",
+            ),
+            FieldProvenance(
+                field="currency",
+                origin=FieldOrigin.TEXT_LAYER,
+                grounding=FieldGroundingOutcome.UNANCHORED,
+            ),
+        ),
+    )
+    transcription = DocumentTranscription(
+        text="FACTURA 2026-0142\nTOTAL 121,00 EUR\n",
+        page_count=1,
+        source_content_sha256="d" * 64,
+        transcriber=TranscriberIdentity(
+            origin=FieldOrigin.TEXT_LAYER,
+            name="test-text-layer",
+            transport=LOCAL_TRANSPORT_LABEL,
+            revision="1",
+        ),
+    )
+    return draft.model_copy(
+        update={"provenance": verified_provenance(draft=draft, transcription=transcription)},
+    )
+
+
+@pytest.fixture
+def grounded_queue(tmp_path: Path) -> Iterator[None]:
+    """A live bucket session carrying one pending draft with grounded provenance.
+
+    Separate from the queue above rather than a third member of it, so the
+    listing assertions there keep naming an exact pair.
+    """
+    with _open_ledger_ux_session(tmp_path):
+        bucket_id = resolve_active_bucket_id()
+        assert bucket_id is not None
+        write_extraction_draft(
+            bucket_id=bucket_id,
+            evidence_reference=_GROUNDED_REFERENCE,
+            draft=_grounded_draft(),
+            extractor="text_layer",
+            settings=load_settings(),
         )
         yield
 
@@ -214,6 +286,38 @@ def test_review_show_of_an_unknown_reference_refuses(seeded_queue: None) -> None
     result = _invoke(["app", "ledger", "evidence", "review", "show", "ev-does-not-exist"])
 
     assert result.exit_code != 0, result.output
+
+
+def test_review_show_tells_a_refused_anchor_from_one_never_offered(grounded_queue: None) -> None:
+    """The distinction the envelope records must survive to the row that shows it.
+
+    Both fields reach this surface with a blank ``anchor``, because the grounding
+    stage clears a form it could not locate. What separates them is whether the
+    reader offered anything at all -- a reader limitation against a possible
+    misread or the wrong document -- and this row is where an operator reads a
+    field's grounding, so the two arriving identical here is the whole defect.
+
+    Driven through the real CLI over a draft the REAL grounding stage produced.
+    A row built by hand would carry whatever the test put in it and would pass
+    while the row builder still dropped the field, which is exactly the gap this
+    campaign keeps falling into.
+    """
+    body = _json_result(["app", "ledger", "evidence", "review", "show", _GROUNDED_REFERENCE])
+
+    fields = {row["field"]: row for row in _objects(body, "fields")}
+    # Positive control: the surface really emitted both rows, so neither
+    # assertion below can pass over an absent field.
+    assert {"grand_total", "currency"} <= set(fields), f"rows reached the operator: {sorted(fields)}"
+
+    refused = fields["grand_total"]
+    assert refused["anchor"] is None, "a form the document does not carry must not read as evidence"
+    assert refused["refused_anchor"] == "4.528,32"
+
+    absent = fields["currency"]
+    assert absent["anchor"] is None
+    assert absent["refused_anchor"] is None, "nothing was offered, so nothing was refused"
+
+    assert refused["refused_anchor"] != absent["refused_anchor"]
 
 
 def test_the_confirm_verb_offers_no_bulk_resolution_flag() -> None:
