@@ -133,7 +133,7 @@ def test_the_withheld_invoice_is_collected_not_dropped(secure_objects: SecureObj
     """
     invoice_id = _persist_contradicted_supply(secure_objects)
 
-    _observations, _ids, compared, mismatches = _screen(secure_objects)
+    _observations, _ids, compared, mismatches, _underivable = _screen(secure_objects)
 
     assert [invoice.invoice_id for invoice in mismatches] == [invoice_id], (
         "the contradicted supply must be reported as withheld; dropping it silently is the "
