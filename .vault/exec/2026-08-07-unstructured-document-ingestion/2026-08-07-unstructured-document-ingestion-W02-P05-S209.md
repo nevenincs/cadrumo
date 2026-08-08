@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:fd83a198abfd53405c58ba05b53f518e128af62086238d96376852843364d317'
+body_hash: 'sha256:d2276dff02a4662c213ccecf18a65db3265dac3c9344443e4f85f031e467e1ba'
 step_id: 'S209'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -24,6 +24,8 @@ related:
 - Add an anchor asserting the super-reducido tier genuinely does not reach the probe date, so a later backdating reds with a message naming the premise instead of the rate.
 - Correct the operator-facing refusal message, which claimed the registry carried no rates for Spain on a date where it carries two tiers, to name the tier whose record is missing; correct the comment beside it that still described the table as having no record before 2024.
 - Replace the vacuous tier-narrowing guard with a containment anchor that walks every day from 2010 to 2026 and asserts no date separates the two readings, carrying the instruction to restore a behavioural probe when one does.
+- Sweep the remaining places a refusal describes the table's reach: the ledger detail that called it a current-rates table, the enum member comment that scoped the condition to every record rather than to the positive tiers, and the invoice docstring that framed the question as whether the table reaches a date at all.
+- Pin the ledger wording in the gate that already reads that message, so the sentence and the data it describes are tied together.
 
 ## Outcome
 
@@ -43,9 +45,14 @@ The tier-narrowing guard could not be repaired by re-anchoring its span, and say
     uv run --no-sync ty check src/cadrumo/domain/invoices
     All checks passed!
 
+    uv run --no-sync pytest src/cadrumo/application/aggregation/tests src/cadrumo/domain/invoices/tests src/cadrumo/domain/iva/tests -n0 -q -m "(unit or integration) and not external_tool and not os_keychain"
+    1749 passed in 286.83s (0:04:46)
+
 Every new anchor was proved to bite by mutating the rate table from outside the repository rather than by editing a tracked file, each mutation reporting the number of times the mutated table was read so an ineffective rebinding could not read as a pass. Backdating the super-reducido records to 2015 makes the uncovered-date anchor red. Re-truncating the general records to 2024 makes the gap-closed test red. Giving the zero tier a 2005 window outside every positive one makes the containment anchor red, naming both separating dates. The tier-naming assertion was checked against the message text as it stood before this change, where both of its clauses fail.
 
 ## Notes
+
+The extent sweep found three sites and no more; a search for the phrasings that assert how far the table reaches now returns nothing outside the tests that pin them. The new ledger assertion was proved to bite against the message as it stood before the sweep, and the same probe confirmed both clauses the existing gate already read survive the rewording, so that gate was not weakened to accommodate this one.
 
 The four failures reported against this premise earlier are all resolved: three were re-anchored here, and the fourth, in the ledger aggregation suite, was closed by a peer in the interval.
 
