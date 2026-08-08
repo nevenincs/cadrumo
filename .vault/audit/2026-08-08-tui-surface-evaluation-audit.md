@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:70d683010ef4ca7f3e523f90602fadb8789484b95633071bcc116fac0d1cf71f'
+body_hash: 'sha256:d3ca67dca259cca8bfff58cdcfadf431cd8e641d4aaed12eb3b4508dfa5a52c0'
 related: []
 ---
 
@@ -136,9 +136,30 @@ are repeatable sections with their own declared labels — a different shape.
 
 ### manager-value-column-vanishes-at-the-floor | medium | a whole column disappears at eighty columns, and the geometry check cannot see it
 
-At eighty columns the profile manager's tables drop the value column entirely,
-leaving only status and field name — every row on the page, not just
-divergences. The operator sees which facts exist and none of their values.
+At eighty columns the profile manager's tables fail to show fact values, and
+two reviewers observed it differently on the same surface at the same width.
+One, driving a profile of short and empty values, reported the value column
+absent entirely — status and field name only, every row on the page. The other,
+after writing a roughly one-hundred-and-sixty character note, saw the value
+column present but the content hard-cropped mid-word at the panel's inner edge,
+with no ellipsis, no overflow marker, and nothing signalling that the stored
+value is longer than what is painted. The stored value is intact in both cases;
+this is presentation only.
+
+**The discrepancy is recorded rather than resolved.** The two observations are
+consistent with a column that collapses toward zero width when its content is
+short and crops when it is long, but that is a hypothesis and no one measured
+the two states against each other. A third attempt to settle it was abandoned
+because at eighty by twenty-four the actions panel fills the visible fold and
+the tables sit below it, so the question needs a deliberate scroll walk rather
+than a single frame. Whoever picks this up should establish which behaviour is
+actually happening before choosing a remedy, because a width policy, a
+cell-level ellipsis and a wrap toggle are three different fixes and the right
+one depends on which of the two readings is the general case.
+
+The operator consequence is the same either way and is what matters: proofing a
+long razón social, address or note on a narrow terminal, there is no on-screen
+signal that what is displayed is not what is stored.
 
 The instrument note matters as much as the defect. The harness geometry band
 reports `ok` for this surface at that width, and correctly so: nothing is
@@ -364,6 +385,16 @@ arguments. The generalisable lesson: an evaluation instrument's fidelity to
 production is itself a claim requiring proof, and a stand-in that renders
 cleanly is indistinguishable from the real surface until something is compared
 against the production entry point.
+
+A third instrument defect surfaced late and is worth recording with the other
+two: the harness gesture that sets a widget value directly resolved its
+selector against the application rather than the top screen, and the framework
+does not descend into a pushed modal that way. So every such gesture aimed at
+any dialog — the field editor, the language chooser, the confirmation prompt
+added during this campaign — failed for every reviewer, silently making modal
+content undrivable. Fixed. A related rough edge was found and deliberately left:
+a gesture is written to the session journal before it is replayed, so one
+failing gesture persists and breaks every subsequent command until it is undone.
 
 A correction belongs here, because this finding was initially over-credited.
 The coordinator attributed a fabricated geometry finding and a false
