@@ -1,29 +1,29 @@
 """A refusal must not claim the law when the real limit is our own coverage.
 
-The bundled IVA registry reaches back a different distance PER TIER. Spain's
-general and reducido records run from September 2012, when RDL 20/2012 fixed
-21 % and 10 %; the super-reducido records begin only in 2024, while the 4 % tipo
-superreducido has stood since Ley 37/1992. So a 2023 line at 4 % fails to
-resolve -- not because its rate was unlawful, but because the table does not
-reach that tier back that far.
+The bundled IVA registry once reached back a different distance PER TIER for
+Spain: general and reducido from September 2012 (RDL 20/2012), super-reducido
+only from 2024 despite the 4 % tipo superreducido standing since Ley 37/1992.
+That gap meant a lawful 2023 line at 4 % failed to resolve -- not because its
+rate was unlawful, but because the table did not reach that tier back that far.
 
-Saying "was not in force" there is a false statement about Spanish law, and it
-is the expensive kind of false: it sends a filer to correct a figure that was
+Saying "was not in force" there was a false statement about Spanish law, and it
+was the expensive kind of false: it sends a filer to correct a figure that was
 right, and it invites the next maintainer to widen the rate table with a
-guessed historical value rather than an authored, corpus-backed one.
+guessed historical value rather than an authored, corpus-backed one. The ledger
+path already drew this distinction; the invoice path did not, so the same
+registry gap once produced a truthful message on one surface and a false one on
+the other.
 
-The ledger path already drew this distinction. The invoice path did not, so the
-same registry gap produced a truthful message on one surface and a false one on
-the other. These tests pin the distinction on the invoice path.
-
-**The premise is data-dependent, so it is anchored rather than assumed.** These
-tests were once written against a table whose general and reducido records also
-began in 2024; correcting those windows to their true 2012 start closed the
-coverage gap for both tiers and left the assertions passing for reasons that had
-stopped being true. Every date literal below is therefore paired with an anchor
-asserting the tier window that makes it the date it claims to be, so the next
-window move reds the anchor with a message naming the premise instead of going
-quiet.
+**The ES per-tier gap that motivated this module is closed.** The super-reducido
+record was corrected to its true 1995-01-01 start (Ley 41/1994 art. 78), which
+predates the general/reducido 2012-09-01 start by seventeen years -- so there is
+no longer a date where general and reducido are covered while super-reducido is
+not, the exact shape these tests pinned. The anchor test below still runs and
+would red the moment a live instance reappears (a tier window narrows again, or
+a fourth tier joins with its own gap), naming the premise instead of going quiet.
+The tests that verify the mechanism survives on tiers/dates it can still reach --
+the closed general/reducido gap, a genuinely out-of-window rate, a covered date,
+and the positive-tier scoping -- are kept below.
 """
 
 from __future__ import annotations
@@ -46,76 +46,27 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 #: Inside every tier's coverage, and the rates genuinely stood on this date.
 _COVERED = date(2024, 6, 1)
-#: Outside the SUPER-REDUCIDO tier's coverage, and inside the other two. 4 % was
-#: in force in Spain here, so this is the surviving lawful-but-uncovered date.
-_UNCOVERED_SUPER_REDUCED = date(2023, 6, 1)
 #: The tiers bearing a positive ordinary rate, spelled out rather than imported
 #: so an edit to the predicate's own tuple cannot move this in step with it.
 _POSITIVE_TIERS = (IvaRateKind.GENERAL, IvaRateKind.REDUCED, IvaRateKind.SUPER_REDUCED)
 
 
-def test_the_uncovered_date_is_uncovered_for_the_tier_it_is_used_for() -> None:
-    """The anchor under every refusal assertion below.
+def test_no_es_tier_currently_exhibits_an_uncovered_but_lawful_date() -> None:
+    """The tripwire that replaces the deleted uncovered-date fixture.
 
-    Without this, backdating the super-reducido records to their true statutory
-    start turns each refusal test below into an assertion about nothing --
-    silently, because the refusal simply stops happening and the test that
-    expected it is the one that fails, pointing at the rate rather than at the
-    premise. This names the premise directly.
+    Every ES tier's coverage now reaches back at least as far as
+    2012-09-01 (super-reducido reaches 1995-01-01, further still), so no date
+    is covered for one tier and uncovered for another -- the exact shape the
+    coverage-versus-legality distinction needs a live example of. This asserts
+    the closure directly: the day it goes false, a tier has narrowed again and
+    the refusal tests this module used to carry (deleted alongside the fixture
+    that anchored them) should be restored against the date that reopens.
     """
-    assert not rate_table_covers(EUMemberState.ES, _UNCOVERED_SUPER_REDUCED, IvaRateKind.SUPER_REDUCED), (
-        "the super-reducido records now reach 2023, so there is no longer a lawful-but-uncovered "
-        "date for that tier and these tests need a new anchor -- or, if no tier retains a gap, "
-        "the coverage-versus-legality distinction has no live instance left to pin"
-    )
-    assert rate_table_covers(EUMemberState.ES, _COVERED, IvaRateKind.SUPER_REDUCED)
-
-
-def test_coverage_is_asked_per_tier_not_per_date() -> None:
-    """The property the refusal branch turns on: reach differs between tiers.
-
-    A date-only question answers "covered" for a 4 % line the table cannot
-    price, routing it back to the false legality message. This asserts the
-    discrimination on the pair that currently exhibits it.
-    """
-    assert rate_table_covers(EUMemberState.ES, _UNCOVERED_SUPER_REDUCED, IvaRateKind.GENERAL)
-    assert not rate_table_covers(EUMemberState.ES, _UNCOVERED_SUPER_REDUCED, IvaRateKind.SUPER_REDUCED)
-    # The bare date form says "covered", which is exactly why it is the wrong
-    # question for a caller resolving one tier.
-    assert rate_table_covers(EUMemberState.ES, _UNCOVERED_SUPER_REDUCED)
-
-
-def test_an_uncovered_date_refuses_on_coverage_not_on_legality() -> None:
-    """4 % WAS in force in Spain in 2023, so the refusal must not say otherwise."""
-    with pytest.raises(IvaRateNotFoundError) as caught:
-        iva_rate_percentage(IvaRate.RATE_4, _UNCOVERED_SUPER_REDUCED)
-
-    message = str(caught.value)
-    assert "no IVA rate is on record" in message
-    assert "not a statement that the rate was unlawful" in message
-    assert "was not in force" not in message, (
-        "the refusal claims the rate was not in force, which is false for RATE_4 in Spain on "
-        f"{_UNCOVERED_SUPER_REDUCED.isoformat()} -- the limit is the registry's coverage of that "
-        "tier, not the law"
-    )
-
-
-def test_the_coverage_refusal_names_the_tier_rather_than_the_whole_table() -> None:
-    """A tier-scoped gap must not be reported as the table reaching nothing.
-
-    The message once said the registry "carries no rates for Spain on that
-    date". That was true while every tier began in 2024 and became false the
-    moment one tier was backdated: on this date the table carries the general
-    and reducido rates and only lacks the super-reducido one. A filer told the
-    table is empty for 2023 cannot act on it; a filer told which tier is
-    missing can.
-    """
-    with pytest.raises(IvaRateNotFoundError) as caught:
-        iva_rate_percentage(IvaRate.RATE_4, _UNCOVERED_SUPER_REDUCED)
-
-    message = str(caught.value)
-    assert IvaRateKind.SUPER_REDUCED.value in message
-    assert "carries no rates for Spain on that date" not in message
+    for kind in _POSITIVE_TIERS:
+        assert rate_table_covers(EUMemberState.ES, date(2012, 9, 1), kind), (
+            f"{kind.value} no longer covers 2012-09-01 -- a per-tier coverage gap may have "
+            "reopened; restore a refusal test pinned to the date that exposes it"
+        )
 
 
 @pytest.mark.parametrize("rate", (IvaRate.RATE_21, IvaRate.RATE_10))
@@ -128,9 +79,10 @@ def test_the_general_and_reducido_gap_is_closed_and_stays_closed(rate: IvaRate) 
     those windows to a later start would resurrect exactly the false-legality
     refusal this module exists to prevent, and would otherwise do it silently.
     """
-    assert iva_rate_percentage(rate, _UNCOVERED_SUPER_REDUCED) is not None
-    assert rate_table_covers(EUMemberState.ES, _UNCOVERED_SUPER_REDUCED, IvaRateKind.GENERAL)
-    assert rate_table_covers(EUMemberState.ES, _UNCOVERED_SUPER_REDUCED, IvaRateKind.REDUCED)
+    on_date = date(2023, 6, 1)
+    assert iva_rate_percentage(rate, on_date) is not None
+    assert rate_table_covers(EUMemberState.ES, on_date, IvaRateKind.GENERAL)
+    assert rate_table_covers(EUMemberState.ES, on_date, IvaRateKind.REDUCED)
 
 
 def test_a_covered_date_still_refuses_a_rate_that_truly_was_not_in_force() -> None:
@@ -162,7 +114,8 @@ def test_the_positive_tier_reading_is_exactly_the_three_positive_tiers() -> None
 
     Asserted as an equality against a locally spelled-out tier tuple, because a
     behavioural probe cannot currently distinguish the two readings at all --
-    see the anchor below, which is the test that will tell us when one can.
+    see :func:`test_no_es_tier_currently_exhibits_an_uncovered_but_lawful_date`,
+    which is the test that will tell us when one can.
     """
     for year in (2011, 2012, 2013, 2023, 2024, 2025, 2026):
         for month in (1, 6, 12):
