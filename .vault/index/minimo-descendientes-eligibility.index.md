@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#minimo-descendientes-eligibility'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:ff7c47bd5b3cf29e32acf8cd478446b8c0c07de9a413656280b026afe2fd5a11'
+body_hash: 'sha256:15f4f0471a77a102dd5e349a24268f5e767fafa4a48e66e013a9806d6a796e8e'
 related:
   - '[[2026-08-04-minimo-descendientes-eligibility-P01-S01]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P01-S02]]'
@@ -63,6 +63,7 @@ related:
   - '[[2026-08-05-minimo-descendientes-eligibility-art-81-maternidad-connect-review-audit]]'
   - '[[2026-08-05-minimo-descendientes-eligibility-diagnostic-message-headroom-census-research]]'
   - '[[2026-08-05-minimo-descendientes-eligibility-semantic-overlap-census-audit]]'
+  - '[[2026-08-08-minimo-descendientes-eligibility-guarderia-cotizaciones-ceiling-adr]]'
 ---
 
 # `minimo-descendientes-eligibility` feature index
@@ -75,6 +76,7 @@ Auto-generated index of all documents tagged with `#minimo-descendientes-eligibi
 
 - `2026-08-04-minimo-descendientes-eligibility-adr` - `minimo-descendientes-eligibility` adr: `Complete the Art. 58/61 LIRPF eligibility predicate before the derived-aggregate override closes` | (**status:** `accepted`)
 - `2026-08-04-minimo-descendientes-eligibility-deferred-descendant-axes-adr` - `minimo-descendientes-eligibility` adr: `Add the relationship-kind and entry-event axes the descendant model lacks, defer month-level guarderia spend` | (**status:** `accepted`)
+- `2026-08-08-minimo-descendientes-eligibility-guarderia-cotizaciones-ceiling-adr` - `minimo-descendientes-eligibility` adr: `The cotizaciones ceiling is a household term against a per-child limit` | (**status:** `accepted`)
 
 ### audit
 
