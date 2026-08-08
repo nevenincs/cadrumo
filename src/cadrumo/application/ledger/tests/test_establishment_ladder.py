@@ -100,8 +100,8 @@ def _resolve(
     return resolve_counterparty_establishment_scope(
         bucket_id=_BUCKET_ID,
         tax_identifier=tax_identifier,
-        printed_country_name=country_name,
-        printed_country_code=country_code,
+        stated_country_name=country_name,
+        stated_country_code=country_code,
         postal_code=postal_code,
         repository=repository,
     )
