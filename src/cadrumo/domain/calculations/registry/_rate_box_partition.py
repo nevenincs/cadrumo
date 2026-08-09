@@ -269,6 +269,56 @@ def derive_rate_box_partitions(revision: ModeloRevision) -> tuple[RateBoxPartiti
     return tuple(sorted(partitions, key=lambda partition: partition.total_casilla_id))
 
 
+def _ledger_iva_bindings_by_partition_key(
+    revision: ModeloRevision,
+) -> dict[tuple[tuple[str, str], ...], list[tuple[DataBindingDefinition, Mapping[str, object]]]]:
+    """Group the revision's ledger-IVA bindings by their non-rate selector identity.
+
+    The rate axis is excluded from the key, which is what makes a rate-pinned
+    binding and its rate-blind sibling land in the same group.
+    """
+    grouped: dict[tuple[tuple[str, str], ...], list[tuple[DataBindingDefinition, Mapping[str, object]]]] = {}
+    for binding in revision.bindings:
+        if binding.source is not BindingSourceKind.LEDGER_IVA_AGGREGATION:
+            continue
+        axes = _iva_selector_axes(binding)
+        grouped.setdefault(_partition_key(axes), []).append((binding, axes))
+    return grouped
+
+
+def _unscreened_reason(
+    *,
+    rated: list[tuple[DataBindingDefinition, Mapping[str, object]]],
+    blind: list[tuple[DataBindingDefinition, Mapping[str, object]]],
+    casillas_by_binding: Mapping[BindingId, Sequence[CasillaId]],
+    exports: Mapping[CasillaId, bool],
+) -> str | None:
+    """Return why this rate-split group forms no partition, or ``None`` if it does.
+
+    The order is load-bearing: the absent-blind-sibling case is checked first
+    because it is the severe one -- every binding pins a rate, so a row whose
+    rate the ledger never recorded matches none of them and reaches no casilla
+    at all.
+    """
+    if not blind:
+        return _NO_RATE_BLIND_SIBLING
+    if len(blind) > 1:
+        return _MULTIPLE_RATE_BLIND_SIBLINGS
+    total_casillas = _distinct(casillas_by_binding.get(blind[0][0].id, ()))
+    box_casillas = _distinct(
+        casilla_id for binding, _ in rated for casilla_id in casillas_by_binding.get(binding.id, ())
+    )
+    if len(total_casillas) != 1 or not box_casillas:
+        return _NO_SINGLE_TOTAL_CASILLA
+    if exports.get(total_casillas[0], False) or total_casillas[0] in box_casillas:
+        return _TOTAL_CASILLA_EXPORTS
+    if not any(exports.get(casilla_id, False) for casilla_id in box_casillas):
+        return _NO_BOX_CASILLA_EXPORTS
+    if not _rate_kind_names(blind[0][1].get("rate_kinds")):
+        return _NO_RATE_KINDS
+    return None
+
+
 def rate_box_unscreened_groups(revision: ModeloRevision) -> tuple[RateBoxUnscreenedGroup, ...]:
     """Return rate-split selector groups that :func:`derive_rate_box_partitions` drops.
 
@@ -307,13 +357,7 @@ def rate_box_unscreened_groups(revision: ModeloRevision) -> tuple[RateBoxUnscree
     """
     casillas_by_binding = _casillas_by_binding(revision)
     exports = {casilla.id: bool(casilla.export_refs) for casilla in revision.casillas}
-
-    grouped: dict[tuple[tuple[str, str], ...], list[tuple[DataBindingDefinition, Mapping[str, object]]]] = {}
-    for binding in revision.bindings:
-        if binding.source is not BindingSourceKind.LEDGER_IVA_AGGREGATION:
-            continue
-        axes = _iva_selector_axes(binding)
-        grouped.setdefault(_partition_key(axes), []).append((binding, axes))
+    grouped = _ledger_iva_bindings_by_partition_key(revision)
 
     unscreened: list[RateBoxUnscreenedGroup] = []
     for key, members in grouped.items():
@@ -321,32 +365,18 @@ def rate_box_unscreened_groups(revision: ModeloRevision) -> tuple[RateBoxUnscree
         if not rated:
             continue
         blind = [member for member in members if not member[1].get(_APPLIED_RATES_AXIS)]
-        rated_binding_ids = tuple(sorted(binding.id for binding, _ in rated))
-
-        reason: str | None = None
-        if not blind:
-            reason = _NO_RATE_BLIND_SIBLING
-        elif len(blind) > 1:
-            reason = _MULTIPLE_RATE_BLIND_SIBLINGS
-        else:
-            total_casillas = _distinct(casillas_by_binding.get(blind[0][0].id, ()))
-            box_casillas = _distinct(
-                casilla_id for binding, _ in rated for casilla_id in casillas_by_binding.get(binding.id, ())
-            )
-            if len(total_casillas) != 1 or not box_casillas:
-                reason = _NO_SINGLE_TOTAL_CASILLA
-            elif exports.get(total_casillas[0], False) or total_casillas[0] in box_casillas:
-                reason = _TOTAL_CASILLA_EXPORTS
-            elif not any(exports.get(casilla_id, False) for casilla_id in box_casillas):
-                reason = _NO_BOX_CASILLA_EXPORTS
-            elif not _rate_kind_names(blind[0][1].get("rate_kinds")):
-                reason = _NO_RATE_KINDS
+        reason = _unscreened_reason(
+            rated=rated,
+            blind=blind,
+            casillas_by_binding=casillas_by_binding,
+            exports=exports,
+        )
         if reason is None:
             continue
         unscreened.append(
             RateBoxUnscreenedGroup(
                 selector_identity=tuple(f"{axis}={value}" for axis, value in key),
-                rated_binding_ids=rated_binding_ids,
+                rated_binding_ids=tuple(sorted(binding.id for binding, _ in rated)),
                 reason=reason,
             ),
         )
