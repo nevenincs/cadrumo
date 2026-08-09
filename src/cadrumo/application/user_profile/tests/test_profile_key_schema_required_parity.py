@@ -3,11 +3,14 @@
 Two mechanisms answer that question and neither derives from the other. The
 profile schema (``schema.toml``) declares ``required`` per field. ``PROFILE_KEYS``
 is compiled from ``WIZARD_FLOWS`` and carries its own ``ProfileKeyRequirement``.
-They disagree today, and the governing ADR defers reconciling them.
+They disagree today, and reconciling them is deliberately out of scope here:
+doing so requires a conditional-requirement grammar the schema does not yet
+have, without which the wizard would have to demand row-scoped facts
+unconditionally and refuse lawful filings.
 
-A deferral without a detector widens unobserved, which is what this file
-prevents. It does not close the divergence; it pins the current one, states a
-cause for every entry, and fails on anything new.
+An accepted divergence without a detector widens unobserved, which is what this
+file prevents. It does not close the divergence; it pins the current one, states
+a cause for every entry, and fails on anything new.
 
 Every cause is machine-checked, not merely asserted in prose. A field excused as
 a repeatable-row field is verified to sit in a section the schema actually marks
@@ -79,9 +82,9 @@ _KNOWN_DIVERGENCES: dict[str, tuple[_Cause, str]] = {
 }
 """Schema-required fields the wizard key space does not require, and why.
 
-Pinned rather than fixed: closing the divergence is the ADR's deferred
-reconciliation, not this gate's job. An entry is removed when its field stops
-diverging, never left standing.
+Pinned rather than fixed: closing the divergence needs a schema grammar that
+does not yet exist, so it is not this gate's job. An entry is removed when its
+field stops diverging, never left standing.
 """
 
 
@@ -119,9 +122,9 @@ def _key_facts() -> tuple[set[str], set[str]]:
 def test_no_new_schema_required_field_diverges_from_the_wizard() -> None:
     """A newly schema-required field must be reconciled or explicitly pinned here.
 
-    This is the detector the ADR's deferral lacked: without it, a field added as
-    schema-required and never wired into the wizard joins the divergence silently
-    and the two surfaces return opposite verdicts on the same record.
+    Without this, a field added as schema-required and never wired into the
+    wizard joins the divergence silently, and the two surfaces return opposite
+    verdicts on the same record.
     """
     _, schema_required, _ = _schema_facts()
     _, keys_required = _key_facts()
