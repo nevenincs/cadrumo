@@ -22,6 +22,13 @@ from dev.packaging._proof_ledger import record_proof
 
 _UTF_8: Final[str] = "utf-8"
 _MANIFEST_NAME: Final[str] = "python-cohort.json"
+
+# ``uv build --out-dir`` writes a one-byte ``.gitignore`` (containing ``*``) into
+# its output directory, so the cohort directory acquires a file no manifest can
+# declare. It is build-tool bookkeeping, never an installable artifact, and is
+# excluded by exact name: the closed-world inventory below must keep refusing any
+# unmanifested wheel or sdist, which a broader pattern would stop doing.
+_BUILD_TOOL_EMITTED_FILES: Final[frozenset[str]] = frozenset({".gitignore"})
 _BUILD_TREE_SOURCE_DIR: Final[str] = "src"
 COHORT_STAMPED_WHEEL_DATA_PATHS: Final[frozenset[str]] = frozenset(
     {"cadrumo/_data/registry/aeat-validation-verdict.json"},
@@ -455,7 +462,11 @@ def load_python_cohort(directory: Path) -> PythonCohort:
     # compares the inventory first: an extra file crosses acquisition, smoke,
     # and promote gates unnoticed when only the declared names are checked.
     declared_files = {str(name) for name in artifacts.values()} | {_MANIFEST_NAME}
-    observed_files = {path.relative_to(cohort_dir).as_posix() for path in cohort_dir.rglob("*") if path.is_file()}
+    observed_files = {
+        path.relative_to(cohort_dir).as_posix()
+        for path in cohort_dir.rglob("*")
+        if path.is_file() and path.name not in _BUILD_TOOL_EMITTED_FILES
+    }
     if observed_files != declared_files:
         raise SystemExit(
             f"Python cohort file inventory drifted: "
