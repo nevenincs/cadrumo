@@ -4,7 +4,7 @@ tags:
   - '#profile-requirement-grounding'
 date: '2026-08-08'
 modified: '2026-08-09'
-body_hash: 'sha256:c6a67351c32bed5eb5959c71f0a665dd653f86c7250cdd3498b805f4b2599d8b'
+body_hash: 'sha256:a823828cba083a3611722d3c7ef671703f0c227daa86bf7ab3a79e8cf3ba5848'
 tier: L2
 related:
   - '[[2026-08-08-profile-requirement-grounding-adr]]'
@@ -33,15 +33,15 @@ Thread the enriched requirement through the blocking-gate locale template (all f
 
 - [x] `P02.S04` - Add label, legal_refs, and modelos to ProfilePreflightMissingPayload and its construction site; `src/cadrumo/entrypoints/cli/_config_payloads.py`.
 - [x] `P02.S05` - Add label, legal_refs, and modelos to ModeloReadinessMissingRequirementPayload and its construction site; `src/cadrumo/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `P02.S06` - Update the blocking-gate context and the profile_readiness_missing locale template to render label and legal ref per missing field in all four catalogues via dev.locales; `src/cadrumo/application/modelo/_profile_readiness_gate.py, src/cadrumo/locales/{en,es,ca,hu}.yml`.
+- [x] `P02.S06` - Update the blocking-gate context and the profile_readiness_missing locale template to render label and legal ref per missing field in all four catalogues via dev.locales; `src/cadrumo/application/modelo/_profile_readiness_gate.py, src/cadrumo/locales/{en,es,ca,hu}.yml`.
 
 ### Phase `P03` - Verify
 
 Prove the enrichment with grounded regression tests, keep the JSON-schema-conformance and locale-parity gates green, and regenerate any affected generated CLI reference stubs.
 
-- [ ] `P03.S07` - Add a grounded regression proving the blocking-gate message text changes for a known missing field; `src/cadrumo/application/modelo/tests/`.
-- [ ] `P03.S08` - Run the JSON-schema-conformance and locale-coverage-parity gates and fix any red findings; `src/cadrumo/entrypoints/cli/tests/, src/cadrumo/tests/`.
-- [ ] `P03.S09` - Run apidocs scaffold --check and land regenerated CLI reference stubs if affected; `docs/api/`.
+- [x] `P03.S07` - Add a grounded regression proving the blocking-gate message text changes for a known missing field; `src/cadrumo/application/modelo/tests/`.
+- [x] `P03.S08` - Run the JSON-schema-conformance and locale-coverage-parity gates and fix any red findings; `src/cadrumo/entrypoints/cli/tests/, src/cadrumo/tests/`.
+- [x] `P03.S09` - Run apidocs scaffold --check and land regenerated CLI reference stubs if affected; `docs/api/`.
 
 ### Phase `P04` - Close out
 
@@ -49,6 +49,17 @@ Run mandatory code review and a fresh-context honesty review against this campai
 
 - [ ] `P04.S10` - Run the mandatory code review against the campaign diff and action every finding; `.vault/audit/`.
 - [ ] `P04.S11` - Run the fresh-context honesty review against the closure summary and close every item as fixed or a formally deferred follow-up; `.vault/audit/`.
+
+### Phase `P05` - Execute the 2026-08-09 amendment: stop granting unassessed readiness
+
+Implements the accepted 2026-08-09 amendment. The per-operation model_selectors axis carries zero modelo_ tokens, so the schema-required branch of ProfilePreflightService.report() is unreachable and the report returns ready=True for a profile declaring nothing. Make the unevaluated case distinguishable from a passing one, ground any axis population against official sources rather than inference, and open a detector for the deferred ProfileKey divergence.
+
+- [ ] `P05.S12` - Make the unevaluated per-modelo case distinguishable from a passing one on ProfilePreflightReport, so a modelo matching no schema-required field reports not-assessed rather than ready; `src/cadrumo/application/user_profile/_preflight.py, src/cadrumo/application/user_profile/_commands.py`.
+- [ ] `P05.S13` - Surface the not-assessed signal as a CLI notice on config profile preflight and app modelo readiness, never as a clean bill of health; `src/cadrumo/entrypoints/cli/_config_payloads.py, src/cadrumo/entrypoints/cli/_modelo_payloads.py`.
+- [ ] `P05.S14` - Replace test_preflight_returns_ready_when_no_modelo_selectors_match, which encodes the current defect as the contract, with a regression asserting a profile declaring no facts is never reported ready for a modelo; `src/cadrumo/application/user_profile/tests/test_services.py`.
+- [ ] `P05.S15` - Inventory the grounded per-modelo profile-fact requirements from each modelo official form and its registry source=profile bindings, recording the evidence per token and refusing to infer any requirement that no source establishes; `.vault/reference/, src/cadrumo/domain/calculations/registry/_profile_grounding.py`.
+- [ ] `P05.S16` - Populate model_selectors with the grounded modelo_ tokens from that inventory and prove the per-modelo branch now contributes, leaving _FILING_BASELINE_PROFILE_PATHS in force until it does; `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`.
+- [ ] `P05.S17` - Add a parity gate failing with the field-level delta when the schema-required set and the PROFILE_KEYS-required set disagree, giving the deferred ProfileKey divergence a detector; `src/cadrumo/application/user_profile/tests/`.
 
 ## Parallelization
 

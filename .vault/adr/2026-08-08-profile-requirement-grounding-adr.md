@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#profile-requirement-grounding'
 date: '2026-08-08'
-modified: '2026-08-08'
+modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:c9e18fb953a92666ffb344791d57057c7dd6d3b776e11037ced9abf5c1417b4d'
+body_hash: 'sha256:e27b2631fafe2057c24ba20487ecc2c413dbefa84ed108e385d79be928ca071e'
 related:
   - "[[2026-07-23-profile-setup-flow-adr]]"
   - '[[2026-08-08-profile-requirement-grounding-reference]]'
@@ -47,3 +47,43 @@ The enrichment is the minimum change that closes the gap for all three surfaces 
 ## Consequences
 
 Operators get a labeled, legally-grounded, per-operation "why" on every incomplete-profile signal instead of a bare dotted path, across the blocking refusal, `preflight`, and `readiness` surfaces uniformly. The change touches a shared model consumed in three places plus four locale catalogues, so it needs care not to regress any of the three consumers' existing JSON-schema conformance gates. It does not resolve the separate `ProfileKey`/`_DEADLINE_RELEVANT_FIELDS` redundancy; that remains open as a follow-up investigation.
+
+
+## Amendment (2026-08-09): the per-operation axis is empty, and the surface grants readiness without checking
+
+**Status of this amendment:** accepted. It corrects a factual premise in the Problem Statement above; the enrichment decision itself stands and P01 remains correct as landed.
+
+### What the original decision got wrong
+
+The Problem Statement asserts that per-operation `model_selectors` "already exists on the schema object in scope at the point each report row is built, and is simply discarded". Measured against the shipped schema by loading it through `load_user_profile_schema()`: **161 fields, 15 required, 143 `model_selectors` values, and exactly 0 beginning with `modelo_`.** The one selector containing the substring is `withholding.modelo_111_no_retenciones_periods`, a field path rather than an operation token. The data does not exist and never did. The reference document carries the same claim, inherited from the same reading.
+
+`ProfilePreflightService.report()` builds its target as `f"modelo_{modelo.strip()}"` (`_preflight.py:164`) and keeps a field only when a selector `startswith` that prefix (`:168-172`). With zero such selectors the schema-required branch is unreachable for every modelo.
+
+### The consequence is worse than dead code
+
+`report()` returns `ready=not missing`. Because the schema-required branch never contributes, `ready` is decided solely by the export-layout header requirements and the IRNR conditional rules. The 15 schema-required fields — including `identity.tax_id` — never reach the per-modelo report at all.
+
+Driven against a real `UserProfileRecord` declaring **no facts whatsoever**, `report(modelo="303", ...)` returns `ready=True` with `missing=()`. The surface grants readiness for a profile that declares nothing, having checked nothing. That is a silent grant of completeness over an unassessed state, which is precisely the failure mode `no-silent-under-declaration` governs — here on profile completeness rather than on a tax figure. An operator reading `ready` gets the one answer they cannot act on.
+
+The codebase already records the behaviour without naming it a defect: `application/user_profile/tests/test_services.py:172` is `test_preflight_returns_ready_when_no_modelo_selectors_match`. The test encodes the current state as the contract, so it would keep passing through any fix.
+
+### Decision
+
+**The per-operation axis is retained as the intended canonical mechanism, but it MUST NOT report readiness it did not establish.** Three rulings:
+
+1. **The unevaluated case must stop reading as ready.** When the per-modelo branch matches no field for a modelo, the report must not present that as a clean bill of health. It surfaces as an explicit not-assessed signal on the report, and the CLI renders it as a notice. A boolean that means "nothing was checked" and a boolean that means "everything passed" must not be the same boolean.
+
+2. **The axis is populated from grounded evidence, never by inference.** Which profile fact a given modelo requires is a tax question, so each `modelo_<code>` token must be grounded the way any regulatory value is — against the modelo's official form and its registry `source = "profile"` bindings. `build_profile_grounding_index` already computes the binding-derived union of profile keys per modelo and is the honest starting inventory. **Populating the axis by guessing which fields "look" required is forbidden**; an ungrounded token is an invented requirement that will refuse a lawful filing.
+
+3. **`_FILING_BASELINE_PROFILE_PATHS` is not retired by this amendment.** The literal tuple at `_profile_readiness_gate.py:60` remains the operative blocking authority until the axis is populated and proven. Retiring it additionally requires a conditional-requirement grammar on `ProfileFieldDefinition` — `required_when` exists today only on `ProfileKey` (`domain/contribuyente/_keys.py:51-52`) — and the Modelo-100 `activities.description` exemption has no schema expression without it. **That grammar is a separate decision and must not be smuggled in as part of this work.**
+
+### Rejected alternative
+
+Deleting the per-modelo branch and striking the capability claim was considered and rejected. It is the smaller, more immediately honest change, and it would leave the tree with no false claim. But it removes the only mechanism that could ever express "operation X requires facts Y", leaving a two-element hand-written tuple as the sole authority for every modelo — which moves further from the standing goal that every call refuse citing the exact missing fact. Ruling 1 delivers the honesty that deletion would buy, without discarding the mechanism.
+
+### What this amendment does not resolve
+
+The ten-mechanism, four-namespace split recorded in `2026-08-09-profile-requirement-grounding-per-operation-axis-and-silent-defaults-audit` is untouched here, as is the `ProfileKey` / `_DEADLINE_RELEVANT_FIELDS` reconciliation the original decision already deferred. That deferral currently has **no detector**, so the divergence can widen unobserved; a parity gate is the tractable first move and is opened as a row rather than left as prose.
+
+This amendment rules on code, and a ruling is not self-executing. Its implementing rows are opened in the same action in `2026-08-08-profile-requirement-grounding-plan` (phase `P05`). Until those close, HEAD carries the rejected behaviour while this record reads as in force — the gap this project has been burned by before.
+
