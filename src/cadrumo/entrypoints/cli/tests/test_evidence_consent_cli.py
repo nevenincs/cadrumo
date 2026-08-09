@@ -282,13 +282,13 @@ def test_a_dispatch_recorded_under_another_profile_is_not_listed_here(profile: T
     one except in the field under test. The own-profile row is seeded alongside
     it, so this cannot pass by the verb reporting nothing at all.
     """
-    from ....adapters.outbound.llm import EvidenceConsentLedgerEntry
     from ....adapters.persistence.storage import (
         LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE,
         secure_object_repository_for_active_bucket,
     )
     from ....core.hashing import canonical_json_bytes
     from ....core.time import now
+    from ....domain.evidence_consent import EvidenceConsentLedgerEntry
 
     _seed_consented_dispatch(profile)
     foreign = EvidenceConsentLedgerEntry(

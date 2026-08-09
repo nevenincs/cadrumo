@@ -39,6 +39,7 @@ import pytest
 
 from .....core.config import Settings
 from .....core.external_constants import UTF_8_ENCODING
+from .....domain.evidence_consent import EvidenceConsentLedgerEntry
 from .....llm import EvidenceConsentToken, LLMClient, LLMConsentError, LLMProvider, LLMRequest
 from .....llm._providers.base import ProviderCompletion, ProviderRequest, _ProviderAdapter
 from ....persistence.storage import (
@@ -46,7 +47,7 @@ from ....persistence.storage import (
     close_active_bucket_session,
     secure_object_repository_for_active_bucket,
 )
-from .._consent_ledger import EvidenceConsentLedger, EvidenceConsentLedgerEntry
+from .._consent_ledger import EvidenceConsentLedger
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

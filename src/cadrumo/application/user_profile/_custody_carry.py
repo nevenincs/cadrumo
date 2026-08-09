@@ -41,10 +41,6 @@ from ...adapters.outbound.aeat.sede import (
     filed_declaracion_observation_object_key,
     iva_compensation_wallet_observation_object_key,
 )
-from ...adapters.outbound.llm import (
-    EvidenceConsentLedgerEntry,
-    evidence_consent_ledger_entry_object_key,
-)
 from ...adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ...adapters.persistence.profile.justificante import JustificanteRepository
 from ...adapters.persistence.profile.submission import SubmissionRepository
@@ -67,6 +63,10 @@ from ...adapters.persistence.storage import (
 from ...adapters.persistence.storage.envelope import Envelope
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ...core.hashing import sha256_hex
+from ...domain.evidence_consent import (
+    EvidenceConsentLedgerEntry,
+    evidence_consent_ledger_entry_object_key,
+)
 from ...domain.user_profile import CarriedSecureObject, ProfileExportError, UserProfileSnapshot
 from ..aggregation import PercepcionObservationRepository, RetencionObservationRepository
 from ..calculations import (

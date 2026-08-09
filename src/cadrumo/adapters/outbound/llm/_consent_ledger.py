@@ -1,7 +1,8 @@
 """The off-host evidence-consent audit ledger.
 
-Persists one :class:`EvidenceConsentLedgerEntry` per off-host evidence dispatch
-that a consent token permitted, to encrypted secure-object storage under
+Persists one :class:`~domain.evidence_consent.EvidenceConsentLedgerEntry` per
+off-host evidence dispatch that a consent token permitted, to encrypted
+secure-object storage under
 :data:`~adapters.persistence.storage.LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE`.
 The entry is appended by :class:`~adapters.outbound.llm.LLMClient` at the same
 choke point that HONOURS the token, before the cache read and before any
@@ -33,14 +34,16 @@ See Also:
         itself, its two fields are copied into the entry.
     :data:`~adapters.persistence.storage.LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE`
         Secure-object namespace used for the encrypted local store.
+    :mod:`~domain.evidence_consent`
+        Owns the entry's record shape and its natural key grammar, so a
+        consumer inside the application layer can recover a stored row's key
+        without importing this outbound adapter.
 """
 
 from __future__ import annotations
 
 import json
 from uuid import uuid4
-
-from pydantic import BaseModel, ConfigDict, Field
 
 from ....adapters.persistence.storage import (
     LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE,
@@ -49,48 +52,18 @@ from ....adapters.persistence.storage import (
 )
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import canonical_json_bytes
-from ....core.time import UtcInstant, now
+from ....core.time import now
+from ....domain.evidence_consent import (
+    EvidenceConsentLedgerEntry,
+    evidence_consent_ledger_entry_object_key,
+)
 from ....llm import LLMConsentError
 
-__all__ = ["EvidenceConsentLedger", "EvidenceConsentLedgerEntry", "evidence_consent_ledger_entry_object_key"]
+__all__ = ["EvidenceConsentLedger"]
 
 _NAMESPACE = LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE.namespace
 _VERSION = LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE.schema_version
 _SENSITIVITY = LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE.sensitivity
-
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True)
-
-
-class EvidenceConsentLedgerEntry(BaseModel):
-    """One consented off-host evidence dispatch, recorded for later audit.
-
-    Every field is metadata ABOUT the transmission. Nothing here reconstructs
-    the document: ``evidence_content_address`` is a digest, and there is no
-    field for prompt or response text.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    entry_id: str = Field(min_length=1, description="Stable id for this ledger entry (a UUID4 hex).")
-    profile_bucket_id: str = Field(min_length=1, description="Encrypted bucket (profile) the dispatch ran under.")
-    evidence_content_address: str = Field(
-        min_length=1,
-        description="SHA-256 content address of the evidence the acknowledgement covered.",
-    )
-    provider: str = Field(min_length=1, description="Resolved off-host provider the request dispatched at.")
-    model: str = Field(min_length=1, description="Resolved model identifier the request dispatched at.")
-    surface: str = Field(min_length=1, description="Operator surface that took the acknowledgement.")
-    recorded_at: UtcInstant = Field(description="UTC timestamp the consent was honoured.")
-
-
-def evidence_consent_ledger_entry_object_key(entry: EvidenceConsentLedgerEntry) -> str:
-    """Return the unique natural key one consent entry is saved under.
-
-    Public so the custody-carry natural-key resolver can recover the same
-    key a decrypted row was written under, without re-deriving the grammar
-    a second time.
-    """
-    return "|".join((entry.recorded_at.isoformat(), entry.evidence_content_address, entry.entry_id))
 
 
 class EvidenceConsentLedger:

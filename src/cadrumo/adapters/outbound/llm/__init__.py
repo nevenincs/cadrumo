@@ -24,10 +24,13 @@ produces :class:`UsageSummary` reports. :class:`LLMRunTelemetryRecorder`
 persists local-only :class:`LLMRunRecord` run-timing/outcome metadata (never
 prompt or response text) and produces :class:`LLMRunTelemetrySummary` reports,
 backing the ``aeat app diagnostics run-health`` operator surface.
-:class:`EvidenceConsentLedger` persists one :class:`EvidenceConsentLedgerEntry`
-per off-host evidence dispatch a consent token permitted -- the content
-address, provider, model and surface, never the bytes -- and is the only one of
-these four stores that refuses rather than degrading when its write fails.
+:class:`EvidenceConsentLedger` persists one
+:class:`domain.evidence_consent.EvidenceConsentLedgerEntry` per off-host
+evidence dispatch a consent token permitted -- the content address, provider,
+model and surface, never the bytes -- and is the only one of these four stores
+that refuses rather than degrading when its write fails. The entry's record
+shape and natural key grammar are owned by :mod:`domain.evidence_consent`, not
+re-exported here.
 Strict model
 types include :class:`Translation` and transient :class:`MultimodalImageInput`,
 whose base64 bytes are not persisted; only content SHA participates in cache
@@ -54,21 +57,15 @@ Examples:
 """
 
 from ._cache import LLMCache
-from ._consent_ledger import (
-    EvidenceConsentLedger,
-    EvidenceConsentLedgerEntry,
-    evidence_consent_ledger_entry_object_key,
-)
+from ._consent_ledger import EvidenceConsentLedger
 from ._run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder, LLMRunTelemetrySummary
 from ._usage import UsageRecorder
 
 __all__ = [
     "EvidenceConsentLedger",
-    "EvidenceConsentLedgerEntry",
     "LLMCache",
     "LLMRunRecord",
     "LLMRunTelemetryRecorder",
     "LLMRunTelemetrySummary",
     "UsageRecorder",
-    "evidence_consent_ledger_entry_object_key",
 ]
