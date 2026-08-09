@@ -5,7 +5,7 @@ tags:
 date: '2026-08-09'
 modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:364ed85fcf66ee21e39c866f9aa1ddc120727b4db1176b202130447d0808ada0'
+body_hash: 'sha256:af0134df296c62503332bee05a5730c770e524de03fbd54ab66e148b9fc7851a'
 related:
   - "[[2026-08-08-profile-requirement-grounding-adr]]"
 ---
@@ -100,7 +100,6 @@ Fourteen is the number of `_profile_to_taxpayer` call sites. It is not the numbe
 
 So the honest scope is: **three sites investigated, two defects fixed, one withdrawn, eleven unexamined** — not "fourteen surfaces affected". Counting the call sites and reporting that count as the blast radius silently substitutes an easy measurement for the hard one, and the resulting number is both precise and unearned.
 
-
 ### Sweep closed: every call site examined, and the exposure is far narrower than this finding claimed
 
 The correction above left "eleven unexamined". They are now examined. There are **twelve** call sites, not fourteen — the original count included the function definition and double-counted a file. Every one is classified below, and **no further placeholder defect exists**.
@@ -120,7 +119,6 @@ The export case is the one worth stating explicitly, because it is where the ala
 **What this means for the finding's own framing.** The heading says the placeholder "silently yields NIF `00000000T` ... across fourteen CLI surfaces". Measured: **two** sites were genuinely harmed by it, five were already protected by an existing gate, four never compare identity, and one claim did not reproduce. The filing-grade surfaces — the ones where a fabricated NIF would have reached a persisted or exported artefact — were **all** already guarded.
 
 The defect was real and worth fixing, and it was narrower than a call-site census made it look. Recorded at this length because the overstatement is the more transferable lesson: the census was easy, precise and wrong, and the only thing that corrected it was reading each consumer's own handling of an empty value.
-
 
 ### Withdrawn: the CCAA foral finding does not survive verification either
 
@@ -152,4 +150,24 @@ Three findings in this document have now been tested against running code. The s
 **Withdrawn — both asserted downstream CONSEQUENCES from reading code paths:** the `work dependencies` claim (three-way probe showed the path was not identity-gated at all under that seed) and the CCAA claim (the guard raises; the fallback is documented).
 
 The distinguishing factor is not care or detail — the withdrawn findings carried precise `file:line` citations and plausible mechanisms. It is whether the claimed BEHAVIOUR was ever executed. A code path read carefully still only supports "this branch exists"; it does not support "and therefore the operator sees X", because the consequence depends on callers, guards and defaults that are not visible from the site. Every consequence claim in an audit should carry either a probe that produced it or an explicit marker that it is inferred and untested.
+
+
+### The replacement finding is now fixed, and it needed measuring first too
+
+The withdrawal section above recorded a smaller real finding in place of the `work dependencies` claim — absent and mismatched identity reporting the same blocker — and marked it **not actioned**. That is now stale: it is fixed in `1ca1b2dec9`. Recorded here so the entry does not keep reading as open work.
+
+**It was measured before it was touched**, because it had been recorded from a code READ, which is the class this document has already retracted twice. Probing both identity paths directly:
+
+| path | correct | wrong | empty / None |
+|---|---|---|---|
+| `_aeat_register_provenance_blockers` | `[]` | mismatch | **`[]`** — fails open |
+| `_justificante_matches_filing` | match | mismatch | **mismatch** — conflates |
+
+So the finding held on the justificante path **only**. The register path already handled absence correctly, which is narrower than the original note implied and is why the fix brings one path into line with its sibling rather than introducing a new convention.
+
+`UNRESOLVED_TAXPAYER_IDENTITY` now reports the absent case. The gate stays fail-closed — an unidentifiable receipt still blocks — so only the reason changes, and the reason is what tells the operator to fill in their profile rather than to go looking at a receipt they cannot alter.
+
+**The first attempt at the fix was wrong, and the existing suite caught it.** Checking identity BEFORE the match let an absent identity mask a genuinely mismatched modelo, year or period — the exact inverse of the confusion being removed. `test_cross_period_clean_state_blocks_mismatched_justificante_metadata` went red and named it. The identity axis is now neutralised for the match probe and judged separately afterwards.
+
+That is worth recording beside the pattern above rather than buried in a commit message. The lesson from the two withdrawals was "execute the claim before believing it"; this shows the same rule applies to the FIX, not only to the finding. A remedy reasoned from a correct diagnosis can still be wrong in a way only running it reveals, and the thing that caught it was a test written by someone else for an unrelated case.
 
