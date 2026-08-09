@@ -56,7 +56,7 @@ required_text = ["modelo 303"]
 
 [revisions.2023-y-siguientes.bindings.selector]
 categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"]
-rate_kinds = ["general", "reduced", "super_reduced"]
+rate_kinds = ["zero", "general", "reduced", "super_reduced"]
 flow_direction = "inversion_sujeto_pasivo"
 fact = "iva_amount_sum"
 
@@ -82,7 +82,7 @@ required_text = ["modelo 303"]
 
 [revisions.2023-y-siguientes.bindings.selector]
 categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"]
-rate_kinds = ["general", "reduced", "super_reduced"]
+rate_kinds = ["zero", "general", "reduced", "super_reduced"]
 flow_direction = "inversion_sujeto_pasivo"
 fact = "base_amount_sum"
 
@@ -101,7 +101,7 @@ required_text = ["modelo 303"]
 
 [revisions.2023-y-siguientes.bindings.selector]
 categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"]
-rate_kinds = ["general", "reduced", "super_reduced"]
+rate_kinds = ["zero", "general", "reduced", "super_reduced"]
 flow_direction = "inversion_sujeto_pasivo"
 fact = "iva_amount_sum"
 

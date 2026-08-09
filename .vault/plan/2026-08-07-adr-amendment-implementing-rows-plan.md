@@ -3,13 +3,15 @@ tags:
   - '#plan'
   - '#adr-amendment-implementing-rows'
 date: '2026-08-07'
-modified: '2026-08-07'
-body_hash: 'sha256:ebc54db038fc1fd1638eb18e8abbbaa654257962053b76eef416fd35e3a101aa'
+modified: '2026-08-09'
+body_hash: 'sha256:212a34c18027b62c2ae9394fa8b3768625a852aa7eb6e75d91fbe11290526bef'
 tier: L1
 related:
   - '[[2026-06-09-modelo-iva-routing-carry-adr]]'
   - '[[2026-08-07-rate-box-evidence-assertion-adr]]'
   - '[[2026-08-07-recargo-equivalencia-source-of-truth-adr]]'
+  - '[[2026-08-09-adr-amendment-implementing-rows-roll-up-authorization-research]]'
+  - '[[2026-08-09-adr-amendment-implementing-rows-adr]]'
 ---
 
 <!-- RETIRED: S01 -->
@@ -35,7 +37,7 @@ accepted, per that record's own status.
 
 ## Steps
 
-- [ ] `S02` - Re-route Modelo 390's intra-community-acquisition categories from the inversion-del-sujeto-pasivo line to the dedicated AIC box ladders, per the 2026-08-06 amendment to modelo-iva-routing-carry-adr, and close its two cross-modelo residues (AIC base imponible reaching no official box on M390 or M303, and the AIC binding's rate_kinds omitting zero on both); `src/cadrumo/registry/aeat/modelos/390/`.
+- [x] `S02` - Re-route Modelo 390's intra-community-acquisition categories from the inversion-del-sujeto-pasivo line to the dedicated AIC box ladders, per the 2026-08-06 amendment to modelo-iva-routing-carry-adr, and close its two cross-modelo residues (AIC base imponible reaching no official box on M390 or M303, and the AIC binding's rate_kinds omitting zero on both); `src/cadrumo/registry/aeat/modelos/390/`.
 - [ ] `S03` - Test each of the four unmodelled M390 regimen blocks for a rate-blind total before applying the two-layer rate-box shape, per the rate-box-evidence-assertion-adr amendment's precondition; `src/cadrumo/registry/aeat/modelos/390/`.
 - [ ] `S04` - Land the recargo mismatch advisory comparing an operator-supplied recargo figure against the rate resolved for its applied rate and date, blocked until recargo-equivalencia-source-of-truth-adr is accepted; `src/cadrumo/application/aggregation/`.
 - [x] `S05` - Re-key the art. 161 recargo lookup on applied_rate and on_date so it can hold the RD-ley transitional recargo tiers, precondition for the mismatch advisory above; `src/cadrumo/domain/iva/`.

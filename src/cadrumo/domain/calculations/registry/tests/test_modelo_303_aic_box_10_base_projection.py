@@ -32,8 +32,9 @@ from pathlib import Path
 import pytest
 
 from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
-from .. import IvaLedgerObservation, resolve_ledger_iva_aggregation_binding_values
+from .. import IvaLedgerObservation, resolve_ledger_iva_aggregation_binding_values, selector_as_dict
 from .._loader import load_registry_tree
+from ._gate_support import fragment_declaring
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -41,6 +42,11 @@ _REVISION_ID = "2023-y-siguientes"
 _CASILLA_BASE = "iva.autorepercutido.intracomunitaria.devengado.base"
 _BINDING_BASE = "modelo-303-iva-autorepercutido-intracomunitaria-devengado-base"
 _FORMULA_BOX_10 = "modelo-303-dr303-10-projection"
+_AIC_BINDING_IDS = (
+    "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota",
+    _BINDING_BASE,
+    "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota",
+)
 
 
 def _m303_revision(root: Path):
@@ -95,6 +101,97 @@ def test_aic_row_feeds_box_10_base_and_box_11_cuota_from_the_same_row() -> None:
 
     assert resolved[_BINDING_BASE] == Decimal("2500.00")
     assert resolved["modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota"] == Decimal("525.00")
+
+
+def test_zero_rate_aic_row_reaches_box_10_base_and_every_aic_binding_admits_it() -> None:
+    """A zero-rate acquisition still declares its official AIC base.
+
+    The official box records the acquisition's base even when its cuota is
+    zero.  The base is intentionally distinct from zero so this proves the
+    live resolver selected the AIC row rather than merely observing the cuota.
+    """
+    revision = _m303_revision(_bundled_registry_root())
+    aic_row = IvaLedgerObservation(
+        ledger_id="aic-goods-zero",
+        transaction_date=date(2025, 5, 10),
+        category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+        rate_kind=IvaRateKind.ZERO,
+        applied_rate=Decimal("0.00"),
+        flow_direction=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+        base_amount=Decimal("1739.25"),
+        iva_amount=Decimal("0.00"),
+    )
+
+    resolved = dict(resolve_ledger_iva_aggregation_binding_values(revision, (aic_row,)))
+
+    assert resolved[_BINDING_BASE] == Decimal("1739.25")
+    bindings = {binding.id: binding for binding in revision.bindings}
+    for binding_id in _AIC_BINDING_IDS:
+        assert "zero" in selector_as_dict(bindings[binding_id])["rate_kinds"]
+
+
+def test_mutation_removing_zero_from_aic_base_selector_reds_the_zero_rate_gate(tmp_path: Path) -> None:
+    """Removing zero on a scratch registry makes the real base assertion fail."""
+    bundled_root = _bundled_registry_root()
+    scratch_root = tmp_path / "registry-mutant" / "aeat"
+    (scratch_root / "modelos").mkdir(parents=True)
+    shutil.copytree(bundled_root / "modelos" / "303", scratch_root / "modelos" / "303")
+    for catalogue_dir in (
+        "apoderamientos",
+        "authorization.d",
+        "calendars",
+        "categories",
+        "iva",
+        "legal",
+        "topics",
+        "treaties",
+    ):
+        source = bundled_root / catalogue_dir
+        if source.is_dir():
+            shutil.copytree(source, scratch_root / catalogue_dir)
+        elif source.exists():
+            shutil.copy2(source, scratch_root / catalogue_dir)
+
+    bindings_path = fragment_declaring(
+        scratch_root / "modelos" / "303" / "revisions" / _REVISION_ID / "bindings",
+        f'id = "{_BINDING_BASE}"',
+    )
+    original = bindings_path.read_text(encoding="utf-8")
+    mutated = original.replace(
+        "\n".join(
+            (
+                'categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"]',
+                'rate_kinds = ["zero", "general", "reduced", "super_reduced"]',
+                'flow_direction = "inversion_sujeto_pasivo"',
+                'fact = "base_amount_sum"',
+            )
+        ),
+        "\n".join(
+            (
+                'categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"]',
+                'rate_kinds = ["general", "reduced", "super_reduced"]',
+                'flow_direction = "inversion_sujeto_pasivo"',
+                'fact = "base_amount_sum"',
+            )
+        ),
+        1,
+    )
+    assert mutated != original, "the mutation target string was not found -- test is stale"
+    bindings_path.write_text(mutated, encoding="utf-8")
+
+    aic_row = IvaLedgerObservation(
+        ledger_id="aic-goods-zero-mutant",
+        transaction_date=date(2025, 5, 10),
+        category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+        rate_kind=IvaRateKind.ZERO,
+        applied_rate=Decimal("0.00"),
+        flow_direction=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+        base_amount=Decimal("1739.25"),
+        iva_amount=Decimal("0.00"),
+    )
+    mutated_resolved = dict(resolve_ledger_iva_aggregation_binding_values(_m303_revision(scratch_root), (aic_row,)))
+
+    assert mutated_resolved[_BINDING_BASE] != Decimal("1739.25")
 
 
 def test_mutation_reverting_box_10_to_manual_reds_the_gate(tmp_path: Path) -> None:

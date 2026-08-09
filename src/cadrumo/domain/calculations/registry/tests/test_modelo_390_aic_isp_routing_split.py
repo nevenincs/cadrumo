@@ -35,7 +35,7 @@ from pathlib import Path
 import pytest
 
 from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
-from .. import IvaLedgerObservation, resolve_ledger_iva_aggregation_binding_values
+from .. import IvaLedgerObservation, resolve_ledger_iva_aggregation_binding_values, selector_as_dict
 from .._loader import load_registry_tree
 from ._gate_support import fragment_declaring
 
@@ -45,6 +45,8 @@ _REVISION_ID = "2010-y-siguientes"
 _CASILLA_BOX_26 = "iva.anual.aic.bienes.tipo-21.cuota"
 _CASILLA_BOX_28 = "iva.anual.autorepercutido.interior.cuota"
 _CASILLA_AIC_BLIND = "iva.anual.autorepercutido.intracomunitaria"
+_AIC_ZERO_BASE_BINDING = "modelo-390-iva-aic-bienes-tipo-0-base"
+_AIC_ZERO_CUOTA_BINDING = "modelo-390-iva-aic-bienes-tipo-0-cuota"
 
 
 def _m390_revision(root: Path):
@@ -144,6 +146,78 @@ def test_aic_and_domestic_isp_ledger_rows_resolve_to_different_bindings() -> Non
         resolved["modelo-390-iva-aic-bienes-tipo-21-base"] != resolved["modelo-390-iva-autorepercutido-interior-base"]
     )
     assert resolved["modelo-390-iva-autorepercutido-intracomunitaria-cuota"] == Decimal("210.00")
+
+
+def test_zero_rate_aic_base_reaches_its_own_official_box_layer() -> None:
+    """A zero-rate AIC base is still declared in the zero-rate AIC box."""
+    revision = _m390_revision(_bundled_registry_root())
+    aic_row = IvaLedgerObservation(
+        ledger_id="aic-bienes-zero",
+        transaction_date=date(2025, 6, 15),
+        category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+        rate_kind=IvaRateKind.ZERO,
+        applied_rate=Decimal("0.00"),
+        flow_direction=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+        base_amount=Decimal("1739.25"),
+        iva_amount=Decimal("0.00"),
+    )
+
+    resolved = dict(resolve_ledger_iva_aggregation_binding_values(revision, (aic_row,)))
+
+    assert resolved[_AIC_ZERO_BASE_BINDING] == Decimal("1739.25")
+    bindings = {binding.id: binding for binding in revision.bindings}
+    assert "zero" in selector_as_dict(bindings[_AIC_ZERO_BASE_BINDING])["rate_kinds"]
+    assert "zero" in selector_as_dict(bindings[_AIC_ZERO_CUOTA_BINDING])["rate_kinds"]
+
+
+def test_mutation_removing_zero_from_m390_aic_base_selector_reds_the_gate(tmp_path: Path) -> None:
+    """Removing zero on a scratch registry makes the AIC base assertion fail."""
+    bundled_root = _bundled_registry_root()
+    scratch_root = tmp_path / "registry-mutant" / "aeat"
+    (scratch_root / "modelos").mkdir(parents=True)
+    shutil.copytree(bundled_root / "modelos" / "390", scratch_root / "modelos" / "390")
+    for catalogue_dir in (
+        "apoderamientos",
+        "authorization.d",
+        "calendars",
+        "categories",
+        "iva",
+        "legal",
+        "topics",
+        "treaties",
+    ):
+        source = bundled_root / catalogue_dir
+        if source.is_dir():
+            shutil.copytree(source, scratch_root / catalogue_dir)
+        elif source.exists():
+            shutil.copy2(source, scratch_root / catalogue_dir)
+
+    bindings_path = fragment_declaring(
+        scratch_root / "modelos" / "390" / "revisions" / _REVISION_ID / "bindings",
+        f'id = "{_AIC_ZERO_BASE_BINDING}"',
+    )
+    original = bindings_path.read_text(encoding="utf-8")
+    mutated = original.replace(
+        'rate_kinds = ["zero"], applied_rates = ["0.00"]',
+        'rate_kinds = ["general"], applied_rates = ["0.00"]',
+        1,
+    )
+    assert mutated != original, "the mutation target string was not found -- test is stale"
+    bindings_path.write_text(mutated, encoding="utf-8")
+
+    aic_row = IvaLedgerObservation(
+        ledger_id="aic-bienes-zero-mutant",
+        transaction_date=date(2025, 6, 15),
+        category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+        rate_kind=IvaRateKind.ZERO,
+        applied_rate=Decimal("0.00"),
+        flow_direction=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+        base_amount=Decimal("1739.25"),
+        iva_amount=Decimal("0.00"),
+    )
+    mutated_resolved = dict(resolve_ledger_iva_aggregation_binding_values(_m390_revision(scratch_root), (aic_row,)))
+
+    assert mutated_resolved[_AIC_ZERO_BASE_BINDING] != Decimal("1739.25")
 
 
 def test_mutation_repointing_box_28_to_the_aic_blind_casilla_reds_the_gate(tmp_path: Path) -> None:
