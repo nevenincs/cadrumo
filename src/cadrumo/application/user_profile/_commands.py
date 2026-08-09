@@ -232,6 +232,14 @@ class ProfilePreflightReport(BaseModel):
     period: Period
     missing: tuple[ProfilePreflightRequirement, ...] = ()
     ready: bool
+    #: Whether the per-operation axis actually assessed anything for this modelo
+    #: — that is, whether any schema field declaring ``required`` also declared a
+    #: ``modelo_<code>`` selector matching it. When false, no schema-required
+    #: field was examined, so ``ready`` reports only the export-identity and
+    #: conditional checks and MUST NOT be read as a clean bill of health.
+    #: Deliberately carries no default: the single producer states it, and a
+    #: default would silently assert an assessment that never ran.
+    per_operation_requirements_assessed: bool
 
     @model_validator(mode="after")
     def _period_matches_filing_year(self) -> Self:

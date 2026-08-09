@@ -85,17 +85,31 @@ class ProfilePreflightService:
             A :class:`ProfilePreflightReport` with ``ready=True`` when all
             required fields are present, or ``ready=False`` with the
             ``missing`` list populated.
+
+            ``per_operation_requirements_assessed`` reports whether the
+            per-modelo walk described above selected any field at all. No
+            shipped schema field currently declares a ``modelo_`` selector, so
+            it is false for every modelo today and ``ready`` reflects only the
+            export-identity and conditional checks. A false value means nothing
+            schema-required was examined; it MUST NOT be rendered as a clean
+            bill of health.
         """
         values = record_to_path_values(record)
         grounding_index = build_profile_grounding_index(authority) if authority is not None else {}
         missing: list[ProfilePreflightRequirement] = []
         target = self._selector_prefix(modelo)
+        # Counts fields the per-operation axis SELECTED, not fields found missing.
+        # A modelo whose selected fields are all present is assessed and ready; a
+        # modelo that selected nothing was never assessed at all, and the two must
+        # not both surface as ``ready=True`` with an empty ``missing``.
+        per_operation_selected = 0
         for section in self._schema.sections:
             for field in section.fields:
                 if not field.required:
                     continue
                 if not self._selectors_match_modelo(field.model_selectors, target):
                     continue
+                per_operation_selected += 1
                 candidate_path = f"{section.key}.{field.key}"
                 if self._has_value(values, candidate_path):
                     continue
@@ -118,6 +132,7 @@ class ProfilePreflightService:
             period=period,
             missing=tuple(missing),
             ready=not missing,
+            per_operation_requirements_assessed=per_operation_selected > 0,
         )
 
     def _requirement(
