@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:061f17aadba167e2106f704644f9aa17a7bfa2daff61252c49670cf432924fb6'
+body_hash: 'sha256:5edec4a786ce899d39a46854af7b7c984df3f94f227b32da53ed12f83c88e98f'
 related:
   - "[[2026-07-23-profile-setup-flow-adr]]"
   - '[[2026-08-08-profile-requirement-grounding-reference]]'
@@ -202,6 +202,26 @@ Under `empty → False`, "no tokens" is the **strictest** possible state. The na
 This is **not** decided here, and deliberately so. It has the same shape as the conditional-scoping question settled above: a predicate whose default determines whether an authoring gap fails loud or silent. It deserves the same measured treatment rather than being smuggled in as a clause of an amendment about something else — which is exactly how the conditional-scoping change would have entered had it not been examined on its own terms.
 
 Whoever takes it should note the tension: the conditional decision above **relies** on `empty → False` being wrong-way-round for the conditional path (untokenised over-asks, which is safe). Flipping the default on the required path without re-examining that interaction would undo the safety property this amendment establishes.
+
+
+#### Reconciliation (2026-08-09c): the token is faithful; the REGISTRY under-declares
+
+Run after this campaign's `P01`-`P08` work landed, to reconcile the two independently-authored rulings now in this document — the cross-modelo-union decision recorded above, and the mis-scoping finding recorded here. **They agree, and the agreement corrects the mis-scoping finding's attribution.**
+
+Measured against the live grounding index:
+
+```
+identity.tax_id  grounding-index modelos: ['100']
+profile-binding fields per modelo:  {'036': 1, '100': 50, '303': 2}
+```
+
+Both mechanisms say modelo 100 alone, because both derive from the same source: **only modelo 100's registry declares a `source = "profile"` binding consuming `identity.tax_id`.** The `modelo_100` token is therefore *faithful* to the binding evidence — consistent with the 32/32 grounding verification recorded earlier — and the earlier characterisation of it as "a wrong token" mis-attributes the cause.
+
+**The correct statement is upstream of both:** a NIF is the filing identity for every modelo, but the registry declares that dependency for one. The schema token and the grounding union are each reporting that accurately. A fix belongs in the registry's `source = "profile"` bindings, not in `schema.toml`'s selectors — and anyone "correcting" the token without touching the bindings would break the property that every token traces to real binding evidence, which is the safeguard the axis's whole grounding rests on.
+
+This also sharpens the operator-facing concern in the cross-modelo-union decision above. That section warns an operator could misread a Modelo 100 citation on a Modelo 303 preflight as target-specific. For `identity.tax_id` the union contains **only** modelo 100, so there is no second modelo to disambiguate against: a universal field presents modelo 100 as its sole grounding on every surface. The union is still the right design; the thinness of this particular union is a registry-coverage fact, not a design flaw in it.
+
+The binding-coverage numbers make the scope plain: 50 fields for modelo 100, 2 for 303, 1 for 036, none for any other modelo. The per-operation axis can only ever be as complete as the registry's profile bindings, and today those are almost entirely one modelo.
 
 
 ### Honest limits
