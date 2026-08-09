@@ -59,6 +59,7 @@ from ..calculations import (
     CalculationObservationRepository,
     IvaCompensationHistoryRepository,
     ObservationSourceKind,
+    PriorDomiciliationElectionProjection,
     ResultDispositionProjection,
     observation_key,
     persist_observation_envelope_and_iva_history,
@@ -130,6 +131,7 @@ def persist_filed_revision_observation(
     repository: CalculationObservationRepository,
     captured_at: datetime,
     result_disposition: ResultDisposition | None = None,
+    prior_domiciliation_election: PriorDomiciliationElectionProjection | None = None,
     taxpayer_nif: str | None = None,
     filing_record_id: str | None = None,
     iva_compensation_history_repository: IvaCompensationHistoryRepository | None = None,
@@ -160,6 +162,9 @@ def persist_filed_revision_observation(
         result_disposition: The single typed ``Tipo de declaración`` resolved
             at the filing boundary. Required for Modelo 303 carry ingress and
             retained with ``app_filing`` provenance in the persisted envelope.
+        prior_domiciliation_election: Safe semantic election and, when the
+            marker is ``X``, its official baseline-U join. It never contains
+            account data and is retained on the local filing observation.
         taxpayer_nif: Taxpayer NIF from the active profile. When supplied for a
             locally filed Modelo 303, the same observation is projected into the
             profile-local IVA compensation history repository.
@@ -234,6 +239,7 @@ def persist_filed_revision_observation(
         captured_at=captured_at,
         stamped_revision_id=work_unit.revision_id,
         result_disposition=disposition_projection,
+        prior_domiciliation_election=prior_domiciliation_election,
         normalize_m303_carry=work_unit.modelo == Modelo.M303.value,
     )
     if history_repo is not None and taxpayer_nif is not None:

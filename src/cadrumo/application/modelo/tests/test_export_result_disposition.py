@@ -263,6 +263,15 @@ def test_incompatible_result_elections_refuse_without_changing_carry_policy() ->
             payment_election=PaymentElection.DOMICILIACION,
         )
 
+    with pytest.raises(ModeloRefundElectionNotEligibleError):
+        _resolve_result_disposition(
+            modelo="303",
+            casilla_values={_M303_RESULT_CASILLA: Decimal("0.00")},
+            profile=_profile(),
+            period=positive_period,
+            refund_election=RefundElection.DEVOLVER,
+        )
+
     assert (
         _resolve_result_disposition(
             modelo="303",

@@ -208,6 +208,7 @@ from ._optional_extras import (
     require_optional_extra,
 )
 from ._payment_election import PaymentElection
+from ._prior_domiciliation_election import PriorDomiciliationElection
 from ._period import (
     FilingPeriodCode,
     Period,
@@ -487,6 +488,7 @@ __all__: list[str] = [
     "OptionalExtra",
     "PassphraseStrength",
     "PaymentElection",
+    "PriorDomiciliationElection",
     "Period",
     "PeriodError",
     "PeriodKind",

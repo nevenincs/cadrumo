@@ -78,6 +78,7 @@ def test_export_modelo_303_wallet_only_revision_writes_fichero_with_redacted_wal
     event_json = event.model_dump_json()
     exported_text = output_path.read_text(encoding="utf-8")
     assert taxpayer_nif in exported_text
+    assert "<T303DID00>" not in exported_text
     assert taxpayer_nif not in result_json
     assert taxpayer_nif not in event_json
     assert "1200" not in result_json
@@ -219,6 +220,36 @@ def test_public_cuenta_corriente_payment_election_is_capability_refused(
         )
 
     assert not output_path.exists()
+
+
+def test_public_ingreso_export_omits_did_page(
+    isolated_backend: None,
+    tmp_path: Path,
+) -> None:
+    """A public positive ingreso export omits DID rather than emitting an empty account page."""
+    taxpayer_nif, _bucket_id, verified, work_repo, calc_repo, event_repo = _build_verified_modelo_303_revision(
+        positive_result=True,
+    )
+    output_path = tmp_path / "modelo-303-ingreso.txt"
+
+    result = export_modelo_revision(
+        ModeloExportCommand(
+            calculation_revision_id=verified.calculation_revision_id,
+            output_path=output_path,
+            actor="operator",
+        ),
+        workflow_profile=TaxpayerProfile(
+            tax_id=taxpayer_nif,
+            iva_regime=IVARegime.GENERAL,
+        ),
+        work_unit_repository=work_repo,
+        calculation_repository=calc_repo,
+        bucket_event_repository=event_repo,
+        clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
+    )
+
+    assert result.resolved_result_disposition is ResultDisposition.INGRESO
+    assert "<T303DID00>" not in output_path.read_text(encoding="utf-8")
 
 
 def test_export_refuses_existing_directory_output_and_leaves_no_tmp_orphan(

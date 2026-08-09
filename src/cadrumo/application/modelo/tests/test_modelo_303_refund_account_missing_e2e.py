@@ -49,7 +49,7 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....core import AuthProviderKind, Period, ResultDisposition
 from ....core.config import Settings
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
-from ....domain.deadlines import IVARegime, ModeloIVAProfile, TaxpayerProfile
+from ....domain.deadlines import ChargeAccount, IVARegime, ModeloIVAProfile, RefundAccount, TaxpayerProfile
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository, reconcile_modelo_303_iva_compensation
@@ -135,6 +135,24 @@ def _redeme_profile_without_refund_account() -> TaxpayerProfile:
         bienes_extranjero_above_threshold=False,
         activity_start_date=date(_YEAR, 4, 1),
         iva=ModeloIVAProfile(redeme_enrolled=True, refund_account=None),
+    )
+
+
+def _redeme_profile_with_distinct_accounts(*, refund_iban: str, charge_iban: str) -> TaxpayerProfile:
+    """Return the same REDEME filer with distinct payable and debit accounts."""
+    return TaxpayerProfile(
+        tax_id=_TAX_ID,
+        iva_regime=IVARegime.GENERAL,
+        has_employees=False,
+        pays_rent_with_retencion=False,
+        does_intracomunitario=False,
+        bienes_extranjero_above_threshold=False,
+        activity_start_date=date(_YEAR, 4, 1),
+        iva=ModeloIVAProfile(
+            redeme_enrolled=True,
+            refund_account=RefundAccount(iban=refund_iban),
+            charge_account=ChargeAccount(iban=charge_iban),
+        ),
     )
 
 
@@ -250,3 +268,33 @@ def test_refund_export_without_account_refuses_and_writes_no_fichero(tmp_path: P
         # atomic-rename .tmp sidecar — the refusal precedes any byte write.
         assert not output_path.exists()
         assert not output_path.with_name(output_path.name + ".tmp").exists()
+
+
+def test_public_refund_export_writes_refund_did_not_distinct_charge_account(tmp_path: Path) -> None:
+    """A public D export keeps the established refund DID semantics after U support."""
+    refund_iban = "ES9121000418450200051332"
+    charge_iban = "ES7921000813610123456789"
+    with _secure_backend(tmp_path):
+        calculation_revision_id = _calculate_verified_negative_period()
+        output_path = tmp_path / "modelo-303-refund.txt"
+
+        result = export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=calculation_revision_id,
+                output_path=output_path,
+                actor="operator",
+            ),
+            workflow_profile=_redeme_profile_with_distinct_accounts(
+                refund_iban=refund_iban,
+                charge_iban=charge_iban,
+            ),
+            clock=datetime(_YEAR, 7, 20, 10, 0, 0, tzinfo=UTC),
+        )
+
+    exported = output_path.read_text(encoding="latin-1")
+    did_start = exported.index("<T303DID00>")
+    did = exported[did_start : did_start + 823]
+    assert result.resolved_result_disposition is ResultDisposition.DEVOLUCION
+    assert did[22:56].rstrip() == refund_iban
+    assert did[193] == "1"
+    assert charge_iban not in exported

@@ -179,6 +179,15 @@ def _resolve_elected_disposition(
                 "payment_election": payment_election.value,
             },
         )
+    if refund_election is RefundElection.DEVOLVER and base_disposition is not ResultDisposition.COMPENSACION:
+        raise ModeloRefundElectionNotEligibleError(
+            "a refund election requires an eligible negative Modelo 303 result",
+            context={
+                "modelo": str(work_unit.modelo),
+                "base_disposition": base_disposition.value,
+                "refund_election": refund_election.value,
+            },
+        )
     return _apply_modelo_303_refund_election(
         base_disposition,
         work_unit=work_unit,
