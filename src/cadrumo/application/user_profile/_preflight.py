@@ -224,7 +224,9 @@ class ProfilePreflightService:
             be rendered as a clean bill of health.
         """
         values = record_to_path_values(record)
-        grounding_index = build_profile_grounding_index(authority) if authority is not None else {}
+        grounding_index: Mapping[str, ProfileKeyGrounding] = (
+            build_profile_grounding_index(authority) if authority is not None else {}
+        )
         missing: list[ProfilePreflightRequirement] = []
         target = self._selector_prefix(modelo)
         # Counts fields the per-operation axis SELECTED, not fields found missing.
