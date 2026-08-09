@@ -99,12 +99,11 @@ def case_insensitive_choice(enum_class: type[StrEnum]) -> typer_click_types.Para
     authoritative: the handler still receives a real member, not the raw token,
     and the MCP input-schema builder still reads the closed value set off the
     wrapped choice. Only the accepted spelling widens.
-
-    CAST-RATIONALE-TYPER-CLICK-PARAMTYPE-DUALITY: typer vendors its own click, so
-    click.Choice's click.types.ParamType and typer's typer._click.types.ParamType
-    are the same runtime object behind two static names; the cast bridges only that
-    static duality, with no Any escape.
     """
+    # CAST-RATIONALE-TYPER-CLICK-PARAMTYPE-DUALITY: typer vendors its own click, so
+    # click.Choice's click.types.ParamType and typer's typer._click.types.ParamType
+    # are the same runtime object behind two static names; the cast bridges only
+    # that static duality, with no Any escape.
     return cast(
         typer_click_types.ParamType,
         click.Choice([member.value for member in enum_class], case_sensitive=False),
