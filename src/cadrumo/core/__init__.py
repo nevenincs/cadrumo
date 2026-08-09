@@ -207,6 +207,7 @@ from ._optional_extras import (
     optional_extra_for_module,
     require_optional_extra,
 )
+from ._payment_election import PaymentElection
 from ._period import (
     FilingPeriodCode,
     Period,
@@ -245,7 +246,6 @@ from ._provenance_stamp import (
     provenance_stamp_transport,
     provenance_transport_label,
 )
-from ._payment_election import PaymentElection
 from ._refund_election import RefundElection
 from ._register_scoping_signal import RegisterScopingSignal
 from ._rescate_type import RescateType

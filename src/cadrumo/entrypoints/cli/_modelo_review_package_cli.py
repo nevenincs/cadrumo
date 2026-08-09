@@ -117,7 +117,7 @@ from ...application.modelo import (
     verify_review_package_signature,
 )
 from ...application.workflow import workflow_state_repository
-from ...core import Period
+from ...core import PaymentElection, Period, RefundElection
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n import tr
 from ._common import _emit_envelope, _profile_to_taxpayer
@@ -142,7 +142,6 @@ from ._modelo_review_package_rendering import (
     review_package_verify_result,
     review_package_verify_signature_result,
 )
-from ...core import PaymentElection, RefundElection
 from ._modelo_work_options import (
     _BucketIdOpt,
     _ModeloOpt,

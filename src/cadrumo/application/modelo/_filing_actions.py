@@ -156,8 +156,8 @@ def file_modelo_revision(
        compatibility, and cross-period clean state.
     3. Run the :class:`WorkflowEngine` gate for the
        revision's modelo and period.
-    4. Resolve the Modelo 303 refund/carry disposition from
-       :class:`RefundElection` and
+    4. Resolve the Modelo 303 result disposition from
+       :class:`RefundElection`, :class:`PaymentElection`, and
        :class:`TaxpayerProfile`.
     5. If a prior current filing exists, mark its
        :class:`ModeloRecord` as ``SUPERSEDIDO`` and its
@@ -186,6 +186,10 @@ def file_modelo_revision(
             honoured only when the period is a lawful refund period (the year's
             last filing period for a non-REDEME taxpayer; every period for REDEME).
             An out-of-window ``DEVOLVER`` is refused.
+        payment_election: The operator's positive-result settlement election.
+            ``INGRESO`` is the default, ``DOMICILIACION`` is available only for
+            Modelo 303, and ``CUENTA_CORRIENTE`` remains explicitly refused
+            until its AEAT capability is grounded.
         work_unit_repository: Optional work-unit catalogue repository override.
         calculation_repository: Optional calculation-revision catalogue
             repository override.

@@ -8,8 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period
-from ....core import PaymentElection, ResultDisposition
+from ....core import PaymentElection, Period, ResultDisposition
 from ....domain.buckets import BucketEventType
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.user_profile import UserProfileFact
@@ -118,7 +117,7 @@ def test_public_domiciliacion_export_projects_persisted_charge_iban_to_did_only(
     tmp_path: Path,
 ) -> None:
     """Public export reaches S18's charge-only DID composer from persisted facts."""
-    taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = _build_verified_modelo_303_revision(
+    _taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = _build_verified_modelo_303_revision(
         positive_result=True,
     )
     charge_iban = "ES7921000813610123456789"
