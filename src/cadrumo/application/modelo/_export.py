@@ -51,7 +51,15 @@ from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogue
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import ExportLayoutFormat, Modelo, Period, RefundElection, ResultDisposition, result_disposition_is_refund
+from ...core import (
+    ExportLayoutFormat,
+    Modelo,
+    PaymentElection,
+    Period,
+    RefundElection,
+    ResultDisposition,
+    result_disposition_is_refund,
+)
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId
 from ...core.logging import get_logger
@@ -63,7 +71,7 @@ from ...domain.calculations.registry import (
     derive_modelo_202_modality,
     derive_taxpayer_files_economic_activity,
 )
-from ...domain.deadlines import RefundAccount, TaxpayerProfile
+from ...domain.deadlines import ChargeAccount, RefundAccount, TaxpayerProfile
 from ...domain.iva import SepaMarca, derive_sepa_marca
 from ...domain.iva_compensation import IvaCompensationReconciliationDecision
 from ...domain.modelos import (
@@ -104,6 +112,7 @@ from ..filing.runtime import RegistrySchemaAccessor
 from ._action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
+    ModeloChargeAccountMissingError,
     ModeloRefundAccountMissingError,
     WorkUnitNotFoundError,
 )
@@ -250,6 +259,7 @@ class ModeloExportCommand(BaseModel):
     output_path: Path
     actor: str = Field(min_length=1, max_length=128)
     refund_election: RefundElection = RefundElection.COMPENSAR
+    payment_election: PaymentElection = PaymentElection.INGRESO
 
 
 class ModeloExportResult(BaseModel):
@@ -295,6 +305,9 @@ class ModeloExportResult(BaseModel):
     exported_at: datetime
     actor: str = Field(min_length=1, max_length=128)
     bucket_event_id: str = Field(min_length=1, max_length=128)
+    resolved_result_disposition: ResultDisposition
+    payment_election: PaymentElection | None = None
+    refund_election: RefundElection | None = None
     casilla_provenance: tuple[filing_domain.ModeloCasillaProvenance, ...] = Field(default_factory=tuple)
     iva_wallet_decision_provenance: ModeloIvaWalletDecisionProvenance | None = None
     local_evidence_status: str = Field(default=_LOCAL_EXPORT_EVIDENCE_STATUS, min_length=1)
@@ -478,6 +491,11 @@ def _operator_name_facts(bucket_id: str, *, modelo: str) -> tuple[str, str, str]
     except ProfileNotFoundError as exc:
         raise ModeloExportError(
             translated_message="application.modelo.errors.export_operator_profile_missing",
+            context={
+                "requirements": _grounded_identity_requirements(
+                    [_PROFILE_SURNAMES_PATH, _PROFILE_NAME_PATH],
+                ),
+            },
         ) from exc
     facts = record_to_path_values(record)
     surnames = (facts.get(_PROFILE_SURNAMES_PATH) or "").strip()
@@ -488,13 +506,13 @@ def _operator_name_facts(bucket_id: str, *, modelo: str) -> tuple[str, str, str]
         if not legal_name:
             raise ModeloExportError(
                 translated_message="application.modelo.errors.export_operator_name_missing",
-                context={"missing": [_PROFILE_LEGAL_NAME_PATH]},
+                context={"missing": _grounded_identity_requirements([_PROFILE_LEGAL_NAME_PATH])},
             )
         if modelo in _LEGAL_ENTITY_NAME_SLOT_MODELOS:
             if not name:
                 raise ModeloExportError(
                     translated_message="application.modelo.errors.export_operator_name_missing",
-                    context={"missing": [_PROFILE_NAME_PATH]},
+                    context={"missing": _grounded_identity_requirements([_PROFILE_NAME_PATH])},
                 )
             return legal_name, name, legal_name
         return legal_name, "", legal_name
@@ -503,9 +521,36 @@ def _operator_name_facts(bucket_id: str, *, modelo: str) -> tuple[str, str, str]
     if missing:
         raise ModeloExportError(
             translated_message="application.modelo.errors.export_operator_name_missing",
-            context={"missing": missing},
+            context={"missing": _grounded_identity_requirements(missing)},
         )
     return surnames, name, _compose_legal_full_name(surnames=surnames, name=name)
+
+
+def _grounded_identity_requirements(paths: list[str]) -> str:
+    """Render declarant-identity paths as operator labels with legal grounding.
+
+    An export refusal is a filing-grade surface: the operator has to go and
+    fill these fields in, so it names them the way the profile editor does
+    rather than by the internal dotted path, using the same requirement
+    builder the modelo readiness gate uses for the same fields.
+
+    Kept as a rendered string rather than a list because the refusal's
+    translated message interpolates it directly, and a list would render with
+    Python's own bracket-and-quote punctuation.
+    """
+    from ...core.resources import resources
+    from ..user_profile import (
+        build_profile_preflight_requirement,
+        format_profile_preflight_requirement,
+    )
+
+    schema = resources().user_profile_schema.singleton
+    return ", ".join(
+        format_profile_preflight_requirement(
+            build_profile_preflight_requirement(path, schema=schema),
+        )
+        for path in paths
+    )
 
 
 def _ddmmaaaa(value: date) -> str:
@@ -513,48 +558,23 @@ def _ddmmaaaa(value: date) -> str:
     return f"{value.day:02d}{value.month:02d}{value.year:04d}"
 
 
-def _refuse_domiciliacion_without_charge_account(account: RefundAccount | None) -> dict[str, str]:
-    """Refuse a domiciliación del ingreso (``U``) export: no charge account exists.
+def _compose_charge_account_block(charge_account: ChargeAccount | None) -> dict[str, str]:
+    """Build the U DID block from the separately recorded debit authority.
 
-    A domiciliación is an INGRESO the taxpayer pays by direct debit, so the
-    account on the fichero is the one AEAT **charges**. This profile has no such
-    account. It carries exactly one, :class:`~domain.deadlines.RefundAccount`,
-    documented as the account AEAT pays a refund INTO, and no charge or cargo
-    account concept exists anywhere on the export path.
-
-    So this refuses unconditionally, and the unconditionality is the decision
-    rather than an oversight. Reusing the refund account would read as harmless --
-    AEAT's record design even carries a single dual-purpose IBAN field at position
-    23, labelled ``Domiciliación/Devolución - IBAN`` -- but one shared FIELD on the
-    record says only that a filing is a refund or a charge and never both. It says
-    nothing about whether the account the taxpayer nominated for receiving money
-    is the account they intend to be DEBITED. Emitting it would turn an
-    application inference into a debit instruction that nothing downstream
-    contradicts, which is the shape where a plausible substitution is worse than a
-    refusal.
-
-    The alternative of emitting the page blank is worse still: that writes the
-    empty 823-byte record the render guard exists to prevent, and files a
-    direct-debit election with no account at all.
-
-    Nothing is lost by refusing, because this application never files -- a human
-    files outside it. A blocked export costs a step; a wrong debit instruction
-    reaching AEAT does not announce itself.
-
-    Raises:
-        ModeloRefundAccountMissingError: Always.
+    ``Domiciliación/Devolución - IBAN`` is the one DID position shared by the
+    two filing dispositions. For ``U`` it carries the charge account, never the
+    refund account. All remaining DID fields are explicitly labelled
+    ``Devolución`` in AEAT's Diseño, so a charge block contains its IBAN and
+    nothing else: no SEPA mark, SWIFT-BIC, or foreign-bank data.
     """
-    del account  # No account on this profile can answer a charge instruction.
-    raise ModeloRefundAccountMissingError(
-        "this modelo elects domiciliación del ingreso, so AEAT requires the account it will CHARGE, "
-        "and no charge account is on file; the profile records only a refund account, which is the "
-        "account AEAT pays into and is not an authorisation to debit",
-        suggestion=(
-            "Recording a charge account is not supported yet, so this election cannot be exported. "
-            "File this period as a plain ingreso and pay by another means, or elect domiciliación "
-            "directly with AEAT outside this application."
-        ),
-    )
+    if charge_account is None:
+        raise ModeloChargeAccountMissingError(
+            "this modelo elects domiciliación del ingreso, so AEAT requires the account it will CHARGE, "
+            "but no charge account is on file; a refund account is an account AEAT pays into and is not "
+            "an authorisation to debit",
+            suggestion="Record the charge-account IBAN before exporting this domiciliación election.",
+        )
+    return {"iban": charge_account.iban}
 
 
 def _compose_refund_account_block(refund_account: RefundAccount | None) -> dict[str, str]:
@@ -625,6 +645,7 @@ def _compose_export_headers(
     workflow_profile: TaxpayerProfile,
     period: Period,
     refund_election: RefundElection = RefundElection.COMPENSAR,
+    payment_election: PaymentElection = PaymentElection.INGRESO,
 ) -> dict[str, str]:
     """Compose the full fichero-BOE export header dict for a revision.
 
@@ -683,6 +704,7 @@ def _compose_export_headers(
         workflow_profile=workflow_profile,
         period=period,
         refund_election=refund_election,
+        payment_election=payment_election,
     ).value
     headers: dict[str, str] = {
         "declaration_type": declaration_type,
@@ -712,19 +734,17 @@ def _compose_export_headers(
     # a direct-debit election, and the render guard suppressed the page to match,
     # so the filing went out with nothing for AEAT to debit.
     #
-    # A domiciliación is REFUSED rather than composed. AEAT's record design does
-    # carry a single dual-purpose IBAN at position 23
-    # ("Domiciliación/Devolución - IBAN"), so the page has somewhere to put a
-    # charge account -- but this profile has no charge account to put there, only
-    # the refund account AEAT pays INTO, and reusing that as a debit instruction
-    # is an inference this code must not make. See the refusal's own docstring.
+    # The DID record has a single dual-purpose IBAN position. Its input stays
+    # disposition-specific: ``U`` reads the separately recorded charge account;
+    # refund dispositions read the refund account. The common record position is
+    # not authority to reuse one account as the other.
     #
     # The account fields live in the encrypted secure-object store on the
     # transiently-loaded profile; they are read into memory here and emitted into
     # the header dict, never logged or written to a plaintext side store.
     disposition = ResultDisposition(declaration_type)
     if disposition is ResultDisposition.DOMICILIACION:
-        headers.update(_refuse_domiciliacion_without_charge_account(workflow_profile.iva.refund_account))
+        headers.update(_compose_charge_account_block(workflow_profile.iva.charge_account))
     elif result_disposition_is_refund(disposition):
         headers.update(_compose_refund_account_block(workflow_profile.iva.refund_account))
 
@@ -917,12 +937,21 @@ def _persist_exported_draft(
     bucket_event_repository: BucketEventHistoryRepositoryProtocol,
     schema_provider: RegistrySchemaAccessor,
 ) -> ModeloExportResult:
+    resolved_result_disposition = resolve_modelo_result_disposition(
+        work_unit=work_unit,
+        revision=revision,
+        workflow_profile=workflow_profile,
+        period=period,
+        refund_election=command.refund_election,
+        payment_election=command.payment_election,
+    )
     headers = _compose_export_headers(
         work_unit=work_unit,
         revision=revision,
         workflow_profile=workflow_profile,
         period=period,
         refund_election=command.refund_election,
+        payment_election=command.payment_election,
     )
     receipt = _write_export_tmp(
         command=command,
@@ -941,6 +970,7 @@ def _persist_exported_draft(
         work_unit=work_unit,
         receipt=receipt,
         iva_wallet_provenance=iva_wallet_provenance,
+        resolved_result_disposition=resolved_result_disposition,
         exported_at=exported_at,
         bucket_event_repository=bucket_event_repository,
     )
@@ -995,6 +1025,28 @@ def _persist_exported_draft(
         exported_at=exported_at,
         actor=command.actor,
         bucket_event_id=event.event_id,
+        resolved_result_disposition=resolved_result_disposition,
+        payment_election=(
+            command.payment_election
+            if resolved_result_disposition
+            in {
+                ResultDisposition.INGRESO,
+                ResultDisposition.DOMICILIACION,
+                ResultDisposition.CUENTA_CORRIENTE_INGRESO,
+            }
+            else None
+        ),
+        refund_election=(
+            command.refund_election
+            if resolved_result_disposition
+            in {
+                ResultDisposition.COMPENSACION,
+                ResultDisposition.DEVOLUCION,
+                ResultDisposition.CUENTA_CORRIENTE_DEVOLUCION,
+                ResultDisposition.DEVOLUCION_TRANSFERENCIA_EXTRANJERO,
+            }
+            else None
+        ),
         casilla_provenance=receipt.casilla_provenance,
         iva_wallet_decision_provenance=iva_wallet_provenance,
         official_evidence_next_action=_official_evidence_next_action(
@@ -1052,6 +1104,7 @@ def _emit_export_event(
     work_unit: WorkUnit,
     receipt: DeclaracionExportResult,
     iva_wallet_provenance: ModeloIvaWalletDecisionProvenance | None,
+    resolved_result_disposition: ResultDisposition,
     exported_at: datetime,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol,
 ) -> BucketEvent:
@@ -1075,7 +1128,21 @@ def _emit_export_event(
         "modelo": work_unit.modelo,
         "filing_year": str(work_unit.filing_year),
         "period": work_unit.period.registry_token,
+        "resolved_result_disposition": resolved_result_disposition.value,
     }
+    if resolved_result_disposition in {
+        ResultDisposition.INGRESO,
+        ResultDisposition.DOMICILIACION,
+        ResultDisposition.CUENTA_CORRIENTE_INGRESO,
+    }:
+        event_payload["payment_election"] = command.payment_election.value
+    if resolved_result_disposition in {
+        ResultDisposition.COMPENSACION,
+        ResultDisposition.DEVOLUCION,
+        ResultDisposition.CUENTA_CORRIENTE_DEVOLUCION,
+        ResultDisposition.DEVOLUCION_TRANSFERENCIA_EXTRANJERO,
+    }:
+        event_payload["refund_election"] = command.refund_election.value
     if iva_wallet_provenance is not None:
         event_payload.update(
             {

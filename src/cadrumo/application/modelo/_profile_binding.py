@@ -63,6 +63,7 @@ from ...domain.contribuyente import (
     MinimoDescendientesThresholds,
     RentaFamilyProfile,
     RentaMaritalStatus,
+    compute_deduccion_maternidad_0611,
     descendant_list_from_facts,
     marriage_full_year,
     marriage_month_start,
@@ -405,6 +406,20 @@ def resolve_maternidad_meses(
     rather than letting a declared figure vanish.
     """
     fact_index = _profile_fact_index(record, schema if schema is not None else load_user_profile_schema())
+    return _resolve_maternidad_meses_from_fact_index(fact_index, snapshot)
+
+
+def _resolve_maternidad_meses_from_fact_index(
+    fact_index: Mapping[str, UserProfileFactValue],
+    snapshot: RegistrySnapshot,
+) -> MaternidadMesesResolution:
+    """Resolve maternidad months from the canonical profile fact projection.
+
+    :func:`resolve_maternidad_meses` owns the record-to-fact projection for
+    calculate diagnostics.  Derived-profile injection already has that same
+    projection while resolving bindings, so it calls this helper rather than
+    reconstructing the family a second way.
+    """
     declares_meses = any(
         key.startswith("renta_family.descendiente.") and key.endswith(".meses_madre_trabajo") for key in fact_index
     )
@@ -1048,6 +1063,42 @@ def _inject_derived_incremento_guarderia_facts(
     )
 
 
+def _inject_derived_deduccion_maternidad_facts(
+    fact_index: dict[str, UserProfileFactValue],
+    snapshot: RegistrySnapshot,
+    declared_selectors: frozenset[str],
+) -> None:
+    """Inject the Art. 81.1 maternidad deduction (casilla 0611) into *fact_index*.
+
+    The registry has no per-descendant fold.  The canonical profile-resolution
+    path therefore decides each child's qualifying months and post-birth alta
+    cap, then projects the one legally-derived total that the binding-leaf 0611
+    formula consumes.  The declared ``profile`` binding is the enrolment switch:
+    revisions without it do not gain this producer by accident.
+
+    The producer is deliberately absent when its eligibility thresholds cannot
+    be resolved.  A zero would claim that no deduction is due, while absence
+    leaves the formula unresolved and lets the calculate-path diagnostic name
+    the missing legal basis.  Never preserve a stored value at this synthetic
+    selector: it is derived from the descendant record at calculation time.
+    """
+    key = f"renta_family.deduccion_maternidad_{snapshot.filing_year}"
+    if key not in declared_selectors:
+        return
+
+    resolution = _resolve_maternidad_meses_from_fact_index(fact_index, snapshot)
+    if not resolution.ceilings_resolved or resolution.cotizaciones_ceiling_inexpressible:
+        return
+
+    fact_index[key] = Decimal(
+        compute_deduccion_maternidad_0611(
+            list(resolution.pairs),
+            filing_year=snapshot.filing_year,
+            alta_posterior_hijos=resolution.alta_posterior_hijos,
+        )
+    )
+
+
 def _inject_derived_state_attribution_facts(
     fact_index: dict[str, UserProfileFactValue],
 ) -> None:
@@ -1276,6 +1327,7 @@ def _load_profile_facts(
     _inject_derived_anualidades_eligibility_facts(fact_index, snapshot)
     _inject_derived_autonomic_deduccion_facts(fact_index, snapshot.filing_year)
     _inject_derived_minimo_descendientes_facts(fact_index, snapshot)
+    _inject_derived_deduccion_maternidad_facts(fact_index, snapshot, declared_selectors)
     _inject_derived_incremento_guarderia_facts(fact_index, snapshot, declared_selectors)
     _inject_derived_state_attribution_facts(fact_index)
     return _ProfileFacts(fact_index=fact_index, fingerprint=profile_record_fingerprint)

@@ -7,5 +7,5 @@ semantic_role = "irpf_tipo_tributacion"
 required = true
 input_kind = "bound"
 binding = "renta-2024-profile-declaration-type"
-legal_refs = ["ley-35-2006:art-82", "ley-35-2006:art-83", "orden-hac-1347-2024:art-4"]
+legal_refs = ["ley-35-2006:art-82", "ley-35-2006:art-83", "orden-hac-242-2025:art-3"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]

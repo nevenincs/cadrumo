@@ -725,6 +725,29 @@ def resolve_clave_credentials(
     )
 
 
+_CLAVE_DNI_NIE_PATH = "auth.dni_nie"
+_CLAVE_NUMERO_SOPORTE_PATH = "auth.numero_soporte"
+_CLAVE_FECHA_VALIDEZ_PATH = "auth.fecha_validez"
+
+
+def _profile_field_label(path: str) -> str:
+    """Return one profile field's operator label, as the profile editor shows it.
+
+    These refusals tell the operator to record a specific fact, so they name
+    it the way the editor does rather than by its storage path. The bare label
+    is used rather than the grounded rendering because each name is embedded
+    mid-sentence, where a trailing citation would read as part of the
+    instruction.
+    """
+    from ...core.resources import resources
+    from ..user_profile import build_profile_preflight_requirement
+
+    return build_profile_preflight_requirement(
+        path,
+        schema=resources().user_profile_schema.singleton,
+    ).label
+
+
 def _require_clave_credentials(settings: Settings, credentials: ClaveCredentials) -> None:
     """Refuse a Cl@ve mode whose flow lacks a credential it needs.
 
@@ -737,7 +760,10 @@ def _require_clave_credentials(settings: Settings, credentials: ClaveCredentials
     if not credentials.dni_nie:
         raise ClaveCredentialsIncompleteError(
             translated_message="application.auth.sessions.errors.clave_identity_missing",
-            context={"provider": credentials.provider_kind.value},
+            context={
+                "provider": credentials.provider_kind.value,
+                "identity_field": _profile_field_label(_CLAVE_DNI_NIE_PATH),
+            },
         )
     if credentials.provider_kind is not AuthProviderKind.CLAVE_MOVIL:
         return
@@ -746,7 +772,11 @@ def _require_clave_credentials(settings: Settings, credentials: ClaveCredentials
     if not credentials.contraste:
         raise ClaveCredentialsIncompleteError(
             translated_message="application.auth.sessions.errors.clave_contraste_missing",
-            context={"provider": credentials.provider_kind.value},
+            context={
+                "provider": credentials.provider_kind.value,
+                "nie_field": _profile_field_label(_CLAVE_NUMERO_SOPORTE_PATH),
+                "dni_field": _profile_field_label(_CLAVE_FECHA_VALIDEZ_PATH),
+            },
         )
 
 
@@ -776,6 +806,33 @@ def _assert_profile_identity_available_for_deferred_check(facts: ClaveAuthFacts)
         return
     raise AuthProfileIdentityMismatchError(
         translated_message="application.auth.sessions.errors.profile_identity_cleared",
+        context={"requirements": _grounded_profile_identity_requirement()},
+    )
+
+
+_PROFILE_TAX_ID_PATH = "identity.tax_id"
+
+
+def _grounded_profile_identity_requirement() -> str:
+    """Render the profile tax-identifier field as its operator label.
+
+    Both refusals below name a field the operator has to go and fill in, and a
+    refusal that names a field reads its name from the schema rather than
+    spelling a dotted path into its sentence - the path is not what the
+    profile editor shows, and a name held in the locale catalogues cannot be
+    kept in step with a schema rename.
+    """
+    from ...core.resources import resources
+    from ..user_profile import (
+        build_profile_preflight_requirement,
+        format_profile_preflight_requirement,
+    )
+
+    return format_profile_preflight_requirement(
+        build_profile_preflight_requirement(
+            _PROFILE_TAX_ID_PATH,
+            schema=resources().user_profile_schema.singleton,
+        ),
     )
 
 
@@ -815,6 +872,7 @@ def _assert_active_profile_identity_matches_provider(
     if not credentials.profile_tax_id:
         raise AuthProfileIdentityMismatchError(
             translated_message="application.auth.sessions.errors.profile_tax_id_missing",
+            context={"requirements": _grounded_profile_identity_requirement()},
         )
     try:
         profile_identity = validate_spanish_tax_id(credentials.profile_tax_id)

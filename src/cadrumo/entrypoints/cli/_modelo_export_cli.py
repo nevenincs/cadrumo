@@ -21,6 +21,8 @@ from ...application.modelo import (
     ModeloExportOutputPathError,
     ModeloExportResult,
     ModeloIvaWalletReconciliationBlocked,
+    ModeloPaymentElectionCapabilityRefusedError,
+    ModeloPaymentElectionIncompatibleError,
     ModeloRefundElectionNotEligibleError,
     ModeloWorkAddressNotFoundError,
     ModeloWorkPeriodTokenError,
@@ -29,7 +31,7 @@ from ...application.modelo import (
     resolve_modelo_revision_for_operator_target,
 )
 from ...application.workflow import workflow_state_repository
-from ...core import Period, RefundElection
+from ...core import PaymentElection, Period, RefundElection
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ._common import _emit_envelope, _profile_to_taxpayer
@@ -175,13 +177,20 @@ def register_export_commands(
                 ),
             ),
         ] = None,
-        disposition: Annotated[
+        refund_election: Annotated[
             RefundElection,
             typer.Option(
-                "--disposition",
-                help=tr("cli.app.modelo.work.disposition_help"),
+                "--refund-election",
+                help=tr("cli.app.modelo.work.refund_election_help"),
             ),
         ] = RefundElection.COMPENSAR,
+        payment_election: Annotated[
+            PaymentElection,
+            typer.Option(
+                "--payment-election",
+                help=tr("cli.app.modelo.work.payment_election_help"),
+            ),
+        ] = PaymentElection.INGRESO,
     ) -> None:
         """Export a verified-complete or filed modelo revision to disk."""
         workflow_state = workflow_state_repository().load()
@@ -227,7 +236,8 @@ def register_export_commands(
                     calculation_revision_id=target_revision_id,
                     output_path=output,
                     actor=actor or resolve_default_actor(),
-                    refund_election=disposition,
+                    refund_election=refund_election,
+                    payment_election=payment_election,
                 ),
                 workflow_profile=workflow_profile,
             )
@@ -239,6 +249,8 @@ def register_export_commands(
             ModeloExportNoActiveBucketError,
             ModeloExportOutputPathError,
             ModeloIvaWalletReconciliationBlocked,
+            ModeloPaymentElectionCapabilityRefusedError,
+            ModeloPaymentElectionIncompatibleError,
             ModeloRefundElectionNotEligibleError,
         ) as exc:
             raise bad_parameter_from_error(exc) from exc

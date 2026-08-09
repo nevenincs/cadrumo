@@ -161,6 +161,39 @@ def format_profile_selector_requirements(
     return tuple(rendered)
 
 
+def format_profile_path_requirements(
+    paths: Iterable[str],
+    *,
+    schema: ProfileSchemaDefinition,
+    grounding_index: Mapping[str, ProfileKeyGrounding] | None = None,
+) -> tuple[str, ...]:
+    """Render profile PATHS as grounded requirement text, in order.
+
+    The path-shaped sibling of :func:`format_profile_selector_requirements`.
+    The distinction is not cosmetic and the two are not interchangeable: a
+    registry binding names the profile fact it consumes by its
+    ``section.field`` PATH, whereas the deadline engine's completeness gate
+    names its fields by their declared ``model_selectors`` TOKEN. Routing
+    binding keys through the selector lookup resolves nothing, so every key
+    passes through unchanged and the rendering is silently a no-op.
+
+    :func:`build_profile_preflight_requirement` already reduces a path to its
+    declared form, so a row-indexed path resolves here too. A path naming no
+    schema field - a derived-selector pattern expanded for a filing year, for
+    instance - keeps its own text, since there is no label to show for it.
+    """
+    return tuple(
+        format_profile_preflight_requirement(
+            build_profile_preflight_requirement(
+                path,
+                schema=schema,
+                grounding_index=grounding_index,
+            ),
+        )
+        for path in paths
+    )
+
+
 class ProfilePreflightService:
     """Resolve required profile selectors for a given ``(modelo, revision, year, period)``.
 
@@ -373,6 +406,7 @@ class ProfilePreflightService:
 __all__ = [
     "ProfilePreflightService",
     "build_profile_preflight_requirement",
+    "format_profile_path_requirements",
     "format_profile_preflight_requirement",
     "format_profile_selector_requirements",
 ]

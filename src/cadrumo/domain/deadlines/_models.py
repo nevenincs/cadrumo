@@ -380,6 +380,49 @@ class RefundAccount(BaseModel):
         return canonical
 
 
+class ChargeAccount(BaseModel):
+    """The cuenta de cargo AEAT may debit for a Modelo 303 domiciliación.
+
+    This is deliberately distinct from :class:`RefundAccount`.  The DR303 DID
+    page has one IBAN position labelled ``Domiciliación/Devolución - IBAN``,
+    but that is a slot chosen by the filing's disposition, not authority to
+    infer that a refund destination may be debited.  A charge account therefore
+    contains exactly the affirmative debit instruction the operator recorded:
+    one IBAN and no refund-only SWIFT, foreign-bank, or SEPA-mark fields.
+
+    Like the refund account, this financial identity data exists only in the
+    encrypted secure-object store and is read transiently when the export is
+    composed.  It is never logged or copied to a plaintext side store.
+
+    Attributes:
+        iban: The authorised debit-account IBAN, canonicalised to the ISO 13616
+            whitespace- and hyphen-stripped upper-case form.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    iban: str
+
+    @field_validator("iban", mode="before")
+    @classmethod
+    def _validate_iban(cls, value: object) -> object:
+        """Reject an absent or malformed debit-account IBAN at the domain boundary."""
+        if not isinstance(value, str):
+            raise DeadlineValidationError("charge-account iban must be a string")
+        canonical = normalise_iban(value)
+        if not canonical:
+            raise DeadlineValidationError("charge-account iban must not be blank")
+        if not IBAN_SHAPE_RE.match(canonical):
+            raise DeadlineValidationError(
+                f"charge-account iban {value!r} does not match the ISO 13616 shape",
+            )
+        if iban_mod_97(canonical) != 1:
+            raise DeadlineValidationError(
+                f"charge-account iban {value!r} fails the mod-97 check",
+            )
+        return canonical
+
+
 class ModeloIVAProfile(BaseModel):
     """IVA facts used by registry filing schedules.
 
@@ -409,6 +452,10 @@ class ModeloIVAProfile(BaseModel):
             account is on file; a refund disposition with no refund
             account is refused at export rather than emitting an empty
             DID block.
+        charge_account: The encrypted cuenta de cargo AEAT may debit when
+            the operator elects domiciliación del ingreso. It is intentionally
+            separate from ``refund_account``; a U export with no recorded
+            charge account is refused rather than reusing a refund destination.
     """
 
     model_config = _STRICT_FROZEN
@@ -421,6 +468,7 @@ class ModeloIVAProfile(BaseModel):
     sii_enrolled: bool = False
     redeme_enrolled: bool = False
     refund_account: RefundAccount | None = None
+    charge_account: ChargeAccount | None = None
 
 
 def _parse_modelo_identifier(value: object) -> Modelo:

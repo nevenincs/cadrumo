@@ -228,6 +228,7 @@ SETUP_ANSWER_FIELDS: Mapping[str, SetupFieldSpec] = {
         "false",
     ),
     "bienes_extranjero_above_threshold": SetupFieldSpec("obligations.bienes_extranjero_above_threshold", bool, "false"),
+    "charge_iban": SetupFieldSpec("filing_export.charge_iban", str),
     "country_of_fiscal_residence": SetupFieldSpec("taxpayer_type.country_of_fiscal_residence", str),
     "does_intracomunitario": SetupFieldSpec("iva.does_intracomunitario", bool, "false"),
     "enrollment_large_company": SetupFieldSpec("censo.large_company", bool, "false"),
@@ -466,6 +467,8 @@ class SetupAnswers(BaseModel):
     activity_start_date: str = ""
     """Optional ISO-8601 censo alta date for the economic activity."""
     taxation_type: Any = ""
+    charge_iban: str = ""
+    """IBAN AEAT may debit for an elected Modelo 303 domiciliación."""
     output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
 
     @field_validator("output_language", mode="before")

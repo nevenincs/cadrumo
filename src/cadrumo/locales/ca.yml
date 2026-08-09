@@ -619,14 +619,14 @@ application:
     sessions:
       errors:
         clave_contraste_missing: La ruta Cl@ve Móvil sense QR necessita el contrast
-          imprès al teu document. Registra auth.numero_soporte al perfil actiu si
-          és un NIE, o auth.fecha_validez si és un DNI, abans de fer servir cap sessió
-          AEAT.
+          imprès al teu document. Registra %{nie_field} al perfil actiu si és un NIE,
+          o %{dni_field} si és un DNI, abans d'utilitzar cap sessió amb l'AEAT.
         clave_identity_malformed: La identitat de Cl@ve no és un NIF, NIE o CIF vàlid,
           per la qual cosa no es pot confirmar que pertanyi a aquest perfil.
-        clave_identity_missing: L'autenticació Cl@ve en directe requereix un DNI/NIE.
-          Registra'l al perfil actiu com a auth.dni_nie, o configura'l per al proveïdor
-          amb `aeat config auth configure`, abans de fer servir cap sessió AEAT.
+        clave_identity_missing: L'autenticació en directe amb Cl@ve exigeix un DNI/NIE.
+          Registra'l al perfil actiu com a %{identity_field}, o configura'l per al
+          proveïdor amb `aeat config auth configure`, abans d'utilitzar cap sessió
+          amb l'AEAT.
         clave_identity_profile_mismatch: La identitat de Cl@ve Móvil no coincideix
           amb la identitat fiscal del perfil actiu; canvia al perfil que coincideixi
           o actualitza el perfil abans de l'autenticació AEAT en directe.
@@ -634,14 +634,14 @@ application:
           llegir. Executa `aeat config auth logout` i després `aeat config auth test`.
         no_session: No hi ha sessió AEAT activa; executa `aeat config auth test` abans
           de llegir dades AEAT.
-        profile_identity_cleared: L'autenticació en directe amb l'AEAT necessita el
-          NIF del perfil actiu, i aquest perfil no en té cap. Restaureu identity.tax_id
-          al perfil i torneu a autenticar-vos.
+        profile_identity_cleared: L'autenticació en directe amb l'AEAT necessita l'ID
+          fiscal del perfil actiu, i aquest perfil no en té. Restaura %{requirements}
+          al perfil i torna a autenticar-te.
         profile_identity_malformed: La identitat fiscal d'aquest perfil no és un NIF,
           NIE o CIF vàlid, per la qual cosa no es pot confirmar que la sessió Cl@ve
           li pertanyi.
-        profile_tax_id_missing: L'autenticació Cl@ve Móvil en directe requereix que
-          el perfil actiu tingui identity.tax_id.
+        profile_tax_id_missing: L'autenticació en directe amb Cl@ve Móvil exigeix
+          que el perfil actiu inclogui %{requirements}.
         provider_close_failed: No s'ha pogut tancar de manera segura la sessió del
           navegador AEAT; repeteix l'autenticació abans de llegir dades AEAT.
         sede_rejected: La sessió AEAT no és acceptada per la Seu; executa `aeat config
@@ -1064,9 +1064,9 @@ application:
         create NAME` abans d'exportar una revisió de modelo.
       export_operator_name_missing: 'L''exportació requereix el nom de l''operador
         al perfil actiu; falten aquestes dades de perfil: %{missing}.'
-      export_operator_profile_missing: L'exportació necessita el nom de l'operador
-        del perfil actiu, però no existeix cap perfil persistit; completa identity.surnames
-        i identity.name abans d'exportar.
+      export_operator_profile_missing: L'exportació necessita la identitat del declarant
+        del perfil actiu, però no hi ha cap perfil persistit; indica %{requirements}
+        abans d'exportar.
       export_output_path_invalid: 'El camí de sortida de l''exportació no és vàlid:
         {output_path} ({reason}).'
       export_period_unmappable: La unitat de treball %{work_unit_id} conté el període
@@ -1331,10 +1331,9 @@ application:
       iva_wallet_next_action: Revisa la decisió de conciliació de la cartera de compensació
         d'IVA abans de verificar o exportar aquest Model 303.
       m210_baseline_tipo_deferred:
-        next_action: 'El tipus de gravamen baseline per a tipo_renta={tipo_renta}
-          està ajornat a una Fase futura sota la task #229 (corpus BOE pendent). Establiu
-          {requirements} per reclamar el tipus de Conveni aplicable, o espereu que
-          el corpus baseline incorpori aquesta fila.'
+        next_action: El corpus inclòs no publica cap tipus base per a tipo_renta=%{tipo_renta}.
+          Indica %{requirements} per aplicar el tipus del Conveni corresponent, o
+          espera que el corpus base incorpori aquesta fila.
       m210_convenio_lob_advisory: 'M210_CONVENIO_LOB_ADVISORY: s''ha aplicat el tipus
         de Convenio Espanya-%{cc} (%{document_id}) per a tipo_renta=%{tipo_renta}.
         El benefici del conveni només està disponible per al beneficiari efectiu resident
@@ -1704,7 +1703,7 @@ application:
       status: estat
     status:
       errors:
-        missing_tax_id: El perfil actiu no té tax.id.
+        missing_tax_id: 'El perfil actiu no ha indicat: %{requirements}.'
         no_active_profile: No hi ha cap perfil actiu configurat.
         projection_failed: El perfil actiu no supera la projecció de l'assistent.
         unexpected_projection_type: Les respostes del flux de setup no es van projectar
@@ -3230,10 +3229,10 @@ cli:
           les files corresponents del llibre major, executa `aeat app ledger preflight`
           i torna a calcular. Executa `%{discover}` per veure tots els bindings que
           el càlcul encara necessita.'
-        missing_date_binding_guidance: '%{base} Estableix %{binding_id} al perfil
-          actiu i torna a calcular. Les dades de perfil amb data no es poden aportar
-          amb --binding. Executa `%{discover}` per llistar tots els bindings que encara
-          necessita el càlcul.'
+        missing_date_binding_guidance: '%{base} Indica %{requirements} al perfil actiu
+          i torna a executar el càlcul. Les dades de perfil amb valor de data no es
+          poden aportar amb --binding. Executa `%{discover}` per llistar tots els
+          bindings que encara necessita el càlcul.'
         missing_relation_guidance: '%{base} Aporta el valor amb --relation KEY=VALUE
           en aquest comandament; KEY és un id de relació del registre, no un id de
           binding. Executa %{discover} per llistar la guia de relacions i els altres
@@ -3255,6 +3254,8 @@ cli:
         override_help: Valor de binding amb sintaxi KEY=VALUE (repetible); executa
           `aeat app modelo bindings list --missing` per veure els bindings que necessita
           el càlcul.
+        payment_election_help: 'Trieu com es paga un resultat positiu del Model 303:
+          ingras ordinari o domiciliacio.'
         period_help: 'Token de període de la unitat: 0A anual, 1T-4T trimestres, 01-12
           mesos; per a models censals (036) usa alta, modificacion o baja.'
         period_token_invalid: '--period ''%{token}'' no és un token de període vàlid
@@ -3303,6 +3304,8 @@ cli:
           fora del territori espanyol en l'exercici. Obligatori juntament amb --annual-salary
           quan s'aplica l'Art. 7.p).
         reason_help: Motiu opcional del descart (text lliure, fins a 500 caràcters)
+        refund_election_help: Trieu si un resultat negatiu elegible del Model 303
+          es compensa o se sollicita com a devolucio.
         relation_help: Valor de relació del registre amb sintaxi KEY=VALUE (repetible).
           KEY és un id de relació del registre, no un id de binding; fes-lo servir
           per a entrades de relació entre períodes o entre models. Executa aeat app
@@ -4473,7 +4476,8 @@ cli:
       auth_state_unreadable: No es pot comprovar l'autenticació fins que les dades
         locals de sessió desades siguin llegibles.
       profile_keys_set: '%{present}/%{total} claus de perfil establertes.'
-      profile_missing_keys: '%{count} clau(s) de perfil que falten.'
+      profile_missing_fields: 'Al perfil li falten %{count} camp(s) obligatori(s):
+        %{fields}'
       profile_none: No hi ha cap perfil configurat
       profile_storage: active_profile=%{active_profile} source=%{source} status=%{status}
       profile_unreadable: 'No es pot llegir el perfil: %{status}'
@@ -5435,6 +5439,9 @@ cli:
     refused_incomplete_profile: 'El perfil actiu no ha respost dades de les quals
       depèn aquesta projecció: %{requirements}. Completa-les amb ''aeat config profile
       edit'', o fes servir --allow-incomplete per consultar el resultat provisional.'
+    refused_undeclared_taxpayer_model: 'El perfil actiu no declara un model de contribuent,
+      de manera que no es poden derivar les obligacions de presentació. Indica: %{requirements}.
+      O torna a executar amb --allow-incomplete per consultar el resultat provisional.'
     status:
       drafts_empty: No s'han trobat esborranys de declaracions desats.
       drafts_empty_with_work_units: No hi ha esborranys de declaracions desats; és
@@ -7087,6 +7094,12 @@ errors:
     refused_modelo_applicability_filter: S'ha trobat un nom de filtre d'aplicabilitat
       desconegut al registre. Es tracta d'un error d'autoria del registre; actualitzeu
       la taula de despacho de filtres.
+    refused_modelo_charge_account_missing: S ha triat una domiciliacio pero no hi
+      ha cap compte de carrec registrat.
+    refused_modelo_payment_election_capability: El metode de pagament escollit encara
+      no esta disponible.
+    refused_modelo_payment_election_incompatible: L opcio de pagament escollida requereix
+      un resultat positiu.
     refused_modelo_refund_account_missing: S'ha sol·licitat una devolució però no
       hi ha cap compte de devolució configurat; l'AEAT no pot pagar una devolució
       sense un compte. Configureu un compte de devolució o compenseu el crèdit (compensar).
@@ -68165,6 +68178,8 @@ profile:
           label: Codi de país del banc
         bank_name:
           label: Nom del banc
+        charge_iban:
+          label: IBAN de carrec
         declaration_type:
           label: Tipus de declaració
         iban:
@@ -68757,6 +68772,13 @@ wizard:
           de tres anys es compta des del primer acolliment i dura tres períodes en
           total, i l''adopció no el torna a començar.'
         prompt: Data de la primera resolució d'acolliment
+      alta-posterior-nacimiento-mes:
+        help: Indiqueu un mes de l’1 al 12. Ha de coincidir amb el primer mes declarat
+          als mesos de treball; deixeu-ho en blanc si la mare ja complia el requisit
+          quan va néixer el fill.
+        invalid_range: El mes ha d’estar entre %{minimum} i %{maximum}.
+        prompt: Mes en què la mare va completar els 30 dies de cotització després
+          del naixement
       birth-date:
         prompt: Data de naixement
       convivencia:
@@ -68800,6 +68822,9 @@ wizard:
           al Registre Civil només s'indica per a un descendent adoptat, i la resolució
           d'acolliment només per a un acolliment preadoptiu o permanent, o per a un
           adoptat que abans va estar acollit. Corregiu la relació o esborreu la data.
+      fallecimiento:
+        help: Deixeu-ho en blanc si aquest descendent no ha mort.
+        prompt: Data de defunció
       gastos-guarderia:
         both_declared: Indiqueu el total anual de llar d'infants o els imports mes
           a mes d'aquest fill, però no tots dos. El detall mensual és l'únic que pot
@@ -68893,6 +68918,12 @@ wizard:
       family-minor-children-in-unit:
         prompt: Fills menors en unitat familiar
       title: Unitat familiar
+    filing-export:
+      charge-iban:
+        help: IBAN que l AEAT pot carregar quan una declaracio del Model 303 escull
+          la domiciliacio. Es diferent del compte de devolucio.
+        prompt: IBAN per a la domiciliacio de l AEAT
+      title: Compte de carrec del Model 303
     flags:
       activity:
         help: Activitat econòmica en text normal, o epígraf IAE si el coneixes
@@ -68906,6 +68937,9 @@ wizard:
           agricoles, ramaderes o forestals subjectes a retenció o ingrés a compte
       bienes-extranjero-above-threshold:
         help: Béns a l'estranger superen el llindar legal
+      charge-iban:
+        help: IBAN que l AEAT pot carregar per a una domiciliacio elegida del Model
+          303.
       cloud-evidence-upload:
         help: Permetre pujar evidència sensible a proveïdors LLM al núvol (desactivat
           per defecte).

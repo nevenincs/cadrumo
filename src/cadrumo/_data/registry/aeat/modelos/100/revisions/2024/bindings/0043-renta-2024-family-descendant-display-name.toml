@@ -3,7 +3,7 @@ id = "renta-2024-family-descendant-display-name"
 source = "profile"
 selector = { profile_model = "RentaFamilyProfile", collection = "descendants", field = "display_name", xsd_path = "/DatosIdentificativos/Hijos/Hijo/APENOMDLG", dictionary_field = "APENOMDLG", repeating = true }
 aggregation = { op = "rows" }
-legal_refs = ["ley-35-2006:art-58", "orden-hac-1347-2024:art-4"]
+legal_refs = ["ley-35-2006:art-58", "orden-hac-242-2025:art-3"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
 
 [[revisions."2024".bindings.source_citations]]

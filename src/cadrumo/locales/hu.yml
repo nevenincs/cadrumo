@@ -581,16 +581,16 @@ application:
         szolgáltatót nem konfigurál.
     sessions:
       errors:
-        clave_contraste_missing: A QR nélküli Cl@ve Móvil útvonalhoz szükség van a
-          dokumentumon nyomtatott contraste értékre. NIE esetén rögzítsd az auth.numero_soporte,
-          DNI esetén az auth.fecha_validez mezőt az aktív profilban, mielőtt bármelyik
-          AEAT-munkamenetet használnád.
+        clave_contraste_missing: 'A QR nélküli Cl@ve Móvil útvonalhoz a dokumentumodon
+          szereplő contraste szükséges. NIE esetén rögzítsd az aktív profilon a következőt:
+          %{nie_field}, DNI esetén pedig ezt: %{dni_field}, mielőtt bármely AEAT-munkamenetet
+          használnád.'
         clave_identity_malformed: A Cl@ve azonosító nem érvényes spanyol NIF, NIE
           vagy CIF, ezért nem igazolható, hogy ehhez a profilhoz tartozik.
-        clave_identity_missing: A Cl@ve élő hitelesítéshez DNI/NIE szükséges. Rögzítsd
-          az aktív profilban auth.dni_nie néven, vagy állítsd be a szolgáltatóhoz
-          az `aeat config auth configure` paranccsal, mielőtt bármelyik AEAT-munkamenetet
-          használnád.
+        clave_identity_missing: 'A Cl@ve élő hitelesítéshez DNI/NIE szükséges. Rögzítsd
+          az aktív profilon a következőként: %{identity_field}, vagy állítsd be a
+          szolgáltatóhoz az `aeat config auth configure` paranccsal, mielőtt bármely
+          AEAT-munkamenetet használnád.'
         clave_identity_profile_mismatch: A Cl@ve Móvil azonossága nem egyezik az aktív
           profil adóazonosítójával; váltson az egyező profilra, vagy frissítse a profil
           adóazonosítóját.
@@ -598,13 +598,13 @@ application:
           Futtassa az `aeat config auth logout`, majd az `aeat config auth test` parancsot.
         no_session: Nincs aktív AEAT munkamenet; futtassa a `aeat config auth test`
           parancsot az AEAT adatok olvasása előtt.
-        profile_identity_cleared: Az élő AEAT-hitelesítéshez szükséges az aktív profil
-          adóazonosítója, ez a profil pedig nem tartalmaz ilyet. Állítsa vissza az
-          identity.tax_id mezőt a profilban, majd hitelesítsen újra.
+        profile_identity_cleared: 'Az élő AEAT-hitelesítéshez az aktív profil adószáma
+          szükséges, de ez a profil nem tartalmazza. Állítsd vissza a profilon a következőt:
+          %{requirements}, majd hitelesíts újra.'
         profile_identity_malformed: A profil adóazonosítója nem érvényes spanyol NIF,
           NIE vagy CIF, ezért nem igazolható, hogy a Cl@ve munkamenet hozzá tartozik.
-        profile_tax_id_missing: A Cl@ve Móvil élő hitelesítés megköveteli, hogy az
-          aktív profil rendelkezzen identity.tax_id-val.
+        profile_tax_id_missing: 'A Cl@ve Móvil élő hitelesítéshez az aktív profilnak
+          tartalmaznia kell a következőt: %{requirements}.'
         provider_close_failed: Az AEAT böngészőmunkamenetet nem sikerült biztonságosan
           bezárni; az AEAT adatok olvasása előtt hitelesítsen újra.
         sede_rejected: Az AEAT munkamenetet az AEAT Sede nem fogadja el; futtassa
@@ -1001,9 +1001,9 @@ application:
         előtt futtassa a `aeat config profile create NÉV` parancsot.
       export_operator_name_missing: 'Az exportáláshoz szükség van az operátor nevére
         az aktív profilban; hiányzó profiladatok: %{missing}.'
-      export_operator_profile_missing: Az exportáláshoz szükség van az operátor nevére
-        az aktív profilból, de nincs perzisztált profil; exportálás előtt töltse ki
-        az identity.surnames és identity.name mezőket.
+      export_operator_profile_missing: 'Az exportáláshoz a bevalló azonosítása szükséges
+        az aktív profilból, de nincs megőrzött profil; add meg a következőt az exportálás
+        előtt: %{requirements}.'
       export_output_path_invalid: 'Az exportálási kimeneti útvonal érvénytelen: {output_path}
         ({reason}).'
       export_period_unmappable: A(z) %{work_unit_id} munkaegység %{period} időszakot
@@ -1267,11 +1267,9 @@ application:
       iva_wallet_next_action: Ellenőrzés vagy exportálás előtt tekintse át az IVA-tárca
         egyeztetési döntést ehhez a Modelo 303-hoz.
       m210_baseline_tipo_deferred:
-        next_action: 'A tipo_renta={tipo_renta} értékéhez tartozó baseline adókulcs
-          egy későbbi Fázisra van halasztva a #229 task alatt (BOE korpusz függőben).
-          Állítsa be a következőt: {requirements}, hogy az alkalmazandó Egyezmény
-          szerinti kulcsot igényelje, vagy várja meg, amíg a baseline korpusz felveszi
-          ezt a sort.'
+        next_action: 'A csomagolt korpusz nem közöl alapkulcsot ehhez: tipo_renta=%{tipo_renta}.
+          Add meg a következőt a vonatkozó egyezményes kulcs érvényesítéséhez: %{requirements},
+          vagy várd meg, amíg az alapkorpusz felveszi ezt a sort.'
       m210_convenio_lob_advisory: 'M210_CONVENIO_LOB_ADVISORY: a Convenio Spanyolország-%{cc}
         (%{document_id}) egyezményi adókulcs alkalmazásra került a tipo_renta=%{tipo_renta}
         értékhez. Az egyezményes kedvezmény csak az adott államban illetőséggel rendelkező
@@ -1632,7 +1630,7 @@ application:
       status: állapot
     status:
       errors:
-        missing_tax_id: Az aktív profilból hiányzik a tax.id azonosító.
+        missing_tax_id: 'Az aktív profil nem adta meg a következőt: %{requirements}.'
         no_active_profile: Nincs konfigurálva aktív profil.
         projection_failed: Az aktív profil nem megy át a varázsló-vetítésen.
         unexpected_projection_type: A beállítási folyamat válaszai nem vetíthetők
@@ -3169,10 +3167,10 @@ cli:
           sorolja be a megfelelő főkönyvi sorokat, futtassa a `aeat app ledger preflight`
           parancsot, majd számoljon újra. Futtassa: `%{discover}` az összes hiányzó
           kötés listázásához.'
-        missing_date_binding_guidance: '%{base} Állítsa be a(z) %{binding_id} értéket
-          az aktív profilban, majd futtassa újra a számítást. Dátum típusú profiladat
-          nem adható meg --binding kapcsolóval. Futtassa: `%{discover}` az összes
-          még szükséges kötés listázásához.'
+        missing_date_binding_guidance: '%{base} Add meg a következőt az aktív profilon:
+          %{requirements}, majd futtasd újra a számítást. A dátum értékű profiladatok
+          nem adhatók meg a --binding kapcsolóval. Futtasd a `%{discover}` parancsot
+          az összes még hiányzó binding listázásához.'
         missing_relation_guidance: '%{base} Add meg az értéket --relation KEY=VALUE
           formában ezen a parancson; a KEY registry relation id, nem binding id. Futtasd:
           %{discover}, hogy lásd a relation útmutatót és a számítás által még igényelt
@@ -3194,6 +3192,8 @@ cli:
         output_language_help: A megjelenített üzenetek kimeneti nyelve.
         override_help: 'Kötési érték KEY=VALUE szintaxissal (ismételhető); futtassa:
           `aeat app modelo bindings list --missing` a hiányzó kötések megtekintéséhez.'
+        payment_election_help: 'Valassza ki, hogyan fizetik a pozitiv Modelo 303 eredmenyt:
+          atutalassal vagy csoportos beszedessel.'
         period_help: 'Munkaegység időszaktoken: 0A éves, 1T-4T negyedévek, 01-12 hónapok;
           nyilvántartási nyomtatványokhoz (036): alta, modificacion vagy baja.'
         period_token_invalid: 'A --period "%{token}" nem érvényes időszaktokent a(z)
@@ -3241,6 +3241,8 @@ cli:
           munkavégzés naptári napjai az adóéven belül. Az Art. 7.p) alkalmazásakor
           az --annual-salary mellett kötelező.
         reason_help: Az eldobás opcionális szabad szöveges oka (max. 500 karakter).
+        refund_election_help: Valassza ki, hogy a jogosult negativ Modelo 303 eredmenyt
+          tovabbviszik vagy visszateriteskent kerik.
         relation_help: 'Registry relation érték KEY=VALUE formában (ismételhető).
           A KEY registry relation id, nem binding id; ezt használd időszakok vagy
           modellek közötti relation bemenetekhez. Futtasd: aeat app modelo bindings
@@ -4415,7 +4417,7 @@ cli:
       auth_state_unreadable: A hitelesítési készültség nem ellenőrizhető, amíg a mentett
         helyi munkamenetadatok nem olvashatók.
       profile_keys_set: '%{present}/%{total} profilkulcs beállítva.'
-      profile_missing_keys: '%{count} profilkulcs hiányzik.'
+      profile_missing_fields: 'A profilból %{count} kötelező mező hiányzik: %{fields}'
       profile_none: Nincs beállított profil.
       profile_storage: active_profile=%{active_profile} source=%{source} status=%{status}
       profile_unreadable: 'A profil nem olvasható: %{status}'
@@ -5387,6 +5389,9 @@ cli:
       amelyekre ez a kimutatás épül: %{requirements}. Pótold őket az ''aeat config
       profile edit'' paranccsal, vagy használd a --allow-incomplete kapcsolót az ideiglenes
       eredmény megtekintéséhez.'
+    refused_undeclared_taxpayer_model: 'Az aktív profil nem ad meg adózói modellt,
+      ezért a bevallási kötelezettségek nem vezethetők le. Add meg: %{requirements}.
+      Vagy futtasd újra a --allow-incomplete kapcsolóval az ideiglenes eredmény megtekintéséhez.'
     status:
       drafts_empty: Nincs mentett bevallástervezet.
       drafts_empty_with_work_units: Nincs mentett bevallástervezet – ez normális,
@@ -6973,6 +6978,12 @@ errors:
     refused_modelo_applicability_filter: Ismeretlen alkalmazhatósági szűrőnév szerepel
       a nyilvántartásban. Ez egy nyilvántartás-szerzői hiba; frissítse a szűrő diszpécser
       táblázatot.
+    refused_modelo_charge_account_missing: Csoportos beszedesi bevallast valasztottak,
+      de nincs rogzitett terhelesi szamla.
+    refused_modelo_payment_election_capability: A valasztott fizetesi mod meg nem
+      tamogatott.
+    refused_modelo_payment_election_incompatible: A valasztott fizetesi modhoz pozitiv
+      eredmeny szukseges.
     refused_modelo_refund_account_missing: Visszatérítést kértek, de nincs visszatérítési
       számla rögzítve; az AEAT nem tud visszatérítést fizetni számla nélkül. Állítson
       be visszatérítési számlát, vagy vigye tovább a kreditet (compensar).
@@ -68283,6 +68294,8 @@ profile:
           label: Bank országkódja
         bank_name:
           label: Bank neve
+        charge_iban:
+          label: Terhelesi IBAN
         declaration_type:
           label: Bevallás típusa
         iban:
@@ -68887,6 +68900,13 @@ wizard:
           kor alatti növekmény az első nevelésbe vételtől számít, összesen három időszakon
           át tart, és az örökbefogadás nem indítja újra.'
         prompt: Az első nevelésbe vételi határozat dátuma
+      alta-posterior-nacimiento-mes:
+        help: Adjon meg egy hónapot 1 és 12 között. Ennek egyeznie kell az első megadott
+          munkahónappal; hagyja üresen, ha az anya már a születéskor teljesítette
+          a feltételt.
+        invalid_range: A hónapnak %{minimum} és %{maximum} között kell lennie.
+        prompt: Az a hónap, amikor az anya a születés után teljesítette a 30 járulékfizetési
+          napot
       birth-date:
         prompt: Születési dátum
       convivencia:
@@ -68932,6 +68952,9 @@ wizard:
           határozat pedig csak örökbefogadás előtti vagy tartós nevelésbe vételre,
           illetve korábban nevelésbe vett örökbefogadottra. Javítsa a jogviszonyt,
           vagy törölje a dátumot.
+      fallecimiento:
+        help: Hagyja üresen, ha ez a leszármazott nem hunyt el.
+        prompt: A halálozás dátuma
       gastos-guarderia:
         both_declared: Adja meg ennek a gyermeknek vagy az éves bölcsődei összeget,
           vagy a havi összegeket, de ne mindkettőt. A havi bontás az egyetlen, amely
@@ -69026,6 +69049,12 @@ wizard:
       family-minor-children-in-unit:
         prompt: Kiskorú gyermekek a családi egységben
       title: Családi egység
+    filing-export:
+      charge-iban:
+        help: Az IBAN, amelyet az AEAT megterhelhet, ha a 303-as modell bevallasa
+          csoportos beszedest valaszt. Ez kulonbozik a visszateritesi szamlatol.
+        prompt: IBAN az AEAT csoportos beszedesehez
+      title: A 303-as modell beszedesi szamlaja
     flags:
       activity:
         help: Gazdasági tevékenység egyszerű szövegként, vagy IAE fejezet, ha ismeri
@@ -69041,6 +69070,8 @@ wizard:
           történő befizetéssel terhelt
       bienes-extranjero-above-threshold:
         help: Külföldi vagyon meghaladja a jogszabályi küszöbértéket
+      charge-iban:
+        help: IBAN, amelyet az AEAT megterhelhet a 303-as modell valasztott beszedesehez.
       cloud-evidence-upload:
         help: Érzékeny bizonylatok feltöltésének engedélyezése felhő LLM-szolgáltatókhoz
           (alapból kikapcsolva).

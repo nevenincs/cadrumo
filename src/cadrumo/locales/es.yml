@@ -625,15 +625,15 @@ application:
     sessions:
       errors:
         clave_contraste_missing: La ruta Cl@ve Móvil sin QR necesita el contraste
-          impreso en tu documento. Registra auth.numero_soporte en el perfil activo
-          si es un NIE, o auth.fecha_validez si es un DNI, antes de usar cualquier
-          sesión AEAT.
+          impreso en tu documento. Registra %{nie_field} en el perfil activo si es
+          un NIE, o %{dni_field} si es un DNI, antes de usar cualquier sesión con
+          la AEAT.
         clave_identity_malformed: La identidad de Cl@ve no es un NIF, NIE o CIF válido,
           por lo que no se puede confirmar que pertenezca a este perfil.
-        clave_identity_missing: La autenticación Cl@ve en directo requiere un DNI/NIE.
-          Regístralo en el perfil activo como auth.dni_nie, o configúralo para el
-          proveedor con `aeat config auth configure`, antes de usar cualquier sesión
-          AEAT.
+        clave_identity_missing: La autenticación en directo con Cl@ve exige un DNI/NIE.
+          Regístralo en el perfil activo como %{identity_field}, o configúralo para
+          el proveedor con `aeat config auth configure`, antes de usar cualquier sesión
+          con la AEAT.
         clave_identity_profile_mismatch: La identidad de Cl@ve Móvil no coincide con
           la identidad fiscal del perfil activo; cambia al perfil que coincida o actualiza
           el perfil antes de la autenticación AEAT en directo.
@@ -642,13 +642,13 @@ application:
         no_session: No hay sesión AEAT activa; ejecuta `aeat config auth test` antes
           de leer datos AEAT.
         profile_identity_cleared: La autenticación en directo con la AEAT necesita
-          el NIF del perfil activo, y este perfil no lo tiene. Restaure identity.tax_id
-          en el perfil y vuelva a autenticarse.
+          el ID fiscal del perfil activo, y este perfil no lo tiene. Restaura %{requirements}
+          en el perfil y vuelve a autenticarte.
         profile_identity_malformed: La identidad fiscal de este perfil no es un NIF,
           NIE o CIF válido, por lo que no se puede confirmar que la sesión Cl@ve le
           pertenezca.
-        profile_tax_id_missing: La autenticación Cl@ve Móvil en directo requiere que
-          el perfil activo tenga identity.tax_id.
+        profile_tax_id_missing: La autenticación en directo con Cl@ve Móvil exige
+          que el perfil activo incluya %{requirements}.
         provider_close_failed: No se pudo cerrar de forma segura la sesión del navegador
           AEAT; repite la autenticación antes de leer datos AEAT.
         sede_rejected: La sesión AEAT no es aceptada por la Sede; ejecuta `aeat config
@@ -1072,9 +1072,9 @@ application:
         create NAME` antes de exportar una revisión de modelo.
       export_operator_name_missing: 'La exportación requiere el nombre del operador
         en el perfil activo; faltan estos datos de perfil: %{missing}.'
-      export_operator_profile_missing: La exportación necesita el nombre del operador
-        del perfil activo, pero no existe un perfil persistido; completa identity.surnames
-        e identity.name antes de exportar.
+      export_operator_profile_missing: La exportación necesita la identidad del declarante
+        del perfil activo, pero no existe ningún perfil persistido; indica %{requirements}
+        antes de exportar.
       export_output_path_invalid: 'La ruta de salida de exportación no es válida:
         {output_path} ({reason}).'
       export_period_unmappable: La unidad de trabajo %{work_unit_id} contiene el periodo
@@ -1342,10 +1342,9 @@ application:
       iva_wallet_next_action: Revise la decisión de conciliación del saldo IVA antes
         de verificar o exportar este Modelo 303.
       m210_baseline_tipo_deferred:
-        next_action: 'El tipo de gravamen baseline para tipo_renta={tipo_renta} está
-          aplazado a una Fase futura bajo task #229 (corpus BOE pendiente). Establezca
-          {requirements} para reclamar el tipo de Convenio aplicable, o espere a que
-          el corpus baseline incorpore esta fila.'
+        next_action: El corpus incluido no publica ningún tipo base para tipo_renta=%{tipo_renta}.
+          Indica %{requirements} para aplicar el tipo del Convenio correspondiente,
+          o espera a que el corpus base incorpore esta fila.
       m210_convenio_lob_advisory: 'M210_CONVENIO_LOB_ADVISORY: se ha aplicado el tipo
         de Convenio España-%{cc} (%{document_id}) para tipo_renta=%{tipo_renta}. El
         beneficio del convenio solo está disponible para el beneficiario efectivo
@@ -1716,7 +1715,7 @@ application:
       status: estado
     status:
       errors:
-        missing_tax_id: El perfil activo no tiene tax.id.
+        missing_tax_id: 'El perfil activo no ha indicado: %{requirements}.'
         no_active_profile: No hay perfil activo configurado.
         projection_failed: El perfil activo no supera la proyección del asistente.
         unexpected_projection_type: Las respuestas del flujo de setup no se proyectaron
@@ -3182,9 +3181,6 @@ cli:
         discard_requires_yes: El descarte es una transición de estado auditable. Vuelva
           a ejecutar 'aeat app modelo work discard %{work_unit_id} --yes' para confirmar.
         discard_yes_help: Confirmar explícitamente la operación de descarte
-        disposition_help: 'Disposición del resultado negativo del Modelo 303: compensar
-          (arrastrar el crédito, por defecto) o devolver (solicitar la devolución;
-          solo en el último periodo del año para un contribuyente no inscrito en REDEME).'
         file_help: Marcar una revisión verificada como internamente presentada. NO
           envía a la AEAT
         file_idempotent_noop: 'Operación idempotente sin efecto: la revisión de cálculo
@@ -3257,10 +3253,10 @@ cli:
           filas correspondientes del libro mayor, ejecuta `aeat app ledger preflight`
           y vuelve a calcular. Ejecuta `%{discover}` para ver todos los bindings que
           el cálculo todavía necesita.'
-        missing_date_binding_guidance: '%{base} Establece %{binding_id} en el perfil
-          activo y vuelve a calcular. Los datos de perfil con fecha no se pueden aportar
-          con --binding. Ejecuta `%{discover}` para listar todos los bindings que
-          aún necesita el cálculo.'
+        missing_date_binding_guidance: '%{base} Indica %{requirements} en el perfil
+          activo y vuelve a ejecutar el cálculo. Los datos de perfil con valor de
+          fecha no se pueden aportar con --binding. Ejecuta `%{discover}` para listar
+          todos los bindings que aún necesita el cálculo.'
         missing_relation_guidance: '%{base} Aporta el valor con --relation KEY=VALUE
           en este comando; KEY es un id de relación del registro, no un id de binding.
           Ejecuta %{discover} para listar la guía de relaciones y los demás bindings
@@ -3282,6 +3278,8 @@ cli:
         override_help: Valor de binding con sintaxis KEY=VALUE (repetible); ejecuta
           `aeat app modelo bindings list --missing` para ver los bindings que requiere
           el cálculo.
+        payment_election_help: 'Elija como se paga un resultado positivo del Modelo
+          303: ingreso ordinario o domiciliacion.'
         period_help: 'Token de periodo de la unidad: 0A anual, 1T-4T trimestres, 01-12
           meses; para modelos censales (036) usa alta, modificacion o baja.'
         period_token_invalid: '--period ''%{token}'' no es un token de periodo válido
@@ -3328,6 +3326,8 @@ cli:
           fuera del territorio español en el ejercicio. Obligatorio junto con --annual-salary
           cuando se aplica el Art. 7.p).
         reason_help: Motivo opcional del descarte (texto libre, hasta 500 caracteres)
+        refund_election_help: Elija si un resultado negativo elegible del Modelo 303
+          se compensa o se solicita como devolucion.
         relation_help: Valor de relación del registro con sintaxis KEY=VALUE (repetible).
           KEY es un id de relación del registro, no un id de binding; úsalo para entradas
           de relación entre periodos o entre modelos. Ejecuta aeat app modelo bindings
@@ -4510,7 +4510,8 @@ cli:
       auth_state_unreadable: No se puede comprobar la autenticación hasta que los
         datos locales de sesión guardados sean legibles.
       profile_keys_set: '%{present}/%{total} claves de perfil configuradas.'
-      profile_missing_keys: '%{count} claves de perfil ausentes.'
+      profile_missing_fields: 'Al perfil le faltan %{count} campo(s) obligatorio(s):
+        %{fields}'
       profile_none: No hay perfil configurado
       profile_storage: active_profile=%{active_profile} source=%{source} status=%{status}
       profile_unreadable: 'No se puede leer el perfil: %{status}'
@@ -5480,6 +5481,9 @@ cli:
     refused_incomplete_profile: 'El perfil activo no ha respondido a datos de los
       que depende esta proyección: %{requirements}. Complétalos con ''aeat config
       profile edit'', o usa --allow-incomplete para consultar el resultado provisional.'
+    refused_undeclared_taxpayer_model: 'El perfil activo no declara un modelo de contribuyente,
+      por lo que no se pueden derivar las obligaciones de presentación. Indica: %{requirements}.
+      O vuelve a ejecutar con --allow-incomplete para consultar el resultado provisional.'
     status:
       drafts_empty: No se encontraron borradores de declaraciones guardados.
       drafts_empty_with_work_units: No hay borradores de declaraciones guardados;
@@ -7133,6 +7137,12 @@ errors:
     refused_modelo_applicability_filter: Se encontró un nombre de filtro de aplicabilidad
       desconocido en el registro. Se trata de un error de autoría del registro; actualice
       la tabla de despacho de filtros.
+    refused_modelo_charge_account_missing: Se ha elegido una domiciliacion pero no
+      hay una cuenta de cargo registrada.
+    refused_modelo_payment_election_capability: El metodo de pago elegido aun no esta
+      disponible.
+    refused_modelo_payment_election_incompatible: La opcion de pago elegida requiere
+      un resultado positivo.
     refused_modelo_refund_account_missing: Se solicitó una devolución pero no hay
       ninguna cuenta de devolución configurada; la AEAT no puede pagar una devolución
       sin una cuenta. Configure una cuenta de devolución o compense el crédito (compensar).
@@ -70501,6 +70511,8 @@ profile:
           label: Código de país del banco
         bank_name:
           label: Nombre del banco
+        charge_iban:
+          label: IBAN de cargo
         declaration_type:
           label: Tipo de declaración
         iban:
@@ -71092,6 +71104,12 @@ wizard:
           de tres años se cuenta desde el primer acogimiento y dura tres periodos
           en total, no vuelve a empezar con la adopción.'
         prompt: Fecha de la primera resolución de acogimiento
+      alta-posterior-nacimiento-mes:
+        help: Indique un mes del 1 al 12. Debe coincidir con el primer mes declarado
+          en los meses de trabajo; déjelo en blanco si la madre ya cumplía el requisito
+          al nacer.
+        invalid_range: El mes debe estar entre %{minimum} y %{maximum}.
+        prompt: Mes en que la madre completó los 30 días de cotización tras el nacimiento
       birth-date:
         prompt: Fecha de nacimiento
       convivencia:
@@ -71136,6 +71154,9 @@ wizard:
           resolución de acogimiento solo para un acogimiento preadoptivo o permanente,
           o para un adoptado que antes estuvo acogido. Corrija la relación o borre
           la fecha.
+      fallecimiento:
+        help: Déjelo en blanco si este descendiente no ha fallecido.
+        prompt: Fecha de fallecimiento
       gastos-guarderia:
         both_declared: Indique el total anual de guardería o los importes mes a mes
           de este hijo, pero no ambos. El detalle mensual es el único que puede expresar
@@ -71228,6 +71249,12 @@ wizard:
       family-minor-children-in-unit:
         prompt: Hijos menores en unidad familiar
       title: Unidad familiar
+    filing-export:
+      charge-iban:
+        help: IBAN que la AEAT puede cargar cuando una declaracion del Modelo 303
+          elige la domiciliacion. Es distinto de la cuenta de devolucion.
+        prompt: IBAN para la domiciliacion de la AEAT
+      title: Cuenta de cargo del Modelo 303
     flags:
       activity:
         help: Actividad económica en texto normal, o epígrafe IAE si lo conoces
@@ -71242,6 +71269,9 @@ wizard:
           agricolas, ganaderas o forestales sujetos a retención o ingreso a cuenta
       bienes-extranjero-above-threshold:
         help: Bienes en el extranjero superan el umbral legal
+      charge-iban:
+        help: IBAN que la AEAT puede cargar para una domiciliacion elegida del Modelo
+          303.
       cloud-evidence-upload:
         help: Permitir subir evidencia sensible a proveedores LLM en la nube (desactivado
           por defecto).

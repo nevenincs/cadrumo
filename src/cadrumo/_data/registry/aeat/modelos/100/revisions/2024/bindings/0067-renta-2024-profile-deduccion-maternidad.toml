@@ -1,0 +1,24 @@
+# Modelo 100 casilla 0611: Art. 81.1 LIRPF deducción por maternidad.
+#
+# Art. 81.1 applies a different cap to each qualifying child (1.200 EUR, or
+# 1.350 EUR in the post-birth-alta month).  The registry formula language has
+# no descendant fold, so the canonical profile resolver computes that fold from
+# the declared descendant records once and exposes this derived scalar.  This
+# binding is the revision-scoped enrolment point; adding a future revision needs
+# an explicit binding and its own proof, not a cross-year Python fallback.
+
+[[revisions."2024".bindings]]
+id = "renta-2024-profile-deduccion-maternidad"
+source = "profile"
+selector = { profile_key = "renta_family.deduccion_maternidad_2024" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-81"]
+source_refs = ["aeat-renta-2024-manual-parte1", "aeat-dr-100-2024-dictionary"]
+
+[[revisions."2024".bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = [
+    "Deducción por maternidad",
+    "Por tanto, 100 euros por cada mes.",
+    "El importe de la deducción por maternidad por cada hijo que otorgue derecho a la misma no podrá superar 1.200 euros anuales",
+]

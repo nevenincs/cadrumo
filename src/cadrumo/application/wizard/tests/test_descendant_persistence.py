@@ -88,9 +88,11 @@ _MAXIMAL_DESCENDANT_ANSWERS = {
     "descendientes#0.convivencia": "true",
     "descendientes#0.custodia-compartida": "true",
     "descendientes#0.meses-madre-trabajo": "1-6",
+    "descendientes#0.alta-posterior-nacimiento-mes": "1",
     "descendientes#0.gastos-guarderia": "1200",
     "descendientes#0.nif": "00000000T",
     "descendientes#1.birth-date": "2010-06-06",
+    "descendientes#1.fallecimiento": "2024-06-15",
     "descendientes#1.discapacidad": "65",
     "descendientes#1.convivencia": "false",
     "descendientes#1.custodia-compartida": "false",
@@ -285,10 +287,12 @@ def test_resume_seeding_round_trips_a_maximal_descendant_fixture(_backend: Path)
     assert seeded["descendientes#0.convivencia"] == "true"
     assert seeded["descendientes#0.custodia-compartida"] == "true"
     assert seeded["descendientes#0.meses-madre-trabajo"] == "01;02;03;04;05;06"
+    assert seeded["descendientes#0.alta-posterior-nacimiento-mes"] == "1"
     assert seeded["descendientes#0.gastos-guarderia"] == "1200"
     assert seeded["descendientes#0.nif"] == "00000000T"
     # Instance 1: the disabled (grade-65, non-cohabiting) branch round-trips.
     assert seeded["descendientes#1.birth-date"] == "2010-06-06"
+    assert seeded["descendientes#1.fallecimiento"] == "2024-06-15"
     assert seeded["descendientes#1.discapacidad"] == "65"
     assert seeded["descendientes#1.convivencia"] == "false"
     assert seeded["descendientes#1.custodia-compartida"] == "false"

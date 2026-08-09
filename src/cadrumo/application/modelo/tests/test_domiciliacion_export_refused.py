@@ -1,110 +1,126 @@
-"""A domiciliación export is refused: there is no charge account to state.
-
-``U``, domiciliación del ingreso, is an INGRESO the taxpayer pays by direct debit,
-so the account on the fichero is the one AEAT **charges**. This application has
-no such account. The profile records exactly one, documented as the account AEAT
-pays a refund INTO, and no charge or cargo account concept exists on the export
-path at all.
-
-The refusal is UNCONDITIONAL, and the tests below assert that rather than
-asserting "refuses when nothing is on file". That distinction is the whole
-decision: reusing the refund account reads as harmless, and AEAT's own record
-design even carries a single dual-purpose IBAN field at position 23 labelled
-``Domiciliación/Devolución - IBAN``. But one shared FIELD says only that a filing
-is a refund or a charge and never both. It says nothing about whether the account
-a taxpayer nominated for RECEIVING money is the account they authorise to be
-DEBITED, and emitting it would turn an application inference into a debit
-instruction nothing downstream contradicts.
-
-Nothing is lost by refusing: this application never files, a human files outside
-it, so a blocked export costs a step while a wrong debit instruction reaching
-AEAT does not announce itself. And the position being refused from is not a good
-one -- before this, a ``U`` election exported with no account whatsoever.
-"""
+"""Domiciliación DID input is charge-only and refuses without debit authority."""
 
 from __future__ import annotations
 
-import pytest
+from datetime import UTC, datetime
 
-from ....core import ResultDisposition
-from ....core.errors import get_error_suggestion
-from ....domain.deadlines import RefundAccount
-from .._action_errors import ModeloRefundAccountMissingError
-from .._export import _refuse_domiciliacion_without_charge_account
+import pytest
+from pydantic import ValidationError
+
+from ....application.filing import build_runtime_schema_provider, render_layout
+from ....core import Period, ResultDisposition
+from ....domain.calculations.registry import RegistrySnapshotRef
+from ....domain.deadlines import ChargeAccount, ModeloIVAProfile, RefundAccount
+from ....domain.filing import ModeloDraft
+from ....domain.submission import ModeloDraftStatus
+from .._action_errors import ModeloChargeAccountMissingError
+from .._export import _compose_charge_account_block
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_SPANISH_IBAN = "ES9121000418450200051332"
+_REFUND_IBAN = "ES9121000418450200051332"
+_CHARGE_IBAN = "ES7921000813610123456789"
+_DID_TAG = "<T303DID00>"
+_DID_PAGE_LENGTH = 823
 
 
-@pytest.mark.parametrize(
-    ("label", "account"),
-    [
-        ("no account at all", None),
-        ("a payable SEPA account on file", RefundAccount(iban=_SPANISH_IBAN)),
-        ("a SWIFT-only foreign account", RefundAccount(swift_bic="BSCHESMMXXX", bank_country_code="US")),
-    ],
-)
-def test_a_domiciliacion_export_is_refused_whatever_the_refund_account_holds(
-    label: str,
-    account: RefundAccount | None,
-) -> None:
-    """Unconditional, including the case that looks fine.
+def _render_domiciliacion_did(charge_block: dict[str, str]) -> str:
+    """Render the real U DID record through the registered 2026 M303 layout."""
+    period = Period.from_year_and_code(2026, "02")
+    provider = build_runtime_schema_provider(filing_year=2026, period=period, modelos=("303",))
+    subview = provider.get_subview("303")
+    draft = ModeloDraft(
+        draft_id="d" + "0" * 63,
+        modelo="303",
+        period=period,
+        profile_tax_id="X1234567L",
+        subject_tax_id="X1234567L",
+        snapshot_ref=RegistrySnapshotRef(
+            modelo="303",
+            revision_id="2023-y-siguientes",
+            modelo_year=2026,
+            period="02",
+        ),
+        status=ModeloDraftStatus.APROBADO,
+        values=(),
+        created_at=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
+        updated_at=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
+        schema_version=subview.schema_version,
+    )
+    headers = {
+        "declaration_type": ResultDisposition.DOMICILIACION.value,
+        "full_name": "Charge Operator",
+        "surnames": "Charge",
+        "name": "Operator",
+        "entity_type": "",
+        "fecha_inicio_periodo": "01042026",
+        "fecha_fin_periodo": "30062026",
+        "devengo_start_date": "01042026",
+        "tax_id": "X1234567L",
+        "presenter_nif": "X1234567L",
+        "program_version": "A001",
+        "redeme": "2",
+        **charge_block,
+    }
+    rendered = render_layout(subview.export_layouts[0], draft=draft, headers=headers).decode("latin-1")
+    start = rendered.index(_DID_TAG)
+    return rendered[start : start + _DID_PAGE_LENGTH]
 
-    The middle case is the one that matters. A perfectly payable Spanish IBAN is
-    on file and the export still refuses, because a refund account is not an
-    authorisation to debit. A conditional refusal would pass a test named for
-    this behaviour while silently emitting that IBAN as a charge instruction.
+
+def test_domiciliacion_refuses_when_only_a_refund_account_is_recorded() -> None:
+    """A payable refund destination is not a debit authorisation.
+
+    The profile deliberately contains the tempting value that must never become
+    a U instruction. Only the separately modelled ``charge_account`` is passed
+    to the U composer, so there is no fallback branch that could reuse it.
     """
-    with pytest.raises(ModeloRefundAccountMissingError) as caught:
-        _refuse_domiciliacion_without_charge_account(account)
+    iva = ModeloIVAProfile(refund_account=RefundAccount(iban=_REFUND_IBAN))
 
-    message = str(caught.value)
-    assert "domiciliación" in message, f"the refusal does not name the election it refuses ({label})"
-    assert "charge" in message.lower(), "the refusal does not say what is missing, only that something is"
+    with pytest.raises(ModeloChargeAccountMissingError) as caught:
+        _compose_charge_account_block(iva.charge_account)
+
+    assert "domiciliación" in str(caught.value)
+    assert "charge account" in str(caught.value).lower()
+    assert "refund account" in str(caught.value).lower()
 
 
-def test_the_refusal_names_the_election_the_requirement_and_the_gap() -> None:
-    """Not "export refused". Three specific facts an operator can act on."""
-    with pytest.raises(ModeloRefundAccountMissingError) as caught:
-        _refuse_domiciliacion_without_charge_account(RefundAccount(iban=_SPANISH_IBAN))
-
-    message = str(caught.value)
-    assert "elects domiciliación" in message, "the message does not state which election triggered it"
-    assert "AEAT requires" in message, "the message does not state that AEAT requires the account"
-    assert "no charge account is on file" in message, "the message does not state what is absent"
-    assert "not an authorisation to debit" in message, (
-        "the message does not explain why the refund account on file does not satisfy the requirement"
+def test_domiciliacion_uses_only_the_explicit_charge_iban() -> None:
+    """The U DID block holds exactly position 23's debit IBAN, nothing refund-only."""
+    iva = ModeloIVAProfile(
+        refund_account=RefundAccount(
+            iban=_REFUND_IBAN,
+            swift_bic="CHASUS33XXX",
+            bank_name="Refund Bank",
+            bank_address="Refund Street 1",
+            bank_city="New York",
+            bank_country_code="US",
+        ),
+        charge_account=ChargeAccount(iban=_CHARGE_IBAN),
     )
 
+    block = _compose_charge_account_block(iva.charge_account)
 
-def test_the_suggestion_is_honestly_unsupported_rather_than_unfollowable() -> None:
-    """An instruction the operator cannot carry out is worse than saying so.
+    assert block == {"iban": _CHARGE_IBAN}
+    assert _REFUND_IBAN not in block.values()
+    assert not ({"sepa_marca", "swift_bic", "bank_name", "bank_address", "bank_city", "bank_country_code"} & block.keys())
 
-    There is no verb that records a charge account, so a suggestion naming one
-    would be a dead instruction -- a defect class this codebase's tests have
-    repeatedly caught. The suggestion says the capability is missing and offers
-    the two routes that do exist.
-    """
-    with pytest.raises(ModeloRefundAccountMissingError) as caught:
-        _refuse_domiciliacion_without_charge_account(None)
+    did = _render_domiciliacion_did(block)
+    assert did[22:56].rstrip() == _CHARGE_IBAN
+    # Positions 12, 57, 127, 162 and 192 are refund-only fields. A U record
+    # carries the debit IBAN and no foreign/refund metadata. Position 194 is
+    # the layout's fixed ``0`` default when no SEPA Marca header is supplied;
+    # it is not an emitted charge or refund value (1/2/3).
+    assert did[11:22].strip() == ""
+    assert did[56:126].strip() == ""
+    assert did[126:161].strip() == ""
+    assert did[161:191].strip() == ""
+    assert did[191:193].strip() == ""
+    assert did[193] == "0"
 
-    suggestion = get_error_suggestion(caught.value)
-    assert suggestion, "an operator-reachable refusal resolved to no next step at all"
-    assert "not supported yet" in suggestion, "the suggestion implies a capability that does not exist"
-    assert "plain ingreso" in suggestion, "the suggestion offers no route the operator can actually take"
 
+def test_charge_account_iban_is_not_optional() -> None:
+    """The domain model refuses a blank debit instruction before export composition."""
+    with pytest.raises(ValidationError) as caught:
+        ChargeAccount(iban="")
 
-def test_domiciliacion_is_the_only_disposition_this_refusal_governs() -> None:
-    """Anchors the blast radius.
-
-    A refusal keyed too broadly would block refund exports, which work and must
-    keep working. This asserts the enum member the caller branches on rather than
-    re-testing the caller, so the pairing cannot drift silently.
-    """
-    assert ResultDisposition.DOMICILIACION.value == "U"
-    assert ResultDisposition.DOMICILIACION not in {
-        ResultDisposition.DEVOLUCION,
-        ResultDisposition.CUENTA_CORRIENTE_DEVOLUCION,
-        ResultDisposition.DEVOLUCION_TRANSFERENCIA_EXTRANJERO,
-    }
+    assert "charge-account iban" in str(caught.value)

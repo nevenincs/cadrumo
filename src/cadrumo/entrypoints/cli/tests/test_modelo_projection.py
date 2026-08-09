@@ -150,6 +150,10 @@ _M100_RENDIMIENTO_NETO_PROJECTED_CASILLA: CasillaId = validated_casilla_id(
     "0171",
     surface="_M100_RENDIMIENTO_NETO_PROJECTED_CASILLA",
 )
+_M100_DEDUCCION_MATERNIDAD_CASILLA: CasillaId = validated_casilla_id(
+    "0611",
+    surface="_M100_DEDUCCION_MATERNIDAD_CASILLA",
+)
 _M100_CUOTA_INTEGRA_ESTATAL_CASILLA: CasillaId = validated_casilla_id(
     "0545",
     surface="_M100_CUOTA_INTEGRA_ESTATAL_CASILLA",
@@ -548,6 +552,9 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
             f"renta-{_FILING_YEAR}-profile-descendientes-guarderia": Decimal("0"),
             f"renta-{_FILING_YEAR}-profile-guarderia-gastos-reales": Decimal("0"),
             f"renta-{_FILING_YEAR}-profile-cotizaciones-ss-madre": Decimal("0"),
+            # Art. 81.1 follows the same derived-profile protocol: with no
+            # declared descendants the resolved per-child fold is zero.
+            f"renta-{_FILING_YEAR}-profile-deduccion-maternidad": Decimal("0"),
             # The Art. 81.2 increment is DERIVED, not read from a stored fact:
             # the verb's profile resolver folds it per child and injects the
             # result. This seeded profile declares no descendientes, so that
@@ -620,3 +627,18 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
         assert obs.get("formula_id"), f"casilla {casilla_id!r} observation must carry formula_id"
         assert obs.get("legal_refs"), f"casilla {casilla_id!r} observation must carry legal_refs"
         assert obs.get("source_refs"), f"casilla {casilla_id!r} observation must carry source_refs"
+
+    # 0611 is not a headline field in m100_projection, so the pull path
+    # exposes it through the canonical observation list. With no descendants,
+    # both the profile resolver and direct registry calculation resolve its
+    # derived scalar to zero; this proves the M130 pull cannot bypass its
+    # formula or use the retired calculate-time injection channel.
+    maternidad = obs_by_id.get(str(_M100_DEDUCCION_MATERNIDAD_CASILLA))
+    assert maternidad is not None, "project calculation must include computed 0611"
+    assert Decimal(maternidad["value"]) == oracle_result.values[_M100_DEDUCCION_MATERNIDAD_CASILLA]
+    assert maternidad["formula_id"] == "renta-2024-deduccion-maternidad-0611"
+    assert maternidad["legal_refs"] == ["ley-35-2006:art-81"]
+    assert set(maternidad["source_refs"]) == {
+        "aeat-renta-2024-manual-parte1",
+        "aeat-dr-100-2024-dictionary",
+    }

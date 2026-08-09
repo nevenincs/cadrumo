@@ -71,6 +71,7 @@ _BIRTH_DATE_PAGE_ID = "birth-date"
 _RELACION_PAGE_ID = "relacion"
 _INSCRIPCION_PAGE_ID = "inscripcion-registro-civil"
 _ACOGIMIENTO_PAGE_ID = "acogimiento-resolucion"
+_FALLECIMIENTO_PAGE_ID = "fallecimiento"
 _DISCAPACIDAD_PAGE_ID = "discapacidad"
 _CONVIVENCIA_PAGE_ID = "convivencia"
 _DEPENDENCIA_PAGE_ID = "dependencia-economica"
@@ -79,6 +80,7 @@ _RENTAS_ANUALES_PAGE_ID = "rentas-anuales"
 _DECLARACION_PROPIA_PAGE_ID = "declaracion-propia"
 _PRORRATA_MINIMO_PAGE_ID = "prorrata-minimo"
 _MESES_MADRE_TRABAJO_PAGE_ID = "meses-madre-trabajo"
+_ALTA_POSTERIOR_NACIMIENTO_MES_PAGE_ID = "alta-posterior-nacimiento-mes"
 _GASTOS_GUARDERIA_PAGE_ID = "gastos-guarderia"
 _GASTOS_GUARDERIA_MENSUALES_PAGE_ID = "gastos-guarderia-mensuales"
 _NIF_PAGE_ID = "nif"
@@ -89,6 +91,7 @@ DESCENDANT_PAGE_IDS: tuple[str, ...] = (
     _RELACION_PAGE_ID,
     _INSCRIPCION_PAGE_ID,
     _ACOGIMIENTO_PAGE_ID,
+    _FALLECIMIENTO_PAGE_ID,
     _DISCAPACIDAD_PAGE_ID,
     _CONVIVENCIA_PAGE_ID,
     _DEPENDENCIA_PAGE_ID,
@@ -97,6 +100,7 @@ DESCENDANT_PAGE_IDS: tuple[str, ...] = (
     _DECLARACION_PROPIA_PAGE_ID,
     _PRORRATA_MINIMO_PAGE_ID,
     _MESES_MADRE_TRABAJO_PAGE_ID,
+    _ALTA_POSTERIOR_NACIMIENTO_MES_PAGE_ID,
     _GASTOS_GUARDERIA_PAGE_ID,
     _GASTOS_GUARDERIA_MENSUALES_PAGE_ID,
     _NIF_PAGE_ID,
@@ -107,6 +111,9 @@ DESCENDANT_NIF_VALIDATOR_ID = "descendant-nif"
 
 #: Registered id of the per-answer descendant meses-madre-trabajo range validator.
 DESCENDANT_MESES_VALIDATOR_ID = "descendant-meses-range"
+
+#: Registered id of the post-birth Social Security completion-month validator.
+DESCENDANT_ALTA_POSTERIOR_VALIDATOR_ID = "descendant-alta-posterior-month"
 
 #: Registered id of the per-answer descendant gastos-guardería sign validator.
 DESCENDANT_GASTOS_VALIDATOR_ID = "descendant-gastos-nonneg"
@@ -208,6 +215,10 @@ _PRORRATA_MINIMO_CHOICE_TRUE_LOCALE_KEY = "wizard.setup.descendientes.prorrata-m
 _PRORRATA_MINIMO_CHOICE_FALSE_LOCALE_KEY = "wizard.setup.descendientes.prorrata-minimo.choices.false.label"
 _MESES_MADRE_TRABAJO_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.meses-madre-trabajo.prompt"
 _MESES_MADRE_TRABAJO_HELP_LOCALE_KEY = "wizard.setup.descendientes.meses-madre-trabajo.help"
+_ALTA_POSTERIOR_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.alta-posterior-nacimiento-mes.prompt"
+_ALTA_POSTERIOR_HELP_LOCALE_KEY = "wizard.setup.descendientes.alta-posterior-nacimiento-mes.help"
+_FALLECIMIENTO_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.fallecimiento.prompt"
+_FALLECIMIENTO_HELP_LOCALE_KEY = "wizard.setup.descendientes.fallecimiento.help"
 _GASTOS_GUARDERIA_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia.prompt"
 _GASTOS_GUARDERIA_HELP_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia.help"
 _GASTOS_MENSUALES_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia-mensuales.prompt"
@@ -219,6 +230,9 @@ _NIF_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.nif.prompt"
 # first: the closest existing leaves (cli.config.descendiente.*) carry
 # CLI-flag-specific prose, so wizard-namespace keys are minted here.
 _MESES_INVALID_RANGE_LOCALE_KEY = "wizard.setup.descendientes.meses-madre-trabajo.invalid_range"
+_ALTA_POSTERIOR_INVALID_RANGE_LOCALE_KEY = (
+    "wizard.setup.descendientes.alta-posterior-nacimiento-mes.invalid_range"
+)
 _RENTAS_INVALID_NEGATIVE_LOCALE_KEY = "wizard.setup.descendientes.rentas-anuales.invalid_negative"
 _GASTOS_INVALID_NEGATIVE_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia.invalid_negative"
 _GASTOS_MENSUALES_INVALID_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia-mensuales.invalid_grammar"
@@ -283,12 +297,17 @@ DESCENDANT_LOCALE_KEYS: tuple[str, ...] = (
     _PRORRATA_MINIMO_CHOICE_FALSE_LOCALE_KEY,
     _MESES_MADRE_TRABAJO_PROMPT_LOCALE_KEY,
     _MESES_MADRE_TRABAJO_HELP_LOCALE_KEY,
+    _ALTA_POSTERIOR_PROMPT_LOCALE_KEY,
+    _ALTA_POSTERIOR_HELP_LOCALE_KEY,
+    _FALLECIMIENTO_PROMPT_LOCALE_KEY,
+    _FALLECIMIENTO_HELP_LOCALE_KEY,
     _GASTOS_GUARDERIA_PROMPT_LOCALE_KEY,
     _GASTOS_GUARDERIA_HELP_LOCALE_KEY,
     _GASTOS_MENSUALES_PROMPT_LOCALE_KEY,
     _GASTOS_MENSUALES_HELP_LOCALE_KEY,
     _NIF_PROMPT_LOCALE_KEY,
     _MESES_INVALID_RANGE_LOCALE_KEY,
+    _ALTA_POSTERIOR_INVALID_RANGE_LOCALE_KEY,
     _GASTOS_INVALID_NEGATIVE_LOCALE_KEY,
     _GASTOS_MENSUALES_INVALID_LOCALE_KEY,
     _GASTOS_BOTH_DECLARED_LOCALE_KEY,
@@ -353,6 +372,20 @@ def _validate_meses_range(page: FlowPage, canonical: str) -> ValidationVerdict:
             maximum=_MESES_MAX,
         )
     return ValidationVerdict.passed()
+
+
+def _validate_alta_posterior_month(page: FlowPage, canonical: str) -> ValidationVerdict:
+    """Keep the optional completion month inside the calendar range."""
+    if not canonical:
+        return ValidationVerdict.passed()
+    if 1 <= int(canonical) <= 12:
+        return ValidationVerdict.passed()
+    return ValidationVerdict.failed(
+        _ALTA_POSTERIOR_INVALID_RANGE_LOCALE_KEY,
+        page_id=page.id,
+        minimum=1,
+        maximum=12,
+    )
 
 
 def _validate_gastos_nonneg(page: FlowPage, canonical: str) -> ValidationVerdict:
@@ -429,6 +462,7 @@ def _validate_gastos_mensuales_grammar(page: FlowPage, canonical: str) -> Valida
 
 
 register_answer_validator(DESCENDANT_MESES_VALIDATOR_ID, _validate_meses_range)
+register_answer_validator(DESCENDANT_ALTA_POSTERIOR_VALIDATOR_ID, _validate_alta_posterior_month)
 register_answer_validator(DESCENDANT_GASTOS_VALIDATOR_ID, _validate_gastos_nonneg)
 register_answer_validator(DESCENDANT_RENTAS_VALIDATOR_ID, _validate_rentas_nonneg)
 register_answer_validator(DESCENDANT_GASTOS_MENSUALES_VALIDATOR_ID, _validate_gastos_mensuales_grammar)
@@ -726,6 +760,15 @@ _DESCENDANT_PAGES: tuple[FlowPage, ...] = (
         answer_type=str,
     ),
     FlowPage(
+        id=_FALLECIMIENTO_PAGE_ID,
+        widget=FlowWidgetKind.DATE,
+        prompt=_locale_ref(_FALLECIMIENTO_PROMPT_LOCALE_KEY),
+        help=_locale_ref(_FALLECIMIENTO_HELP_LOCALE_KEY),
+        format_hint=_locale_ref(_FORMAT_DATE_LOCALE_KEY),
+        required=False,
+        answer_type=str,
+    ),
+    FlowPage(
         id=_CONVIVENCIA_PAGE_ID,
         widget=FlowWidgetKind.CONFIRM,
         prompt=_locale_ref(_CONVIVENCIA_PROMPT_LOCALE_KEY),
@@ -803,6 +846,16 @@ _DESCENDANT_PAGES: tuple[FlowPage, ...] = (
         required=False,
         answer_type=str,
         answer_validator_ids=(DESCENDANT_MESES_VALIDATOR_ID,),
+    ),
+    FlowPage(
+        id=_ALTA_POSTERIOR_NACIMIENTO_MES_PAGE_ID,
+        widget=FlowWidgetKind.INTEGER,
+        prompt=_locale_ref(_ALTA_POSTERIOR_PROMPT_LOCALE_KEY),
+        help=_locale_ref(_ALTA_POSTERIOR_HELP_LOCALE_KEY),
+        format_hint=_locale_ref(_FORMAT_UNITS_LOCALE_KEY),
+        required=False,
+        answer_type=int,
+        answer_validator_ids=(DESCENDANT_ALTA_POSTERIOR_VALIDATOR_ID,),
     ),
     FlowPage(
         id=_GASTOS_GUARDERIA_PAGE_ID,

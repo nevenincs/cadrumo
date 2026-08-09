@@ -61,6 +61,13 @@ entry_surface = "aeat config profile descendiente"
 description = "Incremento por gastos de custodia, prorrateado por meses y limitado por descendiente."
 legal_refs = ["ley-35-2006:art-81", "ley-35-2006:art-81-2", "ley-35-2006:art-81-3"]
 
+[[derived_selectors]]
+pattern = "renta_family.deduccion_maternidad_{filing_year}"
+derived_from = ["renta_family.descendiente"]
+entry_surface = "aeat config profile descendiente"
+description = "Deduccion por maternidad, calculada por descendiente desde los meses declarados y su elegibilidad."
+legal_refs = ["ley-35-2006:art-81"]
+
 [[sections]]
 key = "identity"
 title = "Identity"
@@ -75,7 +82,7 @@ sensitivity = "identity"
 description = "NIF/NIE/CIF used as filing identity."
 model_selectors = ["tax.id", "modelo_100"]
 export_headers = ["profile_tax_id"]
-legal_refs = ["orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
+legal_refs = ["orden-hac-242-2025:art-3", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "name"
@@ -85,7 +92,7 @@ sensitivity = "identity"
 description = "Declarant given name or display name."
 model_selectors = ["name", "modelo_100"]
 export_headers = ["name", "first_name"]
-legal_refs = ["orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
+legal_refs = ["orden-hac-242-2025:art-3", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "surnames"
@@ -95,7 +102,7 @@ sensitivity = "identity"
 description = "Declarant surnames for person filings."
 model_selectors = ["surnames", "modelo_100"]
 export_headers = ["surnames"]
-legal_refs = ["orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
+legal_refs = ["orden-hac-242-2025:art-3", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "legal_name"
@@ -1296,7 +1303,7 @@ sensitivity = "financial"
 description = "Declaration type used by export layouts and Modelo 100."
 model_selectors = ["declaration.type", "modelo_100"]
 export_headers = ["declaration_type", "complementaria", "complementaria_page", "page_complementaria"]
-legal_refs = ["orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
+legal_refs = ["orden-hac-242-2025:art-3", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "rental_reduccion_art_23_2_tier_2024"
@@ -1353,8 +1360,15 @@ key = "iban"
 type = "string"
 required = false
 sensitivity = "financial"
-description = "Your bank account IBAN. AEAT pays a refund INTO this account, and CHARGES this account when a filing elects domiciliacion del ingreso (direct debit). One account serves both directions because the official record carries one IBAN field for both (DR303 position 23, \"Domiciliacion/Devolucion - IBAN\"). Read transiently at export from encrypted secure storage; never logged."
+description = "Refund-account IBAN. AEAT pays Modelo 303 refunds INTO this account. It is not debit authority and is never reused for domiciliacion del ingreso; record a separate charge IBAN for that election. Read transiently at export from encrypted secure storage; never logged."
 export_headers = ["iban"]
+
+[[sections.fields]]
+key = "charge_iban"
+type = "string"
+required = false
+sensitivity = "financial"
+description = "IBAN AEAT may debit only when a Modelo 303 filing elects domiciliacion del ingreso. This affirmative debit authority is distinct from the refund-account IBAN; the U DID page carries this IBAN alone, never refund-only SWIFT, foreign-bank, or SEPA-mark fields. Read transiently at export from encrypted secure storage; never logged."
 
 [[sections.fields]]
 key = "swift_bic"
@@ -1427,7 +1441,7 @@ effective_dated = true
 description = "Sexo del contribuyente para el Modelo 100. Toma los valores del tipo tipo_Sexo del diseno de registro: H (hombre) y M (mujer)."
 enum_values = ["H", "M"]
 model_selectors = ["taxpayer.sex", "modelo_100"]
-legal_refs = ["orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
+legal_refs = ["orden-hac-242-2025:art-3", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "marital_status"
@@ -1438,7 +1452,7 @@ effective_dated = true
 description = "Taxpayer marital or registered-partnership status used by Renta profile decisions."
 enum_values = ["1", "2", "3", "4", "5"]
 model_selectors = ["taxpayer.marital_status", "modelo_100"]
-legal_refs = ["orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
+legal_refs = ["orden-hac-242-2025:art-3", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "birth_date"
@@ -1448,7 +1462,7 @@ sensitivity = "identity"
 effective_dated = false
 description = "Taxpayer birth date."
 model_selectors = ["taxpayer.birth_date", "modelo_100"]
-legal_refs = ["ley-35-2006:art-57", "orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-57", "orden-hac-242-2025:art-3", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "disability_grade"
@@ -1458,7 +1472,7 @@ sensitivity = "identity"
 effective_dated = true
 description = "Taxpayer disability grade code for Modelo 100."
 model_selectors = ["taxpayer.disability_grade", "modelo_100"]
-legal_refs = ["ley-35-2006:art-57", "orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-57", "orden-hac-242-2025:art-3", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "death_date"
@@ -1469,7 +1483,7 @@ effective_dated = false
 nullable = true
 description = "Taxpayer death date when Modelo 100 requires it."
 model_selectors = ["taxpayer.death_date", "modelo_100"]
-legal_refs = ["orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
+legal_refs = ["orden-hac-242-2025:art-3", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "marriage_date"
@@ -1526,7 +1540,7 @@ sensitivity = "identity"
 effective_dated = true
 description = "Spouse NIF/NIE for joint filing."
 model_selectors = ["spouse.tax.id", "modelo_100"]
-legal_refs = ["orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
+legal_refs = ["orden-hac-242-2025:art-3", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "name"
@@ -1536,7 +1550,7 @@ sensitivity = "identity"
 effective_dated = true
 description = "Spouse given name."
 model_selectors = ["spouse.name", "modelo_100"]
-legal_refs = ["orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
+legal_refs = ["orden-hac-242-2025:art-3", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "surnames"
@@ -1546,7 +1560,7 @@ sensitivity = "identity"
 effective_dated = true
 description = "Spouse surnames."
 model_selectors = ["spouse.surnames", "modelo_100"]
-legal_refs = ["orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
+legal_refs = ["orden-hac-242-2025:art-3", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "birth_date"
@@ -1556,7 +1570,7 @@ sensitivity = "identity"
 effective_dated = false
 description = "Spouse birth date."
 model_selectors = ["spouse.birth_date", "modelo_100"]
-legal_refs = ["ley-35-2006:art-57", "orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-57", "orden-hac-242-2025:art-3", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "sex"
@@ -1567,7 +1581,7 @@ effective_dated = true
 description = "Sexo del conyuge para el Modelo 100. Toma los valores del tipo tipo_Sexo del diseno de registro: H (hombre) y M (mujer)."
 enum_values = ["H", "M"]
 model_selectors = ["spouse.sex", "modelo_100"]
-legal_refs = ["orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
+legal_refs = ["orden-hac-242-2025:art-3", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "disability_grade"
@@ -1577,7 +1591,7 @@ sensitivity = "identity"
 effective_dated = true
 description = "Spouse disability grade code for Modelo 100."
 model_selectors = ["spouse.disability_grade", "modelo_100"]
-legal_refs = ["ley-35-2006:art-57", "orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-57", "orden-hac-242-2025:art-3", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "non_resident_irpf"
@@ -1587,7 +1601,7 @@ sensitivity = "identity"
 effective_dated = true
 description = "Whether the spouse is non-resident and not an IRPF taxpayer."
 model_selectors = ["spouse.non_resident_irpf", "modelo_100"]
-legal_refs = ["orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
+legal_refs = ["orden-hac-242-2025:art-3", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "eu_eea_resident"
@@ -1597,7 +1611,7 @@ sensitivity = "identity"
 effective_dated = true
 description = "Whether the non-resident spouse is resident in the EU or EEA."
 model_selectors = ["spouse.eu_eea_resident", "modelo_100"]
-legal_refs = ["orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
+legal_refs = ["orden-hac-242-2025:art-3", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "eu_eea_country"
@@ -1608,7 +1622,7 @@ effective_dated = true
 nullable = true
 description = "EU or EEA country of residence for the spouse."
 model_selectors = ["spouse.eu_eea_country", "modelo_100"]
-legal_refs = ["orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
+legal_refs = ["orden-hac-242-2025:art-3", "orden-hac-277-2026:art-3"]
 
 [[sections]]
 key = "renta_family"
@@ -1624,7 +1638,7 @@ sensitivity = "identity"
 effective_dated = true
 description = "Minor children in the family unit."
 model_selectors = ["family.minor_children_in_unit", "modelo_100"]
-legal_refs = ["ley-35-2006:art-82", "ley-35-2006:art-83", "orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-82", "ley-35-2006:art-83", "orden-hac-242-2025:art-3", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "descendants_eu_eea_deduction"
@@ -1634,7 +1648,7 @@ sensitivity = "identity"
 effective_dated = true
 description = "EU/EEA descendant deduction flag for Modelo 100."
 model_selectors = ["family.descendants_eu_eea_deduction", "modelo_100"]
-legal_refs = ["orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
+legal_refs = ["orden-hac-242-2025:art-3", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "descendiente"

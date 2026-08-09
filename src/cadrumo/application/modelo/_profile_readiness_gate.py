@@ -267,7 +267,9 @@ def modelo_work_profile_preflight_report(
             revision=revision,
             authority=authority,
         )
-    grounding_index = build_profile_grounding_index(authority) if authority is not None else {}
+    grounding_index: Mapping[str, ProfileKeyGrounding] = (
+        build_profile_grounding_index(authority) if authority is not None else {}
+    )
     baseline = tuple(
         _requirement_for_profile_path(path, grounding_index=grounding_index)
         for path in modelo_work_profile_baseline_missing_paths(record, modelo=modelo)

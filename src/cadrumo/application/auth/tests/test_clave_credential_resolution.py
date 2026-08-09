@@ -24,9 +24,10 @@ from pydantic import SecretStr
 
 from ....core import AuthProviderKind
 from ....core.config import override_settings
+from ....core.resources import resources
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from ...user_profile import profile_create_storage_span
+from ...user_profile import build_profile_preflight_requirement, profile_create_storage_span
 from ...workflow import workflow_state_repository
 from .._sessions import (
     AuthProfileIdentityMismatchError,
@@ -143,7 +144,15 @@ def test_clave_mode_without_any_dni_nie_refuses_naming_the_absent_credential() -
         _prepare_clave_auth(settings, AuthProviderKind.CLAVE_MOVIL)
 
     assert raised.value.translated_message == "application.auth.sessions.errors.clave_identity_missing"
-    assert raised.value.context == {"provider": "clave_movil"}
+    # The refusal names the absent credential by the label the profile editor
+    # shows, derived from the schema here rather than spelled out, so this
+    # asserts the name is schema-sourced without pinning one wording.
+    expected_label = build_profile_preflight_requirement(
+        "auth.dni_nie",
+        schema=resources().user_profile_schema.singleton,
+    ).label
+    assert expected_label != "auth.dni_nie", "label collapsed to the path; the assertion would be vacuous"
+    assert raised.value.context == {"provider": "clave_movil", "identity_field": expected_label}
 
 
 def test_non_qr_route_without_a_contraste_refuses_before_the_browser_opens() -> None:

@@ -31,7 +31,7 @@ from ...application.aggregation import (
 )
 from ...application.calculations import ObservationSourceKind
 from ...application.modelo import validate_modelo_work_deadline_posture
-from ...core import BindingSourceKind, Period
+from ...core import BindingSourceKind, PaymentElection, Period, RefundElection, ResultDisposition
 from ...core.identity import BucketId
 from ...core.json_contract import OutputSchema, register_schema
 from ...domain.buckets import (
@@ -876,8 +876,10 @@ class ModeloRequiresResult(OutputSchema):
     profile (``profile_derivable``). ``unresolved_profile_bindings`` names the
     profile-derivable bindings the active profile has not yet supplied a fact
     for (e.g. an unset home-office usage ratio) so the operator can fix the
-    gap before calculating; ``profile_checked`` is ``False`` when no active
-    profile was available to check.
+    gap before calculating, and ``unresolved_profile_keys`` names the profile
+    facts those bindings consume, which is what the operator actually has to
+    supply. ``profile_checked`` is ``False`` when no active profile was
+    available to check.
     """
 
     operation: str = "modelo.requires"
@@ -890,6 +892,7 @@ class ModeloRequiresResult(OutputSchema):
     ledger_derivable: list[DataInventoryCasillaPayload]
     profile_derivable: list[DataInventoryCasillaPayload]
     unresolved_profile_bindings: list[BindingId]
+    unresolved_profile_keys: list[str]
     profile_checked: bool
 
 
@@ -921,6 +924,9 @@ class ModeloExportPayload(OutputSchema):
     file_sha256: str
     format: str
     bucket_event_id: str
+    resolved_result_disposition: ResultDisposition
+    payment_election: PaymentElection | None = None
+    refund_election: RefundElection | None = None
 
     @classmethod
     def from_result(cls, result: _AppModeloExportResult) -> ModeloExportPayload:
@@ -944,6 +950,9 @@ class ModeloExportPayload(OutputSchema):
             file_sha256=result.file_sha256,
             format=result.format,
             bucket_event_id=result.bucket_event_id,
+            resolved_result_disposition=result.resolved_result_disposition,
+            payment_election=result.payment_election,
+            refund_election=result.refund_election,
         )
 
 

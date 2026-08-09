@@ -558,14 +558,13 @@ application:
     sessions:
       errors:
         clave_contraste_missing: The non-QR Cl@ve Móvil route needs the contraste
-          printed on your document. Record auth.numero_soporte on the active profile
-          for a NIE, or auth.fecha_validez for a DNI, before any AEAT session can
-          be used.
+          printed on your document. Record %{nie_field} on the active profile for
+          a NIE, or %{dni_field} for a DNI, before any AEAT session can be used.
         clave_identity_malformed: The Cl@ve identity is not a valid Spanish tax identifier,
           so it cannot be confirmed to belong to this profile.
         clave_identity_missing: Cl@ve live auth requires a DNI/NIE. Record it on the
-          active profile as auth.dni_nie, or configure it for the provider with `aeat
-          config auth configure`, before any AEAT session can be used.
+          active profile as %{identity_field}, or configure it for the provider with
+          `aeat config auth configure`, before any AEAT session can be used.
         clave_identity_profile_mismatch: Cl@ve Móvil identity does not match the active
           profile tax identity; switch to the matching profile or update the profile
           before live AEAT auth.
@@ -574,13 +573,13 @@ application:
         no_session: No active AEAT session; run `aeat config auth test` before reading
           AEAT data.
         profile_identity_cleared: Live AEAT authentication needs the active profile's
-          fiscal ID, and this profile has none. Restore identity.tax_id on the profile,
+          fiscal ID, and this profile has none. Restore %{requirements} on the profile,
           then authenticate again.
         profile_identity_malformed: This profile's fiscal identity is not a valid
           Spanish tax identifier, so a Cl@ve session cannot be confirmed to belong
           to it.
         profile_tax_id_missing: Cl@ve Móvil live auth requires the active profile
-          to carry identity.tax_id.
+          to carry %{requirements}.
         provider_close_failed: AEAT browser session could not be closed safely; retry
           authentication before reading AEAT data.
         sede_rejected: AEAT session is not accepted by the AEAT Sede; run `aeat config
@@ -965,9 +964,9 @@ application:
         create NAME` before exporting a modelo revision.
       export_operator_name_missing: 'Export requires the operator name on the active
         profile; missing profile facts: %{missing}.'
-      export_operator_profile_missing: Export needs the operator name from the active
-        profile, but no persisted profile exists; populate identity.surnames and identity.name
-        before exporting.
+      export_operator_profile_missing: Export needs the declarant identity from the
+        active profile, but no persisted profile exists; supply %{requirements} before
+        exporting.
       export_output_path_invalid: 'The export output path is not valid: {output_path}
         ({reason}).'
       export_period_unmappable: Work unit %{work_unit_id} carries period %{period},
@@ -1211,10 +1210,9 @@ application:
       iva_wallet_next_action: Review the IVA wallet reconciliation decision before
         verifying or exporting this Modelo 303.
       m210_baseline_tipo_deferred:
-        next_action: 'The baseline rate for tipo_renta={tipo_renta} is deferred to
-          a future Phase under task #229 (BOE corpus pending). Set {requirements}
-          to claim the applicable Convenio rate, or wait for the baseline corpus to
-          incorporate this row.'
+        next_action: No baseline rate is published in the bundled corpus for tipo_renta=%{tipo_renta}.
+          Set %{requirements} to claim the applicable Convenio rate, or wait for the
+          baseline corpus to incorporate this row.
       m210_convenio_lob_advisory: 'M210_CONVENIO_LOB_ADVISORY: the Convenio Espana-%{cc}
         (%{document_id}) treaty rate has been applied for tipo_renta=%{tipo_renta}.
         Treaty relief is available only to a genuine beneficial owner resident in
@@ -1568,7 +1566,7 @@ application:
       status: Status
     status:
       errors:
-        missing_tax_id: Active profile is missing tax.id.
+        missing_tax_id: 'The active profile has not supplied: %{requirements}.'
         no_active_profile: No active profile configured.
         projection_failed: Active profile fails wizard projection.
         unexpected_projection_type: Setup flow answers did not project to SetupAnswers.
@@ -2935,9 +2933,6 @@ cli:
         discard_requires_yes: Discard is an auditable state transition. Re-run 'aeat
           app modelo work discard %{work_unit_id} --yes' to confirm.
         discard_yes_help: Explicitly confirm the discard operation
-        disposition_help: 'Modelo 303 negative-result disposition: compensar (carry
-          the credit forward, default) or devolver (request a refund; only in the
-          year''s last filing period for a non-REDEME taxpayer).'
         file_help: Mark a verified revision as internally filed. Does NOT submit to
           AEAT
         file_idempotent_noop: 'Idempotent no-op: calculation revision %{calculation_revision_id}
@@ -3004,10 +2999,10 @@ cli:
           bucket ledger and cannot be supplied with --binding. Add or classify the
           relevant ledger rows, run `aeat app ledger preflight`, then rerun calculate.
           Run `%{discover}` to list every binding the calculation still needs.'
-        missing_date_binding_guidance: '%{base} Set %{binding_id} on the active profile,
-          then rerun calculate. Date-valued profile facts cannot be supplied with
-          --binding. Run `%{discover}` to list every binding the calculation still
-          needs.'
+        missing_date_binding_guidance: '%{base} Set %{requirements} on the active
+          profile, then rerun calculate. Date-valued profile facts cannot be supplied
+          with --binding. Run `%{discover}` to list every binding the calculation
+          still needs.'
         missing_relation_guidance: '%{base} Supply the value with --relation KEY=VALUE
           on this command; KEY is a registry relation id, not a binding id. Run %{discover}
           to list relation guidance and the remaining bindings the calculation still
@@ -3027,6 +3022,8 @@ cli:
         override_help: Binding value with KEY=VALUE syntax (repeatable); run `aeat
           app modelo bindings list --missing` to see the bindings the calculation
           needs.
+        payment_election_help: 'Choose how a positive Modelo 303 result is paid: ordinary
+          payment or direct debit.'
         period_help: 'Work-unit period token: 0A annual, 1T-4T quarters, 01-12 months;
           for censo modelos (036) use alta, modificacion, or baja.'
         period_token_invalid: '--period ''%{token}'' is not a valid period token for
@@ -3074,6 +3071,8 @@ cli:
           Spanish territory in the tax year. Required alongside --annual-salary when
           Art. 7.p) applies.
         reason_help: Optional free-text reason for the discard (up to 500 chars)
+        refund_election_help: Choose whether an eligible negative Modelo 303 result
+          is carried forward or requested as a refund.
         relation_help: Registry relation value as KEY=VALUE (repeatable). KEY is a
           registry relation id, not a binding id; use this for cross-period or cross-modelo
           relation inputs. Run aeat app modelo bindings list --missing for scoped
@@ -4165,7 +4164,7 @@ cli:
       auth_state_unreadable: Authentication readiness cannot be checked until saved
         local session data is readable.
       profile_keys_set: '%{present}/%{total} profile keys set.'
-      profile_missing_keys: '%{count} profile key(s) missing.'
+      profile_missing_fields: 'Profile is missing %{count} required field(s): %{fields}'
       profile_none: No profile configured
       profile_storage: active_profile=%{active_profile} source=%{source} status=%{status}
       profile_unreadable: 'Profile cannot be read: %{status}'
@@ -5072,6 +5071,9 @@ cli:
     refused_incomplete_profile: 'The active profile has not answered facts this projection
       depends on: %{requirements}. Complete them with ''aeat config profile edit'',
       or pass --allow-incomplete to inspect the provisional result.'
+    refused_undeclared_taxpayer_model: 'The active profile does not declare a taxpayer
+      model, so filing obligations cannot be derived. Supply: %{requirements}. Or
+      rerun with --allow-incomplete to inspect the provisional result.'
     status:
       drafts_empty: No saved declaration drafts were found.
       drafts_empty_with_work_units: No declaration drafts are saved - this is normal
@@ -6631,6 +6633,12 @@ errors:
     refused_modelo_applicability_filter: An unknown applicability filter name was
       encountered in the registry. This is a registry-authoring error; update the
       filter dispatch table.
+    refused_modelo_charge_account_missing: A direct-debit filing was selected but
+      no charge account is recorded.
+    refused_modelo_payment_election_capability: The selected payment method is not
+      supported yet.
+    refused_modelo_payment_election_incompatible: The selected payment election requires
+      a positive result.
     refused_modelo_refund_account_missing: A refund was requested but no refund account
       is on file; AEAT cannot pay a devolución without an account. Configure a refund
       account, or carry the credit forward (compensar).
@@ -67704,6 +67712,8 @@ profile:
           label: Bank country code
         bank_name:
           label: Bank name
+        charge_iban:
+          label: Charge IBAN
         declaration_type:
           label: Declaration type
         iban:
@@ -68288,6 +68298,12 @@ wizard:
           from the first fostering and runs for three periods in total, and the adoption
           does not restart it.'
         prompt: First fostering resolution date
+      alta-posterior-nacimiento-mes:
+        help: Enter a month from 1 to 12. It must match the first declared work month;
+          leave blank if the mother already met the requirement when the child was
+          born.
+        invalid_range: The month must be between %{minimum} and %{maximum}.
+        prompt: Month when the mother completed 30 contribution days after the birth
       birth-date:
         prompt: Date of birth
       convivencia:
@@ -68331,6 +68347,9 @@ wizard:
           fostering resolution only to preadoptive or permanent fostering, or to an
           adopted child previously fostered. Correct the relationship or clear the
           date.
+      fallecimiento:
+        help: Leave blank if this descendant has not died.
+        prompt: Date of death
       gastos-guarderia:
         both_declared: Give either the annual guardería total or the month-by-month
           amounts for this child, not both. The monthly detail is the only one that
@@ -68419,6 +68438,12 @@ wizard:
       family-minor-children-in-unit:
         prompt: Minor children in family unit
       title: Family unit
+    filing-export:
+      charge-iban:
+        help: IBAN AEAT may debit when a Modelo 303 filing elects direct debit. This
+          is separate from the refund account.
+        prompt: IBAN for AEAT direct debit
+      title: Modelo 303 direct-debit account
     flags:
       activity:
         help: Business activity as plain text, or the IAE heading if you know it
@@ -68433,6 +68458,8 @@ wizard:
           on account
       bienes-extranjero-above-threshold:
         help: Foreign-held assets above legal threshold
+      charge-iban:
+        help: IBAN AEAT may debit for an elected Modelo 303 direct debit.
       cloud-evidence-upload:
         help: Allow uploading sensitive evidence to cloud LLM providers (off by default).
       country-of-fiscal-residence:
