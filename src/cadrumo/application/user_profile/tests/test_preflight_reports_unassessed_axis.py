@@ -122,8 +122,17 @@ def test_axis_reports_unassessed_for_a_non_operation_selector() -> None:
 def test_the_shipped_schema_assesses_nothing_for_a_real_modelo() -> None:
     """The production case this signal exists for, stated as a fact about the shipped data.
 
-    No shipped field declares a ``modelo_`` selector, so a profile declaring
-    nothing at all is reported ``ready`` while nothing schema-required was
+    The shipped schema declares ``modelo_036``, ``modelo_100`` and
+    ``modelo_303`` tokens onto the fields a live registry
+    ``source = "profile"`` binding actually consumes, so the axis is not
+    universally empty - see
+    ``test_preflight_modelo_100_per_operation_axis_now_contributes`` in
+    ``test_services.py`` for the modelo 100 positive case. This test still
+    holds for modelo 303 specifically: both grounded modelo 303 fields
+    (``iva.autoconsumo_promotor_base``, ``tax_residence.state_attribution_ratio``)
+    are conditionally-required, not schema-`required=true`, so the
+    required+prefix walk still selects nothing for modelo 303 and a profile
+    declaring nothing is reported ``ready`` while nothing schema-required was
     examined. This asserts the flag exposes that, and is paired with the
     positive controls above so it cannot pass against a hardcoded ``False``.
     """

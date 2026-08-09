@@ -114,9 +114,7 @@ def _pairings() -> dict[tuple[str, str, str], tuple[str, ...]]:
             if not fed:
                 continue
             starved = [
-                c
-                for c in revision.casillas
-                if _is_box_number(c.number) and c.binding and not (c.export_refs or ())
+                c for c in revision.casillas if _is_box_number(c.number) and c.binding and not (c.export_refs or ())
             ]
             if not starved:
                 continue
@@ -126,9 +124,7 @@ def _pairings() -> dict[tuple[str, str, str], tuple[str, ...]]:
                 if len(segments) < _MIN_STEM_SEGMENTS:
                     continue
                 stem = ".".join(segments)
-                siblings = tuple(
-                    sorted(str(c.number).strip() for c in starved if str(c.id).startswith(f"{stem}."))
-                )
+                siblings = tuple(sorted(str(c.number).strip() for c in starved if str(c.id).startswith(f"{stem}.")))
                 if siblings:
                     found[(modelo.id, revision_id, str(casilla.id))] = siblings
     return found

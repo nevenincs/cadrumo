@@ -547,13 +547,17 @@ class ProfilePreflightMissingPayload(OutputSchema):
     Nested in
     :class:`ConfigProfilePreflightResult`
     and mirrors :class:`ProfilePreflightRequirement`
-    so the CLI can name the missing selector, schema section, and field key for
-    a concrete modelo/revision/period context.
+    so the CLI can name the missing selector, schema section, field key,
+    human label, consuming modelos, and legal grounding for a concrete
+    modelo/revision/period context.
     """
 
     selector: str
     section_key: str
     field_key: str
+    label: str
+    legal_refs: list[str]
+    modelos: list[str]
 
 
 @register_schema("config.profile.preflight")
@@ -574,6 +578,7 @@ class ConfigProfilePreflightResult(OutputSchema):
     filing_year: int = Field(ge=2000, le=2100)
     period: Period
     ready: bool
+    per_operation_requirements_assessed: bool
     missing: list[ProfilePreflightMissingPayload]
 
     @model_validator(mode="after")

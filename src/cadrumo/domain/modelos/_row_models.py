@@ -144,6 +144,7 @@ class Modelo184MemberRow(BaseModel):
 # and :class:`~core.MetodoValoracion` -- because the registry's own
 # related-party observation is typed with the same sets.
 
+
 def _hydrate_m232_codigo[EnumT: StrEnum](*, field_name: str, value: object, code_set: type[EnumT]) -> EnumT | object:
     """Hydrate the operator's text into its typed DR23200 code set.
 
@@ -196,7 +197,9 @@ class Modelo232VinculadaRow(BaseModel):
     pais: _IsoCountryCode
     tipo_vinculacion: Annotated[
         TipoVinculacion,
-        BeforeValidator(lambda v: _hydrate_m232_codigo(field_name="tipo_vinculacion", value=v, code_set=TipoVinculacion)),
+        BeforeValidator(
+            lambda v: _hydrate_m232_codigo(field_name="tipo_vinculacion", value=v, code_set=TipoVinculacion),
+        ),
     ] = TipoVinculacion.NO_DECLARADO
     tipo_operacion: Annotated[
         TipoOperacionVinculada,

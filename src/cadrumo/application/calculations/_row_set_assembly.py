@@ -309,10 +309,18 @@ def _optional_operation_kind_code_kwarg(fields: Mapping[str, Decimal | str]) -> 
     text = _coerce_text(raw)
     if not text:
         return {}
-    return {"operation_kind_code": _hydrate_coded_field(field_name="operation_kind_code", text=text, code_set=TipoOperacionVinculada)}
+    return {
+        "operation_kind_code": _hydrate_coded_field(
+            field_name="operation_kind_code",
+            text=text,
+            code_set=TipoOperacionVinculada,
+        ),
+    }
 
 
-def _optional_transfer_pricing_method_code_kwarg(fields: Mapping[str, Decimal | str]) -> _TransferPricingMethodCodeKwarg:
+def _optional_transfer_pricing_method_code_kwarg(
+    fields: Mapping[str, Decimal | str],
+) -> _TransferPricingMethodCodeKwarg:
     """Pass ``transfer_pricing_method_code`` only when the row supplies a non-empty value.
 
     The coded counterpart of :func:`_optional_text_kwarg`: the target field is

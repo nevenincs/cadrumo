@@ -131,7 +131,7 @@ def test_defaulted_profile_readiness_surfaces_block_before_modelo_work(
         ],
     )  # fmt: skip
     assert work_create.exit_code == 2, work_create.output
-    assert "activities.description" in work_create.output
+    assert "Activity description" in work_create.output
     assert "work_unit_id" not in work_create.output
 
     preflight_json = invoke_cached_cli(
@@ -287,7 +287,7 @@ def test_attribution_entity_without_activity_remains_status_blocked() -> None:
         ["app", "modelo", "work", "create", "--modelo", "184", "--year", "2025", "--period", "0A"],
     )  # fmt: skip
     assert work_create.exit_code == 2, work_create.output
-    assert "activities.description" in work_create.output
+    assert "Activity description" in work_create.output
     assert "work_unit_id" not in work_create.output
 
 

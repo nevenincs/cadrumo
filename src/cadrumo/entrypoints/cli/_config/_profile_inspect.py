@@ -23,6 +23,7 @@ from ....core import Period as _Period
 from ....core.errors import CadrumoError as _CadrumoError
 from ....core.external_constants import OutputLanguage as _OutputLanguage
 from ....core.i18n import tr
+from ....core.json_contract import Notice, NoticeSeverity
 from ....core.logging import get_logger as _get_logger
 from .._common import _emit_envelope, _no_active_profile_refusal
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
@@ -308,6 +309,7 @@ def _register_preflight_command(
         """
         _activate_subcommand_output_language(ctx, output_language)
         from ....application.modelo import modelo_work_profile_preflight_report
+        from ....core.resources import resources
         from ....domain.user_profile import ProfileNotFoundError
 
         pointer = resolve_active_profile_pointer()
@@ -336,6 +338,7 @@ def _register_preflight_command(
             filing_year=filing_period.filing_year,
             period=filing_period,
             resolve_revision_when_missing=False,
+            authority=resources().modelos.authority,
         )
         if report.ready:
             resolved_revision_id = _resolve_preflight_revision_id(
@@ -343,8 +346,6 @@ def _register_preflight_command(
                 period=filing_period,
                 revision_id=revision_id,
             )
-            from ....core.resources import resources
-
             revision = resources().modelos.authority.validate_modelo(modelo).revisions[resolved_revision_id]
             report = modelo_work_profile_preflight_report(
                 record=record,
@@ -353,6 +354,7 @@ def _register_preflight_command(
                 filing_year=filing_period.filing_year,
                 period=filing_period,
                 revision=revision,
+                authority=resources().modelos.authority,
             )
         result = ConfigProfilePreflightResult(
             profile_id=report.profile_id,
@@ -361,11 +363,15 @@ def _register_preflight_command(
             filing_year=report.filing_year,
             period=report.period,
             ready=report.ready,
+            per_operation_requirements_assessed=report.per_operation_requirements_assessed,
             missing=[
                 ProfilePreflightMissingPayload(
                     selector=requirement.selector,
                     section_key=requirement.section_key,
                     field_key=requirement.field_key,
+                    label=requirement.label,
+                    legal_refs=list(requirement.legal_refs),
+                    modelos=list(requirement.modelos),
                 )
                 for requirement in report.missing
             ],
@@ -386,8 +392,27 @@ def _register_preflight_command(
             f"period\t{report.period.registry_token}",
         ]
         for requirement in report.missing:
-            lines.append(f"missing\t{requirement.section_key}\t{requirement.field_key}\t{requirement.selector}")
-        _emit_envelope(ctx, command="config.profile.preflight", result=result, lines=lines)
+            legal_refs = ", ".join(requirement.legal_refs) or "-"
+            modelos = ", ".join(requirement.modelos) or "-"
+            lines.append(
+                f"missing\t{requirement.section_key}\t{requirement.field_key}\t{requirement.selector}\t"
+                f"{requirement.label}\t{legal_refs}\t{modelos}",
+            )
+        notices = []
+        if not report.per_operation_requirements_assessed:
+            notices.append(
+                Notice(
+                    severity=NoticeSeverity.WARNING,
+                    code="config.profile.preflight.per_operation_axis_not_assessed",
+                    message=(
+                        f"No schema-required profile field is currently declared for Modelo {report.modelo}, so "
+                        "ready reflects only the export-identity and conditional checks, not a per-modelo "
+                        "assessment. Do not read ready as a complete check for this modelo."
+                    ),
+                    context={"modelo": report.modelo, "ready": str(report.ready)},
+                ),
+            )
+        _emit_envelope(ctx, command="config.profile.preflight", result=result, lines=lines, notices=tuple(notices))
         if not report.ready:
             raise typer.Exit(code=2)
 

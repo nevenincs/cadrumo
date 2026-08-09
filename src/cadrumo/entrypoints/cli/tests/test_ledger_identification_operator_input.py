@@ -112,8 +112,7 @@ def test_recording_the_identification_leaves_the_establishment_axis_alone() -> N
     assert transaction is not None
     assert transaction.counterparty_identification_state is EUMemberState.DE
     assert transaction.counterparty_eu_member_state == establishment_before, (
-        "recording where a counterparty is VAT-identified must not silently "
-        "restate where it is established"
+        "recording where a counterparty is VAT-identified must not silently restate where it is established"
     )
 
 

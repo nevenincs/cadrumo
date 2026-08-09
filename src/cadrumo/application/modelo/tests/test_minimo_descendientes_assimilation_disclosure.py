@@ -81,20 +81,29 @@ def _write(*descendants: DescendantInfo) -> None:
     workflow_state_repository().update(lambda s: set_active_fields(s, facts))
 
 
-def _assimilated_child(**overrides: object) -> DescendantInfo:
+def _assimilated_child(
+    *,
+    relacion: DescendantRelacion = DescendantRelacion.DESCENDIENTE,
+    inscripcion_registro_civil_date: date | None = None,
+) -> DescendantInfo:
     """A NON-cohabiting descendant the filer economically supports.
 
     Reaches the mínimo only through the Art. 58 dependency limb, which is exactly
     the population a ``dependencia_assimilation_available=False`` default drops.
+
+    The relación and its Art. 58.2 entry anchor are the only axes these tests
+    vary, so they are named parameters rather than a ``**overrides`` bag: the bag
+    erased every field to ``object`` on the way into the strict model, so the
+    constructor could check none of them.
     """
-    fields: dict[str, object] = {
-        "birth_date": date(_FILING_YEAR - 10, 5, 1),
-        "convive_con_contribuyente": False,
-        "dependencia_economica": True,
-        "rentas_anuales_euros": None,
-    }
-    fields.update(overrides)
-    return DescendantInfo(**fields)  # type: ignore[arg-type]
+    return DescendantInfo(
+        birth_date=date(_FILING_YEAR - 10, 5, 1),
+        relacion=relacion,
+        inscripcion_registro_civil_date=inscripcion_registro_civil_date,
+        convive_con_contribuyente=False,
+        dependencia_economica=True,
+        rentas_anuales_euros=None,
+    )
 
 
 def _rentas_advisories() -> tuple[CalculationSourceDiagnostic, ...]:

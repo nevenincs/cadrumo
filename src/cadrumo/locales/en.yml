@@ -1051,6 +1051,8 @@ application:
         modelo work target; create or repair the profile before continuing.
       profile_readiness_setup_incomplete: Profile setup is incomplete; finish the
         setup flow before working on modelos.
+      profile_readiness_setup_incomplete_missing: 'Profile setup is incomplete; finish
+        the setup flow before working on modelos. Outstanding fields: %{missing}.'
       recipient_decryption_failed: The recipient-encrypted package could not be decrypted;
         the key does not match or the package was tampered with.
       recipient_encryption_invalid_key: The recipient's public key is not a well-formed
@@ -5019,9 +5021,6 @@ cli:
       for this calendar row.
     calendar_local_modelo_events_unavailable: Local modelo event evidence is unavailable
       for this calendar row.
-    calendar_refused_incomplete: 'Calendar has unresolved profile checks: %{keys}.
-      Run the warning fix command or pass --allow-incomplete to inspect the provisional
-      calendar.'
     coverage:
       investigate: '%{count} filing obligation(s) could not be positively scoped for
         this profile and may be under-reported: %{modelos}. Investigate each with
@@ -5070,6 +5069,9 @@ cli:
       period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual),
         01-12 (months). Combine with --year to choose the year.'
       year_help: Filing year (e.g. 2026).
+    refused_incomplete_profile: 'The active profile has not answered facts this projection
+      depends on: %{requirements}. Complete them with ''aeat config profile edit'',
+      or pass --allow-incomplete to inspect the provisional result.'
     status:
       drafts_empty: No saved declaration drafts were found.
       drafts_empty_with_work_units: No declaration drafts are saved - this is normal

@@ -1088,6 +1088,9 @@ application:
         munkához; folytatás előtt hozza létre vagy javítsa a profilt.
       profile_readiness_setup_incomplete: A profil beállítása nincs befejezve; fejezd
         be a beállítási folyamatot, mielőtt modelókkal dolgoznál.
+      profile_readiness_setup_incomplete_missing: 'A profil beállítása nincs befejezve;
+        fejezd be a beállítási folyamatot, mielőtt modelókkal dolgoznál. Hiányzó mezők:
+        %{missing}.'
       recipient_decryption_failed: A címzett számára titkosított csomagot nem sikerült
         megfejteni; a kulcs nem megfelelő, vagy a csomagot módosították.
       recipient_encryption_invalid_key: A címzett nyilvános kulcsa nem egy érvényes
@@ -5327,9 +5330,6 @@ cli:
       élő eseménybizonyíték.
     calendar_local_modelo_events_unavailable: Ehhez a naptársorhoz nem érhető el helyi
       modell eseménybizonyíték.
-    calendar_refused_incomplete: 'A naptárnak megoldatlan profilellenőrzései vannak:
-      %{keys}. Futtassa a figyelmeztetés javító parancsát, vagy adja meg a --allow-incomplete
-      kapcsolót az ideiglenes naptár megtekintéséhez.'
     coverage:
       investigate: '%{count} bevallási kötelezettséget nem sikerült egyértelműen megállapítani
         ehhez a profilhoz, és bevallatlan maradhat: %{modelos}. Vizsgálja meg mindegyiket
@@ -5383,6 +5383,10 @@ cli:
       period_help: 'Bevallási időszak AEAT tokenként: 1T-4T (negyedévek), 0A (éves),
         01-12 (hónapok). Kombinálja a --year kapcsolóval az év kiválasztásához.'
       year_help: Bevallási év (pl. 2026).
+    refused_incomplete_profile: 'Az aktív profil nem adta meg azokat az adatokat,
+      amelyekre ez a kimutatás épül: %{requirements}. Pótold őket az ''aeat config
+      profile edit'' paranccsal, vagy használd a --allow-incomplete kapcsolót az ideiglenes
+      eredmény megtekintéséhez.'
     status:
       drafts_empty: Nincs mentett bevallástervezet.
       drafts_empty_with_work_units: Nincs mentett bevallástervezet – ez normális,

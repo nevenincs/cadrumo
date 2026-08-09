@@ -51,9 +51,7 @@ def _requirements_by_relation(snapshot) -> dict[str, object]:
         filing_year=snapshot.filing_year,
         period=snapshot.period,
     )
-    return {
-        relation_id: requirement for requirement in requirements for relation_id in requirement.relation_ids
-    }
+    return {relation_id: requirement for requirement in requirements for relation_id in requirement.relation_ids}
 
 
 def _grounded_treatments(snapshot) -> dict[str, str]:

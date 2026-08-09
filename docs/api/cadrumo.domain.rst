@@ -23,6 +23,7 @@ Subpackages
    cadrumo.domain.contribuyente
    cadrumo.domain.currency
    cadrumo.domain.deadlines
+   cadrumo.domain.evidence_consent
    cadrumo.domain.filing
    cadrumo.domain.fincas
    cadrumo.domain.invoices

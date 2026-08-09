@@ -54,9 +54,7 @@ _TUI_PACKAGE = Path(__file__).resolve().parent.parent
 
 def _tui_modules() -> tuple[Path, ...]:
     return tuple(
-        path
-        for path in sorted(_TUI_PACKAGE.glob("*.py"))
-        if path.name != "__init__.py" or path.parent == _TUI_PACKAGE
+        path for path in sorted(_TUI_PACKAGE.glob("*.py")) if path.name != "__init__.py" or path.parent == _TUI_PACKAGE
     )
 
 

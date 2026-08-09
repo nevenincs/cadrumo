@@ -1161,6 +1161,9 @@ application:
         este trabajo de modelo; crea o repara el perfil antes de continuar.
       profile_readiness_setup_incomplete: La configuración del perfil está incompleta;
         termina el asistente de configuración antes de trabajar con modelos.
+      profile_readiness_setup_incomplete_missing: 'La configuración del perfil está
+        incompleta; termina el asistente de configuración antes de trabajar con modelos.
+        Campos pendientes: %{missing}.'
       recipient_decryption_failed: No se ha podido descifrar el paquete cifrado para
         el destinatario; la clave no coincide o el paquete ha sido manipulado.
       recipient_encryption_invalid_key: La clave pública del destinatario no es una
@@ -5421,9 +5424,6 @@ cli:
       no está disponible para esta fila del calendario.
     calendar_local_modelo_events_unavailable: La evidencia local de eventos de modelo
       no está disponible para esta fila del calendario.
-    calendar_refused_incomplete: 'El calendario tiene comprobaciones de perfil sin
-      resolver: %{keys}. Ejecuta el comando de corrección del aviso o usa --allow-incomplete
-      para inspeccionar el calendario provisional.'
     coverage:
       investigate: 'No se han podido determinar con certeza %{count} obligación(es)
         de presentación para este perfil y podrian quedar sin declarar: %{modelos}.
@@ -5477,6 +5477,9 @@ cli:
       period_help: 'Periodo de declaración como token AEAT: 1T-4T (trimestres), 0A
         (anual), 01-12 (meses). Combínelo con --year para elegir el año.'
       year_help: Año de declaración (p. ej. 2026).
+    refused_incomplete_profile: 'El perfil activo no ha respondido a datos de los
+      que depende esta proyección: %{requirements}. Complétalos con ''aeat config
+      profile edit'', o usa --allow-incomplete para consultar el resultado provisional.'
     status:
       drafts_empty: No se encontraron borradores de declaraciones guardados.
       drafts_empty_with_work_units: No hay borradores de declaraciones guardados;

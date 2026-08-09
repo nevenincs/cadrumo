@@ -96,7 +96,10 @@ def test_a_committed_change_leaves_the_store_closed_under_the_old_passphrase(tmp
         assert outcome.message == tr("flows.manager.action.passphrase_done")
 
         with pytest.raises(MasterKeyPassphraseMismatchError):
-            change_passphrase(current_passphrase=_ORIGINAL_PASSPHRASE, new_passphrase="whatever-comes-next")
+            change_passphrase(
+                current_passphrase=_ORIGINAL_PASSPHRASE,
+                new_passphrase="whatever-comes-next",  # noqa: S106 - synthetic test fixture
+            )
 
 
 def test_a_mismatched_confirmation_is_refused_and_the_store_is_untouched(tmp_path) -> None:

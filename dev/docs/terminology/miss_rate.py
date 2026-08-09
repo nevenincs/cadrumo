@@ -60,9 +60,7 @@ def report(
     """Write the miss-rate report and print the measured result."""
     write_miss_rate_report(output, note=note)
     evaluation = evaluate_held_out_miss_rate()
-    typer.echo(
-        f"cases {evaluation.case_count}  hits {evaluation.hit_count}  miss-rate {evaluation.miss_rate:.4f}"
-    )
+    typer.echo(f"cases {evaluation.case_count}  hits {evaluation.hit_count}  miss-rate {evaluation.miss_rate:.4f}")
     typer.echo(f"wrote miss-rate report -> {output}")
 
 

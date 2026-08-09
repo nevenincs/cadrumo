@@ -154,10 +154,10 @@ def test_the_stamp_is_not_folded_into_the_derived_identity() -> None:
     """
     from decimal import Decimal
 
-    from .._confirmation_record import build_confirmation_record
+    from .._confirmation_record import InvoiceConfirmationRecord, build_confirmation_record
     from .._evidence_draft import InvoiceDraft
 
-    def _mint() -> object:
+    def _mint() -> InvoiceConfirmationRecord:
         return build_confirmation_record(
             bucket_id="bucket-checks-run",
             invoice_id="inv-0002",
@@ -177,5 +177,5 @@ def test_the_stamp_is_not_folded_into_the_derived_identity() -> None:
     ):
         after = _mint()
 
-    assert after.checks_run != before.checks_run  # type: ignore[attr-defined]
-    assert after.confirmation_id == before.confirmation_id  # type: ignore[attr-defined]
+    assert after.checks_run != before.checks_run
+    assert after.confirmation_id == before.confirmation_id

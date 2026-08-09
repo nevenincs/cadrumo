@@ -117,6 +117,10 @@ def _preflight_kwargs(**overrides: object) -> dict[str, object]:
         "period": Period.from_year_and_code(2026, "1T"),
         "ready": True,
         "missing": [],
+        # Carries no default on the payload deliberately: a default would assert
+        # an assessment that never ran, which is the exact reassurance the flag
+        # exists to withhold. Every projection must therefore state it.
+        "per_operation_requirements_assessed": False,
     }
     base.update(overrides)
     return base

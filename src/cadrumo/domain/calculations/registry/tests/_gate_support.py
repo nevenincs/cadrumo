@@ -48,7 +48,9 @@ def fragment_declaring(directory: Path, anchor: str) -> Path:
     """
     matches = sorted(path for path in directory.glob("*.toml") if anchor in path.read_text(encoding="utf-8"))
     if not matches:
-        msg = f"no fragment under {directory.name} declares {anchor!r} -- the gate is stale, diagnose before re-anchoring"
+        msg = (
+            f"no fragment under {directory.name} declares {anchor!r} -- the gate is stale, diagnose before re-anchoring"
+        )
         raise AssertionError(msg)
     if len(matches) > 1:
         named = ", ".join(path.name for path in matches)

@@ -81,9 +81,10 @@ def test_modelo_100_readiness_filters_ledger_bindings_after_clean_preflight() ->
     assert readiness_payload["ready"] is False
     assert readiness_payload["binding_ready"] is False
     envelope = json.loads(readiness.output)
-    assert envelope["notices"][0]["code"] == "modelo.readiness.ledger_preflight_scope"
-    assert envelope["notices"][0]["context"]["missing_bindings"] == str(len(readiness_missing))
-    assert all(notice["code"] != "modelo.readiness.export_unsupported" for notice in envelope["notices"])
+    notices_by_code = {notice["code"]: notice for notice in envelope["notices"]}
+    ledger_notice = notices_by_code["modelo.readiness.ledger_preflight_scope"]
+    assert ledger_notice["context"]["missing_bindings"] == str(len(readiness_missing))
+    assert "modelo.readiness.export_unsupported" not in notices_by_code
     assert readiness_missing.keys() <= bindings_missing_ids
     preflight_resolved_ids = bindings_missing_ids - set(readiness_missing)
     assert preflight_resolved_ids

@@ -1156,6 +1156,9 @@ application:
         a aquest treball de model; crea o repara el perfil abans de continuar.
       profile_readiness_setup_incomplete: La configuració del perfil està incompleta;
         acaba l'assistent de configuració abans de treballar amb models.
+      profile_readiness_setup_incomplete_missing: 'La configuració del perfil està
+        incompleta; acaba l''assistent de configuració abans de treballar amb models.
+        Camps pendents: %{missing}.'
       recipient_decryption_failed: No s'ha pogut desxifrar el paquet xifrat per al
         destinatari; la clau no coincideix o el paquet ha estat manipulat.
       recipient_encryption_invalid_key: La clau pública del destinatari no és una
@@ -5378,9 +5381,6 @@ cli:
       no està disponible per a aquesta fila del calendari.
     calendar_local_modelo_events_unavailable: L'evidència local d'esdeveniments de
       modelo no està disponible per a aquesta fila del calendari.
-    calendar_refused_incomplete: 'El calendari té comprovacions de perfil sense resoldre:
-      %{keys}. Executeu l ordre de correcció de l avís o useu --allow-incomplete per
-      inspeccionar el calendari provisional.'
     coverage:
       investigate: 'No s''han pogut determinar amb certesa %{count} obligació(ns)
         de presentació per a aquest perfil i podrien quedar sense declarar: %{modelos}.
@@ -5432,6 +5432,9 @@ cli:
       period_help: 'Període de declaració com a token AEAT: 1T-4T (trimestres), 0A
         (anual), 01-12 (mesos). Combina''l amb --year per triar l''any.'
       year_help: Any de declaració (p. ex. 2026).
+    refused_incomplete_profile: 'El perfil actiu no ha respost dades de les quals
+      depèn aquesta projecció: %{requirements}. Completa-les amb ''aeat config profile
+      edit'', o fes servir --allow-incomplete per consultar el resultat provisional.'
     status:
       drafts_empty: No s'han trobat esborranys de declaracions desats.
       drafts_empty_with_work_units: No hi ha esborranys de declaracions desats; és

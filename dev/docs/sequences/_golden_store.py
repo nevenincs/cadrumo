@@ -81,6 +81,15 @@ SANDBOX_STORAGE_ROOT_TOKEN: str = "<sandbox-storage-root>"  # noqa: S105 - a dis
 #: Stable token replacing the per-run sandbox working directory in text frames.
 SANDBOX_WORKDIR_TOKEN: str = "<sandbox-workdir>"  # noqa: S105 - a display placeholder, not a secret
 
+#: Stable token replacing the per-run sandbox root's OWN parent directory —
+#: the outer per-sequence temporary directory that ``storage_root`` and
+#: ``workdir`` are siblings under. Catches paths under sibling substrates
+#: neither of the two more specific tokens above covers, chiefly the secrets
+#: store (deliberately anchored on the sandbox root rather than nested inside
+#: ``storage_root`` — the production custody split), which otherwise leaks a
+#: run-specific temp path into diagnostic-log text frames.
+SANDBOX_ROOT_TOKEN: str = "<sandbox-root>"  # noqa: S105 - a display placeholder, not a secret
+
 #: Stable token replacing the repository checkout root wherever it surfaces in a
 #: frame's output. Corpus and data paths carry the absolute checkout path (stable
 #: on one machine, different on CI and every other checkout), so a golden is only
@@ -101,6 +110,7 @@ PACKAGE_VERSION_TOKEN: str = "<version>"  # noqa: S105 - a display placeholder, 
 _PATH_TOKENS: tuple[str, ...] = (
     SANDBOX_STORAGE_ROOT_TOKEN,
     SANDBOX_WORKDIR_TOKEN,
+    SANDBOX_ROOT_TOKEN,
     REPO_ROOT_TOKEN,
 )
 
@@ -118,17 +128,20 @@ def _repo_root() -> Path:
 def _path_replacements(*, storage_root: str, workdir: str) -> list[tuple[str, str]]:
     """Return the value-anchored ``(path, token)`` pairs, longest needle first.
 
-    Three roots are tokenised — the per-run sandbox storage root and workdir
-    (run-specific) and the repository checkout root (machine-specific) — each in
-    both native and POSIX-slash form. The replacement is value-anchored on the
-    exact known root strings (never a wildcard), so it can never over-mask an
-    unrelated path; longest-first ordering collapses a nested path before its
-    parent.
+    Four roots are tokenised — the per-run sandbox storage root, workdir, and
+    their own parent sandbox root (all run-specific), plus the repository
+    checkout root (machine-specific) — each in both native and POSIX-slash
+    form. The replacement is value-anchored on the exact known root strings
+    (never a wildcard), so it can never over-mask an unrelated path;
+    longest-first ordering collapses a nested path before its parent, so the
+    sandbox root only catches what the two more specific siblings leave
+    behind.
     """
     replacements: list[tuple[str, str]] = []
     for raw, token in (
         (workdir, SANDBOX_WORKDIR_TOKEN),
         (storage_root, SANDBOX_STORAGE_ROOT_TOKEN),
+        (str(Path(storage_root).parent), SANDBOX_ROOT_TOKEN),
         (str(_repo_root()), REPO_ROOT_TOKEN),
     ):
         native = str(raw)
@@ -258,24 +271,31 @@ PLATFORM_CONDITIONAL_PREFLIGHT_CHECKS = frozenset(
     {
         "storage:windows-long-path",
         "model-runtime-hardware-floor",
+        "local-inference-hardware",
+        "local-inference-contention",
     },
 )
 """Health rows whose ``detail`` describes the HOST, not the product.
 
 Docs are rendered FROM these goldens, so a row here becomes a sentence in
-user-facing prose. Both members state a fact about the machine that happened to
-record the capture:
+user-facing prose. Every member states a fact about the machine that happened
+to record the capture:
 
 - ``storage:windows-long-path`` reports ``"not applicable on this platform"``
   off Windows and one of several ``LongPathsEnabled`` verdicts on it.
 - ``model-runtime-hardware-floor`` reports the host's total RAM against the
   configured floor -- literally ``"total system memory 63.9 GiB meets ..."``.
+- ``local-inference-hardware`` and ``local-inference-contention`` report live
+  free system memory, accelerator kind, and free VRAM when an NVML reader is
+  installed -- figures that drift between two runs on the SAME machine as
+  ordinary system load shifts, not only between machines.
 
-Pinning either means the golden can only match the machine that wrote it: a
-Windows capture reds the Linux docs runner, a Linux capture reds every Windows
-developer, and a 64 GiB capture publishes that number to every reader. Masking
-the detail keeps the row and its id under exact comparison and drops only the
-host-specific sentence.
+Pinning any of these means the golden can only match the machine (and moment)
+that wrote it: a Windows capture reds the Linux docs runner, a Linux capture
+reds every Windows developer, a 64 GiB capture publishes that number to every
+reader, and a free-VRAM reading reds the very next run on the same box.
+Masking the detail keeps the row and its id under exact comparison and drops
+only the host-specific sentence.
 
 Keyed on the stable row id, never on the detail text: the long-path check alone
 has five detail variants and the memory one is unbounded, so enumerating strings

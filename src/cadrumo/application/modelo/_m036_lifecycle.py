@@ -334,8 +334,7 @@ def _require_m036_sequence_valid(
         )
     if latest is None and command.event_kind is not CensoModeloEventKind.ALTA:
         raise Modelo036PriorAltaRequiredError(
-            f"m036 declaration_id={declaration_id!r} refused: no prior alta on record "
-            f"for {command.event_kind.value!r}",
+            f"m036 declaration_id={declaration_id!r} refused: no prior alta on record for {command.event_kind.value!r}",
             context={
                 "declaration_id": declaration_id,
                 "requested_event_kind": command.event_kind.value,
@@ -369,6 +368,12 @@ def record_m036_declaration(
     surface through :func:`_m036_declaration_repository`).  ``bucket_id`` is
     checked against the repository binding at save time, so a cross-bucket
     payload cannot land silently.
+
+    Args:
+        command: The declaration command naming the profile, event kind,
+            declared-on date and the sede justificante it was filed under.
+        bucket_id: The bucket to persist into; checked against
+            ``command.profile_id`` before anything is derived or stored.
 
     Raises:
         LiveApplicationInputError: If ``command.profile_id`` names a different

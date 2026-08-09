@@ -11,6 +11,7 @@ snapshot and a persisted revision for Modelo 130) is covered separately in
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -18,6 +19,9 @@ from .._reconcile_casilla import (
     CasillaDivergenceKind,
     detect_casilla_divergences,
 )
+
+if TYPE_CHECKING:
+    from ....domain.calculations.registry import ModeloRevision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -153,7 +157,7 @@ class TestExportExemptCasillasAreOutOfPdfScope:
     """
 
     @staticmethod
-    def _m303_revision() -> object:
+    def _m303_revision() -> ModeloRevision:
         from ....domain.calculations.registry import bundled_authority
 
         return next(m for m in bundled_authority().modelos if m.id == "303").revisions["2023-y-siguientes"]

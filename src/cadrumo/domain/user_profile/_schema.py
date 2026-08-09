@@ -360,6 +360,39 @@ class ProfileSchemaDefinition(BaseModel):
                 return field
         raise UserProfileNotFoundError(f"unknown user-profile field {path!r}")
 
+    def path_for_model_selector(self, selector: str) -> str | None:
+        """Return the canonical dotted path of the field declaring ``selector``.
+
+        The inverse of the ``model_selectors`` declaration. Surfaces that hold
+        a selector token rather than a path - a deadline-engine gating key, a
+        registry binding's consumed profile key - need the path before they can
+        resolve the field's operator label and legal grounding, and every other
+        schema lookup here runs path-first.
+
+        Ambiguity is refused rather than guessed: the schema does not
+        constrain a token to one declaring field, so a token declared by two
+        fields has no single correct answer and returning either would
+        mislabel one of them. An unknown token is likewise not an error - the
+        callers mix selector tokens with identifiers from other namespaces and
+        must be able to ask without knowing which they hold.
+
+        Returns:
+            The ``section.field`` path when exactly one field declares
+            ``selector``, otherwise ``None``.
+        """
+        token = selector.strip()
+        if not token:
+            return None
+        matches = [
+            f"{section.key}.{field.key}"
+            for section in self.sections
+            for field in section.fields
+            if token in field.model_selectors
+        ]
+        if len(matches) != 1:
+            return None
+        return matches[0]
+
 
 NUMERIC_PROFILE_FIELD_TYPES: frozenset[ProfileFieldType] = frozenset(
     {ProfileFieldType.INTEGER, ProfileFieldType.DECIMAL, ProfileFieldType.MONEY},

@@ -312,9 +312,7 @@ def _guarded_raise_sites(source: str) -> dict[str, list[bool]]:
             for stmt in node.body:
                 _visit(stmt, guarded)
             for handler in node.handlers:
-                handler_guarded = guarded or (
-                    handler.type is not None and _except_type_is_guard(handler.type, local)
-                )
+                handler_guarded = guarded or (handler.type is not None and _except_type_is_guard(handler.type, local))
                 for stmt in handler.body:
                     _visit(stmt, handler_guarded)
             for stmt in (*node.orelse, *node.finalbody):

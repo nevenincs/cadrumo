@@ -30,6 +30,7 @@ checksum. Scope is therefore decided BY PATH, each exclusion carrying its reason
 
 from __future__ import annotations
 
+import shutil
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -105,9 +106,18 @@ def repository_text_files(repo_root: Path) -> list[Path]:
     Untracked files are included deliberately. The exposure this canary answers to
     arrived through a file that was gitignored and committed anyway, so a scanner that
     only reads the index would have been blind to it at the moment it mattered.
+
+    The git executable is resolved rather than taken from the argv shorthand: a canary
+    whose enumeration silently resolves to whatever ``git`` a PATH entry happens to
+    supply is a canary that can be pointed at a different tree than the one being
+    guarded, and a machine without git gets one plain sentence instead of a
+    file-not-found traceback from inside a security scan.
     """
-    completed = subprocess.run(
-        ["git", "ls-files", "--cached", "--others", "--exclude-standard"],
+    executable = shutil.which("git")
+    if executable is None:
+        raise SystemExit("git is not on PATH, so the working tree cannot be enumerated for scanning")
+    completed = subprocess.run(  # noqa: S603 - resolved executable, fixed argv, no caller input
+        [executable, "ls-files", "--cached", "--others", "--exclude-standard"],
         cwd=repo_root,
         capture_output=True,
         text=True,

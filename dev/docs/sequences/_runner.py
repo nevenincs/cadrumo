@@ -428,6 +428,57 @@ def _isolated_external_tool_env(sandbox_root: Path) -> Iterator[None]:
 
 
 @contextmanager
+def _isolated_diagnostic_log() -> Iterator[None]:
+    """Bind diagnostic file logging to THIS sequence's own storage root.
+
+    Mirrors :func:`dev.docs.build.ensure_private_diagnostic_log`'s reasoning one
+    level down: that function re-points the shared handler once per PROCESS so
+    concurrent processes cannot contend for one file. It never runs again per
+    sequence, so every sequence sharing a process (a full docs build, or a
+    multi-sequence ``--page`` check) still funnels DEBUG records into whichever
+    file the FIRST sequence in that process happened to bind — the module
+    docstring's "sequences never share state" claim was false for the log
+    channel alone. A ``config repair logs`` frame then tails a file carrying
+    other sequences' temp paths and timestamps, which no golden can pin.
+
+    Must be entered AFTER :func:`~cadrumo.tests.secure_sql.isolated_profile_storage_root`
+    so the derived path below is rooted under THIS sequence's own storage root,
+    not the process default.
+
+    An explicit ``override_settings(cadrumo_log_dir=...)`` here, not reliance on
+    ``cadrumo_local_storage_root``'s automatic re-derivation
+    (:data:`~cadrumo.core._storage_taxonomy.ROOT_DERIVED_STORAGE_FIELDS`):
+    :func:`dev.docs.build.ensure_private_diagnostic_log` already set
+    ``CADRUMO_LOG_DIR`` explicitly at PROCESS start, so the process-wide
+    :class:`~cadrumo.core.config.Settings` carries ``cadrumo_log_dir`` in its
+    own ``model_fields_set`` — and ``override_settings`` preserves a field
+    already marked explicit through every later override precisely because
+    that is the correct behaviour for a genuine operator override. It cannot
+    distinguish that case from this one, so the field must be re-set
+    explicitly here rather than left to re-derive. Rebinding through the
+    ``CADRUMO_LOG_DIR`` environment variable has no effect inside the sandbox:
+    :func:`~cadrumo.core.config.load_settings` returns the frozen override
+    object regardless of environment changes.
+    """
+    from cadrumo.core.logging import allow_logging_reconfiguration, configure_logging
+
+    log_dir = Path(load_settings().cadrumo_local_storage_root) / "logs"
+    settings_context = override_settings(cadrumo_log_dir=str(log_dir))
+    settings_context.__enter__()
+    allow_logging_reconfiguration()
+    configure_logging()
+    try:
+        yield
+    finally:
+        settings_context.__exit__(None, None, None)
+        # Release the latch and leave it unconfigured rather than eagerly
+        # rebinding: this sequence's temporary directory is about to be torn
+        # down, and the next sequence's own entry reconfigures fresh against
+        # its own root. Nothing logs in the gap between sequences.
+        allow_logging_reconfiguration()
+
+
+@contextmanager
 def _absent_credential_vault() -> Iterator[None]:
     """Pin the OS credential vault to a stable absence for the scope.
 
@@ -552,6 +603,7 @@ def sequence_sandbox(
             cadrumo_output_language="en",
         ),
         isolated_profile_storage_root(tmp_path=sandbox_root),
+        _isolated_diagnostic_log(),
         frozen_clock(SANDBOX_INSTANT),
         chdir(workdir),
     ):

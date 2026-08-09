@@ -43,6 +43,7 @@ from .._filed_data_capture import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _TODAY = date(2026, 8, 7)
+_ACTIVITY_START = date(2024, 3, 1)
 
 
 def _confidently_excluded(profile: TaxpayerProfile) -> set[str]:
@@ -52,8 +53,18 @@ def _confidently_excluded(profile: TaxpayerProfile) -> set[str]:
     return set(build_obligation_coverage(profile, (), today=_TODAY).confidently_excluded)
 
 
-def _autonomo(**overrides: object) -> TaxpayerProfile:
-    """A natural person with economic activity, IVA general, activity from 2024."""
+def _autonomo(
+    *,
+    activity_start_date: date | None = _ACTIVITY_START,
+    activity_end_date: date | None = None,
+) -> TaxpayerProfile:
+    """A natural person with economic activity, IVA general, activity from 2024.
+
+    The two activity dates are the only axes these tests vary, so they are named
+    parameters rather than a ``**overrides`` bag: the bag erased every field to
+    ``object`` on the way into the model, which is what a supplied date being
+    silently the wrong type would have hidden.
+    """
     from ....domain.deadlines import (
         EntityType,
         IrpfEstimationRegime,
@@ -61,16 +72,15 @@ def _autonomo(**overrides: object) -> TaxpayerProfile:
         IVARegime,
     )
 
-    fields: dict[str, object] = {
-        "tax_id": "X1234567L",
-        "entity_type": EntityType.NATURAL_PERSON,
-        "irpf_income_categories": frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
-        "irpf_estimation_regime": IrpfEstimationRegime.DIRECTA_NORMAL,
-        "iva_regime": IVARegime.GENERAL,
-        "activity_start_date": date(2024, 3, 1),
-    }
-    fields.update(overrides)
-    return TaxpayerProfile(**fields)  # type: ignore[arg-type]
+    return TaxpayerProfile(
+        tax_id="X1234567L",
+        entity_type=EntityType.NATURAL_PERSON,
+        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
+        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
+        iva_regime=IVARegime.GENERAL,
+        activity_start_date=activity_start_date,
+        activity_end_date=activity_end_date,
+    )
 
 
 # ---------------------------------------------------------------- the year axis
