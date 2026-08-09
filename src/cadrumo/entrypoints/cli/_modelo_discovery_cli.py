@@ -5,11 +5,9 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date
-from typing import Annotated, cast
+from typing import Annotated
 
-import click
 import typer
-import typer._click.types as typer_click_types
 
 from ...application.modelo import (
     DataInventoryCasilla,
@@ -32,7 +30,7 @@ from ...application.modelo import (
     registry_modelo_codes,
     registry_support_matrix,
 )
-from ...core import NON_REGISTRY_MODELOS, Modelo, Period, TaxDomain, resolve_active_bucket_id
+from ...core import Period, TaxDomain, resolve_active_bucket_id
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.calculations.registry import (
@@ -43,7 +41,7 @@ from ...domain.calculations.registry import (
     RegistryValidationError,
 )
 from ...domain.user_profile import ProfileNotFoundError
-from ._common import _emit_envelope, _parse_iso_date
+from ._common import MODELO_CODE_CHOICE, _emit_envelope, _parse_iso_date
 from ._modelo_payloads import (
     BindingListRowPayload,
     BindingPreviewRowPayload,
@@ -113,32 +111,6 @@ def register_discovery_commands(
     _register_bindings_resolve_command(bindings_app, deps)
     _register_formulas_command(app, deps)
     _register_support_matrix_command(app)
-
-
-# The accepted-code set for the ``--modelo`` option is derived from the closed
-# core identifier taxonomy instead of the registry authority. Help and
-# parse-time refusals are introspection surfaces; they must render even while a
-# peer registry authoring slice is fail-hard invalid. Command bodies still call
-# the registry-backed services for real data access.
-#
-# The choice is a module-level constant because ``from __future__ import
-# annotations`` stringifies the ``Annotated`` metadata carrying
-# ``click_type=...`` and Typer re-evaluates that string in this module's global
-# namespace, where a closure-local binding is invisible.
-#
-# typer vendors its own copy of click, so ``click.Choice`` is a
-# ``click.types.ParamType`` while ``typer.Option``'s ``click_type`` expects
-# ``typer._click.types.ParamType``. They are the same object at runtime (the
-# vendored click), so the cast only bridges the static type duality — no Any
-# escape. The bundled registry load this triggers needs no secret passphrase.
-# CAST-RATIONALE-TYPER-CLICK-PARAMTYPE-DUALITY: typer vendors its own click, so
-# click.Choice's click.types.ParamType and typer's typer._click.types.ParamType
-# are the same runtime object behind two static names; the cast bridges only that
-# static duality, with no Any escape.
-_MODELO_CHOICE: typer_click_types.ParamType = cast(
-    typer_click_types.ParamType,
-    click.Choice([modelo.value for modelo in Modelo if modelo not in NON_REGISTRY_MODELOS]),
-)
 
 
 def _as_of(raw: str | None) -> date | None:
@@ -792,7 +764,7 @@ def _register_bindings_list_command(bindings_app: typer.Typer, deps: _DiscoveryD
         ctx: typer.Context,
         modelo: Annotated[
             str | None,
-            typer.Option("--modelo", click_type=_MODELO_CHOICE, help=tr("cli.app.modelo.bindings.modelo_help")),
+            typer.Option("--modelo", click_type=MODELO_CODE_CHOICE, help=tr("cli.app.modelo.bindings.modelo_help")),
         ] = None,
         year: Annotated[
             int | None,
@@ -912,7 +884,7 @@ def _register_bindings_resolve_command(bindings_app: typer.Typer, deps: _Discove
         ctx: typer.Context,
         modelo: Annotated[
             str | None,
-            typer.Option("--modelo", click_type=_MODELO_CHOICE, help=tr("cli.app.modelo.bindings.modelo_help")),
+            typer.Option("--modelo", click_type=MODELO_CODE_CHOICE, help=tr("cli.app.modelo.bindings.modelo_help")),
         ] = None,
         year: Annotated[
             int | None,

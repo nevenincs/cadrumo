@@ -15,7 +15,7 @@ import typer
 from ...core.errors import resolve_error_message
 from ...core.i18n import tr
 from ...domain.portals import PortalCategory
-from ._common import _emit_envelope
+from ._common import MODELO_CODE_CHOICE_ALL, _emit_envelope
 
 
 class _PortalRow(TypedDict):
@@ -80,6 +80,7 @@ def portals_list(
         str | None,
         typer.Option(
             "--modelo",
+            click_type=MODELO_CODE_CHOICE_ALL,
             help=tr(
                 "cli.app.live.portals.modelo_help",
                 default="Filter to portals bound to one modelo code (e.g. 303).",

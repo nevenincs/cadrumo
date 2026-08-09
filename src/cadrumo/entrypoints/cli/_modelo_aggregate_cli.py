@@ -30,7 +30,7 @@ from ...core.external_constants import RETENCIONES_MODELOS
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.calculations.registry import aggregate_withholding_by_clave
-from ._common import _emit_envelope, _load_invoices
+from ._common import MODELO_CODE_CHOICE, _emit_envelope, _load_invoices
 from ._modelo_payloads import ModeloAggregateResult
 
 ResolveYearPeriod = Callable[..., Period]
@@ -51,7 +51,10 @@ def register_aggregate_commands(app: typer.Typer, *, resolve_year_period: Resolv
     )
     def aggregate_modelo(
         ctx: typer.Context,
-        modelo: Annotated[str, typer.Option("--modelo", help=tr("cli.app.modelo.aggregate.modelo_help"))],
+        modelo: Annotated[
+            str,
+            typer.Option("--modelo", click_type=MODELO_CODE_CHOICE, help=tr("cli.app.modelo.aggregate.modelo_help")),
+        ],
         year: Annotated[int, typer.Option("--year", help=tr("cli.app.modelo.work.year_help"))],
         period: Annotated[str, typer.Option("--period", help=tr("cli.app.modelo.aggregate.period_help"))],
         retencion_observation: Annotated[

@@ -54,7 +54,11 @@ from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...domain.calculations.registry import CasillaId, RegistryValidationError, validated_casilla_id
 from ...domain.modelos import CalculationRevision, CalculationRevisionAmendmentKind, WorkUnit
-from ._common import activate_subcommand_output_language, active_bucket_id_or_refuse
+from ._common import (
+    MODELO_CODE_CHOICE,
+    activate_subcommand_output_language,
+    active_bucket_id_or_refuse,
+)
 from ._modelo_aggregate_cli import register_aggregate_commands
 from ._modelo_amend_wizard_cli import register_amend_wizard_commands
 from ._modelo_audit_cli import audit_app as audit_app
@@ -944,15 +948,15 @@ def _parse_amendment_casilla(spec: str) -> tuple[CasillaId, Decimal]:
 def _required_amendment_inputs(
     *,
     from_filing_record_id: str | None,
-    kind: str | None,
+    kind: CalculationRevisionAmendmentKind | None,
     reason: str | None,
     set_overrides: list[str] | None,
-) -> tuple[str, str, str, tuple[str, ...]]:
+) -> tuple[str, CalculationRevisionAmendmentKind, str, tuple[str, ...]]:
     """Return raw amendment CLI inputs or raise one combined option error."""
     missing: list[str] = []
     if not from_filing_record_id or not from_filing_record_id.strip():
         missing.append("--from-filing-record")
-    if not kind or not kind.strip():
+    if kind is None:
         missing.append("--kind")
     if not reason or not reason.strip():
         missing.append("--reason")
@@ -969,20 +973,6 @@ def _required_amendment_inputs(
     assert kind is not None
     assert reason is not None
     return from_filing_record_id, kind, reason, tuple(set_overrides or ())
-
-
-def _parse_amendment_kind(kind: str) -> CalculationRevisionAmendmentKind:
-    """Parse ``--kind`` into :class:`CalculationRevisionAmendmentKind`."""
-    try:
-        return CalculationRevisionAmendmentKind(kind.strip())
-    except ValueError as exc:
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.invalid_amendment_kind",
-                choices=", ".join(repr(k.value) for k in CalculationRevisionAmendmentKind),
-                kind=kind,
-            ),
-        ) from exc
 
 
 def _parse_amendment_overrides(set_overrides: tuple[str, ...]) -> dict[CasillaId, Decimal]:
@@ -1007,7 +997,7 @@ def work_amend(
         ),
     ] = None,
     kind: Annotated[
-        str | None,
+        CalculationRevisionAmendmentKind | None,
         typer.Option(
             "--kind",
             help=tr("cli.app.modelo.work.amendment_kind_help"),
@@ -1051,14 +1041,13 @@ def work_amend(
         set_overrides=set_overrides,
     )
     _require_active_profile()
-    amendment_kind = _parse_amendment_kind(kind)
     overrides = _parse_amendment_overrides(set_specs)
 
     try:
         record = amend_modelo_revision(
             from_filing_record_id=from_filing_record_id,
             overrides=overrides,
-            amendment_kind=amendment_kind,
+            amendment_kind=kind,
             reason=reason,
             actor=actor or _resolve_default_actor(),
         )
@@ -1079,14 +1068,14 @@ def work_amend(
 
     result = WorkAmendResult.model_validate(
         {
-            "amendment_kind": amendment_kind.value,
+            "amendment_kind": kind.value,
             "amends_filing_record_id": from_filing_record_id,
             **_filing_record_payload(record).model_dump(mode="python"),
         },
     )
     lines = [
         "operation\tmodelo.work.amend",
-        f"amendment_kind\t{amendment_kind.value}",
+        f"amendment_kind\t{kind.value}",
         f"amends_filing_record_id\t{from_filing_record_id}",
         *_filing_record_lines(record),
     ]
@@ -1131,6 +1120,7 @@ def modelo_history(
         str,
         typer.Option(
             "--modelo",
+            click_type=MODELO_CODE_CHOICE,
             help=tr("cli.app.modelo.history.modelo_help", default="Modelo code (e.g. 100, 303)."),
         ),
     ],

@@ -16,7 +16,6 @@ from ...core.external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
 from ...core.i18n import tr
 from ...domain.contribuyente.inventory import MovementKind
 from ._common import (
-    _bad,
     _emit_envelope,
     _parse_iso_date,
     parse_decimal_amount,
@@ -38,19 +37,6 @@ def register_inventory_commands(app: typer.Typer) -> None:
     app.add_typer(inventory_app, name="inventory")
     inventory_app.add_typer(inventory_movement_app, name="movement")
     inventory_app.add_typer(inventory_valuation_app, name="valuation")
-
-
-def _parse_movement_kind(raw: str) -> MovementKind:
-    try:
-        return MovementKind(raw)
-    except ValueError as exc:
-        raise _bad(
-            tr(
-                "cli.app.ledger.inventory.unknown_movement_kind",
-                default="Unknown movement kind: {kind!r}",
-                kind=raw,
-            ),
-        ) from exc
 
 
 def _inventory_service() -> InventoryService:
@@ -185,7 +171,7 @@ def inventory_movement_add(
         "--date",
         help=tr("cli.app.ledger.inventory.movement_date_help", default="Movement date (YYYY-MM-DD)."),
     ),
-    kind: str = typer.Option(
+    kind: MovementKind = typer.Option(
         ...,
         "--kind",
         help=tr(
@@ -219,7 +205,7 @@ def inventory_movement_add(
     command = InventoryMovementCommand(
         movement_id=movement_id,
         movement_date=_parse_iso_date(movement_date, label="--date"),
-        kind=_parse_movement_kind(kind),
+        kind=kind,
         quantity=parse_decimal_amount(quantity, label="quantity"),
         unit_cost=parse_optional_decimal_amount(unit_cost, label="unit-cost"),
         taxable_base=parse_optional_decimal_amount(taxable_base, label="taxable-base"),

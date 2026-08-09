@@ -36,7 +36,7 @@ from ...core import Modelo
 from ...core.i18n import tr
 from ...core.output_rendering import jsonable_output_payload
 from ...domain.calculations.registry import CasillaId, RegistrySnapshotError, RegistryValidationError
-from ._common import _emit_envelope
+from ._common import MODELO_CODE_CHOICE, _emit_envelope
 from ._modelo_payloads import (
     CasillaObservationPayload,
     CompareSectionPayload,
@@ -279,6 +279,7 @@ def _register_modelo_compare_command(
             str,
             typer.Option(
                 "--modelo",
+                click_type=MODELO_CODE_CHOICE,
                 help=tr(
                     "cli.app.modelo.compare.modelo_help",
                     default="Modelo number to compare (e.g. 100, 130).",

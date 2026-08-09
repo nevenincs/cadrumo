@@ -14,7 +14,7 @@ from ...core import Period, PeriodError
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.user_profile import ProfileNotFoundError
-from ._common import _emit_envelope, _no_active_profile_refusal
+from ._common import MODELO_CODE_CHOICE, _emit_envelope, _no_active_profile_refusal
 from ._errors import CliRefusedBoundaryError
 from ._modelo_cli_support import unsupported_local_work_period_refusal
 from ._modelo_payloads import (
@@ -41,6 +41,7 @@ def register_readiness_commands(app: typer.Typer) -> None:
             str,
             typer.Option(
                 "--modelo",
+                click_type=MODELO_CODE_CHOICE,
                 help=tr("cli.app.modelo.readiness.modelo_help", default="Modelo code (e.g. 303)."),
             ),
         ],
@@ -150,6 +151,9 @@ def _readiness_result(
                 section_key=req.section_key,
                 field_key=req.field_key,
                 selector=req.selector,
+                label=req.label,
+                legal_refs=list(req.legal_refs),
+                modelos=list(req.modelos),
             )
             for req in report.missing
         ],
@@ -224,7 +228,11 @@ def _readiness_lines(
         ],
     )
     for requirement in report.missing:
-        lines.append(f"{requirement.section_key}.{requirement.field_key}\t{requirement.selector}")
+        legal_refs = ", ".join(requirement.legal_refs) or "-"
+        lines.append(
+            f"{requirement.section_key}.{requirement.field_key}\t{requirement.selector}\t"
+            f"{requirement.label}\t{legal_refs}",
+        )
     for binding in report.missing_bindings:
         lines.append(f"missing_binding\t{binding.binding_id}\t{binding.source}\t{binding.input_channel}")
     for issue in report.ledger_issues:
