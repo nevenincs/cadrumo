@@ -46,7 +46,7 @@ from ...adapters.persistence.profile.modelos_calculation import CalculationRevis
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ...core import PaymentElection, RefundElection, ResultDisposition
+from ...core import PaymentElection, PriorDomiciliationElection, RefundElection, ResultDisposition
 from ...core.config import Settings
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol
@@ -86,6 +86,7 @@ from ._ledger_evidence_gate import raise_if_deductible_vat_evidence_missing
 from ._required_binding_gate import (
     require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
 )
+from ._prior_domiciliation import resolve_prior_domiciliation_election
 from ._result_disposition_resolution import resolve_modelo_result_disposition
 from ._revision_persistence import persist_filed_revision
 from ._verification_actions import (
@@ -129,6 +130,7 @@ def file_modelo_revision(
     notes: str | None = None,
     refund_election: RefundElection = RefundElection.COMPENSAR,
     payment_election: PaymentElection = PaymentElection.INGRESO,
+    prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
@@ -156,8 +158,8 @@ def file_modelo_revision(
        compatibility, and cross-period clean state.
     3. Run the :class:`WorkflowEngine` gate for the
        revision's modelo and period.
-    4. Resolve the Modelo 303 refund/carry disposition from
-       :class:`RefundElection` and
+    4. Resolve the Modelo 303 result disposition from
+       :class:`RefundElection`, :class:`PaymentElection`, and
        :class:`TaxpayerProfile`.
     5. If a prior current filing exists, mark its
        :class:`ModeloRecord` as ``SUPERSEDIDO`` and its
@@ -186,6 +188,10 @@ def file_modelo_revision(
             honoured only when the period is a lawful refund period (the year's
             last filing period for a non-REDEME taxpayer; every period for REDEME).
             An out-of-window ``DEVOLVER`` is refused.
+        payment_election: The operator's positive-result settlement election.
+            ``INGRESO`` is the default, ``DOMICILIACION`` is available only for
+            Modelo 303, and ``CUENTA_CORRIENTE`` remains explicitly refused
+            until its AEAT capability is grounded.
         work_unit_repository: Optional work-unit catalogue repository override.
         calculation_repository: Optional calculation-revision catalogue
             repository override.
@@ -241,6 +247,13 @@ def file_modelo_revision(
     vr_repo = verification_repository or VerificationReportCatalogueRepository()
     obs_repo = calculation_observation_repository or CalculationObservationRepository()
     bv_repo: BucketEventHistoryRepositoryProtocol = bucket_event_repository or BucketEventHistoryRepository()
+    if not isinstance(prior_domiciliation_election, PriorDomiciliationElection):
+        from ._action_errors import ModeloPriorDomiciliationElectionRefusedError
+
+        raise ModeloPriorDomiciliationElectionRefusedError(
+            "prior domiciliation election must be a PriorDomiciliationElection value",
+            context={"received_type": type(prior_domiciliation_election).__name__},
+        )
     _concrete_bv = bv_repo if isinstance(bv_repo, BucketEventHistoryRepository) else BucketEventHistoryRepository()
     run_repo = WorkflowRunRepository(objects=_concrete_bv.secure_object_repository)
 
@@ -313,6 +326,13 @@ def file_modelo_revision(
         refund_election=refund_election,
         payment_election=payment_election,
     )
+    prior_domiciliation_provenance = resolve_prior_domiciliation_election(
+        election=prior_domiciliation_election,
+        work_unit=work_unit,
+        revision=target,
+        filing_repository=fr_repo,
+        observation_repository=obs_repo,
+    )
 
     return persist_filed_revision(
         target=target,
@@ -327,6 +347,7 @@ def file_modelo_revision(
         bucket_event_repository=bv_repo,
         calculation_observation_repository=obs_repo,
         result_disposition=result_disposition,
+        prior_domiciliation_election=prior_domiciliation_provenance,
         taxpayer_nif=workflow_profile.tax_id,
     )
 

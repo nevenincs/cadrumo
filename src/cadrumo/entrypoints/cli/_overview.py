@@ -88,6 +88,7 @@ from ._overview_rendering import (
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
+    from ...application.overview import CalendarWarning
     from ...application.user_profile import ProfileRepository
     from ...application.workflow import ProfileBucketPointer as _ProfileBucketPointer
     from ...domain.deadlines import TaxpayerProfile
@@ -101,14 +102,101 @@ app = typer.Typer(
 )
 
 
-def _refuse_calendar_warnings(cal: OverviewCalendar) -> None:
-    warning_summary = ", ".join(warning.code for warning in cal.warnings)
-    raise _bad(
-        tr(
-            "cli.overview.calendar_refused_incomplete",
-            keys=warning_summary,
+def _grounded_warning_summary(warnings: Sequence[CalendarWarning]) -> str:
+    """Render calendar warnings as grounded profile requirements where possible.
+
+    A completeness warning's ``code`` is the profile field's declared selector
+    token, so the schema resolves it to the field's operator label and the
+    registry supplies its legal grounding - the same two facts the modelo work
+    readiness gate names when it refuses for the same missing field.
+
+    The warning stream also carries codes that are not profile fields at all
+    (censo enrolment, unverified justificante, AEAT evidence conflict). Those
+    resolve to nothing and pass through verbatim, which is what this surface
+    already showed for them.
+    """
+    from ...application.user_profile import format_profile_selector_requirements
+    from ...core.resources import resources
+    from ...domain.calculations.registry import build_profile_grounding_index
+
+    return ", ".join(
+        format_profile_selector_requirements(
+            (warning.code for warning in warnings),
+            schema=resources().user_profile_schema.singleton,
+            grounding_index=build_profile_grounding_index(resources().modelos.authority),
         ),
     )
+
+
+def _incomplete_profile_refusal(warnings: Sequence[CalendarWarning]) -> Exception:
+    """Return the refusal for a projection blocked by unanswered profile facts.
+
+    A profile fact the operator has not supplied is a workflow-state refusal,
+    not invalid operator input, so it is raised as a refusal rather than as a
+    parameter error: nothing the operator typed on this command line is wrong.
+
+    ``fix_command`` is offered as the suggestion only when every warning agrees
+    on one, since suggesting one of several remediations would send the
+    operator to a command that resolves only part of what is blocking them.
+    """
+    from ._errors import CliRefusedBoundaryError
+
+    fix_commands = {warning.fix_command for warning in warnings}
+    return CliRefusedBoundaryError(
+        translated_message="cli.overview.refused_incomplete_profile",
+        context={"requirements": _grounded_warning_summary(warnings)},
+        suggestion=next(iter(fix_commands)) if len(fix_commands) == 1 else None,
+    )
+
+
+#: The profile facts that together declare a taxpayer model, held as their
+#: declared selector tokens. A natural person additionally needs at least one
+#: IRPF income category; a legal or attribution entity is declared by its
+#: entity type alone, so the second token is conditional.
+_ENTITY_TYPE_SELECTOR = "taxpayer.entity_type"
+_IRPF_INCOME_CATEGORIES_SELECTOR = "taxpayer.irpf_income_categories"
+
+
+def _undeclared_taxpayer_model_refusal(profile: TaxpayerProfile) -> Exception:
+    """Return the refusal for a projection blocked by an undeclared taxpayer model.
+
+    Applicability cannot be derived without an entity type, and for a natural
+    person without at least one IRPF income category, so the engine reports
+    incomplete rather than guessing autónomo. This names WHICH of those two
+    facts is absent instead of stating only that the model is undeclared.
+
+    Only the genuinely absent facts are named: a natural person who declared
+    an entity type but no income category is told about the income category,
+    not sent back to a field they already filled in.
+    """
+    from ...application.user_profile import format_profile_selector_requirements
+    from ...core.resources import resources
+    from ...domain.calculations.registry import build_profile_grounding_index
+    from ...domain.deadlines import EntityType
+    from ._errors import CliRefusedBoundaryError
+
+    missing: list[str] = []
+    if profile.entity_type is None:
+        missing.append(_ENTITY_TYPE_SELECTOR)
+    elif profile.entity_type is EntityType.NATURAL_PERSON and not profile.irpf_income_categories:
+        missing.append(_IRPF_INCOME_CATEGORIES_SELECTOR)
+    return CliRefusedBoundaryError(
+        translated_message="cli.overview.refused_undeclared_taxpayer_model",
+        context={
+            "requirements": ", ".join(
+                format_profile_selector_requirements(
+                    missing,
+                    schema=resources().user_profile_schema.singleton,
+                    grounding_index=build_profile_grounding_index(resources().modelos.authority),
+                ),
+            ),
+        },
+        suggestion="aeat config profile edit",
+    )
+
+
+def _refuse_calendar_warnings(cal: OverviewCalendar) -> None:
+    raise _incomplete_profile_refusal(cal.warnings)
 
 
 def _overview_status_period(period: str, *, year: int | None):
@@ -368,7 +456,7 @@ def overview_calendar(
         # The taxpayer model is undeclared — the engine refuses
         # to guess. Surface the "declare your taxpayer type first"
         # guidance instead of an empty calendar with no explanation.
-        raise _bad(cal.incomplete_reason or tr("cli.overview.taxpayer_model_undeclared"))
+        raise _undeclared_taxpayer_model_refusal(_profile_to_taxpayer(current))
     if cal.warnings and not allow_incomplete:
         _refuse_calendar_warnings(cal)
     typed_cal, lines, calendar_notices = overview_calendar_output(
@@ -629,15 +717,9 @@ def overview_agenda(
         raw_values=raw_values,
     )
     if not agenda.taxpayer_model_declared and not allow_incomplete:
-        raise _bad(agenda.incomplete_reason or tr("cli.overview.taxpayer_model_undeclared"))
+        raise _undeclared_taxpayer_model_refusal(_profile_to_taxpayer(current))
     if agenda.warnings and not allow_incomplete:
-        warning_summary = ", ".join(warning.code for warning in agenda.warnings)
-        raise _bad(
-            tr(
-                "cli.overview.calendar_refused_incomplete",
-                keys=warning_summary,
-            ),
-        )
+        raise _incomplete_profile_refusal(agenda.warnings)
 
     typed_agenda, lines, coverage_notices = overview_agenda_output(agenda)
     _emit_envelope(ctx, command="overview.agenda", result=typed_agenda, lines=lines, notices=coverage_notices)
@@ -706,15 +788,9 @@ def overview_backlog(
         work_units=work_units,
     )
     if not backlog.taxpayer_model_declared:
-        raise _bad(backlog.incomplete_reason or tr("cli.overview.taxpayer_model_undeclared"))
+        raise _undeclared_taxpayer_model_refusal(_profile_to_taxpayer(current))
     if backlog.warnings and not allow_incomplete:
-        warning_summary = ", ".join(warning.code for warning in backlog.warnings)
-        raise _bad(
-            tr(
-                "cli.overview.calendar_refused_incomplete",
-                keys=warning_summary,
-            ),
-        )
+        raise _incomplete_profile_refusal(backlog.warnings)
 
     typed_backlog, lines, backlog_notices = overview_backlog_output(
         backlog,

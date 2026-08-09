@@ -204,6 +204,7 @@ from ._casilla_membership import (
 )
 from ._profile_grounding import (
     ProfileKeyGrounding,
+    binding_profile_keys,
     build_profile_grounding_index,
 )
 from ._censo_modelos import (
@@ -998,6 +999,7 @@ __all__ = [
     "build_diseno_coverage_report",
     "build_external_grounding_audit",
     "build_model_law_coverage_ledger",
+    "binding_profile_keys",
     "build_profile_grounding_index",
     "build_snapshot",
     "build_support_matrix",

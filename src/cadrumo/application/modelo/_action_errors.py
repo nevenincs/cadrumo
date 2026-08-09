@@ -231,6 +231,10 @@ class ModeloPaymentElectionCapabilityRefusedError(ModeloError):
     """
 
 
+class ModeloPriorDomiciliationElectionRefusedError(ModeloError):
+    """Raised when a prior-direct-debit election lacks legal, registry, or U-proof authority."""
+
+
 class ModeloRefundAccountMissingError(ModeloError):
     """Raised when a refund-disposition export has no refund account on file.
 

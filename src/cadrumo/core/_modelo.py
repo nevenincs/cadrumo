@@ -216,21 +216,47 @@ class Modelo(StrEnum):
 
 
 #: Recognized AEAT obligation modelos the registry does **not** yet model, each
-#: mapped to a short description of the obligation. These are real, currently
-#: fileable AEAT forms outside the registry directory listing; the
+#: mapped to a short description of the obligation. A member is a real, currently
+#: fileable AEAT form outside the registry directory listing; the
 #: obligation-coverage reconciliation
-#: (:func:`application.overview.build_obligation_coverage`) treats them as
-#: part of the AEAT obligation universe and surfaces each as an *advised*
+#: (:func:`application.overview.build_obligation_coverage`) treats every member as
+#: part of the AEAT obligation universe and surfaces it as an *advised*
 #: (registry-unmodeled → investigate) row rather than leaving it invisible.
 #: Promoting one to a full registry definition (deadline windows + applicability
 #: rule) removes it from this delta and folds it into
 #: :func:`application.modelo.registry_modelo_codes`. The mapping is the
 #: extensible edge of AEAT-wide enrollment: it ratchets up as obligations are
-#: recognized and shrinks as they are modeled. The current set covers the common
-#: retención autoliquidaciones and declaraciones informativas an autónomo, a PYME,
-#: or an entity may owe, grounded against AEAT's published catalogue of
-#: declaraciones informativas and retención forms; it is not yet AEAT's full
-#: ~200-form set.
+#: recognized and shrinks as they are modeled.
+#:
+#: **It is INTENTIONALLY EMPTY today, and that is a recorded decision rather than
+#: an oversight.** Every sentence above describes the mechanism, which is live and
+#: exercised; none of it asserts that a member currently exists. This declaration
+#: previously carried prose claiming a populated set covering the common retención
+#: autoliquidaciones and declaraciones informativas an autónomo, a PYME or an
+#: entity may owe. No such set was ever declared, so that paragraph asserted a
+#: property this module does not have.
+#:
+#: Why it stays empty rather than being filled in passing: deciding that a
+#: registry-less form still bears a filing duty a taxpayer must be advised of is a
+#: TAX REVIEW against official BOE and AEAT sources, per entry, with human
+#: reviewer sign-off. It is not derivable from anything in this codebase, and it
+#: is not the kind of claim to infer from a form's absence. :data:`Modelo.M037`
+#: is the worked example of why: that it was suppressed by Orden HAC/1526/2024 is
+#: a fact with a source, not something the code could have concluded. An entry
+#: added without that grounding would advise a taxpayer of an obligation nobody
+#: established, which is the failure this emptiness avoids.
+#:
+#: **Do not delete the consuming branch to remove "dead code".** While this
+#: mapping is empty the ``REGISTRY_UNMODELED`` disposition in
+#: :func:`application.overview.build_obligation_coverage` is unreachable from any
+#: production input, because the out-of-scope partition resolves first. It is
+#: retained deliberately: it is the advisory capability for a real class of
+#: taxpayers — those whose obligation is registry-less — and removing it reads as
+#: tidying while silently withdrawing that advice. The coverage tests exercise the
+#: branch through a substituted declaration, which proves the disposition
+#: classifies a member correctly; it does not, and cannot, prove any actually
+#: declared obligation is correct. The first real entry therefore inherits a gate
+#: that already bites.
 UNMODELED_OBLIGATIONS: Mapping[Modelo, str] = {}
 
 

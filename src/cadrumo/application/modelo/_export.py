@@ -56,6 +56,7 @@ from ...core import (
     Modelo,
     PaymentElection,
     Period,
+    PriorDomiciliationElection,
     RefundElection,
     ResultDisposition,
     result_disposition_is_refund,
@@ -96,6 +97,7 @@ from ..calculations import (
     CalculationObservationRepository,
     CrossPeriodExpectedMemberSet,
     IvaWalletDecisionRepository,
+    PriorDomiciliationElectionProjection,
 )
 from ..filing import (
     DeclaracionExportResult,
@@ -119,6 +121,7 @@ from ._action_errors import (
 from ._iva_wallet_gate import require_persisted_iva_compensation_decision_matches_revision
 from ._ledger_evidence_gate import raise_if_deductible_vat_evidence_missing
 from ._profile_export_binding import compose_legal_full_name, resolve_profile_export_values
+from ._prior_domiciliation import resolve_prior_domiciliation_election
 from ._required_binding_gate import (
     require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
 )
@@ -251,6 +254,10 @@ class ModeloExportCommand(BaseModel):
             filing. Defaults to ``COMPENSAR``; ``DEVOLVER`` requests the credit
             back and is honoured only for a lawful refund period (refused
             otherwise).
+        payment_election: The operator's positive-result settlement election.
+            ``INGRESO`` retains the standard declaration type, while a supported
+            Modelo 303 ``DOMICILIACION`` resolves to ``U``. Unsupported or
+            sign-incompatible elections are refused by the shared resolver.
     """
 
     model_config = _STRICT_FROZEN
@@ -260,6 +267,7 @@ class ModeloExportCommand(BaseModel):
     actor: str = Field(min_length=1, max_length=128)
     refund_election: RefundElection = RefundElection.COMPENSAR
     payment_election: PaymentElection = PaymentElection.INGRESO
+    prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP
 
 
 class ModeloExportResult(BaseModel):
@@ -286,6 +294,9 @@ class ModeloExportResult(BaseModel):
         actor: Operator identifier captured into the event.
         bucket_event_id: Id of the ``MODELO_EXPORTED`` event appended
             to the catalogue.
+        resolved_result_disposition: The single resolved AEAT declaration type.
+        payment_election: The semantic positive-result election when applicable.
+        refund_election: The semantic negative-result election when applicable.
         casilla_provenance: Regulatory grounding for casillas covered
             by the exported fichero-BOE layout.
     """
@@ -308,6 +319,7 @@ class ModeloExportResult(BaseModel):
     resolved_result_disposition: ResultDisposition
     payment_election: PaymentElection | None = None
     refund_election: RefundElection | None = None
+    prior_domiciliation_election: PriorDomiciliationElectionProjection
     casilla_provenance: tuple[filing_domain.ModeloCasillaProvenance, ...] = Field(default_factory=tuple)
     iva_wallet_decision_provenance: ModeloIvaWalletDecisionProvenance | None = None
     local_evidence_status: str = Field(default=_LOCAL_EXPORT_EVIDENCE_STATUS, min_length=1)
@@ -646,6 +658,8 @@ def _compose_export_headers(
     period: Period,
     refund_election: RefundElection = RefundElection.COMPENSAR,
     payment_election: PaymentElection = PaymentElection.INGRESO,
+    resolved_result_disposition: ResultDisposition | None = None,
+    prior_domiciliation_election: PriorDomiciliationElectionProjection | None = None,
 ) -> dict[str, str]:
     """Compose the full fichero-BOE export header dict for a revision.
 
@@ -693,19 +707,20 @@ def _compose_export_headers(
     # The amendment (complementaria/sustitutiva) is an orthogonal marker set
     # below and does NOT change the result disposition.
     #
-    # The refund election (``C`` -> ``D`` devolución) is applied by the SINGLE
-    # shared resolver `resolve_modelo_result_disposition`, the one place the
-    # disposition is determined; the cross-period carry persistence reads the same
-    # fact from the same ``refund_election``, so the fichero "D" and the
-    # casilla-110 carry can never disagree (art. 30 RD 1624/1992 / LIVA art. 116).
-    declaration_type = resolve_modelo_result_disposition(
-        work_unit=work_unit,
-        revision=revision,
-        workflow_profile=workflow_profile,
-        period=period,
-        refund_election=refund_election,
-        payment_election=payment_election,
-    ).value
+    # Both semantic election axes are applied by the SINGLE shared resolver.
+    # The public export path supplies its already-resolved value so its header,
+    # receipt, and event are one determination; direct header callers resolve
+    # through the same authority here.
+    if resolved_result_disposition is None:
+        resolved_result_disposition = resolve_modelo_result_disposition(
+            work_unit=work_unit,
+            revision=revision,
+            workflow_profile=workflow_profile,
+            period=period,
+            refund_election=refund_election,
+            payment_election=payment_election,
+        )
+    declaration_type = resolved_result_disposition.value
     headers: dict[str, str] = {
         "declaration_type": declaration_type,
         "surnames": surnames,
@@ -770,6 +785,11 @@ def _compose_export_headers(
         if revision.amends_filing_record_id is not None:
             headers["justificante_anterior"] = revision.amends_filing_record_id
             headers["previous_justificante"] = revision.amends_filing_record_id
+
+    if prior_domiciliation_election is not None and (
+        prior_domiciliation_election.election is PriorDomiciliationElection.CANCEL_OR_MODIFY
+    ):
+        headers["prior_domiciliation_action"] = "X"
 
     return headers
 
@@ -934,6 +954,7 @@ def _persist_exported_draft(
     approved: ModeloDraft,
     exported_at: datetime,
     iva_wallet_provenance: ModeloIvaWalletDecisionProvenance | None,
+    prior_domiciliation_election: PriorDomiciliationElectionProjection,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol,
     schema_provider: RegistrySchemaAccessor,
 ) -> ModeloExportResult:
@@ -952,6 +973,8 @@ def _persist_exported_draft(
         period=period,
         refund_election=command.refund_election,
         payment_election=command.payment_election,
+        resolved_result_disposition=resolved_result_disposition,
+        prior_domiciliation_election=prior_domiciliation_election,
     )
     receipt = _write_export_tmp(
         command=command,
@@ -971,6 +994,7 @@ def _persist_exported_draft(
         receipt=receipt,
         iva_wallet_provenance=iva_wallet_provenance,
         resolved_result_disposition=resolved_result_disposition,
+        prior_domiciliation_election=prior_domiciliation_election,
         exported_at=exported_at,
         bucket_event_repository=bucket_event_repository,
     )
@@ -1047,6 +1071,7 @@ def _persist_exported_draft(
             }
             else None
         ),
+        prior_domiciliation_election=prior_domiciliation_election,
         casilla_provenance=receipt.casilla_provenance,
         iva_wallet_decision_provenance=iva_wallet_provenance,
         official_evidence_next_action=_official_evidence_next_action(
@@ -1105,6 +1130,7 @@ def _emit_export_event(
     receipt: DeclaracionExportResult,
     iva_wallet_provenance: ModeloIvaWalletDecisionProvenance | None,
     resolved_result_disposition: ResultDisposition,
+    prior_domiciliation_election: PriorDomiciliationElectionProjection,
     exported_at: datetime,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol,
 ) -> BucketEvent:
@@ -1143,6 +1169,14 @@ def _emit_export_event(
         ResultDisposition.DEVOLUCION_TRANSFERENCIA_EXTRANJERO,
     }:
         event_payload["refund_election"] = command.refund_election.value
+    event_payload["prior_domiciliation_election"] = prior_domiciliation_election.election.value
+    if prior_domiciliation_election.baseline_filing_record_id is not None:
+        event_payload["prior_domiciliation_baseline_filing_record_id"] = (
+            prior_domiciliation_election.baseline_filing_record_id
+        )
+        event_payload["prior_domiciliation_baseline_evidence_reference_id"] = (
+            prior_domiciliation_election.baseline_evidence_reference_id or ""
+        )
     if iva_wallet_provenance is not None:
         event_payload.update(
             {
@@ -1314,6 +1348,13 @@ def export_modelo_revision(
         target_revision=revision,
     )
     iva_wallet_provenance = _iva_wallet_decision_export_provenance(iva_wallet_decision)
+    prior_domiciliation_provenance = resolve_prior_domiciliation_election(
+        election=command.prior_domiciliation_election,
+        work_unit=work_unit,
+        revision=revision,
+        filing_repository=fr_repo,
+        observation_repository=obs_repo,
+    )
 
     now = clock or _utc_now()
     export_period, approved = _approve_export_draft(
@@ -1334,6 +1375,7 @@ def export_modelo_revision(
         approved=approved,
         exported_at=now,
         iva_wallet_provenance=iva_wallet_provenance,
+        prior_domiciliation_election=prior_domiciliation_provenance,
         bucket_event_repository=bv_repo,
         schema_provider=schema_provider,
     )

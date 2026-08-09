@@ -104,7 +104,7 @@ def _compute_profile_grounding_index(
             for binding in revision.bindings:
                 if binding.source is not BindingSourceKind.PROFILE:
                     continue
-                for key in _selector_profile_keys(binding):
+                for key in binding_profile_keys(binding):
                     modelos.setdefault(key, set()).add(definition.id)
                     legal_refs.setdefault(key, set()).update(binding.legal_refs)
                     source_refs.setdefault(key, set()).update(binding.source_refs)
@@ -120,8 +120,20 @@ def _compute_profile_grounding_index(
     }
 
 
-def _selector_profile_keys(binding: DataBindingDefinition) -> tuple[str, ...]:
-    """Return the value-consuming profile keys named by a profile binding's selector."""
+def binding_profile_keys(binding: DataBindingDefinition) -> tuple[str, ...]:
+    """Return the value-consuming profile keys named by a profile binding's selector.
+
+    Only value-consuming selector members contribute: the scalar
+    ``profile_key`` and the composite ``profile_keys``. A
+    ``required_when_profile_key`` gate names a key to TEST, not to file, so
+    including it would over-claim that key's legal basis.
+
+    Shared with the surfaces that must name the profile fact behind an
+    unresolved profile binding, rather than the binding's own identifier - the
+    grounding index below inverts the same relation across the whole
+    registry, and a per-binding caller needs the same extraction without
+    building that index.
+    """
     selector = binding.selector
     if isinstance(selector, ProfileSelector):
         scalar = (selector.profile_key,) if selector.profile_key is not None else ()
@@ -141,4 +153,4 @@ def _selector_profile_keys(binding: DataBindingDefinition) -> tuple[str, ...]:
     return tuple(keys)
 
 
-__all__ = ["ProfileKeyGrounding", "build_profile_grounding_index"]
+__all__ = ["ProfileKeyGrounding", "binding_profile_keys", "build_profile_grounding_index"]

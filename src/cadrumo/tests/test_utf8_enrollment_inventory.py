@@ -288,3 +288,56 @@ def test_no_bare_utf8_literals_in_dev() -> None:
             f"{len(_DEV_KNOWN_VIOLATING)} are ratcheted as known backlog.\n"
             "Do NOT add a file to _DEV_KNOWN_VIOLATING — fix it instead.",
         )
+
+
+#: Floors for the two corpora this module scans. Both sit an order of magnitude
+#: below the live counts (1553 production files, 228 dev files), because their
+#: job is to catch a walk that has COLLAPSED, not to track growth. A floor near
+#: the live count would fail on ordinary deletions and train the next reader to
+#: edit the constant, which is how a floor stops being read at all.
+_PRODUCTION_CORPUS_FLOOR = 200
+_DEV_CORPUS_FLOOR = 20
+
+
+def test_the_production_corpus_is_not_empty() -> None:
+    """The production scan is meaningless over a corpus that returns nothing.
+
+    ``test_no_bare_utf8_literals_in_production_files`` raises only when it finds
+    a violation, so a walk that matches no files reports exactly what a clean
+    tree reports. Nothing else in the repository asserts this walk returns
+    anything: the accessor is module-local.
+
+    Until this floor existed the scan was protected only as a side effect of
+    ``test_no_ratchet_entry_has_gone_inert``, which fails on an empty corpus
+    because every ratchet entry then looks vanished. That protection is
+    accidental and self-cancelling - it holds only while the ratchet is
+    non-empty, and the ratchet exists to be drained to zero. The dev ratchet in
+    this same module has already reached zero, which is what left the dev scan
+    unfalsifiable.
+    """
+    production_files = _all_production_files()
+
+    assert len(production_files) > _PRODUCTION_CORPUS_FLOOR, (
+        f"the production file walk returned {len(production_files)} files, at or below the "
+        f"{_PRODUCTION_CORPUS_FLOOR} floor. The bare-UTF-8 scan over this corpus cannot fail while "
+        "the walk is empty or collapsed, so it would report a clean tree either way. "
+        "Fix the walk rather than lowering this floor."
+    )
+
+
+def test_the_dev_corpus_is_not_empty() -> None:
+    """The dev scan carries no other protection at all.
+
+    ``test_no_bare_utf8_literals_in_dev`` has the same raise-only shape as its
+    production sibling, and its ratchet is already empty, so no inert-entry
+    check stands behind it. Its accessor also returns an empty list when the
+    dev root is not a directory, which makes a collapsed walk silent rather
+    than loud.
+    """
+    dev_files = _all_dev_files()
+
+    assert len(dev_files) > _DEV_CORPUS_FLOOR, (
+        f"the dev file walk returned {len(dev_files)} files, at or below the {_DEV_CORPUS_FLOOR} "
+        "floor. The bare-UTF-8 scan over dev/ cannot fail while the walk is empty or collapsed. "
+        "Fix the walk rather than lowering this floor."
+    )

@@ -3090,9 +3090,6 @@ cli:
         discard_requires_yes: 'Az eldobás auditálható állapotváltás. Futtassa újra:
           `aeat app modelo work discard %{work_unit_id} --yes` a megerősítéshez.'
         discard_yes_help: Az eldobási művelet explicit megerősítése.
-        disposition_help: 'A 303-as modell negatív eredményének rendelkezése: compensar
-          (a jóváírás átvitele, alapértelmezett) vagy devolver (visszatérítés kérése;
-          nem REDEME-adózónál csak az év utolsó bevallási időszakában).'
         file_help: Hitelesített revízió megjelölése belső benyújtottként. NEM nyújt
           be az AEAT-hoz.
         file_idempotent_noop: 'Idempotens nincs-művelet: a(z) %{calculation_revision_id}

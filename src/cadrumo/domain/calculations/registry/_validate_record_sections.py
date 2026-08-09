@@ -40,6 +40,7 @@ from ._validate_extraction_profiles import (
     validate_declaracion_pdf_specimen_gate,
     validate_dotted_callable,
     validate_extraction_profile_artefacts,
+    validate_provisional_declaracion_pdf_evidence_state,
 )
 from ._validate_helpers import missing_refs
 from ._validate_revision_rules import validate_dated_values
@@ -248,6 +249,7 @@ def validate_extraction_profile_section(
                     f"export fields {missing_exported_casillas!r}",
                 )
         failures.extend(validate_extraction_profile_artefacts(prefix, profile))
+        failures.extend(validate_provisional_declaracion_pdf_evidence_state(prefix, profile))
         for target in profile.target_casillas:
             failures.extend(validate_bbox_anchor_consistency(prefix, target))
         if corpus_root is not None:

@@ -93,7 +93,7 @@ from ...domain.prorrata_register import (
     ProrrataRegisterEntry,
     ProrrataRegisterRepositoryProtocol,
 )
-from ..calculations import CalculationObservationRepository
+from ..calculations import CalculationObservationRepository, PriorDomiciliationElectionProjection
 from ._filed_revision_observation import persist_filed_revision_observation
 
 if TYPE_CHECKING:  # pragma: no cover - typing-only storage boundary import
@@ -614,6 +614,7 @@ def persist_filed_revision(
     participation_index_repository: TransactionParticipationIndexRepository | None = None,
     prorrata_register_repository: ProrrataRegisterRepositoryProtocol | None = None,
     result_disposition: ResultDisposition | None = None,
+    prior_domiciliation_election: PriorDomiciliationElectionProjection | None = None,
     taxpayer_nif: str | None = None,
 ) -> ModeloRecord:
     """Persist a verified-complete calculation revision and return a :class:`ModeloRecord`.
@@ -743,6 +744,21 @@ def persist_filed_revision(
                 "filing_year": str(work_unit.filing_year),
                 "period": work_unit.period.registry_token,
                 "supersedes_filing_record_id": prior_current.filing_record_id if prior_current is not None else "",
+                "prior_domiciliation_election": (
+                    prior_domiciliation_election.election.value if prior_domiciliation_election is not None else ""
+                ),
+                "prior_domiciliation_baseline_filing_record_id": (
+                    prior_domiciliation_election.baseline_filing_record_id
+                    if prior_domiciliation_election is not None
+                    and prior_domiciliation_election.baseline_filing_record_id is not None
+                    else ""
+                ),
+                "prior_domiciliation_baseline_evidence_reference_id": (
+                    prior_domiciliation_election.baseline_evidence_reference_id
+                    if prior_domiciliation_election is not None
+                    and prior_domiciliation_election.baseline_evidence_reference_id is not None
+                    else ""
+                ),
             },
         ),
     )
@@ -782,6 +798,7 @@ def persist_filed_revision(
             repository=calculation_observation_repository,
             captured_at=now,
             result_disposition=result_disposition,
+            prior_domiciliation_election=prior_domiciliation_election,
             taxpayer_nif=taxpayer_nif,
             filing_record_id=new_filing_id,
         )

@@ -40,7 +40,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import ClassVar, Literal, override
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...adapters.persistence.storage import (
     CALCULATION_OBSERVATIONS_NAMESPACE,
@@ -51,7 +51,14 @@ from ...adapters.persistence.storage import (
     SensitivityClass,
     safe_repository_id,
 )
-from ...core import STRICT_FROZEN_CONFIG, ObservedHeaderFact, Period, ResultDisposition, SecureObjectWrite
+from ...core import (
+    STRICT_FROZEN_CONFIG,
+    ObservedHeaderFact,
+    Period,
+    PriorDomiciliationElection,
+    ResultDisposition,
+    SecureObjectWrite,
+)
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.resources import resources
@@ -117,6 +124,48 @@ class ResultDispositionProjection(BaseModel):
     @classmethod
     def _parse_disposition(cls, value: object) -> ResultDisposition:
         return ResultDisposition(value)
+
+
+class PriorDomiciliationElectionProjection(BaseModel):
+    """Safe provenance for a Modelo 303 rectificativa's prior-debit election.
+
+    A cancellation/modification is actionable only when the application has
+    already joined the rectificativa to an AEAT-attested baseline filing and to
+    that filed declaration's submitted-file ``U`` header.  The projection keeps
+    the semantic election and redacted join coordinates, never an account or
+    rendered header value.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    election: PriorDomiciliationElection
+    baseline_filing_record_id: str | None = Field(default=None, min_length=64, max_length=64)
+    baseline_evidence_reference_id: str | None = Field(default=None, min_length=1, max_length=128)
+    baseline_result_disposition: ResultDisposition | None = None
+    baseline_source_header_locator: str | None = Field(default=None, min_length=1, max_length=512)
+
+    @field_validator("election", mode="before")
+    @classmethod
+    def _parse_election(cls, value: object) -> PriorDomiciliationElection:
+        return PriorDomiciliationElection(value)
+
+    @model_validator(mode="after")
+    def _enforce_baseline_proof_shape(self) -> PriorDomiciliationElectionProjection:
+        proof = (
+            self.baseline_filing_record_id,
+            self.baseline_evidence_reference_id,
+            self.baseline_result_disposition,
+            self.baseline_source_header_locator,
+        )
+        if self.election is PriorDomiciliationElection.KEEP:
+            if any(value is not None for value in proof):
+                raise ValueError("KEEP prior domiciliation election must not carry baseline provenance")
+            return self
+        if any(value is None for value in proof):
+            raise ValueError("CANCEL_OR_MODIFY prior domiciliation election requires complete baseline-U provenance")
+        if self.baseline_result_disposition is not ResultDisposition.DOMICILIACION:
+            raise ValueError("CANCEL_OR_MODIFY prior domiciliation election requires baseline disposition U")
+        return self
 
 
 class ObservationEnvelopePayload(BaseModel):
@@ -196,6 +245,13 @@ class ObservationEnvelopePayload(BaseModel):
         description=(
             "Validated Modelo 303 declaration disposition with the source that "
             "established it. It is envelope evidence, never a synthetic casilla."
+        ),
+    )
+    prior_domiciliation_election: PriorDomiciliationElectionProjection | None = Field(
+        default=None,
+        description=(
+            "Semantic prior-direct-debit election and, for X, the safe join to "
+            "the externally evidenced baseline U declaration. This is never bank data."
         ),
     )
     m303_compensation_basis: Literal["generated", "resultado", "refunded"] | None = Field(
@@ -434,6 +490,7 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
         source_metadata: Mapping[str, str] | None = None,
         source_headers: tuple[ObservedHeaderFact, ...] = (),
         result_disposition: ResultDispositionProjection | None = None,
+        prior_domiciliation_election: PriorDomiciliationElectionProjection | None = None,
         normalize_m303_carry: bool = False,
     ) -> ObservationEnvelopePayload:
         """Build one validated observation envelope without writing it.
@@ -487,6 +544,7 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
             source_metadata=dict(source_metadata or {}),
             source_headers=source_headers,
             result_disposition=result_disposition,
+            prior_domiciliation_election=prior_domiciliation_election,
         )
         if normalize_m303_carry:
             # Keep the serialisable envelope model independent from the
@@ -507,6 +565,7 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
         source_metadata: Mapping[str, str] | None = None,
         source_headers: tuple[ObservedHeaderFact, ...] = (),
         result_disposition: ResultDispositionProjection | None = None,
+        prior_domiciliation_election: PriorDomiciliationElectionProjection | None = None,
         normalize_m303_carry: bool = False,
     ) -> ObservationEnvelopePayload:
         """Persist one envelope prepared through the canonical validation path."""
@@ -519,6 +578,7 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
             source_metadata=source_metadata,
             source_headers=source_headers,
             result_disposition=result_disposition,
+            prior_domiciliation_election=prior_domiciliation_election,
             normalize_m303_carry=normalize_m303_carry,
         )
         self.save(payload)

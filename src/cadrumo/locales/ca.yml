@@ -3153,9 +3153,6 @@ cli:
         discard_requires_yes: El descart és una transició d'estat auditable. Torneu
           a executar 'aeat app modelo work discard %{work_unit_id} --yes' per confirmar.
         discard_yes_help: Confirmar explícitament l'operació de descart
-        disposition_help: 'Disposició del resultat negatiu del Model 303: compensar
-          (arrossegar el crèdit, per defecte) o tornar (sol·licitar la devolució;
-          només en l''últim període de l''any per a un contribuent no inscrit a REDEME).'
         file_help: Marcar una revisió verificada com a internament presentada. NO
           envia a l'AEAT
         file_idempotent_noop: 'Operació idempotent sense efecte: la revisió de càlcul

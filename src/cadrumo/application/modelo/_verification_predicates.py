@@ -90,9 +90,31 @@ _M349_IMPORTE_RECTIFICACIONES_CASILLA: CasillaId = "decl.importe-rectificaciones
 # from this dispatch fall back to the generic cross-casilla template.
 
 
+def _representante_fiscal_requirement() -> str:
+    """Name the representante-fiscal NIF profile field as the operator sees it.
+
+    The finding tells the operator which profile fact to go and set, so the
+    field is named the way the profile editor names it rather than by an
+    internal path. Resolved from the field's declared model selector through
+    the one renderer every other refusal in this area uses, so a schema rename
+    moves the prose with it.
+    """
+    from ...core.resources import resources
+    from ..user_profile import format_profile_selector_requirements
+
+    rendered = format_profile_selector_requirements(
+        ("taxpayer.representante_fiscal_nif",),
+        schema=resources().user_profile_schema.singleton,
+    )
+    return ", ".join(rendered)
+
+
 def _resolve_predicate_next_action(predicate_id: str) -> str | None:
     if predicate_id == "m210-representante-fiscal-required":
-        return tr("application.modelo.findings.representante_fiscal_required.next_action")
+        return tr(
+            "application.modelo.findings.representante_fiscal_required.next_action",
+            requirements=_representante_fiscal_requirement(),
+        )
     return None
 
 

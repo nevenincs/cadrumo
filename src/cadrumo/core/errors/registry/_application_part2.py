@@ -516,6 +516,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.calculations._m303_carry_ingress.M303CarryIngressError",
+        ErrorCode(
+            code="REFUSED_M303_CARRY_INGRESS",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_calculations_casilla_constraint",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.iva_compensation._errors.IvaWalletReconciliationError",
         ErrorCode(
             code="REFUSED_IVA_WALLET_RECONCILIATION_INVARIANT",
