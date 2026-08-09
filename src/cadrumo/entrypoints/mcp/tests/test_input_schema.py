@@ -13,6 +13,8 @@ from ...cli import command_schema_refs
 from .._dispatch import is_exposable_command
 from .._input_schema import (
     JsonType,
+    SchemaResolutionError,
+    VerbLeafKind,
     VerbParamKind,
     build_verb_input_schemas,
     cli_argv_for,
@@ -138,7 +140,53 @@ def test_resolved_cli_path_uses_the_hyphenated_command_name() -> None:
 def test_stable_history_schema_key_resolves_relocated_cli_path() -> None:
     schemas = build_verb_input_schemas(("config.bucket.history",))
 
-    assert schemas["config.bucket.history"].cli_path == ("config", "profile", "history")
+    schema = schemas["config.bucket.history"]
+
+    assert schema.cli_path == ("config", "profile", "history")
+    assert schema.resolved_leaf.subject_leaf_key == "config.bucket.history"
+    assert schema.resolved_leaf.cli_path == ("config", "profile", "history")
+    assert schema.resolved_leaf.alias_paths == (("config", "bucket", "history"),)
+
+
+def test_resolved_leaf_exposes_hyphenated_click_identity_without_replacing_schema_key() -> None:
+    schema = build_verb_input_schemas(("app.live.iva_wallet.pull",))["app.live.iva_wallet.pull"]
+
+    assert schema.resolved_leaf.subject_leaf_key == "app.live.iva_wallet.pull"
+    assert schema.resolved_leaf.cli_path == ("app", "live", "iva-wallet", "pull")
+    assert schema.resolved_leaf.alias_paths == (("app", "live", "iva_wallet", "pull"),)
+    assert schema.resolved_leaf.kind is VerbLeafKind.COMMAND
+
+
+def test_required_inputs_keep_the_live_argument_and_option_metadata() -> None:
+    schemas = build_verb_input_schemas(("config.bucket.history", "ledger.add"))
+    history = {parameter.name: parameter for parameter in schemas["config.bucket.history"].required_inputs}
+    add = {parameter.name: parameter for parameter in schemas["ledger.add"].required_inputs}
+
+    assert history["profile"].kind is VerbParamKind.ARGUMENT
+    assert history["profile"].cli_flag == ""
+    assert add["booked_date"].kind is VerbParamKind.OPTION
+    assert add["booked_date"].cli_flag == "--date"
+    assert add["direction"].choices == ("INCOMING", "OUTGOING", "INTERNAL_TRANSFER")
+    assert all(parameter.required for parameter in (*history.values(), *add.values()))
+
+
+def test_group_callback_is_classified_without_losing_its_live_inputs() -> None:
+    schema = build_verb_input_schemas(("config.repair",))["config.repair"]
+
+    assert schema.resolved_leaf.kind is VerbLeafKind.CALLBACK
+    assert schema.resolved_leaf.subject_leaf_key == "config.repair"
+    assert schema.resolved_leaf.cli_path == ("config", "repair")
+
+
+def test_unresolved_leaf_retains_key_and_click_path_evidence() -> None:
+    with pytest.raises(SchemaResolutionError) as excinfo:
+        build_verb_input_schemas(("app.not-a-real-command",))
+
+    (failure,) = excinfo.value.failures
+    assert failure.subject_leaf_key == "app.not-a-real-command"
+    assert failure.attempted_cli_path == ("app", "not-a-real-command")
+    assert failure.resolved_cli_path == ("app",)
+    assert "not-a-real-command" in failure.reason
 
 
 def test_argv_places_positionals_first_then_options() -> None:

@@ -40,7 +40,7 @@ from typer._click.core import Context as ClickContext
 from typer._click.core import Parameter as ClickParameter
 from typer.main import get_command as _typer_get_command
 
-from ..schema_surface import CLI_PATH_BY_SCHEMA_KEY
+from ..schema_surface import CLI_PATH_BY_SCHEMA_KEY, GROUP_CALLBACK_SCHEMA_KEYS
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -59,6 +59,13 @@ class JsonType(StrEnum):
     INTEGER = "integer"
     NUMBER = "number"
     BOOLEAN = "boolean"
+
+
+class VerbLeafKind(StrEnum):
+    """The live Click surface addressed by one registered schema key."""
+
+    COMMAND = "command"
+    CALLBACK = "callback"
 
 
 class VerbParameter(BaseModel):
@@ -108,6 +115,41 @@ class VerbParameter(BaseModel):
         return schema
 
 
+class ResolvedVerbLeaf(BaseModel):
+    """One registered subject leaf resolved against the live Click command tree.
+
+    ``subject_leaf_key`` is the stable result-schema identity used by every
+    operator-surface join. ``cli_path`` is the canonical path Click dispatches.
+    ``alias_paths`` records the symbolic path used to reach a relocated or
+    hyphenated Click leaf; it is evidence of resolution, never an alternate
+    dispatch target. A caller must always execute ``cli_path``.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    subject_leaf_key: str = Field(min_length=1)
+    cli_path: tuple[str, ...] = Field(min_length=1)
+    alias_paths: tuple[tuple[str, ...], ...] = ()
+    kind: VerbLeafKind
+
+
+class VerbLeafResolutionFailure(BaseModel):
+    """Evidence retained when a registered subject leaf cannot resolve.
+
+    A schema build must fail rather than emit a parameter-free fallback, but the
+    error must preserve the stable subject key, complete attempted path, and
+    successfully resolved prefix so the live-surface reconciliation can locate
+    the broken registration or lazy subtree.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    subject_leaf_key: str = Field(min_length=1)
+    attempted_cli_path: tuple[str, ...] = Field(min_length=1)
+    resolved_cli_path: tuple[str, ...] = ()
+    reason: str = Field(min_length=1)
+
+
 class VerbInputSchema(BaseModel):
     """The strict per-verb input contract for one exposed MCP tool.
 
@@ -126,6 +168,33 @@ class VerbInputSchema(BaseModel):
     #: line), so the MCP tool description can be verb-specific rather than the
     #: shared family intent.
     help: str = ""
+
+    @property
+    def resolved_leaf(self) -> ResolvedVerbLeaf:
+        """Return this schema's immutable identity in the live Click tree.
+
+        The descriptor is derived from the canonical schema key, resolved Click
+        path, and callback inventory. It deliberately does not invent a second
+        source of truth for those identities.
+        """
+        symbolic_path = _symbolic_cli_path(self.command_key)
+        aliases = () if symbolic_path == self.cli_path else (symbolic_path,)
+        return ResolvedVerbLeaf(
+            subject_leaf_key=self.command_key,
+            cli_path=self.cli_path,
+            alias_paths=aliases,
+            kind=VerbLeafKind.CALLBACK if self.command_key in GROUP_CALLBACK_SCHEMA_KEYS else VerbLeafKind.COMMAND,
+        )
+
+    @property
+    def required_inputs(self) -> tuple[VerbParameter, ...]:
+        """Return the complete live metadata for every required CLI input.
+
+        The result is derived from the projected Click parameters rather than a
+        second handwritten list, retaining positional/option shape, flags,
+        multiplicity, types, choices, and requiredness for action validation.
+        """
+        return tuple(parameter for parameter in self.parameters if parameter.required)
 
     def json_schema(self) -> dict[str, Any]:
         """Project the parameters into a JSON Schema object for the tool.
@@ -241,8 +310,16 @@ def _parameter_from_click(parameter: ClickParameter) -> VerbParameter | None:
     )
 
 
+def _symbolic_cli_path(command_key: str) -> tuple[str, ...]:
+    """Project a schema key into its unrelocated symbolic CLI path."""
+    tokens = command_key.split(".")
+    if tokens[0] in {"config", "app"}:
+        return tuple(tokens)
+    return ("app", *tokens)
+
+
 def _naive_cli_path(command_key: str) -> tuple[str, ...]:
-    """Project a command key onto CLI path tokens without tree resolution.
+    """Project a command key onto the path to attempt without tree resolution.
 
     ``config.*`` and ``app.*`` keys carry their own root segment; every other key
     is a child of ``app``. Used as the fallback path when a key does not resolve
@@ -251,16 +328,13 @@ def _naive_cli_path(command_key: str) -> tuple[str, ...]:
     override = CLI_PATH_BY_SCHEMA_KEY.get(command_key)
     if override is not None:
         return override
-    tokens = command_key.split(".")
-    if tokens[0] in {"config", "app"}:
-        return tuple(tokens)
-    return ("app", *tokens)
+    return _symbolic_cli_path(command_key)
 
 
 def _resolve_command(
     root: ClickCommand,
     command_key: str,
-) -> tuple[ClickCommand | None, tuple[str, ...], str | None]:
+) -> tuple[ClickCommand | None, tuple[str, ...], VerbLeafResolutionFailure | None]:
     """Walk the CLI tree to the leaf command for ``command_key``.
 
     Threads a fresh child :class:`~click.Context` at each level so lazily-loaded
@@ -277,10 +351,16 @@ def _resolve_command(
     command: ClickCommand | None = root
     context = ClickContext(root, info_name=str(root.name))
     resolved: list[str] = []
-    for token in _naive_cli_path(command_key):
+    attempted_path = _naive_cli_path(command_key)
+    for token in attempted_path:
         getter = getattr(command, "get_command", None)
         if getter is None:
-            return None, tuple(resolved), f"resolving {token!r}: command has no subcommands"
+            return None, tuple(resolved), VerbLeafResolutionFailure(
+                subject_leaf_key=command_key,
+                attempted_cli_path=attempted_path,
+                resolved_cli_path=tuple(resolved),
+                reason=f"resolving {token!r}: command has no subcommands",
+            )
         try:
             child = getter(context, token) or getter(context, token.replace("_", "-"))
         except Exception as exc:
@@ -288,9 +368,19 @@ def _resolve_command(
             # declares a parameter type Typer cannot convert to click. Signal the
             # failure so the coverage gate can name the verb rather than letting one
             # hostile parameter silently ship as an argument-free schema.
-            return None, tuple(resolved), f"resolving {token!r}: {type(exc).__name__}: {exc}"
+            return None, tuple(resolved), VerbLeafResolutionFailure(
+                subject_leaf_key=command_key,
+                attempted_cli_path=attempted_path,
+                resolved_cli_path=tuple(resolved),
+                reason=f"resolving {token!r}: {type(exc).__name__}: {exc}",
+            )
         if child is None:
-            return None, tuple(resolved), f"resolving {token!r}: command segment not found"
+            return None, tuple(resolved), VerbLeafResolutionFailure(
+                subject_leaf_key=command_key,
+                attempted_cli_path=attempted_path,
+                resolved_cli_path=tuple(resolved),
+                reason=f"resolving {token!r}: command segment not found",
+            )
         resolved.append(str(child.name))
         context = ClickContext(child, parent=context, info_name=str(child.name))
         command = child
@@ -313,23 +403,49 @@ class SchemaResolutionError(RuntimeError):
         "silent argument-free schema), not an operator-facing registry-bound filing error"
     )
 
+    def __init__(self, failures: tuple[VerbLeafResolutionFailure, ...]) -> None:
+        """Initialise the typed failure with every unresolved subject leaf."""
+        self.failures = failures
+        detail = "; ".join(
+            (
+                f"{failure.subject_leaf_key} "
+                f"(attempted {' '.join(failure.attempted_cli_path)!r}; "
+                f"resolved {' '.join(failure.resolved_cli_path)!r}; {failure.reason})"
+            )
+            for failure in failures
+        )
+        super().__init__(
+            f"MCP input-schema build could not resolve {len(failures)} command "
+            f"subtree(s), which would silently ship an argument-free schema: {detail}"
+        )
 
-def assert_schema_coverage(resolution_errors: Mapping[str, str]) -> None:
+
+def assert_schema_coverage(
+    resolution_errors: Mapping[str, str] | tuple[VerbLeafResolutionFailure, ...],
+) -> None:
     """Fail the build when any command key's subtree failed to materialise.
 
-    ``resolution_errors`` maps a command key to the reason its lazily-loaded
-    subtree could not be resolved during the tree walk. An empty mapping is the
-    healthy state. Any entry names a missing or unmaterialisable verb that would
-    otherwise silently ship an argument-free schema and raises
-    :class:`SchemaResolutionError`.
+    ``resolution_errors`` is normally the typed evidence from the tree walk. A
+    mapping remains accepted for direct callers that can report only a reason;
+    it is converted into the same typed record with its schema-key path. An
+    empty collection is the healthy state. Any entry names a missing or
+    unmaterialisable verb that would otherwise silently ship an argument-free
+    schema and raises :class:`SchemaResolutionError`.
     """
     if not resolution_errors:
         return
-    detail = "; ".join(f"{key} ({reason})" for key, reason in sorted(resolution_errors.items()))
-    raise SchemaResolutionError(
-        f"MCP input-schema build could not resolve {len(resolution_errors)} command "
-        f"subtree(s), which would silently ship an argument-free schema: {detail}",
-    )
+    if isinstance(resolution_errors, Mapping):
+        failures = tuple(
+            VerbLeafResolutionFailure(
+                subject_leaf_key=key,
+                attempted_cli_path=_naive_cli_path(key),
+                reason=reason,
+            )
+            for key, reason in sorted(resolution_errors.items())
+        )
+    else:
+        failures = resolution_errors
+    raise SchemaResolutionError(failures)
 
 
 def _schema_from_resolution(
@@ -376,14 +492,22 @@ def build_verb_input_schemas(command_keys: tuple[str, ...]) -> dict[str, VerbInp
 
     root = _typer_get_command(cli_app)
     schemas: dict[str, VerbInputSchema] = {}
-    resolution_errors: dict[str, str] = {}
+    resolution_errors: list[VerbLeafResolutionFailure] = []
     for key in command_keys:
         command, resolved, error = _resolve_command(root, key)
         if error is not None or command is None:
-            resolution_errors[key] = error or "command did not resolve"
+            resolution_errors.append(
+                error
+                or VerbLeafResolutionFailure(
+                    subject_leaf_key=key,
+                    attempted_cli_path=_naive_cli_path(key),
+                    resolved_cli_path=resolved,
+                    reason="command did not resolve",
+                )
+            )
             continue
         schemas[key] = _schema_from_resolution(key, command, resolved)
-    assert_schema_coverage(resolution_errors)
+    assert_schema_coverage(tuple(resolution_errors))
     return schemas
 
 
