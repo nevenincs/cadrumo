@@ -335,58 +335,117 @@ def _carve_out_rows_from_payload(target: object, payload: Mapping[str, Any]) -> 
             assimilation at a parent no catalogue names, or closes an
             assimilation chain into a cycle.
     """
-    from ._errors import IvaCatalogueError
     from ._grounding import verify_table_legal_refs
 
     resolved: dict[str, _CarveOut] = {}
     citations: list[tuple[str, tuple[str, ...]]] = []
     for record in payload.get("carve_out", ()):
-        code = str(record.get("code", "")).strip().upper()
-        if len(code) != _ALPHA2_LENGTH or not code.isalpha():
-            raise IvaCatalogueError(f"{target}: carve-out record names no alpha-2 code: {record!r}")
-        if code in resolved:
-            raise IvaCatalogueError(f"{target}: {code} is carved out twice; one territory cannot be treated two ways")
-
-        assimilated = record.get("assimilated_to")
-        raw_scope = record.get("scope")
-        nothing = bool(record.get("establishes_nothing", False))
-        declared = [field for field in (assimilated, raw_scope, nothing or None) if field is not None]
-        if len(declared) != 1:
-            raise IvaCatalogueError(
-                f"{target}: carve-out {code} must declare exactly one of assimilated_to, scope or "
-                f"establishes_nothing; a row naming none establishes nothing by accident and a row "
-                f"naming two states the law twice",
-            )
-
-        scope: IvaTerritorialScope | None = None
-        if raw_scope is not None:
-            try:
-                scope = IvaTerritorialScope(str(raw_scope))
-            except ValueError as exc:
-                raise IvaCatalogueError(f"{target}: carve-out {code} names no known scope: {raw_scope!r}") from exc
-
-        parent: str | None = None
-        if assimilated is not None:
-            parent = str(assimilated).strip().upper()
-            if len(parent) != _ALPHA2_LENGTH or not parent.isalpha():
-                raise IvaCatalogueError(
-                    f"{target}: carve-out {code} is assimilated to no alpha-2 code: {assimilated!r}"
-                )
-            if parent == code:
-                raise IvaCatalogueError(f"{target}: carve-out {code} is assimilated to itself")
-
-        references = _str_tuple_or_none(record.get("legal_refs", ()))
-        if references is None:
-            raise IvaCatalogueError(f"{target}: carve-out {code} legal_refs must be an array of strings")
-        # A territorial rule IS a regulatory value, so an uncited row is
-        # ungrounded rather than merely undocumented and must not load.
-        if not references:
-            raise IvaCatalogueError(f"{target}: carve-out {code} cites no provision establishing its treatment")
+        code, carve_out, references = _carve_out_row(target, record, already_resolved=resolved)
         citations.append((code, references))
-        resolved[code] = _CarveOut(assimilated_to=parent, scope=scope, establishes_nothing=nothing)
+        resolved[code] = carve_out
+
+    _refuse_empty_carve_out_table(target, resolved)
+    _refuse_unresolvable_parents(target, resolved)
+    _refuse_assimilation_cycles(target, resolved)
+
+    verify_table_legal_refs(str(target), citations)
+    return resolved
+
+
+def _carve_out_code(target: object, record: Mapping[str, Any], already_resolved: Mapping[str, _CarveOut]) -> str:
+    """Return the row's alpha-2 code, refusing a malformed or repeated one."""
+    from ._errors import IvaCatalogueError
+
+    code = str(record.get("code", "")).strip().upper()
+    if len(code) != _ALPHA2_LENGTH or not code.isalpha():
+        raise IvaCatalogueError(f"{target}: carve-out record names no alpha-2 code: {record!r}")
+    if code in already_resolved:
+        raise IvaCatalogueError(f"{target}: {code} is carved out twice; one territory cannot be treated two ways")
+    return code
+
+
+def _carve_out_disposition(
+    target: object,
+    record: Mapping[str, Any],
+    *,
+    code: str,
+) -> tuple[str | None, IvaTerritorialScope | None, bool]:
+    """Return the row's single disposition: assimilation parent, scope, or nothing.
+
+    Exactly one must be declared. A row naming none establishes nothing by
+    accident, and a row naming two states the law twice.
+    """
+    from ._errors import IvaCatalogueError
+
+    assimilated = record.get("assimilated_to")
+    raw_scope = record.get("scope")
+    nothing = bool(record.get("establishes_nothing", False))
+    declared = [field for field in (assimilated, raw_scope, nothing or None) if field is not None]
+    if len(declared) != 1:
+        raise IvaCatalogueError(
+            f"{target}: carve-out {code} must declare exactly one of assimilated_to, scope or "
+            f"establishes_nothing; a row naming none establishes nothing by accident and a row "
+            f"naming two states the law twice",
+        )
+
+    scope: IvaTerritorialScope | None = None
+    if raw_scope is not None:
+        try:
+            scope = IvaTerritorialScope(str(raw_scope))
+        except ValueError as exc:
+            raise IvaCatalogueError(f"{target}: carve-out {code} names no known scope: {raw_scope!r}") from exc
+
+    parent: str | None = None
+    if assimilated is not None:
+        parent = str(assimilated).strip().upper()
+        if len(parent) != _ALPHA2_LENGTH or not parent.isalpha():
+            raise IvaCatalogueError(f"{target}: carve-out {code} is assimilated to no alpha-2 code: {assimilated!r}")
+        if parent == code:
+            raise IvaCatalogueError(f"{target}: carve-out {code} is assimilated to itself")
+    return parent, scope, nothing
+
+
+def _carve_out_citations(target: object, record: Mapping[str, Any], *, code: str) -> tuple[str, ...]:
+    """Return the row's legal_refs, refusing an uncited or malformed row.
+
+    A territorial rule IS a regulatory value, so an uncited row is ungrounded
+    rather than merely undocumented and must not load.
+    """
+    from ._errors import IvaCatalogueError
+
+    references = _str_tuple_or_none(record.get("legal_refs", ()))
+    if references is None:
+        raise IvaCatalogueError(f"{target}: carve-out {code} legal_refs must be an array of strings")
+    if not references:
+        raise IvaCatalogueError(f"{target}: carve-out {code} cites no provision establishing its treatment")
+    return references
+
+
+def _carve_out_row(
+    target: object,
+    record: Mapping[str, Any],
+    *,
+    already_resolved: Mapping[str, _CarveOut],
+) -> tuple[str, _CarveOut, tuple[str, ...]]:
+    """Judge one carve-out row, returning its code, disposition and citations."""
+    code = _carve_out_code(target, record, already_resolved)
+    parent, scope, nothing = _carve_out_disposition(target, record, code=code)
+    references = _carve_out_citations(target, record, code=code)
+    return code, _CarveOut(assimilated_to=parent, scope=scope, establishes_nothing=nothing), references
+
+
+def _refuse_empty_carve_out_table(target: object, resolved: Mapping[str, _CarveOut]) -> None:
+    """Refuse a table that names no territory at all."""
+    from ._errors import IvaCatalogueError
 
     if not resolved:
         raise IvaCatalogueError(f"{target}: the carve-out table names no territory")
+
+
+def _refuse_unresolvable_parents(target: object, resolved: dict[str, _CarveOut]) -> None:
+    """Refuse an assimilation pointing at a code no catalogue names."""
+    from ._errors import IvaCatalogueError
+
     unresolvable = {row.assimilated_to for row in resolved.values() if row.assimilated_to} - _resolvable_parents(
         resolved
     )
@@ -395,10 +454,18 @@ def _carve_out_rows_from_payload(target: object, payload: Mapping[str, Any]) -> 
             f"{target}: assimilated to {', '.join(sorted(unresolvable))}, which no catalogue names; an "
             f"assimilation whose parent cannot be resolved establishes nothing while reading as a rule",
         )
-    # Beside the unresolvable-parent check because a chain is a property of the
-    # whole table, which the per-record loop above cannot see. The self-pointer
-    # refusal there is the length-one case of this one; both are kept, so the
-    # commonest mistake still earns the message that names it directly.
+
+
+def _refuse_assimilation_cycles(target: object, resolved: Mapping[str, _CarveOut]) -> None:
+    """Refuse an assimilation chain that closes into a ring.
+
+    Separate from the per-row self-pointer refusal because a chain is a
+    property of the WHOLE table, which a per-record check cannot see. The
+    self-pointer refusal is the length-one case of this one; both are kept, so
+    the commonest mistake still earns the message that names it directly.
+    """
+    from ._errors import IvaCatalogueError
+
     for start in resolved:
         seen = {start}
         step = resolved[start].assimilated_to
@@ -411,9 +478,6 @@ def _carve_out_rows_from_payload(target: object, payload: Mapping[str, Any]) -> 
                 )
             seen.add(step)
             step = resolved[step].assimilated_to
-
-    verify_table_legal_refs(str(target), citations)
-    return resolved
 
 
 def _resolvable_parents(rows: dict[str, _CarveOut]) -> frozenset[str]:
