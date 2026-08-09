@@ -251,6 +251,10 @@ class ModeloExportCommand(BaseModel):
             filing. Defaults to ``COMPENSAR``; ``DEVOLVER`` requests the credit
             back and is honoured only for a lawful refund period (refused
             otherwise).
+        payment_election: The operator's positive-result settlement election.
+            ``INGRESO`` retains the standard declaration type, while a supported
+            Modelo 303 ``DOMICILIACION`` resolves to ``U``. Unsupported or
+            sign-incompatible elections are refused by the shared resolver.
     """
 
     model_config = _STRICT_FROZEN
@@ -286,6 +290,9 @@ class ModeloExportResult(BaseModel):
         actor: Operator identifier captured into the event.
         bucket_event_id: Id of the ``MODELO_EXPORTED`` event appended
             to the catalogue.
+        resolved_result_disposition: The single resolved AEAT declaration type.
+        payment_election: The semantic positive-result election when applicable.
+        refund_election: The semantic negative-result election when applicable.
         casilla_provenance: Regulatory grounding for casillas covered
             by the exported fichero-BOE layout.
     """
@@ -646,6 +653,7 @@ def _compose_export_headers(
     period: Period,
     refund_election: RefundElection = RefundElection.COMPENSAR,
     payment_election: PaymentElection = PaymentElection.INGRESO,
+    resolved_result_disposition: ResultDisposition | None = None,
 ) -> dict[str, str]:
     """Compose the full fichero-BOE export header dict for a revision.
 
@@ -693,19 +701,20 @@ def _compose_export_headers(
     # The amendment (complementaria/sustitutiva) is an orthogonal marker set
     # below and does NOT change the result disposition.
     #
-    # The refund election (``C`` -> ``D`` devolución) is applied by the SINGLE
-    # shared resolver `resolve_modelo_result_disposition`, the one place the
-    # disposition is determined; the cross-period carry persistence reads the same
-    # fact from the same ``refund_election``, so the fichero "D" and the
-    # casilla-110 carry can never disagree (art. 30 RD 1624/1992 / LIVA art. 116).
-    declaration_type = resolve_modelo_result_disposition(
-        work_unit=work_unit,
-        revision=revision,
-        workflow_profile=workflow_profile,
-        period=period,
-        refund_election=refund_election,
-        payment_election=payment_election,
-    ).value
+    # Both semantic election axes are applied by the SINGLE shared resolver.
+    # The public export path supplies its already-resolved value so its header,
+    # receipt, and event are one determination; direct header callers resolve
+    # through the same authority here.
+    if resolved_result_disposition is None:
+        resolved_result_disposition = resolve_modelo_result_disposition(
+            work_unit=work_unit,
+            revision=revision,
+            workflow_profile=workflow_profile,
+            period=period,
+            refund_election=refund_election,
+            payment_election=payment_election,
+        )
+    declaration_type = resolved_result_disposition.value
     headers: dict[str, str] = {
         "declaration_type": declaration_type,
         "surnames": surnames,
@@ -944,6 +953,7 @@ def _persist_exported_draft(
         period=period,
         refund_election=command.refund_election,
         payment_election=command.payment_election,
+        resolved_result_disposition=resolved_result_disposition,
     )
     headers = _compose_export_headers(
         work_unit=work_unit,
