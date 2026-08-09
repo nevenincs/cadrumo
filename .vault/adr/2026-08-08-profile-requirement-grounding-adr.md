@@ -5,10 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:e27b2631fafe2057c24ba20487ecc2c413dbefa84ed108e385d79be928ca071e'
+body_hash: 'sha256:28d48bdc24c79feeaa79147ea86985a58948a9d9823b146c20b62f0f91f2a119'
 related:
   - "[[2026-07-23-profile-setup-flow-adr]]"
   - '[[2026-08-08-profile-requirement-grounding-reference]]'
+  - '[[2026-08-09-profile-requirement-grounding-audit]]'
 ---
 # `profile-requirement-grounding` adr: `unify the profile-requirement schema across the blocking gate, preflight, and readiness surfaces` | (**status:** `accepted`)
 
@@ -46,8 +47,13 @@ The enrichment is the minimum change that closes the gap for all three surfaces 
 
 ## Consequences
 
-Operators get a labeled, legally-grounded, per-operation "why" on every incomplete-profile signal instead of a bare dotted path, across the blocking refusal, `preflight`, and `readiness` surfaces uniformly. The change touches a shared model consumed in three places plus four locale catalogues, so it needs care not to regress any of the three consumers' existing JSON-schema conformance gates. It does not resolve the separate `ProfileKey`/`_DEADLINE_RELEVANT_FIELDS` redundancy; that remains open as a follow-up investigation.
+Operators get a labeled "why" on every incomplete-profile signal instead of a bare dotted path, across the blocking refusal, `preflight`, and `readiness` surfaces uniformly. Two qualifications the original text of this section omitted, corrected here after the 2026-08-09 code review measured the gap against the shipped tree:
 
+**Legal grounding is not uniform across the three surfaces.** `preflight` and `readiness` union each row's `legal_refs` with the registry-binding-derived grounding index (`build_profile_grounding_index`); the blocking refusal deliberately does not (a scope decision, not a performance necessity - see the follow-up plan phase `P06`), so it carries only a field's own schema-declared `legal_refs`. Several fields this enrichment covers, including the two universal baseline fields, declare none in the schema. The blocking refusal therefore ships label-only for those fields today; it is not a uniform "labeled, legally-grounded" experience across all three surfaces, and closing that gap is tracked rather than assumed.
+
+**`legal_refs` and `modelos` are the cross-modelo registry union, by design, not the caller's target modelo.** A row's grounding names every modelo whose registry `source = "profile"` binding consumes that field, not only the modelo the operator happened to be checking. A Modelo 303 `preflight` can therefore cite a Modelo 100 ministerial order as part of a missing field's legal basis. This is intentional - the earlier design (folding the call's target modelo into the same field) conflated "which modelo triggered this check" with "which modelos structurally require this fact", which is exactly the kind of inference the amendment below forbids for the per-operation axis. The `modelos` field is shipped on every surface specifically so the operator can see which modelo(s) the cited grounding actually belongs to; it is not a discriminator hidden from the operator, but it is also not filtered to the target, and an operator scanning only the prose message rather than the structured row could misread a cross-modelo citation as target-specific.
+
+The change touches a shared model consumed in three places plus four locale catalogues (in the end, the catalogues needed no edit - see `P02.S06`), so it needs care not to regress any of the three consumers' existing JSON-schema conformance gates. It does not resolve the separate `ProfileKey`/`_DEADLINE_RELEVANT_FIELDS` redundancy, nor the three further surfaces (`config profile status`, the wizard status surface, overview diagnostics) that read the separate `ProfileKey`-derived mechanism and still emit raw dotted paths; both remain open as follow-up investigations the standing goal ("operators can see why a profile is incomplete, everywhere the CLI says so") still asks for.
 
 ## Amendment (2026-08-09): the per-operation axis is empty, and the surface grants readiness without checking
 
@@ -86,4 +92,58 @@ Deleting the per-modelo branch and striking the capability claim was considered 
 The ten-mechanism, four-namespace split recorded in `2026-08-09-profile-requirement-grounding-per-operation-axis-and-silent-defaults-audit` is untouched here, as is the `ProfileKey` / `_DEADLINE_RELEVANT_FIELDS` reconciliation the original decision already deferred. That deferral currently has **no detector**, so the divergence can widen unobserved; a parity gate is the tractable first move and is opened as a row rather than left as prose.
 
 This amendment rules on code, and a ruling is not self-executing. Its implementing rows are opened in the same action in `2026-08-08-profile-requirement-grounding-plan` (phase `P05`). Until those close, HEAD carries the rejected behaviour while this record reads as in force — the gap this project has been burned by before.
+
+
+## Amendment (2026-08-09b): conditional requirements stay UNSCOPED, and the `required` conjunct is load-bearing
+
+**Status:** accepted. Settled jointly by the two agents working this campaign after the axis was populated; both positions and the measurements behind them are recorded below.
+
+### The question
+
+Once the axis carried grounded `modelo_<code>` tokens, a measurement showed only **1 of 32** sat on a `required = true` field (`identity.tax_id` → `modelo_100`). The other 31 are inert for preflight selection, because the per-modelo walk is `field.required AND selectors match the modelo`. That invites an obvious-looking fix: extend the walk to conditionally-required fields so the tokens "work".
+
+### Decision: do not. Conditionals remain unscoped, and the `required` conjunct must not be loosened.
+
+### The decisive mechanism
+
+`ProfilePreflightService._selectors_match_modelo` treats an EMPTY selector tuple as **no match**, not as a wildcard:
+
+```python
+if not selectors:
+    return False
+```
+
+Verified in source and behaviourally: `()` → `False`, `("modelo_100",)` vs `modelo_100` → `True`, `("modelo_303",)` vs `modelo_100` → `False`.
+
+So scoping conditionals would not *narrow* an untokenised conditional field to fewer modelos — it would match **no modelo at all** and stop the check firing entirely.
+
+### Measured blast radius
+
+Driving the real `conditional_profile_required_paths` resolver over value sets that trigger each rule: **3 distinct conditionally-required paths**, and **all 3 carry no `modelo_` token**:
+
+- `taxpayer_type.country_of_fiscal_residence`
+- `taxpayer_type.representante_fiscal_nif`
+- `taxpayer_type.representante_fiscal_nombre`
+
+The last two are the fiscal-representative fields a non-EU/EEA-resident IRNR filer is legally required to declare. Under the scoping change they would silently never be asked for — no error, no advisory, just an absent prompt. The M184 socio `country_of_residence` rule is a separate resolver of the same shape and equally untokenised.
+
+### Why a completeness gate does not rescue the alternative
+
+A gate over the 53 binding-derived pairs was considered as a precondition and rejected, on an argument that is about the predicate rather than the data: a gate makes TODAY's state safe, but with `empty → False` the **default for every newly-added conditional field is "fires for nothing"**. The next author who adds a representante-fiscal-shaped requirement and omits the tokens gets silence, permanently, unless the gate is also written to fail on new untokenised conditionals — i.e. unless it becomes a standing authoring obligation.
+
+Under the decision above the default runs the safe way: an untokenised conditional **over-asks**. That is a property of the predicate's semantics, not of how complete the grounding happens to be, which is why it is not tradeable for a gate.
+
+### What this means for the 31 inert tokens
+
+They are **correct as they stand**. They are real grounding, verified against live registry bindings, and they populate `legal_refs` and `modelos` on requirement rows. They are inert for *selection* by design, not by oversight.
+
+**The `required` conjunct is load-bearing precisely BECAUSE `_selectors_match_modelo` treats empty as no-match** — and those two facts live two functions apart. A reader who notices 31 inert tokens will reach for the conjunct, which is the nearer of the two, and will not see the semantics that make loosening it unsafe. Naming that adjacency here is the point of this amendment, more than the verdict is.
+
+### Also recorded: the per-modelo axis is not the primary safety net
+
+A related measurement, worth stating so the axis is not over-credited: the per-modelo walk currently selects exactly one field for one modelo. What actually carries requirement enforcement today is the **unscoped** validation path and the **unscoped** conditional path, both of which run regardless of modelo. The per-operation axis is additive precision on top of those, not the mechanism holding the floor.
+
+### Honest limits
+
+The blast-radius figure covers the paths reachable from the resolvers driven here. An initial attempt to count conditional entries by parsing `schema.toml` returned zero and was **discarded as a broken probe rather than reported as a result** — the conditional set is assembled in code (`application/user_profile/_completeness.py`), not declared in TOML, so a schema walk cannot see it. Recorded because a zero from a broken instrument is exactly the number that gets repeated later as though it meant something.
 
