@@ -501,18 +501,21 @@ def _parse_cii(root: Element) -> ParsedEInvoice:
     return parsed
 
 
-def _parse_ubl(root: Element) -> ParsedEInvoice:
-    """Parse an OASIS UBL invoice or credit note."""
-    parsed = ParsedEInvoice(shape=DocumentShape.XML_UBL)
-    # The invoice number is the DOCUMENT's own cbc:ID -- a direct child of the
-    # root. Taking the first ID anywhere in the tree yields the guideline
-    # identifier (CustomizationID's neighbour) or a party id instead.
+def _ubl_invoice_number(root: Element) -> str | None:
+    """Return the DOCUMENT's own cbc:ID, read as a direct child of the root.
+
+    Scoped to direct children deliberately. Taking the first ID anywhere in
+    the tree yields the guideline identifier (CustomizationID's neighbour) or
+    a party id instead, both of which look like plausible invoice numbers.
+    """
     for child in root:
         if _local(child.tag) == "ID" and child.text:
-            parsed.invoice_number = child.text.strip()
-            break
-        if _local(child.tag) == "IssueDate" and child.text:
-            parsed.invoice_date = child.text.strip()
+            return child.text.strip()
+    return None
+
+
+def _apply_ubl_document_header(root: Element, parsed: ParsedEInvoice) -> None:
+    """Read the issue date, currency and statutory mention off the root's children."""
     for child in root:
         if _local(child.tag) == "IssueDate" and child.text:
             parsed.invoice_date = child.text.strip()
@@ -528,6 +531,10 @@ def _parse_ubl(root: Element) -> ParsedEInvoice:
             parsed.regime_legend = child.text.strip() or None
     if parsed.regime_legend is None:
         parsed.regime_legend = _first_text(root, "TaxExemptionReason")
+
+
+def _apply_ubl_parties(root: Element, parsed: ParsedEInvoice) -> None:
+    """Read both parties' identity and address off their UBL party blocks."""
     for party_tag, target in (("AccountingSupplierParty", "supplier"), ("AccountingCustomerParty", "customer")):
         found = _find_all(root, party_tag)
         if found:
@@ -535,9 +542,19 @@ def _parse_ubl(root: Element) -> ParsedEInvoice:
             setattr(parsed, f"{target}_name", _ubl_party_name(found[0]))
             setattr(parsed, f"{target}_postal_code", _ubl_postal_code(found[0]))
             setattr(parsed, f"{target}_country_code", _ubl_country_code(found[0]))
-    for total in _find_all(root, "LegalMonetaryTotal"):
-        parsed.taxable_base = _decimal(_first_text(total, "TaxExclusiveAmount"))
-        parsed.grand_total = _decimal(_first_text(total, "TaxInclusiveAmount"))
+
+
+def _ubl_subtotal_category(subtotal: Element) -> str | None:
+    """Return the tax category the subtotal's cbc:ID names, if it names one."""
+    for category in _find_all(subtotal, "TaxCategory"):
+        for child in category:
+            if _local(child.tag) == "ID" and child.text:
+                return _category_for(child.text)
+    return None
+
+
+def _apply_ubl_tax_totals(root: Element, parsed: ParsedEInvoice) -> None:
+    """Read the cuota, the per-rate breakdown, and the first stated category."""
     for tax_total in _find_all(root, "TaxTotal"):
         for child in tax_total:
             if _local(child.tag) == "TaxAmount" and child.text:
@@ -551,16 +568,17 @@ def _parse_ubl(root: Element) -> ParsedEInvoice:
                 ),
             )
             if parsed.iva_category is None:
-                for category in _find_all(subtotal, "TaxCategory"):
-                    for child in category:
-                        if _local(child.tag) == "ID" and child.text:
-                            parsed.iva_category = _category_for(child.text)
-                            break
+                parsed.iva_category = _ubl_subtotal_category(subtotal)
+
+
+def _ubl_lines(root: Element) -> list[ParsedEInvoiceLine]:
+    """Project both invoice and credit-note lines onto the shared line record."""
+    lines: list[ParsedEInvoiceLine] = []
     for line in _find_all(root, "InvoiceLine") + _find_all(root, "CreditNoteLine"):
         rate = None
         for category in _find_all(line, "ClassifiedTaxCategory"):
             rate = _decimal(_first_text(category, "Percent"))
-        parsed.lines.append(
+        lines.append(
             ParsedEInvoiceLine(
                 description=_first_text(line, "Name") or _first_text(line, "Description"),
                 quantity=_decimal(_first_text(line, "InvoicedQuantity"))
@@ -570,6 +588,20 @@ def _parse_ubl(root: Element) -> ParsedEInvoice:
                 iva_rate=rate,
             ),
         )
+    return lines
+
+
+def _parse_ubl(root: Element) -> ParsedEInvoice:
+    """Parse an OASIS UBL invoice or credit note."""
+    parsed = ParsedEInvoice(shape=DocumentShape.XML_UBL)
+    parsed.invoice_number = _ubl_invoice_number(root)
+    _apply_ubl_document_header(root, parsed)
+    _apply_ubl_parties(root, parsed)
+    for total in _find_all(root, "LegalMonetaryTotal"):
+        parsed.taxable_base = _decimal(_first_text(total, "TaxExclusiveAmount"))
+        parsed.grand_total = _decimal(_first_text(total, "TaxInclusiveAmount"))
+    _apply_ubl_tax_totals(root, parsed)
+    parsed.lines.extend(_ubl_lines(root))
     return parsed
 
 
@@ -611,9 +643,8 @@ def _facturae_invoice_total(
     return base + (output_tax or Decimal("0")) + (suplidos or Decimal("0"))
 
 
-def _parse_facturae(root: Element) -> ParsedEInvoice:
-    """Parse a Facturae 3.2.x invoice (the Spanish national format)."""
-    parsed = ParsedEInvoice(shape=DocumentShape.XML_FACTURAE)
+def _apply_facturae_parties(root: Element, parsed: ParsedEInvoice) -> None:
+    """Read both parties by ROLE, never by position, off their Facturae blocks."""
     for party_tag, target in (("SellerParty", "supplier"), ("BuyerParty", "customer")):
         found = _find_all(root, party_tag)
         if found:
@@ -623,10 +654,10 @@ def _parse_facturae(root: Element) -> ParsedEInvoice:
             setattr(parsed, f"{target}_name", _facturae_party_name(found[0]))
             setattr(parsed, f"{target}_postal_code", _facturae_postal_code(found[0]))
             setattr(parsed, f"{target}_country_code", _facturae_country_code(found[0]))
-    invoices = _find_all(root, "Invoice")
-    if not invoices:
-        return parsed
-    invoice = invoices[0]
+
+
+def _apply_facturae_identification(invoice: Element, parsed: ParsedEInvoice) -> None:
+    """Read the invoice's number, series, issue data and statutory mention."""
     for header in _find_all(invoice, "InvoiceHeader"):
         # Scoped to the header's own children: a rectificativa restates the
         # CORRECTED invoice's number under Corrective/ in this same subtree.
@@ -641,6 +672,15 @@ def _parse_facturae(root: Element) -> ParsedEInvoice:
         parsed.regime_legend = _first_text(literals, "LegalReference")
         if parsed.regime_legend is not None:
             break
+
+
+def _apply_facturae_totals(invoice: Element, parsed: ParsedEInvoice) -> Decimal | None:
+    """Read the stated totals and derive the contraprestacion.
+
+    Returns:
+        ``TotalTaxOutputs`` as stated, which the cuota fallback needs when the
+        document carries no per-band tax nodes to sum instead.
+    """
     total_output_tax: Decimal | None = None
     for totals in _find_all(invoice, "InvoiceTotals"):
         parsed.taxable_base = _decimal(_first_text(totals, "TotalGrossAmountBeforeTaxes"))
@@ -671,16 +711,34 @@ def _parse_facturae(root: Element) -> ParsedEInvoice:
             output_tax=total_output_tax,
             suplidos=parsed.suplidos_amount,
         )
-    # Facturae states taxes TWICE: once at invoice level under TaxesOutputs and
-    # again per line under Items/InvoiceLine/TaxesOutputs. A descendant walk
-    # collects both and double-counts every rate -- the invoice-level breakdown
-    # then reports each band twice, so a single-rate invoice looks like a
-    # two-rate one and the identity check fails on a document that is perfectly
-    # well formed. Scope to the INVOICE-level block only.
+    return total_output_tax
+
+
+def _facturae_header_tax_nodes(invoice: Element) -> list[Element]:
+    """Return ONLY the invoice-level Tax nodes, never the per-line ones.
+
+    Facturae states taxes TWICE: once at invoice level under TaxesOutputs and
+    again per line under Items/InvoiceLine/TaxesOutputs. A descendant walk
+    collects both and double-counts every rate -- the invoice-level breakdown
+    then reports each band twice, so a single-rate invoice looks like a
+    two-rate one and the identity check fails on a document that is perfectly
+    well formed. Scope to the INVOICE-level block only.
+    """
     header_taxes: list[Element] = []
     for node in invoice:
         if _local(node.tag) == "TaxesOutputs":
             header_taxes.extend(child for child in node if _local(child.tag) == "Tax")
+    return header_taxes
+
+
+def _apply_facturae_tax_bands(
+    invoice: Element,
+    parsed: ParsedEInvoice,
+    *,
+    total_output_tax: Decimal | None,
+) -> None:
+    """Read the per-band breakdown, the recargo term, and the cuota term."""
+    header_taxes = _facturae_header_tax_nodes(invoice)
     band_cuotas: list[Decimal] = []
     band_recargos: list[Decimal] = []
     for tax in header_taxes:
@@ -717,11 +775,16 @@ def _parse_facturae(root: Element) -> ParsedEInvoice:
         parsed.iva_amount = sum(band_cuotas, Decimal("0"))
     elif total_output_tax is not None:
         parsed.iva_amount = total_output_tax - (parsed.recargo_amount or Decimal("0"))
+
+
+def _facturae_lines(invoice: Element) -> list[ParsedEInvoiceLine]:
+    """Project the Facturae line items onto the shared line record."""
+    lines: list[ParsedEInvoiceLine] = []
     for line in _find_all(invoice, "InvoiceLine"):
         rate = None
         for tax in _find_all(line, "Tax"):
             rate = _decimal(_first_text(tax, "TaxRate"))
-        parsed.lines.append(
+        lines.append(
             ParsedEInvoiceLine(
                 description=_first_text(line, "ItemDescription"),
                 quantity=_decimal(_first_text(line, "Quantity")),
@@ -730,6 +793,21 @@ def _parse_facturae(root: Element) -> ParsedEInvoice:
                 iva_rate=rate,
             ),
         )
+    return lines
+
+
+def _parse_facturae(root: Element) -> ParsedEInvoice:
+    """Parse a Facturae 3.2.x invoice (the Spanish national format)."""
+    parsed = ParsedEInvoice(shape=DocumentShape.XML_FACTURAE)
+    _apply_facturae_parties(root, parsed)
+    invoices = _find_all(root, "Invoice")
+    if not invoices:
+        return parsed
+    invoice = invoices[0]
+    _apply_facturae_identification(invoice, parsed)
+    total_output_tax = _apply_facturae_totals(invoice, parsed)
+    _apply_facturae_tax_bands(invoice, parsed, total_output_tax=total_output_tax)
+    parsed.lines.extend(_facturae_lines(invoice))
     return parsed
 
 
