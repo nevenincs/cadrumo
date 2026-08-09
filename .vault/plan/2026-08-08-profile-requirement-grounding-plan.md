@@ -4,7 +4,7 @@ tags:
   - '#profile-requirement-grounding'
 date: '2026-08-08'
 modified: '2026-08-09'
-body_hash: 'sha256:a823828cba083a3611722d3c7ef671703f0c227daa86bf7ab3a79e8cf3ba5848'
+body_hash: 'sha256:ed757489925218e619fd9c9e4a6f9206c1eb4c75beb58dd0bc68713d3666e237'
 tier: L2
 related:
   - '[[2026-08-08-profile-requirement-grounding-adr]]'
@@ -54,7 +54,7 @@ Run mandatory code review and a fresh-context honesty review against this campai
 
 Implements the accepted 2026-08-09 amendment. The per-operation model_selectors axis carries zero modelo_ tokens, so the schema-required branch of ProfilePreflightService.report() is unreachable and the report returns ready=True for a profile declaring nothing. Make the unevaluated case distinguishable from a passing one, ground any axis population against official sources rather than inference, and open a detector for the deferred ProfileKey divergence.
 
-- [ ] `P05.S12` - Make the unevaluated per-modelo case distinguishable from a passing one on ProfilePreflightReport, so a modelo matching no schema-required field reports not-assessed rather than ready; `src/cadrumo/application/user_profile/_preflight.py, src/cadrumo/application/user_profile/_commands.py`.
+- [x] `P05.S12` - Make the unevaluated per-modelo case distinguishable from a passing one on ProfilePreflightReport, so a modelo matching no schema-required field reports not-assessed rather than ready; `src/cadrumo/application/user_profile/_preflight.py, src/cadrumo/application/user_profile/_commands.py`.
 - [ ] `P05.S13` - Surface the not-assessed signal as a CLI notice on config profile preflight and app modelo readiness, never as a clean bill of health; `src/cadrumo/entrypoints/cli/_config_payloads.py, src/cadrumo/entrypoints/cli/_modelo_payloads.py`.
 - [ ] `P05.S14` - Replace test_preflight_returns_ready_when_no_modelo_selectors_match, which encodes the current defect as the contract, with a regression asserting a profile declaring no facts is never reported ready for a modelo; `src/cadrumo/application/user_profile/tests/test_services.py`.
 - [ ] `P05.S15` - Inventory the grounded per-modelo profile-fact requirements from each modelo official form and its registry source=profile bindings, recording the evidence per token and refusing to infer any requirement that no source establishes; `.vault/reference/, src/cadrumo/domain/calculations/registry/_profile_grounding.py`.

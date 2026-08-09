@@ -6,8 +6,9 @@ tags:
 date: '2026-08-09'
 modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:ac60d332969e2d9165fc32e3f583e0f63a6b96f2ba7430d14489ed0694ccd9f6'
+body_hash: 'sha256:5b3e3f94c179ad35da0c655be41e730003a0b6409e7ff39ebceef89a58285dc9'
 related:
+  - '[[2026-08-08-profile-requirement-grounding-P05-S12]]'
   - '[[2026-08-08-profile-requirement-grounding-adr]]'
   - '[[2026-08-08-profile-requirement-grounding-plan]]'
   - '[[2026-08-08-profile-requirement-grounding-reference]]'
@@ -27,6 +28,10 @@ Auto-generated index of all documents tagged with `#profile-requirement-groundin
 ### audit
 
 - `2026-08-09-profile-requirement-grounding-per-operation-axis-and-silent-defaults-audit` - `profile-requirement-grounding` audit: `the per-operation requirement axis is empty and absent profile facts silently default`
+
+### exec
+
+- `2026-08-08-profile-requirement-grounding-P05-S12` - `profile-requirement-grounding` P05.S12
 
 ### plan
 
