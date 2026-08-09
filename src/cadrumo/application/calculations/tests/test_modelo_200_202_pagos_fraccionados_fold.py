@@ -61,7 +61,7 @@ def _m202_observation(
 
 
 def _resolve_m200_pagos_fraccionados(repository: CalculationObservationRepository) -> dict[RelationId, Decimal]:
-    snapshot = resources().modelos.authority.snapshot("200", filing_year=2024, period="0A")
+    snapshot = resources().modelos.authority.snapshot("200", filing_year=2025, period="0A")
     relation_vals = resolve_relations_from_local_store(snapshot, repository=repository)
     return {rv.relation: rv.value for rv in relation_vals.values if rv.value is not None}
 
@@ -73,7 +73,7 @@ def test_m200_fold_in_credits_modalidad_40_2_instalments(tmp_path: Path) -> None
         repository = CalculationObservationRepository()
         for period, amount in amounts.items():
             repository.save_observation(
-                _m202_observation(filing_year=2024, period=period, casilla_03=amount, casilla_34=Decimal("0")),
+                _m202_observation(filing_year=2025, period=period, casilla_03=amount, casilla_34=Decimal("0")),
                 source_kind="app_filing",
             )
         values = _resolve_m200_pagos_fraccionados(repository)
@@ -93,7 +93,7 @@ def test_m200_fold_in_credits_modalidad_40_3_instalments(tmp_path: Path) -> None
         repository = CalculationObservationRepository()
         for period, amount in amounts.items():
             repository.save_observation(
-                _m202_observation(filing_year=2024, period=period, casilla_03=Decimal("0"), casilla_34=amount),
+                _m202_observation(filing_year=2025, period=period, casilla_03=Decimal("0"), casilla_34=amount),
                 source_kind="app_filing",
             )
         values = _resolve_m200_pagos_fraccionados(repository)
@@ -106,7 +106,7 @@ def _all_m202_relation_values(
     *,
     first_year_cuota: bool,
 ) -> dict[RelationId, Decimal | None]:
-    snapshot = resources().modelos.authority.snapshot("200", filing_year=2024, period="0A")
+    snapshot = resources().modelos.authority.snapshot("200", filing_year=2025, period="0A")
     relation_vals = resolve_relations_from_local_store(
         snapshot,
         repository=repository,
@@ -145,7 +145,7 @@ def test_is3_first_year_flag_never_overrides_a_filed_m202_value(tmp_path: Path) 
         repository = CalculationObservationRepository()
         for period, amount in amounts.items():
             repository.save_observation(
-                _m202_observation(filing_year=2024, period=period, casilla_03=amount, casilla_34=Decimal("0")),
+                _m202_observation(filing_year=2025, period=period, casilla_03=amount, casilla_34=Decimal("0")),
                 source_kind="app_filing",
             )
         values = _all_m202_relation_values(repository, first_year_cuota=True)

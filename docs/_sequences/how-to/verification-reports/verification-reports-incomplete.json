@@ -1378,7 +1378,7 @@
             },
             {
               "casilla_id": "iva.autorepercutido.intracomunitaria.devengado.base",
-              "help_text": null,
+              "help_text": "Add up the self-charged taxable base accrued on intra-Community acquisitions.",
               "input_kind": "bound",
               "label": "Taxable base of accrued reverse-charge VAT on intra-Community acquisitions",
               "legal_refs": [
@@ -2548,6 +2548,7 @@
           {
             "code": "modelo.work.calculate.source_advisory",
             "context": {
+              "casilla_id": "44",
               "reason": "operator_override_diverges_from_computed",
               "source_kind": "operator_casilla_input"
             },

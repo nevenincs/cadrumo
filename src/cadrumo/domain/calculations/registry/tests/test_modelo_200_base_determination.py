@@ -72,7 +72,7 @@ _M200_CUOTA_INTEGRA_CASILLA: CasillaId = validated_casilla_id("DP200014:00562", 
 
 
 def _snapshot_2024():
-    return _committed_snapshot("200", 2024, "0A")
+    return _committed_snapshot("200", 2025, "0A")
 
 
 def _calculate(inputs: dict[CasillaId, Decimal]):

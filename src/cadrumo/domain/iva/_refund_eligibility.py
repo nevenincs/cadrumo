@@ -25,12 +25,18 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Final
 
-from ...core import Period
+from ...core import Period, StandardPeriodCode
 
-#: The last Modelo 303 filing-period tokens of a year, after which a negative
+#: The last Modelo 303 filing-period codes of a year, after which a negative
 #: result may be requested as a refund: ``4T`` (quarterly cadence), ``12`` (monthly
 #: cadence), ``0A`` (annual). Membership is the "annual liquidación" condition.
-LAST_FILING_PERIOD_TOKENS: Final = frozenset({"4T", "12", "0A"})
+LAST_FILING_PERIOD_TOKENS: Final[frozenset[StandardPeriodCode]] = frozenset(
+    {
+        StandardPeriodCode.Q4,
+        StandardPeriodCode.DEC,
+        StandardPeriodCode.ANNUAL,
+    },
+)
 
 
 class RefundEligibilityReason(StrEnum):

@@ -13,6 +13,7 @@ from ....domain.user_profile import (
     UserProfileRecord,
 )
 from .. import (
+    ProfilePreflightRequirement,
     ProfilePreflightService,
     ProfileValidationService,
 )
@@ -263,3 +264,53 @@ def test_preflight_carries_request_fields_through(schema: ProfileSchemaDefinitio
     assert report.filing_year == 2024
     assert report.period == Period.from_year_and_code(2024, "1T")
     del svc
+
+
+def test_preflight_requirement_carries_schema_label_and_legal_refs(schema: ProfileSchemaDefinition) -> None:
+    field = schema.field("identity.tax_id")
+    svc = ProfilePreflightService(schema=schema)
+
+    requirement = svc._requirement(  # noqa: SLF001 - intra-package private access, same test package
+        selector="identity.tax_id",
+        section_key="identity",
+        field_key="tax_id",
+        modelo="303",
+        grounding_index={},
+    )
+
+    assert requirement.label == field.description
+    assert requirement.legal_refs == tuple(sorted(field.legal_refs))
+    assert requirement.modelos == ("303",)
+
+
+def test_preflight_requirement_never_invents_grounding_for_unknown_path(
+    schema: ProfileSchemaDefinition,
+) -> None:
+    svc = ProfilePreflightService(schema=schema)
+
+    requirement = svc._requirement(  # noqa: SLF001 - intra-package private access, same test package
+        selector="not.a.real.schema.path",
+        section_key="not_a_real_section",
+        field_key="not_a_real_field",
+        modelo=None,
+        grounding_index={},
+    )
+
+    assert requirement.label == "not.a.real.schema.path"
+    assert requirement.legal_refs == ()
+    assert requirement.modelos == ()
+
+
+def test_preflight_requirement_model_roundtrips_every_field_populated() -> None:
+    requirement = ProfilePreflightRequirement(
+        selector="identity.tax_id",
+        section_key="identity",
+        field_key="tax_id",
+        label="Tax identification number",
+        legal_refs=("LGT art. 1",),
+        modelos=("100", "303"),
+    )
+
+    roundtripped = ProfilePreflightRequirement.model_validate(requirement.model_dump())
+
+    assert roundtripped == requirement

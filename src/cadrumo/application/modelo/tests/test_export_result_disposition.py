@@ -130,7 +130,7 @@ def _result_disposition_profile(kind: str) -> TaxpayerProfile:
         ("303", {_M303_RESULT_CASILLA: Decimal("0.00")}, Period.from_year_and_code(2024, "1T"), "N"),
         ("303", {}, Period.from_year_and_code(2024, "1T"), "N"),
         ("130", {_M130_RESULT_CASILLA: Decimal("-50.00")}, Period.from_year_and_code(2024, "1T"), "B"),
-        ("200", {_M200_REFUND_RESULT_CASILLA: Decimal("-1000.00")}, Period.from_year_and_code(2024, "0A"), "D"),
+        ("200", {_M200_REFUND_RESULT_CASILLA: Decimal("-1000.00")}, Period.from_year_and_code(2025, "0A"), "D"),
         ("390", {}, Period.from_year_and_code(2026, "0A"), "I"),
     ),
     ids=(

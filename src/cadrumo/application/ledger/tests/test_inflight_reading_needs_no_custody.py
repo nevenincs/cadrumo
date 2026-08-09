@@ -86,8 +86,8 @@ def test_the_in_flight_record_still_refuses_to_serialize() -> None:
     """
     evidence = _evidence()
 
-    with pytest.raises(Exception, match=r"(?i)serial|dump|persist|refus"):
+    with pytest.raises(NotImplementedError, match=r"(?i)serial|dump|persist|refus"):
         evidence.model_dump()
 
-    with pytest.raises(Exception, match=r"(?i)serial|dump|persist|refus"):
+    with pytest.raises(NotImplementedError, match=r"(?i)serial|dump|persist|refus"):
         evidence.model_dump_json()

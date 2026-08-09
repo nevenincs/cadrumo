@@ -132,7 +132,7 @@ def test_validate_casilla_input_ids_rejects_printed_number_for_semantic_id() -> 
 
 
 def test_validate_casilla_input_ids_rejects_ambiguous_reused_printed_number() -> None:
-    snapshot = resources().modelos.authority.snapshot("200", filing_year=2024, period="0A")
+    snapshot = resources().modelos.authority.snapshot("200", filing_year=2025, period="0A")
 
     with pytest.raises(RegistryValidationError, match="is ambiguous") as raised:
         validate_casilla_input_ids(snapshot.revision, {_M200_AMBIGUOUS_PRINTED_NUMBER: Decimal("1")})

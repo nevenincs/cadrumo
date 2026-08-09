@@ -35,19 +35,15 @@ See Also:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import typer
 
 from ...core.i18n import tr
-from ._common import _emit_envelope
+from ...core.telemetry import TelemetryTier
+from ._common import _emit_envelope, case_insensitive_choice
 from ._diagnostics_payloads import (
     TelemetryFlushResult,
     TelemetryStatusResult,
 )
-
-if TYPE_CHECKING:
-    from ...core.telemetry import TelemetryTier
 
 telemetry_app = typer.Typer(
     name="telemetry",
@@ -79,9 +75,10 @@ def diagnostics_telemetry_status(
             ),
         ),
     ),
-    tier: str | None = typer.Option(
+    tier: TelemetryTier | None = typer.Option(
         None,
         "--tier",
+        click_type=case_insensitive_choice(TelemetryTier),
         help=tr(
             "cli.diagnostics.telemetry.tier_help",
             default=(
@@ -105,13 +102,12 @@ def diagnostics_telemetry_status(
     """Report the current remote-telemetry consent posture; never emits anything."""
     from ...application.diagnostics_telemetry import build_telemetry_status_report
     from ...core.config import override_settings
-    from ...core.telemetry import TelemetryTier
 
     overrides: dict[str, object] = {}
     if opt_in is not None:
         overrides["cadrumo_telemetry_opt_in"] = opt_in
     if tier is not None:
-        overrides["cadrumo_telemetry_tier"] = _parse_tier(tier)
+        overrides["cadrumo_telemetry_tier"] = tier
     if endpoint is not None:
         overrides["cadrumo_telemetry_endpoint"] = endpoint
 
@@ -182,9 +178,10 @@ def diagnostics_telemetry_flush(
             ),
         ),
     ),
-    tier: str | None = typer.Option(
+    tier: TelemetryTier | None = typer.Option(
         None,
         "--tier",
+        click_type=case_insensitive_choice(TelemetryTier),
         help=tr(
             "cli.diagnostics.telemetry.tier_help",
             default=(
@@ -226,7 +223,7 @@ def diagnostics_telemetry_flush(
     if opt_in is not None:
         overrides["cadrumo_telemetry_opt_in"] = opt_in
     if tier is not None:
-        overrides["cadrumo_telemetry_tier"] = _parse_tier(tier)
+        overrides["cadrumo_telemetry_tier"] = tier
     if endpoint is not None:
         overrides["cadrumo_telemetry_endpoint"] = endpoint
 
@@ -308,21 +305,3 @@ def diagnostics_telemetry_flush(
         )
 
     _emit_envelope(ctx, command="diagnostics.telemetry.flush", result=result, lines=lines, notices=notices)
-
-
-def _parse_tier(value: str) -> TelemetryTier:
-    from ...core.telemetry import TelemetryTier
-    from ._common import _bad
-
-    try:
-        return TelemetryTier(value.strip().lower())
-    except ValueError as exc:
-        accepted = ", ".join(member.value for member in TelemetryTier)
-        raise _bad(
-            tr(
-                "cli.diagnostics.telemetry.bad_tier",
-                value=value,
-                accepted=accepted,
-                default=f"--tier must be one of: {accepted}; got {value!r}.",
-            ),
-        ) from exc

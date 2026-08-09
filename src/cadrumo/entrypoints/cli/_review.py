@@ -16,7 +16,7 @@ from ...core.decimal import coerce_decimal_strict
 from ...core.errors import resolve_error_message
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
-from ._common import _bad, _emit_envelope, activate_subcommand_output_language
+from ._common import _bad, _emit_envelope, activate_subcommand_output_language, case_insensitive_choice
 from ._review_payloads import ReviewQueueResult, ReviewQueueRowPayload, ReviewViewResult
 
 
@@ -83,7 +83,12 @@ def review_queue(
     ctx: typer.Context,
     kinds: list[str] = typer.Option([], "--kind", help=tr("cli.review.queue.kind_help")),
     source_kinds: list[str] = typer.Option([], "--source-kind", help=tr("cli.review.queue.source_kind_help")),
-    state: str = typer.Option(ReviewState.PENDING.value, "--state", help=tr("cli.review.queue.state_help")),
+    state: ReviewState = typer.Option(
+        ReviewState.PENDING,
+        "--state",
+        click_type=case_insensitive_choice(ReviewState),
+        help=tr("cli.review.queue.state_help"),
+    ),
     modelo: str | None = typer.Option(None, "--modelo", help=tr("cli.review.queue.modelo_help")),
     confidence_below: float | None = typer.Option(
         None,
@@ -120,16 +125,13 @@ def review_queue(
     activate_subcommand_output_language(ctx, output_language)
     threshold = _resolve_confidence_threshold(confidence_below)
     try:
-        resolved_state = ReviewState(state.strip().lower())
         report = project_review_queue(
             kinds=kinds,
             source_kinds=source_kinds,
-            state=resolved_state,
+            state=state,
             modelo=modelo,
             confidence_below=threshold,
         )
-    except ValueError as exc:
-        raise _bad(tr("cli.review.errors.invalid_state", state=state)) from exc
     except ReviewError as exc:
         raise _bad(resolve_error_message(exc)) from exc
     typed_result = ReviewQueueResult(

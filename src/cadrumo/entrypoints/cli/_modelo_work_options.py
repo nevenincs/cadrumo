@@ -21,12 +21,16 @@ import typer
 
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
+from ._common import MODELO_CODE_CHOICE
 
 _WorkUnitIdArg = Annotated[str | None, typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help"))]
 _CalculationRevisionIdArg = Annotated[
     str | None, typer.Argument(help=tr("cli.app.modelo.work.calculation_revision_id_help"))
 ]
-_ModeloOpt = Annotated[str | None, typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help"))]
+_ModeloOpt = Annotated[
+    str | None,
+    typer.Option("--modelo", click_type=MODELO_CODE_CHOICE, help=tr("cli.app.modelo.work.modelo_help")),
+]
 _YearOpt = Annotated[int | None, typer.Option("--year", help=tr("cli.app.modelo.work.year_help"))]
 _PeriodOpt = Annotated[str | None, typer.Option("--period", help=tr("cli.app.modelo.work.period_help"))]
 _RevisionOpt = Annotated[str | None, typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help"))]

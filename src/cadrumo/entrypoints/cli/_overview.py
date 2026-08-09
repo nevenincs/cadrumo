@@ -47,6 +47,7 @@ from ...domain.modelos import WorkUnit
 from ._common import (
     _bad,
     _canonical_period,
+    _declared_tax_id,
     _emit_envelope,
     _load_drafts,
     _load_invoices,
@@ -318,24 +319,33 @@ def overview_calendar(
     if bucket_id is None:
         raise _no_active_profile_refusal()
     workflow_profile = _profile_to_taxpayer(current)
+    # The evidence matchers compare the operator's NIF against the authenticated
+    # identity on each filed artefact, and every one of them fails OPEN on an
+    # empty expected value and CLOSED on a non-empty mismatching one. The
+    # taxpayer projection substitutes a synthetic placeholder NIF for an absent
+    # identity, which is non-empty and matches nothing real, so feeding it here
+    # inverts that design: an operator who has not yet declared a NIF would have
+    # every genuinely filed obligation silently dropped and redisplayed as
+    # unfiled. Read the declared identity instead, so absence stays absence.
+    expected_tax_id = _declared_tax_id(record)
     evidence_notices: list[Notice] = []
     calendar_today = today_madrid()
     live_events, live_notice = _local_live_calendar_events(
         bucket_id,
         rng,
         as_of=calendar_today,
-        expected_tax_id=workflow_profile.tax_id,
+        expected_tax_id=expected_tax_id,
     )
     modelo_record_events, modelo_events_notice = _local_modelo_record_calendar_events(
         bucket_id,
         rng,
-        expected_tax_id=workflow_profile.tax_id,
+        expected_tax_id=expected_tax_id,
     )
     events = (*live_events, *modelo_record_events)
     filing_evidence, filing_evidence_notice = _local_calendar_filing_evidence(
         bucket_id,
         events,
-        expected_tax_id=workflow_profile.tax_id,
+        expected_tax_id=expected_tax_id,
     )
     work_units, work_units_notice = _local_modelo_work_units(bucket_id)
     evidence_notices = [

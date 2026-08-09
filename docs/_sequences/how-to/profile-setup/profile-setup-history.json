@@ -67,22 +67,6 @@
         "config",
         "profile",
         "history",
-        "carla-real"
-      ],
-      "captures": [],
-      "envelope": null,
-      "envelope_source": null,
-      "exit_code": 0,
-      "kind": "command",
-      "stderr_text": null,
-      "text": "operation\tconfig.profile.history\nprofile\tcarla-real\nevent_count\t5\n2026-04-01T09:00:00+00:00\tprofile.values.updated\tprofile\t<profile-id>\tcadrumo.application.user_profile\n2026-04-01T09:00:00+00:00\tbucket.renamed\tbucket\t<profile-id>\tbucket-maintenance\n2026-04-01T09:00:00+00:00\tprofile.bucket.created\tprofile\t<profile-id>\tcadrumo.application.user_profile\n2026-04-01T09:00:00+00:00\tprofile.values.updated\tprofile\t<profile-id>\tcadrumo.application.user_profile\n2026-04-01T09:00:00+00:00\tprofile.renamed\tprofile\t<profile-id>\tcadrumo.application.user_profile\n"
-    },
-    {
-      "argv": [
-        "aeat",
-        "config",
-        "profile",
-        "history",
         "carla-real",
         "--event-type",
         "profile.renamed"

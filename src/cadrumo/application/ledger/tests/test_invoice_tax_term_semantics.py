@@ -40,6 +40,7 @@ import pathlib
 from decimal import Decimal
 
 import pytest
+from pydantic import ValidationError
 
 from ....adapters.inbound.einvoice import parse_einvoice_document
 from ....domain.invoices import InvoiceComponents
@@ -208,7 +209,7 @@ class TestTheConsumerImplementsTheCanonicalIdentity:
 
     def test_the_canonical_identity_refuses_the_double_counted_split(self) -> None:
         """The producer defect, expressed against the declaration it violated."""
-        with pytest.raises(Exception, match="total must equal"):
+        with pytest.raises(ValidationError, match="total must equal"):
             InvoiceComponents(
                 taxable_base=_BASE,
                 cuota=_CUOTA + _RECARGO,

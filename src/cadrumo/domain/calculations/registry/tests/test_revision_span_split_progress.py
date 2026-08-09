@@ -40,7 +40,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: own growth.
 _KNOWN_SPANNING: Final[frozenset[tuple[str, str]]] = frozenset(
     {
-        ("200", "2024-y-siguientes"),  # row #132 — two epochs, both reachable, no blocker
         ("303", "2009-y-siguientes"),  # row #117
         ("303", "2023-y-siguientes"),  # rows #113, #123
         ("390", "2010-y-siguientes"),  # rows #110, #115, #118

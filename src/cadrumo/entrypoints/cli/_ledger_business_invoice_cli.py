@@ -40,6 +40,7 @@ from ._common import (
     _bad,
     _emit_envelope,
     _parse_iso_date,
+    case_insensitive_choice,
     parse_decimal_amount,
     parse_optional_decimal_amount,
 )
@@ -60,22 +61,6 @@ from ._ledger_catalogue_invoice_payloads import (
 def register_business_invoice_commands(app: typer.Typer) -> None:
     """Mount the unified invoice command group on the ledger app."""
     app.add_typer(invoice_app, name="invoice")
-
-
-def _parse_intracom_operation_type(raw: str | None, *, translation_key: str) -> IntracomOperationType | None:
-    if raw is None:
-        return None
-    try:
-        return IntracomOperationType(raw.upper())
-    except ValueError:
-        valid = ", ".join(t.value for t in IntracomOperationType)
-        raise _bad(
-            tr(
-                translation_key,
-                default=f"--operation-type must be one of: {valid}",
-                valid=valid,
-            ),
-        ) from None
 
 
 _OPERATION_TYPE_TO_IVA_CATEGORY: dict[IntracomOperationType, IvaCategory] = {
@@ -347,9 +332,10 @@ _CatalogueOperationDateOpt = Annotated[
     ),
 ]
 _CatalogueOperationTypeOpt = Annotated[
-    str | None,
+    IntracomOperationType | None,
     typer.Option(
         "--operation-type",
+        click_type=case_insensitive_choice(IntracomOperationType),
         help=tr(
             "cli.app.ledger.invoice.operation_type_help",
             default=(
@@ -497,16 +483,12 @@ def invoice_add(
     from ...domain.invoices import InvoiceValidationError
 
     bucket_id = _business_invoice_bucket_id()
-    parsed_operation_type = _parse_intracom_operation_type(
-        operation_type,
-        translation_key="cli.app.ledger.invoice.operation_type_invalid",
-    )
     # An explicitly stated treatment WINS over the one derived from the M349
     # clave. The derivation exists so an intracomunitaria is not left
     # ungrounded when the operator only states the clave; it is a fallback, and
     # silently overriding a value the operator did state would be the reverse.
     resolved_iva_category = iva_category or _catalogue_iva_category_for_operation_type(
-        parsed_operation_type,
+        operation_type,
     )
     try:
         result = create_catalogue_invoice(
@@ -522,7 +504,7 @@ def invoice_add(
             currency=currency,
             notes=notes,
             iva_category=resolved_iva_category,
-            operation_type=parsed_operation_type,
+            operation_type=operation_type,
             operation_date=(
                 None if operation_date is None else _parse_iso_date(operation_date, label="operation-date")
             ),
@@ -596,11 +578,7 @@ def invoice_wizard(
     from ...domain.invoices import InvoiceValidationError
 
     bucket_id = _business_invoice_bucket_id()
-    parsed_operation_type = _parse_intracom_operation_type(
-        operation_type,
-        translation_key="cli.app.ledger.invoice.operation_type_invalid",
-    )
-    resolved_iva_category = iva_category or _catalogue_iva_category_for_operation_type(parsed_operation_type)
+    resolved_iva_category = iva_category or _catalogue_iva_category_for_operation_type(operation_type)
     try:
         wizard_result = create_invoice_via_wizard(
             bucket_id=bucket_id,
@@ -615,7 +593,7 @@ def invoice_wizard(
             country_code=country_code,
             notes=notes,
             iva_category=resolved_iva_category,
-            operation_type=parsed_operation_type,
+            operation_type=operation_type,
             operation_date=operation_date,
             retention_rate=retention_rate,
             retention_amount=retention_amount,
@@ -1035,10 +1013,7 @@ def invoice_update(
         counterparty_country=counterparty_country,
         notes=notes,
         iva_category=iva_category,
-        operation_type=_parse_intracom_operation_type(
-            operation_type,
-            translation_key="cli.app.ledger.invoice.operation_type_invalid",
-        ),
+        operation_type=operation_type,
         operation_date=(None if operation_date is None else _parse_iso_date(operation_date, label="operation-date")),
         retention_rate=parse_optional_decimal_amount(retention_rate, label="retention-rate"),
         retention_amount=parse_optional_decimal_amount(retention_amount, label="retention-amount"),

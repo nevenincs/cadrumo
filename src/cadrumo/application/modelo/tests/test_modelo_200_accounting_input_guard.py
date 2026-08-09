@@ -58,7 +58,7 @@ _BUCKET_ID = "2035baea-4afe-4fe3-b502-ff084fe79153"
 _T0 = datetime(2026, 1, 14, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 14, 11, 0, tzinfo=UTC)
 _M200 = "200"
-_FILING_YEAR = 2024
+_FILING_YEAR = 2025
 _RESULTADO_CONTABLE: CasillaId = validated_casilla_id("00501", surface="_RESULTADO_CONTABLE")
 _BASE_IMPONIBLE: CasillaId = validated_casilla_id("DP200014:00552", surface="_BASE_IMPONIBLE")
 _CUOTA_EJERCICIO: CasillaId = validated_casilla_id("DP200014B:00599", surface="_CUOTA_EJERCICIO")
@@ -247,5 +247,7 @@ def test_m200_uses_explicit_accounting_result_even_when_reviewed_ledger_rows_exi
 
     values = result.revision.casilla_values
     assert values[_BASE_IMPONIBLE] == Decimal("60000.00")
-    assert values[_CUOTA_EJERCICIO] == Decimal("13800.00")
+    # LIS DT 44a 2025 micro-empresa transitional scale: 50.000 x 21% + 10.000 x 22%
+    # = 10.500 + 2.200 = 12.700.
+    assert values[_CUOTA_EJERCICIO] == Decimal("12700.00")
     assert values[_CUOTA_EJERCICIO] != Decimal("0.00")

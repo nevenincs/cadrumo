@@ -247,13 +247,29 @@ def _resolve_source_jurisdiction(
     fiscal_residency: FiscalResidency | None,
     irpf_special_regime: IrpfSpecialRegime | None,
 ) -> str | None:
-    """Stamp the profile-conditional default for ``--source-jurisdiction``."""
+    """Stamp the profile-conditional default for ``--source-jurisdiction``.
+
+    Defaults to ``ES`` only on a DECLARED residency. An undeclared residency
+    resolves to ``None`` — the unresolved state the impatriado aggregation
+    already handles explicitly, segregating such a row out of the base with a
+    typed unresolved-jurisdiction issue rather than admitting it.
+
+    That aggregation documents the invariant this function must not break: an
+    unresolved jurisdiction "is NEVER silently coerced to ``ES``". Returning
+    ``ES`` here for a profile that has declared no residency performed exactly
+    that coercion at the boundary, so the ``None`` never reached the layer built
+    to refuse it, and foreign-source income folded into the Spanish base. The
+    stamp is persisted on the transaction, so it outlived the profile later
+    being completed.
+    """
     if operator_value is not None:
         return operator_value
     if fiscal_residency is FiscalResidency.NON_RESIDENT_IRNR:
         raise _bad(tr("cli.ledger.add.source_jurisdiction_required_irnr"))
     if irpf_special_regime is IrpfSpecialRegime.IMPATRIADO:
         raise _bad(tr("cli.ledger.add.source_jurisdiction_required_beckham"))
+    if fiscal_residency is None:
+        return None
     return "ES"
 
 

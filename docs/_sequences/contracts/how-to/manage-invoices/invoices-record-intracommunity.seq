@@ -4,4 +4,4 @@ aeat --format json app ledger invoice add --kind issued --counterparty-nif DE345
 @step Confirm the operation type and country were stored.
 @result aeat --format json app ledger invoice view {invoice_id}
 @expect result.operation_type == "E"
-@expect result.country_code == "DE"
+@expect result.counterparty_country == "DE"

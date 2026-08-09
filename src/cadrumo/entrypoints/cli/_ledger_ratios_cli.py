@@ -13,6 +13,7 @@ from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...core.time import now
 from ...domain.buckets import BucketEventType
+from ...domain.categories import SpendingCategory
 from ._common import _bad, _emit_envelope, parse_decimal_amount
 from ._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from ._common import active_bucket_id_or_refuse as _ratios_bucket_id
@@ -134,17 +135,6 @@ def _emit_ratios_censo_override_warning(
     )
 
 
-def _resolve_category(raw: str):
-    from ...domain.categories import SpendingCategory
-
-    try:
-        return SpendingCategory(raw.strip())
-    except ValueError as exc:
-        raise _bad(
-            tr("cli.app.ledger.ratios.unknown_category", default="Unknown spending category: {raw!r}", raw=raw),
-        ) from exc
-
-
 @ratios_app.command(
     "list",
     help=tr(
@@ -211,9 +201,9 @@ def ratios_list(
 )
 def ratios_set(
     ctx: typer.Context,
-    category: str = typer.Argument(
+    category: SpendingCategory = typer.Argument(
         ...,
-        help=tr("cli.app.ledger.ratios.category_help", default="Spending category id (e.g. USAGE_RATIO_VEHICLE)."),
+        help=tr("cli.app.ledger.ratios.category_help", default="Spending category id (e.g. vehiculo_combustible)."),
     ),
     ratio: str = typer.Argument(
         ...,
@@ -232,14 +222,13 @@ def ratios_set(
     from ...application.user_profile import CensoSyncService
     from ._ledger_payloads import RatiosSetResult
 
-    category_enum = _resolve_category(category)
     parsed = parse_decimal_amount(ratio, label="ratio")
     bucket_id, profile_id = _ratios_bucket_and_profile()
-    prior = set_usage_ratio(bucket_id=bucket_id, category=category_enum, ratio=parsed)
+    prior = set_usage_ratio(bucket_id=bucket_id, category=category, ratio=parsed)
     _emit_ratios_event(
         bucket_id=bucket_id,
         event_type=BucketEventType.LEDGER_RATIOS_SET,
-        category=category_enum.value,
+        category=category.value,
         prior=prior,
         new=parsed,
     )
@@ -248,7 +237,7 @@ def ratios_set(
         raw_afectacion = sync_service.bound_raw_afectacion_ratio(profile_id=profile_id)
         warning = (
             censo_override_warning(
-                category=category_enum,
+                category=category,
                 override_ratio=parsed,
                 raw_afectacion_ratio=raw_afectacion if raw_afectacion is not None else parsed,
             )
@@ -260,8 +249,8 @@ def ratios_set(
     _emit_envelope(
         ctx,
         command="ledger.ratios.set",
-        result=RatiosSetResult(bucket_id=bucket_id, category=category_enum, ratio=str(parsed)),
-        lines=(f"bucket\t{bucket_id}", f"{category_enum.value}\t{parsed}"),
+        result=RatiosSetResult(bucket_id=bucket_id, category=category, ratio=str(parsed)),
+        lines=(f"bucket\t{bucket_id}", f"{category.value}\t{parsed}"),
     )
 
 
@@ -271,7 +260,7 @@ def ratios_set(
 )
 def ratios_unset(
     ctx: typer.Context,
-    category: str = typer.Argument(
+    category: SpendingCategory = typer.Argument(
         ...,
         help=tr("cli.app.ledger.ratios.unset_category_help", default="Spending category id whose override to clear."),
     ),
@@ -288,31 +277,30 @@ def ratios_unset(
     from ...domain.usage_ratios import UsageRatioValidationError
     from ._ledger_payloads import RatiosUnsetResult
 
-    category_enum = _resolve_category(category)
     bucket_id = _ratios_bucket_id()
     try:
-        prior = unset_usage_ratio(bucket_id=bucket_id, category=category_enum)
+        prior = unset_usage_ratio(bucket_id=bucket_id, category=category)
     except UsageRatioValidationError as exc:
         raise _bad(
             tr(
                 "cli.app.ledger.ratios.no_override_error",
                 default="No persisted override for category {category!r} on bucket {bucket_id!r}",
-                category=category_enum.value,
+                category=category.value,
                 bucket_id=bucket_id,
             ),
         ) from exc
     _emit_ratios_event(
         bucket_id=bucket_id,
         event_type=BucketEventType.LEDGER_RATIOS_UNSET,
-        category=category_enum.value,
+        category=category.value,
         prior=prior,
         new=None,
     )
     _emit_envelope(
         ctx,
         command="ledger.ratios.unset",
-        result=RatiosUnsetResult(bucket_id=bucket_id, category=category_enum, ratio=""),
-        lines=(f"bucket\t{bucket_id}", f"{category_enum.value}\t<unset>"),
+        result=RatiosUnsetResult(bucket_id=bucket_id, category=category, ratio=""),
+        lines=(f"bucket\t{bucket_id}", f"{category.value}\t<unset>"),
     )
 
 

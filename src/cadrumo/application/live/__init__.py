@@ -208,6 +208,7 @@ from ._snapshot_base import (
     SnapshotLifecycleState,
     SnapshotNotFoundError,
     SnapshotRepository,
+    SnapshotStateFilter,
 )
 
 LIVE_EXPEDIENTES_READ_OPERATION = "live-expedientes-read"
@@ -616,6 +617,7 @@ __all__ = [
     "SnapshotLifecycleState",
     "SnapshotNotFoundError",
     "SnapshotRepository",
+    "SnapshotStateFilter",
     "SourceFiledDataCaptureReport",
     "StoredIvaRemoteStateAcquisitionRow",
     "StoredIvaWalletObservationRow",

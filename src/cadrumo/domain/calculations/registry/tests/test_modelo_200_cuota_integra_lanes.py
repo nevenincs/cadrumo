@@ -85,7 +85,7 @@ _M200_CUOTA_EJERCICIO_CASILLA: CasillaId = validated_casilla_id(
 
 
 def _snapshot():
-    return _committed_snapshot("200", 2024, "0A")
+    return _committed_snapshot("200", 2025, "0A")
 
 
 def _cuota_for(

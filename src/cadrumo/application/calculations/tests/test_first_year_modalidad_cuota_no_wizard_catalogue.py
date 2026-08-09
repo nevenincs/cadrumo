@@ -18,7 +18,7 @@ catalogue, so ``get_setup_flow()`` raises there. The child asserts the catalogue
 unregistered (the discriminating condition), then:
 
   POST-fix: the first-year flag resolves True off the projection, the activity-start
-  date resolves, and the M200/2024 cuota-diferencial (DP200014B:00611) COMPUTES.
+  date resolves, and the M200/2025 cuota-diferencial (DP200014B:00611) COMPUTES.
   PRE-fix: the wizard error was swallowed -> flag False, date None, 00611 ABSENT.
 
 Real-behaviour, real-adapter (the child runs the real encrypted-SQLite store via
@@ -38,7 +38,7 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-# Child process: does its own isolated setup + full M200/2024 first-year calculate
+# Child process: does its own isolated setup + full M200/2025 first-year calculate
 # WITHOUT ever importing cadrumo.application.wizard._catalogue, so the wizard SETUP_FLOW
 # catalogue is unregistered in this process. argv[1] is a tmp dir for the bucket.
 _CHILD_SCRIPT = r"""
@@ -96,7 +96,7 @@ with isolated_runtime_profile(tmp_path=tmp, bucket_id=_BUCKET) as profile:
             UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=False),
             UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("500000")),
             UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value=Decimal("100")),
-            UserProfileFact(path="censo.activity_start_date", value="2024-01-01"),
+            UserProfileFact(path="censo.activity_start_date", value="2025-01-01"),
         ),
         created_at=_T0,
         updated_at=_T0,
@@ -104,7 +104,7 @@ with isolated_runtime_profile(tmp_path=tmp, bucket_id=_BUCKET) as profile:
     UserProfileLifecycleRepository(bucket_id=_BUCKET).save(record)
 
     # The decoupled helpers must resolve off the projection with NO catalogue.
-    print("FIRST_YEAR:" + str(_first_year_modalidad_cuota_no_m202(_BUCKET, filing_year=2024)))
+    print("FIRST_YEAR:" + str(_first_year_modalidad_cuota_no_m202(_BUCKET, filing_year=2025)))
     print("ACTIVITY_START:" + str(_activity_start_date_for_bucket(_BUCKET)))
 
     secure_objects = profile.repository
@@ -112,12 +112,12 @@ with isolated_runtime_profile(tmp_path=tmp, bucket_id=_BUCKET) as profile:
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
-    snapshot = resources().modelos.authority.snapshot("200", filing_year=2024, period="0A")
+    snapshot = resources().modelos.authority.snapshot("200", filing_year=2025, period="0A")
     work_unit = create_work_unit(
         bucket_id=_BUCKET,
         modelo="200",
-        filing_year=2024,
-        period=Period.from_year_and_code(2024, "0A"),
+        filing_year=2025,
+        period=Period.from_year_and_code(2025, "0A"),
         revision_id=snapshot.revision.id,
         repository=wu_repo,
         clock=_T0,
@@ -141,7 +141,7 @@ def test_first_year_modalidad_cuota_resolves_without_wizard_catalogue(tmp_path: 
 
     The child process never registers the wizard ``SETUP_FLOW`` catalogue, so it is
     the genuine non-CLI calc context. Post-#30, the decoupled projection-based
-    derivation resolves the first-year relaxation and the M200/2024 cuota-diferencial
+    derivation resolves the first-year relaxation and the M200/2025 cuota-diferencial
     COMPUTES; pre-#30 the swallowed ``WizardCatalogueNotRegisteredError`` left the
     flag False, the date None, and the casilla ABSENT.
     """
@@ -161,8 +161,8 @@ def test_first_year_modalidad_cuota_resolves_without_wizard_catalogue(tmp_path: 
 
     # Post-#30: the decoupled derivation resolves off the wizard-free projection.
     assert "FIRST_YEAR:True" in out, f"first-year flag must resolve True WITHOUT the wizard catalogue{detail}"
-    assert "ACTIVITY_START:2024-01-01" in out, f"activity-start must resolve off the projection{detail}"
+    assert "ACTIVITY_START:2025-01-01" in out, f"activity-start must resolve off the projection{detail}"
     # And the full calculate computes the cuota-diferencial (no silent over-block).
     assert "CUOTA_DIFERENCIAL:PRESENT" in out, (
-        f"M200/2024 first-year cuota-diferencial DP200014B:00611 must COMPUTE without the wizard catalogue{detail}"
+        f"M200/2025 first-year cuota-diferencial DP200014B:00611 must COMPUTE without the wizard catalogue{detail}"
     )

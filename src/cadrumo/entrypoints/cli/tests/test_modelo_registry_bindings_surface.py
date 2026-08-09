@@ -157,7 +157,7 @@ def test_bindings_list_missing_m200_surfaces_m202_relation_inputs() -> None:
             "--modelo",
             "200",
             "--year",
-            "2024",
+            "2025",
             "--period",
             "0A",
             "--missing",
@@ -265,7 +265,7 @@ def test_bindings_list_without_missing_does_not_append_m200_relation_guidance() 
             "--modelo",
             "200",
             "--year",
-            "2024",
+            "2025",
             "--period",
             "0A",
         ],
@@ -564,14 +564,14 @@ def test_bindings_list_typed_payload_carries_relation_inputs_before_calculate() 
     (``RelationDefinition.target_binding``), not a per-form table, so it
     generalises to every modelo.
     """
-    scope = ["--modelo", "200", "--year", "2024", "--period", "0A"]
+    scope = ["--modelo", "200", "--year", "2025", "--period", "0A"]
     result = invoke_cached_cli(["--format", "json", "app", "modelo", "bindings", "list", *scope])
     assert result.exit_code == 0, result.output
     rows = {row["binding_id"]: row for row in _payload(result.output)["bindings"]}
 
     # Cross-check against the authoritative snapshot: every relation's
     # target_binding must surface that relation id on the listed binding row.
-    snapshot = resources().modelos.authority.snapshot("200", filing_year=2024, period="0A")
+    snapshot = resources().modelos.authority.snapshot("200", filing_year=2025, period="0A")
     expected: dict[str, set[str]] = {}
     for relation in snapshot.revision.relations:
         expected.setdefault(str(relation.target_binding), set()).add(str(relation.id))

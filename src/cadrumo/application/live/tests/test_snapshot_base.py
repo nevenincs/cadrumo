@@ -28,6 +28,7 @@ from .._snapshot_base import (
     SnapshotNotFoundError,
     SnapshotRepository,
     SnapshotService,
+    SnapshotStateFilter,
     enforce_snapshot_state_invariants,
 )
 
@@ -637,3 +638,27 @@ def test_snapshot_repository_protocol_anti_tautology() -> None:
         """Intentionally missing all SnapshotRepository members."""
 
     assert not isinstance(NotARepo(), SnapshotRepository)
+
+
+def test_every_lifecycle_state_has_a_filter_member_and_all_means_no_filter() -> None:
+    """The filter axis must stay total over the lifecycle it filters.
+
+    ``SnapshotStateFilter`` deliberately does NOT reuse ``SnapshotLifecycleState``:
+    ``all`` is not a state a snapshot can be *in*, and admitting it to the lifecycle
+    would give every exhaustive match a branch that cannot occur and let a stored
+    record claim a state meaning "no filter".
+
+    The cost of that separation is that a new lifecycle state could be added without
+    a filter for it, silently making those snapshots unreachable from the CLI. This
+    asserts the correspondence rather than a member count, so adding a lifecycle
+    state reds this gate instead of quietly narrowing the operator's reach.
+    """
+    filterable = {member.value for member in SnapshotStateFilter} - {SnapshotStateFilter.ALL.value}
+    assert filterable == {member.value for member in SnapshotLifecycleState}
+
+    for member in SnapshotStateFilter:
+        resolved = member.as_lifecycle_state()
+        if member is SnapshotStateFilter.ALL:
+            assert resolved is None
+        else:
+            assert resolved is SnapshotLifecycleState(member.value)

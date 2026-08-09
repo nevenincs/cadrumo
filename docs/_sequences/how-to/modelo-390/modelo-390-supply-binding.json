@@ -90,6 +90,22 @@
           {
             "code": "modelo.work.calculate.source_advisory",
             "context": {
+              "binding_id": "modelo-390-prev-303-cuota-devengada-simplificado",
+              "binding_source": "relation_prefill",
+              "reason": "source_issue",
+              "relation_id": "modelo-390-rel-303-cuota-devengada-simplificado",
+              "resolver_id": "relation_prefill",
+              "source_kind": "relation_prefill"
+            },
+            "message": "carry 'modelo-390-rel-303-cuota-devengada-simplificado' found no modelo 303 2025 4T filing in the local store, so its bound casilla declares zero rather than the carried 54. That reduces no liability and therefore over-declares.",
+            "severity": "warning",
+            "suggestion": "Supply the value for this casilla directly, through a binding override on calculate, if you hold the prior return."
+          },
+          {
+            "code": "modelo.work.calculate.source_advisory",
+            "context": {
+              "binding_id": "modelo-390-prev-303-compensacion-generada-ejercicio-no-97",
+              "binding_source": "iva_compensation_annual_partition",
               "reason": "source_issue",
               "resolver_id": "iva_compensation_annual_partition",
               "source_kind": "iva_compensation_annual_partition"
@@ -101,6 +117,8 @@
           {
             "code": "modelo.work.calculate.source_advisory",
             "context": {
+              "binding_id": "modelo-390-prev-303-compensacion-ultimo-periodo",
+              "binding_source": "iva_compensation_annual_partition",
               "reason": "source_issue",
               "resolver_id": "iva_compensation_annual_partition",
               "source_kind": "iva_compensation_annual_partition"
@@ -112,6 +130,8 @@
           {
             "code": "modelo.work.calculate.source_advisory",
             "context": {
+              "binding_id": "modelo-390-prorrata-regularizacion-anual",
+              "binding_source": "prorrata_regularizacion",
               "reason": "unresolved_binding",
               "resolver_id": "prorrata_regularizacion",
               "source_kind": "prorrata_regularizacion"
@@ -123,6 +143,9 @@
           {
             "code": "modelo.work.calculate.source_advisory",
             "context": {
+              "binding_id": "modelo-390-prev-303-compensacion-ultimo-periodo",
+              "binding_source": "iva_compensation_annual_partition",
+              "casilla_id": "iva.anual.compensacion-ultimo-periodo-97",
               "reason": "unresolved_binding",
               "source_kind": "iva_compensation_annual_partition"
             },
@@ -133,6 +156,9 @@
           {
             "code": "modelo.work.calculate.source_advisory",
             "context": {
+              "binding_id": "modelo-390-prev-303-compensacion-generada-ejercicio-no-97",
+              "binding_source": "iva_compensation_annual_partition",
+              "casilla_id": "iva.anual.compensacion-generada-ejercicio-no-97",
               "reason": "unresolved_binding",
               "source_kind": "iva_compensation_annual_partition"
             },

@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import typer
 
+from ....core import ModelRole
 from ....core.i18n import tr
 from .._common import _emit_envelope
 
@@ -60,7 +61,7 @@ def _contention_payload(snapshot: object | None) -> ProvisionContentionPayload |
     )
 
 
-def _resolve_role_model(role_value: str | None, model: str | None) -> tuple[str, int] | None:
+def _resolve_role_model(role_value: ModelRole | None, model: str | None) -> tuple[str, int] | None:
     """Resolve an operator's ``--role``/``--model`` into a runtime id and requirement.
 
     An explicit ``--model`` is honoured as given, with the selected role's
@@ -68,9 +69,8 @@ def _resolve_role_model(role_value: str | None, model: str | None) -> tuple[str,
     model does not tell us how much memory it needs -- the catalogue does.
     """
     from ....application.provisioning import select_model_for_role
-    from ....core import ModelRole
 
-    role = ModelRole(role_value) if role_value else ModelRole.VISION_TRANSCRIPTION
+    role = role_value if role_value is not None else ModelRole.VISION_TRANSCRIPTION
     selection = select_model_for_role(role)
     assessable = selection.assessable_load
     if assessable is None:
@@ -159,7 +159,7 @@ def register_provision_commands(app: typer.Typer) -> None:
     def provision_pull(
         ctx: typer.Context,
         model: str | None = typer.Option(None, "--model", help=tr("cli.config.provision.pull.model_help")),
-        role: str | None = typer.Option(None, "--role", help=tr("cli.config.provision.role_help")),
+        role: ModelRole | None = typer.Option(None, "--role", help=tr("cli.config.provision.role_help")),
     ) -> None:
         """Fetch a model, refusing before any bytes move when the load is not admitted."""
         from ....application.provisioning import pull_runtime_model
@@ -198,7 +198,7 @@ def register_provision_commands(app: typer.Typer) -> None:
     def provision_verify(
         ctx: typer.Context,
         model: str | None = typer.Option(None, "--model", help=tr("cli.config.provision.verify.model_help")),
-        role: str | None = typer.Option(None, "--role", help=tr("cli.config.provision.role_help")),
+        role: ModelRole | None = typer.Option(None, "--role", help=tr("cli.config.provision.role_help")),
     ) -> None:
         """Confirm a model is resident and answers a trivial prompt within a bound."""
         from ....application.provisioning import verify_model_ready

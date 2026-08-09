@@ -226,7 +226,7 @@ def mint_evidence_consent_token(
     """
     if not cloud_evidence_read_permitted(settings, profile_eligible=profile_eligible, acknowledged=acknowledged):
         raise LLMConsentError(
-            tr(_MINT_REFUSAL_LOCALE_KEY),
+            translated_message=_MINT_REFUSAL_LOCALE_KEY,
             suggestion=tr(EVIDENCE_CONSENT_REFUSAL_LOCALE_KEY),
         )
     return EvidenceConsentToken(surface=surface, evidence_content_address=evidence_content_address)

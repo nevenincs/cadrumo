@@ -180,7 +180,7 @@ def test_m123_result_disposition_uses_revision_specific_canonical_result_casilla
 
 def test_resolve_modelo_result_disposition_rejects_printed_number_metadata_token() -> None:
     """A registry metadata token must not silently drive result disposition."""
-    work_unit = _registry_work_unit(modelo="200", filing_year=2024, period_code="0A")
+    work_unit = _registry_work_unit(modelo="200", filing_year=2025, period_code="0A")
     revision = _revision_with_casilla_values(
         work_unit,
         {_M200_PRINTED_RESULT_NUMBER: Decimal("5000.00")},
@@ -199,7 +199,7 @@ def test_resolve_modelo_result_disposition_rejects_printed_number_metadata_token
 
 def test_resolve_modelo_result_disposition_rejects_ambiguous_printed_number_metadata_token() -> None:
     """A reused printed number must fail before result casilla filtering."""
-    work_unit = _registry_work_unit(modelo="200", filing_year=2024, period_code="0A")
+    work_unit = _registry_work_unit(modelo="200", filing_year=2025, period_code="0A")
     revision = _revision_with_casilla_values(
         work_unit,
         {_M200_AMBIGUOUS_PRINTED_NUMBER: Decimal("5000.00")},

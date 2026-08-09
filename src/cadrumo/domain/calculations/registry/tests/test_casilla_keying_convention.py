@@ -46,7 +46,7 @@ def _m303_2025_1t_snapshot() -> RegistrySnapshot:
 
 @pytest.fixture(scope="module")
 def _m200_2024_snapshot() -> RegistrySnapshot:
-    return resources().modelos.authority.snapshot("200", filing_year=2024, period="0A")
+    return resources().modelos.authority.snapshot("200", filing_year=2025, period="0A")
 
 
 def test_runtime_accepts_canonical_casilla_id_for_semantic_input(_m303_2025_1t_snapshot: RegistrySnapshot) -> None:

@@ -26,6 +26,7 @@ from datetime import UTC, datetime
 
 import pytest
 from pydantic import ValidationError
+from pydantic_core import PydanticSerializationError
 
 from ....core import LOCAL_TRANSPORT_LABEL, FieldOrigin
 from .._document_transcription import (
@@ -70,16 +71,16 @@ def test_the_record_refuses_every_ordinary_serialization_route() -> None:
     """
     transcription = _transcription()
 
-    with pytest.raises(Exception, match=r"(?i)serial|dump|persist|refus"):
+    with pytest.raises(NotImplementedError, match=r"(?i)serial|dump|persist|refus"):
         transcription.model_dump()
 
-    with pytest.raises(Exception, match=r"(?i)serial|dump|persist|refus"):
+    with pytest.raises(NotImplementedError, match=r"(?i)serial|dump|persist|refus"):
         transcription.model_dump_json()
 
-    with pytest.raises(Exception, match=r"(?i)serial|dump|persist|refus"):
+    with pytest.raises(NotImplementedError, match=r"(?i)serial|dump|persist|refus"):
         dict(transcription)  # type: ignore[call-overload]
 
-    with pytest.raises(Exception, match=r"(?i)serial|dump|persist|refus"):
+    with pytest.raises(NotImplementedError, match=r"(?i)serial|dump|persist|refus"):
         pickle.dumps(transcription)
 
 
@@ -97,10 +98,10 @@ def test_a_parent_model_embedding_a_transcription_also_refuses() -> None:
 
     holder = Holder(transcription=_transcription())
 
-    with pytest.raises(Exception, match=r"(?i)serial|dump|persist|refus"):
+    with pytest.raises(PydanticSerializationError, match=r"(?i)serial|dump|persist|refus"):
         holder.model_dump()
 
-    with pytest.raises(Exception, match=r"(?i)serial|dump|persist|refus"):
+    with pytest.raises(PydanticSerializationError, match=r"(?i)serial|dump|persist|refus"):
         holder.model_dump_json()
 
 

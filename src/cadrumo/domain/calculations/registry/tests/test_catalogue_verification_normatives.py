@@ -659,7 +659,7 @@ def test_modelo_200_regimen_especial_disminucion_casillas_cite_ley_49_2002_exemp
     construct legal-ref coverage) under full bundled-corpus validation."""
     from ._registry_schema_support import _committed_snapshot
 
-    snapshot = _committed_snapshot("200", 2024, "0A")
+    snapshot = _committed_snapshot("200", 2025, "0A")
     revision = snapshot.revision
 
     disminucion_casilla_ids = ("03276", "03277", "03278", "03279", "03280")

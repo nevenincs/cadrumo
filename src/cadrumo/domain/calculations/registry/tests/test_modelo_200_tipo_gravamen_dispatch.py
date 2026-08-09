@@ -101,7 +101,7 @@ def _base_inputs(base: Decimal) -> dict[CasillaId, Decimal]:
 
 
 def _snapshot():
-    return _committed_snapshot("200", 2024, "0A")
+    return _committed_snapshot("200", 2025, "0A")
 
 
 def _parameters() -> dict[str, ParameterDefinition]:

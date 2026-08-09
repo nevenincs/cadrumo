@@ -29,6 +29,7 @@ from pathlib import Path
 import pytest
 
 from ....core import LOCAL_TRANSPORT_LABEL
+from ....domain.transactions import TransactionNotFoundError
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._evidence_draft import InvoiceDraft
 from .._extraction_draft_store import load_extraction_drafts, read_extraction_draft
@@ -186,7 +187,7 @@ def test_a_transaction_bound_reject_still_takes_the_original_path(
         reason="a reason",
     )
 
-    with pytest.raises(Exception) as raised:
+    with pytest.raises(TransactionNotFoundError) as raised:
         execute_reviewed_decision(
             suggestion,
             origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_REJECT,

@@ -69,7 +69,7 @@ _CoveredCase = tuple[str, Callable[[], Any], Callable[[], dict[str, str]], int |
 # (binding-derived) is covered: with the truth-grounded gate (required = calculation
 # results + schema-required, not optional inputs), its computed result casillas are
 # populated and reach disk, while its optional inputs (02/08/09/12/14) are excluded.
-# Modelo 200 (sociedades) is covered with its 2024/0A provider. Modelo 390 (IVA
+# Modelo 200 (sociedades) is covered with its 2025/0A provider. Modelo 390 (IVA
 # resumen anual) is covered with its 2025/0A provider: the required-applicable
 # set is the three computed annual totals (cuota devengada/deducible/resultado),
 # each of which carries a real DR390 box (34/64/65) via export_refs.
@@ -79,7 +79,7 @@ _COVERED: tuple[_CoveredCase, ...] = (
     ("115", _approved_modelo_115_registry_draft, _modelo_115_export_headers, None, None),
     ("123", _approved_modelo_123_registry_draft, _modelo_123_export_headers, None, None),
     ("131", _approved_modelo_131_registry_draft, _m131_headers, None, None),
-    ("200", _approved_modelo_200_registry_draft, _modelo_200_export_headers, 2024, "0A"),
+    ("200", _approved_modelo_200_registry_draft, _modelo_200_export_headers, 2025, "0A"),
     ("390", _approved_modelo_390_registry_draft, _modelo_390_export_headers, 2025, "0A"),
 )
 

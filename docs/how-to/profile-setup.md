@@ -429,7 +429,7 @@ Every change to a profile - creation, edits, imports, classifications,
 calculations, and filings - is recorded as an event in that profile's
 append-only history (a log you can read but not alter). Reading history needs an
 active profile, so switch to it first after logout. The example creates,
-renames, and edits a profile before browsing and filtering its history:
+renames, and edits a profile before filtering its history:
 
 ```{cli-sequence} profile-setup-history
 :verify: Confirm the profile history records each change and can be filtered.

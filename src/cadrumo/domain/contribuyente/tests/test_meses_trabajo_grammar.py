@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import pytest
 
+from ....core.errors import ProfileAnswerTypeError
 from .._meses_trabajo import parse_meses_trabajo, serialise_meses_trabajo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -57,12 +58,12 @@ class TestRefusals:
     )
     def test_malformed_input_refuses(self, raw: str, reason: str) -> None:
         """A dropped month would silently change the proration basis."""
-        with pytest.raises(Exception, match=reason):
+        with pytest.raises(ProfileAnswerTypeError, match=reason):
             parse_meses_trabajo(raw, field="f")
 
     def test_the_refusal_names_the_field_and_the_accepted_form(self) -> None:
         """The operator is told which door the bad value came through, and what to write."""
-        with pytest.raises(Exception, match=r"descendiente\.0\.meses_madre_trabajo") as caught:
+        with pytest.raises(ProfileAnswerTypeError, match=r"descendiente\.0\.meses_madre_trabajo") as caught:
             parse_meses_trabajo("nope", field="descendiente.0.meses_madre_trabajo")
 
         assert "MM or MM-MM" in str(caught.value)

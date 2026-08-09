@@ -428,6 +428,7 @@
           {
             "code": "modelo.work.calculate.source_advisory",
             "context": {
+              "binding_source": "ledger_iva_aggregation",
               "reason": "source_issue",
               "resolver_id": "ledger_iva_aggregation",
               "source_kind": "ledger_iva_aggregation"
@@ -3974,6 +3975,7 @@
           {
             "code": "modelo.work.calculate.source_advisory",
             "context": {
+              "binding_source": "ledger_iva_aggregation",
               "reason": "source_issue",
               "resolver_id": "ledger_iva_aggregation",
               "source_kind": "ledger_iva_aggregation"
@@ -7535,6 +7537,7 @@
           {
             "code": "modelo.work.calculate.source_advisory",
             "context": {
+              "binding_source": "ledger_iva_aggregation",
               "reason": "source_issue",
               "resolver_id": "ledger_iva_aggregation",
               "source_kind": "ledger_iva_aggregation"
@@ -11096,6 +11099,7 @@
           {
             "code": "modelo.work.calculate.source_advisory",
             "context": {
+              "binding_source": "ledger_iva_aggregation",
               "reason": "source_issue",
               "resolver_id": "ledger_iva_aggregation",
               "source_kind": "ledger_iva_aggregation"

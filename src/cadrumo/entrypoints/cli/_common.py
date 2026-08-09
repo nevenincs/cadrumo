@@ -26,17 +26,89 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from datetime import date as _date
 from decimal import Decimal
+from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
+import click
 import typer
+import typer._click.types as typer_click_types
 
+from ...core import NON_REGISTRY_MODELOS, Modelo
 from ...core.cli_metadata import is_metadata_invocation
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.output_rendering import OutputFormat, render_command_output
 from ._command_suggestions import INVOCATION_REMAINDER_META_KEY
+
+# The accepted-code set for every ``--modelo`` option and argument. It is derived
+# from the closed core identifier taxonomy rather than the registry authority:
+# help and parse-time refusals are introspection surfaces and must render even
+# while a peer's registry authoring slice is fail-hard invalid. Command bodies
+# still reach the registry-backed services for real data access.
+#
+# Non-registry members are excluded because every consumer of this choice resolves
+# a registry revision. Surfaces that legitimately address a retired code — the
+# portal catalogue ships an entry for the suppressed Modelo 037 — must NOT use
+# this constant; they need the full taxonomy.
+#
+# It is a module-level constant because ``from __future__ import annotations``
+# stringifies the ``Annotated`` metadata carrying ``click_type=...`` and Typer
+# re-evaluates that string in the defining module's global namespace, where a
+# closure-local binding would be invisible.
+#
+# CAST-RATIONALE-TYPER-CLICK-PARAMTYPE-DUALITY: typer vendors its own click, so
+# click.Choice's click.types.ParamType and typer's typer._click.types.ParamType
+# are the same runtime object behind two static names; the cast bridges only that
+# static duality, with no Any escape.
+MODELO_CODE_CHOICE: typer_click_types.ParamType = cast(
+    typer_click_types.ParamType,
+    click.Choice([modelo.value for modelo in Modelo if modelo not in NON_REGISTRY_MODELOS]),
+)
+
+# The FULL modelo taxonomy, including the codes that have no registry definition.
+# Use this only where a command legitimately addresses a retired or non-registry
+# modelo: the portal catalogue ships an entry for the suppressed Modelo 037, so a
+# portal filter pinned to MODELO_CODE_CHOICE would refuse a code the application
+# deliberately supports. It is a separate constant rather than a widening of
+# MODELO_CODE_CHOICE because the registry-resolving surfaces must keep refusing
+# those codes.
+#
+# CAST-RATIONALE-TYPER-CLICK-PARAMTYPE-DUALITY: typer vendors its own click, so
+# click.Choice's click.types.ParamType and typer's typer._click.types.ParamType
+# are the same runtime object behind two static names; the cast bridges only that
+# static duality, with no Any escape.
+MODELO_CODE_CHOICE_ALL: typer_click_types.ParamType = cast(
+    typer_click_types.ParamType,
+    click.Choice([modelo.value for modelo in Modelo]),
+)
+
+
+def case_insensitive_choice(enum_class: type[StrEnum]) -> typer_click_types.ParamType:
+    """Build a case-insensitive click choice over ``enum_class``'s values.
+
+    Typer renders a bare enum annotation as a case-SENSITIVE choice. Several
+    options on this CLI previously hand-parsed their token with ``.upper()`` or
+    ``.strip().lower()`` before constructing the enum, so replacing that parser
+    with the annotation alone silently narrows the accepted spellings — a
+    behaviour change invisible at the declaration site and in every test that
+    only uses canonical forms.
+
+    Passing the result as ``click_type`` keeps the parameter's enum annotation
+    authoritative: the handler still receives a real member, not the raw token,
+    and the MCP input-schema builder still reads the closed value set off the
+    wrapped choice. Only the accepted spelling widens.
+    """
+    # CAST-RATIONALE-TYPER-CLICK-PARAMTYPE-DUALITY: typer vendors its own click, so
+    # click.Choice's click.types.ParamType and typer's typer._click.types.ParamType
+    # are the same runtime object behind two static names; the cast bridges only
+    # that static duality, with no Any escape.
+    return cast(
+        typer_click_types.ParamType,
+        click.Choice([member.value for member in enum_class], case_sensitive=False),
+    )
+
 
 # The application- and domain-layer symbols below are imported lazily,
 # inside the helpers that use them at runtime. A module-level import
@@ -59,6 +131,7 @@ if TYPE_CHECKING:
     from ...domain.filing import ModeloDraft
     from ...domain.invoices import InvoiceCatalogue
     from ...domain.transactions import TransactionCatalogue
+    from ...domain.user_profile import UserProfileRecord
 
 __all__ = [
     "emit_help_text",
@@ -598,6 +671,23 @@ def _profile_to_taxpayer(state: WorkflowState) -> TaxpayerProfile:
     if record is None:
         return projection_for_taxpayer({})
     return projection_for_taxpayer(record)
+
+
+def _declared_tax_id(record: UserProfileRecord | None) -> str:
+    """Return the ``identity.tax_id`` fact declared on a :class:`UserProfileRecord`.
+
+    Returns ``""`` when the record is absent or carries no such fact.
+
+    Deliberately NOT routed through :func:`_profile_to_taxpayer`. That projection
+    substitutes a synthetic placeholder NIF for an absent identity, which reads
+    downstream as a declared value and cannot be told apart from one. A caller
+    that compares the operator's identity against stored AEAT evidence needs the
+    absence to survive, so this returns the empty string and lets the owning
+    application service raise its own grounded refusal naming the missing fact.
+    """
+    from ...application.user_profile import fact_value
+
+    return (fact_value(record, "identity.tax_id") or "").strip()
 
 
 # ---------------------------------------------------------------------

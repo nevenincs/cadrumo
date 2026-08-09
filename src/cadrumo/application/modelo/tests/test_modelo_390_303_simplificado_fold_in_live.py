@@ -78,6 +78,24 @@ _M390_DEVENGADA_SIMPLIFICADO_CASILLA: CasillaId = validated_casilla_id(
     surface="M390 box 79 simplificado",
 )
 
+# The three régimen-general relation_prefill casillas this test does not
+# exercise. A régimen simplificado profile can still carry zero général-regime
+# activity, but the three general relations are enrolled unconditionally on
+# every M390 filing, not scoped by the profile's declared IVA regime, so they
+# must resolve too (to zero) or the live calculate reports them unresolved.
+_M303_CUOTA_DEVENGADA_TOTAL: CasillaId = validated_casilla_id(
+    "iva.cuota-devengada-total",
+    surface="M303 cuota devengada total",
+)
+_M303_CUOTA_DEDUCIBLE_TOTAL: CasillaId = validated_casilla_id(
+    "iva.cuota-deducible-total",
+    surface="M303 cuota deducible total",
+)
+_M303_RESULTADO_REGIMEN_GENERAL: CasillaId = validated_casilla_id(
+    "iva.resultado-regimen-general",
+    surface="M303 resultado regimen general",
+)
+
 _RELATION_ID = "modelo-390-rel-303-cuota-devengada-simplificado"
 _TARGET_BINDING_ID = "modelo-390-prev-303-cuota-devengada-simplificado"
 _RELATION_PREFILL_SOURCE = "relation_prefill"
@@ -120,7 +138,17 @@ def _seed_m303_quarters(*, obs_repo: CalculationObservationRepository) -> None:
                     modelo="303",
                     filing_year=_YEAR,
                     period=period,
-                    casilla_values={_M303_SIMPLIFICADO_CUOTA_DEVENGADA: cuota},
+                    casilla_values={
+                        _M303_SIMPLIFICADO_CUOTA_DEVENGADA: cuota,
+                        # Zero-filled: this test's scope is the simplificado
+                        # relation alone, but the three régimen-general
+                        # relations are enrolled unconditionally and must
+                        # still resolve for the live calculate to report no
+                        # unresolved relation_prefill diagnostics.
+                        _M303_CUOTA_DEVENGADA_TOTAL: Decimal("0"),
+                        _M303_CUOTA_DEDUCIBLE_TOTAL: Decimal("0"),
+                        _M303_RESULTADO_REGIMEN_GENERAL: Decimal("0"),
+                    },
                 ),
             ),
             source_kind=APP_FILING_SOURCE_KIND,

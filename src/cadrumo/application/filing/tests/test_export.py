@@ -796,15 +796,16 @@ def test_export_writes_modelo_200_negative_cuota_diferencial_as_signed_money(tmp
     The 2025 Diseño de Registro for page 14B publishes casilla 00611 as
     type ``N`` (numeric signed), position 711, length 17. This test drives
     the real M200 registry calculation through ``build_draft``: accounting
-    profit 200 produces cuota 46, and 450 of Modelo 202 pagos fraccionados
-    produces ``DP200014B:00611 = -404.00``. Export must render that amount
-    with the signed-money ``N`` marker in the first byte, then parse back
-    through the registry layout.
+    profit 200, taxed at the LIS DT 44ª 2025 micro-empresa first-tranche
+    rate (21 %), produces cuota 42, and 450 of Modelo 202 pagos
+    fraccionados produces ``DP200014B:00611 = -408.00``. Export must
+    render that amount with the signed-money ``N`` marker in the first
+    byte, then parse back through the registry layout.
     """
-    provider = _schema_provider(filing_year=2024, period="0A", modelos=("200",))
+    provider = _schema_provider(filing_year=2025, period="0A", modelos=("200",))
     draft = build_draft(
         modelo="200",
-        period=Period.from_year_and_code(2024, "0A"),
+        period=Period.from_year_and_code(2025, "0A"),
         profile=ModeloOperatorProfile(
             tax_id="B12345674",
             display_name="Emilio Export Test SL",
@@ -850,8 +851,8 @@ def test_export_writes_modelo_200_negative_cuota_diferencial_as_signed_money(tmp
     field_slice = _field_slice(layout, "modelo-200-page-014b", "modelo-200-page-014b-casilla-00611")
     rendered = payload[field_slice].decode("latin-1")
 
-    assert exported_values[_M200_CUOTA_DIFERENCIAL_CASILLA] == Decimal("-404.00")
-    assert rendered == "N" + "40400".zfill(16)
+    assert exported_values[_M200_CUOTA_DIFERENCIAL_CASILLA] == Decimal("-408.00")
+    assert rendered == "N" + "40800".zfill(16)
     assert verify_export(approved, file_path=output, schema_provider=provider).verdict is DeclaracionVerifyVerdict.MATCH
 
 
@@ -872,7 +873,7 @@ def test_export_leaves_modelo_200_grupo_mercantil_parent_tin_slot_blank(tmp_path
     rather than an omission. The slot stays blank until the grupo mercantil block
     is modelled as its own domain concept.
     """
-    provider = _schema_provider(filing_year=2024, period="0A", modelos=("200",))
+    provider = _schema_provider(filing_year=2025, period="0A", modelos=("200",))
     draft = _approved_modelo_200_registry_draft()
     output = tmp_path / "modelo-200.txt"
 
@@ -924,7 +925,7 @@ def test_export_writes_the_modelo_200_envelope_tags_aeat_publishes(tmp_path: Pat
     design while still carrying a valid digest and a plausible byte count, so no
     signal reaches the operator -- the omission is only visible at the bytes.
     """
-    provider = _schema_provider(filing_year=2024, period="0A", modelos=("200",))
+    provider = _schema_provider(filing_year=2025, period="0A", modelos=("200",))
     draft = _approved_modelo_200_registry_draft()
     output = tmp_path / "modelo-200.txt"
 
@@ -932,10 +933,10 @@ def test_export_writes_the_modelo_200_envelope_tags_aeat_publishes(tmp_path: Pat
 
     payload = output.read_bytes()
 
-    assert payload[:17] == b"<T200020240A0000>"
+    assert payload[:17] == b"<T200020250A0000>"
     assert payload[17:22] == b"<AUX>"
     assert payload[322:328] == b"</AUX>"
-    assert payload[-18:] == b"</T200020240A0000>"
+    assert payload[-18:] == b"</T200020250A0000>"
     # The two EEDD fields the sheet marks optional ride the same record, so a
     # promotion that reached the tags while leaving these as reserved blanks would
     # otherwise pass. Both values come from the export headers.
@@ -957,7 +958,7 @@ def test_the_modelo_200_envelope_tags_agree_on_the_discriminante(tmp_path: Path)
     this compares the two authorities against each other rather than each against a
     third copy of the expected value.
     """
-    provider = _schema_provider(filing_year=2024, period="0A", modelos=("200",))
+    provider = _schema_provider(filing_year=2025, period="0A", modelos=("200",))
     output = tmp_path / "modelo-200.txt"
 
     export_draft(
@@ -991,7 +992,7 @@ def test_a_modelo_200_layout_without_its_footer_record_writes_no_closing_tag(tmp
     model, which is the same shape the loader produces, rather than by editing the
     committed TOML.
     """
-    provider = _schema_provider(filing_year=2024, period="0A", modelos=("200",))
+    provider = _schema_provider(filing_year=2025, period="0A", modelos=("200",))
     layout = provider.get_subview("200").export_layouts[0]
     footers = tuple(record for record in layout.records if record.record_type == "envelope_footer")
 
@@ -1012,8 +1013,8 @@ def test_a_modelo_200_layout_without_its_footer_record_writes_no_closing_tag(tmp
 
     payload = output.read_bytes()
 
-    assert payload[:17] == b"<T200020240A0000>", "the open tag is unaffected, so the loss below is the footer's"
-    assert payload[-18:] != b"</T200020240A0000>"
+    assert payload[:17] == b"<T200020250A0000>", "the open tag is unaffected, so the loss below is the footer's"
+    assert payload[-18:] != b"</T200020250A0000>"
     assert b"</T200" not in payload
 
 

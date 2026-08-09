@@ -17,9 +17,9 @@ Setup that triggers the live first-year flag
   - a legal-entity profile whose ``incn_prior_12_months`` (500.000) is at or below
     the LIS art. 40.3 INCN threshold (6.000.000), so the derived modality is
     ``ART_40_2_OPTIONAL`` (modalidad cuota); and
-  - ``censo.activity_start_date`` in the filing year (2024), so 2024 is the
+  - ``censo.activity_start_date`` in the filing year (2025), so 2025 is the
     taxpayer's FIRST Impuesto sobre Sociedades ejercicio (``year >= filing_year``);
-  - NO Modelo 202 filed for 2024 (a first-year cuota filer has no prior IS return
+  - NO Modelo 202 filed for 2025 (a first-year cuota filer has no prior IS return
     to base a pago fraccionado on - LIS art. 40.2).
 
 Discriminator (vs the flag-OFF status quo pinned by
@@ -90,7 +90,7 @@ _BUCKET_ID = "234af0d3-5002-452b-9eff-80bbc1de0c84"
 _T0 = datetime(2026, 1, 12, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 12, 11, 0, tzinfo=UTC)
 _M200 = "200"
-_FILING_YEAR = 2024
+_FILING_YEAR = 2025
 
 # Cuota-diferencial: the formula operand that consumes the M202 pagos fold-in
 # relation. Absent (unresolved) when the relation is None; present when the
@@ -135,7 +135,7 @@ def _seed_first_year_modalidad_cuota_profile() -> None:
             UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value=Decimal("100")),
             # First IS ejercicio: activity starts in the filing year, so a pago
             # fraccionado under modalidad cuota (art. 40.2) has no prior IS return.
-            UserProfileFact(path="censo.activity_start_date", value="2024-01-01"),
+            UserProfileFact(path="censo.activity_start_date", value="2025-01-01"),
         ),
         created_at=_T0,
         updated_at=_T0,
@@ -144,7 +144,7 @@ def _seed_first_year_modalidad_cuota_profile() -> None:
 
 
 def _calculate_m200(secure_objects: SecureObjectRepository) -> BucketAggregationCalculationResult:
-    """Run the live M200/2024/0A calculate over the seeded bucket - NO M202 seeded."""
+    """Run the live M200/2025/0A calculate over the seeded bucket - NO M202 seeded."""
     _seed_first_year_modalidad_cuota_profile()
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)

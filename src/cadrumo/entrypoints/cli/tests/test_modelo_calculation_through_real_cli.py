@@ -173,16 +173,17 @@ def _seed_legal_entity_profile(
 def test_modelo_200_micro_empresa_pyme_cuota_2024(
     runtime_profile: TestRuntimeProfile,
 ) -> None:
-    """Modelo 200 pyme cuota-íntegra for a micro-empresa ejercicio 2024.
+    """Modelo 200 pyme cuota-íntegra for a micro-empresa ejercicio 2025.
 
-    Oracle: AEAT Manual Práctico de Sociedades 2024, § Tipo reducido
-    empresas de reducida dimensión; LIS Art. 29 (BOE-A-2014-12328)
-    as in force for 2024.
+    Oracle: LIS disposición transitoria 44ª (added by Ley 7/2024,
+    BOE-A-2024-26694), the transitional micro-empresa scale over LIS
+    Art. 29.1 (BOE-A-2014-12328) as in force for periods iniciados en 2025:
+    21 % on the first 50.000 EUR, 22 % on the rest.
 
     Input: base imponible 100.000,00 EUR, SL, no new-entity override,
-    INCN < 1.000.000 EUR (micro-empresa lane, 23 % flat).
+    INCN < 1.000.000 EUR (micro-empresa lane).
 
-    Expected: casilla DP200014:00562 (cuota íntegra) = 23.000,00 EUR.
+    Expected: casilla DP200014:00562 (cuota íntegra) = 21.500,00 EUR.
     """
 
     _seed_legal_entity_profile(
@@ -192,7 +193,7 @@ def test_modelo_200_micro_empresa_pyme_cuota_2024(
     )
     work_unit_id = create_modelo_work_unit_via_cli(
         modelo="200",
-        filing_year=2024,
+        filing_year=2025,
         period="0A",
         revision="2024-y-siguientes",
     )
@@ -237,10 +238,10 @@ def test_modelo_200_micro_empresa_pyme_cuota_2024(
     payload = _payload(result.output)
     # casilla DP200014:00562 is the cuota-integra output casilla.
     cuota = payload["casilla_values"]["DP200014:00562"]
-    # Oracle: 100.000,00 x 23 % = 23.000,00 EUR
-    assert Decimal(cuota) == Decimal("23000.00"), (
-        f"Modelo 200 pyme 2024 cuota-integra: expected 23000.00 EUR "
-        f"(LIS Art. 29, 23% micro-empresa 2024), got {cuota!r}"
+    # Oracle: 50.000,00 x 21 % + 50.000,00 x 22 % = 10.500,00 + 11.000,00 = 21.500,00 EUR
+    assert Decimal(cuota) == Decimal("21500.00"), (
+        f"Modelo 200 pyme 2025 cuota-integra: expected 21500.00 EUR "
+        f"(LIS DT 44a, 21%/22% micro-empresa 2025), got {cuota!r}"
     )
 
 

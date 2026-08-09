@@ -430,6 +430,20 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
 
     resolvers["cadrumo.outbound.aeat.sede.iva_compensation_wallet.observations"] = _iva_wallet_observation_key
 
+    resolvers.update(_ledger_extraction_and_live_deudas_natural_key_resolvers())
+
+    return resolvers
+
+
+def _ledger_extraction_and_live_deudas_natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
+    """Return the natural-key resolvers for the ledger extraction pipeline, live deudas, and the consent ledger.
+
+    Split out of :func:`_natural_key_resolvers` to keep that function inside
+    its declared size budget; these three namespaces share no dependency on
+    each other or on the resolvers registered above them.
+    """
+    resolvers: dict[str, NaturalKeyResolver] = {}
+
     # --- Ledger extraction pipeline (SecureBoundRepository) --------------------
     def _extracted_document_cache_repo() -> ExtractedDocumentCacheRepository:
         return ExtractedDocumentCacheRepository()

@@ -53,7 +53,7 @@ _M200_CUOTA_INTEGRA_CASILLA: CasillaId = validated_casilla_id(
 
 
 def _m200_snapshot() -> RegistrySnapshot:
-    return resources().modelos.authority.snapshot("200", filing_year=2024, period="0A", on=None)
+    return resources().modelos.authority.snapshot("200", filing_year=2025, period="0A", on=None)
 
 
 def test_enum_consumed_binding_ids_identifies_legal_entity_form() -> None:

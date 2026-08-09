@@ -104,7 +104,7 @@ def test_work_create_refuses_status_blocked_profile_missing_activity() -> None:
     payload = json.loads(result.output)
     assert payload["status"] == "error"
     assert payload["error"]["code"] == "REFUSED_MODELO_PROFILE_READINESS"
-    assert "activities.description" in payload["error"]["message"]
+    assert "Censo activity description" in payload["error"]["message"]
     assert "work_unit_id" not in result.output
     assert "Traceback" not in result.output
 
@@ -187,8 +187,9 @@ def test_m210_engine_live_work_create_refuses_legacy_non_eea_irnr_missing_repres
     assert payload["status"] == "error"
     assert payload["error"]["code"] == "REFUSED_MODELO_PROFILE_READINESS"
     message = payload["error"]["message"]
-    assert "taxpayer_type.representante_fiscal_nif" in message
-    assert "taxpayer_type.representante_fiscal_nombre" in message
+    assert "NIF of the representante fiscal" in message
+    assert "Full name of the representante fiscal" in message
+    assert "trlirnr-rdleg-5-2004:art-10" in message
     assert "REFUSED_CLI_VALIDATION_BOUNDARY" not in result.output
     assert "Traceback" not in result.output
 
