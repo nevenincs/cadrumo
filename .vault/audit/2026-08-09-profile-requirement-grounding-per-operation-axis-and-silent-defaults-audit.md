@@ -5,7 +5,7 @@ tags:
 date: '2026-08-09'
 modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:b74e973028074d57be52fa8f1d8bb8eef168f3f328d48b7f84bba843d4d74346'
+body_hash: 'sha256:c8f8d8d0434c86e75ed3594d0cf616e2dd29404a788d36748bec0b0b6490a65d'
 related:
   - "[[2026-08-08-profile-requirement-grounding-adr]]"
 ---
@@ -151,7 +151,6 @@ Three findings in this document have now been tested against running code. The s
 
 The distinguishing factor is not care or detail — the withdrawn findings carried precise `file:line` citations and plausible mechanisms. It is whether the claimed BEHAVIOUR was ever executed. A code path read carefully still only supports "this branch exists"; it does not support "and therefore the operator sees X", because the consequence depends on callers, guards and defaults that are not visible from the site. Every consequence claim in an audit should carry either a probe that produced it or an explicit marker that it is inferred and untested.
 
-
 ### The replacement finding is now fixed, and it needed measuring first too
 
 The withdrawal section above recorded a smaller real finding in place of the `work dependencies` claim — absent and mismatched identity reporting the same blocker — and marked it **not actioned**. That is now stale: it is fixed in `1ca1b2dec9`. Recorded here so the entry does not keep reading as open work.
@@ -171,7 +170,6 @@ So the finding held on the justificante path **only**. The register path already
 
 That is worth recording beside the pattern above rather than buried in a commit message. The lesson from the two withdrawals was "execute the claim before believing it"; this shows the same rule applies to the FIX, not only to the finding. A remedy reasoned from a correct diagnosis can still be wrong in a way only running it reveals, and the thing that caught it was a test written by someone else for an unrelated case.
 
-
 ### Open, ready to execute: the setup-incomplete refusal names no field
 
 Found by sweeping every profile-related refusal string in the locale catalogue against the standing goal that a refusal cite the exact missing fact. **Almost all already do** — `%{missing}`, `%{missing_flags}`, or a named field (`profile_tax_id_missing_detail`, `export_operator_profile_missing`). The generic ones (`no_active_profile`, `no_active_bucket`) are appropriately generic: with no profile at all, "create a profile" IS the exact missing information.
@@ -185,4 +183,3 @@ It refuses on a lifecycle STATUS rather than a field gap, so it names nothing. T
 **Blocked only by contention**, not by design. `_profile_readiness_gate.py` and its test have been peer-dirty for over an hour with the change unpublished, so the file cannot be touched without colliding. Recorded here rather than attempted, and precisely enough to execute directly when the file frees: one branch, one enumeration, one locale template gaining a `%{missing}` placeholder in four catalogues via `dev.locales`.
 
 One caveat for whoever takes it: `SETUP_INCOMPLETE` means the answer set failed the flow's final CROSS-FIELD validation, which is not identical to "some required field is empty". Enumerating only the empty required paths could therefore return an EMPTY list for a profile that is genuinely incomplete on a cross-field rule — a refusal saying "missing: nothing" would be worse than the current vague one. Check that case before shipping, and fall back to the existing wording when the enumeration is empty.
-
