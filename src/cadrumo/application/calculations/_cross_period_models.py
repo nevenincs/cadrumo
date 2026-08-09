@@ -63,6 +63,18 @@ class CrossPeriodCleanStateBlocker(StrEnum):
     MISSING_EXTERNAL_EVIDENCE = "missing_external_evidence"
     MISSING_EXTERNAL_EVIDENCE_RECORD = "missing_external_evidence_record"
     MISMATCHED_EXTERNAL_EVIDENCE_RECORD = "mismatched_external_evidence_record"
+    UNRESOLVED_TAXPAYER_IDENTITY = "unresolved_taxpayer_identity"
+    """No taxpayer identity was resolvable, so the justificante could not be identity-checked.
+
+    Distinct from :attr:`MISMATCHED_EXTERNAL_EVIDENCE_RECORD`, which asserts the
+    stored receipt belongs to someone else. Both once reported the same code, so
+    an operator whose profile simply carried no NIF was told their filed evidence
+    was mismatched -- pointing them at the receipt rather than at the profile
+    field they had not filled in. The check is still fail-closed: an
+    unidentifiable receipt cannot satisfy the clean-state gate. Only the reason
+    given to the operator changes, and it is the reason that tells them what to
+    fix.
+    """
     MISSING_JUSTIFICANTE_VERIFICATION = "missing_justificante_verification"
     OBSERVATION_REVISION_VALUE_DIVERGENCE = "observation_revision_value_divergence"
     OPERATOR_MANUAL_SOURCE = "operator_manual_source"

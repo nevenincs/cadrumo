@@ -34,14 +34,25 @@ from ._cross_period_clean_state_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_TaxpayerIdentityEvidenceCase = tuple[str, str, str | None, bool]
+_TaxpayerIdentityEvidenceCase = tuple[str, str, str | None, CrossPeriodCleanStateBlocker | None]
 _PluralJustificanteCsvCase = tuple[str, str, bool]
 
 
+#: The identity blocker each case must raise, or ``None`` when the receipt
+#: reconciles cleanly. The absent-identity case names
+#: ``UNRESOLVED_TAXPAYER_IDENTITY`` rather than the mismatch code: it still
+#: BLOCKS, but it says the identity could not be resolved instead of asserting
+#: the stored receipt belongs to someone else. Carrying the expected member
+#: rather than a boolean is what makes that distinction assertable at all.
 _TAXPAYER_IDENTITY_EVIDENCE_CASES: tuple[_TaxpayerIdentityEvidenceCase, ...] = (
-    ("matching-taxpayer", "LIVECAP130MATCH01", "X1234567L", False),
-    ("missing-expected-taxpayer", "LIVECAP130NOIDENT", None, True),
-    ("case-insensitive-taxpayer", "LIVECAP130CASE01", "x1234567l", False),
+    ("matching-taxpayer", "LIVECAP130MATCH01", "X1234567L", None),
+    (
+        "missing-expected-taxpayer",
+        "LIVECAP130NOIDENT",
+        None,
+        CrossPeriodCleanStateBlocker.UNRESOLVED_TAXPAYER_IDENTITY,
+    ),
+    ("case-insensitive-taxpayer", "LIVECAP130CASE01", "x1234567l", None),
 )
 
 _PLURAL_JUSTIFICANTE_CSV_CASES: tuple[_PluralJustificanteCsvCase, ...] = (
@@ -54,7 +65,7 @@ def test_live_capture_evidence_reconciles_taxpayer_identity(
     tmp_path: Path,
 ) -> None:
     """Live-capture receipt reconciliation requires the expected taxpayer axis."""
-    for case_label, csv, expected_tax_id, mismatch_expected in _TAXPAYER_IDENTITY_EVIDENCE_CASES:
+    for case_label, csv, expected_tax_id, expected_identity_blocker in _TAXPAYER_IDENTITY_EVIDENCE_CASES:
         case_tmp_path = tmp_path / case_label
         case_tmp_path.mkdir()
         with isolated_runtime_profile(tmp_path=case_tmp_path, bucket_id=_BUCKET_ID):
@@ -65,10 +76,15 @@ def test_live_capture_evidence_reconciles_taxpayer_identity(
 
         assert CrossPeriodCleanStateBlocker.MISSING_JUSTIFICANTE_VERIFICATION not in blockers, case_label
         assert CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE_RECORD not in blockers, case_label
-        if mismatch_expected:
-            assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in blockers, case_label
+        identity_blockers = {
+            CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD,
+            CrossPeriodCleanStateBlocker.UNRESOLVED_TAXPAYER_IDENTITY,
+        }
+        raised = identity_blockers.intersection(blockers)
+        if expected_identity_blocker is None:
+            assert not raised, case_label
         else:
-            assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD not in blockers, case_label
+            assert raised == {expected_identity_blocker}, case_label
 
 
 def test_live_capture_evidence_rejects_mismatched_typed_justificante_period(tmp_path: Path) -> None:

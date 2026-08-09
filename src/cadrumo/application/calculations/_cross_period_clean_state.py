@@ -974,8 +974,10 @@ def _filing_external_evidence_blockers(
         justificante = justificante_repository.load(filing.external_evidence.reference_id)
         if justificante is None:
             blockers.append(CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE_RECORD)
-        elif not _justificante_matches_filing(filing, justificante, taxpayer_tax_id=taxpayer_tax_id):
+        elif not _justificante_matches_filing_apart_from_owner(filing, justificante, taxpayer_tax_id=taxpayer_tax_id):
             blockers.append(CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD)
+        elif _resolved_filing_identity(filing, taxpayer_tax_id) is None:
+            blockers.append(CrossPeriodCleanStateBlocker.UNRESOLVED_TAXPAYER_IDENTITY)
         else:
             blockers.extend(_justificante_observation_reference_blockers(justificante, observation_source_metadata))
     return blockers
@@ -1018,13 +1020,38 @@ def _clean_metadata_csvs(value: str | None) -> tuple[str, ...]:
     return tuple(dict.fromkeys(item.strip() for item in (value or "").split(",") if item.strip()))
 
 
-def _justificante_matches_filing(
+def _resolved_filing_identity(filing: ModeloRecord, taxpayer_tax_id: str | None) -> str | None:
+    """Return the identity a filing's receipt is checked against, or ``None`` when there is none.
+
+    The member NIF wins for a fan-in row; otherwise the taxpayer's own. Absence
+    is reported as absence rather than folded into the match result, so the
+    caller can say WHICH of the two failures occurred: an unidentifiable receipt
+    and someone else's receipt are different facts about the operator's tree and
+    need different remedies.
+    """
+    expected_tax_id = filing.member_nif or taxpayer_tax_id
+    if expected_tax_id is None or not expected_tax_id.strip():
+        return None
+    return expected_tax_id
+
+
+def _justificante_matches_filing_apart_from_owner(
     filing: ModeloRecord,
     justificante: Justificante,
     *,
     taxpayer_tax_id: str | None,
 ) -> bool:
-    expected_tax_id = filing.member_nif or taxpayer_tax_id
+    """Whether the receipt matches this filing on every axis EXCEPT ownership.
+
+    When no identity is resolvable the ownership axis is neutralised (probed with
+    the receipt's own tax id) rather than failed, so a genuinely mismatched
+    modelo, year or period is still reported as a mismatch. Collapsing the two
+    would let an absent identity MASK a real metadata divergence behind an
+    identity complaint, which is the inverse of the confusion this split exists
+    to remove. Ownership is then judged separately by the caller.
+    """
+    resolved = _resolved_filing_identity(filing, taxpayer_tax_id)
+    expected_tax_id = resolved if resolved is not None else justificante.tax_id
     if expected_tax_id is None or not expected_tax_id.strip():
         return False
     return justificante.matches_filing_target(
