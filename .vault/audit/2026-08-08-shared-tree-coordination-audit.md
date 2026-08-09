@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#shared-tree-coordination'
 date: '2026-08-08'
-modified: '2026-08-08'
+modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:966d041119d60c000e3824d578eaa3892918941e39775fb1cb739f293b1aad26'
+body_hash: 'sha256:962382ef170e5685b0ecb1dac42b203fd3c8b6cc31475bab3992ccaff6211366'
 related: []
 ---
 
@@ -80,6 +80,27 @@ The cost is real and worth stating plainly. Queued work sits in the working tree
 **Second independent confirmation, ~5h51m into the freeze.** Re-observed at `2026-08-09 01:20`: same zero-byte file, same frozen `2026-08-08 19:29:59` mtime, unchanged across the whole of a second remediation iteration. The queue-and-continue response held up: a full research-implement-test-mutation-prove cycle completed normally with the lock held, and only publication was blocked. The frozen mtime remains the diagnosis, and the file remains untouched.
 
 One refinement worth recording for whoever picks this up. A blocked iteration still needs to compare a working-tree change against its committed baseline, and the sanctioned procedure for that — copy the working file aside, write the HEAD bytes in place, test, restore — opens a mutation window that a bare whole-index sweep could otherwise publish. **While the lock is frozen that window is actually safe, because no agent in the tree can commit anything at all.** The lock that blocks your publication also blocks the sweep that would capture your window. That is a genuine, if narrow, compensation, and it makes the HEAD-bytes comparison the cheapest reliable way to separate a pre-existing red test from one your own edit caused. Restore from the scratch copy and verify byte-identical by hash afterwards regardless; the safety is situational and evaporates the moment the lock clears.
+
+
+### A numstat proves your change LANDED, not that it was the ONLY thing that landed
+
+A fresh instance of this document's opening hazard, from the compliant side, and it defeated the verification this document itself prescribes.
+
+An agent committed an ADR amendment with an explicit pathspec, believing that scoped the commit to its own edit. It scopes to the **file**. A peer had two decisions sitting uncommitted in the same document, and the pathspec commit published all of it — three paragraphs the committing agent did not write, under a subject line about something else. `git log` now attributes two of the peer's decisions to the wrong author.
+
+**The verify-after check ran, and passed, and could not have caught it.** The agent had been running `git show <sha> --numstat` after every commit all session, exactly as prescribed above, and did so here: 62 insertions, 2 deletions. That number is real and correct. It simply cannot distinguish 55 lines of the author's own work from 7 lines of someone else's.
+
+The two claims are different and the numstat only establishes the first:
+
+- **"my intended change landed"** — what a numstat total shows
+- **"ONLY my intended change landed"** — what a shared-document commit actually needs
+
+On a file one agent is editing the two coincide, which is why the habit reads as sufficient for months before it fails. On a contended document they diverge silently, and the failure is invisible in exactly the artefact used to check it.
+
+**What would have caught it:** reading the diff's added lines rather than their count — `git show <sha> -- <path> | rg '^\+'` and confirming the content is yours. On a document, that is cheap. The apply-cached drive already prescribed above is the stronger answer when a file is known to be contended; the gap here was that the agent never re-classified the document as contended, despite having read plan rows hours earlier that explicitly targeted the same file.
+
+**The remedy is the record, not a git operation.** History was not rewritten. The misattribution is stated in the campaign's own record so the peer's authorship survives where `git log` no longer carries it — the same response this document already prescribes for a sweep, applied by the agent that caused one rather than the agent that suffered it.
+
 
 ### A documented rationale that reads as a smell can be load-bearing, and the cheap check is to run it
 
