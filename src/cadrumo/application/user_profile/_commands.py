@@ -215,6 +215,9 @@ class ProfilePreflightRequirement(BaseModel):
     selector: str = Field(min_length=1, max_length=128)
     section_key: str = Field(min_length=1, max_length=64)
     field_key: str = Field(min_length=1, max_length=128)
+    label: str = Field(min_length=1, max_length=512)
+    legal_refs: tuple[str, ...] = ()
+    modelos: tuple[str, ...] = ()
 
 
 class ProfilePreflightReport(BaseModel):

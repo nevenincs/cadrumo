@@ -36,7 +36,12 @@ from ...domain.calculations.registry import (
 )
 from ...domain.deadlines import EntityType, IrpfIncomeCategory
 from ...domain.modelos import WorkUnit
-from ...domain.user_profile import ProfileNotFoundError, UserProfileRecord, UserProfileStatus
+from ...domain.user_profile import (
+    ProfileNotFoundError,
+    UserProfileNotFoundError,
+    UserProfileRecord,
+    UserProfileStatus,
+)
 from ..user_profile import (
     ProfilePreflightReport,
     ProfilePreflightRequirement,
@@ -68,12 +73,30 @@ def _split_profile_path(path: str) -> tuple[str, str]:
     return section_key, field_key
 
 
-def _requirement_for_profile_path(path: str, *, selector: str | None = None) -> ProfilePreflightRequirement:
+def _requirement_for_profile_path(
+    path: str,
+    *,
+    selector: str | None = None,
+    modelo: str | None = None,
+) -> ProfilePreflightRequirement:
     section_key, field_key = _split_profile_path(path)
+    label = selector or path
+    legal_refs: tuple[str, ...] = ()
+    if "." in path:
+        try:
+            field = resources().user_profile_schema.singleton.field(path)
+        except UserProfileNotFoundError:
+            pass
+        else:
+            label = field.description
+            legal_refs = field.legal_refs
     return ProfilePreflightRequirement(
         selector=selector or path,
         section_key=section_key,
         field_key=field_key,
+        label=label,
+        legal_refs=legal_refs,
+        modelos=(modelo,) if modelo else (),
     )
 
 
@@ -232,7 +255,7 @@ def modelo_work_profile_preflight_report(
             revision=revision,
         )
     baseline = tuple(
-        _requirement_for_profile_path(path)
+        _requirement_for_profile_path(path, modelo=modelo)
         for path in modelo_work_profile_baseline_missing_paths(record, modelo=modelo)
     )
     missing = _dedupe_requirements((*baseline, *_validation_missing_requirements(record), *report.missing))

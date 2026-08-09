@@ -8,11 +8,17 @@ record does not yet carry.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
 from ...core import Period
-from ...domain.calculations.registry import CasillaFieldKind
-from ...domain.user_profile import ProfileSchemaDefinition, UserProfileRecord
+from ...domain.calculations.registry import (
+    CasillaFieldKind,
+    ProfileKeyGrounding,
+    ValidatedRegistryAuthority,
+    build_profile_grounding_index,
+)
+from ...domain.user_profile import ProfileSchemaDefinition, UserProfileNotFoundError, UserProfileRecord
 from . import (
     ProfilePreflightReport,
     ProfilePreflightRequirement,
@@ -51,6 +57,7 @@ class ProfilePreflightService:
         revision_id: str,
         period: Period,
         revision: ModeloRevision | None = None,
+        authority: ValidatedRegistryAuthority | None = None,
     ) -> ProfilePreflightReport:
         """Compute missing required profile fields for the given filing context.
 
@@ -67,6 +74,12 @@ class ProfilePreflightService:
             period: Typed filing period.
             revision: Optional :class:`ModeloRevision` whose export layouts
                 contribute filing-grade declarant identity requirements.
+            authority: Optional :class:`ValidatedRegistryAuthority` used to
+                union each missing field's grounding with every consuming
+                ``source = "profile"`` registry binding's ``legal_refs`` and
+                modelos, via :func:`build_profile_grounding_index`. When
+                omitted, grounding falls back to the schema field's own
+                ``legal_refs`` only - nothing is invented.
 
         Returns:
             A :class:`ProfilePreflightReport` with ``ready=True`` when all
@@ -74,6 +87,7 @@ class ProfilePreflightService:
             ``missing`` list populated.
         """
         values = record_to_path_values(record)
+        grounding_index = build_profile_grounding_index(authority) if authority is not None else {}
         missing: list[ProfilePreflightRequirement] = []
         target = self._selector_prefix(modelo)
         for section in self._schema.sections:
@@ -86,14 +100,16 @@ class ProfilePreflightService:
                 if self._has_value(values, candidate_path):
                     continue
                 missing.append(
-                    ProfilePreflightRequirement(
+                    self._requirement(
                         selector=field.model_selectors[0] if field.model_selectors else candidate_path,
                         section_key=section.key,
                         field_key=field.key,
+                        modelo=modelo,
+                        grounding_index=grounding_index,
                     ),
                 )
-        missing.extend(self._missing_export_identity_requirements(values, revision))
-        missing.extend(self._missing_conditional_profile_requirements(values, missing))
+        missing.extend(self._missing_export_identity_requirements(values, revision, grounding_index))
+        missing.extend(self._missing_conditional_profile_requirements(values, missing, grounding_index))
         return ProfilePreflightReport(
             profile_id=record.profile_id,
             modelo=modelo,
@@ -102,6 +118,47 @@ class ProfilePreflightService:
             period=period,
             missing=tuple(missing),
             ready=not missing,
+        )
+
+    def _requirement(
+        self,
+        *,
+        selector: str,
+        section_key: str,
+        field_key: str,
+        modelo: str | None,
+        grounding_index: Mapping[str, ProfileKeyGrounding],
+    ) -> ProfilePreflightRequirement:
+        """Build one requirement row, enriched with a label and grounding.
+
+        The label and schema-declared ``legal_refs`` come from the field
+        definition itself; the registry-binding-derived ``legal_refs`` and
+        ``modelos`` come from ``grounding_index`` when the field's dotted
+        path is a known ``source = "profile"`` binding key. A path absent
+        from either source contributes nothing to that source - never a
+        fabricated value.
+        """
+        path = f"{section_key}.{field_key}"
+        try:
+            field = self._schema.field(path)
+        except UserProfileNotFoundError:
+            label = selector
+            schema_legal_refs: tuple[str, ...] = ()
+        else:
+            label = field.description
+            schema_legal_refs = field.legal_refs
+        grounding = grounding_index.get(path)
+        legal_refs = tuple(sorted({*schema_legal_refs, *(grounding.legal_refs if grounding else ())}))
+        modelos = {modelo_code.value for modelo_code in grounding.modelos} if grounding else set()
+        if modelo:
+            modelos.add(modelo)
+        return ProfilePreflightRequirement(
+            selector=selector,
+            section_key=section_key,
+            field_key=field_key,
+            label=label,
+            legal_refs=legal_refs,
+            modelos=tuple(sorted(modelos)),
         )
 
     @staticmethod
@@ -122,6 +179,7 @@ class ProfilePreflightService:
         self,
         values: dict[str, str],
         revision: ModeloRevision | None,
+        grounding_index: Mapping[str, ProfileKeyGrounding],
     ) -> list[ProfilePreflightRequirement]:
         if revision is None:
             return []
@@ -139,10 +197,12 @@ class ProfilePreflightService:
             if self._has_value(values, _PROFILE_LEGAL_NAME_PATH):
                 return []
             return [
-                ProfilePreflightRequirement(
+                self._requirement(
                     selector="export.header.legal_name",
                     section_key="identity",
                     field_key="legal_name",
+                    modelo=None,
+                    grounding_index=grounding_index,
                 ),
             ]
         # Natural-person export service composes declarant identity as the complete
@@ -160,10 +220,12 @@ class ProfilePreflightService:
                 if self._has_value(values, candidate_path):
                     continue
                 missing.append(
-                    ProfilePreflightRequirement(
+                    self._requirement(
                         selector="export.header.full_name",
                         section_key=section.key,
                         field_key=field.key,
+                        modelo=None,
+                        grounding_index=grounding_index,
                     ),
                 )
         return missing
@@ -172,6 +234,7 @@ class ProfilePreflightService:
         self,
         values: dict[str, str],
         existing: list[ProfilePreflightRequirement],
+        grounding_index: Mapping[str, ProfileKeyGrounding],
     ) -> list[ProfilePreflightRequirement]:
         already_missing = {(item.section_key, item.field_key) for item in existing}
         missing: list[ProfilePreflightRequirement] = []
@@ -180,10 +243,12 @@ class ProfilePreflightService:
             if (section_key, field_key) in already_missing:
                 continue
             missing.append(
-                ProfilePreflightRequirement(
+                self._requirement(
                     selector=self._selector_for_path(path),
                     section_key=section_key,
                     field_key=field_key,
+                    modelo=None,
+                    grounding_index=grounding_index,
                 ),
             )
         return missing
