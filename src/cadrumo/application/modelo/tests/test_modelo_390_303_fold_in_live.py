@@ -110,6 +110,13 @@ _M390_RECONCILIACION_DEDUCIBLE_303_CASILLA: CasillaId = _casilla_id(
 _M390_RECONCILIACION_RESULTADO_303_CASILLA: CasillaId = _casilla_id(
     "iva.anual.reconciliacion.resultado-303",
 )
+# Régimen simplificado settles annually in the 4T Modelo 303 only (casilla 54,
+# "RS - Total cuota resultante"); the fourth relation copies that single 4T
+# value onto the M390 resumen anual (box 79), never summed across quarters.
+_SIMPLIFICADO_DEVENGADA: CasillaId = _casilla_id("54")
+_M390_RECONCILIACION_DEVENGADA_SIMPLIFICADO_303_CASILLA: CasillaId = _casilla_id(
+    "iva.anual.reconciliacion.devengada-simplificado-303",
+)
 _M390_COMPENSACION_ULTIMO_PERIODO_CASILLA: CasillaId = _casilla_id(
     "iva.anual.compensacion-ultimo-periodo-97",
 )
@@ -143,6 +150,7 @@ _M303_BY_PERIOD: dict[str, dict[CasillaId, Decimal]] = {
         _DEDUCIBLE: Decimal("30.00"),
         _RESULTADO: Decimal("60.00"),
         _COMPENSACION: Decimal("300.00"),  # 4T compensacion
+        _SIMPLIFICADO_DEVENGADA: Decimal("45.00"),  # RS casilla 54, 4T only
     },
 }
 
@@ -156,6 +164,7 @@ _EXPECTED_RESULTADO_TOTAL = sum(v[_RESULTADO] for v in _M303_BY_PERIOD.values())
 # 1T-3T generated amounts remain outside the last period.
 _EXPECTED_COMPENSACION_ULTIMO = _M303_BY_PERIOD["4T"][_COMPENSACION]  # 300.00
 _EXPECTED_COMPENSACION_NO97 = sum(_M303_BY_PERIOD[p][_COMPENSACION] for p in ("1T", "2T", "3T"))  # 45.00
+_EXPECTED_SIMPLIFICADO_DEVENGADA = _M303_BY_PERIOD["4T"][_SIMPLIFICADO_DEVENGADA]  # 45.00, copied not summed
 
 _RELATION_PREFILL_SOURCE = "relation_prefill"
 _ANNUAL_PARTITION_SOURCE = "iva_compensation_annual_partition"
@@ -261,13 +270,14 @@ def test_m390_folds_m303_relations_and_compensation_partition_on_live_calculate(
 
     With four M303/2025 quarterly observations seeded (each carrying the
     fold casillas with DISTINCT values), a live calculate of the M390/2025 annual
-    draws three ``cross_model_output`` relations through the enrolled
+    draws four ``cross_model_output`` relations through the enrolled
     :class:`RelationPrefillSourceResolver` and the two compensation boxes through
     ``IvaCompensationAnnualPartitionSourceResolver``:
 
     - ``iva.anual.reconciliacion.devengada-303`` == sum(1T-4T devengada)
     - ``iva.anual.reconciliacion.deducible-303`` == sum(1T-4T deducible)
     - ``iva.anual.reconciliacion.resultado-303`` == sum(1T-4T resultado)
+    - ``iva.anual.reconciliacion.devengada-simplificado-303`` (casilla 79) == copy(4T casilla 54)
     - ``iva.anual.compensacion-ultimo-periodo-97`` (casilla 97) == FIFO last-period partition
     - ``iva.anual.compensacion-generada-ejercicio-no-97`` (casilla 662) == FIFO remainder partition
 
@@ -300,6 +310,14 @@ def test_m390_folds_m303_relations_and_compensation_partition_on_live_calculate(
     assert Decimal(casilla_values[_M390_RECONCILIACION_RESULTADO_303_CASILLA]) == _EXPECTED_RESULTADO_TOTAL, (
         f"M390 reconciliacion.resultado-303 must fold sum(1T-4T resultado)={_EXPECTED_RESULTADO_TOTAL!r}; "
         f"got {casilla_values[_M390_RECONCILIACION_RESULTADO_303_CASILLA]!r}"
+    )
+    assert (
+        Decimal(casilla_values[_M390_RECONCILIACION_DEVENGADA_SIMPLIFICADO_303_CASILLA])
+        == _EXPECTED_SIMPLIFICADO_DEVENGADA
+    ), (
+        f"M390 reconciliacion.devengada-simplificado-303 (AEAT casilla 79) must copy the 4T "
+        f"régimen simplificado casilla 54={_EXPECTED_SIMPLIFICADO_DEVENGADA!r}; "
+        f"got {casilla_values[_M390_RECONCILIACION_DEVENGADA_SIMPLIFICADO_303_CASILLA]!r}"
     )
 
     # Compensacion casillas (FIFO annual partition).

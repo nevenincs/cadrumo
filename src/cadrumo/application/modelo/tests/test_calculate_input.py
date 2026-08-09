@@ -48,8 +48,8 @@ _M200_MANUAL_DECIMAL_CASILLA: CasillaId = validated_casilla_id(
 
 def test_work_calculate_input_bundle_rejects_ambiguous_reused_printed_number(tmp_path: Path) -> None:
     """A raw ``--casilla`` token must be the canonical ``casilla.id``."""
-    period = Period.from_year_and_code(2024, "0A")
-    snapshot = resources().modelos.authority.snapshot("200", filing_year=2024, period=period.registry_token)
+    period = Period.from_year_and_code(2025, "0A")
+    snapshot = resources().modelos.authority.snapshot("200", filing_year=2025, period=period.registry_token)
 
     bucket_id = _PROFILE_ID
     with isolated_profile_storage_root(tmp_path=tmp_path), profile_create_storage_span(bucket_id):
@@ -68,7 +68,7 @@ def test_work_calculate_input_bundle_rejects_ambiguous_reused_printed_number(tmp
         work_unit = create_work_unit(
             bucket_id=bucket_id,
             modelo="200",
-            filing_year=2024,
+            filing_year=2025,
             period=period,
             revision_id=snapshot.revision.id,
             clock=datetime(2026, 6, 26, 12, 0, tzinfo=UTC),
@@ -123,8 +123,8 @@ _CANONICAL_CASILLA_VALUES = ("140000", "140000.00", "-140000.55", "0", "0.335", 
 
 def _m200_bundle_with_casilla_value(raw_value: str, *, tmp_path: Path) -> WorkCalculateInputBundle:
     """Drive the real calculate-input boundary with one manual ``--casilla`` value."""
-    period = Period.from_year_and_code(2024, "0A")
-    snapshot = resources().modelos.authority.snapshot("200", filing_year=2024, period=period.registry_token)
+    period = Period.from_year_and_code(2025, "0A")
+    snapshot = resources().modelos.authority.snapshot("200", filing_year=2025, period=period.registry_token)
     bucket_id = _DECIMAL_GRAMMAR_PROFILE_ID
     with isolated_profile_storage_root(tmp_path=tmp_path), profile_create_storage_span(bucket_id):
         workflow_state_repository().update(
@@ -142,7 +142,7 @@ def _m200_bundle_with_casilla_value(raw_value: str, *, tmp_path: Path) -> WorkCa
         work_unit = create_work_unit(
             bucket_id=bucket_id,
             modelo="200",
-            filing_year=2024,
+            filing_year=2025,
             period=period,
             revision_id=snapshot.revision.id,
             clock=datetime(2026, 6, 26, 12, 0, tzinfo=UTC),

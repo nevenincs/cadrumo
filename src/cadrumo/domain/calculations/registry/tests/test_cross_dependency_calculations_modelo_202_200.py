@@ -144,7 +144,7 @@ def test_modelo_202_2023_2024_total_correcciones_aumentos_excludes_complementari
 def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
     registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
 ) -> None:
-    snapshot = registry_snapshot("200", 2024, "0A")
+    snapshot = registry_snapshot("200", 2025, "0A")
     revision = snapshot.revision
     assert revision.id == "2024-y-siguientes"
     relation_ids = {relation.id for relation in revision.relations}

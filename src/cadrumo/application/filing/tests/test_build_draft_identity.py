@@ -176,7 +176,7 @@ def test_build_draft_rejects_noncanonical_casilla_reference_token(
 
 def test_build_draft_rejects_ambiguous_reused_printed_number() -> None:
     """A reused printed number must fail before any filing calculation can run."""
-    period = Period.from_year_and_code(2024, "0A")
+    period = Period.from_year_and_code(2025, "0A")
 
     with pytest.raises(ModeloBuilderError, match="is ambiguous") as exc_info:
         build_draft(
@@ -186,7 +186,7 @@ def test_build_draft_rejects_ambiguous_reused_printed_number() -> None:
             inputs={
                 _M200_AMBIGUOUS_PRINTED_NUMBER: Decimal("100.00"),
             },
-            schema_provider=build_runtime_schema_provider(modelos=("200",), filing_year=2024, period=period),
+            schema_provider=build_runtime_schema_provider(modelos=("200",), filing_year=2025, period=period),
         )
 
     assert (

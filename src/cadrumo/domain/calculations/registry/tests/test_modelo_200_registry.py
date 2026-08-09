@@ -104,7 +104,7 @@ def test_modelo_200_validates_with_deadline_and_schedule_catalogue_refs() -> Non
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2024,
+        filing_year=2025,
         period="0A",
     )
     construct = snapshot.revision.constructs[0]
@@ -132,7 +132,7 @@ def test_modelo_200_calendar_year_2024_deadline_matches_boe_order() -> None:
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2024,
+        filing_year=2025,
         period="0A",
     )
 
@@ -173,7 +173,7 @@ def test_modelo_200_schedule_is_annual_for_calendar_year_entities() -> None:
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2024,
+        filing_year=2025,
         period="0A",
     )
 
@@ -202,7 +202,7 @@ def test_modelo_200_liquidacion_cuota_chain_casillas_resolve_under_their_segment
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2024,
+        filing_year=2025,
         period="0A",
     )
 
@@ -246,7 +246,7 @@ def test_modelo_200_page_014_export_binding_resolves_00562_to_liquidacion() -> N
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2024,
+        filing_year=2025,
         period="0A",
     )
 
@@ -274,7 +274,7 @@ def test_modelo_200_liquidacion_014_014b_formulas_and_exports_use_segment_identi
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2024,
+        filing_year=2025,
         period="0A",
     )
 
@@ -417,7 +417,7 @@ def test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example() -> 
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2024,
+        filing_year=2025,
         period="0A",
     )
 
@@ -472,7 +472,7 @@ def test_modelo_200_carries_manual_handoff_under_declaration_advisory_predicates
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2024,
+        filing_year=2025,
         period="0A",
     )
 
@@ -507,7 +507,7 @@ def test_modelo_200_cuota_liquida_is_computed_and_rejects_direct_input() -> None
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2024,
+        filing_year=2025,
         period="0A",
     )
 
@@ -561,7 +561,7 @@ def test_modelo_200_cuota_integra_chain_applies_dispatched_rate_to_post_nivelaci
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2024,
+        filing_year=2025,
         period="0A",
     )
 

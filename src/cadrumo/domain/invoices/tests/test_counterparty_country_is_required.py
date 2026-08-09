@@ -21,6 +21,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from ....core.identity import IdentityError
 from ...iva import InvoiceKind
 from .._enums import IvaRate, PaymentStatus
 from .._models import Invoice, InvoiceLine, _normalise_invoice_counterparty
@@ -87,7 +88,7 @@ def test_the_normaliser_forwards_an_unvalidated_tax_id_when_no_country_is_stated
     assert normalised["counterparty_tax_id"] == "NOTAVALIDNIF"
 
     # And with a country stated, the same input is held to that country's rules.
-    with pytest.raises(Exception):  # noqa: B017  -- identity errors vary by country
+    with pytest.raises(IdentityError):  # identity errors vary by country, but all derive from IdentityError
         _normalise_invoice_counterparty(
             {"counterparty_country": "ES", "counterparty_tax_id": " notavalidnif "},
         )

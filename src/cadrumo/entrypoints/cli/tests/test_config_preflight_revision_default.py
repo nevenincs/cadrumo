@@ -210,11 +210,17 @@ def test_preflight_reports_legal_entity_export_legal_name_requirement() -> None:
     assert result_data["ready"] is False
     missing_obj = result_data["missing"]
     assert isinstance(missing_obj, list)
-    assert {
-        "selector": "export.header.legal_name",
-        "section_key": "identity",
-        "field_key": "legal_name",
-    } in missing_obj
+    legal_name_rows = [
+        row
+        for row in missing_obj
+        if isinstance(row, dict)
+        and row.get("selector") == "export.header.legal_name"
+        and row.get("section_key") == "identity"
+        and row.get("field_key") == "legal_name"
+    ]
+    assert len(legal_name_rows) == 1
+    assert legal_name_rows[0]["label"]
+    assert legal_name_rows[0]["label"] != "export.header.legal_name"
 
     text_result = invoke_cached_cli(
         [

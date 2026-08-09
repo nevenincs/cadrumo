@@ -571,10 +571,10 @@ def _approved_modelo_200_registry_draft():
     # cuota chain, and 450 of Modelo 202 pagos fraccionados produces a negative
     # cuota diferencial. Every computed casilla in the calculation closure is
     # populated, so the completeness gate has a full result set to check.
-    provider = _schema_provider(filing_year=2024, period="0A", modelos=("200",))
+    provider = _schema_provider(filing_year=2025, period="0A", modelos=("200",))
     draft = build_draft(
         modelo="200",
-        period=Period.from_year_and_code(2024, "0A"),
+        period=Period.from_year_and_code(2025, "0A"),
         profile=ModeloOperatorProfile(
             tax_id="B12345674",
             display_name="Emilio Export Test SL",

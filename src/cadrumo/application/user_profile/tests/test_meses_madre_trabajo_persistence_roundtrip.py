@@ -37,6 +37,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core.errors import ProfileAnswerTypeError
 from ....core.resources import resources
 from ....domain.contribuyente import (
     DescendantInfo,
@@ -220,7 +221,7 @@ def test_a_corrupted_stored_month_set_refuses_rather_than_emptying(
     assert stored[_MESES_PATH] != corrupted, "the corruption must differ from the honest value"
     stored[_MESES_PATH] = corrupted
 
-    with pytest.raises(Exception, match=reason):
+    with pytest.raises(ProfileAnswerTypeError, match=reason):
         descendant_list_from_facts(stored)
 
 

@@ -134,6 +134,39 @@ def test_defaulted_profile_readiness_surfaces_block_before_modelo_work(
     assert "activities.description" in work_create.output
     assert "work_unit_id" not in work_create.output
 
+    preflight_json = invoke_cached_cli(
+        [
+            "--format", "json",
+            "config", "profile", "preflight",
+            "--modelo", modelo,
+            "--filing-year", filing_year,
+            "--period", period,
+        ],
+    )  # fmt: skip
+    assert preflight_json.exit_code == 2, preflight_json.output
+    preflight_payload = _payload(preflight_json.output)
+    (missing_row,) = preflight_payload["missing"]
+    assert missing_row["selector"] and missing_row["label"]
+    assert missing_row["label"] != missing_row["selector"]
+    assert isinstance(missing_row["legal_refs"], list)
+    assert isinstance(missing_row["modelos"], list)
+
+    readiness_json = invoke_cached_cli(
+        [
+            "--format", "json",
+            "app", "modelo", "readiness",
+            "--modelo", modelo,
+            "--revision-id", revision_id,
+            "--year", filing_year,
+            "--period", period,
+        ],
+    )  # fmt: skip
+    assert readiness_json.exit_code == 0, readiness_json.output
+    readiness_payload = _payload(readiness_json.output)
+    (readiness_missing_row,) = readiness_payload["missing"]
+    assert readiness_missing_row["label"] == missing_row["label"]
+    assert readiness_missing_row["legal_refs"] == missing_row["legal_refs"]
+
 
 def test_no_business_landlord_can_create_m100_while_quarterly_activity_modelos_refuse() -> None:
     """A real no-business persona can open its applicable Renta work only."""

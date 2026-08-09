@@ -218,7 +218,7 @@ def test_profile_source_resolver_respects_caller_owned_precedence() -> None:
         ("100", 2025, "0A", "renta-2025-profile-tax-residence-ccaa", "enum", "madrid"),
         (
             "200",
-            2024,
+            2025,
             "0A",
             "modelo-200-2024-profile-incn-prior-12-months",
             "decimal",
