@@ -30,7 +30,7 @@ import sys
 from collections.abc import Sequence
 from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel, Field
 
@@ -42,6 +42,7 @@ from ..core.paths import (
     windows_long_paths_enabled,
     windows_storage_root_long_path_margin,
 )
+from .auth import ProviderProbeResult
 
 if TYPE_CHECKING:
     from ..domain.portals import PortalDriftEvent
@@ -97,20 +98,37 @@ class PreflightCheck(BaseModel):
 
 # ── Per-auth-provider certificate / Cl@ve Móvil health ────────────────
 
-# ProviderProbeResult values that mean the provider is simply not configured on
+# ProviderProbeResult members that mean the provider is simply not configured on
 # this workstation — a legitimate, non-fault state for an optional provider.
-_UNCONFIGURED_PROBE_RESULTS = frozenset({"no_provider", "no_path_set", "identity_unset"})
-# ProviderProbeResult values that are a real, operator-fixable misconfiguration.
-_ERROR_PROBE_RESULTS = frozenset({"expired", "corrupt", "unreadable", "invalid_identity", "file_missing"})
-# ProviderProbeResult values that are a non-blocking advisory.
-_WARN_PROBE_RESULTS = frozenset({"expiring"})
-# The single ProviderProbeResult value that means the provider is configured and
+_UNCONFIGURED_PROBE_RESULTS: Final[frozenset[ProviderProbeResult]] = frozenset(
+    {
+        ProviderProbeResult.NO_PROVIDER,
+        ProviderProbeResult.NO_PATH_SET,
+        ProviderProbeResult.IDENTITY_UNSET,
+    },
+)
+# ProviderProbeResult members that are a real, operator-fixable misconfiguration.
+_ERROR_PROBE_RESULTS: Final[frozenset[ProviderProbeResult]] = frozenset(
+    {
+        ProviderProbeResult.EXPIRED,
+        ProviderProbeResult.CORRUPT,
+        ProviderProbeResult.UNREADABLE,
+        ProviderProbeResult.INVALID_IDENTITY,
+        ProviderProbeResult.FILE_MISSING,
+    },
+)
+# ProviderProbeResult members that are a non-blocking advisory.
+_WARN_PROBE_RESULTS: Final[frozenset[ProviderProbeResult]] = frozenset({ProviderProbeResult.EXPIRING})
+# The single ProviderProbeResult member that means the provider is configured and
 # sound. Kept a set so the four bands partition the enum and a newly added
 # member belongs to exactly one of them.
-_OK_PROBE_RESULTS = frozenset({"ok"})
+_OK_PROBE_RESULTS: Final[frozenset[ProviderProbeResult]] = frozenset({ProviderProbeResult.OK})
 
 
-def grade_provider_probe_result(provider: str, result: str) -> tuple[HealthSeverity, bool, str]:
+def grade_provider_probe_result(
+    provider: AuthProviderKind,
+    result: ProviderProbeResult,
+) -> tuple[HealthSeverity, bool, str]:
     """Grade one ``ProviderProbeResult`` value into a doctor verdict.
 
     The four declared bands partition
@@ -124,9 +142,10 @@ def grade_provider_probe_result(provider: str, result: str) -> tuple[HealthSever
     an ungraded state green gives the one answer an operator cannot act on.
 
     Args:
-        provider: The :class:`~core.AuthProviderKind` value being graded, used
+        provider: The :class:`~core.AuthProviderKind` member being graded, used
             to select the concrete remediation for a red row.
-        result: The probe's typed result rendered as its string value.
+        result: The probe's typed :class:`~application.auth.ProviderProbeResult`
+            member.
 
     Returns:
         The severity, the healthy verdict, and the operator remediation
@@ -182,28 +201,27 @@ def probe_auth_providers(*, settings: Settings | None = None) -> tuple[Preflight
                 ),
             )
             continue
-        result = str(probe.result)
-        severity, healthy, remediation = grade_provider_probe_result(kind.value, result)
+        severity, healthy, remediation = grade_provider_probe_result(kind, probe.result)
         rows.append(
             PreflightCheck(
                 check=check_id,
                 healthy=healthy,
                 severity=severity,
-                detail=probe.summary or f"provider {kind.value}: {result or 'unknown'}",
+                detail=probe.summary or f"provider {kind.value}: {probe.result or 'unknown'}",
                 remediation=remediation,
             ),
         )
     return tuple(rows)
 
 
-def _auth_error_remediation(provider: str, result: str) -> str:
+def _auth_error_remediation(provider: AuthProviderKind, result: ProviderProbeResult) -> str:
     """Return the concrete operator action for a red auth-provider probe."""
-    if provider == "certificate":
-        if result == "file_missing":
+    if provider is AuthProviderKind.CERTIFICATE:
+        if result is ProviderProbeResult.FILE_MISSING:
             return "point `aeat config auth certificate --file` at an existing .p12 bundle"
-        if result == "expired":
+        if result is ProviderProbeResult.EXPIRED:
             return "obtain a fresh FNMT certificate and reconfigure `aeat config auth certificate`"
-        if result == "unreadable":
+        if result is ProviderProbeResult.UNREADABLE:
             return "set the correct PKCS#12 passphrase via `aeat config auth certificate secret set`"
         return "re-export a valid .p12 bundle and reconfigure `aeat config auth certificate`"
     return "set a valid DNI/NIE for Cl@ve Móvil via `aeat config auth configure --provider clave_movil`"

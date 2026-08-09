@@ -12,12 +12,14 @@ registry referential-integrity gate over the bundled production authority.
 from __future__ import annotations
 
 import sys
+from enum import StrEnum
 from pathlib import Path
 
 import pytest
 from pydantic import SecretStr
 
 from ...adapters.outbound.storage import windows_worst_case_object_path_suffix_length
+from ...core import AuthProviderKind
 from ...core.config import override_settings
 from ..auth import ProviderProbeResult
 from ..preflight import (
@@ -97,8 +99,8 @@ def test_every_probe_result_belongs_to_exactly_one_severity_band() -> None:
         "unconfigured": _UNCONFIGURED_PROBE_RESULTS,
         "ok": _OK_PROBE_RESULTS,
     }
-    declared = frozenset(member.value for member in ProviderProbeResult)
-    banded: set[str] = set()
+    declared = frozenset(ProviderProbeResult)
+    banded: set[ProviderProbeResult] = set()
     for name, band in bands.items():
         overlap = banded & band
         assert not overlap, f"band {name} double-grades {sorted(overlap)}"
@@ -111,10 +113,22 @@ def test_every_probe_result_belongs_to_exactly_one_severity_band() -> None:
 def test_every_declared_probe_result_grades_without_the_defect_fall_through() -> None:
     """No real probe result reaches the fall-through, so the fall-through only reports defects."""
     for member in ProviderProbeResult:
-        severity, healthy, remediation = grade_provider_probe_result("certificate", member.value)
+        severity, healthy, remediation = grade_provider_probe_result(AuthProviderKind.CERTIFICATE, member)
         assert "cannot grade" not in remediation, member.value
-        if member in {ProviderProbeResult.OK, *(ProviderProbeResult(v) for v in _UNCONFIGURED_PROBE_RESULTS)}:
+        if member in _OK_PROBE_RESULTS | _UNCONFIGURED_PROBE_RESULTS:
             assert healthy is True and severity is HealthSeverity.OK, member.value
+
+
+class _UnbandedProbeResult(StrEnum):
+    """Stands in for a ``ProviderProbeResult`` member landed without a severity band.
+
+    The four bands partition the real enum (the test above reds the moment they
+    stop doing so), so no genuine member can reach the grader's fall-through.
+    This member models exactly the defect the fall-through exists to report,
+    which is otherwise unreachable from inside the declared enum.
+    """
+
+    QUANTUM_INDETERMINATE = "quantum_indeterminate"
 
 
 def test_an_ungraded_probe_result_is_not_reported_healthy() -> None:
@@ -123,7 +137,10 @@ def test_an_ungraded_probe_result_is_not_reported_healthy() -> None:
     Silently green on an unrecognised state is the wrong default for a doctor:
     the operator reads a clean bill of health for a condition nothing assessed.
     """
-    severity, healthy, remediation = grade_provider_probe_result("certificate", "quantum_indeterminate")
+    severity, healthy, remediation = grade_provider_probe_result(
+        AuthProviderKind.CERTIFICATE,
+        _UnbandedProbeResult.QUANTUM_INDETERMINATE,
+    )
     assert healthy is False
     assert severity is HealthSeverity.ERROR
     assert remediation, "an ungraded row must still tell the operator what to do"
