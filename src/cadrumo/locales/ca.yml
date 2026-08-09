@@ -4806,19 +4806,19 @@ cli:
         el model configurat.
     counterparty:
       errors:
+        confirmation_conflict: Ja hi ha confirmada una resposta diferent per a '{identifier}',
+          de manera que confirmar aquesta descartaria la resposta anterior. Retireu-la
+          primer amb 'aeat app ledger counterparty withdraw'. {detail}
         nothing_asserted: 'Per confirmar ''{identifier}'' cal almenys una resposta:
           ''--scope'' per a on està establerta la contrapart, ''--identification-state''
           per a quin Estat membre la identifica a efectes d''IVA, o totes dues. Són
           fets independents i qualsevol d''ells es pot indicar per separat.'
-        scope_conflict: Ja hi ha confirmat un territori diferent per a '{identifier}',
-          de manera que confirmar '{asserted}' descartaria la resposta anterior. Retireu-la
-          primer amb 'aeat app ledger counterparty withdraw'. {detail}
         unverifiable_identifier: '''{identifier}'' no és un identificador fiscal verificable,
           per la qual cosa no hi ha cap contrapart sobre la qual confirmar res.'
       notices:
-        already_confirmed: '''{identifier}'' ja havia estat confirmada per ''{asserted_by}'',
-          establerta a ''{scope}''; aquesta crida no ha creat cap confirmació nova
-          i es manté la procedència original.'
+        already_confirmed: '''{identifier}'' ja havia estat confirmada per ''{asserted_by}''
+          com a ''{answered}''; aquesta crida no ha creat cap confirmació nova i la
+          procedència original es manté.'
         evidence_contradicts_confirmation: '''{identifier}'' es va confirmar com a
           establert a {confirmed}, però l''evidència que heu aportat situa la mateixa
           part a {evidenced}. L''escala no fixarà cap territori per a aquesta contrapart

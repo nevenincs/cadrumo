@@ -4845,19 +4845,19 @@ cli:
         configurado.
     counterparty:
       errors:
+        confirmation_conflict: Ya hay confirmada una respuesta distinta para '{identifier}',
+          de modo que confirmar esta descartaría la respuesta anterior. Retírala primero
+          con 'aeat app ledger counterparty withdraw'. {detail}
         nothing_asserted: 'Para confirmar ''{identifier}'' hace falta al menos una
           respuesta: ''--scope'' para dónde está establecida la contraparte, ''--identification-state''
           para qué Estado miembro la identifica a efectos de IVA, o ambas. Son hechos
           independientes y cualquiera de ellos puede indicarse por separado.'
-        scope_conflict: Ya hay confirmado un territorio distinto para '{identifier}',
-          por lo que confirmar '{asserted}' descartaría la respuesta anterior. Retírela
-          primero con 'aeat app ledger counterparty withdraw'. {detail}
         unverifiable_identifier: '''{identifier}'' no es un identificador fiscal verificable,
           por lo que no hay ninguna contraparte sobre la que confirmar nada.'
       notices:
-        already_confirmed: '''{identifier}'' ya había sido confirmada por ''{asserted_by}'',
-          establecida en ''{scope}''; esta llamada no ha creado ninguna confirmación
-          nueva y se mantiene la procedencia original.'
+        already_confirmed: '''{identifier}'' ya había sido confirmada por ''{asserted_by}''
+          como ''{answered}''; esta llamada no creó ninguna confirmación nueva y la
+          procedencia original se mantiene.'
         evidence_contradicts_confirmation: '''{identifier}'' se confirmó como establecido
           en {confirmed}, pero la evidencia que ha aportado sitúa a la misma parte
           en {evidenced}. La escalera no fijará ningún territorio para esta contraparte

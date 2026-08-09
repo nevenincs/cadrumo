@@ -4475,19 +4475,19 @@ cli:
         read (e.g. qwen2.5vl:7b); defaults to the configured model.
     counterparty:
       errors:
+        confirmation_conflict: A different answer is already confirmed for '{identifier}',
+          so confirming this one would discard the earlier answer. Withdraw it first
+          with 'aeat app ledger counterparty withdraw'. {detail}
         nothing_asserted: 'Confirming ''{identifier}'' needs at least one answer:
           ''--scope'' for where the counterparty is established, ''--identification-state''
           for which Member State VAT-identifies it, or both. They are independent
           facts and either may be supplied alone.'
-        scope_conflict: A different territory is already confirmed for '{identifier}',
-          so confirming '{asserted}' would discard the earlier answer. Withdraw it
-          first with 'aeat app ledger counterparty withdraw'. {detail}
         unverifiable_identifier: '''{identifier}'' is not a verifiable tax identifier,
           so there is no counterparty to confirm anything about.'
       notices:
-        already_confirmed: '''{identifier}'' was already confirmed by ''{asserted_by}'',
-          established in ''{scope}''; this call created no new confirmation and the
-          original provenance stands.'
+        already_confirmed: '''{identifier}'' was already confirmed by ''{asserted_by}''
+          as ''{answered}''; this call created no new confirmation and the original
+          provenance stands.'
         evidence_contradicts_confirmation: '''{identifier}'' was confirmed as established
           in {confirmed}, but the evidence you supplied places the same party in {evidenced}.
           The ladder will settle no territory for this counterparty until one of the

@@ -4748,19 +4748,19 @@ cli:
         modellt használja.
     counterparty:
       errors:
+        confirmation_conflict: A(z) '{identifier}' esetében már más válasz van megerősítve,
+          ezért ennek megerősítése eldobná a korábbi választ. Előbb vonja vissza az
+          'aeat app ledger counterparty withdraw' paranccsal. {detail}
         nothing_asserted: 'A(z) ''{identifier}'' megerősítéséhez legalább egy válasz
           kell: a ''--scope'' azt adja meg, hol letelepedett az ügyfél, az ''--identification-state''
           pedig azt, melyik tagállam adja áfa-azonosítóját; bármelyik önmagában is
           megadható.'
-        scope_conflict: A(z) '{identifier}' esetében már más terület van megerősítve,
-          ezért a(z) '{asserted}' megerősítése eldobná a korábbi választ. Előbb vonja
-          vissza az 'aeat app ledger counterparty withdraw' paranccsal. {detail}
         unverifiable_identifier: A(z) '{identifier}' nem ellenőrizhető adóazonosító,
           ezért nincs olyan ügyfél, amelyről bármit meg lehetne erősíteni.
       notices:
-        already_confirmed: 'A(z) ''{identifier}'' megerősítését ''{asserted_by}''
-          már elvégezte, letelepedés: ''{scope}''; ez a hívás nem hozott létre új
-          megerősítést, és az eredeti forrásadat marad érvényben.'
+        already_confirmed: A(z) '{identifier}' azonosítót '{asserted_by}' már megerősítette
+          mint '{answered}'; ez a hívás nem hozott létre új megerősítést, és az eredeti
+          forrásmegjelölés érvényben marad.
         evidence_contradicts_confirmation: 'A(z) ''{identifier}'' megerősítetten itt
           telepedett le: {confirmed}, de az Ön által megadott bizonyíték ugyanezt
           a felet ide helyezi: {evidenced}. A létra nem állapít meg területet ehhez
