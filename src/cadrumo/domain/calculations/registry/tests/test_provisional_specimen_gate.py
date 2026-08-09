@@ -41,7 +41,13 @@ def _committed_profile(provisional: bool = False) -> ExtractionProfileDefinition
     modelo, _catalogues = _committed_130()
     revision = modelo.revisions["2019-y-siguientes"]
     profile = next(p for p in revision.extraction_profiles if p.surface == "declaracion_pdf")
-    return profile.model_copy(update={"provisional_pending_specimen": provisional})
+    return profile.model_copy(
+        update={
+            "provisional_pending_specimen": provisional,
+            "confidence": "review_required" if provisional else profile.confidence,
+            "corpus_round_trip_verified": False if provisional else profile.corpus_round_trip_verified,
+        },
+    )
 
 
 def _validator(

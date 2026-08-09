@@ -64,6 +64,14 @@ class CoverageAdviceReason(StrEnum):
             not model at all, so neither a window nor an applicability rule
             exists. It surfaces as advised — "AEAT may expect this; the app
             cannot yet scope it" — rather than being invisible.
+
+            :data:`~core.UNMODELED_OBLIGATIONS` is intentionally empty today,
+            so no production input reaches this disposition: the out-of-scope
+            partition resolves first. The branch is kept deliberately, not
+            pending deletion — it is the advisory capability for taxpayers
+            whose obligation is registry-less, and populating the declaration
+            is a per-entry tax review against official sources rather than a
+            coding change. See that declaration for the full reasoning.
     """
 
     APPLICABLE_WINDOW_MISSING = "applicable_window_missing"

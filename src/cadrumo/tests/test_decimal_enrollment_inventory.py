@@ -132,9 +132,6 @@ _STRING_PARSE_EXEMPTIONS: Mapping[tuple[str, str], str] = {
         "Compares app-persisted wallet decision amounts the write boundary "
         "already validated; no operator text crosses this call."
     ),
-    ("application/modelo/_iva_wallet_gate.py", "_calculated_revision_local_iva_compensation_recurrence"): (
-        "Reads a persisted casilla_values entry the calculate boundary already validated through the canonical grammar."
-    ),
     # --- adapters + core, admitted to scope when rule 3 moved from a layer
     # allowlist to a call-site scope. Every adapter entry below reads
     # machine-produced text, which is the extraction posture, not the strict one.

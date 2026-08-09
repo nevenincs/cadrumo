@@ -7,6 +7,37 @@ from pathlib import Path
 from ._schema import ExtractionProfileDefinition, ExtractionTargetDefinition
 
 
+def validate_provisional_declaracion_pdf_evidence_state(
+    scope: str,
+    profile: ExtractionProfileDefinition,
+) -> list[str]:
+    """Reject evidence claims that contradict a provisional declaration profile.
+
+    ``provisional_pending_specimen`` is an explicit acknowledgement that the
+    profile has not been checked against a real declaration PDF.  It therefore
+    cannot simultaneously claim the strict confidence or corpus round-trip
+    evidence that such a specimen would supply.  This is intentionally a
+    registry-build invariant, independent of whether an authoring corpus root
+    happens to be available to the current process.
+    """
+    if profile.surface != "declaracion_pdf" or not profile.provisional_pending_specimen:
+        return []
+
+    failures: list[str] = []
+    if profile.confidence != "review_required":
+        failures.append(
+            f"{scope}: provisional declaracion_pdf profile {profile.id!r} must set "
+            f"confidence='review_required', not {profile.confidence!r}",
+        )
+    if profile.corpus_round_trip_verified:
+        failures.append(
+            f"{scope}: provisional declaracion_pdf profile {profile.id!r} cannot set "
+            "corpus_round_trip_verified=true because a profile awaiting a specimen "
+            "has no real corpus round-trip proof",
+        )
+    return failures
+
+
 def validate_declaracion_pdf_specimen_gate(
     scope: str,
     modelo_id: str,

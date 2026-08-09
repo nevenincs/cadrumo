@@ -82,6 +82,10 @@ def _bindings(*, retencion: str) -> dict[str, Decimal]:
         "renta-2024-modelo-123-retenciones-periodicas": Decimal("0"),
         "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
         "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
+        # Art. 81.1 is profile-derived at the application boundary. This
+        # direct registry scenario has no profile facts, so it supplies the
+        # resolved no-descendant scalar just as the profile resolver would.
+        "renta-2024-profile-deduccion-maternidad": Decimal("0"),
         "renta-2024-profile-incremento-guarderia": Decimal("0"),
         "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
         "renta-2024-profile-descendientes-guarderia": Decimal("0"),

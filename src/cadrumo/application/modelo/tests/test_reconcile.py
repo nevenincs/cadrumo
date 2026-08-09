@@ -42,6 +42,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 MODELO_130_FIXTURE = FIXTURES_DIR / "justificantes" / "modelo_130_2026Q1.pdf"
+MODELO_202_DECLARACION_FIXTURE = FIXTURES_DIR / "justificantes" / "202" / "2025-1P.pdf"
 _WORK_UNIT_TIMESTAMP = datetime(2026, 5, 28, 13, 25, 0, tzinfo=UTC)
 
 
@@ -260,6 +261,29 @@ def test_modelo_reconcile_refuses_declaration_source_for_unenrolled_modelo() -> 
                 source_path=MODELO_130_FIXTURE,
             ),
         )
+    assert excinfo.value.translated_message == "application.modelo.errors.reconcile_declaration_unsupported"
+
+
+def test_modelo_reconcile_refuses_modelo_202_declaration_before_parsing() -> None:
+    """D5 keeps M202 declaration reconciliation unenrolled despite its live profile.
+
+    The real M202 synthetic declaration fixture and matching work-unit identity
+    reach the public ``modelo_reconcile`` boundary.  The typed refusal must
+    occur before parsing; adding M202 to the enrolment set changes this
+    observable result and fails the test.
+    """
+    assert MODELO_202_DECLARACION_FIXTURE.is_file()
+    work_unit_id = _seed_work_unit(modelo="202", filing_year=2025, period="1P")
+
+    with pytest.raises(ReconciliationDeclaracionSourceUnsupportedError) as excinfo:
+        modelo_reconcile(
+            ModeloReconciliationCommand(
+                work_unit_id=work_unit_id,
+                source_kind=ModeloReconciliationEvidenceKind.DECLARATION,
+                source_path=MODELO_202_DECLARACION_FIXTURE,
+            ),
+        )
+
     assert excinfo.value.translated_message == "application.modelo.errors.reconcile_declaration_unsupported"
 
 

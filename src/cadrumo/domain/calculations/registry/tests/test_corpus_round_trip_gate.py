@@ -50,6 +50,7 @@ def _committed_profile(
     return profile.model_copy(
         update={
             "provisional_pending_specimen": provisional,
+            "confidence": "review_required" if provisional else profile.confidence,
             "corpus_round_trip_verified": round_trip_verified,
             "verification_source": verification_source,
         },

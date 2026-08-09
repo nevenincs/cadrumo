@@ -46,6 +46,25 @@ if TYPE_CHECKING:
 _ZERO = Decimal("0")
 
 
+def _fiscal_residence_requirement() -> str:
+    """Name the country-of-fiscal-residence profile field as the operator sees it.
+
+    These findings tell the operator which profile fact to go and set, so the
+    field is named the way the profile editor names it rather than by an
+    internal path. Resolved from the field's declared model selector through
+    the one renderer every other refusal in this area uses, so a schema rename
+    moves the prose with it.
+    """
+    from ...core.resources import resources
+    from ..user_profile import format_profile_selector_requirements
+
+    rendered = format_profile_selector_requirements(
+        ("taxpayer.country_of_fiscal_residence",),
+        schema=resources().user_profile_schema.singleton,
+    )
+    return ", ".join(rendered)
+
+
 def _m210_blocking_finding(
     *,
     message: str,
@@ -137,6 +156,7 @@ def _resolve_convenio_override(
                 "application.modelo.findings.m210_convenio_rate_missing.next_action",
                 cc=country_code,
                 tipo_renta=tipo_renta,
+                requirements=_fiscal_residence_requirement(),
             ),
             legal_refs=legal_refs,
             source_refs=source_refs,
@@ -215,13 +235,14 @@ def resolve_m210_rate(
                 return None, []
             finding = _m210_blocking_finding(
                 message=(
-                    f"M210 baseline tipo_renta={tipo_renta!r} year={year} is "
-                    "deferred to a future Phase per corpus-blocking; "
+                    f"M210 baseline tipo_renta={tipo_renta!r} year={year} has no "
+                    "published baseline rate in the bundled corpus; "
                     "predicate 'm210-baseline-tipo-deferred' fires"
                 ),
                 next_action=tr(
                     "application.modelo.findings.m210_baseline_tipo_deferred.next_action",
                     tipo_renta=tipo_renta,
+                    requirements=_fiscal_residence_requirement(),
                 ),
                 legal_refs=tuple(baseline_param.legal_refs),
                 source_refs=tuple(baseline_param.source_refs),

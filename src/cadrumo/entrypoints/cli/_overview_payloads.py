@@ -178,6 +178,13 @@ class OverviewCalendarEventPayload(OutputSchema):
 
     event_type: Literal["filing", "message"]
     post_filing_kind: str | None = None
+    #: The Ley 39/2015 art. 43.2 service state of a notification — still inside
+    #: its access window, accessed, or lapsed into deemed-served. Operator-facing
+    #: procedural status, not an identifier, so it is mirrored here rather than
+    #: withheld. The event model's ``authenticated_identity`` is deliberately
+    #: absent instead: it carries a taxpayer NIF and is ``exclude=True`` at the
+    #: source, so it never reaches this projection and must not be added.
+    notificacion_estado_servicio: str | None = None
     event_date: str
     source: str
     summary: str

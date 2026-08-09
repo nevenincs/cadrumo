@@ -41,7 +41,7 @@ _DESIGN_PARTS = (
 _DEVENGADA_SEGMENT = "5. Operaciones Reg. Gral. - Base Imponible y cuota"
 _RATE_ROW = re.compile(r"Tipo ([\d,]+)% - (Base imponible|Cuota) \[(\d+)\]")
 
-# These are the four blocks the rate-box ADR's research left unmodelled.  The
+# These are the four blocks the registry leaves unmodelled for rate boxes.  The
 # labels and rate sets are asserted against the AEAT design, not transcribed
 # into the registry as a second authority.
 _UNMODELLED_BLOCKS: tuple[tuple[str, str, frozenset[str]], ...] = (
@@ -103,7 +103,7 @@ def test_each_unmodelled_block_has_rate_boxes_but_no_block_specific_total(
     label: str,
     expected_rates: frozenset[str],
 ) -> None:
-    """Measure the ADR precondition from the official design for every block.
+    """Measure the precondition from the official design for every block.
 
     A parser yielding no rows would make "no total" trivially true, so each
     block first proves its rate rows are present and paired before proving none

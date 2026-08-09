@@ -85,6 +85,43 @@ def isolated_calendar_backend(tmp_path: Path) -> Iterator[None]:
         yield
 
 
+@contextmanager
+def calendar_backend_omitting_gating_facts(tmp_path: Path, *omitted: str) -> Iterator[None]:
+    """Isolated calendar backend whose profile leaves the named gating facts unanswered.
+
+    The default backend answers every completeness gating fact, deliberately,
+    so scenario fixtures see only their own warnings. That makes it unable to
+    express the case where an operator simply has not answered a gating
+    question yet - which is the case the completeness warning exists for.
+
+    Each name in ``omitted`` is a profile fact path. It is overridden to the
+    empty string, which ``register_minimal_profile`` drops rather than stores,
+    so the fact is genuinely ABSENT rather than present-and-false. The two are
+    different states and only absence raises the warning.
+    """
+    unknown = tuple(path for path in omitted if path not in _CALENDAR_GATING_FACT_OVERRIDES)
+    if unknown:
+        raise AssertionError(
+            f"not gating facts this fixture answers, so omitting them changes nothing: {list(unknown)}",
+        )
+    overrides = dict(_CALENDAR_GATING_FACT_OVERRIDES)
+    for path in omitted:
+        overrides[path] = ""
+    with (
+        isolated_profile_storage_root(tmp_path=tmp_path),
+        profile_create_storage_span(PRIMARY_PROFILE_ID),
+    ):
+        workflow_state_repository().update(
+            lambda state: register_minimal_profile(
+                state,
+                profile_id=PRIMARY_PROFILE_ID,
+                display_name="operator",
+                overrides=overrides,
+            ),
+        )
+        yield
+
+
 def _casilla_id(value: object) -> CasillaId:
     try:
         return validated_casilla_id(value, surface="test casilla id")
