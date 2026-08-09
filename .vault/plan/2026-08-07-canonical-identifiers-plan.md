@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#canonical-identifiers'
 date: '2026-08-07'
-modified: '2026-08-07'
-body_hash: 'sha256:6ef3d31e5b70cb92547db9a2e7aa77795c69ed4a1e52a26d9eb907a7e5fe0ac1'
+modified: '2026-08-09'
+body_hash: 'sha256:7903ffb5f101d9c36d3803efb1aaf128e30703d1ce3023887efc69c179568af4'
 tier: L3
 related:
   - '[[2026-08-07-canonical-identifiers-adr]]'
@@ -25,11 +25,18 @@ Amendment), grounded in `2026-08-07-canonical-identifiers-reference`. Waves
 AEAT-issued namespace enrollment (expediente id, clave de liquidacion, then
 CSV under an evidence-gated Phase), and the resolver plus the
 `matches_filing_target` type-level guard delivering the sibling
-`justificante-identity-matching-adr`'s deferred "Option 4". The CSV Phase
-(`W02.P03`) is prioritised within `W02` because the sibling plan's correct
-fix for its own live defect (a two-filings-per-period ambiguity) depends on
-a cotejo-derived CSV field this taxonomy's CSV type gates; the Phase's
-internal evidence-first order is unchanged.
+`justificante-identity-matching-adr`'s deferred "Option 4".
+
+The CSV Phase (`W02.P03`) was originally prioritised within `W02` because
+the sibling plan's fix for its own two-filings-per-period defect was said to
+depend on a cotejo-derived CSV field this taxonomy's type gates. **That
+prioritisation is withdrawn:** the sibling plan has since closed every Step
+and shipped without `AeatCsv`, so the dependency no longer exists.
+`W02.P02` runs first. `W02.P03` has separately been re-planned: the real
+captured receipts its decision Step was to replay do not exist and cannot be
+obtained, so that Step is now a documented decision on the two live
+declarations rather than an empirical replay, with the limitation stated in
+its own Phase note and the Verification section corrected to match.
 
 Waves `W04`-`W08` are the Amendment's scope: the mechanical app-derived
 alias-adoption tranche (302 fields, existing aliases only); the newly
@@ -98,8 +105,9 @@ likely way a mechanical tranche collides with unrelated concurrent work.
 Introduces the `IdentifierNamespace` enum and the AEAT-issued typed aliases,
 closing the expediente-id divergence between `sede/_schema.py` and
 `iva_compensation/_carry_forward.py` under one bound, then separately
-deciding and enrolling the CSV shape only after empirical replay against
-real captured receipts. Depends on Wave `W01` landing first.
+deciding and enrolling the CSV shape on a recorded decision, since the
+empirical replay this Wave originally planned has no evidence to run
+against. Depends on Wave `W01` landing first.
 
 ### Phase `W02.P02` - namespace enum and expediente or clave aliases
 
@@ -110,8 +118,8 @@ onto the shared alias, tightening the one under-constrained divergence.
 
 - [ ] `W02.P02.S05` - declare `IdentifierNamespace` as a closed StrEnum split into AEAT-issued and app-derived groups, each member documented with the concept it names; `src/cadrumo/core/identity/_namespace.py`.
 - [ ] `W02.P02.S06` - declare `AeatExpedienteId` at the sede-schema bound (12-32 chars, AEAT shape pattern) and `AeatClaveLiquidacion` and `AeatPresentationId` at their current field bounds; `src/cadrumo/core/identity/__init__.py`.
-- [ ] `W02.P02.S07` - retype the eleven `expediente_id` fields onto `AeatExpedienteId`, removing the per-field repeated bound and the duplicated shape validator; `src/cadrumo/adapters/outbound/aeat/sede/_schema.py`.
-- [ ] `W02.P02.S08` - retype `Deuda.clave_liquidacion` onto `AeatClaveLiquidacion`; `src/cadrumo/adapters/outbound/aeat/sede/_schema.py`.
+- [ ] `W02.P02.S07` - Retype the expediente_id fields onto AeatExpedienteId, removing the per-field repeated bound and the duplicated shape validator. Re-verify the site list against HEAD first: the concept is far wider than this file, with 3 declarations here and 27 across 13 modules tree-wide, so a dispatch scoped to this file alone leaves the divergence open elsewhere; `src/cadrumo/adapters/outbound/aeat/sede/_schema.py`.
+- [ ] `W02.P02.S08` - Retype Deuda.clave_liquidacion onto AeatClaveLiquidacion, and retype the second bare-str clave_liquidacion on the operator-facing wire payload in the same change. The Deuda model moved out of the sede schema module before this plan was written, so re-verify both sites against HEAD rather than trusting this row's earlier file reference; `src/cadrumo/adapters/outbound/aeat/sede/_deudas.py, src/cadrumo/entrypoints/cli/_app_live_payloads.py`.
 - [ ] `W02.P02.S09` - retype `PeriodComplianceState.expediente_id` onto `AeatExpedienteId`, closing the min-length-1 divergence, with a strict roundtrip proving every already-persisted observed value still validates; `src/cadrumo/domain/iva_compensation/_carry_forward.py`.
 - [ ] `W02.P02.S10` - add an anti-tautology proof for the tightened expediente-id bound: corrupt a persisted fixture value below the new bound and assert refusal; `src/cadrumo/domain/iva_compensation/tests/`.
 - [ ] `W02.P02.S11` - retype `ExpedienteDeclarationPayload.expediente_id` from unconstrained bare `str` onto `AeatExpedienteId`, closing the fourth (loosest) divergence sighted on the operator-facing wire contract; `src/cadrumo/entrypoints/cli/_app_live_payloads.py`.
@@ -119,14 +127,45 @@ onto the shared alias, tightening the one under-constrained divergence.
 
 ### Phase `W02.P03` - CSV canonical shape decision and enrollment
 
-Decides the CSV shape empirically against real captured receipts before any
-retype, then enrolls `AeatCsv` and reconciles the three divergent
-validation strengths and two normalisation forms to one, enumerating every
-storage key the change touches. Prioritised within `W02` because the
-sibling `justificante-identity-matching` plan's fix for its own live
-two-filings-per-period defect depends on this Phase's `AeatCsv` type.
+Decides the CSV shape on the documented contract and the risk asymmetry
+between the two live declarations before any retype, then enrolls
+`AeatCsv` and reconciles the three divergent validation strengths and two
+normalisation forms to one, enumerating every storage key the change
+touches.
 
-- [ ] `W02.P03.S13` - replay the two real captured M303 justificante PDF fixtures against the three candidate CSV shapes (`is_aeat_csv` 8-32 uppercase pattern, `JustificanteCsv` 4-64 no pattern, and the two normalisation forms) and record in the Step record which shape and normal form both fixtures actually satisfy; `src/cadrumo/domain/justificante/`.
+**Re-planned: this Phase no longer claims empirical grounding, because none
+is available to it.** `S13` and `S22` originally turned on replaying "the
+two real captured M303 justificante PDF fixtures". Those do not exist. A
+census of the justificante fixture tree finds 63 fixtures across every
+modelo, all declaring `synthetic_generated`, none `real_corpus`; the
+operator does not file this modelo and has no capture to supply; and AEAT
+publishes only blank form templates, never a specimen of an issued
+justificante, since a real one is personalised and generated only by a real
+filing.
+
+**Substituting the synthetic fixtures would have produced a vacuous gate
+rather than a weaker one, which is why this Phase was re-planned instead.**
+Not one of the 63 fixture PDFs carries a CSV token at all - their declared
+roles are formula-verification and parser-anchor, neither of which is a
+receipt. A replay against them would have decided the CSV shape from
+evidence that does not contain a CSV, and would have reported green while
+proving nothing.
+
+`S13` is therefore a documented decision on the two live declarations and
+the risk asymmetry between them, not a replay, and it records that the
+shape rests on the documented contract rather than on a real artefact.
+`S22` becomes a shape-conformance regression over the adopted bound. The
+Verification section is corrected to match, so the plan is no longer
+unclosable on evidence that will never exist.
+
+**The original prioritisation is withdrawn.** This Phase was sequenced
+first within `W02` because the sibling `justificante-identity-matching`
+plan's fix for its own two-filings-per-period defect was said to depend on
+this Phase's `AeatCsv` type. That plan has since closed every one of its
+Steps and shipped without `AeatCsv`, so the dependency no longer exists and
+`W02.P02` should run first.
+
+- [ ] `W02.P03.S13` - Decide the canonical CSV shape on the documented contract and the risk asymmetry, recording in the Step record that no empirical replay was possible. No captured justificante exists in this repository and AEAT publishes no specimen of an issued one, and separately no fixture of ANY provenance carries a CSV token at all, so a replay would decide nothing whatever fixtures it ran against. Decide instead between the two live declarations on stated reasoning: the core contract accepts 8-32 uppercase alphanumeric and argues in its own docstring that a narrower local copy silently rejects identifiers AEAT really issues and refuses filing evidence, while the receipt-domain alias accepts 4-64 with no pattern. Record which is adopted, that the losing bound is retired rather than left as a second opinion, and that the shape is grounded in documented contract plus risk asymmetry rather than in a real artefact; `src/cadrumo/domain/justificante/`.
 - [ ] `W02.P03.S14` - enumerate every secure-object storage key derived from the CSV value, starting from `extract_identifier` in the justificante persistence adapter, informing (not gating, per the schema-rewrite authorisation) the key-composition redesign in `W08`; `src/cadrumo/adapters/persistence/profile/justificante.py`.
 - [ ] `W02.P03.S15` - declare `AeatCsv` in `core/identity/` at the shape decided in `W02.P03.S13`; `src/cadrumo/core/identity/__init__.py`.
 - [ ] `W02.P03.S16` - retype `JustificanteRef.csv` onto `AeatCsv`, removing its now-redundant field validator; `src/cadrumo/adapters/outbound/aeat/sede/_schema.py`.
@@ -135,8 +174,8 @@ two-filings-per-period defect depends on this Phase's `AeatCsv` type.
 - [ ] `W02.P03.S19` - retype the bare-`str` CSV field onto `AeatCsv`; `src/cadrumo/adapters/inbound/borrador/_schema.py`.
 - [ ] `W02.P03.S20` - unify CSV normalisation to one form across the verify adapter and the calendar-evidence consumer, matching whichever form `W02.P03.S13` proved correct; `src/cadrumo/application/overview/_calendar_evidence.py`.
 - [ ] `W02.P03.S21` - add a strict roundtrip test for `Justificante` populating every defaultable field non-default, plus an anti-tautology proof corrupting the persisted CSV value and asserting refusal; `src/cadrumo/domain/justificante/tests/`.
-- [ ] `W02.P03.S22` - re-run the live-captured justificante fixture parse regression to confirm the enrolled shape still accepts both real receipts; `src/cadrumo/domain/justificante/tests/`.
-- [ ] `W02.P03.S23` - hand off `AeatCsv` to the sibling `justificante-identity-matching` plan's cotejo-derived CSV field, confirming by inspection its new observation-model field is typed onto this alias rather than bare `str`; `src/cadrumo/domain/justificante/_schema.py`.
+- [ ] `W02.P03.S22` - Add a shape-conformance regression over the adopted CSV bound, pinning its accept and refuse boundaries explicitly. This replaces the real-receipt parse regression this row originally carried, which cannot run because no captured receipt exists. Construct the value set from the decided bound rather than from a fixture, covering the shortest and longest accepted forms and the nearest refused ones on each side, and state in the Step record that this proves conformance to the shape the project chose and not fidelity to an artefact AEAT actually issued. Keep the existing parser-anchor fixture parse regression running unchanged alongside it, noting those fixtures carry no CSV token so they exercise parse stability rather than CSV acceptance; `src/cadrumo/domain/justificante/tests/`.
+- [ ] `W02.P03.S23` - OBSOLETE AS WRITTEN, re-decide before executing. This row assumed the sibling justificante-identity-matching plan would still be in flight and would take AeatCsv on a new cotejo-derived field. That plan has since closed all 14 of its Steps and shipped without AeatCsv, so there is no pending field to hand off to. Either retype whatever field it did land onto AeatCsv as a follow-up, or delete this row as superseded; `src/cadrumo/domain/justificante/_schema.py`.
 
 ## Wave `W03` - Resolver and type-level namespace guard
 
@@ -330,8 +369,12 @@ The plan is complete when every Step above is closed (`- [x]`) and:
   execution record.
 - `matches_filing_target` (`W03.P04.S26`) type-checks under the project's
   static type gate with the narrowed parameter type.
-- The two real-captured M303 justificante fixtures still parse
-  (`W02.P03.S22`).
+- The CSV shape-conformance regression (`W02.P03.S22`) passes at both
+  boundaries of the adopted bound, and the parser-anchor fixture parse
+  regression still passes. The original criterion here named two
+  real-captured M303 justificante fixtures. No such fixture exists, none is
+  obtainable, and the criterion was therefore unmeetable rather than
+  demanding.
 - Every golden-schema pinning test from `W08.P13.S56` passes, and the
   `test_json_schema_conformance.py` structural gate still passes.
 - Every Step whose action names a per-namespace batch (`W04.P06`,

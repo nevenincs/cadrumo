@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#modelo-parity-rollup'
 date: '2026-08-05'
-modified: '2026-08-05'
-body_hash: 'sha256:4a8721459aa2b4b52177d1f56435feaa6fde6e1e10ba5d2b41f22d64025befe0'
+modified: '2026-08-09'
+body_hash: 'sha256:6e8708192ba695b5addbbeb8168a7c4735a9fb5cabfb1bb6b913002204dfca2b'
 tier: L3
 related:
   - '[[2026-08-05-modelo-parity-rollup-five-domain-contract-adr]]'
@@ -82,9 +82,9 @@ Adjudicate M100 0150, 0613, and 1481 with focused legal, profile, aggregation, a
 
 Prepare and obtain focused SOL decisions for M100 0150, 0613, and 1481 before any manual-to-computed, profile, or cross-model production change.
 
-- [ ] `W03.P08.S16` - Adjudicate M100 0150 against the 2025 profile and applicable legal evidence; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025`.
-- [ ] `W03.P08.S17` - Adjudicate M100 0613 against monthly facts, profile capability, and applicable legal evidence; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025`.
-- [ ] `W03.P08.S18` - Adjudicate M100 1481 against Modelo 131 relation and aggregation semantics; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025`.
+- [x] `W03.P08.S16` - Adjudicate M100 0150 against the 2025 profile and applicable legal evidence; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025`.
+- [x] `W03.P08.S17` - Adjudicate M100 0613 against monthly facts, profile capability, and applicable legal evidence; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025`.
+- [x] `W03.P08.S18` - Adjudicate M100 1481 against Modelo 131 relation and aggregation semantics; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025`.
 
 ## Wave `W04` - Execute accepted closure work
 

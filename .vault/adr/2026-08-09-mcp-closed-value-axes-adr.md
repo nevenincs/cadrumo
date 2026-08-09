@@ -5,7 +5,7 @@ tags:
 date: '2026-08-09'
 modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:ac5fcfc14fd7e32cf997d5a37aa0908921b4ce3395f48b8ac9177d5addb41bd3'
+body_hash: 'sha256:4c9e06395c5ed31e3aeafe8ef29574806e8e0a556ed7371e49de5107f8f5e7dc'
 related:
   - "[[2026-08-08-mcp-closed-value-axes-audit]]"
 ---
@@ -24,13 +24,11 @@ When both are available for the same axis, which wins? The question surfaced on 
 
 ## Considerations
 
-
 The two mechanisms are not symmetric in *when* they inform the caller, and on this CLI that asymmetry is the whole decision. The operator is an autonomous agent that reads the MCP input schema before invoking; a boundary declaration puts the accepted set in that schema, while a handler-side refusal can only answer after a call has already been made with a guessed value.
 
 The counter-consideration is that a typed, registry-bound error is a richer artefact than a parse failure -- it carries a category, a `retryable` flag, a `runbook_id` slot and a `default_suggestion`. Weighing the two honestly required measuring what a click refusal actually emits rather than assuming it degrades to a bare usage string, which is what the constraints section records.
 
 A third consideration is blast radius. Roughly a hundred bare-string axes share this shape, so whichever way the decision goes it is a standing instruction applied many times by future authors, not a single edit. That argues for a rule with explicit, checkable preconditions rather than a bare preference.
-
 
 ## Considered options
 

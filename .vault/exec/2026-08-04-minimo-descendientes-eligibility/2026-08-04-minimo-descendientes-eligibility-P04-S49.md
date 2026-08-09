@@ -3,13 +3,19 @@ tags:
   - '#exec'
   - '#minimo-descendientes-eligibility'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:b7edb8287b8f7a8868583f914957d3eb021c4c6bd3d0759763e803533c1ee8b7'
+body_hash: 'sha256:1097a392f5913d3b68125fb28f5ba33d09d1df4aa9dfd8f7937e78dd31869361'
 step_id: 'S49'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-plan]]"
 ---
+
+## Description
+
+Move remediation detail from bounded diagnostic prose into `Notice.context`, rewrite
+the affected minimum-descendant advisories to state only the detected problem, and add
+a real-factory headroom gate covering the worst late-qualifying descendant paths.
 
 ## Outcome
 
@@ -89,3 +95,11 @@ The measurements this Step rests on -- the ten-advisory table, the two productio
 truncations, the four-children trigger, the 78-character prefix finding, and the
 late-qualifying convention -- were produced by a reviewing agent that twice refused a
 coordinator instruction on evidence and was right both times.
+
+## Notes
+
+Current focused verification passes 60 tests across the headroom, message-bound,
+Notice-context, source-channel, projection, and count-desynchronisation surfaces. Ruff
+is clean. A broader targeted BasedPyright invocation remains red on four diagnostics in
+`core/json_contract.py`; those diagnostics pre-date and do not touch this Step's owned
+implementation paths, so this record does not claim that broader typing boundary green.

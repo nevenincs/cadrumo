@@ -6,13 +6,17 @@ tags:
 date: '2026-08-09'
 modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:8cd66a283b89d19cd6932bbed56c88fd67d63cf45679a4fcb254244b60b6015f'
+body_hash: 'sha256:4446ca39f52d557dbb8e5c8161c26d4c4ef2717ca87ca4ff77be28ff715a09a9'
 related:
   - '[[2026-06-21-m303-carry-reconciliation-adr]]'
   - '[[2026-08-07-m303-carry-reconciliation-S01]]'
   - '[[2026-08-07-m303-carry-reconciliation-S02]]'
   - '[[2026-08-07-m303-carry-reconciliation-S03]]'
   - '[[2026-08-07-m303-carry-reconciliation-S04]]'
+  - '[[2026-08-07-m303-carry-reconciliation-S05]]'
+  - '[[2026-08-07-m303-carry-reconciliation-S06]]'
+  - '[[2026-08-07-m303-carry-reconciliation-S07]]'
+  - '[[2026-08-07-m303-carry-reconciliation-S08]]'
   - '[[2026-08-07-m303-carry-reconciliation-S09]]'
   - '[[2026-08-07-m303-carry-reconciliation-S10]]'
   - '[[2026-08-07-m303-carry-reconciliation-S11]]'
@@ -20,6 +24,10 @@ related:
   - '[[2026-08-07-m303-carry-reconciliation-S14]]'
   - '[[2026-08-07-m303-carry-reconciliation-S15]]'
   - '[[2026-08-07-m303-carry-reconciliation-plan]]'
+  - '[[2026-08-09-m303-carry-reconciliation-s05-code-review-audit]]'
+  - '[[2026-08-09-m303-carry-reconciliation-s06-code-review-audit]]'
+  - '[[2026-08-09-m303-carry-reconciliation-s07-code-review-audit]]'
+  - '[[2026-08-09-m303-carry-reconciliation-s08-code-review-audit]]'
 ---
 
 # `m303-carry-reconciliation` feature index
@@ -31,6 +39,13 @@ Auto-generated index of all documents tagged with `#m303-carry-reconciliation`.
 ### adr
 
 - `2026-06-21-m303-carry-reconciliation-adr` - `m303-carry-reconciliation` adr: `Modelo 303 refunded period generates zero carry-forward: disposition feeds compensacion-disponible` | (**status:** `accepted`)
+
+### audit
+
+- `2026-08-09-m303-carry-reconciliation-s05-code-review-audit` - `m303-carry-reconciliation` audit: `S05 code review`
+- `2026-08-09-m303-carry-reconciliation-s06-code-review-audit` - `m303-carry-reconciliation` audit: `M303 carry reconciliation S06 code review`
+- `2026-08-09-m303-carry-reconciliation-s07-code-review-audit` - `m303-carry-reconciliation` audit: `M303 carry reconciliation S07 code review`
+- `2026-08-09-m303-carry-reconciliation-s08-code-review-audit` - `m303-carry-reconciliation` audit: `M303 carry reconciliation S08 code review`
 
 ### exec
 
@@ -44,6 +59,10 @@ Auto-generated index of all documents tagged with `#m303-carry-reconciliation`.
 - `2026-08-07-m303-carry-reconciliation-S12` - Surface the filed disposition from the parsed fichero, which already holds it. REFUSED shape, do not add casillas 72 and 73: the AEAT diseño declares 70, 71, 74, 75, 76 and 77 and not 72 or 73, our export layout carries exactly that set, and AEAT models the disposition as a HEADER at offset 13 plus sin-actividad at offset 391, so two casillas would disagree with the official structure about the concept's kind. THREE FINDINGS FROM THE FIRST WORK, recorded so they are not re-derived. ONE, the value is usable as-is: every field regardless of kind is read through _parse_field_value and appended as a ParsedExportFieldValue carrying raw, a decoded value and a source_locator, so a text header yields a decoded string and the projection change is small. TWO, parsed.fields today has exactly one consumer, _verify_submitted_file_context, which reads only DRAFT-kind fields to cross-check modelo, year and period, so every header field is parsed and discarded. THREE, and this is the blocking design question: NO sibling modelo represents a non-casilla fichero fact anywhere. ObservedCasillaValue requires a casilla_id, there is no ObservedHeaderValue or equivalent, and no observation path surfaces a header. Inventing the first such representation is a design decision to be taken deliberately and NOT settled inside a projection fix, so choose the representation before writing the projection
 - `2026-08-07-m303-carry-reconciliation-S14` - 2026-08-07-m303-carry-reconciliation-S14
 - `2026-08-07-m303-carry-reconciliation-S15` - 2026-08-07-m303-carry-reconciliation-S15
+- `2026-08-07-m303-carry-reconciliation-S05` - DEFERRED - report a refunded basis rather than resultado once disposition recovery from the justificante Tipo de declaracion makes the branch reachable
+- `2026-08-07-m303-carry-reconciliation-S06` - DEFERRED - assert the disposition-blind available reconstruction in the annual partition instead of relying on a transitive upstream rewrite in another package
+- `2026-08-07-m303-carry-reconciliation-S07` - DEFERRED - refuse a persisted compensation pair where a directly filed disponible casilla overwrites available without generated following it
+- `2026-08-07-m303-carry-reconciliation-S08` - IMPLEMENTED - validated observation-envelope IVA wallet recurrence
 
 ### plan
 

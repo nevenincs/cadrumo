@@ -5,7 +5,7 @@ tags:
 date: '2026-08-09'
 modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:ca21614d247affb85c949fdc1318ff2f34859bc0858f90b299dad55fdb7c9382'
+body_hash: 'sha256:e49b6d44a1fcfb5b9e8d8a4b8a477428a3e61e9d5615b92b24dbaf038fe0fc00'
 related:
   - "[[2026-08-08-mcp-closed-value-axes-audit]]"
 ---
@@ -66,10 +66,8 @@ This is a decision to *not* change something, which is exactly the kind that goe
 
 ## Consequences
 
-
 One option name continues to mean two units. An operator reading only the option name across the two families still learns nothing about which applies; they must read the help, which now reliably states it.
 
 If the inventory or asset surface later grows an unbounded path, or a third surface adopts `--iva-rate` in a third unit, this decision should be reopened -- the bound is what makes the split safe, not the naming.
 
 Revisiting is cheap and should not require this ADR to be wrong: if the ledger surface is being reworked for other reasons, folding a rename in at that point costs far less than a standalone sweep, and this record explains why it was deferred rather than rejected.
-

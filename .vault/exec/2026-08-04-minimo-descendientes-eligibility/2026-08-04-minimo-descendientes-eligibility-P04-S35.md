@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#minimo-descendientes-eligibility'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:fa8bffda968d734a595b7438b0439d92e66ece3bc870dee61f5bc543b34a1764'
+body_hash: 'sha256:c5f700dd9cde9806df753108ccd4437593377ef52f2aca71859164ef251b02e0'
 step_id: 'S35'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-plan]]"
@@ -29,14 +29,25 @@ related:
 
 ## Outcome
 
-The row is CLOSED as a measured non-defect, not implemented and not deferred. The originating row's premise — that 0611 could reach parity with 0613 by becoming registry-computed — does not survive contact with 0613's actual formula: 0613 is a flat-rate-times-count pattern with no per-child cap variation, while 0611 after the alta-posterior increment has a cap that genuinely varies by which child carries it. The two casillas do not share a rule shape, so "parity" was never an achievable target, and two different rule shapes carried by two different mechanisms (registry formula for 0613, Python resolution for 0611) is what correct modelling looks like rather than an asymmetry to fix. The only route to genuine registry computation of 0611 — a new aggregation primitive applying a conditional per-row cap — would exist purely for auditability, since the figure the current Python computation produces is already correct; nothing in the research found an incorrect figure or a hidden defect, only an unreachable resemblance.
+The earlier non-defect closure is reversed. Sol's architecture review established that its
+premise described 0613's final registry formula while ignoring the variable per-child Python
+fold that produces the derived scalar consumed by that formula. M100/2024 casilla 0611 shares
+that architectural shape and is authorized to become registry-computed without a new
+aggregation primitive: canonical per-child fold, derived profile scalar, `profile/copy`
+binding, and binding-leaf formula.
 
-This closure is recorded in the governing ADR's consequences section as a decision with a stated reopening condition, and in the plan as a closed step, both citing the same reasoning captured here.
+The governing ADR now records the required invariant and the revision boundary. This Step is
+a decision closure, not implementation proof. A separate implementation Step owns the 2024
+producer, removal of the manual casilla-input path, source/legal provenance, official oracles,
+and calculate/pull convergence. Revisions 2020-2022 remain blocked on year-parameterized
+cotizaciones facts; 2023 and 2025 require separate enrollment and proof.
 
 ## Notes
 
-This is a closure, not a deferral, and not a scope narrowing. The original row's completion criterion — achieve registry-computed parity with 0613 — was not judged too expensive to pursue; it was measured false, because the premise the criterion assumed (shared rule shape) does not hold. A campaign closing a step by judging a true criterion not worth meeting would be scope narrowing; this step closes because the criterion itself rested on a false premise, which research disproved rather than argued around.
-
-The recorded reopening condition: if a future legal reform makes casilla 0611's per-child cap uniform again (removing the alta-posterior increment's per-child variation), the parity premise with 0613 would genuinely hold again, and this decision should be revisited on that basis rather than cited as a permanent closure.
+The corrected ruling was independently validated against the focused 0611 and 0613 domain
+suites: 63 tests passed. It also identifies the existing defect boundary explicitly:
+`_calculate_input.py` currently injects the derived 0611 result through the manual
+casilla-input channel, which omits registry formula provenance and leaves manual fallback
+reachable. No implementation-complete claim is made here.
 
 This record was authored by the agent that performed the research, overwritten by the coordinator while that agent was session-limited, and restored here. The overwrite was a process error: a paused agent resumes rather than dies, and its work is not the coordinator's to replace.

@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#minimo-descendientes-eligibility'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:dc070ba6a485c72989c2dcd086af6d937299e1d5b69b9c848e3af6728e3a49aa'
+body_hash: 'sha256:ba154e1e2d50fc7b25f62af0de78ecded3b1ba6bc0ae86973f486a982ae88f81'
 step_id: 'S39'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-plan]]"
@@ -34,7 +34,7 @@ related:
   the estatal and autonomico aggregates.
 - Carry the fact through the persistence layer: writer, key pattern, reader, and
   the flag parser's accepted-key set.
-- Ship the entry surface with the field: the `--descendiente` flag key, its help
+- Ship the flag entry surface with the field: the `--descendiente` flag key, its help
   string, the CLI list row, and the typed list payload.
 - Declare the field and the new legal reference on the user-profile schema.
 - Add the two-limb suite and the persisted-shape roundtrip with its
@@ -43,7 +43,7 @@ related:
 ## Outcome
 
 Both limbs of article 61 norma 4a are modelled, and the fact they turn on is
-enterable, persistable, and reloadable.
+enterable through the `--descendiente` flag, persistable, and reloadable. The guided setup-walk entry surface remained absent until S42.
 
 The rule was unreachable rather than merely unimplemented: the death date
 existed on the Modelo 100 profile row and never on the canonical descendant

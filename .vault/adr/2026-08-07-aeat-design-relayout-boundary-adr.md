@@ -8,8 +8,8 @@ body_schema: 'body-v1'
 body_hash: 'sha256:7eea83f88394473b9e2a3dd94752928deefafe3f987f23ed3c31d0981664c8a9'
 related:
   - "[[2026-08-07-aeat-design-relayout-boundary-research]]"
+  - '[[2026-08-09-aeat-design-relayout-boundary-modelo-200-fragment-tree-provenance-research]]'
 ---
-
 # `aeat-design-relayout-boundary` adr: `a registry revision must not span an AEAT design re-layout` | (**status:** `accepted`)
 
 ## Problem Statement

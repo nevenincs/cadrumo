@@ -6,7 +6,7 @@ tags:
 date: '2026-08-09'
 modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:15f4f0471a77a102dd5e349a24268f5e767fafa4a48e66e013a9806d6a796e8e'
+body_hash: 'sha256:16670027f2d8a5f65fae1e32e3279ad5f3b1a00c5bb3e43c60aa2fa95ca50f6e'
 related:
   - '[[2026-08-04-minimo-descendientes-eligibility-P01-S01]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P01-S02]]'
@@ -48,12 +48,15 @@ related:
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S39]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S40]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S41]]'
+  - '[[2026-08-04-minimo-descendientes-eligibility-P04-S42]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S43]]'
+  - '[[2026-08-04-minimo-descendientes-eligibility-P04-S44]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S45]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S46]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S47]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S48]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S49]]'
+  - '[[2026-08-04-minimo-descendientes-eligibility-P04-S50]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-adr]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-audit]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-deferred-descendant-axes-adr]]'
@@ -133,6 +136,9 @@ Auto-generated index of all documents tagged with `#minimo-descendientes-eligibi
 - `2026-08-04-minimo-descendientes-eligibility-P04-S47` - 2026-08-04-minimo-descendientes-eligibility-P04-S47
 - `2026-08-04-minimo-descendientes-eligibility-P04-S48` - Stop the calculate boundary projecting an internal ValidationError to the generic CLI-validation refusal, because the operator is told to check arguments that are correct while the real cause reaches only the error log, which is the same defect S20 fixed for the descendiente add verb still live on calculate
 - `2026-08-04-minimo-descendientes-eligibility-P04-S49` - 2026-08-04-minimo-descendientes-eligibility-P04-S49
+- `2026-08-04-minimo-descendientes-eligibility-P04-S42` - Add guided pages for descendant completion month and death date
+- `2026-08-04-minimo-descendientes-eligibility-P04-S44` - Give the Art. 81.1 qualifying months month identity rather than a bare count
+- `2026-08-04-minimo-descendientes-eligibility-P04-S50` - Promote M100/2024 casilla 0611 to the established derived-profile-scalar registry producer, removing the manual casilla-input path and fallback while preserving revision-specific legal oracles, diagnostics, provenance, and calculate/pull convergence
 
 ### plan
 

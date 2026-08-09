@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:5edec4a786ce899d39a46854af7b7c984df3f94f227b32da53ed12f83c88e98f'
+body_hash: 'sha256:dcf8aca0c8a769182b651ddabc3959a55633d234b173f4da64453efafa828281'
 related:
   - "[[2026-07-23-profile-setup-flow-adr]]"
   - '[[2026-08-08-profile-requirement-grounding-reference]]'
@@ -170,7 +170,6 @@ Measured before recommending it: the field already carries **21 references acros
 
 So the sentence above is the remedy of record. If a rename is still wanted later, this note is the argument for it and the cost estimate — and the reason the opportunity was missed is worth keeping: the naming risk was identified one exchange after the field had already been wired through to the operator surface.
 
-
 #### The one tokenised required field is mis-scoped, and the predicate's default is inverted for this path
 
 Measured 2026-08-09, after the section above was written, and it sharpens it. The two `required = true` fields worth naming fail for **opposite** reasons:
@@ -203,7 +202,6 @@ This is **not** decided here, and deliberately so. It has the same shape as the 
 
 Whoever takes it should note the tension: the conditional decision above **relies** on `empty → False` being wrong-way-round for the conditional path (untokenised over-asks, which is safe). Flipping the default on the required path without re-examining that interaction would undo the safety property this amendment establishes.
 
-
 #### Reconciliation (2026-08-09c): the token is faithful; the REGISTRY under-declares
 
 Run after this campaign's `P01`-`P08` work landed, to reconcile the two independently-authored rulings now in this document — the cross-modelo-union decision recorded above, and the mis-scoping finding recorded here. **They agree, and the agreement corrects the mis-scoping finding's attribution.**
@@ -222,7 +220,6 @@ Both mechanisms say modelo 100 alone, because both derive from the same source: 
 This also sharpens the operator-facing concern in the cross-modelo-union decision above. That section warns an operator could misread a Modelo 100 citation on a Modelo 303 preflight as target-specific. For `identity.tax_id` the union contains **only** modelo 100, so there is no second modelo to disambiguate against: a universal field presents modelo 100 as its sole grounding on every surface. The union is still the right design; the thinness of this particular union is a registry-coverage fact, not a design flaw in it.
 
 The binding-coverage numbers make the scope plain: 50 fields for modelo 100, 2 for 303, 1 for 036, none for any other modelo. The per-operation axis can only ever be as complete as the registry's profile bindings, and today those are almost entirely one modelo.
-
 
 ### Honest limits
 

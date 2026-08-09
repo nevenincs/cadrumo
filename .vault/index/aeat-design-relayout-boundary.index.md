@@ -6,7 +6,7 @@ tags:
 date: '2026-08-09'
 modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:a27d9fa08603cef92b8ed916746fa98cda4ad86d263fe6f736f63c486c26f1fd'
+body_hash: 'sha256:113c60773b1f83a82f209004e2b2e5cc1e59b0cf7a5c264edcce8e627355e3c3'
 related:
   - '[[2026-08-07-aeat-design-relayout-boundary-adr]]'
   - '[[2026-08-07-aeat-design-relayout-boundary-research]]'
@@ -38,6 +38,7 @@ related:
   - '[[2026-08-08-aeat-design-relayout-boundary-export-fragment-generator-adr]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-modelo-200-partition-adr]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-plan]]'
+  - '[[2026-08-09-aeat-design-relayout-boundary-modelo-200-fragment-tree-provenance-research]]'
 ---
 
 # `aeat-design-relayout-boundary` feature index
@@ -87,3 +88,4 @@ Auto-generated index of all documents tagged with `#aeat-design-relayout-boundar
 ### research
 
 - `2026-08-07-aeat-design-relayout-boundary-research` - `aeat-design-relayout-boundary` research: `revision span vs published AEAT record designs`
+- `2026-08-09-aeat-design-relayout-boundary-modelo-200-fragment-tree-provenance-research` - `aeat-design-relayout-boundary` research: `Modelo 200 export fragment tree provenance (W01.P02.S78)`

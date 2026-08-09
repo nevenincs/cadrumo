@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#m303-carry-reconciliation'
 date: '2026-06-21'
-modified: '2026-07-17'
-body_hash: 'sha256:82ad92618667064452d0e11a752eb1a244d3f05c65f4b07e54a5ce74411f5e67'
+modified: '2026-08-09'
+body_hash: 'sha256:460e4b562bb03c53012db1ea1a3180181931086312d1ad69da4d2fe83b85c083'
 related:
   - "[[2026-06-21-redeme-company-refund-adr]]"
   - "[[2026-06-21-redeme-company-refund-research]]"
@@ -125,3 +125,70 @@ compensación-carry direction set by the PHASE ADRs (not a central apex doc): th
 foundational `live-iva-compensation-wallet-adr` is the carry anchor, and the future
 phase-2.3 (fold-in/carry) ADR unifies the carry mechanism. This ADR lands its specific
 refunded-period-zeroing mechanics under that one authority.
+
+## Amendment: the observation envelope is the disposition authority
+
+The earlier `refunded` boolean and behaviour-preserving `carried` default are
+superseded. They create a second authority and silently invent a disposition when evidence is
+missing. `RegistryModeloObservation` remains casilla-only; no header fact or synthetic
+disposition casilla is added to it. The canonical persisted unit for disposition-aware carry
+is `ObservationEnvelopePayload`, which owns the observation, typed `source_headers`, source
+kind and provenance, revision stamp, and one normalized typed disposition projection.
+
+For official AEAT evidence, the projection resolves exactly one
+`source_headers[header_key="declaration_type"]`. For a local app filing, the filing boundary
+persists its already-determined `ResultDisposition` with provenance. The raw header remains
+evidence and the typed disposition is its validated interpretation; a free `refunded` boolean
+is never another authority. History, annual partition, and wallet consume the validated
+envelope projection, not a bare observation or prior calculation-revision casillas for
+disposition-sensitive carry.
+
+There is no carried default. Missing, duplicate or conflicting declaration-type evidence;
+invalid or non-M303 codes; sign-incompatible disposition; typed-versus-header disagreement;
+incomplete derivation operands; absent canonical available after ingress; and any
+available/generated pair inconsistent with the disposition-aware derivation all refuse carry
+participation. Legacy envelopes remain readable evidence but are ineligible for carry until
+their disposition is grounded. At ingress, available may be synthesized only from a known
+disposition and complete supported operands, preserving the accepted
+absent-posterior-as-zero rule; the normalized persisted record thereafter carries available
+explicitly. A semantic available value never wins over a contradictory generated value.
+
+For dispositions `D`, `V`, and `X`, `generated = 0` and `available = posterior`. `C` carries
+the supported result. Other valid dispositions do not fabricate credit. Implementation order
+is S05 (shared envelope resolver, canonical ingress derivation, and truthful
+`basis="refunded"`), S07 (atomic disposition/available/generated invariant), S06 (envelope
+annual-partition reader and defensive validation), then S08 (validated envelope recurrence
+feeding the wallet). The wallet remains the sole carry authority; prior calculation revisions
+may be checked against its current decision but do not establish the prior filed disposition.
+
+Verification must distinguish identical negative casillas under `C` and `D`, reject every
+missing/conflicting/sign-incompatible evidence shape, prove atomic persistence refusal, prove
+history and partition reject pair mismatches, keep refunded credit out of M390 boxes 97 and
+662 and later M303 periods, and show pull/local-file parity. Exporter-generated payloads are
+structural wiring evidence only: no real AEAT refund specimen is currently recorded.
+
+## Amendment: positive payment election is distinct from refund election
+
+`RefundElection` remains the negative-result C/D choice and must not be widened. A sibling
+core `PaymentElection` owns the positive-result operator choice with semantic members
+`INGRESO`, `DOMICILIACION`, and `CUENTA_CORRIENTE`. One shared fail-closed resolver is the
+only authority mapping base result disposition plus the applicable election to final
+`ResultDisposition`: positive I may remain I or become U/G, while D/V/X remain refund
+dispositions. U/G never change compensation carry. A non-default election incompatible with
+the computed sign refuses rather than being ignored.
+
+The typed payment election is threaded through `ModeloExportCommand`, quickfile, filing
+action/API, CLI, and every review or verification export wrapper. The misleading CLI
+`--disposition` option, which currently carries `RefundElection`, is removed and replaced by
+explicit `--refund-election`; `--payment-election` carries the sibling axis. No legacy alias
+is retained. G belongs to the canonical type so the contract is not forked later, but remains
+capability-gated and refused until its cuenta-corriente-tributaria semantics are officially
+grounded. It must not infer or reuse `ChargeAccount`.
+
+`ChargeAccount` is distinct encrypted durable profile data; an election is per-filing
+provenance. The export receipt and `MODELO_EXPORTED` event persist the resolved result
+disposition and semantic payment election (and the refund election symmetrically where
+applicable), but never IBANs, rendered headers, or other account material. S18 remains open
+until this public path reaches the existing charge-account U composer and proves a real
+end-to-end U export. A separate follow-up Step owns the cross-command contract rather than
+silently widening S18.

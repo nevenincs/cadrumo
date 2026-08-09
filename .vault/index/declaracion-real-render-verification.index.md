@@ -6,7 +6,7 @@ tags:
 date: '2026-08-09'
 modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:389a1b9e3e7a29714b79380859b024d638ece61b35d8eb93f856dba48d25c579'
+body_hash: 'sha256:f87f28770c4b736b68661f0ed83c481016223d0b1e88f4ae65490404df3696bf'
 related:
   - '[[2026-07-26-declaracion-real-render-verification-P01-S01]]'
   - '[[2026-07-26-declaracion-real-render-verification-P01-S02]]'
@@ -38,6 +38,7 @@ related:
   - '[[2026-07-26-declaracion-real-render-verification-P04-S28]]'
   - '[[2026-07-26-declaracion-real-render-verification-P04-S29]]'
   - '[[2026-07-26-declaracion-real-render-verification-P04-S30]]'
+  - '[[2026-07-26-declaracion-real-render-verification-P04-S31]]'
   - '[[2026-07-26-declaracion-real-render-verification-adr]]'
   - '[[2026-07-26-declaracion-real-render-verification-adversarial-verification-of-campaign-claims-audit]]'
   - '[[2026-07-26-declaracion-real-render-verification-campaign-close-honesty-review-audit]]'
@@ -53,6 +54,7 @@ related:
   - '[[2026-07-27-declaracion-real-render-verification-ledger-safe-fix-mechanisms-for-modelo-100-audit]]'
   - '[[2026-07-27-declaracion-real-render-verification-modelo-100-manifest-reconciliation-gap-audit]]'
   - '[[2026-08-03-declaracion-real-render-verification-specimen-corpus-distribution-research]]'
+  - '[[2026-08-09-declaracion-real-render-verification-s31-code-review-audit]]'
 ---
 
 # `declaracion-real-render-verification` feature index
@@ -79,6 +81,7 @@ Auto-generated index of all documents tagged with `#declaracion-real-render-veri
 - `2026-07-27-declaracion-real-render-verification-language-partition-attack-and-ejercicio-scoping-audit` - `declaracion-real-render-verification` audit: `attacking the R12 language partition, plus scoping the decl.ejercicio fix`
 - `2026-07-27-declaracion-real-render-verification-ledger-safe-fix-mechanisms-for-modelo-100-audit` - `declaracion-real-render-verification` audit: `which mechanism spares the ledger path while fixing Modelo 100`
 - `2026-07-27-declaracion-real-render-verification-modelo-100-manifest-reconciliation-gap-audit` - `declaracion-real-render-verification` audit: `the Modelo 100 manifest reconciliation gap, explained exactly`
+- `2026-08-09-declaracion-real-render-verification-s31-code-review-audit` - `declaracion-real-render-verification` audit: `s31 code review`
 
 ### exec
 
@@ -112,6 +115,7 @@ Auto-generated index of all documents tagged with `#declaracion-real-render-veri
 - `2026-07-26-declaracion-real-render-verification-P04-S25` - Make every synthetic fixture generator set the canonical producer signature, since only one of three does and the provenance gate's discriminator rests on that invariant holding
 - `2026-07-26-declaracion-real-render-verification-P04-S28` - Rule whether enum is a claim about the value space or merely a hint, since the schema enforces no enum-versus-text distinction and the answer decides whether the four flagged targets are defects or documentation
 - `2026-07-26-declaracion-real-render-verification-P04-S30` - Declare verify_declaracion's reference-implementation role in its own docstring so it is not deleted as dead code, since three production modules cite it as the canonical scoping policy
+- `2026-07-26-declaracion-real-render-verification-P04-S31` - `declaracion-real-render-verification` execution: `P04.S31`
 
 ### plan
 

@@ -3,15 +3,20 @@ tags:
   - '#plan'
   - '#declaracion-real-render-verification'
 date: '2026-07-26'
-modified: '2026-07-28'
-body_hash: 'sha256:dea681eace89228bac290d51583bd2f0670be0b19df0da64cdde23c486b2257e'
+modified: '2026-08-09'
+body_hash: 'sha256:49fb3ca03cf91d01e4eefc74d1cc2d7fdcf8daca0d7c308ff111cc42714b0e79'
 tier: L2
 related:
   - '[[2026-07-25-declaracion-profile-printed-box-scope-adr]]'
   - '[[2026-07-25-declaracion-profile-printed-box-scope-real-render-gate-and-naming-honesty-audit]]'
   - '[[2026-08-03-declaracion-real-render-verification-specimen-corpus-distribution-research]]'
 ---
+
 # `declaracion-real-render-verification` plan
+
+## Description
+
+## Steps
 
 ### Phase `P01` - Evidence-backed profiles
 
@@ -62,10 +67,7 @@ Open defects and decisions this campaign measured but did not close
 - [x] `P04.S28` - Rule whether enum is a claim about the value space or merely a hint, since the schema enforces no enum-versus-text distinction and the answer decides whether the four flagged targets are defects or documentation; `src/cadrumo/_data/registry/aeat/modelos`.
 - [x] `P04.S29` - Register the Modelo 100 coverage floor as an evidence gap under D2, since three specimens from one filer with every box populated cannot ground one; `.vault/exec, src/cadrumo/_data/registry/aeat/modelos/100`.
 - [x] `P04.S30` - Declare verify_declaracion's reference-implementation role in its own docstring so it is not deleted as dead code, since three production modules cite it as the canonical scoping policy; `src/cadrumo/application/verification`.
-
-## Description
-
-## Steps
+- [x] `P04.S31` - Correct Modelo 202 provisional extraction-profile evidence state so a specimen-less profile cannot claim strict confidence or corpus round-trip verification, enforce the mutual exclusion at registry build while retaining snapshot visibility and D5 non-enrolment, and prove the contradiction red with a mutation-sensitive real registry gate; `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/extraction_profiles/0001-modelo-202-declaracion-pdf.toml, src/cadrumo/domain/calculations/registry/_validate_extraction_profiles.py, src/cadrumo/domain/calculations/registry/tests, src/cadrumo/adapters/inbound/declaracion/tests`.
 
 ## Parallelization
 

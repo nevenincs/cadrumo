@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:1eee0388f3b2cdb6856fc568097f7e004a832da0529447db35407f6f5683e5b7'
+body_hash: 'sha256:63183412f3f34e31cf8633bf05508ae5832bb89b6e49d1469f176c3c37abae81'
 related: []
 ---
 
@@ -13,13 +13,11 @@ related: []
 
 ## Scope
 
-
 A census of every parameter on every MCP tool descriptor, looking for closed-value axes that reach the agent-facing JSON schema as a bare `string` instead of an `enum`. The surface is the whole `build_tool_descriptors()` output, not a sample: **308 tools, 1253 parameters, 190 already carrying an `enum`, 743 bare strings.**
 
 The question is not "which parameters are bare strings" -- most legitimately are, because most are free-form (names, identifiers, paths, amounts, dates). The question is which bare-string parameters have a *closed* value set that a `StrEnum` in this tree already defines.
 
 The governing decision is the `mcp-closed-value-axes` ADR; this document is the evidence behind it and the running record of what has been adjudicated.
-
 
 ## Findings
 
@@ -156,7 +154,6 @@ Nothing else caught it. Ruff passed, the file compiled, every CLI test passed, a
 
 **What follows.** A regex edit that consumes and re-emits a *positional* list of tokens is not a safe refactoring primitive — it silently reorders when the match set and the restore set differ. Prefer a per-site replacement keyed on the site's own surrounding text. And run the locale drift gate after any change that touches `tr()` call sites, including changes that only *move* them: it is the only check in the tree that can see a help key pointing at the wrong string.
 
-
 ### Applying the decision mechanically: two more pinned, one collision confirmed
 
 With the ADR accepted, the remaining gate entries reduce to running its three checks.
@@ -174,7 +171,6 @@ Reading the nine `--iva-rate` help strings side by side exposed a unit disagreem
 Either the operator passes `0.21` to eight verbs and `21` to the ninth, or one of the ten help strings is wrong. Both readings are bad, and the second is worse in the quiet way this codebase cares about: a value entered under the wrong convention is off by a factor of a hundred, arithmetically valid, and lands in an inventory movement that feeds downstream aggregation.
 
 Not fixed here — establishing which convention the movement path actually applies is a ledger-semantics question, not a CLI-typing one, and answering it by reading the help text would repeat the mistake this document keeps recording. Filed as a finding for whoever owns the inventory surface, with the note that the fix is either the parser or the prose, and only the code can say which.
-
 
 ### The `--iva-rate` unit split: two conventions, one option name, and only one of them enforced
 
@@ -197,7 +193,6 @@ The bound is the unit boundary of a fraction, not a rate. The highest Spanish IV
 
 **Not fixed, and deliberately.** The two conventions still share the name `--iva-rate`. Reconciling them is a ledger-semantics decision with an operator-facing rename on one side of it, and it is not this campaign's to make. The guard closes the dangerous direction on the unenforced side; the percentage side was already bounded `0..100` and cannot silently take a fraction without producing an obviously tiny cuota.
 
-
 ### Closing the gate list surfaced four wrong help strings, none of which any gate could see
 
 Adjudicating the last entries pinned `--category` (both ratios verbs), `--kind` on inventory movement and on `modelo work amend`, and confirmed the third `--kind` site as a genuine collision -- `registry.manuals.rules` filters on a plain `str` with no closed set behind it, so there is nothing to declare.
@@ -216,7 +211,6 @@ Each help string was corrected in all four catalogues as well, since the prose s
 So the sweep's most durable output may not be the pinned axes at all. **Declaring the enum makes the accepted set derived rather than restated**, and a derived set cannot drift from the code the way a sentence can. Three of these four had been wrong for long enough to be translated into Catalan and Hungarian.
 
 The amendment case is the one worth remembering: the omission was not cosmetic. `rectificativa` is a distinct legal instrument under LGT art. 122, the engine supports it, and the operator-facing surface said it did not exist.
-
 
 ### The gate list closed at zero, and `--provider` closed by *not* being pinned
 
@@ -251,7 +245,6 @@ A fifth, found earlier in the same pass: `--manual` advertised `renta, iva, soci
 
 **The gate reads the active locale**, which under the test runner is Spanish. That is the right single locale to check if only one is checked -- it is the language of the tax authority -- but it means an English-only defect could pass. Extending it to render all four catalogues is the obvious next step and is not done.
 
-
 ### Generalising the IVA-rate defect: `Invoice.retention_rate` has the same shape
 
 The campaign's highest-severity find was an unbounded fractional field on a persisted model. That suggests a class rather than an incident, so the pivot swept every `Decimal` field whose name reads as a rate, ratio, percentage, coefficient or share, and checked which carry an upper bound.
@@ -267,7 +260,6 @@ So the shape is the `iva_rate` shape exactly, and slightly worse: there the guar
 **Not fixed this iteration** -- it arrived at the end of the budget, and a persisted-model constraint deserves the same treatment `iva_rate` got: a validator naming the unit rather than the bound, a positive control over the rates that actually exist (0.15 and 0.07, not one convenient value), a boundary case, and a mutation proof. The pattern is proven; only the execution is outstanding.
 
 **A guard on one writer is not a guard.** That is the transferable form, and it is worth checking wherever a validation comment explains a unit confusion: the comment marks a place someone already understood the risk, which makes the *other* writers the interesting question.
-
 
 ## Recommendations
 
@@ -356,7 +348,6 @@ The design decisions worth recording:
 
 Mutation-proved in both directions: removing the `surface` exemption reds with the two live sites named, and adding an exemption for an axis that is already pinned reds as stale.
 
-
 ### The multi-locale extension is not cheap, and the earlier estimate was wrong
 
 The help-prose gate reads one locale, and extending it to four was recommended as an obvious cheap follow-up. Measuring it retracts that.
@@ -383,7 +374,6 @@ And that documentation is the reason the originally-planned fix would have been 
 
 Closed as already-addressed. The lesson is the one the orchestration rules already state and this campaign keeps re-earning: **a finding's facts survive, its conclusion does not.** Fourteen iterations of drift separated the deferral from the plan, and the check that caught it cost one file read.
 
-
 ### The fractional-field thread is closed, and the reason is the instrument
 
 Three iterations went into measuring this class. The outcome is one confirmed, fixed and shipped defect (`Transaction.iva_rate`, the 2100% rate) and one confidently wrong finding (`Invoice.retention_rate`, already guarded). The deciding factor for stopping is not the yield, it is that **no instrument built here could be validated.**
@@ -397,4 +387,3 @@ So the 32 fields it now calls unguarded stay **observations, not findings**. The
 **What would actually settle it** is not a better detector but a different question: instead of asking each model whether it refuses, ask each *durable persistence boundary* whether a percentage survives a save-and-load round trip. That reuses the roundtrip fixtures the quality rules already mandate, which are built by hand and satisfy the cross-field validators the synthetic builder cannot. It is a larger piece of work and belongs to whoever owns those boundaries.
 
 The transferable part is the stopping rule. **Three instruments, each honest about a different thing, none validatable against known ground truth -- that is the signal to stop measuring and pivot**, rather than the sense that one more variation might work.
-

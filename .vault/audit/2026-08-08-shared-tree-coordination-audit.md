@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:962382ef170e5685b0ecb1dac42b203fd3c8b6cc31475bab3992ccaff6211366'
+body_hash: 'sha256:497daa949a6372c2efd89feaaf5a4d8ee7d0c4f868b1e810a29a8835b6897881'
 related: []
 ---
 
@@ -63,7 +63,6 @@ This is the compounding form of the sweep hazard. Misattribution and a briefly-b
 
 Recorded here rather than opened as a row in the owning campaign's plan, because that plan is mid-flight under other executors and inserting a row into a peer campaign's tracking document on an inference about ownership would create exactly the false attribution this document is about.
 
-
 ### A frozen `.git/index.lock` blocks every commit in the tree, and the sanctioned response is to queue
 
 Observed continuously across a multi-hour window: `.git/index.lock` present, zero bytes, mtime frozen at `2026-08-08 19:29:59`, while the last commit in the tree landed at `19:25:51`. Every `git commit` in the worktree fails with `fatal: Unable to create '.../.git/index.lock': File exists`, including a correctly-formed explicit-pathspec commit touching only its author's own clean files.
@@ -76,11 +75,9 @@ Git's own error text ends with `remove the file manually to continue`. **That in
 
 The cost is real and worth stating plainly. Queued work sits in the working tree as uncommitted changes indistinguishable from any other peer's WIP, which means it is exposed to exactly the bare whole-index sweep this document opens with — a sweep would publish it under someone else's subject. The two hazards compound: the lock forces work to accumulate uncommitted, and accumulated uncommitted work is what the sweep hazard feeds on. That argues for keeping each queued change small and independently committable, so that whichever of them a sweep captures, the rest still land cleanly under their own author.
 
-
 **Second independent confirmation, ~5h51m into the freeze.** Re-observed at `2026-08-09 01:20`: same zero-byte file, same frozen `2026-08-08 19:29:59` mtime, unchanged across the whole of a second remediation iteration. The queue-and-continue response held up: a full research-implement-test-mutation-prove cycle completed normally with the lock held, and only publication was blocked. The frozen mtime remains the diagnosis, and the file remains untouched.
 
 One refinement worth recording for whoever picks this up. A blocked iteration still needs to compare a working-tree change against its committed baseline, and the sanctioned procedure for that — copy the working file aside, write the HEAD bytes in place, test, restore — opens a mutation window that a bare whole-index sweep could otherwise publish. **While the lock is frozen that window is actually safe, because no agent in the tree can commit anything at all.** The lock that blocks your publication also blocks the sweep that would capture your window. That is a genuine, if narrow, compensation, and it makes the HEAD-bytes comparison the cheapest reliable way to separate a pre-existing red test from one your own edit caused. Restore from the scratch copy and verify byte-identical by hash afterwards regardless; the safety is situational and evaporates the moment the lock clears.
-
 
 ### A numstat proves your change LANDED, not that it was the ONLY thing that landed
 
@@ -101,7 +98,6 @@ On a file one agent is editing the two coincide, which is why the habit reads as
 
 **The remedy is the record, not a git operation.** History was not rewritten. The misattribution is stated in the campaign's own record so the peer's authorship survives where `git log` no longer carries it — the same response this document already prescribes for a sweep, applied by the agent that caused one rather than the agent that suffered it.
 
-
 ### A documented rationale that reads as a smell can be load-bearing, and the cheap check is to run it
 
 A prior remediation pass nominated four sites for re-typing: `expression` fields declared `dict[str, object]` on CLI payload schemas, where a real `FormulaExpression` model already exists in the registry package. The pattern matches the standing prohibition on bare mappings at typed boundaries almost exactly, and the nomination read as obviously correct.
@@ -113,4 +109,3 @@ That is not a rationalisation. `FormulaExpression` declares `args: tuple[Formula
 **What follows.** The prohibition on untyped boundary mappings has a real exception where a strict recursive model meets a JSON transport, and this is it. The available remedies are each worse than the documented status quo: a parallel list-shaped projection of `FormulaExpression` would be a second definition of one concept, and relaxing strictness on `OutputSchema` would weaken the contract for every payload in the tree to type one field. The `dict[str, object]` is the deliberate escape hatch, and it is already documented at the site.
 
 The transferable part is procedural. A rule-shaped violation that has a rationale written beside it is not thereby cleared — prose asserting a property the code lacks is a known failure mode, and the rationale deserves testing rather than deference. But it deserves *testing*, not dismissal: the check here cost four lines and inverted the conclusion. Running it is cheaper than either believing the docstring or overriding it, and a nomination inherited from an earlier pass carries no more authority than the docstring it contradicts. Both are claims; only one of them was measured.
-

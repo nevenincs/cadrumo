@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#minimo-descendientes-eligibility'
 date: '2026-08-04'
-modified: '2026-08-05'
+modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:753a3bc39b48fa867f28df79a5bf6b89666dacbffb13d6211171a1566a105fdb'
+body_hash: 'sha256:2b1d1c83cc788ccdd690125e5247f0726ad3480b9931f9c84ce59b5edde8cd5c'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-audit]]"
   - "[[2026-08-04-decimal-notation-under-declaration-research]]"
@@ -412,6 +412,34 @@ distinction matters: this is not the work being judged too expensive, it is the 
 being measured false. "Parity with 0613" was never achievable because the two casillas do
 not share a rule shape. If a future reform makes 0611's cap uniform again, the parity
 question genuinely reopens and this decision should be revisited rather than cited.
+
+### Amendment: the 0611 closure is reversed; M100/2024 must use the existing derived-scalar pattern
+
+The preceding 0611 decision is superseded. Its decisive premise was false: 0613 is also
+resolved by a variable per-child Python fold before the registry consumes a derived profile
+scalar. It therefore demonstrates the exact architectural boundary 0611 needs; neither
+casilla requires a new registry aggregation primitive.
+
+For M100/2024, 0611 is authorized to become registry-computed through the established
+pattern: calculate the canonical per-child fold once in the domain/application layer, expose
+that result as a derived profile scalar only when every required fact and threshold is
+resolved, bind it with `profile/copy`, and terminate in a binding-leaf registry formula with
+0611 declared computed. The derived result must never travel through the manual casilla-input
+channel. An unresolved producer leaves the binding absent and emits the existing diagnostics;
+it never exposes an operator-supplied 0611 fallback.
+
+Implementation must add the selector, binding, formula, construct membership, computed
+casilla declaration, and complete source/legal provenance as one invariant. Registry-engine
+proof must preserve the 2024 oracles: 2,400 euros for twins, 1,200 for one child, 600 for six
+months, 1,350 for an alta-posterior child, and the mixed-cap multi-child case. It must also
+prove that direct `--casilla 0611` cannot bypass or overwrite the producer and that calculate
+and pull resolve through the same path. The accepted default-relationship ambiguity advisory
+remains visible.
+
+This authorization is revision-scoped. M100/2020 through 2022 remain manual until their
+cotizaciones ceiling is backed by year-parameterized facts and bindings. M100/2023 and 2025
+require their own enrollment and revision-specific proof. Closing the research Step records
+this corrected decision only; a separate implementation Step owns delivery of the producer.
 
 ## Amendment: a design review corrected all four decisions, and refuted one
 

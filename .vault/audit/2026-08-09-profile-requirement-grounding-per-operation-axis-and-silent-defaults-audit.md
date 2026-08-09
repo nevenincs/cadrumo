@@ -5,7 +5,7 @@ tags:
 date: '2026-08-09'
 modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:c8f8d8d0434c86e75ed3594d0cf616e2dd29404a788d36748bec0b0b6490a65d'
+body_hash: 'sha256:6d7cc3ee9e36507d84949a304c4492dda3480470266639b56e7de243aa1b1d24'
 related:
   - "[[2026-08-08-profile-requirement-grounding-adr]]"
 ---
@@ -69,6 +69,14 @@ The requirement concept is spelled in four namespaces that cannot be compared wi
 ### Method note: what was verified and what was not
 
 The two headline findings were re-verified after the swarm reported them — the selector count by loading the real schema in-process, the placeholder by reading the declaration and enumerating call sites. The ten-mechanism inventory and the per-command classification are sub-agent output confirmed only at the `file:line` level, not exhaustively; the per-command table in particular covers commands reachable from the profile read paths traced, not all ~300 CLI verbs. One reported item is explicitly **unconfirmed** and should not be actioned as fact: that `verify`/`file`/`export` may resolve the readiness gate against the work unit's bucket while building the taxpayer projection from the workflow state's active profile, which would diverge under a `--bucket-id` override.
+
+**Closed later the same day: the capability axis was sampled, and is now measured.** The earlier reading verified `CLOUD_EVIDENCE_UPLOAD` end-to-end and only sampled `LLM_VISION` and `GOOGLE_EXPORT`. A sampled claim carried in a report reads exactly like a measured one, so it was worth finishing rather than leaving.
+
+`LLM_VISION` holds structurally, which is stronger than counting its two gates. Exactly two sites in production build a `MultimodalImageInput` — `_llm_classification.py:279/287` and `_evidence_draft.py:1439/1449` — and each sits immediately downstream of a gate in the same function (`:298` and `:1427`). The classification path cannot be reached around its gate: `_classify_with_evidence` takes the vision branch only when `evidence.is_images`, and only `_resolve_evidence` — which gates — can produce that. Both refusals are typed and name the exact toggle (`aeat config profile capabilities set llm_vision on`), so the capability is never a silent skip.
+
+`GOOGLE_EXPORT` has five gates and two ungated entry points, `google_sync_calc_pull` and `google_sync_calc_compute`. **Both are reads, so this is not a gap.** The project states the read/write line itself in the probe's gate, `if not read_only and not resolve_active_capability(...)`, and the enum's own docstring claims only that opting out "keeps exports offline-only" — which is accurate, since neither pull nor compute is an export. `compute`'s "persist nothing" docstring was checked against the code rather than taken on trust: `compute_from_pull` carries no persistence call.
+
+Recorded as a clean negative with its instrument stated, because a clean negative is only worth as much as the method's ability to have found something. This one discriminates: it located every gate that exists, surfaced the two entry points that lack one, and the classification of those two rests on a stated project convention rather than on their passing. One probe in this pass did return empty for a broken reason — a bad `rg` invocation over a directory that silently found no `compute_from_pull` — and was only caught because an empty result on a function known to exist is implausible on its face.
 
 ### Outcome (2026-08-09, same day): what was actioned, and one finding withdrawn
 
@@ -183,3 +191,11 @@ It refuses on a lifecycle STATUS rather than a field gap, so it names nothing. T
 **Blocked only by contention**, not by design. `_profile_readiness_gate.py` and its test have been peer-dirty for over an hour with the change unpublished, so the file cannot be touched without colliding. Recorded here rather than attempted, and precisely enough to execute directly when the file frees: one branch, one enumeration, one locale template gaining a `%{missing}` placeholder in four catalogues via `dev.locales`.
 
 One caveat for whoever takes it: `SETUP_INCOMPLETE` means the answer set failed the flow's final CROSS-FIELD validation, which is not identical to "some required field is empty". Enumerating only the empty required paths could therefore return an EMPTY list for a profile that is genuinely incomplete on a cross-field rule — a refusal saying "missing: nothing" would be worse than the current vague one. Check that case before shipping, and fall back to the existing wording when the enumeration is empty.
+
+**Landed in `8440b7bba4`; this section is closed.** Verified against HEAD rather than assumed from the commit subject, which names the per-operation axis and does not mention this refusal at all — the change rode along inside it.
+
+The implemented branch is what this section specified, including the part flagged as the caveat: `missing_required_field_paths` enumerates, `build_profile_preflight_requirement(...).label` renders the names, and the empty-enumeration case falls back to the original generic wording instead of emitting "missing: nothing". The reasoning is carried as a comment at the branch, so the next reader does not have to rediscover why the fallback exists.
+
+Locale parity confirmed across all four catalogues — `profile_readiness_setup_incomplete_missing` carries a real translated string in `en`, `es`, `ca` and `hu`, with the `%{missing}` placeholder present and no self-referencing scaffold placeholder. That is the check most likely to be skipped on a change like this, since the gate only bites once something sweeps the working copy.
+
+Worth noting for the standing goal: this closes one of the last refusals in the profile surface that named a lifecycle STATUS instead of a field gap. The remaining generic ones (`no_active_profile`, `no_active_bucket`) stay generic on purpose — with no profile at all, "create a profile" is the exact missing information.

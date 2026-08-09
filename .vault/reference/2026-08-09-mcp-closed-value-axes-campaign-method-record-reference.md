@@ -5,7 +5,7 @@ tags:
 date: '2026-08-09'
 modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:64d4493f4e98b68d7ec8336f1b9c2f67b5b8f1480362c6ec5b6a3e3507a21247'
+body_hash: 'sha256:93f3dad2a02bef425c3dae3bd7ae4f1a452a34c3c05ce8b1e02cee3db826231b'
 related:
   - "[[2026-08-08-mcp-closed-value-axes-audit]]"
 ---
@@ -112,4 +112,3 @@ Each was investigated to a conclusion. Re-opening them costs an iteration and re
 **Bounding `LedgerEvidenceRow`'s rate fields.** They are projected directly from `Transaction`, which validates them at the durable boundary. `fx_rate` in particular must *not* carry an upper bound -- a currency conversion rate is not a fraction.
 
 **Pinning `--modelo` on `modelo work create`, `--ccaa`, or `--valuation-method` to their enums.** Each deliberately accepts out-of-set values so a guard can refuse them *well*: ceded autonomic taxes are named with their regional filing route, foral territories raise `ForalRegimeError`, and LIFO is refused citing LIS art. 17.1. A `Choice` refuses before the body runs and replaces a legally-grounded answer with "not one of".
-
