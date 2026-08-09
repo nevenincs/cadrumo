@@ -1,0 +1,212 @@
+"""The bulk register CAPTURE continues past a failed pair, not just the listing.
+
+The sibling sweep test proves cross-pair continuation for
+:func:`~application.live.list_filed_data_bulk`. That is a different guarantee
+from the one asserted here. ``capture_filed_data_bulk`` resolves an active
+bucket id before its loop and then, for every walked row, drives the per-row
+observation capture and persists through the accumulator -- so what the listing
+test proves about ITS loop says nothing about whether THIS one survives a
+refused pair. Until now the capture function's register seam was known only to
+compile, type-check and leave every caller unchanged.
+
+The deferred cost was the real encrypted-storage setup rather than the browser,
+so that is what this test pays: a genuine active-profile bucket runtime, the
+same one production resolves through, alongside the real headless page the
+listing test already proved reachable offline.
+
+Reaching the loop needs the register-injection seam rather than route
+interception alone. Interception makes the browser reachable with no production
+change, but the function first resolves a verified session, which runs the
+live-read access gate and then the central live-session writer; satisfying that
+would ARM real AEAT access. Injecting an already-open register is what lets this
+test never request live access in the first place. ``CADRUMO_LIVE_TESTS_ENABLED``
+is never set here and the live-read gate is never satisfied.
+
+Everything else is real: a real :class:`AeatSession`, a real headless Chromium
+page, a real ``DeclaracionesRegisterSession``, a real bucket, the real form
+drive, the real parse and the real capture loop. Only the network is
+intercepted, and only with synthetic fixtures -- nothing here contacts AEAT.
+
+WHY THE REACHED PAIR YIELDS NO PERSISTED OBSERVATION, and why chasing one would
+be wrong. Per-row capture opens the justificante popup and then fetches the
+cotejo PDF through ``context.request``, an API request context. Route
+interception cannot reach it: a ``**/*`` handler registered on the page OR on
+the browser context is never consulted for ``context.request`` traffic, which
+leaves the browser for the real origin. Measured directly rather than assumed --
+an intercepted ``context.request.get`` against the sede host returned a real 404
+from the real host with the handler never invoked. So driving this far enough to
+persist an observation offline would either need production changes or would
+make genuine AEAT contact, which is precisely what this test exists to avoid.
+
+The reached pair therefore stops at the popup wait and records per-ROW outcomes.
+That is enough, because continuation is read off the SHAPE of the failures: a
+walk-level refusal carries no expediente (no row was ever parsed), while
+anything the second pair produces carries one. The assertion stays written as
+"an observation OR a per-row outcome" so it keeps holding, rather than inverting
+into a false alarm, if the PDF leg ever does become reachable offline.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import re
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
+
+import pytest
+from playwright.async_api import Route, async_playwright
+
+from ....adapters.outbound.aeat.auth import AeatSession, CertificateSessionDetail
+from ....adapters.outbound.aeat.sede import DeclaracionesRegisterSession
+from ....core.config import override_settings
+from ....tests import FIXTURES_DIR
+from ....tests.secure_sql import isolated_runtime_profile
+from .._filed_data_capture import capture_filed_data_bulk
+from .._remote_state_models import BulkFiledDataCaptureReport
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_FIXTURE_ROOT = FIXTURES_DIR / "aeat-sede"
+_MODELO = "100"
+# Both years carry a registry revision for this modelo, so both survive the
+# pre-flight query plan and actually reach the register walk.
+_YEAR_FROM = 2024
+_YEAR_TO = 2025
+_BUCKET_ID = "7c7c7c7c-7c7c-47c7-87c7-7c7c7c7c7c7c"
+
+
+def _offline_session() -> AeatSession:
+    """A real session carrying no persisted browser state and reaching nothing."""
+    authenticated_at = datetime(2026, 8, 9, 9, 0, tzinfo=UTC)
+    return AeatSession(
+        authenticated_at=authenticated_at,
+        idle_deadline=authenticated_at + timedelta(hours=8),
+        storage_state_path=None,
+        identity_nif="12345678Z",
+        provider_detail=CertificateSessionDetail(
+            certificate_thumbprint="aabbcc",
+            certificate_subject="CN=test",
+        ),
+    )
+
+
+def _fixture(stem: str) -> str:
+    return (_FIXTURE_ROOT / f"{stem}.html").read_text(encoding="utf-8")
+
+
+# Lifted from the fixture's raw markup, never from anything the production
+# parser computes, so a comparison against them is a cross-check rather than the
+# parser measured against itself.
+_TOTAL_REGISTROS_RE = re.compile(r"de (\d+) en total")
+_LISTITEM_RE = re.compile(r'class="[^"]*\bz-listitem\b')
+
+
+def _declared_total_in(html: str) -> int:
+    """Return the record total the fixture's own pager label states."""
+    match = _TOTAL_REGISTROS_RE.search(html)
+    assert match is not None, "fixture's pager label shape changed; it can no longer declare a total"
+    return int(match.group(1))
+
+
+def _rendered_rows_in(html: str) -> int:
+    """Count the rendered grid rows straight out of the fixture markup."""
+    return len(_LISTITEM_RE.findall(html))
+
+
+def _capture(output_root: Path) -> BulkFiledDataCaptureReport:
+    """Run the real bulk capture over two queued pages, one truncated, one complete."""
+    pending = [
+        _fixture("declaraciones-register-form-paginated-synthetic"),
+        _fixture("declaraciones-register-form-complete-synthetic"),
+    ]
+    served: list[str] = []
+
+    async def _serve(route: Route) -> None:
+        """Fulfil the real listing URL with the next queued synthetic page."""
+        if not route.request.is_navigation_request():
+            await route.fulfill(status=204, body="")
+            return
+        body = pending.pop(0) if pending else served[-1]
+        served.append(body)
+        await route.fulfill(status=200, content_type="text/html; charset=utf-8", body=body)
+
+    async def _run() -> BulkFiledDataCaptureReport:
+        async with async_playwright() as playwright:
+            browser = await playwright.chromium.launch(headless=True)
+            try:
+                context = await browser.new_context()
+                page = await context.new_page()
+                await page.route("**/*", _serve)
+                register = DeclaracionesRegisterSession(_offline_session(), page, context)
+                with override_settings(
+                    cadrumo_browser_form_interaction_timeout_ms=3000,
+                    cadrumo_browser_buscar_settle_ms=50,
+                    cadrumo_browser_ver_click_timeout_ms=1500,
+                ):
+                    return await capture_filed_data_bulk(
+                        year_from=_YEAR_FROM,
+                        year_to=_YEAR_TO,
+                        output_root=output_root,
+                        modelos=(_MODELO,),
+                        register=register,
+                    )
+            finally:
+                await browser.close()
+
+    report = asyncio.run(_run())
+    assert not pending, (
+        "the capture stopped before requesting every queued page, so it did not continue past the failed pair"
+    )
+    return report
+
+
+def test_a_truncated_pair_is_reported_while_the_other_pair_is_still_captured(tmp_path: Path) -> None:
+    """One pair refused at the walk, the other pair walked and its rows processed.
+
+    The assertions are deliberately order-independent. The route handler cannot
+    see which ``(modelo, ejercicio)`` a navigation belongs to -- the pair is
+    chosen after the document loads, by driving the comboboxes -- so the pages
+    are served in walk order and the property is asserted without naming which
+    year got which page.
+
+    Nothing here asserts a pair count. A count would pass just as well if the
+    capture walked one pair twice, and would need rewriting the moment the
+    fixture pool changed.
+
+    Continuation is read off the SHAPE of the failures rather than off a tally.
+    A walk-level truncation refusal carries no expediente, because no row was
+    ever parsed; anything the second pair produces is per-ROW and therefore
+    carries one. A capture that stopped at the refused pair could only ever
+    report the first kind.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        report = _capture(tmp_path / "captures")
+
+    truncation_failures = [failure for failure in report.failures if failure.error_type == "SedeParseError"]
+    assert truncation_failures, f"no truncation refusal was absorbed into a failure row: {report.failures}"
+
+    # Both numbers are read straight out of the fixture's own markup rather than
+    # from anything the parser computed, so the row is cross-checked against the
+    # page it came from and neither number is hardcoded here.
+    truncated_page = _fixture("declaraciones-register-form-paginated-synthetic")
+    declared_total = _declared_total_in(truncated_page)
+    rendered_rows = _rendered_rows_in(truncated_page)
+    assert rendered_rows < declared_total, "fixture no longer renders fewer rows than its pager declares"
+    for failure in truncation_failures:
+        assert str(rendered_rows) in failure.message and str(declared_total) in failure.message, (
+            f"the failure row lost the rendered-versus-declared cause: {failure.message!r}"
+        )
+
+    walk_refusals = [failure for failure in report.failures if failure.expediente_id is None]
+    per_row_outcomes = [failure for failure in report.failures if failure.expediente_id is not None]
+    assert walk_refusals, "no walk-level refusal was recorded, so the truncated pair never reached the absorber"
+    assert report.observation_paths or per_row_outcomes, (
+        "the complete pair produced neither an observation nor a per-row outcome, "
+        "so the capture never got past the refused pair"
+    )
+
+    refused_years = {failure.year for failure in walk_refusals}
+    reached_years = {failure.year for failure in per_row_outcomes}
+    assert not (refused_years & reached_years), (
+        f"a pair both refused at the walk and reached its rows: refused={refused_years} reached={reached_years}"
+    )

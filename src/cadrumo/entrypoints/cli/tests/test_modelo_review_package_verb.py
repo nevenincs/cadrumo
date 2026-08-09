@@ -219,6 +219,9 @@ def test_review_package_help_advertises_local_only() -> None:
     result = _invoke(["app", "modelo", "review-package", "build", "--help"])
     assert result.exit_code == 0, result.output
     assert any(token in result.output.lower() for token in ("local-only", "local;", "local.", "nunca")), result.output
+    assert "--refund-election" in result.output
+    assert "--payment-election" in result.output
+    assert "--disposition" not in result.output
 
 
 def test_review_package_build_refuses_draft_revision(tmp_path: Path) -> None:

@@ -290,13 +290,12 @@ def _observed_header_facts_from_submitted_file(
         return ()
 
     facts: list[ObservedHeaderFact] = []
-    seen: set[str] = set()
     for field_value in parsed.fields:
         definition = resolved.fields_by_id.get(field_value.field_id)
         if definition is None or definition.kind is not CasillaFieldKind.HEADER:
             continue
         header_key = definition.header_key
-        if header_key is None or field_value.value is None or header_key in seen:
+        if header_key is None or field_value.value is None:
             continue
         token = str(field_value.value).strip()
         if not token:
@@ -304,7 +303,6 @@ def _observed_header_facts_from_submitted_file(
             # indistinguishable from AEAT stating a value, so it is omitted --
             # the same honesty the register's request-type projection applies.
             continue
-        seen.add(header_key)
         facts.append(
             ObservedHeaderFact(
                 header_key=header_key,
@@ -335,13 +333,13 @@ def _observed_headers_from_submitted_file(
     same-key fields was authoritative -- which a second independent walk over
     ``parsed.fields`` would have been free to do.
     """
-    return {
-        fact.header_key: fact.value
-        for fact in _observed_header_facts_from_submitted_file(
-            snapshot=snapshot,
-            body=body,
-        )
-    }
+    headers: dict[str, str] = {}
+    for fact in _observed_header_facts_from_submitted_file(
+        snapshot=snapshot,
+        body=body,
+    ):
+        headers.setdefault(fact.header_key, fact.value)
+    return headers
 
 
 def _observed_casillas_from_submitted_file(

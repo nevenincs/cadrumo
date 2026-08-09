@@ -20,7 +20,7 @@ from ....adapters.outbound.aeat.sede import (
 )
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import CasillaValueKind, Period
+from ....core import CasillaValueKind, ObservedHeaderFact, Period
 from ....core.external_constants import load_external_constants
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
@@ -64,6 +64,24 @@ _M303_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
 _M303_GENERADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-generada-periodo")
 _M303_APLICADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-aplicada-periodo")
 _M303_RESULTADO_FINAL_CASILLA: CasillaId = _casilla_id("71")
+_M303_DECLARATION_TYPE_N = ObservedHeaderFact(
+    header_key="declaration_type",
+    value="N",
+    source_artefact_kind="submitted_file",
+    source_locator="submitted-file:declaration-type",
+)
+_M303_DECLARATION_TYPE_C = ObservedHeaderFact(
+    header_key="declaration_type",
+    value="C",
+    source_artefact_kind="submitted_file",
+    source_locator="submitted-file:declaration-type",
+)
+_M303_DECLARATION_TYPE_I = ObservedHeaderFact(
+    header_key="declaration_type",
+    value="I",
+    source_artefact_kind="submitted_file",
+    source_locator="submitted-file:declaration-type",
+)
 
 
 @cache
@@ -143,6 +161,7 @@ def _parsed_303_submitted_file_observation(
     casilla_87: Decimal,
     casilla_69: Decimal,
     casilla_71: Decimal,
+    headers: tuple[ObservedHeaderFact, ...] = (_M303_DECLARATION_TYPE_C,),
 ) -> FiledDeclaracionObservation:
     """Build a submitted-file observation carrying the five carry-bearing casillas.
 
@@ -196,6 +215,7 @@ def _parsed_303_submitted_file_observation(
         authenticated_identity=_SYNTHETIC_PROFILE_ID,
         artefacts=(artefact,),
         casillas=observed,
+        headers=headers,
         extraction_coverage={"submitted_file": 1.0},
     )
 
@@ -373,6 +393,7 @@ def _prior_303_observation(
     expediente_id: str = _SYNTHETIC_EXPEDIENTE_ID,
     presented_at: datetime = _CAPTURED_AT,
     status: str = "ALTA",
+    headers: tuple[ObservedHeaderFact, ...] = (_M303_DECLARATION_TYPE_N,),
 ) -> FiledDeclaracionObservation:
     observation_period = Period.from_year_and_code(year, period)
     body = f"303-{year}-{period}-submitted-file".encode("ascii")
@@ -470,6 +491,7 @@ def _prior_303_observation(
                 else ()
             ),
         ),
+        headers=headers,
         extraction_coverage={"submitted_file": 1.0},
         registry_snapshot_id=f"303:2009-y-siguientes:{year}:{period}",
     )

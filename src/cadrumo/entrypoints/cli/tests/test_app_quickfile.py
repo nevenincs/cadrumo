@@ -351,6 +351,7 @@ def test_quickfile_m303_fully_taxable_ledger_reaches_granted_boe_without_prorrat
             "--format", "json",
             "app", "quickfile",
             "--modelo", "303", "--year", "2026", "--period", "1T",
+            "--payment-election", "ingreso",
             "--output", str(out),
         ],
     )  # fmt: skip
@@ -371,9 +372,20 @@ def test_quickfile_m303_fully_taxable_ledger_reaches_granted_boe_without_prorrat
     assert "prorrata" not in notice_text.lower()
     assert payload["export"] is not None
     assert payload["export"]["output_path"] == str(out)
+    assert payload["export"]["resolved_result_disposition"] == "I"
+    assert payload["export"]["payment_election"] == "ingreso"
+    assert payload["export"]["refund_election"] is None
     exported = out.read_bytes()
     assert exported
     assert b"12345678Z" in exported
+
+
+def test_quickfile_help_exposes_explicit_result_elections() -> None:
+    result = _invoke(["app", "quickfile", "--help"])
+    assert result.exit_code == 0, result.output
+    assert "--refund-election" in result.output
+    assert "--payment-election" in result.output
+    assert "--disposition" not in result.output
 
 
 def test_quickfile_stops_instructively_when_verify_refuses(tmp_path: Path) -> None:

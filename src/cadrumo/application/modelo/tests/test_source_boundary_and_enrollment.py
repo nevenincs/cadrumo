@@ -40,7 +40,7 @@ from ....domain.modelos import Modelo184MemberRow
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import DEFERRED_SOURCE_KINDS, ForeignAssetClass, ForeignAssetIngestObservation
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import UserProfileLifecycleRepository, build_profile_preflight_requirement
 from .. import (
     BucketAggregationCalculationResult,
     ModeloAggregationBindingError,
@@ -260,8 +260,8 @@ def test_s08_atribucion_member_missing_base_refuses_and_never_calculates_a_zero(
     from the share percentage or quietly become zero — but the layer that
     enforces it moved. ``attribution_entity_socios.1.base_imponible_assigned``
     is a required schema field, so the profile readiness gate refuses both work
-    unit creation and calculation, naming the missing path and the edit verb
-    that fixes it. That is strictly louder than the source diagnostic it now
+    unit creation and calculation, naming the missing field by its operator
+    label and the edit verb that fixes it. That is strictly louder than the source diagnostic it now
     shadows: the operator is told what to supply instead of reading a
     diagnostic attached to a revision that was computed anyway.
 
@@ -316,7 +316,17 @@ def test_s08_atribucion_member_missing_base_refuses_and_never_calculates_a_zero(
         assert cr_repo.load().for_work_unit(work_unit.work_unit_id) == ()
 
     context = refusal.value.context or {}
-    assert missing_path in str(context.get("missing", "")), context
+    # The refusal names the field the way the operator sees it in the profile
+    # editor, not the internal row-indexed path. The expected label is derived
+    # from the schema rather than written out here, so this asserts the refusal
+    # routes through the canonical requirement builder instead of pinning one
+    # spelling of the label.
+    expected_label = build_profile_preflight_requirement(
+        missing_path,
+        schema=resources().user_profile_schema.singleton,
+    ).label
+    assert expected_label != missing_path, "label collapsed to the raw path; the assertion below is vacuous"
+    assert expected_label in str(context.get("missing", "")), context
     assert context.get("modelo") == "184"
 
 

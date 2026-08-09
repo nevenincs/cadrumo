@@ -326,6 +326,14 @@ def test_work_file_defaults_to_current_verified_for_visible_target(_isolated_cli
     assert "NO_PENDING_OBLIGATION" in result.output
 
 
+def test_work_file_help_exposes_explicit_result_elections(_isolated_cli_backend: Path) -> None:
+    result = _invoke(["app", "modelo", "work", "file", "--help"])
+    assert result.exit_code == 0, result.output
+    assert "--refund-election" in result.output
+    assert "--payment-election" in result.output
+    assert "--disposition" not in result.output
+
+
 def test_work_dependencies_lists_cross_period_inventory(_isolated_cli_backend: Path) -> None:
     """`work dependencies` exposes the registry-derived filing-history inventory."""
 

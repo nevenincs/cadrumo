@@ -143,7 +143,7 @@ def test_the_disposition_header_survives_the_projection(tmp_path: Path) -> None:
     assert headers.get("declaration_type") == "D"
 
 
-@pytest.mark.parametrize("code", ["C", "I", "N"])
+@pytest.mark.parametrize("code", ["C", "I", "N", "U", "G", "V", "X"])
 def test_a_non_refund_fichero_is_parsed_back_and_reports_its_disposition(tmp_path: Path, code: str) -> None:
     """The three dispositions that carry no DID page read back through the layout.
 
@@ -170,7 +170,7 @@ def test_a_non_refund_fichero_is_parsed_back_and_reports_its_disposition(tmp_pat
     assert headers, "the projection returned nothing, so the payload did not parse"
 
 
-@pytest.mark.parametrize("code", ["C", "I", "N"])
+@pytest.mark.parametrize("code", ["C", "I", "N", "U", "G", "V", "X"])
 def test_a_non_refund_fichero_yields_casillas_through_the_layout_not_the_positional_fallback(
     tmp_path: Path,
     code: str,

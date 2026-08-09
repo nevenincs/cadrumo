@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import Period
+from ....core import PaymentElection, Period, RefundElection
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaId, CasillaObservation
 from ....domain.deadlines import (
@@ -22,6 +22,11 @@ from ....domain.modelos import (
     WorkUnit,
     derive_calculation_revision_id,
     derive_work_unit_id,
+)
+from .._action_errors import (
+    ModeloPaymentElectionCapabilityRefusedError,
+    ModeloPaymentElectionIncompatibleError,
+    ModeloRefundElectionNotEligibleError,
 )
 from .._result_disposition_resolution import resolve_modelo_result_disposition
 from ._export_test_support import (
@@ -99,6 +104,8 @@ def _resolve_result_disposition(
     casilla_values: dict[CasillaId, Decimal],
     profile: TaxpayerProfile,
     period: Period,
+    refund_election: RefundElection = RefundElection.COMPENSAR,
+    payment_election: PaymentElection = PaymentElection.INGRESO,
 ) -> str:
     work_unit = _result_disposition_work_unit(modelo=modelo, period=period)
     revision = _result_disposition_revision(work_unit=work_unit, casilla_values=casilla_values)
@@ -107,6 +114,8 @@ def _resolve_result_disposition(
         revision=revision,
         workflow_profile=profile,
         period=period,
+        refund_election=refund_election,
+        payment_election=payment_election,
     ).value
 
 
@@ -194,4 +203,73 @@ def test_resolve_modelo_result_disposition_redeme_upgrade_boundaries(
             period=Period.from_year_and_code(2024, period_code),
         )
         == expected
+    )
+
+
+def test_positive_modelo_303_payment_election_resolves_i_or_u_and_refuses_g() -> None:
+    """Positive M303 settlement is explicit; G is typed but unavailable."""
+    period = Period.from_year_and_code(2024, "1T")
+    casilla_values = {_M303_RESULT_CASILLA: Decimal("357.00")}
+
+    assert (
+        _resolve_result_disposition(
+            modelo="303",
+            casilla_values=casilla_values,
+            profile=_profile(),
+            period=period,
+        )
+        == "I"
+    )
+    assert (
+        _resolve_result_disposition(
+            modelo="303",
+            casilla_values=casilla_values,
+            profile=_profile(),
+            period=period,
+            payment_election=PaymentElection.DOMICILIACION,
+        )
+        == "U"
+    )
+    with pytest.raises(ModeloPaymentElectionCapabilityRefusedError):
+        _resolve_result_disposition(
+            modelo="303",
+            casilla_values=casilla_values,
+            profile=_profile(),
+            period=period,
+            payment_election=PaymentElection.CUENTA_CORRIENTE,
+        )
+
+
+def test_incompatible_result_elections_refuse_without_changing_carry_policy() -> None:
+    """Payment elections never turn a credit into carry or refund semantics."""
+    positive_period = Period.from_year_and_code(2024, "1T")
+    positive_values = {_M303_RESULT_CASILLA: Decimal("357.00")}
+    with pytest.raises(ModeloRefundElectionNotEligibleError):
+        _resolve_result_disposition(
+            modelo="303",
+            casilla_values=positive_values,
+            profile=_profile(),
+            period=positive_period,
+            refund_election=RefundElection.DEVOLVER,
+        )
+
+    negative_values = {_M303_RESULT_CASILLA: Decimal("-210.00")}
+    with pytest.raises(ModeloPaymentElectionIncompatibleError):
+        _resolve_result_disposition(
+            modelo="303",
+            casilla_values=negative_values,
+            profile=_profile(),
+            period=positive_period,
+            payment_election=PaymentElection.DOMICILIACION,
+        )
+
+    assert (
+        _resolve_result_disposition(
+            modelo="303",
+            casilla_values=negative_values,
+            profile=_profile(),
+            period=Period.from_year_and_code(2024, "4T"),
+            refund_election=RefundElection.DEVOLVER,
+        )
+        == "D"
     )
