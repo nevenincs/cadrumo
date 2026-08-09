@@ -873,7 +873,8 @@ class LLMClient:
         token = request.consent_token
         if self.settings.cadrumo_evidence_gestor_mode or token is None:
             raise LLMConsentError(
-                tr(_EVIDENCE_CONSENT_DISPATCH_REFUSAL_LOCALE_KEY, provider=provider.value),
+                translated_message=_EVIDENCE_CONSENT_DISPATCH_REFUSAL_LOCALE_KEY,
+                context={"provider": provider.value},
                 suggestion=tr(EVIDENCE_CONSENT_REFUSAL_LOCALE_KEY),
             )
         self.consent_ledger.append(

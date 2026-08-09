@@ -23,6 +23,7 @@ because it carries the authority of a number.
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
 
 from ...core import Period
 from .._invoice_extraction_prompt import (
@@ -159,9 +160,9 @@ def test_a_subset_is_not_a_route_around_the_empty_rate_refusal() -> None:
     """
     unpriced = Period.from_year_and_code(1990, "1T")
 
-    with pytest.raises(Exception) as full_refusal:
+    with pytest.raises(ValidationError) as full_refusal:
         build_invoice_extraction_prompt(period=unpriced)
-    with pytest.raises(Exception) as subset_refusal:
+    with pytest.raises(ValidationError) as subset_refusal:
         build_invoice_extraction_prompt(period=unpriced, fields=_DECLARED[:2])
 
     assert type(subset_refusal.value) is type(full_refusal.value)
