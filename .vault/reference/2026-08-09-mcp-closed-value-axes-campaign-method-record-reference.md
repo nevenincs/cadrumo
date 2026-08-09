@@ -5,7 +5,7 @@ tags:
 date: '2026-08-09'
 modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:2a02b10b40282daabbdd7c7c1234f99cff0ec2f2f7f920d75d31ddb84a1f6acf'
+body_hash: 'sha256:64d4493f4e98b68d7ec8336f1b9c2f67b5b8f1480362c6ec5b6a3e3507a21247'
 related:
   - "[[2026-08-08-mcp-closed-value-axes-audit]]"
 ---
@@ -17,6 +17,34 @@ related:
 A thirty-two iteration remediation pass over the CLI, calculation and ledger surfaces. It produced **two real defect classes fixed** and, more usefully for whoever reads this next, **a record of which searches work on this tree and which do not**.
 
 The fixes are in git and need no explanation here. What git cannot preserve is why three separate measuring instruments produced confident wrong answers, and which conclusions were reached by inference rather than by check. That is what this document is for. **Read the "do not re-attempt" section before starting a similar sweep.**
+
+## Addendum: the instrument that finally worked, and the four limits that bound it
+
+The body above closes the fractional-field class on three failed instruments. It was reopened afterwards and closed again properly. **Both closes reached the same verdict; only the second one is worth trusting**, and the difference is instructive enough to record.
+
+### The technique
+
+**Construction was solved by borrowing, not building.** The reason synthetic instance-builders failed is that the interesting persisted models carry cross-field arithmetic validators -- `iva_amount == taxable_base * iva_rate` and its siblings -- so an instance assembled from field *types* is type-correct and still invalid. But this repo's quality rules already mandate a strict roundtrip test at every persistence boundary, and those tests contain **hand-built, cross-field-valid fixtures**. Import the fixture, vary one field, and the construction problem disappears.
+
+**Isolation was solved by reading the error's `loc`.** A bare refusal cannot distinguish "the bound bit" from "a cross-field validator bit", and that ambiguity is what made two earlier probes meaningless. Pydantic reports which field each error attaches to, so attributing a refusal to the varied field -- versus a model-level error with an empty `loc` -- turns a boolean into a three-way verdict: **bound-refused / other-refused / accepted**. All three modes were observed, each correctly, before the instrument was used on anything unknown.
+
+Six fields across four persistence boundaries, six bound-refusals, every one preceded by a passing control.
+
+### Four limits, each precise
+
+**1. Bound-versus-arithmetic confounding.** Varying a rate without its dependent amount breaks the arithmetic invariant, so the model refuses for a reason unrelated to the bound. Resolvable only by attributing the refusal; invisible without it.
+
+**2. The coherent-variation problem.** For a field whose paired amount must move with it, a genuine bound test requires varying both together -- which means knowing that model's arithmetic. Model-specific work, not a general sweep, and the reason this instrument cannot be turned into a blanket gate.
+
+**3. No safe sub-1 refusal for most percent fields.** This is the important one, and it explains the whole thread's yield. `Transaction.iva_rate` was guardable because **no Spanish IVA rate lies strictly between 0 and 1** -- the legal value set has a gap exactly where a percent-for-fraction mistake lands, so `> 1` refuses the error without refusing any real filing. A prorrata percentage, a deductible ratio, a business-use proportion have no such gap: 0.8 is a legitimate value. **The confusion is undetectable there, by anything, because the wrong value is in-domain.** The class's single defect was findable for a property of IVA rates, not for a property of the search.
+
+**4. Projection boundaries do not need their own bound.** Rate fields on manifest, envelope and worksheet records are projections of already-validated domain records -- the arrangement `LedgerEvidenceRow` was confirmed to have, where `Transaction` validates at the durable boundary and the row carries the value downstream. Extending the instrument there tests the projection, not the guard.
+
+### What this changes about the earlier close
+
+Nothing in the verdict; everything in its standing. The class is closed because a validated instrument looked and found one defect, not because three broken ones found nothing. **A negative from an instrument that cannot be validated is not evidence, and this document's earlier close should be read as provisional until this addendum.**
+
+The transferable form: **when an instrument cannot answer for the cases whose answer you already know, the fix is usually not a better detector but a different source of valid inputs.** The fixtures already existed, mandated by a rule written for an entirely different purpose.
 
 ## The three instruments that failed, and how
 
