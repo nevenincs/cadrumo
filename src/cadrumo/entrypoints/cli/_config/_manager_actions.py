@@ -496,9 +496,9 @@ def _run_export() -> ManagerActionOutcome:
     return ManagerActionOutcome(message=tr("flows.manager.action.export_done", destination=str(destination)))
 
 
-_PASSPHRASE_CURRENT_KEY = "current"
-_PASSPHRASE_NEW_KEY = "new"
-_PASSPHRASE_CONFIRM_KEY = "confirm"
+_PASSPHRASE_CURRENT_KEY = "current"  # noqa: S105 - a prompt field key, not a credential
+_PASSPHRASE_NEW_KEY = "new"  # noqa: S105 - a prompt field key, not a credential
+_PASSPHRASE_CONFIRM_KEY = "confirm"  # noqa: S105 - a prompt field key, not a credential
 
 
 def passphrase_action() -> ManagerAction:
