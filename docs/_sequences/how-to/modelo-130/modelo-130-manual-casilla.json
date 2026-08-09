@@ -188,6 +188,7 @@
           {
             "code": "modelo.work.calculate.source_advisory",
             "context": {
+              "casilla_id": "06",
               "reason": "operator_override_diverges_from_computed",
               "source_kind": "operator_casilla_input"
             },

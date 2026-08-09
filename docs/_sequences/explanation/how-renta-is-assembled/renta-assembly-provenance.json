@@ -120,6 +120,7 @@
           {
             "code": "modelo.work.calculate.source_advisory",
             "context": {
+              "casilla_id": "0513",
               "reason": "source_issue",
               "source_kind": "minimo_descendientes_undeclared"
             },

@@ -37,7 +37,7 @@
         "repair",
         "logs",
         "--lines",
-        "50"
+        "0"
       ],
       "captures": [],
       "envelope": null,

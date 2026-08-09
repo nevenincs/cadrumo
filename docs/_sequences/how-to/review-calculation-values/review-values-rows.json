@@ -127,7 +127,7 @@
         "result": {
           "authorization_state": null,
           "binding_overrides": {},
-          "calculation_revision_id": "436043c9f33bea3a6bdbfdebac568dce53b84164d358c286615f4c187375012a",
+          "calculation_revision_id": "2b12750373422e1066646eefcc8267be09804726ab0936c98be56c205f67f9f6",
           "casilla_values": {
             "decl.ejercicio": "2024",
             "decl.tipo-declaracion": "0",
@@ -156,7 +156,7 @@
                 "importe": "10000",
                 "nif": "sha256:1a1d79e0",
                 "nombre": "",
-                "pais": "ES",
+                "pais": null,
                 "porcentaje": "60"
               },
               "index": 1,
@@ -167,7 +167,7 @@
                 "importe": "5000",
                 "nif": "sha256:5637d0fd",
                 "nombre": "",
-                "pais": "ES",
+                "pais": null,
                 "porcentaje": "40"
               },
               "index": 2,
@@ -338,7 +338,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 436043c9f33bea3a6bdbfdebac568dce53b84164d358c286615f4c187375012a (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 184 --year 2024 --period 0A` and re-inspect this one with `aeat app modelo work revision 436043c9f33bea3a6bdbfdebac568dce53b84164d358c286615f4c187375012a`.",
+          "saved_confirmation": "Saved as draft calculation revision 2b12750373422e1066646eefcc8267be09804726ab0936c98be56c205f67f9f6 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 184 --year 2024 --period 0A` and re-inspect this one with `aeat app modelo work revision 2b12750373422e1066646eefcc8267be09804726ab0936c98be56c205f67f9f6`.",
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",

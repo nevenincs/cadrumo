@@ -5,4 +5,4 @@ aeat --format json app ledger invoice add --kind received --counterparty-nif B12
 aeat app ledger invoice list --kind issued
 @step Confirm the received invoice is a payable invoice.
 @result aeat --format json app ledger invoice view {invoice_id}
-@expect result.source_kind == "payable_invoice"
+@expect result.kind == "received"

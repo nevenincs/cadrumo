@@ -32,7 +32,7 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "invoice_id\t86f7f4a0abb1ddec95074d9ba002cddce7bd6b3a879ddc74d6ed424eb2094d2b\nkind\tissued\ncounterparty_name\tMuenchner Handels GmbH\ncounterparty_tax_id\tDE811569869\ninvoice_number\tF-2026-IC-01\nissued_at\t2026-02-10\nbase_total\t5000.00\niva_total\t0.00\ngrand_total\t5000.00\ncurrency\tEUR\noperation_type\tE\ninvoice_class\tORDINARIA\nseries\t\nrectifies_invoice_number\t\nrecargo_amount\t\niva_category\tintra_community_supply\nlinked_transaction_ids\t\nalready_existed\tFalse\n"
+      "text": "invoice_id\t86f7f4a0abb1ddec95074d9ba002cddce7bd6b3a879ddc74d6ed424eb2094d2b\nkind\tissued\ncounterparty_name\tMuenchner Handels GmbH\ncounterparty_tax_id\tsha256:6b01ecdf\ninvoice_number\tF-2026-IC-01\nissued_at\t2026-02-10\nbase_total\t5000.00\niva_total\t0.00\ngrand_total\t5000.00\ncurrency\tEUR\noperation_type\tE\ninvoice_class\tORDINARIA\nseries\t\nrectifies_invoice_number\t\nrecargo_amount\t\niva_category\tintra_community_supply\nlinked_transaction_ids\t\nalready_existed\tFalse\n"
     },
     {
       "argv": [
@@ -66,7 +66,7 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "invoice_id\t0af0b63e6244ac6a3cc3f4365945d1835730d2985ada6dd9652df59143371209\nkind\tissued\ncounterparty_name\tLyon Services SARL\ncounterparty_tax_id\tFR40123456824\ninvoice_number\tF-2026-IC-02\nissued_at\t2026-03-05\nbase_total\t3000.00\niva_total\t0.00\ngrand_total\t3000.00\ncurrency\tEUR\noperation_type\tS\ninvoice_class\tORDINARIA\nseries\t\nrectifies_invoice_number\t\nrecargo_amount\t\niva_category\tintra_community_service_supply\nlinked_transaction_ids\t\nalready_existed\tFalse\n"
+      "text": "invoice_id\t0af0b63e6244ac6a3cc3f4365945d1835730d2985ada6dd9652df59143371209\nkind\tissued\ncounterparty_name\tLyon Services SARL\ncounterparty_tax_id\tsha256:61b42bb2\ninvoice_number\tF-2026-IC-02\nissued_at\t2026-03-05\nbase_total\t3000.00\niva_total\t0.00\ngrand_total\t3000.00\ncurrency\tEUR\noperation_type\tS\ninvoice_class\tORDINARIA\nseries\t\nrectifies_invoice_number\t\nrecargo_amount\t\niva_category\tintra_community_service_supply\nlinked_transaction_ids\t\nalready_existed\tFalse\n"
     },
     {
       "argv": [
@@ -181,7 +181,7 @@
                 "clave_operacion": "E",
                 "codigo_pais": "DE",
                 "importe": "5000.00",
-                "nif_comunitario": "DE811569869",
+                "nif_comunitario": "sha256:6b01ecdf",
                 "razon_social": "Muenchner Handels GmbH"
               },
               "index": 1,
@@ -192,7 +192,7 @@
                 "clave_operacion": "S",
                 "codigo_pais": "FR",
                 "importe": "3000.00",
-                "nif_comunitario": "FR40123456824",
+                "nif_comunitario": "sha256:61b42bb2",
                 "razon_social": "Lyon Services SARL"
               },
               "index": 2,
