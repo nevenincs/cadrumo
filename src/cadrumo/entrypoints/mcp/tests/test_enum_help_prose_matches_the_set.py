@@ -164,7 +164,8 @@ def test_an_exhaustive_help_enumeration_names_every_member() -> None:
 @pytest.mark.parametrize(
     ("description", "members", "expect_unknown", "expect_missing"),
     [
-        # Every case below is a defect this campaign actually found and repaired.
+        # Every case below reproduces a real mismatch once found between an
+        # enum's members and its CLI help prose, kept as a concrete regression case.
         (
             "Spending category id (e.g. USAGE_RATIO_VEHICLE)",
             ("vehiculo_combustible", "asesoria_fiscal"),
