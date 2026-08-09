@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:74b5036438761e36f9dd90025f7d6d8e490d5ccfebe50c5fe973dd89bcf3a5f6'
+body_hash: 'sha256:1eee0388f3b2cdb6856fc568097f7e004a832da0529447db35407f6f5683e5b7'
 related: []
 ---
 
@@ -382,4 +382,19 @@ Carried since the campaign's first iteration as "same string-downgrade pattern, 
 And that documentation is the reason the originally-planned fix would have been a defect. **`source_kind` is deliberately a superset**: it holds binding source kinds *and* advisory category labels that are not `BindingSourceKind` members. Re-typing it to the enum would have refused the advisory rows the collector exists to emit -- the same substitutability failure that produced this campaign's one shipped regression, this time on a persisted field.
 
 Closed as already-addressed. The lesson is the one the orchestration rules already state and this campaign keeps re-earning: **a finding's facts survive, its conclusion does not.** Fourteen iterations of drift separated the deferral from the plan, and the check that caught it cost one file read.
+
+
+### The fractional-field thread is closed, and the reason is the instrument
+
+Three iterations went into measuring this class. The outcome is one confirmed, fixed and shipped defect (`Transaction.iva_rate`, the 2100% rate) and one confidently wrong finding (`Invoice.retention_rate`, already guarded). The deciding factor for stopping is not the yield, it is that **no instrument built here could be validated.**
+
+Three were tried. **Static `Field` metadata** cannot see a guard written as a validator, which is how the wrong finding happened -- and the blind spot was *documented* one iteration before it was walked into. **A name-based validator search** misses a guard that lives in a `model_validator` covering several fields, which is exactly where the real one lived. **A differential behavioural probe** -- construct with `0.15`, then `15`, and only credit a model that accepts the first -- cannot lie, and that is precisely why it reported inconclusive for 84 of 96 fields including all three cases whose answer is known.
+
+Adding a recursive minimal-instance builder moved coverage to 36 of 96 and left the three controls **still inconclusive**: those models carry cross-field arithmetic validators, so no instance assembled from field types alone satisfies them. An instrument that cannot answer for the cases whose answer you know cannot be trusted for the cases you do not.
+
+So the 32 fields it now calls unguarded stay **observations, not findings**. They cluster in patch, draft, command and suggestion models -- carriers that feed guarded domain records -- which is consistent with correct defence-in-depth placement, and asserting that without tracing each apply path is the same move that produced the wrong finding.
+
+**What would actually settle it** is not a better detector but a different question: instead of asking each model whether it refuses, ask each *durable persistence boundary* whether a percentage survives a save-and-load round trip. That reuses the roundtrip fixtures the quality rules already mandate, which are built by hand and satisfy the cross-field validators the synthetic builder cannot. It is a larger piece of work and belongs to whoever owns those boundaries.
+
+The transferable part is the stopping rule. **Three instruments, each honest about a different thing, none validatable against known ground truth -- that is the signal to stop measuring and pivot**, rather than the sense that one more variation might work.
 
