@@ -4,185 +4,99 @@ tags:
   - '#cli-action-envelope-hardening'
 date: '2026-08-09'
 modified: '2026-08-09'
-body_schema: 'body-v1'
-body_hash: 'sha256:00f4a36b169af9e9d0dab205bf9d046d22773fa2087866f094845a2631755463'
+body_hash: 'sha256:ca336486b3a89b7bd1fa3e8e6c16cf4a70197a013baf9b623ff07d984f562556'
 tier: L3
 related:
-  - "[[2026-08-09-cli-action-envelope-hardening-adr]]"
-  - "[[2026-08-09-cli-action-envelope-hardening-research]]"
-  - "[[2026-08-09-cli-action-envelope-hardening-reference]]"
+  - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-research]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-reference]]'
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #plan) and one feature tag.
-     Replace cli-action-envelope-hardening with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     tier is mandatory for new plans. Allowed: L1, L2, L3, L4.
-     L1 = Steps only. L2 = Phases above Steps. L3 = Waves above
-     Phases above Steps. L4 = Epic above Waves above Phases above
-     Steps; PM association required. Pre-existing plans without this
-     field default to L2.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'. The related field
-     carries the AUTHORIZING documents (ADR, research, reference, prior
-     plan) for every Step in this plan; Steps inherit this chain;
-     per-row reference footers do not exist.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - The related: field carries the AUTHORIZING documents (ADR, research,
-       reference, prior plan) for every Step in this plan. Steps inherit this
-       chain; per-row reference footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- HIERARCHY AND TIERS:
-     Epic > Wave > Phase > Step. Step is the canonical leaf-row
-     noun. Execution Record artifact: <Step Record>.
-     Tier is declared in frontmatter as tier: L1/L2/L3/L4
-     (mandatory for new plans; pre-existing plans without the
-     field default to L2 and the writer adds the field on first
-     edit). The tier selects containers:
-       L1 = Steps only.
-       L2 = Phases above Steps.
-       L3 = Waves above Phases above Steps.
-       L4 = Epic above Waves above Phases above Steps; MUST declare
-            a project-management association in the Epic intent
-            block prose.
-     Selection is by complexity criteria, not container counting.
-     Writer never invents containers to qualify a tier. -->
-
-<!-- IDENTIFIERS AND ROW CONTRACT:
-     S##, P##, W## are flat, per-document, append-only, immutable.
-     Promotion adds containers without renumbering. Gaps are not
-     reused.
-     Display paths are computed from current grouping:
-       Step path:    L1 S##   L2 P##.S##   L3/L4 W##.P##.S##
-       Phase heading:        L2 P##       L3/L4 W##.P##
-       Wave heading:                      L3/L4 W##
-     Row format:
-       - [ ] `<display-path>` - imperative-verb action; `path/to/file`.
-     Two-state checkboxes only ([ ] open, [x] closed). No per-row
-     reference footers; wiki-links and markdown links are forbidden
-     in plan body. Authorizing documents go in the plan's `related:`
-     frontmatter once.
-     ASCII spaced hyphens everywhere; em-dash (U+2014) and en-dash
-     (U+2013) are forbidden. Step rows within a Phase are
-     contiguous. -->
-
-<!-- NO COMPRESSION:
-     N self-similar actions = N rows. Never collapse into "for each
-     X, do Y" / "across all callers, do Z" / "in every module,
-     replace W". The rule applies at every tier including L1. -->
-
-<!-- VAULTSPEC-CORE VAULT PLAN CLI:
-     The `vaultspec-core vault plan` CLI is the canonical surface for
-     structural manipulation of this plan document. Writers and
-     executors MUST use `vaultspec-core vault plan step add/insert/move/
-     remove/check/uncheck/toggle/edit`,
-     `vaultspec-core vault plan phase add/move/remove/edit`,
-     `vaultspec-core vault plan wave add/move/remove/edit`,
-     `vaultspec-core vault plan epic intent`, and
-     `vaultspec-core vault plan tier promote/demote` for every
-     identifier-affecting change rather than hand-editing the row
-     grammar. Hand edits are tolerated by the parser but flagged by
-     `vaultspec-core vault plan check`; canonical-identifier preservation is
-     guaranteed only when the CLI performs the mutation. Run
-     `vaultspec-core vault plan --help` for the full subcommand
-     surface. -->
 
 # `cli-action-envelope-hardening` plan
 
-<!-- One-line headline summary plan. -->
-
 ## Description
-
-<!-- Briefly describe the proposed work. Reference `{adr}`s,
-`{research}`, `{reference}`. Supporting documentation must be read prior to
-writing the plan document. A plan may execute one ADR or a cluster; when
-several feed it, state here which Wave or Phase each ADR governs. -->
 
 ## Steps
 
-<!-- The plan's tier (declared in frontmatter as `tier: L1`, `L2`, `L3`, or
-`L4`) determines the structure under this section:
+## Wave `W01` - Establish the fixed-point census and live denominator
 
-- `L1`: a flat list of Step rows (no Phase, Wave, or Epic).
-- `L2`: one or more `### Phase` blocks each containing Step rows.
-- `L3`: one or more `## Wave` blocks each containing Phase blocks.
-- `L4`: a `## Epic intent` block, followed by Wave blocks. -->
+Create the executable candidate ledger and exact live-surface denominator that every migration and closure claim depends on.
 
-<!-- Replace this scaffold with the tier-appropriate structure for your plan.
-Format examples for each block type are embedded below as commented
-templates. -->
+### Phase `W01.P01` - Candidate and adjudication inventory
 
-<!-- IMPORTANT: This document must be updated between execution runs to
-     track progress. -->
+Build the AST-backed candidate census, fixed-point alias expansion, and disposition contract.
 
-<!-- PHASE BLOCK FORMAT (L2, L3, L4):
-     ### Phase `P02` - rewrite the writer-agent contract
 
-     One sentence stating what this Phase delivers.
+### Phase `W01.P02` - Live surface reconciliation
 
-     - [ ] `P02.S01` - imperative-verb action; `path/to/file`.
-     - [ ] `P02.S02` - imperative-verb action; `path/to/file`.
+Join callable leaves to schemas, manifest capabilities, policies, MCP exposure, and explicit exclusions by identity.
 
-     At L3/L4 the Phase heading uses the ancestor-aware path
-     (### Phase `W01.P02` - ...). The intent sentence is mandatory. -->
 
-<!-- WAVE BLOCK FORMAT (L3, L4):
-     ## Wave `W01` - language-only convention rollout
+## Wave `W02` - Create the canonical action and precondition contract
 
-     One paragraph stating what this Wave delivers, which downstream
-     Wave depends on it, and which authorizing documents back it.
+Introduce application-owned verdicts and catalogue-backed action references before any producer migration begins.
 
-     ### Phase `W01.P01` - ...
-     ### Phase `W01.P02` - ...
+### Phase `W02.P03` - Application-owned contract
 
-     The Wave intent paragraph is mandatory. -->
+Define strict condition, evidence, action, binding, conditionality, and no-recovery models and their catalogue.
 
-<!-- EPIC INTENT BLOCK FORMAT (L4 only):
-     ## Epic intent
 
-     One paragraph stating the strategic goal, the external project-
-     management association (milestone name, project board identifier,
-     roadmap entry), the timeline horizon, and the teams or agents
-     involved.
+### Phase `W02.P04` - Schema-resolved envelope projection
 
-     ## Wave `W01` - ...
-     ## Wave `W02` - ...
+Resolve typed actions against the live command surface and project them consistently through envelope, manifest, and MCP contracts.
 
-     The ## Epic intent block is mandatory at L4 and absent at L1, L2,
-     L3. The plan title (the level-one # heading at the top of the
-     document) is the Epic title; no separate Epic heading is emitted. -->
 
-## Parallelization
+## Wave `W03` - Migrate the root profile and write-policy slice
 
-<!-- State which Steps, Phases, or Waves can be executed in parallel and
-which carry hard ordering. At `L1` and `L2`, parallelism is decided
-per-Step or per-Phase. At `L3` and `L4`, Waves are sequenced by
-default (one Wave must land before the next can begin); Phases
-within a single Wave may be parallelized when they share no hard
-interdependency. -->
+Move the root guard and refusal boundary onto typed verdicts while preserving requested command identity and proving recovery.
 
-## Verification
+### Phase `W03.P05` - Root guard verdicts and boundary transport
 
-<!-- State the mission success criteria for this plan. Each criterion
-should be a verifiable check (test passes, surface conforms,
-reviewer signs off) rather than a free-form assertion.
+Replace root recovery prose, preserve leaf identity through pre-dispatch guards, and prove real profile recovery.
 
-The plan is complete when every Step in the plan is closed
-(`- [x]`). At `L4`, the Epic-completion check additionally requires
-the declared project-management association to report the Epic
-complete.
 
-For tier-specific verification cadence, see the authorizing
-documents linked in the `related:` frontmatter. -->
+## Wave `W04` - Migrate workflow and modelo action chains
+
+Replace persisted and rendered workflow continuations with application-owned typed action records and real recovery journeys.
+
+### Phase `W04.P06` - Persisted workflow continuations
+
+Remove untyped workflow next-action details and string-equality localization.
+
+
+### Phase `W04.P07` - Modelo leaf predicates and notices
+
+Migrate calculate, verify, and file preconditions and their CLI projections with sufficient bindings.
+
+
+## Wave `W05` - Migrate remaining action-authority clusters
+
+Retire error-registry defaults and free-form operational guidance by complete producer-to-projection slices.
+
+### Phase `W05.P08` - Error catalogue and exception overrides
+
+Convert registered defaults and exception-level action overrides into catalogue references or explicit no-recovery outcomes.
+
+
+### Phase `W05.P09` - Diagnostics overview and provisioning
+
+Migrate high-density operational guidance and prove blank-state and readiness recovery.
+
+
+### Phase `W05.P10` - Remaining census-adjudicated producer clusters
+
+Complete the auth, wizard, ledger, deadline, live, adapter, renderer, and locale slices named by the census.
+
+
+## Wave `W06` - Prove action chains and close honestly
+
+Generate the runtime matrix from production declarations, prove negative-recovery-retry behavior, reach a fixed point, and run the independent honesty review.
+
+### Phase `W06.P11` - Runtime matrix and evaluator migration
+
+Replace scenario-authored expectations with production-derived condition and action coverage.
+
+
+### Phase `W06.P12` - Fixed-point closure and campaign honesty
+
+Require zero unclassified sites and exact declared-observed reconciliation before campaign closure.
