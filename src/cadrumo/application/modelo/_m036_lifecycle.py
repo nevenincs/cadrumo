@@ -334,8 +334,7 @@ def _require_m036_sequence_valid(
         )
     if latest is None and command.event_kind is not CensoModeloEventKind.ALTA:
         raise Modelo036PriorAltaRequiredError(
-            f"m036 declaration_id={declaration_id!r} refused: no prior alta on record "
-            f"for {command.event_kind.value!r}",
+            f"m036 declaration_id={declaration_id!r} refused: no prior alta on record for {command.event_kind.value!r}",
             context={
                 "declaration_id": declaration_id,
                 "requested_event_kind": command.event_kind.value,

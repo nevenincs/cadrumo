@@ -234,10 +234,7 @@ def test_every_committed_model_selector_either_resolves_or_is_declared_twice() -
     """
     schema = load_user_profile_schema()
     declared = {
-        selector
-        for section in schema.sections
-        for field in section.fields
-        for selector in field.model_selectors
+        selector for section in schema.sections for field in section.fields for selector in field.model_selectors
     }
     assert declared, "the committed schema declares no model selectors at all"
 

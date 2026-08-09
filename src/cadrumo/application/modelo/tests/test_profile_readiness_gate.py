@@ -861,8 +861,7 @@ def test_calculate_service_names_missing_fields_for_a_setup_incomplete_profile(t
             )
 
         assert (
-            excinfo.value.translated_message
-            == "application.modelo.errors.profile_readiness_setup_incomplete_missing"
+            excinfo.value.translated_message == "application.modelo.errors.profile_readiness_setup_incomplete_missing"
         )
         assert excinfo.value.context is not None
         missing_text = excinfo.value.context["missing"]

@@ -228,9 +228,7 @@ def test_preflight_modelo_100_per_operation_axis_now_contributes(schema: Profile
         period=period,
     )
     assert missing_report.per_operation_requirements_assessed is True
-    assert any(
-        item.section_key == "identity" and item.field_key == "tax_id" for item in missing_report.missing
-    )
+    assert any(item.section_key == "identity" and item.field_key == "tax_id" for item in missing_report.missing)
 
     complete_record = UserProfileRecord(
         profile_id="11111111-1111-4111-8111-111111111111",
@@ -244,9 +242,7 @@ def test_preflight_modelo_100_per_operation_axis_now_contributes(schema: Profile
         period=period,
     )
     assert ready_report.per_operation_requirements_assessed is True
-    assert not any(
-        item.section_key == "identity" and item.field_key == "tax_id" for item in ready_report.missing
-    )
+    assert not any(item.section_key == "identity" and item.field_key == "tax_id" for item in ready_report.missing)
 
 
 def test_preflight_accepts_legal_entity_legal_name_for_export_headers(schema: ProfileSchemaDefinition) -> None:

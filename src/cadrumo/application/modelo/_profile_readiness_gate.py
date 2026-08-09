@@ -580,7 +580,9 @@ def require_profile_ready_for_modelo_work(
                 "modelo": modelo,
                 "filing_year": filing_year,
                 "period": period.registry_token,
-                "missing": ", ".join(format_profile_preflight_requirement(requirement) for requirement in report.missing),
+                "missing": ", ".join(
+                    format_profile_preflight_requirement(requirement) for requirement in report.missing
+                ),
             },
             suggestion=f"aeat config profile edit {bucket_id}",
         )
