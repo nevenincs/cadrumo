@@ -484,8 +484,11 @@ def record_confirmed_counterparty_facts(
         # assertion, and refusing it would make an operator answering the
         # identification alone unable to do so for any counterparty already
         # confirmed. An assertion that CHANGES a stored territory still refuses.
-        both_named = existing.territorial_scope is not None and fact.territorial_scope is not None
-        if both_named and existing.territorial_scope is not fact.territorial_scope:
+        if (
+            existing.territorial_scope is not None
+            and fact.territorial_scope is not None
+            and existing.territorial_scope is not fact.territorial_scope
+        ):
             raise CounterpartyEstablishmentConflictError(
                 f"{existing.canonical_tax_identifier} is already confirmed as established in "
                 f"{existing.territorial_scope.value}, and this assertion says "
