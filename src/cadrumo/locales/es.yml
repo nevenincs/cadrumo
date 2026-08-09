@@ -2232,12 +2232,11 @@ cli:
         movement_date_help: Fecha del movimiento (AAAA-MM-DD)
         movement_group_help: Gestiona movimientos del libro de existencias
         movement_id_help: Identificador del movimiento dentro del libro
-        movement_kind_help: Tipo de movimiento (purchase, sale, adjustment)
+        movement_kind_help: Tipo de movimiento (opening, purchase, cogs o count)
         opening_stock_help: Valor inicial de existencias
         quantity_help: Cantidad del movimiento, positiva o negativa
         taxable_base_help: Base imponible asociada al movimiento
         unit_cost_help: Coste unitario en movimientos de compra
-        unknown_movement_kind: 'Tipo de movimiento desconocido: {kind!r}'
         valuation_group_help: Calcula y previsualiza la valoración de existencias
         valuation_method_help: Método de valoración (fifo o pmp)
         valuation_preview_help: Previsualiza existencias finales y coste de ventas
@@ -2281,7 +2280,6 @@ cli:
           T entregas triangulares, S servicios prestados, I servicios adquiridos,
           R transferencias de bienes en consigna, D devoluciones de bienes en consigna,
           C sustituciones del destinatario en consigna'
-        operation_type_invalid: '--operation-type debe ser uno de: {valid}'
         recargo_help: Recargo de equivalencia repercutido sobre la cuota (LIVA art.
           161). Va incluido en el total de la factura, a diferencia de una retención.
         rectifies_help: Número de la factura que corrige esta rectificativa.
@@ -2339,7 +2337,7 @@ cli:
         sector_id_help: Identificador estable del sector al que hacen referencia las
           entradas del registro y los apuntes del libro.
       ratios:
-        category_help: Id de categoría de gasto (p. ej. USAGE_RATIO_VEHICLE)
+        category_help: Id de categoría de gasto (p. ej. vehiculo_combustible)
         eligible_help: Lista las categorías que admiten proporción específica
         group_help: Proporciones de uso profesional por categoría de gasto
         list_help: Lista las proporciones por categoría del perfil activo
@@ -2347,7 +2345,6 @@ cli:
           en el bucket {bucket_id!r}
         ratio_help: Proporción aplicable entre 0 y 1
         set_help: Establece o sustituye la proporción de una categoría
-        unknown_category: 'Categoría de gasto desconocida: {raw!r}'
         unset_category_help: Id de categoría cuya proporción quieres limpiar
         unset_help: Elimina la proporción específica de una categoría
         validate_help: Valida las proporciones contra categorías admitidas y límites
@@ -2382,7 +2379,6 @@ cli:
       borrador:
         app_help: Snapshots de borrador del modelo 100
         filing_year_help: Ejercicio fiscal (p. ej. 2024)
-        invalid_state: '--state debe ser uno de: active, superseded, discarded, all.'
         latest_help: Mostrar el snapshot activo más reciente de un ejercicio fiscal
         list_help: Listar snapshots persistidos del borrador del modelo 100
         modelo_100_help: Comandos de snapshots del borrador del modelo 100
@@ -2519,8 +2515,6 @@ cli:
         surface_help: 'Filtra por superficie: nif_iva o tgvi'
         tgvi_arg_help: NIF/NIE español que quieres comprobar
         tgvi_help: Verifica el alta ROI/VIES de un NIF en GROI y guarda la observación
-        unknown_surface: 'Superficie de verificación desconocida: {surface} (se esperaba
-          nif_iva o tgvi).'
         view_help: Muestra una observación de verificación guardada
       year_help: Ejercicio de presentación
     maintenance:
@@ -2703,8 +2697,6 @@ cli:
         import_set_required: --set es obligatorio al menos una vez para una importación.
         include_superseded_help: Incluir los filing records superados (excluidos por
           defecto)
-        invalid_evidence_kind: --evidence-kind debe ser uno de {canonical}; se recibió
-          {kind}.
         list_help: Listar los filing records registrados
         modelo_help: Filtrar por código de modelo (p. ej. 303, 130, 100)
         observe_local_file_help: Ruta a una hoja de cálculo local CSV o XLSX de filas
@@ -3075,7 +3067,8 @@ cli:
           %{modelo} %{year} %{period} presentada; elige una de las casillas listadas.
         amend_wizard_value_prompt: Valor corregido para la casilla %{number} (%{label}),
           actualmente %{previous_value}
-        amendment_kind_help: Tipo legal de la amendación (complementaria o sustitutiva)
+        amendment_kind_help: Clase legal de la modificación (complementaria, sustitutiva
+          o rectificativa)
         amendment_reason_help: Motivo libre de la amendación (traza de auditoría del
           operador)
         app_help: Gestionar el ciclo de vida de las unidades de trabajo de un modelo
@@ -3224,7 +3217,6 @@ cli:
           Los ids exactos siguen disponibles como vía avanzada.
         include_discarded_help: Incluir las unidades descartadas en el listado (excluidas
           por defecto)
-        invalid_amendment_kind: --kind debe ser uno de {choices}; se recibió {kind}.
         invalid_binding_key: 'La clave --binding no es un BindingId válido (alfanumérico
           en minúsculas más separadores . _ : -, máx. 128 caracteres)'
         invalid_calculation_revision_id: calculation_revision_id debe ser una cadena
@@ -4534,7 +4526,6 @@ cli:
     telemetry:
       app_help: Inspecciona y controla el nivel de telemetría remota, desactivado
         por defecto y opcional.
-      bad_tier: '--tier debe ser uno de: %{accepted}; se recibió %{value!r}.'
       endpoint_help: Previsualiza/envía como si CADRUMO_TELEMETRY_ENDPOINT fuera esta
         URL solo para esta ejecución; omítelo para usar el endpoint configurado realmente
         en el despliegue.
@@ -4601,7 +4592,7 @@ cli:
         Omitir en filas totalmente BUSINESS.
       category_help: Id de categoría de gasto deducible (solo movimientos de gasto;
         los ingresos no necesitan categoría)
-      classification_help: Clasificación profesional (BUSINESS, PERSONAL o MIXED)
+      classification_help: Clasificación profesional (BUSINESS, PERSONAL, MIXED, ...)
       counterparty_help: Descripción de la contraparte
       currency_help: Código de moneda ISO 4217 de tres letras
       date_help: Fecha contable de la transacción (AAAA-MM-DD)
@@ -5577,8 +5568,8 @@ cli:
       app_help: Inspeccionar los Manuales prácticos AEAT (Renta, IVA, Sociedades)
       kind_help: Filtrar por tipo de regla del manual
       list_help: Listar los manuales disponibles localmente
-      manual_help: Identificador del manual (renta, iva, sociedades)
-      part_help: Volumen del manual (single, part1, part2-deducciones-autonómicas,
+      manual_help: Identificador del manual (renta, iva)
+      part_help: Volumen del manual (single, part1, part2-deducciones-autonomicas,
         part3)
       rules_help: Listar las reglas codificadas en un manual
       section_help: Identificador opcional de sección a mostrar
@@ -5672,7 +5663,6 @@ cli:
     errors:
       invalid_confidence: El umbral de confianza %{value} está fuera de rango; indica
         un valor entre 0 y 1.
-      invalid_state: 'Estado de revisión inválido: %{state}'
     labels:
       affected_object_id: Objeto
       id: ID

@@ -2155,12 +2155,11 @@ cli:
         movement_date_help: Mozgás dátuma (ÉÉÉÉ-HH-NN).
         movement_group_help: Készlet-főkönyvi mozgások kezelése.
         movement_id_help: A mozgás azonosítója a főkönyvön belül.
-        movement_kind_help: Mozgás típusa (purchase, sale, adjustment).
+        movement_kind_help: Mozgás típusa (opening, purchase, cogs vagy count)
         opening_stock_help: Nyitókészlet értéke.
         quantity_help: Mozgás mennyisége, pozitív vagy negatív.
         taxable_base_help: A mozgáshoz kapcsolt adóköteles alap.
         unit_cost_help: Egységár vásárlási mozgásokhoz.
-        unknown_movement_kind: 'Ismeretlen mozgástípus: {kind!r}'
         valuation_group_help: Készletértékelés számítása és előnézete.
         valuation_method_help: Értékelési módszer (fifo vagy pmp).
         valuation_preview_help: Zárópreparát és értékesítési önköltség előnézete.
@@ -2205,8 +2204,6 @@ cli:
           T háromszögügylet, S nyújtott szolgáltatás, I igénybe vett szolgáltatás,
           R vevői készlet áthelyezése, D vevői készlet visszaszállítása, C vevői készlet
           címzettcseréje'
-        operation_type_invalid: 'A --operation-type értéke csak a következők egyike
-          lehet: {valid}'
         recargo_help: Az adótételre felszámított recargo de equivalencia (LIVA 161.
           cikk). A retencióval ellentétben a számla végösszegén belül szerepel.
         rectifies_help: Annak a számlának a száma, amelyet ez a rectificativa javít.
@@ -2265,7 +2262,7 @@ cli:
         sector_id_help: Stabil szektorazonosító, amelyre a nyilvántartási bejegyzések
           és a könyvsorok hivatkoznak.
       ratios:
-        category_help: Kiadási kategóriaazonosító (pl. USAGE_RATIO_VEHICLE).
+        category_help: Kiadási kategóriaazonosító (pl. vehiculo_combustible).
         eligible_help: Egy adott arányhoz alkalmas kategóriák listázása.
         group_help: Üzleti célú arányok kiadási kategóriánként.
         list_help: Kategóriaarányok listázása az aktív profilban.
@@ -2273,7 +2270,6 @@ cli:
           {bucket_id!r} bucketben.
         ratio_help: Alkalmazandó arány 0 és 1 között.
         set_help: Arány beállítása vagy cseréje egy kategóriához.
-        unknown_category: 'Ismeretlen kiadási kategória: {raw!r}'
         unset_category_help: A törlendő arányú kategóriaazonosító.
         unset_help: Egy kategória konkrét arányának eltávolítása.
         validate_help: Arányok érvényesítése az alkalmas kategóriák és korlátok szerint.
@@ -2306,8 +2302,6 @@ cli:
       borrador:
         app_help: Modelo 100 borrador pillanatképek.
         filing_year_help: Benyújtási év (pl. 2024).
-        invalid_state: 'A --state értéke csak a következők egyike lehet: active, superseded,
-          discarded, all.'
         latest_help: A legfrissebb aktív pillanatkép megjelenítése egy benyújtási
           évre.
         list_help: Mentett Modelo 100 borrador pillanatképek listázása.
@@ -2441,8 +2435,6 @@ cli:
         tgvi_arg_help: Ellenőrizendő spanyol NIF/NIE.
         tgvi_help: NIF ROI/VIES-regisztrációjának ellenőrzése a GROI-ban és a megfigyelés
           mentése.
-        unknown_surface: 'Ismeretlen ellenőrzési felület: {surface} (nif_iva vagy
-          tgvi elvárt).'
         view_help: Mentett ellenőrzési megfigyelés megjelenítése.
       year_help: Benyújtási év.
     maintenance:
@@ -2625,8 +2617,6 @@ cli:
         import_set_required: A --set legalább egyszer kötelező importáláshoz.
         include_superseded_help: Felváltott benyújtási rekordok bevonása (alapértelmezés
           szerint kizárva).
-        invalid_evidence_kind: 'A --evidence-kind értéke csak {canonical} egyike lehet;
-          kapott: {kind}.'
         list_help: Regisztrált benyújtási rekordok listázása.
         modelo_help: Szűrés nyomtatványkód szerint (pl. 303, 130, 100).
         observe_local_file_help: Helyi CSV vagy XLSX táblázat elérési útja casilla_code,value
@@ -2995,7 +2985,8 @@ cli:
           %{year} %{period} bevallásnak; válassz a felsorolt rovatszámok közül.
         amend_wizard_value_prompt: Javított érték a(z) %{number} rovathoz (%{label}),
           jelenleg %{previous_value}
-        amendment_kind_help: A módosítás jogi típusa (complementaria vagy sustitutiva).
+        amendment_kind_help: A módosítás jogi típusa (complementaria, sustitutiva
+          vagy rectificativa)
         amendment_reason_help: A módosítás szabad szöveges oka (üzemeltetői auditnaplóhoz).
         app_help: Nyomtatvány-munkaegységek életciklusának kezelése.
         autoconsumo_promotor_base_help: 'Az ingatlanfejlesztő önadóztatásának adóalapja
@@ -3136,8 +3127,6 @@ cli:
           haladó menekülőútként.'
         include_discarded_help: Eldobott munkaegységek bevonása a listába (alapértelmezés
           szerint kizárva).
-        invalid_amendment_kind: 'A --kind értéke csak {choices} egyike lehet; kapott:
-          {kind}.'
         invalid_binding_key: 'A --binding kulcsa nem érvényes BindingId (kisbetűs
           alfanumerikus, plusz . _ : - elválasztók, max. 128 karakter).'
         invalid_calculation_revision_id: A calculation_revision_id értékének 64 karakteres
@@ -4442,8 +4431,6 @@ cli:
     telemetry:
       app_help: Az alapértelmezetten kikapcsolt, opcionális távoli telemetria szint
         ellenőrzése és vezérlése.
-      bad_tier: 'A --tier értékének a következők egyikének kell lennie: %{accepted};
-        kapott érték: %{value!r}.'
       endpoint_help: Előnézet/küldés úgy, mintha az CADRUMO_TELEMETRY_ENDPOINT ez
         az URL lenne csak ehhez a futtatáshoz; hagyd el, hogy a telepítés ténylegesen
         beállított végpontját használd.
@@ -5483,7 +5470,7 @@ cli:
       app_help: Az AEAT Manuál práctico rekordok vizsgálata (Renta, IVA, Sociedades).
       kind_help: Szűrés kézikönyvi szabálytípus alapján.
       list_help: A helyileg elérhető kézikönyv-részek listázása.
-      manual_help: Kézikönyv-azonosító (renta, iva, sociedades).
+      manual_help: Kézikönyv-azonosító (renta, iva).
       part_help: Kézikönyv-kötet (single, part1, part2-deducciones-autonomicas, part3).
       rules_help: Egy kézikönyvben kodifikált szabályok listázása.
       section_help: Opcionális szakaszazonosító a megjelenítéshez.
@@ -5576,7 +5563,6 @@ cli:
     errors:
       invalid_confidence: A(z) %{value} megbízhatósági küszöb a tartományon kívül
         esik; adjon meg egy 0 és 1 közötti értéket.
-      invalid_state: 'Érvénytelen felülvizsgálati állapot: %{state}'
     labels:
       affected_object_id: Objektum
       id: Azonosító

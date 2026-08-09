@@ -2062,12 +2062,11 @@ cli:
         movement_date_help: Movement date (YYYY-MM-DD)
         movement_group_help: Manage inventory ledger movements
         movement_id_help: Movement id within the ledger
-        movement_kind_help: Movement kind (purchase, sale, adjustment)
+        movement_kind_help: Movement kind (opening, purchase, cogs or count)
         opening_stock_help: Opening stock value
         quantity_help: Movement quantity, positive or negative
         taxable_base_help: Taxable base linked to the movement
         unit_cost_help: Unit cost for purchase movements
-        unknown_movement_kind: 'Unknown movement kind: {kind!r}'
         valuation_group_help: Calculate and preview inventory valuation
         valuation_method_help: Valuation method (fifo or pmp)
         valuation_preview_help: Preview closing stock and cost of sales
@@ -2107,7 +2106,6 @@ cli:
           after an exempt import, H the same via a fiscal representative, A acquisitions
           of goods, T triangular supplies, S services supplied, I services acquired,
           R call-off-stock transfers, D call-off-stock returns, C call-off-stock substitutions'
-        operation_type_invalid: '--operation-type must be one of: {valid}'
         recargo_help: Recargo de equivalencia charged on top of the cuota (LIVA art.
           161). It rides inside the invoice total, unlike a retencion.
         rectifies_help: Number of the invoice this rectificativa corrects.
@@ -2161,14 +2159,13 @@ cli:
           entry.
         sector_id_help: Stable sector id the register entries and ledger rows reference.
       ratios:
-        category_help: Spending category id (e.g. USAGE_RATIO_VEHICLE)
+        category_help: Spending category id (e.g. vehiculo_combustible)
         eligible_help: List categories that accept a specific ratio
         group_help: Business-use ratios by spending category
         list_help: List category ratios in the active profile
         no_override_error: No saved ratio for category {category!r} in bucket {bucket_id!r}
         ratio_help: Applicable ratio between 0 and 1
         set_help: Set or replace the ratio for a category
-        unknown_category: 'Unknown spending category: {raw!r}'
         unset_category_help: Category id whose ratio you want to clear
         unset_help: Remove the specific ratio for a category
         validate_help: Validate ratios against eligible categories and bounds
@@ -2197,7 +2194,6 @@ cli:
       borrador:
         app_help: Modelo 100 borrador snapshots
         filing_year_help: Filing year (e.g. 2024)
-        invalid_state: '--state must be one of: active, superseded, discarded, all.'
         latest_help: Show the most recent active snapshot for a filing year
         list_help: List persisted Modelo 100 borrador snapshots
         modelo_100_help: Modelo 100 borrador snapshot commands
@@ -2322,7 +2318,6 @@ cli:
         surface_help: 'Filter by surface: nif_iva or tgvi'
         tgvi_arg_help: Spanish NIF/NIE to check
         tgvi_help: Verify a NIF's ROI/VIES registration in GROI and save the observation
-        unknown_surface: 'Unknown verify surface: {surface} (expected nif_iva or tgvi).'
         view_help: Show a saved verification observation
       year_help: Filing year
     maintenance:
@@ -2492,7 +2487,6 @@ cli:
           carrying imported AEAT-attested evidence
         import_set_required: --set is required at least once for an import.
         include_superseded_help: Include superseded filing records (excluded by default)
-        invalid_evidence_kind: --evidence-kind must be one of {canonical}; got {kind}.
         list_help: List registered filing records
         modelo_help: Filter by modelo code (e.g. 303, 130, 100)
         observe_local_file_help: Path to a local CSV or XLSX spreadsheet of casilla_code,value
@@ -2837,7 +2831,8 @@ cli:
           %{year} %{period} return; choose from the listed casilla numbers.
         amend_wizard_value_prompt: Corrected value for casilla %{number} (%{label}),
           currently %{previous_value}
-        amendment_kind_help: Legal kind of the amendment (complementaria or sustitutiva)
+        amendment_kind_help: Legal kind of the amendment (complementaria, sustitutiva
+          or rectificativa)
         amendment_reason_help: Free-text reason for the amendment (operator audit
           trail)
         app_help: Manage the lifecycle of modelo work units
@@ -2973,7 +2968,6 @@ cli:
           available as an advanced escape hatch.
         include_discarded_help: Include discarded work units in the listing (excluded
           by default)
-        invalid_amendment_kind: --kind must be one of {choices}; got {kind}.
         invalid_binding_key: '--binding key is not a valid BindingId (lowercase alphanumeric
           plus . _ : - separators, max 128 chars)'
         invalid_calculation_revision_id: calculation_revision_id must be a 64-character
@@ -4186,7 +4180,6 @@ cli:
       state_backend_unreadable: Workflow state store is not readable.
     telemetry:
       app_help: Inspect and control the default-off, opt-in remote telemetry tier.
-      bad_tier: '--tier must be one of: %{accepted}; got %{value!r}.'
       endpoint_help: Preview/send as if CADRUMO_TELEMETRY_ENDPOINT were this URL for
         this invocation only; omit to use the deployment's actual configured endpoint.
       flush:
@@ -5164,7 +5157,7 @@ cli:
       app_help: Inspect AEAT Manual práctico records (Renta, IVA, Sociedades)
       kind_help: Filter by manual rule kind
       list_help: List manual parts available locally
-      manual_help: Manual identifier (renta, iva, sociedades)
+      manual_help: Manual identifier (renta, iva)
       part_help: Manual volume (single, part1, part2-deducciones-autonomicas, part3)
       rules_help: List the rules codified in a manual
       section_help: Optional section identifier to show
@@ -5256,7 +5249,6 @@ cli:
     errors:
       invalid_confidence: Confidence threshold %{value} is out of range; supply a
         value between 0 and 1.
-      invalid_state: 'Invalid review state: %{state}'
     labels:
       affected_object_id: Object
       id: ID
