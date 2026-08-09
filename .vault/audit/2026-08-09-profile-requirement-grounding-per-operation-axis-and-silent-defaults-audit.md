@@ -5,7 +5,7 @@ tags:
 date: '2026-08-09'
 modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:e0d0be17add0f4be103c0cb7dbc477694617db3e6d7422173bdd6133894e7722'
+body_hash: 'sha256:900ae64c4320c8837e3d84b5cf70832f537b48fc0412c2a65fea6b7d9463f57c'
 related:
   - "[[2026-08-08-profile-requirement-grounding-adr]]"
 ---
@@ -70,7 +70,6 @@ The requirement concept is spelled in four namespaces that cannot be compared wi
 
 The two headline findings were re-verified after the swarm reported them — the selector count by loading the real schema in-process, the placeholder by reading the declaration and enumerating call sites. The ten-mechanism inventory and the per-command classification are sub-agent output confirmed only at the `file:line` level, not exhaustively; the per-command table in particular covers commands reachable from the profile read paths traced, not all ~300 CLI verbs. One reported item is explicitly **unconfirmed** and should not be actioned as fact: that `verify`/`file`/`export` may resolve the readiness gate against the work unit's bucket while building the taxpayer projection from the workflow state's active profile, which would diverge under a `--bucket-id` override.
 
-
 ### Outcome (2026-08-09, same day): what was actioned, and one finding withdrawn
 
 Appended after acting on the placeholder finding, so a later reader does not re-derive a claim this document itself no longer supports.
@@ -100,4 +99,25 @@ The finding above is headed "across fourteen CLI surfaces", and that framing was
 Fourteen is the number of `_profile_to_taxpayer` call sites. It is not the number of defective ones. Whether the placeholder does harm at a given site depends entirely on how that site's CONSUMER handles an empty value — and the consumers disagree: some fail open on empty (placeholder harmful, absence safe), one fails closed on empty (both equally blocked), and the rest are unexamined. Two of the three sites investigated were genuine defects; one was not.
 
 So the honest scope is: **three sites investigated, two defects fixed, one withdrawn, eleven unexamined** — not "fourteen surfaces affected". Counting the call sites and reporting that count as the blast radius silently substitutes an easy measurement for the hard one, and the resulting number is both precise and unearned.
+
+
+### Sweep closed: every call site examined, and the exposure is far narrower than this finding claimed
+
+The correction above left "eleven unexamined". They are now examined. There are **twelve** call sites, not fourteen — the original count included the function definition and double-counted a file. Every one is classified below, and **no further placeholder defect exists**.
+
+**Guarded — the placeholder is structurally unreachable (5).** `identity.tax_id` is a member of `_FILING_BASELINE_PROFILE_PATHS`, so `require_profile_ready_for_work_unit` refuses an undeclared identity before these paths run: `_modelo_export_cli.py:188` (gate at `_export.py:1220`, which precedes the header build at `:665` where the NIF would otherwise be written into the fichero), `_modelo_review_package_cli.py:248` (routes through `export_modelo_revision`), `_modelo_work_verification_cli.py:179` (verify, gate at `:178`) and `:499` (file, gate at `:498`), and `_app_quickfile.py:127` (routes through the create/calculate/verify/export gates).
+
+The export case is the one worth stating explicitly, because it is where the alarm would have been justified: a placeholder NIF reaching `_export.py:665` would be written into a filed fichero-BOE artefact. It cannot, because the baseline gate refuses first — and it refuses on the DECLARED record, not on the projection.
+
+**Fixed (3).** `_modelo_records_cli.py:275` (`a7c58e309b`), `_overview.py:321` (`a82de57da0`), and the residency-driven jurisdiction default in `_ledger_support.py` (`c8b26b1fc4`).
+
+**Not identity-bearing (4).** `_overview.py:204` (status), `:626` (agenda), `:702` (backlog), `:765` (explain). These derive which obligations apply; they do not match identity. `build_overview_calendar` accepts an `expected_tax_id`, but `status` does not pass one, so it defaults to `None` and fails open; `build_overview_agenda`, `build_overview_backlog` and `build_overview_explain` take no identity at all.
+
+**Withdrawn (1).** `_modelo_work_verification_cli.py:286`, per the section above.
+
+`_ledger.py:381` reads only `fiscal_residency` and `irpf_special_regime`, both of which are honestly `None` when undeclared — the projection fabricates no value on those axes.
+
+**What this means for the finding's own framing.** The heading says the placeholder "silently yields NIF `00000000T` ... across fourteen CLI surfaces". Measured: **two** sites were genuinely harmed by it, five were already protected by an existing gate, four never compare identity, and one claim did not reproduce. The filing-grade surfaces — the ones where a fabricated NIF would have reached a persisted or exported artefact — were **all** already guarded.
+
+The defect was real and worth fixing, and it was narrower than a call-site census made it look. Recorded at this length because the overstatement is the more transferable lesson: the census was easy, precise and wrong, and the only thing that corrected it was reading each consumer's own handling of an empty value.
 
