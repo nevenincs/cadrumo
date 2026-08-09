@@ -118,8 +118,8 @@ from ._iva_compensation_history import (
     cross_check_iva_compensation_annual_summary,
     iva_compensation_annual_summary_from_filed_observation,
     iva_compensation_period_key,
-    iva_compensation_state_from_filed_observation,
-    iva_compensation_state_from_registry_observation,
+    iva_compensation_state_from_observation_envelope,
+    persist_observation_envelope_and_iva_history,
     seed_iva_compensation_period,
 )
 from ._iva_wallet_balance import query_iva_wallet_balance
@@ -132,6 +132,11 @@ from ._iva_wallet_reconciliation import (
 from ._m111_no_retenciones import (
     M111_NO_RETENCIONES_PROFILE_PATH,
     m111_no_retenciones_periods_for_bucket,
+)
+from ._m303_carry_ingress import (
+    M303_DECLARATION_TYPE_HEADER_KEY,
+    M303CarryIngressError,
+    normalize_m303_carry_observation_envelope,
 )
 from ._maritime_exemption_service import MaritimeExemptionResult, resolve_maritime_exemption
 from ._multi_year import (
@@ -148,6 +153,7 @@ from ._observations_repository import (
     IvaWalletDecisionRepository,
     ObservationEnvelopePayload,
     ObservationSourceKind,
+    ResultDispositionProjection,
     is_official_aeat_observation_source,
     iva_wallet_decision_event_key,
     iva_wallet_decision_key,
@@ -193,6 +199,7 @@ __all__ = [
     "CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA",
     "M111_NO_RETENCIONES_PROFILE_PATH",
     "M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA",
+    "M303_DECLARATION_TYPE_HEADER_KEY",
     "M303_DISPONIBLE_CASILLA",
     "M303_GENERADA_CASILLA",
     "M303_POSTERIOR_CASILLA",
@@ -221,6 +228,7 @@ __all__ = [
     "IvaWalletDecisionRepository",
     "IvaWalletDecisionSourceResolver",
     "LocalIvaCompensationRecurrence",
+    "M303CarryIngressError",
     "MaritimeExemptionResult",
     "NoPriorObligationProvenance",
     "NoPriorObligationProvenanceKind",
@@ -233,6 +241,7 @@ __all__ = [
     "ProrrataRegularizacionFeedProjection",
     "ProrrataRegularizacionSourceResolver",
     "RelationPrefillSourceResolver",
+    "ResultDispositionProjection",
     "RevisionCarryOutcome",
     "assemble_atribucion_observations",
     "assemble_foreign_asset_observations",
@@ -258,8 +267,7 @@ __all__ = [
     "is_official_aeat_observation_source",
     "iva_compensation_annual_summary_from_filed_observation",
     "iva_compensation_period_key",
-    "iva_compensation_state_from_filed_observation",
-    "iva_compensation_state_from_registry_observation",
+    "iva_compensation_state_from_observation_envelope",
     "iva_wallet_decision_event_key",
     "iva_wallet_decision_key",
     "m111_no_retenciones_periods_for_bucket",
@@ -269,10 +277,12 @@ __all__ = [
     "modelo_720_prior_baseline_observation",
     "modelo_720_redeclaration_advisory_findings",
     "modelo_721_redeclaration_advisory_findings",
+    "normalize_m303_carry_observation_envelope",
     "observation_key",
     "observation_key_for_token",
     "partition_cross_period_requirements_by_activity_start",
     "period_strictly_before_activity_start",
+    "persist_observation_envelope_and_iva_history",
     "project_prorrata_regularizacion_feed",
     "query_iva_wallet_balance",
     "reconcile_iva_compensation_wallet",

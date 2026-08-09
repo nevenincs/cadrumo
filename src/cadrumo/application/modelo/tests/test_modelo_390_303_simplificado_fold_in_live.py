@@ -46,17 +46,22 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import BindingSourceKind, Period
+from ....core import BindingSourceKind, Period, ResultDisposition
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     CasillaId,
     RegistryModeloObservation,
     validated_casilla_id,
 )
+from ....domain.iva_compensation import M303_COMPENSATION_RESULTADO_CASILLA
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations import CalculationObservationRepository, RelationPrefillSourceResolver
+from ...calculations import (
+    CalculationObservationRepository,
+    RelationPrefillSourceResolver,
+    ResultDispositionProjection,
+)
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -140,6 +145,7 @@ def _seed_m303_quarters(*, obs_repo: CalculationObservationRepository) -> None:
                     period=period,
                     casilla_values={
                         _M303_SIMPLIFICADO_CUOTA_DEVENGADA: cuota,
+                        M303_COMPENSATION_RESULTADO_CASILLA: Decimal("0"),
                         # Zero-filled: this test's scope is the simplificado
                         # relation alone, but the three régimen-general
                         # relations are enrolled unconditionally and must
@@ -153,6 +159,12 @@ def _seed_m303_quarters(*, obs_repo: CalculationObservationRepository) -> None:
             ),
             source_kind=APP_FILING_SOURCE_KIND,
             captured_at=_T0,
+            result_disposition=ResultDispositionProjection(
+                disposition=ResultDisposition.NEGATIVA,
+                provenance_kind="app_filing",
+                provenance_locator=f"test-local-filing:{_YEAR}:{period}",
+            ),
+            normalize_m303_carry=True,
         )
 
 

@@ -38,7 +38,7 @@ from __future__ import annotations
 from collections.abc import Iterator, Mapping
 from datetime import datetime
 from enum import StrEnum
-from typing import ClassVar, override
+from typing import ClassVar, Literal, override
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -51,7 +51,7 @@ from ...adapters.persistence.storage import (
     SensitivityClass,
     safe_repository_id,
 )
-from ...core import STRICT_FROZEN_CONFIG, ObservedHeaderFact, Period, SecureObjectWrite
+from ...core import STRICT_FROZEN_CONFIG, ObservedHeaderFact, Period, ResultDisposition, SecureObjectWrite
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.resources import resources
@@ -97,6 +97,26 @@ def is_official_aeat_observation_source(source_kind: ObservationSourceKind | str
         return ObservationSourceKind(source_kind).is_official_aeat
     except ValueError:
         return False
+
+
+class ResultDispositionProjection(BaseModel):
+    """Validated Modelo 303 disposition evidence owned by an observation envelope.
+
+    The filed ``declaration_type`` is not a casilla.  Keeping it here means a
+    :class:`RegistryModeloObservation` remains a calculation-only record while
+    the envelope retains the typed disposition and how it was established.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    disposition: ResultDisposition
+    provenance_kind: Literal["source_header", "app_filing"]
+    provenance_locator: str = Field(min_length=1, max_length=512)
+
+    @field_validator("disposition", mode="before")
+    @classmethod
+    def _parse_disposition(cls, value: object) -> ResultDisposition:
+        return ResultDisposition(value)
 
 
 class ObservationEnvelopePayload(BaseModel):
@@ -169,6 +189,20 @@ class ObservationEnvelopePayload(BaseModel):
             "persistence, and because a flat string pair cannot carry the "
             "record-design locator that makes a header fact auditable back to "
             "the bytes. Nothing elects on these; they are evidence."
+        ),
+    )
+    result_disposition: ResultDispositionProjection | None = Field(
+        default=None,
+        description=(
+            "Validated Modelo 303 declaration disposition with the source that "
+            "established it. It is envelope evidence, never a synthetic casilla."
+        ),
+    )
+    m303_compensation_basis: Literal["generated", "resultado", "refunded"] | None = Field(
+        default=None,
+        description=(
+            "Disposition-aware carry derivation basis after canonical Modelo "
+            "303 ingress has made available compensation explicit."
         ),
     )
 
@@ -389,7 +423,7 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
         filing_period = _require_observation_period(period)
         return self.load(observation_key(modelo, filing_period))
 
-    def save_observation(
+    def prepare_observation_envelope(
         self,
         observation: RegistryModeloObservation,
         *,
@@ -399,8 +433,10 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
         stamped_revision_id: str | None = None,
         source_metadata: Mapping[str, str] | None = None,
         source_headers: tuple[ObservedHeaderFact, ...] = (),
-    ) -> None:
-        """Persist ``observation`` keyed by its ``(modelo, filing_year, period)``.
+        result_disposition: ResultDispositionProjection | None = None,
+        normalize_m303_carry: bool = False,
+    ) -> ObservationEnvelopePayload:
+        """Build one validated observation envelope without writing it.
 
         ``member_nif`` is an optional grupo-de-entidades member NIF. When
         supplied, the storage identifier is widened (see
@@ -429,6 +465,15 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
         so a fact not named there never reaches storage -- which is exactly how
         the header projection was landing at capture and vanishing before
         persistence.
+
+        ``normalize_m303_carry`` is the explicit canonical ingress used by the
+        official filed-capture and local-filing routes. It refuses incomplete or
+        conflicting declaration-disposition evidence before persisting a
+        carry-capable Modelo 303 row. Generic observation storage intentionally
+        remains readable for legacy evidence and unrelated consumers. Callers
+        that co-emit this envelope with a history projection use
+        :meth:`to_secure_object_write` and the storage backend's batch boundary
+        so the pair cannot half-persist.
         """
         law_revision_id = _validate_observation_casilla_ids(observation)
         resolved_source_kind = ObservationSourceKind(source_kind)
@@ -441,8 +486,43 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
             stamped_revision_id=law_revision_id if stamped_revision_id is None else stamped_revision_id,
             source_metadata=dict(source_metadata or {}),
             source_headers=source_headers,
+            result_disposition=result_disposition,
+        )
+        if normalize_m303_carry:
+            # Keep the serialisable envelope model independent from the
+            # application policy that normalizes it.
+            from ._m303_carry_ingress import normalize_m303_carry_observation_envelope
+
+            payload = normalize_m303_carry_observation_envelope(payload)
+        return payload
+
+    def save_observation(
+        self,
+        observation: RegistryModeloObservation,
+        *,
+        source_kind: ObservationSourceKind | str,
+        captured_at: datetime | None = None,
+        member_nif: str | None = None,
+        stamped_revision_id: str | None = None,
+        source_metadata: Mapping[str, str] | None = None,
+        source_headers: tuple[ObservedHeaderFact, ...] = (),
+        result_disposition: ResultDispositionProjection | None = None,
+        normalize_m303_carry: bool = False,
+    ) -> ObservationEnvelopePayload:
+        """Persist one envelope prepared through the canonical validation path."""
+        payload = self.prepare_observation_envelope(
+            observation,
+            source_kind=source_kind,
+            captured_at=captured_at,
+            member_nif=member_nif,
+            stamped_revision_id=stamped_revision_id,
+            source_metadata=source_metadata,
+            source_headers=source_headers,
+            result_disposition=result_disposition,
+            normalize_m303_carry=normalize_m303_carry,
         )
         self.save(payload)
+        return payload
 
     def iter_modelo(self, modelo: str) -> Iterator[ObservationEnvelopePayload]:
         """Yield every persisted observation for ``modelo`` in unspecified order.

@@ -10,8 +10,7 @@ next period's casilla 110 auto-resolves to zero rather than double-claiming the
 requested devolución credit.
 
 The CONTROL persists the SAME engine-produced negative-result revision with the
-default carried disposition and asserts the credit carries normally — the
-behaviour-preserving default that keeps every existing carry chain green.
+explicit ``C`` disposition and asserts the credit carries normally.
 
 Grounding (non-tautological): the negative-result saldo is produced by the REAL
 registry engine from a credit scenario (deducible > devengada), never
@@ -29,7 +28,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period
+from ....core import Period, ResultDisposition
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     CasillaId,
@@ -50,6 +49,7 @@ from ....domain.modelos import (
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo import persist_filed_revision_observation
+from .._iva_compensation_history import IvaCompensationHistoryRepository
 from .._observations_repository import CalculationObservationRepository
 from .._relation_prefill import resolve_relations_from_local_store
 
@@ -233,7 +233,7 @@ def test_refunded_4t_period_carries_zero_into_next_period(tmp_path: Path) -> Non
     """A refunded (devolución) 4T credit period carries ZERO into 1T/N+1 casilla 110.
 
     The engine produces a real negative-result saldo for 4T/N. Filing that period
-    as a refund request (``refunded=True``) excludes the generated credit from
+    with the filing-boundary ``D`` disposition excludes the generated credit from
     compensación carry, so the persisted carry observation drops the generated
     component and the next period auto-resolves to zero — the requested devolución
     credit is not double-claimed.
@@ -254,19 +254,25 @@ def test_refunded_4t_period_carries_zero_into_next_period(tmp_path: Path) -> Non
             work_unit=_year_n_4t_work_unit(),
             repository=obs_repo,
             captured_at=_CLOCK,
-            refunded=True,
+            result_disposition=ResultDisposition.DEVOLUCION,
+            taxpayer_nif="12345678Z",
         )
 
         carry_in = _carry_in_for_year_n_plus_1(obs_repo)
+        history_state = IvaCompensationHistoryRepository().load_period(_year_n_4t_work_unit().period)
 
     assert carry_in == Decimal("0")
+    assert history_state is not None
+    assert history_state.generated_amount == Decimal("0")
 
 
 def test_carried_4t_period_carries_the_credit_forward_control(tmp_path: Path) -> None:
     """CONTROL (non-regressive): the SAME credit period, compensar-disposed, carries forward.
 
-    The only difference from the refunded test is ``refunded=False`` (the
-    default). The engine-produced saldo carries into 1T/N+1 casilla 110 normally —
+    the standard compensación behaviour every existing carry chain relies on.
+    The only difference from the refunded test is the explicit ``C``
+    disposition. The engine-produced saldo carries into 1T/N+1 casilla 110
+    normally.
     the standard compensación behaviour every existing carry chain relies on.
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
@@ -285,10 +291,15 @@ def test_carried_4t_period_carries_the_credit_forward_control(tmp_path: Path) ->
             work_unit=_year_n_4t_work_unit(),
             repository=obs_repo,
             captured_at=_CLOCK,
+            result_disposition=ResultDisposition.COMPENSACION,
+            taxpayer_nif="12345678Z",
         )
 
         carry_in = _carry_in_for_year_n_plus_1(obs_repo)
+        history_state = IvaCompensationHistoryRepository().load_period(_year_n_4t_work_unit().period)
 
     assert carry_in is not None
     assert carry_in == carried_saldo
     assert carry_in > Decimal("0")
+    assert history_state is not None
+    assert history_state.generated_amount == carried_saldo

@@ -29,8 +29,7 @@ class IvaCompensationModeloError(CoreError):
 
     The IVA compensation carry-forward pipeline is exclusively sourced from
     Modelo 303 filed observations. Passing any other modelo to
-    :func:`~application.calculations._iva_compensation_history.iva_compensation_state_from_filed_observation`,
-    :func:`~application.calculations._iva_compensation_history.iva_compensation_state_from_registry_observation`,
+    :func:`~application.calculations._iva_compensation_history.iva_compensation_state_from_observation_envelope`,
     or
     :func:`~application.calculations._iva_compensation_history.iva_compensation_annual_summary_from_filed_observation`
     violates the calculation boundary contract.

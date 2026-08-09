@@ -49,7 +49,6 @@ from ...core.resources import resources
 from ...core.time import now
 from ...domain.calculations.registry import (
     CasillaId,
-    RegistryModeloObservation,
     undeclared_casilla_ids,
 )
 from ...domain.iva_compensation import (
@@ -59,9 +58,7 @@ from ...domain.iva_compensation import (
     IvaCompensationPeriodState,
     IvaCompensationSeedConflictError,
     IvaCompensationYearRangeError,
-    derive_303_compensation_available,
     derive_iva_compensation_year_end_carry_partition,
-    derive_m303_compensation_available_from_casillas,
     iva_compensation_period_sort_key,
 )
 from ._errors import IvaCompensationModeloError
@@ -73,6 +70,9 @@ from ._iva_compensation_casillas import (
 )
 from ._iva_compensation_casillas import (
     M303_DISPONIBLE_CASILLA as _M303_DISPONIBLE_CASILLA,
+)
+from ._iva_compensation_casillas import (
+    M303_GENERADA_CASILLA as _M303_GENERADA_CASILLA,
 )
 from ._iva_compensation_casillas import (
     M303_POSTERIOR_CASILLA as _M303_POSTERIOR_CASILLA,
@@ -89,6 +89,7 @@ from ._iva_compensation_casillas import (
 from ._iva_compensation_casillas import (
     M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA as _M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA,
 )
+from ._observations_repository import CalculationObservationRepository, ObservationEnvelopePayload
 from ._ports import FiledDeclaracionObservationProtocol
 
 _ZERO = Decimal("0")
@@ -346,92 +347,87 @@ def correct_iva_compensation_period(
     return state
 
 
-def iva_compensation_state_from_filed_observation(
-    observation: FiledDeclaracionObservationProtocol,
-) -> IvaCompensationPeriodState:
-    """Build an :class:`~domain.iva_compensation._carry_forward.IvaCompensationPeriodState`.
-
-    The source is a filed Modelo 303
-    :class:`~application.calculations._ports.FiledDeclaracionObservationProtocol`
-    captured from live or imported filed-declaration evidence.
-    """
-    if observation.modelo != Modelo.M303.value:
-        raise IvaCompensationModeloError(
-            translated_message="application.calculations.iva_compensation.errors.modelo_303_only",
-            context={"modelo": observation.modelo},
-        )
-    values = _decimal_casilla_values(observation)
-    source_artefact_sha256 = next(
-        (artefact.sha256 for artefact in observation.artefacts if artefact.kind == "submitted_file"),
-        None,
-    )
-    return _iva_compensation_state_from_values(
-        values,
-        taxpayer_nif=observation.authenticated_identity,
-        filing_year=observation.ejercicio,
-        period=observation.period,
-        expediente_id=observation.expediente_id,
-        status=observation.status,
-        presented_at=observation.presented_at,
-        source_observation_key=(
-            f"303:{observation.ejercicio}:{observation.period.registry_token}:{observation.expediente_id}"
-        ),
-        source_artefact_sha256=source_artefact_sha256,
-        # An AEAT-fetched filing carries no disposition signal: Modelo 303
-        # declares no devolución casilla, so the election lives only in the
-        # fichero header the fetch never sees. False states that assumption
-        # rather than inheriting it, and is where a signal lands if one
-        # ever reaches this path.
-        refunded=False,
-    )
-
-
-def iva_compensation_state_from_registry_observation(
-    observation: RegistryModeloObservation,
+def iva_compensation_state_from_observation_envelope(
+    envelope: ObservationEnvelopePayload,
     *,
     taxpayer_nif: str,
     expediente_id: str,
     status: str,
-    presented_at: datetime,
-    source_observation_key: str | None = None,
+    source_observation_key: str,
     source_artefact_sha256: ContentDigest | None = None,
 ) -> IvaCompensationPeriodState:
-    """Build an :class:`~domain.iva_compensation._carry_forward.IvaCompensationPeriodState`.
+    """Project one already-normalized M303 envelope into IVA history.
 
-    The source is a registry-grounded Modelo 303
-    :class:`~domain.calculations.registry.RegistryModeloObservation`, usually
-    promoted from local calculation evidence or filed-observation conversion.
+    The history boundary accepts no bare registry or filed observation. Those
+    shapes omit the disposition that decides the available/generated pair, so
+    treating either as history evidence would re-introduce an ungrounded carry
+    default. The validator rejects legacy and mismatched envelopes before this
+    constructor can select an amount.
     """
-    if observation.modelo != Modelo.M303.value:
-        raise IvaCompensationModeloError(
-            translated_message="application.calculations.iva_compensation.errors.modelo_303_only",
-            context={"modelo": observation.modelo},
-        )
-    _validate_registry_observation_casilla_ids(observation)
-    # The fallback builds a typed filing period from a deserialised registry token,
-    # which refuses an administrative or symbolic-selector token. Nothing here is
-    # safe by type: it is safe because the Modelo 303 guard above already rejected
-    # every modelo whose registry periods carry those tokens. Widening that guard
-    # to another modelo makes this a reachable refusal.
+    from ._m303_carry_ingress import validate_normalized_m303_carry_observation_envelope
+
+    validated = validate_normalized_m303_carry_observation_envelope(envelope)
+    observation = validated.observation
+    values = dict(observation.casilla_values)
     period = observation.filing_period or Period.from_year_and_code(observation.filing_year, observation.period)
-    key = source_observation_key or f"303:{observation.filing_year}:{period.registry_token}:{expediente_id}"
-    return _iva_compensation_state_from_values(
-        dict(observation.casilla_values),
+    return IvaCompensationPeriodState(
         taxpayer_nif=taxpayer_nif,
         filing_year=observation.filing_year,
         period=period,
         expediente_id=expediente_id,
         status=status,
-        presented_at=presented_at,
-        source_observation_key=key,
+        presented_at=validated.captured_at,
+        prior_pending_amount=_resolve_casilla_value(values, _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA),
+        applied_amount=_resolve_casilla_value(values, _M303_COMPENSACION_APLICADA_CASILLA),
+        pending_for_later_amount=_resolve_casilla_value(values, _M303_POSTERIOR_CASILLA),
+        period_result_amount=_resolve_casilla_value(values, _M303_RESULTADO_CASILLA),
+        final_result_amount=_resolve_casilla_value(values, _M303_RESULTADO_FINAL_CASILLA),
+        generated_amount=values[_M303_GENERADA_CASILLA],
+        available_end_amount=values[_M303_DISPONIBLE_CASILLA],
+        source_observation_key=source_observation_key,
         source_artefact_sha256=source_artefact_sha256,
-        # An AEAT-fetched filing carries no disposition signal: Modelo 303
-        # declares no devolución casilla, so the election lives only in the
-        # fichero header the fetch never sees. False states that assumption
-        # rather than inheriting it, and is where a signal lands if one
-        # ever reaches this path.
-        refunded=False,
     )
+
+
+def persist_observation_envelope_and_iva_history(
+    *,
+    observation_repository: CalculationObservationRepository,
+    history_repository: IvaCompensationHistoryRepository,
+    envelope: ObservationEnvelopePayload,
+    taxpayer_nif: str,
+    expediente_id: str,
+    status: str,
+    source_observation_key: str,
+    source_artefact_sha256: ContentDigest | None = None,
+) -> IvaCompensationPeriodState:
+    """Atomically persist one M303 envelope and its history projection.
+
+    The state is derived and its disposition-aware pair validated before either
+    secure-object write is prepared. The two prepared writes then enter the
+    shared backend's one transaction, so a refusal or a storage failure cannot
+    leave an observation that history did not receive, or vice versa.
+    """
+    if history_repository.secure_object_repository is not observation_repository.secure_object_repository:
+        from ._m303_carry_ingress import M303CarryIngressError
+
+        raise M303CarryIngressError(
+            "Modelo 303 observation and IVA history repositories must share one secure-object backend",
+        )
+    state = iva_compensation_state_from_observation_envelope(
+        envelope,
+        taxpayer_nif=taxpayer_nif,
+        expediente_id=expediente_id,
+        status=status,
+        source_observation_key=source_observation_key,
+        source_artefact_sha256=source_artefact_sha256,
+    )
+    observation_repository.secure_object_repository.apply_batch(
+        (
+            observation_repository.to_secure_object_write(envelope),
+            history_repository.to_secure_object_write(state),
+        ),
+    )
+    return state
 
 
 def iva_compensation_annual_summary_from_filed_observation(
@@ -537,76 +533,6 @@ def cross_check_iva_compensation_annual_summary(
     )
 
 
-def _iva_compensation_state_from_values(
-    values: dict[CasillaId, Decimal],
-    *,
-    taxpayer_nif: str,
-    filing_year: int,
-    period: Period,
-    expediente_id: str,
-    status: str,
-    presented_at: datetime,
-    source_observation_key: str,
-    source_artefact_sha256: ContentDigest | None,
-    refunded: bool,
-) -> IvaCompensationPeriodState:
-    result = _resolve_casilla_value(values, _M303_RESULTADO_CASILLA)
-    posterior = _resolve_casilla_value(values, _M303_POSTERIOR_CASILLA)
-    # `refunded` is required rather than defaulted, and that is the point. Both
-    # fields below depend on the disposition, and they are written into ONE
-    # state by one constructor -- so a caller that inherits the answer from a
-    # signature instead of stating it can leave the two disagreeing: an
-    # available amount that excludes a refunded credit beside a generated
-    # amount that still carries it. A defaulted flag is exactly how the sibling
-    # derivation came to carry a refunded credit into the next period.
-    derivation = derive_m303_compensation_available_from_casillas(values, refunded=refunded)
-    if derivation is not None:
-        generated = derivation.generated
-        available = derivation.available
-    elif result is not None:
-        # The canonical derivation declines a filing that declares no posterior
-        # casilla, because its two fetched callers read that None as "do not
-        # stamp the casilla at all". This projection has no such choice: both
-        # amount fields of the state below are non-optional, and a period that
-        # declared a negative result generated that credit whether or not it
-        # also declared a posterior balance. Dropping it here would silently
-        # under-state the carry -- the direction that over-taxes the taxpayer a
-        # quarter later. The same pure policy answers it, with the absent
-        # posterior read as the zero it means.
-        available = derive_303_compensation_available(
-            posterior=posterior or _ZERO,
-            resultado=result,
-            refunded=refunded,
-        )
-        generated = available - (posterior or _ZERO)
-    else:
-        generated = _ZERO
-        available = posterior or _ZERO
-    # Semantic-only casilla (no numeric AEAT box), so it was never an inline-number
-    # routing literal — looked up directly by its registry id. A directly filed
-    # value still wins: it is what the filing actually declared.
-    filed_available = _casilla_value(values, _M303_DISPONIBLE_CASILLA)
-    if filed_available is not None:
-        available = filed_available
-    return IvaCompensationPeriodState(
-        taxpayer_nif=taxpayer_nif,
-        filing_year=filing_year,
-        period=period,
-        expediente_id=expediente_id,
-        status=status,
-        presented_at=presented_at,
-        prior_pending_amount=_resolve_casilla_value(values, _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA),
-        applied_amount=_resolve_casilla_value(values, _M303_COMPENSACION_APLICADA_CASILLA),
-        pending_for_later_amount=posterior,
-        period_result_amount=result,
-        final_result_amount=_resolve_casilla_value(values, _M303_RESULTADO_FINAL_CASILLA),
-        generated_amount=generated,
-        available_end_amount=available,
-        source_observation_key=source_observation_key,
-        source_artefact_sha256=source_artefact_sha256,
-    )
-
-
 def _decimal_casilla_values(observation: FiledDeclaracionObservationProtocol) -> dict[CasillaId, Decimal]:
     _validate_observed_casilla_ids(observation)
     values: dict[CasillaId, Decimal] = {}
@@ -673,27 +599,6 @@ def _validate_observed_casilla_ids(observation: FiledDeclaracionObservationProto
     )
 
 
-def _validate_registry_observation_casilla_ids(observation: RegistryModeloObservation) -> None:
-    snapshot = resources().modelos.authority.snapshot(
-        observation.modelo,
-        filing_year=observation.filing_year,
-        period=observation.period,
-    )
-    invalid = undeclared_casilla_ids(snapshot.revision, observation.casilla_values)
-    if not invalid:
-        return
-    raise IvaCompensationCasillaReferenceError(
-        "IVA compensation registry observations must be keyed by canonical casilla.id values declared by the registry",
-        context={
-            "modelo": observation.modelo,
-            "revision": snapshot.revision.id,
-            "period": observation.period,
-            "casilla_ids": invalid,
-        },
-        translated_message="errors.refused.refused_calculations_casilla_constraint",
-    )
-
-
 def _casilla_value(values: dict[CasillaId, Decimal], *casilla_ids: CasillaId) -> Decimal | None:
     for casilla_id in casilla_ids:
         value = values.get(casilla_id)
@@ -715,7 +620,7 @@ __all__ = [
     "cross_check_iva_compensation_annual_summary",
     "iva_compensation_annual_summary_from_filed_observation",
     "iva_compensation_period_key",
-    "iva_compensation_state_from_filed_observation",
-    "iva_compensation_state_from_registry_observation",
+    "iva_compensation_state_from_observation_envelope",
+    "persist_observation_envelope_and_iva_history",
     "seed_iva_compensation_period",
 ]

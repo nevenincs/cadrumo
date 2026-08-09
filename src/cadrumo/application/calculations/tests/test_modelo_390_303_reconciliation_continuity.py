@@ -49,7 +49,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period
+from ....core import Period, derive_result_disposition, result_disposition_casilla_ids
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     CasillaId,
@@ -67,7 +67,7 @@ from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
 from .._iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
-from .._observations_repository import CalculationObservationRepository
+from .._observations_repository import CalculationObservationRepository, ResultDispositionProjection
 from .._relation_prefill import resolve_relations_from_local_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -214,6 +214,18 @@ def _registry_observation(
     )
 
 
+def _filing_result_disposition(result: RegistryCalculationResult):
+    """Use the production result-disposition resolver at this test filing boundary."""
+    casilla_ids = result_disposition_casilla_ids("303")
+    assert casilla_ids is not None
+    disposition = derive_result_disposition(
+        "303",
+        {casilla_id: Decimal(result.values[casilla_id]) for casilla_id in casilla_ids},
+    )
+    assert disposition is not None
+    return disposition
+
+
 def _calculate_390_annual(
     *,
     filing_year: int,
@@ -286,6 +298,12 @@ def _file_year_quarters_and_reconcile(
             _registry_observation(modelo="303", filing_year=filing_year, period=period, result=q_result),
             source_kind="app_filing",
             captured_at=_CLOCK,
+            result_disposition=ResultDispositionProjection(
+                disposition=_filing_result_disposition(q_result),
+                provenance_kind="app_filing",
+                provenance_locator=f"test-local-filing:{filing_year}:{period}",
+            ),
+            normalize_m303_carry=True,
         )
     annual_result, produced = _calculate_390_annual(
         filing_year=filing_year,

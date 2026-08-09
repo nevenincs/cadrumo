@@ -5,7 +5,7 @@ for the annual Modelo 390 revision, inspects its
 :class:`~domain.calculations.registry.ModeloRevision` bindings owned by
 :attr:`~core.BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION`, and
 derives the two annual compensation partition amounts from filed Modelo 303
-:class:`~domain.calculations.registry.RegistryModeloObservation` rows.
+:class:`~application.calculations.ObservationEnvelopePayload` records.
 """
 
 from __future__ import annotations
@@ -45,7 +45,11 @@ from ._iva_compensation_casillas import (
     M303_GENERADA_CASILLA,
     M303_POSTERIOR_CASILLA,
 )
-from ._observations_repository import CalculationObservationRepository
+from ._m303_carry_ingress import (
+    M303CarryIngressError,
+    validate_normalized_m303_carry_observation_envelope,
+)
+from ._observations_repository import CalculationObservationRepository, ObservationEnvelopePayload
 from ._revision_carry_gate import revision_carry_outcome
 
 _log = get_logger(__name__)
@@ -109,16 +113,26 @@ def _validate_303_observation_casilla_ids(observation: RegistryModeloObservation
         )
 
 
-def _period_state_from_303_observation(observation: RegistryModeloObservation) -> IvaCompensationPeriodState:
-    """Reconstruct one filed Modelo 303 period's FIFO compensation state."""
+def _period_state_from_303_envelope(envelope: ObservationEnvelopePayload) -> IvaCompensationPeriodState:
+    """Build one FIFO state from a validated filed Modelo 303 envelope."""
+    validated = validate_normalized_m303_carry_observation_envelope(envelope)
+    observation = validated.observation
     _validate_303_observation_casilla_ids(observation)
     values = observation.casilla_values
-    generated = _observed_value(values, _303_GENERADA_ID) or _ZERO
+    generated = _observed_value(values, _303_GENERADA_ID)
+    if generated is None:
+        raise M303CarryIngressError(
+            "validated Modelo 303 carry envelope is missing its explicit generated compensation amount",
+            context={"casilla_id": _303_GENERADA_ID},
+        )
     applied = _observed_value(values, _303_APLICADA_ID) or _ZERO
     posterior = _observed_value(values, _303_POSTERIOR_ID)
     available = _observed_value(values, _303_DISPONIBLE_ID)
     if available is None:
-        available = (posterior or _ZERO) + generated
+        raise M303CarryIngressError(
+            "validated Modelo 303 carry envelope is missing its explicit available compensation amount",
+            context={"casilla_id": _303_DISPONIBLE_ID},
+        )
     period = Period.from_year_and_code(observation.filing_year, observation.period)
     return IvaCompensationPeriodState(
         # A casilla observation records no taxpayer, and these states are
@@ -144,7 +158,7 @@ def _period_state_from_303_observation(observation: RegistryModeloObservation) -
 
 def resolve_iva_compensation_annual_partition_binding_values(
     revision: ModeloRevision,
-    observations: tuple[RegistryModeloObservation, ...],
+    envelopes: tuple[ObservationEnvelopePayload, ...],
     *,
     filing_year: int,
 ) -> dict[BindingId, Decimal]:
@@ -153,9 +167,9 @@ def resolve_iva_compensation_annual_partition_binding_values(
     Args:
         revision: The annual Modelo 390 :class:`~domain.calculations.registry.ModeloRevision`
             whose partition bindings declare the target output slots.
-        observations: Filed Modelo 303
-            :class:`~domain.calculations.registry.RegistryModeloObservation`
-            rows used to reconstruct the compensation FIFO state.
+        envelopes: Filed, already-normalized Modelo 303
+            :class:`~application.calculations.ObservationEnvelopePayload`
+            records used to reconstruct the compensation FIFO state.
         filing_year: Annual filing year used to select same-year Modelo 303
             observations.
     """
@@ -163,9 +177,9 @@ def resolve_iva_compensation_annual_partition_binding_values(
     if not binding_by_output:
         return {}
     states = tuple(
-        _period_state_from_303_observation(observation)
-        for observation in observations
-        if observation.modelo == Modelo.M303.value and observation.filing_year == filing_year
+        _period_state_from_303_envelope(envelope)
+        for envelope in envelopes
+        if envelope.observation.modelo == Modelo.M303.value and envelope.observation.filing_year == filing_year
     )
     if not states:
         return {}
@@ -185,8 +199,8 @@ def _load_303_observations_for_partition(
     snapshot: RegistrySnapshot,
     *,
     repository: CalculationObservationRepository,
-) -> tuple[RegistryModeloObservation, ...]:
-    observations: list[RegistryModeloObservation] = []
+) -> tuple[ObservationEnvelopePayload, ...]:
+    envelopes: list[ObservationEnvelopePayload] = []
     for period_code in _partition_source_periods(snapshot.revision):
         payload = repository.load_observation(
             Modelo.M303.value,
@@ -208,8 +222,12 @@ def _load_303_observations_for_partition(
                 observation.period,
             )
             continue
-        observations.append(observation)
-    return tuple(observations)
+        # Revalidate after decrypting persisted evidence. Legacy, incomplete, or
+        # internally contradictory envelopes are readable records but never FIFO
+        # input; the period state repeats this check before partitioning.
+        validate_normalized_m303_carry_observation_envelope(payload)
+        envelopes.append(payload)
+    return tuple(envelopes)
 
 
 def _unresolved_diagnostics(
@@ -266,7 +284,7 @@ class IvaCompensationAnnualPartitionSourceResolver:
             return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
         repo = self._repository if self._repository is not None else CalculationObservationRepository()
         try:
-            observations = _load_303_observations_for_partition(snapshot, repository=repo)
+            envelopes = _load_303_observations_for_partition(snapshot, repository=repo)
         except _STORAGE_DEGRADATION_ERRORS as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,
@@ -276,7 +294,7 @@ class IvaCompensationAnnualPartitionSourceResolver:
             )
         binding_values = resolve_iva_compensation_annual_partition_binding_values(
             snapshot.revision,
-            observations,
+            envelopes,
             filing_year=snapshot.filing_year,
         )
         unresolved = tuple(binding_id for binding_id in declared_binding_ids if binding_id not in binding_values)
@@ -293,9 +311,13 @@ class IvaCompensationAnnualPartitionSourceResolver:
             provenance=tuple(
                 CalculationSourceProvenance(
                     source_kind=_SOURCE_KIND.value,
-                    source_ref=f"303:{observation.filing_year}:{observation.period}:iva-compensation-annual-partition",
+                    source_ref=(
+                        "303:"
+                        f"{envelope.observation.filing_year}:{envelope.observation.period}:"
+                        "iva-compensation-annual-partition"
+                    ),
                 )
-                for observation in observations
+                for envelope in envelopes
             ),
         )
 

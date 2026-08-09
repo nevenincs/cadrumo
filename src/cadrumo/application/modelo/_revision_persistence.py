@@ -44,7 +44,7 @@ from typing import TYPE_CHECKING
 
 from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from ...core import M210GrossIncomeSourceMode, Modelo, ProrrataRegisterRegime
+from ...core import M210GrossIncomeSourceMode, Modelo, ProrrataRegisterRegime, ResultDisposition
 from ...core.hashing import sha256_hex
 from ...domain.buckets import (
     BucketEvent,
@@ -613,7 +613,7 @@ def persist_filed_revision(
     calculation_observation_repository: CalculationObservationRepository | None = None,
     participation_index_repository: TransactionParticipationIndexRepository | None = None,
     prorrata_register_repository: ProrrataRegisterRepositoryProtocol | None = None,
-    refunded: bool = False,
+    result_disposition: ResultDisposition | None = None,
     taxpayer_nif: str | None = None,
 ) -> ModeloRecord:
     """Persist a verified-complete calculation revision and return a :class:`ModeloRecord`.
@@ -634,11 +634,10 @@ def persist_filed_revision(
     current record must carry
     :class:`~domain.modelos.ExternalEvidence`.
 
-    ``refunded`` is resolved once at the calculate/file boundary by
-    ``resolve_modelo_result_disposition``. For refunded Modelo 303 filings
-    (devolución, Tipo de declaración ``D``), it tells
-    :func:`persist_filed_revision_observation` to persist ZERO compensación carry;
-    the default ``False`` preserves standard carry (RD 1624/1992 art. 30 / Ley 37/1992 art. 116).
+    ``result_disposition`` is resolved once at the calculate/file boundary by
+    ``resolve_modelo_result_disposition``. Modelo 303 observation persistence
+    retains that typed fact with app-filing provenance and derives carry only
+    through the shared canonical ingress; it never inherits a boolean default.
 
     For Modelo 303 settlement periods, the filed definitive prorrata percentage
     and annual volume inputs are also co-emitted to the profile
@@ -782,7 +781,7 @@ def persist_filed_revision(
             work_unit=work_unit,
             repository=calculation_observation_repository,
             captured_at=now,
-            refunded=refunded,
+            result_disposition=result_disposition,
             taxpayer_nif=taxpayer_nif,
             filing_record_id=new_filing_id,
         )

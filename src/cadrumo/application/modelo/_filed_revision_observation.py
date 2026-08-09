@@ -43,33 +43,25 @@ See Also:
     :mod:`~cadrumo.application.calculations._cross_period_clean_state`:
         Classifies ``app_filing`` as non-official evidence for filing-grade
         readiness.
-    :func:`~cadrumo.application.calculations.iva_compensation_state_from_registry_observation`:
-        Projects local Modelo 303 observations into the IVA compensation history.
+    :func:`~cadrumo.application.calculations.persist_observation_envelope_and_iva_history`:
+        Atomically co-emits local Modelo 303 observations and IVA history.
 """
 
 from __future__ import annotations
 
 from datetime import datetime
-from decimal import Decimal
 from typing import Final
 
-from ...core import Modelo
-from ...domain.calculations.registry import (
-    CasillaId,
-    CasillaObservation,
-    RegistryModeloObservation,
-)
-from ...domain.iva_compensation import derive_m303_compensation_available_from_casillas
+from ...core import Modelo, ResultDisposition
+from ...domain.calculations.registry import RegistryModeloObservation
 from ...domain.modelos import CalculationRevision, WorkUnit
 from ..calculations import (
-    M303_DISPONIBLE_CASILLA,
-    M303_GENERADA_CASILLA,
-    M303_POSTERIOR_CASILLA,
     CalculationObservationRepository,
     IvaCompensationHistoryRepository,
     ObservationSourceKind,
-    iva_compensation_state_from_registry_observation,
+    ResultDispositionProjection,
     observation_key,
+    persist_observation_envelope_and_iva_history,
 )
 from ._action_errors import ModeloLocalObservationError
 
@@ -79,91 +71,6 @@ APP_FILING_SOURCE_KIND: Final = ObservationSourceKind.APP_FILING
 Deliberately not official AEAT evidence: a locally-filed value must never
 satisfy the cross-period clean-state filing gate.
 """
-
-
-#: Canonical id for the Modelo 303 end-of-period available compensation carry-forward casilla. A
-#: refunded (devolución) period must carry ZERO generated credit forward, so when
-#: the filed revision is refunded this casilla is re-stamped to its posterior-only
-#: value before the cross-period observation is persisted (RD 1624/1992 art. 30 /
-#: Ley 37/1992 art. 116).
-_M303_DISPONIBLE_CASILLA: Final[CasillaId] = M303_DISPONIBLE_CASILLA
-#: Canonical id for Modelo 303 compensación pendiente de periodos posteriores (AEAT box 87):
-#: the posterior-only component that survives a refund.
-_M303_POSTERIOR_CASILLA: Final[CasillaId] = M303_POSTERIOR_CASILLA
-#: The per-period generated-credit casilla, zeroed on a refunded period.
-_M303_GENERADA_CASILLA: Final[CasillaId] = M303_GENERADA_CASILLA
-_ZERO: Final = Decimal("0")
-
-
-def _refunded_303_observations(
-    observations: tuple[CasillaObservation, ...],
-) -> tuple[CasillaObservation, ...]:
-    """Zero the generated-credit components of a refunded Modelo 303 observation.
-
-    A refunded (devolución) period is requested as devolución rather than
-    compensación carry, so the persisted cross-period carry must drop the generated credit:
-    ``iva.compensacion-disponible-fin-periodo`` is re-stamped to its
-    posterior-only value from ``iva.compensacion-pendiente-periodos-posteriores``
-    (AEAT box 87) and ``iva.compensacion-generada-periodo`` to zero. Every other
-    casilla is preserved verbatim — including its provenance — so the carried
-    observation stays a faithful projection of the filed revision except for the
-    one disposition-determined correction.
-
-    The rewrite is applied only to the
-    :class:`~cadrumo.domain.calculations.registry.CasillaObservation` rows that
-    encode the generated compensation credit. It leaves the filed revision's
-    remaining observations and provenance unchanged so the saved
-    :class:`~cadrumo.domain.calculations.registry.RegistryModeloObservation` still
-    represents the local filing.
-
-    Both figures come from
-    :func:`~cadrumo.domain.iva_compensation.derive_m303_compensation_available_from_casillas`
-    rather than being re-derived here. The rule is one regulatory rule, and a
-    second copy of it in this module is how the local path and the AEAT-capture
-    path would answer a refunded period differently after the next change to the
-    conversion.
-
-    The rewritten rows drop their formula lineage. A refunded period's available
-    carry is NOT the registry formula's ``posterior + generada`` projection --
-    the generated credit is excluded by disposition, so that formula never ran
-    for this value, and its ``operand_refs`` would assert arithmetic the figure
-    contradicts. The sibling AEAT-capture path refuses outright when supplied
-    refs disagree with the formula's projection, so leaving them here would ship
-    a provenance claim that path treats as an error.
-    """
-    values = {item.casilla_id: item.value for item in observations}
-    derivation = derive_m303_compensation_available_from_casillas(
-        {
-            # Both selectors the derivation reads are supplied, defaulting to
-            # zero when the filed revision declared no such row: an undeclared
-            # box 87 means there is no posterior credit to survive the refund.
-            _M303_POSTERIOR_CASILLA: values.get(_M303_POSTERIOR_CASILLA, _ZERO),
-            _M303_GENERADA_CASILLA: values.get(_M303_GENERADA_CASILLA, _ZERO),
-        },
-        refunded=True,
-    )
-    if derivation is None:
-        raise ModeloLocalObservationError(
-            "Modelo 303 refunded carry derivation returned no result for a complete input, "
-            "so the generated credit cannot be excluded from the persisted carry",
-            context={"casilla_ids": sorted(str(item) for item in values)},
-        )
-    dropped_lineage: dict[str, object] = {
-        "formula_id": None,
-        "op": None,
-        "operand_refs": (),
-        "operand_casilla_refs": (),
-        "operand_values": (),
-    }
-    rewritten: list[CasillaObservation] = []
-    for item in observations:
-        if item.casilla_id == _M303_DISPONIBLE_CASILLA:
-            rewritten.append(item.model_copy(update={**dropped_lineage, "value": derivation.available}))
-        elif item.casilla_id == _M303_GENERADA_CASILLA:
-            rewritten.append(item.model_copy(update={**dropped_lineage, "value": derivation.generated}))
-        else:
-            rewritten.append(item)
-    return tuple(rewritten)
 
 
 def _local_iva_history_expediente_id(filing_ref: str) -> str:
@@ -213,7 +120,7 @@ def _history_repository_in_observation_context(
                 "observation_backend": str(context.engine.url),
             },
         )
-    return override
+    return IvaCompensationHistoryRepository(objects=context)
 
 
 def persist_filed_revision_observation(
@@ -222,7 +129,7 @@ def persist_filed_revision_observation(
     work_unit: WorkUnit,
     repository: CalculationObservationRepository,
     captured_at: datetime,
-    refunded: bool = False,
+    result_disposition: ResultDisposition | None = None,
     taxpayer_nif: str | None = None,
     filing_record_id: str | None = None,
     iva_compensation_history_repository: IvaCompensationHistoryRepository | None = None,
@@ -250,14 +157,9 @@ def persist_filed_revision_observation(
             the filing transition threads through, so the write lands in the
             active bucket's encrypted store).
         captured_at: The filing timestamp, stamped on the stored record.
-        refunded: When ``True`` and the work unit is Modelo 303, the filed period
-            was disposed as a refund request (devolución, Tipo de declaración
-            ``D``): the generated compensación credit is excluded from carry, so
-            the persisted ``iva.compensacion-disponible-fin-periodo`` (and the
-            per-period generada casilla) are zeroed for the generated component
-            before the carry row is written. The default ``False`` preserves the
-            standard compensación carry. Legal basis: RD 1624/1992 art. 30 / Ley
-            37/1992 art. 116.
+        result_disposition: The single typed ``Tipo de declaración`` resolved
+            at the filing boundary. Required for Modelo 303 carry ingress and
+            retained with ``app_filing`` provenance in the persisted envelope.
         taxpayer_nif: Taxpayer NIF from the active profile. When supplied for a
             locally filed Modelo 303, the same observation is projected into the
             profile-local IVA compensation history repository.
@@ -277,8 +179,8 @@ def persist_filed_revision_observation(
     locally filed Modelo 303 rows with a taxpayer NIF, the same observation is
     also converted into an
     :class:`~cadrumo.domain.iva_compensation.IvaCompensationPeriodState` via
-    :func:`~cadrumo.application.calculations.iva_compensation_state_from_registry_observation`
-    and saved through
+    :func:`~cadrumo.application.calculations.persist_observation_envelope_and_iva_history`
+    together with
     :class:`~cadrumo.application.calculations.IvaCompensationHistoryRepository`;
     that history is read only by the explicit IVA-wallet recurrence comparison
     path, not as a second direct owner of the effective casilla 110 value.
@@ -291,14 +193,11 @@ def persist_filed_revision_observation(
         :func:`~cadrumo.application.calculations.extract_modelo_303_local_iva_compensation_recurrence`:
             Reads the local IVA history for wallet reconciliation.
     """
-    observations = revision.observations
-    if refunded and work_unit.modelo == Modelo.M303.value:
-        observations = _refunded_303_observations(observations)
     observation = RegistryModeloObservation(
         modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
         period=work_unit.period.registry_token,
-        observations=observations,
+        observations=revision.observations,
     )
     key = observation_key(work_unit.modelo, work_unit.period)
     projects_iva_history = (
@@ -315,24 +214,41 @@ def persist_filed_revision_observation(
         if projects_iva_history
         else None
     )
-    repository.save_observation(
+    if work_unit.modelo == Modelo.M303.value and result_disposition is None:
+        raise ModeloLocalObservationError(
+            "local Modelo 303 carry persistence requires the filing-boundary result disposition",
+            context={"modelo": work_unit.modelo, "period": work_unit.period.registry_token},
+        )
+    disposition_projection = (
+        ResultDispositionProjection(
+            disposition=result_disposition,
+            provenance_kind="app_filing",
+            provenance_locator=f"local-filing:{filing_record_id or key}",
+        )
+        if result_disposition is not None
+        else None
+    )
+    payload = repository.prepare_observation_envelope(
         observation,
         source_kind=APP_FILING_SOURCE_KIND,
         captured_at=captured_at,
         stamped_revision_id=work_unit.revision_id,
+        result_disposition=disposition_projection,
+        normalize_m303_carry=work_unit.modelo == Modelo.M303.value,
     )
     if history_repo is not None and taxpayer_nif is not None:
         filing_ref = filing_record_id or key
-        history_repo.save_period(
-            iva_compensation_state_from_registry_observation(
-                observation,
-                taxpayer_nif=taxpayer_nif.strip(),
-                expediente_id=_local_iva_history_expediente_id(filing_ref),
-                status=APP_FILING_SOURCE_KIND,
-                presented_at=captured_at,
-                source_observation_key=f"{key}:local:{filing_ref[:64]}",
-            ),
+        persist_observation_envelope_and_iva_history(
+            observation_repository=repository,
+            history_repository=history_repo,
+            envelope=payload,
+            taxpayer_nif=taxpayer_nif.strip(),
+            expediente_id=_local_iva_history_expediente_id(filing_ref),
+            status=APP_FILING_SOURCE_KIND,
+            source_observation_key=f"{key}:local:{filing_ref[:64]}",
         )
+    else:
+        repository.save(payload)
     return key
 
 

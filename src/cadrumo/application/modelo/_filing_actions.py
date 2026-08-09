@@ -46,7 +46,7 @@ from ...adapters.persistence.profile.modelos_calculation import CalculationRevis
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ...core import RefundElection
+from ...core import PaymentElection, RefundElection, ResultDisposition
 from ...core.config import Settings
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol
@@ -86,7 +86,7 @@ from ._ledger_evidence_gate import raise_if_deductible_vat_evidence_missing
 from ._required_binding_gate import (
     require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
 )
-from ._result_disposition_resolution import revision_is_refund_disposition
+from ._result_disposition_resolution import resolve_modelo_result_disposition
 from ._revision_persistence import persist_filed_revision
 from ._verification_actions import (
     cross_period_expected_member_sets_from_profile,
@@ -128,6 +128,7 @@ def file_modelo_revision(
     workflow_profile: TaxpayerProfile,
     notes: str | None = None,
     refund_election: RefundElection = RefundElection.COMPENSAR,
+    payment_election: PaymentElection = PaymentElection.INGRESO,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
@@ -305,11 +306,12 @@ def file_modelo_revision(
         run_repository=run_repo,
     )
 
-    refunded = _filed_revision_refunded(
+    result_disposition = _filed_revision_result_disposition(
         work_unit=work_unit,
         target=target,
         workflow_profile=workflow_profile,
         refund_election=refund_election,
+        payment_election=payment_election,
     )
 
     return persist_filed_revision(
@@ -324,28 +326,27 @@ def file_modelo_revision(
         work_unit_repository=wu_repo,
         bucket_event_repository=bv_repo,
         calculation_observation_repository=obs_repo,
-        refunded=refunded,
+        result_disposition=result_disposition,
         taxpayer_nif=workflow_profile.tax_id,
     )
 
 
-def _filed_revision_refunded(
+def _filed_revision_result_disposition(
     *,
     work_unit: WorkUnit,
     target: CalculationRevision,
     workflow_profile: TaxpayerProfile,
     refund_election: RefundElection,
-) -> bool:
-    # Determine the filing disposition ONCE from the same shared resolver the
-    # export reads. A Modelo 303 devolución period returns the credit, so the
-    # cross-period carry persisted by filing must generate zero compensación
-    # rather than double-claim the refunded credit into the next period.
-    return revision_is_refund_disposition(
+    payment_election: PaymentElection,
+) -> ResultDisposition:
+    """Resolve once at the filing boundary for both export and carry evidence."""
+    return resolve_modelo_result_disposition(
         work_unit=work_unit,
         revision=target,
         workflow_profile=workflow_profile,
         period=work_unit.period,
         refund_election=refund_election,
+        payment_election=payment_election,
     )
 
 

@@ -71,7 +71,7 @@ class M303CompensationAvailableDerivation:
 
     available: Decimal
     generated: Decimal
-    basis: Literal["generated", "resultado"]
+    basis: Literal["generated", "resultado", "refunded"]
     operand_refs: tuple[CasillaId, ...]
     operand_values: tuple[Decimal, ...]
 
@@ -114,7 +114,11 @@ def derive_m303_compensation_available_from_casillas(
             return M303CompensationAvailableDerivation(
                 available=posterior,
                 generated=_ZERO,
-                basis="resultado",
+                # This is not a resultado-derived carry.  The disposition has
+                # excluded the period's generated credit, so recording the
+                # ordinary fallback basis would make later evidence claim the
+                # wrong policy path.
+                basis="refunded",
                 operand_refs=(),
                 operand_values=(),
             )
@@ -141,7 +145,7 @@ def derive_m303_compensation_available_from_casillas(
         # it in this module is how the two would drift apart on the next
         # regulatory change to the conversion.
         generated=available - posterior,
-        basis="resultado",
+        basis="refunded" if refunded else "resultado",
         operand_refs=(),
         operand_values=(),
     )
