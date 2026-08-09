@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:a0e02b2ae9e2ee1b41c7470601dbbc4fdbca8379e3fc9da802eb27d2774aa483'
+body_hash: 'sha256:9c0ea75ccf84a38132be58b9afda955a02845a508811ba29a9271e482aabd792'
 related:
   - "[[2026-07-23-profile-setup-flow-adr]]"
   - '[[2026-08-08-profile-requirement-grounding-reference]]'
@@ -154,6 +154,23 @@ Driving `report()` for modelo 100 with only `identity.tax_id` declared returns `
 **So `assessed = True` is a claim about the axis, never about the modelo's requirements.** It does not mean the profile is complete for that modelo; the unscoped validation path is what establishes that, and it runs elsewhere. A consumer that renders `assessed = True` as reassurance would be making a completeness claim this field cannot support.
 
 One caution on sizing this, because the obvious count is wrong: a naive tally says fourteen required fields go unreported. It is **one**. `missing_required_field_paths` is row-aware, so the ten `attribution_*` and two `usage_ratios` columns correctly do not count for a filer who declared no such rows. The real gap is `iva.regime` — smaller than the naive figure and a cleaner example, being a field a real filer must actually declare rather than an artefact of counting repeatable columns.
+
+
+#### The gap sat exactly on the boundary of this document's own taxonomy
+
+Worth stating because it generalises past this field. The one genuinely-unreported requirement is `iva.regime` — **the same field excluded from the conditional count above as "the inverse shape"**.
+
+It fell between the two categories this amendment defines. Excluded from the conditional path *correctly*, because it is conditionally relaxed rather than conditionally added. Invisible on the required path because it carries no token. Both agents examined it closely — one to argue the exclusion, one to accept it — and neither asked what the **other** path did with it.
+
+So a field that fits neither bucket cleanly is precisely where a gap survives a review that checks each bucket carefully. A taxonomy makes each category auditable and simultaneously creates a seam between them, and the seam is not visible from inside either category. When this document's distinction is used again, the question to ask is not "is this correctly classified" but "what does the path I just classified it OUT of do with it".
+
+#### On renaming the flag: the window has closed, and the sentence is now the remedy
+
+A narrower name was proposed — `per_operation_requirements_assessed = True` invites the completeness reading, and a rename would protect a reader who never opens this record, where a sentence only protects one who does. The reasoning is sound.
+
+Measured before recommending it: the field already carries **21 references across 9 modules**, including the CLI payloads, the readiness command, profile inspect and the state projection. It was cheap to rename while it had two consumers; it no longer does. A rename is now a deliberate sweep with its own atomic commit, not an opportunistic fix, and it would collide with in-flight work across most of those modules.
+
+So the sentence above is the remedy of record. If a rename is still wanted later, this note is the argument for it and the cost estimate — and the reason the opportunity was missed is worth keeping: the naming risk was identified one exchange after the field had already been wired through to the operator surface.
 
 
 ### Honest limits
