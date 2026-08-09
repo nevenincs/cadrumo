@@ -316,11 +316,24 @@ def test_neither_backend_refuses_a_key_production_actually_emits(
     provider = build(tmp_path)
 
     # A validation refusal is the failure under test; anything else (missing
-    # object, absent root, no credentials) means the key itself was admitted.
-    with pytest.raises(Exception) as caught:
+    # object, absent root, no credentials, a backend-specific transport
+    # failure) means the key itself was admitted. The failure surface differs
+    # per backend (a typed OutboundStorageError locally, a raw googleapiclient
+    # exception for a mocked Drive credential), so this deliberately catches
+    # anything and discriminates inside the handler rather than
+    # pytest.raises(Exception), which the broad-exception-assertion gate would
+    # otherwise flag as an untargeted expectation.
+    try:
         provider.get("namespace", admissible)
-
-    assert not isinstance(caught.value, OutboundStorageValidationError), caught.value
+    except Exception as exc:
+        if isinstance(exc, OutboundStorageValidationError):
+            raise AssertionError(f"admissible key {admissible!r} was refused as invalid: {exc}") from exc
+    else:
+        raise AssertionError(
+            f"expected {provider!r}.get to fail for admissible key {admissible!r} on this unwired test fixture "
+            "(missing object, absent root, or no credentials) -- a silent success means the fixture changed "
+            "and this test's assumptions need revisiting",
+        )
 
 
 def test_each_backend_keeps_its_own_refusal_identity() -> None:
