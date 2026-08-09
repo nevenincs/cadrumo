@@ -5,50 +5,24 @@ tags:
 date: '2026-08-09'
 modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:84a5f48ec76545f396fb6dea6945c79d0be55e2e0a61a4c6a634936793141c97'
+body_hash: 'sha256:9cced6d8191ed668ab74b91fdbc94d91ad2baaa40bbb6b907a531822c7f616a9'
 related:
   - "[[2026-08-07-m303-carry-reconciliation-plan]]"
   - "[[2026-06-21-m303-carry-reconciliation-adr]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace m303-carry-reconciliation with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-# `m303-carry-reconciliation` audit: `S20 payment-election implementation review`
-
 ## Scope
 
-<!-- What was audited and why -->
+Read-only review of S20 against the accepted M303 carry-reconciliation ADR amendment and S20 plan row. The review examined positive-result election resolution, C/D versus U/G carry separation, charge-account handling, export receipt and event provenance, all four CLI/wrapper routes, removed legacy option exposure, localisation, and focused public export coverage.
 
 ## Findings
 
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
+### zero-refund-election-silently-ignored | medium | A refund election on a zero result did not fail closed
 
-       ### S20 payment-election implementation review | {level} | {summary}
+The initial review found that the shared resolver rejected a non-default payment election when the computed disposition was `N`, but routed a non-default `RefundElection.DEVOLVER` through the negative-result helper unchanged because only `C` consumed that election. A Modelo 303 zero result therefore resolved to `N` without a refusal or election provenance. The ADR amendment requires every non-default election incompatible with the computed sign to refuse rather than be ignored.
 
-     followed by a paragraph carrying the detail. S20 payment-election implementation review is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
+Resolution verified during review: the resolver now rejects `DEVOLVER` unless the base disposition is `C`, and the targeted zero-result regression expects `ModeloRefundElectionNotEligibleError`. The direct current-runtime reproduction now raises that refusal, and the focused S20 suite passed 29 tests.
 
 ## Recommendations
 
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->
+- Preserve the zero-result refusal regression with the positive and negative election cases; no open S20 payment-election finding remains from this review.
+- Resolution status: the recorded MEDIUM zero-`DEVOLVER` finding was remediated and re-reviewed clean.

@@ -6,7 +6,7 @@ tags:
 date: '2026-08-09'
 modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:4446ca39f52d557dbb8e5c8161c26d4c4ef2717ca87ca4ff77be28ff715a09a9'
+body_hash: 'sha256:c4ddd331e00ccb1c1122e7b46894efa8b899f5aa5f9169c07d73e59da6796ce5'
 related:
   - '[[2026-06-21-m303-carry-reconciliation-adr]]'
   - '[[2026-08-07-m303-carry-reconciliation-S01]]'
@@ -23,11 +23,17 @@ related:
   - '[[2026-08-07-m303-carry-reconciliation-S12]]'
   - '[[2026-08-07-m303-carry-reconciliation-S14]]'
   - '[[2026-08-07-m303-carry-reconciliation-S15]]'
+  - '[[2026-08-07-m303-carry-reconciliation-S17]]'
+  - '[[2026-08-07-m303-carry-reconciliation-S18]]'
+  - '[[2026-08-07-m303-carry-reconciliation-S20]]'
   - '[[2026-08-07-m303-carry-reconciliation-plan]]'
+  - '[[2026-08-09-m303-carry-reconciliation-did-page-s17-audit]]'
+  - '[[2026-08-09-m303-carry-reconciliation-payment-election-s20-audit]]'
   - '[[2026-08-09-m303-carry-reconciliation-s05-code-review-audit]]'
   - '[[2026-08-09-m303-carry-reconciliation-s06-code-review-audit]]'
   - '[[2026-08-09-m303-carry-reconciliation-s07-code-review-audit]]'
   - '[[2026-08-09-m303-carry-reconciliation-s08-code-review-audit]]'
+  - '[[2026-08-09-m303-carry-reconciliation-s18-code-review-audit]]'
 ---
 
 # `m303-carry-reconciliation` feature index
@@ -42,10 +48,13 @@ Auto-generated index of all documents tagged with `#m303-carry-reconciliation`.
 
 ### audit
 
+- `2026-08-09-m303-carry-reconciliation-did-page-s17-audit` - 2026-08-09-m303-carry-reconciliation-did-page-s17-audit
+- `2026-08-09-m303-carry-reconciliation-payment-election-s20-audit` - 2026-08-09-m303-carry-reconciliation-payment-election-s20-audit
 - `2026-08-09-m303-carry-reconciliation-s05-code-review-audit` - `m303-carry-reconciliation` audit: `S05 code review`
 - `2026-08-09-m303-carry-reconciliation-s06-code-review-audit` - `m303-carry-reconciliation` audit: `M303 carry reconciliation S06 code review`
 - `2026-08-09-m303-carry-reconciliation-s07-code-review-audit` - `m303-carry-reconciliation` audit: `M303 carry reconciliation S07 code review`
 - `2026-08-09-m303-carry-reconciliation-s08-code-review-audit` - `m303-carry-reconciliation` audit: `M303 carry reconciliation S08 code review`
+- `2026-08-09-m303-carry-reconciliation-s18-code-review-audit` - `m303-carry-reconciliation` audit: `M303 S18 charge-account export review`
 
 ### exec
 
@@ -63,6 +72,9 @@ Auto-generated index of all documents tagged with `#m303-carry-reconciliation`.
 - `2026-08-07-m303-carry-reconciliation-S06` - DEFERRED - assert the disposition-blind available reconstruction in the annual partition instead of relying on a transitive upstream rewrite in another package
 - `2026-08-07-m303-carry-reconciliation-S07` - DEFERRED - refuse a persisted compensation pair where a directly filed disponible casilla overwrites available without generated following it
 - `2026-08-07-m303-carry-reconciliation-S08` - IMPLEMENTED - validated observation-envelope IVA wallet recurrence
+- `2026-08-07-m303-carry-reconciliation-S17` - S17 account-bearing DID export verification
+- `2026-08-07-m303-carry-reconciliation-S18` - S18 charge-account public export verification
+- `2026-08-07-m303-carry-reconciliation-S20` - S20 payment-election implementation
 
 ### plan
 

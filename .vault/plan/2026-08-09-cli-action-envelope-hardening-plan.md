@@ -4,7 +4,7 @@ tags:
   - '#cli-action-envelope-hardening'
 date: '2026-08-09'
 modified: '2026-08-09'
-body_hash: 'sha256:3bd9220ef1eb90d915f8bf026b040f0a8df0d9262fcfd55f3374fde346e32ea7'
+body_hash: 'sha256:c7690d10429950fbc5ce3b24efa634981e47bd75401059c076cd5a417f7a9f4f'
 tier: L3
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
@@ -16,6 +16,14 @@ related:
 
 ## Description
 
+Implement the accepted application-owned precondition verdict and
+schema-resolved action-chain architecture. The campaign starts by making its
+blast radius executable, then introduces the canonical contract, migrates
+complete producer-to-projection slices, and closes only through exact live
+identity joins and real negative-recovery-retry observations. The related ADR,
+research, and reference authorize every Wave. This VaultSpec lifecycle record
+is intentionally not routed through the user-documentation pipeline.
+
 ## Steps
 
 ## Wave `W01` - Establish the fixed-point census and live denominator
@@ -26,10 +34,11 @@ Create the executable candidate ledger and exact live-surface denominator that e
 
 Build the AST-backed candidate census, fixed-point alias expansion, and disposition contract.
 
-- [ ] `W01.P01.S01` - Add an AST-backed census emitting stable candidate records keyed by path, enclosing symbol, role, alias, and action identity; `dev/cli_action_census.py`.
+- [x] `W01.P01.S01` - Add an AST-backed census emitting stable candidate records keyed by path, enclosing symbol, role, alias, and action identity; `dev/cli_action_census.py`.
 - [ ] `W01.P01.S02` - Add fixed-point vocabulary expansion and fail a closing pass that discovers a new semantic cluster; `dev/cli_action_census.py`.
 - [ ] `W01.P01.S03` - Add the adjudicated disposition model with stale-exclusion detection and symbol-scoped reasons; `dev/cli_action_census_dispositions.py`.
 - [ ] `W01.P01.S04` - Require every census candidate to carry exactly one current disposition; `src/cadrumo/entrypoints/cli/tests/test_suggestion_command_conformance.py`.
+- [ ] `W01.P01.S49` - Expand migration Phases through the plan CLI with one exclusive Step per adjudicated producer cluster before execution; `.vault/plan/2026-08-09-cli-action-envelope-hardening-plan.md`.
 
 ### Phase `W01.P02` - Live surface reconciliation
 
@@ -104,9 +113,17 @@ Retire error-registry defaults and free-form operational guidance by complete pr
 
 Convert registered defaults and exception-level action overrides into catalogue references or explicit no-recovery outcomes.
 
-- [ ] `W05.P08.S28` - Convert every adjudicated registered error default into an action reference or explicit no-recovery disposition; `src/cadrumo/core/errors/registry`.
-- [ ] `W05.P08.S29` - Migrate every census-adjudicated production exception override to a typed action producer or grounded exclusion; `src/cadrumo`.
+- [ ] `W05.P08.S28` - Define the error-registry migration contract and catalogue projection; `src/cadrumo/core/errors/_registry.py`.
+- [ ] `W05.P08.S29` - Fail when an adjudicated exception-override producer lacks an exclusive migration Step; `dev/cli_action_census_dispositions.py`.
 - [ ] `W05.P08.S30` - Prove registered error recovery resolves against the live command and input surface; `src/cadrumo/entrypoints/cli/tests/test_error_registry_contract.py`.
+- [ ] `W05.P08.S50` - Migrate core error-code defaults to catalogue action identities or explicit no-recovery outcomes; `src/cadrumo/core/errors/registry/_core.py`.
+- [ ] `W05.P08.S51` - Migrate first application error-code defaults to catalogue action identities or explicit no-recovery outcomes; `src/cadrumo/core/errors/registry/_application_part1.py`.
+- [ ] `W05.P08.S52` - Migrate second application error-code defaults to catalogue action identities or explicit no-recovery outcomes; `src/cadrumo/core/errors/registry/_application_part2.py`.
+- [ ] `W05.P08.S53` - Migrate first domain error-code defaults to catalogue action identities or explicit no-recovery outcomes; `src/cadrumo/core/errors/registry/_domain_part1.py`.
+- [ ] `W05.P08.S54` - Migrate second domain error-code defaults to catalogue action identities or explicit no-recovery outcomes; `src/cadrumo/core/errors/registry/_domain_part2.py`.
+- [ ] `W05.P08.S55` - Migrate third domain error-code defaults to catalogue action identities or explicit no-recovery outcomes; `src/cadrumo/core/errors/registry/_domain_part3.py`.
+- [ ] `W05.P08.S56` - Migrate first adapter error-code defaults to catalogue action identities or explicit no-recovery outcomes; `src/cadrumo/core/errors/registry/_adapters_part1.py`.
+- [ ] `W05.P08.S57` - Migrate second adapter error-code defaults to catalogue action identities or explicit no-recovery outcomes; `src/cadrumo/core/errors/registry/_adapters_part2.py`.
 
 ### Phase `W05.P09` - Diagnostics overview and provisioning
 
@@ -126,8 +143,12 @@ Complete the auth, wizard, ledger, deadline, live, adapter, renderer, and locale
 - [ ] `W05.P10.S37` - Migrate wizard status and next-step producers; `src/cadrumo/application/wizard`.
 - [ ] `W05.P10.S38` - Migrate ledger findings lifecycle guards and recovery-action producers; `src/cadrumo/application/ledger`.
 - [ ] `W05.P10.S39` - Migrate deadline recovery commands and overdue continuations; `src/cadrumo/domain/deadlines`.
-- [ ] `W05.P10.S40` - Migrate live-read and AEAT adapter recovery producers with explicit safety dispositions; `src/cadrumo/application/live`.
-- [ ] `W05.P10.S41` - Remove command identity from remaining adjudicated renderers and locale prose; `src/cadrumo/locales`.
+- [ ] `W05.P10.S40` - Migrate live-read recovery producers with explicit safety dispositions; `src/cadrumo/application/live`.
+- [ ] `W05.P10.S41` - Remove canonical command identity from locale prose and retain derived message templates; `src/cadrumo/locales`.
+- [ ] `W05.P10.S58` - Migrate AEAT adapter recovery producers with explicit external-system safety dispositions; `src/cadrumo/adapters/outbound/aeat`.
+- [ ] `W05.P10.S59` - Remove independently authored command identity from adjudicated CLI renderers; `src/cadrumo/entrypoints/cli`.
+- [ ] `W05.P10.S60` - Migrate TUI recovery rendering to the shared resolved action projection; `src/cadrumo/adapters/inbound/tui`.
+- [ ] `W05.P10.S61` - Migrate shipped agent harness action citations to canonical action identities; `src/cadrumo/_data/agent`.
 
 ## Wave `W06` - Prove action chains and close honestly
 
@@ -149,3 +170,42 @@ Require zero unclassified sites and exact declared-observed reconciliation befor
 - [ ] `W06.P12.S46` - Require a complete semantic and mechanical pass with no newly discovered action site or alias; `dev/cli_action_census.py`.
 - [ ] `W06.P12.S47` - Fail closure on unclassified sites unresolved actions insufficient bindings missing proofs or ungrounded exclusions; `src/cadrumo/entrypoints/cli/tests/test_action_coverage_closure.py`.
 - [ ] `W06.P12.S48` - Publish the final reconciliation and fresh-context honesty findings; `.vault/audit/2026-08-09-cli-action-envelope-hardening-audit.md`.
+
+## Parallelization
+
+Waves are ordered. Within W01, P01 and P02 may run concurrently after agreeing
+on stable candidate and leaf identifiers. Within W02, P03 lands before P04.
+W03 is the first complete migration slice and must be green before W04 or W05
+begins. Within W04, P06 precedes P07 where modelo consumes persisted workflow
+records. Within W05, P08, P09, and P10 may run in parallel with exclusive file
+ownership after the latest fixed-point census assigns every candidate to one
+slice. W06 begins only after all migration dispositions are closed.
+
+Routine discovery, implementation, and verification are owned by Terra high
+agents. Cross-cutting contracts, census machinery, live reconciliation, and
+proof-matrix work are owned by Terra xhigh agents. Sol remains architecture
+advisor and adjudicates only contract conflicts, evidence sufficiency, and
+cross-Wave exceptions.
+
+## Verification
+
+- Feature-scoped RAG, AST, exact-search, and live-surface census completes one
+  full iteration without discovering a new alias, producer, transformer,
+  renderer, command form, or refusal site.
+- Every candidate row has exactly one current disposition and every exclusion
+  is keyed by symbol and enclosing function with a grounded reason.
+- Every operator-callable leaf joins by identity to its result schema, input
+  schema, manifest profile, policy classification, action profile, and declared
+  MCP exposure or exclusion.
+- Every reachable failed precondition emits a stable condition identity,
+  evaluated evidence, and either a resolvable action with sufficient bindings
+  or an explicit terminal, safety, or operator-decision outcome.
+- Every declared actionable outcome joins to a real observation, and every
+  observed actionable outcome joins to one declaration.
+- Safe deterministic scenarios pass real negative dispatch, recovery dispatch,
+  and retry; external and destructive boundaries carry explicit safety proof.
+- Targeted owner tests, import-hygiene gates, strict typing, locale parity, and
+  the relevant full CLI/MCP envelope suites pass without mocks, patches, skips,
+  xfails, or tautological expected actions.
+- A fresh-context Terra xhigh honesty review is persisted and every finding is
+  closed or formally deferred with a follow-up reference before S48 is checked.

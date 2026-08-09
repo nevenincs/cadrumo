@@ -4,7 +4,7 @@ tags:
   - '#m303-carry-reconciliation'
 date: '2026-06-21'
 modified: '2026-08-09'
-body_hash: 'sha256:460e4b562bb03c53012db1ea1a3180181931086312d1ad69da4d2fe83b85c083'
+body_hash: 'sha256:28bdc7fadf1f477a26410e456a26548d69636bd5c617d5838dc72c25c82297c5'
 related:
   - "[[2026-06-21-redeme-company-refund-adr]]"
   - "[[2026-06-21-redeme-company-refund-research]]"
@@ -192,3 +192,35 @@ applicable), but never IBANs, rendered headers, or other account material. S18 r
 until this public path reaches the existing charge-account U composer and proves a real
 end-to-end U export. A separate follow-up Step owns the cross-command contract rather than
 silently widening S18.
+
+## Amendment: prior domiciliation action is a separate filing election
+
+The page-3 X/blank marker is a distinct per-filing `PriorDomiciliationElection`, with
+semantic values `KEEP` (blank) and `CANCEL_OR_MODIFY` (X). It is not amendment kind,
+`PaymentElection`, or the misleading existing `tipo_rectificacion` header. It is legal only
+for Modelo 303 rectificativas; X additionally requires authoritative baseline evidence whose
+persisted resolved disposition was U. Unsupported modelo/kind, raw or unknown values,
+missing baseline-U proof, and an election the selected registry revision cannot represent all
+refuse before bytes, receipt, or event. KEEP is the neutral default.
+
+One shared DID predicate governs renderer and parity:
+`disposition_requires_bank_account OR (is_m303_rectificativa AND
+casilla111_has_content AND prior_domiciliation_election is KEEP)`. Content means semantically
+present, not merely non-zero. X disables only the Nota-3-added requirement; it never
+suppresses DID independently required by current U or a refund disposition.
+
+The registry layout must split. The current 2023-y-siguientes page-3 snapshot is bounded
+through 2025 and retains the 2025 authority (marker offset 406, casilla 111 offset 424). A
+2026-y-siguientes snapshot is grounded separately to the 2026 design (marker 440, casilla 111
+441, including all adjacent moved page-3 positions). Both revisions use the truthful header
+semantic `prior_domiciliation_action`; `tipo_rectificacion` is removed.
+
+The typed election is threaded through export, quickfile, file action/API, CLI, verification
+wrappers, receipt/event, and filing observation with safe semantic and baseline provenance,
+never IBAN. The Nota-3-only DID uses the existing `RefundAccount`. The statutory 2025 and
+2026 forms describe casilla 111 as money credited by bank transfer to the taxpayer's indicated
+account; it is a refund destination, not a debit mandate. Current U continues to use
+`ChargeAccount`. Missing `RefundAccount` refuses before output or event, and distinct
+charge/refund specimens must prove the correct source. Casilla 111 requires a negative
+casilla 71, so U is already sign-incompatible whenever Nota 3 applies; that fail-closed
+invariant is retained rather than inventing a combined-account precedence rule.

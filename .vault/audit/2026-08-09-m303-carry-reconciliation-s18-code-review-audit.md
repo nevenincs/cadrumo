@@ -5,7 +5,7 @@ tags:
 date: '2026-08-09'
 modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:29d5297dfadcb1d67b16ea9770aea431fc13e48e960d2f295f33a1a9a70ffc2f'
+body_hash: 'sha256:bd8c13b51bde27d4283df2a0c598aae631ef7ee23cabc32877d4fb9d7a2b9766'
 related:
   - "[[2026-08-07-m303-carry-reconciliation-plan]]"
 ---
@@ -25,3 +25,4 @@ The U tests call the private `_compose_charge_account_block` and render manually
 
 - Decide the authoritative recorded U/G payment-method election and thread it through the single result-disposition resolver, export, filing, quickfile, and CLI paths as appropriate; do not add a test-only declaration-type override.
 - After that decision, add real public export/composition tests for a selected U with a persisted/projected charge IBAN and for its missing-charge refusal, then rerun review before closing S18.
+- Resolution (re-reviewed): S20 now provides the canonical `PaymentElection` and the public export proof. Persisted profile facts project a distinct charge account, `DOMICILIACION` resolves to `U`, and `export_modelo_revision` renders the DID page with only that charge IBAN. The missing-charge path refuses despite a refund account, while the refund DID regressions retain refund-account-only output. The focused six-test suite passed; this MEDIUM finding is cleared.
