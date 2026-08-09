@@ -314,5 +314,5 @@ def test_the_cache_document_is_the_only_route_a_transcription_can_be_written(
 
     assert written.model_dump(mode="json")["entries"], "the persistable mirror serializes"
 
-    with pytest.raises(Exception, match=r"(?i)serial|dump|persist|refus"):
+    with pytest.raises(NotImplementedError, match=r"(?i)serial|dump|persist|refus"):
         _transcription().model_dump()

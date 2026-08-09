@@ -32,6 +32,7 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from pydantic import ValidationError
 
 from ....core import ClassifierInputSource
 from ....domain.iva import (
@@ -78,7 +79,7 @@ class TestTheChannelCarriesAttributionBesideTheValue:
 
     def test_a_fact_cannot_be_supplied_without_naming_its_source(self) -> None:
         """The one thing the channel exists to make impossible."""
-        with pytest.raises(Exception, match="source"):
+        with pytest.raises(ValidationError, match="source"):
             DeclaredFact(value=SupplyNature.GOODS)  # type: ignore[call-arg]
 
 
