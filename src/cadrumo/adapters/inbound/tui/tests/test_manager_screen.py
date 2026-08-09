@@ -15,6 +15,7 @@ from __future__ import annotations
 import asyncio
 
 import pytest
+from textual.widget import Widget
 from textual.widgets import DataTable, Input, Static
 
 from .....application.user_profile import (
@@ -626,7 +627,7 @@ async def test_the_action_row_never_paints_past_a_floor_terminal(tmp_path) -> No
             await pilot.pause()
             offenders = [
                 f"{type(widget).__name__}{widget.region}"
-                for widget in app.screen.walk_children()
+                for widget in app.screen.walk_children(Widget)
                 if widget.display and widget.region.right > 80
             ]
             assert not offenders, f"painted past the side edge of an 80-column terminal: {offenders}"

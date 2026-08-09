@@ -32,8 +32,10 @@ from __future__ import annotations
 import json
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Any
 
 import pytest
+from click.testing import Result
 
 from ....domain.iva import EUMemberState, IvaTerritorialScope
 from ._cli_surface_support import (
@@ -65,11 +67,17 @@ def _confirm_json(*args: str):
     return _invoke(["--format", "json", "app", "ledger", "counterparty", "confirm", *args])
 
 
-def _payload(result) -> dict:
+def _payload(result: Result) -> dict[str, Any]:
+    """Parse the JSON envelope the CLI wrote to stdout.
+
+    ``Any`` is what a parsed envelope genuinely is at this boundary: the
+    ``result`` payload differs per verb, so a single annotation here would
+    have to describe every command's schema at once.
+    """
     return json.loads(result.output)
 
 
-def _notice_codes(result) -> set[str]:
+def _notice_codes(result: Result) -> set[str]:
     return {notice["code"] for notice in _payload(result).get("notices", [])}
 
 

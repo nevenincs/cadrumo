@@ -29,7 +29,7 @@ from __future__ import annotations
 
 import json
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import pytest
 
@@ -37,12 +37,14 @@ from ...application.ledger import DocumentTranscription, TranscriberIdentity
 from ...core import LOCAL_TRANSPORT_LABEL, FieldOrigin
 from ...core.config import load_settings
 from ...core.time import now
+from .._client import LLMClient
 from .._evidence_draft_text import TextInvoiceFieldExtractor
 from .._models import LLMProvider, LLMResponse
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 if TYPE_CHECKING:
+    from ...application.ledger import InvoiceDraft
     from .._models import LLMRequest
 
 _REPLY = json.dumps(
@@ -56,12 +58,19 @@ _REPLY = json.dumps(
 )
 
 
-class _CapturingClient:
-    """Captures the request the reader builds. No transport, no inference."""
+class _CapturingClient(LLMClient):
+    """Captures the request the reader builds. No transport, no inference.
+
+    Subclasses the client the reader's ``client`` parameter declares, so it is
+    substitutable for the real one rather than merely shaped like it -- the
+    same form the sibling reader tests use.
+    """
 
     def __init__(self) -> None:
+        super().__init__()
         self.requests: list[LLMRequest] = []
 
+    @override
     async def complete(self, request: LLMRequest) -> LLMResponse:
         self.requests.append(request)
         return LLMResponse(
@@ -86,9 +95,9 @@ def _transcription(origin: FieldOrigin, *, name: str = "pdfplumber") -> Document
     )
 
 
-def _extract(transcription: DocumentTranscription) -> tuple[_CapturingClient, object]:
+def _extract(transcription: DocumentTranscription) -> tuple[_CapturingClient, InvoiceDraft]:
     client = _CapturingClient()
-    extractor = TextInvoiceFieldExtractor(model="stub-text", client=client, settings=load_settings())  # type: ignore[arg-type]
+    extractor = TextInvoiceFieldExtractor(model="stub-text", client=client, settings=load_settings())
     return client, extractor.extract(transcription=transcription)
 
 
@@ -114,7 +123,7 @@ def test_every_envelope_carries_the_transcribers_origin_not_a_hardcoded_one(orig
     """
     _client, draft = _extract(_transcription(origin))
 
-    envelopes = draft.provenance  # type: ignore[attr-defined]
+    envelopes = draft.provenance
     assert envelopes, "the fixture must produce envelopes, or this passes vacuously"
     assert {envelope.origin for envelope in envelopes} == {origin}
 
@@ -135,7 +144,7 @@ def test_the_request_is_marked_evidence_derived_unless_the_corpus_is_named() -> 
     where its pages came from is treated as holding a taxpayer's document.
     """
     client = _CapturingClient()
-    TextInvoiceFieldExtractor(model="stub-text", client=client, settings=load_settings()).extract(  # type: ignore[arg-type]
+    TextInvoiceFieldExtractor(model="stub-text", client=client, settings=load_settings()).extract(
         transcription=_transcription(FieldOrigin.TEXT_LAYER),
     )
     assert client.requests[0].evidence_derived is True
@@ -143,7 +152,7 @@ def test_the_request_is_marked_evidence_derived_unless_the_corpus_is_named() -> 
     corpus_client = _CapturingClient()
     TextInvoiceFieldExtractor(
         model="stub-text",
-        client=corpus_client,  # type: ignore[arg-type]
+        client=corpus_client,
         settings=load_settings(),
         public_corpus=True,
     ).extract(transcription=_transcription(FieldOrigin.TEXT_LAYER))
@@ -161,7 +170,7 @@ def test_the_default_local_model_is_the_text_extraction_role_not_the_vision_one(
     """
     settings = load_settings()
     client = _CapturingClient()
-    TextInvoiceFieldExtractor(client=client, settings=settings).extract(  # type: ignore[arg-type]
+    TextInvoiceFieldExtractor(client=client, settings=settings).extract(
         transcription=_transcription(FieldOrigin.TEXT_LAYER),
     )
 
@@ -179,5 +188,5 @@ def test_the_role_evidence_the_model_returned_reaches_the_draft_envelope() -> No
     """
     _client, draft = _extract(_transcription(FieldOrigin.TEXT_LAYER))
 
-    supplier = next(e for e in draft.provenance if e.field == "supplier_tax_id")  # type: ignore[attr-defined]
+    supplier = next(e for e in draft.provenance if e.field == "supplier_tax_id")
     assert supplier.role_evidence == "Proveedor:"

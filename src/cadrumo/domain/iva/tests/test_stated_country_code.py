@@ -30,6 +30,7 @@ See Also:
 from __future__ import annotations
 
 import tomllib
+from collections.abc import Mapping
 
 import pytest
 
@@ -46,6 +47,24 @@ def _bundled() -> dict[str, object]:
     return tomllib.loads(
         bundled_path("registry", "aeat", "iva", "country_names.toml").read_text(encoding="utf-8"),
     )
+
+
+def _bundled_country_records() -> list[Mapping[str, object]]:
+    """Read the shipped country rows, asserting only that they ARE rows.
+
+    Deliberately typed no tighter than that. A row missing ``alpha3``, or
+    repeating one another row already carries, is precisely what the gates
+    below look for on the shipped file -- so a model requiring the column
+    would refuse the defect at parse time and leave every assertion passing
+    over a population that can no longer contain it.
+    """
+    records = _bundled()["country"]
+    assert isinstance(records, list), "the shipped catalogue no longer stores countries as an array of tables"
+    rows: list[Mapping[str, object]] = []
+    for record in records:
+        assert isinstance(record, dict), f"country row is not a table: {record!r}"
+        rows.append(record)
+    return rows
 
 
 class TestTheLookup:
@@ -127,15 +146,15 @@ class TestTheBundledColumn:
         Read from the file rather than restated, so this cannot become a second
         copy of the table that drifts against it and passes while doing so.
         """
-        records = _bundled()["country"]
+        records = _bundled_country_records()
         assert records
-        missing = [record["code"] for record in records if not str(record.get("alpha3", "")).strip()]  # type: ignore[union-attr,index]
+        missing = [record["code"] for record in records if not str(record.get("alpha3", "")).strip()]
         assert not missing, f"records carrying no alpha-3 code: {missing}"
 
     def test_the_column_names_each_country_exactly_once(self) -> None:
         """One alpha-3 per country and one country per alpha-3, on the shipped data."""
-        records = _bundled()["country"]
-        codes = [str(record["alpha3"]) for record in records]  # type: ignore[union-attr,index]
+        records = _bundled_country_records()
+        codes = [str(record["alpha3"]) for record in records]
         assert len(set(codes)) == len(codes)
         assert len(_index_country_alpha3(_bundled(), source="bundled")) == len(codes)
 

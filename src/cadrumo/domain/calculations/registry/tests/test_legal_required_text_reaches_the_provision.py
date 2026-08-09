@@ -28,6 +28,7 @@ legal authority behind it, not a test change.
 from __future__ import annotations
 
 import tomllib
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Final
 
@@ -160,6 +161,23 @@ def _legal_entries() -> list[tuple[str, dict[str, object]]]:
     return entries
 
 
+def _required_phrases(entry: Mapping[str, object]) -> tuple[str, ...]:
+    """Read one entry's required phrases as the strings they are.
+
+    Narrowed here rather than at each call site, so both gates below read the
+    field the same way. The list check is not ceremony: a bare string is
+    truthy and iterable, so a catalogue that stated one phrase unwrapped
+    would have been walked one CHARACTER at a time, and every single-letter
+    substring matches a heading -- the entry would have been reported as
+    heading-only whatever it actually quoted.
+    """
+    required = entry.get("required_text")
+    if required is None:
+        return ()
+    assert isinstance(required, list), f"required_text is not a list of phrases: {required!r}"
+    return tuple(str(phrase) for phrase in required)
+
+
 def _grounding_text(corpus_ref: str) -> str | None:
     """Return the text production actually grounds on for this reference.
 
@@ -202,7 +220,7 @@ def _heading_only_entries() -> list[tuple[str, int]]:
     """
     found: list[tuple[str, int]] = []
     for key, entry in _legal_entries():
-        required = entry.get("required_text") or []
+        required = _required_phrases(entry)
         corpus_ref = entry.get("corpus_ref")
         if not required or not isinstance(corpus_ref, str):
             continue
@@ -210,7 +228,7 @@ def _heading_only_entries() -> list[tuple[str, int]]:
         if text is None or len(text) <= _UNCHECKED_BODY_FLOOR:
             continue
         heading = text[:_HEADING_WINDOW]
-        if all(normalise_corpus_text(str(phrase)) in heading for phrase in required):
+        if all(normalise_corpus_text(phrase) in heading for phrase in required):
             found.append((key, len(text)))
     return found
 
@@ -281,7 +299,7 @@ def test_the_measurement_would_notice_a_body_phrase() -> None:
     heading = text[:_HEADING_WINDOW]
 
     # Its phrases now come from the body, so at least one falls outside the heading.
-    assert not all(normalise_corpus_text(str(phrase)) in heading for phrase in art_94["required_text"]), (
+    assert not all(normalise_corpus_text(phrase) in heading for phrase in _required_phrases(art_94)), (
         "art. 94 was requoted onto its operative provision; a required_text that fits "
         "entirely in the heading means the correction was reverted"
     )
