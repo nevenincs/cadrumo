@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:11c6add7275b3178e54ede75d5fcff0c22e2a6f264ae8da4377cbf237854410d'
+body_hash: 'sha256:a0e02b2ae9e2ee1b41c7470601dbbc4fdbca8379e3fc9da802eb27d2774aa483'
 related:
   - "[[2026-07-23-profile-setup-flow-adr]]"
   - '[[2026-08-08-profile-requirement-grounding-reference]]'
@@ -141,6 +141,20 @@ They are **correct as they stand** — real grounding, verified against live reg
 ### The axis is not the primary safety net
 
 Worth stating so it is not over-credited: the per-modelo walk currently selects one field for one modelo. Requirement enforcement today is carried by the **unscoped** validation path and the **unscoped** conditional path, both of which run regardless of modelo. The per-operation axis is additive precision on top of those.
+
+
+### The same predicate governs the REQUIRED path, so `assessed = True` is not a completeness claim
+
+`_selectors_match_modelo` is the same predicate on both paths, so empty-means-no-match applies to `required = true` fields too: **an untokenised required field is skipped by the per-modelo walk for every modelo.** Measured on 2026-08-09: 15 required fields, **1 tokenised**.
+
+The consequence is on `per_operation_requirements_assessed`, and it runs opposite to the intuition. `assessed = False` is honest — it reports that nothing was examined, which is the whole reason the flag exists. **`assessed = True` is the weaker signal**: it reads as "the required fields for this modelo were checked" when it means "the *tokenised* required fields were", currently one field out of fifteen.
+
+Driving `report()` for modelo 100 with only `identity.tax_id` declared returns `assessed = True`, `ready = True`, `missing = ()` — while `iva.regime` is `required = true`, genuinely required for that record, and unreported.
+
+**So `assessed = True` is a claim about the axis, never about the modelo's requirements.** It does not mean the profile is complete for that modelo; the unscoped validation path is what establishes that, and it runs elsewhere. A consumer that renders `assessed = True` as reassurance would be making a completeness claim this field cannot support.
+
+One caution on sizing this, because the obvious count is wrong: a naive tally says fourteen required fields go unreported. It is **one**. `missing_required_field_paths` is row-aware, so the ten `attribution_*` and two `usage_ratios` columns correctly do not count for a filer who declared no such rows. The real gap is `iva.regime` — smaller than the naive figure and a cleaner example, being a field a real filer must actually declare rather than an artefact of counting repeatable columns.
+
 
 ### Honest limits
 
