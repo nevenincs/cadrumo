@@ -1331,10 +1331,10 @@ application:
       iva_wallet_next_action: Revisa la decisió de conciliació de la cartera de compensació
         d'IVA abans de verificar o exportar aquest Model 303.
       m210_baseline_tipo_deferred:
-        next_action: 'El tipus de gravamen b tipo_renta={tipo_renta} està ajornat
-          a una Fase futura sota la task #229 (corpus BOE pendent). Establiu profile.country_of_fiscal_residence
-          per reclamar la tarifa Convenio aplicable, o espereu que el corpus baseline
-          incorpori aquesta fila.'
+        next_action: 'El tipus de gravamen baseline per a tipo_renta={tipo_renta}
+          està ajornat a una Fase futura sota la task #229 (corpus BOE pendent). Establiu
+          {requirements} per reclamar el tipus de Conveni aplicable, o espereu que
+          el corpus baseline incorpori aquesta fila.'
       m210_convenio_lob_advisory: 'M210_CONVENIO_LOB_ADVISORY: s''ha aplicat el tipus
         de Convenio Espanya-%{cc} (%{document_id}) per a tipo_renta=%{tipo_renta}.
         El benefici del conveni només està disponible per al beneficiari efectiu resident
@@ -1346,9 +1346,9 @@ application:
         l'article específic del conveni, no només el marc general del Model de Conveni
         de l'OCDE.
       m210_convenio_rate_missing:
-        next_action: Autoritzeu una fila de Convenio España-{cc} per a tipo_renta={tipo_renta}
-          a registry/aeat/treaties/, o desestableixi profile.country_of_fiscal_residence
-          per usar el baseline TRLIRNR Art 25.
+        next_action: Autoritzeu una fila de Conveni Espanya-{cc} per a tipo_renta={tipo_renta}
+          a registry/aeat/treaties/, o esborreu {requirements} per tornar al baseline
+          de l'art. 25 del TRLIRNR.
       madrid_nacimiento_adopcion_eligibility_advisory: 'MADRID_NACIMIENTO_ADOPCION_ELIGIBILITY_ADVISORY:
         la casella %{casilla_id} és zero però el contribuent té un descendent elegible
         (recompte %{weighted_count}) per a la deducció de Madrid. El disparador automàtic
@@ -1432,10 +1432,10 @@ application:
       registry_snapshot_unresolved: no s'ha pogut resoldre la instantània del registre
         per al model=%{modelo} exercici=%{filing_year} període=%{period}
       representante_fiscal_required:
-        next_action: Designeu un representant fiscal a Espanya establint profile.representante_fiscal_nif
-          mitjançant l'ordre `aeat config profile edit`. El TRLIRNR Art. 10 exigeix
-          que els declarants IRNR no residents a la UE/EEE designin un representant
-          per a comunicacions amb l'AEAT.
+        next_action: Designeu un representant fiscal a Espanya establint {requirements}
+          mitjançant l'ordre `aeat config profile edit`. L'art. 10 del TRLIRNR exigeix
+          que els declarants IRNR no residents a l'EEE designin un representant per
+          a les comunicacions amb l'AEAT.
     iva_wallet:
       correct_no_record: No existeix cap registre de compensació sembrat per a %{filing_year}/%{period}.
         Executa primer 'aeat app modelo iva-wallet seed'; la correcció sobreescriu

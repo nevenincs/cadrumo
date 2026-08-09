@@ -1212,7 +1212,7 @@ application:
         verifying or exporting this Modelo 303.
       m210_baseline_tipo_deferred:
         next_action: 'The baseline rate for tipo_renta={tipo_renta} is deferred to
-          a future Phase under task #229 (BOE corpus pending). Set profile.country_of_fiscal_residence
+          a future Phase under task #229 (BOE corpus pending). Set {requirements}
           to claim the applicable Convenio rate, or wait for the baseline corpus to
           incorporate this row.'
       m210_convenio_lob_advisory: 'M210_CONVENIO_LOB_ADVISORY: the Convenio Espana-%{cc}
@@ -1226,8 +1226,8 @@ application:
         efectivo article, not only the general OECD Model Convention framework.
       m210_convenio_rate_missing:
         next_action: Author a Convenio España-{cc} treaty override row for tipo_renta={tipo_renta}
-          under registry/aeat/treaties/, or unset profile.country_of_fiscal_residence
-          to fall back to the TRLIRNR Art 25 baseline.
+          under registry/aeat/treaties/, or clear {requirements} to fall back to the
+          TRLIRNR Art 25 baseline.
       madrid_nacimiento_adopcion_eligibility_advisory: 'MADRID_NACIMIENTO_ADOPCION_ELIGIBILITY_ADVISORY:
         casilla %{casilla_id} is zero but the filer has a Madrid nacimiento/adopcion-eligible
         descendant (weighted count %{weighted_count}). Auto-trigger is fail-closed
@@ -1308,7 +1308,7 @@ application:
       registry_snapshot_unresolved: registry snapshot for modelo=%{modelo} filing_year=%{filing_year}
         period=%{period} could not be resolved
       representante_fiscal_required:
-        next_action: Designate a fiscal representative in Spain by setting profile.representante_fiscal_nif
+        next_action: Designate a fiscal representative in Spain by setting {requirements}
           via the `aeat config profile edit` command. TRLIRNR Art. 10 requires non-EEA
           IRNR filers to declare a representative for AEAT communications.
     iva_wallet:

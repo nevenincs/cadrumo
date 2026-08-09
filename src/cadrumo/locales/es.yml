@@ -1342,10 +1342,10 @@ application:
       iva_wallet_next_action: Revise la decisión de conciliación del saldo IVA antes
         de verificar o exportar este Modelo 303.
       m210_baseline_tipo_deferred:
-        next_action: 'El tipo de gravamen baseline para tipo_renta={tipo_renta} esta
+        next_action: 'El tipo de gravamen baseline para tipo_renta={tipo_renta} está
           aplazado a una Fase futura bajo task #229 (corpus BOE pendiente). Establezca
-          profile.country_of_fiscal_residence para reclamar la tarifa Convenio aplicable,
-          o espere a que el corpus baseline incorpore esta fila.'
+          {requirements} para reclamar el tipo de Convenio aplicable, o espere a que
+          el corpus baseline incorpore esta fila.'
       m210_convenio_lob_advisory: 'M210_CONVENIO_LOB_ADVISORY: se ha aplicado el tipo
         de Convenio España-%{cc} (%{document_id}) para tipo_renta=%{tipo_renta}. El
         beneficio del convenio solo está disponible para el beneficiario efectivo
@@ -1358,8 +1358,8 @@ application:
         de Convenio de la OCDE.
       m210_convenio_rate_missing:
         next_action: Autorice una fila de Convenio España-{cc} para tipo_renta={tipo_renta}
-          en registry/aeat/treaties/, o desestablezca profile.country_of_fiscal_residence
-          para usar el baseline TRLIRNR Art 25.
+          en registry/aeat/treaties/, o borre {requirements} para volver al baseline
+          del art. 25 del TRLIRNR.
       madrid_nacimiento_adopcion_eligibility_advisory: 'MADRID_NACIMIENTO_ADOPCION_ELIGIBILITY_ADVISORY:
         la casilla %{casilla_id} es cero pero el contribuyente tiene un descendiente
         elegible (recuento %{weighted_count}) para la deducción de Madrid. El disparo
@@ -1443,10 +1443,10 @@ application:
       registry_snapshot_unresolved: no se pudo resolver el snapshot de registro para
         el modelo=%{modelo} ejercicio=%{filing_year} periodo=%{period}
       representante_fiscal_required:
-        next_action: Designe un representante fiscal en España estableciendo profile.representante_fiscal_nif
-          mediante el comando `aeat config profile edit`. El TRLIRNR Art. 10 exige
-          que los declarantes IRNR no residentes en la UE/EEE designen un representante
-          para comunicaciones con la AEAT.
+        next_action: Designe un representante fiscal en España estableciendo {requirements}
+          mediante el comando `aeat config profile edit`. El TRLIRNR art. 10 exige
+          que los declarantes IRNR no residentes en el EEE designen un representante
+          para las comunicaciones con la AEAT.
     iva_wallet:
       correct_no_record: No existe ningún registro de compensación sembrado para %{filing_year}/%{period}.
         Ejecuta primero 'aeat app modelo iva-wallet seed'; la corrección sobrescribe

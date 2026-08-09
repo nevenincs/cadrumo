@@ -1269,8 +1269,8 @@ application:
       m210_baseline_tipo_deferred:
         next_action: 'A tipo_renta={tipo_renta} értékéhez tartozó baseline adókulcs
           egy későbbi Fázisra van halasztva a #229 task alatt (BOE korpusz függőben).
-          Állítsa be a profile.country_of_fiscal_residence értékét az alkalmazható
-          Convenio tarifa igényléséhez, vagy várja meg amíg a baseline korpusz beépíti
+          Állítsa be a következőt: {requirements}, hogy az alkalmazandó Egyezmény
+          szerinti kulcsot igényelje, vagy várja meg, amíg a baseline korpusz felveszi
           ezt a sort.'
       m210_convenio_lob_advisory: 'M210_CONVENIO_LOB_ADVISORY: a Convenio Spanyolország-%{cc}
         (%{document_id}) egyezményi adókulcs alkalmazásra került a tipo_renta=%{tipo_renta}
@@ -1284,9 +1284,9 @@ application:
         az egyezmény konkrét cikkelyét, ne csak az OECD Modellegyezmény általános
         LOB koncepcióját.
       m210_convenio_rate_missing:
-        next_action: Hozzon létre egy Convenio España-{cc} szerződési sort a tipo_renta={tipo_renta}
-          értékhez a registry/aeat/treaties/ alatt, vagy állítsa vissza a profile.country_of_fiscal_residence
-          értékét a TRLIRNR Art 25 alapérték használatához.
+        next_action: 'Hozzon létre egy Spanyolország-{cc} egyezményi sort a tipo_renta={tipo_renta}
+          értékhez a registry/aeat/treaties/ alatt, vagy törölje a következőt: {requirements},
+          hogy visszatérjen a TRLIRNR 25. cikke szerinti baseline-hoz.'
       madrid_nacimiento_adopcion_eligibility_advisory: 'MADRID_NACIMIENTO_ADOPCION_ELIGIBILITY_ADVISORY:
         a(z) %{casilla_id} rovat nulla, de van jogosult leszármazottak (súlyozott
         szám %{weighted_count}) a madridi levonáshoz. Az automatikus kiváltás zárt
@@ -1369,10 +1369,10 @@ application:
       registry_snapshot_unresolved: 'a registry-pillanatkép nem oldható fel: modelo=%{modelo}
         filing_year=%{filing_year} period=%{period}'
       representante_fiscal_required:
-        next_action: Jelöljön ki egy spanyolországi adóügyi képviselőt a profile.representante_fiscal_nif
-          beállításával a `aeat config profile edit` paranccsal. A TRLIRNR 10. cikke
-          megköveteli, hogy az EU/EGT-n kívüli IRNR bevallók képviselőt jelöljenek
-          ki az AEAT kommunikációhoz.
+        next_action: 'Jelöljön ki egy spanyolországi adóügyi képviselőt a következő
+          beállításával: {requirements}, az `aeat config profile edit` paranccsal.
+          A TRLIRNR 10. cikke előírja, hogy az EGT-n kívüli IRNR-bevallók képviselőt
+          jelöljenek ki az AEAT-tal folytatott kommunikációhoz.'
     iva_wallet:
       correct_no_record: 'Nincs beállított kompenzációs rekord ehhez: %{filing_year}/%{period}.
         Először futtassa a ''aeat app modelo iva-wallet seed'' parancsot; a javítás
