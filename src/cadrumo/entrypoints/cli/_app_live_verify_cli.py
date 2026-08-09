@@ -14,7 +14,7 @@ from typing import Annotated, TypedDict
 
 import typer
 
-from ...application.live import VerifyVerdict
+from ...application.live import VerifySurface, VerifyVerdict
 from ...core.i18n import tr
 from ...core.time import now
 from ._app_live_auth_preflight import resolve_active_bucket
@@ -90,7 +90,7 @@ def _verify_row(observation) -> _VerifyRow:
 def verify_list(
     ctx: typer.Context,
     surface: Annotated[
-        str | None,
+        VerifySurface | None,
         typer.Option(
             "--surface",
             help=tr(
@@ -110,21 +110,13 @@ def verify_list(
     stored observations returned by :class:`VerifyService`, not fresh live
     checks, and are emitted through :class:`VerifyListResult`.
     """
-    from ...application.live import VerifyService, VerifySurface
+    from ...application.live import VerifyService
     from ._app_live_payloads import VerifyListResult, VerifyObservationSummaryPayload
 
     bucket_id = _bucket_id()
-    resolved_surface: VerifySurface | None = None
-    if surface is not None:
-        try:
-            resolved_surface = VerifySurface(surface)
-        except ValueError as exc:
-            raise typer.BadParameter(
-                tr("cli.app.live.verify.unknown_surface", surface=surface),
-            ) from exc
     rows = VerifyService().list_observations(
         bucket_id=bucket_id,
-        surface=resolved_surface,
+        surface=surface,
         nif=nif,
     )
     result = VerifyListResult(
@@ -180,7 +172,7 @@ def verify_show(
 def verify_latest(
     ctx: typer.Context,
     surface: Annotated[
-        str,
+        VerifySurface,
         typer.Option(
             "--surface",
             help=tr(
@@ -201,19 +193,13 @@ def verify_latest(
     emits the stable :class:`VerifyLatestResult` shape with
     ``observation_id=None``.
     """
-    from ...application.live import VerifyService, VerifySurface
+    from ...application.live import VerifyService
     from ._app_live_payloads import VerifyLatestResult
 
     bucket_id = _bucket_id()
-    try:
-        resolved_surface = VerifySurface(surface)
-    except ValueError as exc:
-        raise typer.BadParameter(
-            tr("cli.app.live.verify.unknown_surface", surface=surface),
-        ) from exc
     record = VerifyService().latest_for_nif(
         bucket_id=bucket_id,
-        surface=resolved_surface,
+        surface=surface,
         nif=nif,
     )
     if record is None:
@@ -268,7 +254,7 @@ def verify_nif_iva(
     :class:`VerifyNifIvaResult`.
     """
     from ...adapters.outbound.aeat.sede import NifIvaCheckSedeDriver
-    from ...application.live import VerifyService, VerifySurface
+    from ...application.live import VerifyService
     from ...core.access_gate import AeatAccessGate
     from ...core.config import load_settings
     from ._app_live_payloads import VerifyNifIvaResult
@@ -325,7 +311,7 @@ def verify_tgvi(
     :class:`VerifyTgviResult`.
     """
     from ...adapters.outbound.aeat.sede import GroiSedeDriver
-    from ...application.live import VerifyService, VerifySurface
+    from ...application.live import VerifyService
     from ...core.access_gate import AeatAccessGate
     from ...core.config import load_settings
     from ._app_live_payloads import VerifyTgviResult

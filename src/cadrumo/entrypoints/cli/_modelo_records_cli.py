@@ -35,7 +35,7 @@ from ...core import Period, PeriodError
 from ...core.i18n import tr
 from ...domain.calculations.registry import CasillaId, validated_casilla_id
 from ...domain.modelos import ExternalEvidenceKind, ModeloCode, ModeloValidationError
-from ._common import _emit_envelope, _profile_to_taxpayer
+from ._common import MODELO_CODE_CHOICE, _emit_envelope, _profile_to_taxpayer
 from ._modelo_payloads import (
     FilingRecordImportResult,
     FilingRecordLocalObservationResult,
@@ -153,7 +153,7 @@ def filing_record_list(
     ] = None,
     modelo: Annotated[
         str | None,
-        typer.Option("--modelo", help=tr("cli.app.modelo.filing_record.modelo_help")),
+        typer.Option("--modelo", click_type=MODELO_CODE_CHOICE, help=tr("cli.app.modelo.filing_record.modelo_help")),
     ] = None,
     include_superseded: Annotated[
         bool,
@@ -226,7 +226,7 @@ def filing_record_import(
         typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help")),
     ],
     evidence_kind: Annotated[
-        str,
+        ExternalEvidenceKind,
         typer.Option(
             "--evidence-kind",
             help=tr("cli.app.modelo.filing_record.evidence_kind_help"),
@@ -253,7 +253,8 @@ def filing_record_import(
 ) -> None:
     """Import AEAT external evidence as a current :class:`ModeloRecord`.
 
-    The CLI validates :class:`ExternalEvidenceKind`, parses each ``--set`` value
+    Typer validates :class:`ExternalEvidenceKind` at the boundary, the CLI parses
+    each ``--set`` value
     into a :class:`CasillaId` decimal, resolves the active profile tax id, and
     delegates to :func:`import_external_filing_evidence`.
     The result is emitted as :class:`FilingRecordImportResult`; it is an
@@ -261,18 +262,6 @@ def filing_record_import(
     this application.
     """
     validated_work_unit_id = _work_unit_id(work_unit_id)
-    try:
-        kind = ExternalEvidenceKind(evidence_kind)
-    except ValueError as exc:
-        canonical = ", ".join(repr(k.value) for k in ExternalEvidenceKind)
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.filing_record.invalid_evidence_kind",
-                canonical=canonical,
-                kind=evidence_kind,
-            ),
-        ) from exc
-
     casilla_values: dict[CasillaId, Decimal] = {}
     for spec in set_overrides or ():
         key, value = _casilla_value(spec)
@@ -287,7 +276,7 @@ def filing_record_import(
         record = import_external_filing_evidence(
             work_unit_id=validated_work_unit_id,
             casilla_values=casilla_values,
-            evidence_kind=kind,
+            evidence_kind=evidence_kind,
             evidence_reference_id=evidence_reference_id,
             actor=actor or _actor(),
             expected_tax_id=expected_tax_id,
@@ -301,14 +290,14 @@ def filing_record_import(
 
     result = FilingRecordImportResult.model_validate(
         {
-            "evidence_kind": kind,
+            "evidence_kind": evidence_kind,
             "evidence_reference_id": evidence_reference_id,
             **filing_record_payload(record).model_dump(mode="python"),
         },
     )
     lines = [
         "operation\tmodelo.filing_record.import",
-        f"evidence_kind\t{kind.value}",
+        f"evidence_kind\t{evidence_kind.value}",
         f"evidence_reference_id\t{evidence_reference_id}",
         *filing_record_lines(record),
     ]
@@ -324,7 +313,7 @@ def filing_record_observe_local(
     ctx: typer.Context,
     modelo: Annotated[
         str,
-        typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help")),
+        typer.Option("--modelo", click_type=MODELO_CODE_CHOICE, help=tr("cli.app.modelo.work.modelo_help")),
     ],
     year: Annotated[
         int,

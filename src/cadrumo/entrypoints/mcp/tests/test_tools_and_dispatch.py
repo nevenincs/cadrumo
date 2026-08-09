@@ -366,6 +366,134 @@ def test_ledger_import_provider_renders_as_a_json_enum() -> None:
     assert provider_property["enum"], "the recognised provider set must be non-empty"
 
 
+def test_invoice_operation_type_renders_as_a_json_enum_on_every_writing_verb() -> None:
+    """Every invoice verb accepting ``--operation-type`` exposes the closed M349 set.
+
+    The M349 clave is a closed set, so each writing verb declares
+    :class:`~core.IntracomOperationType` at the Typer boundary and the built MCP
+    input schema surfaces every letter as a JSON ``enum``. The operator on this
+    surface is an autonomous agent reading the schema: a bare ``string`` forces it
+    to guess the claves, and a guess lands a wrong operation key on a filed M349.
+
+    Asserting the full member set rather than a count keeps the gate honest when a
+    clave is added to the enum, and covering all three writing verbs stops one of
+    them regressing to a hand-parsed ``str`` while its siblings stay typed.
+    """
+    from ....core import IntracomOperationType
+
+    expected = [operation.value for operation in IntracomOperationType]
+    by_key = {descriptor.command_key: descriptor for descriptor in build_tool_descriptors()}
+    writing_verbs = ("ledger.invoice.add", "ledger.invoice.wizard", "ledger.invoice.update")
+    for command_key in writing_verbs:
+        operation_property = by_key[command_key].input_schema["properties"]["operation_type"]
+        assert operation_property["type"] == "string", command_key
+        assert operation_property["enum"] == expected, command_key
+    assert expected, "the recognised M349 operation set must be non-empty"
+
+
+@pytest.mark.parametrize(
+    ("command_key", "parameter_name", "enum_import"),
+    [
+        ("diagnostics.telemetry.status", "tier", "core.telemetry:TelemetryTier"),
+        ("diagnostics.telemetry.flush", "tier", "core.telemetry:TelemetryTier"),
+        (
+            "registry.audit_oracles",
+            "environment",
+            "domain.calculations.registry:OracleEnvironment",
+        ),
+        (
+            "modelo.filing_record.import",
+            "evidence_kind",
+            "domain.modelos:ExternalEvidenceKind",
+        ),
+        ("review.queue", "state", "application.review:ReviewState"),
+        (
+            "app.live.borrador.100.list",
+            "state",
+            "application.live:SnapshotStateFilter",
+        ),
+    ],
+)
+def test_closed_value_axes_reach_the_mcp_schema_as_enums(
+    command_key: str,
+    parameter_name: str,
+    enum_import: str,
+) -> None:
+    """A closed-set CLI option must surface its accepted values in the MCP schema.
+
+    Each axis here is a ``StrEnum`` whose members are exactly the accepted CLI
+    tokens. Declaring the enum at the Typer boundary is what makes the input-schema
+    builder emit a JSON ``enum``; a bare ``str`` annotation compiles, passes lint,
+    and silently ships a schema that tells the agent-operator nothing about the
+    accepted set. Hand-parsing the token inside the handler does not repair that,
+    because the refusal only arrives after the agent has already guessed.
+
+    The expected set is read from the enum itself rather than restated, so adding a
+    member cannot leave this gate asserting a stale list; the assertion that still
+    bites is that the schema and the enum agree.
+    """
+    import importlib
+
+    module_path, _, class_name = enum_import.partition(":")
+    enum_class = getattr(importlib.import_module(f"cadrumo.{module_path}"), class_name)
+    expected = [member.value for member in enum_class]
+
+    by_key = {descriptor.command_key: descriptor for descriptor in build_tool_descriptors()}
+    schema_property = by_key[command_key].input_schema["properties"][parameter_name]
+    assert schema_property["type"] == "string"
+    assert schema_property["enum"] == expected
+    assert expected, f"{class_name} must declare at least one member"
+
+
+def test_every_modelo_work_verb_pins_the_registry_eligible_modelo_set() -> None:
+    """The whole ``modelo work`` family must advertise its accepted modelo codes.
+
+    Every verb in this family resolves a registry revision from
+    ``(modelo, filing_year, period)``, so a code with no registry definition can
+    never address one. The accepted set is therefore the core taxonomy minus
+    :data:`NON_REGISTRY_MODELOS`, derived here from the same two core objects the
+    CLI derives it from rather than restated as a literal list.
+
+    The surface is asserted to be complete rather than sampled: a new ``work``
+    verb that declares a bare ``str`` modelo option reds this gate instead of
+    quietly shipping an unhinted axis. ``NON_REGISTRY_MODELOS`` is asserted
+    non-empty so the exclusion cannot become vacuous and let a retired code in.
+
+    ``modelo.work.create`` is exempt, and the exemption is the interesting part.
+    It is the one verb an operator reaches with a modelo the application does not
+    handle, so it deliberately accepts any code in order to run
+    ``guard_unsupported_work_modelo`` and answer with a legally-grounded refusal —
+    ITP-AJD and ISD are ceded autonomic taxes, and the refusal names the regional
+    filing route. A ``click.Choice`` would refuse first with a bare "not one of",
+    trading an actionable answer for an unhinted one. The exemption is asserted to
+    still be bare, so silently pinning it later also reds this gate.
+    """
+    from ....core import NON_REGISTRY_MODELOS, Modelo
+
+    expected = [modelo.value for modelo in Modelo if modelo not in NON_REGISTRY_MODELOS]
+    assert NON_REGISTRY_MODELOS, "the exclusion must exclude something, or this gate is vacuous"
+    assert expected
+
+    #: Accepts out-of-taxonomy codes on purpose; see the docstring.
+    instructive_refusal_verbs = {"modelo.work.create"}
+
+    work_verbs = {
+        descriptor.command_key: descriptor
+        for descriptor in build_tool_descriptors()
+        if descriptor.command_key.startswith("modelo.work.")
+        and "modelo" in descriptor.input_schema.get("properties", {})
+    }
+    assert work_verbs, "positive control failed: no modelo.work.* verb takes a modelo option"
+    assert instructive_refusal_verbs <= work_verbs.keys()
+
+    for command_key, descriptor in sorted(work_verbs.items()):
+        schema_property = descriptor.input_schema["properties"]["modelo"]
+        if command_key in instructive_refusal_verbs:
+            assert schema_property.get("enum") is None, command_key
+            continue
+        assert schema_property.get("enum") == expected, command_key
+
+
 def test_config_reset_lifecycle_schemas_expose_only_start_status_and_resume() -> None:
     """The MCP mirror follows the durable reset lifecycle without scope compatibility."""
     by_key = {descriptor.command_key: descriptor for descriptor in build_tool_descriptors()}

@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Annotated, cast
+from typing import Annotated
 
-import click
 import typer
-import typer._click.types as typer_click_types
 
 from ...application.registry import (
     RegistryRevisionDiffReport,
@@ -21,13 +19,12 @@ from ...application.registry import (
     verify_registry_tree,
     verify_registry_workbooks,
 )
-from ...core import NON_REGISTRY_MODELOS, Modelo
 from ...core.config import load_settings
 from ...core.i18n import tr
 from ...core.json_contract import strict_round_trip
 from ...core.resources import bundled_path
 from ...domain.calculations.registry import OracleEnvironment as _OracleEnvironment
-from ._common import _emit_envelope, resolve_optional_root
+from ._common import MODELO_CODE_CHOICE, _emit_envelope, resolve_optional_root
 from ._registry_corpus import citations_app, manuals_app
 from ._registry_diff_payloads import RegistryDiffRevisionsResult
 from ._registry_payloads import (
@@ -61,25 +58,6 @@ app.add_typer(workbooks_app, name="workbooks")
 app.add_typer(parity_app, name="parity")
 app.add_typer(citations_app, name="citations")
 app.add_typer(manuals_app, name="manuals")
-
-# The accepted-code set for the ``modelo`` argument is derived from the closed
-# core identifier taxonomy, mirroring ``_MODELO_CHOICE`` in
-# ``_modelo_discovery_cli.py``. Help and parse-time refusals must render even
-# while a peer registry authoring slice is fail-hard invalid; the year-to-year
-# resolution refusal itself still comes from the registry-backed service.
-#
-# typer vendors its own copy of click, so ``click.Choice`` is a
-# ``click.types.ParamType`` while ``typer.Argument``'s ``click_type`` expects
-# ``typer._click.types.ParamType``. They are the same object at runtime (the
-# vendored click), so the cast only bridges the static type duality.
-# CAST-RATIONALE-TYPER-CLICK-PARAMTYPE-DUALITY: typer vendors its own click, so
-# click.Choice's click.types.ParamType and typer's typer._click.types.ParamType
-# are the same runtime object behind two static names; the cast bridges only that
-# static duality, with no Any escape.
-_DIFF_MODELO_CHOICE: typer_click_types.ParamType = cast(
-    typer_click_types.ParamType,
-    click.Choice([modelo.value for modelo in Modelo if modelo not in NON_REGISTRY_MODELOS]),
-)
 
 
 def _metric_line(key: str, value: object) -> str:
@@ -179,7 +157,7 @@ def audit_oracles_cmd(
     ctx: typer.Context,
     registry_root: _RegistryRootOpt = None,
     environment: Annotated[
-        str,
+        _OracleEnvironment,
         typer.Option(
             "--environment",
             help=tr("cli.registry.audit_oracles_environment_help"),
@@ -296,7 +274,7 @@ def diff_revisions_cmd(
     ctx: typer.Context,
     modelo: Annotated[
         str,
-        typer.Argument(click_type=_DIFF_MODELO_CHOICE, help=tr("cli.registry.diff_revisions_modelo_help")),
+        typer.Argument(click_type=MODELO_CODE_CHOICE, help=tr("cli.registry.diff_revisions_modelo_help")),
     ],
     from_year: Annotated[
         int,

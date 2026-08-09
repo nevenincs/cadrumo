@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import typer
 
+from ....application.auth import AuthDiagnosticPhoneState
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from .._common import _emit_envelope
@@ -141,7 +142,7 @@ def _optional_bool_text(value: bool | None) -> str:
 def auth_diagnostics_report(
     ctx: typer.Context,
     diagnostic_id: str = typer.Argument(..., help=tr("cli.config.auth.diagnostics.id_help", default="Diagnostic id")),
-    phone_state: str = typer.Option(
+    phone_state: AuthDiagnosticPhoneState = typer.Option(
         ...,
         "--phone-state",
         help=tr(

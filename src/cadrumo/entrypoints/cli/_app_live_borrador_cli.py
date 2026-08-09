@@ -15,7 +15,11 @@ from typing import Annotated, Literal, TypedDict
 
 import typer
 
-from ...application.live import Borrador100SnapshotService, SnapshotLifecycleState
+from ...application.live import (
+    Borrador100SnapshotService,
+    SnapshotLifecycleState,
+    SnapshotStateFilter,
+)
 from ...core.i18n import tr
 from ._app_live_payloads import (
     Borrador100LatestResult,
@@ -65,7 +69,7 @@ def register_borrador_commands(app: typer.Typer, *, active_bucket_id: Callable[[
     def borrador_100_list(
         ctx: typer.Context,
         state: Annotated[
-            str,
+            SnapshotStateFilter,
             typer.Option(
                 "--state",
                 help=tr(
@@ -73,29 +77,21 @@ def register_borrador_commands(app: typer.Typer, *, active_bucket_id: Callable[[
                     default="Snapshot state filter: active, superseded, discarded, or all.",
                 ),
             ),
-        ] = "active",
+        ] = SnapshotStateFilter.ACTIVE,
     ) -> None:
         """List persisted Modelo 100 borrador snapshots for the active bucket.
 
-        ``--state`` maps to :class:`SnapshotLifecycleState`:
+        ``--state`` is a :class:`SnapshotStateFilter` mapping onto
+        :class:`SnapshotLifecycleState`, with ``all`` meaning no filter:
         ``active`` is the default consumption surface, while ``superseded`` and
         ``discarded`` keep audit-visible :class:`Borrador100Snapshot` records
         available through :class:`Borrador100ListResult` rows projected as
         :class:`Borrador100SnapshotSummaryPayload`.
         """
         bucket_id = active_bucket_id()
-        match state:
-            case "all":
-                state_filter = None
-            case "active":
-                state_filter = SnapshotLifecycleState.ACTIVE
-            case "superseded":
-                state_filter = SnapshotLifecycleState.SUPERSEDED
-            case "discarded":
-                state_filter = SnapshotLifecycleState.DISCARDED
-            case _:
-                raise typer.BadParameter(tr("cli.app.live.borrador.invalid_state"))
-        rows = Borrador100SnapshotService(bucket_id=bucket_id).list_snapshots(state=state_filter)
+        rows = Borrador100SnapshotService(bucket_id=bucket_id).list_snapshots(
+            state=state.as_lifecycle_state(),
+        )
         result = Borrador100ListResult(
             bucket_id=bucket_id,
             count=len(rows),

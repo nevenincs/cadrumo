@@ -84,6 +84,32 @@ class SnapshotLifecycleState(StrEnum):
     DISCARDED = "discarded"
 
 
+class SnapshotStateFilter(StrEnum):
+    """Operator-facing filter over :class:`SnapshotLifecycleState`, plus ``ALL``.
+
+    ``ALL`` is deliberately NOT a member of :class:`SnapshotLifecycleState`. No
+    persisted snapshot is ever *in* an "all" state, so adding it there would give
+    every exhaustive match over the lifecycle a branch that cannot occur and would
+    let a stored record claim a state that means "no filter". The filter is its own
+    closed axis that maps onto the lifecycle, mirroring
+    :class:`~application.review.ReviewState`.
+
+    Every lifecycle state has a member here, so a filter exists for each; the
+    correspondence is enforced by a gate rather than left to the next author.
+    """
+
+    ACTIVE = "active"
+    SUPERSEDED = "superseded"
+    DISCARDED = "discarded"
+    ALL = "all"
+
+    def as_lifecycle_state(self) -> SnapshotLifecycleState | None:
+        """Return the lifecycle state to filter on, or ``None`` for no filter."""
+        if self is SnapshotStateFilter.ALL:
+            return None
+        return SnapshotLifecycleState(self.value)
+
+
 @runtime_checkable
 class SnapshotRepository[TPayload: BaseModel](Protocol):
     """Structural contract for bucket-scoped snapshot persistence backends.
