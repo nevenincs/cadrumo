@@ -22,6 +22,7 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date
 
 from ...core import Modelo, Period
@@ -31,14 +32,16 @@ from ...core.resources import resources
 from ...domain.calculations.registry import (
     ApplicabilityVerdict,
     ModeloRevision,
+    ProfileKeyGrounding,
     RegistrySnapshotError,
+    ValidatedRegistryAuthority,
+    build_profile_grounding_index,
     derive_modelo_applicability,
 )
 from ...domain.deadlines import EntityType, IrpfIncomeCategory
 from ...domain.modelos import WorkUnit
 from ...domain.user_profile import (
     ProfileNotFoundError,
-    UserProfileNotFoundError,
     UserProfileRecord,
     UserProfileStatus,
 )
@@ -49,6 +52,9 @@ from ..user_profile import (
     ProfileValidationIssue,
     ProfileValidationService,
     UserProfileLifecycleRepository,
+    build_profile_preflight_requirement,
+    format_profile_preflight_requirement,
+    missing_required_field_paths,
     projection_for_taxpayer,
     record_to_path_values,
 )
@@ -66,37 +72,25 @@ _BLOCKING_APPLICABILITY_VERDICTS = frozenset(
 )
 
 
-def _split_profile_path(path: str) -> tuple[str, str]:
-    section_key, _, field_key = path.partition(".")
-    if not field_key:
-        return "profile", section_key
-    return section_key, field_key
-
-
 def _requirement_for_profile_path(
     path: str,
     *,
     selector: str | None = None,
-    modelo: str | None = None,
+    grounding_index: Mapping[str, ProfileKeyGrounding] | None = None,
 ) -> ProfilePreflightRequirement:
-    section_key, field_key = _split_profile_path(path)
-    label = selector or path
-    legal_refs: tuple[str, ...] = ()
-    if "." in path:
-        try:
-            field = resources().user_profile_schema.singleton.field(path)
-        except UserProfileNotFoundError:
-            pass
-        else:
-            label = field.description
-            legal_refs = field.legal_refs
-    return ProfilePreflightRequirement(
-        selector=selector or path,
-        section_key=section_key,
-        field_key=field_key,
-        label=label,
-        legal_refs=legal_refs,
-        modelos=(modelo,) if modelo else (),
+    """Build one requirement row for a raw (possibly row-indexed) profile path.
+
+    Thin call-site wrapper over the shared
+    :func:`application.user_profile.build_profile_preflight_requirement`,
+    resolving the live schema singleton - the one requirement-row builder
+    this package and :class:`application.user_profile.ProfilePreflightService`
+    both route through.
+    """
+    return build_profile_preflight_requirement(
+        path,
+        schema=resources().user_profile_schema.singleton,
+        selector=selector,
+        grounding_index=grounding_index,
     )
 
 
@@ -188,7 +182,11 @@ def modelo_work_profile_baseline_validation_issues(record: UserProfileRecord) ->
     )
 
 
-def _validation_missing_requirements(record: UserProfileRecord) -> tuple[ProfilePreflightRequirement, ...]:
+def _validation_missing_requirements(
+    record: UserProfileRecord,
+    *,
+    grounding_index: Mapping[str, ProfileKeyGrounding] | None = None,
+) -> tuple[ProfilePreflightRequirement, ...]:
     validation = ProfileValidationService(schema=resources().user_profile_schema.singleton).validate_record(record)
     requirements: list[ProfilePreflightRequirement] = []
     for issue in validation.issues:
@@ -199,6 +197,7 @@ def _validation_missing_requirements(record: UserProfileRecord) -> tuple[Profile
             _requirement_for_profile_path(
                 path,
                 selector=issue.path or f"profile.validation.{issue.code}",
+                grounding_index=grounding_index,
             ),
         )
     return tuple(requirements)
@@ -213,6 +212,7 @@ def modelo_work_profile_preflight_report(
     period: Period,
     revision: ModeloRevision | None = None,
     resolve_revision_when_missing: bool = True,
+    authority: ValidatedRegistryAuthority | None = None,
 ) -> ProfilePreflightReport:
     """Return the profile-field report enforced by the modelo work creation gate.
 
@@ -233,6 +233,17 @@ def modelo_work_profile_preflight_report(
             already resolved the target revision.
         resolve_revision_when_missing: Whether to resolve the registry
             revision when ``revision`` is not supplied.
+        authority: Optional :class:`ValidatedRegistryAuthority`. When
+            supplied, each missing requirement's grounding is unioned with
+            every consuming ``source = "profile"`` registry binding's
+            ``legal_refs`` and modelos. Passed by
+            :func:`require_profile_ready_for_modelo_work` (the blocking
+            work-creation gate) and by the explicitly-invoked readiness
+            surfaces (``config profile preflight``, ``app modelo readiness``)
+            alike - ``build_profile_grounding_index`` memoises its
+            registry-wide walk per authority instance, so the blocking gate's
+            per-call cost stays bounded even though it runs on every
+            filing-grade mutation.
 
     Returns:
         :class:`application.user_profile.ProfilePreflightReport` combining
@@ -245,6 +256,7 @@ def modelo_work_profile_preflight_report(
             revision_id=revision_id,
             filing_year=filing_year,
             period=period,
+            authority=authority,
         )
     else:
         report = ProfilePreflightService(schema=resources().user_profile_schema.singleton).report(
@@ -253,12 +265,16 @@ def modelo_work_profile_preflight_report(
             revision_id=revision_id,
             period=period,
             revision=revision,
+            authority=authority,
         )
+    grounding_index = build_profile_grounding_index(authority) if authority is not None else {}
     baseline = tuple(
-        _requirement_for_profile_path(path, modelo=modelo)
+        _requirement_for_profile_path(path, grounding_index=grounding_index)
         for path in modelo_work_profile_baseline_missing_paths(record, modelo=modelo)
     )
-    missing = _dedupe_requirements((*baseline, *_validation_missing_requirements(record), *report.missing))
+    missing = _dedupe_requirements(
+        (*baseline, *_validation_missing_requirements(record, grounding_index=grounding_index), *report.missing),
+    )
     return report.model_copy(update={"missing": missing, "ready": not missing})
 
 
@@ -269,6 +285,7 @@ def _report_for_target(
     revision_id: str,
     filing_year: int,
     period: Period,
+    authority: ValidatedRegistryAuthority | None = None,
 ) -> ProfilePreflightReport:
     try:
         snapshot = resources().modelos.authority.snapshot(
@@ -285,6 +302,7 @@ def _report_for_target(
         revision_id=revision_id,
         period=period,
         revision=revision,
+        authority=authority,
     )
 
 
@@ -431,12 +449,26 @@ def _require_profile_filing_ready(
     modelo: str,
     filing_year: int,
     period: Period,
+    grounding_index: Mapping[str, ProfileKeyGrounding] | None = None,
 ) -> None:
-    missing: list[str] = list(modelo_work_profile_baseline_missing_paths(record, modelo=modelo))
-    for requirement in _validation_missing_requirements(record):
-        path = f"{requirement.section_key}.{requirement.field_key}"
-        if path not in missing:
-            missing.append(path)
+    """Refuse when a baseline or validation-required profile fact is missing.
+
+    ``grounding_index`` is optional and, when omitted, this stays the
+    registry-free check :func:`require_existing_profile_baseline_ready_for_modelo_work`
+    relies on. :func:`require_profile_ready_for_modelo_work` passes the
+    memoised grounding index so its refusal carries real legal grounding
+    instead of a bare label.
+    """
+    missing: list[ProfilePreflightRequirement] = [
+        _requirement_for_profile_path(path, grounding_index=grounding_index)
+        for path in modelo_work_profile_baseline_missing_paths(record, modelo=modelo)
+    ]
+    seen = {(item.section_key, item.field_key) for item in missing}
+    for requirement in _validation_missing_requirements(record, grounding_index=grounding_index):
+        key = (requirement.section_key, requirement.field_key)
+        if key not in seen:
+            seen.add(key)
+            missing.append(requirement)
     if not missing:
         return
     raise ModeloProfileReadinessError(
@@ -445,7 +477,7 @@ def _require_profile_filing_ready(
             "modelo": modelo,
             "filing_year": filing_year,
             "period": period.registry_token,
-            "missing": ", ".join(missing),
+            "missing": ", ".join(format_profile_preflight_requirement(requirement) for requirement in missing),
         },
         suggestion=f"aeat config profile edit {bucket_id}",
     )
@@ -466,7 +498,14 @@ def require_profile_ready_for_modelo_work(
     evaluates modelo-specific profile requirements through
     :class:`application.user_profile.ProfilePreflightReport`, and then
     applies the pre-activity period check for lifecycle modelos whose obligation
-    starts at ``censo.activity_start_date``.
+    starts at ``censo.activity_start_date``. Unlike
+    :func:`require_existing_profile_baseline_ready_for_modelo_work`, this gate
+    passes the live registry authority through both the baseline/validation
+    refusal and the full preflight report, so a raised
+    :class:`ModeloProfileReadinessError` carries real ``legal_refs`` for every
+    missing field the registry grounds - the memoised
+    ``build_profile_grounding_index`` keeps the added per-call cost bounded on
+    this hot path.
     """
     try:
         record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
@@ -480,12 +519,31 @@ def require_profile_ready_for_modelo_work(
         # A profile minted by the interactive setup flow is live (listed,
         # resumable, its tax id reserved) but not workable: its answer set
         # has not passed the flow's final cross-field validation, so no
-        # filing-grade modelo work may build on it.
+        # filing-grade modelo work may build on it. Name the outstanding
+        # schema-required fields when the enumeration finds any.
+        # SETUP_INCOMPLETE is not identical to "some required field is
+        # empty" - it can also mean the answer set failed a cross-field
+        # rule with every individual field populated, in which case the
+        # enumeration below is empty and the original generic wording is
+        # kept rather than claiming "missing: nothing".
+        schema = resources().user_profile_schema.singleton
+        missing_paths = missing_required_field_paths(schema, record_to_path_values(record))
+        if missing_paths:
+            missing_labels = ", ".join(
+                build_profile_preflight_requirement(path, schema=schema).label for path in missing_paths
+            )
+            raise ModeloProfileReadinessError(
+                translated_message="application.modelo.errors.profile_readiness_setup_incomplete_missing",
+                context={"bucket_id": bucket_id, "modelo": modelo, "missing": missing_labels},
+                suggestion="aeat config profile create NAME",
+            )
         raise ModeloProfileReadinessError(
             translated_message="application.modelo.errors.profile_readiness_setup_incomplete",
             context={"bucket_id": bucket_id, "modelo": modelo},
             suggestion="aeat config profile create NAME",
         )
+    authority = resources().modelos.authority
+    grounding_index = build_profile_grounding_index(authority)
     applicability_first = enforce_applicability and modelo.strip() in _PRE_ACTIVITY_LIFECYCLE_MODELOS
     if applicability_first:
         _require_modelo_applicable_for_local_work(
@@ -499,6 +557,7 @@ def require_profile_ready_for_modelo_work(
         modelo=modelo,
         filing_year=filing_year,
         period=period,
+        grounding_index=grounding_index,
     )
     if enforce_applicability and not applicability_first:
         _require_modelo_applicable_for_local_work(
@@ -512,16 +571,16 @@ def require_profile_ready_for_modelo_work(
         revision_id=revision_id,
         filing_year=filing_year,
         period=period,
+        authority=authority,
     )
     if not report.ready:
-        missing = tuple(f"{requirement.section_key}.{requirement.field_key}" for requirement in report.missing)
         raise ModeloProfileReadinessError(
             translated_message="application.modelo.errors.profile_readiness_missing",
             context={
                 "modelo": modelo,
                 "filing_year": filing_year,
                 "period": period.registry_token,
-                "missing": ", ".join(missing),
+                "missing": ", ".join(format_profile_preflight_requirement(requirement) for requirement in report.missing),
             },
             suggestion=f"aeat config profile edit {bucket_id}",
         )

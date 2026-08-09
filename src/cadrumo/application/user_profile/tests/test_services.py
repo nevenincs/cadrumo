@@ -3,19 +3,23 @@
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
 
-from ....core import Period
+from ....core import Modelo, Period
 from ....core.errors import BaseSeverity
 from ....core.resources import resources
+from ....domain.calculations.registry import ProfileKeyGrounding
 from ....domain.user_profile import (
     ProfileSchemaDefinition,
     UserProfileFact,
     UserProfileRecord,
+    profile_field_label,
 )
 from .. import (
     ProfilePreflightRequirement,
     ProfilePreflightService,
     ProfileValidationService,
+    build_profile_preflight_requirement,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -169,7 +173,20 @@ def test_every_declared_enum_value_is_accepted(schema: ProfileSchemaDefinition) 
                 )
 
 
-def test_preflight_returns_ready_when_no_modelo_selectors_match(schema: ProfileSchemaDefinition) -> None:
+def test_preflight_ready_with_no_modelo_selectors_matched_is_not_assessed(schema: ProfileSchemaDefinition) -> None:
+    """``ready=True`` here reflects zero schema-required fields examined, not a complete profile.
+
+    No shipped schema field declares a ``modelo_200`` selector - the shipped
+    schema populates ``modelo_036``, ``modelo_100`` and ``modelo_303`` tokens
+    only, because those are the only modelos with a live ``source =
+    "profile"`` registry binding today. For modelo 200,
+    ``ProfilePreflightService.report()``'s schema-required walk still never
+    runs, so ``ready`` reflects only the (here, trivially-passing)
+    export-identity and conditional checks. The unassessed case must be
+    distinguishable from a passing one - this test asserts both halves
+    together so a future reader cannot read `ready is True` alone as a clean
+    bill of health.
+    """
     svc = ProfilePreflightService(schema=schema)
     record = UserProfileRecord(
         profile_id="11111111-1111-4111-8111-111111111111",
@@ -178,12 +195,58 @@ def test_preflight_returns_ready_when_no_modelo_selectors_match(schema: ProfileS
     )
     report = svc.report(
         record=record,
-        modelo="100",
+        modelo="200",
         revision_id="2024-y-siguientes",
         period=Period.from_year_and_code(2024, "0A"),
     )
     assert report.ready is True
     assert report.missing == ()
+    assert report.per_operation_requirements_assessed is False
+
+
+def test_preflight_modelo_100_per_operation_axis_now_contributes(schema: ProfileSchemaDefinition) -> None:
+    """``identity.tax_id`` is grounded for modelo 100 - the axis is not universally empty.
+
+    ``identity.tax_id`` is ``required=true`` and carries
+    ``model_selectors = ("tax.id", "modelo_100")``, grounded by a live
+    modelo 100 ``source = "profile"`` registry binding. A profile missing
+    ``tax_id`` must surface it as a real, assessed requirement; a profile
+    carrying it must report ``ready`` with the axis still marked assessed.
+    """
+    svc = ProfilePreflightService(schema=schema)
+    period = Period.from_year_and_code(2024, "0A")
+
+    empty_record = UserProfileRecord(
+        profile_id="11111111-1111-4111-8111-111111111111",
+        display_name="Operator",
+        facts=(),
+    )
+    missing_report = svc.report(
+        record=empty_record,
+        modelo="100",
+        revision_id="2024-y-siguientes",
+        period=period,
+    )
+    assert missing_report.per_operation_requirements_assessed is True
+    assert any(
+        item.section_key == "identity" and item.field_key == "tax_id" for item in missing_report.missing
+    )
+
+    complete_record = UserProfileRecord(
+        profile_id="11111111-1111-4111-8111-111111111111",
+        display_name="Operator",
+        facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
+    )
+    ready_report = svc.report(
+        record=complete_record,
+        modelo="100",
+        revision_id="2024-y-siguientes",
+        period=period,
+    )
+    assert ready_report.per_operation_requirements_assessed is True
+    assert not any(
+        item.section_key == "identity" and item.field_key == "tax_id" for item in ready_report.missing
+    )
 
 
 def test_preflight_accepts_legal_entity_legal_name_for_export_headers(schema: ProfileSchemaDefinition) -> None:
@@ -266,39 +329,90 @@ def test_preflight_carries_request_fields_through(schema: ProfileSchemaDefinitio
     del svc
 
 
-def test_preflight_requirement_carries_schema_label_and_legal_refs(schema: ProfileSchemaDefinition) -> None:
+def test_preflight_requirement_carries_catalogue_label_and_legal_refs(schema: ProfileSchemaDefinition) -> None:
     field = schema.field("identity.tax_id")
-    svc = ProfilePreflightService(schema=schema)
 
-    requirement = svc._requirement(  # noqa: SLF001 - intra-package private access, same test package
+    requirement = build_profile_preflight_requirement(
+        "identity.tax_id",
+        schema=schema,
         selector="identity.tax_id",
-        section_key="identity",
-        field_key="tax_id",
-        modelo="303",
         grounding_index={},
     )
 
-    assert requirement.label == field.description
+    assert requirement.label == profile_field_label("identity", field)
     assert requirement.legal_refs == tuple(sorted(field.legal_refs))
-    assert requirement.modelos == ("303",)
+    assert requirement.modelos == ()
+
+
+def test_preflight_requirement_modelos_reflects_grounding_union_not_the_call_target(
+    schema: ProfileSchemaDefinition,
+) -> None:
+    """``modelos`` is the registry-grounded consuming set, never the caller's target."""
+    grounding = ProfileKeyGrounding(
+        profile_key="identity.tax_id",
+        modelos=(Modelo.M100,),
+        legal_refs=("orden-hac-1347-2024:art-4",),
+        source_refs=(),
+    )
+
+    requirement = build_profile_preflight_requirement(
+        "identity.tax_id",
+        schema=schema,
+        selector="identity.tax_id",
+        grounding_index={"identity.tax_id": grounding},
+    )
+
+    # The grounding names M100; the call itself carries no target-modelo concept
+    # any more, so the row must reflect the grounded set exactly, not a caller hint.
+    assert requirement.modelos == (Modelo.M100.value,)
+    assert "orden-hac-1347-2024:art-4" in requirement.legal_refs
 
 
 def test_preflight_requirement_never_invents_grounding_for_unknown_path(
     schema: ProfileSchemaDefinition,
 ) -> None:
-    svc = ProfilePreflightService(schema=schema)
-
-    requirement = svc._requirement(  # noqa: SLF001 - intra-package private access, same test package
+    requirement = build_profile_preflight_requirement(
+        "not_a_real_section.not_a_real_field",
+        schema=schema,
         selector="not.a.real.schema.path",
-        section_key="not_a_real_section",
-        field_key="not_a_real_field",
-        modelo=None,
         grounding_index={},
     )
 
     assert requirement.label == "not.a.real.schema.path"
     assert requirement.legal_refs == ()
-    assert requirement.modelos == ()
+
+
+def test_preflight_requirement_builder_matches_service_report_output_for_tax_id(
+    schema: ProfileSchemaDefinition,
+) -> None:
+    """Parity: the shared builder reproduces what the service's own walk produces.
+
+    ``ProfilePreflightService.report`` and the modelo-work readiness gate's
+    baseline/validation checks route through one shared requirement-row
+    builder. This proves ``build_profile_preflight_requirement`` produces,
+    for the same path, selector and grounding, an identical row to what
+    ``ProfilePreflightService.report`` surfaces for a profile missing
+    ``identity.tax_id`` under Modelo 100.
+    """
+    svc = ProfilePreflightService(schema=schema)
+    period = Period.from_year_and_code(2024, "0A")
+    record = UserProfileRecord(
+        profile_id="11111111-1111-4111-8111-111111111111",
+        display_name="Operator",
+        facts=(),
+    )
+
+    report = svc.report(record=record, modelo="100", revision_id="2024-y-siguientes", period=period)
+    (from_report,) = [item for item in report.missing if item.field_key == "tax_id"]
+
+    direct = build_profile_preflight_requirement(
+        "identity.tax_id",
+        schema=schema,
+        selector=from_report.selector,
+        grounding_index={},
+    )
+
+    assert direct == from_report
 
 
 def test_preflight_requirement_model_roundtrips_every_field_populated() -> None:
@@ -314,3 +428,24 @@ def test_preflight_requirement_model_roundtrips_every_field_populated() -> None:
     roundtripped = ProfilePreflightRequirement.model_validate(requirement.model_dump())
 
     assert roundtripped == requirement
+
+
+def test_preflight_requirement_anti_tautology_dropped_label_refuses_to_load() -> None:
+    """A payload missing the required ``label`` must not silently reload as valid.
+
+    Proves the roundtrip above is not vacuous: mutate a valid dump by
+    deleting the required ``label`` field, and confirm the strict model
+    actually refuses it rather than defaulting or coercing it away.
+    """
+    payload = ProfilePreflightRequirement(
+        selector="identity.tax_id",
+        section_key="identity",
+        field_key="tax_id",
+        label="Tax identification number",
+        legal_refs=("LGT art. 1",),
+        modelos=("100",),
+    ).model_dump()
+    del payload["label"]
+
+    with pytest.raises(ValidationError):
+        ProfilePreflightRequirement.model_validate(payload)

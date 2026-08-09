@@ -443,6 +443,13 @@ class ProjectionModeloReadiness(BaseModel):
         ledger_period: The :class:`~cadrumo.core.Period` the ledger preflight
             was scoped to, or ``None`` when no ledger preflight was run.
         ledger_issues: Blocking :class:`LedgerPreflightIssue` rows.
+        per_operation_requirements_assessed: Whether the per-modelo
+            schema-required axis (see
+            :attr:`~cadrumo.application.user_profile.ProfilePreflightReport.per_operation_requirements_assessed`)
+            actually examined any field for this modelo. ``False`` means no
+            schema-required field was checked and ``profile_ready`` reflects
+            only the export-identity and conditional checks; it MUST NOT be
+            rendered as a clean bill of health.
     """
 
     model_config = _STRICT_FROZEN
@@ -454,6 +461,7 @@ class ProjectionModeloReadiness(BaseModel):
     period: Period
     missing: tuple[ProfilePreflightRequirement, ...] = ()
     profile_ready: bool
+    per_operation_requirements_assessed: bool
     profile_refusal: str = ""
     registry_ready: bool = True
     registry_refusal: str = ""
@@ -491,6 +499,7 @@ def _build_modelo_readiness(
     if not requests or active_profile_id is None:
         return ()
 
+    from ..core.resources import resources
     from .modelo import (
         modelo_applicability_refusal,
         modelo_work_profile_preflight_report,
@@ -516,6 +525,7 @@ def _build_modelo_readiness(
             period=readiness_period,
             revision=revision,
             resolve_revision_when_missing=registry_resolution.snapshot is not None,
+            authority=resources().modelos.authority,
         )
         profile_refusal = ""
         applicability_refusal = modelo_applicability_refusal(
@@ -564,6 +574,7 @@ def _build_modelo_readiness(
                 period=profile_report.period,
                 missing=profile_report.missing,
                 profile_ready=profile_ready,
+                per_operation_requirements_assessed=profile_report.per_operation_requirements_assessed,
                 profile_refusal=profile_refusal,
                 registry_ready=registry_resolution.ready,
                 registry_refusal=registry_resolution.refusal,

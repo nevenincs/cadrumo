@@ -61,6 +61,18 @@ def _store_incomplete_profile(bucket_id: str) -> None:
     )
 
 
+def _store_profile_with_no_facts_whatsoever(bucket_id: str) -> None:
+    UserProfileLifecycleRepository(bucket_id=bucket_id).save(
+        UserProfileRecord(
+            profile_id=bucket_id,
+            display_name="Zero-fact profile",
+            facts=(),
+            created_at=_NOW,
+            updated_at=_NOW,
+        ),
+    )
+
+
 def _store_profile_without_activity(bucket_id: str) -> None:
     UserProfileLifecycleRepository(bucket_id=bucket_id).save(
         UserProfileRecord(
@@ -240,12 +252,47 @@ def test_create_work_unit_service_refuses_profile_missing_activity(tmp_path: Pat
                 clock=_NOW,
             )
 
+        from ....core.resources import resources
+        from ....domain.user_profile import profile_field_label
+
+        expected_label = profile_field_label(
+            "activities",
+            resources().user_profile_schema.singleton.field("activities.description"),
+        )
         assert excinfo.value.context == {
             "modelo": Modelo.M130.value,
             "filing_year": 2025,
             "period": "1T",
-            "missing": "activities.description",
+            "missing": expected_label,
         }
+        assert len(repository.load()) == 0
+
+
+def test_create_work_unit_service_refuses_profile_declaring_no_facts_whatsoever(tmp_path: Path) -> None:
+    """A profile with zero declared facts is never reported ready, for any modelo.
+
+    A ``UserProfileRecord`` declaring nothing must not let ``ready`` (at the
+    ``ProfilePreflightService`` layer, where the per-operation axis can be
+    empty for a given modelo) be misread as "nothing to check". At the
+    work-creation gate, ``_FILING_BASELINE_PROFILE_PATHS`` still catches
+    this: ``identity.tax_id`` is a universal baseline requirement
+    independent of the per-operation axis.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID) as profile:
+        _store_profile_with_no_facts_whatsoever(_OPERATOR_PROFILE_ID)
+        repository = WorkUnitCatalogueRepository(objects=profile.repository)
+
+        with pytest.raises(ModeloProfileReadinessError):
+            create_work_unit(
+                bucket_id=_OPERATOR_PROFILE_ID,
+                modelo=Modelo.M130.value,
+                filing_year=2025,
+                period=Period.from_year_and_code(2025, "1T"),
+                revision_id=_M130_REVISION,
+                repository=repository,
+                clock=_NOW,
+            )
+
         assert len(repository.load()) == 0
 
 
@@ -336,6 +383,80 @@ def test_calculate_service_refuses_existing_work_unit_with_incomplete_profile(tm
                 work_unit_repository=repository,
                 clock=_NOW,
             )
+
+
+def test_calculate_service_refusal_carries_grounded_legal_refs_for_missing_tax_id(tmp_path: Path) -> None:
+    """The blocking gate's refusal carries real legal grounding.
+
+    ``require_profile_ready_for_modelo_work`` (invoked here via
+    ``calculate_modelo_revision`` re-checking an existing work unit) threads
+    the live registry authority through both
+    ``_require_profile_filing_ready`` and the full preflight report, so a
+    profile missing ``identity.tax_id`` for a Modelo 100 work unit refuses
+    with the field's grounded ``legal_refs`` rendered inline - not a bare
+    label. ``identity.tax_id`` is grounded by a real Modelo 100 registry
+    binding, so this is a genuine registry fact, not an invented expectation.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID):
+        _store_profile_with_no_facts_whatsoever(_OPERATOR_PROFILE_ID)
+        repository = WorkUnitCatalogueRepository()
+        work_unit = _store_work_unit(
+            repository,
+            bucket_id=_OPERATOR_PROFILE_ID,
+            modelo=Modelo.M100,
+            filing_year=2025,
+            period_code="0A",
+            revision_id=_M100_REVISION,
+        )
+
+        with pytest.raises(ModeloProfileReadinessError) as excinfo:
+            calculate_modelo_revision(
+                work_unit.work_unit_id,
+                actor="operator",
+                casilla_inputs={},
+                binding_values={},
+                work_unit_repository=repository,
+                clock=_NOW,
+            )
+
+        assert excinfo.value.context is not None
+        missing_text = excinfo.value.context["missing"]
+        assert isinstance(missing_text, str)
+        assert "orden-hac-1347-2024:art-4" in missing_text or "orden-hac-277-2026:art-3" in missing_text
+
+
+def test_grounding_index_lookup_stays_bounded_across_repeated_readiness_checks(tmp_path: Path) -> None:
+    """``build_profile_grounding_index`` is memoised per authority.
+
+    The blocking gate calls it on every filing-grade mutation
+    (``require_profile_ready_for_modelo_work``), so an unmemoised
+    registry-wide binding walk on every call would scale linearly with call
+    count. This proves a large batch of calls costs close to one walk, not N
+    walks: the first call pays the full registry walk, and a generous
+    multiple of that cost bounds the remaining 199.
+    """
+    import time
+
+    from ....core.resources import resources
+    from ....domain.calculations.registry import build_profile_grounding_index
+
+    authority = resources().modelos.authority
+
+    first_start = time.perf_counter()
+    first_index = build_profile_grounding_index(authority)
+    first_duration = time.perf_counter() - first_start
+    assert first_index
+
+    repeat_start = time.perf_counter()
+    for _ in range(199):
+        repeated_index = build_profile_grounding_index(authority)
+        assert repeated_index is first_index
+    repeat_duration = time.perf_counter() - repeat_start
+
+    # 199 cached lookups must cost a small fraction of one uncached walk, not
+    # 199x it - a generous 0.5x ceiling leaves ample margin over dict-lookup
+    # cost while still failing hard if memoisation regresses to a re-walk.
+    assert repeat_duration < max(first_duration * 0.5, 0.05)
 
 
 def test_calculate_service_refuses_existing_nonresident_legal_entity_m200(tmp_path: Path) -> None:
@@ -657,7 +778,15 @@ def test_visible_target_ensure_refuses_reused_pre_activity_m303_before_rename(tm
 
 
 def test_create_work_unit_service_refuses_a_setup_incomplete_profile(tmp_path: Path) -> None:
-    """A mid-setup profile is refused on status alone, even with a filing-ready fact set."""
+    """A mid-setup profile failing only the flow's cross-field rule keeps the generic wording.
+
+    ``_store_ready_profile`` populates every schema-required fact, so the
+    ``SETUP_INCOMPLETE`` status here can only reflect a cross-field failure
+    (the flow's final validation), never an empty required field -
+    ``missing_required_field_paths`` enumerates nothing for this record, and
+    the refusal correctly falls back to the generic key rather than claiming
+    "missing: nothing".
+    """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID):
         _store_ready_profile(_OPERATOR_PROFILE_ID, activity_start_date=date(2025, 1, 1))
         repository = UserProfileLifecycleRepository(bucket_id=_OPERATOR_PROFILE_ID)
@@ -673,7 +802,74 @@ def test_create_work_unit_service_refuses_a_setup_incomplete_profile(tmp_path: P
                 revision_id=_M303_REVISION,
                 clock=_NOW,
             )
-        assert "setup_incomplete" in str(excinfo.value.translated_message)
+        assert excinfo.value.translated_message == "application.modelo.errors.profile_readiness_setup_incomplete"
+
+
+def test_calculate_service_names_missing_fields_for_a_setup_incomplete_profile(tmp_path: Path) -> None:
+    """A mid-setup profile missing real required fields names them instead of refusing vaguely.
+
+    Per the per-operation-axis-and-silent-defaults audit's open item: the
+    setup-incomplete refusal used to name a lifecycle STATUS rather than a
+    field gap, sending the operator back into the wizard to hunt for what
+    was actually missing.
+
+    ``create_work_unit`` cannot exercise this branch: its early registry-free
+    gate (``require_existing_profile_baseline_ready_for_modelo_work``) runs
+    ``ProfileValidationService`` first and already refuses with the generic
+    ``profile_readiness_missing`` message for ANY missing required field,
+    before the status-aware gate below ever runs - so the two gates would
+    always agree on "missing", never reach the SETUP_INCOMPLETE branch with a
+    gap to report. This exercises the readiness re-check on an EXISTING work
+    unit instead (``calculate_modelo_revision``), whose only gate is
+    ``require_profile_ready_for_work_unit`` -> the status-aware
+    ``require_profile_ready_for_modelo_work`` directly.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID):
+        UserProfileLifecycleRepository(bucket_id=_OPERATOR_PROFILE_ID).save(
+            UserProfileRecord(
+                profile_id=_OPERATOR_PROFILE_ID,
+                display_name="Baseline-only profile",
+                facts=(
+                    UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                    UserProfileFact(path="activities.description", value="design"),
+                ),
+                created_at=_NOW,
+                updated_at=_NOW,
+            ),
+        )
+        repository = WorkUnitCatalogueRepository()
+        work_unit = _store_work_unit(
+            repository,
+            bucket_id=_OPERATOR_PROFILE_ID,
+            modelo=Modelo.M303,
+            filing_year=2025,
+            period_code="1T",
+            revision_id=_M303_REVISION,
+        )
+        profile_repository = UserProfileLifecycleRepository(bucket_id=_OPERATOR_PROFILE_ID)
+        record = profile_repository.load(_OPERATOR_PROFILE_ID)
+        profile_repository.save(record.model_copy(update={"status": UserProfileStatus.SETUP_INCOMPLETE}))
+
+        with pytest.raises(ModeloProfileReadinessError) as excinfo:
+            calculate_modelo_revision(
+                work_unit.work_unit_id,
+                actor="operator",
+                casilla_inputs={},
+                binding_values={},
+                work_unit_repository=repository,
+                clock=_NOW,
+            )
+
+        assert (
+            excinfo.value.translated_message
+            == "application.modelo.errors.profile_readiness_setup_incomplete_missing"
+        )
+        assert excinfo.value.context is not None
+        missing_text = excinfo.value.context["missing"]
+        assert isinstance(missing_text, str)
+        assert missing_text
+        # Never a raw dotted path once a catalogue label is available.
+        assert "identity." not in missing_text
 
 
 def _reversed_declaration_order_record() -> UserProfileRecord:

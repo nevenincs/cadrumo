@@ -17,6 +17,7 @@ gated key's legal basis; it is deliberately excluded.
 
 from __future__ import annotations
 
+import threading
 from collections.abc import Mapping
 from typing import cast
 
@@ -46,6 +47,11 @@ class ProfileKeyGrounding(BaseModel):
     source_refs: tuple[str, ...]
 
 
+_GROUNDING_INDEX_CACHE_MAXSIZE = 4
+_grounding_index_cache: dict[int, Mapping[str, ProfileKeyGrounding]] = {}
+_grounding_index_cache_lock = threading.Lock()
+
+
 def build_profile_grounding_index(
     authority: ValidatedRegistryAuthority,
 ) -> Mapping[str, ProfileKeyGrounding]:
@@ -55,7 +61,40 @@ def build_profile_grounding_index(
     :class:`ValidatedRegistryAuthority` and every revision's bindings; a key
     never consumed by any profile binding is simply absent (the flow renders
     no legal zone for it — nothing is invented).
+
+    Memoised per *authority* instance: this is a full registry-wide walk, and
+    the profile-preflight report path (blocking gate, ``config profile
+    preflight``, ``app modelo readiness``) can call it several times per
+    operator invocation. :class:`ValidatedRegistryAuthority` is an unhashable
+    ``@dataclass(slots=True)`` with no ``__weakref__`` slot (its default
+    ``eq``-driven ``__hash__ = None`` rules out ``functools.lru_cache``, and
+    its ``slots=True`` rules out :func:`weakref.finalize`-based eviction), so
+    the cache keys on ``id(authority)`` in a small FIFO-bounded dict instead:
+    at most :data:`_GROUNDING_INDEX_CACHE_MAXSIZE` entries are retained,
+    evicting the oldest when a new authority instance is seen. In practice at
+    most one or two distinct authority instances are ever live in a process
+    (a fresh instance appears only on an explicit registry reload), so the
+    bound is never exercised in production and exists purely so a long-running
+    process or test session cannot grow this cache unbounded.
     """
+    cache_key = id(authority)
+    with _grounding_index_cache_lock:
+        cached = _grounding_index_cache.get(cache_key)
+        if cached is not None:
+            return cached
+    index = _compute_profile_grounding_index(authority)
+    with _grounding_index_cache_lock:
+        _grounding_index_cache[cache_key] = index
+        while len(_grounding_index_cache) > _GROUNDING_INDEX_CACHE_MAXSIZE:
+            oldest_key = next(iter(_grounding_index_cache))
+            del _grounding_index_cache[oldest_key]
+    return index
+
+
+def _compute_profile_grounding_index(
+    authority: ValidatedRegistryAuthority,
+) -> Mapping[str, ProfileKeyGrounding]:
+    """Perform the uncached registry walk :func:`build_profile_grounding_index` memoises."""
     modelos: dict[str, set[str]] = {}
     legal_refs: dict[str, set[str]] = {}
     source_refs: dict[str, set[str]] = {}

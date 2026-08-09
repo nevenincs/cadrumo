@@ -176,7 +176,7 @@ if TYPE_CHECKING:
         RemoveProfileCommand,
         RenameProfileCommand,
     )
-    from ._completeness import iva_regime_required, profile_section_rows
+    from ._completeness import iva_regime_required, missing_required_field_paths, profile_section_rows
     from ._cotejo_apply import (
         CENSO_CERTIFICATE_AXIS_PREFIX,
         CENSO_DIVERGENCE_NOTICE_CODE,
@@ -260,7 +260,12 @@ if TYPE_CHECKING:
         profile_field_choices,
         resolve_profile_field_label_for_path,
     )
-    from ._preflight import ProfilePreflightService
+    from ._preflight import (
+        ProfilePreflightService,
+        build_profile_preflight_requirement,
+        format_profile_preflight_requirement,
+        format_profile_selector_requirements,
+    )
     from ._profile_pointer_transaction import active_profile_pointer_transaction
     from ._profile_repository import ProfileRepository
     from ._projections import (
@@ -368,7 +373,15 @@ _LAZY_EXPORTS: dict[str, str] = {
                 "snapshot_to_values",
             ),
         ),
-        ("._preflight", ("ProfilePreflightService",)),
+        (
+            "._preflight",
+            (
+                "ProfilePreflightService",
+                "build_profile_preflight_requirement",
+                "format_profile_preflight_requirement",
+                "format_profile_selector_requirements",
+            ),
+        ),
         ("._validation", ("ProfileValidationService",)),
         (
             "._bundle",
@@ -446,7 +459,7 @@ _LAZY_EXPORTS: dict[str, str] = {
             ),
         ),
         ("._filing_baseline", ("missing_filing_baseline_flags",)),
-        ("._completeness", ("iva_regime_required", "profile_section_rows")),
+        ("._completeness", ("iva_regime_required", "missing_required_field_paths", "profile_section_rows")),
         ("._section_rows", ("next_section_row_index", "section_row_facts")),
         ("._keys_validation", ("list_profile_key_records", "validate_profile_values")),
         ("._language_resolver", ("resolve_profile_output_language_hint",)),
@@ -649,6 +662,7 @@ __all__ = [
     "assess_passphrase",
     "build_lifecycle_service",
     "build_profile_overview",
+    "build_profile_preflight_requirement",
     "bundle_data_categories",
     "bundle_excluded_data_categories",
     "carried_namespace_definitions",
@@ -668,6 +682,8 @@ __all__ = [
     "export_profile_bundle",
     "fact_value",
     "facts_to_values",
+    "format_profile_preflight_requirement",
+    "format_profile_selector_requirements",
     "inspect_recovery_status",
     "iva_regime_required",
     "list_profile_key_records",
@@ -675,6 +691,7 @@ __all__ = [
     "logout_active_profile",
     "mask_profile_field",
     "missing_filing_baseline_flags",
+    "missing_required_field_paths",
     "next_section_row_index",
     "open_censo_divergences",
     "prepare_profile_export",

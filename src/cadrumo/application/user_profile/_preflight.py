@@ -8,7 +8,7 @@ record does not yet carry.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from typing import TYPE_CHECKING
 
 from ...core import Period
@@ -18,7 +18,13 @@ from ...domain.calculations.registry import (
     ValidatedRegistryAuthority,
     build_profile_grounding_index,
 )
-from ...domain.user_profile import ProfileSchemaDefinition, UserProfileNotFoundError, UserProfileRecord
+from ...domain.user_profile import (
+    ProfileSchemaDefinition,
+    UserProfileNotFoundError,
+    UserProfileRecord,
+    profile_field_label,
+    section_field_key,
+)
 from . import (
     ProfilePreflightReport,
     ProfilePreflightRequirement,
@@ -34,6 +40,125 @@ _PROFILE_ENTITY_TYPE_PATH = "taxpayer_type.entity_type"
 _PROFILE_LEGAL_NAME_PATH = "identity.legal_name"
 _PROFILE_NAME_PATH = "identity.name"
 _PROFILE_SURNAMES_PATH = "identity.surnames"
+
+
+def build_profile_preflight_requirement(
+    path: str,
+    *,
+    schema: ProfileSchemaDefinition,
+    selector: str | None = None,
+    grounding_index: Mapping[str, ProfileKeyGrounding] | None = None,
+) -> ProfilePreflightRequirement:
+    """Build one requirement row for a profile path, enriched with a label and grounding.
+
+    The shared builder behind every ``ProfilePreflightRequirement`` this
+    package or :mod:`application.modelo`'s profile readiness gate
+    constructs - the schema-required walk in :meth:`ProfilePreflightService.report`,
+    its export-identity and conditional-requirement branches, and the
+    modelo-work baseline/validation checks in ``_profile_readiness_gate.py``
+    all route through this one function rather than maintaining parallel
+    implementations.
+
+    ``path`` is reduced to its declared ``section.field`` form via
+    :func:`~domain.user_profile.section_field_key` before lookup, so a
+    repeatable-row path (``activities.0.iae_epigraph``) and a bare
+    non-dotted validation code both resolve correctly. The label is the
+    locale-catalogue operator label (falling back to the field's declared
+    ``description``, never a raw dotted path) when the reduced path names a
+    real schema field; otherwise it falls back to ``selector`` or ``path``
+    itself. The schema-declared ``legal_refs`` come from the field
+    definition; the registry-binding-derived ``legal_refs`` and ``modelos``
+    come from ``grounding_index`` when the reduced path is a known
+    ``source = "profile"`` binding key. A path absent from either source
+    contributes nothing to that source - never a fabricated value.
+    ``modelos`` is always the grounded registry union, never the modelo the
+    caller happens to be checking - the two are different facts and must
+    not be conflated under one field.
+    """
+    reduced = section_field_key(path) if "." in path else path
+    section_key, _, field_key = reduced.partition(".")
+    if not field_key:
+        section_key, field_key = "profile", section_key
+    label = selector or path
+    legal_refs: tuple[str, ...] = ()
+    if "." in reduced:
+        try:
+            field = schema.field(reduced)
+        except UserProfileNotFoundError:
+            pass
+        else:
+            label = profile_field_label(section_key, field)
+            legal_refs = field.legal_refs
+    grounding = (grounding_index or {}).get(reduced)
+    if grounding:
+        legal_refs = tuple(sorted({*legal_refs, *grounding.legal_refs}))
+    modelos = tuple(sorted({m.value for m in grounding.modelos})) if grounding else ()
+    return ProfilePreflightRequirement(
+        selector=selector or path,
+        section_key=section_key,
+        field_key=field_key,
+        label=label,
+        legal_refs=legal_refs,
+        modelos=modelos,
+    )
+
+
+def format_profile_preflight_requirement(requirement: ProfilePreflightRequirement) -> str:
+    """Render one requirement row as ``label (legal_ref, legal_ref)``.
+
+    The single operator-facing rendering of a missing profile requirement,
+    shared by every surface that names one: the modelo work readiness gate's
+    refusal, the overview calendar/agenda/backlog refusals, and the data
+    inventory checklist's unresolved-coefficient warning.
+
+    Falls back to the bare label when the field carries no legal grounding -
+    never a raw dotted path once a label is available, and never an invented
+    citation when none is declared.
+    """
+    if requirement.legal_refs:
+        return f"{requirement.label} ({', '.join(requirement.legal_refs)})"
+    return requirement.label
+
+
+def format_profile_selector_requirements(
+    selectors: Iterable[str],
+    *,
+    schema: ProfileSchemaDefinition,
+    grounding_index: Mapping[str, ProfileKeyGrounding] | None = None,
+) -> tuple[str, ...]:
+    """Render declared selector tokens as grounded requirement text, in order.
+
+    Bridges the surfaces that hold a ``model_selectors`` TOKEN - a
+    deadline-engine gating key, a registry binding's consumed profile key -
+    rather than a ``section.field`` path, which is what
+    :func:`build_profile_preflight_requirement` resolves.
+
+    A token the schema resolves to exactly one field is rendered as that
+    field's operator label with its legal grounding. A token the schema does
+    not resolve - because it names no field, because two fields declare it, or
+    because it belongs to another namespace entirely, such as a warning code
+    that is not a profile field at all - is passed through unchanged. Callers
+    mix both kinds in one stream, and a token rendered verbatim is the
+    behaviour that surface already has, whereas a guessed label would be
+    confidently wrong.
+    """
+    rendered: list[str] = []
+    for selector in selectors:
+        path = schema.path_for_model_selector(selector)
+        if path is None:
+            rendered.append(selector)
+            continue
+        rendered.append(
+            format_profile_preflight_requirement(
+                build_profile_preflight_requirement(
+                    path,
+                    schema=schema,
+                    selector=selector,
+                    grounding_index=grounding_index,
+                ),
+            ),
+        )
+    return tuple(rendered)
 
 
 class ProfilePreflightService:
@@ -87,12 +212,16 @@ class ProfilePreflightService:
             ``missing`` list populated.
 
             ``per_operation_requirements_assessed`` reports whether the
-            per-modelo walk described above selected any field at all. No
-            shipped schema field currently declares a ``modelo_`` selector, so
-            it is false for every modelo today and ``ready`` reflects only the
-            export-identity and conditional checks. A false value means nothing
-            schema-required was examined; it MUST NOT be rendered as a clean
-            bill of health.
+            per-modelo walk described above selected any field at all. The
+            shipped schema declares grounded ``modelo_`` selectors only for
+            Modelo 036, 100 and 303, and among those only ``identity.tax_id``
+            (Modelo 100) is also schema-``required`` - every other tokenised
+            field is optional, so it is never selected by this walk. The flag
+            is therefore true for Modelo 100 and false for every other modelo,
+            including 036 and 303, where ``ready`` reflects only the
+            export-identity and conditional checks. A false value means
+            nothing schema-required was examined for that modelo; it MUST NOT
+            be rendered as a clean bill of health.
         """
         values = record_to_path_values(record)
         grounding_index = build_profile_grounding_index(authority) if authority is not None else {}
@@ -114,11 +243,10 @@ class ProfilePreflightService:
                 if self._has_value(values, candidate_path):
                     continue
                 missing.append(
-                    self._requirement(
+                    build_profile_preflight_requirement(
+                        candidate_path,
+                        schema=self._schema,
                         selector=field.model_selectors[0] if field.model_selectors else candidate_path,
-                        section_key=section.key,
-                        field_key=field.key,
-                        modelo=modelo,
                         grounding_index=grounding_index,
                     ),
                 )
@@ -133,47 +261,6 @@ class ProfilePreflightService:
             missing=tuple(missing),
             ready=not missing,
             per_operation_requirements_assessed=per_operation_selected > 0,
-        )
-
-    def _requirement(
-        self,
-        *,
-        selector: str,
-        section_key: str,
-        field_key: str,
-        modelo: str | None,
-        grounding_index: Mapping[str, ProfileKeyGrounding],
-    ) -> ProfilePreflightRequirement:
-        """Build one requirement row, enriched with a label and grounding.
-
-        The label and schema-declared ``legal_refs`` come from the field
-        definition itself; the registry-binding-derived ``legal_refs`` and
-        ``modelos`` come from ``grounding_index`` when the field's dotted
-        path is a known ``source = "profile"`` binding key. A path absent
-        from either source contributes nothing to that source - never a
-        fabricated value.
-        """
-        path = f"{section_key}.{field_key}"
-        try:
-            field = self._schema.field(path)
-        except UserProfileNotFoundError:
-            label = selector
-            schema_legal_refs: tuple[str, ...] = ()
-        else:
-            label = field.description
-            schema_legal_refs = field.legal_refs
-        grounding = grounding_index.get(path)
-        legal_refs = tuple(sorted({*schema_legal_refs, *(grounding.legal_refs if grounding else ())}))
-        modelos = {modelo_code.value for modelo_code in grounding.modelos} if grounding else set()
-        if modelo:
-            modelos.add(modelo)
-        return ProfilePreflightRequirement(
-            selector=selector,
-            section_key=section_key,
-            field_key=field_key,
-            label=label,
-            legal_refs=legal_refs,
-            modelos=tuple(sorted(modelos)),
         )
 
     @staticmethod
@@ -212,11 +299,10 @@ class ProfilePreflightService:
             if self._has_value(values, _PROFILE_LEGAL_NAME_PATH):
                 return []
             return [
-                self._requirement(
+                build_profile_preflight_requirement(
+                    "identity.legal_name",
+                    schema=self._schema,
                     selector="export.header.legal_name",
-                    section_key="identity",
-                    field_key="legal_name",
-                    modelo=None,
                     grounding_index=grounding_index,
                 ),
             ]
@@ -235,11 +321,10 @@ class ProfilePreflightService:
                 if self._has_value(values, candidate_path):
                     continue
                 missing.append(
-                    self._requirement(
+                    build_profile_preflight_requirement(
+                        f"{section.key}.{field.key}",
+                        schema=self._schema,
                         selector="export.header.full_name",
-                        section_key=section.key,
-                        field_key=field.key,
-                        modelo=None,
                         grounding_index=grounding_index,
                     ),
                 )
@@ -258,11 +343,10 @@ class ProfilePreflightService:
             if (section_key, field_key) in already_missing:
                 continue
             missing.append(
-                self._requirement(
+                build_profile_preflight_requirement(
+                    f"{section_key}.{field_key}",
+                    schema=self._schema,
                     selector=self._selector_for_path(path),
-                    section_key=section_key,
-                    field_key=field_key,
-                    modelo=None,
                     grounding_index=grounding_index,
                 ),
             )
@@ -280,8 +364,13 @@ class ProfilePreflightService:
 
     @staticmethod
     def _split_path(path: str) -> tuple[str, str]:
-        section_key, _, field_key = path.partition(".")
+        section_key, _, field_key = section_field_key(path).partition(".")
         return section_key, field_key
 
 
-__all__ = ["ProfilePreflightService"]
+__all__ = [
+    "ProfilePreflightService",
+    "build_profile_preflight_requirement",
+    "format_profile_preflight_requirement",
+    "format_profile_selector_requirements",
+]

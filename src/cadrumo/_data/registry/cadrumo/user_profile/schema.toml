@@ -73,8 +73,9 @@ type = "string"
 required = true
 sensitivity = "identity"
 description = "NIF/NIE/CIF used as filing identity."
-model_selectors = ["tax.id"]
+model_selectors = ["tax.id", "modelo_100"]
 export_headers = ["profile_tax_id"]
+legal_refs = ["orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "name"
@@ -82,8 +83,9 @@ type = "string"
 required = false
 sensitivity = "identity"
 description = "Declarant given name or display name."
-model_selectors = ["name"]
+model_selectors = ["name", "modelo_100"]
 export_headers = ["name", "first_name"]
+legal_refs = ["orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "surnames"
@@ -91,8 +93,9 @@ type = "string"
 required = false
 sensitivity = "identity"
 description = "Declarant surnames for person filings."
-model_selectors = ["surnames"]
+model_selectors = ["surnames", "modelo_100"]
 export_headers = ["surnames"]
+legal_refs = ["orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "legal_name"
@@ -308,6 +311,8 @@ required = false
 sensitivity = "identity"
 effective_dated = true
 description = "Modelo 303 casilla 65 — porcentaje atribuible a la Administración del Estado (Art. 29 del Concierto Económico, Ley 12/2002). Cadrumo lo calcula a partir de la jurisdicción fiscal: 100 % en territorio común y 0 % cuando la atribución foral no está soportada."
+model_selectors = ["modelo_303"]
+legal_refs = ["ley-12-2002:art-29", "ley-37-1992:art-115", "orden-eha-3786-2008:art-1", "rd-1624-1992:art-71"]
 
 [[sections]]
 key = "censo"
@@ -323,6 +328,8 @@ sensitivity = "identity"
 effective_dated = true
 description = "Modelo 036 censo state."
 enum_values = ["alta", "modificacion", "baja"]
+model_selectors = ["modelo_036"]
+legal_refs = ["orden-eha-1274-2007:art-1", "orden-eha-1274-2007:art-2", "rd-1065-2007:art-10", "rd-1065-2007:art-11", "rd-1065-2007:art-9"]
 
 [[sections.fields]]
 key = "large_company"
@@ -532,7 +539,7 @@ required = false
 sensitivity = "financial"
 effective_dated = true
 description = "Categorías de renta IRPF declaradas por la persona: actividad económica, trabajo, capital inmobiliario, capital mobiliario, ganancias patrimoniales o pensión. Solo la actividad económica puede originar pagos fraccionados en los Modelos 130 o 131."
-model_selectors = ["taxpayer.irpf_income_categories"]
+model_selectors = ["taxpayer.irpf_income_categories", "modelo_100"]
 schedule_predicates = ["taxpayer.irpf_income_categories"]
 legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-22", "ley-35-2006:art-25", "ley-35-2006:art-27", "ley-35-2006:art-33"]
 
@@ -1238,6 +1245,7 @@ sensitivity = "financial"
 effective_dated = true
 description = "Base imponible del autoconsumo Art. 9.1.c LISIVA para promotores inmobiliarios: coste de construccion o rehabilitacion de inmuebles afectados al patrimonio de arrendamiento. Corresponde a casilla iva.autoconsumo.promotor.base de Modelo 303."
 legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79"]
+model_selectors = ["modelo_303"]
 
 [[sections]]
 key = "obligations"
@@ -1286,8 +1294,9 @@ type = "string"
 required = false
 sensitivity = "financial"
 description = "Declaration type used by export layouts and Modelo 100."
-model_selectors = ["declaration.type"]
+model_selectors = ["declaration.type", "modelo_100"]
 export_headers = ["declaration_type", "complementaria", "complementaria_page", "page_complementaria"]
+legal_refs = ["orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "rental_reduccion_art_23_2_tier_2024"
@@ -1296,7 +1305,7 @@ required = false
 sensitivity = "financial"
 description = "Modelo 100 de 2024, art. 23.2: porcentaje de reducción por alquiler de vivienda entre los tramos legales del 50, 60, 70 o 90 %. Sin este dato no puede calcularse la casilla 0150 únicamente a partir de la condición de elegibilidad."
 enum_values = ["tier-50", "tier-60", "tier-70", "tier-90"]
-model_selectors = ["renta.rental_reduccion_art_23_2_tier_2024"]
+model_selectors = ["renta.rental_reduccion_art_23_2_tier_2024", "modelo_100"]
 legal_refs = ["ley-35-2006:art-23"]
 
 [[sections.fields]]
@@ -1417,7 +1426,8 @@ sensitivity = "identity"
 effective_dated = true
 description = "Sexo del contribuyente para el Modelo 100. Toma los valores del tipo tipo_Sexo del diseno de registro: H (hombre) y M (mujer)."
 enum_values = ["H", "M"]
-model_selectors = ["taxpayer.sex"]
+model_selectors = ["taxpayer.sex", "modelo_100"]
+legal_refs = ["orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "marital_status"
@@ -1427,7 +1437,8 @@ sensitivity = "identity"
 effective_dated = true
 description = "Taxpayer marital or registered-partnership status used by Renta profile decisions."
 enum_values = ["1", "2", "3", "4", "5"]
-model_selectors = ["taxpayer.marital_status"]
+model_selectors = ["taxpayer.marital_status", "modelo_100"]
+legal_refs = ["orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "birth_date"
@@ -1436,7 +1447,8 @@ required = false
 sensitivity = "identity"
 effective_dated = false
 description = "Taxpayer birth date."
-model_selectors = ["taxpayer.birth_date"]
+model_selectors = ["taxpayer.birth_date", "modelo_100"]
+legal_refs = ["ley-35-2006:art-57", "orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "disability_grade"
@@ -1445,7 +1457,8 @@ required = false
 sensitivity = "identity"
 effective_dated = true
 description = "Taxpayer disability grade code for Modelo 100."
-model_selectors = ["taxpayer.disability_grade"]
+model_selectors = ["taxpayer.disability_grade", "modelo_100"]
+legal_refs = ["ley-35-2006:art-57", "orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "death_date"
@@ -1455,7 +1468,8 @@ sensitivity = "identity"
 effective_dated = false
 nullable = true
 description = "Taxpayer death date when Modelo 100 requires it."
-model_selectors = ["taxpayer.death_date"]
+model_selectors = ["taxpayer.death_date", "modelo_100"]
+legal_refs = ["orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "marriage_date"
@@ -1475,7 +1489,7 @@ required = false
 sensitivity = "identity"
 effective_dated = false
 description = "Primer mes del ejercicio en que el matrimonio estuvo vigente, calculado automáticamente a partir de la fecha de matrimonio."
-model_selectors = ["renta_taxpayer.marriage_month_start"]
+model_selectors = ["renta_taxpayer.marriage_month_start", "modelo_100"]
 legal_refs = ["ley-35-2006:art-82"]
 
 [[sections.fields]]
@@ -1485,7 +1499,7 @@ required = false
 sensitivity = "identity"
 effective_dated = false
 description = "Último mes completo del ejercicio en que el matrimonio estuvo vigente, calculado automáticamente a partir de la fecha de matrimonio."
-model_selectors = ["renta_taxpayer.marriage_month_end"]
+model_selectors = ["renta_taxpayer.marriage_month_end", "modelo_100"]
 legal_refs = ["ley-35-2006:art-82"]
 
 [[sections.fields]]
@@ -1495,7 +1509,7 @@ required = false
 sensitivity = "identity"
 effective_dated = false
 description = "Indica si el matrimonio estuvo vigente durante todo el ejercicio, calculado automáticamente a partir de la fecha de matrimonio."
-model_selectors = ["renta_taxpayer.marriage_full_year"]
+model_selectors = ["renta_taxpayer.marriage_full_year", "modelo_100"]
 legal_refs = ["ley-35-2006:art-82"]
 
 [[sections]]
@@ -1511,7 +1525,8 @@ required = false
 sensitivity = "identity"
 effective_dated = true
 description = "Spouse NIF/NIE for joint filing."
-model_selectors = ["spouse.tax.id"]
+model_selectors = ["spouse.tax.id", "modelo_100"]
+legal_refs = ["orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "name"
@@ -1520,7 +1535,8 @@ required = false
 sensitivity = "identity"
 effective_dated = true
 description = "Spouse given name."
-model_selectors = ["spouse.name"]
+model_selectors = ["spouse.name", "modelo_100"]
+legal_refs = ["orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "surnames"
@@ -1529,7 +1545,8 @@ required = false
 sensitivity = "identity"
 effective_dated = true
 description = "Spouse surnames."
-model_selectors = ["spouse.surnames"]
+model_selectors = ["spouse.surnames", "modelo_100"]
+legal_refs = ["orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "birth_date"
@@ -1538,7 +1555,8 @@ required = false
 sensitivity = "identity"
 effective_dated = false
 description = "Spouse birth date."
-model_selectors = ["spouse.birth_date"]
+model_selectors = ["spouse.birth_date", "modelo_100"]
+legal_refs = ["ley-35-2006:art-57", "orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "sex"
@@ -1548,7 +1566,8 @@ sensitivity = "identity"
 effective_dated = true
 description = "Sexo del conyuge para el Modelo 100. Toma los valores del tipo tipo_Sexo del diseno de registro: H (hombre) y M (mujer)."
 enum_values = ["H", "M"]
-model_selectors = ["spouse.sex"]
+model_selectors = ["spouse.sex", "modelo_100"]
+legal_refs = ["orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "disability_grade"
@@ -1557,7 +1576,8 @@ required = false
 sensitivity = "identity"
 effective_dated = true
 description = "Spouse disability grade code for Modelo 100."
-model_selectors = ["spouse.disability_grade"]
+model_selectors = ["spouse.disability_grade", "modelo_100"]
+legal_refs = ["ley-35-2006:art-57", "orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "non_resident_irpf"
@@ -1566,7 +1586,8 @@ required = false
 sensitivity = "identity"
 effective_dated = true
 description = "Whether the spouse is non-resident and not an IRPF taxpayer."
-model_selectors = ["spouse.non_resident_irpf"]
+model_selectors = ["spouse.non_resident_irpf", "modelo_100"]
+legal_refs = ["orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "eu_eea_resident"
@@ -1575,7 +1596,8 @@ required = false
 sensitivity = "identity"
 effective_dated = true
 description = "Whether the non-resident spouse is resident in the EU or EEA."
-model_selectors = ["spouse.eu_eea_resident"]
+model_selectors = ["spouse.eu_eea_resident", "modelo_100"]
+legal_refs = ["orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "eu_eea_country"
@@ -1585,7 +1607,8 @@ sensitivity = "identity"
 effective_dated = true
 nullable = true
 description = "EU or EEA country of residence for the spouse."
-model_selectors = ["spouse.eu_eea_country"]
+model_selectors = ["spouse.eu_eea_country", "modelo_100"]
+legal_refs = ["orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
 
 [[sections]]
 key = "renta_family"
@@ -1600,7 +1623,8 @@ required = false
 sensitivity = "identity"
 effective_dated = true
 description = "Minor children in the family unit."
-model_selectors = ["family.minor_children_in_unit"]
+model_selectors = ["family.minor_children_in_unit", "modelo_100"]
+legal_refs = ["ley-35-2006:art-82", "ley-35-2006:art-83", "orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "descendants_eu_eea_deduction"
@@ -1609,7 +1633,8 @@ required = false
 sensitivity = "identity"
 effective_dated = true
 description = "EU/EEA descendant deduction flag for Modelo 100."
-model_selectors = ["family.descendants_eu_eea_deduction"]
+model_selectors = ["family.descendants_eu_eea_deduction", "modelo_100"]
+legal_refs = ["orden-hac-1347-2024:art-4", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
 key = "descendiente"
@@ -1663,7 +1688,8 @@ required = false
 sensitivity = "identity"
 effective_dated = true
 description = "Count of descendants represented in Renta family facts."
-model_selectors = ["RentaFamilyProfile.descendientes_count"]
+model_selectors = ["RentaFamilyProfile.descendientes_count", "modelo_100"]
+legal_refs = ["ley-35-2006:art-58"]
 
 [[sections.fields]]
 key = "madrid_nacimiento_adopcion_eligible_count"
@@ -1672,7 +1698,7 @@ required = false
 sensitivity = "identity"
 effective_dated = false
 description = "Número prorrateado de descendientes convivientes que cumplen el plazo de nacimiento o adopción para la deducción de la Comunidad de Madrid (DL 1/2010 art. 4), aplicado a la casilla 1039 del Modelo 100."
-model_selectors = ["renta_family.madrid_nacimiento_adopcion_eligible_count"]
+model_selectors = ["renta_family.madrid_nacimiento_adopcion_eligible_count", "modelo_100"]
 legal_refs = ["ley-35-2006:art-77", "madrid-dl-1-2010:art-4"]
 
 [[sections.fields]]
@@ -1682,7 +1708,7 @@ required = false
 sensitivity = "financial"
 effective_dated = false
 description = "Base imponible de los demás miembros de la unidad familiar para el límite de renta de la deducción de la Comunidad de Madrid (DL 1/2010 art. 18.1). En una unidad individual o monoparental equivale a cero; en una unidad conyugal solo se aplica cuando constan las bases necesarias."
-model_selectors = ["renta_family.unidad_familiar_otros_miembros_base"]
+model_selectors = ["renta_family.unidad_familiar_otros_miembros_base", "modelo_100"]
 legal_refs = ["ley-35-2006:art-77", "madrid-dl-1-2010:art-18"]
 
 [[sections.fields]]
@@ -1703,7 +1729,8 @@ required = false
 sensitivity = "financial"
 effective_dated = true
 description = "Mother's Social Security cotizaciones paid in 2024 (Art. 81.2 LIRPF cap term)."
-model_selectors = ["family.cotizaciones_ss_madre_2024"]
+model_selectors = ["family.cotizaciones_ss_madre_2024", "modelo_100"]
+legal_refs = ["ley-35-2006:art-81"]
 
 [[sections.fields]]
 key = "descendants"

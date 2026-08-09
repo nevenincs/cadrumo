@@ -15,7 +15,9 @@ from .. import (
     ProfileFieldType,
     ProfileRemovePolicy,
     ProfileSchemaDefinition,
+    ProfileSectionDefinition,
     ProfileSnapshotPolicy,
+    UserProfileNotFoundError,
     UserProfileSchemaLoadError,
     load_user_profile_schema,
 )
@@ -136,6 +138,43 @@ def test_committed_user_profile_schema_legal_refs_resolve_against_catalogue_and_
     verify_legal_catalogue({ref: catalogues.legal[ref] for ref in refs}, source_root=bundled_path())
 
 
+def test_no_grounded_profile_key_regresses_to_a_schema_field_with_no_legal_refs() -> None:
+    """A live-grounded profile key must not silently lose its schema citation.
+
+    Computed against the LIVE registry authority, not a hardcoded snapshot -
+    fails the moment a new ``source = "profile"`` binding is added for a
+    field whose schema entry is never updated to carry the same citation.
+
+    Two fields with a deliberately unreconciled two-way citation divergence
+    (``iva.autoconsumo_promotor_base``, ``taxpayer_type.irpf_income_categories``)
+    are excluded from this check: both already carry non-empty schema
+    ``legal_refs``, so they are a different situation - a disagreement
+    between two non-empty citation sets - not the "schema carries nothing"
+    gap this test guards.
+    """
+    from ...calculations.registry import build_profile_grounding_index
+
+    authority = resources().modelos.authority
+    index = build_profile_grounding_index(authority)
+    schema = load_user_profile_schema()
+
+    regressed: list[str] = []
+    for key, grounding in index.items():
+        if not grounding.legal_refs:
+            continue
+        try:
+            field = schema.field(key)
+        except UserProfileNotFoundError:
+            continue
+        if not field.legal_refs:
+            regressed.append(key)
+
+    assert not regressed, (
+        "these profile keys carry a live registry legal_ref but their schema field carries none - "
+        f"carry the citation onto the schema field: {sorted(regressed)}"
+    )
+
+
 def test_user_profile_schema_models_are_strict_frozen_and_forbid_extras() -> None:
     field = ProfileFieldDefinition.model_validate(
         {
@@ -174,6 +213,96 @@ def test_enum_fields_require_declared_values() -> None:
                 "description": "Tax residence.",
             },
         )
+
+
+def test_model_selector_resolves_to_the_declaring_field_path() -> None:
+    schema = load_user_profile_schema()
+
+    resolved = schema.path_for_model_selector("has_employees")
+
+    assert resolved == "withholding.has_employees"
+    assert "has_employees" in schema.field(resolved).model_selectors
+
+
+def test_every_committed_model_selector_either_resolves_or_is_declared_twice() -> None:
+    """No committed selector may resolve to a field that does not declare it.
+
+    Guards the resolver against the failure that would matter in production:
+    returning a confidently wrong path. A token declared by two fields is
+    permitted to resolve to nothing, but a token that resolves at all must
+    resolve to a field carrying that exact token.
+    """
+    schema = load_user_profile_schema()
+    declared = {
+        selector
+        for section in schema.sections
+        for field in section.fields
+        for selector in field.model_selectors
+    }
+    assert declared, "the committed schema declares no model selectors at all"
+
+    for selector in sorted(declared):
+        resolved = schema.path_for_model_selector(selector)
+        if resolved is None:
+            continue
+        assert selector in schema.field(resolved).model_selectors
+
+
+def test_unknown_and_blank_model_selectors_resolve_to_nothing() -> None:
+    schema = load_user_profile_schema()
+
+    assert schema.path_for_model_selector("no_such_selector_token") is None
+    assert schema.path_for_model_selector("") is None
+    assert schema.path_for_model_selector("   ") is None
+
+
+def test_ambiguous_model_selector_resolves_to_nothing_rather_than_guessing() -> None:
+    """A token two fields declare has no single correct path, so none is returned.
+
+    The committed schema happens to declare each token once, so the ambiguity
+    this guards against cannot be reproduced from real data and is constructed
+    here instead. Returning either candidate would mislabel the other.
+    """
+    schema = load_user_profile_schema()
+    shared_selector = "shared_ambiguous_selector"
+    section = ProfileSectionDefinition.model_validate(
+        {
+            "key": "ambiguity_probe",
+            "title": "Ambiguity probe",
+            "sensitivity": "identity",
+            "fields": (
+                {
+                    "key": "first_declaring_field",
+                    "type": "string",
+                    "sensitivity": "identity",
+                    "description": "First field declaring the shared selector.",
+                    "model_selectors": (shared_selector,),
+                },
+                {
+                    "key": "second_declaring_field",
+                    "type": "string",
+                    "sensitivity": "identity",
+                    "description": "Second field declaring the shared selector.",
+                    "model_selectors": (shared_selector,),
+                },
+            ),
+        },
+    )
+    ambiguous = ProfileSchemaDefinition.model_validate(
+        {
+            "id": schema.id,
+            "version": schema.version,
+            "title": schema.title,
+            "snapshot_policy": schema.snapshot_policy.value,
+            "remove_policy": schema.remove_policy.value,
+            "sections": (*schema.sections, section),
+        },
+    )
+
+    assert ambiguous.path_for_model_selector(shared_selector) is None
+    # The same schema still resolves an unambiguous token, so the None above is
+    # the ambiguity refusal and not a resolver broken by the added section.
+    assert ambiguous.path_for_model_selector("has_employees") == "withholding.has_employees"
 
 
 def test_schema_rejects_duplicate_section_keys() -> None:

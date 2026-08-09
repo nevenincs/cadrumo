@@ -498,6 +498,7 @@ def _readiness(**overrides: object) -> ProjectionModeloReadiness:
         "filing_year": 2026,
         "period": period,
         "profile_ready": True,
+        "per_operation_requirements_assessed": True,
         "ready": True,
     }
     base.update(overrides)

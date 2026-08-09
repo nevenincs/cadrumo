@@ -370,6 +370,12 @@ def record_m036_declaration(
     checked against the repository binding at save time, so a cross-bucket
     payload cannot land silently.
 
+    Args:
+        command: The declaration command naming the profile, event kind,
+            declared-on date and the sede justificante it was filed under.
+        bucket_id: The bucket to persist into; checked against
+            ``command.profile_id`` before anything is derived or stored.
+
     Raises:
         LiveApplicationInputError: If ``command.profile_id`` names a different
             profile than ``bucket_id``. A bucket identity IS the profile UUID

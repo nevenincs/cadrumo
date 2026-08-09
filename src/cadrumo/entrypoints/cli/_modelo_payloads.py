@@ -1100,6 +1100,9 @@ class ModeloReadinessMissingRequirementPayload(OutputSchema):
     section_key: str
     field_key: str
     selector: str
+    label: str
+    legal_refs: list[str]
+    modelos: list[str]
 
 
 class ModeloReadinessMissingBindingPayload(OutputSchema):

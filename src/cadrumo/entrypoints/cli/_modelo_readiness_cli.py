@@ -229,9 +229,10 @@ def _readiness_lines(
     )
     for requirement in report.missing:
         legal_refs = ", ".join(requirement.legal_refs) or "-"
+        modelos = ", ".join(requirement.modelos) or "-"
         lines.append(
             f"{requirement.section_key}.{requirement.field_key}\t{requirement.selector}\t"
-            f"{requirement.label}\t{legal_refs}",
+            f"{requirement.label}\t{legal_refs}\t{modelos}",
         )
     for binding in report.missing_bindings:
         lines.append(f"missing_binding\t{binding.binding_id}\t{binding.source}\t{binding.input_channel}")
@@ -247,6 +248,19 @@ def _readiness_lines(
 
 def _readiness_notices(report) -> tuple[Notice, ...]:
     notices: list[Notice] = []
+    if not report.per_operation_requirements_assessed:
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code="modelo.readiness.per_operation_axis_not_assessed",
+                message=(
+                    f"No schema-required profile field is currently declared for Modelo {report.modelo}, so "
+                    "profile_ready reflects only the export-identity and conditional checks, not a per-modelo "
+                    "assessment. Do not read profile_ready as a complete check for this modelo."
+                ),
+                context={"modelo": report.modelo, "profile_ready": str(report.profile_ready)},
+            ),
+        )
     if _ledger_ready_but_bindings_missing(report):
         notices.append(
             Notice(
