@@ -674,7 +674,9 @@ def _profile_to_taxpayer(state: WorkflowState) -> TaxpayerProfile:
 
 
 def _declared_tax_id(record: UserProfileRecord | None) -> str:
-    """Return the profile's declared ``identity.tax_id``, or ``""`` when undeclared.
+    """Return the ``identity.tax_id`` fact declared on a :class:`UserProfileRecord`.
+
+    Returns ``""`` when the record is absent or carries no such fact.
 
     Deliberately NOT routed through :func:`_profile_to_taxpayer`. That projection
     substitutes a synthetic placeholder NIF for an absent identity, which reads

@@ -26,6 +26,7 @@ from ....adapters.outbound.aeat.sede import FiledDeclaracionArtefact, FiledDecla
 from ....application.overview import calendar_filing_evidence_from_sources
 from ....application.user_profile import projection_for_taxpayer
 from ....core import Period
+from ....tests.aeat_literal_fixtures import FILED_ARTEFACT_PATH_FIXTURE, aeat_url
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -46,7 +47,7 @@ def _filed_observation() -> FiledDeclaracionObservation:
         artefacts=(
             FiledDeclaracionArtefact(
                 kind="register_row",
-                source_url="https://sede.agenciatributaria.gob.es/registro/20243031T000001",
+                source_url=aeat_url("sede", FILED_ARTEFACT_PATH_FIXTURE),
                 content_type="text/html",
                 byte_count=2048,
                 sha256="a" * 64,
