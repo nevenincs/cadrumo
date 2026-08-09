@@ -27,12 +27,17 @@ test and not a comment.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import pytest
 
 from ....core.resources import resources
-from ....domain.calculations.registry import relation_source_requirements
+from ....domain.calculations.registry import RegistryFoldRequirement, relation_source_requirements
 from .._binding_prefill import PrefilledBinding
 from .._relation_prefill import _relation_value_grounding
+
+if TYPE_CHECKING:
+    from ....domain.calculations.registry import RegistrySnapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -40,11 +45,11 @@ _SETTLEMENT = "direct_annual_settlement"
 _EVIDENCE = "factual_evidence"
 
 
-def _m100_2024():
+def _m100_2024() -> RegistrySnapshot:
     return resources().modelos.authority.snapshot("100", filing_year=2024, period="0A")
 
 
-def _requirements_by_relation(snapshot) -> dict[str, object]:
+def _requirements_by_relation(snapshot: RegistrySnapshot) -> dict[str, RegistryFoldRequirement]:
     """Map each relation id to the fold requirement that carries its treatment."""
     requirements = relation_source_requirements(
         snapshot.revision,
@@ -54,7 +59,7 @@ def _requirements_by_relation(snapshot) -> dict[str, object]:
     return {relation_id: requirement for requirement in requirements for relation_id in requirement.relation_ids}
 
 
-def _grounded_treatments(snapshot) -> dict[str, str]:
+def _grounded_treatments(snapshot: RegistrySnapshot) -> dict[str, str]:
     """Run the real join and collect the treatment it carries onto each relation."""
     by_relation = _requirements_by_relation(snapshot)
     treatments: dict[str, str] = {}
