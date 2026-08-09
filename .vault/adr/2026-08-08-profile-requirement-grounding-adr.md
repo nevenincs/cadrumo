@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:28d48bdc24c79feeaa79147ea86985a58948a9d9823b146c20b62f0f91f2a119'
+body_hash: 'sha256:11c6add7275b3178e54ede75d5fcff0c22e2a6f264ae8da4377cbf237854410d'
 related:
   - "[[2026-07-23-profile-setup-flow-adr]]"
   - '[[2026-08-08-profile-requirement-grounding-reference]]'
@@ -93,57 +93,56 @@ The ten-mechanism, four-namespace split recorded in `2026-08-09-profile-requirem
 
 This amendment rules on code, and a ruling is not self-executing. Its implementing rows are opened in the same action in `2026-08-08-profile-requirement-grounding-plan` (phase `P05`). Until those close, HEAD carries the rejected behaviour while this record reads as in force — the gap this project has been burned by before.
 
-
 ## Amendment (2026-08-09b): conditional requirements stay UNSCOPED, and the `required` conjunct is load-bearing
 
-**Status:** accepted. Settled jointly by the two agents working this campaign after the axis was populated; both positions and the measurements behind them are recorded below.
+**Status:** accepted. Settled jointly by the two agents working this campaign after the axis was populated.
 
 ### The question
 
-Once the axis carried grounded `modelo_<code>` tokens, a measurement showed only **1 of 32** sat on a `required = true` field (`identity.tax_id` → `modelo_100`). The other 31 are inert for preflight selection, because the per-modelo walk is `field.required AND selectors match the modelo`. That invites an obvious-looking fix: extend the walk to conditionally-required fields so the tokens "work".
+Once the axis carried grounded `modelo_<code>` tokens, only **1 of 32** sat on a `required = true` field (`identity.tax_id` → `modelo_100`). The other 31 are inert for preflight selection, because the per-modelo walk is `field.required AND selectors match the modelo`. That invites an obvious-looking fix: extend the walk to conditionally-required fields so the other tokens "work".
 
 ### Decision: do not. Conditionals remain unscoped, and the `required` conjunct must not be loosened.
 
-### The decisive mechanism
+### The reason is an invariant, not a count
 
-`ProfilePreflightService._selectors_match_modelo` treats an EMPTY selector tuple as **no match**, not as a wildcard:
+Stated first and deliberately without numbers, because the evidence below is a fact about today's data and **this is not**:
 
-```python
-if not selectors:
-    return False
-```
+> `ProfilePreflightService._selectors_match_modelo` treats an empty selector tuple as matching **no** modelo, not as a wildcard. Scoping conditional requirements to the axis would therefore make "untokenised" mean **never checked** rather than "checked everywhere". The failure mode of an authoring gap inverts from over-asking to silent omission. **This holds regardless of how many paths are tokenised at any given moment.**
 
-Verified in source and behaviourally: `()` → `False`, `("modelo_100",)` vs `modelo_100` → `True`, `("modelo_303",)` vs `modelo_100` → `False`.
+Verified in source and behaviourally: `()` → `False`; `("modelo_100",)` vs `modelo_100` → `True`; `("modelo_303",)` vs `modelo_100` → `False`.
 
-So scoping conditionals would not *narrow* an untokenised conditional field to fewer modelos — it would match **no modelo at all** and stop the check firing entirely.
+The distinction matters because this decision **explicitly permits** tokenising a conditionally-required field for grounding and display — the same basis on which the 31 inert tokens are correct. So the measurement below is expected to change, legitimately. A reader who finds it outdated must not conclude the reasoning lapsed with it.
 
-### Measured blast radius
+### Evidence of blast radius, as measured on 2026-08-09 (not the reason)
 
-Driving the real `conditional_profile_required_paths` resolver over value sets that trigger each rule: **3 distinct conditionally-required paths**, and **all 3 carry no `modelo_` token**:
+Driving the real resolvers over value sets that trigger each rule, **4 conditionally-ADDED paths exist and all 4 carry no `modelo_` token**:
 
 - `taxpayer_type.country_of_fiscal_residence`
 - `taxpayer_type.representante_fiscal_nif`
-- `taxpayer_type.representante_fiscal_nombre`
+- `taxpayer_type.representante_fiscal_nombre` (via `conditional_profile_required_paths`)
+- `attribution_entity_socios.<row>.country_of_residence` (via `atribucion_socio_missing_country_paths`, row-scoped)
 
-The last two are the fiscal-representative fields a non-EU/EEA-resident IRNR filer is legally required to declare. Under the scoping change they would silently never be asked for — no error, no advisory, just an absent prompt. The M184 socio `country_of_residence` rule is a separate resolver of the same shape and equally untokenised.
+The two representante-fiscal fields are what a non-EU/EEA-resident IRNR filer is legally required to declare. Under the rejected alternative they would silently never be asked for.
+
+**`iva.regime` is deliberately excluded from that count.** It is the INVERSE shape: `required = true` in the schema and conditionally *relaxed* by `iva_regime_required`, not conditionally added. It travels the required-field path, not the conditional one, so counting it here would overstate the figure. An earlier exchange between the two agents circulated "5" by including it; **4 is the correct count of conditionally-added paths**, recorded because a wrong number in an ADR outlives the conversation that produced it.
 
 ### Why a completeness gate does not rescue the alternative
 
-A gate over the 53 binding-derived pairs was considered as a precondition and rejected, on an argument that is about the predicate rather than the data: a gate makes TODAY's state safe, but with `empty → False` the **default for every newly-added conditional field is "fires for nothing"**. The next author who adds a representante-fiscal-shaped requirement and omits the tokens gets silence, permanently, unless the gate is also written to fail on new untokenised conditionals — i.e. unless it becomes a standing authoring obligation.
+A gate over the 53 binding-derived pairs was considered as a precondition and rejected on a structural argument rather than a data one: a gate makes *today's* state safe, but with empty-means-no-match the **default for every newly-added conditional field is "fires for nothing"**. The next author who adds a representante-fiscal-shaped requirement and omits the tokens gets silence — permanently — unless the gate also fails on new untokenised conditionals, i.e. unless it becomes a standing authoring obligation.
 
-Under the decision above the default runs the safe way: an untokenised conditional **over-asks**. That is a property of the predicate's semantics, not of how complete the grounding happens to be, which is why it is not tradeable for a gate.
+Under this decision the default runs the safe way: an untokenised conditional **over-asks**.
 
-### What this means for the 31 inert tokens
+### What this means for the inert tokens
 
-They are **correct as they stand**. They are real grounding, verified against live registry bindings, and they populate `legal_refs` and `modelos` on requirement rows. They are inert for *selection* by design, not by oversight.
+They are **correct as they stand** — real grounding, verified against live registry bindings, populating `legal_refs` and `modelos` on requirement rows, inert for *selection* by design rather than oversight.
 
-**The `required` conjunct is load-bearing precisely BECAUSE `_selectors_match_modelo` treats empty as no-match** — and those two facts live two functions apart. A reader who notices 31 inert tokens will reach for the conjunct, which is the nearer of the two, and will not see the semantics that make loosening it unsafe. Naming that adjacency here is the point of this amendment, more than the verdict is.
+**The `required` conjunct is load-bearing precisely BECAUSE the selector predicate treats empty as no-match**, and those two facts live two functions apart. A reader who notices inert tokens will reach for the conjunct — the nearer of the two — and will not see the semantics that make loosening it unsafe. Naming that adjacency is the main purpose of this amendment; the verdict is secondary.
 
-### Also recorded: the per-modelo axis is not the primary safety net
+### The axis is not the primary safety net
 
-A related measurement, worth stating so the axis is not over-credited: the per-modelo walk currently selects exactly one field for one modelo. What actually carries requirement enforcement today is the **unscoped** validation path and the **unscoped** conditional path, both of which run regardless of modelo. The per-operation axis is additive precision on top of those, not the mechanism holding the floor.
+Worth stating so it is not over-credited: the per-modelo walk currently selects one field for one modelo. Requirement enforcement today is carried by the **unscoped** validation path and the **unscoped** conditional path, both of which run regardless of modelo. The per-operation axis is additive precision on top of those.
 
 ### Honest limits
 
-The blast-radius figure covers the paths reachable from the resolvers driven here. An initial attempt to count conditional entries by parsing `schema.toml` returned zero and was **discarded as a broken probe rather than reported as a result** — the conditional set is assembled in code (`application/user_profile/_completeness.py`), not declared in TOML, so a schema walk cannot see it. Recorded because a zero from a broken instrument is exactly the number that gets repeated later as though it meant something.
+An initial attempt to size the blast radius by parsing `schema.toml` returned zero and was **discarded as a broken probe rather than reported** — the conditional set is assembled in code, not declared in TOML, so a schema walk cannot see it. Recorded because a zero from a broken instrument is exactly the number that gets repeated later as though it meant something.
 
