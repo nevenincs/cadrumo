@@ -36,10 +36,10 @@ from ....domain.calculations.registry import RegistryFoldRequirement, relation_s
 from .._binding_prefill import PrefilledBinding
 from .._relation_prefill import _relation_value_grounding
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
 if TYPE_CHECKING:
     from ....domain.calculations.registry import RegistrySnapshot
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _SETTLEMENT = "direct_annual_settlement"
 _EVIDENCE = "factual_evidence"

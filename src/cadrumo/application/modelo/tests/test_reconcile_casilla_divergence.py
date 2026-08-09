@@ -20,10 +20,10 @@ from .._reconcile_casilla import (
     detect_casilla_divergences,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
 if TYPE_CHECKING:
     from ....domain.calculations.registry import ModeloRevision
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_matching_casillas_produce_no_divergences() -> None:
