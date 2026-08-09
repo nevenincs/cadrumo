@@ -59,14 +59,14 @@ _SPANISH_CIF = "B12345678"
 _TAXABLE = ClassifierInputs(counterparty_taxable_person=CounterpartyTaxablePersonStatus.TAXABLE_PERSON)
 
 
-def _missing_fields(*, customer_identifier: str | None = None, **kwargs: object) -> set[str]:
+def _missing_fields(*, declared: DeclaredFacts, customer_identifier: str | None = None) -> set[str]:
     """Return which criteria fields one assembly attempt could not fill."""
     assembly = assemble_classification_criteria(
         transaction_date=_DATE,
         direction=InvoiceKind.ISSUED,
         inputs=_TAXABLE,
+        declared=declared,
         customer_identifier=customer_identifier,
-        **kwargs,  # type: ignore[arg-type]
     )
     return {gap.field for gap in assembly.missing}
 

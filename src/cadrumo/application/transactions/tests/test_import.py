@@ -27,6 +27,7 @@ tautologies.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -48,12 +49,19 @@ from ....domain.transactions import (
 from .._diagnostics import (
     LedgerImportDiagnosticKind,
 )
-from .._import import import_ledger_with_diagnostics
+from .._import import LedgerImportResult, import_ledger_with_diagnostics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _diagnose(**kwargs: object):
+def _diagnose(
+    *,
+    source_path: Path,
+    raw_transactions: Iterable[RawTransaction],
+    existing_catalogue: TransactionCatalogue,
+    import_fingerprints: Iterable[str] | None = None,
+    original_source_path: Path | None = None,
+) -> LedgerImportResult:
     """Call the helper with fingerprints derived for the supplied rows.
 
     ``import_fingerprints`` is a required argument on the real signature: a
@@ -61,17 +69,20 @@ def _diagnose(**kwargs: object):
     ``UNSPECIFIED`` discriminator and can never match a stored one, so a default
     would let dedup fail open. These tests supply direction-free fingerprints
     consistently on both sides of the comparison, which is what keeps them
-    meaningful.
+    meaningful. Deriving them here is a convenience of the fixture and never of
+    the production signature, which the omission test below pins.
     """
-    rows = tuple(kwargs.pop("raw_transactions"))  # type: ignore[arg-type]
-    fingerprints = kwargs.pop(
-        "import_fingerprints",
-        tuple(derive_import_fingerprint(raw) for raw in rows),
-    )
+    rows = tuple(raw_transactions)
     return import_ledger_with_diagnostics(
+        source_path=source_path,
         raw_transactions=rows,
-        import_fingerprints=fingerprints,  # type: ignore[arg-type]
-        **kwargs,  # type: ignore[arg-type]
+        existing_catalogue=existing_catalogue,
+        import_fingerprints=(
+            tuple(derive_import_fingerprint(raw) for raw in rows)
+            if import_fingerprints is None
+            else import_fingerprints
+        ),
+        original_source_path=original_source_path,
     )
 
 
@@ -528,8 +539,13 @@ def test_import_fingerprints_is_required_so_dedup_cannot_fail_open() -> None:
     parameter = inspect.signature(import_ledger_with_diagnostics).parameters["import_fingerprints"]
     assert parameter.default is inspect.Parameter.empty
 
-    with pytest.raises(TypeError):
-        import_ledger_with_diagnostics(  # type: ignore[call-arg]
+    # The refusal is exercised through the argument-binding rule rather than by
+    # writing the incomplete call out: a literal call would ask a type checker to
+    # prove valid the very thing the interpreter must reject, and every shape
+    # that hides it from the checker also hides it from the reader. ``bind``
+    # raises the same TypeError, on the same missing required parameter.
+    with pytest.raises(TypeError, match="import_fingerprints"):
+        inspect.signature(import_ledger_with_diagnostics).bind(
             source_path=_SOURCE_PATH,
             raw_transactions=(_raw_transaction("tx-1"),),
             existing_catalogue=TransactionCatalogue(),
