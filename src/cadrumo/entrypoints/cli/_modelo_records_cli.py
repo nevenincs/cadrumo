@@ -35,7 +35,7 @@ from ...core import Period, PeriodError
 from ...core.i18n import tr
 from ...domain.calculations.registry import CasillaId, validated_casilla_id
 from ...domain.modelos import ExternalEvidenceKind, ModeloCode, ModeloValidationError
-from ._common import MODELO_CODE_CHOICE, _emit_envelope, _profile_to_taxpayer
+from ._common import MODELO_CODE_CHOICE, _declared_tax_id, _emit_envelope
 from ._modelo_payloads import (
     FilingRecordImportResult,
     FilingRecordLocalObservationResult,
@@ -272,7 +272,7 @@ def filing_record_import(
     try:
         from ...application.workflow import workflow_state_repository
 
-        expected_tax_id = _profile_to_taxpayer(workflow_state_repository().load()).tax_id
+        expected_tax_id = _declared_tax_id(workflow_state_repository().load().active_profile_record())
         record = import_external_filing_evidence(
             work_unit_id=validated_work_unit_id,
             casilla_values=casilla_values,

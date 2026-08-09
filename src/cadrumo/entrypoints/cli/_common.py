@@ -132,6 +132,7 @@ if TYPE_CHECKING:
     from ...domain.filing import ModeloDraft
     from ...domain.invoices import InvoiceCatalogue
     from ...domain.transactions import TransactionCatalogue
+    from ...domain.user_profile import UserProfileRecord
 
 __all__ = [
     "emit_help_text",
@@ -671,6 +672,21 @@ def _profile_to_taxpayer(state: WorkflowState) -> TaxpayerProfile:
     if record is None:
         return projection_for_taxpayer({})
     return projection_for_taxpayer(record)
+
+
+def _declared_tax_id(record: UserProfileRecord | None) -> str:
+    """Return the profile's declared ``identity.tax_id``, or ``""`` when undeclared.
+
+    Deliberately NOT routed through :func:`_profile_to_taxpayer`. That projection
+    substitutes a synthetic placeholder NIF for an absent identity, which reads
+    downstream as a declared value and cannot be told apart from one. A caller
+    that compares the operator's identity against stored AEAT evidence needs the
+    absence to survive, so this returns the empty string and lets the owning
+    application service raise its own grounded refusal naming the missing fact.
+    """
+    from ...application.user_profile import fact_value
+
+    return (fact_value(record, "identity.tax_id") or "").strip()
 
 
 # ---------------------------------------------------------------------
