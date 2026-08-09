@@ -5,7 +5,7 @@ tags:
 date: '2026-08-09'
 modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:af0134df296c62503332bee05a5730c770e524de03fbd54ab66e148b9fc7851a'
+body_hash: 'sha256:b74e973028074d57be52fa8f1d8bb8eef168f3f328d48b7f84bba843d4d74346'
 related:
   - "[[2026-08-08-profile-requirement-grounding-adr]]"
 ---
@@ -170,4 +170,19 @@ So the finding held on the justificante path **only**. The register path already
 **The first attempt at the fix was wrong, and the existing suite caught it.** Checking identity BEFORE the match let an absent identity mask a genuinely mismatched modelo, year or period — the exact inverse of the confusion being removed. `test_cross_period_clean_state_blocks_mismatched_justificante_metadata` went red and named it. The identity axis is now neutralised for the match probe and judged separately afterwards.
 
 That is worth recording beside the pattern above rather than buried in a commit message. The lesson from the two withdrawals was "execute the claim before believing it"; this shows the same rule applies to the FIX, not only to the finding. A remedy reasoned from a correct diagnosis can still be wrong in a way only running it reveals, and the thing that caught it was a test written by someone else for an unrelated case.
+
+
+### Open, ready to execute: the setup-incomplete refusal names no field
+
+Found by sweeping every profile-related refusal string in the locale catalogue against the standing goal that a refusal cite the exact missing fact. **Almost all already do** — `%{missing}`, `%{missing_flags}`, or a named field (`profile_tax_id_missing_detail`, `export_operator_profile_missing`). The generic ones (`no_active_profile`, `no_active_bucket`) are appropriately generic: with no profile at all, "create a profile" IS the exact missing information.
+
+**One is genuinely vague.** `application.modelo.errors.profile_readiness_setup_incomplete` — "Profile setup is incomplete; finish the setup flow before working on modelos" — raised from `_profile_readiness_gate.py` when `record.status is UserProfileStatus.SETUP_INCOMPLETE`.
+
+It refuses on a lifecycle STATUS rather than a field gap, so it names nothing. The operator is told to resume the wizard, which is actionable, but not which answers are outstanding — and the wizard is exactly where they would have to hunt for that.
+
+**It is feasible, with machinery the same file already uses.** The gate already calls `_validation_missing_requirements(record)` on its other branch, and `missing_required_field_paths` enumerates unsatisfied schema-required paths from a values mapping. The setup-incomplete branch simply does not enumerate before refusing. The fix is to carry the same `%{missing}` list this file already renders on the sibling refusal.
+
+**Blocked only by contention**, not by design. `_profile_readiness_gate.py` and its test have been peer-dirty for over an hour with the change unpublished, so the file cannot be touched without colliding. Recorded here rather than attempted, and precisely enough to execute directly when the file frees: one branch, one enumeration, one locale template gaining a `%{missing}` placeholder in four catalogues via `dev.locales`.
+
+One caveat for whoever takes it: `SETUP_INCOMPLETE` means the answer set failed the flow's final CROSS-FIELD validation, which is not identical to "some required field is empty". Enumerating only the empty required paths could therefore return an EMPTY list for a profile that is genuinely incomplete on a cross-field rule — a refusal saying "missing: nothing" would be worse than the current vague one. Check that case before shipping, and fall back to the existing wording when the enumeration is empty.
 
