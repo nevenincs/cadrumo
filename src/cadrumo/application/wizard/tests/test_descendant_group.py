@@ -40,6 +40,7 @@ from ...flows import (
 )
 from .. import attach_descendant_group, descendant_facts_from_answers
 from .._descendant_group import (
+    _ALTA_POSTERIOR_INVALID_RANGE_LOCALE_KEY,
     _ENTRY_BEFORE_BIRTH_LOCALE_KEY,
     _ENTRY_IN_FUTURE_LOCALE_KEY,
     _GASTOS_BOTH_DECLARED_LOCALE_KEY,
@@ -125,6 +126,7 @@ def test_count_two_projects_the_exact_documented_fact_shape() -> None:
     state = answer(definition, state, "descendientes#0.convivencia", "true")
     state = answer(definition, state, "descendientes#0.custodia-compartida", "false")
     state = answer(definition, state, "descendientes#0.meses-madre-trabajo", "1-6")
+    state = answer(definition, state, "descendientes#0.alta-posterior-nacimiento-mes", "1")
     state = answer(definition, state, "descendientes#0.gastos-guarderia", "900")
 
     # Instance 1: older adopted child under shared custody, carrying a NIF.
@@ -139,6 +141,7 @@ def test_count_two_projects_the_exact_documented_fact_shape() -> None:
     # gate being real: without it the engine refuses the target as not visible.
     state = answer(definition, state, "descendientes#1.relacion", DescendantRelacion.ADOPTADO.value)
     state = answer(definition, state, "descendientes#1.inscripcion-registro-civil", "2016-06-01")
+    state = answer(definition, state, "descendientes#1.fallecimiento", "2024-06-15")
     state = answer(definition, state, "descendientes#1.convivencia", "true")
     state = answer(definition, state, "descendientes#1.custodia-compartida", "true")
     state = answer(definition, state, "descendientes#1.nif", _VALID_NIF)
@@ -165,10 +168,12 @@ def test_count_two_projects_the_exact_documented_fact_shape() -> None:
         "renta_family.descendiente.0.discapacidad": "33",
         "renta_family.descendiente.0.convivencia": "true",
         "renta_family.descendiente.0.meses_madre_trabajo": "01;02;03;04;05;06",
+        "renta_family.descendiente.0.alta_posterior_nacimiento_mes": "1",
         "renta_family.descendiente.0.gastos_guarderia": "900",
         "renta_family.descendiente.1.birth_date": "2015-03-01",
         "renta_family.descendiente.1.relacion": "adoptado",
         "renta_family.descendiente.1.inscripcion_registro_civil": "2016-06-01",
+        "renta_family.descendiente.1.fallecimiento": "2024-06-15",
         "renta_family.descendiente.1.convivencia": "true",
         "renta_family.descendiente.1.custodia_compartida": "true",
         "renta_family.descendiente.1.nif": _VALID_NIF,
@@ -376,6 +381,20 @@ def test_meses_out_of_range_refuses_as_a_verdict_and_valid_commits() -> None:
 
     committed = answer(definition, state, "descendientes#0.meses-madre-trabajo", "1-6")
     assert committed.answers["descendientes#0.meses-madre-trabajo"] == "1-6"
+
+
+def test_alta_posterior_month_refuses_out_of_range_and_commits_valid_month() -> None:
+    definition = _probe_definition()
+    state = _one_descendant_state(definition)
+
+    rejected = answer(definition, state, "descendientes#0.alta-posterior-nacimiento-mes", "13")
+    assert [v.message_key for v in rejected.verdicts["descendientes#0.alta-posterior-nacimiento-mes"]] == [
+        _ALTA_POSTERIOR_INVALID_RANGE_LOCALE_KEY
+    ]
+    assert "descendientes#0.alta-posterior-nacimiento-mes" not in rejected.answers
+
+    committed = answer(definition, state, "descendientes#0.alta-posterior-nacimiento-mes", "1")
+    assert committed.answers["descendientes#0.alta-posterior-nacimiento-mes"] == "1"
 
 
 def test_negative_gastos_refuses_as_a_verdict() -> None:

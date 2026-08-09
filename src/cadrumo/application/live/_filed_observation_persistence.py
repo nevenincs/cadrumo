@@ -32,7 +32,6 @@ from ...adapters.outbound.aeat.sede import (
     FiledDeclaracionArtefact,
     FiledDeclaracionObservation,
     FiledDeclaracionObservationStore,
-    ObservedCasillaValue,
     SedeParseError,
     extract_csv_from_url,
     registry_observation_from_filed_declaration,
@@ -44,14 +43,13 @@ from ...application.calculations import (
     CalculationObservationRepository,
     IvaCompensationHistoryRepository,
     ObservationSourceKind,
-    iva_compensation_state_from_filed_observation,
     observation_key,
+    persist_observation_envelope_and_iva_history,
 )
 from ...core import Modelo, Period, PeriodKind
 from ...core.hashing import sha256_hex
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.logging import get_logger
-from ...core.resources import resources
 from ...domain.buckets import (
     BucketEvent,
     BucketEventObjectType,
@@ -59,17 +57,7 @@ from ...domain.buckets import (
     append_bucket_event,
     derive_bucket_event_id,
 )
-from ...domain.calculations.registry import (
-    CasillaObservation,
-    RegistryModeloObservation,
-    casillas_by_id,
-    expression_casilla_refs,
-)
-from ...domain.iva_compensation import (
-    M303_COMPENSATION_AVAILABLE_CASILLA,
-    derive_m303_compensation_available_from_casillas,
-    iva_compensation_period_sort_key,
-)
+from ...domain.iva_compensation import iva_compensation_period_sort_key
 from ...domain.justificante import Justificante
 from ...domain.modelos import (
     ExternalEvidence,
@@ -163,9 +151,8 @@ def persist_filed_calculation_observation(
             f"with status {observation.status!r}",
         )
     registry_observation = registry_observation_from_filed_declaration(observation)
-    registry_observation = _with_derived_303_compensation_available(registry_observation)
     repo = repository if repository is not None else CalculationObservationRepository()
-    repo.save_observation(
+    payload = repo.prepare_observation_envelope(
         registry_observation,
         source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
         captured_at=observation.presented_at,
@@ -174,11 +161,30 @@ def persist_filed_calculation_observation(
         # the metadata projection is built from a fixed key set, so a header
         # fact routed through it would be dropped here exactly as it was before.
         source_headers=observation.headers,
+        # Canonical S05 ingress: official evidence must recover its one typed
+        # disposition from the submitted-file header before it can participate
+        # in M303 carry. No compensación default is admitted here.
+        normalize_m303_carry=True,
     )
     if observation.modelo == Modelo.M303:
-        IvaCompensationHistoryRepository().save_period(
-            iva_compensation_state_from_filed_observation(_calculation_observation(observation))
+        source_artefact_sha256 = next(
+            (artefact.sha256 for artefact in observation.artefacts if artefact.kind == "submitted_file"),
+            None,
         )
+        persist_observation_envelope_and_iva_history(
+            observation_repository=repo,
+            history_repository=IvaCompensationHistoryRepository(objects=repo.secure_object_repository),
+            envelope=payload,
+            taxpayer_nif=observation.authenticated_identity,
+            expediente_id=observation.expediente_id,
+            status=observation.status,
+            source_observation_key=(
+                f"303:{observation.ejercicio}:{observation.period.registry_token}:{observation.expediente_id}"
+            ),
+            source_artefact_sha256=source_artefact_sha256,
+        )
+    else:
+        repo.save(payload)
     return observation_key(
         registry_observation.modelo,
         Period.from_year_and_code(registry_observation.filing_year, registry_observation.period),
@@ -672,91 +678,6 @@ def _justificante_csvs_for_observation(
 
 filed_observation_identity_key = _filed_observation_identity_key
 justificante_csvs_for_observation = _justificante_csvs_for_observation
-
-
-@dataclass(frozen=True)
-class _FiledDeclaracionCalculationObservation:
-    modelo: str
-    ejercicio: int
-    period: Period
-    expediente_id: str
-    status: str
-    presented_at: datetime
-    authenticated_identity: str
-    artefacts: tuple[FiledDeclaracionArtefact, ...]
-    casillas: tuple[ObservedCasillaValue, ...]
-
-
-def _calculation_observation(
-    observation: FiledDeclaracionObservation,
-) -> _FiledDeclaracionCalculationObservation:
-    return _FiledDeclaracionCalculationObservation(
-        modelo=observation.modelo,
-        ejercicio=observation.ejercicio,
-        period=observation.period,
-        expediente_id=observation.expediente_id,
-        status=observation.status,
-        presented_at=observation.presented_at,
-        authenticated_identity=observation.authenticated_identity,
-        artefacts=observation.artefacts,
-        casillas=observation.casillas,
-    )
-
-
-def _with_derived_303_compensation_available(
-    observation: RegistryModeloObservation,
-) -> RegistryModeloObservation:
-    """Add the internal Modelo 303 carry-forward value from official filed casillas."""
-    if observation.modelo != Modelo.M303:
-        return observation
-    target_id = M303_COMPENSATION_AVAILABLE_CASILLA
-    if target_id in observation.casilla_values:
-        return observation
-    # See the sibling sede derivation: a fetched AEAT filing carries no
-    # compensación/devolución election (Modelo 303 has no devolución casilla),
-    # so the standard compensación disposition is ASSUMED here. The local filed
-    # path knows the disposition and re-stamps this same casilla for a refunded
-    # period; this path cannot, and says so rather than inheriting a default.
-    derivation = derive_m303_compensation_available_from_casillas(
-        observation.casilla_values,
-        refunded=False,
-    )
-    if derivation is None:
-        return observation
-    snapshot = resources().modelos.authority.snapshot(
-        Modelo.M303.value,
-        filing_year=observation.filing_year,
-        period=observation.period,
-    )
-    casilla = casillas_by_id(snapshot.revision)[target_id]
-    formula = next(item for item in snapshot.revision.formulas if item.target_casilla_id == target_id)
-    formula_id = None
-    if derivation.operand_refs:
-        expected_operand_refs = expression_casilla_refs(formula.expression)
-        if derivation.operand_refs != expected_operand_refs:
-            raise LiveApplicationError(
-                f"live Modelo 303 compensation carry observation supplied operand refs {derivation.operand_refs!r} "
-                f"but formula {formula.id!r} projects to {expected_operand_refs!r}",
-                context={
-                    "modelo": observation.modelo,
-                    "filing_year": observation.filing_year,
-                    "period": observation.period,
-                    "casilla_id": target_id,
-                    "formula_id": formula.id,
-                },
-            )
-        formula_id = formula.id
-    derived = CasillaObservation(
-        casilla_id=target_id,
-        value=derivation.available,
-        formula_id=formula_id,
-        operand_refs=derivation.operand_refs,
-        operand_casilla_refs=derivation.operand_refs,
-        operand_values=derivation.operand_values,
-        legal_refs=tuple(casilla.legal_refs),
-        source_refs=tuple(casilla.source_refs),
-    )
-    return observation.model_copy(update={"observations": (*observation.observations, derived)})
 
 
 __all__ = [

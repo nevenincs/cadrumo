@@ -64,7 +64,7 @@ from ...domain.calculations.registry import (
     revision_date_binding_ids,
     validate_registry_text_scalar,
 )
-from ...domain.contribuyente import compute_deduccion_maternidad_0611, descendant_list_from_facts
+from ...domain.contribuyente import descendant_list_from_facts
 from ...domain.modelos import (
     CalculationRevision,
     Dt12WindowEligibility,
@@ -1193,16 +1193,6 @@ def apply_calculation_shortcut_inputs(
         ):
             if advisory is not None:
                 advisories.append(advisory)
-
-        if maternidad.pairs:
-            deduccion = compute_deduccion_maternidad_0611(
-                list(maternidad.pairs),
-                filing_year=_work_unit_filing_year(work_unit_id),
-                alta_posterior_hijos=maternidad.alta_posterior_hijos,
-            )
-            resolved_casilla_values[_semantic_role_casilla_id(work_unit_id, _DEDUCCION_MATERNIDAD_SEMANTIC_ROLE)] = (
-                Decimal(deduccion)
-            )
 
     pension_values = (
         rescate_plan_pensiones_capital,

@@ -184,12 +184,41 @@ def load_active_taxpayer_profile(state: WorkflowState) -> TaxpayerProfile:
             context={"workflow_state": "no_active_profile"},
         )
     values: dict[str, str] = dict(record_to_path_values(record))
-    if not values.get("identity.tax_id"):
+    if not values.get(_TAX_ID_PATH):
         raise WizardStatusError(
             translated_message="application.wizard.status.errors.missing_tax_id",
-            context={"active_profile": resolve_active_bucket_id()},
+            context={
+                "active_profile": resolve_active_bucket_id(),
+                "requirements": _grounded_tax_id_requirement(),
+            },
         )
     return projection_for_taxpayer(record)
+
+
+_TAX_ID_PATH = "identity.tax_id"
+
+
+def _grounded_tax_id_requirement() -> str:
+    """Render the tax-identifier field as its operator label with legal grounding.
+
+    The refusal previously named the field by baking a selector token into its
+    sentence, which meant the operator read an identifier that appears nowhere
+    in the profile editor and that no translator could keep in step with the
+    schema. Reading the label from the schema is also what every other missing
+    profile fact refusal in this codebase does.
+    """
+    from ...core.resources import resources
+    from ..user_profile import (
+        build_profile_preflight_requirement,
+        format_profile_preflight_requirement,
+    )
+
+    return format_profile_preflight_requirement(
+        build_profile_preflight_requirement(
+            _TAX_ID_PATH,
+            schema=resources().user_profile_schema.singleton,
+        ),
+    )
 
 
 __all__ = [

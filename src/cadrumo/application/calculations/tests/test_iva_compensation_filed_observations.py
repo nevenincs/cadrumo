@@ -8,43 +8,82 @@ from pathlib import Path
 import pytest
 
 from ....adapters.outbound.aeat.sede import ObservedCasillaValue
-from ....core import CasillaValueKind, Period
+from ....adapters.outbound.aeat.sede._errors import SedeValidationError
+from ....core import CasillaValueKind, ObservedHeaderFact, Period
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
 from ....domain.iva_compensation import (
     IvaCompensationCasillaReferenceError,
-    IvaCompensationDecimalParseError,
     IvaCompensationExpiryReviewState,
     IvaCompensationSeedConflictError,
     IvaCompensationYearRangeError,
     build_iva_compensation_carry_forward_report,
     enforce_iva_compensation_four_year_window,
 )
+from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from .._errors import IvaCompensationModeloError
 from .._iva_compensation_history import (
     IvaCompensationHistoryRepository,
     iva_compensation_annual_summary_from_filed_observation,
     iva_compensation_period_key,
-    iva_compensation_state_from_filed_observation,
+    iva_compensation_state_from_observation_envelope,
     seed_iva_compensation_period,
 )
+from .._m303_carry_ingress import M303CarryIngressError
+from .._observations_repository import CalculationObservationRepository, ObservationSourceKind
 from ._iva_compensation_history_support import (
     _M303_POSTERIOR_CASILLA,
-    _M303_PRINTED_NUMBER_REFERENCE_CASES,
-    _M303_PRINTED_PERIOD_RESULT_REFERENCE_CASILLA,
     _M303_RESULTADO_CASILLA,
     _M390_PRINTED_LAST_PERIOD_COMPENSATION_REFERENCE_CASILLA,
     _TAXPAYER_REF,
     _filed_303_compensation_observation,
     _filed_390_observation,
     _filed_observation,
-    _M303PrintedNumberSourceKind,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _HISTORY_BUCKET_ID = "30330300-0000-4000-8000-000000000303"
 _CONFLICT_BUCKET_ID = "30330300-0000-4000-8000-000000000304"
+
+
+def _history_state_from_filed_observation(observation: object):
+    """Build history only through the disposition-grounded envelope contract."""
+    from ....adapters.outbound.aeat.sede import FiledDeclaracionObservation
+
+    if not isinstance(observation, FiledDeclaracionObservation):
+        raise AssertionError("test requires a filed declaration observation")
+    resultado = next(casilla for casilla in observation.casillas if casilla.casilla_id == _M303_RESULTADO_CASILLA)
+    result = resultado.decimal_value()
+    code = "C" if result < 0 else "I" if result > 0 else "N"
+    envelope = CalculationObservationRepository().prepare_observation_envelope(
+        registry_grounded_modelo_observation(
+            modelo=observation.modelo,
+            filing_year=observation.ejercicio,
+            period=observation.period.registry_token,
+            casilla_values={casilla.casilla_id: casilla.decimal_value() for casilla in observation.casillas},
+        ),
+        source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
+        captured_at=observation.presented_at,
+        source_headers=(
+            ObservedHeaderFact(
+                header_key="declaration_type",
+                value=code,
+                source_artefact_kind="submitted_file",
+                source_locator=f"test-filed-observation:{observation.ejercicio}:{observation.period.registry_token}",
+            ),
+        ),
+        normalize_m303_carry=True,
+    )
+    return iva_compensation_state_from_observation_envelope(
+        envelope,
+        taxpayer_nif=observation.authenticated_identity,
+        expediente_id=observation.expediente_id,
+        status=observation.status,
+        source_observation_key=(
+            f"303:{observation.ejercicio}:{observation.period.registry_token}:{observation.expediente_id}"
+        ),
+    )
 
 
 def test_three_year_filed_history_repository_projects_compensation_lots(tmp_path: Path) -> None:
@@ -78,7 +117,7 @@ def test_three_year_filed_history_repository_projects_compensation_lots(tmp_path
         )
 
         for observation in observations:
-            repository.save_period(iva_compensation_state_from_filed_observation(observation))
+            repository.save_period(_history_state_from_filed_observation(observation))
 
         reloaded = IvaCompensationHistoryRepository().list_periods()
         report = build_iva_compensation_carry_forward_report(reloaded, as_of_year=2026)
@@ -169,20 +208,33 @@ def test_a_filing_with_no_posterior_casilla_still_carries_the_credit_it_generate
     )
     assert len(without_posterior.casillas) == len(observation.casillas) - 1, "the fixture still declares a posterior"
 
-    state = iva_compensation_state_from_filed_observation(without_posterior)
+    state = _history_state_from_filed_observation(without_posterior)
 
     assert state.pending_for_later_amount is None
     assert state.generated_amount == Decimal("100.00")
     assert state.available_end_amount == Decimal("100.00")
 
 
-def test_iva_compensation_state_from_filed_observation_raises_for_non_303_modelo() -> None:
+def test_iva_compensation_history_refuses_a_non_303_envelope() -> None:
     observation = _filed_observation(modelo="130")
-    with pytest.raises(IvaCompensationModeloError) as excinfo:
-        iva_compensation_state_from_filed_observation(observation)
-
-    assert excinfo.value.translated_message == "application.calculations.iva_compensation.errors.modelo_303_only"
-    assert excinfo.value.context == {"modelo": "130"}
+    envelope = CalculationObservationRepository().prepare_observation_envelope(
+        registry_grounded_modelo_observation(
+            modelo=observation.modelo,
+            filing_year=observation.ejercicio,
+            period=observation.period.registry_token,
+            casilla_values={},
+        ),
+        source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
+        captured_at=observation.presented_at,
+    )
+    with pytest.raises(M303CarryIngressError):
+        iva_compensation_state_from_observation_envelope(
+            envelope,
+            taxpayer_nif=observation.authenticated_identity,
+            expediente_id=observation.expediente_id,
+            status=observation.status,
+            source_observation_key="130:2024:4T:test",
+        )
 
 
 def test_iva_compensation_period_key_raises_localized_year_range_error() -> None:
@@ -191,38 +243,6 @@ def test_iva_compensation_period_key_raises_localized_year_range_error() -> None
 
     assert excinfo.value.translated_message == "errors.refused.refused_iva_compensation_year_range"
     assert excinfo.value.context == {"filing_year": 1999, "min_year": 2000, "max_year": 2099}
-
-
-def test_iva_compensation_state_from_filed_observation_raises_localized_decimal_parse_error() -> None:
-    observation = _filed_observation(modelo="303").model_copy(
-        update={
-            "casillas": (
-                ObservedCasillaValue(
-                    casilla_id=_M303_RESULTADO_CASILLA,
-                    value="not-decimal",
-                    value_kind=CasillaValueKind.NUMERIC,
-                    source_artefact_kind="submitted_file",
-                    source_locator="submitted-file:casilla-69",
-                    confidence=1.0,
-                ),
-            ),
-        },
-    )
-
-    with pytest.raises(IvaCompensationDecimalParseError) as excinfo:
-        iva_compensation_state_from_filed_observation(observation)
-
-    assert excinfo.value.translated_message == "errors.refused.refused_iva_compensation_decimal_parse"
-    # Modelo 390 reaches this refusal too, so the context names which filing refused
-    # and not only the casilla. It must never carry the observed VALUE: the carrier
-    # holds the artefact's own token and this context is rendered to the operator.
-    assert excinfo.value.context == {
-        "casilla_id": _M303_RESULTADO_CASILLA,
-        "modelo": "303",
-        "filing_year": "2024",
-        "period": "4T",
-    }
-    assert "not-decimal" not in str(excinfo.value.context)
 
 
 def test_iva_compensation_refuses_a_casilla_whose_declared_kind_is_not_numeric() -> None:
@@ -248,13 +268,10 @@ def test_iva_compensation_refuses_a_casilla_whose_declared_kind_is_not_numeric()
         },
     )
 
-    with pytest.raises(IvaCompensationDecimalParseError) as excinfo:
-        iva_compensation_state_from_filed_observation(observation)
+    with pytest.raises(SedeValidationError) as excinfo:
+        _history_state_from_filed_observation(observation)
 
-    # '15' converts cleanly, so nothing but the declared kind can refuse it.
-    assert excinfo.value.context is not None
-    assert excinfo.value.context["casilla_id"] == _M303_RESULTADO_CASILLA
-    assert "15" not in str(excinfo.value.context["modelo"])
+    assert str(_M303_RESULTADO_CASILLA) in str(excinfo.value)
 
 
 def test_seed_iva_compensation_period_raises_localized_conflict_error(tmp_path: Path) -> None:
@@ -274,41 +291,6 @@ def test_seed_iva_compensation_period_raises_localized_conflict_error(tmp_path: 
 
         assert excinfo.value.translated_message == "application.calculations.iva_compensation.errors.seed_conflict"
         assert excinfo.value.context == {"filing_year": 2024, "period": "2T", "existing_status": "seeded"}
-
-
-@pytest.mark.parametrize(
-    ("source_artefact_kind", "source_locator"),
-    _M303_PRINTED_NUMBER_REFERENCE_CASES,
-    ids=("submitted-file", "justificante-pdf"),
-)
-def test_iva_compensation_state_from_filed_observation_refuses_printed_number_references(
-    source_artefact_kind: _M303PrintedNumberSourceKind,
-    source_locator: str,
-) -> None:
-    observation = _filed_observation(modelo="303").model_copy(
-        update={
-            "casillas": (
-                ObservedCasillaValue(
-                    casilla_id=_M303_PRINTED_PERIOD_RESULT_REFERENCE_CASILLA,
-                    value="-25.00",
-                    value_kind=CasillaValueKind.NUMERIC,
-                    source_artefact_kind=source_artefact_kind,
-                    source_locator=source_locator,
-                    confidence=1.0,
-                ),
-            ),
-        },
-    )
-
-    with pytest.raises(IvaCompensationCasillaReferenceError) as excinfo:
-        iva_compensation_state_from_filed_observation(observation)
-
-    assert excinfo.value.context == {
-        "modelo": "303",
-        "revision": "2023-y-siguientes",
-        "period": "4T",
-        "casilla_ids": (_M303_PRINTED_PERIOD_RESULT_REFERENCE_CASILLA,),
-    }
 
 
 def test_iva_compensation_annual_summary_refuses_printed_number_references() -> None:

@@ -1051,8 +1051,10 @@ def _justificante_matches_filing_apart_from_owner(
     to remove. Ownership is then judged separately by the caller.
     """
     resolved = _resolved_filing_identity(filing, taxpayer_tax_id)
+    # The receipt's own tax id is a required, min-length field, so the fallback
+    # can be blank-but-present but never absent; only the blank case is live.
     expected_tax_id = resolved if resolved is not None else justificante.tax_id
-    if expected_tax_id is None or not expected_tax_id.strip():
+    if not expected_tax_id.strip():
         return False
     return justificante.matches_filing_target(
         modelo=str(filing.modelo),

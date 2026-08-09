@@ -404,6 +404,7 @@ def _descendant_from_row(row: Mapping[str, str]) -> DescendantInfo:
         dependencia_economica=dependencia,
         inscripcion_registro_civil_date=inscripcion_date,
         acogimiento_resolucion_date=acogimiento_date,
+        death_date=parse_iso8601_date(row.get("fallecimiento", "")),
         discapacidad_grado=_discapacidad_grade(row.get("discapacidad", "")),
         # Both read through the canonical vocabulary, and both resolve an
         # unreadable or unanswered value to the NON-CLAIMING direction.
@@ -435,6 +436,9 @@ def _descendant_from_row(row: Mapping[str, str]) -> DescendantInfo:
         presenta_declaracion_propia=parse_bool(row.get("declaracion-propia", "")) is True,
         prorrata_minimo=parse_bool(prorrata) if prorrata else None,
         meses_madre_trabajo=parse_meses_trabajo(meses, field="meses-madre-trabajo") if meses else (),
+        alta_posterior_nacimiento_mes=(
+            int(row["alta-posterior-nacimiento-mes"]) if row.get("alta-posterior-nacimiento-mes") else None
+        ),
         gastos_guarderia_euros=guarderia["gastos_guarderia_euros"],
         gastos_guarderia_mensuales=guarderia["gastos_guarderia_mensuales"],
         nif=row.get("nif") or None,
@@ -595,6 +599,7 @@ def _descendant_instance_answers(descendant: DescendantInfo, *, prefix: str) -> 
             if descendant.acogimiento_resolucion_date is not None
             else None,
         ),
+        ("fallecimiento", descendant.death_date.isoformat() if descendant.death_date is not None else None),
         ("discapacidad", descendant.discapacidad_grado),
         # An empty set means "none recorded", so it emits no answer at all
         # rather than a literal empty string the resume walk would commit.
@@ -604,6 +609,7 @@ def _descendant_instance_answers(descendant: DescendantInfo, *, prefix: str) -> 
             "meses-madre-trabajo",
             serialise_meses_trabajo(descendant.meses_madre_trabajo) if descendant.meses_madre_trabajo else None,
         ),
+        ("alta-posterior-nacimiento-mes", descendant.alta_posterior_nacimiento_mes),
         ("gastos-guarderia", descendant.gastos_guarderia_euros if descendant.gastos_guarderia_euros > 0 else None),
         # Re-emitted in the CANONICAL expanded form, which is what the resume
         # walk must see: a map the operator originally typed as a range was

@@ -15,10 +15,15 @@ from ._bindings import bound_casilla_binding_ids
 from ._errors import RegistryValidationError
 from ._ids import BindingId, CasillaId, LegalRefId, ModeloId, RelationId, RevisionId, SourceRefId
 from ._relation_aggregation import relation_aggregation_op
-from ._relations import relation_source_requirements
+from ._relations import RegistryFoldRequirement, relation_source_requirements
 from ._schema import (
+    DependencyClassificationDefinition,
     ModeloDefinition,
+    ModeloRevision,
+    PeriodSelector,
     RegistryCatalogues,
+    RegistrySnapshot,
+    RelationDefinition,
     RelationPeriodAlignment,
     RelationRevisionSelector,
 )
@@ -225,6 +230,186 @@ def audit_registry_relation_handoffs(
     return RegistryRelationHandoffAudit(records=tuple(records))
 
 
+def _representative_filing_year(
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+    selector: PeriodSelector,
+) -> int:
+    """Return the filing year this revision's own period selector nominates.
+
+    Raises:
+        RegistryValidationError: When the selector nominates neither an
+            explicit year nor a ``year_from`` floor, leaving the expansion
+            below no year to resolve against.
+    """
+    filing_year = selector.years[0] if selector.years else selector.year_from
+    if filing_year is None:
+        raise RegistryValidationError(
+            f"modelo {modelo.id} revision {revision.id} has no representative filing year",
+        )
+    return filing_year
+
+
+def _clean_state_mode(
+    classification: DependencyClassificationDefinition,
+) -> Literal["required", "conditional", "advisory"]:
+    """Map a dependency classification onto its clean-state contract.
+
+    A source the taxpayer does not file (a suffered retencion) can only ever
+    be advisory; one conditional on economic activity is conditional; the
+    remainder are required.
+    """
+    if not classification.taxpayer_files_source:
+        return "advisory"
+    if classification.conditional_on_economic_activity:
+        return "conditional"
+    return "required"
+
+
+def _relation_applicability(
+    *,
+    relation: RelationDefinition,
+    period: str,
+    matching: tuple[RegistryFoldRequirement, ...],
+) -> Literal["active", "not_applicable", "unresolved"]:
+    """Classify one relation against the period being expanded.
+
+    A relation naming target periods that exclude this one is not applicable
+    here at all; otherwise it is active when the requirement graph produced a
+    row for it, and unresolved when it did not.
+    """
+    if relation.target_periods and period not in relation.target_periods:
+        return "not_applicable"
+    return "active" if matching else "unresolved"
+
+
+def _sole_matching_requirement(
+    relation: RelationDefinition,
+    requirements: tuple[RegistryFoldRequirement, ...],
+    *,
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+    period: str,
+) -> tuple[RegistryFoldRequirement, ...]:
+    """Return the requirement rows this relation produced, refusing ambiguity.
+
+    Raises:
+        RegistryValidationError: When one relation produces more than one
+            source requirement for a single period, which would leave the
+            record below choosing arbitrarily between two source contracts.
+    """
+    matching = tuple(requirement for requirement in requirements if relation.id in requirement.relation_ids)
+    if len(matching) > 1:
+        raise RegistryValidationError(
+            f"relation {relation.id!r} produces multiple source requirements for {modelo.id}/{revision.id}/{period}",
+        )
+    return matching
+
+
+def _self_consistent_snapshot(
+    authority: ValidatedRegistryAuthority,
+    *,
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+    filing_year: int,
+    period: str,
+) -> RegistrySnapshot:
+    """Resolve the snapshot law-determined, then assert it names this revision.
+
+    Resolution is law-determined and then asserted equal against the revision
+    the caller is already walking -- never injected as the selector, per the
+    registry authority-flow rule. Injecting it would silently mask a revision
+    whose own period_selector does not self-consistently resolve back to
+    itself; asserting turns that into a loud registry-validation failure. A
+    live probe against the bundled registry confirms the two are equivalent
+    for every relation-bearing revision today (0 mismatches across 42
+    modelo/revision/period triples).
+
+    Raises:
+        RegistryValidationError: When the law-determined resolution selects a
+            different revision than the one declaring this period.
+    """
+    snapshot = authority.snapshot(str(modelo.id), filing_year=filing_year, period=period)
+    if snapshot.revision.id != revision.id:
+        raise RegistryValidationError(
+            f"modelo {modelo.id} revision {revision.id}: law-determined "
+            f"resolution for filing_year={filing_year} period={period!r} "
+            f"selected revision {snapshot.revision.id!r} instead -- this "
+            "revision's own declared period_selector does not "
+            "self-consistently resolve to itself",
+        )
+    return snapshot
+
+
+def _applicability_records_for_period(
+    snapshot: RegistrySnapshot,
+    *,
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+    classifications_by_source: dict[ModeloId, DependencyClassificationDefinition],
+) -> list[RelationHandoffApplicabilityRecord]:
+    """Project every relation this snapshot declares onto one applicability row.
+
+    Raises:
+        RegistryValidationError: When a relation names a source modelo the
+            revision declares no dependency classification for, which would
+            leave its clean-state contract undecidable.
+    """
+    requirements = relation_source_requirements(
+        snapshot.revision,
+        filing_year=snapshot.filing_year,
+        period=snapshot.period,
+    )
+    records: list[RelationHandoffApplicabilityRecord] = []
+    for relation in snapshot.revision.relations:
+        classification = classifications_by_source.get(relation.source_modelo)
+        if classification is None:
+            raise RegistryValidationError(
+                f"modelo {modelo.id} revision {revision.id}: relation {relation.id!r} "
+                f"has no dependency classification for source {relation.source_modelo!r}",
+            )
+        matching = _sole_matching_requirement(
+            relation,
+            requirements,
+            modelo=modelo,
+            revision=revision,
+            period=snapshot.period,
+        )
+        requirement = matching[0] if matching else None
+        records.append(
+            RelationHandoffApplicabilityRecord(
+                target_modelo=modelo.id,
+                target_revision=revision.id,
+                relation_id=relation.id,
+                filing_year=snapshot.filing_year,
+                target_period=snapshot.period,
+                relation_target_periods=relation.target_periods,
+                applicability=_relation_applicability(
+                    relation=relation,
+                    period=snapshot.period,
+                    matching=matching,
+                ),
+                source_modelo=relation.source_modelo,
+                source_filing_year=None if requirement is None else requirement.filing_year,
+                source_periods=() if requirement is None else requirement.periods,
+                source_filing_periods=()
+                if requirement is None
+                else tuple(filing_period.registry_token for filing_period in requirement.filing_periods),
+                source_casilla_id=relation.source_casilla_id,
+                target_binding=relation.target_binding,
+                requirement_relation_ids=() if requirement is None else requirement.relation_ids,
+                dependency_treatment=classification.treatment,
+                taxpayer_files_source=classification.taxpayer_files_source,
+                conditional_on_economic_activity=classification.conditional_on_economic_activity,
+                clean_state_mode=_clean_state_mode(classification),
+                aggregation_op=relation_aggregation_op(relation),
+                legal_refs=relation.legal_refs,
+                source_refs=relation.source_refs,
+            ),
+        )
+    return records
+
+
 def audit_registry_relation_handoff_applicability(
     authority: ValidatedRegistryAuthority,
 ) -> RegistryRelationHandoffApplicabilityAudit:
@@ -246,95 +431,24 @@ def audit_registry_relation_handoff_applicability(
             if not revision.relations:
                 continue
             selector = revision.period_selector
-            filing_year = selector.years[0] if selector.years else selector.year_from
-            if filing_year is None:
-                raise RegistryValidationError(
-                    f"modelo {modelo.id} revision {revision.id} has no representative filing year",
-                )
+            filing_year = _representative_filing_year(modelo, revision, selector)
             classifications_by_source = {
                 classification.source_modelo: classification for classification in revision.dependency_classifications
             }
             for period in selector.periods:
-                # Resolve law-determined, then assert-equal against the revision
-                # this loop is already on -- never inject revision.id as the
-                # selector (aeat-registry-authority-flow). Injecting it
-                # here would silently mask a revision whose own period_selector
-                # does not self-consistently resolve back to itself; asserting
-                # instead turns that into a loud registry-validation failure. A
-                # live probe against the bundled registry confirms the two are
-                # equivalent for every relation-bearing revision today (0
-                # mismatches across 42 modelo/revision/period triples).
-                snapshot = authority.snapshot(
-                    str(modelo.id),
+                snapshot = _self_consistent_snapshot(
+                    authority,
+                    modelo=modelo,
+                    revision=revision,
                     filing_year=filing_year,
                     period=period,
                 )
-                if snapshot.revision.id != revision.id:
-                    raise RegistryValidationError(
-                        f"modelo {modelo.id} revision {revision.id}: law-determined "
-                        f"resolution for filing_year={filing_year} period={period!r} "
-                        f"selected revision {snapshot.revision.id!r} instead -- this "
-                        "revision's own declared period_selector does not "
-                        "self-consistently resolve to itself",
-                    )
-                requirements = relation_source_requirements(
-                    snapshot.revision,
-                    filing_year=snapshot.filing_year,
-                    period=snapshot.period,
+                records.extend(
+                    _applicability_records_for_period(
+                        snapshot,
+                        modelo=modelo,
+                        revision=revision,
+                        classifications_by_source=classifications_by_source,
+                    ),
                 )
-                for relation in snapshot.revision.relations:
-                    classification = classifications_by_source.get(relation.source_modelo)
-                    if classification is None:
-                        raise RegistryValidationError(
-                            f"modelo {modelo.id} revision {revision.id}: relation {relation.id!r} "
-                            f"has no dependency classification for source {relation.source_modelo!r}",
-                        )
-                    matching = tuple(
-                        requirement for requirement in requirements if relation.id in requirement.relation_ids
-                    )
-                    if len(matching) > 1:
-                        raise RegistryValidationError(
-                            f"relation {relation.id!r} produces multiple source requirements for "
-                            f"{modelo.id}/{revision.id}/{snapshot.period}",
-                        )
-                    if relation.target_periods and snapshot.period not in relation.target_periods:
-                        applicability: Literal["active", "not_applicable", "unresolved"] = "not_applicable"
-                    elif matching:
-                        applicability = "active"
-                    else:
-                        applicability = "unresolved"
-                    requirement = matching[0] if matching else None
-                    if not classification.taxpayer_files_source:
-                        clean_state_mode: Literal["required", "conditional", "advisory"] = "advisory"
-                    elif classification.conditional_on_economic_activity:
-                        clean_state_mode = "conditional"
-                    else:
-                        clean_state_mode = "required"
-                    records.append(
-                        RelationHandoffApplicabilityRecord(
-                            target_modelo=modelo.id,
-                            target_revision=revision.id,
-                            relation_id=relation.id,
-                            filing_year=snapshot.filing_year,
-                            target_period=snapshot.period,
-                            relation_target_periods=relation.target_periods,
-                            applicability=applicability,
-                            source_modelo=relation.source_modelo,
-                            source_filing_year=None if requirement is None else requirement.filing_year,
-                            source_periods=() if requirement is None else requirement.periods,
-                            source_filing_periods=()
-                            if requirement is None
-                            else tuple(period.registry_token for period in requirement.filing_periods),
-                            source_casilla_id=relation.source_casilla_id,
-                            target_binding=relation.target_binding,
-                            requirement_relation_ids=() if requirement is None else requirement.relation_ids,
-                            dependency_treatment=classification.treatment,
-                            taxpayer_files_source=classification.taxpayer_files_source,
-                            conditional_on_economic_activity=classification.conditional_on_economic_activity,
-                            clean_state_mode=clean_state_mode,
-                            aggregation_op=relation_aggregation_op(relation),
-                            legal_refs=relation.legal_refs,
-                            source_refs=relation.source_refs,
-                        ),
-                    )
     return RegistryRelationHandoffApplicabilityAudit(records=tuple(records))

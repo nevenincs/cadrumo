@@ -66,17 +66,21 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period
+from ....core import Period, ResultDisposition
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     CasillaId,
     RegistryModeloObservation,
     validated_casilla_id,
 )
+from ....domain.iva_compensation import (
+    M303_COMPENSATION_POSTERIOR_CASILLA,
+    M303_COMPENSATION_RESULTADO_CASILLA,
+)
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations import CalculationObservationRepository
+from ...calculations import CalculationObservationRepository, ResultDispositionProjection
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -113,10 +117,34 @@ _M390_BOX_662: CasillaId = _casilla_id("iva.anual.compensacion-generada-ejercici
 # each quarter's disponible accumulates the prior quarters' unconsumed saldo, so
 # the whole year's credit carries into the 4T autoliquidacion.
 _M303_COMPENSACION_BY_PERIOD: dict[str, dict[CasillaId, Decimal]] = {
-    "1T": {_GENERADA: Decimal("100.00"), _APLICADA: Decimal("0.00"), _DISPONIBLE: Decimal("100.00")},
-    "2T": {_GENERADA: Decimal("20.00"), _APLICADA: Decimal("0.00"), _DISPONIBLE: Decimal("120.00")},
-    "3T": {_GENERADA: Decimal("30.00"), _APLICADA: Decimal("0.00"), _DISPONIBLE: Decimal("150.00")},
-    "4T": {_GENERADA: Decimal("50.00"), _APLICADA: Decimal("0.00"), _DISPONIBLE: Decimal("200.00")},
+    "1T": {
+        M303_COMPENSATION_RESULTADO_CASILLA: Decimal("-100.00"),
+        _GENERADA: Decimal("100.00"),
+        _APLICADA: Decimal("0.00"),
+        M303_COMPENSATION_POSTERIOR_CASILLA: Decimal("0.00"),
+        _DISPONIBLE: Decimal("100.00"),
+    },
+    "2T": {
+        M303_COMPENSATION_RESULTADO_CASILLA: Decimal("-20.00"),
+        _GENERADA: Decimal("20.00"),
+        _APLICADA: Decimal("0.00"),
+        M303_COMPENSATION_POSTERIOR_CASILLA: Decimal("100.00"),
+        _DISPONIBLE: Decimal("120.00"),
+    },
+    "3T": {
+        M303_COMPENSATION_RESULTADO_CASILLA: Decimal("-30.00"),
+        _GENERADA: Decimal("30.00"),
+        _APLICADA: Decimal("0.00"),
+        M303_COMPENSATION_POSTERIOR_CASILLA: Decimal("120.00"),
+        _DISPONIBLE: Decimal("150.00"),
+    },
+    "4T": {
+        M303_COMPENSATION_RESULTADO_CASILLA: Decimal("-50.00"),
+        _GENERADA: Decimal("50.00"),
+        _APLICADA: Decimal("0.00"),
+        M303_COMPENSATION_POSTERIOR_CASILLA: Decimal("150.00"),
+        _DISPONIBLE: Decimal("200.00"),
+    },
 }
 
 # Oracle from the carried-pending inputs + AEAT identity (NOT the registry formula).
@@ -176,6 +204,12 @@ def _seed_m303_compensacion_quarters(*, obs_repo: CalculationObservationReposito
             ),
             source_kind=APP_FILING_SOURCE_KIND,
             captured_at=_T0,
+            result_disposition=ResultDispositionProjection(
+                disposition=ResultDisposition.COMPENSACION,
+                provenance_kind="app_filing",
+                provenance_locator=f"test-local-filing:{_YEAR}:{period}",
+            ),
+            normalize_m303_carry=True,
         )
 
 

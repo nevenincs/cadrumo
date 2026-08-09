@@ -55,7 +55,7 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period
+from ....core import Period, ResultDisposition
 from ....core.errors import CadrumoError
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
@@ -529,6 +529,7 @@ def _calculate_and_file_m303_quarter(secure_objects: SecureObjectRepository, *, 
         work_unit=work_unit,
         repository=CalculationObservationRepository(objects=secure_objects),
         captured_at=_FILE_AT,
+        result_disposition=ResultDisposition.INGRESO,
     )
     return revision
 

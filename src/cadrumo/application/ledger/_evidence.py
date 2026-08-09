@@ -840,6 +840,12 @@ class PurchaseInvoiceEvidenceService:
         )
 
 
+# Public supporting contract for sibling ledger action services, matching the
+# shape `_actions_common` declares. The evidence event emitter is shared: this
+# module raises it on the evidence paths, and the LLM review workflow raises the
+# same event for a declined draft, which never becomes a transaction.
+emit_evidence_event = _emit_evidence_event
+
 __all__ = [
     "PurchaseInvoiceEvidence",
     "PurchaseInvoiceEvidenceDocument",
@@ -849,4 +855,5 @@ __all__ = [
     "PurchaseInvoiceEvidenceRepository",
     "PurchaseInvoiceEvidenceResult",
     "PurchaseInvoiceEvidenceService",
+    "emit_evidence_event",
 ]

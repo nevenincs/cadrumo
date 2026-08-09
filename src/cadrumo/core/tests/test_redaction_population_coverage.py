@@ -36,7 +36,7 @@ from collections.abc import Callable
 import pytest
 
 from .._iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
-from ..classification import SensitivityClass
+from ..classification import RedactionRule, SensitivityClass
 from ..hashing import sha256_hex
 from ..identity import IdentityError, nif_iva_format_for_country, normalise_nif_iva, validate_identity
 from ..redaction import (
@@ -91,7 +91,7 @@ MIXED_POPULATION_CORPUS = [
 ]
 
 
-def _diagnostic_rules() -> tuple[object, ...]:
+def _diagnostic_rules() -> tuple[RedactionRule, ...]:
     return default_rules_for_class(SensitivityClass.DIAGNOSTIC)
 
 
@@ -164,6 +164,7 @@ def test_an_ambiguity_candidate_note_survives_while_its_value_is_hashed() -> Non
 
     assert isinstance(redacted, dict)
     candidates = redacted["candidates"]
+    assert isinstance(candidates, list), f"the candidate rows did not survive as a list: {candidates!r}"
     assert [candidate["note"] for candidate in candidates] == [
         "printed under 'Proveedor'",
         "printed under 'Cliente'",

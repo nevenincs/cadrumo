@@ -46,6 +46,7 @@ from decimal import Decimal
 from ...core import (
     CasillaId,
     Modelo,
+    PaymentElection,
     Period,
     RefundElection,
     ResultDisposition,
@@ -68,7 +69,12 @@ from ...domain.iva import (
     refund_disposition_available,
 )
 from ...domain.modelos import CalculationRevision, WorkUnit
-from ._action_errors import CalculationRegistryUnavailableError, ModeloRefundElectionNotEligibleError
+from ._action_errors import (
+    CalculationRegistryUnavailableError,
+    ModeloPaymentElectionCapabilityRefusedError,
+    ModeloPaymentElectionIncompatibleError,
+    ModeloRefundElectionNotEligibleError,
+)
 from ._calculation_helpers import assert_snapshot_matches_work_unit_revision
 from ._registry_resources import registry_root
 
@@ -87,6 +93,7 @@ def resolve_modelo_result_disposition(
     workflow_profile: TaxpayerProfile,
     period: Period,
     refund_election: RefundElection = RefundElection.COMPENSAR,
+    payment_election: PaymentElection = PaymentElection.INGRESO,
 ) -> ResultDisposition:
     """Resolve the single fichero "Tipo de declaración" result disposition.
 
@@ -130,15 +137,76 @@ def resolve_modelo_result_disposition(
         work_unit.modelo,
         _result_disposition_values_for_revision(work_unit=work_unit, revision=revision, period=period),
     )
-    if base is None:
-        return DECLARATION_TYPE_FALLBACK
+    base_disposition = base or DECLARATION_TYPE_FALLBACK
+    return _resolve_elected_disposition(
+        base_disposition,
+        work_unit=work_unit,
+        workflow_profile=workflow_profile,
+        period=period,
+        refund_election=refund_election,
+        payment_election=payment_election,
+    )
+
+
+def _resolve_elected_disposition(
+    base_disposition: ResultDisposition,
+    *,
+    work_unit: WorkUnit,
+    workflow_profile: TaxpayerProfile,
+    period: Period,
+    refund_election: RefundElection,
+    payment_election: PaymentElection,
+) -> ResultDisposition:
+    """Apply the one election axis that the computed result makes applicable."""
+    if base_disposition is ResultDisposition.INGRESO:
+        if refund_election is not RefundElection.COMPENSAR:
+            raise ModeloRefundElectionNotEligibleError(
+                "a refund election is incompatible with a positive result",
+                context={
+                    "modelo": str(work_unit.modelo),
+                    "base_disposition": base_disposition.value,
+                    "refund_election": refund_election.value,
+                },
+            )
+        return _apply_payment_election(work_unit=work_unit, payment_election=payment_election)
+
+    if payment_election is not PaymentElection.INGRESO:
+        raise ModeloPaymentElectionIncompatibleError(
+            "a payment election requires a positive result",
+            context={
+                "modelo": str(work_unit.modelo),
+                "base_disposition": base_disposition.value,
+                "payment_election": payment_election.value,
+            },
+        )
     return _apply_modelo_303_refund_election(
-        base,
+        base_disposition,
         work_unit=work_unit,
         workflow_profile=workflow_profile,
         period=period,
         refund_election=refund_election,
     )
+
+
+def _apply_payment_election(
+    *,
+    work_unit: WorkUnit,
+    payment_election: PaymentElection,
+) -> ResultDisposition:
+    """Resolve a positive-result settlement without changing refund/carry policy."""
+    if payment_election is PaymentElection.INGRESO:
+        return ResultDisposition.INGRESO
+    if payment_election is PaymentElection.CUENTA_CORRIENTE:
+        raise ModeloPaymentElectionCapabilityRefusedError(
+            "cuenta corriente payment is not supported until its AEAT filing semantics are grounded",
+            context={"modelo": str(work_unit.modelo), "payment_election": payment_election.value},
+        )
+    if work_unit.modelo != Modelo.M303.value:
+        raise ModeloPaymentElectionCapabilityRefusedError(
+            "direct-debit payment is currently supported only for Modelo 303",
+            context={"modelo": str(work_unit.modelo), "payment_election": payment_election.value},
+        )
+    return ResultDisposition.DOMICILIACION
 
 
 def _result_disposition_values_for_revision(
@@ -242,6 +310,7 @@ def revision_is_refund_disposition(
     workflow_profile: TaxpayerProfile,
     period: Period,
     refund_election: RefundElection = RefundElection.COMPENSAR,
+    payment_election: PaymentElection = PaymentElection.INGRESO,
 ) -> bool:
     """Return whether the revision's resolved disposition is a refund (devolución).
 
@@ -260,6 +329,7 @@ def revision_is_refund_disposition(
         workflow_profile=workflow_profile,
         period=period,
         refund_election=refund_election,
+        payment_election=payment_election,
     )
     return result_disposition_is_refund(disposition)
 

@@ -544,6 +544,147 @@ class _RetentionTimestamp(Protocol):
     def __lt__(self, other: Any, /) -> bool: ...
 
 
+def _rank_newest_first[EntryT, TimestampT: _RetentionTimestamp](
+    entries: Sequence[EntryT],
+    timestamp: Callable[[EntryT], TimestampT],
+) -> list[tuple[int, EntryT]]:
+    """Rank entries newest-first, each paired with its original input index.
+
+    The index rides along because the byte-ceiling stage removes by IDENTITY
+    rather than by value: two entries that compare equal must stay
+    distinguishable, or dropping one would drop both. The sort is stable, so
+    entries sharing a timestamp keep their relative input order.
+    """
+    return sorted(enumerate(entries), key=lambda pair: timestamp(pair[1]), reverse=True)
+
+
+def _unpaired[EntryT](pairs: Sequence[tuple[int, EntryT]]) -> list[EntryT]:
+    """Drop the ranking index, returning the entries as the caller handed them in."""
+    return [entry for _index, entry in pairs]
+
+
+def _validate_retention_bounds(
+    *,
+    cutoff: object | None,
+    max_count: int | None,
+    max_total_bytes: int | None,
+    size_fn: object | None,
+    combine: str,
+) -> None:
+    """Refuse bound combinations the selector cannot answer.
+
+    Raises:
+        ValueError: When no bound is supplied, when ``max_total_bytes`` is
+            supplied without ``size_fn``, or when ``combine="union"`` is
+            paired with ``max_total_bytes``.
+    """
+    if cutoff is None and max_count is None and max_total_bytes is None:
+        raise ValueError(
+            "select_filesystem_retention_survivors requires at least one of cutoff, max_count, max_total_bytes",
+        )
+    if max_total_bytes is not None and size_fn is None:
+        raise ValueError("max_total_bytes requires size_fn")
+    if combine == "union" and max_total_bytes is not None:
+        raise ValueError("combine='union' does not support max_total_bytes")
+
+
+def _select_union[EntryT, TimestampT: _RetentionTimestamp](
+    ranked: Sequence[tuple[int, EntryT]],
+    *,
+    protected_indices: set[int],
+    cutoff: TimestampT | None,
+    max_count: int | None,
+    timestamp: Callable[[EntryT], TimestampT],
+) -> tuple[list[tuple[int, EntryT]], list[tuple[int, EntryT]]]:
+    """Remove an entry matching EITHER bound, both judged against the full ranking.
+
+    Distinct from the sequential stages: rank is read off the unstaged
+    ranking, so an entry still inside the age window is removed for being
+    beyond the count bound.
+    """
+    keep: list[tuple[int, EntryT]] = []
+    remove: list[tuple[int, EntryT]] = []
+    for rank, (index, entry) in enumerate(ranked):
+        if index in protected_indices:
+            keep.append((index, entry))
+            continue
+        expired = cutoff is not None and timestamp(entry) < cutoff
+        beyond_rank = max_count is not None and rank >= max_count
+        (remove if (expired or beyond_rank) else keep).append((index, entry))
+    return keep, remove
+
+
+def _partition_expired[EntryT, TimestampT: _RetentionTimestamp](
+    ranked: Sequence[tuple[int, EntryT]],
+    *,
+    protected_indices: set[int],
+    cutoff: TimestampT,
+    timestamp: Callable[[EntryT], TimestampT],
+) -> tuple[list[tuple[int, EntryT]], list[tuple[int, EntryT]]]:
+    """Split off entries strictly older than ``cutoff``; one exactly at it survives."""
+    kept: list[tuple[int, EntryT]] = []
+    expired: list[tuple[int, EntryT]] = []
+    for index, entry in ranked:
+        if index not in protected_indices and timestamp(entry) < cutoff:
+            expired.append((index, entry))
+        else:
+            kept.append((index, entry))
+    return kept, expired
+
+
+def _partition_beyond_count[EntryT](
+    ranked: Sequence[tuple[int, EntryT]],
+    *,
+    protected_indices: set[int],
+    max_count: int,
+) -> tuple[list[tuple[int, EntryT]], list[tuple[int, EntryT]]]:
+    """Split off entries past the ``max_count``-th unprotected survivor.
+
+    Protected entries are kept without consuming a count slot, so
+    ``protect_newest`` can hold more entries than ``max_count`` admits.
+    """
+    kept: list[tuple[int, EntryT]] = []
+    excess: list[tuple[int, EntryT]] = []
+    retained = 0
+    for index, entry in ranked:
+        if index in protected_indices:
+            kept.append((index, entry))
+            continue
+        if retained < max_count:
+            kept.append((index, entry))
+            retained += 1
+        else:
+            excess.append((index, entry))
+    return kept, excess
+
+
+def _partition_over_byte_ceiling[EntryT](
+    ranked: Sequence[tuple[int, EntryT]],
+    *,
+    protected_indices: set[int],
+    max_total_bytes: int,
+    size_fn: Callable[[EntryT], int],
+) -> tuple[list[tuple[int, EntryT]], list[tuple[int, EntryT]]]:
+    """Drop oldest-first until the running total fits under the ceiling.
+
+    Protected entries still COUNT toward the total but are never dropped, so
+    a ceiling smaller than the protected set keeps them and simply reports no
+    further removals rather than deleting the newest artefact.
+    """
+    total = sum(size_fn(entry) for _index, entry in ranked)
+    over: list[tuple[int, EntryT]] = []
+    over_indices: set[int] = set()
+    for index, entry in reversed(ranked):  # oldest surviving entry first
+        if total <= max_total_bytes:
+            break
+        if index in protected_indices:
+            continue
+        over.append((index, entry))
+        over_indices.add(index)
+        total -= size_fn(entry)
+    return [pair for pair in ranked if pair[0] not in over_indices], over
+
+
 def select_filesystem_retention_survivors[EntryT, TimestampT: _RetentionTimestamp](
     entries: Sequence[EntryT],
     *,
@@ -609,74 +750,57 @@ def select_filesystem_retention_survivors[EntryT, TimestampT: _RetentionTimestam
             supplied without ``size_fn``, or when ``combine="union"`` is
             paired with ``max_total_bytes``.
     """
-    if cutoff is None and max_count is None and max_total_bytes is None:
-        raise ValueError(
-            "select_filesystem_retention_survivors requires at least one of cutoff, max_count, max_total_bytes",
-        )
-    if max_total_bytes is not None and size_fn is None:
-        raise ValueError("max_total_bytes requires size_fn")
-    if combine == "union" and max_total_bytes is not None:
-        raise ValueError("combine='union' does not support max_total_bytes")
-
-    ranked: list[tuple[int, EntryT]] = sorted(
-        enumerate(entries),
-        key=lambda pair: timestamp(pair[1]),
-        reverse=True,
+    _validate_retention_bounds(
+        cutoff=cutoff,
+        max_count=max_count,
+        max_total_bytes=max_total_bytes,
+        size_fn=size_fn,
+        combine=combine,
     )
+
+    ranked = _rank_newest_first(entries, timestamp)
     protected_indices = {index for index, _entry in ranked[: max(protect_newest, 0)]}
 
     if combine == "union":
-        keep_pairs: list[tuple[int, EntryT]] = []
-        remove_pairs: list[tuple[int, EntryT]] = []
-        for rank, (index, entry) in enumerate(ranked):
-            if index in protected_indices:
-                keep_pairs.append((index, entry))
-                continue
-            expired = cutoff is not None and timestamp(entry) < cutoff
-            beyond_rank = max_count is not None and rank >= max_count
-            (remove_pairs if (expired or beyond_rank) else keep_pairs).append((index, entry))
-        return [entry for _, entry in keep_pairs], [entry for _, entry in remove_pairs]
+        keep_pairs, remove_pairs = _select_union(
+            ranked,
+            protected_indices=protected_indices,
+            cutoff=cutoff,
+            max_count=max_count,
+            timestamp=timestamp,
+        )
+        return _unpaired(keep_pairs), _unpaired(remove_pairs)
 
+    # Sequential: each stage narrows the previous stage's survivors, so a
+    # later bound never re-examines an entry an earlier one already removed.
     survivors = ranked
     removed: list[tuple[int, EntryT]] = []
 
     if cutoff is not None:
-        kept, expired_pairs = [], []
-        for index, entry in survivors:
-            if index not in protected_indices and timestamp(entry) < cutoff:
-                expired_pairs.append((index, entry))
-            else:
-                kept.append((index, entry))
-        survivors, removed = kept, removed + expired_pairs
+        survivors, expired_pairs = _partition_expired(
+            survivors,
+            protected_indices=protected_indices,
+            cutoff=cutoff,
+            timestamp=timestamp,
+        )
+        removed += expired_pairs
 
     if max_count is not None:
-        kept, excess_pairs = [], []
-        retained = 0
-        for index, entry in survivors:
-            if index in protected_indices:
-                kept.append((index, entry))
-                continue
-            if retained < max_count:
-                kept.append((index, entry))
-                retained += 1
-            else:
-                excess_pairs.append((index, entry))
-        survivors, removed = kept, removed + excess_pairs
+        survivors, excess_pairs = _partition_beyond_count(
+            survivors,
+            protected_indices=protected_indices,
+            max_count=max_count,
+        )
+        removed += excess_pairs
 
     if max_total_bytes is not None:
-        assert size_fn is not None  # enforced above
-        total = sum(size_fn(entry) for _index, entry in survivors)
-        over_ceiling: list[tuple[int, EntryT]] = []
-        over_indices: set[int] = set()
-        for index, entry in reversed(survivors):  # oldest surviving entry first
-            if total <= max_total_bytes:
-                break
-            if index in protected_indices:
-                continue
-            over_ceiling.append((index, entry))
-            over_indices.add(index)
-            total -= size_fn(entry)
-        survivors = [pair for pair in survivors if pair[0] not in over_indices]
-        removed = removed + over_ceiling
+        assert size_fn is not None  # enforced by _validate_retention_bounds
+        survivors, over_ceiling = _partition_over_byte_ceiling(
+            survivors,
+            protected_indices=protected_indices,
+            max_total_bytes=max_total_bytes,
+            size_fn=size_fn,
+        )
+        removed += over_ceiling
 
-    return [entry for _index, entry in survivors], [entry for _index, entry in removed]
+    return _unpaired(survivors), _unpaired(removed)

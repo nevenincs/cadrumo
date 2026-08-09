@@ -74,6 +74,8 @@ def test_modelo_202_declaracion_pdf_profile_declares_expected_target_casillas() 
     profile = snapshot.extraction_profiles["modelo-202-declaracion-pdf"]
     assert profile.surface == "declaracion_pdf"
     assert profile.provisional_pending_specimen is True
+    assert profile.confidence == "review_required"
+    assert profile.corpus_round_trip_verified is False
     assert profile.verification_source == "synthetic_from_aeat_published_text"
     assert {target.casilla_id for target in profile.target_casillas} == _M202_EXPECTED_CASILLAS
     for target in profile.target_casillas:

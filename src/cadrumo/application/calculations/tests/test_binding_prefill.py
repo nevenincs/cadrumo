@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period
+from ....core import Period, derive_result_disposition, result_disposition_casilla_ids
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
 from ....core.resources import resources
 from ....domain.calculations.registry import (
@@ -41,7 +41,7 @@ from .._binding_prefill import (
 from .._errors import BindingPrefillTypeError
 from .._iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
 from .._iva_compensation_history import IvaCompensationHistoryRepository
-from .._observations_repository import CalculationObservationRepository
+from .._observations_repository import CalculationObservationRepository, ResultDispositionProjection
 from .._relation_prefill import resolve_relations_from_local_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -164,6 +164,18 @@ def _registry_observation(
     )
 
 
+def _filing_result_disposition(result: RegistryCalculationResult):
+    """Use the production result-disposition resolver at this test filing boundary."""
+    casilla_ids = result_disposition_casilla_ids("303")
+    assert casilla_ids is not None
+    disposition = derive_result_disposition(
+        "303",
+        {casilla_id: Decimal(result.values[casilla_id]) for casilla_id in casilla_ids},
+    )
+    assert disposition is not None
+    return disposition
+
+
 def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observations(
     tmp_path: Path,
 ) -> None:
@@ -220,6 +232,12 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
             repository.save_observation(
                 _registry_observation(filing_year=2025, period=period, result=result),
                 source_kind="app_filing",
+                result_disposition=ResultDispositionProjection(
+                    disposition=_filing_result_disposition(result),
+                    provenance_kind="app_filing",
+                    provenance_locator=f"test-local-filing:2025:{period}",
+                ),
+                normalize_m303_carry=True,
             )
 
         snapshot = _snapshot("390", 2025, "0A")

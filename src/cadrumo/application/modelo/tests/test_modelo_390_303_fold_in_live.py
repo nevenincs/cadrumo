@@ -61,17 +61,18 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period
+from ....core import Period, ResultDisposition
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     CasillaId,
     RegistryModeloObservation,
     validated_casilla_id,
 )
+from ....domain.iva_compensation import M303_COMPENSATION_RESULTADO_CASILLA
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations import CalculationObservationRepository
+from ...calculations import CalculationObservationRepository, ResultDispositionProjection
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -132,24 +133,28 @@ _M303_BY_PERIOD: dict[str, dict[CasillaId, Decimal]] = {
         _DEDUCIBLE: Decimal("40.00"),
         _RESULTADO: Decimal("60.00"),
         _COMPENSACION: Decimal("10.00"),  # 1T compensacion
+        M303_COMPENSATION_RESULTADO_CASILLA: Decimal("-10.00"),
     },
     "2T": {
         _DEVENGADA: Decimal("250.00"),
         _DEDUCIBLE: Decimal("80.00"),
         _RESULTADO: Decimal("170.00"),
         _COMPENSACION: Decimal("20.00"),  # 2T compensacion
+        M303_COMPENSATION_RESULTADO_CASILLA: Decimal("-20.00"),
     },
     "3T": {
         _DEVENGADA: Decimal("180.00"),
         _DEDUCIBLE: Decimal("60.00"),
         _RESULTADO: Decimal("120.00"),
         _COMPENSACION: Decimal("15.00"),  # 3T compensacion
+        M303_COMPENSATION_RESULTADO_CASILLA: Decimal("-15.00"),
     },
     "4T": {
         _DEVENGADA: Decimal("90.00"),
         _DEDUCIBLE: Decimal("30.00"),
         _RESULTADO: Decimal("60.00"),
         _COMPENSACION: Decimal("300.00"),  # 4T compensacion
+        M303_COMPENSATION_RESULTADO_CASILLA: Decimal("-300.00"),
         _SIMPLIFICADO_DEVENGADA: Decimal("45.00"),  # RS casilla 54, 4T only
     },
 }
@@ -200,6 +205,12 @@ def _seed_m303_quarters(*, obs_repo: CalculationObservationRepository) -> None:
             ),
             source_kind=APP_FILING_SOURCE_KIND,
             captured_at=_T0,
+            result_disposition=ResultDispositionProjection(
+                disposition=ResultDisposition.COMPENSACION,
+                provenance_kind="app_filing",
+                provenance_locator=f"test-local-filing:{_YEAR}:{period}",
+            ),
+            normalize_m303_carry=True,
         )
 
 

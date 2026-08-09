@@ -65,7 +65,8 @@ _MELLIZO_BIRTH = "NACIMIENTO=2022-06-01"
 # Every profile/relation-sourced binding a minimal M100 2024 calculate needs
 # besides the descendiente facts under test. Mirrors the fixture in
 # ``test_modelo_100_descendiente_entry_surface.py``; no binding here touches
-# 0611, which has no formula and is written by the shortcut layer alone.
+# 0611. Its 2024 registry formula reads the profile-derived scalar, so no
+# command-line flag supplies its value.
 _REQUIRED_2024_BINDING_FLAGS: tuple[str, ...] = (
     "--binding", "renta-2024-modelo-100-estimacion-directa-es-normal=1",
     "--binding", "renta-2024-modelo-111-retenciones-periodicas=0",
@@ -147,6 +148,12 @@ def _casilla_0611(output: str) -> Decimal:
     return Decimal(str(_payload(output)["casilla_values"][_MATERNIDAD_CASILLA_ID]))
 
 
+def _casilla_0611_observation(output: str) -> dict[str, object]:
+    """Return 0611's persisted, registry-grounded calculation observation."""
+    observations = _payload(output)["observations"]
+    return next(observation for observation in observations if observation["casilla_id"] == _MATERNIDAD_CASILLA_ID)
+
+
 def _advisory_kinds(output: str) -> set[str]:
     return {
         notice.get("context", {}).get("source_kind")
@@ -216,6 +223,58 @@ def test_declaring_fewer_months_moves_the_casilla(runtime_profile: TestRuntimePr
 
     assert exit_code == 0, output
     assert _casilla_0611(output) == Decimal("600")
+
+
+def test_alta_posterior_reaches_the_1350_per_hijo_cap(runtime_profile: TestRuntimeProfile) -> None:
+    """The 2024 manual's Art. 81.1 cap rises to 1.350 after a qualifying alta.
+
+    This child has twelve qualifying months and its declared alta is in the
+    first working month. The authority's annual 1.350 cap, rather than an
+    application-side reconstruction of the 150 increment, is the oracle.
+    """
+    _seed_natural_person_profile(runtime_profile)
+    _declare("NACIMIENTO=2024-01-15,MESES_TRABAJO=1-12,ALTA_POSTERIOR_MES=1")
+
+    exit_code, output = _calculate()
+
+    assert exit_code == 0, output
+    assert _casilla_0611(output) == Decimal("1350")
+
+
+def test_mixed_alta_cap_descendants_are_folded_per_child(runtime_profile: TestRuntimeProfile) -> None:
+    """The 1.350 and 1.200 annual caps apply to their respective children.
+
+    A premature aggregate cap would lose the child-specific alta entitlement.
+    The manual's stated per-child caps make 2.550 the external oracle for this
+    mixed pair.
+    """
+    _seed_natural_person_profile(runtime_profile)
+    _declare(
+        "NACIMIENTO=2024-01-15,MESES_TRABAJO=1-12,ALTA_POSTERIOR_MES=1",
+        f"{_MELLIZO_BIRTH},MESES_TRABAJO=1-12",
+    )
+
+    exit_code, output = _calculate()
+
+    assert exit_code == 0, output
+    assert _casilla_0611(output) == Decimal("2550")
+
+
+def test_0611_is_a_provenance_carrying_registry_formula(runtime_profile: TestRuntimeProfile) -> None:
+    """The calculated record retains formula and legal/source provenance for 0611."""
+    _seed_natural_person_profile(runtime_profile)
+    _declare(f"{_MELLIZO_BIRTH},MESES_TRABAJO=1-12")
+
+    exit_code, output = _calculate()
+
+    assert exit_code == 0, output
+    observation = _casilla_0611_observation(output)
+    assert observation["formula_id"] == "renta-2024-deduccion-maternidad-0611"
+    assert observation["legal_refs"] == ["ley-35-2006:art-81"]
+    assert set(observation["source_refs"]) == {
+        "aeat-renta-2024-manual-parte1",
+        "aeat-dr-100-2024-dictionary",
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -391,6 +450,27 @@ def test_the_profile_declaration_alone_is_now_the_only_route(runtime_profile: Te
 
     assert exit_code == 0, output
     assert _casilla_0611(output) == _ORACLE_ONE_HIJO_TWELVE_MONTHS
+
+
+@pytest.mark.parametrize("attempted_value", ("0", "9999"))
+def test_direct_casilla_0611_cannot_bypass_or_overwrite_the_profile_producer(
+    runtime_profile: TestRuntimeProfile,
+    attempted_value: str,
+) -> None:
+    """A caller may neither manufacture nor overwrite the Art. 81.1 result.
+
+    ``0`` would erase the profile's genuine 1.200 result, while ``9999`` would
+    manufacture one. Both must be refused because 0611 is now a computed
+    registry casilla, with the profile fold as its sole producer.
+    """
+    _seed_natural_person_profile(runtime_profile)
+    _declare(f"{_MELLIZO_BIRTH},MESES_TRABAJO=1-12")
+
+    exit_code, output = _calculate("--casilla", f"{_MATERNIDAD_CASILLA_ID}={attempted_value}")
+
+    assert exit_code != 0, output
+    assert _MATERNIDAD_CASILLA_ID in output
+    assert "computed" in output.lower()
 
 
 # ---------------------------------------------------------------------------

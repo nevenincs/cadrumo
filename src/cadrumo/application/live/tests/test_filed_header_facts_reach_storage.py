@@ -24,8 +24,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core import ObservedHeaderFact, Period
-from ...calculations import CalculationObservationRepository
+from ....core import ObservedHeaderFact, Period, ResultDisposition
+from ...calculations import CalculationObservationRepository, IvaCompensationHistoryRepository
 from .._filed_observation_persistence import _filed_observation_source_metadata
 from ._filed_capture_history_support import _prior_303_observation, _secure_backend
 
@@ -51,7 +51,10 @@ def test_captured_header_facts_are_readable_back_out_of_storage(tmp_path: Path) 
     """The end the bug was at: persisted, then read back, with provenance intact."""
     from ...live import persist_filed_calculation_observation
 
-    observation = _prior_303_observation(pending_compensation=Decimal("0.00")).model_copy(
+    observation = _prior_303_observation(
+        pending_compensation=Decimal("0.00"),
+        result=Decimal("-1.00"),
+    ).model_copy(
         update={"headers": _FACTS},
     )
 
@@ -62,11 +65,20 @@ def test_captured_header_facts_are_readable_back_out_of_storage(tmp_path: Path) 
             "303",
             Period.from_year_and_code(observation.ejercicio, "1T"),
         )
+        history_state = IvaCompensationHistoryRepository().load_period(
+            Period.from_year_and_code(observation.ejercicio, "1T"),
+        )
 
         assert stored is not None, "nothing was persisted, so this proves nothing about the header channel"
         assert stored.source_headers == _FACTS, (
             "the header facts did not survive persistence with their provenance intact"
         )
+        assert stored.result_disposition is not None
+        assert stored.result_disposition.disposition is ResultDisposition.COMPENSACION
+        assert stored.result_disposition.provenance_kind == "source_header"
+        assert history_state is not None
+        assert history_state.generated_amount == Decimal("1.00")
+        assert history_state.available_end_amount == Decimal("1.00")
 
 
 def test_the_metadata_projection_still_does_not_carry_headers(tmp_path: Path) -> None:
@@ -79,7 +91,10 @@ def test_the_metadata_projection_still_does_not_carry_headers(tmp_path: Path) ->
     keeps "it arrived" from being satisfiable by the shape we moved away from.
     """
     del tmp_path
-    observation = _prior_303_observation(pending_compensation=Decimal("0.00")).model_copy(
+    observation = _prior_303_observation(
+        pending_compensation=Decimal("0.00"),
+        result=Decimal("-1.00"),
+    ).model_copy(
         update={"headers": _FACTS},
     )
 

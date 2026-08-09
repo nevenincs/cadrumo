@@ -347,7 +347,7 @@ def test_preflight_requirement_modelos_reflects_grounding_union_not_the_call_tar
     grounding = ProfileKeyGrounding(
         profile_key="identity.tax_id",
         modelos=(Modelo.M100,),
-        legal_refs=("orden-hac-1347-2024:art-4",),
+        legal_refs=("orden-hac-242-2025:art-3",),
         source_refs=(),
     )
 
@@ -361,7 +361,7 @@ def test_preflight_requirement_modelos_reflects_grounding_union_not_the_call_tar
     # The grounding names M100; the call itself carries no target-modelo concept
     # any more, so the row must reflect the grounded set exactly, not a caller hint.
     assert requirement.modelos == (Modelo.M100.value,)
-    assert "orden-hac-1347-2024:art-4" in requirement.legal_refs
+    assert "orden-hac-242-2025:art-3" in requirement.legal_refs
 
 
 def test_preflight_requirement_never_invents_grounding_for_unknown_path(

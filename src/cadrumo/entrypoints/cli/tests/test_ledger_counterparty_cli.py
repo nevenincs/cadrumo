@@ -32,10 +32,12 @@ from __future__ import annotations
 import json
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Any
 
 import pytest
+from click.testing import Result
 
-from ....domain.iva import IvaTerritorialScope
+from ....domain.iva import EUMemberState, IvaTerritorialScope
 from ._cli_surface_support import (
     _invoke,
     create_cli_surface_profile,
@@ -65,11 +67,17 @@ def _confirm_json(*args: str):
     return _invoke(["--format", "json", "app", "ledger", "counterparty", "confirm", *args])
 
 
-def _payload(result) -> dict:
+def _payload(result: Result) -> dict[str, Any]:
+    """Parse the JSON envelope the CLI wrote to stdout.
+
+    ``Any`` is what a parsed envelope genuinely is at this boundary: the
+    ``result`` payload differs per verb, so a single annotation here would
+    have to describe every command's schema at once.
+    """
     return json.loads(result.output)
 
 
-def _notice_codes(result) -> set[str]:
+def _notice_codes(result: Result) -> set[str]:
     return {notice["code"] for notice in _payload(result).get("notices", [])}
 
 
@@ -190,6 +198,52 @@ def test_an_unverifiable_identifier_refuses_rather_than_storing_a_key_for_nothin
     result = _confirm("not-a-tax-id", "--scope", IvaTerritorialScope.ES_MAINLAND.value)
 
     assert result.exit_code != 0
+
+
+def test_an_identification_only_conflict_refuses_instead_of_raising() -> None:
+    """The refusal must survive the axis the operator did NOT answer.
+
+    Establishment and VAT-identification are independent axes and either may
+    stand alone, so a conflict is reachable with no ``--scope`` in the call at
+    all. The refusal path read the unanswered axis to name what was asserted,
+    which raises on the very invocation that most needs the instruction --
+    an operator correcting only an identification State was met with a crash
+    instead of the withdraw route.
+    """
+    assert _confirm(_SUPPLIER_CIF, "--identification-state", EUMemberState.DE.value).exit_code == 0
+
+    conflicted = _confirm(_SUPPLIER_CIF, "--identification-state", EUMemberState.FR.value)
+
+    assert conflicted.exit_code != 0
+    # The route out, not merely a non-zero status: a refusal naming no
+    # correction is the shape this surface exists to avoid.
+    assert "withdraw" in conflicted.output
+    # Both values are named, so the operator can see which answer is being kept.
+    assert EUMemberState.DE.value in conflicted.output
+    assert EUMemberState.FR.value in conflicted.output
+
+
+def test_an_identification_only_retry_reports_the_stored_answer() -> None:
+    """The no-op notice must describe a confirmation carrying no territory.
+
+    The already-confirmed notice rendered the stored territory unconditionally,
+    so an identification-only confirmation raised on the retry that was supposed
+    to be the safe path. A retrying agent is this CLI's operator, so the no-op
+    branch is the more-travelled one, not the edge.
+    """
+    assert _confirm(_SUPPLIER_CIF, "--identification-state", EUMemberState.DE.value).exit_code == 0
+
+    again = _confirm_json(_SUPPLIER_CIF, "--identification-state", EUMemberState.DE.value)
+
+    assert again.exit_code == 0, again.output
+    assert _payload(again)["result"]["recorded"] is False
+    assert "ledger.counterparty.already_confirmed" in _notice_codes(again)
+    # The unanswered axis is absent rather than reported as a stored blank.
+    notice = next(
+        item for item in _payload(again)["notices"] if item["code"] == "ledger.counterparty.already_confirmed"
+    )
+    assert notice["context"]["identification_state"] == EUMemberState.DE.value
+    assert "territorial_scope" not in notice["context"]
 
 
 def test_the_accepted_scopes_are_offered_on_a_parse_failure() -> None:

@@ -9,8 +9,13 @@ from pathlib import Path
 import pytest
 
 from ....core import Period
+from ....core import PaymentElection, ResultDisposition
 from ....domain.buckets import BucketEventType
 from ....domain.deadlines import IVARegime, TaxpayerProfile
+from ....domain.user_profile import UserProfileFact
+from ...user_profile import projection_for_taxpayer, set_active_fields
+from ...workflow import workflow_state_repository
+from .._action_errors import ModeloChargeAccountMissingError, ModeloPaymentElectionCapabilityRefusedError
 from .._export import ModeloExportCommand, ModeloExportOutputPathError, export_modelo_revision
 from ._export_modelo_303_support import _build_verified_modelo_303_revision
 from ._export_test_support import isolated_backend_context
@@ -48,6 +53,9 @@ def test_export_modelo_303_wallet_only_revision_writes_fichero_with_redacted_wal
     assert result.modelo == "303"
     assert result.byte_size == output_path.stat().st_size
     assert result.file_sha256
+    assert result.resolved_result_disposition is ResultDisposition.NEGATIVA
+    assert result.payment_election is None
+    assert result.refund_election is None
     assert result.casilla_provenance
     provenance = result.iva_wallet_decision_provenance
     assert provenance is not None
@@ -61,6 +69,9 @@ def test_export_modelo_303_wallet_only_revision_writes_fichero_with_redacted_wal
 
     event = event_repo.load().for_bucket(bucket_id, event_types=(BucketEventType.MODELO_EXPORTED,))[-1]
     assert event.payload["period"] == "2T"
+    assert event.payload["resolved_result_disposition"] == ResultDisposition.NEGATIVA.value
+    assert "refund_election" not in event.payload
+    assert "payment_election" not in event.payload
     assert event.payload["iva_wallet_selected_authority"] == "aeat_wallet"
     assert event.payload["iva_wallet_divergence"] == "wallet_only"
     assert event.payload["iva_wallet_target_period"] == "2T"
@@ -74,6 +85,141 @@ def test_export_modelo_303_wallet_only_revision_writes_fichero_with_redacted_wal
     assert "1200" not in event_json
     assert "synthetic-modelo-303-export" not in result_json
     assert "synthetic-modelo-303-export" not in event_json
+
+
+def _project_persisted_charge_profile(*, charge_iban: str | None) -> TaxpayerProfile:
+    """Project the stored active profile through its canonical taxpayer boundary."""
+    facts = [
+        UserProfileFact(path="filing_export.iban", value="ES9121000418450200051332"),
+        UserProfileFact(path="filing_export.swift_bic", value="CHASUS33XXX"),
+        UserProfileFact(path="filing_export.bank_name", value="Refund Only Bank"),
+        UserProfileFact(path="filing_export.bank_address", value="Refund Street 1"),
+        UserProfileFact(path="filing_export.bank_city", value="New York"),
+        UserProfileFact(path="filing_export.bank_country_code", value="US"),
+    ]
+    if charge_iban is not None:
+        facts.append(UserProfileFact(path="filing_export.charge_iban", value=charge_iban))
+    workflow_state_repository().update(lambda state: set_active_fields(state, tuple(facts)))
+    persisted = workflow_state_repository().load().active_profile_record()
+    assert persisted is not None
+    profile = projection_for_taxpayer(persisted)
+    assert profile.iva.refund_account is not None
+    assert profile.iva.refund_account.iban == "ES9121000418450200051332"
+    if charge_iban is None:
+        assert profile.iva.charge_account is None
+    else:
+        assert profile.iva.charge_account is not None
+        assert profile.iva.charge_account.iban == charge_iban
+    return profile
+
+
+def test_public_domiciliacion_export_projects_persisted_charge_iban_to_did_only(
+    isolated_backend: None,
+    tmp_path: Path,
+) -> None:
+    """Public export reaches S18's charge-only DID composer from persisted facts."""
+    taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = _build_verified_modelo_303_revision(
+        positive_result=True,
+    )
+    charge_iban = "ES7921000813610123456789"
+    output_path = tmp_path / "modelo-303-direct-debit.txt"
+
+    result = export_modelo_revision(
+        ModeloExportCommand(
+            calculation_revision_id=verified.calculation_revision_id,
+            output_path=output_path,
+            actor="operator",
+            payment_election=PaymentElection.DOMICILIACION,
+        ),
+        workflow_profile=_project_persisted_charge_profile(charge_iban=charge_iban),
+        work_unit_repository=work_repo,
+        calculation_repository=calc_repo,
+        bucket_event_repository=event_repo,
+        clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
+    )
+
+    exported = output_path.read_bytes().decode("latin-1")
+    did_start = exported.index("<T303DID00>")
+    did = exported[did_start : did_start + 823]
+    assert did[22:56].rstrip() == charge_iban
+    assert did[11:22].strip() == ""
+    assert did[56:126].strip() == ""
+    assert did[126:161].strip() == ""
+    assert did[161:191].strip() == ""
+    assert did[191:193].strip() == ""
+    assert "ES9121000418450200051332" not in exported
+    assert "CHASUS33XXX" not in exported
+    assert "Refund Only Bank" not in exported
+
+    assert result.resolved_result_disposition is ResultDisposition.DOMICILIACION
+    assert result.payment_election is PaymentElection.DOMICILIACION
+    assert result.refund_election is None
+    event = event_repo.load().for_bucket(bucket_id, event_types=(BucketEventType.MODELO_EXPORTED,))[-1]
+    assert event.payload["resolved_result_disposition"] == ResultDisposition.DOMICILIACION.value
+    assert event.payload["payment_election"] == PaymentElection.DOMICILIACION.value
+    assert "refund_election" not in event.payload
+    result_json = result.model_dump_json()
+    event_json = event.model_dump_json()
+    assert charge_iban not in result_json
+    assert charge_iban not in event_json
+    assert "ES9121000418450200051332" not in result_json
+    assert "ES9121000418450200051332" not in event_json
+
+
+def test_public_domiciliacion_without_persisted_charge_account_refuses(
+    isolated_backend: None,
+    tmp_path: Path,
+) -> None:
+    """A persisted refund account never becomes a public U debit fallback."""
+    _taxpayer_nif, _bucket_id, verified, work_repo, calc_repo, event_repo = _build_verified_modelo_303_revision(
+        positive_result=True,
+    )
+    output_path = tmp_path / "missing-charge-account.txt"
+
+    with pytest.raises(ModeloChargeAccountMissingError):
+        export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=verified.calculation_revision_id,
+                output_path=output_path,
+                actor="operator",
+                payment_election=PaymentElection.DOMICILIACION,
+            ),
+            workflow_profile=_project_persisted_charge_profile(charge_iban=None),
+            work_unit_repository=work_repo,
+            calculation_repository=calc_repo,
+            bucket_event_repository=event_repo,
+            clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
+        )
+
+    assert not output_path.exists()
+
+
+def test_public_cuenta_corriente_payment_election_is_capability_refused(
+    isolated_backend: None,
+    tmp_path: Path,
+) -> None:
+    """G remains a typed but unavailable capability and never reads a charge account."""
+    _taxpayer_nif, _bucket_id, verified, work_repo, calc_repo, event_repo = _build_verified_modelo_303_revision(
+        positive_result=True,
+    )
+    output_path = tmp_path / "cuenta-corriente.txt"
+
+    with pytest.raises(ModeloPaymentElectionCapabilityRefusedError):
+        export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=verified.calculation_revision_id,
+                output_path=output_path,
+                actor="operator",
+                payment_election=PaymentElection.CUENTA_CORRIENTE,
+            ),
+            workflow_profile=_project_persisted_charge_profile(charge_iban="ES7921000813610123456789"),
+            work_unit_repository=work_repo,
+            calculation_repository=calc_repo,
+            bucket_event_repository=event_repo,
+            clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
+        )
+
+    assert not output_path.exists()
 
 
 def test_export_refuses_existing_directory_output_and_leaves_no_tmp_orphan(

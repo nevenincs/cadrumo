@@ -2,14 +2,17 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Literal
 
 import pytest
 
-from ....core import Period
+from ....core import ObservedHeaderFact, Period, ResultDisposition
 from ....domain.calculations.registry import (
+    CasillaId,
     RegistryModeloObservation,
     RegistryValidationError,
     materialize_relation_binding_values,
@@ -21,7 +24,8 @@ from .._iva_compensation_annual_partition import (
     IvaCompensationAnnualPartitionSourceResolver,
     resolve_iva_compensation_annual_partition_binding_values,
 )
-from .._observations_repository import CalculationObservationRepository
+from .._m303_carry_ingress import M303CarryIngressError
+from .._observations_repository import CalculationObservationRepository, ResultDispositionProjection
 from .._relation_prefill import resolve_relations_from_local_store
 from ._iva_compensation_history_support import (
     _BOX_97_BINDING,
@@ -31,7 +35,9 @@ from ._iva_compensation_history_support import (
     _M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
     _M303_DISPONIBLE_CASILLA,
     _M303_GENERADA_CASILLA,
+    _M303_POSTERIOR_CASILLA,
     _M303_PRINTED_COMPENSATION_REFERENCE_CASILLA,
+    _M303_RESULTADO_CASILLA,
     _M303_RESULTADO_REGIMEN_GENERAL_CASILLA,
     _modelo_390_2026_snapshot,
 )
@@ -40,6 +46,61 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _FIFO_BUCKET_ID = "39039000-0000-4000-8000-000000000097"
 _HISTORY_BUCKET_ID = "39039000-0000-4000-8000-000000000390"
+
+
+def _save_normalized_m303_carry_observation(
+    repository: CalculationObservationRepository,
+    observation: RegistryModeloObservation,
+    *,
+    disposition: ResultDisposition,
+) -> None:
+    """Persist real app-filing carry evidence through the production ingress."""
+    repository.save_observation(
+        observation,
+        source_kind="app_filing",
+        captured_at=datetime(2027, 1, 30, 12, 0, tzinfo=UTC),
+        result_disposition=ResultDispositionProjection(
+            disposition=disposition,
+            provenance_kind="app_filing",
+            provenance_locator=f"test-local-filing:{observation.filing_year}:{observation.period}",
+        ),
+        normalize_m303_carry=True,
+    )
+
+
+def _prepare_m303_carry_envelope(
+    repository: CalculationObservationRepository,
+    *,
+    period: str,
+    casilla_values: Mapping[CasillaId, Decimal],
+    disposition: ResultDisposition | None,
+    source_kind: str = "app_filing",
+    provenance_kind: Literal["source_header", "app_filing"] = "app_filing",
+    source_headers: tuple[ObservedHeaderFact, ...] = (),
+    normalize: bool = True,
+):
+    """Build test filing evidence through the production envelope ingress."""
+    return repository.prepare_observation_envelope(
+        registry_grounded_modelo_observation(
+            modelo="303",
+            filing_year=2026,
+            period=period,
+            casilla_values=casilla_values,
+        ),
+        source_kind=source_kind,
+        captured_at=datetime(2027, 1, 30, 12, 0, tzinfo=UTC),
+        source_headers=source_headers,
+        result_disposition=(
+            ResultDispositionProjection(
+                disposition=disposition,
+                provenance_kind=provenance_kind,
+                provenance_locator=f"test-filing:2026:{period}",
+            )
+            if disposition is not None
+            else None
+        ),
+        normalize_m303_carry=normalize,
+    )
 
 
 def test_modelo_390_carry_boxes_resolve_through_fifo_partition_with_carried_pending(tmp_path: Path) -> None:
@@ -54,27 +115,29 @@ def test_modelo_390_carry_boxes_resolve_through_fifo_partition_with_carried_pend
     per-period relation path.
     """
     quarter_chain = [
-        ("1T", Decimal("100.00"), Decimal("0.00"), Decimal("100.00")),
-        ("2T", Decimal("0.00"), Decimal("30.00"), Decimal("70.00")),
-        ("3T", Decimal("0.00"), Decimal("0.00"), Decimal("70.00")),
-        ("4T", Decimal("50.00"), Decimal("0.00"), Decimal("120.00")),
+        ("1T", Decimal("-100.00"), Decimal("100.00"), Decimal("0.00"), Decimal("0.00"), Decimal("100.00")),
+        ("2T", Decimal("-10.00"), Decimal("0.00"), Decimal("30.00"), Decimal("70.00"), Decimal("70.00")),
+        ("3T", Decimal("-10.00"), Decimal("0.00"), Decimal("0.00"), Decimal("70.00"), Decimal("70.00")),
+        ("4T", Decimal("-50.00"), Decimal("50.00"), Decimal("0.00"), Decimal("70.00"), Decimal("120.00")),
     ]
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_FIFO_BUCKET_ID):
         observation_repo = CalculationObservationRepository()
-        for period, generada, aplicada, disponible in quarter_chain:
-            observation_repo.save_observation(
+        for period, resultado, generada, aplicada, posterior, disponible in quarter_chain:
+            _save_normalized_m303_carry_observation(
+                observation_repo,
                 registry_grounded_modelo_observation(
                     modelo="303",
                     filing_year=2026,
                     period=period,
                     casilla_values={
+                        _M303_RESULTADO_CASILLA: resultado,
                         _M303_GENERADA_CASILLA: generada,
                         _M303_COMPENSACION_APLICADA_CASILLA: aplicada,
+                        _M303_POSTERIOR_CASILLA: posterior,
                         _M303_DISPONIBLE_CASILLA: disponible,
                     },
                 ),
-                source_kind="app_filing",
-                captured_at=datetime(2027, 1, 30, 12, 0, tzinfo=UTC),
+                disposition=ResultDisposition.COMPENSACION,
             )
 
         snapshot = _modelo_390_2026_snapshot()
@@ -91,7 +154,7 @@ def test_modelo_390_carry_boxes_resolve_through_fifo_partition_with_carried_pend
             ),
         )
 
-    _4t_disponible = quarter_chain[-1][3]
+    _4t_disponible = quarter_chain[-1][5]
     assert resolution.binding_values[_BOX_97_BINDING] == _4t_disponible
     assert resolution.binding_values[_BOX_662_BINDING] == Decimal("0.00")
     assert resolution.relation_values == {}
@@ -117,7 +180,8 @@ def test_modelo_390_compensation_bindings_resolve_from_secure_iva_history(tmp_pa
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_HISTORY_BUCKET_ID):
         observation_repo = CalculationObservationRepository()
         for period, devengada, deducible, regimen_general, compensacion in quarter_data:
-            observation_repo.save_observation(
+            _save_normalized_m303_carry_observation(
+                observation_repo,
                 registry_grounded_modelo_observation(
                     modelo="303",
                     filing_year=2026,
@@ -126,11 +190,11 @@ def test_modelo_390_compensation_bindings_resolve_from_secure_iva_history(tmp_pa
                         _M303_CUOTA_DEVENGADA_TOTAL_CASILLA: devengada,
                         _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: deducible,
                         _M303_RESULTADO_REGIMEN_GENERAL_CASILLA: regimen_general,
+                        _M303_RESULTADO_CASILLA: Decimal("-1.00"),
                         _M303_GENERADA_CASILLA: compensacion,
                     },
                 ),
-                source_kind="app_filing",
-                captured_at=datetime(2027, 1, 30, 12, 0, tzinfo=UTC),
+                disposition=ResultDisposition.COMPENSACION,
             )
 
         snapshot = _modelo_390_2026_snapshot()
@@ -175,25 +239,184 @@ def test_modelo_390_compensation_bindings_resolve_from_secure_iva_history(tmp_pa
 
 def test_relation_prefill_fifo_state_refuses_printed_number_compensation_references() -> None:
     snapshot = _modelo_390_2026_snapshot()
+    repository = CalculationObservationRepository()
     generated_observation = registry_grounded_observations(
         modelo="303",
         filing_year=2026,
         period="4T",
-        casilla_values={_M303_GENERADA_CASILLA: Decimal("50.00")},
+        casilla_values={
+            _M303_RESULTADO_CASILLA: Decimal("-50.00"),
+            _M303_GENERADA_CASILLA: Decimal("50.00"),
+        },
     )[0]
-    observation = RegistryModeloObservation(
+    valid_observation = RegistryModeloObservation(
         modelo="303",
         filing_year=2026,
         period="4T",
-        observations=(
-            generated_observation,
-            generated_observation.model_copy(update={"casilla_id": _M303_PRINTED_COMPENSATION_REFERENCE_CASILLA}),
-        ),
+        observations=(generated_observation,),
     )
+    envelope = repository.prepare_observation_envelope(
+        valid_observation,
+        source_kind="app_filing",
+        result_disposition=ResultDispositionProjection(
+            disposition=ResultDisposition.COMPENSACION,
+            provenance_kind="app_filing",
+            provenance_locator="test-local-filing:2026:4T",
+        ),
+        normalize_m303_carry=True,
+    )
+    observation = envelope.observation.model_copy(
+        update={
+            "observations": (
+                *envelope.observation.observations,
+                generated_observation.model_copy(update={"casilla_id": _M303_PRINTED_COMPENSATION_REFERENCE_CASILLA}),
+            ),
+        },
+    )
+    invalid_envelope = envelope.model_copy(update={"observation": observation})
 
     with pytest.raises(RegistryValidationError, match=r"canonical casilla\.id"):
         resolve_iva_compensation_annual_partition_binding_values(
             snapshot.revision,
-            (observation,),
+            (invalid_envelope,),
+            filing_year=2026,
+        )
+
+
+def test_annual_partition_reader_refuses_a_persisted_available_generated_pair_mismatch(tmp_path: Path) -> None:
+    """The FIFO reader independently rejects a pair changed after ingress."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_FIFO_BUCKET_ID):
+        repository = CalculationObservationRepository()
+        envelope = _prepare_m303_carry_envelope(
+            repository,
+            period="4T",
+            casilla_values={
+                _M303_RESULTADO_CASILLA: Decimal("-25.00"),
+                _M303_GENERADA_CASILLA: Decimal("25.00"),
+            },
+            disposition=ResultDisposition.COMPENSACION,
+        )
+        mismatched_observation = envelope.observation.model_copy(
+            update={
+                "observations": tuple(
+                    observation.model_copy(update={"value": Decimal("99.00")})
+                    if observation.casilla_id == _M303_DISPONIBLE_CASILLA
+                    else observation
+                    for observation in envelope.observation.observations
+                ),
+            },
+        )
+        repository.save(envelope.model_copy(update={"observation": mismatched_observation}))
+        snapshot = _modelo_390_2026_snapshot()
+
+        with pytest.raises(M303CarryIngressError):
+            IvaCompensationAnnualPartitionSourceResolver(
+                repository=repository,
+                registry_snapshot=snapshot,
+            ).resolve(
+                CalculationSourceContext(
+                    bucket_id=_FIFO_BUCKET_ID,
+                    modelo="390",
+                    filing_year=2026,
+                    period=Period.from_year_and_code(2026, "0A"),
+                    revision=snapshot.revision,
+                ),
+            )
+
+
+def test_annual_partition_keeps_refunded_credit_out_of_both_m390_carry_boxes() -> None:
+    """Identical negative results diverge only by the filed C/D disposition."""
+    repository = CalculationObservationRepository()
+    input_values = {
+        _M303_RESULTADO_CASILLA: Decimal("-25.00"),
+        _M303_GENERADA_CASILLA: Decimal("25.00"),
+    }
+    carried = _prepare_m303_carry_envelope(
+        repository,
+        period="4T",
+        casilla_values=input_values,
+        disposition=ResultDisposition.COMPENSACION,
+    )
+    refunded = _prepare_m303_carry_envelope(
+        repository,
+        period="4T",
+        casilla_values=input_values,
+        disposition=ResultDisposition.DEVOLUCION,
+    )
+    snapshot = _modelo_390_2026_snapshot()
+
+    carried_values = resolve_iva_compensation_annual_partition_binding_values(
+        snapshot.revision,
+        (carried,),
+        filing_year=2026,
+    )
+    refunded_values = resolve_iva_compensation_annual_partition_binding_values(
+        snapshot.revision,
+        (refunded,),
+        filing_year=2026,
+    )
+
+    assert carried_values[_BOX_97_BINDING] == Decimal("25.00")
+    assert carried_values[_BOX_662_BINDING] == Decimal("0.00")
+    assert refunded_values[_BOX_97_BINDING] == Decimal("0.00")
+    assert refunded_values[_BOX_662_BINDING] == Decimal("0.00")
+
+
+def test_annual_partition_refuses_legacy_and_conflicting_disposition_evidence(tmp_path: Path) -> None:
+    """Missing or conflicting filing disposition cannot participate in FIFO."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_FIFO_BUCKET_ID):
+        repository = CalculationObservationRepository()
+        legacy = _prepare_m303_carry_envelope(
+            repository,
+            period="4T",
+            casilla_values={
+                _M303_RESULTADO_CASILLA: Decimal("-25.00"),
+                _M303_GENERADA_CASILLA: Decimal("25.00"),
+            },
+            disposition=None,
+            normalize=False,
+        )
+        repository.save(legacy)
+        snapshot = _modelo_390_2026_snapshot()
+
+        with pytest.raises(M303CarryIngressError):
+            IvaCompensationAnnualPartitionSourceResolver(
+                repository=repository,
+                registry_snapshot=snapshot,
+            ).resolve(
+                CalculationSourceContext(
+                    bucket_id=_FIFO_BUCKET_ID,
+                    modelo="390",
+                    filing_year=2026,
+                    period=Period.from_year_and_code(2026, "0A"),
+                    revision=snapshot.revision,
+                ),
+            )
+
+    conflicting = _prepare_m303_carry_envelope(
+        CalculationObservationRepository(),
+        period="4T",
+        casilla_values={
+            _M303_RESULTADO_CASILLA: Decimal("-25.00"),
+            _M303_GENERADA_CASILLA: Decimal("25.00"),
+        },
+        disposition=ResultDisposition.COMPENSACION,
+        source_kind="aeat_sede_live_capture",
+        provenance_kind="source_header",
+        source_headers=(
+            ObservedHeaderFact(
+                header_key="declaration_type",
+                value="D",
+                source_artefact_kind="submitted_file",
+                source_locator="modelo-303:test:declaration_type:13:1",
+            ),
+        ),
+        normalize=False,
+    )
+
+    with pytest.raises(M303CarryIngressError):
+        resolve_iva_compensation_annual_partition_binding_values(
+            _modelo_390_2026_snapshot().revision,
+            (conflicting,),
             filing_year=2026,
         )

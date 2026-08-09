@@ -44,8 +44,6 @@ from datetime import date
 from decimal import Decimal
 from typing import Final, Protocol
 
-from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import Modelo
 from ...core import Period as _Period
 from ...core.i18n import tr
@@ -60,17 +58,21 @@ from ...domain.calculations.registry import (
 from ...domain.iva_compensation import IvaCompensationReconciliationDecision
 from ...domain.modelos import (
     CalculationRevision,
-    CalculationRevisionCatalogueRepositoryProtocol,
-    CalculationRevisionState,
     ModeloError,
     WorkUnit,
-    WorkUnitCatalogueRepositoryProtocol,
 )
 from ..calculations import (
     M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
     M303_DISPONIBLE_CASILLA,
+    CalculationObservationRepository,
     IvaWalletDecisionRepository,
+    LocalIvaCompensationRecurrence,
 )
+from ..calculations._m303_carry_ingress import (
+    M303CarryIngressError,
+    validate_normalized_m303_carry_observation_envelope,
+)
+from ..calculations._revision_carry_gate import revision_carry_outcome
 
 
 class _IvaWalletBlockedDecision(Protocol):
@@ -109,8 +111,6 @@ def resolve_iva_compensation_decision_for_calculation(
     snapshot: RegistrySnapshot,
     supplied_decision: object | None,
     repository: IvaWalletDecisionRepository | None,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     binding_values: Mapping[BindingId, Decimal] | None,
     backend_binding_values: Mapping[BindingId, Decimal] | None,
     casilla_inputs: Mapping[CasillaId, Decimal] | None,
@@ -132,13 +132,11 @@ def resolve_iva_compensation_decision_for_calculation(
     if supplied_decision is None:
         persisted = load_persisted_iva_compensation_decision_for_work_unit(work_unit, repository=repository)
         if persisted is not None:
-            persisted = _refresh_first_period_zero_decision_if_local_evidence_changed(
+            persisted = _refresh_local_iva_compensation_decision_if_evidence_changed(
                 work_unit,
                 snapshot=snapshot,
                 decision=persisted,
                 repository=repository,
-                work_unit_repository=work_unit_repository,
-                calculation_repository=calculation_repository,
             )
             return _require_first_period_zero_decision_grounded(work_unit, snapshot, persisted)
         if caller_supplied_prior_compensation_value(
@@ -157,8 +155,6 @@ def resolve_iva_compensation_decision_for_calculation(
                 work_unit,
                 snapshot=snapshot,
                 repository=repository,
-                work_unit_repository=work_unit_repository,
-                calculation_repository=calculation_repository,
                 persist=False,
             )
             if decision is not None and not _decision_is_missing_local_authority(decision):
@@ -177,8 +173,6 @@ def resolve_iva_compensation_decision_for_calculation(
             work_unit,
             snapshot=snapshot,
             repository=repository,
-            work_unit_repository=work_unit_repository,
-            calculation_repository=calculation_repository,
         )
     return require_persisted_iva_compensation_decision_for_work_unit(
         work_unit,
@@ -457,29 +451,49 @@ def _decision_is_first_period_zero(decision: object) -> bool:
     return str(getattr(decision, "divergence", "")) == "first_period_zero"
 
 
-def _refresh_first_period_zero_decision_if_local_evidence_changed(
+def _refresh_local_iva_compensation_decision_if_evidence_changed(
     work_unit: WorkUnit,
     *,
     snapshot: RegistrySnapshot,
     decision: IvaCompensationReconciliationDecision,
     repository: IvaWalletDecisionRepository | None,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None,
 ) -> IvaCompensationReconciliationDecision:
-    if not _decision_is_first_period_zero(decision):
+    if not (
+        _decision_is_first_period_zero(decision)
+        or _decision_is_missing_local_authority(decision)
+        or _decision_uses_observation_envelope_recurrence(decision)
+    ):
         return decision
     refreshed = lazily_reconcile_local_iva_compensation_for_work_unit(
         work_unit,
         snapshot=snapshot,
         repository=repository,
-        work_unit_repository=work_unit_repository,
-        calculation_repository=calculation_repository,
         persist=False,
     )
     if refreshed is None or _decision_replay_basis(refreshed) == _decision_replay_basis(decision):
         return decision
     _save_iva_compensation_decision(refreshed, repository=repository)
     return refreshed
+
+
+def _decision_uses_observation_envelope_recurrence(decision: object) -> bool:
+    """Whether a decision must revalidate the prior filed-envelope recurrence.
+
+    A local envelope recurrence can be superseded or found invalid on a later
+    encrypted read. Replay only re-evaluates the selected local filed-history
+    authority, never a settled live-wallet or taxpayer-override decision whose
+    arbitrary evidence locator might share this textual prefix.
+    """
+    if str(getattr(decision, "selected_authority", "")) not in {
+        "local_recurrence",
+        "filed_history",
+    }:
+        return False
+    return any(
+        str(getattr(source, "source_kind", "")) in {"local_recurrence", "filed_history_observation"}
+        and str(getattr(source, "source_locator", "")).startswith("observation-envelope:")
+        for source in getattr(decision, "authority_sources", ()) or ()
+    )
 
 
 def _decision_replay_basis(decision: IvaCompensationReconciliationDecision) -> tuple[object, ...]:
@@ -606,8 +620,6 @@ def lazily_reconcile_local_iva_compensation_for_work_unit(
     *,
     snapshot: RegistrySnapshot,
     repository: IvaWalletDecisionRepository | None = None,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     persist: bool = True,
 ) -> IvaCompensationReconciliationDecision | None:
     """Auto-derive and persist the local-authority Modelo 303 compensation decision.
@@ -637,12 +649,14 @@ def lazily_reconcile_local_iva_compensation_for_work_unit(
         taxpayer_nif=taxpayer_nif,
         wallet=None,
         decision_repository=repository,
-        fallback_local_recurrence=_calculated_revision_local_iva_compensation_recurrence(
+        local_recurrence=_validated_observation_envelope_local_iva_compensation_recurrence(
             work_unit,
             snapshot=snapshot,
-            work_unit_repository=work_unit_repository,
-            calculation_repository=calculation_repository,
         ),
+        # The generic previous-filing reader can still read legacy envelopes for
+        # unrelated consumers. The lazy Modelo 303 wallet gate instead admits
+        # only the explicit disposition-aware envelope recurrence below.
+        use_repository_local_recurrence=False,
         # Missing local recurrence proves a zero only when the profile's
         # activity-start date scopes every Modelo 303 prior-compensation
         # dependency out as pre-activity. Otherwise the reconciliation must keep
@@ -653,19 +667,18 @@ def lazily_reconcile_local_iva_compensation_for_work_unit(
     return report.decision
 
 
-def _calculated_revision_local_iva_compensation_recurrence(
+def _validated_observation_envelope_local_iva_compensation_recurrence(
     work_unit: WorkUnit,
     *,
     snapshot: RegistrySnapshot,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None,
-):
-    """Return prior-period calculated M303 carry evidence for wallet reconciliation.
+) -> LocalIvaCompensationRecurrence | None:
+    """Return only validated filed M303 envelope recurrence for the wallet gate.
 
-    This fallback is deliberately recurrence evidence only: the returned value is
-    fed through the IVA wallet decision path. A zero amount can unblock the next
-    period because no compensation is applied; a non-zero amount still becomes a
-    blocked local-recurrence decision unless wallet evidence or an override exists.
+    A prior calculation revision records a local calculation, not the filed
+    declaration's disposition. It therefore cannot establish this recurrence.
+    Missing, legacy, revision-refused, or disposition-conflicting envelopes
+    deliberately return no evidence, allowing the normal wallet gate to block
+    rather than select an invented carry amount.
     """
     requirements = tuple(
         requirement
@@ -685,46 +698,41 @@ def _calculated_revision_local_iva_compensation_recurrence(
         if requirement.filing_periods
         else _Period.from_year_and_code(requirement.filing_year, requirement.periods[0])
     )
-    wu_repo = work_unit_repository if work_unit_repository is not None else WorkUnitCatalogueRepository()
-    calc_repo = (
-        calculation_repository if calculation_repository is not None else CalculationRevisionCatalogueRepository()
-    )
-    calculation_catalogue = calc_repo.load()
-    matching_work_units = sorted(
-        (
-            candidate
-            for candidate in wu_repo.load().values()
-            if candidate.bucket_id == work_unit.bucket_id
-            and candidate.modelo == Modelo.M303
-            and candidate.filing_year == requirement.filing_year
-            and candidate.period == source_period
+    payload = CalculationObservationRepository().load_observation(Modelo.M303.value, source_period)
+    if payload is None:
+        return None
+    observation = payload.observation
+    if (
+        observation.filing_year != requirement.filing_year
+        or observation.period != source_period.registry_token
+        or revision_carry_outcome(
+            payload.stamped_revision_id,
+            source_modelo=observation.modelo,
+            source_filing_year=observation.filing_year,
+            source_period=observation.period,
+        ).refused
+    ):
+        return None
+    try:
+        validated = validate_normalized_m303_carry_observation_envelope(payload)
+    except M303CarryIngressError:
+        return None
+    amount = validated.observation.casilla_values.get(_M303_AVAILABLE_COMPENSATION_CASILLA_ID)
+    if amount is None:
+        return None
+    return LocalIvaCompensationRecurrence(
+        binding_id=_M303_PRIOR_COMPENSATION_BINDING_ID,
+        amount=amount,
+        source_kind=str(validated.source_kind),
+        source_modelo=Modelo.M303.value,
+        source_filing_year=requirement.filing_year,
+        source_periods=(source_period,),
+        resolved_at=validated.captured_at,
+        source_locator=(
+            "observation-envelope:"
+            f"{Modelo.M303.value}:{source_period.filing_year}:{source_period.registry_token}"
         ),
-        key=lambda candidate: candidate.updated_at,
-        reverse=True,
     )
-    from ..calculations import LocalIvaCompensationRecurrence
-
-    for source_work_unit in matching_work_units:
-        revision_id = source_work_unit.filed_calculation_revision_id or source_work_unit.current_calculation_revision_id
-        if revision_id is None:
-            continue
-        revision = calculation_catalogue.get(revision_id)
-        if revision is None or revision.state is CalculationRevisionState.DESCARTADO:
-            continue
-        amount = revision.casilla_values.get(_M303_AVAILABLE_COMPENSATION_CASILLA_ID)
-        if amount is None:
-            continue
-        return LocalIvaCompensationRecurrence(
-            binding_id=_M303_PRIOR_COMPENSATION_BINDING_ID,
-            amount=Decimal(amount),
-            source_kind="calculated_revision",
-            source_modelo=Modelo.M303.value,
-            source_filing_year=requirement.filing_year,
-            source_periods=(source_period,),
-            resolved_at=revision.updated_at,
-            source_locator=f"calculation_revision:{revision.calculation_revision_id}",
-        )
-    return None
 
 
 def require_persisted_iva_compensation_decision_matches_revision(

@@ -46,7 +46,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Period, RefundElection
+from ...core import PaymentElection, Period, RefundElection
 from ...core.errors import CadrumoError
 from ...core.logging import get_logger
 from ...domain.deadlines import TaxpayerProfile
@@ -179,6 +179,7 @@ class QuickfileCommand(BaseModel):
     output_path: Path
     actor: str
     refund_election: RefundElection = RefundElection.COMPENSAR
+    payment_election: PaymentElection = PaymentElection.INGRESO
 
 
 def _refusal_outcome(stage: QuickfileStage, exc: CadrumoError) -> QuickfileStageOutcome:
@@ -379,6 +380,7 @@ def run_modelo_quickfile(
                 output_path=command.output_path,
                 actor=command.actor,
                 refund_election=command.refund_election,
+                payment_election=command.payment_election,
             ),
             workflow_profile=workflow_profile,
         )

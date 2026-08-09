@@ -33,6 +33,8 @@ from ...application.modelo import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     ModeloCalculationRevisionSelector,
+    ModeloPaymentElectionCapabilityRefusedError,
+    ModeloPaymentElectionIncompatibleError,
     ModeloRefundElectionNotEligibleError,
     ModeloVerifySelector,
     WorkUnitNotFoundError,
@@ -41,7 +43,7 @@ from ...application.modelo import (
     verify_modelo_revision,
 )
 from ...application.workflow import workflow_state_repository
-from ...core import RefundElection
+from ...core import PaymentElection, RefundElection
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
@@ -466,13 +468,20 @@ def _register_work_file_command(work_app: typer.Typer, *, deps: _VerificationDep
             str | None,
             typer.Option("--notes", help=tr("cli.app.modelo.work.notes_help")),
         ] = None,
-        disposition: Annotated[
+        refund_election: Annotated[
             RefundElection,
             typer.Option(
-                "--disposition",
-                help=tr("cli.app.modelo.work.disposition_help"),
+                "--refund-election",
+                help=tr("cli.app.modelo.work.refund_election_help"),
             ),
         ] = RefundElection.COMPENSAR,
+        payment_election: Annotated[
+            PaymentElection,
+            typer.Option(
+                "--payment-election",
+                help=tr("cli.app.modelo.work.payment_election_help"),
+            ),
+        ] = PaymentElection.INGRESO,
         output_language: OutputLanguage | None = typer.Option(
             None,
             "--output-language",
@@ -507,7 +516,8 @@ def _register_work_file_command(work_app: typer.Typer, *, deps: _VerificationDep
                 actor=actor or deps.resolve_default_actor(),
                 workflow_profile=workflow_profile,
                 notes=notes,
-                refund_election=disposition,
+                refund_election=refund_election,
+                payment_election=payment_election,
             )
         except CalculationRevisionNotFoundError as exc:
             if calculation_revision_id is not None:
@@ -515,6 +525,8 @@ def _register_work_file_command(work_app: typer.Typer, *, deps: _VerificationDep
             raise deps.bad_parameter_from_error(exc) from exc
         except (
             CalculationRevisionStateError,
+            ModeloPaymentElectionCapabilityRefusedError,
+            ModeloPaymentElectionIncompatibleError,
             ModeloRefundElectionNotEligibleError,
             WorkUnitNotFoundError,
         ) as exc:

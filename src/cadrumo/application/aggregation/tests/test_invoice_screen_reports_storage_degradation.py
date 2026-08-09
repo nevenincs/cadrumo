@@ -33,7 +33,7 @@ import pytest
 
 from ....core import Period
 from ....core.resources import resources
-from ....domain.invoices import InvoicePersistenceError
+from ....domain.invoices import InvoiceCatalogue, InvoicePersistenceError
 from .._modelo_bindings import (
     CalculationSourceContext,
     _raise_if_invoice_iva_would_be_silent,
@@ -55,9 +55,17 @@ class _UnreadableInvoiceCatalogue:
     screen catches.
     """
 
-    bucket_id = "29292929-2929-4929-8929-292929292929"
+    bucket_id: str = "29292929-2929-4929-8929-292929292929"
 
-    def load(self):
+    def exists(self) -> bool:
+        # It exists. That is the whole distinction under test: absent and
+        # unreadable are different answers, and only one of them is degradation.
+        return True
+
+    def load(self) -> InvoiceCatalogue:
+        raise InvoicePersistenceError("invoice catalogue envelope could not be decrypted")
+
+    def save(self, catalogue: InvoiceCatalogue) -> None:
         raise InvoicePersistenceError("invoice catalogue envelope could not be decrypted")
 
 
@@ -122,12 +130,16 @@ def test_a_readable_empty_catalogue_is_not_reported_as_degraded() -> None:
     """
 
     class _EmptyCatalogue:
-        bucket_id = _UnreadableInvoiceCatalogue.bucket_id
+        bucket_id: str = _UnreadableInvoiceCatalogue.bucket_id
 
-        def load(self):
-            from ....domain.invoices import InvoiceCatalogue
+        def exists(self) -> bool:
+            return False
 
+        def load(self) -> InvoiceCatalogue:
             return InvoiceCatalogue.model_validate({})
+
+        def save(self, catalogue: InvoiceCatalogue) -> None:
+            raise NotImplementedError("the screen under test reads the catalogue and never writes it")
 
     screened = _screened_invoice_iva_observations(
         context=_context(),

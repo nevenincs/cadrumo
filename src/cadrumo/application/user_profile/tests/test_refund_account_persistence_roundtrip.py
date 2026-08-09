@@ -1,4 +1,4 @@
-"""Encrypted-SQL persistence-boundary roundtrip for the refund-account facts.
+"""Encrypted-SQL persistence boundary for separate Modelo 303 bank accounts.
 
 The Modelo 303 cuenta-devolución refund account AEAT pays a refund into
 is SENSITIVE FINANCIAL IDENTITY DATA: per the
@@ -11,7 +11,7 @@ plaintext, logs, or a side store.
 This file locks the secure-storage boundary for those new financial
 fields with the discipline ``aeat-quality-gates`` mandates:
 
-- A populated roundtrip: every refund-account fact at a NON-DEFAULT
+- A populated roundtrip: every refund-account and charge-account fact at a NON-DEFAULT
   value survives a real encrypted save/load cycle with strict pydantic
   equality on the full :class:`UserProfileRecord`, plus per-fact
   witnesses.
@@ -19,7 +19,7 @@ fields with the discipline ``aeat-quality-gates`` mandates:
   the persisted IBAN fact, reloaded through the real decrypt/parse
   pipeline, surfaces strict inequality — proving the load side genuinely
   reads the persisted IBAN rather than re-deriving the save-side value.
-- The :class:`RefundAccount` domain-model IBAN field validator rejects a
+- The :class:`RefundAccount` and :class:`ChargeAccount` domain-model IBAN field validators reject a
   malformed IBAN at the boundary (ISO 13616 shape + mod-97), so a
   malformed account is refused on input rather than at fichero-write
   time, and accepts a known-valid IBAN canonicalised.
@@ -41,13 +41,14 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.storage import SensitivityClass
-from ....domain.deadlines import DeadlineValidationError, RefundAccount
+from ....domain.deadlines import ChargeAccount, DeadlineValidationError, RefundAccount
 from ....domain.user_profile import (
     UserProfileFact,
     UserProfileRecord,
     UserProfileStatus,
 )
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from .._projections import projection_for_taxpayer
 from .._repository import (
     USER_PROFILE_VALUE_NAMESPACE,
     UserProfileLifecycleRepository,
@@ -64,6 +65,7 @@ _PROFILE_UUID = "3f1c8d2a-7b4e-4a6c-8d9f-1e2a3b4c5d6e"
 # both as the persisted refund-account fact and as the known-valid input
 # to the RefundAccount IBAN validator.
 _IBAN_VALUE = "ES9121000418450200051332"
+_CHARGE_IBAN_VALUE = "ES7921000813610123456789"
 
 # Every refund-account fact carries a NON-DEFAULT value so a
 # save-drops-field / load-re-defaults-field regression surfaces as
@@ -83,6 +85,7 @@ _REFUND_ACCOUNT_FACTS: tuple[UserProfileFact, ...] = (
     UserProfileFact(path="filing_export.bank_address", value="383 Madison Avenue", source="manual_cli"),
     UserProfileFact(path="filing_export.bank_city", value="New York", source="manual_cli"),
     UserProfileFact(path="filing_export.bank_country_code", value="US", source="manual_cli"),
+    UserProfileFact(path="filing_export.charge_iban", value=_CHARGE_IBAN_VALUE, source="manual_cli"),
 )
 
 
@@ -135,10 +138,10 @@ def _fact_value(record: UserProfileRecord, path: str) -> object:
     return matches[0]
 
 
-def test_refund_account_facts_survive_encrypted_sql_roundtrip(
+def test_separate_bank_account_facts_survive_encrypted_sql_roundtrip(
     lifecycle: UserProfileLifecycleRepository,
 ) -> None:
-    """Every refund-account financial fact survives the real encrypted-SQL cycle.
+    """Separate refund and charge facts survive the real encrypted-SQL cycle.
 
     Persists a populated :class:`UserProfileRecord` carrying the IBAN,
     SWIFT-BIC, and the full foreign-bank block at non-default values,
@@ -155,14 +158,26 @@ def test_refund_account_facts_survive_encrypted_sql_roundtrip(
     # Strict pydantic equality across the full lifecycle record.
     assert loaded == original
 
-    # Per-fact witnesses: every refund-account financial field survives
-    # the encrypted boundary with its exact persisted string value.
+    # Per-fact witnesses: every refund-only field and the distinct debit IBAN
+    # survive the encrypted boundary with their exact persisted string value.
     assert _fact_value(loaded, "filing_export.iban") == _IBAN_VALUE
     assert _fact_value(loaded, "filing_export.swift_bic") == "CHASUS33XXX"
     assert _fact_value(loaded, "filing_export.bank_name") == "J.P. Morgan Chase Bank"
     assert _fact_value(loaded, "filing_export.bank_address") == "383 Madison Avenue"
     assert _fact_value(loaded, "filing_export.bank_city") == "New York"
     assert _fact_value(loaded, "filing_export.bank_country_code") == "US"
+    assert _fact_value(loaded, "filing_export.charge_iban") == _CHARGE_IBAN_VALUE
+
+    # The canonical application projection reconstructs two distinct domain
+    # concepts from the encrypted facts. The refund's non-SEPA bank metadata
+    # does not bleed into the debit authority, and the two IBANs remain distinct.
+    profile = projection_for_taxpayer(loaded)
+    assert profile.iva.refund_account is not None
+    assert profile.iva.refund_account.iban == _IBAN_VALUE
+    assert profile.iva.refund_account.swift_bic == "CHASUS33XXX"
+    assert profile.iva.charge_account is not None
+    assert profile.iva.charge_account.iban == _CHARGE_IBAN_VALUE
+    assert profile.iva.charge_account.iban != profile.iva.refund_account.iban
 
 
 def test_corrupting_the_persisted_iban_surfaces_on_reload(
@@ -293,3 +308,16 @@ class TestRefundAccountIbanValidator:
         """
         with pytest.raises(DeadlineValidationError, match="mod-97"):
             RefundAccount._validate_iban("ES9921000418450200051332")
+
+
+class TestChargeAccountIbanValidator:
+    """A debit instruction requires a present, structurally valid IBAN."""
+
+    def test_valid_iban_is_canonicalised(self) -> None:
+        account = ChargeAccount(iban="es79 2100-0813 6101 2345 6789")
+        assert account.iban == _CHARGE_IBAN_VALUE
+
+    @pytest.mark.parametrize("invalid", ["", "   ", "ES7921000813610123456788"])
+    def test_blank_or_malformed_iban_is_refused(self, invalid: str) -> None:
+        with pytest.raises(ValidationError):
+            ChargeAccount(iban=invalid)

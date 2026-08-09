@@ -218,6 +218,19 @@ class ModeloRefundElectionNotEligibleError(ModeloError):
     """
 
 
+class ModeloPaymentElectionIncompatibleError(ModeloError):
+    """Raised when a non-default payment election contradicts the result sign."""
+
+
+class ModeloPaymentElectionCapabilityRefusedError(ModeloError):
+    """Raised when a canonical payment election lacks a grounded capability.
+
+    ``CUENTA_CORRIENTE`` remains typed so its future capability does not fork
+    the contract, but is refused until officially grounded. It never infers or
+    reuses a charge account.
+    """
+
+
 class ModeloRefundAccountMissingError(ModeloError):
     """Raised when a refund-disposition export has no refund account on file.
 
@@ -231,6 +244,17 @@ class ModeloRefundAccountMissingError(ModeloError):
     the profile, or carry the credit forward (``compensar``) instead of
     requesting a refund. This is the no-silent-under-declaration sibling of the
     election's eligibility refusal.
+    """
+
+
+class ModeloChargeAccountMissingError(ModeloError):
+    """Raised when a domiciliación export has no charge account on file.
+
+    A ``U`` declaration instructs AEAT to debit the taxpayer's account. The
+    DID page therefore needs the separately recorded charge-account IBAN; a
+    refund account is a destination for payments from AEAT and cannot satisfy
+    a debit instruction. The export refuses rather than falling back to that
+    separate account or writing an empty account page.
     """
 
 
@@ -260,8 +284,11 @@ __all__ = [
     "ExternalModeloImportError",
     "ModeloAggregationBindingError",
     "ModeloApplicabilityFilterError",
+    "ModeloChargeAccountMissingError",
     "ModeloCrossPeriodCleanStateError",
     "ModeloLocalObservationError",
+    "ModeloPaymentElectionCapabilityRefusedError",
+    "ModeloPaymentElectionIncompatibleError",
     "ModeloProfileReadinessError",
     "ModeloRecordNotFoundError",
     "ModeloRefundAccountMissingError",

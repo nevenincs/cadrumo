@@ -962,25 +962,54 @@ def _profile_not_ready_check(
     missing_required = tuple(f for f in unset_findings if f.requirement == "required")
     if not missing_required:
         missing_required = tuple(
-            DiagnosticFinding(summary=key, requirement="required") for key in report.missing_required
+            DiagnosticFinding(summary=_grounded_profile_key_summary(key), requirement="required")
+            for key in report.missing_required
         )
     already_named = {finding.summary.split(" — ", 1)[0] for finding in missing_required}
     enrolment_findings = tuple(
-        DiagnosticFinding(summary=key, requirement="required")
+        DiagnosticFinding(summary=_grounded_profile_key_summary(key), requirement="required")
         for key in report.missing_enrolment
         if key not in already_named
     )
+    findings = missing_required + enrolment_findings
     return DiagnosticCheck(
         name="profile.readiness",
         status="warn",
         summary=tr(
-            "cli.diagnostics.summary.profile_missing_keys",
-            default="Profile is missing %{count} required key(s)",
-            count=len(missing_required) + len(enrolment_findings),
+            "cli.diagnostics.summary.profile_missing_fields",
+            default="Profile is missing %{count} required field(s): %{fields}",
+            count=len(findings),
+            fields=", ".join(finding.summary for finding in findings),
         ),
         next_action=_PROFILE_EDIT_COMMAND,
-        findings=missing_required + enrolment_findings,
+        findings=findings,
     )
+
+
+def _grounded_profile_key_summary(key: str) -> str:
+    """Render a bare profile key path as "path - label", or unchanged.
+
+    The fallback branch above reads keys straight off the wizard report, which
+    carries canonical paths and no labels, while the primary branch already
+    emits the labelled form. Without this the operator's diagnostics would
+    name the same field two different ways depending on which branch produced
+    it, and the fallback way would be a raw dotted path.
+
+    The path is retained ahead of the label because the enrolment de-duplication
+    above splits on the separator to compare paths, and because the path is what
+    an operator types at the profile editor.
+
+    A key the schema does not resolve is returned unchanged rather than
+    guessed at.
+    """
+    from ..core.resources import resources
+    from .user_profile import build_profile_preflight_requirement
+
+    schema = resources().user_profile_schema.singleton
+    requirement = build_profile_preflight_requirement(key, schema=schema)
+    if requirement.label == key:
+        return key
+    return f"{key} — {requirement.label}"
 
 
 def _auth_unavailable_check(health: ActiveProfileHealth) -> DiagnosticCheck:

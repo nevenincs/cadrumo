@@ -62,6 +62,8 @@ from .._filed_observation_persistence import (
 )
 from ._filed_capture_history_support import (
     _CAPTURED_AT,
+    _M303_DECLARATION_TYPE_C,
+    _M303_DECLARATION_TYPE_I,
     _M303_DISPONIBLE_CASILLA,
     _M303_GENERADA_CASILLA,
     _M303_POSTERIOR_CASILLA,
@@ -866,6 +868,7 @@ def test_filed_303_capture_persists_secure_iva_compensation_history(tmp_path: Pa
                 result=period_result,
                 final_result=final_result,
                 expediente_id=_SYNTHETIC_EXPEDIENTE_ID,
+                headers=(_M303_DECLARATION_TYPE_C,),
             ),
         )
 
@@ -908,6 +911,7 @@ def test_filed_303_capture_accepts_canonical_compensation_casilla_ids(tmp_path: 
                 result=period_result,
                 final_result=period_result,
                 generated=generated,
+                headers=(_M303_DECLARATION_TYPE_C,),
             ),
         )
 
@@ -966,6 +970,7 @@ def test_multiyear_303_submitted_file_parser_promotes_sanitized_iva_history(tmp_
                 casilla_87=Decimal("100.00"),
                 casilla_69=Decimal("25.00"),
                 casilla_71=Decimal("25.00"),
+                headers=(_M303_DECLARATION_TYPE_I,),
             ),
         )
 

@@ -230,7 +230,10 @@ def _wallet_decision_repository_at(sidecar_root: Path) -> tuple[IvaWalletDecisio
     return IvaWalletDecisionRepository(objects=objects), settings
 
 
-def _build_verified_modelo_303_revision() -> tuple[
+def _build_verified_modelo_303_revision(
+    *,
+    positive_result: bool = False,
+) -> tuple[
     str,
     str,
     CalculationRevision,
@@ -260,6 +263,13 @@ def _build_verified_modelo_303_revision() -> tuple[
         bucket_event_repository=event_repo,
         clock=datetime(2026, 5, 21, 12, 0, tzinfo=UTC),
     )
+    binding_values = _modelo_303_engine_inputs()
+    if positive_result:
+        # The wallet-only decision applies EUR 1,200 of prior compensation.
+        # This deliberately exceeds that carry so public payment-election
+        # paths exercise a genuinely positive M303 result.
+        binding_values["modelo-303-iva-repercutido-general-cuota"] = Decimal("2400.00")
+
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
         actor="operator",
@@ -268,7 +278,7 @@ def _build_verified_modelo_303_revision() -> tuple[
             "iva.prorrata-volumen-total": Decimal("100.00"),
             **_MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS,
         },
-        binding_values=_modelo_303_engine_inputs(),
+        binding_values=binding_values,
         iva_compensation_decision=decision,
         filing_period_date=date(2026, 6, 30),
         work_unit_repository=work_repo,

@@ -724,6 +724,9 @@ def test_export_help_advertises_local_only() -> None:
     assert result.exit_code == 0, result.output
     assert "modelo" in result.output.lower()
     assert any(token in result.output.lower() for token in ("local-only", "local;", "local.", "nunca")), result.output
+    assert "--refund-election" in result.output
+    assert "--payment-election" in result.output
+    assert "--disposition" not in result.output
 
 
 def test_export_refuses_explicit_revision_in_draft_state(

@@ -11,6 +11,7 @@ import pytest
 
 from ....core import Period
 from ....domain.deadlines import (
+    ChargeAccount,
     IVARegime,
     ModeloIVAProfile,
     RefundAccount,
@@ -66,12 +67,20 @@ def _did_page(text: str) -> str:
     return page
 
 
-def _redeme_profile(*, refund_account: RefundAccount | None = None) -> TaxpayerProfile:
+def _redeme_profile(
+    *,
+    refund_account: RefundAccount | None = None,
+    charge_account: ChargeAccount | None = None,
+) -> TaxpayerProfile:
     """A REDEME-enrolled IVA profile so a negative M303 period resolves to a refund."""
     return TaxpayerProfile(
         tax_id=_synthetic_valid_nif(12_345_678),
         iva_regime=IVARegime.GENERAL,
-        iva=ModeloIVAProfile(redeme_enrolled=True, refund_account=refund_account),
+        iva=ModeloIVAProfile(
+            redeme_enrolled=True,
+            refund_account=refund_account,
+            charge_account=charge_account,
+        ),
     )
 
 
@@ -145,10 +154,11 @@ def _render_modelo_303_fichero(
 
 
 def test_refund_export_emits_iban_redeme_and_marca_for_sepa_account() -> None:
-    """A REDEME refund with a Spanish IBAN emits the DID IBAN, REDEME byte, and SEPA mark."""
+    """A refund uses its refund account even when a distinct debit IBAN exists."""
     account = RefundAccount(iban=_SPANISH_IBAN)
+    charge_account = ChargeAccount(iban="ES7921000813610123456789")
     text = _render_modelo_303_fichero(
-        workflow_profile=_redeme_profile(refund_account=account),
+        workflow_profile=_redeme_profile(refund_account=account, charge_account=charge_account),
         casilla_71=Decimal("-210.00"),
     )
 
@@ -158,6 +168,7 @@ def test_refund_export_emits_iban_redeme_and_marca_for_sepa_account() -> None:
     assert iban_field.rstrip() == _SPANISH_IBAN
     assert did[_DID_SEPA_OFFSET - 1] == "1"
     assert text.count(_SPANISH_IBAN) == 1
+    assert charge_account.iban not in text
 
 
 def test_refund_export_emits_swift_and_bank_block_for_non_sepa_account() -> None:

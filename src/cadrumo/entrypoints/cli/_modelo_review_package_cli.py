@@ -78,6 +78,8 @@ from ...application.modelo import (
     ModeloExportNoActiveBucketError,
     ModeloExportOutputPathError,
     ModeloIvaWalletReconciliationBlocked,
+    ModeloPaymentElectionCapabilityRefusedError,
+    ModeloPaymentElectionIncompatibleError,
     ModeloRefundElectionNotEligibleError,
     ModeloWorkAddressNotFoundError,
     ModeloWorkPeriodTokenError,
@@ -140,6 +142,7 @@ from ._modelo_review_package_rendering import (
     review_package_verify_result,
     review_package_verify_signature_result,
 )
+from ...core import PaymentElection, RefundElection
 from ._modelo_work_options import (
     _BucketIdOpt,
     _ModeloOpt,
@@ -230,6 +233,20 @@ def review_package_build(
             ),
         ),
     ] = None,
+    refund_election: Annotated[
+        RefundElection,
+        typer.Option(
+            "--refund-election",
+            help=tr("cli.app.modelo.work.refund_election_help"),
+        ),
+    ] = RefundElection.COMPENSAR,
+    payment_election: Annotated[
+        PaymentElection,
+        typer.Option(
+            "--payment-election",
+            help=tr("cli.app.modelo.work.payment_election_help"),
+        ),
+    ] = PaymentElection.INGRESO,
     notes: Annotated[
         str,
         typer.Option(
@@ -299,6 +316,8 @@ def review_package_build(
                     calculation_revision_id=target_revision_id,
                     output_path=draft_path,
                     actor=resolved_actor,
+                    refund_election=refund_election,
+                    payment_election=payment_election,
                 ),
                 workflow_profile=workflow_profile,
             )
@@ -310,6 +329,8 @@ def review_package_build(
             ModeloExportNoActiveBucketError,
             ModeloExportOutputPathError,
             ModeloIvaWalletReconciliationBlocked,
+            ModeloPaymentElectionCapabilityRefusedError,
+            ModeloPaymentElectionIncompatibleError,
             ModeloRefundElectionNotEligibleError,
         ) as exc:
             raise bad_parameter_from_error(exc) from exc

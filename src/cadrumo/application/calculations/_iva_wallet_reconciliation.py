@@ -140,7 +140,8 @@ def reconcile_modelo_303_iva_compensation(
     decided_at: datetime | None = None,
     max_wallet_age_days: int = DEFAULT_MAX_WALLET_AGE_DAYS,
     treat_absent_recurrence_as_first_period: bool = False,
-    fallback_local_recurrence: LocalIvaCompensationRecurrence | None = None,
+    local_recurrence: LocalIvaCompensationRecurrence | None = None,
+    use_repository_local_recurrence: bool = True,
     persist: bool = True,
 ) -> IvaCompensationReconciliationReport:
     """Resolve, compare, and optionally persist the Modelo 303 IVA wallet decision.
@@ -181,9 +182,13 @@ def reconcile_modelo_303_iva_compensation(
             caller asserts first-period status (e.g. the calculate path verifies
             no prior 303 compensation history exists). It NEVER fabricates a
             non-zero balance: a present recurrence still flows through normally.
-        fallback_local_recurrence: Optional local recurrence evidence supplied by
-            the caller when the repository-backed previous-filing/history pass
-            has no row, for example a current prior-period calculated revision.
+        local_recurrence: Optional local recurrence evidence supplied by the
+            caller. Callers that own a stricter evidence boundary can pass its
+            already-validated projection here.
+        use_repository_local_recurrence: Whether to use the generic
+            repository/history reconstruction as the local recurrence source.
+            A caller that supplies a stricter recurrence may disable this so a
+            legacy generic observation cannot regain authority by fallback.
         persist: Whether to store the resulting decision for later calculation replay.
 
     The local side is not recomputed here. It is read through the same
@@ -228,13 +233,12 @@ def reconcile_modelo_303_iva_compensation(
             "IVA wallet decision repository must use the same encrypted storage backend "
             "as the calculation observation repository",
         )
-    recurrence, prefill_report = extract_modelo_303_local_iva_compensation_recurrence(
+    repository_recurrence, prefill_report = extract_modelo_303_local_iva_compensation_recurrence(
         snapshot,
         repository=repo,
         captured_at=decided_at,
     )
-    if recurrence is None and fallback_local_recurrence is not None:
-        recurrence = fallback_local_recurrence
+    recurrence = repository_recurrence if use_repository_local_recurrence else local_recurrence
     local_recurrence_amount = recurrence.amount if recurrence is not None else None
     # First-period treatment: with no live wallet and no prior recurrence, the
     # caller-asserted first IVA period has a legally-certain zero

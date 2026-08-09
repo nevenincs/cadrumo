@@ -24,7 +24,7 @@ import typer
 
 from ...application.modelo import QuickfileCommand, run_modelo_quickfile
 from ...application.workflow import workflow_state_repository
-from ...core import Period, PeriodError, RefundElection
+from ...core import PaymentElection, Period, PeriodError, RefundElection
 from ...core.i18n import tr
 from ...core.json_contract import Notice
 from ._app_quickfile_payloads import QuickfileResultPayload
@@ -98,10 +98,14 @@ def quickfile(
         typer.Option("--row", help=tr("cli.app.modelo.work.row_help")),
     ] = None,
     actor: _ActorOpt = None,
-    disposition: Annotated[
+    refund_election: Annotated[
         RefundElection,
-        typer.Option("--disposition", help=tr("cli.app.modelo.work.disposition_help")),
+        typer.Option("--refund-election", help=tr("cli.app.modelo.work.refund_election_help")),
     ] = RefundElection.COMPENSAR,
+    payment_election: Annotated[
+        PaymentElection,
+        typer.Option("--payment-election", help=tr("cli.app.modelo.work.payment_election_help")),
+    ] = PaymentElection.INGRESO,
     output_language: OutputLanguageOpt = None,
 ) -> None:
     """Run readiness -> create -> calculate -> verify -> export for one modelo target."""
@@ -153,7 +157,8 @@ def quickfile(
             registry_revision_id=revision,
             output_path=output,
             actor=resolved_actor,
-            refund_election=disposition,
+            refund_election=refund_election,
+            payment_election=payment_election,
         ),
         workflow_profile=workflow_profile,
         build_calculation_inputs=_build_inputs,

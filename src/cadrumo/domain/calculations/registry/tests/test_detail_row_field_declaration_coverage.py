@@ -42,6 +42,7 @@ from __future__ import annotations
 from typing import Final, get_args
 
 import pytest
+from pydantic import BaseModel
 
 from .....core import Modelo
 from .....core.resources import resources
@@ -88,7 +89,7 @@ _NOT_A_DRAWABLE_COLUMN: Final[frozenset[str]] = frozenset(
 )
 
 #: family -> (observation model, row-field Literal, modelo it declares into)
-_FAMILIES: Final[tuple[tuple[str, type, object, Modelo], ...]] = (
+_FAMILIES: Final[tuple[tuple[str, type[BaseModel], object, Modelo], ...]] = (
     ("atribucion_member", AtributionMemberObservation, _AtributionRowField, Modelo.M184),
     ("foreign_asset", Modelo720RowObservation, _ForeignAssetRowField, Modelo.M720),
     ("refund_operation", RefundOperationObservation, _RefundRowField, Modelo.M360),
@@ -99,7 +100,7 @@ _FAMILIES: Final[tuple[tuple[str, type, object, Modelo], ...]] = (
 )
 
 
-def _undeclared(model: type, literal: object) -> frozenset[str]:
+def _undeclared(model: type[BaseModel], literal: object) -> frozenset[str]:
     declared = frozenset(get_args(literal))
     return frozenset(model.model_fields) - declared - _NOT_A_DRAWABLE_COLUMN
 
@@ -131,7 +132,7 @@ def test_the_families_are_all_reachable_and_carry_both_halves() -> None:
 @pytest.mark.parametrize(("name", "model", "literal", "modelo"), _FAMILIES, ids=[f[0] for f in _FAMILIES])
 def test_an_exporting_family_declares_every_drawable_field(
     name: str,
-    model: type,
+    model: type[BaseModel],
     literal: object,
     modelo: Modelo,
 ) -> None:

@@ -51,6 +51,7 @@ from .. import (
     expression_casilla_refs,
     resolve_ledger_iva_aggregation_binding_values,
 )
+from .._ledger_bindings import iva_ledger_selector
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -284,4 +285,6 @@ def test_the_volumen_boxes_select_what_the_quarterly_return_selects() -> None:
         ("modelo-390-volumen-exportaciones-exentas-base", "modelo-303-casilla-60-exportaciones-base"),
     )
     for annual_id, quarterly_id in pairs:
-        assert set(annual[annual_id].selector.categories) == set(quarterly[quarterly_id].selector.categories)
+        annual_selector = iva_ledger_selector(annual[annual_id])
+        quarterly_selector = iva_ledger_selector(quarterly[quarterly_id])
+        assert set(annual_selector.categories) == set(quarterly_selector.categories)

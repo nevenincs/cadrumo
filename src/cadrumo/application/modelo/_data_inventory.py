@@ -28,19 +28,28 @@ See Also:
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from ...core import Period
 from ...core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingSourceKind
 from ...core.i18n import output_language
+from ...core.logging import get_logger
 from ...domain.calculations.registry import (
     BindingId,
     CasillaId,
     InputKind,
     LegalRefId,
     SourceRefId,
+    binding_profile_keys,
+    build_profile_grounding_index,
 )
 from ._binding_readiness import profile_resolvable_binding_ids
 from ._registry_resources import authority_via_resources
+
+_log = get_logger(__name__)
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry import ModeloRevision
 
 
 @dataclass(frozen=True, slots=True)
@@ -80,7 +89,39 @@ class DataInventoryChecklist:
     ledger_derivable: tuple[DataInventoryCasilla, ...]
     profile_derivable: tuple[DataInventoryCasilla, ...]
     unresolved_profile_bindings: tuple[BindingId, ...]
+    #: The profile keys those unresolved bindings consume, in binding order and
+    #: de-duplicated. Carried alongside the binding ids because the operator
+    #: needs to know WHICH PROFILE FACT to supply, and a binding id names the
+    #: registry's internal consumer of that fact rather than the fact itself.
+    unresolved_profile_keys: tuple[str, ...]
     profile_checked: bool
+
+
+def _profile_keys_for_bindings(
+    revision: ModeloRevision,
+    binding_ids: tuple[BindingId, ...],
+) -> tuple[str, ...]:
+    """Return the profile keys the given bindings consume, in order, de-duplicated.
+
+    A binding may consume several profile keys, and several bindings may
+    consume the same one, so the operator-facing list is de-duplicated while
+    preserving the binding order the checklist already presents.
+
+    A binding contributing no key is simply absent: nothing is invented for
+    it, and its binding id remains available on the checklist.
+    """
+    wanted = set(binding_ids)
+    keys: list[str] = []
+    seen: set[str] = set()
+    for binding in revision.bindings:
+        if binding.id not in wanted:
+            continue
+        for key in binding_profile_keys(binding):
+            if key in seen:
+                continue
+            seen.add(key)
+            keys.append(key)
+    return tuple(keys)
 
 
 def data_inventory_checklist(
@@ -162,6 +203,7 @@ def data_inventory_checklist(
         # constant_value, ...) need no operator data-gathering action.
 
     unresolved_profile_bindings: tuple[BindingId, ...] = ()
+    unresolved_profile_keys: tuple[str, ...] = ()
     profile_checked = False
     if bucket_id is not None and profile_binding_ids:
         resolved = profile_resolvable_binding_ids(
@@ -174,6 +216,7 @@ def data_inventory_checklist(
         unresolved_profile_bindings = tuple(
             binding_id for binding_id in profile_binding_ids if str(binding_id) not in resolved
         )
+        unresolved_profile_keys = _profile_keys_for_bindings(revision, unresolved_profile_bindings)
     elif bucket_id is not None:
         profile_checked = True
 
@@ -187,12 +230,59 @@ def data_inventory_checklist(
         ledger_derivable=tuple(ledger_derivable),
         profile_derivable=tuple(profile_derivable),
         unresolved_profile_bindings=unresolved_profile_bindings,
+        unresolved_profile_keys=unresolved_profile_keys,
         profile_checked=profile_checked,
     )
+
+
+def profile_requirements_for_binding(
+    *,
+    modelo: str,
+    filing_year: int,
+    period: Period,
+    binding_id: str,
+) -> str:
+    """Name the profile facts one binding consumes, as grounded requirement text.
+
+    A binding id names the registry's internal consumer of a profile fact and
+    appears nowhere in the profile editor, so an operator told to set one has
+    nothing to act on. This resolves the binding to the facts behind it.
+
+    Lives here rather than at the CLI boundary because the binding definitions
+    it reads are registry state: resolving them at the entrypoint would put a
+    registry-authority read in a transport layer that is budgeted to hold none.
+
+    Best-effort by contract. An unresolvable snapshot, a binding id matching no
+    row, or a binding naming no profile key all return the empty string, and
+    the caller keeps whatever guidance it already had. A degraded message is
+    worse than a resolved one and better than none.
+    """
+    from ...core.resources import resources
+    from ..user_profile import format_profile_path_requirements
+
+    try:
+        authority = authority_via_resources()
+        snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period.registry_token)
+        keys = next(
+            (binding_profile_keys(b) for b in snapshot.revision.bindings if str(b.id) == binding_id),
+            (),
+        )
+        if not keys:
+            return ""
+        rendered = format_profile_path_requirements(
+            keys,
+            schema=resources().user_profile_schema.singleton,
+            grounding_index=build_profile_grounding_index(authority),
+        )
+    except Exception:
+        _log.debug("profile-fact lookup for binding failed", exc_info=True)
+        return ""
+    return ", ".join(rendered)
 
 
 __all__ = [
     "DataInventoryCasilla",
     "DataInventoryChecklist",
     "data_inventory_checklist",
+    "profile_requirements_for_binding",
 ]

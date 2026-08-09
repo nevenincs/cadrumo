@@ -77,6 +77,25 @@ def register_counterparty_commands(app: typer.Typer) -> None:
     app.add_typer(counterparty_app, name="counterparty")
 
 
+def _confirmed_answers(fact: ConfirmedCounterpartyFacts) -> str:
+    """Name the answers actually stored, skipping the axis left unanswered.
+
+    Establishment and VAT-identification are independent axes and either may
+    stand alone, so every surface describing a stored fact has to read both
+    optionally: a summary assuming a territory is present renders a
+    identification-only confirmation as nothing, and reaching for its value
+    raises instead.
+    """
+    return ", ".join(
+        part
+        for part in (
+            fact.territorial_scope.value if fact.territorial_scope is not None else None,
+            fact.identification_state.value if fact.identification_state is not None else None,
+        )
+        if part is not None
+    )
+
+
 def _payload(fact: ConfirmedCounterpartyFacts) -> CounterpartyEstablishmentPayload:
     """Project the persisted fact onto its wire shape."""
     return CounterpartyEstablishmentPayload(
@@ -212,15 +231,19 @@ def counterparty_confirm(
             ),
         ) from exc
     except CounterpartyEstablishmentConflictError as exc:
+        # The refusal names neither axis itself: the conflict is raised for a
+        # changed territory OR a changed identification State, and an
+        # identification-only assertion carries no scope to name. The writer's
+        # own message states which axis diverged and both of its values, so the
+        # wrapper carries the actionable route and defers the diagnosis.
         raise _bad(
             tr(
-                "cli.ledger.counterparty.errors.scope_conflict",
+                "cli.ledger.counterparty.errors.confirmation_conflict",
                 identifier=tax_identifier,
-                asserted=scope.value,
                 detail=str(exc),
                 default=(
-                    f"A different territory is already confirmed for '{tax_identifier}', so confirming "
-                    f"'{scope.value}' would discard the earlier answer. Withdraw it first with "
+                    f"A different answer is already confirmed for '{tax_identifier}', so confirming this "
+                    f"one would discard the earlier answer. Withdraw it first with "
                     f"'aeat app ledger counterparty withdraw'. {exc}"
                 ),
             ),
@@ -229,6 +252,19 @@ def counterparty_confirm(
     recorded = fact.asserted_at == stamped_at
     notices: list[Notice] = []
     if not recorded:
+        answered = _confirmed_answers(fact)
+        # Each axis appears in the context only when it was actually answered:
+        # the notice reports what is stored, and a key carrying an empty string
+        # for an unanswered axis would read as a stored blank answer.
+        context = {
+            "canonical_tax_identifier": fact.canonical_tax_identifier,
+            "stored_asserted_by": fact.asserted_by,
+            "supplied_asserted_by": asserted_by,
+        }
+        if fact.territorial_scope is not None:
+            context["territorial_scope"] = fact.territorial_scope.value
+        if fact.identification_state is not None:
+            context["identification_state"] = fact.identification_state.value
         notices.append(
             Notice(
                 severity=NoticeSeverity.INFO,
@@ -236,20 +272,15 @@ def counterparty_confirm(
                 message=tr(
                     "cli.ledger.counterparty.notices.already_confirmed",
                     identifier=fact.canonical_tax_identifier,
-                    scope=fact.territorial_scope.value,
+                    answered=answered,
                     asserted_by=fact.asserted_by,
                     default=(
-                        f"'{fact.canonical_tax_identifier}' was already confirmed by '{fact.asserted_by}', "
-                        f"established in '{fact.territorial_scope.value}'; this call created no new "
-                        f"confirmation and the original provenance stands."
+                        f"'{fact.canonical_tax_identifier}' was already confirmed by '{fact.asserted_by}' "
+                        f"as '{answered}'; this call created no new confirmation and the original "
+                        f"provenance stands."
                     ),
                 ),
-                context={
-                    "canonical_tax_identifier": fact.canonical_tax_identifier,
-                    "territorial_scope": fact.territorial_scope.value,
-                    "stored_asserted_by": fact.asserted_by,
-                    "supplied_asserted_by": asserted_by,
-                },
+                context=context,
             ),
         )
 
@@ -260,16 +291,7 @@ def counterparty_confirm(
         # Both facts are optional and either may stand alone, so the line names
         # what was answered rather than assuming a territory is present.
         lines=[
-            f"{fact.canonical_tax_identifier}: "
-            + ", ".join(
-                part
-                for part in (
-                    fact.territorial_scope.value if fact.territorial_scope is not None else None,
-                    fact.identification_state.value if fact.identification_state is not None else None,
-                )
-                if part is not None
-            )
-            + f"{'' if recorded else ' (already confirmed)'}",
+            f"{fact.canonical_tax_identifier}: {_confirmed_answers(fact)}{'' if recorded else ' (already confirmed)'}",
         ],
         notices=notices,
     )

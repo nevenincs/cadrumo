@@ -91,6 +91,7 @@ from ._festivos import (
     shift_deadline,
 )
 from ._models import (
+    ChargeAccount,
     CrossPeriodGroupMemberRoster,
     EntityType,
     FiscalResidency,
@@ -127,6 +128,7 @@ from ._recargo import (
 __all__ = [
     "MODELOS_WITHOUT_SHIFT",
     "CalendarCCAA",
+    "ChargeAccount",
     "CrossPeriodGroupMemberRoster",
     "DeadlineEngine",
     "DeadlineError",

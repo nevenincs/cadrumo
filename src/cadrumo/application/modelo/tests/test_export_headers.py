@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from ....core import Period
+from ....core.resources import resources
 from ....domain.calculations.registry import BindingId, CasillaId, validated_casilla_id
 from ....domain.deadlines import (
     EntityType,
@@ -19,6 +20,7 @@ from ....domain.deadlines import (
     TaxpayerProfile,
 )
 from ....domain.modelos import CalculationRevisionState
+from ...user_profile import build_profile_preflight_requirement
 from .._export import ModeloExportCommand, ModeloExportError, compose_export_headers, export_modelo_revision
 from ._export_test_support import (
     _M303_RESULT_CASILLA,
@@ -282,7 +284,15 @@ def test_modelo_202_legal_entity_export_requires_legal_name(isolated_backend: No
             period=Period.from_year_and_code(2026, "1P"),
         )
 
-    assert exc_info.value.context == {"missing": ["identity.legal_name"]}
+    # The refusal names the field by its operator label, derived from the
+    # schema here rather than spelled out, so this asserts the refusal routes
+    # through the canonical requirement builder rather than pinning wording.
+    expected_label = build_profile_preflight_requirement(
+        "identity.legal_name",
+        schema=resources().user_profile_schema.singleton,
+    ).label
+    assert expected_label != "identity.legal_name", "label collapsed to the path; assertion would be vacuous"
+    assert expected_label in str(exc_info.value.context["missing"])
 
 
 def test_modelo_111_legal_entity_uses_profile_identity_name_for_required_name_header(

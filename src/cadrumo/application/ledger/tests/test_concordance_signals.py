@@ -42,7 +42,7 @@ from decimal import Decimal
 import pytest
 
 from ....domain.iva import IvaTerritorialScope
-from .._establishment_ladder import EstablishmentRung, _printed_evidence
+from .._establishment_ladder import EstablishmentRung, RegistrationEstablishmentConflict, _printed_evidence
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -60,17 +60,32 @@ _DUTCH_VAT = "NL123456789B01"
 _REVERSE_CHARGE = "inversión del sujeto pasivo"
 
 
-def _walk(**overrides: object):
-    kwargs: dict[str, object] = {
-        "tax_identifier": _GERMAN_VAT,
-        # No address country and no postal code: this is the population the rung
-        # exists for, where every earlier rung has already declined.
-        "country_code": None,
-        "postal_code": None,
-        "on_date": _DATE,
-    }
-    kwargs.update(overrides)
-    return _printed_evidence(**kwargs)  # type: ignore[arg-type]
+def _walk(
+    *,
+    tax_identifier: str | None = _GERMAN_VAT,
+    # No address country and no postal code: this is the population the rung
+    # exists for, where every earlier rung has already declined.
+    country_code: str | None = None,
+    postal_code: str | None = None,
+    regime_legend: str | None = None,
+    charged_iva_rates: tuple[Decimal, ...] = (),
+    on_date: date | None = _DATE,
+) -> tuple[IvaTerritorialScope | None, EstablishmentRung | None, RegistrationEstablishmentConflict | None]:
+    """Walk the rungs with this file's population pinned, overriding one axis at a time.
+
+    The parameters mirror the walk's own rather than collecting a bag: a
+    misspelled override would otherwise be accepted silently and the case
+    would assert against the DEFAULT population, passing while measuring
+    nothing it names.
+    """
+    return _printed_evidence(
+        tax_identifier=tax_identifier,
+        country_code=country_code,
+        postal_code=postal_code,
+        regime_legend=regime_legend,
+        charged_iva_rates=charged_iva_rates,
+        on_date=on_date,
+    )
 
 
 def test_a_registration_alone_still_settles_nothing() -> None:

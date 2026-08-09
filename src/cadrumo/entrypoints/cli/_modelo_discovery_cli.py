@@ -529,6 +529,7 @@ def _register_requires_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
             ledger_derivable=[_data_inventory_casilla_payload(entry) for entry in checklist.ledger_derivable],
             profile_derivable=[_data_inventory_casilla_payload(entry) for entry in checklist.profile_derivable],
             unresolved_profile_bindings=list(checklist.unresolved_profile_bindings),
+            unresolved_profile_keys=list(checklist.unresolved_profile_keys),
             profile_checked=checklist.profile_checked,
         )
         lines = [
@@ -576,7 +577,8 @@ def _requires_notices(checklist) -> tuple[Notice, ...]:
             ),
         )
     if checklist.unresolved_profile_bindings:
-        missing = ", ".join(sorted(str(binding_id) for binding_id in checklist.unresolved_profile_bindings))
+        binding_ids = ", ".join(sorted(str(binding_id) for binding_id in checklist.unresolved_profile_bindings))
+        missing = _unresolved_profile_requirements(checklist) or binding_ids
         return (
             Notice(
                 severity=NoticeSeverity.WARNING,
@@ -589,10 +591,39 @@ def _requires_notices(checklist) -> tuple[Notice, ...]:
                     missing=missing,
                 ),
                 suggestion="aeat app ledger ratios set",
-                context={"modelo": str(checklist.modelo), "missing_bindings": missing},
+                # The binding ids stay on the notice context: they are the
+                # registry-side identifiers a support channel needs, while the
+                # message carries the profile facts the operator must supply.
+                context={"modelo": str(checklist.modelo), "missing_bindings": binding_ids},
             ),
         )
     return ()
+
+
+def _unresolved_profile_requirements(checklist) -> str:
+    """Render the unresolved bindings' profile facts as grounded requirements.
+
+    A binding id names the registry's internal consumer of a profile fact, not
+    the fact the operator has to supply, so the message is built from the
+    profile keys those bindings consume and resolved through the same schema
+    and registry grounding the modelo readiness gate uses.
+
+    Returns the empty string when no key resolves, which lets the caller fall
+    back to the binding ids rather than emit a warning naming nothing.
+    """
+    from ...application.user_profile import format_profile_path_requirements
+    from ...core.resources import resources
+    from ...domain.calculations.registry import build_profile_grounding_index
+
+    if not checklist.unresolved_profile_keys:
+        return ""
+    return ", ".join(
+        format_profile_path_requirements(
+            checklist.unresolved_profile_keys,
+            schema=resources().user_profile_schema.singleton,
+            grounding_index=build_profile_grounding_index(resources().modelos.authority),
+        ),
+    )
 
 
 _BINDING_SOURCE_TO_READINESS: dict[str, str] = {

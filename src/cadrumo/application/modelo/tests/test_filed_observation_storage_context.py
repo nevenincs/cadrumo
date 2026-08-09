@@ -20,8 +20,9 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Modelo, Period
+from ....core import Modelo, Period, ResultDisposition
 from ....domain.calculations.registry import CasillaId, CasillaObservation, validated_casilla_id
+from ....domain.iva_compensation import M303_COMPENSATION_RESULTADO_CASILLA
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
@@ -70,7 +71,10 @@ def _work_unit(bucket_id: str) -> WorkUnit:
 
 
 def _revision(work_unit: WorkUnit) -> CalculationRevision:
-    casilla_values = {_DISPONIBLE_CASILLA: Decimal("125.00")}
+    casilla_values = {
+        _DISPONIBLE_CASILLA: Decimal("125.00"),
+        M303_COMPENSATION_RESULTADO_CASILLA: Decimal("-125.00"),
+    }
     return CalculationRevision(
         calculation_revision_id=derive_calculation_revision_id(
             work_unit_id=work_unit.work_unit_id,
@@ -85,6 +89,12 @@ def _revision(work_unit: WorkUnit) -> CalculationRevision:
             CasillaObservation(
                 casilla_id=_DISPONIBLE_CASILLA,
                 value=Decimal("125.00"),
+                legal_refs=("ley-37-1992:art-99",),
+                source_refs=("aeat-manual-iva",),
+            ),
+            CasillaObservation(
+                casilla_id=M303_COMPENSATION_RESULTADO_CASILLA,
+                value=Decimal("-125.00"),
                 legal_refs=("ley-37-1992:art-99",),
                 source_refs=("aeat-manual-iva",),
             ),
@@ -104,6 +114,7 @@ def _persist(work_unit: WorkUnit, *, repository, history_repository=None) -> str
         work_unit=work_unit,
         repository=repository,
         captured_at=_CAPTURED_AT,
+        result_disposition=ResultDisposition.COMPENSACION,
         taxpayer_nif=_TAX_ID,
         filing_record_id=_FILING_RECORD_ID,
         iva_compensation_history_repository=history_repository,

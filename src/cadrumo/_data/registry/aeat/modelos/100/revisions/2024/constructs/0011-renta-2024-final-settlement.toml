@@ -35,6 +35,7 @@ formulas = [
     "renta-2024-matrimonio-vigente-todo-anio",
     "renta-2024-matrimonio-mes-inicio",
     "renta-2024-matrimonio-mes-fin",
+    "renta-2024-deduccion-maternidad-0611",
     "renta-2024-incremento-guarderia-0613",
 ]
 application_links = [
