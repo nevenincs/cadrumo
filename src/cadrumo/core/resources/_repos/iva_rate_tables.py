@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 class IvaRateTableRepository(ResourceCacheRepository[Mapping["EUMemberState", "tuple[IvaRateRecord, ...]"], None]):
     """Singleton-keyed repository for the bundled IVA rate table.
 
-    Wraps :func:`cadrumo.domain.iva._rates.load_iva_rate_table`
+    Wraps :func:`cadrumo.domain.iva.load_iva_rate_table`
     and returns mappings from :class:`EUMemberState` to
     :class:`IvaRateRecord` tuples.
     """
