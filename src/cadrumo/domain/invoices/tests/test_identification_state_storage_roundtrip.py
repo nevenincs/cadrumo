@@ -134,8 +134,6 @@ def test_dropping_the_persisted_identification_surfaces_at_load(tmp_path: Path) 
 
         reloaded = InvoiceCatalogueRepository().load()
 
-    assert reloaded != original, (
-        "a dropped identification re-defaulted silently: the boundary is tautological"
-    )
+    assert reloaded != original, "a dropped identification re-defaulted silently: the boundary is tautological"
     survivor = next(iter(reloaded.values()))
     assert survivor.counterparty_identification_state is not EUMemberState.FR

@@ -322,7 +322,9 @@ def test_an_unrecognised_column_is_reported_and_the_file_still_imports(tmp_path:
     assert "bogus" not in source.rows[0].values
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        result = import_invoices_from_rows(source, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED, declared_country="ES")
+        result = import_invoices_from_rows(
+            source, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED, declared_country="ES"
+        )
         assert result.created == 1
         assert result.refused == ()
 

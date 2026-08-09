@@ -318,7 +318,20 @@ def test_bulk_import_unknown_column_is_reported_and_the_row_still_imports(tmp_pa
     )
 
     result = invoke_cached_cli(
-        ["--format", "json", "app", "ledger", "invoice", "import", "--file", str(csv_path), "--kind", "received", "--country", "ES"],
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "invoice",
+            "import",
+            "--file",
+            str(csv_path),
+            "--kind",
+            "received",
+            "--country",
+            "ES",
+        ],
     )
     assert result.exit_code == 0, result.output
     assert "bogus_column" in result.output

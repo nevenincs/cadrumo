@@ -167,8 +167,7 @@ def main(argv: list[str] | None = None) -> int:
             _show(session)
         case "journal":
             _emit(
-                f"{session.surface} · {session.width}x{session.height} · "
-                f"{session.theme} · {session.locale or 'auto'}",
+                f"{session.surface} · {session.width}x{session.height} · {session.theme} · {session.locale or 'auto'}",
             )
             for index, gesture in enumerate(session.gestures, start=1):
                 _emit(f"{index:>3}. {describe(gesture)}")

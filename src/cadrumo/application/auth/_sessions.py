@@ -609,9 +609,7 @@ def _resolve_provider_kind(settings: Settings, kind: AuthProviderKind | None) ->
     if kind is not None:
         return kind
     fallback = (settings.cadrumo_auth_provider or AuthProviderKind.CERTIFICATE).value
-    return resolve_active_provider_kind(settings=settings, fallback_provider=fallback) or (
-        AuthProviderKind.CERTIFICATE
-    )
+    return resolve_active_provider_kind(settings=settings, fallback_provider=fallback) or (AuthProviderKind.CERTIFICATE)
 
 
 def _normalise_tax_identity(value: object) -> str:

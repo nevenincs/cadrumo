@@ -249,7 +249,9 @@ def _manager_populated(tmp_path: Path) -> Iterator[ProfileManagerApp]:
         register_profile_with_credentials(label=_VISUAL_LABEL, passphrase=_VISUAL_PASSWORD)
         schema = load_user_profile_schema()
         section = next(item for item in schema.sections if item.key == "activities")
-        facts = section_row_facts(section, row_index=next_section_row_index(section.key, ()), values={"description": "Consultoria"})
+        facts = section_row_facts(
+            section, row_index=next_section_row_index(section.key, ()), values={"description": "Consultoria"}
+        )
         workflow_state_repository().update(lambda state: set_active_fields(state, facts))
         yield ProfileManagerApp(
             build_active_profile_overview(),

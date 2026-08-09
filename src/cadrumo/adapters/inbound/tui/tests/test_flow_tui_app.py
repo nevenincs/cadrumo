@@ -355,7 +355,9 @@ def _two_section_definition() -> FlowDefinition:
                 id="s2",
                 title=_copy("wizard.section.two"),
                 items=(
-                    FlowPage(id="p_second", widget=FlowWidgetKind.TEXT, prompt=_copy(), answer_type=str, required=False),
+                    FlowPage(
+                        id="p_second", widget=FlowWidgetKind.TEXT, prompt=_copy(), answer_type=str, required=False
+                    ),
                 ),
             ),
         ),
