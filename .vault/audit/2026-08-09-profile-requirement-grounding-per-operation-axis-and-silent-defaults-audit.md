@@ -5,7 +5,7 @@ tags:
 date: '2026-08-09'
 modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:900ae64c4320c8837e3d84b5cf70832f537b48fc0412c2a65fea6b7d9463f57c'
+body_hash: 'sha256:364ed85fcf66ee21e39c866f9aa1ddc120727b4db1176b202130447d0808ada0'
 related:
   - "[[2026-08-08-profile-requirement-grounding-adr]]"
 ---
@@ -120,4 +120,36 @@ The export case is the one worth stating explicitly, because it is where the ala
 **What this means for the finding's own framing.** The heading says the placeholder "silently yields NIF `00000000T` ... across fourteen CLI surfaces". Measured: **two** sites were genuinely harmed by it, five were already protected by an existing gate, four never compare identity, and one claim did not reproduce. The filing-grade surfaces — the ones where a fabricated NIF would have reached a persisted or exported artefact — were **all** already guarded.
 
 The defect was real and worth fixing, and it was narrower than a call-site census made it look. Recorded at this length because the overstatement is the more transferable lesson: the census was easy, precise and wrong, and the only thing that corrected it was reading each consumer's own handling of an empty value.
+
+
+### Withdrawn: the CCAA foral finding does not survive verification either
+
+The `tax_residence.ccaa` finding above is **retracted in its load-bearing claim**. Verified against the real code rather than re-read from the sweep that produced it.
+
+**"The foral guard is a no-op" is false.** `guard_active_profile_foral_ccaa` documents its own contract as raising the foral refusal "if present", and it honours it. Driving `parse_tax_region` directly:
+
+```
+'madrid'      -> madrid
+'pais_vasco'  -> ForalRegimeError: foral regime outside the scope of this profile
+'navarra'     -> ForalRegimeError
+'PAIS_VASCO'  -> ForalRegimeError          (case-insensitive)
+'andalucia'   -> andalucia
+''            -> TaxResidenceProfileError: unknown tax-region
+```
+
+A **declared** foral filer is refused at work-create. The claim that such a filer "gets a común-régimen Modelo 100 built, calculated, verified and exported" is wrong: they cannot create the work unit.
+
+**"Silently falls back to estatal" is also wrong.** The fallback is a documented, deliberate decision at `_profile_binding.py:505-511`, which cites the 0511/0512 mínimo-del-contribuyente precedent and names the CCAA whose own 2025 figures are a follow-up, stating in terms that they are "a named follow-up, **not silently assumed to mirror estatal forever**". The partial-divergence design is also deliberate: a CCAA regulating only some tranches resolves per-tranche rather than needing a full parallel table.
+
+**What survives is narrow.** `tax_residence.ccaa` is genuinely optional, genuinely absent from the filing baseline, and genuinely not conditionally required — so an **undeclared** CCAA receives estatal parameters with no advisory. That is the same optional-field-without-a-conditional-requirement-grammar gap already recorded in the first finding, not a separate defect, and it is the general case that grammar exists to solve.
+
+### Pattern across the withdrawals: measured findings held, reasoned ones did not
+
+Three findings in this document have now been tested against running code. The split is not random and is worth stating.
+
+**Held — both established by driving the real code in-process:** the per-operation axis measurement (161 fields, 143 selectors, 0 `modelo_`-prefixed, and `report()` returning `ready=True` for a profile declaring nothing), and the calendar matcher behaviour (fail-open on empty, fail-closed on mismatch, placeholder drops filed evidence).
+
+**Withdrawn — both asserted downstream CONSEQUENCES from reading code paths:** the `work dependencies` claim (three-way probe showed the path was not identity-gated at all under that seed) and the CCAA claim (the guard raises; the fallback is documented).
+
+The distinguishing factor is not care or detail — the withdrawn findings carried precise `file:line` citations and plausible mechanisms. It is whether the claimed BEHAVIOUR was ever executed. A code path read carefully still only supports "this branch exists"; it does not support "and therefore the operator sees X", because the consequence depends on callers, guards and defaults that are not visible from the site. Every consequence claim in an audit should carry either a probe that produced it or an explicit marker that it is inferred and untested.
 
