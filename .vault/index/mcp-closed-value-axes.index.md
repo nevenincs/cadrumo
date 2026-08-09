@@ -6,10 +6,11 @@ tags:
 date: '2026-08-09'
 modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:6953e4b958c681b82774e45061fa83cce5e667eb493700a6d5e3dac3294f0e4f'
+body_hash: 'sha256:08c4d2fa13b2966926aa9a557d4854a445000125477aa51d7f48c66abe14647b'
 related:
   - '[[2026-08-08-mcp-closed-value-axes-audit]]'
   - '[[2026-08-09-mcp-closed-value-axes-adr]]'
+  - '[[2026-08-09-mcp-closed-value-axes-campaign-method-record-reference]]'
   - '[[2026-08-09-mcp-closed-value-axes-iva-rate-unit-split-adr]]'
 ---
 
@@ -27,3 +28,7 @@ Auto-generated index of all documents tagged with `#mcp-closed-value-axes`.
 ### audit
 
 - `2026-08-08-mcp-closed-value-axes-audit` - `mcp-closed-value-axes` audit: `Closed-value CLI axes reaching the MCP schema as bare strings`
+
+### reference
+
+- `2026-08-09-mcp-closed-value-axes-campaign-method-record-reference` - `mcp-closed-value-axes` reference: `What this remediation campaign found, and what not to re-attempt`
