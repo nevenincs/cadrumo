@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:9c0ea75ccf84a38132be58b9afda955a02845a508811ba29a9271e482aabd792'
+body_hash: 'sha256:061f17aadba167e2106f704644f9aa17a7bfa2daff61252c49670cf432924fb6'
 related:
   - "[[2026-07-23-profile-setup-flow-adr]]"
   - '[[2026-08-08-profile-requirement-grounding-reference]]'
@@ -81,7 +81,7 @@ The codebase already records the behaviour without naming it a defect: `applicat
 
 2. **The axis is populated from grounded evidence, never by inference.** Which profile fact a given modelo requires is a tax question, so each `modelo_<code>` token must be grounded the way any regulatory value is — against the modelo's official form and its registry `source = "profile"` bindings. `build_profile_grounding_index` already computes the binding-derived union of profile keys per modelo and is the honest starting inventory. **Populating the axis by guessing which fields "look" required is forbidden**; an ungrounded token is an invented requirement that will refuse a lawful filing.
 
-3. **`_FILING_BASELINE_PROFILE_PATHS` is not retired by this amendment.** The literal tuple at `_profile_readiness_gate.py:60` remains the operative blocking authority until the axis is populated and proven. Retiring it additionally requires a conditional-requirement grammar on `ProfileFieldDefinition` — `required_when` exists today only on `ProfileKey` (`domain/contribuyente/_keys.py:51-52`) — and the Modelo-100 `activities.description` exemption has no schema expression without it. **That grammar is a separate decision and must not be smuggled in as part of this work.**
+3. **`_FILING_BASELINE_PROFILE_PATHS` is not retired by this amendment.** The literal tuple at `_profile_readiness_gate.py:64` remains the operative blocking authority until the axis is populated and proven. Retiring it additionally requires a conditional-requirement grammar on `ProfileFieldDefinition` — `required_when` exists today only on `ProfileKey` (`domain/contribuyente/_keys.py:51-52`) — and the Modelo-100 `activities.description` exemption has no schema expression without it. **That grammar is a separate decision and must not be smuggled in as part of this work.**
 
 ### Rejected alternative
 
@@ -142,7 +142,6 @@ They are **correct as they stand** — real grounding, verified against live reg
 
 Worth stating so it is not over-credited: the per-modelo walk currently selects one field for one modelo. Requirement enforcement today is carried by the **unscoped** validation path and the **unscoped** conditional path, both of which run regardless of modelo. The per-operation axis is additive precision on top of those.
 
-
 ### The same predicate governs the REQUIRED path, so `assessed = True` is not a completeness claim
 
 `_selectors_match_modelo` is the same predicate on both paths, so empty-means-no-match applies to `required = true` fields too: **an untokenised required field is skipped by the per-modelo walk for every modelo.** Measured on 2026-08-09: 15 required fields, **1 tokenised**.
@@ -154,7 +153,6 @@ Driving `report()` for modelo 100 with only `identity.tax_id` declared returns `
 **So `assessed = True` is a claim about the axis, never about the modelo's requirements.** It does not mean the profile is complete for that modelo; the unscoped validation path is what establishes that, and it runs elsewhere. A consumer that renders `assessed = True` as reassurance would be making a completeness claim this field cannot support.
 
 One caution on sizing this, because the obvious count is wrong: a naive tally says fourteen required fields go unreported. It is **one**. `missing_required_field_paths` is row-aware, so the ten `attribution_*` and two `usage_ratios` columns correctly do not count for a filer who declared no such rows. The real gap is `iva.regime` — smaller than the naive figure and a cleaner example, being a field a real filer must actually declare rather than an artefact of counting repeatable columns.
-
 
 #### The gap sat exactly on the boundary of this document's own taxonomy
 
@@ -173,7 +171,39 @@ Measured before recommending it: the field already carries **21 references acros
 So the sentence above is the remedy of record. If a rename is still wanted later, this note is the argument for it and the cost estimate — and the reason the opportunity was missed is worth keeping: the naming risk was identified one exchange after the field had already been wired through to the operator surface.
 
 
+#### The one tokenised required field is mis-scoped, and the predicate's default is inverted for this path
+
+Measured 2026-08-09, after the section above was written, and it sharpens it. The two `required = true` fields worth naming fail for **opposite** reasons:
+
+```
+identity.tax_id  required=True  selectors=('tax.id', 'modelo_100')
+iva.regime       required=True  selectors=('iva.regime',)        <- no modelo_ token
+```
+
+`iva.regime` is genuinely modelo-specific and carries no token, so it is selected **nowhere**. `identity.tax_id` is genuinely **universal** — a NIF is the filing identity for every modelo — and is tokenised to modelo 100 alone, so it is selected **only there**. The axis's single tokenised required field is therefore mis-scoped: a wrong token rather than a missing one.
+
+Behaviour today, driven over a profile declaring nothing:
+
+```
+modelo 100: assessed=True   ready=False  missing=1
+modelo 303: assessed=False  ready=True   missing=0
+modelo 390: assessed=False  ready=True   missing=0
+modelo 130: assessed=False  ready=True   missing=0
+```
+
+**The flag is not lying anywhere.** On every modelo but 100 the walk selects nothing and correctly reports `assessed = False`; on 100 it reports `True` and substantively so, naming the absent NIF. Recorded precisely because the tempting summary — "the flag reads `True` over an empty check" — is **false**, and would not survive the first person to test it.
+
+What is true is narrower and still worth fixing: **the tokenised required set is one field, scoped to one modelo, when that field applies to all of them.**
+
+#### Open question (not decided here): the required path's default is inverted
+
+Under `empty → False`, "no tokens" is the **strictest** possible state. The natural authoring intent runs the other way — tokens narrow to the named modelos, absence means applies to all — so the field needing the widest scope gets the narrowest, and expressing "required for every modelo" would cost a token per modelo.
+
+This is **not** decided here, and deliberately so. It has the same shape as the conditional-scoping question settled above: a predicate whose default determines whether an authoring gap fails loud or silent. It deserves the same measured treatment rather than being smuggled in as a clause of an amendment about something else — which is exactly how the conditional-scoping change would have entered had it not been examined on its own terms.
+
+Whoever takes it should note the tension: the conditional decision above **relies** on `empty → False` being wrong-way-round for the conditional path (untokenised over-asks, which is safe). Flipping the default on the required path without re-examining that interaction would undo the safety property this amendment establishes.
+
+
 ### Honest limits
 
 An initial attempt to size the blast radius by parsing `schema.toml` returned zero and was **discarded as a broken probe rather than reported** — the conditional set is assembled in code, not declared in TOML, so a schema walk cannot see it. Recorded because a zero from a broken instrument is exactly the number that gets repeated later as though it meant something.
-

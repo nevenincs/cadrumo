@@ -6,7 +6,7 @@ tags:
 date: '2026-08-09'
 modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:b83920b8e76eb6bad1b8823b14621385dd845cfb5b1e9705615672130e0532c2'
+body_hash: 'sha256:418355270c0da194f3dc2bfcd3d131c3406a549eaa3a68e8c8a0db7380c9dd6b'
 related:
   - '[[2026-08-08-profile-requirement-grounding-P01-S01]]'
   - '[[2026-08-08-profile-requirement-grounding-P01-S02]]'
@@ -30,12 +30,22 @@ related:
   - '[[2026-08-08-profile-requirement-grounding-P07-S22]]'
   - '[[2026-08-08-profile-requirement-grounding-P07-S23]]'
   - '[[2026-08-08-profile-requirement-grounding-P07-S34]]'
+  - '[[2026-08-08-profile-requirement-grounding-P08-S24]]'
+  - '[[2026-08-08-profile-requirement-grounding-P08-S25]]'
+  - '[[2026-08-08-profile-requirement-grounding-P08-S26]]'
+  - '[[2026-08-08-profile-requirement-grounding-P08-S27]]'
+  - '[[2026-08-08-profile-requirement-grounding-P08-S28]]'
+  - '[[2026-08-08-profile-requirement-grounding-P08-S35]]'
+  - '[[2026-08-08-profile-requirement-grounding-P08-S36]]'
   - '[[2026-08-08-profile-requirement-grounding-adr]]'
   - '[[2026-08-08-profile-requirement-grounding-plan]]'
   - '[[2026-08-08-profile-requirement-grounding-reference]]'
   - '[[2026-08-09-profile-requirement-grounding-audit]]'
   - '[[2026-08-09-profile-requirement-grounding-per-modelo-grounding-inventory-reference]]'
   - '[[2026-08-09-profile-requirement-grounding-per-operation-axis-and-silent-defaults-audit]]'
+  - '[[2026-08-09-profile-requirement-grounding-profilekey-schema-field-parity-reference]]'
+  - '[[2026-08-09-profile-requirement-grounding-registry-schema-legal-refs-drift-reference]]'
+  - '[[2026-08-09-profile-requirement-grounding-wrong-modulos-citation-on-identity-fields-audit]]'
 ---
 
 # `profile-requirement-grounding` feature index
@@ -52,6 +62,7 @@ Auto-generated index of all documents tagged with `#profile-requirement-groundin
 
 - `2026-08-09-profile-requirement-grounding-audit` - `profile-requirement-grounding` audit: `code review of the requirement-row enrichment across the three consumer surfaces`
 - `2026-08-09-profile-requirement-grounding-per-operation-axis-and-silent-defaults-audit` - `profile-requirement-grounding` audit: `the per-operation requirement axis is empty and absent profile facts silently default`
+- `2026-08-09-profile-requirement-grounding-wrong-modulos-citation-on-identity-fields-audit` - `profile-requirement-grounding` audit: `orden-hac-1347-2024:art-4 wrongly cited on declarant-identity bindings`
 
 ### exec
 
@@ -77,6 +88,13 @@ Auto-generated index of all documents tagged with `#profile-requirement-groundin
 - `2026-08-08-profile-requirement-grounding-P07-S22` - Ground and fix the silent tax-id/regime default: an absent profile yields NIF 00000000T and regime GENERAL across CLI surfaces instead of refusing or flagging the gap, per the per-operation-axis audit's finding two
 - `2026-08-08-profile-requirement-grounding-P07-S23` - Fix the no-op foral guard: tax_residence.ccaa being absent silently skips the parse_tax_region check instead of refusing, per the per-operation-axis audit's finding three
 - `2026-08-08-profile-requirement-grounding-P07-S34` - Name the outstanding schema-required fields on the setup-incomplete refusal when the enumeration finds any, falling back to the existing generic wording for a cross-field-only failure, per the per-operation-axis audit's open ready-to-execute item
+- `2026-08-08-profile-requirement-grounding-P08-S24` - Field-by-field parity audit between ProfileKey (domain/contribuyente/_keys.py, wizard-sourced) and ProfileFieldDefinition (schema.toml-sourced): every field present in one but not the other, every requirement-flag disagreement, every legal_refs/description mismatch
+- `2026-08-08-profile-requirement-grounding-P08-S25` - Sweep every modelo registry TOML under _data/registry/aeat/modelos/ for source=profile bindings and compare each binding's legal_refs against the corresponding schema.toml field's legal_refs
+- `2026-08-08-profile-requirement-grounding-P08-S26` - Decompose the S24 and S25 inventories into one Step per discrete drifted field or surface once those inventories exist, each grounded against the bundled BOE or AEAT corpus before any value is added, and this row must not close without either the fan-out rows or an explicit recorded finding of zero drift
+- `2026-08-08-profile-requirement-grounding-P08-S27` - Reconcile the three CLI surfaces that still read the separate ProfileKey-derived profile_health.missing_required mechanism and emit raw dotted paths (config profile status, wizard status, overview diagnostics): either wire them through the same enriched ProfilePreflightRequirement path this campaign built, or record a grounded reason each must stay on the separate mechanism
+- `2026-08-08-profile-requirement-grounding-P08-S28` - Re-run the JSON-schema-conformance, locale-coverage-parity, and profile-key-schema-required-parity gates after the union, plus a grounded regression proving no field identified as drifted in S25/S26 remains unreconciled
+- `2026-08-08-profile-requirement-grounding-P08-S35` - Add the 24 registry-grounded legal_refs to their schema.toml fields identified by S25, format-preserving and refusing on any target field not found, since each citation already exists and was corpus-verified on its registry binding and this is carrying it to the field, not new legal research
+- `2026-08-08-profile-requirement-grounding-P08-S36` - Run the mandatory fresh-context honesty review against the full P01-P08 closure and action every finding
 
 ### plan
 
@@ -86,3 +104,5 @@ Auto-generated index of all documents tagged with `#profile-requirement-groundin
 
 - `2026-08-08-profile-requirement-grounding-reference` - `profile-requirement-grounding` reference: `profile requirement schema and its three consumer surfaces`
 - `2026-08-09-profile-requirement-grounding-per-modelo-grounding-inventory-reference` - `profile-requirement-grounding` reference: `Grounded per-modelo profile-fact inventory`
+- `2026-08-09-profile-requirement-grounding-profilekey-schema-field-parity-reference` - `profile-requirement-grounding` reference: `ProfileKey vs schema.toml field-by-field parity audit`
+- `2026-08-09-profile-requirement-grounding-registry-schema-legal-refs-drift-reference` - `profile-requirement-grounding` reference: `Registry-binding vs schema.toml legal_refs drift sweep`
