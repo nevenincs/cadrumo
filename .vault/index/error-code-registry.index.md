@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#error-code-registry'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:63dac3020674970db0a2d9c2aefe8573db52c775d0d820bfcb12e364ff9534ee'
+body_hash: 'sha256:bf665c8393608167a248dcdd96b0e4dd9dac270fd3bb7ccd50464afd1fc07a49'
 related:
   - '[[2026-04-25-error-code-registry-adr]]'
   - '[[2026-04-25-error-code-registry-code-review-exec]]'
@@ -15,6 +15,7 @@ related:
   - '[[2026-04-25-error-code-registry-plan]]'
   - '[[2026-04-25-error-code-registry-research]]'
   - '[[2026-04-25-error-code-registry-review-audit]]'
+  - '[[2026-08-08-error-code-registry-refusal-funnels-audit]]'
 ---
 
 # `error-code-registry` feature index
@@ -30,6 +31,7 @@ Auto-generated index of all documents tagged with `#error-code-registry`.
 ### audit
 
 - `2026-04-25-error-code-registry-review-audit` - `error-code-registry` Code Review
+- `2026-08-08-error-code-registry-refusal-funnels-audit` - `error-code-registry` audit: `refusal funnels`
 
 ### exec
 

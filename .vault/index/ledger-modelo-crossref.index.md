@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#ledger-modelo-crossref'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
 body_hash: 'sha256:abdbf0d44a82abaf01fe08038e7053ba975b6a1a2d10655673ee8f246041e030'
 related:

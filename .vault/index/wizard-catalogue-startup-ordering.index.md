@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#wizard-catalogue-startup-ordering'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
 body_hash: 'sha256:4afc03f6ec96127867a78ac4cf9ad6fc2df5056c32706b75716dcc5c29551155'
 related:

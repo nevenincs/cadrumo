@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#profile-requirement-grounding'
 date: '2026-08-08'
-modified: '2026-08-08'
-body_hash: 'sha256:0fa88c7cef54d7b02261748ff67d21a2fdccec1721cda60d98d905929f3d7ba9'
+modified: '2026-08-09'
+body_hash: 'sha256:c6a67351c32bed5eb5959c71f0a665dd653f86c7250cdd3498b805f4b2599d8b'
 tier: L2
 related:
   - '[[2026-08-08-profile-requirement-grounding-adr]]'
@@ -23,16 +23,16 @@ Executes `2026-08-08-profile-requirement-grounding-adr` (accepted). Grounded in 
 
 Extend ProfilePreflightRequirement with label, legal_refs, and modelos; populate them in ProfilePreflightService.report() from the field object already in scope unioned with build_profile_grounding_index; cover with roundtrip and anti-tautology tests.
 
-- [ ] `P01.S01` - Add label, legal_refs, and modelos fields to ProfilePreflightRequirement; `src/cadrumo/application/user_profile/_commands.py`.
-- [ ] `P01.S02` - Populate the new fields in ProfilePreflightService.report() from the in-scope field object unioned with build_profile_grounding_index; `src/cadrumo/application/user_profile/_preflight.py`.
-- [ ] `P01.S03` - Add roundtrip and anti-tautology tests for the enriched ProfilePreflightRequirement; `src/cadrumo/application/user_profile/tests/`.
+- [x] `P01.S01` - Add label, legal_refs, and modelos fields to ProfilePreflightRequirement; `src/cadrumo/application/user_profile/_commands.py`.
+- [x] `P01.S02` - Populate the new fields in ProfilePreflightService.report() from the in-scope field object unioned with build_profile_grounding_index; `src/cadrumo/application/user_profile/_preflight.py`.
+- [x] `P01.S03` - Add roundtrip and anti-tautology tests for the enriched ProfilePreflightRequirement; `src/cadrumo/application/user_profile/tests/`.
 
 ### Phase `P02` - Wire the three consumer surfaces
 
 Thread the enriched requirement through the blocking-gate locale template (all four catalogues via dev.locales), ProfilePreflightMissingPayload, and ModeloReadinessMissingRequirementPayload.
 
-- [ ] `P02.S04` - Add label, legal_refs, and modelos to ProfilePreflightMissingPayload and its construction site; `src/cadrumo/entrypoints/cli/_config_payloads.py`.
-- [ ] `P02.S05` - Add label, legal_refs, and modelos to ModeloReadinessMissingRequirementPayload and its construction site; `src/cadrumo/entrypoints/cli/_modelo_payloads.py`.
+- [x] `P02.S04` - Add label, legal_refs, and modelos to ProfilePreflightMissingPayload and its construction site; `src/cadrumo/entrypoints/cli/_config_payloads.py`.
+- [x] `P02.S05` - Add label, legal_refs, and modelos to ModeloReadinessMissingRequirementPayload and its construction site; `src/cadrumo/entrypoints/cli/_modelo_payloads.py`.
 - [ ] `P02.S06` - Update the blocking-gate context and the profile_readiness_missing locale template to render label and legal ref per missing field in all four catalogues via dev.locales; `src/cadrumo/application/modelo/_profile_readiness_gate.py, src/cadrumo/locales/{en,es,ca,hu}.yml`.
 
 ### Phase `P03` - Verify

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#multi-row-modelo-declaration'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
 body_hash: 'sha256:05cba215541bcf3ea60ed8daf26201e2bd1f2552712fa1acbebc694260a97200'
 related:

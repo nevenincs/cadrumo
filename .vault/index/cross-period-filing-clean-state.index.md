@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cross-period-filing-clean-state'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
 body_hash: 'sha256:06445dd88274b0bfb3951d1c4e40eb3a35692a222babccd9ef72f5c8ca5c7df8'
 related:

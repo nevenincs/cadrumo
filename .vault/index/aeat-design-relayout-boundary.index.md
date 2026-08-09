@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#aeat-design-relayout-boundary'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
 body_hash: 'sha256:a27d9fa08603cef92b8ed916746fa98cda4ad86d263fe6f736f63c486c26f1fd'
 related:

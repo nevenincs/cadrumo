@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#recargo-equivalencia-source-of-truth'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:8bc38ad0bf2ab23a63783d8836d1c4eacc6a4c45e437685f16cbc6bbcd9207bd'
+body_hash: 'sha256:a5ee4972c04e18f84e6422ef4961e4becf546877591318264964e654f5bfb322'
 related:
   - '[[2026-08-07-recargo-equivalencia-source-of-truth-adr]]'
   - '[[2026-08-07-recargo-equivalencia-source-of-truth-research]]'
@@ -20,7 +20,7 @@ Auto-generated index of all documents tagged with `#recargo-equivalencia-source-
 
 ### adr
 
-- `2026-08-07-recargo-equivalencia-source-of-truth-adr` - `recargo-equivalencia-source-of-truth` adr: `the invoice or the table: what establishes a recargo de equivalencia cuota` | (**status:** `proposed`)
+- `2026-08-07-recargo-equivalencia-source-of-truth-adr` - `recargo-equivalencia-source-of-truth` adr: `the invoice or the table: what establishes a recargo de equivalencia cuota` | (**status:** `accepted`)
 
 ### research
 

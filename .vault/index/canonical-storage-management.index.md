@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#canonical-storage-management'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
 body_hash: 'sha256:d55fc7cf98d4206678f75ef7329704c41040504f2d73edce6a3ce5b6f7b3f6d5'
 related:

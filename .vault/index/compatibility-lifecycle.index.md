@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#compatibility-lifecycle'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
 body_hash: 'sha256:fd75e250780154cfe922bd016e14e5c7cbe6257e72711b9da256ec995f93d35a'
 related:

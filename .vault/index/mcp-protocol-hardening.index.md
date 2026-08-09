@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#mcp-protocol-hardening'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
 body_hash: 'sha256:20d8415ca59e6c495010872d1550180eedc8b8d2e7b061a0fb1e7b9bf807918b'
 related:

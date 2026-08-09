@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#real-pdf-fixture-corpus'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
 body_hash: 'sha256:c6c712dbc177c369dd69fc76a45020d4063590411c9b6c223e233f2fde575565'
 related:

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:7ac71a7d323e1dc69cd8e6dad8345828dfb124833ee4f96108e2bf79e2db0d46'
+body_hash: 'sha256:966d041119d60c000e3824d578eaa3892918941e39775fb1cb739f293b1aad26'
 related: []
 ---
 
@@ -62,3 +62,34 @@ This is the compounding form of the sweep hazard. Misattribution and a briefly-b
 **The two offender classes are not the same defect and must not be closed as one.** A bank export's filename containing a calendar quarter is external-world naming that the period grammar never parses; an AEAT-grammar token in a fixture is the thing the gate exists to catch. Whoever takes this must classify before allowlisting, and each allowlist entry must state its reason, or the allowlist becomes the honour-system list the gate was built to remove.
 
 Recorded here rather than opened as a row in the owning campaign's plan, because that plan is mid-flight under other executors and inserting a row into a peer campaign's tracking document on an inference about ownership would create exactly the false attribution this document is about.
+
+
+### A frozen `.git/index.lock` blocks every commit in the tree, and the sanctioned response is to queue
+
+Observed continuously across a multi-hour window: `.git/index.lock` present, zero bytes, mtime frozen at `2026-08-08 19:29:59`, while the last commit in the tree landed at `19:25:51`. Every `git commit` in the worktree fails with `fatal: Unable to create '.../.git/index.lock': File exists`, including a correctly-formed explicit-pathspec commit touching only its author's own clean files.
+
+The diagnosis rule works and should be applied before anything else: an **advancing** mtime means contention and will clear on its own; a **frozen** mtime means the holder died. This one is frozen, four minutes after the last successful commit, which is the signature of a git process that crashed mid-commit rather than one still working.
+
+Git's own error text ends with `remove the file manually to continue`. **That instruction is forbidden here and must not be followed.** The prohibition on deleting anything under `.git/` — `index.lock` named explicitly — has no debugging exception, and the tool suggesting it does not create one. A lock whose holder is genuinely dead is indistinguishable, from inside a single agent's view, from one held by a peer's long-running operation that is about to write; `ps -W` cannot prove absence of the holder, so "the holder is dead" is never a conclusion an agent can reach with certainty, only a reading of the mtime.
+
+**What follows for a blocked author.** The lock blocks publication, not work. Do the research, land the edits in the working tree, run the real gates, and prove the change with a mutation pass — all of that completes normally with the lock held. Then record the change as a queued diff naming every file, and hand the queue forward rather than stalling the iteration. What must not happen is abandoning verification because the commit cannot land: an unverified queued diff is strictly worse than a verified one, because the next agent to pick it up inherits a change nobody has proven.
+
+The cost is real and worth stating plainly. Queued work sits in the working tree as uncommitted changes indistinguishable from any other peer's WIP, which means it is exposed to exactly the bare whole-index sweep this document opens with — a sweep would publish it under someone else's subject. The two hazards compound: the lock forces work to accumulate uncommitted, and accumulated uncommitted work is what the sweep hazard feeds on. That argues for keeping each queued change small and independently committable, so that whichever of them a sweep captures, the rest still land cleanly under their own author.
+
+
+**Second independent confirmation, ~5h51m into the freeze.** Re-observed at `2026-08-09 01:20`: same zero-byte file, same frozen `2026-08-08 19:29:59` mtime, unchanged across the whole of a second remediation iteration. The queue-and-continue response held up: a full research-implement-test-mutation-prove cycle completed normally with the lock held, and only publication was blocked. The frozen mtime remains the diagnosis, and the file remains untouched.
+
+One refinement worth recording for whoever picks this up. A blocked iteration still needs to compare a working-tree change against its committed baseline, and the sanctioned procedure for that — copy the working file aside, write the HEAD bytes in place, test, restore — opens a mutation window that a bare whole-index sweep could otherwise publish. **While the lock is frozen that window is actually safe, because no agent in the tree can commit anything at all.** The lock that blocks your publication also blocks the sweep that would capture your window. That is a genuine, if narrow, compensation, and it makes the HEAD-bytes comparison the cheapest reliable way to separate a pre-existing red test from one your own edit caused. Restore from the scratch copy and verify byte-identical by hash afterwards regardless; the safety is situational and evaporates the moment the lock clears.
+
+### A documented rationale that reads as a smell can be load-bearing, and the cheap check is to run it
+
+A prior remediation pass nominated four sites for re-typing: `expression` fields declared `dict[str, object]` on CLI payload schemas, where a real `FormulaExpression` model already exists in the registry package. The pattern matches the standing prohibition on bare mappings at typed boundaries almost exactly, and the nomination read as obviously correct.
+
+It is wrong, and the module already says so. The payload module's own docstring states that the `expression` fields stay `dict[str, object]` because `FormulaExpression` is a recursive tree, and that the strict `OutputSchema` base does not coerce lists back to tuples on re-validation.
+
+That is not a rationalisation. `FormulaExpression` declares `args: tuple[FormulaExpression, ...]` and inherits a strict model config, so a round-trip through `model_dump(mode="json")` renders the tuple as a JSON array and re-validation refuses it: `Input should be a valid tuple ... input_type=list`. The refusal reproduces in four lines against the real classes, with no test harness. Re-typing the four sites would have made every one of those payloads unre-validatable.
+
+**What follows.** The prohibition on untyped boundary mappings has a real exception where a strict recursive model meets a JSON transport, and this is it. The available remedies are each worse than the documented status quo: a parallel list-shaped projection of `FormulaExpression` would be a second definition of one concept, and relaxing strictness on `OutputSchema` would weaken the contract for every payload in the tree to type one field. The `dict[str, object]` is the deliberate escape hatch, and it is already documented at the site.
+
+The transferable part is procedural. A rule-shaped violation that has a rationale written beside it is not thereby cleared — prose asserting a property the code lacks is a known failure mode, and the rationale deserves testing rather than deference. But it deserves *testing*, not dismissal: the check here cost four lines and inverted the conclusion. Running it is cheaper than either believing the docstring or overriding it, and a nomination inherited from an earlier pass carries no more authority than the docstring it contradicts. Both are claims; only one of them was measured.
+

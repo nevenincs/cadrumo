@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#pr28-storage-retro'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
 body_hash: 'sha256:f4ea569effbf9e4592dbe9cc6871815062559e3b43fc13a6319626790ec19eb2'
 related:

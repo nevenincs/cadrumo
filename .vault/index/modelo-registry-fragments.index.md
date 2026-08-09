@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-registry-fragments'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
 body_hash: 'sha256:49ede35305511e36a3a5f7d8ff205888023fe4d499cc7cf1adbac3468451ef1b'
 related:

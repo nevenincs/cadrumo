@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-localization-cascade'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
 body_hash: 'sha256:18d2b176a7c5b01392b1c887d0b637c770eb74e5b61286373426cbf48b21e111'
 related:

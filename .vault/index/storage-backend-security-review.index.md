@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#storage-backend-security-review'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
 body_hash: 'sha256:54f10889c014800b38ab75ec750e13c80e0d5cb1f9f97ecc6d81162014c8f59e'
 related:

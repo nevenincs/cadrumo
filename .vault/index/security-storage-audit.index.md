@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#security-storage-audit'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
 body_hash: 'sha256:c7c2dbe3de41038794d5e0e85c73df08256050f2eef23ce2cb945992d7ed92f2'
 related:

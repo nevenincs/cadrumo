@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#dead-code-purge'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
 body_hash: 'sha256:a806bef768e590c8f8aaa720741082e240fa6026aac8a2ae4a88bd25ee8fa45a'
 related:

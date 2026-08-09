@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#llm-invoice-read-reconciliation'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:dd71004b8703163f26975da3e19e10de7dddd1c3867105005dd71308d928da71'
+body_hash: 'sha256:8a2c3df8abd212a74336f411f6034aa25a6312a441b14ddae9034f2c80ba0fd8'
 related:
   - '[[2026-08-06-llm-invoice-read-reconciliation-adr]]'
   - '[[2026-08-06-llm-invoice-read-reconciliation-research]]'
@@ -20,7 +20,7 @@ Auto-generated index of all documents tagged with `#llm-invoice-read-reconciliat
 
 ### adr
 
-- `2026-08-06-llm-invoice-read-reconciliation-adr` - `llm-invoice-read-reconciliation` adr: `Direction-aware evidence reading, and the two questions the invoice-read path cannot answer alone` | (**status:** `proposed`)
+- `2026-08-06-llm-invoice-read-reconciliation-adr` - `llm-invoice-read-reconciliation` adr: `Direction-aware evidence reading, and the two questions the invoice-read path cannot answer alone` | (**status:** `accepted`)
 
 ### research
 

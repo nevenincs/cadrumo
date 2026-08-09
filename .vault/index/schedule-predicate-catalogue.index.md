@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#schedule-predicate-catalogue'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
 body_hash: 'sha256:c20d3bc53c8b69f28125671f17e74dd4266f8b03c7d43db77ec0f16a76899e19'
 related:

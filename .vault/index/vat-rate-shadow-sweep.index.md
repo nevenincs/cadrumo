@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#vat-rate-shadow-sweep'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
 body_hash: 'sha256:82e0bf3357b96bf5926fd61e9c31dc47e755cb148e31eb1bdf38da58617af40f'
 related:

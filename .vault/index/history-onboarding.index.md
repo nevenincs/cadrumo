@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#history-onboarding'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:794b801a8e8ba2a71710aa477079adb9b37c0b4b284f628294aabff857fe3add'
+body_hash: 'sha256:9b2b04c6da138acdb96228792599967cd8a3f0918e5323505e5dbb5e018c2c51'
 related:
   - '[[2026-08-07-history-onboarding-P01-S01]]'
   - '[[2026-08-07-history-onboarding-P01-S02]]'
@@ -38,6 +38,7 @@ related:
   - '[[2026-08-07-history-onboarding-P04-S14]]'
   - '[[2026-08-07-history-onboarding-P04-S15]]'
   - '[[2026-08-07-history-onboarding-P04-S16]]'
+  - '[[2026-08-07-history-onboarding-P04-S30]]'
   - '[[2026-08-07-history-onboarding-P04-S31]]'
   - '[[2026-08-07-history-onboarding-P04-S33]]'
   - '[[2026-08-07-history-onboarding-P04-S35]]'
@@ -88,6 +89,7 @@ Auto-generated index of all documents tagged with `#history-onboarding`.
 - `2026-08-07-history-onboarding-P04-S14` - add the cross-period next_action builder cases pointing at the new discover and pull-all verbs, verified by the existing next-action conformance coverage
 - `2026-08-07-history-onboarding-P04-S15` - update operator_surface/_help.py with the new discover and pull-all verb entries, verified by test_rule_surface_conformance.py
 - `2026-08-07-history-onboarding-P04-S16` - update the agent-harness docs under src/cadrumo/_data/agent that name the filed verb group to cite the new discover and pull-all verbs, verified by the harness-citation conformance check confirming every named verb resolves against the live operator-surface manifest
+- `2026-08-07-history-onboarding-P04-S30` - Enroll the app.* payload modules into the JSON-schema conformance parametrisation in staged per-family batches, since SCHEMA_REGISTRY is populated at collection time from the config payload modules only, so every parametrised case was a config or root key and no app command was inside the gate at all. That is not something a passing run could reveal, because a gate can only check what is registered when it collects. LIVE FAMILY LANDED at commit 71a7cc3ba2, measured from outside the repository first with a probe that refuses rather than passes if the import adds no key: enrolling _app_live_payloads adds 33 schema keys and takes the gate from 163 to 229 cases, all green, so no conformance violation was hiding behind the absence. FOUR FAMILIES REMAIN and are the outstanding batches, named in the test module's own comment so the staging is visible rather than implied: agent-workspace, contract, maintenance and quickfile. Gate for each remaining batch. Measure the delta before landing, land only if green, and if a batch reds then that is a real conformance finding to report rather than a reason to leave the family unenrolled
 - `2026-08-07-history-onboarding-P04-S31` - add a fixture-anchor assertion beside every test that intersects a candidate set against UNMODELED_OBLIGATIONS, which is currently EMPTY so any such intersection assertion passes vacuously and keeps passing if the filter it guards is deleted, gating instead on the PROPERTY the filter guarantees so the test stays meaningful whether the collection is empty today or populated tomorrow, verified by the anchor failing when the constant is empty and by the property assertion failing when the filter is removed
 - `2026-08-07-history-onboarding-P04-S33` - Enroll app live filed discover in the profile-bound write allowlist with a comment stating why a read-shaped verb writes: it persists nothing of the register it reads, which is why it is discover rather than pull, but it resolves its session through the central live-session writer, which opens an active-profile storage span and an auth mutation span. Its own docstring asserting that nothing is persisted is true of register data and false of session state, so enrolling on the docstring's word would be the error the census gate's own message warns against. Gate: the name-independent leaf census no longer reports the leaf as accounted for by no mechanism, and the MCP write-policy mutability parity gate still passes, since it requires every write-allowlist entry to map to a non-read-only family
 - `2026-08-07-history-onboarding-P04-S35` - MEASUREMENT row. Partition the error-registry entries carrying no default_suggestion into operator-reachable and internal-only by reading each entry's raise sites. Measured when S13 landed: 377 of 606 entries carry no suggestion, 62 percent. That count is NOT itself a defect, because an entry an operator can never reach correctly carries none, which REFUSED_ACCESS_GATE_LIVE_READ_NOT_ENABLED demonstrates by firing only under pytest, where suggesting the opt-in environment variable would have armed real AEAT access. The open question is therefore not why 377 lack suggestions but how many of them an operator can actually reach. That is decidable per entry by reading raise sites, as S13 did for ERROR_APPLICATION_LIVE by finding all seven of its direct raises inside stages the history sweep sequences, but nothing in the tree records which side any entry falls on, so it is worth measuring once rather than rediscovering per row. A suggestion that MISDIRECTS is worse than none, because the agent-operator this CLI targets follows it, which is why declining FAIL_SNAPSHOT_NOT_FOUND was correct: a filed-specific citation on a base shared with borrador and deudas would misdirect their misses. The output is a classified inventory plus a per-entry decision, never a blanket sweep adding suggestions to 377 entries. Gate: the partition is total over the suggestion-less set with a stated justification recorded per entry for the side it lands on, gated on totality and per-entry justification rather than on any count, and the suggestion-command conformance test stays green for every suggestion added. Scope-adjacent to history-onboarding rather than native to it, and lives here for provenance because S13 surfaced it

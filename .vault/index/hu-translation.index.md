@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#hu-translation'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
 body_hash: 'sha256:da01382edd03bbc72f7dd5fb1195acd03ba9196829858fac9ba32c3a9a00e6a6'
 related:

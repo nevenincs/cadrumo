@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#pytest-markers'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
 body_hash: 'sha256:106b63172c754ba22fa6878a34aa58a3bd1df58c9107ce969a4bbed43f379aff'
 related:

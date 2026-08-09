@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cross-period-prorrata'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
 body_hash: 'sha256:6998ae64571f31e5442b5a4c29cf5ad3ade1a92b114d6e7e79cb57ce9c9c01a2'
 related:

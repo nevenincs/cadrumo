@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#minimo-descendientes-eligibility'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
 body_hash: 'sha256:15f4f0471a77a102dd5e349a24268f5e767fafa4a48e66e013a9806d6a796e8e'
 related:

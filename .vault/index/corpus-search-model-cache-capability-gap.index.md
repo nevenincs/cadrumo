@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#corpus-search-model-cache-capability-gap'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
 body_hash: 'sha256:ee8ca08123bc9c381966afda3fdb1dbf9d88da0015d256ac2b7b0aa12abfafd4'
 related:

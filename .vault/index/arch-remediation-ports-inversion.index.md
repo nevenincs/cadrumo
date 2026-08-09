@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#arch-remediation-ports-inversion'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
 body_hash: 'sha256:0a3e304c4600f243033946bdebf24e0cad5ee8a72a5f013695168cb62ba5269b'
 related:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#resource-management-api'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
 body_hash: 'sha256:3aeed70c637dc78f198517a0793578ddd05a7ae8bfd9c0c5b0f9caf2f6ff0b08'
 related:

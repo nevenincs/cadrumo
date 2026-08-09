@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#aeat-architecture-review'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
 body_hash: 'sha256:3c5be2f68373e447eb5e29ca3febda26376f001ce8fc07d8223c0463d8144a45'
 related:

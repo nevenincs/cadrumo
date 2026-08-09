@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#tui-wizard-substrate'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
 body_hash: 'sha256:db13ac78fc45c5f45b1ca4062cc013f2b89f6b7afc61a1226789f225a2b18848'
 related:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#open-decisions-and-operator-gates'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
 body_hash: 'sha256:88f230635db68bb23fe03f326899bac65d814dcb038ea0445c83824e6469877b'
 related:

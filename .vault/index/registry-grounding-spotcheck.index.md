@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#registry-grounding-spotcheck'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
 body_hash: 'sha256:7cbb9fe3a472d703508a829f2762173ea1383d257058c7184622cbc9f197de5b'
 related:

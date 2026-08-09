@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-locales-cli'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
 body_hash: 'sha256:7310b139e1ae47e935cb1d9fe62db090cc882fb9f678f21f77bcf464ed335100'
 related:

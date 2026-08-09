@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#financial-provider-extraction-discipline'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
 body_hash: 'sha256:ecdbd639051c40c7e30a3624fe66e18534d5b2e0cf285ff5612945ab43b1def4'
 related:

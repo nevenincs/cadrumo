@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#calculation-source-connectivity'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
 body_hash: 'sha256:540d0ec4bf50dc6785d5e3ede8d9ea357a0a2db232b8d715dd23f54fe4ca05f5'
 related:

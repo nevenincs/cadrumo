@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#bucket-sealed-archive'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
 body_hash: 'sha256:99785429123fb3550464707171fc1bd6f91696062b4906ab1844861add0548bb'
 related:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#legal-grounding-centralization'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
 body_hash: 'sha256:a974734d226730082c9684ef53de82b9b7d7e995c6a3b59b70113e09c06a13e8'
 related:

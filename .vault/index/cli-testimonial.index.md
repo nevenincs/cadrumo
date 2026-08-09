@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-testimonial'
-date: '2026-08-08'
-modified: '2026-08-08'
+date: '2026-08-09'
+modified: '2026-08-09'
 body_schema: 'body-v1'
 body_hash: 'sha256:c6043c529df0317ab9cf81257034f5db19b79a1af50b645643909b4b8e1edb1e'
 related:
