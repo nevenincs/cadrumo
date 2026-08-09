@@ -29,6 +29,7 @@ two would not land on the expected refusal.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -36,6 +37,7 @@ from pathlib import Path
 import pytest
 
 from ....core import Period
+from ....domain.calculations.registry import IvaLedgerObservation
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -101,7 +103,7 @@ def _transaction(row_id: str, *, iva_rate: Decimal | None, iva_amount: Decimal) 
     )
 
 
-def _aggregate(transaction: Transaction) -> tuple[tuple[object, ...], list[str]]:
+def _aggregate(transaction: Transaction) -> tuple[Sequence[IvaLedgerObservation], list[str]]:
     catalogue = TransactionCatalogue.model_validate({"transactions": {transaction.transaction_id: transaction}})
     aggregation = aggregate_iva_ledger_observations(catalogue, period=_PERIOD)
     return aggregation.observations, [issue.reason.value for issue in aggregation.issues]

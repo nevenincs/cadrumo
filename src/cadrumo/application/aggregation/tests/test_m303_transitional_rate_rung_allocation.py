@@ -91,7 +91,7 @@ def _transaction(
     *,
     on_date: date,
     taxable_base: Decimal,
-    iva_rate: Decimal,
+    iva_rate: Decimal | None,
     iva_amount: Decimal,
 ) -> Transaction:
     return Transaction.model_validate(
@@ -356,20 +356,20 @@ def test_an_underdetermined_observation_would_reach_no_rung_at_all() -> None:
     of -- while its determined twin reaches the ordinary reducido rung. So the
     refusal above is load-bearing, not incidental.
     """
-    common = {
-        "ledger_id": "control",
-        "transaction_date": date(2024, 11, 6),
-        "category": IvaCategory.DOMESTIC_REDUCED,
-        "rate_kind": IvaRateKind.REDUCED,
-        "flow_direction": IvaFlowDirection.REPERCUTIDO,
-        "base_amount": Decimal("1600.00"),
-        "iva_amount": Decimal("120.00"),
-        "recargo_amount": Decimal("0"),
-    }
     revision = _revision()
 
     def reached(applied_rate: Decimal | None) -> dict[str, Decimal]:
-        observation = IvaLedgerObservation(**common, applied_rate=applied_rate)
+        observation = IvaLedgerObservation(
+            ledger_id="control",
+            transaction_date=date(2024, 11, 6),
+            category=IvaCategory.DOMESTIC_REDUCED,
+            rate_kind=IvaRateKind.REDUCED,
+            flow_direction=IvaFlowDirection.REPERCUTIDO,
+            base_amount=Decimal("1600.00"),
+            iva_amount=Decimal("120.00"),
+            recargo_amount=Decimal("0"),
+            applied_rate=applied_rate,
+        )
         values = resolve_iva_ledger_binding_values(revision, (observation,))
         return {str(k): v for k, v in values.items() if "iva-repercutido" in str(k) and v != Decimal("0")}
 
