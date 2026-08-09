@@ -5,7 +5,7 @@ tags:
 date: '2026-08-09'
 modified: '2026-08-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:ff18ac8014853a0eb2f1805c747bb3af043b7c0df2c015a4638959215119d4a5'
+body_hash: 'sha256:e0d0be17add0f4be103c0cb7dbc477694617db3e6d7422173bdd6133894e7722'
 related:
   - "[[2026-08-08-profile-requirement-grounding-adr]]"
 ---
@@ -69,3 +69,35 @@ The requirement concept is spelled in four namespaces that cannot be compared wi
 ### Method note: what was verified and what was not
 
 The two headline findings were re-verified after the swarm reported them — the selector count by loading the real schema in-process, the placeholder by reading the declaration and enumerating call sites. The ten-mechanism inventory and the per-command classification are sub-agent output confirmed only at the `file:line` level, not exhaustively; the per-command table in particular covers commands reachable from the profile read paths traced, not all ~300 CLI verbs. One reported item is explicitly **unconfirmed** and should not be actioned as fact: that `verify`/`file`/`export` may resolve the readiness gate against the work unit's bucket while building the taxpayer projection from the workflow state's active profile, which would diverge under a `--bucket-id` override.
+
+
+### Outcome (2026-08-09, same day): what was actioned, and one finding withdrawn
+
+Appended after acting on the placeholder finding, so a later reader does not re-derive a claim this document itself no longer supports.
+
+**Fixed and verified:**
+
+- `_modelo_records_cli.py` — the placeholder made `import_external_filing_evidence`'s existing refusal structurally unreachable (it fires only on a falsy identity). Fixed in `a7c58e309b` by reading the declared identity.
+- `_overview.py` calendar — the evidence matchers fail OPEN on an empty identity and CLOSED on a non-empty wrong one, so the placeholder dropped genuinely filed obligations and redisplayed them as unfiled. Fixed in `a82de57da0`.
+- `_ledger_support.py` — unrelated to `_profile_to_taxpayer` but the same shape: an undeclared `fiscal_residency` fell through to a hardcoded `"ES"`, defeating the impatriado aggregation's documented invariant that an unresolved jurisdiction "is NEVER silently coerced to ES". Fixed in `c8b26b1fc4` by resolving to `None`, the state that aggregation already handles.
+
+**Withdrawn:** the claim does NOT hold for `_modelo_work_verification_cli.py` (`work dependencies`). A fix was written, then withdrawn unshipped. Driving the real clean-state evaluator over one seeded, genuinely-filed observation and varying only the identity:
+
+| `taxpayer_tax_id` | blockers |
+|---|---|
+| `"00000000T"` (placeholder) | `mismatched_external_evidence_record` |
+| `None` | `mismatched_external_evidence_record` |
+| `"X1234567L"` (**correct**) | `mismatched_external_evidence_record` |
+
+Identical in all three, **including the correct identity** — so that path was not identity-gated at all under this seed, and a test asserting "placeholder blocks" passed for an unrelated reason. Only the correct-identity positive control exposed it. Without that control a no-op change and two tests encoding a false belief would have shipped looking green.
+
+**A smaller, real finding replaces it.** This surface has two identity paths with OPPOSITE empty-handling — `_aeat_register_provenance_blockers` skips on empty, `_justificante_matches_filing` returns `False` on empty — and both map to the same `MISMATCHED_EXTERNAL_EVIDENCE_RECORD`. So an operator who has declared no NIF is told their external evidence record is mismatched, pointing them at their filed evidence rather than at their profile. The fail-closed half is arguably correct for a clean-state gate (official AEAT evidence cannot be confirmed without knowing whose it is); what is wrong is that absence and mismatch are indistinguishable in the report. Remediation is a distinct unresolved-identity blocker in `application/calculations`, not a CLI change — it alters a typed enum consumed by verification surfaces and needs its own decision. **Not actioned here.**
+
+### Correction: a call-site count is not a defect count
+
+The finding above is headed "across fourteen CLI surfaces", and that framing was wrong in a way worth naming, because it is the kind of error that reads as rigour.
+
+Fourteen is the number of `_profile_to_taxpayer` call sites. It is not the number of defective ones. Whether the placeholder does harm at a given site depends entirely on how that site's CONSUMER handles an empty value — and the consumers disagree: some fail open on empty (placeholder harmful, absence safe), one fails closed on empty (both equally blocked), and the rest are unexamined. Two of the three sites investigated were genuine defects; one was not.
+
+So the honest scope is: **three sites investigated, two defects fixed, one withdrawn, eleven unexamined** — not "fourteen surfaces affected". Counting the call sites and reporting that count as the blast radius silently substitutes an easy measurement for the hard one, and the resulting number is both precise and unearned.
+
