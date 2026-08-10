@@ -27,7 +27,7 @@ fichero-BOE they file.
 
 Exemptions are keyed by ``(module, enclosing function, primitive)`` and never by
 line number. File granularity is not enough: a module that legitimately owns the
-funnel — ``_common.py`` owns both ``_emit_envelope`` and ``emit_progress_line`` —
+funnel — ``_common.py`` owns ``_render_and_echo`` —
 would otherwise blanket-exempt every future emit added anywhere inside it, so a
 bypass dropped into a neighbouring function in an already-listed module would
 pass silently. Line numbers are rejected for the opposite reason: they move with
@@ -62,14 +62,13 @@ _EXCLUDED_MODULES: set[Path] = set()
 # without passing the redacting renderer. Keep the reason specific enough that a
 # reviewer can re-derive the decision without reading the call site.
 _ALLOWED_DIRECT_OUTPUTS: dict[tuple[str, str, str], str] = {
-    ("entrypoints/cli/_common.py", "_emit_envelope", "typer.echo"): (
-        "IS the success funnel: echoes render_command_output()'s text arm, which "
-        "applied redact_for_cli_output before returning."
-    ),
-    ("entrypoints/cli/_common.py", "emit_progress_line", "typer.echo"): (
-        "IS the streamed-progress funnel: echoes render_command_output()'s text "
-        "arm, so a progress line gets the same redaction pass and the same "
-        "reveal-identifiers resolution as the closing envelope."
+    ("entrypoints/cli/_common.py", "_render_and_echo", "typer.echo"): (
+        "IS the success funnel, and is now the ONLY one: echoes "
+        "render_command_output()'s text arm, which applied redact_for_cli_output "
+        "before returning. The closing envelope and the streamed progress channel "
+        "both delegate here, so this is the single place operator-facing success "
+        "text crosses into stdout. It replaced two entries that each owned a "
+        "private copy of the same three lines."
     ),
     ("entrypoints/cli/_errors.py", "write_stderr", "write"): (
         "IS the stderr funnel: every write in this function emits redacted_text, "
@@ -331,3 +330,10 @@ def test_emit_boundaries_are_present_for_success_output() -> None:
     # envelope exists, so without a shared primitive each caller reinvents a
     # bare echo and the stream drifts from the envelope's redaction.
     assert "def emit_progress_line(" in common
+    # Both choke points delegate to ONE writer. Sharing a renderer is not the
+    # same as sharing an implementation: the streamed channel originally called
+    # render_command_output itself and kept its own echo, which is a second copy
+    # of the boundary and the shape the whole gate exists to prevent. Pinning the
+    # count keeps a third emitter from quietly minting a third copy.
+    assert "def _render_and_echo(" in common
+    assert common.count("typer.echo(rendered.text)") == 1
