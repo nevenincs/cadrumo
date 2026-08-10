@@ -39,7 +39,7 @@ from ...core import HEX_PATTERN_64, Period
 from ...core.config import SecretStoreBackend
 from ...core.errors import BaseSeverity
 from ...core.identity import BucketId, ProfileId
-from ...core.json_contract import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema, ResolvedPreconditionAction, register_schema
 from ...core.time import validate_utc_aware
 from ...domain.user_profile import UserProfileFact, UserProfileStatus
 
@@ -514,7 +514,7 @@ class ConfigProfileShowResult(OutputSchema):
     profile_record_present: bool | None = None
     configured: bool | None = None
     error: str | None = None
-    next_action: str | None = None
+    precondition_action: ResolvedPreconditionAction | None = None
     bucket_id: str | None = None
     # Readiness / repair branches (raised when profile record cannot be loaded).
     readiness: str | None = None
@@ -647,7 +647,7 @@ class ConfigStatusResult(OutputSchema):
     profile_id: str | None = None
     iva_regime: str | None = None
     tax_residence_ccaa: str | None = None
-    next_action: str | None = None
+    precondition_action: ResolvedPreconditionAction | None = None
 
 
 class ConfigResetTargetPayload(OutputSchema):
@@ -1130,7 +1130,7 @@ class ActiveProfileHealthPayload(OutputSchema):
     profile_total_keys: int = Field(default=0, ge=0)
     missing_required: list[str] = []
     repairable_by_clearing_pointer: bool = False
-    next_action: str = ""
+    precondition_action: ResolvedPreconditionAction | None = None
 
 
 @register_schema("config.repair.profile")
@@ -1163,7 +1163,7 @@ class RepairProfileResult(OutputSchema):
     profile_record_present: bool | None = None
     status: str | None = None
     error: str | None = None
-    next_action: str | None = None
+    precondition_action: ResolvedPreconditionAction | None = None
 
 
 class RepairIntegrityCheckPayload(OutputSchema):

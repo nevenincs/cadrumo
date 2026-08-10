@@ -62,7 +62,7 @@ def test_readiness_stays_required() -> None:
 
 def test_client_deserialization_refuses_a_widened_readiness() -> None:
     """A payload rebuilt from a client's JSON carries the same contract."""
-    valid = WhoamiIdentity(readiness="ready", active_profile="Erika", next_action="")
+    valid = WhoamiIdentity(readiness="ready", active_profile="Erika", precondition_action=None)
     assert WhoamiIdentity.model_validate_json(valid.model_dump_json()) == valid
 
     widened = valid.model_dump()

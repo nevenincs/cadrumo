@@ -26,6 +26,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 def _pointer_repair_payload(*, status: object = "none", source: object = "none") -> dict[str, object]:
+    from .....application.profile_preconditions import inspect_active_profile_precondition
+    from ..._common import resolve_cli_precondition_action
+
+    verdict = inspect_active_profile_precondition(
+        active_profile_present=False,
+        registered_profile_count=0,
+    )
+    assert verdict is not None
     return {
         "dry_run": True,
         "cleared_pointer": False,
@@ -40,7 +48,7 @@ def _pointer_repair_payload(*, status: object = "none", source: object = "none")
             "profile_total_keys": 2,
             "missing_required": ["identity.tax_id"],
             "repairable_by_clearing_pointer": False,
-            "next_action": "aeat config profile create NAME --tax-id <TAX_ID> --activity <ACTIVITY>",
+            "precondition_action": resolve_cli_precondition_action(verdict),
         },
         "after": None,
     }
@@ -54,7 +62,6 @@ def _profile_record_status_payload() -> dict[str, object]:
         "registered_bucket": True,
         "profile_record_present": True,
         "status": "activo",
-        "next_action": "aeat config login x",
     }
 
 

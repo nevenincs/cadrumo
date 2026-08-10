@@ -110,6 +110,7 @@ from .auth import (
 )
 from .auth_credentials import ActiveCertificateCredentials
 from .ledger import LedgerPreflightIssue, preflight_ledger_tax_readiness
+from .operator_actions import PreconditionVerdict
 from .user_profile import ProfilePreflightRequirement
 from .workflow import (
     ActiveProfileHealth,
@@ -143,8 +144,8 @@ class ProjectionActiveProfile(BaseModel):
         registered_bucket: Whether the active-profile pointer resolves
             to a registered bucket.
         record_present: Whether the encrypted profile record loaded.
-        next_action: The operator-facing next-step command carried from
-            :func:`~cadrumo.application.workflow.assess_active_profile_health`.
+        precondition_verdict: The application-owned recovery verdict carried
+            from :func:`~cadrumo.application.workflow.assess_active_profile_health`.
     """
 
     model_config = _STRICT_FROZEN
@@ -154,7 +155,7 @@ class ProjectionActiveProfile(BaseModel):
     health_status: str = ""
     registered_bucket: bool = False
     record_present: bool = False
-    next_action: str = ""
+    precondition_verdict: PreconditionVerdict | None = None
 
 
 class ProjectionWorkspaceSummary(BaseModel):
@@ -271,7 +272,7 @@ def _build_active_profile(health: ActiveProfileHealth) -> ProjectionActiveProfil
         health_status=health.status,
         registered_bucket=health.registered_bucket,
         record_present=health.profile_record_present,
-        next_action=health.next_action,
+        precondition_verdict=health.precondition_verdict,
     )
 
 

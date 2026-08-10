@@ -260,6 +260,10 @@ def test_whoami_identity_is_null_when_no_profile_is_active(tmp_path: Any) -> Non
     assert identity.active_profile is None
     assert identity.tax_id_present is False
     assert identity.readiness == "none"
+    assert identity.precondition_action is not None
+    assert identity.precondition_action.action is not None
+    assert identity.precondition_action.action.action_id == "operator.profile.create"
+    assert identity.precondition_action.missing_argument_names == ("profile_name",)
 
 
 def test_render_whoami_identity_names_the_label_and_readiness() -> None:
@@ -268,7 +272,7 @@ def test_render_whoami_identity_names_the_label_and_readiness() -> None:
             active_profile="Erika",
             tax_id_present=True,
             readiness="ready",
-            next_action="aeat app overview status",
+            precondition_action=None,
         ),
     )
     assert "Erika" in text
