@@ -245,8 +245,17 @@ def reconcile_modelo_303_iva_compensation(
     # ``iva.compensacion-pendiente-periodos-anteriores`` (LIVA art. 99.5).
     # Pass an explicit zero recurrence + the first-period flag so the decision
     # is the non-blocking ``first_period_zero`` rather than the ``missing``
-    # block. This NEVER overrides a real recurrence: only the
-    # genuinely-absent (None) case is mapped to zero.
+    # block. A present recurrence still flows through normally.
+    #
+    # This never overrides a recurrence it can SEE, but seeing one is the
+    # caller's job: a ``None`` here says only that the caller produced no
+    # recurrence, never why. The claim that used to stand in this comment --
+    # that only the genuinely-absent case is mapped to zero -- was the defect
+    # rather than the guarantee, because a caller that had found a stored
+    # observation and could not read it arrived with the same ``None`` as a
+    # caller that had found nothing at all, and an unreadable envelope became a
+    # proven zero on the compensación. The caller must therefore pass the flag
+    # false whenever it saw evidence it could not use.
     is_first_iva_period = treat_absent_recurrence_as_first_period and wallet is None and local_recurrence_amount is None
     if is_first_iva_period:
         local_recurrence_amount = Decimal("0")
