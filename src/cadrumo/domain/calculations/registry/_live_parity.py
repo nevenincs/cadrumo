@@ -25,7 +25,6 @@ modules so the abstraction stays free of network code.
 
 from __future__ import annotations
 
-from abc import abstractmethod
 from collections.abc import Iterable, Mapping
 from enum import StrEnum
 from json import JSONDecodeError, loads
@@ -53,7 +52,6 @@ _log = get_logger(__name__)
 _ORACLE_ID_ADAPTER: TypeAdapter[OracleId] = TypeAdapter(OracleId)
 
 __all__ = [
-    "BaseCheckerOracle",
     "CrossReferenceApplicability",
     "CrossReferenceApplicabilityDeclaracion",
     "LiveParityCatalogue",
@@ -770,189 +768,6 @@ def decode_replay_json_payload(raw: bytes, *, surface_label: str) -> ReplayPaylo
         raise RegistryValidationError(f"{surface_label} payload must be a JSON object")
     _log.debug("decoding replay payload for %s", surface_label)
     return ReplayPayload.model_validate(document)
-
-
-class _CheckerDriver[CheckerObservation](Protocol):
-    """Structural type of a checker-style replay/live driver."""
-
-    @property
-    def mode(self) -> Literal["live", "replay"]: ...
-
-    def planned_operations(
-        self,
-        payload: bytes,
-        *,
-        expected: Mapping[str, object],
-    ) -> tuple[RemoteOperation, ...]: ...
-
-    def collect_observation(
-        self,
-        payload: bytes,
-        *,
-        expected: Mapping[str, object],
-    ) -> CheckerObservation: ...
-
-
-class BaseCheckerOracle[CheckerObservation]:
-    """Shared orchestrator for checker-style oracles.
-
-    Encapsulates the common ``verify_payload`` template used by per-key
-    verdict checkers (NIF-IVA, GROI, and analogous future surfaces):
-    guard pre-flight, driver presence branch, driver-error → unverifiable
-    translation, per-key field comparison, overall verdict, and result
-    packing. Subclasses provide the surface-specific bits: the planned
-    operations builder, expected-value normaliser, observed-value lookup,
-    per-field comparison, and human narrative label.
-
-    Per-domain typed observation models (NIF/IVA vs GROI) stay in the
-    concrete adapter modules; this base composes them generically.
-    """
-
-    surface_label: str
-
-    def __init__(self, *, driver: _CheckerDriver[CheckerObservation] | None = None) -> None:
-        self._driver: _CheckerDriver[CheckerObservation] | None = driver
-
-    @property
-    @abstractmethod
-    def oracle_id(self) -> OracleId:
-        """Stable catalogue identifier for this checker oracle.
-
-        Abstract: each concrete per-key checker (NIF-IVA, GROI, and analogous
-        surfaces) supplies the id its modelo cross-reference binds to in
-        registry TOML. Must be non-empty and unique within the catalogue.
-
-        Returns:
-            The oracle's typed catalogue key.
-        """
-        ...
-
-    @property
-    @abstractmethod
-    def surface_kind(self) -> OracleSurfaceKind:
-        """Kind of AEAT verification surface this checker oracle drives.
-
-        Abstract: the concrete adapter returns the ``OracleSurfaceKind``
-        literal matching its surface, which the binding audit cross-checks
-        against the cross-reference's declared surface via the
-        ``_COMPATIBLE_SURFACE_PAIRS`` allow-list.
-
-        Returns:
-            The surface classification as an ``OracleSurfaceKind`` literal.
-        """
-        ...
-
-    @abstractmethod
-    def planned_operations(
-        self,
-        payload: bytes,
-        *,
-        expected: Mapping[str, object],
-    ) -> tuple[RemoteOperation, ...]:
-        """Enumerate the remote steps this checker oracle will perform.
-
-        Abstract: the concrete adapter builds the ordered tuple of operations
-        for ``payload`` (the registry-rendered bytes) and ``expected`` (the
-        expected per-key values). The shared ``verify_payload`` template
-        pre-flights this set through the remote-state guard before any step
-        runs, so the returned tuple must list every operation the oracle
-        intends to perform.
-
-        Args:
-            payload: The synthetic, registry-rendered bytes to verify.
-            expected: Expected response values the oracle will compare against.
-
-        Returns:
-            The planned steps as a tuple of :class:`RemoteOperation`.
-        """
-        ...
-
-    @abstractmethod
-    def _expected_values(self, expected: Mapping[str, object]) -> dict[str, str]: ...
-
-    @abstractmethod
-    def _observed_for(
-        self,
-        observation: CheckerObservation,
-        key: str,
-    ) -> str | None: ...
-
-    @abstractmethod
-    def _compare_field(self, key: str, expected: str, *, observed: str | None) -> ParityFieldComparison: ...
-
-    @abstractmethod
-    def _observation_locator(self, observation: CheckerObservation) -> str | None: ...
-
-    def verify_payload(
-        self,
-        policy: RemoteStateGuardPolicy,
-        payload: bytes,
-        *,
-        expected: Mapping[str, object],
-    ) -> ParityResult:
-        """Run the shared checker template and report parity.
-
-        The concrete subclass supplies the surface-specific pieces; this
-        template sequences them: pre-flight every planned operation against
-        ``policy`` (returning a ``"blocked"`` verdict on refusal), translate a
-        missing or erroring driver into an ``"unverifiable"`` verdict, compare
-        expected against observed values per key, and pack the overall verdict
-        into a ``ParityResult``. The verdict is ``"match"`` only when at least
-        one field compared and every field matched. Never raises on an
-        AEAT-side divergence.
-
-        Args:
-            policy: The ``RemoteStateGuardPolicy`` gating remote operations.
-            payload: The synthetic, registry-rendered bytes to verify.
-            expected: Expected per-key values to compare against.
-
-        Returns:
-            A :class:`ParityResult` carrying the verdict and per-field comparisons.
-        """
-        operations = self.planned_operations(payload, expected=expected)
-        try:
-            assert_oracle_operations_allowed(self, policy, operations)
-        except RegistryValidationError as exc:
-            return ParityResult(
-                oracle_id=self.oracle_id,
-                cross_reference_id=policy.id,
-                verdict="blocked",
-                narrative=f"{self.surface_label} oracle blocked by remote-state guard: {exc}",
-            )
-        driver = self._driver
-        if driver is None:
-            return ParityResult(
-                oracle_id=self.oracle_id,
-                cross_reference_id=policy.id,
-                verdict="unverifiable",
-                narrative=(
-                    f"{self.surface_label} oracle has no executable driver configured. "
-                    "Guard preflight passed, but no AEAT or replay observation was available "
-                    "for comparison."
-                ),
-            )
-        try:
-            observation = driver.collect_observation(payload, expected=expected)
-        except RegistryValidationError as exc:
-            return ParityResult(
-                oracle_id=self.oracle_id,
-                cross_reference_id=policy.id,
-                verdict="unverifiable",
-                narrative=f"{self.surface_label} driver could not produce comparable observations: {exc}",
-            )
-        fields = tuple(
-            self._compare_field(key, expected_value, observed=self._observed_for(observation, key))
-            for key, expected_value in sorted(self._expected_values(expected).items())
-        )
-        verdict: ParityVerdict = "match" if fields and all(field.verdict == "match" for field in fields) else "mismatch"
-        return ParityResult(
-            oracle_id=self.oracle_id,
-            cross_reference_id=policy.id,
-            verdict=verdict,
-            narrative=f"{self.surface_label} {driver.mode} comparison returned {verdict}.",
-            fields=fields,
-            raw_evidence_locator=self._observation_locator(observation),
-        )
 
 
 def audit_registry_oracle_bindings(

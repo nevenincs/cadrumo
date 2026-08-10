@@ -5,15 +5,15 @@ from __future__ import annotations
 import pytest
 
 from .._checker_oracle_flow import (
+    CheckerObservation,
+    CheckerReplayDriver,
     compare_verdict_field,
-    decode_replay_observation,
     normalize_expected_verdicts,
     normalize_verdict_mapping,
     observed_verdict,
     replay_parse_operation,
 )
 from .._errors import RegistryValidationError
-from .._groi_oracle import GroiObservation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -49,13 +49,15 @@ def test_replay_parse_operation_returns_single_local_workbook_step() -> None:
     assert operations[0].action == "parse-groi-replay"
 
 
-def test_decode_replay_observation_uses_real_observation_model() -> None:
-    observation = decode_replay_observation(
+def test_canonical_replay_driver_decodes_real_observation() -> None:
+    driver = CheckerReplayDriver(surface_label="GROI replay", replay_action="parse-groi-replay")
+
+    observation = driver.collect_observation(
         b'{"observed": {"a28015865": "VALID"}, "raw_evidence_locator": "corpus/groi.json"}',
-        surface_label="GROI replay",
-        observation_type=GroiObservation,
+        expected={},
     )
 
+    assert isinstance(observation, CheckerObservation)
     assert observation.values == {"A28015865": "valid"}
     assert observation.raw_evidence_locator == "corpus/groi.json"
 

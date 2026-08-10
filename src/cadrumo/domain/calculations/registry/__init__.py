@@ -538,7 +538,8 @@ from ._validate_registry_scope import validate_registry_scope
 from ._validate_revision_identity import revision_casilla_identity_failures, revision_reference_identity_failures
 
 if TYPE_CHECKING:
-    from ._aeat_nif_iva_oracle import AeatNifIvaCheckerOracle, AeatNifIvaObservation
+    from ._aeat_nif_iva_oracle import AeatNifIvaCheckerOracle
+    from ._checker_oracle_flow import CheckerDriver, CheckerObservation, CheckerReplayDriver
     from ._external_grounding import (
         ExternalGroundingFinding,
         DeclaredScenarioInputs,
@@ -556,10 +557,7 @@ if TYPE_CHECKING:
     )
     from ._groi_oracle import (
         GROI_ORACLE_ID,
-        GroiDriver,
-        GroiObservation,
         GroiOracle,
-        GroiReplayDriver,
     )
     from ._live_parity import (
         CrossReferenceApplicability,
@@ -621,7 +619,9 @@ if TYPE_CHECKING:
 #: against the whole tree, not inferred from the module names alone.
 _LAZY_EXPORTS: dict[str, str] = {
     "AeatNifIvaCheckerOracle": "._aeat_nif_iva_oracle",
-    "AeatNifIvaObservation": "._aeat_nif_iva_oracle",
+    "CheckerDriver": "._checker_oracle_flow",
+    "CheckerObservation": "._checker_oracle_flow",
+    "CheckerReplayDriver": "._checker_oracle_flow",
     "ExternalGroundingFinding": "._external_grounding",
     "DeclaredScenarioInputs": "._external_grounding",
     "ExternalGroundingFindingKind": "._external_grounding",
@@ -636,10 +636,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "build_external_grounding_audit": "._external_grounding",
     "load_bundled_external_oracle_inventory": "._external_grounding",
     "GROI_ORACLE_ID": "._groi_oracle",
-    "GroiDriver": "._groi_oracle",
-    "GroiObservation": "._groi_oracle",
     "GroiOracle": "._groi_oracle",
-    "GroiReplayDriver": "._groi_oracle",
     "CrossReferenceApplicability": "._live_parity",
     "CrossReferenceApplicabilityDeclaracion": "._live_parity",
     "LiveParityCatalogue": "._live_parity",
@@ -717,7 +714,6 @@ __all__ = [
     "REVISION_GOVERNANCE_FIELDS",
     "REVISION_MANIFEST_ONLY_FIELDS",
     "AeatNifIvaCheckerOracle",
-    "AeatNifIvaObservation",
     "AmbiguousRevisionSelectionError",
     "ApplicabilityVerdict",
     "ApplicationLinkDefinition",
@@ -739,6 +735,9 @@ __all__ = [
     "CasillaFieldKind",
     "CasillaFieldKindValue",
     "CasillaObservation",
+    "CheckerDriver",
+    "CheckerObservation",
+    "CheckerReplayDriver",
     "CensoModeloEventKind",
     "CensoModeloFoundationCommand",
     "CensoModeloFoundationContract",
@@ -802,10 +801,7 @@ __all__ = [
     "FormulaDefinition",
     "FormulaExpression",
     "FormulaId",
-    "GroiDriver",
-    "GroiObservation",
     "GroiOracle",
-    "GroiReplayDriver",
     "HandoffPathClassification",
     "ImpatriadoIncomeObservationProtocol",
     "InputKind",

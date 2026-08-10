@@ -38,7 +38,7 @@ from .....core.errors import SiteHealthError
 from .....core.identity import normalise_nif_iva
 from .....core.logging import get_logger
 from .....domain.calculations.registry import (
-    AeatNifIvaObservation,
+    CheckerObservation,
     RegistryValidationError,
     RemoteOperation,
     RemoteStateGuardPolicy,
@@ -314,11 +314,11 @@ class NifIvaCheckSedeDriver:
         payload: bytes,
         *,
         expected: Mapping[str, object],
-    ) -> AeatNifIvaObservation:
-        """Collect results and return a typed :class:`~domain.calculations.registry.AeatNifIvaObservation`.
+    ) -> CheckerObservation:
+        """Collect results and return the canonical checker observation.
 
         Calls :meth:`collect` and projects the observations into the
-        ``AeatNifIvaObservation`` shape the registry oracle expects: a
+        canonical checker-observation shape the registry oracle expects: a
         ``values`` mapping of ``NIF -> verdict`` string and a single
         ``raw_evidence_locator`` (the first non-``None`` URL from the
         observation set).
@@ -329,7 +329,7 @@ class NifIvaCheckSedeDriver:
             expected: Mapping keyed by NIF whose VIES validity is to be checked.
 
         Returns:
-            An :class:`~domain.calculations.registry.AeatNifIvaObservation`
+            A :class:`~domain.calculations.registry.CheckerObservation`
             with the collected verdicts and evidence locator.
         """
         result = self.collect(payload, expected=expected)
@@ -342,7 +342,7 @@ class NifIvaCheckSedeDriver:
             ),
             None,
         )
-        return AeatNifIvaObservation(values=values, raw_evidence_locator=evidence)
+        return CheckerObservation(values=values, raw_evidence_locator=evidence)
 
     async def collect_async(
         self,
