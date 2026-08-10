@@ -37,6 +37,7 @@ from ...tests.fixtures.settings import EnvFileFreeSettings
 from ...tests.loopback_llm import (
     SilentLoopbackHandler,
     openai_chat_reply,
+    read_text_body,
     serving_loopback,
     write_json_response,
 )
@@ -128,8 +129,7 @@ def _serve_openai() -> Iterator[tuple[str, Queue[str]]]:
 
     class _Endpoint(SilentLoopbackHandler):
         def do_POST(self) -> None:
-            raw = self.rfile.read(int(self.headers.get("content-length", "0")))
-            bodies.put(raw.decode("utf-8"))
+            bodies.put(read_text_body(self))
             write_json_response(
                 self,
                 # A parsable empty extraction object, so a case that runs the full
