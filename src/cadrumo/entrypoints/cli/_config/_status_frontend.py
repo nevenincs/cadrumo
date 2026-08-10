@@ -251,7 +251,8 @@ def build_active_profile_notices(record: UserProfileRecord | None) -> tuple[Noti
     :class:`~cadrumo.core.json_contract.Notice` values a CLI envelope
     already carries — never a second, TUI-only advisory vocabulary.
     Degrades to no notices for a locked or absent bucket, matching every
-    other zone this page builds.
+    other zone this page builds -- an absent :class:`UserProfileRecord` is the
+    locked-bucket case and yields no advisories rather than a diagnostic.
     """
     if record is None:
         return ()

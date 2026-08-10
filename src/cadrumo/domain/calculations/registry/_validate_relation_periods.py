@@ -107,6 +107,10 @@ def validate_relation_source_coordinate_coverage(
     coordinate against the *union* of those revisions, requiring exactly one
     owner for each in-modelled coordinate.
 
+    ``source_revisions`` is the set of :class:`ModeloRevision` the source model
+    partitions its years across; ownership is resolved against their union
+    rather than against any one of them.
+
     The sole history boundary is generic: an observation-backed carry can read
     a filing before the earliest modelled source year.  That filing still has
     to use a known period shape and semantic casilla (checked by the caller),

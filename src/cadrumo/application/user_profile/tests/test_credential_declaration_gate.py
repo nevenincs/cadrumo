@@ -142,6 +142,21 @@ _EXEMPT: Final[Mapping[str, str]] = {
         "Knowing the mode confers no capability. This is a permanent member of the "
         "section rather than a case awaiting reclassification."
     ),
+    "auth.clave_movil_route": (
+        "The same case as auth.provider one field up, and exempt for the same reason: a "
+        "closed enum of 'qr' / 'app_request' holding WHICH way Cl@ve Movil asks for "
+        "confirmation, not any material to confirm with. Both values are published in the "
+        "schema, so classing the chosen one secret would protect nothing while hiding from "
+        "the operator how their own login behaves. "
+        "Its lexical evidence is a false positive with a linguistic cause worth naming: it "
+        "matches 'clave' because Cl@ve is the PROPER NOUN for Spain's national "
+        "authentication system, which necessarily appears in the name and description of "
+        "every field about it. The keyword cannot distinguish the brand from the password, "
+        "and in Spanish tax software the brand is the commoner reading. What the route "
+        "actually needs to authenticate -- the contraste pair its description mentions -- "
+        "lives in numero_soporte and fecha_validez, both correctly declared secret. "
+        "A permanent member of the section rather than a case awaiting reclassification."
+    ),
     "censo.divergencia": (
         "Matches on 'provenance token'. That is this project's own term for the source "
         "marker on a divergence row (PROVENANCE_SOURCE_CENSO_ARTEFACT), not a bearer "

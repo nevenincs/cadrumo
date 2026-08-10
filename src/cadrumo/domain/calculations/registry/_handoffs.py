@@ -1,4 +1,10 @@
-"""Typed inventory of canonical cross-model relation handoffs."""
+"""Typed inventory of canonical cross-model relation handoffs.
+
+A handoff is a coordinate in the registry: the source and target
+:class:`ModeloRevision` a value crosses between, resolved against the
+:class:`RegistrySnapshot` the authority compiled. The inventory is what makes
+"which model feeds which" a declared fact rather than one re-derived per caller.
+"""
 
 from __future__ import annotations
 

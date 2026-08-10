@@ -1063,7 +1063,15 @@ def verify_modelo_revision(
     settings: Settings | None = None,
     clock: datetime | None = None,
 ) -> VerificationReport:
-    """Persist and return the domain verification report without transport recovery data."""
+    """Persist and return the domain verification report without transport recovery data.
+
+    The thin arm over :func:`verify_modelo_revision_with_preconditions`, for
+    callers that want the report and none of the transport-recovery envelope.
+    It takes the same inputs the gates are evaluated against: the
+    :class:`TaxpayerProfile` the workflow gate reads, and the
+    :class:`TransactionCatalogueRepository` the ledger-derived casillas are
+    reconciled from.
+    """
     return verify_modelo_revision_with_preconditions(
         calculation_revision_id,
         actor=actor,

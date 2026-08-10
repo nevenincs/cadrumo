@@ -6,6 +6,10 @@ secure-object backend. The load path deserialises the envelope and validates
 it; callers receive a typed :class:`WorkflowState` or a diagnostic error class
 rather than a raw payload.
 
+The envelope carries the :class:`SensitivityClass` this store writes under, so
+the classification travels with the record rather than being re-decided at each
+write site.
+
 See Also:
     :class:`~application.workflow.WorkflowState`
         Typed encrypted state payload persisted by
