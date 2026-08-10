@@ -5,10 +5,21 @@ from __future__ import annotations
 import json
 
 import pytest
+from pydantic import ValidationError
 
 from ...config import override_settings
+from ...json_contract import (
+    ActionArgumentSource,
+    ActionArgumentStatus,
+    ActionConditionality,
+    ActionConditionEvidence,
+    ActionEvidenceProvenance,
+    ResolvedActionArgument,
+    ResolvedActionReference,
+    ResolvedPreconditionAction,
+)
 from ...locks_errors import LockAcquisitionError
-from .. import build_error_envelope, render_error_json, render_error_text
+from .. import ActiveProfilePointerError, ErrorEnvelope, build_error_envelope, render_error_json, render_error_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -16,6 +27,44 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 def _output_language(language: str):
     """Pin ``cadrumo_output_language`` via the canonical Settings override."""
     return override_settings(cadrumo_output_language=language)
+
+
+def _resolved_recovery_action() -> ResolvedPreconditionAction:
+    return ResolvedPreconditionAction(
+        failed_condition_id="profile.active.missing",
+        evidence=(
+            ActionConditionEvidence(
+                condition_id="profile.active.missing",
+                evidence_id="profile.active.state",
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                values={"profile_name": "example", "profile_count": 0, "required": True},
+            ),
+        ),
+        action=ResolvedActionReference(
+            action_id="operator.profile.create",
+            target_command_key="config.profile.create",
+        ),
+        argument_bindings=(
+            ResolvedActionArgument(
+                argument_name="profile_name",
+                status=ActionArgumentStatus.RESOLVED,
+                value="example",
+                source=ActionArgumentSource.CONDITION_EVIDENCE,
+                source_key="profile_name",
+                source_evidence_id="profile.active.state",
+            ),
+        ),
+        conditionality=ActionConditionality.IMMEDIATE,
+    )
+
+
+def test_public_error_envelope_schema_is_complete_before_any_build_call() -> None:
+    schema = ErrorEnvelope.model_json_schema()
+
+    assert ErrorEnvelope.__pydantic_complete__
+    assert "$defs" in schema
+    assert "ResolvedPreconditionAction" in schema["$defs"]
+    assert schema["properties"]["action"]["anyOf"][0]["$ref"].endswith("/$defs/ResolvedPreconditionAction")
 
 
 def test_error_json_serializes_deterministically_with_shared_spine() -> None:
@@ -36,6 +85,51 @@ def test_error_json_serializes_deterministically_with_shared_spine() -> None:
     # The error detail is nested under ``error``; the spine owns the version.
     assert "schema_version" not in payload["error"]
     assert payload["error"]["code"]
+
+
+def test_error_envelope_carries_resolved_precondition_action_through_json() -> None:
+    action = _resolved_recovery_action()
+
+    envelope = build_error_envelope(LockAcquisitionError(), action=action)
+    payload = json.loads(render_error_json(LockAcquisitionError(), action=action))
+
+    assert envelope.action == action
+    assert payload["error"]["action"] == action.model_dump(mode="json")
+    assert payload["error"]["action"]["action"]["target_command_key"] == "config.profile.create"
+    assert payload["error"]["action"]["argument_bindings"] == [
+        {
+            "argument_name": "profile_name",
+            "source": "operator_action.condition_evidence",
+            "source_evidence_id": "profile.active.state",
+            "source_key": "profile_name",
+            "status": "resolved",
+            "value": "example",
+        },
+    ]
+
+
+def test_default_and_exception_suggestions_are_not_error_envelope_authority() -> None:
+    error = ActiveProfilePointerError(path="broken-pointer.json")
+    registered = error.code
+
+    assert registered is not None
+    assert registered.default_suggestion is not None
+    assert error.suggestion is not None
+    envelope = build_error_envelope(error)
+    rendered = render_error_text(error)
+
+    assert envelope.action is None
+    assert "suggestion" not in envelope.model_dump()
+    assert registered.default_suggestion not in rendered
+    assert error.suggestion not in rendered
+
+
+def test_error_envelope_rejects_retired_suggestion_field() -> None:
+    envelope = build_error_envelope(LockAcquisitionError())
+    legacy_payload = envelope.model_dump(mode="json") | {"suggestion": "aeat config repair"}
+
+    with pytest.raises(ValidationError, match="suggestion"):
+        ErrorEnvelope.model_validate(legacy_payload)
 
 
 def test_secret_scrubbing_redacts_sensitive_fields_in_json_and_text() -> None:

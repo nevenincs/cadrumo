@@ -22,6 +22,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from .. import CasillaId, validated_casilla_id
 from ..json_contract import (
@@ -425,3 +426,298 @@ def test_precondition_projection_rejects_presentation_evidence_and_models_no_rec
     assert rendered["action"]["action"] is None
     assert rendered["action"]["no_recovery_outcome"] == NoRecoveryOutcome.TERMINAL.value
     assert rendered["action"]["conditionality"] == ActionConditionality.NOT_APPLICABLE.value
+
+
+def _profile_state_evidence(*, condition_id: str = "profile.active.required") -> ActionConditionEvidence:
+    """One real typed fact row used to construct action-envelope inputs."""
+    return ActionConditionEvidence(
+        condition_id=condition_id,
+        evidence_id="profile.state",
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        values={"profile_name": "Ada", "profile_status": "absent"},
+    )
+
+
+def _profile_name_binding(*, value: str | int = "Ada") -> ResolvedActionArgument:
+    """One condition-evidence binding for the action projection."""
+    return ResolvedActionArgument(
+        argument_name="profile_name",
+        status=ActionArgumentStatus.RESOLVED,
+        value=value,
+        source=ActionArgumentSource.CONDITION_EVIDENCE,
+        source_key="profile_name",
+        source_evidence_id="profile.state",
+    )
+
+
+def _profile_create_action(
+    *,
+    evidence: tuple[ActionConditionEvidence, ...] | None = None,
+    argument_bindings: tuple[ResolvedActionArgument, ...] | None = None,
+) -> ResolvedPreconditionAction:
+    """Construct a fully resolved action using only production DTOs."""
+    return ResolvedPreconditionAction(
+        failed_condition_id="profile.active.required",
+        evidence=(_profile_state_evidence(),) if evidence is None else evidence,
+        action=ResolvedActionReference(
+            action_id="profile.create",
+            target_command_key="config.profile.create",
+        ),
+        argument_bindings=(_profile_name_binding(),) if argument_bindings is None else argument_bindings,
+        conditionality=ActionConditionality.IMMEDIATE,
+    )
+
+
+def test_resolved_precondition_action_rejects_identity_and_evidence_join_defects() -> None:
+    """Wire identities, failed conditions, and evidence sources cannot drift apart."""
+    with pytest.raises(ValidationError):
+        _profile_create_action(evidence=(_profile_state_evidence(), _profile_state_evidence()))
+    with pytest.raises(ValidationError):
+        _profile_create_action(evidence=(_profile_state_evidence(condition_id="profile.exists.required"),))
+    with pytest.raises(ValidationError):
+        _profile_create_action(
+            argument_bindings=(
+                _profile_name_binding(),
+                ResolvedActionArgument(
+                    argument_name="profile_name",
+                    status=ActionArgumentStatus.RESOLVED,
+                    value="Ada",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="profile_name",
+                ),
+            ),
+        )
+    with pytest.raises(ValidationError):
+        ResolvedPreconditionAction(
+            failed_condition_id="profile.active.required",
+            evidence=(_profile_state_evidence(),),
+            action=ResolvedActionReference(
+                action_id="profile.create",
+                target_command_key="config.profile.create",
+            ),
+            argument_bindings=(
+                ResolvedActionArgument(
+                    argument_name="profile_name",
+                    status=ActionArgumentStatus.RESOLVED,
+                    value="Ada",
+                    source=ActionArgumentSource.CONDITION_EVIDENCE,
+                    source_key="profile_name",
+                    source_evidence_id="profile.unknown",
+                ),
+            ),
+            conditionality=ActionConditionality.IMMEDIATE,
+        )
+    with pytest.raises(ValidationError):
+        ResolvedPreconditionAction(
+            failed_condition_id="profile.active.required",
+            evidence=(_profile_state_evidence(),),
+            action=ResolvedActionReference(
+                action_id="profile.create",
+                target_command_key="config.profile.create",
+            ),
+            argument_bindings=(
+                ResolvedActionArgument(
+                    argument_name="profile_name",
+                    status=ActionArgumentStatus.RESOLVED,
+                    value="Ada",
+                    source=ActionArgumentSource.CONDITION_EVIDENCE,
+                    source_key="profile_identifier",
+                    source_evidence_id="profile.state",
+                ),
+            ),
+            conditionality=ActionConditionality.IMMEDIATE,
+        )
+    with pytest.raises(ValidationError):
+        _profile_create_action(argument_bindings=(_profile_name_binding(value=1),))
+    with pytest.raises(ValidationError):
+        _profile_create_action(argument_bindings=(_profile_name_binding(value="Bea"),))
+
+
+def test_resolved_precondition_action_rejects_resolution_and_outcome_defects() -> None:
+    """The DTO makes missing inputs and closed outcomes structurally explicit."""
+    with pytest.raises(ValidationError):
+        ResolvedActionArgument(
+            argument_name="profile_name",
+            status=ActionArgumentStatus.RESOLVED,
+            value="Ada",
+            source=ActionArgumentSource.CONDITION_EVIDENCE,
+            source_key="profile_name",
+        )
+    with pytest.raises(ValidationError):
+        ResolvedActionArgument(
+            argument_name="profile_name",
+            status=ActionArgumentStatus.MISSING,
+            value="Ada",
+        )
+    missing_name = ResolvedActionArgument(argument_name="profile_name", status=ActionArgumentStatus.MISSING)
+    with pytest.raises(ValidationError):
+        ResolvedPreconditionAction(
+            failed_condition_id="profile.active.required",
+            evidence=(_profile_state_evidence(),),
+            action=ResolvedActionReference(
+                action_id="profile.create",
+                target_command_key="config.profile.create",
+            ),
+            argument_bindings=(missing_name,),
+            missing_argument_names=("profile_name", "profile_name"),
+            conditionality=ActionConditionality.REQUIRES_ARGUMENTS,
+        )
+    with pytest.raises(ValidationError):
+        ResolvedPreconditionAction(
+            failed_condition_id="profile.active.required",
+            evidence=(_profile_state_evidence(),),
+            action=ResolvedActionReference(
+                action_id="profile.create",
+                target_command_key="config.profile.create",
+            ),
+            argument_bindings=(missing_name,),
+            missing_argument_names=("profile_name",),
+            conditionality=ActionConditionality.IMMEDIATE,
+        )
+    with pytest.raises(ValidationError):
+        ResolvedPreconditionAction(
+            failed_condition_id="profile.active.required",
+            evidence=(_profile_state_evidence(),),
+            action=ResolvedActionReference(
+                action_id="profile.create",
+                target_command_key="config.profile.create",
+            ),
+            conditionality=ActionConditionality.NOT_APPLICABLE,
+        )
+    with pytest.raises(ValidationError):
+        ResolvedPreconditionAction(
+            failed_condition_id="profile.active.required",
+            evidence=(_profile_state_evidence(),),
+            conditionality=ActionConditionality.IMMEDIATE,
+            no_recovery_outcome=NoRecoveryOutcome.SAFETY,
+        )
+    with pytest.raises(ValidationError):
+        ResolvedPreconditionAction(
+            failed_condition_id="profile.active.required",
+            evidence=(_profile_state_evidence(),),
+            action=ResolvedActionReference(
+                action_id="profile.create",
+                target_command_key="config.profile.create",
+            ),
+            conditionality=ActionConditionality.IMMEDIATE,
+            no_recovery_outcome=NoRecoveryOutcome.SAFETY,
+        )
+
+
+@pytest.mark.parametrize(
+    "reserved_key",
+    (
+        "action",
+        "command",
+        "fix_command",
+        "next_action",
+        "next_command",
+        "recovery",
+        "recovery_hint",
+        "remediation",
+        "suggestion",
+    ),
+)
+def test_notice_rejects_every_reserved_action_context_key(reserved_key: str) -> None:
+    """Context remains usable for facts but cannot become an action side channel."""
+    with pytest.raises(ValidationError):
+        Notice(
+            severity=NoticeSeverity.INFO,
+            code="profile.active.required",
+            message="An active profile is required.",
+            context={reserved_key: "profile.create"},
+        )
+
+
+def test_precondition_projection_canonicalizes_and_deep_freezes_wire_facts() -> None:
+    """Equivalent input order produces one immutable, deterministic wire record."""
+    request = ActionConditionEvidence(
+        condition_id="profile.active.required",
+        evidence_id="profile.request",
+        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+        values={"profile_name": "Ada"},
+    )
+    display_name = ResolvedActionArgument(
+        argument_name="display_name",
+        status=ActionArgumentStatus.RESOLVED,
+        value="Ada",
+        source=ActionArgumentSource.REQUEST_CONTEXT,
+        source_key="profile_name",
+    )
+    ordered = _profile_create_action(
+        evidence=(request, _profile_state_evidence()),
+        argument_bindings=(display_name, _profile_name_binding()),
+    )
+    reversed_input = _profile_create_action(
+        evidence=(_profile_state_evidence(), request),
+        argument_bindings=(_profile_name_binding(), display_name),
+    )
+
+    assert ordered.model_dump_json() == reversed_input.model_dump_json()
+    with pytest.raises(TypeError):
+        ordered.evidence[0].values["profile_name"] = "Bea"
+    with pytest.raises(ValidationError):
+        ordered.action.action_id = "profile.reset"
+
+
+def test_action_bearing_envelope_json_round_trip_preserves_resolved_target_and_bindings() -> None:
+    """The full envelope carries a schema-resolved action without prose authority."""
+    original = SchemaEnvelope[_ProvenancePayload](
+        command="config profile status",
+        status=EnvelopeStatus.WARNING,
+        result=_ProvenancePayload(casilla_id=_SIMPLE_CASILLA, value="0"),
+        notices=[
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code="profile.active.required",
+                message="An active profile is required.",
+                action=_profile_create_action(),
+            ),
+        ],
+    )
+
+    round_tripped = SchemaEnvelope[_ProvenancePayload].model_validate_json(original.model_dump_json())
+
+    assert round_tripped == original
+    action = round_tripped.notices[0].action
+    assert action is not None
+    assert action.action is not None
+    assert action.action.target_command_key == "config.profile.create"
+    assert action.argument_bindings[0].argument_name == "profile_name"
+
+
+def test_no_recovery_envelope_json_round_trip_preserves_closed_outcome() -> None:
+    """A terminal refusal remains explicit after a full JSON-text envelope round trip."""
+    original = SchemaEnvelope[_ProvenancePayload](
+        command="app modelo file",
+        status=EnvelopeStatus.WARNING,
+        result=_ProvenancePayload(casilla_id=_SIMPLE_CASILLA, value="0"),
+        notices=[
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code="submission.period.closed",
+                message="The submission period is closed.",
+                action=ResolvedPreconditionAction(
+                    failed_condition_id="submission.period.closed",
+                    evidence=(
+                        ActionConditionEvidence(
+                            condition_id="submission.period.closed",
+                            evidence_id="submission.period",
+                            provenance=ActionEvidenceProvenance.REGISTRY_RECORD,
+                            values={"period_status": "closed"},
+                        ),
+                    ),
+                    conditionality=ActionConditionality.NOT_APPLICABLE,
+                    no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                ),
+            ),
+        ],
+    )
+
+    round_tripped = SchemaEnvelope[_ProvenancePayload].model_validate_json(original.model_dump_json())
+
+    assert round_tripped == original
+    action = round_tripped.notices[0].action
+    assert action is not None
+    assert action.action is None
+    assert action.no_recovery_outcome is NoRecoveryOutcome.TERMINAL

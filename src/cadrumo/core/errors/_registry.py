@@ -21,20 +21,20 @@ from __future__ import annotations
 import json
 import logging as _logging_stdlib
 import re
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum, StrEnum
 from pathlib import PurePath
 from types import MappingProxyType
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from pydantic import BaseModel, ConfigDict
 
 from ..redaction import redact_for_log
 
 if TYPE_CHECKING:
-    from ..json_contract import Notice
+    from ..json_contract import Notice, ResolvedPreconditionAction
 
 # cadrumo.core.logging.get_logger triggers configure_logging() → config → cadrumo.core.errors,
 # creating a circular import at module load. Use the stdlib getter here; the root
@@ -125,11 +125,22 @@ class ErrorEnvelope(BaseModel):
     code: str
     category: str
     message: str
-    suggestion: str | None
+    action: ResolvedPreconditionAction | None = None
     retryable: bool
     runbook_id: str | None
     context: dict[str, str] | None
     trace_id: str | None
+
+
+def _complete_error_envelope_model() -> None:
+    """Resolve the canonical action DTO after the core package import cycle closes."""
+    if ErrorEnvelope.__pydantic_complete__:
+        return
+    from ..json_contract import ResolvedPreconditionAction
+
+    ErrorEnvelope.model_rebuild(
+        _types_namespace={"ResolvedPreconditionAction": ResolvedPreconditionAction},
+    )
 
 
 _ERROR_REGISTRY_MUTABLE: dict[str, ErrorCode] = {}
@@ -163,7 +174,7 @@ def register(code: ErrorCode) -> ErrorCode:
     return code
 
 
-from .registry import _ALL_DECLARED_ERROR_CODES
+from .registry import _ALL_DECLARED_ERROR_CODES  # pyright: ignore[reportPrivateUsage]
 
 
 def _build_declared_code_map(rows: tuple[tuple[str, ErrorCode], ...]) -> Mapping[str, ErrorCode]:
@@ -324,6 +335,7 @@ def scrub_error_context(context: Mapping[str, object] | None) -> dict[str, str] 
 def build_error_envelope(
     error: BaseException,
     *,
+    action: ResolvedPreconditionAction | None = None,
     context: Mapping[str, object] | None = None,
     trace_id: str | None = None,
 ) -> ErrorEnvelope:
@@ -333,13 +345,14 @@ def build_error_envelope(
         A frozen :class:`ErrorEnvelope` suitable for serialisation to
         the machine-readable stderr payload.
     """
+    _complete_error_envelope_model()
     code = get_registered_error_code(error)
     merged_context = _merge_error_context(error, context)
     return ErrorEnvelope(
         code=code.code,
         category=code.category.value,
         message=resolve_error_message(error, code),
-        suggestion=get_error_suggestion(error, code),
+        action=action,
         retryable=code.retryable,
         runbook_id=code.runbook_id,
         context=scrub_error_context(merged_context),
@@ -357,10 +370,7 @@ def render_error_text(
     prefix = _category_text_prefix(code.category)
     message = resolve_error_message(error, code)
     first_line = f"{prefix} {message}"
-    suggestion = get_error_suggestion(error, code)
     lines = [first_line]
-    if suggestion is not None:
-        lines.append(f"  -> Run `{suggestion}`")
     scrubbed_context = scrub_error_context(_merge_error_context(error, context))
     if scrubbed_context:
         for key, value in scrubbed_context.items():
@@ -371,6 +381,7 @@ def render_error_text(
 def render_error_json(
     error: BaseException,
     *,
+    action: ResolvedPreconditionAction | None = None,
     context: Mapping[str, object] | None = None,
     trace_id: str | None = None,
     active_profile: str | None = None,
@@ -407,7 +418,7 @@ def render_error_json(
     """
     from ..json_contract import ENVELOPE_SCHEMA_VERSION, EnvelopeStatus, jsonable_output_payload
 
-    envelope = build_error_envelope(error, context=context, trace_id=trace_id)
+    envelope = build_error_envelope(error, action=action, context=context, trace_id=trace_id)
     document = {
         "schema_version": ENVELOPE_SCHEMA_VERSION,
         "command": command,
@@ -485,18 +496,9 @@ def _coerce_interpolation_kwargs(
         return {}
     safe: dict[str, object] = {}
     for key, value in context.items():
-        if isinstance(key, str) and key.isidentifier():
+        if key.isidentifier():
             safe[key] = value
     return safe
-
-
-def get_error_suggestion(error: BaseException, code: ErrorCode | None = None) -> str | None:
-    """Resolve the copy-paste recovery command for ``error``."""
-    resolved_code = code or get_registered_error_code(error)
-    suggestion = getattr(error, "suggestion", None)
-    if isinstance(suggestion, str) and suggestion:
-        return suggestion
-    return resolved_code.default_suggestion
 
 
 def _qualname(error_type: type[BaseException]) -> str:
@@ -510,7 +512,9 @@ def _merge_error_context(
     merged: dict[str, object] = {}
     error_context = getattr(error, "context", None)
     if isinstance(error_context, Mapping):
-        merged.update(error_context)
+        for key, value in cast("Mapping[object, object]", error_context).items():
+            if isinstance(key, str):
+                merged[key] = value
     for key, value in vars(error).items():
         if key.startswith("_") or key in {"code", "context", "translated_message", "suggestion", "original_exception"}:
             continue
@@ -555,10 +559,11 @@ def _stringify_context_value(value: object) -> str:
     if isinstance(value, PurePath):
         return str(value)
     if isinstance(value, (list, tuple, frozenset, set)):
-        return ", ".join(_stringify_context_value(item) for item in value)
+        return ", ".join(_stringify_context_value(item) for item in cast("Iterable[object]", value))
     if isinstance(value, Mapping):
+        mapping = cast("Mapping[object, object]", value)
         return ", ".join(
-            f"{_stringify_context_value(key)}={_stringify_context_value(item)}" for key, item in value.items()
+            f"{_stringify_context_value(key)}={_stringify_context_value(item)}" for key, item in mapping.items()
         )
     return f"<{type(value).__name__}>"
 

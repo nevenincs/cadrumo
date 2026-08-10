@@ -10,9 +10,9 @@ from __future__ import annotations
 
 import re
 import shlex
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from decimal import Decimal
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING, Annotated, cast
 
 import typer
 from pydantic import TypeAdapter, ValidationError
@@ -45,7 +45,7 @@ from ...application.modelo import (
 )
 from ...core import M210GrossIncomeSourceMode, Modelo, RescateType
 from ...core.decimal import try_parse_canonical_decimal
-from ...core.errors import CadrumoError, build_error_envelope, resolve_error_message
+from ...core.errors import CadrumoError, resolve_error_message
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.logging import get_logger
@@ -610,17 +610,18 @@ def _validate_m349_detail_rows_for_work_unit(work_unit_id: str, rows: tuple[Mode
 
 def bad_parameter_from_error(exc: BaseException) -> typer.BadParameter:
     """Render registered domain errors before crossing the Typer boundary."""
-    message = resolve_error_message(exc)
-    suggestion = build_error_envelope(exc).suggestion
-    if suggestion:
-        message = f"{message}\nRun `{suggestion}`"
-    return typer.BadParameter(message)
+    return typer.BadParameter(resolve_error_message(exc))
 
 
 def bad_parameter_from_localized_context(exc: BaseException) -> typer.BadParameter:
     """Render local projection refusals that intentionally are not error-code registered."""
     key = getattr(exc, "translated_message", None)
-    context = getattr(exc, "context", None) or {}
+    raw_context = getattr(exc, "context", None)
+    context = (
+        {key: value for key, value in cast("Mapping[str, object]", raw_context).items()}
+        if isinstance(raw_context, Mapping)
+        else {}
+    )
     if isinstance(key, str) and key:
         return typer.BadParameter(tr(key, **context))
     return typer.BadParameter(str(exc))
