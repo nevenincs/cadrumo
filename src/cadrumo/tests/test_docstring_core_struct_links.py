@@ -220,11 +220,28 @@ def test_public_functions_link_anchor_parameters() -> None:
 
 _DOTTED_ROLE = re.compile(r":(?:class|func|meth|attr|data|exc|obj|mod):`~?([A-Za-z_][A-Za-z0-9_.]*)`")
 
-# Shrink-only. Every remaining entry names a symbol inside a PRIVATE module --
-# prose reaching past a facade into ``_module`` internals, the class the
-# architecture boundaries rule already governs. The ceiling bounds that debt and
-# refuses new instances; it is not a target and must never be raised.
-_UNRESOLVED_DOTTED_REFERENCE_CEILING = 204
+# Shrink-only debt ceiling, NOT a target. It is lowered as the debt burns down
+# and must never be raised. The remaining entries are prose reaching past a
+# facade into ``_module`` internals -- the class the architecture boundaries rule
+# already governs -- concentrated enough to be tractable: at 144 the five heaviest
+# owners carried 83 of them, so a burn-down starts there rather than site by site.
+#
+# It landed at 204 and the first 60 of that drop was THIS DETECTOR, not work.
+# ``core/__init__.py`` declares ``__all__: list[str] = [...]``, an ``ast.AnnAssign``
+# rather than an ``ast.Assign``; reading only the latter parsed that facade as
+# exporting zero symbols and turned all 61 roles into it -- 38 of them the lazily
+# resolved ``BindingSourceKind``, a PEP 562 facade the boundaries rule explicitly
+# sanctions -- into violations. A detector that flags a sanctioned pattern 38 times
+# is reporting on itself. The same node type produced 112 false violations from
+# this same file for an earlier sweep, so it is a recurrence and not a one-off:
+# any AST walk over module-level constants must handle ``AnnAssign`` and
+# ``AugAssign`` or it silently sees an empty set.
+#
+# Neither time did the finding list reveal it -- 61 plausible role names read
+# exactly like debt. Both times the tell was the DENOMINATOR: an ``__all__`` of
+# size zero, and one symbol holding 38 of 61. Print the denominator, or find the
+# implausible concentration.
+_UNRESOLVED_DOTTED_REFERENCE_CEILING = 144
 
 # A derived scan selecting nothing satisfies the ceiling assertion perfectly.
 # These floors sit far below the real figures so ordinary churn never moves them.
@@ -266,6 +283,17 @@ def _defined_names(path: Path) -> set[str] | None:
                     return None
         elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
             names.add(node.target.id)
+            # ``__all__: list[str] = [...]`` is an AnnAssign, not an Assign, and
+            # reading only the latter silently treats an annotated facade as
+            # exporting nothing. That is not hypothetical: it produced sixty-one
+            # false positives against ``core`` -- a lazy PEP 562 facade the
+            # architecture rule explicitly sanctions -- and would have baked this
+            # detector's blind spot into the ceiling below.
+            if node.target.id == "__all__" and node.value is not None:
+                try:
+                    names.update(ast.literal_eval(node.value))
+                except (ValueError, TypeError):
+                    return None
         elif isinstance(node, ast.ImportFrom):
             names.update(alias.asname or alias.name for alias in node.names)
     return names
