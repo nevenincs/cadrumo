@@ -734,7 +734,14 @@ async def capture_filed_data_bulk(
             if declarations is None:
                 continue
             if limit is not None:
-                remaining = limit - len(accumulator.observation_paths)
+                # absorbed_count, not len(observation_paths): the paths list is
+                # appended only on the write path, so a preview left it empty
+                # and this residual never shrank -- every batch took a full
+                # `limit` slice instead of what remained. The accumulator's own
+                # docstring already says the paths cannot serve as the tally for
+                # exactly this reason; the outer break below reads it correctly
+                # and this site did not.
+                remaining = limit - accumulator.absorbed_count
                 if remaining <= 0:
                     break
                 declarations = declarations[:remaining]
