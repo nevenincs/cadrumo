@@ -124,7 +124,6 @@ class PortalsService:
         if metadata is None:
             raise PortalNotFoundError(
                 f"portal {portal!r} is not registered in PORTAL_REGISTRY",
-                suggestion="aeat app live portals list",
                 translated_message=tr("application.portals.errors.portal_not_found"),
             )
         return _portal_to_row(metadata)
