@@ -685,8 +685,6 @@ class WorkflowResult(BaseModel):
             raise ValueError("DONE results must not carry an aborted_reason")
         if self.final_stage is WorkflowStage.ABORTED and (not self.steps or self.steps[-1].success is not False):
             raise ValueError("ABORTED results must end with an explicitly failed workflow step")
-        if self.final_stage is WorkflowStage.ABORTED and self.steps[-1].precondition_verdict is None:
-            raise ValueError("ABORTED results must end with a typed precondition verdict")
         return self
 
 

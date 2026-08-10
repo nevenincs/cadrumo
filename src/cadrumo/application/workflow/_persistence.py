@@ -30,7 +30,7 @@ from datetime import date, datetime
 from enum import StrEnum
 from pathlib import Path
 
-from pydantic import ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage import (
@@ -47,6 +47,7 @@ from ...adapters.persistence.storage import (
     SecureObjectRepository,
     SecureObjectRevisionConflictError,
     SecureObjectWrite,
+    SensitivityClass,
     StorageError,
     inner_envelope_classification_is_expected,
     inner_envelope_version_is_current,
@@ -89,6 +90,16 @@ _RUN_VERSION = WORKFLOW_RUN_STORAGE_NAMESPACE.schema_version
 _RUN_NAMESPACE = WORKFLOW_RUN_STORAGE_NAMESPACE.namespace
 _RUN_SENSITIVITY = WORKFLOW_RUN_STORAGE_NAMESPACE.sensitivity
 _UPDATE_RETRY_LIMIT = 4
+
+
+class _WorkflowRunEnvelopeHeader(BaseModel):
+    """Version and classification inspected before the typed run payload."""
+
+    model_config = ConfigDict(strict=True, frozen=True)
+
+    schema_version: int = Field(ge=1)
+    classification: SensitivityClass
+
 
 _OPERATION_INSTANT: contextvars.ContextVar[datetime | None] = contextvars.ContextVar(
     "cadrumo_workflow_operation_instant",
@@ -468,15 +479,7 @@ class WorkflowRunRepository:
                 translated_message="application.workflow.errors.run_not_found",
                 context={"run_id": safe_run_id},
             )
-        envelope = Envelope[WorkflowResult].model_validate_json(record.payload.decode("utf-8"))
-        if not inner_envelope_classification_is_expected(envelope.classification, _RUN_SENSITIVITY):
-            raise ClassificationError(
-                f"workflow run has classification {envelope.classification}; consumer expected {_RUN_SENSITIVITY}",
-            )
-        if not inner_envelope_version_is_current(envelope.schema_version, _RUN_VERSION):
-            raise EnvelopeVersionError(
-                f"workflow run is at version {envelope.schema_version}; consumer supports up to {_RUN_VERSION}",
-            )
+        envelope = _validate_workflow_run_envelope(record.payload)
         if envelope.payload.run_id != safe_run_id:
             raise WorkflowError(
                 translated_message="application.workflow.errors.run_identity_mismatch",
@@ -496,7 +499,7 @@ class WorkflowRunRepository:
         )
         runs: list[WorkflowResult] = []
         for record in records:
-            envelope = Envelope[WorkflowResult].model_validate_json(record.payload.decode("utf-8"))
+            envelope = _validate_workflow_run_envelope(record.payload)
             result = envelope.payload
             # Enumeration has no requested key to compare against, so the
             # payload's own id is checked against the row's stored key digest --
@@ -511,6 +514,26 @@ class WorkflowRunRepository:
             runs.append(result)
         runs.sort(key=lambda item: item.started_at, reverse=True)
         return tuple(runs)
+
+
+def _validate_workflow_run_envelope(payload: bytes) -> Envelope[WorkflowResult]:
+    """Validate one workflow-run envelope against the exact current v2 contract.
+
+    The repository is pre-release, so a workflow-run schema change advances the
+    current format and refuses earlier app-written payloads. There is no legacy
+    upgrader or tolerant read branch.
+    """
+    raw_payload = payload.decode("utf-8")
+    header = _WorkflowRunEnvelopeHeader.model_validate_json(raw_payload)
+    if not inner_envelope_classification_is_expected(header.classification, _RUN_SENSITIVITY):
+        raise ClassificationError(
+            f"workflow run has classification {header.classification}; consumer expected {_RUN_SENSITIVITY}",
+        )
+    if not inner_envelope_version_is_current(header.schema_version, _RUN_VERSION):
+        raise EnvelopeVersionError(
+            f"workflow run is at version {header.schema_version}; consumer requires {_RUN_VERSION}",
+        )
+    return Envelope[WorkflowResult].model_validate_json(raw_payload)
 
 
 def workflow_state_repository() -> WorkflowStateRepository:
