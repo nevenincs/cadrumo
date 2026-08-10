@@ -195,3 +195,178 @@ def test_public_functions_link_anchor_parameters() -> None:
             for anchor in sorted(violations[symbol]):
                 lines.append(f"  {symbol}  ->  :class:`{anchor}`")
         pytest.fail("\n".join(lines))
+
+
+# ---------------------------------------------------------------------------
+# Dotted cross-reference resolution
+# ---------------------------------------------------------------------------
+#
+# The gates above ask whether a link is PRESENT. This one asks whether a link
+# RESOLVES, which is a different failure and went undetected until a package
+# split moved sixty-three symbols to a sibling and left the prose behind: one
+# hundred and eighteen roles across forty-nine files pointed at a package
+# exporting six. A role is a string, and a stale string is indistinguishable
+# from a live one until something resolves it.
+#
+# Bare anchors stay out of scope deliberately. Project convention is a bare
+# ``:class:`Name```, resolved by the documentation build against the whole
+# public surface, so it names no single module to check against. Only a role
+# naming a MODULE PATH asserts where a symbol lives, and only that assertion can
+# be wrong here.
+#
+# Resolution is static: reading source beats importing, because importing makes
+# this gate red whenever a peer's in-flight edit breaks an unrelated import
+# chain, and a gate that reds on other people's work gets muted.
+
+_DOTTED_ROLE = re.compile(r":(?:class|func|meth|attr|data|exc|obj|mod):`~?([A-Za-z_][A-Za-z0-9_.]*)`")
+
+# Shrink-only. Every remaining entry names a symbol inside a PRIVATE module --
+# prose reaching past a facade into ``_module`` internals, the class the
+# architecture boundaries rule already governs. The ceiling bounds that debt and
+# refuses new instances; it is not a target and must never be raised.
+_UNRESOLVED_DOTTED_REFERENCE_CEILING = 204
+
+# A derived scan selecting nothing satisfies the ceiling assertion perfectly.
+# These floors sit far below the real figures so ordinary churn never moves them.
+_MINIMUM_MODULES_SCANNED = 400
+_MINIMUM_DOTTED_ROLES_EXAMINED = 50
+
+
+def _module_file_for(parts: list[str]) -> Path | None:
+    """Return the file backing a dotted module path, or ``None`` if there is none."""
+    package_init = SRC_CADRUMO.joinpath(*parts, "__init__.py")
+    if package_init.is_file():
+        return package_init
+    module_file = SRC_CADRUMO.joinpath(*parts[:-1], f"{parts[-1]}.py") if parts else None
+    return module_file if module_file is not None and module_file.is_file() else None
+
+
+def _defined_names(path: Path) -> set[str] | None:
+    """Return every name a module defines or imports, or ``None`` when unparseable.
+
+    Unions ``__all__`` with top-level definitions. The union is deliberate: a
+    role reaching into a private module names something that module defines but
+    does not publish, which is a different question from whether the reference
+    resolves at all. This gate answers only the second.
+    """
+    try:
+        tree = ast.parse(path.read_text(encoding="utf-8", errors="replace"))
+    except SyntaxError:
+        return None
+    names: set[str] = set()
+    for node in tree.body:
+        if isinstance(node, ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef):
+            names.add(node.name)
+        elif isinstance(node, ast.Assign):
+            names.update(target.id for target in node.targets if isinstance(target, ast.Name))
+            if any(isinstance(t, ast.Name) and t.id == "__all__" for t in node.targets):
+                try:
+                    names.update(ast.literal_eval(node.value))
+                except (ValueError, TypeError):
+                    return None
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            names.add(node.target.id)
+        elif isinstance(node, ast.ImportFrom):
+            names.update(alias.asname or alias.name for alias in node.names)
+    return names
+
+
+def _owning_module(target: str) -> tuple[Path, str] | None:
+    """Return ``(module_file, symbol)`` for an in-repo dotted target, else ``None``.
+
+    ``None`` covers stdlib and third-party targets, whose correctness belongs to
+    the documentation build's resolver, and targets naming a module outright --
+    a package does not re-export its own submodules through ``__all__``, so
+    checking those would flag every module reference in the tree.
+    """
+    parts = target.split(".")
+    if parts and parts[0] == "cadrumo":
+        parts = parts[1:]
+    if len(parts) < 2 or _module_file_for(parts) is not None:
+        return None
+    for split in range(len(parts) - 1, 0, -1):
+        module_file = _module_file_for(parts[:split])
+        if module_file is not None:
+            return module_file, parts[split]
+    return None
+
+
+def _unresolved_reference(target: str) -> tuple[Path, str] | None:
+    """Return the owning module and symbol when a dotted target does not resolve."""
+    owned = _owning_module(target)
+    if owned is None:
+        return None
+    module_file, symbol = owned
+    defined = _defined_names(module_file)
+    return None if defined is None or symbol in defined else (module_file, symbol)
+
+
+def _scan_dotted_references(path: Path, tree: ast.AST) -> tuple[list[str], int]:
+    """Return one module's unresolved-reference reports and how many targets it examined."""
+    reports: list[str] = []
+    examined = 0
+    origin = path.relative_to(SRC_CADRUMO).as_posix()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Module | ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef):
+            continue
+        text = ast.get_docstring(node, clean=False)
+        if not text:
+            continue
+        for target in _DOTTED_ROLE.findall(text):
+            if _owning_module(target) is None:
+                continue
+            examined += 1
+            missing = _unresolved_reference(target)
+            if missing is None:
+                continue
+            owner = missing[0].relative_to(SRC_CADRUMO).as_posix()
+            reports.append(f"{origin}: `{target}` -> {owner} does not define {missing[1]!r}")
+    return reports, examined
+
+
+def _unresolved_dotted_references() -> tuple[list[str], int, int]:
+    """Return every unresolved dotted role, modules scanned, and targets examined."""
+    unresolved: list[str] = []
+    scanned = 0
+    examined = 0
+    for path, tree in production_ast_items():
+        scanned += 1
+        reports, seen = _scan_dotted_references(path, tree)
+        unresolved.extend(reports)
+        examined += seen
+    return unresolved, scanned, examined
+
+
+def test_dotted_reference_scan_is_non_empty() -> None:
+    """Anti-vacuity: a scan selecting nothing satisfies the ceiling assertion perfectly."""
+    _, scanned, examined = _unresolved_dotted_references()
+
+    assert scanned >= _MINIMUM_MODULES_SCANNED, f"only {scanned} modules scanned; the walk collapsed"
+    assert examined >= _MINIMUM_DOTTED_ROLES_EXAMINED, (
+        f"only {examined} in-repo dotted roles examined; the pattern or the resolver collapsed"
+    )
+
+
+def test_dotted_reference_detector_still_discriminates() -> None:
+    """Anti-vacuity: the resolver must reject a fabricated symbol and accept a real one."""
+    assert _owning_module("core.identity.ThisSymbolIsNotDefinedAnywhere") is not None, (
+        "the resolver no longer reaches core.identity"
+    )
+    assert _unresolved_reference("core.identity.ThisSymbolIsNotDefinedAnywhere") is not None, (
+        "a fabricated symbol resolved, so the check can never fail"
+    )
+    assert _unresolved_reference("core.identity.BucketId") is None, (
+        "a known-good target was rejected, so the check always fails"
+    )
+
+
+def test_dotted_cross_references_resolve_within_the_ceiling() -> None:
+    """A role naming a module path must name a symbol that module defines."""
+    unresolved, _, _ = _unresolved_dotted_references()
+
+    assert len(unresolved) <= _UNRESOLVED_DOTTED_REFERENCE_CEILING, (
+        f"{len(unresolved)} dotted cross-reference(s) name a symbol their cited module does not "
+        f"define, above the shrink-only ceiling of {_UNRESOLVED_DOTTED_REFERENCE_CEILING}. "
+        "Repoint the reference at the module that owns the symbol; never raise the ceiling.\n"
+        + "\n".join(sorted(unresolved)[:40])
+    )
