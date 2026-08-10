@@ -149,7 +149,6 @@ def _google_service(credentials: object, service_name: str, version: str) -> Any
     except ImportError as exc:
         raise OutboundStorageNetworkError(
             f"googleapiclient not importable: {exc}",
-            suggestion="pip install cadrumo[google]",
             translated_message="adapters.google.calc_sheets.errors.googleapiclient_not_importable",
         ) from exc
     return build(service_name, version, credentials=credentials, cache_discovery=False)
@@ -197,11 +196,6 @@ def _find_folder(
         conflict_message=(
             f"folder named {name!r} under parent {parent_id!r} exists but is not marked as "
             "app-owned; refusing to adopt foreign Drive content"
-        ),
-        conflict_suggestion=(
-            "either delete the existing folder, stamp "
-            f"appProperties.{_OWNERSHIP_KEY}={_OWNERSHIP_VALUE} on it, "
-            "or choose a different Drive root"
         ),
     )
 

@@ -18,7 +18,6 @@ and storage factory render the same localised repair guidance.
 from __future__ import annotations
 
 from ....core import resolve_active_bucket_id
-from ....core.i18n import tr
 from ._errors import GoogleAuthProfileUnboundError
 
 
@@ -32,9 +31,8 @@ def resolve_active_profile() -> str:
     Raises:
         :exc:`adapters.outbound.google.GoogleAuthProfileUnboundError`:
             When the :func:`core.resolve_active_bucket_id` precedence
-            chain resolves to no profile. The error carries a ``suggestion``
-            pointing to ``aeat config profile create NAME`` and a ``context``
-            payload naming the failed resolution attempt for renderers.
+            chain resolves to no profile. The error carries factual context
+            naming the failed resolution attempt for renderers.
     """
     resolved = resolve_active_bucket_id()
     if resolved is not None and resolved.strip():
@@ -43,7 +41,6 @@ def resolve_active_profile() -> str:
     raise GoogleAuthProfileUnboundError(
         "no active AEAT profile bound for Google OAuth",
         context={"active_profile": resolved or ""},
-        suggestion=tr("adapters.google.profile_binding.suggestions.create_profile"),
         translated_message="adapters.google.profile_binding.errors.no_active_profile",
     )
 

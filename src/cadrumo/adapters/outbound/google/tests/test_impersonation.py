@@ -186,7 +186,7 @@ def test_resolve_refuses_when_adc_is_genuinely_unavailable() -> None:
 
     assert isinstance(raised.value, GoogleAuthError)
     assert raised.value.context == {"target_principal": _TARGET_PRINCIPAL}
-    assert raised.value.suggestion == "gcloud auth application-default login"
+    assert not hasattr(raised.value, "suggestion")
 
 
 def test_resolve_refusal_names_the_exact_target_principal_for_a_different_config() -> None:
@@ -299,7 +299,7 @@ def test_ensure_source_credential_is_fresh_raises_adc_stale_when_refresh_cannot_
 
     assert isinstance(raised.value, GoogleAuthError)
     assert raised.value.context == {"target_principal": _TARGET_PRINCIPAL_FOR_FRESHNESS}
-    assert raised.value.suggestion == "gcloud auth application-default login"
+    assert not hasattr(raised.value, "suggestion")
 
 
 def test_ensure_source_credential_is_fresh_names_the_exact_target_principal() -> None:

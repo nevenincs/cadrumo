@@ -22,7 +22,6 @@ import pytest
 
 from .....application.storage.calc_sheets import CALC_SHEETS_ENGINE_VERSION
 from .....core import CasillaId, validated_casilla_id
-from .....core.i18n import tr
 from .....core.resources import resources
 from .....domain.calculations.registry import InputKind
 from ...storage import (
@@ -138,7 +137,9 @@ def test_compute_from_pull_refuses_stale_workbook() -> None:
         compute_from_pull(snapshot, pull)
 
     assert raised.value.translated_message == "adapters.google.calc_sheets.errors.workbook_snapshot_mismatch"
-    assert raised.value.suggestion == tr("adapters.google.calc_sheets.suggestions.reexport_then_pull")
+    assert raised.value.context is not None
+    assert raised.value.context["spreadsheet_id"] == "test-id"
+    assert not hasattr(raised.value, "suggestion")
 
 
 def test_compute_from_pull_refuses_prechange_engine_even_with_matching_verdict() -> None:

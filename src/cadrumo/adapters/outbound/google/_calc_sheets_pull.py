@@ -72,7 +72,6 @@ from ....application.storage.calc_sheets import (
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core import CasillaId, Period
 from ....core.decimal import coerce_decimal, coerce_finite_european_decimal
-from ....core.i18n import tr
 from ....core.time import coerce_utc_aware
 from ....domain.calculations.registry import (
     BindingId,
@@ -340,7 +339,6 @@ def _drive_service(credentials: object) -> _GoogleResource:
     except ImportError as exc:
         raise OutboundStorageNetworkError(
             f"googleapiclient not importable: {exc}",
-            suggestion="pip install cadrumo[google]",
             translated_message="adapters.google.calc_sheets.errors.googleapiclient_not_importable",
         ) from exc
     return build("drive", "v3", credentials=credentials, cache_discovery=False)
@@ -352,7 +350,6 @@ def _sheets_service(credentials: object) -> _GoogleResource:
     except ImportError as exc:
         raise OutboundStorageNetworkError(
             f"googleapiclient not importable: {exc}",
-            suggestion="pip install cadrumo[google]",
             translated_message="adapters.google.calc_sheets.errors.googleapiclient_not_importable",
         ) from exc
     return build("sheets", "v4", credentials=credentials, cache_discovery=False)
@@ -378,7 +375,6 @@ def _verify_ownership(drive_service: Any, spreadsheet_id: str) -> None:
             f"spreadsheet {spreadsheet_id!r} is not marked as app-owned; refusing "
             f"to read operator edits from a foreign Drive file",
             context={"spreadsheet_id": spreadsheet_id, "name": file_meta.get("name", "")},
-            suggestion=tr("adapters.google.calc_sheets.suggestions.verify_exported_workbook"),
             translated_message="adapters.google.calc_sheets.errors.foreign_spreadsheet_not_owned",
         )
 
@@ -434,7 +430,6 @@ def _merge_developer_metadata_entries(entries: Iterable[Mapping[str, Any]]) -> d
         raise OutboundStorageConflictError(
             "spreadsheet carries conflicting duplicate Cadrumo developer metadata; refusing order-dependent pull",
             context={"conflicting_metadata_keys": sorted(conflicting_keys)},
-            suggestion=tr("adapters.google.calc_sheets.suggestions.reexport_workbook"),
             translated_message="adapters.google.calc_sheets.errors.conflicting_duplicate_metadata",
         )
     return pairs
@@ -528,7 +523,6 @@ def _require_matching_metadata(
             "workbook_registry_sha": metadata.registry_sha,
             "snapshot_registry_sha": registry_sha(snapshot),
         },
-        suggestion=tr("adapters.google.calc_sheets.suggestions.reexport_then_pull"),
         translated_message="adapters.google.calc_sheets.errors.workbook_snapshot_mismatch",
     )
 

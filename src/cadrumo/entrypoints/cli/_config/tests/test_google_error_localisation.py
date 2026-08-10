@@ -73,3 +73,12 @@ def test_unknown_google_error_falls_back_to_the_generic_frame() -> None:
     message = _refusal_message(GoogleAuthError("unclassified failure"))
     assert message == tr("cli.config.google.errors.auth_failed", detail="unclassified failure")
     assert "unclassified failure" in message
+
+
+def test_google_refusal_keeps_the_adapter_failure_as_factual_detail_only() -> None:
+    """The config boundary does not recreate the retired adapter recovery transport."""
+
+    refusal = _google_refusal(GoogleAuthValidationError("missing installed wrapper"))
+
+    assert refusal.context == {"detail": "missing installed wrapper"}
+    assert not hasattr(refusal, "suggestion")

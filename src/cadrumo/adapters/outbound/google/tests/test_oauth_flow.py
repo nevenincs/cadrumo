@@ -12,7 +12,6 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.config import override_settings
-from .....core.i18n import tr
 from .....tests.secure_sql import isolated_runtime_profile
 from .._errors import (
     GoogleAuthBrowserOpenError,
@@ -121,7 +120,7 @@ def test_resolve_active_tax_id_refuses_missing_profile_bucket(tmp_path: Path) ->
         "reason": "profile_bucket_manifest_missing",
     }
     assert raised.value.translated_message == "adapters.google.oauth_flow.errors.profile_state_unresolved"
-    assert raised.value.suggestion == tr("adapters.google.oauth_flow.suggestions.repair_profile_state")
+    assert not hasattr(raised.value, "suggestion")
 
 
 # Source for a child process that drives the interactive-terminal guard with
@@ -186,18 +185,17 @@ def test_interactive_terminal_guard_refuses_a_non_tty_stdin() -> None:
 
     The pytest runner attaches a non-TTY stdin, so this exercises the
     guard against the real interpreter state a non-interactive invocation
-    has. The refusal carries the typed translation + suggestion keys so
-    the CLI renders an instructive, localised message naming the
-    interactive-terminal prerequisite — the contract that replaces the
-    audit-M19 silent hang.
+    has. The refusal carries the typed translation and factual reason that
+    identifies the interactive-terminal prerequisite — the contract that
+    replaces the audit-M19 silent hang.
     """
 
     with pytest.raises(GoogleAuthNonInteractiveError) as raised:
         require_interactive_terminal()
 
     assert raised.value.translated_message == "adapters.google.oauth_flow.errors.non_interactive"
-    assert raised.value.suggestion == tr("adapters.google.oauth_flow.suggestions.run_from_interactive_terminal")
     assert raised.value.context == {"reason": "stdin_not_a_tty"}
+    assert not hasattr(raised.value, "suggestion")
 
 
 def test_login_flow_refuses_missing_profile_record_before_oauth_network(tmp_path: Path) -> None:
@@ -214,4 +212,4 @@ def test_login_flow_refuses_missing_profile_record_before_oauth_network(tmp_path
         "reason": "profile_record_missing",
     }
     assert raised.value.translated_message == "adapters.google.oauth_flow.errors.profile_state_unresolved"
-    assert raised.value.suggestion == tr("adapters.google.oauth_flow.suggestions.repair_profile_state")
+    assert not hasattr(raised.value, "suggestion")
