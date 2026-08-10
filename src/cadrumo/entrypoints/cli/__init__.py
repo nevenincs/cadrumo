@@ -1359,7 +1359,7 @@ def _metadata_state_isolation(arguments: list[str]) -> Iterator[None]:
 
 def _emit_operator_progress(progress: object) -> None:
     """Write an operator progress banner to stderr, keeping stdout pure."""
-    from ...adapters.outbound.aeat import OperatorProgress
+    from ...core import OperatorProgress
 
     if not isinstance(progress, OperatorProgress):
         raise TypeError(f"progress must be OperatorProgress, got {type(progress).__name__}")
