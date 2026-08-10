@@ -525,9 +525,21 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
 
         ``normalize_m303_carry`` is the explicit canonical ingress used by the
         official filed-capture and local-filing routes. It refuses incomplete or
-        conflicting declaration-disposition evidence before persisting a
-        carry-capable Modelo 303 row. Generic observation storage intentionally
-        remains readable for legacy evidence and unrelated consumers. Callers
+        conflicting declaration-disposition evidence and normalizes the
+        available/generated pair before persisting a carry-capable Modelo 303
+        row.
+
+        The disposition REQUIREMENT is not part of that opt-in. Every prepared
+        envelope is screened by
+        :func:`~application.calculations._m303_carry_ingress.require_official_m303_carry_disposition`,
+        so official Modelo 303 evidence declaring carry casillas cannot be
+        stored with no resolved disposition regardless of which route prepared
+        it. A requirement reachable only through a flag defaulting to ``False``
+        is a safety mechanism switched off by default, and generic storage was
+        the route that took it. Storage stays open for unrelated consumers --
+        other modelos, and sources with no disposition concept -- which is a
+        scope limit on the refusal, not a tolerance for under-declared Modelo
+        303 evidence. Callers
         that co-emit this envelope with a history projection use
         :meth:`to_secure_object_write` and the storage backend's batch boundary
         so the pair cannot half-persist.
@@ -546,12 +558,22 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
             result_disposition=result_disposition,
             prior_domiciliation_election=prior_domiciliation_election,
         )
-        if normalize_m303_carry:
-            # Keep the serialisable envelope model independent from the
-            # application policy that normalizes it.
-            from ._m303_carry_ingress import normalize_m303_carry_observation_envelope
+        # Keep the serialisable envelope model independent from the
+        # application policy that normalizes and screens it.
+        from ._m303_carry_ingress import (
+            normalize_m303_carry_observation_envelope,
+            require_official_m303_carry_disposition,
+        )
 
+        if normalize_m303_carry:
             payload = normalize_m303_carry_observation_envelope(payload)
+        # Runs on EVERY prepared envelope, including the generic path where the
+        # opt-in above is not taken. That is the point: the disposition
+        # requirement used to live only behind a flag defaulting to False, so
+        # official carry evidence written through generic storage carried no
+        # resolved disposition at all. Placed here, before any caller can save,
+        # a refusal leaves the repositories untouched.
+        require_official_m303_carry_disposition(payload)
         return payload
 
     def save_observation(

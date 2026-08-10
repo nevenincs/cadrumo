@@ -32,6 +32,58 @@ from ._observations_repository import (
 M303_DECLARATION_TYPE_HEADER_KEY = "declaration_type"
 """The only submitted-file header that can establish an official M303 result disposition."""
 
+M303_CARRY_CASILLAS = frozenset(
+    {
+        M303_COMPENSATION_AVAILABLE_CASILLA,
+        M303_COMPENSATION_GENERADA_CASILLA,
+        M303_COMPENSATION_POSTERIOR_CASILLA,
+        M303_COMPENSATION_RESULTADO_CASILLA,
+    },
+)
+"""The casillas whose presence makes a Modelo 303 observation carry-capable.
+
+Carry capability is read from the payload's own declared casillas rather than
+inferred from its modelo: these four are exactly the boxes
+:func:`normalize_m303_carry_observation_envelope` reads and normalises, so an
+observation declaring none of them cannot feed a later period's compensación
+and has no disposition to resolve. Scoping the write-boundary refusal on this
+set keeps it the shape of the defect -- an observation that WILL be read as
+carry evidence -- instead of the shape of the modelo.
+"""
+
+
+def require_official_m303_carry_disposition(envelope: ObservationEnvelopePayload) -> None:
+    """Refuse official carry-capable Modelo 303 evidence that resolved no disposition.
+
+    The generic storage path admits every modelo and every source, and most of
+    them have no disposition concept at all; refusing on modelo alone would
+    reject writes that are legitimately dispositionless. So the three
+    conditions are read from the payload: it is Modelo 303, its source is
+    official AEAT evidence, and it declares at least one casilla a later
+    reader would treat as carry evidence.
+
+    This requires a disposition that something upstream already resolved. It
+    does not resolve one: the determination belongs to the declaration-type
+    header for official evidence and to the filing boundary for local
+    evidence, and answering it a second time here would let the two disagree.
+    """
+    if str(envelope.observation.modelo) != Modelo.M303.value:
+        return
+    if not envelope.source_kind.is_official_aeat:
+        return
+    if envelope.result_disposition is not None:
+        return
+    declared = frozenset(envelope.observation.casilla_values)
+    if declared.isdisjoint(M303_CARRY_CASILLAS):
+        return
+    raise M303CarryIngressError(
+        "official Modelo 303 carry evidence cannot be persisted without a resolved result disposition",
+        context={
+            "source_kind": envelope.source_kind,
+            "header_key": M303_DECLARATION_TYPE_HEADER_KEY,
+        },
+    )
+
 _M303_DISPOSITIONS = frozenset(
     {
         ResultDisposition.COMPENSACION,
