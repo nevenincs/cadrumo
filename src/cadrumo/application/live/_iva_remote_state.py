@@ -523,10 +523,22 @@ def _taxpayer_ref(taxpayer_nif: str | None) -> str:
     never be read as a real subject nor collide with one -- hashing a
     stand-in would mint one stable ref that every subjectless row shared,
     making them look like the same taxpayer.
+
+    A value that normalises to nothing takes the same exit, because it is the
+    same fact one step later. The wallet observation's own guard is
+    ``min_length=1`` on the RAW string, which admits ``" "`` and the ``\\xa0``
+    that arrives from parsing an AEAT page; the canonical identity token then
+    trims it to ``""``. Hashing that yields the sha256 of the empty string --
+    one digest, worn by every blank row, and shaped exactly like a real
+    subject's ref. The guard and the emptying live in different modules, so
+    neither reads as wrong on its own.
     """
     if taxpayer_nif is None:
         return _ABSENT_TAXPAYER_REF
-    digest = _sha256_hex(_tax_id_identity_token(taxpayer_nif).encode("utf-8"))
+    token = _tax_id_identity_token(taxpayer_nif)
+    if not token:
+        return _ABSENT_TAXPAYER_REF
+    digest = _sha256_hex(token.encode("utf-8"))
     return f"sha256:{digest[:12]}"
 
 

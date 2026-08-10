@@ -7,16 +7,19 @@ projected onto the CLI-safe row, whose ``taxpayer_ref`` is a required ``str``.
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
 
+from ....adapters.outbound.aeat.sede import IvaCompensationWalletObservation
 from ....core import Period
+from ....core.identity import tax_id_identity_token
 from ....domain.iva_compensation import (
     IvaCompensationCarryForwardLot,
     IvaCompensationExpiryReviewState,
 )
-from .._iva_remote_state import _carry_forward_lot_row
+from .._iva_remote_state import _carry_forward_lot_row, _taxpayer_ref
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -72,3 +75,46 @@ def test_the_absent_marker_is_shared_by_subjectless_lots_but_never_by_a_real_sub
 
     assert absent_ref == other_absent_ref
     assert absent_ref != populated_ref
+
+
+# ------------------------------------- the subject that is present but empty
+
+
+@pytest.mark.parametrize("blank", ["", " ", "\xa0", "  \t "])
+def test_a_subject_that_normalises_to_nothing_takes_the_absent_exit(blank: str) -> None:
+    """A blank subject is the absent case one step later, not a real one.
+
+    The canonical identity token trims and uppercases, so every one of these
+    normalises to ``""``. Hashing that yields the sha256 of the empty string --
+    a value shaped exactly like a real subject's ref and worn by every blank
+    row at once, which is the collision the absent marker exists to avoid.
+    """
+    ref = _taxpayer_ref(blank)
+
+    assert not ref.startswith("sha256:")
+    assert ref == _taxpayer_ref(None)
+
+
+def test_the_blank_subject_is_reachable_through_the_wallet_observation() -> None:
+    """The guard upstream does not exclude the state the branch above handles.
+
+    Without this the blank branch could be guarding a state nothing can occupy.
+    ``taxpayer_nif`` is constrained ``min_length=1`` on the RAW string, which a
+    non-breaking space satisfies -- and ``\\xa0`` is what parsing an AEAT page
+    produces. The guard and the normalisation that empties it live in separate
+    modules, so neither is locally wrong.
+    """
+    observation = IvaCompensationWalletObservation(
+        taxpayer_nif="\xa0",
+        authenticated_identity=_SYNTHETIC_NIF,
+        target_year=2026,
+        target_period=Period.model_validate({"filing_year": 2026, "code": "1T"}),
+        total_pending=Decimal("0"),
+        source_url="https://sede.agenciatributaria.gob.es/wallet",
+        captured_at=datetime(2026, 4, 1, tzinfo=UTC),
+    )
+
+    # Full validation ran -- model_construct would have proved nothing here.
+    assert observation.taxpayer_nif == "\xa0"
+    assert tax_id_identity_token(observation.taxpayer_nif) == ""
+    assert _taxpayer_ref(observation.taxpayer_nif) == _taxpayer_ref(None)
