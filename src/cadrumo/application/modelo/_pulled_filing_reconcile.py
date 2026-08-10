@@ -169,11 +169,6 @@ def pulled_filing_divergence_findings(
                     f"{divergence.computed_value}, the pulled declaration records "
                     f"{divergence.filed_value} ({divergence.kind.value})."
                 ),
-                next_action=(
-                    "Advisory only: compare this casilla against the declaration already filed for "
-                    "the period. A gap means either this calculation's inputs differ from what was "
-                    "declared, or AEAT holds a later corrected filing that has not been re-pulled."
-                ),
                 legal_refs=casilla.legal_refs,
                 source_refs=casilla.source_refs,
             ),

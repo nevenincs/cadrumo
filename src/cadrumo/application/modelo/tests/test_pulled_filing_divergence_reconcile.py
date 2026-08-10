@@ -580,7 +580,7 @@ def test_a_diverging_casilla_raises_one_warning_carrying_that_casillas_own_groun
     assert str(_LOCAL_AMOUNT) in finding.message
     assert str(_FILED_AMOUNT) in finding.message
     assert CasillaDivergenceKind.VALUE_MISMATCH.value in finding.message
-    assert finding.next_action is not None
+    assert "next_action" not in finding.model_dump(mode="json")
 
     assert finding.legal_refs == subject.legal_refs, (
         "the finding must carry the diverging casilla's own legal references, not references "

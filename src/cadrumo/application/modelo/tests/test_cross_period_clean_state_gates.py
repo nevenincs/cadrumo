@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import hashlib
-import json
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -45,7 +44,6 @@ from ....domain.modelos import (
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
-from ....tests.cli_runner import invoke_cached_cli
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import (
@@ -59,7 +57,7 @@ from ...calculations import (
 )
 from ...user_profile import UserProfileLifecycleRepository
 from .. import create_work_unit, import_external_filing_evidence, verify_modelo_revision
-from .._verification_actions import _cross_period_clean_state_next_action
+from .._verification_cross_period import _cross_period_clean_state_findings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -363,113 +361,18 @@ def _clean_state_repair_verdict(
     )
 
 
-@pytest.mark.parametrize(
-    ("blockers", "expected_next_action", "missing_member_nifs", "unexpected_member_nifs"),
-    (
-        (
-            (CrossPeriodCleanStateBlocker.MISSING_EXPECTED_GROUP_MEMBER_ROSTER,),
-            (
-                "Configure the expected grupo member roster for source modelo=303 year=2025 period=1T, "
-                "then run `aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A` "
-                "and rerun verification."
-            ),
-            (),
-            (),
-        ),
-        (
-            (CrossPeriodCleanStateBlocker.INCOMPLETE_GROUP_MEMBER_COVERAGE,),
-            (
-                "Capture every expected grupo member filing for source modelo=303 year=2025 period=1T. "
-                "Missing members: B00000001. "
-                "Run `aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A`."
-            ),
-            ("B00000001",),
-            (),
-        ),
-        (
-            (CrossPeriodCleanStateBlocker.UNEXPECTED_GROUP_MEMBER_SOURCE,),
-            (
-                "Review the grupo roster for source modelo=303 year=2025 period=1T; "
-                "unexpected captured members: C00000000. Then rerun verification."
-            ),
-            (),
-            ("C00000000",),
-        ),
-        (
-            (CrossPeriodCleanStateBlocker.OBSERVATION_REVISION_VALUE_DIVERGENCE,),
-            (
-                "Reconcile the captured filed observation against the local calculation with "
-                "`aeat app registry verify-filed-state --observation PATH`, "
-                "then refresh the upstream filing evidence."
-            ),
-            (),
-            (),
-        ),
-        (
-            (CrossPeriodCleanStateBlocker.OPERATOR_MANUAL_SOURCE,),
-            (
-                "Use AEAT evidence for upstream values in source modelo=303 year=2025 period=1T. "
-                "Run `aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A`."
-            ),
-            (),
-            (),
-        ),
-        (
-            (CrossPeriodCleanStateBlocker.MISSING_JUSTIFICANTE_VERIFICATION,),
-            (
-                "Capture/import AEAT evidence for source modelo=303 year=2025 period=1T. "
-                "Run `aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A`, "
-                "`aeat app live justificante pull --modelo 303 --year 2025 --period 1T`, "
-                "`aeat app modelo filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf "
-                "--evidence-id CSV --set CASILLA=VALUE`, or "
-                "`aeat app modelo reconcile file WORK_UNIT_ID --file PATH`; rerun verification."
-            ),
-            (),
-            (),
-        ),
-        (
-            (CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD,),
-            (
-                "Capture/import AEAT evidence for source modelo=303 year=2025 period=1T. "
-                "Run `aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A`, "
-                "`aeat app live justificante pull --modelo 303 --year 2025 --period 1T`, "
-                "`aeat app modelo filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf "
-                "--evidence-id CSV --set CASILLA=VALUE`, or "
-                "`aeat app modelo reconcile file WORK_UNIT_ID --file PATH`; rerun verification."
-            ),
-            (),
-            (),
-        ),
-        (
-            (CrossPeriodCleanStateBlocker.MISSING_CALCULATION_REVISION,),
-            (
-                "Recalculate and verify the upstream work unit for source modelo=303 year=2025 period=1T, "
-                "then attach AEAT evidence and rerun the target verification."
-            ),
-            (),
-            (),
-        ),
-    ),
-)
-def test_cross_period_clean_state_repair_diagnostics_map_blockers_to_operator_actions(
-    blockers: tuple[CrossPeriodCleanStateBlocker, ...],
-    expected_next_action: str,
-    missing_member_nifs: tuple[str, ...],
-    unexpected_member_nifs: tuple[str, ...],
-) -> None:
+def test_cross_period_clean_state_blockers_remain_factual_without_recovery_prose() -> None:
     evidence = _clean_state_repair_evidence(
-        blockers,
-        missing_member_nifs=missing_member_nifs,
-        unexpected_member_nifs=unexpected_member_nifs,
+        (CrossPeriodCleanStateBlocker.MISSING_EXPECTED_GROUP_MEMBER_ROSTER,),
+        missing_member_nifs=(),
+        unexpected_member_nifs=(),
     )
 
-    next_action = _cross_period_clean_state_next_action(
-        _clean_state_repair_verdict(evidence),
-        evidence,
-    )
+    (finding,) = _cross_period_clean_state_findings(_clean_state_repair_verdict(evidence))
 
-    assert next_action == expected_next_action
-
+    assert finding.severity.value == "blocking"
+    assert "blockers=missing_expected_group_member_roster" in finding.message
+    assert "next_action" not in finding.model_dump(mode="json")
 
 def test_verify_modelo_390_persists_cross_period_clean_state_blockers_when_prior_filings_are_missing(
     tmp_path: Path,
@@ -511,15 +414,7 @@ def test_verify_modelo_390_persists_cross_period_clean_state_blockers_when_prior
         "modelo=303" in finding.message and "blockers=missing_observation" in finding.message
         for finding in cross_period_findings
     )
-    assert any(
-        finding.next_action is not None
-        and "aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A" in finding.next_action
-        and "aeat app live justificante pull --modelo 303 --year 2025 --period 1T" in finding.next_action
-        and "aeat app modelo filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf"
-        in finding.next_action
-        and "aeat app modelo reconcile file WORK_UNIT_ID --file PATH" in finding.next_action
-        for finding in cross_period_findings
-    )
+    assert all("next_action" not in finding.model_dump(mode="json") for finding in cross_period_findings)
     assert len(stored_reports) == 1
     assert stored_reports[0] == report
 
@@ -619,124 +514,4 @@ def test_verify_fails_closed_when_profile_records_no_activity_start_date(tmp_pat
     assert fail_closed_findings
     finding = fail_closed_findings[0]
     assert finding.severity.value == "blocking"
-    assert finding.next_action is not None
-    assert "activity-start date" in finding.next_action
-
-
-def test_verify_surfaces_operator_declared_suppression_advisory_without_blocking(tmp_path: Path) -> None:
-    """A declared date scopes pre-activity priors out as a NON-BLOCKING advisory.
-
-    With an operator-declared activity-start date of 2025-10-01 (the first day of
-    4T), the three earlier 2025 M303 quarters the M390/2025 target depends on are
-    strictly pre-activity and scoped out: no BLOCKING cross-period finding is
-    produced for them, and each surfaces as a NON-BLOCKING ADVISORY (``WARNING``
-    severity) stating the date is operator-declared and not yet censo-corroborated.
-    The alta-containing 4T quarter stays in scope and (being unevidenced here) keeps
-    the grant refused, proving the advisory rides alongside a still-honest gate.
-    """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        _store_ready_profile_record(activity_start_date="2025-10-01")
-        objects = profile.repository
-        work_units = WorkUnitCatalogueRepository(objects=objects)
-        calculations = CalculationRevisionCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID)
-        reports = VerificationReportCatalogueRepository(objects=objects, bucket_id=_BUCKET_ID)
-        revision_id = _persist_390_draft(
-            work_unit_repository=work_units,
-            calculation_repository=calculations,
-        )
-        json_projection = invoke_cached_cli(
-            [
-                "--format",
-                "json",
-                "--language",
-                "ca",
-                "app",
-                "modelo",
-                "work",
-                "verify",
-                revision_id,
-            ],
-        )
-        assert json_projection.exit_code == 1, json_projection.output
-        envelope = json.loads(json_projection.output)
-        stored_reports = reports.load().for_calculation_revision(revision_id)
-        assert len(stored_reports) == 1
-        stored_report = stored_reports[0]
-        report = stored_report
-        stored_finding_evidence = tuple((finding.message, finding.next_action) for finding in stored_report.findings)
-
-        text_projection = invoke_cached_cli(
-            [
-                "--language",
-                "ca",
-                "app",
-                "modelo",
-                "work",
-                "verify",
-                revision_id,
-            ],
-        )
-        assert text_projection.exit_code == 1, text_projection.output
-
-        notices = envelope["notices"]
-        payload = envelope["result"]
-        blocking_notice = next(
-            notice for notice in notices if notice["context"]["kind"] == "cross_period_dependency_unclean"
-        )
-        suppression_notice = next(
-            notice
-            for notice in notices
-            if notice["context"]["kind"] == "advisory" and "període=1T" in notice["message"]
-        )
-        blocking_payload = next(
-            finding for finding in payload["findings"] if finding["kind"] == "cross_period_dependency_unclean"
-        )
-        suppression_payload = next(
-            finding
-            for finding in payload["findings"]
-            if finding["kind"] == "advisory" and "període=1T" in finding["message"]
-        )
-
-        assert "la dependència entre períodes no està neta" in blocking_notice["message"]
-        assert "model=303" in blocking_notice["message"]
-        assert blocking_notice["suggestion"] is not None
-        assert (
-            "aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A" in (blocking_notice["suggestion"])
-        )
-        assert "la dependència entre períodes no està neta" in blocking_payload["message"]
-        assert blocking_payload["next_action"] == blocking_notice["suggestion"]
-        assert "la dependència entre períodes no està neta" in text_projection.output
-        assert "dependència entre períodes exclosa perquè no hi ha obligació prèvia" in suppression_notice["message"]
-        assert "2025-10-01" in suppression_notice["message"]
-        assert suppression_notice["suggestion"] is not None
-        assert "Confirmeu que la data" in (suppression_notice["suggestion"])
-        assert "Quan estigui disponible la lectura en viu del cens" in (suppression_notice["suggestion"])
-        assert "dependència entre períodes exclosa perquè no hi ha obligació prèvia" in suppression_payload["message"]
-        assert suppression_payload["next_action"] == suppression_notice["suggestion"]
-        assert "dependència entre períodes exclosa perquè no hi ha obligació prèvia" in text_projection.output
-        assert all("%{" not in message for message, _ in stored_finding_evidence)
-
-        reloaded_report = reports.load().for_calculation_revision(revision_id)[0]
-        assert (
-            tuple((finding.message, finding.next_action) for finding in reloaded_report.findings)
-            == stored_finding_evidence
-        )
-
-    advisory_findings = tuple(
-        finding
-        for finding in report.findings
-        if finding.kind.value == "advisory" and "no-prior-obligation (pre-activity)" in finding.message
-    )
-    assert advisory_findings
-    assert all(finding.severity.value == "warning" for finding in advisory_findings)
-    assert {f.message.split("period=")[1].split(" ")[0] for f in advisory_findings} == {"1T", "2T", "3T"}
-    assert any("operator-declared activity-start date 2025-10-01" in f.message for f in advisory_findings)
-    # The only BLOCKING cross-period finding is the in-scope alta-period 4T, never a
-    # suppressed pre-activity quarter.
-    blocking_cross_period = tuple(
-        finding
-        for finding in report.findings
-        if finding.kind.value == "cross_period_dependency_unclean" and finding.severity.value == "blocking"
-    )
-    assert blocking_cross_period
-    assert all("period=4T" in finding.message for finding in blocking_cross_period)
+    assert "next_action" not in finding.model_dump(mode="json")

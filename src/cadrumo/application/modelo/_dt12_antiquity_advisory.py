@@ -88,7 +88,6 @@ def _dt12_antiquity_advisory_finding(
                 reduccion_id=reduccion_id,
                 reduccion_value=str(reduccion_value),
             ),
-            next_action=tr("application.modelo.findings.dt12a_reduccion_antiquity_next_action"),
             legal_refs=("ley-35-2006:dt-12",),
         )
     return None

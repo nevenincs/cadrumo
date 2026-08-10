@@ -292,6 +292,7 @@ from ._projection import (
     compare_modelo_years,
     project_modelo_100_from_m130,
 )
+from ._pulled_filing_reconcile import pulled_filing_divergence_findings
 from ._quickfile import (
     QUICKFILE_STAGE_ORDER,
     QuickfileCommand,
@@ -316,7 +317,6 @@ from ._reconcile_casilla import (
     CasillaDivergenceKind,
     detect_casilla_divergences,
 )
-from ._pulled_filing_reconcile import pulled_filing_divergence_findings
 from ._reconcile_population import (
     CasillaPopulationScope,
     resolve_casilla_population_scope,
@@ -482,7 +482,14 @@ from ._taxation_comparison import (
     compare_taxation_for_work_unit,
     compare_taxation_modes,
 )
-from ._verification_actions import verify_modelo_revision
+from ._verification_actions import verify_modelo_revision, verify_modelo_revision_with_preconditions
+from ._verification_preconditions import (
+    ModeloVerificationResult,
+    VerificationFindingPreconditionProjection,
+    project_registry_snapshot_unresolved_finding,
+    project_verification_finding_no_recovery,
+    project_verification_findings,
+)
 from ._work_addressing import (
     ModeloExactWorkUnitTarget,
     ModeloResolvedRevisionProjection,
@@ -647,10 +654,10 @@ __all__ = [
     "ModeloLocalObservationError",
     "ModeloLocalObservationResult",
     "ModeloMaritimeExemptionPreview",
-    "ModeloProfileReadinessError",
     "ModeloPaymentElectionCapabilityRefusedError",
     "ModeloPaymentElectionIncompatibleError",
     "ModeloPriorDomiciliationElectionRefusedError",
+    "ModeloProfileReadinessError",
     "ModeloProjectInvalidDecimalOverrideError",
     "ModeloProjectM100Projection",
     "ModeloProjectM130Accumulated",
@@ -679,6 +686,7 @@ __all__ = [
     "ModeloRevisionPick",
     "ModeloVerificationFindingKind",
     "ModeloVerificationFindingSeverity",
+    "ModeloVerificationResult",
     "ModeloVerifySelector",
     "ModeloVisibleFilingTarget",
     "ModeloWorkAddress",
@@ -752,6 +760,7 @@ __all__ = [
     "TaxationComparisonResult",
     "TaxationRecommendation",
     "VerificationCompletenessStatus",
+    "VerificationFindingPreconditionProjection",
     "VerificationReportNotFoundError",
     "WorkCalculateInputBundle",
     "WorkUnitAlreadyDiscardedError",
@@ -790,7 +799,6 @@ __all__ = [
     "create_m145_communication_record",
     "create_work_unit",
     "data_inventory_checklist",
-    "profile_requirements_for_binding",
     "declared_modelo_period_tokens",
     "decrypt_feedback_package_from_originator_envelope",
     "decrypt_review_package_for_recipient",
@@ -853,11 +861,15 @@ __all__ = [
     "persist_filed_revision_observation",
     "pre_activity_period_refusal",
     "preview_maritime_exemption_for_active_profile",
+    "profile_requirements_for_binding",
     "profile_resolvable_binding_ids",
     "profile_resolved_binding_ids",
     "project_modelo_100_from_m130",
     "project_modelo_work_target",
     "project_modelo_work_unit",
+    "project_registry_snapshot_unresolved_finding",
+    "project_verification_finding_no_recovery",
+    "project_verification_findings",
     "public_key_hex_from_raw_bytes",
     "pulled_filing_divergence_findings",
     "read_m036_declaration",
@@ -924,6 +936,7 @@ __all__ = [
     "validate_modelo_work_deadline_posture",
     "verify_counter_signed_receipt",
     "verify_modelo_revision",
+    "verify_modelo_revision_with_preconditions",
     "verify_review_package",
     "verify_review_package_signature",
     "visible_target_work_units",

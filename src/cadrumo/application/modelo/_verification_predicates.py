@@ -19,8 +19,6 @@ See Also:
 
 from __future__ import annotations
 
-from ...application.operator_actions import next_action
-
 import decimal as _decimal
 import re as _re
 from collections.abc import Callable, Mapping
@@ -86,46 +84,11 @@ _PREDICATE_PROFILE_FIELD_REQUIRED = _re.compile(r'^profile_field_required\("(?P<
 _M349_NUMERO_RECTIFICACIONES_CASILLA: CasillaId = "decl.numero-rectificaciones"
 _M349_IMPORTE_RECTIFICACIONES_CASILLA: CasillaId = "decl.importe-rectificaciones"
 
-# Per-predicate next_action dispatch. Predicates listed here emit their
-# dedicated next_action prose via a direct tr() call (so the locale
-# scaffold AST scanner can pick up the literal key); predicates absent
-# from this dispatch fall back to the generic cross-casilla template.
-
-
-def _representante_fiscal_requirement() -> str:
-    """Name the representante-fiscal NIF profile field as the operator sees it.
-
-    The finding tells the operator which profile fact to go and set, so the
-    field is named the way the profile editor names it rather than by an
-    internal path. Resolved from the field's declared model selector through
-    the one renderer every other refusal in this area uses, so a schema rename
-    moves the prose with it.
-    """
-    from ...core.resources import resources
-    from ..user_profile import format_profile_selector_requirements
-
-    rendered = format_profile_selector_requirements(
-        ("taxpayer.representante_fiscal_nif",),
-        schema=resources().user_profile_schema.singleton,
-    )
-    return ", ".join(rendered)
-
-
-def _resolve_predicate_next_action(predicate_id: str) -> str | None:
-    if predicate_id == "m210-representante-fiscal-required":
-        return tr(
-            "application.modelo.findings.representante_fiscal_required.next_action",
-            requirements=_representante_fiscal_requirement(),
-        )
-    return None
-
-
 # Per-advisory fallback message for advisory predicates whose finding text is
 # not (yet) carried in the locale catalogue. The advisory finding message is
 # resolved via ``tr(advisory_key, default=...)``: a registered locale key still
 # takes precedence, and this default is used only when the key is absent — so
-# translators can enrich the catalogue later without a code change. Mirrors the
-# ``_resolve_predicate_next_action`` per-predicate dispatch shape.
+# translators can enrich the catalogue later without a code change.
 def _resolve_advisory_message_default(predicate_id: str) -> str | None:
     if predicate_id == "modelo-130-art109-exencion-alta-retencion":
         return (
@@ -902,12 +865,6 @@ def _evaluate_verification_predicates(
                 )
         else:
             if not _evaluate_predicate_expression(predicate.expression, casilla_values, profile):
-                next_action = _resolve_predicate_next_action(predicate.predicate_id)
-                if next_action is None:
-                    next_action = tr(
-                        "application.modelo.findings.cross_casilla_invariant_next_action",
-                        predicate_id=predicate.predicate_id,
-                    )
                 findings.append(
                     ModeloVerificationFinding(
                         kind=ModeloVerificationFindingKind.BLOCKING_RULE,
@@ -917,7 +874,6 @@ def _evaluate_verification_predicates(
                             predicate_id=predicate.predicate_id,
                             expression=predicate.expression,
                         ),
-                        next_action=next_action,
                         legal_refs=tuple(str(r) for r in predicate.legal_refs),
                     ),
                 )
@@ -954,6 +910,5 @@ parse_predicate_casilla_ids = _parse_predicate_casilla_ids
 parse_predicate_date = _parse_predicate_date
 parse_predicate_raw_tokens = _parse_predicate_raw_tokens
 resolve_advisory_message_default = _resolve_advisory_message_default
-resolve_predicate_next_action = _resolve_predicate_next_action
 roll_forward_balance_reconciles = _roll_forward_balance_reconciles
 validated_predicate_casilla_id = _validated_predicate_casilla_id

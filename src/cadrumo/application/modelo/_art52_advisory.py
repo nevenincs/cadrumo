@@ -133,7 +133,6 @@ def _art52_reduccion_advisory_finding(
                 reduccion_value=str(reduccion_value),
                 sublimit=str(MODELO_100_ART_52_INDIVIDUAL_SUBLIMIT_EUR),
             ),
-            next_action=tr("application.modelo.findings.art52_reduccion_individual_sublimit_next_action"),
             legal_refs=("ley-35-2006:art-52",),
         )
     return None

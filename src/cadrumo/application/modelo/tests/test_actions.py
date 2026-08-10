@@ -63,7 +63,6 @@ from .._verification_actions import (
     _dt12_antiquity_advisory_finding,
     _dt12_reduccion_advisory_finding,
     _evaluate_verification_predicates,
-    _iva_wallet_blocking_verification_finding,
     _missing_required_casilla_finding,
 )
 from .._workflow_gate import (
@@ -452,27 +451,6 @@ def test_cross_casilla_invariant_violated_message_is_localised() -> None:
     assert rendered_by_language["es"] != rendered_by_language["en"]
 
 
-def test_cross_casilla_invariant_next_action_is_localised() -> None:
-    """_evaluate_verification_predicates emits a tr()-rendered next_action for a violated predicate."""
-    _, finding = _predicate_finding(
-        predicate_id="test-cross-casilla-002",
-        legal_ref="irpf:art2",
-        expression=f'any_nonzero(["{_PREDICATE_OPTIONAL_LEFT_CASILLA}","{_PREDICATE_OPTIONAL_RIGHT_CASILLA}"])',
-        casilla_values={_PREDICATE_OPTIONAL_LEFT_CASILLA: Decimal(0), _PREDICATE_OPTIONAL_RIGHT_CASILLA: Decimal(0)},
-    )
-
-    assert finding.next_action is not None
-    # The next_action must contain the predicate_id (from the locale template).
-    assert "test-cross-casilla-002" in finding.next_action
-    # Must not produce a None or empty next_action.
-    assert len(finding.next_action) > 0
-
-
-# ---------------------------------------------------------------------------
-# contract/contract — registry-snapshot-unresolved finding is localised
-# ---------------------------------------------------------------------------
-
-
 def test_registry_snapshot_unresolved_finding_is_localised() -> None:
     """_collect_revision_verification_findings produces a localised message when the registry
     snapshot cannot be resolved for a non-existent modelo.
@@ -562,7 +540,7 @@ def test_art20_reduccion_advisory_fires_within_band_and_is_localised() -> None:
     assert str(_ART20_RNT_CASILLA) in finding.message
     assert "12000" in finding.message
     assert str(_ART20_REDUCCION_CASILLA) in finding.message
-    assert finding.next_action
+    assert "next_action" not in finding.model_dump(mode="json")
     # The advisory message must be the rendered locale value, not the raw key.
     assert finding.message != "application.modelo.findings.art20_reduccion_possible"
 
@@ -628,7 +606,7 @@ def test_art52_reduccion_advisory_fires_for_purely_individual_over_sublimit() ->
     assert str(_ART52_REDUCCION_CASILLA) in finding.message
     assert "3000" in finding.message
     assert "1500" in finding.message
-    assert finding.next_action
+    assert "next_action" not in finding.model_dump(mode="json")
     # The advisory message must be the rendered locale value, not the raw key.
     assert finding.message != "application.modelo.findings.art52_reduccion_individual_sublimit_possible"
 
@@ -725,7 +703,7 @@ def test_dt12_antiquity_advisory_fires_when_reduccion_applied() -> None:
     assert finding.legal_refs == ("ley-35-2006:dt-12",)
     assert str(_DT12_ANTIQUITY_REDUCCION_CASILLA) in finding.message
     assert "4000" in finding.message
-    assert finding.next_action
+    assert "next_action" not in finding.model_dump(mode="json")
     assert finding.message != "application.modelo.findings.dt12a_reduccion_antiquity_possible"
 
 
@@ -743,41 +721,6 @@ def test_dt12_antiquity_advisory_silent_when_roles_absent() -> None:
 
 # ---------------------------------------------------------------------------
 # contract/contract — IVA wallet next_action is localised
-# ---------------------------------------------------------------------------
-
-
-def test_iva_wallet_blocking_finding_next_action_is_localised() -> None:
-    """_iva_wallet_blocking_verification_finding returns a finding with a tr()-rendered next_action.
-
-    The next_action must come from the locale catalogue key
-    'application.modelo.findings.iva_wallet_next_action' and must not be
-    the old hardcoded English string.
-    """
-    decision = IvaCompensationReconciliationDecision(
-        target_year=2026,
-        target_period=Period.from_year_and_code(2026, "1T"),
-        taxpayer_nif="12345678Z",
-        divergence="wallet_missing",
-        blocked=True,
-        selected_authority="missing",
-        selected_amount=None,
-        stale_wallet=False,
-        decided_at=_T0,
-        reason="No AEAT wallet observation or local recurrence is available.",
-    )
-    finding = _iva_wallet_blocking_verification_finding(decision)
-
-    assert finding.next_action is not None
-    # Must not be None or trivially empty.
-    assert len(finding.next_action) > 10
-    # Must not be the raw locale key (self-referencing fallback).
-    assert finding.next_action != "application.modelo.findings.iva_wallet_next_action"
-    # Must reference Modelo 303 (invariant across all authored locales).
-    assert "303" in finding.next_action
-
-
-# ---------------------------------------------------------------------------
-# contract/contract — iva_wallet_blocked_message uses tr(); exception carries translated_message
 # ---------------------------------------------------------------------------
 
 
@@ -1095,7 +1038,6 @@ def test_missing_required_casilla_finding_message_is_localised() -> None:
     """
     finding = _missing_required_casilla_finding(
         _M130_INGRESOS_CASILLA,
-        "wu-abc123",
         casilla_def=_m130_casilla_definition(_M130_INGRESOS_CASILLA),
     )
 
@@ -1115,60 +1057,13 @@ def test_missing_required_casilla_finding_message_changes_with_casilla_id() -> N
     """
     finding_a = _missing_required_casilla_finding(
         _M130_INGRESOS_CASILLA,
-        "wu-1",
         casilla_def=_m130_casilla_definition(_M130_INGRESOS_CASILLA),
     )
     finding_b = _missing_required_casilla_finding(
         _M130_GASTOS_CASILLA,
-        "wu-1",
         casilla_def=_m130_casilla_definition(_M130_GASTOS_CASILLA),
     )
 
     assert finding_a.message != finding_b.message
     assert _M130_INGRESOS_CASILLA in finding_a.message
     assert _M130_GASTOS_CASILLA in finding_b.message
-
-
-# ---------------------------------------------------------------------------
-# contract/contract — DT12 advisory next_action is localised
-# ---------------------------------------------------------------------------
-
-
-def test_dt12_reduccion_advisory_next_action_is_localised() -> None:
-    """_dt12_reduccion_advisory_finding next_action renders via tr().
-
-    The next_action must be sourced from the locale catalogue key
-    'application.modelo.findings.dt12a_reduccion_next_action' and must
-    not be the old hardcoded English string.
-    """
-    revision = _dt12_revision()
-    casilla_values = {_DT12_INGRESO_CASILLA: Decimal("25000"), _DT12_REDUCCION_CASILLA: Decimal("0")}
-
-    finding = _dt12_reduccion_advisory_finding(revision, casilla_values)
-
-    assert finding is not None
-    assert finding.next_action is not None
-    # Must not be the raw locale key surfaced as a self-referencing fallback.
-    assert finding.next_action != "application.modelo.findings.dt12a_reduccion_next_action"
-    # Must contain a substantive reference to the DT 12 legal provision.
-    assert "12" in finding.next_action
-    # Must reference the CLI verb or the DT provision (either locale will satisfy this).
-    assert len(finding.next_action) > 20
-
-
-def test_dt12_reduccion_advisory_next_action_differs_from_hardcoded_string() -> None:
-    """next_action is no longer the old hardcoded English string.
-
-    After contract the next_action is locale-catalogue-driven. The pre-contract
-    value was a specific English sentence; asserting it is gone proves
-    the catalogue path is active.
-    """
-    revision = _dt12_revision()
-    casilla_values = {_DT12_INGRESO_CASILLA: Decimal("25000"), _DT12_REDUCCION_CASILLA: Decimal("0")}
-
-    finding = _dt12_reduccion_advisory_finding(revision, casilla_values)
-
-    assert finding is not None
-    assert finding.next_action is not None
-    # The pre-contract hardcoded substring that should no longer appear.
-    assert "to aeat app modelo work calculate to auto-inject" not in finding.next_action

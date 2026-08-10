@@ -31,7 +31,6 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core import ConvenioOverrideKind, TipoRentaIrnr
-from ...core.i18n import tr
 from ...domain.calculations.registry import ConvenioOverride, LegalRefId, RegistrySnapshot, SourceRefId
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.modelos import (
@@ -46,29 +45,9 @@ if TYPE_CHECKING:
 _ZERO = Decimal("0")
 
 
-def _fiscal_residence_requirement() -> str:
-    """Name the country-of-fiscal-residence profile field as the operator sees it.
-
-    These findings tell the operator which profile fact to go and set, so the
-    field is named the way the profile editor names it rather than by an
-    internal path. Resolved from the field's declared model selector through
-    the one renderer every other refusal in this area uses, so a schema rename
-    moves the prose with it.
-    """
-    from ...core.resources import resources
-    from ..user_profile import format_profile_selector_requirements
-
-    rendered = format_profile_selector_requirements(
-        ("taxpayer.country_of_fiscal_residence",),
-        schema=resources().user_profile_schema.singleton,
-    )
-    return ", ".join(rendered)
-
-
 def _m210_blocking_finding(
     *,
     message: str,
-    next_action: str,
     legal_refs: tuple[LegalRefId, ...],
     source_refs: tuple[SourceRefId, ...],
 ) -> ModeloVerificationFinding:
@@ -83,7 +62,6 @@ def _m210_blocking_finding(
         kind=ModeloVerificationFindingKind.BLOCKING_RULE,
         severity=ModeloVerificationFindingSeverity.BLOCKING,
         message=message,
-        next_action=next_action,
         legal_refs=legal_refs,
         source_refs=source_refs,
     )
@@ -151,12 +129,6 @@ def _resolve_convenio_override(
                 f"M210 Convenio rate row missing for country={country_code!r} "
                 f"tipo_renta={tipo_renta!r} year={year}; "
                 "predicate 'm210-convenio-rate-missing' fires"
-            ),
-            next_action=tr(
-                "application.modelo.findings.m210_convenio_rate_missing.next_action",
-                cc=country_code,
-                tipo_renta=tipo_renta,
-                requirements=_fiscal_residence_requirement(),
             ),
             legal_refs=legal_refs,
             source_refs=source_refs,
@@ -238,11 +210,6 @@ def resolve_m210_rate(
                     f"M210 baseline tipo_renta={tipo_renta!r} year={year} has no "
                     "published baseline rate in the bundled corpus; "
                     "predicate 'm210-baseline-tipo-deferred' fires"
-                ),
-                next_action=tr(
-                    "application.modelo.findings.m210_baseline_tipo_deferred.next_action",
-                    tipo_renta=tipo_renta,
-                    requirements=_fiscal_residence_requirement(),
                 ),
                 legal_refs=tuple(baseline_param.legal_refs),
                 source_refs=tuple(baseline_param.source_refs),

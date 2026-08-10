@@ -16,8 +16,6 @@ and the calendar from disagreeing about whether a prior period was ever due.
 
 from __future__ import annotations
 
-from ...application.operator_actions import next_action
-
 import decimal as _decimal
 import re as _re
 from collections.abc import Iterable
@@ -107,10 +105,6 @@ def _modelo_202_incomplete_modality_finding(
             f"{_MODELO_202_INCN_PROFILE_FACT} (INCN prior 12 months) is required to choose "
             "LIS art. 40.2 vs art. 40.3 before verification, filing, or export."
         ),
-        next_action=(
-            f"Set {_MODELO_202_INCN_PROFILE_FACT} on the active taxpayer profile, then recalculate "
-            "and rerun verification."
-        ),
         legal_refs=verdict.legal_refs,
     )
 
@@ -131,7 +125,6 @@ def _raise_if_modelo_202_modality_incomplete(*, work_unit: WorkUnit, profile: Ta
             "missing_profile_fact": _MODELO_202_INCN_PROFILE_FACT,
             "modality": Modelo202Modality.INCOMPLETE.value,
         },
-        suggestion=finding.next_action,
     )
 
 
@@ -359,7 +352,6 @@ def _cross_period_clean_state_findings(
                             f"period={requirement_period} origin={requirement.origin.value} "
                             f"origin_ids={origin_text} blockers={blocker_text}"
                         ),
-                        next_action=_cross_period_clean_state_next_action(verdict, evidence),
                         legal_refs=_cross_period_requirement_legal_refs(requirement),
                         source_refs=_cross_period_requirement_source_refs(requirement),
                     ),
@@ -409,10 +401,6 @@ def _cross_period_operator_declared_suppression_advisory_finding(
             f"strictly before the operator-declared activity-start date {declared_date}, which has "
             "not yet been corroborated against an AEAT censo snapshot."
         ),
-        next_action=(
-            "Confirm the recorded activity-start date is correct. Once the live AEAT censo read is "
-            "available, the date will be corroborated and this advisory cleared."
-        ),
         legal_refs=_CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS,
         source_refs=_cross_period_requirement_source_refs(requirement),
     )
@@ -457,12 +445,6 @@ def _cross_period_first_year_fractional_suppression_advisory_finding(
             "basis. If modalidad base (art. 40.3) was elected, the entity IS obligated — confirm "
             "the modality (see next action)."
         ),
-        next_action=(
-            "Confirm the entity files Modelo 202 under modalidad cuota (LIS art. 40.2) and that this "
-            "is its first Impuesto sobre Sociedades year. If it elected modalidad base (art. 40.3) or "
-            "a prior IS return exists, capture or import the prior Modelo 200/202 AEAT evidence and "
-            "rerun verification."
-        ),
         legal_refs=_M202_FIRST_YEAR_LEGAL_REFS,
         source_refs=_cross_period_requirement_source_refs(requirement),
     )
@@ -489,11 +471,6 @@ def _cross_period_missing_activity_start_finding(
             f"period={verdict.target_period.registry_token}. If this is the first period of economic "
             "activity, no prior obligation existed; record the activity-start date so the pre-activity "
             "dependency can be scoped out. Otherwise capture the missing AEAT evidence."
-        ),
-        next_action=(
-            "Record the operator-declared activity-start date on the taxpayer profile "
-            "(`aeat config profile edit`), then rerun verification. If a prior obligation genuinely "
-            "existed, capture or import its AEAT justificante/CSV/live evidence instead."
         ),
         legal_refs=_CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS,
     )
@@ -552,15 +529,6 @@ def _cross_period_modelo_not_applicable_advisory_finding(
             ),
             modelos=", ".join(modelos),
         ),
-        next_action=tr(
-            "application.modelo.findings.cross_period_modelo_not_applicable.next_action",
-            default=(
-                "Use `aeat app modelo bindings list --missing` to identify the retenciones binding. "
-                "Supply the certificate amount with --binding KEY=VALUE where applicable: put the binding id "
-                "on the left of one equals sign and the amount on the right. Confirm the profile's IRPF "
-                "estimation regime if a mutually exclusive pago-fraccionado modelo was scoped out."
-            ),
-        ),
         legal_refs=legal_refs,
         source_refs=source_refs,
     )
@@ -583,10 +551,6 @@ def _cross_period_zero_value_previous_filing_advisory_finding(
             f"period={requirement_period} origin_ids={origin_text} for target modelo={verdict.target_modelo} "
             f"year={verdict.target_filing_year} period={verdict.target_period.registry_token}. No prior filing "
             "evidence is required because the taxpayer is not applying a positive prior-year negative-base balance."
-        ),
-        next_action=(
-            "If a prior-year negative general base balance exists and is being applied, replace the zero "
-            "with the carried amount and capture/import the prior Modelo 100 AEAT evidence before filing."
         ),
         legal_refs=tuple(
             dict.fromkeys((*_M100_ZERO_BIN_LEGAL_REFS, *_cross_period_requirement_legal_refs(requirement))),
@@ -613,11 +577,6 @@ def _cross_period_m111_no_retenciones_advisory_finding(
             f"year={verdict.target_filing_year} period={verdict.target_period.registry_token}. Fact "
             f"{M111_NO_RETENCIONES_PROFILE_PATH} attests no rentas subject to retencion or ingreso a "
             "cuenta were paid, so AEAT says an all-blank Modelo 111 must not be filed."
-        ),
-        next_action=(
-            "Keep 036/037 censo or operator evidence supporting the no-retenciones period. If any subject "
-            "payment existed, remove that period from the profile fact, capture the per-perceptor "
-            "retencion observation, calculate/file Modelo 111, and rerun verification."
         ),
         legal_refs=tuple(
             dict.fromkeys((*_M111_NO_RETENCIONES_LEGAL_REFS, *_cross_period_requirement_legal_refs(requirement))),
@@ -646,116 +605,8 @@ def _cross_period_non_official_local_chain_advisory_finding(
             period=requirement_period,
             origin=requirement.origin.value,
         ),
-        next_action=tr("application.modelo.findings.cross_period_non_official_local_chain.next_action"),
         legal_refs=_cross_period_requirement_legal_refs(requirement),
         source_refs=_cross_period_requirement_source_refs(requirement),
-    )
-
-
-def _cross_period_clean_state_next_action(
-    verdict: CrossPeriodCleanStateVerdict,
-    evidence: CrossPeriodDependencyEvidence,
-) -> str:
-    requirement = evidence.requirement
-    requirement_period = requirement.period.registry_token
-    target_period = verdict.target_period.registry_token
-    blockers = set(evidence.blockers)
-    target_capture = (
-        "aeat app live filed pull-sources "
-        f"--modelo {verdict.target_modelo} "
-        f"--year {verdict.target_filing_year} "
-        f"--period {target_period}"
-    )
-    source_hint = (
-        f"source modelo={requirement.source_modelo} year={requirement.filing_year} period={requirement_period}"
-    )
-    source_capture = (
-        "aeat app live filed pull-sources "
-        f"--modelo {requirement.source_modelo} "
-        f"--year {requirement.filing_year} "
-        f"--period {requirement_period}"
-    )
-    source_justificante_capture = (
-        "aeat app live justificante pull "
-        f"--modelo {requirement.source_modelo} "
-        f"--year {requirement.filing_year} "
-        f"--period {requirement_period}"
-    )
-    import_official_record = (
-        "aeat app modelo filing-record import WORK_UNIT_ID "
-        "--evidence-kind aeat_justificante_pdf --evidence-id CSV --set CASILLA=VALUE"
-    )
-    # Offered only on the fallback branch. The targeted pull-sources verb stays the
-    # action for a KNOWN upstream gap; a whole-history sweep is the right answer
-    # only when the profile has no AEAT-sourced evidence at all, and suggesting it
-    # for a single missing period would send the operator on a far longer run than
-    # the gap requires.
-    history_discover = "aeat app live filed discover"
-    history_pull_all = "aeat app live filed pull-all"
-    if CrossPeriodCleanStateBlocker.REGISTRY_REVISION_DIVERGENCE in blockers:
-        # The prior filing's stamped revision no longer re-confirms against the
-        # law-determined revision for its source context. Re-file and re-stamp
-        # the source period under the current revision rather than carrying a
-        # stale or unverifiable value forward.
-        return (
-            f"The prior filing for {source_hint} does not re-confirm against the law-determined registry "
-            "revision for that period; its values may follow superseded or unverifiable rules. Re-file and "
-            f"re-capture the source period so it is re-stamped under the current revision: run `{source_capture}`, "
-            "then rerun verification."
-        )
-    if CrossPeriodCleanStateBlocker.MISSING_EXPECTED_GROUP_MEMBER_ROSTER in blockers:
-        return (
-            "Configure the expected grupo member roster for "
-            f"{source_hint}, then run `{target_capture}` and rerun verification."
-        )
-    if CrossPeriodCleanStateBlocker.INCOMPLETE_GROUP_MEMBER_COVERAGE in blockers:
-        missing = ", ".join(evidence.missing_member_nifs)
-        member_detail = f" Missing members: {missing}." if missing else ""
-        return f"Capture every expected grupo member filing for {source_hint}.{member_detail} Run `{target_capture}`."
-    if CrossPeriodCleanStateBlocker.UNEXPECTED_GROUP_MEMBER_SOURCE in blockers:
-        unexpected = ", ".join(evidence.unexpected_member_nifs)
-        return (
-            f"Review the grupo roster for {source_hint}; unexpected captured members: "
-            f"{unexpected}. Then rerun verification."
-        )
-    if CrossPeriodCleanStateBlocker.OBSERVATION_REVISION_VALUE_DIVERGENCE in blockers:
-        return (
-            "Reconcile the captured filed observation against the local calculation with "
-            "`aeat app registry verify-filed-state --observation PATH`, then refresh the upstream filing evidence."
-        )
-    if CrossPeriodCleanStateBlocker.OPERATOR_MANUAL_SOURCE in blockers:
-        return f"Use AEAT evidence for upstream values in {source_hint}. Run `{target_capture}`."
-    if blockers & {
-        CrossPeriodCleanStateBlocker.MISSING_OBSERVATION,
-        CrossPeriodCleanStateBlocker.MISSING_OBSERVED_CASILLA,
-        CrossPeriodCleanStateBlocker.MISSING_CURRENT_FILING_RECORD,
-        CrossPeriodCleanStateBlocker.DUPLICATE_CURRENT_FILING_RECORD,
-        CrossPeriodCleanStateBlocker.SUPERSEDED_DEPENDENCY,
-        CrossPeriodCleanStateBlocker.MISSING_AEAT_ACCEPTANCE,
-        CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE,
-        CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE_RECORD,
-        CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD,
-        CrossPeriodCleanStateBlocker.MISSING_JUSTIFICANTE_VERIFICATION,
-        CrossPeriodCleanStateBlocker.LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE,
-    }:
-        return (
-            f"Capture/import AEAT evidence for {source_hint}. Run `{target_capture}`, "
-            f"`{source_justificante_capture}`, `{import_official_record}`, or "
-            "`aeat app modelo reconcile file WORK_UNIT_ID --file PATH`; rerun verification."
-        )
-    if blockers & {
-        CrossPeriodCleanStateBlocker.MISSING_CALCULATION_REVISION,
-        CrossPeriodCleanStateBlocker.UNFILED_CALCULATION_REVISION,
-        CrossPeriodCleanStateBlocker.MISSING_COMPLETE_VERIFICATION_REPORT,
-    }:
-        return (
-            f"Recalculate and verify the upstream work unit for {source_hint}, then attach AEAT evidence "
-            "and rerun the target verification."
-        )
-    return (
-        "Import or capture the upstream justificante/CSV/live evidence, reconcile it with the local calculation, "
-        f"and rerun verification. On a profile with no AEAT history yet, `{history_discover}` reports what AEAT "
-        f"holds and `{history_pull_all}` fetches it in one sweep."
     )
 
 
@@ -812,7 +663,6 @@ def _require_cross_period_clean_state(
             "period": work_unit.period.registry_token,
             "finding_count": str(len(blocking_findings)),
         },
-        suggestion=first.next_action,
     )
 
 
@@ -857,7 +707,6 @@ CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS = _CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS
 CROSS_PERIOD_DEPENDENCY_LEGAL_REFS = _CROSS_PERIOD_DEPENDENCY_LEGAL_REFS
 IVA_COMPENSATION_CARRY_LEGAL_REF = _IVA_COMPENSATION_CARRY_LEGAL_REF
 cross_period_clean_state_findings = _cross_period_clean_state_findings
-cross_period_clean_state_next_action = _cross_period_clean_state_next_action
 cross_period_clean_state_verdict_for_work_unit = _cross_period_clean_state_verdict_for_work_unit
 modelo_202_incomplete_modality_finding = _modelo_202_incomplete_modality_finding
 require_cross_period_clean_state = _require_cross_period_clean_state

@@ -73,7 +73,6 @@ def _dt12_reduccion_advisory_finding(
                 ingreso_value=str(ingreso_value),
                 reduccion_id=reduccion_id,
             ),
-            next_action=tr("application.modelo.findings.dt12a_reduccion_next_action"),
             legal_refs=("ley-35-2006:dt-12",),
         )
     return None

@@ -119,13 +119,12 @@ def test_casilla_present_no_facts_fires_capture_advisory(snapshot: RegistrySnaps
     finding = findings[0]
     assert finding.severity is ModeloVerificationFindingSeverity.WARNING
     # Assertions are locale-robust (this application-layer test runs under the
-    # default es output language, and the message/next_action route through tr()):
+    # default es output language, and the message routes through tr()):
     # the interpolated casilla id and the machine-token fact-group name survive
-    # every locale, as does the Modelo 184 provenance reference in the next_action.
+    # every locale, as does the Modelo 184 provenance reference in the message.
     assert _CASILLA_1577 in finding.message
     assert "attribution_received" in finding.message
-    assert finding.next_action is not None
-    assert "184" in finding.next_action
+    assert "next_action" not in finding.model_dump(mode="json")
 
 
 def test_both_present_is_silent(snapshot: RegistrySnapshot) -> None:

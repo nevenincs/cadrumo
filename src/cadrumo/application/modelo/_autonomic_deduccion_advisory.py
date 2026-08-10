@@ -140,7 +140,6 @@ def _madrid_nacimiento_adopcion_eligibility_advisory_finding(
             casilla_id=casilla_id,
             weighted_count=str(weighted_count),
         ),
-        next_action=tr("application.modelo.findings.madrid_nacimiento_adopcion_eligibility_advisory_next_action"),
         legal_refs=_ADVISORY_LEGAL_REFS,
     )
 

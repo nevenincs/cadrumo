@@ -114,7 +114,7 @@ def test_advisory_fires_for_indeterminate_conjunta_unit_with_eligible_descendant
     assert finding.casilla_id == _CASILLA_1039
     assert finding.legal_refs == ("ley-35-2006:art-77", "madrid-dl-1-2010:art-4", "madrid-dl-1-2010:art-18")
     assert "1039" in finding.message
-    assert finding.next_action
+    assert "next_action" not in finding.model_dump(mode="json")
 
 
 def test_advisory_fires_for_married_filer_with_eligible_descendant(

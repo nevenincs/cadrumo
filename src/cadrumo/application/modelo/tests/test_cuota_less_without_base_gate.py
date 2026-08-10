@@ -124,7 +124,7 @@ def test_a_cuota_less_row_with_no_base_blocks() -> None:
     assert finding.severity is ModeloVerificationFindingSeverity.BLOCKING
     assert "tx-1" in finding.message
     # The refusal must name the fix, not merely the fault.
-    assert "--taxable-base" in finding.next_action
+    assert "next_action" not in finding.model_dump(mode="json")
     # Grounded in the duty to declare the operation, not in the deduction-evidence
     # statute the neighbouring gate cites -- different requirement, different refs.
     assert "ley-37-1992:art-164" in finding.legal_refs

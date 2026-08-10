@@ -132,11 +132,6 @@ def _objective_estimation_exclusion_advisory_findings(
                     f"modelo={modelo} year={work_unit.filing_year} field={profile_field} "
                     f"declared={declared} EUR threshold={threshold} EUR ({label})."
                 ),
-                next_action=(
-                    "Review whether estimacion objetiva remains applicable for this filing year. If the "
-                    "exclusion applies, update the IRPF estimation regime/profile before filing; if it does not, "
-                    "retain the supporting activity-volume evidence."
-                ),
                 legal_refs=parameter.legal_refs,
                 source_refs=_scope_source_refs(work_unit.filing_year),
             ),

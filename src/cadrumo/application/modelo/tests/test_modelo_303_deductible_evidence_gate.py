@@ -65,6 +65,7 @@ from .. import (
     create_work_unit,
     file_modelo_revision,
     verify_modelo_revision,
+    verify_modelo_revision_with_preconditions,
 )
 from .._export import ModeloExportCommand, ModeloExportEvidenceMissingError, export_modelo_revision
 from .._filing_actions import ModeloFilingEvidenceMissingError
@@ -332,7 +333,7 @@ def test_modelo_303_verify_blocks_on_deductible_gap_and_only_warns_on_the_output
     assert purchase.iva_amount is not None
     assert revision.casilla_values[_RESULTADO] == sale.iva_amount - purchase.iva_amount
 
-    report = verify_modelo_revision(
+    verification = verify_modelo_revision_with_preconditions(
         revision.calculation_revision_id,
         actor="operator",
         workflow_profile=_workflow_profile(),
@@ -345,6 +346,7 @@ def test_modelo_303_verify_blocks_on_deductible_gap_and_only_warns_on_the_output
         transaction_repository=tx_repo,
         clock=_VERIFIED_AT,
     )
+    report = verification.report
 
     assert report.granted_verificado_completo is False
     assert report.completeness_status is VerificationCompletenessStatus.BLOCKED
@@ -366,30 +368,38 @@ def test_modelo_303_verify_blocks_on_deductible_gap_and_only_warns_on_the_output
         for finding in evidence_findings
         for source_ref in finding.source_refs
     )
-    # The deductible finding is the BLOCKING one, and its next_action is now
-    # true rather than aspirational: a blocked verify captures no bundle and
-    # leaves the draft open, so attaching and re-verifying really does work.
+    # The deductible finding is BLOCKING while the output side stays an
+    # ADVISORY; each remains factual and has no persisted recovery prose.
     assert any(
         finding.kind is ModeloVerificationFindingKind.BLOCKING_RULE
         and purchase.transaction_id in finding.message
         and "deductible VAT" in finding.message
-        and "aeat app ledger evidence add" in (finding.next_action or "")
-        and "rerun verification" in (finding.next_action or "")
-        and (
-            f"aeat app ledger attach {purchase.transaction_id} --purchase-invoice-evidence-id"
-            in (finding.next_action or "")
-        )
         for finding in blocking
     )
     assert any(
         finding.kind is ModeloVerificationFindingKind.ADVISORY
         and sale.transaction_id in finding.message
         and "output VAT" in finding.message
-        and finding.next_action is not None
-        and "Advisory only" in finding.next_action
-        and "no dedicated public CLI path" in finding.next_action
-        and f"aeat app ledger attach {sale.transaction_id} --attachment-id" in finding.next_action
         for finding in warning
+    )
+    assert all("next_action" not in finding.model_dump(mode="json") for finding in evidence_findings)
+    evidence_projections = tuple(
+        projection
+        for projection in verification.finding_preconditions
+        if "VAT" in projection.finding.message and "no linked evidence" in projection.finding.message
+    )
+    assert len(evidence_projections) == len(evidence_findings)
+    assert all(
+        projection.precondition_verdict is not None
+        and projection.precondition_verdict.action is None
+        and projection.precondition_verdict.no_recovery_outcome is not None
+        for projection in evidence_projections
+        if projection.finding.severity is ModeloVerificationFindingSeverity.BLOCKING
+    )
+    assert all(
+        projection.precondition_verdict is None
+        for projection in evidence_projections
+        if projection.finding.severity is ModeloVerificationFindingSeverity.WARNING
     )
     # The load-bearing half: a blocked verify must leave NO frozen bundle and a
     # still-open draft. If either moved, the operator would be locked out of the
@@ -727,10 +737,7 @@ def test_output_vat_evidence_hint_is_advisory_and_names_current_cli_limit(
     finding = findings[0]
     assert finding.kind is ModeloVerificationFindingKind.ADVISORY
     assert finding.severity is ModeloVerificationFindingSeverity.WARNING
-    assert finding.next_action is not None
-    assert "Advisory only" in finding.next_action
-    assert "no dedicated public CLI path" in finding.next_action
-    assert f"aeat app ledger attach {sale.transaction_id} --attachment-id" in finding.next_action
+    assert "next_action" not in finding.model_dump(mode="json")
 
 
 def test_modelo_303_export_refuses_legacy_verified_deductible_vat_missing_evidence(

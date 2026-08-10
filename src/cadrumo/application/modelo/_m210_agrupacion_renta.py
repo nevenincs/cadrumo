@@ -124,7 +124,6 @@ def m210_agrupacion_renta_verification_findings(
                 kind=ModeloVerificationFindingKind.BLOCKING_RULE,
                 severity=ModeloVerificationFindingSeverity.BLOCKING,
                 message=str(exc),
-                next_action="Supply one compatible Modelo 210 annual grouped-renta row set before verifying.",
                 legal_refs=(_M210_AGRUPACION_LEGAL_REF,),
                 source_refs=(_M210_AGRUPACION_SOURCE_REF,),
             ),

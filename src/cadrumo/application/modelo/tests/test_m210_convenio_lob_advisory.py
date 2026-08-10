@@ -133,7 +133,7 @@ def test_lob_advisory_fires_for_every_matched_treaty_override(
     assert finding.casilla_id == _TIPO_RENTA
     assert finding.legal_refs == expected_legal_refs
     assert country_code in finding.message
-    assert country_code in (finding.next_action or "")
+    assert "next_action" not in finding.model_dump(mode="json")
 
 
 def test_lob_advisory_silent_for_domestic_resident_with_no_treaty_country(
