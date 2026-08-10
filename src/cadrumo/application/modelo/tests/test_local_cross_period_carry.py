@@ -668,6 +668,9 @@ def test_first_iva_period_m303_1t_uses_wallet_first_period_zero(repos: _Repos) -
     assert revision.casilla_values[_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA] == Decimal("0")
 
 
+_SEED_OPENING_BALANCE_WITH_ZERO_REFUSAL = "application.modelo.errors.iva_wallet_not_seeded"
+
+
 def _persist_unreadable_prior_303(period_code: str = "4T", filing_year: int = 2024) -> None:
     """Store a prior-period Modelo 303 observation the carry gate cannot interpret.
 
@@ -716,7 +719,7 @@ def test_unreadable_prior_303_observation_cannot_prove_a_first_period_zero(repos
         clock=_T1,
     )
 
-    with pytest.raises(ModeloIvaWalletReconciliationBlocked):
+    with pytest.raises(ModeloIvaWalletReconciliationBlocked) as blocked:
         calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             work_unit_repository=wu_repo,
@@ -724,6 +727,15 @@ def test_unreadable_prior_303_observation_cannot_prove_a_first_period_zero(repos
             bucket_event_repository=bv_repo,
             clock=_T1,
         )
+
+    surfaced_key = blocked.value.translated_message
+    assert surfaced_key is not None, "the refusal reached the operator with no locale key at all"
+    assert surfaced_key != _SEED_OPENING_BALANCE_WITH_ZERO_REFUSAL, (
+        "a taxpayer whose stored prior-period evidence could not be read was told to seed the "
+        "opening balance with zero and confirm it, which reconstructs by hand the under-declaration "
+        "that blocking this case exists to prevent, and stamps it as an operator decision. "
+        f"Surfaced refusal: {surfaced_key}"
+    )
 
 
 def _persist_prior_303(repository: CalculationObservationRepository) -> None:
