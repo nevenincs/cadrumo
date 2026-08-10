@@ -42,6 +42,7 @@ class TestItFiresWhereTheCodeWasNeeded:
         assert len(findings) == 1
         assert findings[0].kind is DraftDiscrepancyKind.POSTAL_CODE_UNREADABLE
         assert findings[0].field == "supplier_postal_code"
+        assert "issuing party" in findings[0].detail
 
     def test_an_unreadable_code_with_no_country_printed_is_reported(self) -> None:
         """Nothing established the party at all, so the code was the only evidence."""
@@ -93,7 +94,10 @@ class TestBothPartiesAreAskedIndependently:
     def test_the_customer_side_is_checked(self) -> None:
         draft = InvoiceDraft(customer_postal_code=_ADDRESS_BLOB, customer_country="España")
 
+        findings = postal_shape_findings(draft)
+
         assert _kinds(draft) == ["customer_postal_code"]
+        assert "billed party" in findings[0].detail
 
     def test_one_party_settled_does_not_silence_the_other(self) -> None:
         draft = InvoiceDraft(

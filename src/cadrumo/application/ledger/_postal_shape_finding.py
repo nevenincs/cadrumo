@@ -48,7 +48,7 @@ See Also:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Final, NamedTuple
+from typing import TYPE_CHECKING
 
 from ...core import DraftDiscrepancyKind
 from ...domain.iva import (
@@ -56,31 +56,12 @@ from ...domain.iva import (
     territorial_scope_for_country,
     territorial_scope_for_spanish_postal_code,
 )
+from ._party_attribution import party_addresses
 
 if TYPE_CHECKING:
     from ._evidence_draft import DraftDiscrepancyFinding, InvoiceDraft
 
 __all__ = ["postal_shape_findings"]
-
-
-class _Party(NamedTuple):
-    """One side of the document, named by the fields that describe it."""
-
-    postal_field: str
-    country_field: str
-    role: str
-
-
-_PARTIES: Final[tuple[_Party, ...]] = (
-    _Party("supplier_postal_code", "supplier_country", "issuing"),
-    _Party("customer_postal_code", "customer_country", "billed"),
-)
-"""Both sides, because establishment is asked of each party independently.
-
-Checking only the supplier would pass every document whose CUSTOMER carried the
-unreadable code, and on an invoice the filer issued the customer IS the
-counterparty -- the side whose territory the classification turns on.
-"""
 
 
 def _territory_already_settled(printed_country: str | None) -> bool:
@@ -119,7 +100,7 @@ def postal_shape_findings(draft: InvoiceDraft) -> tuple[DraftDiscrepancyFinding,
     from ._evidence_draft import DraftDiscrepancyFinding
 
     findings: list[DraftDiscrepancyFinding] = []
-    for party in _PARTIES:
+    for party in party_addresses():
         printed: str | None = getattr(draft, party.postal_field, None)
         if printed is None or not printed.strip():
             continue
@@ -137,7 +118,7 @@ def postal_shape_findings(draft: InvoiceDraft) -> tuple[DraftDiscrepancyFinding,
                 # a glance that an address line landed in the wrong slot, and
                 # can read the correct code straight out of it.
                 detail=(
-                    f"the {party.role} party's postal code field holds {printed.strip()!r}, which is not a "
+                    f"the {party.operator_role} party's postal code field holds {printed.strip()!r}, which is not a "
                     f"five-digit postal code, and its printed country did not settle where the party is "
                     f"established; the Spanish IVA territory therefore stays undetermined"
                 ),
