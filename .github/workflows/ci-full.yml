@@ -138,10 +138,36 @@ jobs:
         # defect. It can go blocking on its own once its backlog closes. The
         # serial pass below cannot, and joining them would hold this one hostage.
         #
-        # NON-BLOCKING WHILE THE BACKLOG STANDS. Triaged measurement: 13 real
-        # failures remain. Blocking now would red the release-verdict lane on
-        # defects nobody has closed, and a lane that is always red is a lane
-        # everyone learns to ignore.
+        # NON-BLOCKING, AND THE REASON HAS CHANGED. The backlog this step was
+        # landed with — a triaged measurement of 13 real failures — CLOSED on
+        # 2026-08-06. It resolved to one genuine defect, fixed in 963dd72f08:
+        # a test asserting that an empty perceptor store should yield zeroed
+        # casillas, where the resolver correctly refuses in order to prevent a
+        # silent zero. Recorded rather than deleted, because deleting the
+        # sentence silently would send the next reader to re-open a closed
+        # investigation.
+        #
+        # WHAT HOLDS THE FLAG ON NOW IS NOT A BACKLOG. This lane transitively
+        # reaches a live European Central Bank endpoint through a multi-currency
+        # fixture (audited in 2e944c6dcf), so turning the flag off would wire the
+        # release verdict to a third party nobody here operates: one pass failed
+        # on repeated gateway timeouts while a direct probe minutes later
+        # succeeded three times. The obvious alternative — pinning rates to a
+        # committed fixture — is worse, because a stale fixture would ground
+        # regulated calculations in silently wrong rates.
+        #
+        # THAT TRADE IS NOT SETTLED, AND THIS COMMENT DOES NOT SETTLE IT. Treat
+        # the flag as an OPEN DECISION, not as a permanent state. It was ruled in
+        # passing while closing a plan step, which is not the authority required
+        # to make a campaign gate non-blocking forever; an accepted decision
+        # record is owed and does not exist yet. Do not remove this flag, and do
+        # not promote it to policy, without one.
+        #
+        # SCOPE OF THIS PARAGRAPH: it governs THIS step and the dev-tooling step
+        # below (which says "flip it off with the other one"). It does NOT govern
+        # the serial pass or the vault-drift step — each of those carries its own,
+        # different release condition. A reader who applies this reasoning to all
+        # four flags is applying it to two it never covered.
         #
         # A NOTE ON MEASURING THIS: the first count taken here (19) was
         # contaminated. Re-running it found 28, and intersecting the two runs
