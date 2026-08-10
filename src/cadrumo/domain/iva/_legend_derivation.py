@@ -59,7 +59,7 @@ from typing import Final, Self
 from pydantic import BaseModel, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
-from ...core.text_fold import fold_diacritics
+from ...core.text_fold import fold_printed_phrase
 from ._regime_legend import REGIME_LEGENDS, RegimeLegend
 from ._schema import IvaCategory
 
@@ -179,7 +179,7 @@ def normalise_regime_legend_text(printed: str) -> str:
     isolation: every mention is four to nine words, and its distinctiveness is
     the whole phrase.
     """
-    return " ".join(fold_diacritics(printed.casefold()).split())
+    return fold_printed_phrase(printed)
 
 
 def index_regime_legends(legends: Iterable[RegimeLegend]) -> dict[str, RegimeLegend]:

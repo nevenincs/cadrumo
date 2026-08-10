@@ -348,7 +348,7 @@ from .secure_object_write import (
     DEFAULT_WRITE_PROVENANCE,
     SecureObjectWrite,
 )
-from .text_fold import fold_diacritics, unicode_compose
+from .text_fold import fold_diacritics, fold_printed_phrase, unicode_compose
 
 if TYPE_CHECKING:
     # Static bindings for the lazily-exposed surface below. At runtime these
@@ -592,6 +592,7 @@ __all__: list[str] = [
     "exclusive_file_lock",
     "expected_floor",
     "fold_diacritics",
+    "fold_printed_phrase",
     "foreign_asset_obligation_group",
     "freeze_toml",
     "freeze_toml_value",

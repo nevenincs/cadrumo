@@ -92,7 +92,7 @@ from ...core.identity import (
 )
 from ...core.parsing import normalise_iso_3166_alpha2_jurisdiction
 from ...core.resources import bundled_path
-from ...core.text_fold import fold_diacritics
+from ...core.text_fold import fold_printed_phrase
 from ._classification import IvaTerritorialScope
 from ._schema import EUMemberState
 
@@ -832,7 +832,7 @@ def _normalise_printed_country_name(printed: str) -> str:
     vocabulary with its stops, and squeezing punctuation generally would start
     matching strings that are not names.
     """
-    return " ".join(fold_diacritics(printed.casefold()).split())
+    return fold_printed_phrase(printed)
 
 
 @lru_cache(maxsize=1)
