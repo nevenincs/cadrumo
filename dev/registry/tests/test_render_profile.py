@@ -939,15 +939,15 @@ def test_profile_authority_has_no_legacy_tree_or_layout_oracle() -> None:
         for node in module.body
         if isinstance(node, ast.FunctionDef) and node.name == "load_render_profile_source_evidence"
     )
-    source_calls = {
-        node.func.attr
+    assert any(
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "is_link_like"
+        and len(node.args) == 1
+        and isinstance(node.args[0], ast.Name)
+        and node.args[0].id == "source_path"
         for node in ast.walk(source_loader)
-        if isinstance(node, ast.Call)
-        and isinstance(node.func, ast.Attribute)
-        and isinstance(node.func.value, ast.Name)
-        and node.func.value.id == "source_path"
-    }
-    assert {"is_symlink", "is_junction"} <= source_calls
+    )
 
 
 def test_real_profile_fragments_stay_below_the_reviewability_line_cap() -> None:

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:ce6e41ad445af504bd755b569bcb1da6469e089ab540044b6482ceb5b56f9765'
+body_hash: 'sha256:9e776efc018ccbdd78ebb187012457e5d888f5cc95b65929931861dc8a640270'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
@@ -17,22 +17,24 @@ related:
 
 Verdict: **PASS. No open critical, high, medium, or low findings remain.**
 
-This independent formal review covered approved plan step `W02.P03.S32` against the accepted generator-authority ADR and fixed-width amendment, the active plan, render-profile research, and the S31, S37, S38, S40, and S41 execution and audit evidence. Production scope was `dev/registry/_export_tree.py`, `_render_profile.py`, `_provenance_manifest.py`, `_generated_tree_validation.py`, `_generated_tree_publication.py`, and `_generated_tree_check.py`; the corresponding focused tests and variable-envelope gate were reviewed directly. The adjacent canonical `CasillaId` import moves in parity modules and the peer-owned `is_link_like` relocations were inspected for boundary contamination and did not create an S32 authority duplicate or semantic regression.
+This final independent review reconciled `W02.P03.S32` with the accepted generator-authority ADR, its authority-gap research, completed profile and fixed-width steps, and the current generation, provenance, publication, recovery, validation, and check boundaries. It confirmed one wire-authority `RenderProfile`, one transport-only profile, one canonical `render_profile_digest`, and the canonical core link-safety predicate. No legacy layout, profile alias, fallback, default, or duplicate inference capability remains in the reviewed boundary.
 
-The final generation path validates the exact `RenderProfile` and `RenderProfileSourceEvidence` before target creation, refuses variable envelopes before rendering, preserves nonblank official numeric facts, consults the profile only for blank numeric exact anchors, maps all eleven public `ExportValuePolicy` members exhaustively, preserves allowed values only for enumerated digits, and uses the public domain schema and sole runtime codec. `ExportTreeTransportProfile` is transport-only and the retired `ExportRenderProfile` name has no alias. The canonical order-independent profile digest includes design identity, fragment membership, width and singleton rules, exact anchors, allowed values, policy and official evidence, plus independently resolved source-evidence facts. Provenance schema version 2 and generator/normalization version cutovers carry the profile schema and digest through emit, load, validation, recovery, check, and publication verification.
-
-Reviewed tests import production directly and use no fake, mock, stub, patch, monkeypatch, skip, or xfail shortcuts. Independent final verification passed the three exact interrupted-recovery cases, including separate profile and evidence drift, and all 165 tests in `dev/registry/tests`. Ruff over `dev/registry` passed. Strict BasedPyright over all reviewed production modules reported zero errors, warnings, or notes.
+Real behavior evidence passed: the focused generator/profile/provenance/publication/check/envelope selector collected 106 tests; the full development-registry unit lane collected 190 tests. Scoped Ruff and strict BasedPyright were clean, and `git diff --check` was clean. The default pytest selector that collected zero tests was discarded rather than treated as evidence.
 
 ## Findings
 
 ### publication-recovery-authority-bypass | high | Interrupted publication could finalize stale profile provenance
 
-The initial review found `publish_validated_generated_export_tree` invoking `_recover_interrupted_publication` before normal current-authority validation. Recovery received only paths and context and could accept a journal-matching package without comparing its profile provenance to the joined design, semantic map, rendered derivations, current profile, or current source evidence. A candidate validated under authority A could therefore be finalized by a retry supplying authority B.
+Resolution: **RESOLVED.** Recovery now carries the current joined design, semantic map, rendered layout, profile, and evidence through every candidate and target acceptance branch. It loads the exact layout and invokes the canonical provenance verifier before any promotion, rollback deletion, journal finalization, or early return. Real interrupted-recovery mutations of the profile and source evidence refuse while retaining the live target, rollback, and journal bytes.
 
-Resolution: **RESOLVED.** Recovery now requires every current generation authority. `_verify_recovery_package_against_current_authorities` loads the exact recovered layout, requires equality with the current rendered layout, and calls the canonical `verify_export_fragment_provenance_manifest` with the current joined design, semantic map, target, rendered derivations, render profile, and source evidence. This verification occurs before accepting an already-cut-over target, before moving a staged candidate into the target, and before deleting rollback material or finalizing the journal.
+### variable-envelope-validation-order | medium | A bad profile could fail before the variable envelope hard stop
 
-Real `candidate_live` interruption tests independently mutate the profile fragment authority and source-evidence identity. Both refuse while preserving the live target bytes, retained rollback bytes, and journal bytes, with no candidate-path resurrection. The unchanged-authority recovery case continues to complete successfully. Independent execution passed all three exact recovery cases.
+Resolution: **RESOLVED.** Fixed-width generation now rejects every typed variable envelope immediately after transport validation and before profile validation or target creation. The real Modelo 200 envelope test deliberately supplies an inapplicable profile and proves the envelope refusal still wins, so restoring the old order fails the test.
+
+### linked-official-source-guard | low | Source evidence did not use the canonical link predicate
+
+Resolution: **RESOLVED.** The source-evidence loader now uses the sole `is_link_like` core predicate. A real linked official binary refuses before hashing, and an AST guard fails if inline or redeclared source-link logic replaces the canonical owner.
 
 ## Recommendations
 
-Accept `W02.P03.S32` as passing formal review. Preserve current-authority verification at every recovery success transition, the single public policy and codec owners, exhaustive mapper coverage, exact-anchor-only profile projection, order-independent complete profile digest, profile-bearing provenance hard cutover, variable-envelope refusal, and the real no-mutation recovery regressions.
+Accept `W02.P03.S32`. Preserve exact-anchor-only blank-wire resolution, profile schema/digest provenance, canonical core link safety, current-authority recovery verification, variable-envelope-first refusal, the hard removal of `ExportRenderProfile`, and the real-source regression boundaries.

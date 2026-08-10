@@ -5,7 +5,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:af451e68785bc78237b60a5f883b0ff14badbefadf959df19f4e89ff01aa7062'
+body_hash: 'sha256:f2dad8c7b28fde4883716e43e3e1fc8e2ed1375ae39781a226fcdaece0f28d1b'
 step_id: 'S32'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
@@ -15,32 +15,26 @@ related:
 ## Scope
 
 - `dev/registry/`
-- Narrow canonical-boundary repair for stale development-tool `CasillaId` imports after the public forwarding alias was deleted.
 
 ## Description
 
-- Require the exact SHA-bound `RenderProfile` and `RenderProfileSourceEvidence` throughout rendering, validation, publication, recovery, check mode, and provenance verification.
-- Keep `ExportTreeTransportProfile` transport-only and remove the ambiguous `ExportRenderProfile` name without an alias.
-- Resolve only blank numeric source fields through exact validated profile anchors; retain every nonblank official wire fact unchanged and refuse uncovered anchors or variable envelopes.
-- Map every public singleton export policy explicitly to one generated schema shape, carrying the exact enumeration domain and refusing unknown or generic fallthrough behavior.
-- Add one order-independent digest over every profile rule, membership, fragment identity, allowed-value domain, and resolved source-evidence fact.
-- Hard-cut the provenance, generator, and render-normalization schemas and require render-profile schema and digest fields in emitted and loaded manifests.
-- Verify interrupted publication candidates and live targets against the retry's current joined design, semantic map, rendered layout, profile, and evidence before any move, finalization, rollback deletion, or early return.
+- Thread the exact SHA-bound render profile and resolved source evidence through rendering, validation, publication, recovery, check mode, and provenance verification.
+- Delete the ambiguous `ExportRenderProfile` surface; retain transport facts in `ExportTreeTransportProfile` and absent-wire authority in `RenderProfile`.
+- Resolve only blank numeric official cells through exact validated anchors, retain present official facts, and refuse uncovered, conflicting, inapplicable, or hash-drifting authority.
+- Attest the canonical order-independent profile digest and profile schema in provenance schema version 2, then verify them through every repository boundary.
+- Re-verify interrupted-recovery candidates and targets against the retry's current authorities before any promotion or destructive finalization.
+- Reject typed variable envelopes before render-profile validation or target creation; use the canonical core link guard for source evidence.
 
 ## Outcome
 
-Generation now validates the wire-authority profile before creating a target and uses it only when the exact official numeric content cell is absent. Width-17 unsigned and signed amount rules hydrate the canonical decimal and money shapes, and all eleven singleton policies hydrate their exact public schema constraints. The real loader sees exactly the rendered layout, while provenance binds the current profile schema and canonical digest alongside source, map, loader, output, and derivation evidence.
+The generator has one hard-cut authority path: official coordinates and present wire facts remain source-owned, semantic meaning remains map-owned, and a reviewed hash-pinned render profile supplies only absent exact-anchor numeric wire facts. `DP200000` and every other typed variable envelope refuse fixed-width generation without truncation. The emitted manifest records the render-profile schema and complete canonical digest, and verification rejects profile, evidence, source, map, layout, file, or schema drift.
 
-Validation, publication, and check mode require the same profile and evidence rather than accepting a caller-optional or legacy path. Crash recovery re-verifies a journaled package through the canonical provenance verifier with every current authority. Separate real interrupted-journal mutations prove profile drift and source-evidence drift refuse without changing the live target or deleting the retained backup and journal.
+The current recovery path verifies the canonical manifest with the exact joined design, map, rendered derivations, profile, and evidence before accepting a journaled candidate or target. No legacy profile alias, fallback, defaults, or duplicate digest/inference owner remains.
 
-The former layout-wide `ExportRenderProfile` is now `ExportTreeTransportProfile`; `RenderProfile` remains the sole wire-authority profile and `render_profile_digest` has one canonical owner. Exact discovery found no compatibility alias, duplicate digest, development-only policy taxonomy, or generic policy mapper. The canonical registry codec remains the only runtime render/parse policy owner.
-
-Focused generation, profile, provenance, publication, recovery, check, and variable-envelope verification passed with 105 tests. The full development-registry lane passed with 165 tests. Scoped Ruff passed, strict scoped BasedPyright reported zero diagnostics, and the production/dev path-isolation gate passed with 23 tests. Independent formal review passed after remediation with no open high, medium, or low findings.
+Focused source, profile, provenance, publication, recovery, check, and envelope verification passed 106 tests. The full `dev/registry` unit lane passed 190 tests. Scoped Ruff, strict BasedPyright, and `git diff --check` were clean. Independent Luna review passed with no open critical, high, medium, or low findings.
 
 ## Notes
 
-The full development-registry run initially exposed four stale `CasillaId` imports left after deletion of the registry forwarding alias. The narrowly authorized repair points `_parity_tapes.py`, `_workbook_parity.py`, `_workbook_parity_models.py`, and `test_workbook_parity.py` directly at the canonical `cadrumo.core` owner; no alias was restored.
+An initial default pytest command selected zero tests and was discarded. The final test commands override the repository's default selector and prove nonzero collection.
 
-A broader schema/filing lane collected 328 tests and retained 19 failures in pre-existing strict fixed-width/XML verification behavior outside S32. An earlier collection attempt also encountered a transient peer core-facade race; the retry collected after that surface stabilized. These boundaries were not weakened or modified.
-
-The shared files also carried concurrent link-detection relocation hunks. Those hunks remain peer-owned and are excluded from this Step's staged payload. Unrelated Modelo 303, relation, auth, TUI, identifier, locale, and plan work remained untouched.
+The independent review found and this Step resolved three issues: current-authority verification during interrupted recovery, variable-envelope refusal ordering, and source-link consolidation onto canonical `is_link_like`. The review and execution records were refreshed through the owning vault CLI before plan closure.
