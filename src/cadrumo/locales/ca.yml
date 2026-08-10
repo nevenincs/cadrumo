@@ -7458,6 +7458,8 @@ flows:
       passphrase_confirm: Confirma la nova contrasenya
       passphrase_current: Contrasenya actual
       passphrase_done: Contrasenya canviada.
+      passphrase_failed: No s'ha pogut canviar la contrasenya. Revisa l'estat de l'emmagatzematge
+        local i torna-ho a provar.
       passphrase_mismatch: La nova contrasenya i la seva confirmació no coincideixen.
       passphrase_new: Nova contrasenya
       passphrase_wrong_current: Aquesta no és la contrasenya actual.
@@ -7640,6 +7642,7 @@ flows:
         pàgina. No es pot desfer.
       title: Reiniciar tot el procés?
     header: '{flow} - pregunta {position} de {total}, secció {section}'
+    header_single_section: '{flow} — pregunta {position} de {total}'
     section_unavailable: Secció no disponible
 live:
   errors:

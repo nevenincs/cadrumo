@@ -307,12 +307,11 @@ def _name_paths(paths: Sequence[str], labels: Mapping[str, str]) -> str:
     is how the record addresses a field, not how the page shows it, and it
     is not what the operator was reading when they answered.
 
-    A path with no label falls back to itself rather than being dropped: a
-    field missing from the projection is still a divergence they must be
-    told about, and an obscure name is better than silence about a value
-    AEAT contradicts.
+    A path missing from the projection is still reported, but only through a
+    generic operator label. Its dotted storage address is diagnostic data,
+    not actionable screen copy.
     """
-    return ", ".join(labels.get(path, path) for path in paths)
+    return ", ".join(labels.get(path, tr("flows.manager.field_unavailable")) for path in paths)
 
 
 def _field_labels(overview: ProfileOverview) -> Mapping[str, str]:
@@ -615,7 +614,13 @@ def _run_passphrase_change() -> ManagerActionOutcome:
             disposition=ManagerActionDisposition.REFUSED,
         )
     except (MasterKeyMaterialMissingError, SecretStoreError) as exc:
-        return ManagerActionOutcome(message=str(exc), disposition=ManagerActionDisposition.REFUSED)
+        from ....core.errors import CadrumoError, resolve_error_message
+
+        message = resolve_error_message(exc) if isinstance(exc, CadrumoError) else ""
+        return ManagerActionOutcome(
+            message=message or tr("flows.manager.action.passphrase_failed"),
+            disposition=ManagerActionDisposition.REFUSED,
+        )
 
     return ManagerActionOutcome(message=tr("flows.manager.action.passphrase_done"))
 
@@ -1301,7 +1306,7 @@ def _row_field(section: ProfileSectionDefinition, field: ProfileFieldDefinition)
     from ....adapters.inbound.tui import FormField, FormFieldKind, form_choices
     from ....application.user_profile import profile_field_choices
 
-    declared = profile_field_choices(field)
+    declared = profile_field_choices(field, path=f"{section.key}.{field.key}")
     return FormField(
         key=field.key,
         label=profile_field_label(section.key, field),

@@ -7335,6 +7335,8 @@ flows:
       passphrase_confirm: Új jelmondat megerősítése
       passphrase_current: Jelenlegi jelmondat
       passphrase_done: Jelmondat módosítva.
+      passphrase_failed: A jelszót nem sikerült módosítani. Ellenőrizd a helyi tárhely
+        állapotát, majd próbáld újra.
       passphrase_mismatch: Az új jelmondat és a megerősítése nem egyezik.
       passphrase_new: Új jelmondat
       passphrase_wrong_current: Ez nem a jelenlegi jelmondat.
@@ -7519,6 +7521,7 @@ flows:
         Ez nem vonható vissza.
       title: Újraindítja a teljes folyamatot?
     header: '{flow} - {position}. kérdés a(z) {total} közül, {section} szakasz'
+    header_single_section: '{flow} — {position}. kérdés / {total}'
     section_unavailable: Nem elérhető szakasz
 live:
   errors:

@@ -6993,6 +6993,8 @@ flows:
       passphrase_confirm: Confirm new passphrase
       passphrase_current: Current passphrase
       passphrase_done: Passphrase changed.
+      passphrase_failed: The passphrase could not be changed. Review local storage
+        health and try again.
       passphrase_mismatch: The new passphrase and its confirmation do not match.
       passphrase_new: New passphrase
       passphrase_wrong_current: That is not the current passphrase.
@@ -7174,6 +7176,7 @@ flows:
         This cannot be undone.
       title: Restart the whole flow?
     header: '{flow} - question {position} of {total}, section {section}'
+    header_single_section: '{flow} — question {position} of {total}'
     section_unavailable: Unavailable section
 live:
   errors:

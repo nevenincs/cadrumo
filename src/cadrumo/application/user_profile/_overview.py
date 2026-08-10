@@ -42,6 +42,7 @@ from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...core import ClaveMovilRoute
 from ...core.classification import SensitivityClass
 from ...core.i18n import tr
 from ...core.json_contract import Notice
@@ -156,7 +157,11 @@ class ProfileFieldChoice(BaseModel):
     label: str
 
 
-def profile_field_choices(field: ProfileFieldDefinition) -> tuple[ProfileFieldChoice, ...]:
+def profile_field_choices(
+    field: ProfileFieldDefinition,
+    *,
+    path: str | None = None,
+) -> tuple[ProfileFieldChoice, ...]:
     """The closed answer set for one field, or empty when it is free text.
 
     THE authority on "may this field be answered by picking rather than by
@@ -176,10 +181,9 @@ def profile_field_choices(field: ProfileFieldDefinition) -> tuple[ProfileFieldCh
     canonical ``true`` / ``false`` the fact carrier promotes to a real
     :class:`bool`, so picking Yes stores a boolean rather than the word.
 
-    An ENUM's tokens are offered as themselves: they are stored keys the
-    schema declares, not prose this layer may rewrite. A surface that knows
-    better for a particular field -- the language chooser, whose tokens no
-    operator can be asked to recognise -- relabels them at the point of use.
+    The schema path selects existing canonical copy for choices whose stored
+    tokens are dispatch keys rather than operator language. Passing the path
+    avoids guessing a field's meaning from an accidentally matching enum set.
 
     Every other type is free text and returns empty, which is how a caller
     tells "pick one of these" from "type a value".
@@ -190,6 +194,25 @@ def profile_field_choices(field: ProfileFieldDefinition) -> tuple[ProfileFieldCh
             ProfileFieldChoice(value="false", label=tr("flows.confirm.no")),
         )
     if field.type is ProfileFieldType.ENUM:
+        if path == "preferences.output_language":
+            return tuple(
+                ProfileFieldChoice(
+                    value=token,
+                    label=tr(f"wizard.setup.profile.output-language.choices.{token}.label"),
+                )
+                for token in field.enum_values
+            )
+        if path == "auth.provider":
+            return tuple(
+                ProfileFieldChoice(value=token, label=tr(f"auth.catalogue.{token}_label"))
+                for token in field.enum_values
+            )
+        if path == "auth.clave_movil_route":
+            route_keys = {
+                ClaveMovilRoute.QR.value: "flows.manager.action.auth_clave_movil_route_qr",
+                ClaveMovilRoute.APP_REQUEST.value: "flows.manager.action.auth_clave_movil_route_app_request",
+            }
+            return tuple(ProfileFieldChoice(value=token, label=tr(route_keys[token])) for token in field.enum_values)
         return tuple(ProfileFieldChoice(value=token, label=token) for token in field.enum_values)
     return ()
 
@@ -383,7 +406,7 @@ def _field_view(
     present = profile_value_is_present(raw)
     return ProfileFieldView(
         path=path,
-        label=f"{profile_field_label(section_key, field) or path}{label_suffix}",
+        label=f"{profile_field_label(section_key, field) or tr('flows.manager.field_unavailable')}{label_suffix}",
         # Mask only a value that exists; masking a blank would render dots
         # for a field the operator has not filled in and read as "something
         # is set here".
@@ -391,7 +414,7 @@ def _field_view(
         masked=masked,
         required=field.required,
         field_type=field.type,
-        choices=profile_field_choices(field),
+        choices=profile_field_choices(field, path=f"{section_key}.{field.key}"),
         row_index=row_index,
     )
 
@@ -509,7 +532,7 @@ def _namespace_field_views(
             leaves.append(leaf)
     views: list[ProfileFieldView] = []
     for index in sorted(instances, key=int):
-        for leaf in instances[index]:
+        for detail_number, leaf in enumerate(instances[index], start=1):
             leaf_path = f"{prefix}{index}.{leaf}"
             view = _field_view(
                 path=leaf_path,
@@ -519,7 +542,7 @@ def _namespace_field_views(
                 label_suffix=(
                     f" ({tr(_CENSO_DIVERGENCIA_LEAF_LABEL_KEYS[leaf], default=leaf)})"
                     if is_censo_divergencia and leaf in _CENSO_DIVERGENCIA_LEAF_LABEL_KEYS
-                    else f" ({leaf})"
+                    else f" ({tr('flows.manager.namespace_detail', number=detail_number)})"
                 ),
                 row_index=index,
             )

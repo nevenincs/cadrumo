@@ -179,13 +179,27 @@ def _build_auth_view(state: WorkflowState | None, *, active_uuid: str | None) ->
     lifetime.
     """
     from ....adapters.inbound.tui import StatusAuthView
+    from ....application.user_profile import profile_field_choices
+    from ....core.i18n import tr
+    from ....domain.user_profile import load_user_profile_schema
 
     idle_deadline, absolute_deadline = _active_profile_session_deadlines(active_uuid)
     if state is None:
         return StatusAuthView(idle_deadline=idle_deadline, absolute_deadline=absolute_deadline)
     auth = state.auth
+    provider = None
+    if auth.provider:
+        field = load_user_profile_schema().field("auth.provider")
+        provider = next(
+            (
+                choice.label
+                for choice in profile_field_choices(field, path="auth.provider")
+                if choice.value == auth.provider
+            ),
+            tr("flows.status.auth.provider_unknown"),
+        )
     return StatusAuthView(
-        provider=auth.provider,
+        provider=provider,
         login_ready=auth.authenticated_at is not None,
         subject=auth.subject,
         certificate_source=auth.active_certificate_source,
@@ -325,10 +339,9 @@ def _build_fact_rows(
     authority already chose -- a declaration is never overridden by
     wording, in either direction.
 
-    The LABEL keeps the raw indexed path rather than the field's name,
-    because the two questions are different: three socios would otherwise
-    render three identically-labelled rows on a surface with no other
-    column to tell them apart.
+    Indexed facts keep their schema label and add a localized row marker.
+    The stored dotted address remains a table key only; it is never display
+    copy.
 
     Masking reads the schema's ``description``, never the localized
     label, for the reason the overview gives: whether a value is a secret
@@ -348,15 +361,14 @@ def _build_fact_rows(
     """
     from ....adapters.inbound.tui import StatusFactRow
     from ....application.user_profile import (
+        build_profile_overview,
         mask_profile_field,
         record_to_path_values,
-        resolve_profile_field_label_for_path,
     )
     from ....core.i18n import tr
     from ....domain.user_profile import (
         UserProfileError,
         load_user_profile_schema,
-        profile_field_label,
         section_field_key,
     )
 
@@ -366,62 +378,41 @@ def _build_fact_rows(
     if not values:
         return ()
     resolved_schema = schema if schema is not None else load_user_profile_schema()
+    overview = build_profile_overview(record, schema=resolved_schema)
+    views = {field.path: field for section in overview.sections for field in section.fields}
 
     rows: list[StatusFactRow] = []
     for path in sorted(values):
         value = values[path]
+        view = views.get(path)
         declared_path = section_field_key(path)
         try:
             field_def = resolved_schema.field(declared_path)
         except UserProfileError:
-            label = path
+            label = tr("flows.status.profile.field_unavailable")
+            value = tr("flows.status.profile.value_unavailable")
             masked = mask_profile_field(path=path, label=path, sensitivity=None)
         else:
-            section_key = declared_path.split(".", 1)[0]
-            label = path if declared_path != path else (profile_field_label(section_key, field_def) or path)
             masked = mask_profile_field(
                 path=path,
                 label=field_def.description or path,
                 sensitivity=field_def.sensitivity,
             )
-            leaf_label_key = _censo_divergencia_leaf_label_key(path)
-            if leaf_label_key is not None:
-                # Otherwise a cotejo divergence renders as
-                # "censo.divergencia.0.axis -> contact.fiscal_address": two
-                # raw internal identifiers naming which field AEAT disputes,
-                # legible only to whoever wrote this code. Restated as
-                # "Divergencias del cotejo censal (campo) -> Domicilio
-                # fiscal" through the SAME field-label authority the manager
-                # overview uses, so the two profile-facts surfaces agree on
-                # what a divergence axis is called.
-                field_label = profile_field_label(section_key, field_def) or declared_path
-                leaf_suffix = tr(leaf_label_key, default=leaf_label_key)
-                label = f"{field_label} ({leaf_suffix})"
-                if path.endswith(".axis"):
-                    resolved_axis = resolve_profile_field_label_for_path(resolved_schema, value)
-                    if resolved_axis is not None:
-                        value = resolved_axis
+            if view is None:
+                label = tr("flows.status.profile.field_unavailable")
+                value = tr("flows.status.profile.value_unavailable")
+            else:
+                label = view.label
+                if view.row_index is not None:
+                    label = tr("flows.status.profile.repeated_field", label=label, row=view.row_index)
+                value = view.value or ""
+                if value and view.choices:
+                    value = next(
+                        (choice.label for choice in view.choices if choice.value == value),
+                        tr("flows.status.profile.value_unavailable"),
+                    )
         rows.append(StatusFactRow(label=label, value=value, masked=masked))
     return tuple(rows)
-
-
-def _censo_divergencia_leaf_label_key(path: str) -> str | None:
-    """Return the locale key for one ``censo.divergencia.{n}.{leaf}`` row's leaf, or ``None``.
-
-    Scoped to this one namespace rather than a generic indexed-leaf
-    translator: the leaf name is chosen by whichever family writes a given
-    namespace field, and ``censo.divergencia`` is the only one whose leaves
-    (``axis`` / ``artefact_value`` / ``source``) name a concept an operator
-    needs read off this read-only page.
-    """
-    if not path.startswith("censo.divergencia."):
-        return None
-    leaf = path.rsplit(".", 1)[-1]
-    return {
-        "axis": "cli.config.profile.censo.divergencia_leaf_axis",
-        "artefact_value": "cli.config.profile.censo.divergencia_leaf_artefact_value",
-        "source": "cli.config.profile.censo.divergencia_leaf_source",
-    }.get(leaf)
 
 
 __all__ = ["build_status_page_data", "present_status_tui"]

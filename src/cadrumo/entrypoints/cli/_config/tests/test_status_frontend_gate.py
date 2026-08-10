@@ -418,8 +418,8 @@ def test_an_unindexed_row_carries_the_label_the_manager_carries() -> None:
     )
 
 
-def test_an_indexed_row_keeps_its_raw_path_as_the_label() -> None:
-    """Two socios must stay distinguishable, so an indexed row keeps its path.
+def test_an_indexed_row_uses_the_schema_label_and_a_visible_row_marker() -> None:
+    """Two socios stay distinguishable without exposing their stored paths.
 
     DISCRIMINATING as an inequality: the schema declares
     ``attribution_entity_socios.nif`` once, so naming an indexed row after
@@ -455,11 +455,12 @@ def test_an_indexed_row_keeps_its_raw_path_as_the_label() -> None:
     labels = {row.value: row.label for row in rows}
     assert labels.keys() >= {"B12345678", "B87654321"}, f"both socios must project a row; got {labels}"
     assert labels["B12345678"] != labels["B87654321"], "two socios rendered under one indistinguishable row name"
-    assert labels["B12345678"] == first_path
-    assert labels["B87654321"] == second_path
-
     declared = load_user_profile_schema().field("attribution_entity_socios.nif")
-    assert labels["B12345678"] != profile_field_label("attribution_entity_socios", declared)
+    field_label = profile_field_label("attribution_entity_socios", declared)
+    assert field_label in labels["B12345678"]
+    assert field_label in labels["B87654321"]
+    assert first_path not in labels.values()
+    assert second_path not in labels.values()
 
 
 # ── independent zone degradation (a damaged read never tracebacks) ──────────
