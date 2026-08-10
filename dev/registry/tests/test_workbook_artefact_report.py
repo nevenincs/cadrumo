@@ -1,19 +1,26 @@
-"""Runtime contracts for workbook reports and frozen persistence records."""
+"""Validation contracts for the workbook parity artefact report.
+
+The report's two refusals both exist to stop a scan claiming more than it did: a
+SCANNED status paired with an UNREADABLE kind asserts a successful read of
+something never read, and a non-scanned status without an error leaves the
+operator knowing a workbook failed and nothing about why.
+
+These live beside the harness that owns them rather than under the package
+tests: the workbook parity tooling is contributor-only and does not ship, so a
+test importing it from ``cadrumo`` asserts a boundary the tree no longer has.
+"""
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
-from ..adapters.persistence.storage.bucket import bucket_paths
-from ..adapters.persistence.storage.sql import SecureObjectRawRow
-from ..domain.calculations.registry import WorkbookArtefactReport, WorkbookKind, WorkbookScanStatus
+from .._workbook_parity_models import WorkbookArtefactReport
+from .._workbook_parity_types import WorkbookKind, WorkbookScanStatus
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _HASH_64 = "a" * 64
 
@@ -70,41 +77,3 @@ def test_workbook_report_accepts_failed_unreadable_with_error() -> None:
 
     assert report.scan_status == "failed"
     assert report.error == "BadZipFile: File is not a zip file"
-
-
-def test_bucket_paths_record_is_frozen(tmp_path: Path) -> None:
-    """Bucket path records are immutable after path resolution."""
-    paths = bucket_paths(root=tmp_path, bucket_id="profile")
-
-    assert paths.bucket_dir.as_posix().endswith("buckets/profile")
-    with pytest.raises(ValidationError, match="Instance is frozen"):
-        paths.db_dir = paths.root
-
-
-def test_secure_object_raw_row_is_frozen_and_validates_revision_hashes() -> None:
-    """Raw secure-object records freeze payload metadata and enforce hash width."""
-    row = SecureObjectRawRow(
-        row_id=1,
-        namespace="aeat.test",
-        object_key=b"object-key",
-        classification="cache",
-        schema_version=1,
-        written_at=datetime.now(UTC),
-        payload=b"payload",
-        revision_id=_HASH_64,
-    )
-
-    assert row.revision_id == _HASH_64
-    with pytest.raises(ValidationError, match="Instance is frozen"):
-        row.payload = b"changed"
-    with pytest.raises(ValidationError, match="String should have at least 64 characters"):
-        SecureObjectRawRow(
-            row_id=1,
-            namespace="aeat.test",
-            object_key=b"object-key",
-            classification="cache",
-            schema_version=1,
-            written_at=datetime.now(UTC),
-            payload=b"payload",
-            revision_id="short",
-        )
