@@ -13,7 +13,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import BindingSourceKind, Period
+from ....core import AggregationCaptureKind, BindingSourceKind, Period
 from ....core.resources import resources
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
@@ -108,7 +108,7 @@ def test_m111_professional_retencion_observation_calculates_activity_boxes(tmp_p
             filing_year=2026,
             period=period,
             observations=[_professional_observation()],
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         snapshot = resources().modelos.authority.snapshot("111", filing_year=2026, period="1T")
         wu_repo = WorkUnitCatalogueRepository(objects=objects)
@@ -156,7 +156,7 @@ def test_m111_administrador_retencion_observation_folds_into_trabajo_boxes(tmp_p
             filing_year=2026,
             period=period,
             observations=[_administrador_observation()],
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         snapshot = resources().modelos.authority.snapshot("111", filing_year=2026, period="1T")
         wu_repo = WorkUnitCatalogueRepository(objects=objects)
@@ -206,7 +206,7 @@ def test_m111_administrador_wrong_rate_surfaces_calculate_advisory(tmp_path: Pat
             filing_year=2026,
             period=period,
             observations=[_administrador_wrong_rate_observation()],
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         snapshot = resources().modelos.authority.snapshot("111", filing_year=2026, period="1T")
         wu_repo = WorkUnitCatalogueRepository(objects=objects)

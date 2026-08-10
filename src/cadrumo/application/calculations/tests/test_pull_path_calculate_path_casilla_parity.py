@@ -72,7 +72,14 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import CasillaId, Period, ProrrataProvisionalProvenance, ProrrataRegisterRegime, validated_casilla_id
+from ....core import (
+    AggregationCaptureKind,
+    CasillaId,
+    Period,
+    ProrrataProvisionalProvenance,
+    ProrrataRegisterRegime,
+    validated_casilla_id,
+)
 from ....core.aggregation import BindingSourceKind
 from ....core.resources import resources
 from ....domain.calculations.registry import (
@@ -267,7 +274,7 @@ def _seed_180_retencion_observations() -> Decimal:
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, "0A"),
         observations=tuple(_retencion_observation(nif) for nif in _M180_PERCEPTOR_NIFS),
-        source_kind="aggregate_pull",
+        source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         captured_at=_T0,
     )
     return Decimal(len(set(_M180_PERCEPTOR_NIFS)))
