@@ -5,7 +5,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:e49b07e9ae08424580bfe4c0d4460a670059fbfb123454c815e23be43fd6aa6e'
+body_hash: 'sha256:e902d48058d7d750f86a7495063b1066a4fca0f178a23792ce44a434b934220e'
 step_id: 'S30'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
@@ -37,6 +37,7 @@ Focused parser, IR, semantic validation/join, provenance, and variable-envelope 
 
 ## Notes
 
-The original implementation landed across commits `0316ec8f58`, `38d9447750`, `4aafa285c1`, and `e2b4ecf15a`; commit `727cff8e85` recorded the original split evidence, and `e3f6f68fcb` reopened the step after formal review. This correction remains one scoped commit over the owned files; its final commit identity is verified with post-commit `git show --numstat` because a commit cannot contain its own content hash.
+The original implementation landed across commits `0316ec8f58`, `38d9447750`, `4aafa285c1`, and `e2b4ecf15a`; commit `727cff8e85` recorded the original split evidence, and `e3f6f68fcb` reopened the step after formal review. Shared-branch commit `4e00057887` swept the complete correction code and tests while the final gates were running: 8 added lines in `_export_tree.py`, 14 in `_semantic_map_join.py`, 21 in `_semantic_map_validation.py`, 7 added and 3 removed in `test_provenance_manifest.py`, 99 added in `test_variable_envelope_generation_gate.py`, 18 added and 1 removed in `_record_design.py`, and 163 added and 9 removed in `test_record_design.py`. The S30 execution record and CLI-authored plan closure land in one scoped follow-up commit. History was not rewritten or amended.
 
 A trial extension of exact contiguity to all PDF parser output exposed six pre-existing PDF segmentation and sparse visual-chart behaviors outside the amended Modelo 200 workbook boundary. That trial was removed before final verification; no PDF behavior changed. No peer-owned provenance implementation or renderer test file was edited.
+
