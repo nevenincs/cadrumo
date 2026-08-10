@@ -417,14 +417,15 @@ def _live_action_input_schema(command_key: str) -> VerbInputSchema:
 def _resolve_notice_actions(notices: Sequence[Notice] | None) -> tuple[Notice, ...]:
     """Join success-notice actions to their live CLI paths before presentation."""
     from ...application.operator_actions import lookup_action
-    from ...core.json_contract import ResolvedActionReference
+    from ...core.json_contract import ResolvedNoticeAction
 
     resolved: list[Notice] = []
     for notice in notices or ():
-        action = notice.action
-        if not isinstance(action, ResolvedActionReference):
+        notice_action = notice.action
+        if not isinstance(notice_action, ResolvedNoticeAction):
             resolved.append(notice)
             continue
+        action = notice_action.action
         declaration = lookup_action(action.action_id)
         if declaration.target_command_key != action.target_command_key:
             raise ValueError(
@@ -432,13 +433,21 @@ def _resolve_notice_actions(notices: Sequence[Notice] | None) -> tuple[Notice, .
             )
         schema = _live_action_input_schema(action.target_command_key)
         parameter_names = {parameter.name for parameter in schema.parameters}
-        argument_names = set(action.arguments or {})
+        argument_names = {binding.argument_name for binding in notice_action.argument_bindings}
         if not argument_names <= parameter_names:
             raise ValueError(
                 f"notice action arguments do not exist on live target {action.target_command_key}: "
                 f"{tuple(sorted(argument_names - parameter_names))}",
             )
-        resolved.append(notice.model_copy(update={"action": action.model_copy(update={"cli_path": schema.cli_path})}))
+        resolved.append(
+            notice.model_copy(
+                update={
+                    "action": notice_action.model_copy(
+                        update={"action": action.model_copy(update={"cli_path": schema.cli_path})},
+                    ),
+                },
+            ),
+        )
     return tuple(resolved)
 
 
@@ -447,17 +456,23 @@ _SAFE_ACTION_TOKEN = re.compile(r"^[A-Za-z0-9._:/=@+-]+$")
 
 def _action_text_lines(notices: Sequence[Notice]) -> tuple[str, ...]:
     """Derive executable text commands from the same resolved action DTOs as JSON."""
-    from ...core.json_contract import ResolvedActionReference
+    from ...core.json_contract import ResolvedNoticeAction
     from ...core.product_identity import PRODUCT_IDENTITY
     from ..mcp._input_schema import cli_argv_for
 
     lines: list[str] = []
     for notice in notices:
-        action = notice.action
-        if not isinstance(action, ResolvedActionReference) or action.cli_path is None:
+        notice_action = notice.action
+        if not isinstance(notice_action, ResolvedNoticeAction):
+            continue
+        action = notice_action.action
+        if action.cli_path is None:
             continue
         schema = _live_action_input_schema(action.target_command_key)
-        argv = cli_argv_for(schema, dict(action.arguments or {}))[2:]
+        arguments: dict[str, object] = {
+            binding.argument_name: binding.value for binding in notice_action.argument_bindings
+        }
+        argv = cli_argv_for(schema, arguments)[2:]
         rendered = " ".join(token if _SAFE_ACTION_TOKEN.fullmatch(token) else json.dumps(token) for token in argv)
         lines.append(f"next_action\t{PRODUCT_IDENTITY.cli_executable} {rendered}")
     return tuple(lines)
@@ -543,7 +558,7 @@ def _emit_envelope(
 
         sandbox_notice = sandbox_notice_for_active_bucket()
         if sandbox_notice is not None:
-            rendered_lines = (sandbox_banner_line(sandbox_notice), *lines)
+            rendered_lines = (sandbox_banner_line(sandbox_notice), *rendered_lines)
     rendered = render_command_output(format_name=output_format.value, payload=result, lines=rendered_lines)
     if rendered.text:
         typer.echo(rendered.text)

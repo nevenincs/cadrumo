@@ -805,6 +805,40 @@ def test_sandbox_active_indicator_appears_as_text_banner_while_sandbox_is_active
     assert "sandbox:bakeoff" in shown.output
 
 
+def test_sandbox_banner_preserves_resolved_modelo_next_action() -> None:
+    """Sandbox text prepends its banner without dropping derived action guidance."""
+    create_profile_via_cli("main")
+    assert _invoke(("config", "profile", "sandbox", "create", "bakeoff", "--from-profile", "main")).exit_code == 0
+
+    created = _invoke(
+        (
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "create",
+            "--modelo",
+            "130",
+            "--year",
+            "2025",
+            "--period",
+            "1T",
+            "--revision",
+            "2019-y-siguientes",
+        ),
+    )
+    assert created.exit_code == 0, created.output
+    work_unit_id = unwrap_schema_envelope(created.output)["work_unit_id"]
+
+    status = _invoke(("app", "modelo", "work", "status", work_unit_id[-12:]))
+    assert status.exit_code == 0, status.output
+    output_lines = status.output.splitlines()
+    assert output_lines[0].startswith("SANDBOX\t")
+    assert "sandbox:bakeoff" in output_lines[0]
+    assert f"next_action\taeat app modelo work calculate {work_unit_id}" in output_lines
+
+
 def test_sandbox_active_indicator_absent_for_a_real_profile() -> None:
     """A command run against a real (non-sandbox) profile carries no sandbox indicator."""
     create_profile_via_cli("main")

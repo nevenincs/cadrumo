@@ -3,6 +3,7 @@
   "production": {
     "cyclomatic": {
       "src/cadrumo/adapters/inbound/einvoice/_aeat_record_schema.py::_collect_particles": {
+        "reason": "flat guard/dispatch chain, max nesting depth 3; long but linear, never regressed from baseline",
         "score": 11
       },
       "src/cadrumo/adapters/inbound/einvoice/_parsers.py::_apply_facturae_tax_bands": {

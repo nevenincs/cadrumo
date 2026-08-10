@@ -6,12 +6,14 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:aea53e8e3050a9d147e6bba88fdec0aa24e46452bc449f0f73488aa2581f5fc2'
+body_hash: 'sha256:c4843fa401262028987e1bcfe44e90af40e89ffe09290125644e9f165a95a476'
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S01]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S02]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S03]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S04]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S49]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S62]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P02-S05]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P02-S06]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P02-S07]]'
@@ -24,6 +26,10 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-W02-P04-S13]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W02-P04-S14]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W02-P04-S15]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W03-P05-S16]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W03-P05-S17]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W03-P05-S18]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W03-P05-S19]]'
   - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
   - '[[2026-08-09-cli-action-envelope-hardening-plan]]'
   - '[[2026-08-09-cli-action-envelope-hardening-reference]]'
@@ -43,6 +49,10 @@ related:
   - '[[2026-08-10-cli-action-envelope-hardening-s13-manifest-action-profile-audit]]'
   - '[[2026-08-10-cli-action-envelope-hardening-s14-action-schema-resolution-audit]]'
   - '[[2026-08-10-cli-action-envelope-hardening-s15-mcp-action-projection-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s16-storage-write-policy-verdict-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s17-root-guard-typed-projection-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s18-refusal-boundary-action-projection-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s19-storage-policy-proof-audit]]'
 ---
 
 # `cli-action-envelope-hardening` feature index
@@ -72,6 +82,10 @@ Auto-generated index of all documents tagged with `#cli-action-envelope-hardenin
 - `2026-08-10-cli-action-envelope-hardening-s13-manifest-action-profile-audit` - `cli-action-envelope-hardening` audit: `S13 manifest action profile contract`
 - `2026-08-10-cli-action-envelope-hardening-s14-action-schema-resolution-audit` - `cli-action-envelope-hardening` audit: `S14 action schema resolution`
 - `2026-08-10-cli-action-envelope-hardening-s15-mcp-action-projection-audit` - `cli-action-envelope-hardening` audit: `S15 MCP action projection`
+- `2026-08-10-cli-action-envelope-hardening-s16-storage-write-policy-verdict-audit` - `cli-action-envelope-hardening` audit: `S16 storage write-policy verdict`
+- `2026-08-10-cli-action-envelope-hardening-s17-root-guard-typed-projection-audit` - `cli-action-envelope-hardening` audit: `S17 root guard typed projection`
+- `2026-08-10-cli-action-envelope-hardening-s18-refusal-boundary-action-projection-audit` - `cli-action-envelope-hardening` audit: `S18 refusal boundary action projection`
+- `2026-08-10-cli-action-envelope-hardening-s19-storage-policy-proof-audit` - `cli-action-envelope-hardening` audit: `S19 storage-policy exact scenario proof`
 
 ### exec
 
@@ -82,6 +96,8 @@ Auto-generated index of all documents tagged with `#cli-action-envelope-hardenin
 - `2026-08-09-cli-action-envelope-hardening-W01-P01-S02` - Add fixed-point vocabulary expansion and fail a closing pass that discovers a new semantic cluster
 - `2026-08-09-cli-action-envelope-hardening-W01-P01-S03` - Add the adjudicated disposition model with stale-exclusion detection and symbol-scoped reasons
 - `2026-08-09-cli-action-envelope-hardening-W01-P01-S04` - Require every census candidate to carry exactly one current disposition
+- `2026-08-09-cli-action-envelope-hardening-W01-P01-S49` - Expand migration Phases through the plan CLI with one exclusive Step per adjudicated producer cluster before execution
+- `2026-08-09-cli-action-envelope-hardening-W01-P01-S62` - Reconcile deleted and newly exposed census candidates after schema removal without retaining stale compatibility dispositions
 - `2026-08-09-cli-action-envelope-hardening-W02-P03-S08` - Define immutable action references, bindings, precondition verdicts, evidence, conditionality, and no-recovery records
 - `2026-08-09-cli-action-envelope-hardening-W02-P03-S09` - Define the canonical action catalogue without duplicating application guard predicates
 - `2026-08-09-cli-action-envelope-hardening-W02-P03-S10` - Prove strict action-model validation, catalogue uniqueness, binding sufficiency, and terminal outcomes
@@ -91,6 +107,10 @@ Auto-generated index of all documents tagged with `#cli-action-envelope-hardenin
 - `2026-08-09-cli-action-envelope-hardening-W02-P04-S13` - Add manifest action-profile records that reference condition and action identities without predicates
 - `2026-08-09-cli-action-envelope-hardening-W02-P04-S14` - Resolve catalogue actions against live command and input schemas and reject insufficient bindings
 - `2026-08-09-cli-action-envelope-hardening-W02-P04-S15` - Use the shared action resolver for MCP action projection
+- `2026-08-09-cli-action-envelope-hardening-W03-P05-S16` - Replace storage write-policy recovery hints with typed failed-condition verdicts
+- `2026-08-09-cli-action-envelope-hardening-W03-P05-S17` - Preserve requested live leaf identity before root guards and migrate every profile and taxpayer policy refusal in the shared CLI boundary to typed verdicts
+- `2026-08-09-cli-action-envelope-hardening-W03-P05-S18` - Carry guarded command identity and verdict through the refusal boundary
+- `2026-08-09-cli-action-envelope-hardening-W03-P05-S19` - Prove every storage policy condition identity evidence action status and binding set
 
 ### plan
 
