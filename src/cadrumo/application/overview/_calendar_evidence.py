@@ -37,9 +37,10 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from ...application.operator_actions import next_action
-from ...core.identity import same_tax_identifier
 from ...core import Period as _Period
+from ...core import normalise_aeat_csv
 from ...core.i18n import tr
+from ...core.identity import same_tax_identifier
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.modelos import is_justificante_backed_external_evidence
 from ..calculations import ObservationSourceKind, is_official_aeat_observation_source
@@ -137,8 +138,7 @@ def no_aeat_history_notice(observation_source_kinds: tuple[ObservationSourceKind
         message=tr(
             "overview.no_aeat_history",
             default=(
-                "This profile holds no filing evidence AEAT confirmed. Retrieve the filing "
-                "history AEAT holds for it."
+                "This profile holds no filing evidence AEAT confirmed. Retrieve the filing history AEAT holds for it."
             ),
         ),
         context={"observation_count": str(len(observation_source_kinds))},
@@ -248,8 +248,14 @@ def _justificantes_by_csv(justificantes: tuple[Justificante, ...]) -> dict[str, 
 
 
 def _justificante_csv_key(csv: str) -> str:
-    """Return the canonical lookup key for AEAT CSV identifiers."""
-    return csv.strip().casefold()
+    """Return the canonical lookup key for AEAT CSV identifiers.
+
+    Delegates to the one comparison form rather than restating it. This site
+    previously casefolded, which produced a lowercase key that the canonical
+    uppercase contract refuses -- so one identifier had two keys depending on
+    which surface built it.
+    """
+    return normalise_aeat_csv(csv)
 
 
 def _filing_evidence_from_modelo_record(
@@ -337,7 +343,7 @@ def _modelo_record_verified_justificante(
     expected_tax_id: str | None,
 ) -> Justificante | None:
     """Return matching justificante metadata for a Modelo record external reference."""
-    expected = (expected_tax_id or "").strip().upper()
+    expected = (expected_tax_id or "").strip()
     if not expected:
         return None
     candidates = justificantes_by_csv.get(_justificante_csv_key(reference_id), ())
@@ -423,10 +429,9 @@ def _authenticated_identity_matches_expected(
     authenticated_identity: str | None,
     expected_tax_id: str | None,
 ) -> bool:
-    expected = (expected_tax_id or "").strip().upper()
-    if not expected:
+    if not expected_tax_id:
         return True
-    return same_tax_identifier(authenticated_identity, expected)
+    return same_tax_identifier(authenticated_identity, expected_tax_id)
 
 
 def _filing_evidence_from_filed_declaration_observation(
@@ -568,7 +573,7 @@ def _calculation_observation_verified_justificante(
     expected_tax_id: str | None,
 ) -> Justificante | None:
     """Resolve filed-history observation metadata to matching persisted justificante metadata."""
-    expected = str(expected_tax_id or source_metadata.get("authenticated_identity") or "").strip().upper()
+    expected = str(expected_tax_id or source_metadata.get("authenticated_identity") or "").strip()
     if not expected:
         return None
     for csv in _metadata_justificante_csv_candidates(source_metadata):
@@ -641,7 +646,7 @@ def _capture_snapshot_verified_justificante(
     justificantes_by_csv: Mapping[str, tuple[Justificante, ...]],
     expected_tax_id: str | None,
 ) -> Justificante | None:
-    expected = (expected_tax_id or "").strip().upper()
+    expected = (expected_tax_id or "").strip()
     candidates = justificantes_by_csv.get(_justificante_csv_key(snapshot.csv), ())
     matching = tuple(
         justificante
