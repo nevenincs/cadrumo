@@ -44,6 +44,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Final, NamedTuple, Never
 
+from ...core.identity import same_tax_identifier
 from ...core import ActionEvidenceProvenance, CasillaId, Modelo
 from ...core import Period as _Period
 from ...domain.calculations.registry import (
@@ -343,7 +344,7 @@ def apply_iva_compensation_decision_binding(
             translated_message="application.modelo.errors.iva_wallet_taxpayer_identity_missing",
             evidence_values={"taxpayer_identity_present": False},
         )
-    if decision.taxpayer_nif.strip().upper() != taxpayer_nif.strip().upper():
+    if not same_tax_identifier(decision.taxpayer_nif, taxpayer_nif):
         _raise_iva_wallet_precondition(
             subject_leaf_key="modelo.work.calculate",
             reason_code="taxpayer_mismatch",

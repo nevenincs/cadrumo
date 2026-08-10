@@ -37,6 +37,7 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from ...application.operator_actions import next_action
+from ...core.identity import same_tax_identifier
 from ...core import Period as _Period
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
@@ -425,8 +426,7 @@ def _authenticated_identity_matches_expected(
     expected = (expected_tax_id or "").strip().upper()
     if not expected:
         return True
-    actual = (authenticated_identity or "").strip().upper()
-    return bool(actual) and actual == expected
+    return same_tax_identifier(authenticated_identity, expected)
 
 
 def _filing_evidence_from_filed_declaration_observation(
@@ -443,8 +443,7 @@ def _filing_evidence_from_filed_declaration_observation(
     only when the storage layer has already verified and supplied the encrypted
     justificante artefact reference and CSV.
     """
-    expected = (expected_tax_id or "").strip().upper()
-    if expected and observation.authenticated_identity.strip().upper() != expected:
+    if expected_tax_id and not same_tax_identifier(observation.authenticated_identity, expected_tax_id):
         return None
     if not _is_active_aeat_filing_status(observation.status):
         return None
@@ -512,9 +511,8 @@ def _filing_evidence_from_calculation_observation(
     aeat_expediente_id = str(source_metadata.get("aeat_expediente_id") or "").strip()
     if not aeat_expediente_id:
         return None
-    expected = (expected_tax_id or "").strip().upper()
-    authenticated_identity = str(source_metadata.get("authenticated_identity", "")).strip().upper()
-    if expected and (not authenticated_identity or authenticated_identity != expected):
+    authenticated_identity = str(source_metadata.get("authenticated_identity", ""))
+    if expected_tax_id and not same_tax_identifier(authenticated_identity, expected_tax_id):
         return None
     observation = payload.observation
     _obs_year = observation.filing_year
