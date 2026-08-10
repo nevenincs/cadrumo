@@ -27,9 +27,14 @@ import json
 import subprocess
 import sys
 import tarfile
+from collections.abc import Iterable, Mapping
 from dataclasses import asdict, dataclass
+from enum import StrEnum
 from pathlib import Path
-from typing import Final
+from typing import Final, cast
+
+import yaml
+from yaml.nodes import MappingNode, Node, ScalarNode, SequenceNode
 
 REPO_ROOT: Final[Path] = Path(__file__).resolve().parent.parent
 SOURCE_ROOT: Final[str] = "src/cadrumo"
@@ -52,6 +57,133 @@ INITIAL_ACTION_ALIASES: Final[frozenset[str]] = frozenset(
 COMMAND_PREFIX: Final[str] = "aeat "
 COMMAND_LITERAL_ALIAS: Final[str] = "<command-literal>"
 MODULE_SYMBOL: Final[str] = "<module>"
+_FIXED_POINT_SOURCE_SUFFIXES: Final[frozenset[str]] = frozenset({".json", ".py", ".yaml", ".yml"})
+_RENDERER_SINKS: Final[frozenset[str]] = frozenset(
+    {"_emit_envelope", "emit_json_success", "echo", "print", "tr"},
+)
+FIXED_POINT_STATE_VERSION: Final[int] = 1
+FIXED_POINT_PRODUCTION_SCOPE: Final[str] = "production-src-cadrumo-v1"
+
+type CandidateKey = tuple[str, str, str, str, str]
+
+
+class DiscoveryKind(StrEnum):
+    """Closed kinds of evidence found by one fixed-point census pass."""
+
+    ACTION_ALIAS = "action_alias"
+    COMMAND_FORM = "command_form"
+    HELPER = "helper"
+    LOCALE_FAMILY = "locale_family"
+    MODEL = "model"
+    REFUSAL_SITE = "refusal_site"
+    RENDERER = "renderer"
+
+
+class DiscoveryTriggerKind(StrEnum):
+    """The evidence relationship that permitted a discovery."""
+
+    CANDIDATE = "candidate"
+    SEED = "seed"
+
+
+@dataclass(frozen=True, slots=True)
+class DiscoveryTrigger:
+    """Local causal evidence for a discovery, never a global alias lookup."""
+
+    kind: DiscoveryTriggerKind
+    token: str
+    path: str
+    enclosing_symbol: str
+    line: int
+    column: int
+    candidate_key: CandidateKey | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class DiscoveryRecord:
+    """One evidence-preserving semantic cluster observed in source."""
+
+    kind: DiscoveryKind
+    token: str
+    path: str
+    enclosing_symbol: str
+    line: int
+    column: int
+    trigger: DiscoveryTrigger
+
+    @property
+    def key(self) -> tuple[object, ...]:
+        """Return a deterministic identity including the causal relationship."""
+        return (
+            self.kind.value,
+            self.token,
+            self.path,
+            self.enclosing_symbol,
+            self.trigger.kind.value,
+            self.trigger.token,
+            self.trigger.path,
+            self.trigger.enclosing_symbol,
+            self.trigger.candidate_key or (),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class UnknownCluster:
+    """An externally reported cluster that cannot be auto-admitted safely."""
+
+    kind: str
+    token: str
+    path: str
+    enclosing_symbol: str
+    line: int
+    column: int
+    trigger: DiscoveryTrigger
+
+    @property
+    def key(self) -> tuple[object, ...]:
+        """Return a deterministic identity for an unclosed external finding."""
+        return (
+            self.kind,
+            self.token,
+            self.path,
+            self.enclosing_symbol,
+            self.trigger.kind.value,
+            self.trigger.token,
+            self.trigger.path,
+            self.trigger.enclosing_symbol,
+            self.trigger.candidate_key or (),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class FixedPointState:
+    """Versioned, serializable admissions used by one source-scope closure."""
+
+    version: int
+    revision: str
+    scope: str
+    admitted_aliases: tuple[str, ...]
+    admitted_cluster_keys: tuple[tuple[object, ...], ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class FixedPointPass:
+    """The deterministic result of one semantic-plus-mechanical pass."""
+
+    state: FixedPointState
+    candidates: tuple[CandidateRecord, ...]
+    discoveries: tuple[DiscoveryRecord, ...]
+    unknown_clusters: tuple[UnknownCluster, ...]
+
+    @property
+    def newly_observed(self) -> tuple[DiscoveryRecord, ...]:
+        """Return evidence not explicitly admitted into the prior state."""
+        admitted = set(self.state.admitted_cluster_keys)
+        return tuple(record for record in self.discoveries if record.key not in admitted)
+
+
+class FixedPointNotClosedError(RuntimeError):
+    """Raised when a proposed closing pass finds unadmitted evidence."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -77,8 +209,8 @@ class CandidateRecord:
         return (self.path, self.enclosing_symbol, self.role, self.alias, self.action_identity)
 
 
-def production_sources(revision: str) -> tuple[tuple[str, str], ...]:
-    """Read production Python from one pinned revision in one Git process.
+def repository_sources(revision: str) -> tuple[tuple[str, str], ...]:
+    """Read census-relevant repository text from one pinned revision.
 
     ``git archive`` is a single, revision-consistent object read.  Calling
     ``git show`` for every source file made a normal census operationally
@@ -96,16 +228,44 @@ def production_sources(revision: str) -> tuple[tuple[str, str], ...]:
             path = member.name
             if (
                 not member.isfile()
-                or not path.endswith(".py")
-                or "/tests/" in path
-                or Path(path).name.startswith("test_")
+                or Path(path).suffix not in _FIXED_POINT_SOURCE_SUFFIXES
             ):
                 continue
             source_file = archive.extractfile(member)
             if source_file is None:
                 continue
-            sources.append((path, source_file.read().decode(_UTF_8)))
+            try:
+                sources.append((path, source_file.read().decode(_UTF_8)))
+            except UnicodeDecodeError:
+                continue
     return tuple(sorted(sources))
+
+
+def production_sources(revision: str) -> tuple[tuple[str, str], ...]:
+    """Return the original S01 production-Python source universe unchanged."""
+    return tuple(
+        (path, source)
+        for path, source in repository_sources(revision)
+        if path.endswith(".py") and "/tests/" not in path and not Path(path).name.startswith("test_")
+    )
+
+
+def fixed_point_production_sources(revision: str) -> tuple[tuple[str, str], ...]:
+    """Return the production-only source scope used by S02.
+
+    S01's denominator is Python under ``src/cadrumo``.  S02 keeps exactly that
+    candidate universe while admitting production catalogue YAML solely as a
+    separately typed discovery source.  Tests are intentionally unavailable
+    through this function; unit tests exercise ``fixed_point_pass_from_sources``
+    with an explicit source snapshot instead.
+    """
+    return tuple(
+        (path, source)
+        for path, source in repository_sources(revision)
+        if "/tests/" not in path
+        and not Path(path).name.startswith("test_")
+        and Path(path).suffix in _FIXED_POINT_SOURCE_SUFFIXES
+    )
 
 
 def _identity(node: ast.expr | None, *, missing: str = "<declaration>") -> str:
@@ -121,22 +281,23 @@ def _identity(node: ast.expr | None, *, missing: str = "<declaration>") -> str:
     return ast.unparse(node)
 
 
-def _target_aliases(target: ast.expr) -> tuple[str, ...]:
-    """Return initial action aliases written by an assignment target."""
-    if isinstance(target, ast.Name) and target.id in INITIAL_ACTION_ALIASES:
+def _target_aliases(target: ast.expr, aliases: frozenset[str]) -> tuple[str, ...]:
+    """Return admitted action aliases written by an assignment target."""
+    if isinstance(target, ast.Name) and target.id in aliases:
         return (target.id,)
-    if isinstance(target, ast.Attribute) and target.attr in INITIAL_ACTION_ALIASES:
+    if isinstance(target, ast.Attribute) and target.attr in aliases:
         return (target.attr,)
     if isinstance(target, (ast.Tuple, ast.List)):
-        return tuple(alias for child in target.elts for alias in _target_aliases(child))
+        return tuple(alias for child in target.elts for alias in _target_aliases(child, aliases))
     return ()
 
 
 class _CandidateVisitor(ast.NodeVisitor):
     """Collect role-labelled candidates while carrying the enclosing symbol."""
 
-    def __init__(self, path: str) -> None:
+    def __init__(self, path: str, aliases: frozenset[str]) -> None:
         self._path = path
+        self._aliases = aliases
         self._symbols: list[str] = []
         self.records: list[CandidateRecord] = []
 
@@ -144,7 +305,7 @@ class _CandidateVisitor(ast.NodeVisitor):
     def _symbol(self) -> str:
         return ".".join(self._symbols) if self._symbols else MODULE_SYMBOL
 
-    def _add(self, node: ast.AST, *, role: str, alias: str, action_identity: str) -> None:
+    def _add(self, node: ast.stmt | ast.expr, *, role: str, alias: str, action_identity: str) -> None:
         self.records.append(
             CandidateRecord(
                 path=self._path,
@@ -174,35 +335,35 @@ class _CandidateVisitor(ast.NodeVisitor):
         self._visit_function(node)
 
     def visit_AnnAssign(self, node: ast.AnnAssign) -> None:
-        for alias in _target_aliases(node.target):
+        for alias in _target_aliases(node.target, self._aliases):
             self._add(node, role="definition", alias=alias, action_identity=_identity(node.value))
         self.generic_visit(node)
 
     def visit_Assign(self, node: ast.Assign) -> None:
         for target in node.targets:
-            for alias in _target_aliases(target):
+            for alias in _target_aliases(target, self._aliases):
                 self._add(node, role="assignment", alias=alias, action_identity=_identity(node.value))
         self.generic_visit(node)
 
     def visit_NamedExpr(self, node: ast.NamedExpr) -> None:
-        for alias in _target_aliases(node.target):
+        for alias in _target_aliases(node.target, self._aliases):
             self._add(node, role="assignment", alias=alias, action_identity=_identity(node.value))
         self.generic_visit(node)
 
     def visit_Call(self, node: ast.Call) -> None:
         for keyword in node.keywords:
-            if keyword.arg in INITIAL_ACTION_ALIASES:
+            if keyword.arg in self._aliases:
                 self._add(node, role="producer", alias=keyword.arg, action_identity=_identity(keyword.value))
         self.generic_visit(node)
 
     def visit_Dict(self, node: ast.Dict) -> None:
         for key, value in zip(node.keys, node.values, strict=True):
-            if isinstance(key, ast.Constant) and isinstance(key.value, str) and key.value in INITIAL_ACTION_ALIASES:
+            if isinstance(key, ast.Constant) and isinstance(key.value, str) and key.value in self._aliases:
                 self._add(key, role="producer", alias=key.value, action_identity=_identity(value))
         self.generic_visit(node)
 
     def visit_Attribute(self, node: ast.Attribute) -> None:
-        if isinstance(node.ctx, ast.Load) and node.attr in INITIAL_ACTION_ALIASES:
+        if isinstance(node.ctx, ast.Load) and node.attr in self._aliases:
             self._add(node, role="transformer", alias=node.attr, action_identity=ast.unparse(node))
         self.generic_visit(node)
 
@@ -216,23 +377,20 @@ class _CandidateVisitor(ast.NodeVisitor):
             )
 
 
-def census(revision: str) -> tuple[CandidateRecord, ...]:
-    """Return unique, deterministically ordered candidates from ``revision``.
-
-    The revision is deliberately required.  Scanning a moving worktree while
-    peers are committing can combine source from different trees and fabricate
-    a blast-radius number that has never existed at one revision.
-    """
-    records: dict[tuple[str, str, str, str, str], CandidateRecord] = {}
-    for path, source in production_sources(revision):
+def _census_sources(
+    sources: Iterable[tuple[str, str]],
+    aliases: frozenset[str],
+) -> tuple[CandidateRecord, ...]:
+    """Return unique candidates from already-pinned Python sources."""
+    records: dict[CandidateKey, CandidateRecord] = {}
+    for path, source in sources:
+        if not path.endswith(".py"):
+            continue
         try:
             tree = ast.parse(source, filename=path)
         except SyntaxError:
-            # A revision that contains syntactically invalid Python cannot
-            # supply AST evidence for that module; later closure work treats
-            # this as a separately adjudicated source-health finding.
             continue
-        visitor = _CandidateVisitor(path)
+        visitor = _CandidateVisitor(path, aliases)
         visitor.visit(tree)
         for record in visitor.records:
             previous = records.get(record.key)
@@ -241,12 +399,718 @@ def census(revision: str) -> tuple[CandidateRecord, ...]:
     return tuple(sorted(records.values(), key=lambda record: (*record.key, record.line, record.column)))
 
 
+def census(revision: str) -> tuple[CandidateRecord, ...]:
+    """Return the S01 candidate ledger from ``revision``.
+
+    The revision is deliberately required.  Scanning a moving worktree while
+    peers are committing can combine source from different trees and fabricate
+    a blast-radius number that has never existed at one revision.
+    """
+    return _census_sources(production_sources(revision), INITIAL_ACTION_ALIASES)
+
+
+type SourceEntry = tuple[str, str]
+type ClusterKey = tuple[object, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class FixedPointSources:
+    """The explicit production-only inputs to one S02 observation pass."""
+
+    production_python: tuple[SourceEntry, ...]
+    yaml_catalogues: tuple[SourceEntry, ...]
+
+    @classmethod
+    def from_entries(cls, entries: Iterable[SourceEntry]) -> FixedPointSources:
+        """Partition explicit source text without widening the production scope."""
+        python: list[SourceEntry] = []
+        catalogues: list[SourceEntry] = []
+        for path, source in entries:
+            if not _is_fixed_point_production_path(path):
+                message = f"fixed-point source outside production scope: {path}"
+                raise ValueError(message)
+            suffix = Path(path).suffix
+            if suffix == ".py":
+                python.append((path, source))
+            elif suffix in {".yaml", ".yml"}:
+                catalogues.append((path, source))
+        return cls(tuple(sorted(python)), tuple(sorted(catalogues)))
+
+
+@dataclass(frozen=True, slots=True)
+class _SourceReference:
+    """One direct lexical flow from an admitted action token to a use site."""
+
+    alias: str
+    node: ast.expr
+
+
+def _is_fixed_point_production_path(path: str) -> bool:
+    return (
+        path.startswith(f"{SOURCE_ROOT}/")
+        and "/tests/" not in path
+        and not Path(path).name.startswith("test_")
+    )
+
+
+def fixed_point_sources(revision: str) -> FixedPointSources:
+    """Read the complete, production-only S02 source scope at one revision."""
+    return FixedPointSources.from_entries(fixed_point_production_sources(revision))
+
+
+def initial_fixed_point_state(revision: str) -> FixedPointState:
+    """Return the only automatically admitted inputs: the S01 seed aliases."""
+    return FixedPointState(
+        version=FIXED_POINT_STATE_VERSION,
+        revision=revision,
+        scope=FIXED_POINT_PRODUCTION_SCOPE,
+        admitted_aliases=tuple(sorted(INITIAL_ACTION_ALIASES)),
+    )
+
+
+def _command_form(value: str) -> str:
+    """Return the stable two-token command-family form of one CLI literal."""
+    return " ".join(value.split(maxsplit=2)[:2])
+
+
+def _stable_records(records: Iterable[DiscoveryRecord]) -> tuple[DiscoveryRecord, ...]:
+    unique = {record.key: record for record in records}
+    return tuple(sorted(unique.values(), key=lambda record: record.key))
+
+
+def _stable_unknown(records: Iterable[UnknownCluster]) -> tuple[UnknownCluster, ...]:
+    unique = {record.key: record for record in records}
+    return tuple(sorted(unique.values(), key=lambda record: record.key))
+
+
+def _call_name(node: ast.Call) -> str | None:
+    if isinstance(node.func, ast.Name):
+        return node.func.id
+    if isinstance(node.func, ast.Attribute):
+        return node.func.attr
+    return None
+
+
+def _assignment_target_name(node: ast.expr) -> str | None:
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        return node.attr
+    return None
+
+
+def _direct_nodes(nodes: Iterable[ast.AST]) -> Iterable[ast.AST]:
+    """Yield a scope's nodes while deliberately excluding nested lexical scopes."""
+    stack = list(reversed(tuple(nodes)))
+    while stack:
+        node = stack.pop()
+        if isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)):
+            continue
+        yield node
+        stack.extend(reversed(tuple(ast.iter_child_nodes(node))))
+
+
+def _direct_reference(
+    node: ast.AST | None,
+    aliases: frozenset[str],
+    bindings: Mapping[str, _SourceReference],
+) -> _SourceReference | None:
+    """Resolve only an explicit local data-flow edge; never a global alias match."""
+    if isinstance(node, ast.Name):
+        if node.id in bindings:
+            return bindings[node.id]
+        if node.id in aliases:
+            return _SourceReference(node.id, node)
+        return None
+    if isinstance(node, ast.Attribute) and node.attr in aliases:
+        return _SourceReference(node.attr, node)
+    if (
+        isinstance(node, ast.Subscript)
+        and isinstance(node.slice, ast.Constant)
+        and isinstance(node.slice.value, str)
+        and node.slice.value in aliases
+    ):
+        return _SourceReference(node.slice.value, node)
+    if isinstance(node, ast.Call):
+        references = [
+            reference
+            for value in (*node.args, *(keyword.value for keyword in node.keywords))
+            if (reference := _direct_reference(value, aliases, bindings)) is not None
+        ]
+        return references[0] if len(references) == 1 else None
+    if isinstance(node, ast.FormattedValue):
+        return _direct_reference(node.value, aliases, bindings)
+    if isinstance(node, ast.JoinedStr):
+        references = [
+            reference
+            for value in node.values
+            if (reference := _direct_reference(value, aliases, bindings)) is not None
+        ]
+        return references[0] if len(references) == 1 else None
+    return None
+
+
+class _DiscoveryVisitor(ast.NodeVisitor):
+    """Collect typed discoveries from direct lexical action-dataflow edges only."""
+
+    def __init__(
+        self,
+        path: str,
+        aliases: frozenset[str],
+        candidates: tuple[CandidateRecord, ...],
+    ) -> None:
+        self._path = path
+        self._aliases = aliases
+        self._symbols: list[str] = []
+        self.records: list[DiscoveryRecord] = []
+        self._candidates_by_line_alias: dict[tuple[int, str], CandidateRecord] = {}
+        for candidate in candidates:
+            if candidate.path != path:
+                continue
+            key = (candidate.line, candidate.alias)
+            prior = self._candidates_by_line_alias.get(key)
+            if prior is None or (candidate.column, candidate.key) < (prior.column, prior.key):
+                self._candidates_by_line_alias[key] = candidate
+
+    @property
+    def _symbol(self) -> str:
+        return ".".join(self._symbols) if self._symbols else MODULE_SYMBOL
+
+    def _trigger(self, reference: _SourceReference) -> DiscoveryTrigger:
+        candidate = self._candidates_by_line_alias.get((reference.node.lineno, reference.alias))
+        return DiscoveryTrigger(
+            kind=DiscoveryTriggerKind.CANDIDATE if candidate is not None else DiscoveryTriggerKind.SEED,
+            token=reference.alias,
+            path=self._path,
+            enclosing_symbol=self._symbol,
+            line=reference.node.lineno,
+            column=reference.node.col_offset,
+            candidate_key=candidate.key if candidate is not None else None,
+        )
+
+    def _add(
+        self,
+        kind: DiscoveryKind,
+        token: str,
+        node: ast.stmt | ast.expr,
+        reference: _SourceReference,
+    ) -> None:
+        self.records.append(
+            DiscoveryRecord(
+                kind=kind,
+                token=token,
+                path=self._path,
+                enclosing_symbol=self._symbol,
+                line=node.lineno,
+                column=node.col_offset,
+                trigger=self._trigger(reference),
+            ),
+        )
+
+    def _observe_assignment(
+        self,
+        target: ast.expr,
+        value: ast.AST | None,
+        node: ast.stmt | ast.expr,
+        bindings: dict[str, _SourceReference],
+    ) -> None:
+        reference = _direct_reference(value, self._aliases, bindings)
+        target_name = _assignment_target_name(target)
+        if reference is None or target_name is None:
+            return
+        if target_name not in self._aliases and target_name != reference.alias:
+            self._add(DiscoveryKind.ACTION_ALIAS, target_name, node, reference)
+        if isinstance(target, ast.Name):
+            bindings[target.id] = reference
+
+    def _observe_scope(
+        self,
+        body: Iterable[ast.stmt],
+        *,
+        parameter_names: Iterable[str] = (),
+    ) -> None:
+        bindings = {
+            name: _SourceReference(name, ast.Name(id=name, ctx=ast.Load(), lineno=0, col_offset=0))
+            for name in parameter_names
+            if name in self._aliases
+        }
+        for node in _direct_nodes(body):
+            if isinstance(node, ast.Assign):
+                for target in node.targets:
+                    self._observe_assignment(target, node.value, node, bindings)
+            elif isinstance(node, (ast.AnnAssign, ast.NamedExpr)):
+                self._observe_assignment(node.target, node.value, node, bindings)
+            elif isinstance(node, ast.Dict):
+                for key, value in zip(node.keys, node.values, strict=True):
+                    reference = _direct_reference(value, self._aliases, bindings)
+                    if (
+                        reference is not None
+                        and isinstance(key, ast.Constant)
+                        and isinstance(key.value, str)
+                        and key.value not in self._aliases
+                    ):
+                        self._add(DiscoveryKind.ACTION_ALIAS, key.value, key, reference)
+            elif isinstance(node, (ast.Return, ast.Yield, ast.YieldFrom)):
+                value = node.value
+                reference = _direct_reference(value, self._aliases, bindings)
+                if reference is not None:
+                    self._add(DiscoveryKind.HELPER, self._symbol, node, reference)
+            elif isinstance(node, ast.Call):
+                if _call_name(node) in _RENDERER_SINKS:
+                    references = [
+                        reference
+                        for value in (*node.args, *(keyword.value for keyword in node.keywords))
+                        if (reference := _direct_reference(value, self._aliases, bindings)) is not None
+                    ]
+                    for reference in references:
+                        self._add(DiscoveryKind.RENDERER, self._symbol, node, reference)
+            elif isinstance(node, ast.Raise) and isinstance(node.exc, ast.Call):
+                references = [
+                    reference
+                    for value in (*node.exc.args, *(keyword.value for keyword in node.exc.keywords))
+                    if (reference := _direct_reference(value, self._aliases, bindings)) is not None
+                ]
+                for reference in references:
+                    self._add(DiscoveryKind.REFUSAL_SITE, ast.unparse(node.exc.func), node, reference)
+            elif (
+                isinstance(node, ast.Constant)
+                and isinstance(node.value, str)
+                and node.value.startswith(COMMAND_PREFIX)
+            ):
+                self._add(
+                    DiscoveryKind.COMMAND_FORM,
+                    _command_form(node.value),
+                    node,
+                    _SourceReference(COMMAND_LITERAL_ALIAS, node),
+                )
+
+    def visit_Module(self, node: ast.Module) -> None:
+        self._observe_scope(node.body)
+        for child in node.body:
+            if isinstance(child, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+                self.visit(child)
+
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        self._symbols.append(node.name)
+        for child in node.body:
+            if not isinstance(child, (ast.Assign, ast.AnnAssign)):
+                continue
+            targets = (child.target,) if isinstance(child, ast.AnnAssign) else child.targets
+            for target in targets:
+                for alias in _target_aliases(target, self._aliases):
+                    self._add(
+                        DiscoveryKind.MODEL,
+                        self._symbol,
+                        child,
+                        _SourceReference(alias, target),
+                    )
+        self._observe_scope(node.body)
+        for child in node.body:
+            if isinstance(child, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+                self.visit(child)
+        self._symbols.pop()
+
+    def _visit_function(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> None:
+        self._symbols.append(node.name)
+        parameters = (*node.args.posonlyargs, *node.args.args, *node.args.kwonlyargs)
+        self._observe_scope(node.body, parameter_names=(argument.arg for argument in parameters))
+        for child in node.body:
+            if isinstance(child, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+                self.visit(child)
+        self._symbols.pop()
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        self._visit_function(node)
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        self._visit_function(node)
+
+
+def _locale_family(path: str) -> str | None:
+    prefix = "src/cadrumo/locales/"
+    return "src/cadrumo/locales" if path.startswith(prefix) else None
+
+
+def _yaml_value_scalars(node: Node) -> Iterable[ScalarNode]:
+    """Yield scalar *values* only, excluding YAML comments and mapping keys."""
+    if isinstance(node, ScalarNode):
+        yield node
+    elif isinstance(node, SequenceNode):
+        for child in node.value:
+            yield from _yaml_value_scalars(child)
+    elif isinstance(node, MappingNode):
+        for _key, value in node.value:
+            yield from _yaml_value_scalars(value)
+
+
+def _locale_discoveries(sources: Iterable[SourceEntry]) -> tuple[DiscoveryRecord, ...]:
+    records: list[DiscoveryRecord] = []
+    for path, source in sources:
+        family = _locale_family(path)
+        if family is None:
+            continue
+        try:
+            document = cast(Node | None, yaml.compose(source))  # type: ignore[reportUnknownMemberType]
+        except yaml.YAMLError:
+            continue
+        if document is None:
+            continue
+        for scalar in _yaml_value_scalars(document):
+            if scalar.tag != "tag:yaml.org,2002:str" or not scalar.value.startswith(COMMAND_PREFIX):
+                continue
+            mark = scalar.start_mark
+            records.append(
+                DiscoveryRecord(
+                    kind=DiscoveryKind.LOCALE_FAMILY,
+                    token=family,
+                    path=path,
+                    enclosing_symbol=MODULE_SYMBOL,
+                    line=mark.line + 1,
+                    column=mark.column,
+                    trigger=DiscoveryTrigger(
+                        kind=DiscoveryTriggerKind.SEED,
+                        token=COMMAND_PREFIX,
+                        path=path,
+                        enclosing_symbol=MODULE_SYMBOL,
+                        line=mark.line + 1,
+                        column=mark.column,
+                    ),
+                ),
+            )
+    return _stable_records(records)
+
+
+def _validate_fixed_point_state(state: FixedPointState, revision: str | None = None) -> None:
+    if state.version != FIXED_POINT_STATE_VERSION:
+        message = f"unsupported fixed-point state version {state.version!r}"
+        raise ValueError(message)
+    if state.scope != FIXED_POINT_PRODUCTION_SCOPE:
+        message = f"unsupported fixed-point state scope {state.scope!r}"
+        raise ValueError(message)
+    if revision is not None and state.revision != revision:
+        message = f"fixed-point state revision {state.revision!r} does not match pass revision {revision!r}"
+        raise ValueError(message)
+    if tuple(sorted(set(state.admitted_aliases))) != state.admitted_aliases:
+        raise ValueError("fixed-point state aliases must be sorted and unique")
+    if not INITIAL_ACTION_ALIASES.issubset(state.admitted_aliases):
+        raise ValueError("fixed-point state omits one or more S01 seed aliases")
+
+
+def _json_cluster_value(value: object) -> object:
+    if isinstance(value, tuple):
+        items = cast(tuple[object, ...], value)
+        return [_json_cluster_value(item) for item in items]
+    if isinstance(value, str):
+        return value
+    raise ValueError("fixed-point cluster keys may contain only strings and tuples")
+
+
+def _cluster_key_from_json(value: object) -> tuple[object, ...]:
+    if not isinstance(value, list):
+        raise ValueError("fixed-point cluster key must be a JSON array")
+    values = cast(list[object], value)
+    parsed: list[object] = []
+    for item in values:
+        if isinstance(item, str):
+            parsed.append(item)
+        elif isinstance(item, list):
+            parsed.append(_cluster_key_from_json(cast(object, item)))
+        else:
+            raise ValueError("fixed-point cluster key values must be strings or arrays")
+    return tuple(parsed)
+
+
+def _cluster_sort_key(key: ClusterKey) -> str:
+    return json.dumps(_json_cluster_value(key), separators=(",", ":"))
+
+
+def dump_fixed_point_state(state: FixedPointState) -> dict[str, object]:
+    """Return the sole canonical JSON-v1 representation of admitted state."""
+    _validate_fixed_point_state(state)
+    cluster_keys = tuple(sorted(set(state.admitted_cluster_keys), key=_cluster_sort_key))
+    if cluster_keys != state.admitted_cluster_keys:
+        raise ValueError("fixed-point state cluster keys must be sorted and unique")
+    return {
+        "version": state.version,
+        "revision": state.revision,
+        "scope": state.scope,
+        "admitted_aliases": list(state.admitted_aliases),
+        "admitted_cluster_keys": [_json_cluster_value(key) for key in state.admitted_cluster_keys],
+    }
+
+
+def load_fixed_point_state(payload: Mapping[str, object]) -> FixedPointState:
+    """Load only a complete canonical v1 state; partial state is not evidence."""
+    expected = {"version", "revision", "scope", "admitted_aliases", "admitted_cluster_keys"}
+    if set(payload) != expected:
+        message = f"fixed-point state keys must be exactly {sorted(expected)!r}"
+        raise ValueError(message)
+    version = payload["version"]
+    revision = payload["revision"]
+    scope = payload["scope"]
+    aliases = payload["admitted_aliases"]
+    keys = payload["admitted_cluster_keys"]
+    if type(version) is not int or not isinstance(revision, str) or not isinstance(scope, str):
+        raise ValueError("fixed-point state version, revision, and scope have invalid types")
+    if not isinstance(aliases, list):
+        raise ValueError("fixed-point state aliases must be a non-empty string array")
+    alias_values = cast(list[object], aliases)
+    if not all(isinstance(alias, str) and alias for alias in alias_values):
+        raise ValueError("fixed-point state aliases must be a non-empty string array")
+    if not isinstance(keys, list):
+        raise ValueError("fixed-point state cluster keys must be an array")
+    key_values = cast(list[object], keys)
+    state = FixedPointState(
+        version=version,
+        revision=revision,
+        scope=scope,
+        admitted_aliases=tuple(cast(str, alias) for alias in alias_values),
+        admitted_cluster_keys=tuple(_cluster_key_from_json(key) for key in key_values),
+    )
+    dumped = dump_fixed_point_state(state)
+    if dumped != dict(payload):
+        raise ValueError("fixed-point state is not canonical JSON-v1")
+    return state
+
+
+def read_fixed_point_state(path: Path) -> FixedPointState:
+    """Read one reviewed state artifact without accepting malformed JSON."""
+    try:
+        payload = cast(object, json.loads(path.read_text(encoding=_UTF_8)))
+    except (OSError, json.JSONDecodeError) as error:
+        raise ValueError(f"cannot read fixed-point state {path}: {error}") from error
+    if not isinstance(payload, dict):
+        raise ValueError("fixed-point state document must be a JSON object")
+    document = cast(dict[object, object], payload)
+    if not all(isinstance(key, str) for key in document):
+        raise ValueError("fixed-point state document must be a JSON object")
+    return load_fixed_point_state(cast(Mapping[str, object], document))
+
+
+def write_fixed_point_state(path: Path, state: FixedPointState) -> None:
+    """Persist the canonical reviewed-state form for a later exact rescan."""
+    path.write_text(f"{json.dumps(dump_fixed_point_state(state), indent=2)}\n", encoding=_UTF_8)
+
+
+def fixed_point_pass_from_sources(
+    state: FixedPointState,
+    sources: FixedPointSources | Iterable[SourceEntry],
+    *,
+    semantic_observations: Iterable[DiscoveryRecord | UnknownCluster] = (),
+) -> FixedPointPass:
+    """Run one deterministic pass over an explicit production source snapshot."""
+    _validate_fixed_point_state(state)
+    source_set = sources if isinstance(sources, FixedPointSources) else FixedPointSources.from_entries(sources)
+    candidates = _census_sources(source_set.production_python, frozenset(state.admitted_aliases))
+    discoveries: list[DiscoveryRecord] = []
+    for path, source in source_set.production_python:
+        try:
+            tree = ast.parse(source, filename=path)
+        except SyntaxError:
+            continue
+        visitor = _DiscoveryVisitor(path, frozenset(state.admitted_aliases), candidates)
+        visitor.visit(tree)
+        discoveries.extend(visitor.records)
+    discoveries.extend(_locale_discoveries(source_set.yaml_catalogues))
+    unknown_clusters: list[UnknownCluster] = []
+    for observation in semantic_observations:
+        if isinstance(observation, DiscoveryRecord):
+            discoveries.append(observation)
+        else:
+            unknown_clusters.append(observation)
+    return FixedPointPass(
+        state=state,
+        candidates=candidates,
+        discoveries=_stable_records(discoveries),
+        unknown_clusters=_stable_unknown(unknown_clusters),
+    )
+
+
+def fixed_point_pass(
+    revision: str,
+    state: FixedPointState,
+    *,
+    semantic_observations: Iterable[DiscoveryRecord | UnknownCluster] = (),
+) -> FixedPointPass:
+    """Run one pass over the exact S01 production scope at ``revision``."""
+    _validate_fixed_point_state(state, revision)
+    return fixed_point_pass_from_sources(
+        state,
+        fixed_point_sources(revision),
+        semantic_observations=semantic_observations,
+    )
+
+
+def admit_observed(
+    state: FixedPointState,
+    discoveries: Iterable[DiscoveryRecord],
+) -> FixedPointState:
+    """Acknowledge reviewed cluster keys without expanding the scan vocabulary."""
+    _validate_fixed_point_state(state)
+    observed = tuple(discoveries)
+    cluster_keys = tuple(
+        sorted(
+            {*state.admitted_cluster_keys, *(record.key for record in observed)},
+            key=_cluster_sort_key,
+        ),
+    )
+    return FixedPointState(
+        version=state.version,
+        revision=state.revision,
+        scope=state.scope,
+        admitted_aliases=state.admitted_aliases,
+        admitted_cluster_keys=cluster_keys,
+    )
+
+
+def admit_discoveries(
+    state: FixedPointState,
+    discoveries: Iterable[DiscoveryRecord],
+) -> FixedPointState:
+    """Compatibility name for the cluster-only ``admit_observed`` transition."""
+    return admit_observed(state, discoveries)
+
+
+def admit_aliases(
+    state: FixedPointState,
+    aliases: Iterable[str],
+    discoveries: Iterable[DiscoveryRecord],
+) -> FixedPointState:
+    """Promote only explicitly named, locally evidenced action-alias tokens."""
+    _validate_fixed_point_state(state)
+    requested = tuple(aliases)
+    if not requested or any(not alias for alias in requested):
+        raise ValueError("at least one non-empty action alias is required for promotion")
+    observed = tuple(discoveries)
+    evidenced = {
+        record.token
+        for record in observed
+        if record.kind is DiscoveryKind.ACTION_ALIAS
+        and record.trigger.path == record.path
+        and record.trigger.enclosing_symbol == record.enclosing_symbol
+    }
+    unsupported = tuple(sorted(set(requested).difference(evidenced)))
+    if unsupported:
+        message = f"cannot admit unobserved action alias tokens: {', '.join(unsupported)}"
+        raise ValueError(message)
+    return FixedPointState(
+        version=state.version,
+        revision=state.revision,
+        scope=state.scope,
+        admitted_aliases=tuple(sorted((*state.admitted_aliases, *requested))),
+        admitted_cluster_keys=state.admitted_cluster_keys,
+    )
+
+
+def admit_alias(
+    state: FixedPointState,
+    alias: str,
+    discoveries: Iterable[DiscoveryRecord],
+) -> FixedPointState:
+    """Promote one evidenced action alias; convenience for reviewed state tools."""
+    return admit_aliases(state, (alias,), discoveries)
+
+
+def close_fixed_point(result: FixedPointPass) -> FixedPointPass:
+    """Accept a closure only when a full rescan finds no reopened evidence."""
+    new_keys = result.newly_observed
+    if not new_keys and not result.unknown_clusters:
+        return result
+    lines = ["fixed-point closure refused: complete pass found unclosed semantic clusters"]
+    lines.extend(
+        f"{record.kind.value}:{record.token} at {record.path}:{record.line} "
+        f"via {record.trigger.kind.value}:{record.trigger.token}"
+        for record in new_keys
+    )
+    lines.extend(
+        f"unknown:{record.kind}:{record.token} at {record.path}:{record.line} "
+        f"via {record.trigger.kind.value}:{record.trigger.token}"
+        for record in result.unknown_clusters
+    )
+    raise FixedPointNotClosedError("\n".join(lines))
+
+
 def main(argv: list[str] | None = None) -> int:
-    """Print the initial candidate ledger for one pinned revision."""
+    """Print the S01 ledger or an explicit fixed-point diagnostic snapshot."""
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("revision", help="Git revision to census; use an immutable commit when citing output")
     parser.add_argument("--json", action="store_true", help="emit candidate records as JSON")
+    parser.add_argument(
+        "--fixed-point",
+        action="store_true",
+        help="run the complete fixed-point observation pass from the seed state",
+    )
+    parser.add_argument(
+        "--close-fixed-point",
+        action="store_true",
+        help="fail unless the complete fixed-point pass has no unadmitted discoveries",
+    )
+    parser.add_argument(
+        "--state",
+        type=Path,
+        help="load a reviewed fixed-point JSON-v1 state before observing",
+    )
+    parser.add_argument(
+        "--write-state",
+        type=Path,
+        help="write the resulting reviewed fixed-point JSON-v1 state",
+    )
+    parser.add_argument(
+        "--admit-observed",
+        action="store_true",
+        help="explicitly admit this pass's cluster keys, then rescan once",
+    )
+    parser.add_argument(
+        "--admit-alias",
+        action="append",
+        default=[],
+        metavar="TOKEN",
+        help="promote one locally evidenced action alias into the next scan vocabulary; repeatable",
+    )
     arguments = parser.parse_args(argv)
+    if arguments.close_fixed_point and not arguments.fixed_point:
+        parser.error("--close-fixed-point requires --fixed-point")
+    if (
+        arguments.state
+        or arguments.write_state
+        or arguments.admit_observed
+        or arguments.admit_alias
+    ) and not arguments.fixed_point:
+        parser.error("--state, --write-state, --admit-observed, and --admit-alias require --fixed-point")
+    if arguments.fixed_point:
+        state = (
+            read_fixed_point_state(arguments.state)
+            if arguments.state
+            else initial_fixed_point_state(arguments.revision)
+        )
+        result = fixed_point_pass(arguments.revision, state)
+        if arguments.admit_observed:
+            state = admit_observed(state, result.newly_observed)
+        if arguments.admit_alias:
+            state = admit_aliases(state, arguments.admit_alias, result.discoveries)
+        if arguments.admit_observed or arguments.admit_alias:
+            result = fixed_point_pass(arguments.revision, state)
+        if arguments.close_fixed_point:
+            close_fixed_point(result)
+        if arguments.write_state:
+            write_fixed_point_state(arguments.write_state, result.state)
+        snapshot = {
+            "revision": arguments.revision,
+            "state": dump_fixed_point_state(result.state),
+            "candidate_count": len(result.candidates),
+            "discovery_count": len(result.discoveries),
+            "newly_observed": [asdict(record) | {"key": record.key} for record in result.newly_observed],
+            "unknown_clusters": [asdict(record) | {"key": record.key} for record in result.unknown_clusters],
+        }
+        if arguments.json:
+            print(json.dumps(snapshot, indent=2))
+            return 0
+        print(f"revision {arguments.revision}")
+        print(f"action-guidance candidates {snapshot['candidate_count']}")
+        print(f"fixed-point discoveries {snapshot['discovery_count']}")
+        print(f"unadmitted discoveries {len(result.newly_observed)}")
+        print(f"unknown clusters {len(result.unknown_clusters)}")
+        return 0
     records = census(arguments.revision)
     if arguments.json:
         print(
