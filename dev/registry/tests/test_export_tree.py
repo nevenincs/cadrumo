@@ -27,6 +27,7 @@ from .._generated_tree_validation import (
 from .._provenance_manifest import (
     EXPORT_FRAGMENT_PROVENANCE_FILENAME,
     ExportFragmentTarget,
+    _write_canonical_manifest_atomically,
     emit_export_fragment_provenance_manifest,
     export_fragment_provenance_manifest_json_bytes,
     load_export_fragment_provenance_manifest,
@@ -807,6 +808,32 @@ def test_direct_manifest_emission_and_real_loader_verification(_m200_snapshot, t
         )
         == emitted
     )
+
+
+def test_manifest_writer_refuses_a_target_that_already_exists(tmp_path) -> None:
+    """Pin the refusal that makes this writer a superset of the core hardened tier.
+
+    ``atomic_write_hardened_bytes`` publishes with :func:`os.replace`, which
+    overwrites an existing target; its ``O_EXCL`` guards only the staging
+    tempfile. This writer refuses instead, and that difference is the entire
+    reason it is not delegated. Nothing else asserted it: the emit-level test
+    must ``unlink()`` the manifest before it can call emit at all, so the
+    behaviour was exercised by necessity and would have survived its own
+    deletion in green.
+
+    The first write is the positive control -- without it a refusal that fired
+    unconditionally, or a writer that never wrote at all, would pass too.
+    """
+    target = tmp_path / EXPORT_FRAGMENT_PROVENANCE_FILENAME
+
+    _write_canonical_manifest_atomically(target, b'{"first": true}')
+    assert target.read_bytes() == b'{"first": true}'
+
+    with pytest.raises(RegistryValidationError, match="already exists"):
+        _write_canonical_manifest_atomically(target, b'{"second": true}')
+
+    assert target.read_bytes() == b'{"first": true}', "the refused write must not have replaced the target"
+    assert tuple(tmp_path.iterdir()) == (target,), "the refused write must not leave its staging tempfile behind"
 
 
 def test_renderer_refuses_mismatched_map_without_emitting_a_manifest(_m200_snapshot, tmp_path) -> None:

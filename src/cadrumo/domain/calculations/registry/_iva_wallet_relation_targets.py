@@ -47,25 +47,7 @@ IVA_WALLET_OWNED_RELATION_TARGETS: frozenset[IvaWalletRelationTarget] = frozense
         ),
         (
             Modelo.M303.value,
-            "2023",
-            "modelo-303-rel-self-compensacion-anteriores",
-            MODELO_303_IVA_COMPENSATION_BINDING_ID,
-        ),
-        (
-            Modelo.M303.value,
-            "2024-hasta-08-y-2t",
-            "modelo-303-rel-self-compensacion-anteriores",
-            MODELO_303_IVA_COMPENSATION_BINDING_ID,
-        ),
-        (
-            Modelo.M303.value,
-            "2024-desde-09-y-3t",
-            "modelo-303-rel-self-compensacion-anteriores",
-            MODELO_303_IVA_COMPENSATION_BINDING_ID,
-        ),
-        (
-            Modelo.M303.value,
-            "2025",
+            "2023-y-siguientes",
             "modelo-303-rel-self-compensacion-anteriores",
             MODELO_303_IVA_COMPENSATION_BINDING_ID,
         ),

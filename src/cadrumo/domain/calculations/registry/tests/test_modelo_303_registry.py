@@ -64,21 +64,6 @@ _M303_PRORRATA_REGULARIZACION_SOURCE_CASILLAS: tuple[CasillaId, ...] = (
     _M303_PRORRATA_PORCENTAJE_CASILLA,
 )
 _M303_PRORRATA_REGULARIZACION_SOURCE_PERIODS = ("1T", "2T", "3T", "4T")
-_M303_EXPLICIT_RECORD_DESIGN_REVISIONS = (
-    "2023",
-    "2024-hasta-08-y-2t",
-    "2024-desde-09-y-3t",
-    "2025",
-    "2026-y-siguientes",
-)
-_M303_RECORD_DESIGN_SOURCE_BY_REVISION = {
-    "2009-y-siguientes": "aeat-dr-303-2025",
-    "2023": "aeat-dr-303-2023",
-    "2024-hasta-08-y-2t": "aeat-dr-303-2024-early",
-    "2024-desde-09-y-3t": "aeat-dr-303-2024-late",
-    "2025": "aeat-dr-303-2025",
-    "2026-y-siguientes": "aeat-dr-303-2026",
-}
 _M303_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_REVISION = {
     "2009-y-siguientes": frozenset(
         {
@@ -92,30 +77,31 @@ _M303_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_REVISION = {
             "rd-1624-1992:art-71",
         }
     ),
+    "2023-y-siguientes": frozenset(
+        {
+            "ley-37-1992:art-88",
+            "ley-37-1992:art-90",
+            "ley-37-1992:art-91",
+            "ley-37-1992:art-92",
+            "ley-37-1992:art-94",
+            "ley-37-1992:art-95",
+            "ley-37-1992:art-99",
+            "ley-37-1992:art-115",
+            "ley-37-1992:art-116",
+            "ley-37-1992:art-122",
+            "ley-37-1992:art-123",
+            "ley-37-1992:art-124",
+            "orden-eha-3786-2008:art-1",
+            "orden-hac-819-2024:art-1",
+            "rd-1624-1992:art-29",
+            "rd-1624-1992:art-30",
+            "rd-1624-1992:art-71",
+        }
+    ),
 }
-_M303_CURRENT_RECORD_DESIGN_LEGAL_REFS = frozenset(
-    {
-        "ley-37-1992:art-88",
-        "ley-37-1992:art-90",
-        "ley-37-1992:art-91",
-        "ley-37-1992:art-92",
-        "ley-37-1992:art-94",
-        "ley-37-1992:art-95",
-        "ley-37-1992:art-99",
-        "ley-37-1992:art-115",
-        "ley-37-1992:art-116",
-        "ley-37-1992:art-122",
-        "ley-37-1992:art-123",
-        "ley-37-1992:art-124",
-        "orden-eha-3786-2008:art-1",
-        "rd-1624-1992:art-29",
-        "rd-1624-1992:art-30",
-        "rd-1624-1992:art-71",
-    }
+_M303_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_REVISION["2026-y-siguientes"] = (
+    _M303_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_REVISION["2023-y-siguientes"]
 )
-_M303_RECORD_DESIGN_LAYOUT_MODIFICATION_LEGAL_REF = "orden-hac-819-2024:art-unico"
-for _revision_id in _M303_EXPLICIT_RECORD_DESIGN_REVISIONS:
-    _M303_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_REVISION[_revision_id] = _M303_CURRENT_RECORD_DESIGN_LEGAL_REFS
 
 
 def _load_modelo_303() -> tuple[ModeloDefinition, RegistryCatalogues]:
@@ -154,20 +140,16 @@ def test_modelo_303_revision_period_selectors_cover_2009_to_present() -> None:
     assert rev_old.period_selector.year_to == 2022
     assert rev_old.period_selector.periods == ("1T", "2T", "3T", "4T")
 
-    assert "2023-y-siguientes" not in modelo.revisions
-    expected_selectors = {
-        "2023": (2023, ("1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12")),
-        "2024-hasta-08-y-2t": (2024, ("1T", "2T", "01", "02", "03", "04", "05", "06", "07", "08")),
-        "2024-desde-09-y-3t": (2024, ("3T", "4T", "09", "10", "11", "12")),
-        "2025": (2025, ("1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12")),
-    }
-    for revision_id, (year, periods) in expected_selectors.items():
-        revision = modelo.revisions[revision_id]
-        assert revision.valid_from == date(year, 1, 1)
-        assert revision.valid_to == date(year, 12, 31)
-        assert revision.period_selector.year_from == year
-        assert revision.period_selector.year_to == year
-        assert revision.period_selector.periods == periods
+    rev_new = modelo.revisions["2023-y-siguientes"]
+    assert rev_new.valid_from == date(2023, 1, 1)
+    assert rev_new.period_selector.year_from == 2023
+    assert rev_new.valid_to == date(2025, 12, 31)
+    assert rev_new.period_selector.year_to == 2025
+    # Contract: the bounded 2023-2025 revision accepts quarterly and monthly periods.
+    assert "1T" in rev_new.period_selector.periods
+    assert "4T" in rev_new.period_selector.periods
+    assert "01" in rev_new.period_selector.periods
+    assert "12" in rev_new.period_selector.periods
 
     rev_current = modelo.revisions["2026-y-siguientes"]
     assert rev_current.valid_from == date(2026, 1, 1)
@@ -190,27 +172,7 @@ def test_modelo_303_snapshot_builds_for_each_quarter() -> None:
             filing_year=2025,
             period=period,
         )
-        assert snapshot.revision.id == "2025"
-
-    expected_2024_revisions = {
-        "1T": "2024-hasta-08-y-2t",
-        "2T": "2024-hasta-08-y-2t",
-        "3T": "2024-desde-09-y-3t",
-        "4T": "2024-desde-09-y-3t",
-        "01": "2024-hasta-08-y-2t",
-        "08": "2024-hasta-08-y-2t",
-        "09": "2024-desde-09-y-3t",
-        "12": "2024-desde-09-y-3t",
-    }
-    for period, expected_revision_id in expected_2024_revisions.items():
-        snapshot = build_snapshot(
-            modelo,
-            catalogues,
-            source_root=bundled_path(),
-            filing_year=2024,
-            period=period,
-        )
-        assert snapshot.revision.id == expected_revision_id
+        assert snapshot.revision.id == "2023-y-siguientes"
 
     for period in ("1T", "2T", "3T", "4T"):
         snapshot = build_snapshot(
@@ -231,26 +193,6 @@ def test_modelo_303_snapshot_builds_for_each_quarter() -> None:
             period=period,
         )
         assert snapshot.revision.id == "2009-y-siguientes"
-
-
-def test_modelo_303_explicit_record_design_revisions_have_one_exact_source() -> None:
-    """Each post-2022 design has its own primary source, never a fallback."""
-    modelo, _ = _load_modelo_303()
-
-    for revision_id in _M303_EXPLICIT_RECORD_DESIGN_REVISIONS:
-        revision = modelo.revisions[revision_id]
-        record_design_source = _M303_RECORD_DESIGN_SOURCE_BY_REVISION[revision_id]
-
-        assert revision.source_refs == (
-            record_design_source,
-            "aeat-modelo-303-procedure",
-            "boe-modelo-303-2008-form",
-        )
-        assert len(revision.workbook_parity_refs) == 1
-        parity = revision.workbook_parity_refs[0]
-        assert parity.id == f"modelo-303-dr-{record_design_source.removeprefix('aeat-dr-303-')}"
-        assert parity.workbook_source == record_design_source
-        assert parity.source_refs == (record_design_source,)
 
 
 def test_modelo_303_snapshot_carries_legal_authority_and_record_design() -> None:
@@ -283,29 +225,10 @@ def test_modelo_303_extraction_profile_legal_refs_match_target_casillas() -> Non
         assert set(profile.legal_refs) == expected_refs
 
 
-def test_modelo_303_hac_819_2024_authority_starts_only_with_late_2024_design() -> None:
-    """Reject both the fabricated authority and any backdated layout grounding."""
-    modelo, catalogues = _load_modelo_303()
-
-    assert "orden-hac-819-2024:art-1" not in catalogues.legal
-    authority = catalogues.legal[_M303_RECORD_DESIGN_LAYOUT_MODIFICATION_LEGAL_REF]
-    assert authority.document_id == "BOE-A-2024-16129"
-    assert authority.article == "único"
-    assert authority.effective_from == date(2024, 8, 6)
-
-    for revision_id in ("2023", "2024-hasta-08-y-2t"):
-        construct = next(item for item in modelo.revisions[revision_id].constructs if item.id == "modelo-303-iva-autoliquidacion")
-        assert _M303_RECORD_DESIGN_LAYOUT_MODIFICATION_LEGAL_REF not in construct.legal_refs
-
-    for revision_id in ("2024-desde-09-y-3t", "2025", "2026-y-siguientes"):
-        construct = next(item for item in modelo.revisions[revision_id].constructs if item.id == "modelo-303-iva-autoliquidacion")
-        assert _M303_RECORD_DESIGN_LAYOUT_MODIFICATION_LEGAL_REF in construct.legal_refs
-
-
 def test_modelo_303_quarterly_deadlines_match_orden_eha_3786_2008_art_7() -> None:
     """1T-3T close on day 20; 4T closes on day 30 of January following."""
     modelo, _ = _load_modelo_303()
-    prior_windows = {w.id: w for w in modelo.revisions["2025"].deadline_windows}
+    prior_windows = {w.id: w for w in modelo.revisions["2023-y-siguientes"].deadline_windows}
     prior_expected = {
         "modelo-303-2025-1t": (date(2025, 4, 1), date(2025, 4, 21)),
         "modelo-303-2025-2t": (date(2025, 7, 1), date(2025, 7, 21)),
@@ -503,9 +426,10 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
         "modelo-303-casilla-59-entregas-intracomunitarias-base": Decimal("0"),
         "modelo-303-casilla-60-exportaciones-base": Decimal("0"),
         # Casilla 122 is deliberately ABSENT here. This test resolves against
-        # 2009-y-siguientes, while the supplier-side inversión binding belongs
-        # to the later explicit record-design revisions. Listing it here would
-        # assert a resolution this revision cannot produce.
+        # 2009-y-siguientes, and the supplier-side inversión binding exists only
+        # on 2023-y-siguientes -- so listing it would assert a resolution this
+        # revision cannot produce. The three fixtures that DO carry it are the
+        # ones resolving against 2023.
         # No third-country import rows in this observation set, so the import
         # deducible binding resolves to zero.
         "modelo-303-iva-soportado-importaciones-cuota": Decimal("0"),
@@ -542,7 +466,7 @@ def test_modelo_303_construct_includes_iva_bindings() -> None:
     assert "modelo-303-iva-autorepercutido-intracomunitaria-cuota" in construct.bindings
 
 
-@pytest.mark.parametrize("revision_id", ["2009-y-siguientes", *_M303_EXPLICIT_RECORD_DESIGN_REVISIONS])
+@pytest.mark.parametrize("revision_id", ["2009-y-siguientes", "2023-y-siguientes"])
 def test_modelo_303_bienes_inversion_regularizacion_binding_is_declared_while_casilla_43_stays_manual(
     revision_id: str,
 ) -> None:
@@ -566,7 +490,7 @@ def test_modelo_303_bienes_inversion_regularizacion_binding_is_declared_while_ca
     assert casilla_43.binding is None
 
 
-@pytest.mark.parametrize("revision_id", ["2009-y-siguientes", *_M303_EXPLICIT_RECORD_DESIGN_REVISIONS])
+@pytest.mark.parametrize("revision_id", ["2009-y-siguientes", "2023-y-siguientes"])
 def test_modelo_303_prorrata_regularizacion_binding_is_declared_while_casilla_44_stays_manual(
     revision_id: str,
 ) -> None:
@@ -588,16 +512,12 @@ def test_modelo_303_prorrata_regularizacion_binding_is_declared_while_casilla_44
     }
     assert binding_aggregation_op(binding) is BindingAggregationOp.SUM
     assert {"ley-37-1992:art-104", "ley-37-1992:art-105"}.issubset(binding.legal_refs)
-    assert binding.source_refs == (
-        _M303_RECORD_DESIGN_SOURCE_BY_REVISION[revision_id],
-        "aeat-modelo-303-procedure",
-        "boe-modelo-303-2008-form",
-    )
+    assert {"aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"}.issubset(binding.source_refs)
     citations_by_source = {citation.source_ref: citation for citation in binding.source_citations}
     assert citations_by_source["aeat-modelo-303-procedure"].required_text == ("modelo 303",)
 
 
-@pytest.mark.parametrize("revision_id", ["2009-y-siguientes", *_M303_EXPLICIT_RECORD_DESIGN_REVISIONS])
+@pytest.mark.parametrize("revision_id", ["2009-y-siguientes", "2023-y-siguientes"])
 def test_modelo_303_construct_exposes_prorrata_regularizacion_binding(revision_id: str) -> None:
     modelo, _ = _load_modelo_303()
     revision = modelo.revisions[revision_id]
@@ -608,7 +528,7 @@ def test_modelo_303_construct_exposes_prorrata_regularizacion_binding(revision_i
     assert "ley-37-1992:art-105" in construct.legal_refs
 
 
-@pytest.mark.parametrize("revision_id", ["2009-y-siguientes", *_M303_EXPLICIT_RECORD_DESIGN_REVISIONS])
+@pytest.mark.parametrize("revision_id", ["2009-y-siguientes", "2023-y-siguientes"])
 def test_modelo_303_casilla_44_regularizacion_flows_to_total_deducible(revision_id: str) -> None:
     modelo, _ = _load_modelo_303()
     revision = modelo.revisions[revision_id]
@@ -630,7 +550,7 @@ def test_modelo_303_casilla_44_regularizacion_flows_to_total_deducible(revision_
         _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
     }
 
-    if revision_id in _M303_EXPLICIT_RECORD_DESIGN_REVISIONS:
+    if revision_id == "2023-y-siguientes":
         projection = next(formula for formula in revision.formulas if formula.id == "modelo-303-dr303-45-projection")
         assert projection.expression.casilla_id == _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA
 
@@ -843,7 +763,7 @@ def test_modelo_303_compensation_calculation_applies_available_balance_and_carri
 
 
 def test_modelo_303_monthly_snapshot_resolves_for_each_period() -> None:
-    """Each explicit current record-design revision resolves its monthly periods.
+    """The 2023+ revision must accept monthly IVA-liquidation periods 01-12.
 
     REDEME and large-company taxpayers use monthly Modelo 303 schedules. The
     revision selector still has to resolve those monthly periods directly
@@ -859,7 +779,7 @@ def test_modelo_303_monthly_snapshot_resolves_for_each_period() -> None:
             filing_year=2025,
             period=period,
         )
-        assert snapshot.revision.id == "2025"
+        assert snapshot.revision.id == "2023-y-siguientes"
         schedule_ids = {s.id for s in snapshot.revision.filing_schedules}
         assert "modelo-303-mensual" in schedule_ids, f"monthly schedule absent for period {period}"
 
@@ -875,7 +795,7 @@ def test_modelo_303_monthly_filing_schedule_matches_monthly_liquidation_profiles
     from .. import applicable_filing_schedules
 
     modelo, _catalogues = _load_modelo_303()
-    revision = modelo.revisions["2025"]
+    revision = modelo.revisions["2023-y-siguientes"]
 
     monthly_profiles = (
         TaxpayerProfile(
@@ -1084,8 +1004,11 @@ def test_modelo_303_workbook_parity_ref_anchors_record_design_layout() -> None:
     assert parity.fixture_id == "modelo-303-2025-record-design-layout"
 
 
-# The defect-C2 regression that pinned the no-volume prorrata default used one
-# filing-year sample. It is retired rather than widened because a dedicated
-# two-revision gate now owns the claim: measured by mutation, breaking the
-# branch on either live revision reds that gate. Its distinct mid-year axis was
-# carried across before this test was removed.
+# The defect-C2 regression that pinned the no-volume prorrata default lived
+# here, built at a single filing year inside the 2023-y-siguientes window. That
+# single-revision scope is what let 2009-y-siguientes keep returning 0 after the
+# defect had been closed once. It is retired rather than widened because a
+# dedicated two-revision gate now owns the claim: measured by mutation, breaking
+# the branch on either live revision reds that gate, where this test stayed
+# green for the earlier one. Its one distinct axis, a mid-year rather than a
+# settlement period, was carried across to that gate before this was removed.

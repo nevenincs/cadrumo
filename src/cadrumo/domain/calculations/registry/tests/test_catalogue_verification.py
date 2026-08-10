@@ -14,7 +14,6 @@ from .....tests import REPO_ROOT
 from .._corpus_catalogue import verify_source_catalogue, verify_source_file
 from .._coverage import EvidenceTierCoverageGate, audit_registry_model_law_coverage
 from .._legal import verify_legal_catalogue
-from .._schema import filing_period_from_scope
 from .._temporal import select_revision
 from .._validate import RegistryValidator
 from ._catalogue_verification_support import _catalogues, _registry_tree
@@ -106,15 +105,7 @@ def test_the_derived_artefact_gate_still_admits_the_pdf_manual_exception() -> No
 
 
 def test_supported_period_matrix_has_applicable_record_design_sources() -> None:
-    """Every selected period carries an official layout applicable at its end.
-
-    Record-design applicability is evidence for a filing period, not a second
-    revision selector.  In particular, Modelo 303's 2024 late design applies
-    to 3T/09 onward while its revision intentionally shares the filing year
-    with the early design.  The production selector must therefore resolve by
-    period token alone; the canonical period end only verifies the selected
-    design source, never chooses the revision.
-    """
+    """Every period-sensitive registry family carries its official layout revision."""
     modelos, catalogues = _registry_tree()
     missing: list[str] = []
     checked: set[tuple[str, str, int]] = set()
@@ -153,6 +144,7 @@ def test_supported_period_matrix_has_applicable_record_design_sources() -> None:
                         modelo,
                         filing_year=year,
                         period=period,
+                        on=period_start,
                     )
                     assert selected.id == revision.id
 
@@ -170,22 +162,22 @@ def test_supported_period_matrix_has_applicable_record_design_sources() -> None:
                     resolved_exceptions.add(exception_key)
                     continue
 
-                for period in revision.period_selector.periods:
-                    filing_period = filing_period_from_scope(year, period)
-                    evidence_date = (
-                        filing_period.end_date
-                        if filing_period is not None and filing_period.has_date_span()
-                        else period_end
-                    )
-                    if not any(
-                        (source.applies_from is None or source.applies_from <= evidence_date)
-                        and (source.applies_to is None or source.applies_to >= evidence_date)
-                        for source in sources
-                    ):
-                        missing.append(
-                            f"modelo {modelo_id}, revision {revision.id}, period {period}, "
-                            f"uncovered {evidence_date.isoformat()}",
+                uncovered = next(
+                    (
+                        date.fromordinal(ordinal)
+                        for ordinal in range(period_start.toordinal(), period_end.toordinal() + 1)
+                        if not any(
+                            (source.applies_from is None or source.applies_from <= date.fromordinal(ordinal))
+                            and (source.applies_to is None or source.applies_to >= date.fromordinal(ordinal))
+                            for source in sources
                         )
+                    ),
+                    None,
+                )
+                if uncovered is not None:
+                    missing.append(
+                        f"modelo {modelo_id}, revision {revision.id}, uncovered {uncovered.isoformat()}",
+                    )
 
     assert required_modelos == {modelo_id for modelo_id, _, _ in checked}
     assert resolved_exceptions == set(_PUBLICATION_BOUND_RECORD_DESIGN_EXCEPTIONS)
