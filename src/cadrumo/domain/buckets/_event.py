@@ -277,6 +277,13 @@ class BucketEventType(StrEnum):
     LIVE_VERIFY_NIF_IVA_CHECKED = "live.verify.nif_iva_checked"
     LIVE_VERIFY_TGVI_CHECKED = "live.verify.tgvi_checked"
     LIVE_BORRADOR100_SNAPSHOT_CAPTURED = "live.borrador100.snapshot_captured"
+    # Synchronisation-run completion, one member per surface. Distinct from the
+    # capture events above: those record that a snapshot was taken, these record
+    # that a whole run over a surface finished and how much of it was covered.
+    # A run that ends in partial failure still emits its member -- a run record
+    # written only on success makes every truncated sweep invisible.
+    SYNC_RUN_FILED_DECLARATIONS_COMPLETED = "sync_run.filed_declarations.completed"
+    SYNC_RUN_CALC_SHEETS_EXPORT_COMPLETED = "sync_run.calc_sheets_export.completed"
     ATTACHMENT_LINKED = "attachment.linked"
     ATTACHMENT_REMOVED = "attachment.removed"
 

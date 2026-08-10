@@ -85,6 +85,7 @@ from ._aeat_csv import (
     AEAT_CSV_MIN_LENGTH,
     AEAT_CSV_PATTERN,
     is_aeat_csv,
+    normalise_aeat_csv,
 )
 from ._amendment_kind_regime import (
     AmendmentKindRegime,
@@ -283,6 +284,7 @@ from ._storage_taxonomy import (
     storage_path,
     storage_tree_targets,
 )
+from ._sync_surface import SyncSurface
 from ._tax_domain import TaxDomain
 from ._tipos_actividad import (
     IAE_SUBJECT_TIPOS_ACTIVIDAD,
@@ -528,6 +530,7 @@ __all__: list[str] = [
     "StorageNodeKind",
     "StorageOverridePolicy",
     "StorageScope",
+    "SyncSurface",
     "TaxDomain",
     "TipoActividad",
     "TipoOperacionVinculada",
@@ -570,6 +573,7 @@ __all__: list[str] = [
     "model_candidate",
     "modelo_has_codified_amendment_regime",
     "modelo_has_codified_disposition",
+    "normalise_aeat_csv",
     "normalise_corpus_text",
     "normalise_iban",
     "normalise_product_identity_references",
