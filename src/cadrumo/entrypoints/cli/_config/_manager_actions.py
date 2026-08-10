@@ -54,8 +54,7 @@ if TYPE_CHECKING:
     from ....application.auth import AuthConfigureResult
     from ....application.live import FiledHistoryOnboardingRun
     from ....application.user_profile import CensalReconciliation, EffectiveFact, ProfileOverview
-    from ....core import AuthProviderKind
-    from ....core import ClaveMovilRoute
+    from ....core import AuthProviderKind, ClaveMovilRoute
     from ....domain.user_profile import ProfileFieldDefinition, ProfileSectionDefinition
 
 _AUTH_PROVIDER_PATH = "auth.provider"
@@ -767,6 +766,8 @@ def _auth_form_page(
         certificate_names: Names of the registered certificate sources.
         active_certificate: The currently selected certificate name, or
             ``""`` when none is selected.
+        suggested_route: The current environment fallback when the profile
+            has not yet recorded its own Cl@ve Movil route.
 
     Returns:
         The :class:`~cadrumo.adapters.inbound.tui.FormPage` to present.

@@ -185,7 +185,7 @@ enum_values = ["certificate", "clave_movil", "clave_permanente"]
 key = "clave_movil_route"
 type = "enum"
 required = false
-sensitivity = "operational"
+sensitivity = "identity"
 description = "How Cl@ve Movil should ask for confirmation: show a QR code in a visible browser, or identify with DNI/NIE plus contraste and send a request to the Cl@ve app."
 enum_values = ["qr", "app_request"]
 

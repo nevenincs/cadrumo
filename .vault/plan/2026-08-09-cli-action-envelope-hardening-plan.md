@@ -4,7 +4,7 @@ tags:
   - '#cli-action-envelope-hardening'
 date: '2026-08-09'
 modified: '2026-08-10'
-body_hash: 'sha256:9414e450b029790db64ea05f3775bec7fbecd43a37e7a3aa7c6d3093be1ed5b4'
+body_hash: 'sha256:3418235e9235bf83f27d8da8c26aa81d32c29c36089380ade07f06f61d55b1d0'
 tier: L3
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
@@ -81,7 +81,7 @@ Replace root recovery prose, preserve leaf identity through pre-dispatch guards,
 
 - [x] `W03.P05.S16` - Replace storage write-policy recovery hints with typed failed-condition verdicts; `src/cadrumo/application/storage_write_policy.py`.
 - [x] `W03.P05.S17` - Preserve requested live leaf identity before root guards and migrate every profile and taxpayer policy refusal in the shared CLI boundary to typed verdicts; `src/cadrumo/entrypoints/cli/_common.py`.
-- [ ] `W03.P05.S18` - Carry guarded command identity and verdict through the refusal boundary; `src/cadrumo/entrypoints/cli/_errors.py`.
+- [x] `W03.P05.S18` - Carry guarded command identity and verdict through the refusal boundary; `src/cadrumo/entrypoints/cli/_errors.py`.
 - [ ] `W03.P05.S19` - Prove every storage policy condition identity evidence action status and binding set; `src/cadrumo/application/tests/test_storage_write_policy.py`.
 - [ ] `W03.P05.S20` - Prove clean-root refusal recovery and retry through real CLI dispatch; `src/cadrumo/entrypoints/cli/tests/test_profile_guard_action_recovery.py`.
 

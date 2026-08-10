@@ -168,7 +168,6 @@ def advisory_notice(
     code: str,
     message: str,
     *,
-    suggestion: str | None = None,
     context: dict[str, str] | None = None,
 ) -> Notice:
     """Project a non-blocking modelo advisory message onto the envelope notices channel.
@@ -219,9 +218,25 @@ def source_diagnostic_notice(diagnostic: CalculationSourceDiagnostic, *, code: s
         "relation_id": diagnostic.relation_id,
         "casilla_id": diagnostic.casilla_id,
         "source_ref": diagnostic.source_ref,
+        # Non-command remediation stays distinct from the diagnosis so machine
+        # consumers need not recover it from prose. Executable command identity
+        # remains reserved for Notice.action by the Notice validator.
+        "remedy": diagnostic.remedy,
     }
     context.update({key: value for key, value in optional.items() if value})
-    return advisory_notice(code, diagnostic.message, suggestion=diagnostic.remedy, context=context)
+    return advisory_notice(code, diagnostic.message, context=context)
+
+
+def source_diagnostic_notice_text(notice: Notice) -> str:
+    """Render one source diagnosis together with its non-command remedy."""
+    context = notice.context or {}
+    remedy = context.get("remedy")
+    message = notice.message if remedy is None else f"{notice.message} {remedy}"
+    return tr(
+        "cli.app.modelo.work.calculate_source_advisory",
+        message=message,
+        default="ADVISORY: %{message}",
+    )
 
 
 def next_action_notice(

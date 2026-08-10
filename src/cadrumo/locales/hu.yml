@@ -2522,9 +2522,6 @@ cli:
           ideiglenes felülbírálással, az állapot megváltoztatása nélkül
         unknown_keys: 'Ismeretlen --binding kulcs(ok): {keys}; ismert kötések a(z)
           {code}@{revision} ({period}) számára: {suggestion}.'
-        unscoped_revision_suggestion: Mielőtt az ids értékeket work calculate parancsba
-          másolod, futtasd újra --modelo MODELO --year YEAR --period PERIOD kapcsolókkal
-          a cél munkaegységhez.
         unscoped_revision_warning: A kötéslista nincs %{missing_filters} szerint szűkítve;
           olyan revízió kötésazonosítóit is tartalmazhatja, amely nem egyezik a work
           calculate által használt munkaegységgel.
@@ -3110,8 +3107,6 @@ cli:
           Importált külső bizonyítékot (justificante / CSV-nyilvántartás / élő rögzítés)
           kell tartalmaznia.
         history_help: Egy munkaegység minden életciklus-eseményének megjelenítése.
-        history_next_action: Tekintse át ennek a munkaegységnek a jelenlegi állapotát
-          a `aeat app modelo work status` paranccsal.
         history_next_action_summary: Tekintse át ennek a munkaegységnek a jelenlegi
           állapotát.
         history_work_unit_id_help: Annak a munkaegységnek az azonosítója, amelynek
@@ -3145,9 +3140,6 @@ cli:
           érték: {spec}.'
         list_help: Regisztrált munkaegységek listázása, opcionálisan profil szerint
           szűrve.
-        list_next_action: Egy munkaegység teljes állapotát a `aeat app modelo work
-          status` paranccsal tekintheti meg, majd a `aeat app modelo work calculate`
-          paranccsal készíthet vagy számolhat újra vázlatot.
         list_next_action_summary: Tekintse meg egy munkaegység teljes állapotát a
           vázlat elkészítése vagy újraszámítása előtt.
         m184_socio_handoff_message: 'Jövedelem-hozzárendelési rendszer (régimen de
@@ -3357,9 +3349,6 @@ cli:
         state_label_presentado_supersedido: Felülírt beadás
         state_label_verificado_completo: Teljesen ellenőrizve
         status_help: Egy munkaegység metaadatainak megjelenítése.
-        status_next_action: Készítse el vagy számolja újra ezt az egységet a `aeat
-          app modelo work calculate` paranccsal, majd ellenőrizze a vázlatot a `aeat
-          app modelo work verify` paranccsal.
         status_next_action_summary: Készítse el vagy számolja újra ezt a munkaegységet,
           majd ellenőrizze az eredményül kapott vázlatot.
         verify_help: Tervezet számítási revízió hitelesítése a hitelesített-teljes
@@ -3367,14 +3356,8 @@ cli:
         verify_idempotent_noop: 'Idempotens nincs-művelet: a(z) %{calculation_revision_id}
           számítási revízió már ellenőrzött; a meglévő ellenőrzési jelentés változatlanul
           lett visszaadva.'
-        verify_next_action_granted: Az ellenőrzés sikeres. Exportálja a benyújtási
-          dokumentumot a `aeat app modelo export` paranccsal.
         verify_next_action_granted_summary: Az ellenőrzés sikeres. Exportálja a benyújtási
           dokumentumot.
-        verify_next_action_incomplete: Az ellenőrzés blokkoló tételeket talált (lásd
-          a fenti értesítéseket). Oldja meg őket, számolja újra a `aeat app modelo
-          work calculate` paranccsal, majd futtassa újra a `aeat app modelo work verify`
-          parancsot.
         verify_next_action_incomplete_summary: Az ellenőrzés blokkoló tételeket talált.
           Oldja meg őket, számolja újra, majd futtassa újra az ellenőrzést.
         verify_selector_help: Piszkozat-revízió választó (current, latest-draft vagy
@@ -5403,9 +5386,6 @@ cli:
     coverage:
       incomplete_summary: '%{count} benyújtási kötelezettséget nem sikerült egyértelműen
         a profilhoz rendelni, ezért kimaradhatnak a jelentésből: %{modelos}.'
-      investigate: '%{count} bevallási kötelezettséget nem sikerült egyértelműen megállapítani
-        ehhez a profilhoz, és bevallatlan maradhat: %{modelos}. Vizsgálja meg mindegyiket
-        a ''aeat app overview explain <modelo>'' paranccsal.'
     drafts: Tervezetek
     explain:
       help: Egy nyomtatvány alkalmazhatóságának elemzése az aktív profillal szemben.
@@ -5440,8 +5420,6 @@ cli:
         01-12 (hónapok). Az évhez kombináld a --year kapcsolóval.'
       year_help: Bevallási év (pl. 2026).
     post_filing:
-      pending: '%{count} AEAT bevallás utáni esemény igényel figyelmet: %{kinds}.
-        Tekintsd át őket a ''aeat app live notifications list'' paranccsal.'
       pending_summary: '%{count} AEAT benyújtás utáni esemény figyelmet igényel: %{kinds}.'
     prepare:
       help: 'Végigvezet az adatelőkészítés lépésein egy modellhez/időszakhoz sorban:
@@ -5687,9 +5665,6 @@ cli:
       session_unchecked: A munkamenet és készültség nem következik a kiválasztott
         profilból.
       tagline: Helyi munkafolyamat a spanyol adóhatósággal (AEAT) adózóknak és tanácsadóknak.
-      welcome_no_profile: 'Aktív profil: nincs. A profilhoz kötött munka előtt hozz
-        létre egyet.'
-      welcome_profile: 'Aktív profil: `%{profile}`.'
       welcome_profile_unavailable: 'Aktív profil: nem érhető el. Javítsd a kijelölt
         profilt a profilhoz kötött munka előtt.'
     language_help: A kimenet és a súgószöveg nyelve (en, es, ca, hu).
@@ -7282,6 +7257,9 @@ flows:
       add_row_section: Melyik szakaszhoz
       auth_clave_incomplete: 'A Cl@ve még ezt igényli: %{missing}. Semmi sem lett
         elmentve.'
+      auth_clave_movil_route: Cl@ve Móvil útvonal
+      auth_clave_movil_route_app_request: Kérés az alkalmazásban
+      auth_clave_movil_route_qr: QR-kód
       auth_contraste_missing: 'A QR nélküli Cl@ve Móvil útvonalhoz a dokumentum ellenőrző
         adata szükséges: NIE esetén a támogatási szám, DNI esetén az érvényességi
         dátum. Semmi sem lett elmentve.'
@@ -68845,6 +68823,8 @@ profile:
         share_pct:
           label: Hozzárendelt részesedés aránya
       auth:
+        clave_movil_route:
+          label: Cl@ve Móvil útvonal
         dni_nie:
           label: DNI vagy NIE a Cl@ve-hoz
         fecha_validez:

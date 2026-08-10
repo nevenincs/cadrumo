@@ -2602,9 +2602,6 @@ cli:
           temporales opcionales, sin mutar el estado
         unknown_keys: 'Clave(s) de --binding desconocida(s) {keys}; vinculaciones
           conocidas para {code}@{revision} ({period}): {suggestion}.'
-        unscoped_revision_suggestion: Antes de copiar ids en work calculate, vuelve
-          a ejecutar con --modelo MODELO --year YEAR --period PERIOD para la unidad
-          de trabajo destino.
         unscoped_revision_warning: La lista de vinculaciones no está acotada por %{missing_filters};
           puede incluir ids de vinculaciones de una revisión que no coincide con la
           unidad de trabajo usada por work calculate.
@@ -3202,8 +3199,6 @@ cli:
           vivo)
         history_help: Muestra todos los eventos del ciclo de vida de una unidad de
           trabajo
-        history_next_action: Revisa el estado actual de esta unidad de trabajo con
-          `aeat app modelo work status`.
         history_next_action_summary: Revisa el estado actual de esta unidad de trabajo.
         history_work_unit_id_help: Id de unidad de trabajo cuyo ciclo de vida quieres
           ver
@@ -3234,9 +3229,6 @@ cli:
           signo igual y el valor a la derecha. Se recibió {spec}.'
         list_help: Listar las unidades de trabajo registradas, opcionalmente filtradas
           por perfil
-        list_next_action: Inspecciona el estado completo de una unidad de trabajo
-          con `aeat app modelo work status` y luego crea o recalcula el borrador con
-          `aeat app modelo work calculate`.
         list_next_action_summary: Inspecciona el estado completo de una unidad de
           trabajo antes de crear o recalcular su borrador.
         m184_socio_handoff_message: 'Régimen de atribución de rentas: el socio %{nif}
@@ -3441,21 +3433,14 @@ cli:
         state_label_presentado_supersedido: Presentación sustituida
         state_label_verificado_completo: Verificado completo
         status_help: Mostrar los metadatos de una unidad de trabajo
-        status_next_action: Crea o recalcula esta unidad con `aeat app modelo work
-          calculate` y luego verifica el borrador con `aeat app modelo work verify`.
         status_next_action_summary: Crea o recalcula esta unidad de trabajo y después
           verifica el borrador resultante.
         verify_help: Verificar una revisión draft contra el contrato verified-complete
         verify_idempotent_noop: 'Operación idempotente sin efecto: la revisión de
           cálculo %{calculation_revision_id} ya está verificada; se devolvió el informe
           de verificación existente sin cambios.'
-        verify_next_action_granted: La verificación se superó. Exporta el artefacto
-          de presentación con `aeat app modelo export`.
         verify_next_action_granted_summary: La verificación se superó. Exporta el
           artefacto de presentación.
-        verify_next_action_incomplete: La verificación encontró elementos bloqueantes
-          (consulta los avisos anteriores). Resuélvelos, recalcula con `aeat app modelo
-          work calculate` y vuelve a ejecutar `aeat app modelo work verify`.
         verify_next_action_incomplete_summary: La verificación encontró elementos
           bloqueantes. Resuélvelos, recalcula y vuelve a ejecutar la verificación.
         verify_selector_help: Selector de revisión borrador (current, latest-draft
@@ -5501,9 +5486,6 @@ cli:
     coverage:
       incomplete_summary: 'No se pudieron acotar de forma concluyente %{count} obligación(es)
         de presentación para este perfil y podrían quedar sin declarar: %{modelos}.'
-      investigate: 'No se han podido determinar con certeza %{count} obligación(es)
-        de presentación para este perfil y podrian quedar sin declarar: %{modelos}.
-        Investigue cada una con ''aeat app overview explain <modelo>''.'
     drafts: Borradores
     explain:
       help: Descompone la aplicabilidad de un modelo frente al perfil activo. Muestra
@@ -7452,6 +7434,9 @@ flows:
       add_row_section: A qué sección se añade
       auth_clave_incomplete: A Cl@ve todavía le falta %{missing}. No se ha guardado
         nada.
+      auth_clave_movil_route: Ruta de Cl@ve Móvil
+      auth_clave_movil_route_app_request: Solicitud en la aplicación
+      auth_clave_movil_route_qr: Código QR en un navegador visible
       auth_contraste_missing: 'Cl@ve Móvil sin QR necesita el contraste de su documento:
         el número de soporte si es un NIE, o la fecha de validez si es un DNI. No
         se ha guardado nada.'
@@ -70974,6 +70959,8 @@ profile:
         share_pct:
           label: Porcentaje de participación atribuido
       auth:
+        clave_movil_route:
+          label: Ruta de Cl@ve Móvil
         dni_nie:
           label: DNI o NIE para Cl@ve
         fecha_validez:

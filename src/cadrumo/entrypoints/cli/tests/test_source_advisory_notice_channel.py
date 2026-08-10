@@ -12,8 +12,6 @@ remediation no longer rides a free-form ``suggestion`` field.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 import pytest
 
 from ....application.aggregation import CalculationSourceDiagnostic
@@ -29,20 +27,6 @@ _MESSAGE = (
 _REMEDY = "Record the IVA rate on the ledger rows that lack one, then recalculate"
 
 
-@dataclass(frozen=True)
-class _DiagnosticsOnly:
-    """The one attribute the projector reads off a calculation result.
-
-    Not a stand-in for the calculation: the diagnostic below is a real
-    :class:`~application.aggregation.CalculationSourceDiagnostic`. The projector
-    accepts the whole result envelope while reading only ``source_diagnostics``,
-    and persisting a revision to hand it one would exercise the persistence path
-    instead of the hop under test.
-    """
-
-    source_diagnostics: tuple[CalculationSourceDiagnostic, ...]
-
-
 def _rate_box_diagnostic() -> CalculationSourceDiagnostic:
     return CalculationSourceDiagnostic(
         reason=_REASON,
@@ -53,31 +37,35 @@ def _rate_box_diagnostic() -> CalculationSourceDiagnostic:
 
 
 def test_the_advisory_becomes_a_notice_carrying_reason_and_message() -> None:
-    notices, lines = _work_calculate_source_advisory_output(_DiagnosticsOnly((_rate_box_diagnostic(),)))
+    notices, lines = _work_calculate_source_advisory_output((_rate_box_diagnostic(),))
 
     assert len(notices) == 1
     context = notices[0].context
     assert context is not None, "the advisory reached the operator with no structured provenance"
     assert context["reason"] == _REASON
     assert context["source_kind"] == "ledger_iva_aggregation"
+    assert context["remedy"] == _REMEDY
     assert notices[0].message == _MESSAGE
     assert len(lines) == 1
     assert _MESSAGE in lines[0]
+    assert _REMEDY in lines[0]
 
 
 def test_a_calculation_with_no_advisory_emits_no_notice() -> None:
     """The negative control: a projector that always emitted one would pass above."""
-    assert _work_calculate_source_advisory_output(_DiagnosticsOnly(())) == ([], [])
+    assert _work_calculate_source_advisory_output(()) == ([], [])
 
 
-def test_same_message_is_deduplicated_across_contexts_but_distinct_messages_remain() -> None:
+def test_same_message_is_presented_once_without_discarding_distinct_contexts() -> None:
     first = _rate_box_diagnostic()
     same_message = first.model_copy(update={"source_kind": "ledger_renta_gastos_aggregation"})
     distinct = first.model_copy(update={"message": f"{_MESSAGE} for a different source row"})
 
-    notices, lines = _work_calculate_source_advisory_output(_DiagnosticsOnly((first, same_message, distinct)))
+    notices, lines = _work_calculate_source_advisory_output((first, same_message, distinct))
 
-    assert [notice.message for notice in notices] == [_MESSAGE, distinct.message]
+    assert [notice.message for notice in notices] == [_MESSAGE, _MESSAGE, distinct.message]
     assert notices[0].context is not None
     assert notices[0].context["source_kind"] == first.source_kind
+    assert notices[1].context is not None
+    assert notices[1].context["source_kind"] == same_message.source_kind
     assert len(lines) == 2

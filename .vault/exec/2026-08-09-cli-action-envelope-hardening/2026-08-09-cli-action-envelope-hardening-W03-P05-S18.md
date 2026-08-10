@@ -5,44 +5,11 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:52bd07f346bf2f62bcb532d8809597194a0bb69cfde52acfded032dd7e380523'
+body_hash: 'sha256:a18c23e3bf0560fc09a7681fe236c869c17955efb833835522f15e35e69c9313'
 step_id: 'S18'
 related:
   - "[[2026-08-09-cli-action-envelope-hardening-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace cli-action-envelope-hardening with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S18 and 2026-08-09-cli-action-envelope-hardening-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Carry guarded command identity and verdict through the refusal boundary and ## Scope
-
-- `src/cadrumo/entrypoints/cli/_errors.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Carry guarded command identity and verdict through the refusal boundary
 
@@ -95,4 +62,3 @@ During verification, peer checkpoint commit `04c3de99cf` captured the two S18
 implementation files together with unrelated shared-worktree changes. This
 executor performed no staging or commit and did not touch the Git lock. The
 current HEAD was re-read and all proofs were rerun against the captured bytes.
-

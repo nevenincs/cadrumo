@@ -2398,8 +2398,6 @@ cli:
           overrides, without mutating state
         unknown_keys: 'Unknown --binding key(s) {keys}; known bindings for {code}@{revision}
           ({period}): {suggestion}.'
-        unscoped_revision_suggestion: Before copying ids into work calculate, rerun
-          with --modelo MODELO --year YEAR --period PERIOD for the target work unit.
         unscoped_revision_warning: The binding list is not scoped by %{missing_filters};
           it may include binding ids from a revision that does not match the work
           unit used by work calculate.
@@ -2951,8 +2949,6 @@ cli:
           Must carry imported external evidence (justificante / CSV register / live
           capture)
         history_help: Show every lifecycle event for one work unit
-        history_next_action: Review this work unit's current state with `aeat app
-          modelo work status`.
         history_next_action_summary: Review this work unit's current state.
         history_work_unit_id_help: Work unit id whose lifecycle you want to view
         id_is_work_unit_not_calc_revision_natural: This id is a work-unit-id, but
@@ -2981,8 +2977,6 @@ cli:
           is a key-value entry: put the field name on the left of one equals sign
           and the value on the right. Received {spec}.'
         list_help: List registered work units, optionally filtered by profile
-        list_next_action: Inspect one work unit's full state with `aeat app modelo
-          work status`, then draft or recalculate it with `aeat app modelo work calculate`.
         list_next_action_summary: Inspect one work unit's full state before drafting
           or recalculating it.
         m184_socio_handoff_message: 'Régimen de atribución de rentas: socio %{nif}
@@ -3179,21 +3173,14 @@ cli:
         state_label_presentado_supersedido: superseded filing
         state_label_verificado_completo: verified complete
         status_help: Show the metadata of one work unit
-        status_next_action: Draft or recalculate this unit with `aeat app modelo work
-          calculate`, then verify the draft with `aeat app modelo work verify`.
         status_next_action_summary: Draft or recalculate this work unit, then verify
           the resulting draft.
         verify_help: Verify a draft calculation revision against the verified-complete
           contract
         verify_idempotent_noop: 'Idempotent no-op: calculation revision %{calculation_revision_id}
           is already verified; returned the existing verification report without changes.'
-        verify_next_action_granted: Verification passed. Export the filing artefact
-          with `aeat app modelo export`.
         verify_next_action_granted_summary: Verification passed. Export the filing
           artefact.
-        verify_next_action_incomplete: Verification found blocking items (see the
-          notices above). Resolve them, recalculate with `aeat app modelo work calculate`,
-          then re-run `aeat app modelo work verify`.
         verify_next_action_incomplete_summary: Verification found blocking items.
           Resolve them, recalculate, then run verification again.
         verify_selector_help: Draft revision selector (current, latest-draft, or explicit).
@@ -6936,8 +6923,9 @@ flows:
       add_row_required: This is required; the row cannot be added without it.
       add_row_section: Which section to add to
       auth_clave_incomplete: Cl@ve still needs %{missing}. Nothing was saved.
-      auth_clave_movil_route: Cl@ve Móvil confirmation route
-      auth_clave_movil_route_qr: QR code in a visible browser
+      auth_clave_movil_route: Cl@ve Móvil route
+      auth_clave_movil_route_app_request: Request in app
+      auth_clave_movil_route_qr: QR code
       auth_contraste_missing: 'Cl@ve Móvil without QR needs the contraste from your
         document: the support number for a NIE, or the validity date for a DNI. Nothing
         was saved.'
@@ -68249,6 +68237,8 @@ profile:
         share_pct:
           label: Attributed participation percentage
       auth:
+        clave_movil_route:
+          label: Cl@ve Móvil route
         dni_nie:
           label: DNI or NIE for Cl@ve
         fecha_validez:

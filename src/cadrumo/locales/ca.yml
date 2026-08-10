@@ -2577,9 +2577,6 @@ cli:
           temporals opcionals, sense mutar l'estat
         unknown_keys: 'Clau(s) de --binding desconeguda(es) {keys}; vinculacions conegudes
           per a {code}@{revision} ({period}): {suggestion}.'
-        unscoped_revision_suggestion: Abans de copiar ids a work calculate, torna
-          a executar amb --modelo MODELO --year YEAR --period PERIOD per a la unitat
-          de treball de destinació.
         unscoped_revision_warning: La llista de vinculacions no està acotada per %{missing_filters};
           pot incloure ids de vinculacions d una revisió que no coincideix amb la
           unitat de treball usada per work calculate.
@@ -5722,7 +5719,6 @@ cli:
       session_unchecked: La sessió i la preparació no s'infereixen del perfil seleccionat.
       tagline: Flux local amb l'Agència Estatal d'Administració Tributària (AEAT)
         per a contribuents i assessors.
-      welcome_profile: 'Perfil actiu: `%{profile}`.'
       welcome_profile_unavailable: 'Perfil actiu: no disponible. Repara el perfil
         seleccionat abans del treball vinculat al perfil.'
     language_help: Idioma de la sortida i del text d'ajuda (en, es, ca, hu).
@@ -7384,6 +7380,9 @@ flows:
       add_row_required: És obligatori; la fila no es pot afegir sense aquesta dada.
       add_row_section: A quina secció s'afegeix
       auth_clave_incomplete: A Cl@ve encara li falta %{missing}. No s'ha desat res.
+      auth_clave_movil_route: Ruta de Cl@ve Mòbil
+      auth_clave_movil_route_app_request: Sol·licitud a l'aplicació
+      auth_clave_movil_route_qr: Codi QR
       auth_contraste_missing: 'Cl@ve Mòbil sense QR necessita el contrast del vostre
         document: el número de suport si és un NIE, o la data de validesa si és un
         DNI. No s''ha desat res.'
@@ -68704,6 +68703,8 @@ profile:
         share_pct:
           label: Percentatge de participació atribuït
       auth:
+        clave_movil_route:
+          label: Ruta de Cl@ve Mòbil
         dni_nie:
           label: DNI o NIE per a Cl@ve
         fecha_validez:

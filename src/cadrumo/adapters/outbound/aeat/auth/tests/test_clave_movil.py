@@ -121,6 +121,7 @@ def test_attempt_context_uses_profile_storage_and_redacts_identity_values() -> N
             lambda state: register_minimal_profile(
                 state,
                 profile_id=bucket_id,
+                display_name="Clave Movil Test",
                 overrides={"identity.tax_id": "X1234567L"},
                 secure_objects=secure_object_repository_for_active_bucket(),
                 enforce_unique_tax_id=False,
@@ -207,13 +208,17 @@ def test_probe_without_persisted_session_refuses_without_fresh_login(tmp_path: P
 
 
 def test_render_progress_banner_routes_only_to_armed_operator_sink() -> None:
-    captured: list[str] = []
+    from ......core import OperatorProgress
+
+    captured: list[OperatorProgress] = []
     _render_progress_banner(verification_code="YLL", timeout_seconds=120, used_non_qr_fallback=True)
     assert captured == []
     with operator_progress_sink(captured.append):
         _render_progress_banner(verification_code="YLL", timeout_seconds=120, used_non_qr_fallback=True)
     assert len(captured) == 1
-    assert "YLL" in captured[0]
+    assert "YLL" in captured[0].message
+    assert captured[0].timeout_seconds == 120
+    assert "Time remaining 2:00" in captured[0].render()
 
 
 def test_render_progress_banner_uses_structured_log_not_stdio(

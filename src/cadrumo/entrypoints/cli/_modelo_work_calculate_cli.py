@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Annotated, Any, Protocol
+from typing import TYPE_CHECKING, Annotated, Any
 
 import typer
 from pydantic import ValidationError
@@ -49,6 +49,7 @@ from ._modelo_rendering import (
     calculation_revision_payload,
     calculation_revision_state_label,
     source_diagnostic_notice,
+    source_diagnostic_notice_text,
     work_unit_deadline_output,
     work_unit_plazo_lines,
 )
@@ -480,7 +481,9 @@ def _run_work_calculate(
             calculation_result,
             work_unit=unit_for_modality,
         )
-        source_advisory_notices, source_advisory_lines = _work_calculate_source_advisory_output(calculation_result)
+        source_advisory_notices, source_advisory_lines = _work_calculate_source_advisory_output(
+            calculation_result.source_diagnostics,
+        )
         deadline_payload, deadline_notices = work_unit_deadline_output(unit_for_modality)
         result = WorkCalculateResult.model_validate(
             {
@@ -588,21 +591,8 @@ def _work_calculate_authorization_output(
     )
 
 
-class _CarriesSourceDiagnostics(Protocol):
-    """The one attribute the projector below actually reads.
-
-    Declared structurally because that is what the function depends on. Naming
-    the whole calculation envelope in the signature claimed a coupling the body
-    does not have, and forced anything exercising this hop to build a persisted
-    result -- which would run the persistence path rather than this projection.
-    """
-
-    @property
-    def source_diagnostics(self) -> tuple[CalculationSourceDiagnostic, ...]: ...
-
-
 def _work_calculate_source_advisory_output(
-    calculation_result: _CarriesSourceDiagnostics,
+    diagnostics: tuple[CalculationSourceDiagnostic, ...],
 ) -> tuple[list[Notice], list[str]]:
     """Project NON-blocking source diagnostics into notices + human lines.
 
@@ -622,25 +612,24 @@ def _work_calculate_source_advisory_output(
     typed ``Notice.action`` projection; this renderer never reads the removed
     legacy ``suggestion`` field.
     """
-    diagnostics = calculation_result.source_diagnostics
     if not diagnostics:
         return [], []
     notices: list[Notice] = []
-    seen_messages: set[str] = set()
+    seen_notices: set[str] = set()
     for diagnostic in diagnostics:
         notice = source_diagnostic_notice(diagnostic, code="modelo.work.calculate.source_advisory")
-        if notice.message in seen_messages:
+        notice_identity = notice.model_dump_json()
+        if notice_identity in seen_notices:
             continue
-        seen_messages.add(notice.message)
+        seen_notices.add(notice_identity)
         notices.append(notice)
-    lines = [
-        tr(
-            "cli.app.modelo.work.calculate_source_advisory",
-            message=notice.message,
-            default="ADVISORY: %{message}",
-        )
-        for notice in notices
-    ]
+    lines: list[str] = []
+    seen_lines: set[str] = set()
+    for notice in notices:
+        line = source_diagnostic_notice_text(notice)
+        if line not in seen_lines:
+            lines.append(line)
+            seen_lines.add(line)
     return (notices, lines)
 
 
