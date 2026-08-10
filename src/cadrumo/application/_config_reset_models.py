@@ -14,13 +14,12 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-from ..core import STRICT_FROZEN_CONFIG
-from ..core.identity import BucketId
+from ..core import STRICT_FROZEN_CONFIG, Hex64Str
+from ..core.identity import BucketId, ContentDigest
 from ..core.time import validate_utc_aware
 from ..domain.user_profile import UserProfileStatus
 from ._bucket_deletion_contracts import BucketDeletionFingerprint
 
-_SHA256_PATTERN = r"^[0-9a-f]{64}$"
 CONFIG_RESET_SCHEMA_VERSION = 1
 
 
@@ -60,12 +59,7 @@ class ConfigResetPointerSnapshot(BaseModel):
 
     present: bool
     bucket_id: BucketId | None = None
-    content_sha256: str | None = Field(
-        default=None,
-        min_length=64,
-        max_length=64,
-        pattern=_SHA256_PATTERN,
-    )
+    content_sha256: ContentDigest | None = None
 
     @model_validator(mode="after")
     def _validate_presence(self) -> ConfigResetPointerSnapshot:
@@ -112,9 +106,9 @@ class ConfigResetDeletionMarker(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    operation_id: str = Field(min_length=64, max_length=64, pattern=_SHA256_PATTERN)
+    operation_id: Hex64Str
     bucket_id: BucketId
-    fingerprint: str = Field(min_length=64, max_length=64, pattern=_SHA256_PATTERN)
+    fingerprint: ContentDigest
     marked_at: datetime
 
     @model_validator(mode="after")
@@ -207,7 +201,7 @@ class ConfigResetOperation(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     schema_version: Literal[1] = CONFIG_RESET_SCHEMA_VERSION
-    operation_id: str = Field(min_length=64, max_length=64, pattern=_SHA256_PATTERN)
+    operation_id: Hex64Str
     status: ConfigResetOperationStatus = ConfigResetOperationStatus.INCOMPLETE
     started_at: datetime
     updated_at: datetime
