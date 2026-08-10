@@ -18,8 +18,8 @@ from enum import StrEnum
 from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Period, PeriodKind, StandardPeriodCode
-from ...core.identity import ContentDigest, SubjectTaxId
+from ...core import IvaCompensationStateProvenance, Period, PeriodKind, StandardPeriodCode
+from ...core.identity import AeatExpedienteId, ContentDigest, SubjectTaxId
 from ._errors import (
     IvaCompensationCarryForwardPolicyError,
     IvaCompensationYearRangeError,
@@ -27,13 +27,16 @@ from ._errors import (
 
 _ZERO = Decimal("0")
 
-#: Status carried by a manually-seeded opening carry-forward state (written by
-#: the application ``seed_iva_compensation_period`` helper). A seeded state
-#: declares a prior carry-forward balance in ``available_end_amount`` /
-#: ``pending_for_later_amount`` with ``generated_amount == 0`` (it generated no
-#: new credit in a filed period); the lot builder must still surface it as an
-#: available lot so ``iva-wallet balance`` reflects the seeded opening balance.
-_SEEDED_STATUS = "seeded"
+#: The provenances whose rows declare an opening carry-forward balance rather
+#: than generating credit in a filed period. Both members belong here: the
+#: retired ``status`` literal wrote one token for a seed AND a correction, so
+#: branching on it silently treated the two as one path.
+_OPERATOR_DECLARED_PROVENANCES = frozenset(
+    {
+        IvaCompensationStateProvenance.OPERATOR_SEED,
+        IvaCompensationStateProvenance.OPERATOR_CORRECTION,
+    },
+)
 
 
 class IvaCompensationExpiryReviewState(StrEnum):
@@ -65,8 +68,40 @@ class IvaCompensationPeriodState(BaseModel):
     )
     filing_year: int = Field(ge=2000, le=2099)
     period: Period
-    expediente_id: str = Field(min_length=1, max_length=32)
-    status: str = Field(min_length=1, max_length=32)
+    provenance: IvaCompensationStateProvenance = Field(
+        description=(
+            "Which of the five supplying paths built this row. Required with no "
+            "default, so a new supplying path must declare its own provenance "
+            "rather than inherit one it never chose. Constrained against "
+            "expediente_id and status by the validator below."
+        ),
+    )
+    expediente_id: AeatExpedienteId | None = Field(
+        default=None,
+        description=(
+            "The AEAT-issued expediente: present on an AEAT capture, None on "
+            "every other path. The four non-AEAT paths each used to mint a "
+            "synthetic marker into this field (manual-seed, manual-correction, "
+            "local-<ref>, obs-<year>-<period>), which made an operator-supplied "
+            "string structurally indistinguishable from an identifier AEAT "
+            "issued. Nothing is lost by dropping them: each was a lossier "
+            "duplicate of the source_observation_key written at the same site."
+        ),
+    )
+    status: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=32,
+        description=(
+            "The AEAT-PRINTED register status, and nothing else. None on every "
+            "non-AEAT path. This field once carried three incompatible subjects "
+            "at once -- an AEAT register status, an observation source-kind "
+            "token, and two app lifecycle literals -- so provenance was readable "
+            "off two fields that could disagree, and an operator seed was "
+            "indistinguishable from an operator correction because both wrote "
+            "the same literal. Provenance now has its own typed field."
+        ),
+    )
     presented_at: datetime
     prior_pending_amount: Decimal | None = None
     applied_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
@@ -90,6 +125,25 @@ class IvaCompensationPeriodState(BaseModel):
             "the artefact."
         ),
     )
+
+    @model_validator(mode="after")
+    def _expediente_and_status_match_provenance(self) -> IvaCompensationPeriodState:
+        is_aeat = self.provenance is IvaCompensationStateProvenance.AEAT_CAPTURE
+        if is_aeat and self.expediente_id is None:
+            raise ValueError(
+                "an aeat_capture compensation state must carry the AEAT-issued expediente_id",
+            )
+        if not is_aeat and self.expediente_id is not None:
+            raise ValueError(
+                f"a {self.provenance.value} compensation state must not carry an "
+                "expediente_id: only an AEAT capture receives one from AEAT",
+            )
+        if not is_aeat and self.status is not None:
+            raise ValueError(
+                f"a {self.provenance.value} compensation state must not carry a "
+                "status: that field reports the AEAT-printed register status only",
+            )
+        return self
 
     @model_validator(mode="after")
     def _period_year_matches(self) -> IvaCompensationPeriodState:
@@ -213,14 +267,14 @@ def build_iva_compensation_carry_forward_report(
         if remaining_to_allocate > _ZERO:
             unallocated_applied += remaining_to_allocate
         # A filed period contributes a lot equal to the credit it GENERATED this
-        # period. A manually-seeded opening balance generated nothing in a filed
-        # period (generated_amount == 0) but declares a prior carry-forward in
-        # available_end_amount; surface that seeded balance as a lot too, so
-        # `iva-wallet balance` reflects the seeded state (lot_count > 0) instead
-        # of reporting an empty wallet. The two cases are mutually exclusive (a
-        # seed never carries generated_amount), so no double-counting.
+        # period. An operator-declared opening balance generated nothing in a
+        # filed period (generated_amount == 0) but declares a prior carry-forward
+        # in available_end_amount; surface that balance as a lot too, so
+        # `iva-wallet balance` reflects it (lot_count > 0) instead of reporting an
+        # empty wallet. The two cases are mutually exclusive (an operator-declared
+        # opening balance never carries generated_amount), so no double-counting.
         lot_amount = state.generated_amount
-        if lot_amount <= _ZERO and state.status == _SEEDED_STATUS:
+        if lot_amount <= _ZERO and state.provenance in _OPERATOR_DECLARED_PROVENANCES:
             lot_amount = state.available_end_amount
         if lot_amount > _ZERO:
             working.append(

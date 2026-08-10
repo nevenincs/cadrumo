@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period
+from ....core import AggregationCaptureKind, Period
 from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind, RetencionClave
 from ....domain.calculations.registry import (
     DataBindingDefinition,
@@ -118,7 +118,7 @@ def test_resolver_materialises_distinct_percepcion_count(tmp_path: Path) -> None
                 _obs("11111111H", RetencionClave.G),
                 _obs("22222222J", RetencionClave.A),
             ],
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         resolution = WithholdingSourceResolver().resolve(_context(_revision_with(binding)))
 

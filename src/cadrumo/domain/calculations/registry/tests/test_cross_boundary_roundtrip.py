@@ -26,7 +26,6 @@ from .....core.identity import SubjectTaxId
 from ....filing import (
     ModeloBindingValue,
     ModeloDraft,
-    ModeloDraftStatus,
     ModeloValidationFinding,
     ModeloValue,
     ModeloValueKind,
@@ -37,6 +36,7 @@ from ....modelos import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ....submission import ModeloDraftStatus
 from .. import RegistrySnapshotRef
 from .._bindings import (
     CasillaObservation,

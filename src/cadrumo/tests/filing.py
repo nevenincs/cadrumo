@@ -25,7 +25,6 @@ from decimal import Decimal
 from pydantic import TypeAdapter, ValidationError
 
 from ..application.filing import (
-    ModeloBuilderError,
     approve_draft,
     build_draft,
     build_runtime_schema_provider,
@@ -34,7 +33,7 @@ from ..application.filing import (
 )
 from ..core import CasillaId, Period, validated_casilla_id
 from ..domain.calculations.registry import BindingId
-from ..domain.filing import ModeloDraft, ModeloInputs
+from ..domain.filing import ModeloBuilderError, ModeloDraft, ModeloInputs
 from ..domain.invoices import InvoiceCatalogue
 from ..domain.submission import ModeloDraftStatus
 from ..domain.transactions import TransactionCatalogue

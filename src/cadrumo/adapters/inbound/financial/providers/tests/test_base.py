@@ -14,6 +14,7 @@ from decimal import Decimal
 
 import pytest
 
+from ......core.tabular import coerce_cell_text
 from ......domain.transactions import RawTransaction, SourceFormat
 from ......tests import FIXTURES_DIR
 from .. import (
@@ -22,7 +23,7 @@ from .. import (
     ProviderValidation,
     detect_provider,
 )
-from .._base import parse_amount_value
+from .._base import archive_cell_text, parse_amount_value
 from .._csv import CsvProvider
 from .._ofx import OfxProvider
 from .._pdf_n26 import PdfN26Provider
@@ -87,6 +88,13 @@ def test_parse_amount_value_respects_explicit_decimal_separator() -> None:
     assert parse_amount_value("1,234", decimal_separator=".") == Decimal("1234")
     assert parse_amount_value("1.234,56", decimal_separator=",") == Decimal("1234.56")
     assert parse_amount_value("1,234.56", decimal_separator=".") == Decimal("1234.56")
+
+
+def test_financial_archive_cell_text_binds_the_canonical_temporal_policy() -> None:
+    """The provider policy must delegate to the sole core coercion authority."""
+    stamp = datetime(2026, 4, 17, 10, 30, 5, 123456)
+    assert archive_cell_text(stamp) == coerce_cell_text(stamp, temporal_as_iso=True)
+    assert archive_cell_text(stamp) == "2026-04-17 10:30:05"
 
 
 # Scientific notation, with the magnitude the shape really denotes. Sanitisation

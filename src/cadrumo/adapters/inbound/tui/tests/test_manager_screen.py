@@ -363,7 +363,8 @@ async def test_a_masked_field_opens_empty_rather_than_prefilled(tmp_path) -> Non
 @pytest.mark.asyncio
 async def test_aeat_progress_replaces_the_inherited_stderr_sink_with_the_pinned_header(tmp_path) -> None:
     """Cl@ve verification progress must be visible before the pull finishes."""
-    from .....adapters.outbound.aeat import OperatorProgress, emit_operator_progress, operator_progress_sink
+    from .....adapters.outbound.aeat import emit_operator_progress, operator_progress_sink
+    from .....core import OperatorProgress
     from .. import ManagerAction, ManagerActionOutcome, PinnedStatusBar
 
     release = threading.Event()

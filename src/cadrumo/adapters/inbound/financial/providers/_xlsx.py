@@ -33,7 +33,7 @@ from ._base import (
     InvalidFinancialSourceError,
     ParsedLedgerRow,
     ProviderValidation,
-    coerce_cell_text,
+    archive_cell_text,
     default_currency,
 )
 from ._constants import XLSX_EXTENSION
@@ -330,7 +330,8 @@ def _best_layout_match_for_worksheet(
 ) -> tuple[int, int, list[str], dict[str, str], CsvBankLayout] | None:
     """Return the best (score, header_index, row, lookup, layout) the worksheet matches, or ``None``."""
     sample_rows = [
-        [coerce_cell_text(cell) for cell in row] for row in worksheet.iter_rows(min_row=1, max_row=10, values_only=True)
+        [archive_cell_text(cell) for cell in row]
+        for row in worksheet.iter_rows(min_row=1, max_row=10, values_only=True)
     ]
     best: tuple[int, int, list[str], dict[str, str], CsvBankLayout] | None = None
     for index, row in enumerate(sample_rows):
@@ -346,7 +347,7 @@ def _best_layout_match_for_worksheet(
 
 def _row_to_mapping(headers: Sequence[str], row: Sequence[object]) -> dict[str, str]:
     """Convert one worksheet row into the stored raw-field mapping."""
-    return {header: coerce_cell_text(row[index]) if index < len(row) else "" for index, header in enumerate(headers)}
+    return {header: archive_cell_text(row[index]) if index < len(row) else "" for index, header in enumerate(headers)}
 
 
 def _row_to_cells(headers: Sequence[str], row: Sequence[object]) -> dict[str, object]:

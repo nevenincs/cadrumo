@@ -16,6 +16,7 @@ import typer
 
 from ...application.live import VerifySurface, VerifyVerdict
 from ...core.i18n import tr
+from ...core.identity import tax_id_identity_token
 from ...core.time import now
 from ._app_live_auth_preflight import resolve_active_bucket
 from ._common import _emit_envelope
@@ -261,7 +262,7 @@ def verify_nif_iva(
 
     settings = load_settings()
     AeatAccessGate(settings).require_live_read()
-    nif_key = nif.strip().upper()
+    nif_key = tax_id_identity_token(nif)
     expected_verdict = _expected(expected)
     driver = NifIvaCheckSedeDriver(settings=settings)
     result = driver.collect(b"", expected={nif_key: (expected_verdict or "unknown")})
@@ -318,7 +319,7 @@ def verify_tgvi(
 
     settings = load_settings()
     AeatAccessGate(settings).require_live_read()
-    nif_key = nif.strip().upper()
+    nif_key = tax_id_identity_token(nif)
     expected_verdict = _expected(expected)
     driver = GroiSedeDriver(settings=settings)
     result = driver.collect(b"", expected={nif_key: (expected_verdict or "unknown")})

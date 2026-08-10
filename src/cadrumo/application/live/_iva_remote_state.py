@@ -74,6 +74,7 @@ from ...core.config import Settings as _Settings
 from ...core.config import load_settings as _load_settings
 from ...core.errors import CadrumoError as _CadrumoError
 from ...core.hashing import sha256_hex as _sha256_hex
+from ...core.identity import tax_id_identity_token as _tax_id_identity_token
 from ...core.resources import resources as _resources
 from ...core.time import now
 from ...domain.iva_compensation import IvaCompensationAuthoritySource as _IvaCompensationAuthoritySource
@@ -388,7 +389,8 @@ def _history_row(state: _IvaCompensationPeriodState) -> IvaCompensationHistoryRo
     return IvaCompensationHistoryRow(
         year=state.filing_year,
         period=state.period,
-        status=state.status,
+        provenance=state.provenance,
+        register_status=state.status,
         presented_at=state.presented_at,
         prior_pending_amount=_decimal_text(state.prior_pending_amount),
         applied_amount=_decimal_text(state.applied_amount),
@@ -521,10 +523,35 @@ def _taxpayer_ref(taxpayer_nif: str | None) -> str:
     never be read as a real subject nor collide with one -- hashing a
     stand-in would mint one stable ref that every subjectless row shared,
     making them look like the same taxpayer.
+
+    A value that normalises to nothing takes the same exit, because it is the
+    same fact one step later. The wallet observation's own guard is
+    ``min_length=1`` on the RAW string, which admits ``" "`` and the ``\\xa0``
+    that arrives from parsing an AEAT page; the canonical identity token then
+    trims it to ``""``. Hashing that yields the sha256 of the empty string --
+    one digest, worn by every blank row, and shaped exactly like a real
+    subject's ref. The guard and the emptying live in different modules, so
+    neither reads as wrong on its own.
+
+    The aggregation package holds its own normalise-then-hash step for perceptor
+    keys. This deliberately does not reuse it, and the reason is recorded so the
+    two are not folded on the strength of looking alike: that one REFUSES a
+    blank token, which is wrong here because a subjectless row is a legitimate
+    domain value that must still project; and it returns the full digest, where
+    this surface wants a short CLI-safe ref. The truncation width here is itself
+    an identity contract -- two refs compare equal only if every producer cuts
+    them identically -- so a shared function returning full hex would leave this
+    site cutting locally regardless. What the two genuinely share is one
+    expression over :func:`tax_id_identity_token` -- already the single identity
+    authority both go through. The hashing spelling repeats; the identity rule
+    does not.
     """
     if taxpayer_nif is None:
         return _ABSENT_TAXPAYER_REF
-    digest = _sha256_hex(taxpayer_nif.strip().upper().encode("utf-8"))
+    token = _tax_id_identity_token(taxpayer_nif)
+    if not token:
+        return _ABSENT_TAXPAYER_REF
+    digest = _sha256_hex(token.encode("utf-8"))
     return f"sha256:{digest[:12]}"
 
 
@@ -690,9 +717,7 @@ async def _capture_iva_compensation_wallet_with_session(
         settings=settings,
     )
     store_root = (
-        output_root
-        if output_root is not None
-        else settings.cadrumo_live_state_dir / _LIVE_STATE_IVA_WALLET_DIRNAME
+        output_root if output_root is not None else settings.cadrumo_live_state_dir / _LIVE_STATE_IVA_WALLET_DIRNAME
     )
     return persist_and_reconcile_iva_compensation_wallet(observation, output_root=store_root)
 

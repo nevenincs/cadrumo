@@ -43,7 +43,7 @@ from ...adapters.persistence.storage import (
     SensitivityClass,
     safe_repository_id,
 )
-from ...core import CasillaId, CasillaValueKind, Modelo, Period
+from ...core import CasillaId, CasillaValueKind, IvaCompensationStateProvenance, Modelo, Period
 from ...core.identity import AeatExpedienteId, ContentDigest, SubjectTaxId
 from ...core.resources import resources
 from ...core.time import now
@@ -226,10 +226,7 @@ class IvaCompensationHistoryRepository(SecureBoundRepository[IvaCompensationPeri
         return tuple(sorted(self.iter_records(), key=_sort_key))
 
 
-_SEED_STATUS = "seeded"
-_SEED_EXPEDIENTE_ID = "manual-seed"
 _SEED_SOURCE_OBS_PREFIX = "303:seed"
-_CORRECTED_EXPEDIENTE_ID = "manual-correction"
 _CORRECTED_SOURCE_OBS_PREFIX = "303:correction"
 
 
@@ -262,16 +259,15 @@ def seed_iva_compensation_period(
             context={
                 "filing_year": period.filing_year,
                 "period": period.registry_token,
-                "existing_status": existing.status,
+                "existing_provenance": existing.provenance.value,
             },
         )
     when = seeded_at if seeded_at is not None else now()
     state = IvaCompensationPeriodState(
         taxpayer_nif=taxpayer_nif,
+        provenance=IvaCompensationStateProvenance.OPERATOR_SEED,
         filing_year=period.filing_year,
         period=period,
-        expediente_id=_SEED_EXPEDIENTE_ID,
-        status=_SEED_STATUS,
         presented_at=when,
         prior_pending_amount=None,
         applied_amount=None,
@@ -322,15 +318,18 @@ def correct_iva_compensation_period(
     if existing is None:
         raise IvaCompensationSeedConflictError(
             translated_message="application.calculations.iva_compensation.errors.correction_missing",
-            context={"filing_year": period.filing_year, "period": period.registry_token, "existing_status": "absent"},
+            context={
+                "filing_year": period.filing_year,
+                "period": period.registry_token,
+                "existing_provenance": "absent",
+            },
         )
     when = corrected_at if corrected_at is not None else now()
     state = IvaCompensationPeriodState(
         taxpayer_nif=taxpayer_nif,
+        provenance=IvaCompensationStateProvenance.OPERATOR_CORRECTION,
         filing_year=period.filing_year,
         period=period,
-        expediente_id=_CORRECTED_EXPEDIENTE_ID,
-        status=_SEED_STATUS,
         presented_at=when,
         prior_pending_amount=None,
         applied_amount=None,
@@ -350,8 +349,9 @@ def iva_compensation_state_from_observation_envelope(
     envelope: ObservationEnvelopePayload,
     *,
     taxpayer_nif: str,
-    expediente_id: str,
-    status: str,
+    provenance: IvaCompensationStateProvenance,
+    expediente_id: str | None = None,
+    status: str | None = None,
     source_observation_key: str,
     source_artefact_sha256: ContentDigest | None = None,
 ) -> IvaCompensationPeriodState:
@@ -371,6 +371,7 @@ def iva_compensation_state_from_observation_envelope(
     period = observation.filing_period or Period.from_year_and_code(observation.filing_year, observation.period)
     return IvaCompensationPeriodState(
         taxpayer_nif=taxpayer_nif,
+        provenance=provenance,
         filing_year=observation.filing_year,
         period=period,
         expediente_id=expediente_id,
@@ -394,8 +395,9 @@ def persist_observation_envelope_and_iva_history(
     history_repository: IvaCompensationHistoryRepository,
     envelope: ObservationEnvelopePayload,
     taxpayer_nif: str,
-    expediente_id: str,
-    status: str,
+    provenance: IvaCompensationStateProvenance,
+    expediente_id: str | None = None,
+    status: str | None = None,
     source_observation_key: str,
     source_artefact_sha256: ContentDigest | None = None,
 ) -> IvaCompensationPeriodState:
@@ -415,6 +417,7 @@ def persist_observation_envelope_and_iva_history(
     state = iva_compensation_state_from_observation_envelope(
         envelope,
         taxpayer_nif=taxpayer_nif,
+        provenance=provenance,
         expediente_id=expediente_id,
         status=status,
         source_observation_key=source_observation_key,

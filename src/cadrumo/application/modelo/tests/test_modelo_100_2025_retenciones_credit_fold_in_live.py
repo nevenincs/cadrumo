@@ -60,7 +60,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import BindingSourceKind, CasillaId, Period, validated_casilla_id
+from ....core import AggregationCaptureKind, BindingSourceKind, CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     BindingId,
@@ -459,7 +459,7 @@ def _calculate_m111_administrador_quarter(
                 accrued_on="2025-03-15",
             ),
         ],
-        source_kind="aggregate_pull",
+        source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     snapshot = resources().modelos.authority.snapshot("111", filing_year=_YEAR, period=period_code)

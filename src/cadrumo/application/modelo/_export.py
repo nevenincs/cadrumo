@@ -74,6 +74,7 @@ from ...domain.calculations.registry import (
     derive_taxpayer_files_economic_activity,
 )
 from ...domain.deadlines import ChargeAccount, RefundAccount, TaxpayerProfile
+from ...domain.filing import ModeloDraft
 from ...domain.iva import SepaMarca, derive_sepa_marca
 from ...domain.iva_compensation import IvaCompensationReconciliationDecision
 from ...domain.modelos import (
@@ -100,7 +101,6 @@ from ..calculations import (
 )
 from ..filing import (
     DeclaracionExportResult,
-    ModeloDraft,
     approve_draft,
     assert_export_artifact_matches_receipt,
     build_draft,

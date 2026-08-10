@@ -12,6 +12,7 @@ from pydantic import TypeAdapter, ValidationError
 from ....core import CasillaId, validated_casilla_id
 from ....core.errors import BaseSeverity
 from ....core.i18n import Translatable as tr
+from ....domain.filing import ModeloValidationFinding
 from ....domain.invoices import (
     Invoice,
     InvoiceLine,
@@ -27,7 +28,6 @@ from ....domain.transactions import (
     Transaction,
     TransactionDirection,
 )
-from ...filing import ModeloValidationFinding
 from .. import (
     FindingReviewItem,
     InvoiceReviewItem,

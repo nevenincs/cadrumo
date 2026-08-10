@@ -7,7 +7,7 @@ from decimal import Decimal
 
 from ....application.wizard import _catalogue as _wizard_catalogue
 from ....application.wizard import _persistence as _wizard_persistence
-from ....core import Period
+from ....core import IvaCompensationStateProvenance, Period
 from ....domain.iva_compensation import IvaCompensationPeriodState
 
 _WIZARD_REGISTRATION_MODULES = (_wizard_catalogue, _wizard_persistence)
@@ -53,11 +53,10 @@ def _state(
     applied: Decimal = Decimal("0.00"),
 ) -> IvaCompensationPeriodState:
     return IvaCompensationPeriodState(
+        provenance=IvaCompensationStateProvenance.APP_FILING,
         taxpayer_nif=_NIF,
         filing_year=filing_year,
         period=Period.from_year_and_code(filing_year, period),
-        expediente_id=f"EXP-{filing_year}-{period}",
-        status="filed",
         presented_at=datetime(filing_year + 1, 1, 20, 12, 0, tzinfo=UTC),
         prior_pending_amount=None,
         applied_amount=applied,

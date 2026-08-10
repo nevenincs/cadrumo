@@ -16,7 +16,7 @@ from ....adapters.outbound.aeat.sede import (
     parse_iva_compensation_wallet_html,
 )
 from ....adapters.persistence.storage import has_active_bucket_session
-from ....core import Period
+from ....core import IvaCompensationStateProvenance, Period
 from ....domain.iva_compensation import (
     IvaCompensationAuthoritySource,
     IvaCompensationPeriodState,
@@ -171,10 +171,11 @@ def test_iva_wallet_history_report_surfaces_lots_and_authority_decisions(tmp_pat
         history_repo = IvaCompensationHistoryRepository()
         history_repo.save_period(
             IvaCompensationPeriodState(
+                provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
                 taxpayer_nif=_TAXPAYER_REF,
                 filing_year=2022,
                 period=Period.from_year_and_code(2022, "4T"),
-                expediente_id="EXP-2022-4T",
+                expediente_id="202230300000004Z",
                 status="ALTA",
                 presented_at=_CAPTURED_AT,
                 generated_amount=Decimal("100.00"),
@@ -185,10 +186,11 @@ def test_iva_wallet_history_report_surfaces_lots_and_authority_decisions(tmp_pat
         )
         history_repo.save_period(
             IvaCompensationPeriodState(
+                provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
                 taxpayer_nif=_TAXPAYER_REF,
                 filing_year=2024,
                 period=Period.from_year_and_code(2024, "1T"),
-                expediente_id="EXP-2024-1T",
+                expediente_id="202430300000001Z",
                 status="ALTA",
                 presented_at=_CAPTURED_AT,
                 generated_amount=Decimal("30.00"),
@@ -252,8 +254,8 @@ def test_iva_wallet_history_report_surfaces_lots_and_authority_decisions(tmp_pat
         "source_kind" not in source and source.startswith("aeat_wallet") for source in decision.authority_sources
     )
     assert "wallet:2026:2T" not in report.model_dump_json()
-    assert "EXP-2022-4T" not in report.model_dump_json()
-    assert "EXP-2024-1T" not in report.model_dump_json()
+    assert "202230300000004Z" not in report.model_dump_json()
+    assert "202430300000001Z" not in report.model_dump_json()
     assert _TAXPAYER_REF not in report.model_dump_json()
 
 
@@ -264,10 +266,11 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(tmp_path: Pat
         history_repo = IvaCompensationHistoryRepository()
         history_repo.save_period(
             IvaCompensationPeriodState(
+                provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
                 taxpayer_nif=_TAXPAYER_REF,
                 filing_year=2025,
                 period=Period.from_year_and_code(2025, "4T"),
-                expediente_id="EXP-2025-4T",
+                expediente_id="202530300000004Z",
                 status="ALTA",
                 presented_at=_CAPTURED_AT,
                 prior_pending_amount=Decimal("25.00"),
@@ -362,13 +365,13 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(tmp_path: Pat
         assert report.authority_decision_count == 1
         assert report.authority_decisions[0].taxpayer_ref.startswith("sha256:")
         assert _TAXPAYER_REF not in remote_state.model_dump_json()
-        assert "EXP-2025-4T" not in remote_state.model_dump_json()
+        assert "202530300000004Z" not in remote_state.model_dump_json()
         assert "303:2025:4T" not in remote_state.model_dump_json()
         assert _TAXPAYER_REF not in report.model_dump_json()
 
         database_bytes = read_db_at_rest_bytes(profile.paths.database_file)
         assert _TAXPAYER_REF.encode("ascii") not in database_bytes
-        assert b"EXP-2025-4T" not in database_bytes
+        assert b"202530300000004Z" not in database_bytes
 
 
 def test_remote_iva_evidence_reload_opens_active_profile_session_without_cli_bootstrap(tmp_path: Path) -> None:
@@ -379,10 +382,11 @@ def test_remote_iva_evidence_reload_opens_active_profile_session_without_cli_boo
             )
             IvaCompensationHistoryRepository().save_period(
                 IvaCompensationPeriodState(
+                    provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
                     taxpayer_nif=_TAXPAYER_REF,
                     filing_year=2025,
                     period=Period.from_year_and_code(2025, "4T"),
-                    expediente_id="EXP-2025-4T",
+                    expediente_id="202530300000004Z",
                     status="ALTA",
                     presented_at=_CAPTURED_AT,
                     generated_amount=Decimal("20.00"),
@@ -400,16 +404,17 @@ def test_remote_iva_evidence_reload_opens_active_profile_session_without_cli_boo
     assert remote_state.history.rows[0].year == 2025
     assert remote_state.history.rows[0].period == Period.from_year_and_code(2025, "4T")
     assert _TAXPAYER_REF not in remote_state.model_dump_json()
-    assert "EXP-2025-4T" not in remote_state.model_dump_json()
+    assert "202530300000004Z" not in remote_state.model_dump_json()
 
 
 def _store_prior_compensation(*, amount: Decimal) -> None:
     IvaCompensationHistoryRepository().save_period(
         IvaCompensationPeriodState(
+            provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
             taxpayer_nif=_TAXPAYER_REF,
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
-            expediente_id="EXP-2026-1T",
+            expediente_id="202630300000001Z",
             status="ALTA",
             presented_at=_CAPTURED_AT,
             generated_amount=amount,

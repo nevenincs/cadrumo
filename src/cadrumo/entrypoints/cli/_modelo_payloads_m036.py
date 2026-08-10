@@ -24,7 +24,7 @@ from datetime import datetime
 from pydantic import Field
 
 from ...application.modelo import ModeloReconciliationEvidenceKind, ModeloReconciliationVerdict
-from ...core import Period
+from ...core import IvaCompensationStateProvenance, Period
 from ...core.identity import BucketId, WorkUnitId
 from ...core.json_contract import OutputSchema, register_schema
 
@@ -146,8 +146,13 @@ class IvaWalletCorrectResult(OutputSchema):
     """Confirmation returned by ``aeat app modelo iva-wallet correct``.
 
     Surfaces the corrected :class:`Period`, the taxpayer, the new opening
-    carry-forward amount, the prior amount it replaced, the seeded ``status``,
-    and the operator reason recorded into the audit event.
+    carry-forward amount, the prior amount it replaced, the row's typed
+    ``provenance``, and the operator reason recorded into the audit event.
+
+    ``register_status`` reports the AEAT-printed register status and is
+    therefore always ``None`` here: a correction is operator-declared, so
+    AEAT printed nothing about it. It is emitted rather than omitted so the
+    field means the same thing on every wallet payload that carries it.
 
     The mutation itself is owned by
     :func:`correct_iva_compensation_period_for_bucket`,
@@ -162,5 +167,6 @@ class IvaWalletCorrectResult(OutputSchema):
     taxpayer_nif: str
     previous_amount: str
     amount: str
-    status: str
+    provenance: IvaCompensationStateProvenance
+    register_status: str | None = None
     reason: str

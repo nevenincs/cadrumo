@@ -42,8 +42,8 @@ from ._base import (
     InvalidFinancialSourceError,
     ParsedLedgerRow,
     ProviderValidation,
+    archive_cell_text,
     build_raw_transaction,
-    coerce_cell_text,
     default_currency,
     describe_dialect,
     normalize_header,
@@ -588,7 +588,7 @@ def _value_from_aliases(
     if header is None:
         return None
     value = raw_fields.get(header, "")
-    normalized = coerce_cell_text(value)
+    normalized = archive_cell_text(value)
     return normalized or None
 
 
@@ -609,7 +609,7 @@ def _currency_from_aliases(
     header = _find_column(lookup, aliases)
     if header is None:
         return default_currency()
-    raw = coerce_cell_text(raw_fields.get(header, ""))
+    raw = archive_cell_text(raw_fields.get(header, ""))
     if not raw:
         return default_currency()
     try:
@@ -630,7 +630,7 @@ def _typed_value_from_aliases(
     if header is None:
         return None
     value = raw_fields.get(header, "")
-    return value if coerce_cell_text(value) else None
+    return value if archive_cell_text(value) else None
 
 
 def _typed_value_and_header_from_aliases(
@@ -643,7 +643,7 @@ def _typed_value_and_header_from_aliases(
     if header is None:
         return None
     value = raw_fields.get(header, "")
-    return (header, value) if coerce_cell_text(value) else None
+    return (header, value) if archive_cell_text(value) else None
 
 
 def _direction_from_aliases(
@@ -655,7 +655,7 @@ def _direction_from_aliases(
     header = _find_column(lookup, aliases)
     if header is None:
         return None
-    raw = coerce_cell_text(raw_fields.get(header, ""))
+    raw = archive_cell_text(raw_fields.get(header, ""))
     if not raw:
         raise FinancialValidationError("missing direction value")
     normalized = "_".join(raw.replace("-", " ").replace("_", " ").upper().split())

@@ -20,14 +20,14 @@ from typing import Annotated
 
 from pydantic import Field
 
-from ...application.evidence import BundleId, BundleVerificationState
+from ...application.evidence import BundleVerificationState
 from ...application.workflow import (
     SiteHealthAlert,
     WorkflowObligationFacts,
     WorkflowStage,
     WorkflowStepDetails,
 )
-from ...core import Period
+from ...core import Hex64Str, Period
 from ...core.aggregation import RetencionClave
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, FilingRecordId, WorkUnitId
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction, register_schema
@@ -90,7 +90,7 @@ class ModeloAuditShowResult(OutputSchema):
     """Evidence bundle manifest render result (audit show)."""
 
     operation: str = "modelo.audit.show"
-    bundle_id: BundleId
+    bundle_id: Hex64Str
     manifest_version: int = Field(ge=1)
     bucket_id: BucketId
     work_unit_id: WorkUnitId
@@ -108,7 +108,7 @@ class ModeloAuditCheckResult(OutputSchema):
     """Evidence bundle integrity re-verification result (audit check)."""
 
     operation: str = "modelo.audit.check"
-    bundle_id: BundleId
+    bundle_id: Hex64Str
     verification_state: BundleVerificationState
     completeness_ratio: float = Field(ge=0.0, le=1.0)
     findings: list[EvidenceBundleCheckFindingPayload]
@@ -124,7 +124,7 @@ class ModeloAuditExportResult(OutputSchema):
 
     operation: str = "modelo.audit.export"
     bucket_id: BucketId
-    bundle_id: BundleId
+    bundle_id: Hex64Str
     output: str = Field(min_length=1)
     verification_state: BundleVerificationState
     records: int = Field(ge=0)

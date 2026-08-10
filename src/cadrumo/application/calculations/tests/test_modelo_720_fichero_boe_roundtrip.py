@@ -43,7 +43,6 @@ from pathlib import Path
 import pytest
 
 from ....application.filing import (
-    ModeloDraftStatus,
     ModeloOperatorProfile,
     build_draft,
     build_runtime_schema_provider,
@@ -51,6 +50,7 @@ from ....application.filing import (
 )
 from ....core import Period
 from ....domain.filing import ModeloInputs
+from ....domain.submission import ModeloDraftStatus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

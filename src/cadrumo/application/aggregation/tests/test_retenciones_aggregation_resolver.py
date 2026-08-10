@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import BindingSourceKind, NoRecoveryOutcome, Period
+from ....core import AggregationCaptureKind, BindingSourceKind, NoRecoveryOutcome, Period
 from ....core.resources import resources
 from ....domain.calculations.registry import ModeloRevision, RegistrySnapshot
 from ....tests.secure_sql import isolated_runtime_profile
@@ -114,7 +114,7 @@ def test_resolver_materialises_distinct_perceptor_count(tmp_path: Path) -> None:
             filing_year=2024,
             period=period,
             observations=[_observation("11111111H"), _observation("22222222J")],
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         resolution = RetencionesAggregationSourceResolver().resolve(_context(_m180_revision_with_retenciones_source()))
 
@@ -146,7 +146,7 @@ def test_resolver_materialises_modelo_115_count_and_base_from_real_store(tmp_pat
                     accrued_on="2026-03-15",
                 ),
             ],
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         snapshot = _authority_snapshot("115", 2026, "1T")
 
@@ -212,7 +212,7 @@ def test_resolver_materialises_modelo_111_scheme_filtered_bindings_from_real_sto
                     accrued_on="2026-03-20",
                 ),
             ],
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         snapshot = _authority_snapshot("111", 2026, "1T")
 

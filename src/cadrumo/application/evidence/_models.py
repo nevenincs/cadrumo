@@ -29,14 +29,13 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, field_serializer
 
-from ...core import STRICT_FROZEN_CONFIG, ElidedProse
+from ...core import STRICT_FROZEN_CONFIG, ElidedProse, Hex64Str
 from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, FilingRecordId, WorkUnitId
 from ...core.time import now
 from ...domain.buckets import BucketEventObjectType
-from ._ids import BundleId
 
 
 class EvidenceBundleNotFoundError(CadrumoError):
@@ -146,7 +145,7 @@ class EvidenceBundle(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    bundle_id: BundleId
+    bundle_id: Hex64Str
     manifest_version: int = Field(ge=1)
     bucket_id: BucketId
     work_unit_id: WorkUnitId

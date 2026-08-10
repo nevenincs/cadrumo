@@ -23,21 +23,18 @@ from ...core.config import Settings
 from ...core.errors import BaseSeverity, CadrumoError
 from ...core.i18n import Translatable as tr
 from ...core.logging import get_logger
+from ...domain.filing import ModeloDraft, ModeloValidationFinding
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
     PaymentStatus,
 )
+from ...domain.submission import ModeloDraftStatus
 from ...domain.transactions import (
     BusinessClassification,
     Transaction,
     TransactionCatalogue,
     is_classified,
-)
-from ..filing import (
-    ModeloDraft,
-    ModeloDraftStatus,
-    ModeloValidationFinding,
 )
 from ._enums import ReviewSeverity
 from ._errors import ReviewSourceLoadError

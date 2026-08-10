@@ -9,7 +9,14 @@ from pathlib import Path
 
 import pytest
 
-from ....core import CasillaId, Period, derive_result_disposition, result_disposition_casilla_ids, validated_casilla_id
+from ....core import (
+    CasillaId,
+    IvaCompensationStateProvenance,
+    Period,
+    derive_result_disposition,
+    result_disposition_casilla_ids,
+    validated_casilla_id,
+)
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
 from ....core.resources import resources
 from ....domain.calculations.registry import (
@@ -227,16 +234,18 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
         }
         repository = CalculationObservationRepository()
         for period, result in quarterly_results.items():
-            repository.save(repository.prepare_observation_envelope(
-                _registry_observation(filing_year=2025, period=period, result=result),
-                source_kind="app_filing",
-                result_disposition=ResultDispositionProjection(
-                    disposition=_filing_result_disposition(result),
-                    provenance_kind="app_filing",
-                    provenance_locator=f"test-local-filing:2025:{period}",
-                ),
-                normalize_m303_carry=True,
-            ))
+            repository.save(
+                repository.prepare_observation_envelope(
+                    _registry_observation(filing_year=2025, period=period, result=result),
+                    source_kind="app_filing",
+                    result_disposition=ResultDispositionProjection(
+                        disposition=_filing_result_disposition(result),
+                        provenance_kind="app_filing",
+                        provenance_locator=f"test-local-filing:2025:{period}",
+                    ),
+                    normalize_m303_carry=True,
+                )
+            )
 
         snapshot = _snapshot("390", 2025, "0A")
 
@@ -330,6 +339,7 @@ def test_modelo_303_local_iva_recurrence_preserves_filed_history_source_kind(
         iva_history_repository = IvaCompensationHistoryRepository()
         iva_history_repository.save_period(
             IvaCompensationPeriodState(
+                provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
                 taxpayer_nif="12345678Z",
                 filing_year=2025,
                 period=Period.from_year_and_code(2025, "4T"),
@@ -387,6 +397,7 @@ def test_iva_history_observation_refuses_missing_registry_casilla_provenance() -
 
 def test_iva_history_observation_only_claims_formula_provenance_for_exact_casilla_projection() -> None:
     state = IvaCompensationPeriodState(
+        provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
         taxpayer_nif="12345678Z",
         filing_year=2025,
         period=Period.from_year_and_code(2025, "4T"),

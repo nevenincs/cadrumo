@@ -36,7 +36,7 @@ from ...application.live import (
     LiveIvaReadSurface,
     SnapshotLifecycleState,
 )
-from ...core import Modelo, Period
+from ...core import IvaCompensationStateProvenance, Modelo, Period
 from ...core.errors import CoreValidationError
 from ...core.identity import BucketId, ContentDigest, SnapshotId
 from ...core.json_contract import OutputSchema, register_schema
@@ -345,7 +345,8 @@ class IvaCompensationHistoryRowPayload(OutputSchema):
 
     year: int
     period: Period
-    status: str
+    provenance: IvaCompensationStateProvenance
+    register_status: str | None = None
     presented_at: str
     prior_pending_amount: str | None
     applied_amount: str | None

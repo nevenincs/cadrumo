@@ -64,7 +64,7 @@ from ._records import (
     ParameterCell,
     SheetCellAddress,
     TabName,
-    _column_index_to_letters,
+    column_index_to_letters,
 )
 
 
@@ -540,9 +540,9 @@ def _emit_bracket_table_layout(
     header_row = anchor.row
     first_data_row = header_row + 1
     last_data_row = header_row + row_count
-    lower_col = _column_index_to_letters(anchor_column)
-    fa_col = _column_index_to_letters(anchor_column + 2)
-    mr_col = _column_index_to_letters(anchor_column + 3)
+    lower_col = column_index_to_letters(anchor_column)
+    fa_col = column_index_to_letters(anchor_column + 2)
+    mr_col = column_index_to_letters(anchor_column + 3)
     tab_name = TabName.TARIFFS.value
     bracket_ranges[parameter_id] = BracketRanges(
         parameter=parameter_id,

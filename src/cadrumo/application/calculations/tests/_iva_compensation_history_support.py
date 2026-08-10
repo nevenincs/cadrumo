@@ -17,7 +17,7 @@ from ....adapters.outbound.aeat.sede import (
     IvaCompensationWalletRow,
     ObservedCasillaValue,
 )
-from ....core import CasillaId, CasillaValueKind, Period, validated_casilla_id
+from ....core import CasillaId, CasillaValueKind, IvaCompensationStateProvenance, Period, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import RegistrySnapshot
 from ....domain.iva_compensation import IvaCompensationPeriodState
@@ -73,11 +73,10 @@ def _state(
     available: Decimal | None = None,
 ) -> IvaCompensationPeriodState:
     return IvaCompensationPeriodState(
+        provenance=IvaCompensationStateProvenance.APP_FILING,
         taxpayer_nif=_TAXPAYER_REF,
         filing_year=filing_year,
         period=Period.from_year_and_code(filing_year, period),
-        expediente_id=f"EXP-{filing_year}-{period}",
-        status="filed",
         presented_at=datetime(filing_year + 1, 1, 20, 12, 0, tzinfo=UTC),
         prior_pending_amount=None,
         applied_amount=applied,

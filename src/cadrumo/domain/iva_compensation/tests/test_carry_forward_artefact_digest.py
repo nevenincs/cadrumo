@@ -27,7 +27,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core import Period
+from ....core import IvaCompensationStateProvenance, Period
 from .._carry_forward import IvaCompensationPeriodState
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -43,6 +43,7 @@ _MALFORMED_DIGESTS = ("z" * 64, "A" * 64, "0123456789ABCDEF" * 4, "-" * 64)
 
 def _period_state(digest: str | None) -> IvaCompensationPeriodState:
     return IvaCompensationPeriodState(
+        provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
         taxpayer_nif=_VALID_NIF,
         filing_year=2025,
         period=Period.from_year_and_code(2025, "1T"),

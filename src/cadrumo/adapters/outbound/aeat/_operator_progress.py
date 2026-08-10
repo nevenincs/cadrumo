@@ -38,4 +38,4 @@ def emit_operator_progress(progress: OperatorProgress) -> None:
         sink(progress)
 
 
-__all__ = ["OperatorProgress", "emit_operator_progress", "operator_progress_sink"]
+__all__ = ["emit_operator_progress", "operator_progress_sink"]

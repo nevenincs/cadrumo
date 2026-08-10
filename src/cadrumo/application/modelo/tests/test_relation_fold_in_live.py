@@ -42,7 +42,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import CasillaId, Period, validated_casilla_id
+from ....core import AggregationCaptureKind, CasillaId, Period, validated_casilla_id
 from ....core.aggregation import BindingSourceKind
 from ....core.resources import resources
 from ....domain.calculations.registry import (
@@ -212,7 +212,7 @@ def _seed_180_retencion_observations() -> Decimal:
         filing_year=_YEAR,
         period=period,
         observations=[_retencion_observation(nif) for nif in _M180_PERCEPTOR_NIFS],
-        source_kind="aggregate_pull",
+        source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )
     return Decimal(len(set(_M180_PERCEPTOR_NIFS)))
 

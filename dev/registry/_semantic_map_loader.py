@@ -67,11 +67,7 @@ def load_semantic_map(fragment_directory: Path) -> SemanticMap:
 
 
 def _semantic_map_fragment_paths(fragment_directory: Path) -> tuple[Path, ...]:
-    if (
-        not fragment_directory.is_dir()
-        or fragment_directory.is_symlink()
-        or fragment_directory.is_junction()
-    ):
+    if not fragment_directory.is_dir() or fragment_directory.is_symlink() or fragment_directory.is_junction():
         raise RegistryValidationError(
             f"semantic-map path must be a real directory: {fragment_directory}",
         )
@@ -88,15 +84,11 @@ def _semantic_map_fragment_paths(fragment_directory: Path) -> tuple[Path, ...]:
     invalid = tuple(
         path.name
         for path in paths
-        if path.suffix.casefold() != ".toml"
-        or path.is_symlink()
-        or path.is_junction()
-        or not path.is_file()
+        if path.suffix.casefold() != ".toml" or path.is_symlink() or path.is_junction() or not path.is_file()
     )
     if invalid:
         raise RegistryValidationError(
-            "semantic-map directory accepts only regular TOML fragments; "
-            f"refusing entries: {invalid!r}",
+            f"semantic-map directory accepts only regular TOML fragments; refusing entries: {invalid!r}",
         )
     return paths
 
@@ -135,14 +127,11 @@ def _compile_fragments(fragments: Iterable[SemanticMapFragment]) -> SemanticMap:
 
     identity = ordered[0].modelo, ordered[0].design_epoch
     mismatched_fragments = tuple(
-        fragment.fragment_id
-        for fragment in ordered
-        if (fragment.modelo, fragment.design_epoch) != identity
+        fragment.fragment_id for fragment in ordered if (fragment.modelo, fragment.design_epoch) != identity
     )
     if mismatched_fragments:
         raise RegistryValidationError(
-            "semantic-map fragments have conflicting modelo/design identities: "
-            f"{mismatched_fragments!r}",
+            f"semantic-map fragments have conflicting modelo/design identities: {mismatched_fragments!r}",
         )
 
     records = tuple(record for fragment in ordered for record in fragment.records)

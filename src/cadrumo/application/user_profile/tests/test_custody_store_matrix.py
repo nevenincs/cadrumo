@@ -29,6 +29,8 @@ from typing import Final
 
 import pytest
 
+from ....core import IvaCompensationStateProvenance
+from ....core.aggregation import AggregationCaptureKind
 from ....core.hashing import sha256_hex
 from ....core.resources import resources
 from ....domain.filing import ModeloDraft, compute_modelo_draft_id, registry_schema_version
@@ -180,11 +182,10 @@ def _seed_iva_compensation(bucket_id: str) -> None:
 
     IvaCompensationHistoryRepository().save_period(
         IvaCompensationPeriodState(
+            provenance=IvaCompensationStateProvenance.OPERATOR_SEED,
             taxpayer_nif="12345678Z",
             filing_year=2024,
             period=Period.from_year_and_code(2024, "4T"),
-            expediente_id="EXP-001",
-            status="seeded",
             presented_at=_NOW,
             generated_amount=Decimal("0"),
             available_end_amount=Decimal("100"),
@@ -776,7 +777,9 @@ def _seed_observations(bucket_id: str) -> None:
     from ...calculations import CalculationObservationRepository
 
     obs = RegistryModeloObservation(modelo="303", filing_year=2024, period="4T")
-    CalculationObservationRepository().save(CalculationObservationRepository().prepare_observation_envelope(obs, source_kind="app_filing"))
+    CalculationObservationRepository().save(
+        CalculationObservationRepository().prepare_observation_envelope(obs, source_kind="app_filing")
+    )
 
 
 def _verify_observations(bucket_id: str) -> None:
@@ -806,7 +809,7 @@ def _seed_retencion(bucket_id: str) -> None:
         filing_year=2024,
         period=Period.from_year_and_code(2024, "1T"),
         observation=obs,
-        source_kind="aggregate_pull",
+        source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )
 
 
@@ -838,7 +841,7 @@ def _seed_withholding(bucket_id: str) -> None:
         filing_year=2024,
         period=Period.from_year_and_code(2024, "0A"),
         observation=obs,
-        source_kind="aggregate_pull",
+        source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )
 
 

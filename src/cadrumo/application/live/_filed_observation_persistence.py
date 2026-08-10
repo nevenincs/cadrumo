@@ -46,7 +46,7 @@ from ...application.calculations import (
     observation_key,
     persist_observation_envelope_and_iva_history,
 )
-from ...core import Modelo, Period, PeriodKind
+from ...core import IvaCompensationStateProvenance, Modelo, Period, PeriodKind
 from ...core.hashing import sha256_hex
 from ...core.identity import same_tax_identifier
 from ...core.json_contract import Notice, NoticeSeverity
@@ -177,6 +177,7 @@ def persist_filed_calculation_observation(
             history_repository=IvaCompensationHistoryRepository(objects=repo.secure_object_repository),
             envelope=payload,
             taxpayer_nif=observation.authenticated_identity,
+            provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
             expediente_id=observation.expediente_id,
             status=observation.status,
             source_observation_key=(

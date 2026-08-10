@@ -44,9 +44,9 @@ from datetime import date
 from decimal import Decimal
 from typing import Final, NamedTuple, Never
 
-from ...core.identity import same_tax_identifier
 from ...core import ActionEvidenceProvenance, CasillaId, Modelo
 from ...core import Period as _Period
+from ...core.identity import same_tax_identifier
 from ...domain.calculations.registry import (
     BindingId,
     ModeloRevision,
@@ -113,22 +113,28 @@ class ModeloIvaWalletReconciliationBlockedError(ModeloPreconditionErrorMixin, Mo
 ModeloIvaWalletReconciliationBlocked = ModeloIvaWalletReconciliationBlockedError
 
 
-def _blocked_reason_code(decision: IvaCompensationReconciliationDecision) -> str:
-    """Name WHY a wallet decision blocks, in the code vocabulary this module uses.
+def _blocked_refusal(decision: IvaCompensationReconciliationDecision) -> tuple[str, str]:
+    """Name WHY a wallet decision blocks, and the message that says it.
 
-    Every neighbouring refusal states a specific code -- target mismatch, amount
-    mismatch, first-period-zero ungrounded -- while the blocked refusal restated
-    the template's own first clause, so an operator read the same sentence for a
-    stale wallet, a target mismatch, missing authority and evidence that existed
-    and could not be interpreted.
+    Returns the code AND its translated-message key together, because the two
+    cannot be chosen independently: every neighbouring refusal in this module
+    states a specific code and selects the message written for that case, and a
+    site that picked a specific code while keeping the generic template would
+    put a machine token in the ``%{reason}`` slot of a sentence meant for a
+    person. That is what the blocked refusal did -- an operator read the same
+    sentence for a stale wallet as for evidence that existed and could not be
+    interpreted.
 
-    Only the last of those is distinguishable from the decision alone, because it
-    is the only one carrying a field of its own. The rest still collapse to the
-    generic code and remain readable through ``divergence``.
+    Only the unreadable-evidence case is distinguishable from the decision
+    alone, because it is the only one carrying a field of its own. The rest stay
+    generic and remain readable through ``divergence``.
     """
     if decision.local_evidence_found_but_unusable:
-        return "local_evidence_found_but_unreadable"
-    return "blocked"
+        return (
+            "local_evidence_found_but_unreadable",
+            "application.modelo.errors.iva_wallet_local_evidence_found_but_unreadable",
+        )
+    return "blocked", "application.modelo.errors.iva_wallet_blocked"
 
 
 def _raise_iva_wallet_precondition(
@@ -352,11 +358,11 @@ def apply_iva_compensation_decision_binding(
             evidence_values={"taxpayer_identity_match": False},
         )
     if decision.blocked:
-        blocked_reason = _blocked_reason_code(decision)
+        blocked_reason, blocked_message = _blocked_refusal(decision)
         _raise_iva_wallet_precondition(
             subject_leaf_key="modelo.work.calculate",
             reason_code=blocked_reason,
-            translated_message="application.modelo.errors.iva_wallet_blocked",
+            translated_message=blocked_message,
             evidence_values={
                 "divergence_code": str(decision.divergence),
                 "wallet_blocked": True,
@@ -582,7 +588,7 @@ def _registry_snapshot_for_work_unit(
         _raise_iva_wallet_precondition(
             subject_leaf_key=subject_leaf_key,
             reason_code="registry_snapshot_unavailable",
-            translated_message="application.modelo.errors.iva_wallet_blocked",
+            translated_message="application.modelo.errors.iva_wallet_registry_snapshot_unavailable",
             evidence_values={
                 "modelo_id": str(work_unit.modelo),
                 "filing_year": work_unit.filing_year,
@@ -730,7 +736,7 @@ def _require_first_period_zero_decision_grounded(
     _raise_iva_wallet_precondition(
         subject_leaf_key=subject_leaf_key,
         reason_code="first_period_zero_ungrounded",
-        translated_message="application.modelo.errors.iva_wallet_blocked",
+        translated_message="application.modelo.errors.iva_wallet_first_period_zero_ungrounded",
         evidence_values={
             "divergence_code": "first_period_zero",
             "concrete_zero_authority": False,
@@ -961,11 +967,11 @@ def require_persisted_iva_compensation_decision_matches_revision(
             evidence_values={"persisted_decision_present": False},
         )
     if decision.blocked:
-        blocked_reason = _blocked_reason_code(decision)
+        blocked_reason, blocked_message = _blocked_refusal(decision)
         _raise_iva_wallet_precondition(
             subject_leaf_key=subject_leaf_key,
             reason_code=blocked_reason,
-            translated_message="application.modelo.errors.iva_wallet_blocked",
+            translated_message=blocked_message,
             evidence_values={
                 "divergence_code": str(decision.divergence),
                 "wallet_blocked": True,
@@ -1014,7 +1020,7 @@ def require_persisted_iva_compensation_decision_matches_revision(
         _raise_iva_wallet_precondition(
             subject_leaf_key=subject_leaf_key,
             reason_code="revision_amount_missing",
-            translated_message="application.modelo.errors.iva_wallet_blocked",
+            translated_message="application.modelo.errors.iva_wallet_revision_amount_missing",
             evidence_values={
                 "binding_id": _M303_PRIOR_COMPENSATION_BINDING_ID,
                 "casilla_id": _M303_PRIOR_COMPENSATION_CASILLA_ID,
@@ -1029,7 +1035,7 @@ def require_persisted_iva_compensation_decision_matches_revision(
         _raise_iva_wallet_precondition(
             subject_leaf_key=subject_leaf_key,
             reason_code="amount_mismatch",
-            translated_message="application.modelo.errors.iva_wallet_blocked",
+            translated_message="application.modelo.errors.iva_wallet_amount_mismatch",
             evidence_values={
                 "decision_amount": Decimal(decision.selected_amount),
                 "revision_amount": revision_amount,

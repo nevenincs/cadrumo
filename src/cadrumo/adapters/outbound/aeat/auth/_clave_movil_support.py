@@ -15,13 +15,14 @@ from urllib.parse import urlsplit
 
 from pydantic import SecretStr
 
+from .....core import OperatorProgress
 from .....core.errors import resolve_error_message
 from .....core.hashing import sha256_hex
 from .....core.identity import IdentityError, validate_spanish_tax_id
 from .....core.logging import get_logger
 from .....domain.calculations.registry import RemoteStateGuardPolicy
 from ....persistence.storage import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE
-from .._operator_progress import OperatorProgress, emit_operator_progress, operator_progress_sink
+from .._operator_progress import emit_operator_progress, operator_progress_sink
 from ._errors import AuthConfigurationError, AuthError
 
 if TYPE_CHECKING:

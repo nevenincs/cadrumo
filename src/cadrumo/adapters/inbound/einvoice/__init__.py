@@ -26,7 +26,6 @@ faster** than a vision read of the same document.
 
 from __future__ import annotations
 
-from ....core import STRUCTURED_DOCUMENT_SHAPES, DocumentShape
 from ._parsers import ParsedEInvoice, ParsedEInvoiceLine, parse_einvoice_document
 from ._record_batch import (
     AeatParty,
@@ -43,11 +42,9 @@ __all__ = [
     "EMBEDDED_XML_SUFFIXES",
     "MAX_XML_DEPTH",
     "MAX_XML_PAYLOAD_BYTES",
-    "STRUCTURED_DOCUMENT_SHAPES",
     "AeatParty",
     "AeatRecordBatch",
     "AeatRecordFamily",
-    "DocumentShape",
     "EInvoiceXmlParseError",
     "ParsedAeatRecord",
     "ParsedEInvoice",

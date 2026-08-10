@@ -55,7 +55,7 @@ from ...core import (
     ProrrataRegisterRegime as _ProrrataRegisterRegime,
 )
 from ...core import (
-    SectorDiferenciadoLetra,
+    SectorDiferenciadoLetra as _SectorDiferenciadoLetra,
 )
 from ...core.errors import CadrumoError as _CadrumoError
 from ._protocols import ProrrataRegisterRepositoryProtocol
@@ -131,7 +131,7 @@ class SectorDefinition(BaseModel):
     model_config = _STRICT_FROZEN_CONFIG
 
     sector_id: str = Field(min_length=1, max_length=64)
-    letra: SectorDiferenciadoLetra
+    letra: _SectorDiferenciadoLetra
     member_activity_codes: tuple[str, ...] = Field(min_length=1)
 
     @field_validator("member_activity_codes")
@@ -514,7 +514,6 @@ __all__ = [
     "ProrrataRegisterRepositoryProtocol",
     "ProrrataRegisterValidationError",
     "SectorDefinition",
-    "SectorDiferenciadoLetra",
     "ThreeActiveYearsAggregate",
     "resolve_provisional_percentage",
 ]

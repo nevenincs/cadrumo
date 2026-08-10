@@ -36,11 +36,10 @@ from ...adapters.persistence.storage import (
     SecureBoundRepository,
     secure_object_repository_for_bucket,
 )
-from ...core import STRICT_FROZEN_CONFIG
+from ...core import STRICT_FROZEN_CONFIG, Hex64Str
 from ...core.config import Settings
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
-from ._ids import BundleId
 from ._models import (
     BundleVerificationState,
     EvidenceBundle,
@@ -98,7 +97,7 @@ class EvidenceBundleVerificationReport(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    bundle_id: BundleId
+    bundle_id: Hex64Str
     verification_state: BundleVerificationState
     findings: tuple[EvidenceBundleCheckResult, ...] = Field(default_factory=tuple)
     completeness_ratio: float = Field(ge=0.0, le=1.0)
@@ -226,7 +225,6 @@ class EvidenceBundleService:
             raise EvidenceBundleNotFoundError(
                 translated_message="errors.refused.refused_evidence_bundle_not_found",
                 context={"bundle_id": bundle_id, "bucket_id": bucket_id},
-                suggestion="aeat app modelo audit check",
             )
         if len(matches) > 1:
             raise EvidenceBundleNotFoundError(
@@ -237,7 +235,6 @@ class EvidenceBundleService:
                     "match_count": len(matches),
                     "matches": ", ".join(sorted(bundle.bundle_id for bundle in matches)),
                 },
-                suggestion="provide a longer bundle id prefix",
             )
         return matches[0]
 
@@ -397,7 +394,6 @@ class EvidenceBundleService:
             raise EvidenceBundleVerificationError(
                 translated_message="errors.refused.refused_evidence_bundle_verification",
                 context={"bundle_id": bundle.bundle_id, "verification_state": report.verification_state.value},
-                suggestion="aeat app modelo audit check",
             )
         if report.verification_state is BundleVerificationState.INCOMPLETE and not force_incomplete:
             raise EvidenceBundleVerificationError(
@@ -407,7 +403,6 @@ class EvidenceBundleService:
                     "verification_state": report.verification_state.value,
                     "force_incomplete": force_incomplete,
                 },
-                suggestion="aeat app modelo audit export --force-incomplete",
             )
 
         output_path.parent.mkdir(parents=True, exist_ok=True)

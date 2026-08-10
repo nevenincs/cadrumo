@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 import subprocess
 import sys
 from pathlib import Path
@@ -10,6 +11,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry import RegistryValidationError, extract_record_design
 
+from .. import _record_design as record_design_module
 from ._record_design_support import (
     _RECORD_DESIGN_ROOT,
     _committed_registry_tree,
@@ -24,6 +26,26 @@ from ._record_design_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_MODELO_303_DESIGNS = (
+    ("aeat-dr-303-2023", 406),
+    ("aeat-dr-303-2024-early", 406),
+    ("aeat-dr-303-2024-late", 426),
+    ("aeat-dr-303-2025", 429),
+    ("aeat-dr-303-2026", 430),
+)
+_PARTIAL_VARIABLE_ENVELOPE_FAILURES = {
+    "aeat-dr-131-2019-2023-v101": "incomplete variable-envelope composition",
+    "aeat-dr-131-2024": "incomplete variable-envelope composition",
+    "aeat-dr-131-2025": "incomplete variable-envelope composition",
+    "aeat-dr-131-2026": "incomplete variable-envelope composition",
+    "aeat-dr-232-2016": "duplicate relative closing suffixes",
+    "aeat-dr-232-2018": "incomplete variable-envelope composition",
+    "aeat-dr-390-2022": "incomplete variable-envelope composition",
+    "aeat-dr-390-2023": "incomplete variable-envelope composition",
+    "aeat-dr-390-2024": "incomplete variable-envelope composition",
+    "aeat-dr-390-2025": "incomplete variable-envelope composition",
+}
 
 
 def test_modelo_200_workbook_recovers_source_declared_totals_and_variable_envelope() -> None:
@@ -61,6 +83,54 @@ def test_modelo_200_workbook_recovers_source_declared_totals_and_variable_envelo
         envelope.variable_total.label,
         envelope.variable_total.length,
     ) == (16, "total", "Variable")
+
+
+@pytest.mark.parametrize(("source_ref", "expected_field_count"), _MODELO_303_DESIGNS)
+def test_modelo_303_workbooks_recognise_the_official_variable_envelope_shape(
+    source_ref: str,
+    expected_field_count: int,
+) -> None:
+    """Every pinned M303 binary owns the same explicit DP30300 composition."""
+    _modelo, catalogues = _committed_registry_tree()
+    source = catalogues.sources[source_ref]
+
+    parsed = extract_record_design(bundled_path() / source.corpus_path)
+    fixed = tuple(sheet for sheet in parsed if sheet.variable_envelope is None)
+    envelopes = tuple(sheet.variable_envelope for sheet in parsed if sheet.variable_envelope is not None)
+
+    assert len(parsed) == 7
+    assert len(fixed) == 6
+    assert sum(len(sheet.fields) for sheet in parsed) == expected_field_count
+    assert len(envelopes) == 1
+    envelope = envelopes[0]
+    assert envelope is not None
+    assert envelope.name == "DP30300"
+    assert envelope.prefix_extent == 328
+    assert (envelope.body.row, envelope.body.ordinal, envelope.body.offset, envelope.body.length) == (
+        19,
+        14,
+        329,
+        "Variable",
+    )
+    assert (
+        envelope.closing_suffix.row,
+        envelope.closing_suffix.ordinal,
+        envelope.closing_suffix.offset,
+        envelope.closing_suffix.length,
+    ) == (20, 15, "***", 18)
+    assert (
+        envelope.variable_total.row,
+        envelope.variable_total.label,
+        envelope.variable_total.length,
+    ) == (21, "total", "Variable")
+
+
+def test_variable_envelope_recognition_has_no_record_name_selector() -> None:
+    """The parser recognises official composition markers, never a known tab name."""
+    source = inspect.getsource(record_design_module._extract_sheet_rows)
+
+    assert "DP200000" not in source
+    assert "DP30300" not in source
 
 
 def test_workbook_declared_total_must_equal_terminal_parsed_extent(tmp_path: Path) -> None:
@@ -164,6 +234,20 @@ def test_workbook_total_recovery_accepts_only_official_labels_and_positive_integ
         (
             (
                 (1, 1, 328, "An", "Fixed prefix", None, None),
+                ("Total", 328, "Variable", None, None, None, None),
+            ),
+            "mixes fixed and variable totals",
+        ),
+        (
+            (
+                (1, 1, 328, "An", "Fixed prefix", None, None),
+                ("Total:", 328, "Variable", None, None, None, None),
+            ),
+            "mixes fixed and variable totals",
+        ),
+        (
+            (
+                (1, 1, 328, "An", "Fixed prefix", None, None),
                 (2, 329, "Variable", "An", "Variable body", None, None),
                 (3, "***", 18, "An", "Closing suffix", None, '"</T200>"'),
                 ("Total", None, 328, None, None, None, None),
@@ -176,6 +260,60 @@ def test_workbook_total_recovery_accepts_only_official_labels_and_positive_integ
                 (1, 1, 328, "An", "Fixed prefix", None, None),
                 (2, 329, "Variable", "An", "Variable body", None, None),
                 ("Total", None, "Variable", None, None, None, None),
+            ),
+            "incomplete variable-envelope composition",
+        ),
+        (
+            (
+                (1, 1, 328, "An", "Fixed prefix", None, None),
+                (2, 329, "Variable", "An", "Variable body", None, None),
+                (3, "***", 18, "An", "Closing suffix", None, '"</T200>"'),
+            ),
+            "incomplete variable-envelope composition",
+        ),
+        (
+            (
+                (1, 1, 328, "An", "Fixed prefix", None, None),
+                (2, "***", 18, "An", "Closing suffix", None, '"</T200>"'),
+            ),
+            "incomplete variable-envelope composition",
+        ),
+        (
+            (
+                (1, 1, 328, "An", "Fixed prefix", None, None),
+                ("Total", None, "Variable", None, None, None, None),
+            ),
+            "incomplete variable-envelope composition",
+        ),
+        (
+            (
+                (1, 1, 328, "An", "Fixed prefix", None, None),
+                (None, 329, "Variable", "An", "Malformed variable body", None, None),
+            ),
+            "malformed variable-envelope marker in row 3",
+        ),
+        (
+            (
+                (1, 1, 328, "An", "Fixed prefix", None, None),
+                (None, "***", 18, "An", "Malformed closing suffix", None, '"</T200>"'),
+            ),
+            "malformed variable-envelope marker in row 3",
+        ),
+        (
+            (
+                (1, 1, 328, "An", "Fixed prefix", None, None),
+                (2, 329, "Variable", "An", "Variable body", None, None),
+                (3, "***", 17, "An", "Wrong-length closing suffix", None, '"</T200"'),
+                ("Total", None, "Variable", None, None, None, None),
+            ),
+            "incomplete variable-envelope composition",
+        ),
+        (
+            (
+                (1, 1, 328, "An", "Fixed prefix", None, None),
+                (2, 329, "Variable", "An", "Variable body", None, None),
+                (3, "***", 17, "An", "Wrong-length closing suffix", None, '"</T200"'),
+                ("Total", None, 328, None, None, None, None),
             ),
             "incomplete variable-envelope composition",
         ),
@@ -210,7 +348,7 @@ def test_variable_envelope_rejects_malformed_composition(
     path = tmp_path / "malformed-envelope.xlsx"
     workbook = Workbook()
     worksheet = workbook.active
-    worksheet.title = "DP200000"
+    worksheet.title = "VARIABLE-ENVELOPE"
     worksheet.append(("Nº", "Posic.", "Lon", "Tipo", "Descripción", "Validación", "Contenido"))
     for row in rows:
         worksheet.append(row)
@@ -240,7 +378,7 @@ def test_variable_envelope_rejects_malformed_composition(
             "has an overlap before field at row 3: expected offset 4, got 3",
         ),
         (
-            "DP200000",
+            "VariableOverlap",
             (
                 (1, 1, 200, "An", "Prefix one"),
                 (2, 200, 129, "An", "Overlapping prefix"),
@@ -251,7 +389,7 @@ def test_variable_envelope_rejects_malformed_composition(
             "has an overlap before field at row 3: expected offset 201, got 200",
         ),
         (
-            "DP200000",
+            "VariableGap",
             (
                 (1, 1, 199, "An", "Prefix one"),
                 (2, 201, 128, "An", "Discontinuous prefix"),
@@ -575,7 +713,14 @@ def test_registered_record_design_sources_are_discovered_and_parseable() -> None
         if source.kind == "record_design"
     }
 
-    source_items = tuple(sorted(sources.items()))
+    assert set(sources) >= set(_PARTIAL_VARIABLE_ENVELOPE_FAILURES)
+    source_items = tuple(
+        sorted(
+            (source_id, path)
+            for source_id, path in sources.items()
+            if source_id not in _PARTIAL_VARIABLE_ENVELOPE_FAILURES
+        ),
+    )
     parsed_by_path = _official_record_designs(tuple(path for _source_id, path in source_items))
     parsed = {source_id: parsed_by_path[path] for source_id, path in source_items}
 
@@ -583,6 +728,22 @@ def test_registered_record_design_sources_are_discovered_and_parseable() -> None
     assert all(parsed.values())
     assert {path.suffix.lower() for path in sources.values()} >= {".pdf", ".xls", ".xlsx"}
     assert sum(len(sheet.fields) for sheets in parsed.values() for sheet in sheets) > len(sources)
+
+
+@pytest.mark.parametrize(
+    ("source_ref", "message"),
+    tuple(_PARTIAL_VARIABLE_ENVELOPE_FAILURES.items()),
+)
+def test_registered_partial_variable_envelopes_refuse_instead_of_truncating(
+    source_ref: str,
+    message: str,
+) -> None:
+    """Every official partial envelope is an explicit parser refusal, never a fixed record."""
+    _, catalogues = _committed_registry_tree()
+    source = catalogues.sources[source_ref]
+
+    with pytest.raises(RegistryValidationError, match=message):
+        extract_record_design(bundled_path() / source.corpus_path)
 
 
 # Run out-of-process: any sibling test that parses a workbook or PDF imports these

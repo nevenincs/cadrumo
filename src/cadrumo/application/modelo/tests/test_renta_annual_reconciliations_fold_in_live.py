@@ -67,7 +67,7 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import BindingSourceKind, CasillaId, Period, validated_casilla_id
+from ....core import AggregationCaptureKind, BindingSourceKind, CasillaId, Period, validated_casilla_id
 from ....core.aggregation import RetencionClave
 from ....core.resources import resources
 from ....domain.calculations.registry import (
@@ -350,7 +350,7 @@ def _seed_retencion_perceptors(
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, _ANNUAL_PERIOD),
         observations=[_retencion_observation(nif, scheme=scheme, source_prefix=f"retencion-{modelo}") for nif in nifs],
-        source_kind="aggregate_pull",
+        source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )
     return Decimal(len(set(nifs)))
 
@@ -455,7 +455,7 @@ def _seed_m190_withholding_detail() -> None:
                 retencion_practicada=Decimal("150.00"),
             ),
         ],
-        source_kind="aggregate_pull",
+        source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )
 
 
@@ -511,7 +511,7 @@ def _seed_and_file_m111_1t(secure_objects: SecureObjectRepository) -> BucketAggr
                 accrued_on=f"{_YEAR}-03-15",
             ),
         ],
-        source_kind="aggregate_pull",
+        source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )
     result = _calculate_periodic(secure_objects, modelo="111", period="1T")
     report = verify_modelo_revision(

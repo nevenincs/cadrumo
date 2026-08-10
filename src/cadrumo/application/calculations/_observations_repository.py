@@ -61,7 +61,7 @@ from ...core import (
 )
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
-from ...core.identity import FilingRecordId, same_tax_identifier
+from ...core.identity import FilingRecordId, same_tax_identifier, tax_id_identity_token
 from ...core.resources import resources
 from ...core.time import UtcInstant, now
 from ...domain.calculations.registry import RegistryModeloObservation, RegistrySnapshotError, undeclared_casilla_ids
@@ -364,7 +364,7 @@ def iva_wallet_decision_key(taxpayer_nif: str, target_period: Period) -> str:
     filing_period = _require_observation_period(target_period)
     target_year = filing_period.filing_year
     target_period_token = filing_period.registry_token
-    taxpayer_token = taxpayer_nif.strip().upper()
+    taxpayer_token = tax_id_identity_token(taxpayer_nif)
     if not taxpayer_token:
         raise ObservationKeyError("taxpayer_nif must be non-empty")
     safe_repository_id(target_period_token, context="target_period")
@@ -378,7 +378,7 @@ def iva_wallet_decision_key(taxpayer_nif: str, target_period: Period) -> str:
 
 def iva_wallet_decision_event_key(decision: IvaCompensationReconciliationDecision) -> str:
     """Opaque immutable event key for one persisted reconciliation decision."""
-    taxpayer_token = decision.taxpayer_nif.strip().upper()
+    taxpayer_token = tax_id_identity_token(decision.taxpayer_nif)
     if not taxpayer_token:
         raise ObservationKeyError("decision taxpayer_nif must be non-empty")
     digest = sha256_hex(

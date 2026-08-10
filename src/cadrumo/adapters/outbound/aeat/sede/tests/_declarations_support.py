@@ -16,7 +16,6 @@ from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
 from ......application.filing import (
-    ModeloDraftStatus,
     ModeloOperatorProfile,
     build_draft,
     build_runtime_schema_provider,
@@ -33,6 +32,7 @@ from ......domain.calculations.registry import (
     relation_source_requirements,
     resolve_export_layout,
 )
+from ......domain.submission import ModeloDraftStatus
 from ......tests import FIXTURES_DIR
 from ......tests.secure_sql import isolated_runtime_profile
 from ...browser import Profile, opened_browser_page, shared_playwright_runtime

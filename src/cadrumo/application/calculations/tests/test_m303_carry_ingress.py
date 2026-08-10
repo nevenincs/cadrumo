@@ -41,12 +41,12 @@ _CREDIT = Decimal("20.00")
 def _exported_fichero(tmp_path: Path, *, declaration_type: str) -> bytes:
     """Produce the header evidence through the production M303 exporter."""
     from ....application.filing import (
-        ModeloDraftStatus,
         ModeloOperatorProfile,
         build_draft,
         build_runtime_schema_provider,
         export_draft,
     )
+    from ....domain.submission import ModeloDraftStatus
 
 
     period = Period.from_year_and_code(2025, "1T")

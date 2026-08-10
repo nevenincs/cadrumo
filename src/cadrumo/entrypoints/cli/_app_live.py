@@ -315,7 +315,8 @@ def _iva_wallet_history_result(report: IvaCompensationHistoryReport) -> Any:
             IvaCompensationHistoryRowPayload(
                 year=row.year,
                 period=row.period,
-                status=row.status,
+                provenance=row.provenance,
+                register_status=row.register_status,
                 presented_at=row.presented_at.isoformat(),
                 prior_pending_amount=row.prior_pending_amount,
                 applied_amount=row.applied_amount,
