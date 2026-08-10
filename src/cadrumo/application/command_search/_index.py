@@ -21,18 +21,14 @@ is unit-tested directly without the MCP transport.
 
 from __future__ import annotations
 
-import re
 import sqlite3
 from collections.abc import Iterable, Sequence
-from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...core import fts_or_group
+from ...core import SpanishStemmer, fts_or_group, spanish_stemmer, spanish_word_tokens, stem_spanish_terms
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
-
-_WORD_RE = re.compile(r"\w+", re.UNICODE)
 
 #: Query tokens shorter than this carry no discriminative signal (the article
 #: ``a``, the conjunctions ``y``/``o``, a stray ``I``) yet spuriously match a
@@ -87,35 +83,14 @@ class CommandHit(BaseModel):
     score: float
 
 
-class _SpanishStemmer(Protocol):
-    """The one stemmer method consumed by the command index."""
-
-    def stemWords(self, words: list[str]) -> list[str]: ...  # noqa: N802 - third-party API
-
-
-def _spanish_stemmer() -> _SpanishStemmer:
-    import snowballstemmer
-
-    # CAST-RATIONALE-SPANISH-STEMMER-PROTOCOL: snowballstemmer ships no static
-    # return protocol, while this boundary consumes only its stemWords method.
-    return snowballstemmer.stemmer("spanish")
-
-
-def _stem_terms(stemmer: _SpanishStemmer, terms: Sequence[str]) -> list[str]:
-    if not terms:
-        return list(terms)
-    return list(stemmer.stemWords(list(terms)))
-
-
-def _column_text(stemmer: _SpanishStemmer, raw: str) -> str:
+def _column_text(stemmer: SpanishStemmer, raw: str) -> str:
     """Store a tier as raw plus stemmed text so one column matches both forms.
 
     Keeps the raw (diacritics-folded by the tokenizer) text alongside its
     Spanish-stemmed tokens, so one column matches both an exact/accented query
     term and a morphological variant without a second column per tier.
     """
-    folded = raw.lower()
-    stemmed = " ".join(_stem_terms(stemmer, _WORD_RE.findall(folded)))
+    stemmed = " ".join(stem_spanish_terms(stemmer, spanish_word_tokens(raw)))
     return f"{raw} {stemmed}".strip()
 
 
@@ -144,7 +119,7 @@ class CommandIndex:
 
     def __init__(self, docs: Sequence[CommandDoc]) -> None:
         self._docs = tuple(docs)
-        self._stemmer = _spanish_stemmer()
+        self._stemmer = spanish_stemmer()
         self._connection: sqlite3.Connection | None = None
         if _fts5_available():
             self._connection = self._build_fts(self._docs)
@@ -186,7 +161,7 @@ class CommandIndex:
         path (the two paths' own scales are not comparable, so neither is
         surfaced raw).
         """
-        folded_terms = [term for term in _WORD_RE.findall(query.lower()) if len(term) >= _MIN_TERM_LEN]
+        folded_terms = [term for term in spanish_word_tokens(query) if len(term) >= _MIN_TERM_LEN]
         if not folded_terms or limit <= 0:
             return ()
         ranked_keys = self._lexical_ranked_keys(folded_terms)[:limit]
@@ -209,7 +184,7 @@ class CommandIndex:
 
     def _search_fts_keys(self, folded_terms: Sequence[str]) -> list[str]:
         assert self._connection is not None
-        stemmed_terms = _stem_terms(self._stemmer, folded_terms)
+        stemmed_terms = stem_spanish_terms(self._stemmer, folded_terms)
         match = fts_or_group([*folded_terms, *stemmed_terms])
         if not match:
             return []
@@ -228,7 +203,7 @@ class CommandIndex:
         wanted = set(folded_terms)
         scored: list[tuple[int, int, str]] = []
         for ordinal, doc in enumerate(self._docs):
-            doc_terms = set(_WORD_RE.findall(doc.combined_text.lower()))
+            doc_terms = set(spanish_word_tokens(doc.combined_text))
             overlap = len(wanted & doc_terms)
             if overlap:
                 scored.append((overlap, ordinal, doc.command_key))

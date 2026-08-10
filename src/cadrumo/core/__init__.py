@@ -268,6 +268,13 @@ from ._result_disposition import (
     result_disposition_requires_bank_account,
 )
 from ._revision_review import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
+from ._spanish_stemming import (
+    SpanishStemmer,
+    spanish_stemmer,
+    spanish_word_tokens,
+    stem_spanish_terms,
+    stem_spanish_text,
+)
 from ._storage_taxonomy import (
     EXTERNAL_PATH_SETTINGS_FIELDS,
     FINGERPRINT_EXCLUDED_STORAGE_FIELDS,
@@ -533,6 +540,7 @@ __all__: list[str] = [
     "SectorDiferenciadoLetra",
     "SecureObjectWrite",
     "ServiceCapability",
+    "SpanishStemmer",
     "StandardPeriodCode",
     "StateRootInputs",
     "StorageArea",
@@ -616,7 +624,11 @@ __all__: list[str] = [
     "result_disposition_casilla_ids",
     "result_disposition_is_refund",
     "result_disposition_requires_bank_account",
+    "spanish_stemmer",
+    "spanish_word_tokens",
     "stale_persisted_format_declarations",
+    "stem_spanish_terms",
+    "stem_spanish_text",
     "storage_location",
     "storage_path",
     "storage_tree_targets",
