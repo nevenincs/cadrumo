@@ -7,12 +7,14 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG
-from ..operator_actions import (
-    ActionArgumentBinding,
+from ...core import (
+    STRICT_FROZEN_CONFIG,
     ActionArgumentSource,
     ActionArgumentStatus,
     ActionConditionality,
+)
+from ..operator_actions import (
+    ActionArgumentBinding,
     ActionReference,
     ConditionEvidence,
     PreconditionVerdict,
