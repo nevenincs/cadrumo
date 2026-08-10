@@ -243,10 +243,8 @@ class _NounVisitor(ast.NodeVisitor):
         nouns = matched_nouns(f"{from_docstring} {from_field}")
         if not nouns:
             return
-        if from_docstring and matched_nouns(from_docstring):
-            channel = "class_docstring"
-        else:
-            channel = "field_description"
+        documented_in_class = bool(from_docstring) and bool(matched_nouns(from_docstring))
+        channel = "class_docstring" if documented_in_class else "field_description"
         annotation = annotation_text(node)
         self.candidates.append(
             NounCandidate(
