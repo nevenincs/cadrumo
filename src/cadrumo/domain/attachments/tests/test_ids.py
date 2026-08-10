@@ -1,4 +1,4 @@
-"""Real-behavior tests for the :data:`AttachmentId` alias."""
+"""Real-behavior tests for the canonical core hex-64 identity type."""
 
 from __future__ import annotations
 
@@ -7,12 +7,12 @@ import hashlib
 import pytest
 from pydantic import ValidationError
 
+from ....core import Hex64Str
 from ....tests.fixtures.identity_holder import single_field_holder
-from .._ids import AttachmentId
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_Holder = single_field_holder("attachment_id", AttachmentId)
+_Holder = single_field_holder("attachment_id", Hex64Str)
 
 
 def test_accepts_canonical_sha256_hex_digest() -> None:

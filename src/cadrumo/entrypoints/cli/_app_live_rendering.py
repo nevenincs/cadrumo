@@ -38,6 +38,10 @@ def _filed_capture_lines(
         lines.append(_metric_line("year_from", year_from))
     if year_to is not None:
         lines.append(_metric_line("year_to", year_to))
+    if getattr(report, "dry_run", False):
+        # Text and JSON must agree on the one fact that decides whether anything
+        # was written, so the metric rides both surfaces rather than JSON alone.
+        lines.append(_metric_line("dry_run", "true"))
     failed_count = getattr(report, "failed_count", len(failures))
     lines.extend(
         (

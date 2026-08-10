@@ -56,6 +56,7 @@ from ...adapters.outbound.aeat.sede import (
 )
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import (
+    CasillaId,
     CasillaValueKind,
     FiledHistoryDiscoverySignal,
     Period,
@@ -339,6 +340,7 @@ class _CaptureReportFields(TypedDict):
     """Deduped report fields shared by every filed-declaration capture report."""
 
     captured_count: int
+    reached_count: int
     observation_paths: tuple[str, ...]
     artefact_refs: tuple[str, ...]
     justificante_metadata_count: int
@@ -464,6 +466,7 @@ class _CaptureAccumulator:
         """Return the deduped report fields shared by every filed-capture report."""
         return {
             "captured_count": len(self.observation_paths),
+            "reached_count": self.absorbed_count,
             "observation_paths": tuple(self.observation_paths),
             "artefact_refs": tuple(self.artefact_refs),
             "justificante_metadata_count": len(tuple(dict.fromkeys(self.justificante_csvs))),
@@ -701,6 +704,7 @@ async def capture_filed_data_bulk(
             year_from=year_from,
             year_to=year_to,
             captured_count=0,
+            reached_count=0,
             failed_count=len(failures),
             observation_paths=(),
             artefact_refs=(),
@@ -733,7 +737,14 @@ async def capture_filed_data_bulk(
             if declarations is None:
                 continue
             if limit is not None:
-                remaining = limit - len(accumulator.observation_paths)
+                # absorbed_count, not len(observation_paths): the paths list is
+                # appended only on the write path, so a preview left it empty
+                # and this residual never shrank -- every batch took a full
+                # `limit` slice instead of what remained. The accumulator's own
+                # docstring already says the paths cannot serve as the tally for
+                # exactly this reason; the outer break below reads it correctly
+                # and this site did not.
+                remaining = limit - accumulator.absorbed_count
                 if remaining <= 0:
                     break
                 declarations = declarations[:remaining]
@@ -1294,7 +1305,7 @@ def filed_period_selection_rows(
 def casillas_a_recapture_would_change(
     fresh: FiledDeclaracionObservation,
     stored: RegistryModeloObservation,
-) -> tuple[str, ...]:
+) -> tuple[CasillaId, ...]:
     """Return every casilla whose freshly captured value disagrees with the stored one.
 
     Derived from the observed casilla set rather than from a hand-listed field
@@ -1324,10 +1335,12 @@ def casillas_a_recapture_would_change(
     Returns:
         The changed casilla ids, sorted, so the notice text is deterministic.
     """
-    stored_values = {str(observation.casilla_id): observation.value for observation in stored.observations}
-    changed: set[str] = set()
+    # Both sides already carry the typed CasillaId, so neither is stringified:
+    # erasing the alias at this boundary was drift, not normalisation.
+    stored_values = {observation.casilla_id: observation.value for observation in stored.observations}
+    changed: set[CasillaId] = set()
     for observed in fresh.casillas:
-        casilla_id = str(observed.casilla_id)
+        casilla_id = observed.casilla_id
         if casilla_id not in stored_values:
             continue
         if observed.value_kind is not CasillaValueKind.NUMERIC:
@@ -1495,6 +1508,12 @@ class FiledHistoryOnboardingRun(BaseModel):
     pairs: tuple[FiledHistoryPairOutcome, ...] = ()
     selection_rows: tuple[FiledPeriodSelectionRow, ...] = ()
     captured_count: int = Field(default=0, ge=0)
+    #: Units this sweep REACHED, from the accumulator tally counted in every
+    #: mode. Carried separately from ``captured_count`` because that one is
+    #: ``len(observation_paths)``, which a preview leaves empty -- so it
+    #: cannot answer "was this sweep truncated" on the very path where the
+    #: question matters most.
+    reached_count: int = Field(default=0, ge=0)
     scoping_signal: RegisterScopingSignal = RegisterScopingSignal.INCONCLUSIVE
     carries_a_taxpayer_specific_denominator: bool = False
     iva_wallet_status: str = Field(default="not_attempted", min_length=1, max_length=64)
@@ -1837,6 +1856,7 @@ async def pull_filed_history(
     return FiledHistoryOnboardingRun(
         pairs=pairs,
         captured_count=capture.captured_count,
+        reached_count=capture.reached_count,
         scoping_signal=scoping,
         carries_a_taxpayer_specific_denominator=discovery.carries_a_taxpayer_specific_denominator,
         iva_wallet_status=iva_status,

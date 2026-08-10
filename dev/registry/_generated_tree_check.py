@@ -20,7 +20,7 @@ from cadrumo.domain.calculations.registry import (
     load_modelo_directory,
 )
 
-from ._export_tree import ExportRenderProfile, render_complete_export_tree
+from ._export_tree import ExportTreeTransportProfile, render_complete_export_tree
 from ._generated_tree_validation import (
     GeneratedExportTreeValidationContext,
     ValidatedGeneratedExportTree,
@@ -32,6 +32,7 @@ from ._provenance_manifest import (
     ExportFragmentTarget,
     normalised_loader_semantics,
     verify_export_fragment_provenance_manifest,
+from ._render_profile import RenderProfile, RenderProfileSourceEvidence
 )
 from ._semantic_map import SemanticMap
 from ._semantic_map_join import JoinedRecordDesign
@@ -73,7 +74,9 @@ def check_generated_export_tree(
     context: GeneratedExportTreeCheckContext,
     joined: JoinedRecordDesign,
     semantic_map: SemanticMap,
-    profile: ExportRenderProfile,
+    transport_profile: ExportTreeTransportProfile,
+    render_profile: RenderProfile,
+    render_profile_source_evidence: RenderProfileSourceEvidence,
 ) -> CheckedGeneratedExportTree:
     """Regenerate and compare one target without writing, repairing, or publishing it.
 
@@ -89,12 +92,16 @@ def check_generated_export_tree(
         revision_id=context.validation.target.revision_id,
         joined=joined,
         semantic_map=semantic_map,
-        profile=profile,
+        transport_profile=transport_profile,
+        render_profile=render_profile,
+        render_profile_source_evidence=render_profile_source_evidence,
     )
     candidate = validate_generated_export_tree(
         context=context.validation,
         joined=joined,
         semantic_map=semantic_map,
+        render_profile=render_profile,
+        render_profile_source_evidence=render_profile_source_evidence,
         rendered=rendered,
     )
     published_layout = _load_exact_published_layout(
@@ -108,6 +115,8 @@ def check_generated_export_tree(
         semantic_map=semantic_map,
         target=context.validation.target,
         loaded_layout=published_layout,
+        render_profile=render_profile,
+        render_profile_source_evidence=render_profile_source_evidence,
         field_derivations=rendered.field_derivations,
     )
     if normalised_loader_semantics(published_layout) != normalised_loader_semantics(candidate.layout):

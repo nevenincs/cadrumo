@@ -14,6 +14,7 @@ plaintext NIF must never appear in the object key (only its sha256).
 from __future__ import annotations
 
 import hashlib
+import json
 from datetime import UTC, datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
@@ -23,11 +24,12 @@ from pydantic import ValidationError
 
 from ....adapters.persistence.storage import PathContainmentError, SecureObjectRowIdentityError
 from ....adapters.persistence.storage.crypto import secure_object_key_digest
-from ....core import BindingSourceKind, Period
+from ....core import AggregationCaptureKind, BindingSourceKind, Period
 from ....core.external_constants import UTF_8_ENCODING
 from ....tests.secure_sql import isolated_runtime_profile
 from .._retencion_observations_repository import (
     RetencionObservationRepository,
+    _RetencionObservationEnvelopePayload,
     persist_retencion_observations,
     retencion_observation_key,
 )
@@ -181,7 +183,7 @@ def test_replace_observations_drops_removed_perceptor_no_stale_row(tmp_path: Pat
             filing_year=2024,
             period=period,
             observations=full,
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         assert len({o.perceptor_nif for o in repo.load_observations("180", period)}) == 3
         # Re-pull dropped 33333333P.
@@ -190,7 +192,7 @@ def test_replace_observations_drops_removed_perceptor_no_stale_row(tmp_path: Pat
             filing_year=2024,
             period=period,
             observations=full[:2],
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         loaded = repo.load_observations("180", period)
         assert len(loaded) == 2
@@ -233,7 +235,7 @@ def test_failed_replacement_leaves_the_prior_window_intact(tmp_path: Path) -> No
             filing_year=2024,
             period=period,
             observations=declared,
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
 
         replacement = repo.build_observation_payload(
@@ -245,7 +247,7 @@ def test_failed_replacement_leaves_the_prior_window_intact(tmp_path: Path) -> No
                 scheme=RetencionScheme.ECONOMIC_ACTIVITY,
                 retencion=Decimal("400"),
             ),
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         stale_identifiers = tuple(repo.extract_identifier(row) for row in repo.iter_records())
         with pytest.raises(PathContainmentError):
@@ -274,7 +276,7 @@ def test_replacement_carries_over_a_row_present_in_both_sets(tmp_path: Path) -> 
                 _observation(nif="11111111H", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("100")),
                 _observation(nif="22222222J", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("200")),
             ),
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         carried = _observation(nif="11111111H", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("175"))
         repo.replace_observations(
@@ -282,7 +284,7 @@ def test_replacement_carries_over_a_row_present_in_both_sets(tmp_path: Path) -> 
             filing_year=2024,
             period=period,
             observations=(carried,),
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
 
         assert repo.load_observations("180", period) == (carried,)
@@ -304,7 +306,7 @@ def test_replacement_leaves_other_windows_untouched(tmp_path: Path) -> None:
             filing_year=2023,
             period=neighbour,
             observations=(neighbour_row,),
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         repo.replace_observations(
             modelo="180",
@@ -313,7 +315,7 @@ def test_replacement_leaves_other_windows_untouched(tmp_path: Path) -> None:
             observations=(
                 _observation(nif="11111111H", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("100")),
             ),
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
 
         assert repo.load_observations("180", neighbour) == (neighbour_row,)
@@ -356,7 +358,7 @@ def test_whitespace_variant_nifs_are_one_perceptor_in_store_and_aggregation(tmp_
             filing_year=2024,
             period=period,
             observations=(padded, canonical),
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         stored = repo.load_observations("180", period)
         assert len({o.perceptor_nif for o in stored}) == 1
@@ -391,7 +393,7 @@ def test_window_scan_refuses_a_row_filed_under_another_perceptors_key(tmp_path: 
             filing_year=2024,
             period=period,
             observations=(row_a, row_b),
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         # Positive control: the untouched window projects both rows.
         assert len(repo.load_observations("180", period)) == 2
@@ -403,7 +405,7 @@ def test_window_scan_refuses_a_row_filed_under_another_perceptors_key(tmp_path: 
                 filing_year=2024,
                 period=period,
                 observation=row_a,
-                source_kind="aggregate_pull",
+                source_kind=AggregationCaptureKind.AGGREGATE_PULL,
             ),
         )
         write_b = repo.to_secure_object_write(
@@ -412,7 +414,7 @@ def test_window_scan_refuses_a_row_filed_under_another_perceptors_key(tmp_path: 
                 filing_year=2024,
                 period=period,
                 observation=row_b,
-                source_kind="aggregate_pull",
+                source_kind=AggregationCaptureKind.AGGREGATE_PULL,
             ),
         )
         repo.secure_object_repository.save_with_raw_key(
@@ -457,7 +459,7 @@ def test_envelope_refuses_a_capture_instant_without_utc(captured_at: datetime) -
                 retencion=Decimal("100"),
             ),
             captured_at=captured_at,
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
 
 
@@ -475,7 +477,98 @@ def test_envelope_accepts_a_utc_capture_instant() -> None:
             retencion=Decimal("100"),
         ),
         captured_at=datetime(2024, 4, 15, 10, 30, tzinfo=UTC),
-        source_kind="aggregate_pull",
+        source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )
 
     assert payload.captured_at.utcoffset() == timedelta(0)
+
+
+def _capture_payload(period: Period) -> _RetencionObservationEnvelopePayload:
+    """One fully-populated envelope: every defaultable field carries a non-default."""
+    return RetencionObservationRepository().build_observation_payload(
+        modelo="180",
+        filing_year=2024,
+        period=period,
+        observation=_observation(
+            nif="11111111H",
+            scheme=RetencionScheme.ECONOMIC_ACTIVITY,
+            retencion=Decimal("100"),
+        ),
+        source_kind=AggregationCaptureKind.AGGREGATE_PULL,
+        captured_at=datetime(2024, 4, 15, 10, 30, tzinfo=UTC),
+        source_metadata={"ingestion_run": "run-7", "operator": "aggregate-cli"},
+    )
+
+
+def test_capture_kind_survives_the_encrypted_boundary_as_the_enum(tmp_path: Path) -> None:
+    """Strict roundtrip through the real cycle: the typed axis comes back typed.
+
+    ``source_metadata`` is populated rather than left to its default factory,
+    because a save-drops-field / load-re-defaults regression is invisible when
+    the fixture uses the default.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repo = RetencionObservationRepository()
+        period = Period.from_year_and_code(2024, "0A")
+        built = _capture_payload(period)
+
+        repo.save(built)
+        reloaded = repo.load(repo.extract_identifier(built))
+
+        assert reloaded == built
+        assert reloaded is not None
+        assert reloaded.source_kind is AggregationCaptureKind.AGGREGATE_PULL
+        assert dict(reloaded.source_metadata) == {"ingestion_run": "run-7", "operator": "aggregate-cli"}
+
+
+def test_a_stored_envelope_missing_the_capture_kind_refuses_to_load(tmp_path: Path) -> None:
+    """Anti-tautology: delete the field on disk and prove the read refuses.
+
+    Without this the roundtrip above could pass against a boundary that silently
+    re-defaults a dropped field, and every strict-equality assertion in this
+    module would be measuring the fixture rather than the persistence.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repo = RetencionObservationRepository()
+        period = Period.from_year_and_code(2024, "0A")
+        built = _capture_payload(period)
+        write = repo.to_secure_object_write(built)
+
+        corrupted = json.loads(write.payload.decode(UTF_8_ENCODING))
+        assert corrupted.pop("source_kind", None) is not None, (
+            "the persisted payload does not carry source_kind, so deleting it proves nothing"
+        )
+        repo.secure_object_repository.save_with_raw_key(
+            namespace=repo.namespace,
+            hashed_object_key=secure_object_key_digest(repo.extract_identifier(built)),
+            classification=repo.sensitivity,
+            schema_version=repo.schema_version,
+            written_at=write.written_at,
+            payload=json.dumps(corrupted).encode(UTF_8_ENCODING),
+        )
+
+        with pytest.raises(ValidationError):
+            repo.load(repo.extract_identifier(built))
+
+
+def test_an_evidence_authority_value_cannot_enter_this_store() -> None:
+    """The point of typing the axis: the exemption is now enforced, not observed.
+
+    Both aggregation stores are exempt from the official-evidence displacement
+    guard BECAUSE no evidence-authority provenance can reach them. While
+    ``source_kind`` was a free-form ``str`` that was true of the content and of
+    nothing else, so the exemption would have expired silently the day something
+    wrote an AEAT kind here. This is the refusal that makes it structural.
+    """
+    with pytest.raises(ValidationError):
+        RetencionObservationRepository().build_observation_payload(
+            modelo="180",
+            filing_year=2024,
+            period=Period.from_year_and_code(2024, "0A"),
+            observation=_observation(
+                nif="11111111H",
+                scheme=RetencionScheme.ECONOMIC_ACTIVITY,
+                retencion=Decimal("100"),
+            ),
+            source_kind="aeat_sede_justificante",  # type: ignore[arg-type]
+        )

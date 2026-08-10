@@ -29,10 +29,12 @@ import pytest
 
 from .....adapters.persistence.storage.attachment import AttachmentStore
 from .....domain.attachments import (
+    AttachmentBytesContent,
+    AttachmentIngestionRequest,
     AttachmentKind,
     AttachmentSource,
     AttachmentValidationError,
-    add_attachment_bytes,
+    add_attachment,
 )
 from .....tests.secure_sql import isolated_runtime_profile
 from ...storage import OutboundStoragePermissionError
@@ -60,17 +62,19 @@ def _store_resolved_link(store: AttachmentStore, *, payload: bytes):
             service=endpoint.service,
         )
         assert endpoint.requested_paths == [f"/drive/v3/files/{_FILE_ID}?alt=media"]
-    return add_attachment_bytes(
+    return add_attachment(
         store,
-        data=data,
-        kind=AttachmentKind.DRIVE_DOCUMENT,
-        source=AttachmentSource.GOOGLE_DRIVE,
-        source_reference=_DRIVE_LINK,
-        mime_type="application/pdf",
-        captured_at=_CAPTURED_AT,
-        bucket_id=_BUCKET_ID,
-        link_transaction_ids=("tx-doclink-1",),
-        metadata={"source": "GOOGLE_DRIVE", "source_reference": _DRIVE_LINK},
+        content=AttachmentBytesContent(data=data),
+        request=AttachmentIngestionRequest(
+            kind=AttachmentKind.DRIVE_DOCUMENT,
+            source=AttachmentSource.GOOGLE_DRIVE,
+            source_reference=_DRIVE_LINK,
+            mime_type="application/pdf",
+            captured_at=_CAPTURED_AT,
+            bucket_id=_BUCKET_ID,
+            link_transaction_ids=("tx-doclink-1",),
+            metadata={"source": "GOOGLE_DRIVE", "source_reference": _DRIVE_LINK},
+        ),
     )
 
 

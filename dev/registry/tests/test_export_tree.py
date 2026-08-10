@@ -12,6 +12,7 @@ import pytest
 
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import (
+    ExportEncoding,
     RegistryError,
     RegistryValidationError,
     bundled_authority,
@@ -19,7 +20,7 @@ from cadrumo.domain.calculations.registry import (
 )
 
 from .. import _export_tree
-from .._export_tree import ExportRenderProfile, RenderedExportTree, render_complete_export_tree
+from .._export_tree import ExportTreeTransportProfile, RenderedExportTree, render_complete_export_tree
 from .._generated_tree_validation import (
     GeneratedExportTreeValidationContext,
     validate_generated_export_tree,
@@ -34,6 +35,14 @@ from .._provenance_manifest import (
     verify_export_fragment_provenance_manifest,
 )
 from .._record_design_ir import RecordDesignIntermediate, RecordDesignWorkbookFormat
+from .._render_profile import (
+    RenderProfile,
+    RenderProfileAnchor,
+    RenderProfileDesignIdentity,
+    RenderProfileSourceEvidence,
+    ReviewedPolicyDecision,
+    SingletonNumericRule,
+)
 from .._semantic_map import SemanticMap
 from .._semantic_map_join import JoinedRecordDesign, join_record_design_semantics
 
@@ -199,17 +208,75 @@ def _entry(
     }
 
 
-def _profile() -> ExportRenderProfile:
-    return ExportRenderProfile(
+def _profile() -> ExportTreeTransportProfile:
+    return ExportTreeTransportProfile(
         modelo="200",
         design_epoch="2025",
         source_ref="aeat-dr-200-2025",
         source_sha256="a4506d24b7973a745d1225d59147078e03f14a30791a229d852b37f757442505",
         layout_id="generated-modelo-200-fichero",
         format="fixed_width",
-        encoding="latin-1",
+        encoding=ExportEncoding.LATIN_1,
         line_ending="crlf",
         serializer_convention="rtoml-pretty-v1",
+    )
+
+
+def _wire_profile() -> RenderProfile:
+    identity = RenderProfileDesignIdentity(
+        modelo="200",
+        design_epoch="2025",
+        source_ref="aeat-dr-200-2025",
+        source_sha256="a4506d24b7973a745d1225d59147078e03f14a30791a229d852b37f757442505",
+    )
+    return RenderProfile(
+        schema_version=1,
+        design_identity=identity,
+        fragment_ids=(),
+        width_17_rules=(),
+        singleton_rules=(),
+    )
+
+
+def _wire_evidence() -> RenderProfileSourceEvidence:
+    return RenderProfileSourceEvidence(
+        design_identity=_wire_profile().design_identity,
+        entries=(),
+    )
+
+
+def _blank_integer_profile() -> RenderProfile:
+    anchor = RenderProfileAnchor(
+        sheet="Registro tipo 2",
+        source_row=21,
+        source_cell="A21",
+        ordinal=2,
+        record_identity="registro-tipo-2",
+    )
+    return _wire_profile().model_copy(
+        update={
+            "fragment_ids": ("blank-integer",),
+            "singleton_rules": (
+                SingletonNumericRule(
+                    rule_kind="singleton_numeric",
+                    anchor=anchor,
+                    aeat_type="Num",
+                    semantic_kind="integer",
+                    value_policy="unsigned-integer",
+                    integer_digits=4,
+                    decimal_digits=0,
+                    sign_policy="unsigned",
+                    allowed_values=(),
+                    evidence=ReviewedPolicyDecision(
+                        authority_kind="reviewed_policy",
+                        decision_id="synthetic-blank-integer-proof",
+                        governed_anchor=anchor,
+                        decision_statement="This exact synthetic blank field is an unsigned integer.",
+                        justification="The test exercises exact-anchor profile integration without inference.",
+                    ),
+                ),
+            ),
+        },
     )
 
 
@@ -443,7 +510,9 @@ def _write_isolated_generated_authority_tree(
         revision_id="2025",
         joined=joined,
         semantic_map=semantic_map,
-        profile=_profile(),
+        transport_profile=_profile(),
+        render_profile=_wire_profile(),
+        render_profile_source_evidence=_wire_evidence(),
     )
     context = GeneratedExportTreeValidationContext(
         registry_root=registry_root,
@@ -467,6 +536,8 @@ def test_generated_tree_validation_requires_real_loader_and_authority_selection(
         joined=joined,
         semantic_map=semantic_map,
         rendered=rendered,
+        render_profile=_wire_profile(),
+        render_profile_source_evidence=_wire_evidence(),
     )
 
     assert validated.target == context.target
@@ -491,6 +562,8 @@ def test_generated_tree_validation_refuses_partial_or_non_generated_export_sibli
             joined=joined,
             semantic_map=semantic_map,
             rendered=rendered,
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
         )
 
     context, joined, semantic_map, rendered, export_root = _write_isolated_generated_authority_tree(
@@ -516,6 +589,8 @@ legal_refs = ["ley-27-2014:art-40"]
             joined=joined,
             semantic_map=semantic_map,
             rendered=rendered,
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
         )
 
 
@@ -533,6 +608,8 @@ def test_generated_tree_validation_refuses_direct_revision_legacy_and_loader_bre
             joined=joined,
             semantic_map=semantic_map,
             rendered=rendered,
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
         )
 
     context, joined, semantic_map, rendered, export_root = _write_isolated_generated_authority_tree(
@@ -547,6 +624,8 @@ def test_generated_tree_validation_refuses_direct_revision_legacy_and_loader_bre
             joined=joined,
             semantic_map=semantic_map,
             rendered=rendered,
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
         )
 
 
@@ -564,6 +643,8 @@ def test_generated_tree_validation_refuses_stale_sibling_provenance(_m200_snapsh
             joined=joined,
             semantic_map=semantic_map,
             rendered=rendered,
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
         )
 
 
@@ -580,6 +661,8 @@ def test_generated_tree_validation_refuses_wrong_period_and_provenance_drift(_m2
             joined=joined,
             semantic_map=semantic_map,
             rendered=rendered,
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
         )
 
     with pytest.raises(RegistryValidationError, match="'303'"):
@@ -591,6 +674,8 @@ def test_generated_tree_validation_refuses_wrong_period_and_provenance_drift(_m2
             joined=joined,
             semantic_map=semantic_map,
             rendered=rendered,
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
         )
 
     with pytest.raises(RegistryValidationError, match="'2026'"):
@@ -602,6 +687,8 @@ def test_generated_tree_validation_refuses_wrong_period_and_provenance_drift(_m2
             joined=joined,
             semantic_map=semantic_map,
             rendered=rendered,
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
         )
 
     manifest_path = (
@@ -623,6 +710,8 @@ def test_generated_tree_validation_refuses_wrong_period_and_provenance_drift(_m2
             joined=joined,
             semantic_map=semantic_map,
             rendered=rendered,
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
         )
 
 
@@ -653,7 +742,9 @@ def test_renderer_writes_stable_complete_tree_that_real_directory_loader_merges(
         revision_id="2025",
         joined=_joined(_m200_snapshot),
         semantic_map=_semantic_map(),
-        profile=_profile(),
+        transport_profile=_profile(),
+        render_profile=_wire_profile(),
+        render_profile_source_evidence=_wire_evidence(),
     )
     duplicate_revision_dir = _write_modelo_shell(tmp_path / "comparison" / "modelos" / "200")
     second = render_complete_export_tree(
@@ -661,7 +752,9 @@ def test_renderer_writes_stable_complete_tree_that_real_directory_loader_merges(
         revision_id="2025",
         joined=_joined(_m200_snapshot),
         semantic_map=_semantic_map(),
-        profile=_profile(),
+        transport_profile=_profile(),
+        render_profile=_wire_profile(),
+        render_profile_source_evidence=_wire_evidence(),
     )
 
     assert first.output_files == (
@@ -693,6 +786,8 @@ def test_renderer_writes_stable_complete_tree_that_real_directory_loader_merges(
             target=ExportFragmentTarget(modelo="200", revision_id="2025", design_epoch="2025"),
             loaded_layout=layout,
             field_derivations=first.field_derivations,
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
         )
         == first.provenance_manifest
     )
@@ -710,7 +805,9 @@ def test_renderer_manifest_refuses_file_tampering_derivation_drift_and_partial_f
         revision_id="2025",
         joined=_joined(_m200_snapshot),
         semantic_map=_semantic_map(),
-        profile=_profile(),
+        transport_profile=_profile(),
+        render_profile=_wire_profile(),
+        render_profile_source_evidence=_wire_evidence(),
     )
     layout = load_modelo_directory(tmp_path / "modelos" / "200").revisions["2025"].export_layouts[0]
     export_root = revision_dir / "export"
@@ -727,6 +824,8 @@ def test_renderer_manifest_refuses_file_tampering_derivation_drift_and_partial_f
             target=ExportFragmentTarget(modelo="200", revision_id="2025", design_epoch="2025"),
             loaded_layout=layout,
             field_derivations=rendered.field_derivations,
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
         )
     original_fragment.write_bytes(original_bytes)
 
@@ -741,6 +840,8 @@ def test_renderer_manifest_refuses_file_tampering_derivation_drift_and_partial_f
             target=ExportFragmentTarget(modelo="200", revision_id="2025", design_epoch="2025"),
             loaded_layout=layout,
             field_derivations=rendered.field_derivations,
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
         )
 
     drifted_derivation = manifest.field_derivations[0].model_copy(update={"derivation_code": "filler-v1"})
@@ -756,6 +857,8 @@ def test_renderer_manifest_refuses_file_tampering_derivation_drift_and_partial_f
             target=ExportFragmentTarget(modelo="200", revision_id="2025", design_epoch="2025"),
             loaded_layout=layout,
             field_derivations=rendered.field_derivations,
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
         )
 
     partial_manifest = manifest.model_copy(update={"field_derivations": manifest.field_derivations[:-1]})
@@ -768,6 +871,8 @@ def test_renderer_manifest_refuses_file_tampering_derivation_drift_and_partial_f
             target=ExportFragmentTarget(modelo="200", revision_id="2025", design_epoch="2025"),
             loaded_layout=layout,
             field_derivations=rendered.field_derivations,
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
         )
 
 
@@ -781,7 +886,9 @@ def test_direct_manifest_emission_and_real_loader_verification(_m200_snapshot, t
         revision_id="2025",
         joined=joined,
         semantic_map=semantic_map,
-        profile=_profile(),
+        transport_profile=_profile(),
+        render_profile=_wire_profile(),
+        render_profile_source_evidence=_wire_evidence(),
     )
     layout = load_modelo_directory(tmp_path / "modelos" / "200").revisions["2025"].export_layouts[0]
     manifest_path = revision_dir / "export" / EXPORT_FRAGMENT_PROVENANCE_FILENAME
@@ -794,6 +901,8 @@ def test_direct_manifest_emission_and_real_loader_verification(_m200_snapshot, t
         loaded_layout=layout,
         export_root=revision_dir / "export",
         field_derivations=rendered.field_derivations,
+        render_profile=_wire_profile(),
+        render_profile_source_evidence=_wire_evidence(),
     )
 
     assert load_export_fragment_provenance_manifest(manifest_path.read_bytes()) == emitted
@@ -805,6 +914,8 @@ def test_direct_manifest_emission_and_real_loader_verification(_m200_snapshot, t
             target=ExportFragmentTarget(modelo="200", revision_id="2025", design_epoch="2025"),
             loaded_layout=layout,
             field_derivations=rendered.field_derivations,
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
         )
         == emitted
     )
@@ -855,26 +966,61 @@ def test_renderer_refuses_mismatched_map_without_emitting_a_manifest(_m200_snaps
             revision_id="2025",
             joined=_joined(_m200_snapshot),
             semantic_map=mismatched_map,
-            profile=_profile(),
+            transport_profile=_profile(),
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
         )
 
     assert not (revision_dir / "export" / EXPORT_FRAGMENT_PROVENANCE_FILENAME).exists()
 
 
-def test_renderer_refuses_unmeasured_numeric_form_without_emitting_a_partial_fragment(_m200_snapshot, tmp_path) -> None:
-    """A numeric type without its official form is insufficient to select wire semantics."""
+def test_renderer_refuses_uncovered_blank_numeric_anchor_without_emitting_a_partial_fragment(
+    _m200_snapshot,
+    tmp_path,
+) -> None:
+    """A blank numeric field needs its exact reviewed profile rule before output."""
     target = tmp_path / "export"
 
-    with pytest.raises(RegistryValidationError, match="no unambiguous content form"):
+    with pytest.raises(RegistryValidationError, match="must cover exactly the eligible blank numeric fields"):
         render_complete_export_tree(
             target,
             revision_id="2025",
             joined=_joined(_m200_snapshot, numeric_content=None),
             semantic_map=_semantic_map(),
-            profile=_profile(),
+            transport_profile=_profile(),
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
         )
 
     assert not target.exists()
+
+
+def test_renderer_resolves_one_blank_numeric_field_only_through_its_exact_profile_anchor(
+    _m200_snapshot,
+    tmp_path,
+) -> None:
+    revision_dir = _write_modelo_shell(tmp_path / "modelos" / "200")
+    joined = _joined(_m200_snapshot, numeric_content=None)
+    profile = _blank_integer_profile()
+
+    rendered = render_complete_export_tree(
+        revision_dir / "export",
+        revision_id="2025",
+        joined=joined,
+        semantic_map=_semantic_map(),
+        transport_profile=_profile(),
+        render_profile=profile,
+        render_profile_source_evidence=_wire_evidence(),
+    )
+    loaded = load_modelo_directory(tmp_path / "modelos" / "200").revisions["2025"].export_layouts[0]
+    derived = rendered.field_derivations[-1]
+
+    assert loaded == rendered.layout
+    assert derived.derivation_code == "render-profile-singleton-v1"
+    assert derived.field.value_policy == "unsigned-integer"
+    assert derived.field.data_type == "integer"
+    assert derived.field.length == 4
+    assert rendered.provenance_manifest.render_profile_sha256 != "0" * 64
 
 
 @pytest.mark.parametrize(
@@ -907,7 +1053,9 @@ def test_renderer_refuses_missing_or_noncontiguous_official_record_geometry(
             revision_id="2025",
             joined=joined,
             semantic_map=_semantic_map(),
-            profile=_profile(),
+            transport_profile=_profile(),
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
         )
 
     assert not target.exists()
@@ -922,7 +1070,9 @@ def test_renderer_refuses_profile_hash_drift_literal_extent_and_nonempty_target(
             revision_id="2025",
             joined=joined,
             semantic_map=_semantic_map(),
-            profile=_profile().model_copy(update={"source_sha256": "b" * 64}),
+            transport_profile=_profile().model_copy(update={"source_sha256": "b" * 64}),
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
         )
 
     literal_map = _semantic_map().model_copy(
@@ -950,7 +1100,9 @@ def test_renderer_refuses_profile_hash_drift_literal_extent_and_nonempty_target(
             revision_id="2025",
             joined=join_record_design_semantics(literal_map, intermediate, _m200_snapshot),
             semantic_map=literal_map,
-            profile=_profile(),
+            transport_profile=_profile(),
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
         )
     assert not (tmp_path / "second" / "export").exists()
 
@@ -963,7 +1115,9 @@ def test_renderer_refuses_profile_hash_drift_literal_extent_and_nonempty_target(
             revision_id="2025",
             joined=joined,
             semantic_map=_semantic_map(),
-            profile=_profile(),
+            transport_profile=_profile(),
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
         )
 
 
@@ -994,7 +1148,9 @@ def test_renderer_refuses_missing_or_ambiguous_official_literal_without_output(
             revision_id="2025",
             joined=join_record_design_semantics(semantic_map, intermediate, _m200_snapshot),
             semantic_map=semantic_map,
-            profile=_profile(),
+            transport_profile=_profile(),
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
         )
 
     assert not target.exists()
@@ -1018,7 +1174,9 @@ def test_renderer_refuses_wrong_same_width_literal_without_output(_m200_snapshot
             revision_id="2025",
             joined=join_record_design_semantics(semantic_map, _intermediate(), _m200_snapshot),
             semantic_map=semantic_map,
-            profile=_profile(),
+            transport_profile=_profile(),
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
         )
 
     assert not target.exists()
@@ -1037,14 +1195,18 @@ def test_renderer_partitions_oversized_record_deterministically_and_loader_merge
         revision_id="2025",
         joined=joined,
         semantic_map=semantic_map,
-        profile=_profile(),
+        transport_profile=_profile(),
+        render_profile=_wire_profile(),
+        render_profile_source_evidence=_wire_evidence(),
     )
     second = render_complete_export_tree(
         second_revision / "export",
         revision_id="2025",
         joined=joined,
         semantic_map=semantic_map,
-        profile=_profile(),
+        transport_profile=_profile(),
+        render_profile=_wire_profile(),
+        render_profile_source_evidence=_wire_evidence(),
     )
     compact_map, compact_joined = _oversized_authorities(_m200_snapshot, field_count=20)
     compact_revision = _write_modelo_shell(tmp_path / "compact" / "modelos" / "200")
@@ -1053,7 +1215,9 @@ def test_renderer_partitions_oversized_record_deterministically_and_loader_merge
         revision_id="2025",
         joined=compact_joined,
         semantic_map=compact_map,
-        profile=_profile(),
+        transport_profile=_profile(),
+        render_profile=_wire_profile(),
+        render_profile_source_evidence=_wire_evidence(),
     )
 
     oversized_parts = tuple(path for path in first.output_files if path.startswith("0001-record-"))

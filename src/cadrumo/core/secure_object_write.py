@@ -32,6 +32,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
+from ._hex import Hex64Str
 from ._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .classification import SensitivityClass
 
@@ -70,7 +71,7 @@ class SecureObjectWrite(BaseModel):
     payload: bytes = Field(min_length=1)
     write_provenance: str = Field(default=DEFAULT_WRITE_PROVENANCE, min_length=1, max_length=255)
     source_event_id: str | None = Field(default=None, min_length=1, max_length=128)
-    expected_revision_id: str | None = Field(default=None, min_length=64, max_length=64)
+    expected_revision_id: Hex64Str | None = None
 
 
 __all__ = [

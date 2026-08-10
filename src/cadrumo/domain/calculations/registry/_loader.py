@@ -15,9 +15,9 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal, cast, get_args, get_origin
 
-from pydantic import BaseModel, TypeAdapter, ValidationError
+from pydantic import BaseModel, ValidationError
 
-from ....core import freeze_toml, read_toml
+from ....core import OBJECT_TUPLE_ADAPTER, freeze_toml, read_toml
 from ._compiled_cache import load_compiled_registry_cache, store_compiled_registry_cache
 from ._errors import RegistryLoadError, RegistryValidationError
 from ._loader_cache import (
@@ -51,7 +51,6 @@ from ._validate_revision_identity import revision_reference_identity_failures
 _REVISION_EXPORT_LAYOUTS = "export_layouts"
 _REVISION_CONSTRUCTS = "constructs"
 _REVISION_COMPLETENESS_MANIFEST = "completeness_manifest"
-_TOML_ARRAY_ADAPTER: TypeAdapter[tuple[object, ...]] = TypeAdapter(tuple[object, ...])
 _REVISION_SPECIAL_MERGE_FIELDS = frozenset({_REVISION_EXPORT_LAYOUTS, _REVISION_CONSTRUCTS})
 _REVISION_APPEND_ARRAYS: frozenset[str] = frozenset(
     field_name
@@ -150,7 +149,7 @@ def _as_toml_array(value: object) -> tuple[object, ...] | None:
     """Narrow a frozen TOML array to object entries, or return ``None``."""
     if not isinstance(value, tuple):
         return None
-    return _TOML_ARRAY_ADAPTER.validate_python(value)
+    return OBJECT_TUPLE_ADAPTER.validate_python(value)
 
 
 def _reject_local_catalogues(path: Path, data: Mapping[str, object]) -> None:

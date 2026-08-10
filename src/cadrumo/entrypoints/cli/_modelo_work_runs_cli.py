@@ -24,7 +24,6 @@ See Also:
 
 from __future__ import annotations
 
-import json
 from collections.abc import Callable
 from typing import Annotated
 
@@ -44,7 +43,7 @@ from ...application.workflow import (
 from ...core import Period
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
-from ...core.json_contract import ResolvedPreconditionAction
+from ._action_rendering import resolved_precondition_action_json_cell
 from ._common import _emit_envelope, resolve_cli_precondition_action
 from ._modelo_cli_support import (
     OutputLanguageOpt,
@@ -98,12 +97,6 @@ def _workflow_run_payload(run: WorkflowResult) -> WorkflowRunPayload:
     )
 
 
-def _workflow_run_action_text(action: ResolvedPreconditionAction | None) -> str:
-    """Render the exact action DTO as a deterministic text-table field."""
-    value = None if action is None else action.model_dump(mode="json")
-    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
-
-
 def _workflow_run_tab_line(run: WorkflowRunPayload) -> str:
     """Render one workflow-run payload as its tab-delimited CLI row."""
     return "\t".join(
@@ -115,7 +108,7 @@ def _workflow_run_tab_line(run: WorkflowRunPayload) -> str:
             run.aborted_reason or "-",
             run.started_at,
             run.summary,
-            _workflow_run_action_text(run.action),
+            resolved_precondition_action_json_cell(run.action),
         ),
     )
 

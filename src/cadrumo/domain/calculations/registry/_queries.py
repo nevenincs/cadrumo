@@ -17,7 +17,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError
 
-from ....core import BindingSourceKind, Modelo, Period, TaxDomain
+from ....core import OBJECT_TUPLE_ADAPTER, BindingSourceKind, Modelo, Period, TaxDomain
 from ....core.i18n import output_language
 from ._authority import ValidatedRegistryAuthority
 from ._binding_selector_utils import boolean_binding_encoded_values
@@ -59,7 +59,6 @@ _PUBLIC_MAPPING_ADAPTER: TypeAdapter[dict[object, object]] = TypeAdapter(
     dict[object, object],
     config=ConfigDict(strict=True),
 )
-_PUBLIC_TUPLE_ADAPTER: TypeAdapter[tuple[object, ...]] = TypeAdapter(tuple[object, ...])
 
 #: Bare registry period tokens (``0A``, ``1T``-``4T``, ``01``-``12``,
 #: ``1P``-``4P``, ``EXT-1T``-``EXT-4T``, ``AD-HOC``, ``EVENT-N``) carry
@@ -916,7 +915,7 @@ def _public_tuple(value: object) -> tuple[object, ...] | None:
     """Narrow a runtime tuple to object entries for recursive public projection."""
     if not isinstance(value, tuple):
         return None
-    return _PUBLIC_TUPLE_ADAPTER.validate_python(value)
+    return OBJECT_TUPLE_ADAPTER.validate_python(value)
 
 
 def _public_selector_value(value: object) -> BindingSelectorQueryValue:

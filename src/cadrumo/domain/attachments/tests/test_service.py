@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import hashlib
 from datetime import UTC, datetime
 from pathlib import Path
@@ -10,13 +11,17 @@ import pytest
 
 from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....tests.secure_sql import isolated_runtime_profile
+from .. import _service as attachment_service
 from .._enums import AttachmentKind, AttachmentSource
 from .._errors import AttachmentNotFoundError
 from .._models import Attachment
 from .._service import (
+    AttachmentBytesContent,
+    AttachmentFileContent,
+    AttachmentIngestionRequest,
     add_attachment,
-    add_attachment_bytes,
     link_attachment_invoice,
+    link_attachment_transaction,
     list_attachments,
     load_attachment,
 )
@@ -32,12 +37,14 @@ _SERVICE_BUCKET_ID = "5c2d1e0a-7b8c-4d9e-8f01-2a3b4c5d6e7f"
 def _add_text_attachment(store: AttachmentStore, path: Path, *, source_reference: str) -> Attachment:
     return add_attachment(
         store,
-        path=path,
-        kind=AttachmentKind.OTHER,
-        source=AttachmentSource.LOCAL_FILE,
-        source_reference=source_reference,
-        mime_type="text/plain",
-        captured_at=_CAPTURED_AT,
+        content=AttachmentFileContent(path=path),
+        request=AttachmentIngestionRequest(
+            kind=AttachmentKind.OTHER,
+            source=AttachmentSource.LOCAL_FILE,
+            source_reference=source_reference,
+            mime_type="text/plain",
+            captured_at=_CAPTURED_AT,
+        ),
     )
 
 
@@ -171,6 +178,58 @@ def test_link_attachment_invoice_raises_not_found_for_unknown_attachment(tmp_pat
             link_attachment_invoice(store, attachment_id="deadbeef" * 8, invoice_id="invoice-abc")
 
 
+def test_link_attachment_transaction_appends_and_persists_through_real_store(tmp_path: Path) -> None:
+    """The transaction link uses the same real manifest-update path as invoice links."""
+    source_file = tmp_path / "transaction.pdf"
+    source_file.write_bytes(b"%PDF-1.4 transaction evidence bytes")
+
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        store = AttachmentStore()
+        added = _add_text_attachment(store, source_file, source_reference="transaction-evidence")
+        updated = link_attachment_transaction(
+            store,
+            attachment_id=added.attachment_id,
+            transaction_id="transaction-abc",
+        )
+        reloaded = load_attachment(store, added.attachment_id)
+
+    assert updated.linked_transaction_ids == ("transaction-abc",)
+    assert reloaded.linked_transaction_ids == ("transaction-abc",)
+    assert reloaded.linked_invoice_ids == ()
+
+
+def test_attachment_service_has_one_typed_ingestion_and_relation_update_core() -> None:
+    """The public surface cannot grow a second byte-ingestion or link-update body."""
+    service_path = Path(attachment_service.__file__)
+    assert not (service_path.parent / "_ids.py").exists()
+    tree = ast.parse(service_path.read_text(encoding="utf-8"), filename=str(service_path))
+    functions = {node.name: node for node in tree.body if isinstance(node, ast.FunctionDef)}
+
+    assert not {name for name in functions if name.startswith("add_attachment_")}
+    assert {"add_attachment", "_store_content", "_persist_attachment", "_link_attachment"} <= functions.keys()
+
+    def called_names(function: ast.FunctionDef) -> set[str]:
+        return {
+            node.func.id
+            for node in ast.walk(function)
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+        }
+
+    assert {"_store_content", "_persist_attachment"} <= called_names(functions["add_attachment"])
+    assert "_link_attachment" in called_names(functions["link_attachment_invoice"])
+    assert "_link_attachment" in called_names(functions["link_attachment_transaction"])
+
+    manifest_writers = {
+        function.name
+        for function in functions.values()
+        if any(
+            isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "write_manifest"
+            for node in ast.walk(function)
+        )
+    }
+    assert manifest_writers == {"_persist_attachment", "_link_attachment"}
+
+
 def test_same_byte_reingestion_accumulates_links_and_keeps_the_first_capture(
     tmp_path: Path,
 ) -> None:
@@ -187,29 +246,33 @@ def test_same_byte_reingestion_accumulates_links_and_keeps_the_first_capture(
         first_capture = datetime(2026, 3, 1, 9, 0, tzinfo=UTC)
         second_capture = datetime(2026, 4, 1, 9, 0, tzinfo=UTC)
 
-        first = add_attachment_bytes(
+        first = add_attachment(
             store,
-            data=data,
-            kind=AttachmentKind.INVOICE_PDF,
-            source=AttachmentSource.LOCAL_FILE,
-            source_reference="source-A",
-            mime_type="application/pdf",
-            captured_at=first_capture,
-            bucket_id=_SERVICE_BUCKET_ID,
-            link_transaction_ids=("tx-A",),
-            metadata={"channel": "A", "only-a": "kept"},
+            content=AttachmentBytesContent(data=data),
+            request=AttachmentIngestionRequest(
+                kind=AttachmentKind.INVOICE_PDF,
+                source=AttachmentSource.LOCAL_FILE,
+                source_reference="source-A",
+                mime_type="application/pdf",
+                captured_at=first_capture,
+                bucket_id=_SERVICE_BUCKET_ID,
+                link_transaction_ids=("tx-A",),
+                metadata={"channel": "A", "only-a": "kept"},
+            ),
         )
-        add_attachment_bytes(
+        add_attachment(
             store,
-            data=data,
-            kind=AttachmentKind.INVOICE_PDF,
-            source=AttachmentSource.GOOGLE_DRIVE,
-            source_reference="source-B",
-            mime_type="application/pdf",
-            captured_at=second_capture,
-            bucket_id=_SERVICE_BUCKET_ID,
-            link_transaction_ids=("tx-B",),
-            metadata={"channel": "B", "only-b": "added"},
+            content=AttachmentBytesContent(data=data),
+            request=AttachmentIngestionRequest(
+                kind=AttachmentKind.INVOICE_PDF,
+                source=AttachmentSource.GOOGLE_DRIVE,
+                source_reference="source-B",
+                mime_type="application/pdf",
+                captured_at=second_capture,
+                bucket_id=_SERVICE_BUCKET_ID,
+                link_transaction_ids=("tx-B",),
+                metadata={"channel": "B", "only-b": "added"},
+            ),
         )
 
         merged = load_attachment(store, first.attachment_id)
@@ -240,16 +303,18 @@ def test_same_byte_merge_is_independent_of_ingestion_order(tmp_path: Path) -> No
             store = AttachmentStore()
             attachment_id = ""
             for index, transaction_id in enumerate(order):
-                attachment = add_attachment_bytes(
+                attachment = add_attachment(
                     store,
-                    data=data,
-                    kind=AttachmentKind.INVOICE_PDF,
-                    source=AttachmentSource.LOCAL_FILE,
-                    source_reference=f"source-{transaction_id}",
-                    mime_type="application/pdf",
-                    captured_at=datetime(2026, 3, 1 + index, 9, 0, tzinfo=UTC),
-                    bucket_id=_SERVICE_BUCKET_ID,
-                    link_transaction_ids=(transaction_id,),
+                    content=AttachmentBytesContent(data=data),
+                    request=AttachmentIngestionRequest(
+                        kind=AttachmentKind.INVOICE_PDF,
+                        source=AttachmentSource.LOCAL_FILE,
+                        source_reference=f"source-{transaction_id}",
+                        mime_type="application/pdf",
+                        captured_at=datetime(2026, 3, 1 + index, 9, 0, tzinfo=UTC),
+                        bucket_id=_SERVICE_BUCKET_ID,
+                        link_transaction_ids=(transaction_id,),
+                    ),
                 )
                 attachment_id = attachment.attachment_id
             return load_attachment(store, attachment_id).linked_transaction_ids
@@ -265,28 +330,32 @@ def test_repeated_identical_ingestion_is_a_stable_no_op(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SERVICE_BUCKET_ID):
         store = AttachmentStore()
         data = b"%PDF-1.4\nidempotent same-byte evidence\n%%EOF"
-        first = add_attachment_bytes(
+        first = add_attachment(
             store,
-            data=data,
-            kind=AttachmentKind.INVOICE_PDF,
-            source=AttachmentSource.LOCAL_FILE,
-            source_reference="source-A",
-            mime_type="application/pdf",
-            captured_at=datetime(2026, 3, 1, 9, 0, tzinfo=UTC),
-            bucket_id=_SERVICE_BUCKET_ID,
-            link_transaction_ids=("tx-A",),
+            content=AttachmentBytesContent(data=data),
+            request=AttachmentIngestionRequest(
+                kind=AttachmentKind.INVOICE_PDF,
+                source=AttachmentSource.LOCAL_FILE,
+                source_reference="source-A",
+                mime_type="application/pdf",
+                captured_at=datetime(2026, 3, 1, 9, 0, tzinfo=UTC),
+                bucket_id=_SERVICE_BUCKET_ID,
+                link_transaction_ids=("tx-A",),
+            ),
         )
         after_first = load_attachment(store, first.attachment_id)
-        add_attachment_bytes(
+        add_attachment(
             store,
-            data=data,
-            kind=AttachmentKind.INVOICE_PDF,
-            source=AttachmentSource.LOCAL_FILE,
-            source_reference="source-A",
-            mime_type="application/pdf",
-            captured_at=datetime(2026, 3, 1, 9, 0, tzinfo=UTC),
-            bucket_id=_SERVICE_BUCKET_ID,
-            link_transaction_ids=("tx-A",),
+            content=AttachmentBytesContent(data=data),
+            request=AttachmentIngestionRequest(
+                kind=AttachmentKind.INVOICE_PDF,
+                source=AttachmentSource.LOCAL_FILE,
+                source_reference="source-A",
+                mime_type="application/pdf",
+                captured_at=datetime(2026, 3, 1, 9, 0, tzinfo=UTC),
+                bucket_id=_SERVICE_BUCKET_ID,
+                link_transaction_ids=("tx-A",),
+            ),
         )
         after_third = load_attachment(store, after_first.attachment_id)
 

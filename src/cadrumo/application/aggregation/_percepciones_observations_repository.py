@@ -57,7 +57,7 @@ from ...adapters.persistence.storage import (
     SensitivityClass,
     safe_repository_id,
 )
-from ...core import STRICT_FROZEN_CONFIG, Period
+from ...core import STRICT_FROZEN_CONFIG, AggregationCaptureKind, Period
 from ...core.time import UtcInstant, now
 from ...domain.calculations.registry import WithholdingObservation
 from ._errors import AggregationValidationError, t
@@ -84,6 +84,25 @@ class _PercepcionObservationEnvelopePayload(BaseModel):
     classifies whether a FILED observation is official AEAT evidence. The two
     are different value sets on different axes; unifying them would let a
     capture token be read as filing-grade evidence.
+
+    **This store therefore carries no official-evidence displacement guard, and
+    that is a consequence of the axis above rather than an omission.** The
+    calculation observation store refuses a non-official write onto a slot
+    already holding AEAT evidence; the predicate it evaluates is
+    ``ObservationSourceKind.is_official_aeat``, and neither this module nor its
+    sibling imports that enum -- it appears here only in the sentence above.
+    There is no official-evidence state on these rows for a guard to protect,
+    so a guard modelled on that one would have no expression to evaluate.
+
+    A second reason makes the same guard actively WRONG here rather than merely
+    unnecessary: that store protects a SLOT holding one authoritative row, while
+    this one holds a WINDOW that is a SET, written only through whole-window
+    set-replace. Clearing a row the operator dropped is the operation this store
+    exists to perform, so a per-row displacement refusal would refuse it.
+
+    Both reasons rest on capture provenance staying a distinct axis. It is a
+    free-form ``str`` here, so nothing structural holds it apart from the
+    filed-observation taxonomy -- only this declaration does.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -93,7 +112,7 @@ class _PercepcionObservationEnvelopePayload(BaseModel):
     period: Period
     observation: WithholdingObservation
     captured_at: UtcInstant
-    source_kind: str = Field(min_length=1)
+    source_kind: AggregationCaptureKind
     source_metadata: Mapping[str, str] = Field(default_factory=dict)
 
 
@@ -171,7 +190,7 @@ class PercepcionObservationRepository(SecureBoundRepository[_PercepcionObservati
         filing_year: int,
         period: Period,
         observation: WithholdingObservation,
-        source_kind: str,
+        source_kind: AggregationCaptureKind,
         captured_at: datetime | None = None,
         source_metadata: Mapping[str, str] | None = None,
     ) -> _PercepcionObservationEnvelopePayload:
@@ -198,7 +217,7 @@ class PercepcionObservationRepository(SecureBoundRepository[_PercepcionObservati
         filing_year: int,
         period: Period,
         observation: WithholdingObservation,
-        source_kind: str,
+        source_kind: AggregationCaptureKind,
         captured_at: datetime | None = None,
         source_metadata: Mapping[str, str] | None = None,
     ) -> None:
@@ -222,7 +241,7 @@ class PercepcionObservationRepository(SecureBoundRepository[_PercepcionObservati
         filing_year: int,
         period: Period,
         observations: Sequence[WithholdingObservation],
-        source_kind: str,
+        source_kind: AggregationCaptureKind,
         captured_at: datetime | None = None,
         source_metadata: Mapping[str, str] | None = None,
     ) -> None:
@@ -299,7 +318,7 @@ def persist_percepcion_observations(
     filing_year: int,
     period: Period,
     observations: Sequence[WithholdingObservation],
-    source_kind: str = "aggregate_pull",
+    source_kind: AggregationCaptureKind = AggregationCaptureKind.AGGREGATE_PULL,
 ) -> None:
     """The ONE shared write path every per-perceptor-clave producer calls.
 

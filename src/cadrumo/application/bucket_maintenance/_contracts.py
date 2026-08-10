@@ -15,14 +15,12 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core import STRICT_FROZEN_CONFIG, Hex64Str
 from ...core.identity import BucketId, ContentDigest
 from ...core.time import UtcInstant
 from ...domain.retention import RetentionFloorAssessment
 from ...domain.user_profile import UserProfileStatus
 from .._bucket_deletion_contracts import BucketDeletionFingerprint
-
-_SHA256_PATTERN = r"^[0-9a-f]{64}$"
 
 
 class AssessBucketDeletionCommand(BaseModel):
@@ -120,18 +118,8 @@ class DeleteBucketCommand(BaseModel):
     confirmed: bool = False
     acknowledge_retention_override: bool = False
     retention_override_reason: str | None = Field(default=None, min_length=1, max_length=512)
-    reset_operation_id: str | None = Field(
-        default=None,
-        min_length=64,
-        max_length=64,
-        pattern=_SHA256_PATTERN,
-    )
-    expected_deletion_fingerprint: str | None = Field(
-        default=None,
-        min_length=64,
-        max_length=64,
-        pattern=_SHA256_PATTERN,
-    )
+    reset_operation_id: Hex64Str | None = None
+    expected_deletion_fingerprint: ContentDigest | None = None
 
     @model_validator(mode="after")
     def _validate_reset_ownership(self) -> DeleteBucketCommand:
@@ -163,13 +151,8 @@ class DeleteBucketResult(BaseModel):
     occurred_at: UtcInstant
     retention_override_used: bool = False
     latest_safe_erase_date: UtcInstant | None = None
-    deletion_fingerprint: str = Field(min_length=64, max_length=64, pattern=_SHA256_PATTERN)
-    reset_operation_id: str | None = Field(
-        default=None,
-        min_length=64,
-        max_length=64,
-        pattern=_SHA256_PATTERN,
-    )
+    deletion_fingerprint: ContentDigest
+    reset_operation_id: Hex64Str | None = None
     already_absent: bool = False
 
 

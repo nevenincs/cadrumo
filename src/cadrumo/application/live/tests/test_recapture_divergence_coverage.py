@@ -101,6 +101,11 @@ def test_enrolment_reaches_fewer_units_than_absorption_raises_divergences(tmp_pa
         ).calculation_observation_keys
 
     assert len(divergences) == reached, "each absorbed observation must contribute one advisory"
+    # Assert the population is REAL before asserting a relation over it. Without
+    # this, enrolment collapsing to zero for an unrelated reason would satisfy
+    # the narrowing below -- 0 < N passes happily -- and this test would go on
+    # reporting a defect it was no longer reproducing.
+    assert len(enrolled) >= 1, "no observation enrolled at all, so the narrowing below would pass vacuously"
     assert len(enrolled) < len(divergences), (
         "enrolment no longer narrows against absorption, so the two populations this test "
         f"exists to separate have converged: enrolled={len(enrolled)} divergences={len(divergences)}"

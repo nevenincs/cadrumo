@@ -48,6 +48,7 @@ from ...application.calculations import (
 )
 from ...core import Modelo, Period, PeriodKind
 from ...core.hashing import sha256_hex
+from ...core.identity import same_tax_identifier
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.logging import get_logger
 from ...domain.buckets import (
@@ -600,7 +601,7 @@ def _filed_justificante_can_stamp_filing(
             exc_info=True,
         )
         return False
-    if observation.authenticated_identity.strip().upper() != expected_tax_id.strip().upper():
+    if not same_tax_identifier(observation.authenticated_identity, expected_tax_id):
         return False
     return justificante_matches_filing_record(
         justificante,

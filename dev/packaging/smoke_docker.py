@@ -322,9 +322,11 @@ from cadrumo.adapters.persistence.storage.master_key._bucket_session import Buck
 from cadrumo.adapters.persistence.storage.sql import SecureObjectRepository, dispose_engine, get_engine
 from cadrumo.core.config import Settings
 from cadrumo.domain.attachments import (
+    AttachmentBytesContent,
+    AttachmentIngestionRequest,
     AttachmentKind,
     AttachmentSource,
-    add_attachment_bytes,
+    add_attachment,
     list_attachments,
     load_attachment,
 )
@@ -348,16 +350,18 @@ try:
     engine = get_engine(settings)
     with activate_session(session):
         store = AttachmentStore(objects=SecureObjectRepository(engine=engine))
-        attachment = add_attachment_bytes(
+        attachment = add_attachment(
             store,
-            data=payload,
-            kind=AttachmentKind.INVOICE_PDF,
-            source=AttachmentSource.LOCAL_FILE,
-            source_reference="packaging-smoke.pdf",
-            mime_type="application/pdf",
-            captured_at=datetime.now(UTC).replace(microsecond=0),
-            bucket_id="packaging-smoke",
-            link_transaction_ids=("tx-packaging-smoke",),
+            content=AttachmentBytesContent(data=payload),
+            request=AttachmentIngestionRequest(
+                kind=AttachmentKind.INVOICE_PDF,
+                source=AttachmentSource.LOCAL_FILE,
+                source_reference="packaging-smoke.pdf",
+                mime_type="application/pdf",
+                captured_at=datetime.now(UTC).replace(microsecond=0),
+                bucket_id="packaging-smoke",
+                link_transaction_ids=("tx-packaging-smoke",),
+            ),
         )
         expected = hashlib.sha256(payload).hexdigest()
         if attachment.attachment_id != expected:

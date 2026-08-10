@@ -34,14 +34,15 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from types import MappingProxyType
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from ...application.operator_actions import next_action
+from ...core.identity import same_tax_identifier
 from ...core import Period as _Period
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.modelos import is_justificante_backed_external_evidence
-from ..calculations import is_official_aeat_observation_source
+from ..calculations import ObservationSourceKind, is_official_aeat_observation_source
 from ._calendar_models import (
     OverviewAeatSubmissionState,
     OverviewCalendarEvent,
@@ -54,6 +55,7 @@ if TYPE_CHECKING:
     from ...adapters.outbound.aeat.sede import FiledDeclaracionObservation
     from ...domain.justificante import Justificante
     from ...domain.modelos import ModeloRecord
+    from ..calculations import ObservationEnvelopePayload
     from ..live import JustificanteCaptureSnapshot
 
 _AEAT_SUBMISSION_RANK: MappingProxyType[OverviewAeatSubmissionState, int] = MappingProxyType(
@@ -97,7 +99,7 @@ NO_AEAT_HISTORY_NOTICE_CODE = "overview.no_aeat_history"
 """Notice code for a workable profile carrying no official AEAT observation."""
 
 
-def no_aeat_history_notice(calculation_observations: tuple[object, ...]) -> Notice | None:
+def no_aeat_history_notice(observation_source_kinds: tuple[ObservationSourceKind, ...]) -> Notice | None:
     """Point a workable profile with no AEAT-sourced history at the history pull.
 
     Fires only when NOT ONE persisted calculation observation carries an official
@@ -114,10 +116,20 @@ def no_aeat_history_notice(calculation_observations: tuple[object, ...]) -> Noti
 
     Returns ``None`` when any official observation exists, so an onboarded
     profile stays quiet.
+
+    **Takes the source kinds, not the observations, and the narrowing is the
+    point.** Reading ``source_kind`` off an untyped payload classified EVIDENCE
+    AUTHORITY by attribute NAME, and that name is not unique to this axis: the
+    aggregation observation envelopes carry a field spelled identically that
+    means CAPTURE PROVENANCE -- which ingestion path wrote a row -- and answers
+    to a different closed set. Nothing in a duck-typed read distinguishes them,
+    so widening this function's input was a one-line change away from grading
+    capture provenance as AEAT confirmation. Asking for the enum makes the two
+    axes non-interchangeable at the call site, where the caller holds the
+    payload and knows which one it has.
     """
-    for payload in calculation_observations:
-        if is_official_aeat_observation_source(str(getattr(payload, "source_kind", ""))):
-            return None
+    if any(source_kind.is_official_aeat for source_kind in observation_source_kinds):
+        return None
     return Notice(
         action=next_action("operator.live.filed.pull_all"),
         severity=NoticeSeverity.INFO,
@@ -129,7 +141,7 @@ def no_aeat_history_notice(calculation_observations: tuple[object, ...]) -> Noti
                 "history AEAT holds for it."
             ),
         ),
-        context={"observation_count": str(len(calculation_observations))},
+        context={"observation_count": str(len(observation_source_kinds))},
     )
 
 
@@ -414,8 +426,7 @@ def _authenticated_identity_matches_expected(
     expected = (expected_tax_id or "").strip().upper()
     if not expected:
         return True
-    actual = (authenticated_identity or "").strip().upper()
-    return bool(actual) and actual == expected
+    return same_tax_identifier(authenticated_identity, expected)
 
 
 def _filing_evidence_from_filed_declaration_observation(
@@ -432,8 +443,7 @@ def _filing_evidence_from_filed_declaration_observation(
     only when the storage layer has already verified and supplied the encrypted
     justificante artefact reference and CSV.
     """
-    expected = (expected_tax_id or "").strip().upper()
-    if expected and observation.authenticated_identity.strip().upper() != expected:
+    if expected_tax_id and not same_tax_identifier(observation.authenticated_identity, expected_tax_id):
         return None
     if not _is_active_aeat_filing_status(observation.status):
         return None
@@ -477,7 +487,7 @@ def _is_active_aeat_filing_status(status: str | None) -> bool:
 
 
 def _filing_evidence_from_calculation_observation(
-    payload: object,
+    payload: ObservationEnvelopePayload,
     *,
     expected_tax_id: str | None,
     justificantes_by_csv: Mapping[str, tuple[Justificante, ...]],
@@ -489,18 +499,10 @@ def _filing_evidence_from_calculation_observation(
     the row to :attr:`OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED`;
     otherwise the row remains submitted-observed evidence.
     """
-    source_kind = str(getattr(payload, "source_kind", ""))
+    source_kind = payload.source_kind
     if not is_official_aeat_observation_source(source_kind):
         return None
-    source_metadata_raw = getattr(payload, "source_metadata", None)
-    source_metadata: Mapping[str, object]
-    if isinstance(source_metadata_raw, Mapping):
-        # CAST-RATIONALE-CALENDAR-EVIDENCE-SOURCE-METADATA: isinstance narrows to
-        # Mapping but cannot check its type parameters.
-        # nosemgrep: no-cast-in-domain-application
-        source_metadata = cast(Mapping[str, object], source_metadata_raw)
-    else:
-        source_metadata = {}
+    source_metadata = payload.source_metadata
     if not source_metadata:
         return None
     status = str(source_metadata.get("aeat_register_status", "")).strip()
@@ -509,24 +511,22 @@ def _filing_evidence_from_calculation_observation(
     aeat_expediente_id = str(source_metadata.get("aeat_expediente_id") or "").strip()
     if not aeat_expediente_id:
         return None
-    expected = (expected_tax_id or "").strip().upper()
-    authenticated_identity = str(source_metadata.get("authenticated_identity", "")).strip().upper()
-    if expected and (not authenticated_identity or authenticated_identity != expected):
+    authenticated_identity = str(source_metadata.get("authenticated_identity", ""))
+    if expected_tax_id and not same_tax_identifier(authenticated_identity, expected_tax_id):
         return None
-    observation = getattr(payload, "observation", None)
-    if observation is None:
-        return None
-    _obs_year = int(observation.filing_year)
-    _obs_period = getattr(observation, "filing_period", None)
-    if isinstance(_obs_period, _Period):
+    observation = payload.observation
+    _obs_year = observation.filing_year
+    _obs_period = observation.filing_period
+    if _obs_period is not None:
         if _obs_period.filing_year != _obs_year:
             return None
     else:
-        registry_token = observation.period
-        if not isinstance(registry_token, str):
-            return None
+        # filing_period is derived at construction from filing_year and period,
+        # so it is absent only when a caller passed None explicitly. The model
+        # permits that, so the fallback stays live rather than being deleted as
+        # unreachable.
         try:
-            _obs_period = _period_from_registry_token(_obs_year, registry_token)
+            _obs_period = _period_from_registry_token(_obs_year, observation.period)
         except ValueError:
             return None
     verified_justificante = _calculation_observation_verified_justificante(
@@ -549,12 +549,12 @@ def _filing_evidence_from_calculation_observation(
         ),
         aeat_submitted_at=verified_justificante.presented_at
         if verified_justificante is not None
-        else getattr(payload, "captured_at", None),
+        else payload.captured_at,
         aeat_reference_id=aeat_expediente_id,
-        aeat_evidence_kind=source_kind,
+        aeat_evidence_kind=source_kind.value,
         verified_justificante_csv=verified_justificante.csv if verified_justificante is not None else None,
         justificante_verified=verified,
-        evidence_source=source_kind,
+        evidence_source=source_kind.value,
     )
 
 

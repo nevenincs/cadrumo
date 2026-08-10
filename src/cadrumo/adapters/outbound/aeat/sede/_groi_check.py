@@ -50,7 +50,7 @@ from .....core.config import Settings
 from .....core.errors import SiteHealthError
 from .....core.logging import get_logger
 from .....domain.calculations.registry import (
-    GroiObservation,
+    CheckerObservation,
     RegistryValidationError,
     RemoteOperation,
     RemoteStateGuardPolicy,
@@ -282,8 +282,8 @@ class GroiSedeDriver:
         payload: bytes,
         *,
         expected: Mapping[str, object],
-    ) -> GroiObservation:
-        """Return a :class:`GroiObservation` by adapting the per-NIF result into the registry-Protocol shape.
+    ) -> CheckerObservation:
+        """Return the canonical checker observation from the per-NIF result.
 
         Drives the live GROI form via :meth:`collect`, then collapses the
         per-NIF observations into a flat ``{nif: verdict}`` mapping that
@@ -297,7 +297,7 @@ class GroiSedeDriver:
         evidence_locator: str | None = None
         if result.observations:
             evidence_locator = result.observations[0].raw_evidence_locator
-        return GroiObservation(values=values, raw_evidence_locator=evidence_locator)
+        return CheckerObservation(values=values, raw_evidence_locator=evidence_locator)
 
 
 async def collect_groi_observations(

@@ -13,9 +13,9 @@ from .....tests.aeat_literal_fixtures import aeat_host
 from .._aeat_nif_iva_oracle import (
     ORACLE_ID,
     AeatNifIvaCheckerOracle,
-    AeatNifIvaReplayDriver,
     register_default,
 )
+from .._checker_oracle_flow import CheckerReplayDriver
 from .._errors import RegistryValidationError
 from .._live_parity import LiveParityCatalogue, LiveParityOracle, OracleEnvironment
 from .._remote_state_guard import (
@@ -158,7 +158,9 @@ def test_verify_payload_reports_guard_block_when_aeat_host_not_in_policy() -> No
 
 
 def test_verify_payload_compares_replay_observations() -> None:
-    oracle = AeatNifIvaCheckerOracle(driver=AeatNifIvaReplayDriver())
+    oracle = AeatNifIvaCheckerOracle(
+        driver=CheckerReplayDriver(surface_label="AEAT NIF-IVA replay", replay_action="parse-aeat-nif-iva-replay"),
+    )
     policy = _aeat_policy()
 
     result = oracle.verify_payload(
@@ -217,7 +219,7 @@ def test_replay_payload_roundtrip_via_nif_iva_driver() -> None:
     assert payload.raw_evidence_locator == "corpus/aeat_official/nif_iva/sample.json"
 
     # Drive through the production reader path.
-    driver = AeatNifIvaReplayDriver()
+    driver = CheckerReplayDriver(surface_label="AEAT NIF-IVA replay", replay_action="parse-aeat-nif-iva-replay")
     observation = driver.collect_observation(raw, expected={})
 
     # Driver normalises keys to upper-case and values to lower-case.

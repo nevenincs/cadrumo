@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import unicodedata
 
-__all__ = ["fold_diacritics", "unicode_compose"]
+__all__ = ["fold_diacritics", "fold_printed_phrase", "unicode_compose"]
 
 
 def fold_diacritics(text: str) -> str:
@@ -42,6 +42,35 @@ def fold_diacritics(text: str) -> str:
     """
     decomposed = unicodedata.normalize("NFKD", text)
     return "".join(char for char in decomposed if unicodedata.category(char) != "Mn")
+
+
+def fold_printed_phrase(printed: str) -> str:
+    """Return the form a printed multi-word phrase is matched under.
+
+    Three transforms and no more, in this order: fold case, fold accents,
+    collapse every run of whitespace to one space and trim the ends. Each earns
+    its place against how a phrase arrives from a document rather than from a
+    keyboard -- typography is the issuer's choice, a phrase set as a line wraps
+    with the break inside it, and a text layer or an OCR pass routinely returns
+    the ASCII spelling of an accented word.
+
+    **Punctuation is deliberately NOT stripped**, which is the transform a
+    fourth one would be. A vocabulary can carry a name whose stops are part of
+    it, and squeezing punctuation generally starts matching strings that are not
+    phrases at all.
+
+    Case folds BEFORE accents, and the order is load-bearing rather than
+    incidental: a caller that folds accents first and cases afterward is a
+    different function, because :meth:`str.casefold` can itself emit a combining
+    mark that the earlier accent fold is no longer there to remove.
+
+    Args:
+        printed: The phrase as it was printed.
+
+    Returns:
+        The normalised form to match on.
+    """
+    return " ".join(fold_diacritics(printed.casefold()).split())
 
 
 def unicode_compose(text: str) -> str:

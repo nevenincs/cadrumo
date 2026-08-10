@@ -3,7 +3,7 @@
 Exercises the exact composition ``aeat app ledger doclink pull-folder``
 performs — :func:`list_drive_folder_documents` to enumerate the folder's
 PDF/image children, then :func:`resolve_document_link` +
-:func:`~cadrumo.domain.attachments.add_attachment_bytes` to fetch-and-encrypt
+:func:`~cadrumo.domain.attachments.add_attachment` to fetch-and-encrypt
 each one — with the storage and manifest path REAL (a real
 :class:`AttachmentStore` over real SQLite) and the Drive requests executed
 through real ``google-api-python-client`` resources pointed at local HTTP
@@ -31,7 +31,13 @@ from pathlib import Path
 import pytest
 
 from .....adapters.persistence.storage.attachment import AttachmentStore
-from .....domain.attachments import AttachmentKind, AttachmentSource, add_attachment_bytes
+from .....domain.attachments import (
+    AttachmentBytesContent,
+    AttachmentIngestionRequest,
+    AttachmentKind,
+    AttachmentSource,
+    add_attachment,
+)
 from .....tests.secure_sql import isolated_runtime_profile
 from ...storage import OutboundStorageError, OutboundStoragePermissionError
 from .._document_link_resolver import list_drive_folder_documents, resolve_document_link
@@ -90,16 +96,18 @@ def _pull_folder(
             except OutboundStorageError:
                 refused.append(document.file_id)
                 continue
-        attachment = add_attachment_bytes(
+        attachment = add_attachment(
             store,
-            data=data,
-            kind=AttachmentKind.DRIVE_DOCUMENT,
-            source=AttachmentSource.GOOGLE_DRIVE,
-            source_reference=reference,
-            mime_type=document.mime_type,
-            captured_at=_CAPTURED_AT,
-            bucket_id=_BUCKET_ID,
-            metadata={"source": "GOOGLE_DRIVE", "drive_folder_id": _FOLDER_ID},
+            content=AttachmentBytesContent(data=data),
+            request=AttachmentIngestionRequest(
+                kind=AttachmentKind.DRIVE_DOCUMENT,
+                source=AttachmentSource.GOOGLE_DRIVE,
+                source_reference=reference,
+                mime_type=document.mime_type,
+                captured_at=_CAPTURED_AT,
+                bucket_id=_BUCKET_ID,
+                metadata={"source": "GOOGLE_DRIVE", "drive_folder_id": _FOLDER_ID},
+            ),
         )
         fetched.append(attachment.attachment_id)
     return fetched, refused

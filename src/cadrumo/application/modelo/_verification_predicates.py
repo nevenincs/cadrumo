@@ -26,6 +26,7 @@ from decimal import Decimal
 from types import MappingProxyType
 
 from ...core import CasillaId, validated_casilla_id
+from ...core.money import CENT
 from ...core.parsing import parse_date
 from ...domain.calculations.registry import (
     KNOWN_PROFILE_FLAG_ADVISORY_FIELDS,
@@ -156,11 +157,6 @@ _M349_IMPORTE_RECTIFICACIONES_CASILLA: CasillaId = "decl.importe-rectificaciones
 # (modulos-rendimiento-neto-actividad) the operator can be prompted to
 # reconcile against.
 
-#: One-cent tolerance for the roll-forward continuity reconciliation — absorbs the
-#: sub-cent drift a total-of-per-year-detail figure can accumulate without masking
-#: a genuine discontinuity (which is euros, not cents).
-_BALANCE_CENT_TOLERANCE = Decimal("0.01")
-
 
 def _predicate_casilla_ids(predicate: ParsedVerificationPredicate) -> list[CasillaId]:
     """Validate a parsed predicate's casilla captures at the runtime boundary."""
@@ -231,7 +227,10 @@ def _roll_forward_balance_reconciles(
     base = casilla_values.get(ids[3], Decimal(0))
     generated = max(Decimal(0), -base)
     expected = opening - applied + generated
-    return abs(closing - expected) <= _BALANCE_CENT_TOLERANCE
+    # Bounded at the cent quantum: absorbs the sub-cent drift a
+    # total-of-per-year-detail figure accumulates, without masking a genuine
+    # discontinuity, which is euros rather than cents.
+    return abs(closing - expected) <= CENT
 
 
 def _evaluate_applicability_filter(filter_name: str, profile: TaxpayerProfile) -> bool:
@@ -792,7 +791,6 @@ evaluate_advisory_predicate_fires = _evaluate_advisory_predicate_fires
 evaluate_applicability_filter = _evaluate_applicability_filter
 evaluate_predicate_expression = _evaluate_predicate_expression
 evaluate_verification_predicates = _evaluate_verification_predicates
-BALANCE_CENT_TOLERANCE = _BALANCE_CENT_TOLERANCE
 M210_UNRESOLVED_RATE_REASONS = _M210_UNRESOLVED_RATE_REASONS
 M349_IMPORTE_RECTIFICACIONES_CASILLA = _M349_IMPORTE_RECTIFICACIONES_CASILLA
 M349_NUMERO_RECTIFICACIONES_CASILLA = _M349_NUMERO_RECTIFICACIONES_CASILLA

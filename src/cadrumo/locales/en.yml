@@ -624,6 +624,18 @@ application:
       unsupported_archive_schema_version: Archive schema version {archive_schema_version}
         predates what this application supports; it cannot be restored without a migration.
   calculations:
+    errors:
+      observation_displaces_official_evidence_app_filing: 'This modelo, year and period
+        already holds evidence captured from AEAT ({existing_source_kind}), so a locally
+        computed filing cannot be saved over it. A local recalculation is not the
+        authority for what was filed: if it is correct, file the correction with AEAT
+        and pull the result back. The captured evidence cannot be recovered through
+        any path this application exposes.'
+      observation_displaces_official_evidence_manual: This modelo, year and period
+        already holds evidence captured from AEAT ({existing_source_kind}). Saving
+        a manual figure here replaces it, and the replaced evidence cannot be recovered
+        through any path this application exposes. Re-run with the replace-official-evidence
+        option if displacing it is intended.
     iva_compensation:
       errors:
         correction_missing: No seeded compensation record exists for %{filing_year}/%{period};
@@ -2267,6 +2279,10 @@ cli:
         pull_all_pairs_refused: '{count} modelo/ejercicio pair(s) could not be read
           and were NOT reported as empty: {pairs}. Re-run to retry; a refusal is not
           evidence that nothing was filed.'
+        pull_dry_run_help: Report what a bulk pull would capture without writing anything.
+          Bulk mode only.
+        pull_dry_run_single_mode_error: --dry-run is only valid for a bulk pull with
+          --from-year/--to-year; a single-modelo pull has no dry run.
         pull_help: Pull filed-declaration data from the authenticated AEAT register.
         pull_modelo_help: Limit this pull to this modelo.
         pull_sources_help: Pull the filed observations required by a target filing's

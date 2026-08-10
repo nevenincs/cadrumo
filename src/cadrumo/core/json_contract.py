@@ -35,7 +35,6 @@ import json
 import re
 import sys
 from collections.abc import Callable, Mapping, Sequence
-from decimal import Decimal
 from enum import StrEnum
 from types import MappingProxyType
 from typing import IO, Any, Final, Protocol, cast, runtime_checkable
@@ -49,16 +48,15 @@ from pydantic import (
     ValidationError,
     field_serializer,
     field_validator,
-    model_validator,
 )
 
 from ._action_argument_resolution import ActionArgumentResolution
-from ._operator_action_enums import (
-    ActionArgumentSource,
-    ActionArgumentStatus,
-    ActionConditionality,
-    ActionEvidenceProvenance,
-    NoRecoveryOutcome,
+from ._operator_action_enums import ActionArgumentStatus
+from ._precondition_action_invariants import (
+    FIELD_KEY_PATTERN,
+    PreconditionActionIdentity,
+    PreconditionEvidence,
+    PreconditionOutcomeInvariant,
 )
 from .errors import CadrumoError
 from .logging import get_logger
@@ -67,25 +65,6 @@ from .redaction import redact_structured_for_cli_output
 
 _log = get_logger(__name__)
 
-_NAMESPACED_ID_PATTERN: Final[str] = r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$"
-_FIELD_KEY_PATTERN: Final[str] = r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)*$"
-_PRESENTATION_KEY_TOKENS: Final[frozenset[str]] = frozenset(
-    {
-        "action",
-        "command",
-        "help",
-        "hint",
-        "instruction",
-        "label",
-        "message",
-        "next",
-        "prose",
-        "remediation",
-        "suggestion",
-        "text",
-        "title",
-    }
-)
 #: Case-SENSITIVE by mandate, not by oversight. The product-naming rule makes the
 #: casing carry the meaning: the sole human CLI executable is the exact lowercase
 #: token ``aeat``, while ``AEAT`` names the Spanish tax authority and is retained
@@ -120,13 +99,6 @@ _STRICT_ROOT_CONFIG = ConfigDict(
     strict=True,
     validate_assignment=True,
 )
-
-
-def _is_presentation_key(key: str) -> bool:
-    """Return whether a fact key carries presentation or action guidance."""
-    return any(token in _PRESENTATION_KEY_TOKENS for token in re.split(r"[._]", key))
-
-
 #: Envelope contract version shared by the success :class:`SchemaEnvelope`
 #: and the stderr error envelope. Both documents carry the same outer
 #: spine (``schema_version``, ``command``, ``status``, ``notices``), so the
@@ -168,55 +140,21 @@ class NoticeSeverity(StrEnum):
     WARNING = "warning"
 
 
-class ActionConditionEvidence(BaseModel):
+class ActionConditionEvidence(PreconditionEvidence):
     """One evaluated failed-condition fact projected onto the wire.
 
     The model deliberately contains observed facts only. It does not select a
     condition, decide applicability, or resolve an action catalogue.
     """
 
-    model_config = _STRICT_FROZEN_CONFIG
-
-    condition_id: str = Field(pattern=_NAMESPACED_ID_PATTERN, min_length=3, max_length=160)
-    evidence_id: str = Field(pattern=_NAMESPACED_ID_PATTERN, min_length=3, max_length=160)
-    provenance: ActionEvidenceProvenance
-    values: Mapping[str, str | int | bool | Decimal] = Field(min_length=1)
-
-    @field_validator("values")
-    @classmethod
-    def _freeze_values(
-        cls,
-        value: Mapping[str, str | int | bool | Decimal],
-    ) -> Mapping[str, str | int | bool | Decimal]:
-        """Freeze lexically ordered factual values and reject command prose."""
-        if any(not re.fullmatch(_FIELD_KEY_PATTERN, key) for key in value):
-            raise ValueError("action evidence value keys must be stable fact identifiers")
-        if any(_is_presentation_key(key) for key in value):
-            raise ValueError("action evidence value keys cannot carry presentation or action prose")
-        if any(isinstance(item, str) and _RAW_AEAT_COMMAND_PATTERN.search(item) for item in value.values()):
-            raise ValueError("action evidence values cannot carry raw aeat command prose")
-        return MappingProxyType(dict(sorted(value.items())))
-
-    @field_serializer("values")
-    def _serialize_values(
-        self,
-        value: Mapping[str, str | int | bool | Decimal],
-    ) -> dict[str, str | int | bool | Decimal]:
-        """Emit the immutable facts as one deterministic ordinary mapping."""
-        return dict(value)
-
-
-class ResolvedActionReference(BaseModel):
+class ResolvedActionReference(PreconditionActionIdentity):
     """One catalogue action after an outer resolver supplied its canonical target.
 
     The resolver is outside :mod:`cadrumo.core`; this record neither looks up
     the action ID nor discovers the live command surface.
     """
 
-    model_config = _STRICT_FROZEN_CONFIG
-
-    action_id: str = Field(pattern=_NAMESPACED_ID_PATTERN, min_length=3, max_length=160)
-    target_command_key: str = Field(pattern=_FIELD_KEY_PATTERN, min_length=1, max_length=160)
+    target_command_key: str = Field(pattern=FIELD_KEY_PATTERN, min_length=1, max_length=160)
     cli_path: tuple[str, ...] | None = Field(default=None, exclude_if=lambda value: value is None)
     arguments: Mapping[str, str] | None = Field(default=None, exclude_if=lambda value: value is None)
 
@@ -251,7 +189,9 @@ class ResolvedActionArgument(ActionArgumentResolution):
     model_config = _STRICT_FROZEN_CONFIG
 
 
-class ResolvedPreconditionAction(BaseModel):
+class ResolvedPreconditionAction(
+    PreconditionOutcomeInvariant[ActionConditionEvidence, ResolvedActionReference, ResolvedActionArgument],
+):
     """A resolved precondition verdict projected for a machine consumer.
 
     This is intentionally a wire DTO. Application/domain guards own the
@@ -259,125 +199,6 @@ class ResolvedPreconditionAction(BaseModel):
     catalogue and live-schema resolution. The DTO only proves that the action
     target and each argument were resolved before presentation.
     """
-
-    model_config = _STRICT_FROZEN_CONFIG
-
-    failed_condition_id: str = Field(pattern=_NAMESPACED_ID_PATTERN, min_length=3, max_length=160)
-    evidence: tuple[ActionConditionEvidence, ...] = Field(min_length=1)
-    action: ResolvedActionReference | None = None
-    argument_bindings: tuple[ResolvedActionArgument, ...] = Field(default_factory=tuple)
-    missing_argument_names: tuple[str, ...] = Field(default_factory=tuple)
-    conditionality: ActionConditionality
-    no_recovery_outcome: NoRecoveryOutcome | None = None
-
-    @field_validator("evidence")
-    @classmethod
-    def _canonicalize_evidence(
-        cls,
-        value: tuple[ActionConditionEvidence, ...],
-    ) -> tuple[ActionConditionEvidence, ...]:
-        """Reject duplicate evidence identities and make the wire deterministic."""
-        evidence_ids = tuple(item.evidence_id for item in value)
-        if len(set(evidence_ids)) != len(evidence_ids):
-            raise ValueError("action evidence identities must be unique")
-        return tuple(sorted(value, key=lambda item: item.evidence_id))
-
-    @field_validator("argument_bindings")
-    @classmethod
-    def _canonicalize_arguments(
-        cls,
-        value: tuple[ResolvedActionArgument, ...],
-    ) -> tuple[ResolvedActionArgument, ...]:
-        """Reject competing target-argument materialisations."""
-        names = tuple(item.argument_name for item in value)
-        if len(set(names)) != len(names):
-            raise ValueError("action argument names must be unique")
-        return tuple(sorted(value, key=lambda item: item.argument_name))
-
-    @field_validator("missing_argument_names")
-    @classmethod
-    def _canonicalize_missing_names(cls, value: tuple[str, ...]) -> tuple[str, ...]:
-        """Keep the missing-input list stable and exactly match argument rows."""
-        if any(not re.fullmatch(_FIELD_KEY_PATTERN, name) for name in value):
-            raise ValueError("missing action argument names must be stable identifiers")
-        if len(set(value)) != len(value):
-            raise ValueError("missing action argument names must be unique")
-        return tuple(sorted(value))
-
-    @model_validator(mode="after")
-    def _validate_projection(self) -> ResolvedPreconditionAction:
-        """Validate wire consistency without evaluating policy or resolving catalogues."""
-        if any(item.condition_id != self.failed_condition_id for item in self.evidence):
-            raise ValueError("action evidence must identify the failed condition")
-
-        has_action = self.action is not None
-        has_no_recovery = self.no_recovery_outcome is not None
-        if has_action == has_no_recovery:
-            raise ValueError("a precondition action requires exactly one action or no_recovery_outcome")
-
-        self._reject_arguments_their_evidence_does_not_support()
-
-        missing_from_bindings = tuple(
-            item.argument_name for item in self.argument_bindings if item.status is ActionArgumentStatus.MISSING
-        )
-        if self.missing_argument_names != missing_from_bindings:
-            raise ValueError("missing_argument_names must exactly match missing action arguments")
-
-        self._reject_conditionality_the_projection_contradicts(
-            has_no_recovery=has_no_recovery,
-            missing_from_bindings=missing_from_bindings,
-        )
-        return self
-
-    def _reject_arguments_their_evidence_does_not_support(self) -> None:
-        """Refuse any condition-evidence argument the declared evidence cannot back.
-
-        The value equality is deliberately type-strict. A binding merely
-        comparing equal to its evidence fact -- ``1`` against ``True``, or a
-        string against the number it spells -- would put on the wire an argument
-        the evidence does not state, and this DTO's entire claim is that the
-        target and every argument were resolved before presentation.
-        """
-        evidence_by_id = {item.evidence_id: item for item in self.evidence}
-        for argument in self.argument_bindings:
-            if argument.source is not ActionArgumentSource.CONDITION_EVIDENCE:
-                continue
-            assert argument.source_evidence_id is not None
-            evidence = evidence_by_id.get(argument.source_evidence_id)
-            if evidence is None:
-                raise ValueError("condition-evidence action arguments must reference declared evidence")
-            assert argument.source_key is not None
-            evidence_value = evidence.values.get(argument.source_key)
-            if evidence_value is None and argument.source_key not in evidence.values:
-                raise ValueError("condition-evidence action arguments must reference a declared evidence fact")
-            if type(argument.value) is not type(evidence_value) or argument.value != evidence_value:
-                raise ValueError("condition-evidence action argument value must exactly match its evidence fact")
-
-    def _reject_conditionality_the_projection_contradicts(
-        self,
-        *,
-        has_no_recovery: bool,
-        missing_from_bindings: tuple[str, ...],
-    ) -> None:
-        """Refuse a conditionality the projection's own shape rules out.
-
-        Conditionality is derivable from whether a recovery exists and whether
-        its arguments resolved. Carrying it on the wire anyway and checking it
-        here is what makes a disagreement between the two a refusal rather than
-        a silent reinterpretation by whatever reads the envelope.
-        """
-        if has_no_recovery:
-            if self.argument_bindings or self.missing_argument_names:
-                raise ValueError("no-recovery outcomes cannot carry action arguments")
-            if self.conditionality is not ActionConditionality.NOT_APPLICABLE:
-                raise ValueError("no-recovery outcomes require not_applicable conditionality")
-        elif self.conditionality is ActionConditionality.NOT_APPLICABLE:
-            raise ValueError("recovery actions cannot use not_applicable conditionality")
-        elif missing_from_bindings and self.conditionality is not ActionConditionality.REQUIRES_ARGUMENTS:
-            raise ValueError("missing action arguments require requires_arguments conditionality")
-        elif not missing_from_bindings and self.conditionality is not ActionConditionality.IMMEDIATE:
-            raise ValueError("fully resolved recovery actions require immediate conditionality")
-
 
 class ResolvedNoticeAction(BaseModel):
     """A fully materialised next action carried by a successful notice.

@@ -20,7 +20,7 @@ from .._manifest import (
     ResultSchemaInventoryRow,
 )
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_canonical_catalogue_resolves_against_real_live_command_and_input_schemas() -> None:

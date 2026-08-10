@@ -34,6 +34,17 @@ from ._errors import (
 from ._models import Invoice, InvoiceCatalogue
 
 _LOGGER = get_logger(__name__)
+#: Default closeness for proposing an invoice-to-transaction link.
+#:
+#: DELIBERATELY NOT :data:`~core.money.CENT`, despite carrying the same value.
+#: CENT bounds rounding noise: it answers "could these two figures be the same
+#: number, differently rounded". This answers something else -- "are these two
+#: figures close enough that a human should be offered the link" -- which is a
+#: matching heuristic, not an arithmetic invariant. It is a per-call default the
+#: caller may widen; CENT is a quantum nobody may widen without changing what
+#: rounding means. The two agreeing today is a coincidence of scale, and folding
+#: this onto CENT would make a later loosening of link suggestions silently
+#: loosen every rounding check in the codebase.
 _DEFAULT_AMOUNT_TOLERANCE = Decimal("0.01")
 
 

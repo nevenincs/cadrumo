@@ -14,7 +14,8 @@ from ....domain.transactions import (
     BusinessClassification,
     TransactionDirection,
 )
-from .. import ManualLedgerTransactionCommand
+from .. import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
+from .._models import _ManualLedgerTransactionInput
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -71,6 +72,46 @@ def test_manual_ledger_transaction_command_normalises_operator_text() -> None:
     assert command.attachment_ids == ("attachment-1",)
     assert command.actor == "operator"
     assert command.source_command == "aeat app ledger add"
+
+
+def test_manual_ledger_command_and_patch_share_the_canonical_input_normalisation() -> None:
+    """Create and patch boundaries normalize the same shared ledger facts identically."""
+
+    command = _command(
+        currency=" eur ",
+        counterparty=" Proveedor SL ",
+        category_id=" office-supplies ",
+        source_jurisdiction=" DE ",
+        counterparty_country=" ES ",
+        attachment_ids=(" attachment-1 ",),
+    )
+    patch = ManualLedgerTransactionPatch(
+        currency=" eur ",
+        counterparty=" Proveedor SL ",
+        category_id=" office-supplies ",
+        source_jurisdiction=" DE ",
+        counterparty_country=" ES ",
+        attachment_ids=(" attachment-1 ",),
+    )
+
+    for input_model in (command, patch):
+        assert input_model.currency == "EUR"
+        assert input_model.counterparty == "Proveedor SL"
+        assert input_model.category_id == "office-supplies"
+        assert input_model.source_jurisdiction == "DE"
+        assert input_model.counterparty_country == "ES"
+        assert input_model.attachment_ids == ("attachment-1",)
+
+
+def test_manual_ledger_command_and_patch_have_one_input_normalisation_owner() -> None:
+    """The shared input invariant is declared only on the private ledger base."""
+
+    assert ManualLedgerTransactionCommand.__bases__ == (_ManualLedgerTransactionInput,)
+    assert ManualLedgerTransactionPatch.__bases__ == (_ManualLedgerTransactionInput,)
+    for model in (ManualLedgerTransactionCommand, ManualLedgerTransactionPatch):
+        assert "_normalise_country_codes" not in model.__dict__
+        assert "_normalise_currency" not in model.__dict__
+        assert "_normalise_identifier_tuple" not in model.__dict__
 
 
 def test_manual_ledger_transaction_command_rejects_invalid_payloads() -> None:

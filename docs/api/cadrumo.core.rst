@@ -110,6 +110,7 @@ Submodules
    cadrumo.core._tax_domain
    cadrumo.core._tipos_actividad
    cadrumo.core._toml
+   cadrumo.core._type_adapters
    cadrumo.core.aggregation
    cadrumo.core.async_cleanup
    cadrumo.core.atomic_write

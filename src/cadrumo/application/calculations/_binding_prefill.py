@@ -45,6 +45,7 @@ from typing import Final
 
 from pydantic import BaseModel, TypeAdapter
 
+from ...core import STR_KEYED_MAPPING_ADAPTER
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import BindingSourceKind, CasillaId, Modelo, Period
 from ...core.resources import resources
@@ -92,7 +93,6 @@ from ._per_grupo_member_keys import per_grupo_member_requirement_keys
 from ._revision_carry_gate import revision_carry_outcome
 
 _STRING_SEQUENCE = TypeAdapter(tuple[str, ...])
-_STRING_OBJECT_MAPPING = TypeAdapter(dict[str, object])
 
 
 def _selector_year_delta(value: object) -> int:
@@ -659,7 +659,7 @@ def _pre_activity_scoped_binding_ids(
 
 def _selector_value(selector: object, key: str, default: object) -> object:
     if isinstance(selector, dict):
-        return _STRING_OBJECT_MAPPING.validate_python(selector).get(key, default)
+        return STR_KEYED_MAPPING_ADAPTER.validate_python(selector).get(key, default)
     return getattr(selector, key, default)
 
 

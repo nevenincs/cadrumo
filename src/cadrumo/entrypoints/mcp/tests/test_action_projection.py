@@ -23,7 +23,7 @@ from .._input_schema import (
 from .._server import build_sdk_tools
 from .._tools import build_tool_descriptors
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _ACTION_CAPABILITIES_KEY = "x-cadrumo-action-capabilities"
 

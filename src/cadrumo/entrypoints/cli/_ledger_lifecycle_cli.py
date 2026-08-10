@@ -230,7 +230,7 @@ def ledger_doclink(
     :func:`resolve_document_link`, which fetches
     Drive files reachable under the granted ``drive.file`` scope. The fetched
     bytes are stored through the byte-bearing
-    :func:`add_attachment_bytes` path (real
+    :func:`add_attachment` path (real
     ``sha256`` and ``mime_type``), and the original link is kept as manifest
     provenance. Gmail links, arbitrary URLs, and out-of-scope Drive files are
     **refused** — a link is never stored as evidence.
@@ -239,7 +239,12 @@ def ledger_doclink(
     from ...adapters.outbound.storage import OutboundStorageError, build_google_credentials
     from ...adapters.persistence.storage import AttachmentStore
     from ...application.ledger import attach_manual_transaction_evidence
-    from ...domain.attachments import AttachmentKind, add_attachment_bytes
+    from ...domain.attachments import (
+        AttachmentBytesContent,
+        AttachmentIngestionRequest,
+        AttachmentKind,
+        add_attachment,
+    )
 
     attachment_source = source.to_attachment_source()
     state = _state()
@@ -276,18 +281,20 @@ def ledger_doclink(
         ) from exc
 
     store = AttachmentStore()
-    attachment = add_attachment_bytes(
+    attachment = add_attachment(
         store,
-        data=data,
-        kind=AttachmentKind.DRIVE_DOCUMENT,
-        source=attachment_source,
-        source_reference=reference,
-        mime_type=_sniff_document_mime_type(reference, data),
-        captured_at=now(),
-        bucket_id=transaction_repository.bucket_id,
-        link_transaction_ids=(resolved_id,),
-        metadata={"source": attachment_source.value, "source_reference": reference},
-        notes=note,
+        content=AttachmentBytesContent(data=data),
+        request=AttachmentIngestionRequest(
+            kind=AttachmentKind.DRIVE_DOCUMENT,
+            source=attachment_source,
+            source_reference=reference,
+            mime_type=_sniff_document_mime_type(reference, data),
+            captured_at=now(),
+            bucket_id=transaction_repository.bucket_id,
+            link_transaction_ids=(resolved_id,),
+            metadata={"source": attachment_source.value, "source_reference": reference},
+            notes=note,
+        ),
     )
     result = attach_manual_transaction_evidence(
         bucket_id=transaction_repository.bucket_id,
@@ -360,7 +367,7 @@ def ledger_pull_folder(
     :func:`ledger_doclink` uses for a single document), then fetches and
     encrypts each PDF/image child through
     :func:`~adapters.outbound.google.resolve_document_link` and
-    :func:`~domain.attachments.add_attachment_bytes` — the identical
+    :func:`~domain.attachments.add_attachment` — the identical
     fetch-and-encrypt primitive ``doclink`` composes, never re-implemented
     here. Fetched attachments are content-addressed and deduplicate by
     SHA-256, so re-running the sweep is idempotent. Attachments are stored
@@ -380,7 +387,12 @@ def ledger_pull_folder(
     )
     from ...adapters.outbound.storage import OutboundStorageError, build_google_credentials
     from ...adapters.persistence.storage import AttachmentStore
-    from ...domain.attachments import AttachmentKind, add_attachment_bytes
+    from ...domain.attachments import (
+        AttachmentBytesContent,
+        AttachmentIngestionRequest,
+        AttachmentKind,
+        add_attachment,
+    )
     from ._ledger_payloads import LedgerDocLinkPullFolderFilePayload, LedgerDocLinkPullFolderResult
 
     folder_id = _parse_drive_folder_reference(folder)
@@ -440,22 +452,24 @@ def ledger_pull_folder(
                 ),
             )
             continue
-        attachment = add_attachment_bytes(
+        attachment = add_attachment(
             store,
-            data=data,
-            kind=AttachmentKind.DRIVE_DOCUMENT,
-            source=AttachmentSource.GOOGLE_DRIVE,
-            source_reference=reference,
-            mime_type=document.mime_type or _sniff_document_mime_type(document.name, data),
-            captured_at=now(),
-            bucket_id=bucket_id,
-            metadata={
-                "source": AttachmentSource.GOOGLE_DRIVE.value,
-                "source_reference": reference,
-                "drive_folder_id": folder_id,
-                "drive_file_name": document.name,
-            },
-            notes=note,
+            content=AttachmentBytesContent(data=data),
+            request=AttachmentIngestionRequest(
+                kind=AttachmentKind.DRIVE_DOCUMENT,
+                source=AttachmentSource.GOOGLE_DRIVE,
+                source_reference=reference,
+                mime_type=document.mime_type or _sniff_document_mime_type(document.name, data),
+                captured_at=now(),
+                bucket_id=bucket_id,
+                metadata={
+                    "source": AttachmentSource.GOOGLE_DRIVE.value,
+                    "source_reference": reference,
+                    "drive_folder_id": folder_id,
+                    "drive_file_name": document.name,
+                },
+                notes=note,
+            ),
         )
         fetched_count += 1
         rows.append(

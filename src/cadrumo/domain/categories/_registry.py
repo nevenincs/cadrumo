@@ -15,9 +15,9 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import cast
 
-from pydantic import TypeAdapter, ValidationError
+from pydantic import ValidationError
 
-from ...core import read_toml
+from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER, read_toml
 from ...core.decimal import coerce_decimal
 from ...core.i18n import Translatable as tr
 from ...core.paths import file_stat_fingerprint, path_stat_fingerprint
@@ -35,8 +35,6 @@ from ._proportionality import (
 )
 from ._spending_category import SpendingCategory
 
-_OBJECT_SEQUENCE = TypeAdapter(tuple[object, ...])
-_STRING_OBJECT_MAPPING = TypeAdapter(dict[str, object])
 
 
 def load_category_profile_file(path: Path) -> Mapping[SpendingCategory, CategoryProfile]:
@@ -68,11 +66,11 @@ def _load_category_profile_file_cached(
         raise CategoryValidationError(f"{target}: missing [[profiles]] entries")
 
     profiles: dict[SpendingCategory, CategoryProfile] = {}
-    for index, raw_profile in enumerate(_OBJECT_SEQUENCE.validate_python(raw_profiles), start=1):
+    for index, raw_profile in enumerate(OBJECT_TUPLE_ADAPTER.validate_python(raw_profiles), start=1):
         if not isinstance(raw_profile, Mapping):
             raise CategoryValidationError(f"{target}: profiles[{index}] must be a table")
         try:
-            profile = _parse_profile(_STRING_OBJECT_MAPPING.validate_python(raw_profile))
+            profile = _parse_profile(STR_KEYED_MAPPING_ADAPTER.validate_python(raw_profile))
         except (ValidationError, ValueError) as exc:
             raise CategoryValidationError(f"{target}: invalid profiles[{index}]: {exc}") from exc
         if profile.category in profiles:
@@ -139,7 +137,7 @@ def _parse_profile(raw_profile: object) -> CategoryProfile:
     if not isinstance(raw_profile, dict):
         raise CategoryValidationError("profile entry must be a table")
     # CAST-RATIONALE-TOML-INVARIANT-DICT:
-    data = _STRING_OBJECT_MAPPING.validate_python(raw_profile)
+    data = STR_KEYED_MAPPING_ADAPTER.validate_python(raw_profile)
     category = SpendingCategory(str(data.get("category")))
     # CAST-RATIONALE-CATEGORY-PROPORTIONALITY-RAW: data.get() is loosely typed
     # by the mapping adapter; the isinstance check immediately below is the
@@ -162,7 +160,7 @@ def _parse_profile(raw_profile: object) -> CategoryProfile:
 def _parse_rule(raw_rule: object) -> ProportionalityRule:
     if not isinstance(raw_rule, dict):
         raise CategoryValidationError("proportionality rule must be a table")
-    data = _STRING_OBJECT_MAPPING.validate_python(raw_rule)
+    data = STR_KEYED_MAPPING_ADAPTER.validate_python(raw_rule)
     raw_variants = data.get("statutory_cap_variants", ())
     if not isinstance(raw_variants, list | tuple):
         raise CategoryValidationError("statutory_cap_variants must be a list")
@@ -179,10 +177,10 @@ def _parse_rule(raw_rule: object) -> ProportionalityRule:
             "statutory_cap_eur": _decimal_or_none(data.get("statutory_cap_eur")),
             "statutory_cap_period": _cap_period_or_none(data.get("statutory_cap_period")),
             "statutory_cap_variants": tuple(
-                _parse_cap_variant(raw_variant) for raw_variant in _OBJECT_SEQUENCE.validate_python(raw_variants)
+                _parse_cap_variant(raw_variant) for raw_variant in OBJECT_TUPLE_ADAPTER.validate_python(raw_variants)
             ),
             "citations": tuple(
-                _parse_citation(raw_citation) for raw_citation in _OBJECT_SEQUENCE.validate_python(raw_citations)
+                _parse_citation(raw_citation) for raw_citation in OBJECT_TUPLE_ADAPTER.validate_python(raw_citations)
             ),
             "notes": tr(str(data.get("notes"))),
         },
@@ -192,7 +190,7 @@ def _parse_rule(raw_rule: object) -> ProportionalityRule:
 def _parse_cap_variant(raw_variant: object) -> StatutoryCapVariant:
     if not isinstance(raw_variant, dict):
         raise CategoryValidationError("statutory_cap_variants entries must be tables")
-    data = _STRING_OBJECT_MAPPING.validate_python(raw_variant)
+    data = STR_KEYED_MAPPING_ADAPTER.validate_python(raw_variant)
     return StatutoryCapVariant.model_validate(
         {
             "id": data.get("id"),
@@ -205,7 +203,7 @@ def _parse_cap_variant(raw_variant: object) -> StatutoryCapVariant:
 def _parse_citation(raw_citation: object) -> CategoryCitation:
     if not isinstance(raw_citation, dict):
         raise CategoryValidationError("citations entries must be tables")
-    data = _STRING_OBJECT_MAPPING.validate_python(raw_citation)
+    data = STR_KEYED_MAPPING_ADAPTER.validate_python(raw_citation)
     url = data.get("url")
     if not isinstance(url, str):
         raise CategoryValidationError("citation url must be a string")

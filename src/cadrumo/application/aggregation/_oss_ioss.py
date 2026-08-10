@@ -33,7 +33,7 @@ from pydantic import BaseModel, Field, StringConstraints
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, Period
-from ...core.money import round_to_cents
+from ...core.money import CENT, round_to_cents
 from ...domain.calculations.registry import (
     BindingId,
     ModeloRevision,
@@ -115,12 +115,6 @@ class OssIossLedgerCandidate(BaseModel):
 #: Tolerance applied when comparing a persisted IVA amount against the
 #: amount derived from ``base_amount * lookup_rate(...) / 100``.
 #:
-#: Ledger amounts are rounded to two decimal places at persistence
-#: time; a difference of one cent or less is treated as rounding
-#: noise, not as a data-quality blocker. Larger gaps fail the
-#: validation and the line is rejected before the registry resolver
-#: aggregates it.
-_IVA_TOLERANCE: Decimal = Decimal("0.01")
 _STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 
 
@@ -157,7 +151,7 @@ def validate_oss_ioss_observation(
     derives the expected IVA amount from ``base_amount`` and the
     looked-up rate, and rejects the candidate if the persisted
     ``iva_amount`` deviates from the derived value by more than
-    :data:`_IVA_TOLERANCE` (one cent).
+    :data:`~core.money.CENT`.
 
     Args:
         candidate: The substrate-classified ledger line to validate.
@@ -174,7 +168,12 @@ def validate_oss_ioss_observation(
     """
     expected = _expected_iva_amount(candidate)
     persisted = round_to_cents(candidate.iva_amount)
-    if abs(persisted - expected) > _IVA_TOLERANCE:
+    # Ledger amounts are rounded to two decimal places at persistence time, so a
+    # difference of one cent or less is rounding noise rather than a data-quality
+    # blocker. Larger gaps fail validation and the line is rejected before the
+    # registry resolver aggregates it. The quantum is CENT because it is the same
+    # cent the rounding produced, not a threshold this module chose.
+    if abs(persisted - expected) > CENT:
         raise AggregationValidationError(
             t("oss_ioss_iva_amount_mismatches_destination_rate"),
             context={

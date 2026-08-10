@@ -19,13 +19,11 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from pydantic import TypeAdapter
 
-from ...core import BindingSourceKind
+from ...core import STR_KEYED_MAPPING_ADAPTER, BindingSourceKind
 from ...domain.calculations.registry import RegistrySnapshot, previous_filing_observation_requirements
 
 _PER_GRUPO_MEMBER: str = "per_grupo_member"
-_SELECTOR_MAPPING = TypeAdapter(dict[str, object])
 
 
 def per_grupo_member_requirement_keys(snapshot: RegistrySnapshot) -> set[tuple[str, int, str]]:
@@ -56,5 +54,5 @@ def per_grupo_member_requirement_keys(snapshot: RegistrySnapshot) -> set[tuple[s
 
 def _selector_grouping(selector: object) -> object:
     if isinstance(selector, Mapping):
-        return _SELECTOR_MAPPING.validate_python(selector).get("grouping")
+        return STR_KEYED_MAPPING_ADAPTER.validate_python(selector).get("grouping")
     return getattr(selector, "grouping", None)

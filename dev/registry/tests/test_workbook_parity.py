@@ -21,13 +21,12 @@ import pytest
 from openpyxl import Workbook, load_workbook
 from pydantic import ValidationError
 
+from cadrumo.core import CasillaId, validated_casilla_id
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import (
-    CasillaId,
     RegistrySnapshot,
     RegistryValidationError,
     build_snapshot,
-    validated_casilla_id,
 )
 from cadrumo.domain.calculations.registry.tests._registry_schema_support import _committed_modelo
 from dev.registry._parity_tapes import ParityScenario

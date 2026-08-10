@@ -37,7 +37,7 @@ from ....tests.secure_sql import isolated_profile_storage_root
 from .._common import CliPolicyRefusalProjection, attach_cli_policy_refusal_projection
 from .._errors import CliRefusedBoundaryError, command_error_boundary
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 def _persisted_builder_refusal_result() -> WorkflowResult:

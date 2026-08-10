@@ -29,8 +29,9 @@ from io import BytesIO
 from pathlib import Path
 from typing import BinaryIO
 
-from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
+from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
@@ -66,7 +67,6 @@ _ATTACHMENT_MANIFEST_SENSITIVITY = ATTACHMENT_MANIFEST_STORAGE_NAMESPACE.sensiti
 _ATTACHMENT_BLOB_NAMESPACE = ATTACHMENT_BLOB_STORAGE_NAMESPACE.namespace
 _ATTACHMENT_MANIFEST_NAMESPACE = ATTACHMENT_MANIFEST_STORAGE_NAMESPACE.namespace
 _ATTACHMENT_ERROR_CONTEXT = {"surface": "attachment_store"}
-_JSON_OBJECT = TypeAdapter(dict[str, object])
 
 
 def _attachment_validation_error(message: str, *, violation: str) -> AttachmentValidationError:
@@ -134,18 +134,18 @@ def _decode_manifest_envelope(payload: bytes, *, attachment_id: str | None = Non
         raise _attachment_validation_error("invalid attachment manifest", violation="manifest_payload") from exc
     if not isinstance(payload_dict, dict):
         raise _attachment_validation_error("invalid attachment manifest", violation="manifest_payload")
-    typed_payload_dict = _JSON_OBJECT.validate_python(payload_dict)
+    typed_payload_dict = STR_KEYED_MAPPING_ADAPTER.validate_python(payload_dict)
     raw_manifest_payload = typed_payload_dict.get("payload")
     if not isinstance(raw_manifest_payload, dict):
         raise _attachment_validation_error("invalid attachment manifest", violation="manifest_payload")
-    manifest_payload = _JSON_OBJECT.validate_python(raw_manifest_payload)
+    manifest_payload = STR_KEYED_MAPPING_ADAPTER.validate_python(raw_manifest_payload)
     if attachment_id is None:
         manifest_sha256 = manifest_payload.get("sha256")
         if not isinstance(manifest_sha256, str):
             raise _attachment_validation_error("invalid attachment manifest", violation="manifest_payload")
         attachment_id = _require_digest(manifest_sha256, field_name="sha256")
     manifest_payload["attachment_id"] = attachment_id
-    # ``_JSON_OBJECT.validate_python`` returns a fresh dict, so the injected
+    # ``STR_KEYED_MAPPING_ADAPTER.validate_python`` returns a fresh dict, so the injected
     # attachment_id above lands on a copy — write it back into the envelope
     # dict actually serialized below.
     typed_payload_dict["payload"] = manifest_payload

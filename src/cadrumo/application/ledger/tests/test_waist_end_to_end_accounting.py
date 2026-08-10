@@ -48,7 +48,13 @@ from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....application.aggregation import CalculationSourceContext
 from ....application.invoices import InvoiceCatalogueSourceResolver, create_catalogue_invoice
 from ....core import STRUCTURED_DOCUMENT_SHAPES, BindingSourceKind, Period
-from ....domain.attachments import AttachmentKind, AttachmentSource, add_attachment
+from ....domain.attachments import (
+    AttachmentFileContent,
+    AttachmentIngestionRequest,
+    AttachmentKind,
+    AttachmentSource,
+    add_attachment,
+)
 from ....domain.calculations.registry import (
     INVOICE_BINDING_SOURCE_KINDS,
     ModeloRevision,
@@ -139,12 +145,14 @@ class TestHop1Ingest:
         source.write_bytes(_FIXTURE.read_bytes())
         return add_attachment(
             AttachmentStore(),
-            path=source,
-            kind=AttachmentKind.OTHER,
-            source=AttachmentSource.LOCAL_FILE,
-            source_reference="waist-gate",
-            mime_type="application/xml",
-            captured_at=_CAPTURED_AT,
+            content=AttachmentFileContent(path=source),
+            request=AttachmentIngestionRequest(
+                kind=AttachmentKind.OTHER,
+                source=AttachmentSource.LOCAL_FILE,
+                source_reference="waist-gate",
+                mime_type="application/xml",
+                captured_at=_CAPTURED_AT,
+            ),
         ).attachment_id
 
     def test_the_bytes_come_back_out_of_the_encrypted_store_unchanged(

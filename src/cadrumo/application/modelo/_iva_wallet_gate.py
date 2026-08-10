@@ -44,6 +44,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Final, NamedTuple, Never
 
+from ...core.identity import same_tax_identifier
 from ...core import ActionEvidenceProvenance, CasillaId, Modelo
 from ...core import Period as _Period
 from ...domain.calculations.registry import (
@@ -110,6 +111,24 @@ class ModeloIvaWalletReconciliationBlockedError(ModeloPreconditionErrorMixin, Mo
 
 
 ModeloIvaWalletReconciliationBlocked = ModeloIvaWalletReconciliationBlockedError
+
+
+def _blocked_reason_code(decision: IvaCompensationReconciliationDecision) -> str:
+    """Name WHY a wallet decision blocks, in the code vocabulary this module uses.
+
+    Every neighbouring refusal states a specific code -- target mismatch, amount
+    mismatch, first-period-zero ungrounded -- while the blocked refusal restated
+    the template's own first clause, so an operator read the same sentence for a
+    stale wallet, a target mismatch, missing authority and evidence that existed
+    and could not be interpreted.
+
+    Only the last of those is distinguishable from the decision alone, because it
+    is the only one carrying a field of its own. The rest still collapse to the
+    generic code and remain readable through ``divergence``.
+    """
+    if decision.local_evidence_found_but_unusable:
+        return "local_evidence_found_but_unreadable"
+    return "blocked"
 
 
 def _raise_iva_wallet_precondition(
@@ -325,7 +344,7 @@ def apply_iva_compensation_decision_binding(
             translated_message="application.modelo.errors.iva_wallet_taxpayer_identity_missing",
             evidence_values={"taxpayer_identity_present": False},
         )
-    if decision.taxpayer_nif.strip().upper() != taxpayer_nif.strip().upper():
+    if not same_tax_identifier(decision.taxpayer_nif, taxpayer_nif):
         _raise_iva_wallet_precondition(
             subject_leaf_key="modelo.work.calculate",
             reason_code="taxpayer_mismatch",
@@ -333,15 +352,16 @@ def apply_iva_compensation_decision_binding(
             evidence_values={"taxpayer_identity_match": False},
         )
     if decision.blocked:
+        blocked_reason = _blocked_reason_code(decision)
         _raise_iva_wallet_precondition(
             subject_leaf_key="modelo.work.calculate",
-            reason_code="blocked",
+            reason_code=blocked_reason,
             translated_message="application.modelo.errors.iva_wallet_blocked",
             evidence_values={
                 "divergence_code": str(decision.divergence),
                 "wallet_blocked": True,
             },
-            context={"divergence": str(decision.divergence), "reason": "blocked"},
+            context={"divergence": str(decision.divergence), "reason": blocked_reason},
         )
     if decision.selected_amount is None:
         _raise_iva_wallet_precondition(
@@ -798,6 +818,11 @@ def lazily_reconcile_local_iva_compensation_for_work_unit(
         treat_absent_recurrence_as_first_period=(
             not evidence.prior_period_observation_found and _activity_start_proves_first_iva_period(work_unit, snapshot)
         ),
+        # The caller is the only party that can tell having found nothing from
+        # having found a record it could not read. Without this the no-authority
+        # outcome states that nothing is available while the taxpayer's own
+        # prior record sits in the store.
+        local_evidence_found_but_unusable=(evidence.prior_period_observation_found and evidence.recurrence is None),
         persist=persist,
     )
     return report.decision
@@ -936,15 +961,16 @@ def require_persisted_iva_compensation_decision_matches_revision(
             evidence_values={"persisted_decision_present": False},
         )
     if decision.blocked:
+        blocked_reason = _blocked_reason_code(decision)
         _raise_iva_wallet_precondition(
             subject_leaf_key=subject_leaf_key,
-            reason_code="blocked",
+            reason_code=blocked_reason,
             translated_message="application.modelo.errors.iva_wallet_blocked",
             evidence_values={
                 "divergence_code": str(decision.divergence),
                 "wallet_blocked": True,
             },
-            context={"divergence": str(decision.divergence), "reason": "blocked"},
+            context={"divergence": str(decision.divergence), "reason": blocked_reason},
         )
     if decision.target_period != work_unit.period:
         _raise_iva_wallet_precondition(

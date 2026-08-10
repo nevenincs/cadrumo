@@ -21,9 +21,11 @@ import pytest
 from ....adapters.persistence.storage import AttachmentStore
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....domain.attachments import (
+    AttachmentBytesContent,
+    AttachmentIngestionRequest,
     AttachmentKind,
     AttachmentSource,
-    add_attachment_bytes,
+    add_attachment,
     link_attachment_transaction,
     list_attachments,
     load_attachment,
@@ -55,15 +57,17 @@ def _store(secure_objects: SecureObjectRepository) -> AttachmentStore:
 
 
 def _seed_attachment(secure_objects: SecureObjectRepository, *, marker: bytes) -> str:
-    attachment = add_attachment_bytes(
+    attachment = add_attachment(
         _store(secure_objects),
-        data=_PDF_BYTES + marker,
-        kind=AttachmentKind.INVOICE_PDF,
-        source=AttachmentSource.LOCAL_FILE,
-        source_reference="operator-evidence",
-        mime_type="application/pdf",
-        captured_at=datetime(2026, 8, 1, tzinfo=UTC),
-        bucket_id=_BUCKET_ID,
+        content=AttachmentBytesContent(data=_PDF_BYTES + marker),
+        request=AttachmentIngestionRequest(
+            kind=AttachmentKind.INVOICE_PDF,
+            source=AttachmentSource.LOCAL_FILE,
+            source_reference="operator-evidence",
+            mime_type="application/pdf",
+            captured_at=datetime(2026, 8, 1, tzinfo=UTC),
+            bucket_id=_BUCKET_ID,
+        ),
     )
     return attachment.attachment_id
 

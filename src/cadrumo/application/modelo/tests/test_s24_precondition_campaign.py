@@ -23,7 +23,7 @@ from ...operator_surface import (
 )
 from .._preconditions import MODELO_PRECONDITION_PROFILES
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _ROOT = Path(__file__).parents[5]
 _MODELO_PATH_PREFIX = "src/cadrumo/application/modelo/"

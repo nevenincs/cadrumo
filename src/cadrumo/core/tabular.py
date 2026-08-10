@@ -55,7 +55,7 @@ from .decimal import european_thousands_reading_is_ambiguous
 from .errors import CoreValidationError
 from .external_constants import CSV_ENCODING_FALLBACK_CHAIN
 from .logging import get_logger
-from .text_fold import fold_diacritics
+from .text_fold import fold_printed_phrase
 
 __all__ = [
     "CANDIDATE_DELIMITERS",
@@ -427,7 +427,7 @@ def _locate_header(parsed: list[tuple[int, list[str]]], *, column_count: int) ->
 def _is_summary_row(cells: list[str]) -> bool:
     """Return whether a data-region row is an appended aggregate rather than a movement."""
     leading = next((cell for cell in cells if cell.strip()), "")
-    folded = " ".join(fold_diacritics(leading.strip().casefold()).split())
+    folded = fold_printed_phrase(leading)
     return any(
         folded == token or folded.startswith(f"{token} ") or folded.startswith(f"{token}:")
         for token in _SUMMARY_ROW_TOKENS

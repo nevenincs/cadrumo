@@ -203,6 +203,11 @@ from ._operator_action_enums import (
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
 )
+from ._precondition_action_invariants import (
+    PreconditionActionIdentity,
+    PreconditionEvidence,
+    PreconditionOutcomeInvariant,
+)
 from ._operator_progress import OperatorProgress
 from ._optional_extras import (
     ANTHROPIC_EXTRA,
@@ -307,6 +312,7 @@ from ._tipos_actividad import (
     TipoActividad,
 )
 from ._toml import freeze_toml, freeze_toml_value, parse_toml_text, read_toml, to_str_keyed_dict
+from ._type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from .compatibility_lifecycle import (
     COMPATIBILITY_REGIME,
     PERSISTED_FORMATS,
@@ -342,7 +348,7 @@ from .secure_object_write import (
     DEFAULT_WRITE_PROVENANCE,
     SecureObjectWrite,
 )
-from .text_fold import fold_diacritics, unicode_compose
+from .text_fold import fold_diacritics, fold_printed_phrase, unicode_compose
 
 if TYPE_CHECKING:
     # Static bindings for the lazily-exposed surface below. At runtime these
@@ -372,6 +378,7 @@ if TYPE_CHECKING:
     from ._pid_liveness import pid_is_alive
     from .aggregation import (
         OBSERVATION_BACKED_BINDING_SOURCE_KINDS,
+        AggregationCaptureKind,
         BindingSourceKind,
         IntracomOperationType,
     )
@@ -424,6 +431,7 @@ __all__: list[str] = [
     "NIST_PASSPHRASE_MIN_LENGTH",
     "NON_IAE_SUBJECT_TIPOS_ACTIVIDAD",
     "NON_REGISTRY_MODELOS",
+    "OBJECT_TUPLE_ADAPTER",
     "OBSERVATION_BACKED_BINDING_SOURCE_KINDS",
     "OFFICIAL_M210_TIPO_RENTA_CODES",
     "OFX_EXTRA",
@@ -442,6 +450,7 @@ __all__: list[str] = [
     "STORAGE_TAXONOMY",
     "STRICT_FROZEN_CONFIG",
     "STRUCTURED_DOCUMENT_SHAPES",
+    "STR_KEYED_MAPPING_ADAPTER",
     "UNMODELED_OBLIGATIONS",
     "AcceleratorKind",
     "ActionArgumentResolution",
@@ -454,6 +463,7 @@ __all__: list[str] = [
     "Art104TresExclusion",
     "AuthProviderDescription",
     "AuthProviderKind",
+    "AggregationCaptureKind",
     "BindingSourceKind",
     "BucketPointer",
     "CasillaId",
@@ -528,6 +538,9 @@ __all__: list[str] = [
     "PostFilingEventKind",
     "PriorDomiciliationElection",
     "ProductIdentity",
+    "PreconditionActionIdentity",
+    "PreconditionEvidence",
+    "PreconditionOutcomeInvariant",
     "ProfileSessionRefusalReason",
     "ProrrataProvisionalProvenance",
     "ProrrataRegisterRegime",
@@ -581,6 +594,7 @@ __all__: list[str] = [
     "exclusive_file_lock",
     "expected_floor",
     "fold_diacritics",
+    "fold_printed_phrase",
     "foreign_asset_obligation_group",
     "freeze_toml",
     "freeze_toml_value",
@@ -651,6 +665,10 @@ def __getattr__(name: str) -> object:
         from .aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS
 
         return OBSERVATION_BACKED_BINDING_SOURCE_KINDS
+    if name == "AggregationCaptureKind":
+        from .aggregation import AggregationCaptureKind
+
+        return AggregationCaptureKind
     if name == "BindingSourceKind":
         from .aggregation import BindingSourceKind
 

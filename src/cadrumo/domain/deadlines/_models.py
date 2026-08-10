@@ -15,9 +15,9 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, Self
 
-from pydantic import BaseModel, BeforeValidator, Field, TypeAdapter, field_validator, model_validator
+from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_validator
 
-from ...core import IBAN_SHAPE_RE, Modelo, Period, iban_mod_97, normalise_iban
+from ...core import IBAN_SHAPE_RE, OBJECT_TUPLE_ADAPTER, Modelo, Period, iban_mod_97, normalise_iban
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import (
     MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR,
@@ -31,7 +31,6 @@ from ..contribuyente import (
 )
 from ._errors import DeadlineValidationError
 
-_OBJECT_TUPLE_ADAPTER: TypeAdapter[tuple[object, ...]] = TypeAdapter(tuple[object, ...])
 
 
 class IVARegime(StrEnum):
@@ -503,10 +502,10 @@ class CrossPeriodGroupMemberRoster(BaseModel):
     @classmethod
     def _coerce_member_nifs(cls, value: object) -> object:
         if isinstance(value, tuple):
-            tuple_validated: tuple[object, ...] = _OBJECT_TUPLE_ADAPTER.validate_python(value)
+            tuple_validated: tuple[object, ...] = OBJECT_TUPLE_ADAPTER.validate_python(value)
             return tuple_validated
         if isinstance(value, list | set | frozenset):
-            sequence_validated: tuple[object, ...] = _OBJECT_TUPLE_ADAPTER.validate_python(value)
+            sequence_validated: tuple[object, ...] = OBJECT_TUPLE_ADAPTER.validate_python(value)
             return sequence_validated
         return value
 

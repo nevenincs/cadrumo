@@ -61,12 +61,16 @@ from ...core import (
 )
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
-from ...core.identity import FilingRecordId
+from ...core.identity import FilingRecordId, same_tax_identifier
 from ...core.resources import resources
 from ...core.time import UtcInstant, now
 from ...domain.calculations.registry import RegistryModeloObservation, RegistrySnapshotError, undeclared_casilla_ids
 from ...domain.iva_compensation import IvaCompensationReconciliationDecision
-from ._errors import ObservationCasillaReferenceError, ObservationKeyError
+from ._errors import (
+    ObservationCasillaReferenceError,
+    ObservationEvidenceDisplacementError,
+    ObservationKeyError,
+)
 
 
 class ObservationSourceKind(StrEnum):
@@ -493,8 +497,14 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
         result_disposition: ResultDispositionProjection | None = None,
         prior_domiciliation_election: PriorDomiciliationElectionProjection | None = None,
         normalize_m303_carry: bool = False,
+        replace_official_evidence: bool = False,
     ) -> ObservationEnvelopePayload:
         """Build one validated observation envelope without writing it.
+
+        Every writer traverses this method, so it is where the official-evidence
+        guard lives -- see :meth:`_refuse_official_evidence_displacement`, which
+        also states which store that guard covers and which sibling observation
+        repositories it does not.
 
         ``member_nif`` is an optional grupo-de-entidades member NIF. When
         supplied, the storage identifier is widened (see
@@ -553,7 +563,67 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
             from ._m303_carry_ingress import normalize_m303_carry_observation_envelope
 
             payload = normalize_m303_carry_observation_envelope(payload)
+        # Checked HERE, and here only, because this is the one function every
+        # writer traverses. The operator verb reaches storage through
+        # `save_observation`; the live capture and the local filing flow bypass
+        # it entirely and persist through a prepared write batch so the
+        # observation and its IVA history land in one transaction. Guarding the
+        # save would therefore cover one of the two ruled edges while being
+        # named for both. This runs before any write is prepared, so a refusal
+        # never has to reason about staged work inside a transaction.
+        if not replace_official_evidence:
+            self._refuse_official_evidence_displacement(payload)
         return payload
+
+    def _refuse_official_evidence_displacement(self, payload: ObservationEnvelopePayload) -> None:
+        """Refuse a non-official write onto a slot already holding AEAT evidence.
+
+        Compares MEMBERSHIP only -- existing is official, incoming is not. The
+        provenance taxonomy has no ordering, so a general "downgrade" rule would
+        invent an axis the registry does not publish; official-to-official and
+        anything-to-non-official stay permitted.
+
+        The occupancy read uses :meth:`extract_identifier`, the same derivation
+        the write uses, so the slot inspected is the slot that would be written
+        rather than a re-derived approximation of it.
+
+        WHICH STORE THIS COVERS, stated here because the guard's name does not
+        say it and a reader will otherwise assume every observation write is
+        protected. It covers THIS repository only -- the ``(modelo, filing_year,
+        period[, member])`` slot. Two sibling repositories persist observations
+        at a finer key with their own save and their own set-replace path:
+        ``application/aggregation/_retencion_observations_repository.py`` keyed
+        by NIF and scheme, and ``_percepciones_observations_repository.py`` keyed
+        by NIF, clave and subclave. They are a different store, not writers that
+        slipped past this check, and nothing here refuses on their behalf.
+        """
+        if payload.source_kind.is_official_aeat:
+            return
+        existing = self.load(self.extract_identifier(payload))
+        if existing is None or not existing.source_kind.is_official_aeat:
+            return
+        observation = payload.observation
+        context = {
+            "modelo": observation.modelo,
+            "filing_year": str(observation.filing_year),
+            "period": str(observation.period),
+            "existing_source_kind": existing.source_kind.value,
+            "incoming_source_kind": payload.source_kind.value,
+        }
+        # Two raises with LITERAL keys rather than one raise selecting a key by
+        # expression: the locale scaffold discovers keys by reading the literal
+        # argument, so a computed key is invisible to it and the parity gate
+        # would never learn the string exists. The duplication is the price of
+        # the key being discoverable.
+        if payload.source_kind is ObservationSourceKind.APP_FILING:
+            raise ObservationEvidenceDisplacementError(
+                translated_message="application.calculations.errors.observation_displaces_official_evidence_app_filing",
+                context=context,
+            )
+        raise ObservationEvidenceDisplacementError(
+            translated_message="application.calculations.errors.observation_displaces_official_evidence_manual",
+            context=context,
+        )
 
     def save_observation(
         self,
@@ -568,8 +638,15 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
         result_disposition: ResultDispositionProjection | None = None,
         prior_domiciliation_election: PriorDomiciliationElectionProjection | None = None,
         normalize_m303_carry: bool = False,
+        replace_official_evidence: bool = False,
     ) -> ObservationEnvelopePayload:
-        """Persist one envelope prepared through the canonical validation path."""
+        """Persist one envelope prepared through the canonical validation path.
+
+        ``replace_official_evidence`` is the operator's explicit statement that
+        displacing captured AEAT evidence at this slot is intended. It is
+        forwarded to the preparation step, which owns the refusal; nothing here
+        re-decides it.
+        """
         payload = self.prepare_observation_envelope(
             observation,
             source_kind=source_kind,
@@ -581,6 +658,7 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
             result_disposition=result_disposition,
             prior_domiciliation_election=prior_domiciliation_election,
             normalize_m303_carry=normalize_m303_carry,
+            replace_official_evidence=replace_official_evidence,
         )
         self.save(payload)
         return payload
@@ -711,7 +789,6 @@ class IvaWalletDecisionRepository(SecureBoundRepository[IvaWalletDecisionEnvelop
         Returns an immutable tuple of :class:`IvaCompensationReconciliationDecision`.
         """
         filing_period = _require_observation_period(target_period)
-        taxpayer_token = taxpayer_nif.strip().upper()
         decisions: list[IvaCompensationReconciliationDecision] = []
         for record in self._objects.list_records(
             self.history_namespace,
@@ -722,7 +799,7 @@ class IvaWalletDecisionRepository(SecureBoundRepository[IvaWalletDecisionEnvelop
                 record.payload.decode(UTF_8_ENCODING),
             )
             decision = envelope.payload.decision
-            if decision.taxpayer_nif.strip().upper() == taxpayer_token and decision.target_period == filing_period:
+            if same_tax_identifier(decision.taxpayer_nif, taxpayer_nif) and decision.target_period == filing_period:
                 decisions.append(decision)
         return tuple(sorted(decisions, key=lambda item: (item.decided_at, item.wallet_captured_at or item.decided_at)))
 

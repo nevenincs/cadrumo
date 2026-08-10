@@ -4,7 +4,7 @@ There is no link-only ``add_link_attachment`` path that records a
 Gmail/Drive/URL reference as a ``text/uri-list`` manifest without ever
 fetching the document. This gate proves the invariant: every manifest the
 byte-bearing
-:func:`cadrumo.domain.attachments.add_attachment_bytes` path writes carries the
+:func:`cadrumo.domain.attachments.add_attachment` path writes carries the
 real ``sha256`` of the stored bytes and a concrete document ``mime_type`` — never
 ``text/uri-list`` — over a real SQLite-backed :class:`AttachmentStore`.
 
@@ -26,7 +26,7 @@ from ....tests.secure_sql import isolated_runtime_profile
 from .._enums import AttachmentKind, AttachmentSource
 from .._errors import AttachmentValidationError
 from .._models import Attachment
-from .._service import add_attachment_bytes
+from .._service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -48,21 +48,23 @@ def _add_drive_document(
     link_transaction_ids: tuple[str, ...] = (),
     metadata: dict[str, str] | None = None,
 ) -> Attachment:
-    return add_attachment_bytes(
+    return add_attachment(
         store,
-        data=data,
-        kind=AttachmentKind.DRIVE_DOCUMENT,
-        source=AttachmentSource.GOOGLE_DRIVE,
-        source_reference=source_reference,
-        mime_type=mime_type,
-        captured_at=_CAPTURED_AT,
-        bucket_id=bucket_id,
-        link_transaction_ids=link_transaction_ids,
-        metadata=metadata,
+        content=AttachmentBytesContent(data=data),
+        request=AttachmentIngestionRequest(
+            kind=AttachmentKind.DRIVE_DOCUMENT,
+            source=AttachmentSource.GOOGLE_DRIVE,
+            source_reference=source_reference,
+            mime_type=mime_type,
+            captured_at=_CAPTURED_AT,
+            bucket_id=bucket_id,
+            link_transaction_ids=link_transaction_ids,
+            metadata=metadata or {},
+        ),
     )
 
 
-def test_add_attachment_bytes_writes_byte_bearing_manifest_never_uri_list(tmp_path: Path) -> None:
+def test_add_attachment_writes_byte_bearing_manifest_never_uri_list(tmp_path: Path) -> None:
     """A fetched document is stored with its real digest and mime, not as a link."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         store = AttachmentStore()

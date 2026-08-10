@@ -20,12 +20,11 @@ from pydantic import AnyUrl, ValidationError
 
 from .....core.config import Settings
 from .....tests.aeat_literal_fixtures import UNKNOWN_AEAT_STATE_SURFACE_URL_CANARY, aeat_host
+from .._checker_oracle_flow import CheckerObservation, CheckerReplayDriver
 from .._errors import RegistryValidationError
 from .._groi_oracle import (
     GROI_ORACLE_ID,
-    GroiObservation,
     GroiOracle,
-    GroiReplayDriver,
     register_default,
 )
 from .._live_parity import LiveParityCatalogue, LiveParityOracle, OracleEnvironment
@@ -40,6 +39,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _SEDE_HOST = aeat_host("sede")
 _WWW2_HOST = aeat_host("www2")
+_GROI_REPLAY_DRIVER = CheckerReplayDriver(surface_label="GROI replay", replay_action="parse-groi-replay")
 
 
 def _aeat_policy() -> RemoteStateGuardPolicy:
@@ -149,7 +149,7 @@ def test_verify_payload_reports_guard_block_when_aeat_host_not_in_policy() -> No
 def test_verify_payload_compares_replay_observations_to_expected_verdicts() -> None:
     """Replay driver round-trips JSON; oracle compares per-NIF and emits match/mismatch."""
 
-    oracle = GroiOracle(driver=GroiReplayDriver())
+    oracle = GroiOracle(driver=_GROI_REPLAY_DRIVER)
     policy = _aeat_policy()
     payload = (
         b'{"observed": {"A28015865": "valid", "B12345678": "invalid"}, '
@@ -171,7 +171,7 @@ def test_verify_payload_compares_replay_observations_to_expected_verdicts() -> N
 
 
 def test_verify_payload_match_when_all_observations_agree() -> None:
-    oracle = GroiOracle(driver=GroiReplayDriver())
+    oracle = GroiOracle(driver=_GROI_REPLAY_DRIVER)
     policy = _aeat_policy()
     payload = b'{"observed": {"A28015865": "valid"}}'
 
@@ -183,7 +183,7 @@ def test_verify_payload_match_when_all_observations_agree() -> None:
 
 
 def test_verify_payload_unverifiable_when_replay_payload_is_malformed() -> None:
-    oracle = GroiOracle(driver=GroiReplayDriver())
+    oracle = GroiOracle(driver=_GROI_REPLAY_DRIVER)
     policy = _aeat_policy()
 
     result = oracle.verify_payload(policy, b"not-json", expected={"A28015865": "valid"})
@@ -195,7 +195,7 @@ def test_verify_payload_unverifiable_when_replay_payload_is_malformed() -> None:
 def test_replay_driver_rejects_payload_without_observed_object() -> None:
     # ReplayPayload.model_validate enforces the required ``observed`` field;
     # missing it raises pydantic ValidationError (strict schema).
-    driver = GroiReplayDriver()
+    driver = _GROI_REPLAY_DRIVER
     with pytest.raises(ValidationError, match="observed"):
         driver.collect_observation(b'{"raw_evidence_locator": "x"}', expected={})
 
@@ -203,7 +203,7 @@ def test_replay_driver_rejects_payload_without_observed_object() -> None:
 def test_replay_driver_rejects_non_string_observed_values() -> None:
     # ReplayPayload enforces Mapping[str, str]; a non-string value raises
     # pydantic ValidationError under strict mode.
-    driver = GroiReplayDriver()
+    driver = _GROI_REPLAY_DRIVER
     with pytest.raises(ValidationError):
         driver.collect_observation(b'{"observed": {"A28015865": 1}}', expected={})
 
@@ -232,7 +232,7 @@ def test_replay_payload_roundtrip_via_groi_driver() -> None:
     assert payload.raw_evidence_locator == "corpus/aeat_official/groi/sample.txt"
 
     # Drive through the production reader path.
-    driver = GroiReplayDriver()
+    driver = _GROI_REPLAY_DRIVER
     observation = driver.collect_observation(raw, expected={})
 
     # The driver normalises keys to upper-case.
@@ -260,13 +260,13 @@ def test_replay_payload_strict_rejects_non_string_value_in_observed() -> None:
 
 
 def test_observation_model_normalises_nif_uppercase_and_verdict_lowercase() -> None:
-    observation = GroiObservation(values={"a28015865": "VALID"})
+    observation = CheckerObservation(values={"a28015865": "VALID"})
     assert observation.values == {"A28015865": "valid"}
 
 
 def test_observation_model_rejects_blank_keys_or_values() -> None:
     with pytest.raises(ValueError, match="blank"):
-        GroiObservation(values={"": "valid"})
+        CheckerObservation(values={"": "valid"})
 
 
 def test_register_default_under_production_environment() -> None:

@@ -32,6 +32,13 @@ from ._record_design_ir import (
     RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION,
     RecordDesignIntermediateField,
 )
+from ._render_profile import (
+    RENDER_PROFILE_SCHEMA_VERSION,
+    RenderProfile,
+    RenderProfileSourceEvidence,
+    render_profile_digest,
+    validate_render_profile,
+)
 from ._semantic_map import SemanticMap, SemanticMapEntry
 from ._semantic_map_join import JoinedRecordDesign
 
@@ -58,13 +65,13 @@ __all__ = [
 ]
 
 
-EXPORT_FRAGMENT_PROVENANCE_SCHEMA_VERSION: Final[int] = 1
+EXPORT_FRAGMENT_PROVENANCE_SCHEMA_VERSION: Final[int] = 2
 """Current wire schema for the internal non-loader provenance manifest."""
 
-EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION: Final[int] = 2
+EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION: Final[int] = 3
 """Current generator contract recorded by every provenance manifest."""
 
-EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION: Final[int] = 1
+EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION: Final[int] = 2
 """Reviewed parser-to-wire normalization contract recorded for every field."""
 
 _LOADER_SEMANTIC_SCHEMA_VERSION: Final[int] = 3
@@ -161,6 +168,8 @@ type ExportFieldDerivationCode = Literal[
     "numeric-integer-v1",
     "text-a-v1",
     "text-an-v1",
+    "render-profile-width-17-v1",
+    "render-profile-singleton-v1",
 ]
 
 
@@ -272,6 +281,8 @@ class ExportFragmentProvenanceManifest(_StrictModel):
     parser_schema_version: int = Field(ge=1)
     generator_schema_version: int = Field(ge=1)
     semantic_map_sha256: str = Field(pattern=_SHA256_PATTERN)
+    render_profile_schema_version: int = Field(ge=1)
+    render_profile_sha256: str = Field(pattern=_SHA256_PATTERN)
     modelo: ModeloId
     revision_id: RevisionId
     design_epoch: str = Field(min_length=1)
@@ -295,6 +306,11 @@ class ExportFragmentProvenanceManifest(_StrictModel):
             raise ValueError(
                 "generator schema drift: manifest records "
                 f"{self.generator_schema_version}, expected {EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION}",
+            )
+        if self.render_profile_schema_version != RENDER_PROFILE_SCHEMA_VERSION:
+            raise ValueError(
+                "render-profile schema drift: manifest records "
+                f"{self.render_profile_schema_version}, expected {RENDER_PROFILE_SCHEMA_VERSION}",
             )
         paths = tuple(item.relative_path for item in self.output_files)
         if paths != tuple(sorted(paths)):
@@ -419,9 +435,17 @@ def build_export_fragment_provenance_manifest(
     loaded_layout: ExportLayoutDefinition,
     export_root: Path,
     field_derivations: tuple[ExportFieldDerivation, ...],
+    render_profile: RenderProfile,
+    render_profile_source_evidence: RenderProfileSourceEvidence,
 ) -> ExportFragmentProvenanceManifest:
     """Assemble provenance only from the exact joined and rendered authorities."""
-    _validate_generation_scope(joined=joined, semantic_map=semantic_map, target=target)
+    _validate_generation_scope(
+        joined=joined,
+        semantic_map=semantic_map,
+        target=target,
+        render_profile=render_profile,
+        render_profile_source_evidence=render_profile_source_evidence,
+    )
     manifest = ExportFragmentProvenanceManifest(
         manifest_schema_version=EXPORT_FRAGMENT_PROVENANCE_SCHEMA_VERSION,
         source_ref=joined.source.source_ref,
@@ -429,6 +453,8 @@ def build_export_fragment_provenance_manifest(
         parser_schema_version=RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION,
         generator_schema_version=EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION,
         semantic_map_sha256=semantic_map_digest(semantic_map),
+        render_profile_schema_version=RENDER_PROFILE_SCHEMA_VERSION,
+        render_profile_sha256=render_profile_digest(render_profile, render_profile_source_evidence),
         modelo=target.modelo,
         revision_id=target.revision_id,
         design_epoch=target.design_epoch,
@@ -450,6 +476,8 @@ def emit_export_fragment_provenance_manifest(
     loaded_layout: ExportLayoutDefinition,
     export_root: Path,
     field_derivations: tuple[ExportFieldDerivation, ...],
+    render_profile: RenderProfile,
+    render_profile_source_evidence: RenderProfileSourceEvidence,
 ) -> ExportFragmentProvenanceManifest:
     """Write one complete canonical sibling manifest after a fresh tree renders.
 
@@ -463,6 +491,8 @@ def emit_export_fragment_provenance_manifest(
         loaded_layout=loaded_layout,
         export_root=export_root,
         field_derivations=field_derivations,
+        render_profile=render_profile,
+        render_profile_source_evidence=render_profile_source_evidence,
     )
     manifest_path = export_fragment_provenance_path(export_root)
     if is_link_like(manifest_path):
@@ -481,6 +511,8 @@ def verify_export_fragment_provenance_manifest(
     target: ExportFragmentTarget,
     loaded_layout: ExportLayoutDefinition,
     field_derivations: tuple[ExportFieldDerivation, ...],
+    render_profile: RenderProfile,
+    render_profile_source_evidence: RenderProfileSourceEvidence,
 ) -> ExportFragmentProvenanceManifest:
     """Refuse current-authority, file, loader-semantic, or derivation drift."""
     manifest_path = export_fragment_provenance_path(export_root)
@@ -494,6 +526,8 @@ def verify_export_fragment_provenance_manifest(
         joined=joined,
         semantic_map=semantic_map,
         target=target,
+        render_profile=render_profile,
+        render_profile_source_evidence=render_profile_source_evidence,
     )
     actual_outputs = collect_export_fragment_output_digests(export_root)
     if manifest.output_files != actual_outputs:
@@ -542,7 +576,10 @@ def _validate_generation_scope(
     joined: JoinedRecordDesign,
     semantic_map: SemanticMap,
     target: ExportFragmentTarget,
+    render_profile: RenderProfile,
+    render_profile_source_evidence: RenderProfileSourceEvidence,
 ) -> None:
+    validate_render_profile(render_profile, joined, render_profile_source_evidence)
     if joined.modelo != target.modelo:
         raise RegistryValidationError(
             f"joined modelo {joined.modelo!r} does not match generation target {target.modelo!r}",
@@ -617,14 +654,24 @@ def _require_manifest_matches_current_authorities(
     joined: JoinedRecordDesign,
     semantic_map: SemanticMap,
     target: ExportFragmentTarget,
+    render_profile: RenderProfile,
+    render_profile_source_evidence: RenderProfileSourceEvidence,
 ) -> None:
-    _validate_generation_scope(joined=joined, semantic_map=semantic_map, target=target)
+    _validate_generation_scope(
+        joined=joined,
+        semantic_map=semantic_map,
+        target=target,
+        render_profile=render_profile,
+        render_profile_source_evidence=render_profile_source_evidence,
+    )
     expected = {
         "source_ref": joined.source.source_ref,
         "source_sha256": joined.source.source_sha256,
         "parser_schema_version": RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION,
         "generator_schema_version": EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION,
         "semantic_map_sha256": semantic_map_digest(semantic_map),
+        "render_profile_schema_version": RENDER_PROFILE_SCHEMA_VERSION,
+        "render_profile_sha256": render_profile_digest(render_profile, render_profile_source_evidence),
         "modelo": target.modelo,
         "revision_id": target.revision_id,
         "design_epoch": target.design_epoch,

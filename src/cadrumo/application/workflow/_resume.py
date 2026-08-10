@@ -58,7 +58,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG, Period
+from ...core import HEX_PATTERN_16, HEX_PATTERN_64, STRICT_FROZEN_CONFIG, Period
 from ._errors import WorkflowError
 from ._models import WorkflowAbortReason, WorkflowObligationFacts, WorkflowResult, WorkflowStage
 from ._persistence import list_runs, load_run
@@ -103,8 +103,8 @@ _NON_RESUMABLE_REASONS: frozenset[WorkflowAbortReason] = frozenset(
         WorkflowAbortReason.USER_CANCELLED,
     },
 )
-_WORKFLOW_RUN_ID_RE = re.compile(r"^[0-9a-f]{16}$")
-_WORK_UNIT_ID_RE = re.compile(r"^[0-9a-f]{64}$")
+_WORKFLOW_RUN_ID_RE = re.compile(HEX_PATTERN_16)
+_WORK_UNIT_ID_RE = re.compile(HEX_PATTERN_64)
 
 
 class WorkflowResumeRunCandidate(BaseModel):

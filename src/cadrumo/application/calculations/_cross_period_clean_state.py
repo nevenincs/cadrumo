@@ -21,6 +21,7 @@ from typing import Final, NamedTuple, cast
 
 from ...adapters.persistence.profile.justificante import JustificanteRepository
 from ...core import CasillaId, Modelo, Period
+from ...core.identity import same_tax_identifier
 from ...domain.calculations.registry import (
     Modelo202Modality,
     RegistryFoldRequirement,
@@ -671,9 +672,8 @@ def _aeat_register_provenance_blockers(
     if not expediente_id:
         blockers.append(CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD)
 
-    authenticated_identity = metadata.get("authenticated_identity", "").strip().upper()
-    expected_identity = expected_tax_id.strip().upper() if expected_tax_id is not None else ""
-    if expected_identity and (not authenticated_identity or authenticated_identity != expected_identity):
+    authenticated_identity = metadata.get("authenticated_identity", "")
+    if expected_tax_id and not same_tax_identifier(authenticated_identity, expected_tax_id):
         blockers.append(CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD)
     return blockers
 

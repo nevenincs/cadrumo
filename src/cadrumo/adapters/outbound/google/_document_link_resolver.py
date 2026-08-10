@@ -5,7 +5,7 @@ Ledger evidence may start from a recorded
 stored as evidence by itself.
 :func:`~adapters.outbound.google.resolve_document_link` fetches reachable
 Drive content as bytes so the caller can persist those bytes through
-:func:`~domain.attachments.add_attachment_bytes`; the original link remains
+:func:`~domain.attachments.add_attachment`; the original link remains
 provenance metadata on that byte-bearing attachment.
 :func:`~adapters.outbound.google.list_drive_folder_documents` extends the
 same minimal-scope posture to a *folder*: it lists the PDF/image children of a

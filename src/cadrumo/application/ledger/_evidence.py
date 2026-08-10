@@ -62,7 +62,7 @@ from ...adapters.persistence.storage import (
     SecureBoundRepository,
     secure_object_repository_for_bucket,
 )
-from ...core import STRICT_FROZEN_CONFIG
+from ...core import STRICT_FROZEN_CONFIG, Hex64Str
 from ...core.config import Settings
 from ...core.errors import CadrumoError
 from ...core.external_constants import PDF_EXTENSION, PDF_MIME_TYPE, XML_MIME_TYPE
@@ -70,7 +70,13 @@ from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, ContentDigest
 from ...core.time import now as _utc_now
 from ...domain import canonical_decimal_string
-from ...domain.attachments import AttachmentKind, AttachmentSource, add_attachment
+from ...domain.attachments import (
+    AttachmentFileContent,
+    AttachmentIngestionRequest,
+    AttachmentKind,
+    AttachmentSource,
+    add_attachment,
+)
 from ...domain.buckets import (
     BucketEvent,
     BucketEventHistoryRepositoryProtocol,
@@ -148,7 +154,7 @@ class PurchaseInvoiceEvidence(BaseModel):
     # storage is not evidence -- `source_path` is a provenance breadcrumb only and is
     # never read for bytes (sensitive-financial-data-secure-storage-only), so a
     # byte-less record would be an unreadable claim about a file we do not hold.
-    attachment_id: str = Field(min_length=64, max_length=64)
+    attachment_id: Hex64Str
     media_kind: MediaKind
     supplier: str | None = None
     invoice_number: str | None = None
@@ -598,15 +604,17 @@ class PurchaseInvoiceEvidenceService:
         store = AttachmentStore(objects=secure_object_repository_for_bucket(bucket_id, self._settings))
         attachment = add_attachment(
             store,
-            path=resolved,
-            kind=_attachment_kind_for(media_kind),
-            source=AttachmentSource.LOCAL_FILE,
-            source_reference=str(resolved),
-            mime_type=_SUFFIX_MIME[resolved.suffix.lower()],
-            captured_at=now,
-            bucket_id=bucket_id,
-            captured_by=actor,
-            source_command="aeat app ledger evidence add",
+            content=AttachmentFileContent(path=resolved),
+            request=AttachmentIngestionRequest(
+                kind=_attachment_kind_for(media_kind),
+                source=AttachmentSource.LOCAL_FILE,
+                source_reference=str(resolved),
+                mime_type=_SUFFIX_MIME[resolved.suffix.lower()],
+                captured_at=now,
+                bucket_id=bucket_id,
+                captured_by=actor,
+                source_command="aeat app ledger evidence add",
+            ),
         )
         digest = attachment.attachment_id
         records = _load(self._settings, bucket_id)

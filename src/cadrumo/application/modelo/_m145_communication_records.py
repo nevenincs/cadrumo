@@ -39,11 +39,11 @@ from pydantic import BaseModel, Field, TypeAdapter, field_validator, model_valid
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage import M145_COMMUNICATION_RECORD_NAMESPACE
-from ...core import STRICT_FROZEN_CONFIG, CasillaId, ExportLayoutFormat, validated_casilla_id_map
+from ...core import STRICT_FROZEN_CONFIG, CasillaId, ExportLayoutFormat, Hex64Str, validated_casilla_id_map
 from ...core.decimal import coerce_decimal_strict
 from ...core.errors import resolve_error_message
 from ...core.hashing import content_hash_hex, sha256_hex
-from ...core.identity import BucketId, IdentityError, validate_spanish_tax_id
+from ...core.identity import BucketId, ContentDigest, IdentityError, validate_spanish_tax_id
 from ...core.logging import get_logger
 from ...core.resources import resources
 from ...core.time import now
@@ -75,7 +75,6 @@ from ._revision_persistence import emit_modelo_bucket_event as _emit_bucket_even
 if TYPE_CHECKING:
     from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
 
-_HEX_64_PATTERN = r"^[0-9a-f]{64}$"
 _FOUR_DIGIT_YEAR_PATTERN = re.compile(r"^\d{4}$")
 _ISO_DATE_PATTERN = re.compile(r"^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$")
 _AEAT_DATE_PATTERN = re.compile(r"^(0[1-9]|[12]\d|3[01])(0[1-9]|1[0-2])\d{4}$")
@@ -83,10 +82,7 @@ _LINE_ENDINGS: Mapping[str, bytes] = {"none": b"", "lf": b"\n", "crlf": b"\r\n"}
 _M145_COMMUNICATION_EVENT_ACTOR = M145_COMMUNICATION_SERVICE_OWNER
 _LOGGER = get_logger(__name__)
 
-M145CommunicationRecordId = Annotated[
-    str,
-    Field(min_length=64, max_length=64, pattern=_HEX_64_PATTERN),
-]
+M145CommunicationRecordId = Hex64Str
 M145CommunicationFieldValue = Annotated[str, Field(max_length=512)]
 
 
@@ -203,7 +199,7 @@ class M145CommunicationExportResult(BaseModel):
     encoding: str = Field(min_length=1)
     record_count: int = Field(ge=1)
     byte_length: int = Field(ge=1)
-    payload_sha256: str = Field(min_length=64, max_length=64, pattern=_HEX_64_PATTERN)
+    payload_sha256: ContentDigest
     payload: bytes
     legal_refs: tuple[str, ...]
     source_refs: tuple[str, ...]

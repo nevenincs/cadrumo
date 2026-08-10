@@ -16,17 +16,15 @@ from typing import Self, override
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, field_serializer, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER, Hex64Str
 from ...core.errors import CoreValidationError
 from ...core.identity import BucketId, ContentDigest
 from ...core.time import parse_iso_datetime, validate_utc_aware
 from ._enums import AttachmentKind, AttachmentSource
 from ._errors import AttachmentValidationError
-from ._ids import AttachmentId
 
 _HEX_DIGITS = frozenset("0123456789abcdef")
 _LINK_ONLY_MIME_TYPE = "text/uri-list"
-_OBJECT_SEQUENCE = TypeAdapter(tuple[object, ...])
-_STRING_OBJECT_MAPPING = TypeAdapter(dict[str, object])
 _STRING_METADATA_MAPPING: TypeAdapter[dict[str, str]] = TypeAdapter(dict[str, str], config=ConfigDict(strict=True))
 
 
@@ -130,7 +128,7 @@ class Attachment(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    attachment_id: AttachmentId
+    attachment_id: Hex64Str
     kind: AttachmentKind
     source: AttachmentSource
     source_reference: str = Field(min_length=1)
@@ -216,7 +214,7 @@ class Attachment(BaseModel):
             raise AttachmentValidationError("linked_transaction_ids must be an iterable of strings, not a scalar")
         if not isinstance(value, Iterable):
             raise AttachmentValidationError("linked_transaction_ids must be iterable")
-        return _dedupe_preserve_order(_OBJECT_SEQUENCE.validate_python(value), field_name="linked_transaction_ids")
+        return _dedupe_preserve_order(OBJECT_TUPLE_ADAPTER.validate_python(value), field_name="linked_transaction_ids")
 
     @field_validator("linked_invoice_ids", mode="before")
     @classmethod
@@ -228,7 +226,7 @@ class Attachment(BaseModel):
             raise AttachmentValidationError("linked_invoice_ids must be an iterable of strings, not a scalar")
         if not isinstance(value, Iterable):
             raise AttachmentValidationError("linked_invoice_ids must be iterable")
-        return _dedupe_preserve_order(_OBJECT_SEQUENCE.validate_python(value), field_name="linked_invoice_ids")
+        return _dedupe_preserve_order(OBJECT_TUPLE_ADAPTER.validate_python(value), field_name="linked_invoice_ids")
 
     @field_validator("metadata", mode="before")
     @classmethod
@@ -289,13 +287,13 @@ class AttachmentCatalogue(BaseModel):
         if isinstance(data, cls):
             return data
         if isinstance(data, Mapping):
-            payload = _STRING_OBJECT_MAPPING.validate_python(data)
+            payload = STR_KEYED_MAPPING_ADAPTER.validate_python(data)
             if "attachments" in payload:
                 return payload
             return {"attachments": payload}
         if isinstance(data, Iterable) and not isinstance(data, str | bytes):
             attachments: dict[str, Attachment] = {}
-            for item in _OBJECT_SEQUENCE.validate_python(data):
+            for item in OBJECT_TUPLE_ADAPTER.validate_python(data):
                 attachment = item if isinstance(item, Attachment) else Attachment.model_validate(item)
                 if attachment.attachment_id in attachments:
                     raise AttachmentValidationError(f"duplicate attachment_id: {attachment.attachment_id}")

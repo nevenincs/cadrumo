@@ -26,7 +26,7 @@ from pydantic import ValidationError
 
 from ....adapters.persistence.storage import PathContainmentError, SecureObjectRowIdentityError
 from ....adapters.persistence.storage.crypto import secure_object_key_digest
-from ....core import Period
+from ....core import AggregationCaptureKind, Period
 from ....core.aggregation import RetencionClave
 from ....core.external_constants import UTF_8_ENCODING
 from ....domain.calculations.registry import WithholdingObservation, aggregate_withholding_by_clave
@@ -73,7 +73,7 @@ def test_withholding_observation_survives_encrypted_storage_roundtrip(tmp_path: 
             filing_year=2024,
             period=period,
             observation=original,
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
             captured_at=None,
             source_metadata={"origin": "pull"},
         )
@@ -123,7 +123,7 @@ def test_one_perceptor_two_claves_persist_as_distinct_percepciones(tmp_path: Pat
                 filing_year=2024,
                 period=period,
                 observation=record,
-                source_kind="aggregate_pull",
+                source_kind=AggregationCaptureKind.AGGREGATE_PULL,
             )
         loaded = repo.load_observations("190", period)
         # All three rows survive (no key collision); the two 11111111H rows are
@@ -164,7 +164,7 @@ def test_period_scoping_excludes_other_windows(tmp_path: Path) -> None:
             filing_year=2023,
             period=Period.from_year_and_code(2023, "0A"),
             observation=obs,
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         assert repo.load_observations("190", Period.from_year_and_code(2024, "0A")) == ()
         assert repo.load_observations("190", Period.from_year_and_code(2023, "0A")) == (obs,)
@@ -205,7 +205,7 @@ def test_replace_observations_drops_removed_percepcion_no_stale_row(tmp_path: Pa
             filing_year=2024,
             period=period,
             observations=full,
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         assert len(repo.load_observations("190", period)) == 3
         # Re-pull dropped the 11111111H/clave-G percepción.
@@ -214,7 +214,7 @@ def test_replace_observations_drops_removed_percepcion_no_stale_row(tmp_path: Pa
             filing_year=2024,
             period=period,
             observations=full[:1] + full[2:],
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         loaded = repo.load_observations("190", period)
         assert len(loaded) == 2
@@ -257,7 +257,7 @@ def test_failed_replacement_leaves_the_prior_window_intact(tmp_path: Path) -> No
             filing_year=2024,
             period=period,
             observations=declared,
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
 
         replacement = repo.build_observation_payload(
@@ -265,7 +265,7 @@ def test_failed_replacement_leaves_the_prior_window_intact(tmp_path: Path) -> No
             filing_year=2024,
             period=period,
             observation=_observation(nif="44444444A", clave="A"),
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         stale_identifiers = tuple(repo.extract_identifier(row) for row in repo.iter_records())
         with pytest.raises(PathContainmentError):
@@ -294,7 +294,7 @@ def test_replacement_carries_over_a_row_present_in_both_sets(tmp_path: Path) -> 
                 _observation(nif="11111111H", clave="A"),
                 _observation(nif="22222222J", clave="A"),
             ),
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         carried = _observation(nif="11111111H", clave="A", dinerario=Decimal("2500"))
         repo.replace_observations(
@@ -302,7 +302,7 @@ def test_replacement_carries_over_a_row_present_in_both_sets(tmp_path: Path) -> 
             filing_year=2024,
             period=period,
             observations=(carried,),
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
 
         assert repo.load_observations("190", period) == (carried,)
@@ -337,7 +337,7 @@ def test_whitespace_variant_tax_ids_are_one_perceptor_in_store_and_aggregation(t
             filing_year=2024,
             period=period,
             observations=(padded, canonical),
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         stored = repo.load_observations("190", period)
         assert len(stored) == 1
@@ -372,7 +372,7 @@ def test_window_scan_refuses_a_row_filed_under_another_perceptors_key(tmp_path: 
             filing_year=2024,
             period=period,
             observations=(row_a, row_b),
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         # Positive control: the untouched window projects both rows.
         assert len(repo.load_observations("190", period)) == 2
@@ -383,7 +383,7 @@ def test_window_scan_refuses_a_row_filed_under_another_perceptors_key(tmp_path: 
                 filing_year=2024,
                 period=period,
                 observation=observation,
-                source_kind="aggregate_pull",
+                source_kind=AggregationCaptureKind.AGGREGATE_PULL,
             )
 
         key_a = repo.extract_identifier(_payload(row_a))
@@ -426,7 +426,7 @@ def test_envelope_refuses_a_capture_instant_without_utc(captured_at: datetime) -
             period=Period.from_year_and_code(2024, "0A"),
             observation=_observation(nif="11111111H", clave="A"),
             captured_at=captured_at,
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
 
 
@@ -440,7 +440,7 @@ def test_envelope_accepts_a_utc_capture_instant() -> None:
         period=Period.from_year_and_code(2024, "0A"),
         observation=_observation(nif="11111111H", clave="A"),
         captured_at=datetime(2024, 4, 15, 10, 30, tzinfo=UTC),
-        source_kind="aggregate_pull",
+        source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )
 
     assert payload.captured_at.utcoffset() == timedelta(0)

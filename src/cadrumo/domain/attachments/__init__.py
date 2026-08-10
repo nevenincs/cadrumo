@@ -28,18 +28,20 @@ adapter layer and stores encrypted blob rows plus manifest
 :class:`adapters.persistence.storage.SensitivityClass`.
 This package does not own a plaintext or on-disk repository implementation.
 
-Service helpers :func:`add_attachment` and :func:`add_attachment_bytes` hash
-file or in-memory bytes, write them through the supplied store, build the
-manifest, and persist it; :func:`load_attachment` and
-:func:`list_attachments` read manifests back through the same protocol.
+The service helper :func:`add_attachment` accepts one typed
+:class:`AttachmentIngestionRequest` plus either :class:`AttachmentFileContent`
+or :class:`AttachmentBytesContent`, hashes the supplied content, writes it
+through the supplied store, builds the manifest, and persists it;
+:func:`load_attachment` and :func:`list_attachments` read manifests back
+through the same protocol.
 :func:`link_attachment_invoice` and :func:`link_attachment_transaction`
 re-persist an already-stored manifest with an
 invoice id appended to :attr:`Attachment.linked_invoice_ids`, for the case
 where the invoice is minted only after the evidence is already captured
 (e.g. confirming an extracted invoice draft).
 :class:`DocumentLinkSource` narrows operator doclink channels, but a document
-link must be resolved to bytes before :func:`add_attachment_bytes`; there is no
-link-only attachment path.
+link must be resolved to :class:`AttachmentBytesContent` before
+:func:`add_attachment`; there is no link-only attachment path.
 
 Callers must import public models, errors, enums, protocols, and service
 helpers from ``cadrumo.domain.attachments`` and must not reach into private
@@ -75,8 +77,10 @@ from ._errors import (
 from ._models import Attachment, AttachmentCatalogue, is_link_only_mime_type, normalize_media_type
 from ._protocols import AttachmentStoreProtocol
 from ._service import (
+    AttachmentBytesContent,
+    AttachmentFileContent,
+    AttachmentIngestionRequest,
     add_attachment,
-    add_attachment_bytes,
     link_attachment_invoice,
     link_attachment_transaction,
     list_attachments,
@@ -85,8 +89,11 @@ from ._service import (
 
 __all__ = [
     "Attachment",
+    "AttachmentBytesContent",
     "AttachmentCatalogue",
     "AttachmentError",
+    "AttachmentFileContent",
+    "AttachmentIngestionRequest",
     "AttachmentKind",
     "AttachmentNotFoundError",
     "AttachmentPersistenceError",
@@ -95,7 +102,6 @@ __all__ = [
     "AttachmentValidationError",
     "DocumentLinkSource",
     "add_attachment",
-    "add_attachment_bytes",
     "is_link_only_mime_type",
     "link_attachment_invoice",
     "link_attachment_transaction",

@@ -157,6 +157,34 @@ class RelationAggregation(BaseModel):
         return value
 
 
+class AggregationCaptureKind(StrEnum):
+    """Which ingestion path wrote a per-perceptor aggregation observation batch.
+
+    CAPTURE PROVENANCE, and a different axis from two neighbours it is easy to
+    confuse with. It is not
+    :class:`~application.calculations.ObservationSourceKind`, which classifies
+    whether a persisted modelo observation is official AEAT filing evidence; and
+    it is not the inner ``source_kind`` on a retención observation, which records
+    whether the underlying row came from a ledger transaction or a payable
+    invoice. All three have worn the name ``source_kind``.
+
+    That distinction was load-bearing before it was enforceable. The two
+    aggregation stores are exempt from the official-evidence displacement guard
+    precisely BECAUSE no evidence-authority value can reach them, and that
+    exemption rested on the field being a free-form ``str`` that happened to
+    carry one token. Nothing refused ``"aeat_sede_justificante"`` into either
+    store, and on the day something wrote it the exemption would have become
+    wrong silently. Typing the axis converts the disjointness from an observation
+    about today's content into a load-time refusal.
+
+    One member is not a defect. The set is closed at what the code actually
+    produces; a second ingestion path adds its own member here, deliberately,
+    rather than arriving as an unreviewed string.
+    """
+
+    AGGREGATE_PULL = "aggregate_pull"
+
+
 class RowSetGroupingKind(StrEnum):
     """Canonical row-set source-kind discriminators for detail-record assembly.
 

@@ -5,8 +5,7 @@ from __future__ import annotations
 from pydantic import BaseModel, Field
 
 from ..core import STRICT_FROZEN_CONFIG
-
-_SHA256_PATTERN = r"^[0-9a-f]{64}$"
+from ..core.identity import ContentDigest
 
 
 class BucketDeletionFingerprint(BaseModel):
@@ -19,8 +18,8 @@ class BucketDeletionFingerprint(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     schema_version: int = Field(default=1, ge=1)
-    digest: str = Field(min_length=64, max_length=64, pattern=_SHA256_PATTERN)
-    manifest_digest: str = Field(min_length=64, max_length=64, pattern=_SHA256_PATTERN)
+    digest: ContentDigest
+    manifest_digest: ContentDigest
     file_count: int = Field(ge=1)
     total_bytes: int = Field(ge=0)
 

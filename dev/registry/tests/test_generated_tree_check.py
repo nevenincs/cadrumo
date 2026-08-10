@@ -10,10 +10,10 @@ from shutil import rmtree
 import pytest
 
 from cadrumo.core.hashing import hash_file
-from cadrumo.domain.calculations.registry import RegistryValidationError, bundled_authority
+from cadrumo.domain.calculations.registry import ExportEncoding, RegistryValidationError, bundled_authority
 
 from .. import _generated_tree_check
-from .._export_tree import ExportRenderProfile
+from .._export_tree import ExportTreeTransportProfile
 from .._generated_tree_check import (
     GeneratedExportTreeCheckContext,
     check_generated_export_tree,
@@ -24,7 +24,11 @@ from .._provenance_manifest import (
     load_export_fragment_provenance_manifest,
     normalised_loader_semantics,
 )
-from .test_export_tree import _write_isolated_generated_authority_tree
+from .test_export_tree import (
+    _wire_evidence,
+    _wire_profile,
+    _write_isolated_generated_authority_tree,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -62,15 +66,15 @@ def _check_inputs(tmp_path: Path, snapshot):
     return context, joined, semantic_map, target_export_root
 
 
-def _profile() -> ExportRenderProfile:
-    return ExportRenderProfile(
+def _profile() -> ExportTreeTransportProfile:
+    return ExportTreeTransportProfile(
         modelo="200",
         design_epoch="2025",
         source_ref="aeat-dr-200-2025",
         source_sha256="a4506d24b7973a745d1225d59147078e03f14a30791a229d852b37f757442505",
         layout_id="generated-modelo-200-fichero",
         format="fixed_width",
-        encoding="latin-1",
+        encoding=ExportEncoding.LATIN_1,
         line_ending="crlf",
         serializer_convention="rtoml-pretty-v1",
     )
@@ -85,7 +89,9 @@ def test_check_regenerates_in_isolation_and_preserves_published_hashes(m200_snap
         context=context,
         joined=joined,
         semantic_map=semantic_map,
-        profile=_profile(),
+        transport_profile=_profile(),
+        render_profile=_wire_profile(),
+        render_profile_source_evidence=_wire_evidence(),
     )
 
     assert _tree_hashes(target_export_root) == before
@@ -103,7 +109,8 @@ def test_check_regenerates_in_isolation_and_preserves_published_hashes(m200_snap
     (
         "semantic-map",
         "source",
-        "profile",
+        "transport-profile",
+        "render-profile",
         "output-byte",
         "manifest-authority",
         "manifest-schema",
@@ -117,6 +124,7 @@ def test_check_refuses_drift_without_changing_published_hashes(m200_snapshot, tm
     """Every authority or membership defect fails while target bytes remain exactly as supplied."""
     context, joined, semantic_map, target_export_root = _check_inputs(tmp_path, m200_snapshot)
     profile = _profile()
+    render_profile = _wire_profile()
     if defect == "semantic-map":
         semantic_map = semantic_map.model_copy(
             update={
@@ -130,8 +138,10 @@ def test_check_refuses_drift_without_changing_published_hashes(m200_snapshot, tm
         joined = joined.model_copy(
             update={"source": joined.source.model_copy(update={"source_sha256": "b" * 64})},
         )
-    elif defect == "profile":
+    elif defect == "transport-profile":
         profile = profile.model_copy(update={"source_sha256": "b" * 64})
+    elif defect == "render-profile":
+        render_profile = render_profile.model_copy(update={"fragment_ids": ("digest-drift",)})
     elif defect == "output-byte":
         output = target_export_root / "0001-record-generated-registro-tipo-1-part-001.toml"
         output.write_bytes(output.read_bytes() + b"# drift\n")
@@ -171,7 +181,9 @@ def test_check_refuses_drift_without_changing_published_hashes(m200_snapshot, tm
             context=context,
             joined=joined,
             semantic_map=semantic_map,
-            profile=profile,
+            transport_profile=profile,
+            render_profile=render_profile,
+            render_profile_source_evidence=_wire_evidence(),
         )
 
     assert _tree_hashes(target_export_root) == before
@@ -189,7 +201,9 @@ def test_check_refuses_candidate_reuse_without_changing_published_hashes(m200_sn
             context=context,
             joined=joined,
             semantic_map=semantic_map,
-            profile=_profile(),
+            transport_profile=_profile(),
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
         )
 
     assert _tree_hashes(target_export_root) == before
@@ -210,7 +224,9 @@ def test_check_refuses_linked_candidate_ancestor_before_rendering(m200_snapshot,
             context=context,
             joined=joined,
             semantic_map=semantic_map,
-            profile=_profile(),
+            transport_profile=_profile(),
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
         )
 
     assert not redirected_export_root.exists()

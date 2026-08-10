@@ -20,7 +20,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, CasillaId, Modelo
+from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, CasillaId, Modelo, Period
 from ..categories import (
     CategoryCitation,
     CategoryProfile,
@@ -279,7 +279,7 @@ class RentaDeductibleExpenseObservation(_RentaStrictFrozenModel):
             raise RentaValidationError("category_family must match category")
         if self.target_casilla_id != RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS.get(self.category):
             raise RentaValidationError("target_casilla_id must match the first-slice category mapping")
-        if not (date(self.tax_year, 1, 1) <= self.filing_date < date(self.tax_year + 1, 1, 1)):
+        if not Period.from_year_and_code(self.tax_year, "0A").contains(self.filing_date):
             raise RentaValidationError("filing_date must fall inside the observation tax year")
         if self.invoice_id is None and self.invoice_issue_date is not None:
             raise RentaValidationError("invoice_issue_date requires invoice_id")
@@ -488,7 +488,7 @@ def build_renta_deductible_expense_observation(
     target_casilla_id = RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS.get(fact.category)
     if target_casilla_id is None:
         raise RentaValidationError(f"category {fact.category.value!r} is outside the first Renta expense slice")
-    if not (date(tax_year, 1, 1) <= fact.filing_date < date(tax_year + 1, 1, 1)):
+    if not Period.from_year_and_code(tax_year, "0A").contains(fact.filing_date):
         raise RentaValidationError("fact filing date falls outside the requested tax year")
     invoice_status = (
         RentaInvoiceEvidenceStatus.LINKED if fact.invoice_id is not None else RentaInvoiceEvidenceStatus.NONE

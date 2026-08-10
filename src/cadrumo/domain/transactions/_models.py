@@ -24,8 +24,10 @@ from pydantic_core import core_schema
 
 from ...core import (
     ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS,
+    OBJECT_TUPLE_ADAPTER,
     Art104TresExclusion,
     ConceptoIngreso,
+    Hex64Str,
     TipoActividad,
     fold_diacritics,
 )
@@ -73,7 +75,6 @@ from ._model_validation import (
 from ._raw_transaction import RawTransaction
 from ._retencion_parameters import maximum_supported_activity_retencion_rate
 
-_OBJECT_TUPLE_ADAPTER: TypeAdapter[tuple[object, ...]] = TypeAdapter(tuple[object, ...])
 _STRING_KEYED_MAPPING_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(
     dict[str, object],
     config=ConfigDict(strict=True),
@@ -416,7 +417,7 @@ class TransactionEvidenceProvenanceEntry(BaseModel):
     actor: str = Field(min_length=1, max_length=64)
     source_command: str = Field(min_length=1, max_length=128)
     linked_at: datetime
-    bucket_event_id: str | None = Field(default=None, min_length=64, max_length=64)
+    bucket_event_id: Hex64Str | None = None
 
     @field_validator("evidence_id", "actor", "source_command", "bucket_event_id")
     @classmethod
@@ -438,7 +439,7 @@ class TransactionEditLineageEntry(BaseModel):
     actor: str = Field(min_length=1, max_length=64)
     source_command: str = Field(min_length=1, max_length=128)
     edited_at: datetime
-    bucket_event_id: str | None = Field(default=None, min_length=64, max_length=64)
+    bucket_event_id: Hex64Str | None = None
 
     @field_validator("previous_transaction_id", "actor", "source_command", "bucket_event_id")
     @classmethod
@@ -462,7 +463,7 @@ class TransactionLifecycleLineageEntry(BaseModel):
     source_command: str = Field(min_length=1, max_length=128)
     changed_at: datetime
     reason: str = ""
-    bucket_event_id: str | None = Field(default=None, min_length=64, max_length=64)
+    bucket_event_id: Hex64Str | None = None
 
     @model_validator(mode="before")
     @classmethod
@@ -517,7 +518,7 @@ class SplitLineage(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    split_group_id: str = Field(min_length=64, max_length=64)
+    split_group_id: Hex64Str
     role: SplitRole
     sibling_transaction_ids: tuple[str, ...] = ()
 
@@ -532,24 +533,13 @@ class SplitLineage(BaseModel):
             payload["role"] = SplitRole(raw_role)
         return payload
 
-    @field_validator("split_group_id")
-    @classmethod
-    def _require_lowercase_hex(cls, value: str) -> str:
-        try:
-            int(value, 16)
-        except ValueError as exc:
-            raise TransactionValidationError("split_group_id must be a 64-character lowercase hex digest") from exc
-        if value != value.lower():
-            raise TransactionValidationError("split_group_id must be lowercase")
-        return value
-
     @field_validator("sibling_transaction_ids", mode="before")
     @classmethod
     def _coerce_siblings(cls, value: object) -> tuple[object, ...]:
         if isinstance(value, tuple):
-            return _OBJECT_TUPLE_ADAPTER.validate_python(value)
+            return OBJECT_TUPLE_ADAPTER.validate_python(value)
         if isinstance(value, Sequence) and not isinstance(value, str | bytes):
-            return _OBJECT_TUPLE_ADAPTER.validate_python(value)
+            return OBJECT_TUPLE_ADAPTER.validate_python(value)
         raise TransactionValidationError("sibling_transaction_ids must be a sequence")
 
     @field_validator("sibling_transaction_ids")
@@ -1045,7 +1035,7 @@ class Transaction(BaseModel):
         if value is None:
             return ()
         if isinstance(value, list):
-            return _OBJECT_TUPLE_ADAPTER.validate_python(value)
+            return OBJECT_TUPLE_ADAPTER.validate_python(value)
         return value
 
     @model_validator(mode="after")
@@ -1559,7 +1549,7 @@ class TransactionCatalogue(BaseModel):
             return {"transactions": payload}
         if isinstance(data, Iterable) and not isinstance(data, str | bytes):
             transactions: dict[str, Transaction] = {}
-            for item in _OBJECT_TUPLE_ADAPTER.validate_python(data):
+            for item in OBJECT_TUPLE_ADAPTER.validate_python(data):
                 transaction = item if isinstance(item, Transaction) else Transaction.model_validate(item)
                 if transaction.transaction_id in transactions:
                     raise TransactionValidationError(f"duplicate transaction_id: {transaction.transaction_id}")
