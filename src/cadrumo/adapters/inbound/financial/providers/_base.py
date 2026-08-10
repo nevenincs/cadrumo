@@ -61,7 +61,7 @@ from .....core.errors import CadrumoError, CoreValidationError
 from .....core.hashing import sha256_hex as _sha256_hex
 from .....core.logging import get_logger
 from .....core.parsing import normalise_iso_4217_currency
-from .....core.tabular import coerce_cell_text as _coerce_cell_text
+from .....core.tabular import coerce_cell_text
 from .....core.time import now
 from .....domain.transactions import RawProvenance, RawTransaction, SourceFormat, TransactionDirection
 
@@ -394,7 +394,7 @@ def normalize_header(value: str) -> str:
     return " ".join(without_diacritics.split())
 
 
-def coerce_cell_text(value: object) -> str:
+def archive_cell_text(value: object) -> str:
     """Coerce a source value to a stripped string for raw-field storage.
 
     Binds the raw-field archive's rendering policy — a booking stamp is
@@ -402,7 +402,7 @@ def coerce_cell_text(value: object) -> str:
     the shared cell coercer, so the twelve call sites in this package state
     the policy once instead of each carrying the keyword.
     """
-    return _coerce_cell_text(value, temporal_as_iso=True)
+    return coerce_cell_text(value, temporal_as_iso=True)
 
 
 def _expected_date_format_hint(*, day_first: bool) -> str:
@@ -417,7 +417,7 @@ def parse_date_value(value: object, *, day_first: bool = True, label: str = "dat
         return value.date()
     if isinstance(value, date):
         return value
-    original_raw = coerce_cell_text(value)
+    original_raw = archive_cell_text(value)
     if not original_raw:
         raise FinancialValidationError("missing date value")
     raw = original_raw.replace(".", "/")
@@ -506,7 +506,7 @@ def parse_amount_value(
     numeric = _already_numeric_amount(value)
     if numeric is not None:
         return numeric
-    raw = coerce_cell_text(value)
+    raw = archive_cell_text(value)
     if not raw:
         raise FinancialValidationError("missing amount value")
     if _EXPONENT_RE.search(raw):
