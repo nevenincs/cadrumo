@@ -3,8 +3,8 @@ tags:
   - "#adr"
   - "#real-pdf-import"
 date: '2026-04-22'
-modified: '2026-07-17'
-body_hash: 'sha256:47b8c1762e25c1379e50e37de184596fe6b369f2ef8fd9d4fd00e32bf67190f8'
+modified: '2026-08-10'
+body_hash: 'sha256:be52a34cacb7ef0a2da23ed92912f3c2e96e014bf374b2ec5d8ead02c4dfb054'
 related:
   - "[[2026-04-17-export-first-adr]]"
   - "[[2026-04-22-citation-blocklist-adr]]"
@@ -237,3 +237,39 @@ changes:
 This amendment is recorded here so that future readers understand why
 the Python-module path described in section 1 is absent from the
 implementation.
+
+## Amendment (2026-08-10): the public registry codec owns fixed-width runtime semantics
+
+This is the latest governing amendment for fixed-width runtime ownership. It preserves
+the accepted requirement to produce fichero-BOE exports and the 2026-05-21 decision
+that registry TOML owns reviewed layout data. It replaces only that amendment's clause
+retaining the generic adapter `_formats` runtime, and it overrides any contrary
+runtime-home statement retained in the earlier historical sections of this record.
+
+The reconciliation is grounded by
+`2026-08-10-aeat-export-fragment-generator-authority-source-authority-research` and
+the resolved code findings in
+`2026-08-10-aeat-export-fragment-generator-authority-s38-fixed-width-codec-audit`.
+The governing runtime decision is:
+
+- Registry TOML owns fixed-width layout data. One public registry-domain fixed-width
+  codec owns schema validation plus field render and parse semantics.
+- Core owns only strict, finite, exact numeric coercion; it does not own registry
+  field taxonomy, padding, signs, or wire projection.
+- The application filing writer, parser, and verifier and the outbound registry
+  renderer consume that public codec. They do not redeclare its transformations.
+- The adapter `_formats` taxonomy and runtime, including `RecordFieldSpec`, are
+  deleted without compatibility aliases or forwarding shims.
+- S37's two exact value-policy transforms remain explicit field declarations and
+  distinct from ordinary type semantics, as reviewed in
+  `2026-08-10-aeat-export-fragment-generator-authority-s37-value-policy-audit`.
+  Ordinary fixed-width booleans use canonical `X` or blank wire data; XML
+  dictionary boolean vocabularies remain a separate format contract.
+- Signed numeric fields use the inline leading sign marker: ASCII space for
+  non-negative values and `N` for negative values. Encoding, padding, and
+  justification are public closed registry axes.
+
+This consolidation removes competing runtime authorities while retaining official
+layout evidence and reviewed policy declarations in their canonical homes. Future
+fixed-width behavior changes amend the public registry codec contract; they do not
+reintroduce an adapter-owned format taxonomy.
