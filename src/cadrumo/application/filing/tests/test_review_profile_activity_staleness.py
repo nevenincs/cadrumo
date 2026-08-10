@@ -37,6 +37,7 @@ import pytest
 
 from ....core import Period, read_pointer
 from ....core.config import load_settings
+from ....domain.filing import CasillaSchemaProvider, ModeloDraft
 from ....domain.submission import ModeloDraftStatus
 from ....domain.user_profile import UserProfileFact
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -44,9 +45,7 @@ from ....tests.user_profile import register_minimal_profile
 from ...user_profile import profile_create_storage_span, profile_storage_session, set_active_field
 from ...workflow import workflow_state_repository
 from .. import (
-    CasillaSchemaProvider,
     ModeloApprovalStaleReason,
-    ModeloDraft,
     approval_stale_reasons,
     approve_draft,
     build_draft,

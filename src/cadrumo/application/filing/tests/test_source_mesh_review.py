@@ -39,13 +39,12 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....core import Period
 from ....domain.invoices import Invoice, InvoiceCatalogue
 from ....domain.iva import InvoiceKind
+from ....domain.filing import CasillaSchemaProvider, ModeloDraft
 from ....domain.submission import ModeloDraftStatus
 from ....tests.secure_sql import TestRuntimeProfile
 from ...invoices import build_catalogue_invoice
 from .. import (
-    CasillaSchemaProvider,
     ModeloApprovalStaleReason,
-    ModeloDraft,
     approval_stale_reasons,
     approve_draft,
     build_draft,
