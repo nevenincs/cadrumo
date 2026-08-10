@@ -29,6 +29,7 @@ Subpackages
    cadrumo.application.ledger
    cadrumo.application.live
    cadrumo.application.modelo
+   cadrumo.application.operator_actions
    cadrumo.application.operator_output
    cadrumo.application.operator_surface
    cadrumo.application.overview
@@ -67,6 +68,7 @@ Submodules
    cadrumo.application.diagnostics_run_health
    cadrumo.application.diagnostics_telemetry
    cadrumo.application.preflight
+   cadrumo.application.profile_preconditions
    cadrumo.application.provisioning
    cadrumo.application.repair_integrity
    cadrumo.application.state_projection

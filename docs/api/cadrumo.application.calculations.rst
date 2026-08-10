@@ -25,6 +25,7 @@ Submodules
    cadrumo.application.calculations._iva_wallet_balance
    cadrumo.application.calculations._iva_wallet_reconciliation
    cadrumo.application.calculations._m111_no_retenciones
+   cadrumo.application.calculations._m303_carry_ingress
    cadrumo.application.calculations._maritime_exemption_service
    cadrumo.application.calculations._multi_year
    cadrumo.application.calculations._observations_repository
