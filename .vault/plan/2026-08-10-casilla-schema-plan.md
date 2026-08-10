@@ -4,7 +4,7 @@ tags:
   - '#casilla-schema'
 date: '2026-08-10'
 modified: '2026-08-10'
-body_hash: 'sha256:62e11214595ee7c9f25d83a1ecb8547d16a9f57a4fca59a35a0089592883f95b'
+body_hash: 'sha256:d1c6e814aa98c762b8bd8ebbafce2938204137f840136cc3fc89096eed436e14'
 tier: L3
 related:
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
@@ -52,7 +52,7 @@ The Category-A data oversights are corrected so derivations are truthful on the 
 - [ ] `W01.P02.S05` - normalise the completeness-manifest authoring tree to one on-disk shape and add a shape gate; `src/cadrumo/_data/registry/aeat/modelos/`.
 - [ ] `W01.P02.S06` - remove the phantom constant_value source kind from its four production sites; `src/cadrumo/entrypoints/cli/_modelo_discovery_cli.py`.
 - [ ] `W01.P02.S07` - reconcile the M200 multi-segment manifest internal-only inconsistency and correct the false single-segment comment; `src/cadrumo/domain/calculations/registry/_record_design_coverage.py`.
-- [ ] `W01.P02.S08` - derive the manifest-less revision worklist from the loaded snapshots after S05, assign each modelo to the owner-ruled tranches from its registry legal domain and title (tranche 1 is IRPF, retencion and IVA including M145, tranche 2 is the informative annual declarations, tranche 3 is the remainder), record the assignment for owner confirmation, and append one manifest-authoring step per revision to this plan; `tranche 2: informative annual declarations; tranche 3: remainder), record the assignment for owner confirmation, and append one manifest-authoring step per revision to this plan; `src/cadrumo/_data/registry/aeat/modelos/`.
+- [ ] `W01.P02.S08` - derive the manifest-less revision worklist from the loaded snapshots after S05, assign each modelo to the owner-ruled tranches from its registry legal domain and title (tranche 1 is IRPF, retencion and IVA including M145, tranche 2 is the informative annual declarations, tranche 3 is the remainder), and record the assignment for owner confirmation before appending one manifest-authoring step per revision to this plan; `src/cadrumo/_data/registry/aeat/modelos/`.
 
 ## Wave `W02` - canonical derivations and the blocker spine
 
@@ -101,7 +101,7 @@ ModeloWorkReview, its producer, its envelope, and the findings attribution sweep
 
 - [ ] `W03.P07.S22` - promote resolve_calculation_binding_channels to the application modelo facade; `src/cadrumo/application/modelo/__init__.py`.
 - [ ] `W03.P07.S23` - add the frozen ModeloWorkReview model and its single producer build_modelo_work_review, law-resolving the revision and asserting any stored stamp; `src/cadrumo/application/modelo/`.
-- [ ] `W03.P07.S24` - sweep all finding construction sites that leave casilla_id unset (26 sites across 18 files, with _verification_cross_period.py carrying 9 including the never-populating cross-period kind) and populate it wherever a casilla exists to name, recording the grep-derived site list in the exec record; `_verification_cross_period.py carries 9 including the never-populating cross-period kind) and populate it wherever a casilla exists to name, recording the grep-derived site list in the exec record; `src/cadrumo/application/modelo/`.
+- [ ] `W03.P07.S24` - sweep all finding construction sites that leave casilla_id unset (26 sites across 18 files, with _verification_cross_period.py carrying 9 including the never-populating cross-period kind) and populate it wherever a casilla exists to name, recording the grep-derived site list in the exec record; `src/cadrumo/application/modelo/`.
 - [ ] `W03.P07.S25` - implement the owner-ruled progress counts: typed state plus counts against the named manifest denominator, UNDEFINED when no manifest exists, never a bare percentage; `src/cadrumo/application/modelo/`.
 - [ ] `W03.P07.S26` - register the modelo.work.review envelope wrapping the record, with the spine axis and machine facts riding Notice context; `src/cadrumo/entrypoints/cli/_modelo_payloads.py`.
 - [ ] `W03.P07.S27` - widen the modelo.requires classifier to bucket previous_filing, relation_prefill and live_observation sources, read alternate bindings, and surface unbucketed sources as an advisory; `src/cadrumo/application/modelo/_data_inventory.py`.
