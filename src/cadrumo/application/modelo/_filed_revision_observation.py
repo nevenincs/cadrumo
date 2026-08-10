@@ -124,6 +124,33 @@ def _history_repository_in_observation_context(
     return IvaCompensationHistoryRepository(objects=context)
 
 
+def require_filing_result_disposition(
+    *,
+    work_unit: WorkUnit,
+    result_disposition: ResultDisposition | None,
+) -> None:
+    """Refuse a Modelo 303 filing whose result disposition was never resolved.
+
+    The disposition is a determined fact resolved once at the calculate/file
+    boundary by ``resolve_modelo_result_disposition``. This is a PRESENCE
+    requirement and never a second derivation: recomputing it here would make
+    a regulated determination answerable in two places, which is how the fichero
+    an operator submits and the carry a later period reads come to disagree.
+
+    Declared as a callable rather than left inline because the same condition has
+    to hold at two positions in one filing transition: ahead of the first
+    repository write, where a refusal leaves every catalogue untouched, and again
+    at the observation write itself, which other callers reach directly. Two
+    copies of the condition would be two authorities on when a filing is
+    under-declared, and they would drift.
+    """
+    if work_unit.modelo == Modelo.M303.value and result_disposition is None:
+        raise ModeloLocalObservationError(
+            "local Modelo 303 carry persistence requires the filing-boundary result disposition",
+            context={"modelo": work_unit.modelo, "period": work_unit.period.registry_token},
+        )
+
+
 def persist_filed_revision_observation(
     *,
     revision: CalculationRevision,
@@ -219,11 +246,7 @@ def persist_filed_revision_observation(
         if projects_iva_history
         else None
     )
-    if work_unit.modelo == Modelo.M303.value and result_disposition is None:
-        raise ModeloLocalObservationError(
-            "local Modelo 303 carry persistence requires the filing-boundary result disposition",
-            context={"modelo": work_unit.modelo, "period": work_unit.period.registry_token},
-        )
+    require_filing_result_disposition(work_unit=work_unit, result_disposition=result_disposition)
     disposition_projection = (
         ResultDispositionProjection(
             disposition=result_disposition,
@@ -261,4 +284,5 @@ def persist_filed_revision_observation(
 __all__ = [
     "APP_FILING_SOURCE_KIND",
     "persist_filed_revision_observation",
+    "require_filing_result_disposition",
 ]
