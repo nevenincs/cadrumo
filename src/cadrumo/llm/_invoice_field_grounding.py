@@ -81,17 +81,7 @@ __all__ = [
 _JSON_OBJECT_RE = re.compile(r"\{.*\}", re.DOTALL)
 
 
-class ExtractedInvoiceFields(BaseModel):
-    """Raw string fields the reading model transcribed, before grounded re-validation.
-
-    Every field is an optional string: the model is instructed to transcribe the
-    printed value verbatim (never compute or infer it) and this schema accepts
-    whatever string it returns. Grounded re-validation into typed values (a
-    checksum-valid tax id, a parsed date, a parsed Decimal) happens in
-    :func:`ground_extracted_fields`, never here -- a malformed or hallucinated
-    string must be rejected downstream, not coerced at the schema boundary.
-    """
-
+class _ExtractedInvoiceFieldClaims(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     supplier_tax_id: str | None = Field(default=None)
@@ -114,7 +104,19 @@ class ExtractedInvoiceFields(BaseModel):
     currency: str | None = Field(default=None)
 
 
-class ExtractedFieldAnchors(BaseModel):
+class ExtractedInvoiceFields(_ExtractedInvoiceFieldClaims):
+    """Raw string fields the reading model transcribed, before grounded re-validation.
+
+    Every field is an optional string: the model is instructed to transcribe the
+    printed value verbatim (never compute or infer it) and this schema accepts
+    whatever string it returns. Grounded re-validation into typed values (a
+    checksum-valid tax id, a parsed date, a parsed Decimal) happens in
+    :func:`ground_extracted_fields`, never here -- a malformed or hallucinated
+    string must be rejected downstream, not coerced at the schema boundary.
+    """
+
+
+class ExtractedFieldAnchors(_ExtractedInvoiceFieldClaims):
     """The verbatim printed substring the model read each field from.
 
     Deliberately a mirror of :class:`ExtractedInvoiceFields` rather than extra
@@ -130,28 +132,6 @@ class ExtractedFieldAnchors(BaseModel):
     (:func:`~application.ledger.evaluate_anchor`), never by this schema, because
     that check needs the document and this schema does not have it.
     """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    supplier_tax_id: str | None = Field(default=None)
-    supplier_name: str | None = Field(default=None)
-    supplier_postal_code: str | None = Field(default=None)
-    supplier_country: str | None = Field(default=None)
-    customer_tax_id: str | None = Field(default=None)
-    customer_name: str | None = Field(default=None)
-    customer_postal_code: str | None = Field(default=None)
-    customer_country: str | None = Field(default=None)
-    invoice_number: str | None = Field(default=None)
-    invoice_date: str | None = Field(default=None)
-    taxable_base: str | None = Field(default=None)
-    iva_rate: str | None = Field(default=None)
-    iva_amount: str | None = Field(default=None)
-    retencion_rate: str | None = Field(default=None)
-    retencion_amount: str | None = Field(default=None)
-    grand_total: str | None = Field(default=None)
-    regime_legend: str | None = Field(default=None)
-    currency: str | None = Field(default=None)
-
 
 class ExtractedRoleEvidence(BaseModel):
     """The printed context assigning each identity value to a party role.
