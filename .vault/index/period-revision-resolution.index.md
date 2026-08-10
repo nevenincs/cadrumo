@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#period-revision-resolution'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:cf85a4bfab779c88c77862d15bbb04eaeef7b28717583291f669c8a8ed17a5d9'
 related:

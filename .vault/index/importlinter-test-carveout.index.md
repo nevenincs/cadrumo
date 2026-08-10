@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#importlinter-test-carveout'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:827219dc49b7cfbe1964eb59533ca5cfde8fcdf4072f3c2112a4f030739b0812'
 related:

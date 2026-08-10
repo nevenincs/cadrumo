@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#m303-iva-resultado-chain'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:5b44a350f97ea276f1c9340b9e95fe20c8c12d2a56c62fea4ca09d31ba0cb891'
 related:

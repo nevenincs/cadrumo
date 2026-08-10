@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#pdf-taxonomy'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:6ff5f0e731689c4011609ff6859da85cfdbccebeb67142b9d316b614e3fc761a'
 related:

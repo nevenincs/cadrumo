@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#transient-metastate-sweep'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:52c89fc5ec36ad3af01e7e24e13a24aa58d82c2e6e84880aef9447161e56df3d'
 related:

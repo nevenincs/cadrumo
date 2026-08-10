@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#minimo-descendientes-eligibility'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:16670027f2d8a5f65fae1e32e3279ad5f3b1a00c5bb3e43c60aa2fa95ca50f6e'
+body_hash: 'sha256:a35bb07aaae32042b52463c8e776524655634442cfa375f3ed697cfd43790a36'
 related:
   - '[[2026-08-04-minimo-descendientes-eligibility-P01-S01]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P01-S02]]'
@@ -32,6 +32,7 @@ related:
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S22]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S23]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S24]]'
+  - '[[2026-08-04-minimo-descendientes-eligibility-P04-S25]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S26]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S27]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S28]]'
@@ -105,6 +106,7 @@ Auto-generated index of all documents tagged with `#minimo-descendientes-eligibi
 - `2026-08-04-minimo-descendientes-eligibility-P04-S13` - Add the DescendantRelacion closed set, the two named entry-event dates replacing adoption_date, and their flag, wizard and locale entry surface
 - `2026-08-04-minimo-descendientes-eligibility-P04-S14` - Scope the Art. 58.2 missing-anchor advisory to descendants that actually carry a tranche
 - `2026-08-04-minimo-descendientes-eligibility-P04-S17` - Assimilate an economically dependent descendant where the filer declares no anualidades at all, sweeping the existing incompatibility injector in the same change, BLOCKED on per-child attribution of anualidades
+- `2026-08-04-minimo-descendientes-eligibility-P04-S25` - Escalate the stale ley-35-2006 art-81 corpus excerpt for operator refresh, because its apartado 1 carries the post-2023 widened supuestos while its apartado 2 still carries the cotizaciones ceiling the bundled AEAT manual states was removed from 2023, and the 150 euro post-alta increment is absent entirely, so the excerpt is a two-vintage hybrid that cannot gate the required_text for any clause S15 or S23 implement
 - `2026-08-04-minimo-descendientes-eligibility-P04-S15` - Give the Art. 81.1 maternidad adoption clause its own date-scoped three-year window, separate from the Art. 58.2 period-scoped one, BLOCKED on S21 because nothing on the calculate path reads a descendant record for maternidad, so the predicate would land with no consumer and rebuild the dead shape S19 removed
 - `2026-08-04-minimo-descendientes-eligibility-P04-S16` - Model month-level guarderia spend as an optional sparse per-month map alongside the annual figure, refusing both at once for one child
 - `2026-08-04-minimo-descendientes-eligibility-P04-S18` - Rename the derived guarderia cap-population path and its binding away from the menor-de-tres name it outgrew, in ONE atomic commit carrying the schema pattern, the binding TOML, the formula reference, the injector and every M100 fixture supplying the binding id by name

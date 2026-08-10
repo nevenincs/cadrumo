@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cadrumo-cli-executable'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:37cf8981b73dc63ef8b5f5066eee8264ceb4e0e5dca91ad08235937c7e7366bd'
 related:

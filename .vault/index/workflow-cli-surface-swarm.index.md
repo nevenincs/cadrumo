@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#workflow-cli-surface-swarm'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:096855bdbb7e4e52fc3ca67eb96765b46e9272ee91d6b08f568a93315c252086'
 related:

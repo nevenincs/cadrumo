@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#dependency-provisioning'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:fed92f90b1839dc183300ce5389921bef419877bde28d50c4f005847d8d0e446'
 related:

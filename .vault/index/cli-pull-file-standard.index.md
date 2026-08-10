@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-pull-file-standard'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:cbf82a8999c0a3d19e2aeff3c722a4655a6b25af5b1bee04a6bba7b94d15a54b'
 related:

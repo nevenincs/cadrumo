@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#homebrew-arm64-pac-ret'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:94fecff17a0aef12c4df8ed7e51fb48c85ff8378f758b0f3cf52415623b44e6e'
 related:

@@ -314,22 +314,9 @@ def load_render_profile(profile_directory: Path) -> RenderProfile:
     """Load sorted TOML fragments without weakening their strict authored schema."""
     if not profile_directory.is_dir() or profile_directory.is_symlink() or profile_directory.is_junction():
         raise RegistryValidationError(f"render profile path must be a real directory: {profile_directory}")
-    try:
-        paths = tuple(sorted(profile_directory.iterdir(), key=lambda path: path.name))
-    except OSError as exc:
-        raise RegistryValidationError(f"cannot inspect render profile directory: {profile_directory}") from exc
+    paths = tuple(sorted(profile_directory.glob("*.toml"), key=lambda path: path.name))
     if not paths:
         raise RegistryValidationError(f"render profile directory contains no TOML fragments: {profile_directory}")
-    non_fragments = tuple(
-        path.name
-        for path in paths
-        if path.suffix.casefold() != ".toml" or path.is_symlink() or path.is_junction() or not path.is_file()
-    )
-    if non_fragments:
-        raise RegistryValidationError(
-            "render profile directory accepts only regular TOML fragments; "
-            f"refusing non-profile entries: {non_fragments!r}",
-        )
     fragments: list[RenderProfileFragment] = []
     for path in paths:
         if path.is_symlink() or path.is_junction() or not path.is_file():

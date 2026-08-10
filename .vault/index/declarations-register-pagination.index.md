@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#declarations-register-pagination'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:a1c77fb1aa49ffb79f482ac2c7503ad03b41dfd5b587b42e39697ae39f29c9a8'
 related:

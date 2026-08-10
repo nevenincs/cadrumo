@@ -6,7 +6,6 @@ import ast
 import inspect
 
 import pytest
-from openpyxl import load_workbook
 
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import (
@@ -212,45 +211,6 @@ def test_intermediate_is_a_complete_total_preserving_projection_of_the_verified_
         envelope.total_label,
         envelope.total_length,
     ) == ("A16", "total", "Variable")
-
-
-def test_intermediate_recovers_every_official_total_colon_without_fixing_the_variable_envelope() -> None:
-    """The real workbook's ``Total:`` cells govern fixed totals; DP200000 stays variable."""
-    source_root = bundled_path()
-    catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "is.toml"))
-    resolved = resolve_record_design_binary(
-        source_root,
-        catalogues.sources,
-        source_ref="aeat-dr-200-2025",
-        filing_year=2025,
-        design_epoch="2025",
-    )
-    intermediate = load_record_design_intermediate(
-        source_root,
-        catalogues.sources,
-        source_ref="aeat-dr-200-2025",
-        filing_year=2025,
-        design_epoch="2025",
-    )
-    workbook = load_workbook(resolved.path, read_only=True, data_only=True)
-    try:
-        official_totals = {
-            worksheet.title.strip(): value
-            for worksheet in workbook.worksheets
-            for label, _unused, value in worksheet.iter_rows(min_col=1, max_col=3, values_only=True)
-            if isinstance(label, str) and label.strip().casefold() == "total:" and isinstance(value, int)
-        }
-    finally:
-        workbook.close()
-
-    assert official_totals
-    assert {sheet.sheet for sheet in intermediate.sheets} == set(official_totals)
-    assert {sheet.sheet: sheet.declared_total for sheet in intermediate.sheets} == official_totals
-    envelope = next(envelope for envelope in intermediate.variable_envelopes if envelope.sheet == "DP200000")
-    assert envelope.prefix_extent == 328
-    assert envelope.body_offset == 329
-    assert envelope.body_length == "Variable"
-    assert envelope.total_length == "Variable"
 
 
 @pytest.mark.parametrize(

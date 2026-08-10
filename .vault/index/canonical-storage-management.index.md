@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#canonical-storage-management'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:d55fc7cf98d4206678f75ef7329704c41040504f2d73edce6a3ce5b6f7b3f6d5'
+body_hash: 'sha256:b9fb2ecf6c58312ecb1d9049097bcfbf8f4a138f7aab245cac2dfbff5a82fd79'
 related:
   - '[[2026-08-03-canonical-storage-management-W01-P01-S01]]'
   - '[[2026-08-03-canonical-storage-management-W01-P01-S02]]'
@@ -142,6 +142,7 @@ related:
   - '[[2026-08-04-canonical-storage-management-pre-close-inherited-review-audit]]'
   - '[[2026-08-04-canonical-storage-management-s78-closure-criterion-audit]]'
   - '[[2026-08-04-canonical-storage-management-void-assertion-class-audit]]'
+  - '[[2026-08-10-canonical-storage-management-dev-product-boundary-audit]]'
 ---
 
 # `canonical-storage-management` feature index
@@ -167,6 +168,7 @@ Auto-generated index of all documents tagged with `#canonical-storage-management
 - `2026-08-04-canonical-storage-management-pre-close-inherited-review-audit` - `canonical-storage-management` audit: `pre-close inherited review`
 - `2026-08-04-canonical-storage-management-s78-closure-criterion-audit` - `canonical-storage-management` audit: `what closing S78 would claim, and what the evidence supports`
 - `2026-08-04-canonical-storage-management-void-assertion-class-audit` - `canonical-storage-management` audit: `void assertion class`
+- `2026-08-10-canonical-storage-management-dev-product-boundary-audit` - `canonical-storage-management` audit: `Dev product boundary and storage CLI review`
 
 ### exec
 

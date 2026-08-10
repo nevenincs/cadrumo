@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#deferred-scope-state-machine'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:c734868ad4464eedfe26f15c49a2c44d2f033483c7545ae490a498713038b1ef'
 related:

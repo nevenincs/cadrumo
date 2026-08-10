@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-ledger-testimonials'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:d186cb61da764fc75bf4e7bcc1982ae6538cb3fc6e2f08dd181ef72ae6eeb025'
 related:

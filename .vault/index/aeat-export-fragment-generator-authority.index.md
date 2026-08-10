@@ -6,7 +6,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:7b62a6301ea8a0c24bd313e8fc4ec93cb3a047275cc6a7fdaf9ddab9808bfa28'
+body_hash: 'sha256:05037e5696c2134ddf76f2c7dcbc075b01ddd0195f46aaefebd8964ea16ec3ed'
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P01-S01]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P01-S02]]'
@@ -15,6 +15,7 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P02-S04]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P02-S05]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P02-S06]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P02-S31]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W02-P03-S07]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W02-P03-S08]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W02-P03-S09]]'
@@ -23,6 +24,7 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W02-P04-S12]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W03-P05-S13]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W03-P05-S14]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-W03-P05-S15]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-s01-source-catalogue-audit]]'
@@ -41,7 +43,9 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-s12-check-mode-audit]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-s13-parser-completeness-audit]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-s14-mapping-refusal-audit]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-s15-mutation-gate-audit]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-s30-variable-envelope-code-review-audit]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-s31-render-profile-audit]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-source-authority-research]]'
 ---
 
@@ -72,7 +76,9 @@ Auto-generated index of all documents tagged with `#aeat-export-fragment-generat
 - `2026-08-10-aeat-export-fragment-generator-authority-s12-check-mode-audit` - `aeat-export-fragment-generator-authority` audit: `S12 read-only generated export check`
 - `2026-08-10-aeat-export-fragment-generator-authority-s13-parser-completeness-audit` - `aeat-export-fragment-generator-authority` audit: `S13 parser completeness review`
 - `2026-08-10-aeat-export-fragment-generator-authority-s14-mapping-refusal-audit` - `aeat-export-fragment-generator-authority` audit: `s14 mapping refusal`
+- `2026-08-10-aeat-export-fragment-generator-authority-s15-mutation-gate-audit` - `aeat-export-fragment-generator-authority` audit: `S15 candidate mutation gate review`
 - `2026-08-10-aeat-export-fragment-generator-authority-s30-variable-envelope-code-review-audit` - `aeat-export-fragment-generator-authority` audit: `S30 variable envelope code review`
+- `2026-08-10-aeat-export-fragment-generator-authority-s31-render-profile-audit` - `aeat-export-fragment-generator-authority` audit: `S31 render profile formal review`
 
 ### exec
 
@@ -83,6 +89,7 @@ Auto-generated index of all documents tagged with `#aeat-export-fragment-generat
 - `2026-08-10-aeat-export-fragment-generator-authority-W01-P02-S04` - Define the per-modelo per-design semantic-map schema keyed by exact parser anchors
 - `2026-08-10-aeat-export-fragment-generator-authority-W01-P02-S05` - Validate mapping bijection and require canonical identifiers, legal references, and source references to resolve through existing registry catalogues while constraining typed anomaly exceptions
 - `2026-08-10-aeat-export-fragment-generator-authority-W01-P02-S06` - Define the adjacent non-loader provenance manifest and normalized loader-semantic digest
+- `2026-08-10-aeat-export-fragment-generator-authority-W01-P02-S31` - Define and validate the exhaustive per-modelo, per-design, source-SHA-pinned render-profile authority with exact-anchor coverage, explicit unsigned Num versus signed N handling, individually grounded rules for all 126 smaller fields, and no legacy-tree oracle or implicit defaults
 - `2026-08-10-aeat-export-fragment-generator-authority-W02-P03-S07` - Implement fail-closed parser-to-semantic-map joining without fuzzy or positional matching
 - `2026-08-10-aeat-export-fragment-generator-authority-W02-P03-S08` - Render the complete target export tree with stable partitioning and canonical TOML serialization
 - `2026-08-10-aeat-export-fragment-generator-authority-W02-P03-S09` - Emit source, map, schema, semantic, and file digests in the provenance manifest
@@ -91,6 +98,7 @@ Auto-generated index of all documents tagged with `#aeat-export-fragment-generat
 - `2026-08-10-aeat-export-fragment-generator-authority-W02-P04-S12` - Implement check mode that independently regenerates and rejects semantic, provenance, or byte drift
 - `2026-08-10-aeat-export-fragment-generator-authority-W03-P05-S13` - Prove parser completeness, declared totals, source applicability, and source-hash enforcement
 - `2026-08-10-aeat-export-fragment-generator-authority-W03-P05-S14` - Prove missing, duplicate, ambiguous, fuzzy, and illegal-exception mappings refuse the whole design
+- `2026-08-10-aeat-export-fragment-generator-authority-W03-P05-S15` - Prove offset, length, source-anchor, target-revision, and generated-file mutations are detected
 
 ### plan
 

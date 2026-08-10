@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#aeat-user-docs-hardening'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:c4d22158f2bd5fa947dfcad1e2f5b363431fa8ae30c4907fb48eaa7cf1afecbe'
 related:

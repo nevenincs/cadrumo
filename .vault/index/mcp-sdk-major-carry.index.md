@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#mcp-sdk-major-carry'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:65a06f814089b15c8bdaeedabf9ccafbfa32ddd83dadc8cd3056fb823c8a2b8a'
 related:

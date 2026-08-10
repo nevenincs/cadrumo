@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#exception-restructure'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:3004b3013c7a73e9e0d0541ddf2a2a4ece725cc96c7c87396ed0982370975bd3'
 related:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#legal-corpus-structure'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:4120c2c591b92929d9143208d3989af89f77d87c3e4adbb75a09274735790cb6'
 related:

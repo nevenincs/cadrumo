@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#aeat-auth-providers'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:1657c1651e8d0989ebe7e9c3c112120ed6459655c8c2b2a0f54de1219017a385'
 related:

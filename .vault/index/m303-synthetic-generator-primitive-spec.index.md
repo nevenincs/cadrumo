@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#m303-synthetic-generator-primitive-spec'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:9e8daa1611d0fc8c007b4c3405d662dc9e7bfe9438efd74632308e901ba83706'
 related:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#purchase-invoice-ocr-extraction-discipline'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:8f2be18d441cfca05793736c27d1dc1a8407f00d668802fca785ac92fa56fe5b'
 related:

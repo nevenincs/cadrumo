@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#security-supply-chain-2026-05-30'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:6757670493767249e039935d4fbf68d274fb575c58af20c1736fb9b1c870ab98'
 related:

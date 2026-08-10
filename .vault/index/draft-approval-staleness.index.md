@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#draft-approval-staleness'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:f705fd53495a8d902ecce005ab900bbf94f7456ef8b0df6af96458b33443690e'
 related:

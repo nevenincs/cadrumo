@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#canonical-identifiers'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:c578b80cdf1739a831ca1fad254f4203dc6d86ad19a26084408e6cf312394a86'
+body_hash: 'sha256:46bac9099232ca0cdc7506220312262ecfad5386f0953ad8800ef6667866e30c'
 related:
   - "[[2026-08-07-justificante-identity-matching-adr]]"
 ---
@@ -137,6 +137,47 @@ tree today. Enrolling it under a canonical taxonomy is new capture-and-persist
 work, not a retype of an existing field, and the ADR must treat it as
 explicitly scoped in or out rather than assumed covered by "the taxonomy now
 exists."
+
+**Correction (2026-08-10): item 1's claim that the loosest CSV type is the one
+proven against real receipts is FALSE, and this document held the evidence
+against it the whole time.** The claim that `JustificanteCsv` (4-64, no
+pattern) "is the type that actually parses live-captured AEAT PDFs" was
+never measured against the captured CSV values this repository already
+records. Those values are: `FNBB57PE9KZ5TN4R`, `MZRSYDRL5JMPJPRT` and
+`TUD4V9XAUV7QJ8QV`, captured from three separate real IRPF filings (2021,
+2022, 2023) and described as byte-identical across two independent capture
+rounds - `2026-04-25-aeat-verify-research` and `2026-04-26-aeat-verify-audit`.
+Every one is sixteen uppercase alphanumeric characters. Every one satisfies
+`core/_aeat_csv.py`'s 8-32 uppercase-alphanumeric contract, with margin on
+both sides. **No AEAT-issued value anywhere in this repository requires the
+4-64 bound.**
+
+The error is worth naming precisely, because the implementing plan reproduced
+it and reached a stronger wrong conclusion. The plan's `W02.P03` re-planning
+note searched for captured justificante *PDFs*, found only
+`synthetic_generated` fixtures, and concluded that no empirical grounding for
+the CSV shape existed or could be obtained. The artefact that carried the
+evidence was absent; the evidence itself was not. It sat in the vault's own
+research and audit records. A census that looks for the container and
+concludes the content does not exist is the failure mode here, and it
+converted a decidable question into a documented-contract argument.
+
+The consequent decision, ruled 2026-08-10: `core/_aeat_csv.py`'s 8-32 plus
+uppercase-alphanumeric pattern is canonical, and `JustificanteCsv`'s
+4-64-no-pattern bound is retired rather than kept as a second opinion. This
+is the one place in this campaign where the substitutability pre-filter
+selects the TIGHTER type, so the reasoning is recorded rather than assumed:
+the filter asks whether the survivor refuses anything legitimate that the
+retiree admits. 8-32 refuses nothing observed. What 4-64 admits is `tiny` and
+`CSV-ORIG-001` as valid filing evidence.
+
+**The limit on this evidence, stated rather than buried:** three CSVs drawn
+from one taxpayer's IRPF filings is a narrow sample, and it does not prove
+AEAT never issues another shape. What makes the tighter bound safe is the
+margin and the risk asymmetry, not the sample size - every observed value
+sits at sixteen characters, mid-window. Anyone revisiting this decision must
+weigh that sentence rather than the count of supporting values.
+
 
 ## Classification census: AEAT-issued and app-derived membership
 

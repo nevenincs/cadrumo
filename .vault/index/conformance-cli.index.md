@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#conformance-cli'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:96bb51461c40e331b5ba6d3ec2bae42633d2a9f4d7f41bb7ee8b15ff17218565'
 related:

@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#profile-login-session'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:2f825a855758e2161f8071e4938f1dced14b6b89bb0faba56647e11919e60698'
+body_hash: 'sha256:576c4de283943f11c6bcd7a8ca94f95f3db501134733823ae4dd5a6af2628996'
 related:
   - '[[2026-07-24-profile-login-session-W01-P01-S01]]'
   - '[[2026-07-24-profile-login-session-W01-P01-S02]]'
@@ -30,6 +30,7 @@ related:
   - '[[2026-07-24-profile-login-session-plan]]'
   - '[[2026-07-24-profile-login-session-research]]'
   - '[[2026-07-25-profile-login-session-model-facing-digest-delta-audit]]'
+  - '[[2026-08-10-profile-login-session-stale-route-handover-code-review-audit]]'
 ---
 
 # `profile-login-session` feature index
@@ -46,6 +47,7 @@ Auto-generated index of all documents tagged with `#profile-login-session`.
 
 - `2026-07-24-profile-login-session-close-honesty-review-audit` - `profile-login-session` audit: `Fresh-context campaign close honesty review`
 - `2026-07-25-profile-login-session-model-facing-digest-delta-audit` - `profile-login-session` audit: `model facing digest delta`
+- `2026-08-10-profile-login-session-stale-route-handover-code-review-audit` - `profile-login-session` audit: `Stale route handover code review`
 
 ### exec
 

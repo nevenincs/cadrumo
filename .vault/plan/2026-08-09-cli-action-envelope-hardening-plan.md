@@ -4,7 +4,7 @@ tags:
   - '#cli-action-envelope-hardening'
 date: '2026-08-09'
 modified: '2026-08-10'
-body_hash: 'sha256:023b70b402d7c8ecb0c3165558f19c9cc77f07dee5bc513185dccdfbb514ce17'
+body_hash: 'sha256:1629ed80d71ada1af279df9a4c8b89d7125deff536a28cffabef7f1d81be99f8'
 tier: L3
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
@@ -93,9 +93,9 @@ Replace persisted and rendered workflow continuations with application-owned typ
 
 Remove untyped workflow next-action details and string-equality localization.
 
-- [ ] `W04.P06.S21` - Delete the permissive persisted workflow-details compatibility shape and replace next-action details with closed typed action and precondition records; `src/cadrumo/application/workflow/_models.py`.
-- [ ] `W04.P06.S22` - Emit typed verdicts from workflow refusal branches; `src/cadrumo/application/workflow/_engine.py`.
-- [ ] `W04.P06.S23` - Remove English string-equality recovery matching from work-run rendering; `src/cadrumo/entrypoints/cli/_modelo_work_runs_cli.py`.
+- [x] `W04.P06.S21` - Delete the permissive persisted workflow-details compatibility shape and replace next-action details with closed typed action and precondition records; `src/cadrumo/application/workflow/_models.py`.
+- [x] `W04.P06.S22` - Emit typed verdicts from workflow refusal branches; `src/cadrumo/application/workflow/_engine.py`.
+- [x] `W04.P06.S23` - Remove English string-equality recovery matching from work-run rendering; `src/cadrumo/entrypoints/cli/_modelo_work_runs_cli.py`.
 
 ### Phase `W04.P07` - Modelo leaf predicates and notices
 

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#stray-concept-sweep'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:d029aa4b86764132fa02eeff02c09569c5057b87b9523fea73f3f5aaa05c8bb3'
 related:

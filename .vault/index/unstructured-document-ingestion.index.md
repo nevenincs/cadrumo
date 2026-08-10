@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#unstructured-document-ingestion'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:f105312406c931acb7a3a29c4bde2a30796f6423ed9c3da485bfce363dddff79'
+body_hash: 'sha256:cac7f7434e265f90e49dae844e8f8ba65277987a0d5a4cad4a4dea0312a9523f'
 related:
   - '[[2026-08-07-unstructured-document-ingestion-W01-P01-S01]]'
   - '[[2026-08-07-unstructured-document-ingestion-W01-P01-S02]]'
@@ -38,6 +38,7 @@ related:
   - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S209]]'
   - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S210]]'
   - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S217]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S260]]'
   - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S77]]'
   - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S78]]'
   - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S79]]'
@@ -121,6 +122,7 @@ related:
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S123]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S124]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S127]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S128]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S129]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S130]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S131]]'
@@ -132,6 +134,7 @@ related:
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S143]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S144]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S147]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S149]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S151]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S153]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S154]]'
@@ -150,6 +153,7 @@ related:
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S182]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S184]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S185]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S187]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S188]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S189]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S190]]'
@@ -209,6 +213,9 @@ related:
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S278]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S279]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S284]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S285]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S293]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S297]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S66]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S67]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S68]]'
@@ -364,7 +371,7 @@ Auto-generated index of all documents tagged with `#unstructured-document-ingest
 - `2026-08-07-unstructured-document-ingestion-W04-P10-S277` - 2026-08-07-unstructured-document-ingestion-W04-P10-S277
 - `2026-08-07-unstructured-document-ingestion-W04-P10-S280` - Measure tabular column-role mapping quality over the 71 columns of the nine CSV exports against an operator-authored expected mapping
 - `2026-08-07-unstructured-document-ingestion-W04-P10-S281` - Declare the field-name mapping between InvoiceDraft and the corpus key ground-truth vocabulary, since the two share only 7 names of the key 25 and the rest are the same concepts under different spellings - so a scored run reports 12 missed beside 15 undeclared and a probe recovered 9 of 10 concepts correctly under their other names - the mapping lives harness-side as declared data asserted against the corpus, counterparty resolves by counterparty_role as a rule rather than a rename, composite issuer and recipient score leaf by leaf so one wrong leaf cannot destroy a correct read, and key fields with no draft counterpart are reported as their own class never pooled into missed
-- `2026-08-07-unstructured-document-ingestion-W04-P10-S286` - Stop the cost estimator reporting a plausible zero for the design-target model, since estimate_cost_usd resolves an unknown model to 0 rather than refusing and its pricing table carries claude-sonnet-4-6 only - so claude-haiku-4-5, claude-opus-4-1 and gpt-4o all price at 0 for a million tokens, and every cost figure for the tier the campaign actually targets reads free
+- `2026-08-07-unstructured-document-ingestion-W04-P10-S286` - Refuse to price an unknown model rather than reporting it free
 - `2026-08-07-unstructured-document-ingestion-W04-P10-S287` - Thread the field selection the compiler gained through to the production text reader
 - `2026-08-07-unstructured-document-ingestion-W04-P10-S288` - Give the LLM reader path the country name-to-code resolution the structured e-invoice path already has, since the model reads the country correctly and states it as a printed name (Espana) while supplier_country_code is populated only at _evidence_draft.py 1335 where UBL alpha-2 and Facturae alpha-3 are resolved into one code system - so the capability exists and the reader path simply does not reach it, which is the built-and-unreached shape rather than a missing capability - once wired the field scores against the corpus code representation instead of being excluded as a coverage gap
 - `2026-08-07-unstructured-document-ingestion-W04-P10-S38` - Measure the tabular mapping baseline over the six csv_dialect descriptors, nine CSV exports and the libro registro header
@@ -372,7 +379,7 @@ Auto-generated index of all documents tagged with `#unstructured-document-ingest
 - `2026-08-07-unstructured-document-ingestion-W05-P11-S159` - Make the column-role mapping request declare its evidence posture
 - `2026-08-07-unstructured-document-ingestion-W05-P11-S163` - Make the reinstated-consent-symbol set drive its own verification
 - `2026-08-07-unstructured-document-ingestion-W05-P11-S169` - Constrain the withdrawal survey's completeness
-- `2026-08-07-unstructured-document-ingestion-W05-P11-S275` - Route the audit payload transport derivation through provenance_stamp_transport instead of the hand-rolled split, which yields transport-and-reader glued together (local-text today, openai-text-extract once a consented read lands), with a red-green proof over an off-host stamp
+- `2026-08-07-unstructured-document-ingestion-W05-P11-S275` - Route the audit payload transport through the shared derivation
 - `2026-08-07-unstructured-document-ingestion-W05-P11-S40` - `unstructured-document-ingestion` exec: `W05-P11-S40`
 - `2026-08-07-unstructured-document-ingestion-W05-P11-S43` - `unstructured-document-ingestion` exec: `W05-P11-S43`
 - `2026-08-07-unstructured-document-ingestion-W05-P11-S44` - `unstructured-document-ingestion` exec: `W05-P11-S44`
@@ -465,6 +472,13 @@ Auto-generated index of all documents tagged with `#unstructured-document-ingest
 - `2026-08-07-unstructured-document-ingestion-W10-P18-S283` - Repair the incomplete relocation that deleted dev/packaging/evidence_release.py in commit 4841bc6bd3 while three modules still import from it - release_candidate.py line 44, seal_candidate.py line 31 and soak_promoter.py line 36 - and the symbols download_release_assets, list_releases, resolve_gh, run_gh_with_retry, EvidenceLane and evidence_tag exist nowhere else in the tree, so dev/release fails to collect at HEAD and the whole release lane is blocked - decide whether the module returns or the symbols land in a named new home and sweep every consumer in ONE commit
 - `2026-08-07-unstructured-document-ingestion-W10-P18-S289` - Amend the release-asset-transport ADR to record that D4 no-callers premise is false for the download surface, since D3 in the same record preserves the operator locally-minted evidence release which has no backing run and stays a release download - and three live modules import download_release_assets, list_releases, resolve_gh, run_gh_with_retry, EvidenceLane and evidence_tag - so the record contradicts itself and a reader executing D4 literally deletes what D3 requires, which is what broke HEAD
 - `2026-08-07-unstructured-document-ingestion-W10-P18-S76` - Sweep every W08 through W10 verb for the pull and --file naming standard, envelope and notice conformance, and documented-command coverage, gated by the conformance suites red-green proven on one deliberate violation
+- `2026-08-07-unstructured-document-ingestion-W02-P05-S260` - Read suplidos from the document — landing verified, not authored here
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S128` - Correct the prose claiming the place-of-supply articles are unbundled
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S149` - The exact-structured origin note: premise false, and no live surface carries it
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S187` - Delete the registration-to-establishment inference
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S285` - The key-echo ratchet: ruled, and already closed by an admission gate
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S293` - The M390 casilla echoes: drained by authoring, not by nulling
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S297` - The prefixed-identifier parametrisation: already at HEAD
 
 ### plan
 

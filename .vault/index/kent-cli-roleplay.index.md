@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#kent-cli-roleplay'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:63db9f015a0cc3b4965b8d64058ba34f20d1e2d7cdaf005679ade5b9e779921d'
 related:

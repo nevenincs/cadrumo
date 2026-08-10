@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#iva-bienes-inversion-regularizacion'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:9a32ed4e2cceeb299f6fb1adbcbdab213b46e828d3a9e5cba80ea2ed078c6ea1'
 related:

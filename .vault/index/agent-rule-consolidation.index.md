@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#agent-rule-consolidation'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:7522a3dccc68beed839404e143689f9546a31b7b5233a31ca55bf83f5e719b37'
 related:

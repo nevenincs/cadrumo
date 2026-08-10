@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#desktop-capture-harness'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:8c08f0d28f6bb662ecfb0121346eaaf9e5538a463dfcb328cb52b7c01687f2cf'
 related:

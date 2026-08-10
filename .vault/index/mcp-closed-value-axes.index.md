@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#mcp-closed-value-axes'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:08c4d2fa13b2966926aa9a557d4854a445000125477aa51d7f48c66abe14647b'
 related:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#release-asset-transport'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:7c29633e97db0e781c65ce5a8461eda0c91de8590a933a192ab56a3afd194025'
 related:

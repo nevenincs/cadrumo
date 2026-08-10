@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#export-publication'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:9054ed5560e3cdf33378b63a247d82fff90296354496b029add70299d0e5fbb0'
 related:

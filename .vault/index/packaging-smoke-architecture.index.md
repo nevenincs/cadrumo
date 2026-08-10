@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#packaging-smoke-architecture'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:1c9092e6294305f9db9d475e6d6553debed4d089327c24dfdf1d1322cdefb127'
 related:

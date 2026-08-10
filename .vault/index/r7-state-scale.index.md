@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#r7-state-scale'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:5f92898d37b33bd7d5f0904f63009b783a8fa07766e814115fa638af286b2ef3'
 related:

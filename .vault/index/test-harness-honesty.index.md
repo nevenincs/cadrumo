@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#test-harness-honesty'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:aa52c48719254b6f3a8b518e359aaf7517451c0e55971cd11344d596deb6bd75'
 related:

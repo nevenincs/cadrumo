@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#normatives'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:0424e1f979af3db40961574249c24bfed27d2812f769544ae3b2b5fa310caa32'
 related:

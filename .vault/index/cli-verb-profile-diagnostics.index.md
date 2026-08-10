@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-verb-profile-diagnostics'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:6bfb04d35d4ee218de631c80dde9a2fadef97db386dcee8c1d2169859e837154'
 related:

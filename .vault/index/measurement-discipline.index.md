@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#measurement-discipline'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:332a01ee56895efa01f5fade1b0eb751c7bcf52e2bd8ed1179ac33cf83c690d0'
 related:

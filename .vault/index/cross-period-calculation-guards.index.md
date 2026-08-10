@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cross-period-calculation-guards'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:80d749bd5ed1d7a537a7c933cde50f7d9e8d3026bff72d00fa197fb5576b5ada'
 related:

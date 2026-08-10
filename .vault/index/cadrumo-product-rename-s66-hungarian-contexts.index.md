@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cadrumo-product-rename-s66-hungarian-contexts'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:886fbf2e50ad469f701dcb33d74232012fdff5704f33b0f0bc158d2a405fbb8b'
 related:

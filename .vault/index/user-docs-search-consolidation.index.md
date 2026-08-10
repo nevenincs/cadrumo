@@ -3,13 +3,14 @@ generated: true
 tags:
   - '#index'
   - '#user-docs-search-consolidation'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:8474954870c0c99979bed804334b38f09143e09b5a8a55949b45b38372cc8f95'
+body_hash: 'sha256:f25322b276fa785bd36b320da4765afd29656af7f5b8c22b54f31b3a4a5098eb'
 related:
   - '[[2026-08-01-user-docs-search-consolidation-P01-S01]]'
   - '[[2026-08-01-user-docs-search-consolidation-P01-S02]]'
+  - '[[2026-08-01-user-docs-search-consolidation-P01-S38]]'
   - '[[2026-08-01-user-docs-search-consolidation-P02-S03]]'
   - '[[2026-08-01-user-docs-search-consolidation-P02-S04]]'
   - '[[2026-08-01-user-docs-search-consolidation-P02-S05]]'
@@ -20,6 +21,7 @@ related:
   - '[[2026-08-01-user-docs-search-consolidation-P02-S31]]'
   - '[[2026-08-01-user-docs-search-consolidation-P02-S32]]'
   - '[[2026-08-01-user-docs-search-consolidation-P02-S33]]'
+  - '[[2026-08-01-user-docs-search-consolidation-P02-S35]]'
   - '[[2026-08-01-user-docs-search-consolidation-P03-S08]]'
   - '[[2026-08-01-user-docs-search-consolidation-P03-S09]]'
   - '[[2026-08-01-user-docs-search-consolidation-P03-S18]]'
@@ -126,6 +128,8 @@ Auto-generated index of all documents tagged with `#user-docs-search-consolidati
 
 ### exec
 
+- `2026-08-01-user-docs-search-consolidation-P01-S38` - Record in the licence rule source that the narrow embedding exception has no consumer at HEAD
+- `2026-08-01-user-docs-search-consolidation-P02-S35` - Correct the two prose sites asserting a Rung-2 mechanism the tree no longer has
 - `2026-08-01-user-docs-search-consolidation-P04-S10` - Retire the pages-only CADRUMO_DOCS_PAGEFIND_MODE deploy value so every root builds the full record-injected index, updating the deploy-environment test to pin full mode
 - `2026-08-01-user-docs-search-consolidation-P04-S11` - Add a deployment-parity gate asserting the built site's pagefind entry carries every decided record kind and every language root, so an env value can never silently re-narrow the shipped contract again
 - `2026-08-01-user-docs-search-consolidation-P04-S19` - Make the record-injection language follow the build language with the card summary preferring the root language's description, so every localized root's records land in the index its palette loads, correcting the module's stale per-language docstring in the same change and citing the localized-root artefact measurement in the exec record

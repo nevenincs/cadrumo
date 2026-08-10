@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#iva-complexity-hardening-scope'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:326860c788610bc5ebe4c284acd7f3c14d0726604dce3aaae22e836dee1b506a'
 related:

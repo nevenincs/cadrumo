@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cadrumo-product-rename-s66-hungarian-catalogue'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:88108c5342a6a0044ccf07f124cd9eccfc74a0416b72a61c90a5e2b2f12ece76'
 related:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#playwright-anti-bot'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:31779f8786a9514a63d0ec6857ee7463aed8875358dd944c620ee46b709003cc'
 related:

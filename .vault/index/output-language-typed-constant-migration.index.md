@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#output-language-typed-constant-migration'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:e62fb9c9ea975b96770bc668bdcdda5ac3e2067f7ff2c9570276e061c4db487f'
 related:

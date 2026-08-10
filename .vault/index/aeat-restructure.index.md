@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#aeat-restructure'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:230b3ecda4f90431e1b76bd80d3190ee333b49717ab6d517b6c146794de16e1f'
 related:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#obligation-coverage-completeness'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:e49bd4161be3f97acd94ca626c4b37ad8f01a84111cbf66ca0dd8304eb7ab859'
 related:

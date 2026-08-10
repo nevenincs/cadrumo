@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#recargo-equivalencia-source-of-truth'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:a5ee4972c04e18f84e6422ef4961e4becf546877591318264964e654f5bfb322'
 related:

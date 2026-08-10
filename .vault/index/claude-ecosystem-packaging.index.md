@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#claude-ecosystem-packaging'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
 body_hash: 'sha256:989d41ea9c2ff3f1b2fb0ca6c8a836da8edea93a6f9216588e6714a44689ac3c'
 related:
