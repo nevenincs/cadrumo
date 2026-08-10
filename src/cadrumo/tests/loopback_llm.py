@@ -41,6 +41,7 @@ __all__ = [
     "ollama_tags_reply",
     "openai_chat_reply",
     "read_json_body",
+    "read_text_body",
     "serving_loopback",
     "write_json_response",
     "write_raw_response",
@@ -66,11 +67,27 @@ class SilentLoopbackHandler(BaseHTTPRequestHandler):
         """Silence the stdlib per-request access log."""
 
 
-def read_json_body(handler: BaseHTTPRequestHandler) -> Mapping[str, object]:
-    """Return the handler's request body, parsed as JSON.
+def read_text_body(handler: BaseHTTPRequestHandler) -> str:
+    """Return the handler's request body, decoded but not parsed.
 
     Reads exactly ``content-length`` bytes, which is what makes the connection
     reusable for the next request rather than leaving unread bytes in the socket.
+
+    The undecoded sibling of :func:`read_json_body`, for the suites that record
+    what arrived verbatim: their evidence is the transmitted text itself, and a
+    parse-then-reserialise round trip would record a body the client never sent.
+
+    Args:
+        handler: The handler serving the request.
+
+    Returns:
+        The request body as text.
+    """
+    return handler.rfile.read(int(handler.headers.get("content-length", "0"))).decode("utf-8")
+
+
+def read_json_body(handler: BaseHTTPRequestHandler) -> Mapping[str, object]:
+    """Return the handler's request body, parsed as JSON.
 
     Args:
         handler: The handler serving the request.
@@ -78,8 +95,7 @@ def read_json_body(handler: BaseHTTPRequestHandler) -> Mapping[str, object]:
     Returns:
         The decoded JSON object.
     """
-    raw = handler.rfile.read(int(handler.headers.get("content-length", "0")))
-    parsed: Mapping[str, object] = json.loads(raw.decode("utf-8"))
+    parsed: Mapping[str, object] = json.loads(read_text_body(handler))
     return parsed
 
 

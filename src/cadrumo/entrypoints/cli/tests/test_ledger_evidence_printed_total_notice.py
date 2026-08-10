@@ -25,17 +25,22 @@ from __future__ import annotations
 
 import json
 import re
-import threading
 from collections.abc import Iterator
 from http import HTTPStatus
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from io import BytesIO
 from pathlib import Path
-from typing import Any, override
+from typing import Any
 
 import pytest
 
 from ....core.config import override_settings
+from ....tests.loopback_llm import (
+    SilentLoopbackHandler,
+    ollama_chat_reply,
+    read_json_body,
+    serving_loopback,
+    write_json_response,
+)
 from ._ledger_ux_support import _invoke, _open_ledger_ux_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -43,6 +48,9 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _SUPPLIER_CIF = "B12345674"
 
 _MISMATCH_NOTICE_CODE = "ledger.evidence.confirm.printed_total_mismatch"
+
+#: The model name the reading runtime reports on this route.
+_READING_MODEL = "qwen2.5:7b"
 
 # base 100,00 + cuota 21,00 = 121,00; the printed total agrees.
 _COHERENT_INVOICE_LINES = (
@@ -88,30 +96,22 @@ _RECARGO_INVOICE_LINES = (
 # stub and the mismatch assertion would be testing the fixture.
 
 
-class _LoopbackRequestHandler(BaseHTTPRequestHandler):
+class _LoopbackRequestHandler(SilentLoopbackHandler):
     """A real local endpoint speaking the reading runtime's ``/api/chat`` shape."""
 
     def do_POST(self) -> None:
-        body = self.rfile.read(int(self.headers.get("content-length", "0")))
-        prompt = json.dumps(json.loads(body.decode("utf-8"))["messages"])
+        prompt = json.dumps(read_json_body(self)["messages"])
         fields = _RECARGO_FIELDS if "2026-0199" in prompt else _COHERENT_FIELDS
-        payload = json.dumps(
-            {
-                "model": "qwen2.5:7b",
-                "message": {"role": "assistant", "content": json.dumps(fields)},
-                "prompt_eval_count": 100,
-                "eval_count": 50,
-            },
-        ).encode("utf-8")
-        self.send_response(HTTPStatus.OK)
-        self.send_header("content-type", "application/json")
-        self.send_header("content-length", str(len(payload)))
-        self.end_headers()
-        self.wfile.write(payload)
-
-    @override
-    def log_message(self, format: str, *args: object) -> None:
-        """Silence the handler's stderr access log."""
+        write_json_response(
+            self,
+            ollama_chat_reply(
+                json.dumps(fields),
+                model=_READING_MODEL,
+                prompt_eval_count=100,
+                eval_count=50,
+            ),
+            status=HTTPStatus.OK,
+        )
 
 
 _COHERENT_FIELDS = {
@@ -146,17 +146,9 @@ _RECARGO_FIELDS = {
 @pytest.fixture(autouse=True)
 def _loopback_reader() -> Iterator[None]:
     """Serve a real reading endpoint on a loopback port for the duration of a test."""
-    server = ThreadingHTTPServer(("127.0.0.1", 0), _LoopbackRequestHandler)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    chat_url = f"http://127.0.0.1:{server.server_port}/api/chat"
-    try:
+    with serving_loopback(_LoopbackRequestHandler, path="/api/chat") as chat_url:
         with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
             yield
-    finally:
-        server.shutdown()
-        server.server_close()
-        thread.join(timeout=5)
 
 
 def _text_pdf_bytes(lines: tuple[str, ...]) -> bytes:
