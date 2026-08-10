@@ -111,6 +111,8 @@ def serving_a_loopback_reader(
     """
     _LoopbackRequestHandler.replies = tuple(replies)
     _LoopbackRequestHandler.fallback = dict(fallback or {})
-    with serving_loopback(_LoopbackRequestHandler, path="/api/chat") as chat_url:
-        with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
-            yield chat_url
+    with (
+        serving_loopback(_LoopbackRequestHandler, path="/api/chat") as chat_url,
+        override_settings(cadrumo_llm_ollama_chat_url=chat_url),
+    ):
+        yield chat_url
