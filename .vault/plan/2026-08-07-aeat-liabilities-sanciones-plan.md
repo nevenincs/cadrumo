@@ -4,7 +4,7 @@ tags:
   - '#aeat-liabilities-sanciones'
 date: '2026-08-07'
 modified: '2026-08-10'
-body_hash: 'sha256:3e438e9e8e2d662ddd4f0039c81d5c084a24e8bd1d46fb0e463cb967655daca4'
+body_hash: 'sha256:592691079e64aab5990d469d4b1b6c24d42154e5869fa1cc565827746d3cf380'
 tier: L2
 related:
   - '[[2026-08-07-aeat-liabilities-sanciones-adr]]'
@@ -63,6 +63,33 @@ Divergence reconciliation against filed declarations (the ADR's rejected
 option 2) is out of scope for this plan and requires its own ADR once P05
 ships and a real specimen exists to validate a comparison against.
 
+
+**Correction (2026-08-10): the deeper half of the P06 block is discharged.**
+The paragraph above states that none of LGT arts. 28, 65, 82, 163, 167-173 or
+178-212 is bundled, so the corpus must be fetched before a human review is even
+possible. That was accurate and is now out of date: the consolidated Ley 58/2003
+is bundled, acquired from BOE through the sanctioned maintainer acquirer rather
+than by hand, with its extracted sidecar. All 46 of those articles are present
+and verified against the written file and the sidecar independently of the
+acquirer's own check. Eleven per-article Ley 58/2003 excerpts were already
+bundled and none of them covered the range these rows need, which is why the
+absence was real rather than a search failure.
+
+What that changes, stated narrowly. P06 is no longer blocked on two things. It
+is blocked on ONE: a named human legal reviewer. The corpus dependency in each
+row's scope clause is satisfied, and a `corpus_ref` now has a bundled
+consolidated target to resolve against instead of a file that had to be created
+first.
+
+What it does NOT change. An agent still may not author or stamp these entries,
+and `review_status` still may not be self-stamped. The live cross-check on any
+numeric amount or rate is still owed and is part of the review rather than of
+the acquisition: the payload was fetched from BOE and its served version is
+asserted per bloque, but the standing grounding rule distrusts any bundled text
+on a number, and the reviewer's reading is what discharges that. Retiring the
+per-article excerpts in favour of the consolidated file is a separate question
+this correction deliberately does not settle.
+
 ## Steps
 
 ### Phase `P01` - Deuda domain type and closed enums
@@ -112,10 +139,10 @@ Wire the live AEAT fetch once an operator authorises a specimen capture: the DOM
 
 Author legal-catalogue entries for the four ungrounded LGT provisions, each with a named human reviewer and a live-cross-checked BOE corpus_ref, needed only before the register interprets a legal category rather than displaying AEAT's own reported figures.
 
-- [ ] `P06.S19` - BLOCKED on a named human legal reviewer, never an agent stamp: author the legal-catalogue entry for LGT art. 28, recargo del periodo ejecutivo and recargo de apremio, with a corpus_ref resolving to the last live-cross-checked BOE consolidated text; `src/cadrumo/_data/corpus/normatives/html, legal catalogue`.
-- [ ] `P06.S20` - BLOCKED on a named human legal reviewer: author the legal-catalogue entry for LGT arts. 178-212, regimen sancionador, focused on the arts. 191-197 pecuniaria proporcional bands, with a live-cross-checked corpus_ref; `src/cadrumo/_data/corpus/normatives/html, legal catalogue`.
-- [ ] `P06.S21` - BLOCKED on a named human legal reviewer: author the legal-catalogue entry for LGT arts. 65 and 82, aplazamiento y fraccionamiento del pago and garantias, with a live-cross-checked corpus_ref; `src/cadrumo/_data/corpus/normatives/html, legal catalogue`.
-- [ ] `P06.S22` - BLOCKED on a named human legal reviewer: author the legal-catalogue entry for LGT arts. 163 and 167 through 173, procedimiento de apremio, providencia and embargo, with a live-cross-checked corpus_ref, verified by the legal-entry evidence gate; `src/cadrumo/_data/corpus/normatives/html, legal catalogue`.
+- [ ] `P06.S19` - BLOCKED on a named human legal reviewer, never an agent stamp. The corpus half of this row's blocker is discharged as of 2026-08-10: the consolidated Ley 58/2003 is bundled with its extracted sidecar, so art. 28 is present and a corpus_ref has a target. Author the legal-catalogue entry for LGT art. 28, recargo del periodo ejecutivo and recargo de apremio, pointing corpus_ref at the bundled consolidated file at anchor a28 rather than hand-authoring a duplicate excerpt. The reviewer cross-checks every percentage against live BOE before stamping, because the standing grounding rule distrusts bundled text on a number; `src/cadrumo/_data/registry/aeat/legal/`.
+- [ ] `P06.S20` - BLOCKED on a named human legal reviewer, never an agent stamp. The corpus half is discharged as of 2026-08-10: arts. 178 through 212 are all present in the bundled consolidated Ley 58/2003 and in its sidecar. Author the legal-catalogue entry for the regimen sancionador focused on the arts. 191-197 pecuniaria proporcional bands, pointing corpus_ref at the bundled consolidated file. Every band percentage is cross-checked against live BOE by the reviewer before stamping; `src/cadrumo/_data/registry/aeat/legal/`.
+- [ ] `P06.S21` - BLOCKED on a named human legal reviewer, never an agent stamp. The corpus half is discharged as of 2026-08-10: arts. 65 and 82 are present in the bundled consolidated Ley 58/2003. Author the legal-catalogue entry for aplazamiento y fraccionamiento del pago and its garantias, pointing corpus_ref at the bundled consolidated file. Any interest rate the entry carries is cross-checked against live BOE by the reviewer before stamping; `src/cadrumo/_data/registry/aeat/legal/`.
+- [ ] `P06.S22` - BLOCKED on a named human legal reviewer, never an agent stamp. The corpus half is discharged as of 2026-08-10: arts. 163 and 167 through 173 are all present in the bundled consolidated Ley 58/2003. Author the legal-catalogue entry for the procedimiento de apremio, providencia and embargo, pointing corpus_ref at the bundled consolidated file, verified by the legal-entry evidence gate; `src/cadrumo/_data/registry/aeat/legal/`.
 
 ### Phase `P07` - Peer-WIP-blocked: locale rows
 
