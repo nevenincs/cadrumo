@@ -174,7 +174,9 @@ def test_cluster_admission_rescans_to_closure_without_promoting_generic_tokens()
 
     assert admitted.admitted_aliases == state.admitted_aliases
     assert len(second.candidates) == len(first.candidates)
-    generic_tokens = {record.token for record in first.discoveries if record.kind is not DiscoveryKind.ACTION_ALIAS}
+    generic_tokens = {
+        record.token for record in first.discoveries if record.kind is not DiscoveryKind.ACTION_ALIAS
+    }
     assert generic_tokens.isdisjoint(admitted.admitted_aliases)
     state_document = dump_fixed_point_state(admitted)
     assert dump_fixed_point_state(load_fixed_point_state(state_document)) == state_document

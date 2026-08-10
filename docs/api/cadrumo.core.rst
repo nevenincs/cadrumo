@@ -35,6 +35,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   cadrumo.core._action_argument_resolution
    cadrumo.core._aeat_csv
    cadrumo.core._amendment_kind_regime
    cadrumo.core._auth_provider
@@ -80,7 +81,9 @@ Submodules
    cadrumo.core._invoice_link
    cadrumo.core._irnr
    cadrumo.core._iva_category_resolution
+   cadrumo.core._iva_compensation_provenance
    cadrumo.core._ledger_sort
+   cadrumo.core._link_safety
    cadrumo.core._lockfile_unlink
    cadrumo.core._model_catalogue
    cadrumo.core._modelo
@@ -89,12 +92,14 @@ Submodules
    cadrumo.core._notificacion_estado_servicio
    cadrumo.core._objeto_tributario
    cadrumo.core._observed_header_fact
+   cadrumo.core._operator_action_enums
    cadrumo.core._operator_progress
    cadrumo.core._optional_extras
    cadrumo.core._payment_election
    cadrumo.core._period
    cadrumo.core._pid_liveness
    cadrumo.core._post_filing_event
+   cadrumo.core._precondition_action_invariants
    cadrumo.core._prior_domiciliation_election
    cadrumo.core._profile_session
    cadrumo.core._prorrata_exclusions
@@ -105,8 +110,10 @@ Submodules
    cadrumo.core._rescate_type
    cadrumo.core._result_disposition
    cadrumo.core._revision_review
+   cadrumo.core._spanish_stemming
    cadrumo.core._storage_taxonomy
    cadrumo.core._storage_taxonomy_locations
+   cadrumo.core._sync_surface
    cadrumo.core._tax_domain
    cadrumo.core._tipos_actividad
    cadrumo.core._toml

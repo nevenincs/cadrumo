@@ -1,6 +1,6 @@
 """Cl@ve Permanente auth provider for AEAT Sede Electrónica.
 
-Implements the :class:`~adapters.outbound.aeat.auth.AuthProvider` protocol for
+Implements the :class:`~application.auth.AuthProvider` protocol for
 the DNI/NIE + password Cl@ve Permanente flow against the live portal. Unlike
 Cl@ve Móvil, routine Cl@ve Permanente login for AEAT *read paths* is fully
 headless-automatable: the operator supplies a DNI/NIE and password, the
@@ -107,7 +107,7 @@ _CLAVE_PERMANENTE_PASSWORD_ENV: Final[str] = "CADRUMO_CLAVE_PERMANENTE_PASSWORD"
 
 
 class ClavePermanenteAuthProvider:
-    """Cl@ve Permanente implementation of the :class:`~adapters.outbound.aeat.auth.AuthProvider` protocol.
+    """Cl@ve Permanente implementation of the :class:`~application.auth.AuthProvider` protocol.
 
     Constructed by :func:`~adapters.outbound.aeat.auth.select_provider`
     when ``kind == AuthProviderKind.CLAVE_PERMANENTE``. Both fresh login and

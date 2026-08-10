@@ -408,30 +408,28 @@ def _import_official_m130_result_observation(
         expected_tax_id=_TAX_ID,
         clock=_FILE_AT,
     )
-    observation_repo.save(
-        observation_repo.prepare_observation_envelope(
-            RegistryModeloObservation(
+    observation_repo.save(observation_repo.prepare_observation_envelope(
+        RegistryModeloObservation(
+            modelo="130",
+            filing_year=_YEAR,
+            period=period,
+            observations=registry_grounded_observations(
                 modelo="130",
                 filing_year=_YEAR,
                 period=period,
-                observations=registry_grounded_observations(
-                    modelo="130",
-                    filing_year=_YEAR,
-                    period=period,
-                    casilla_values=casilla_values,
-                ),
+                casilla_values=casilla_values,
             ),
-            source_kind="aeat_sede_justificante",
-            captured_at=_FILE_AT,
-            stamped_revision_id=snapshot.revision.id,
-            source_metadata={
-                "aeat_register_status": "ALTA",
-                "aeat_expediente_id": f"EXP-130-{_YEAR}-{period}",
-                "aeat_justificante_csv": evidence_reference_id,
-                "authenticated_identity": _TAX_ID,
-            },
-        )
-    )
+        ),
+        source_kind="aeat_sede_justificante",
+        captured_at=_FILE_AT,
+        stamped_revision_id=snapshot.revision.id,
+        source_metadata={
+            "aeat_register_status": "ALTA",
+            "aeat_expediente_id": f"EXP-130-{_YEAR}-{period}",
+            "aeat_justificante_csv": evidence_reference_id,
+            "authenticated_identity": _TAX_ID,
+        },
+    ))
 
 
 def _seed_prior_year_m100(secure_objects: SecureObjectRepository) -> None:
@@ -444,29 +442,27 @@ def _seed_prior_year_m100(secure_objects: SecureObjectRepository) -> None:
     zero). Net income is set above the minoración ceiling so the minoración
     resolves to zero.
     """
-    CalculationObservationRepository(objects=secure_objects).save(
-        CalculationObservationRepository(objects=secure_objects).prepare_observation_envelope(
-            RegistryModeloObservation(
+    CalculationObservationRepository(objects=secure_objects).save(CalculationObservationRepository(objects=secure_objects).prepare_observation_envelope(
+        RegistryModeloObservation(
+            modelo="100",
+            filing_year=_PRIOR_YEAR,
+            period=_M100_ANNUAL_PERIOD,
+            observations=registry_grounded_observations(
                 modelo="100",
                 filing_year=_PRIOR_YEAR,
                 period=_M100_ANNUAL_PERIOD,
-                observations=registry_grounded_observations(
-                    modelo="100",
-                    filing_year=_PRIOR_YEAR,
-                    period=_M100_ANNUAL_PERIOD,
-                    casilla_values={
-                        _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
-                        _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
-                        _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
-                        _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
-                        _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0"),
-                    },
-                ),
+                casilla_values={
+                    _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
+                    _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
+                    _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
+                    _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
+                    _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0"),
+                },
             ),
-            source_kind="app_filing",
-            captured_at=_FILE_AT,
-        )
-    )
+        ),
+        source_kind="app_filing",
+        captured_at=_FILE_AT,
+    ))
 
 
 def _seed_taxpayer_profile() -> None:

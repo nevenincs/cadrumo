@@ -142,9 +142,7 @@ def test_auth_payload_refuses_undeclared_secret_shaped_field(
 ) -> None:
     """Secret-shaped additions cannot cross a payload boundary undeclared."""
     if isinstance(result, AuthTestResult):
-        payload = AuthTestPayload.from_test_result(result, active_profile_precondition_action=None).model_dump(
-            mode="json"
-        )
+        payload = AuthTestPayload.from_test_result(result, active_profile_precondition_action=None).model_dump(mode="json")
     elif isinstance(result, AuthStatusResult):
         payload = AuthStatusPayload.from_result(result, active_profile_precondition_action=None).model_dump(mode="json")
     else:

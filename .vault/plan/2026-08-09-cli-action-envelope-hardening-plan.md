@@ -4,7 +4,7 @@ tags:
   - '#cli-action-envelope-hardening'
 date: '2026-08-09'
 modified: '2026-08-10'
-body_hash: 'sha256:0a015041b5a5af48d2d1b9ce9e3dea9c6a2c1b7239c863ab92f5aa488efb9939'
+body_hash: 'sha256:cf8f7a8a4a6afad40b87c46b934e107aea5b2923601bc9a4b9468086c317b5ad'
 tier: L3
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
@@ -103,8 +103,8 @@ Migrate calculate, verify, and file preconditions and their CLI projections with
 
 - [x] `W04.P07.S24` - Migrate adjudicated modelo work and verification predicates to typed verdicts; `src/cadrumo/application/modelo`.
 - [x] `W04.P07.S25` - Replace lifecycle suggestion construction with resolved typed action notices; `src/cadrumo/entrypoints/cli/_modelo_work_lifecycle_cli.py`.
-- [ ] `W04.P07.S26` - Replace unknown-revision and verification continuations with bound or explicitly conditional actions; `src/cadrumo/entrypoints/cli/_modelo_work_verification_cli.py`.
-- [ ] `W04.P07.S27` - Prove calculate verify and file negative-recovery-retry journeys; `src/cadrumo/entrypoints/cli/tests/test_modelo_action_recovery.py`.
+- [x] `W04.P07.S26` - Replace unknown-revision and verification continuations with bound or explicitly conditional actions; `src/cadrumo/entrypoints/cli/_modelo_work_verification_cli.py`.
+- [x] `W04.P07.S27` - Prove calculate verify and file negative-recovery-retry journeys; `src/cadrumo/entrypoints/cli/tests/test_modelo_action_recovery.py`.
 
 ## Wave `W05` - Migrate remaining action-authority clusters
 
@@ -114,7 +114,7 @@ Retire error-registry defaults and free-form operational guidance by complete pr
 
 Convert registered defaults and exception-level action overrides into catalogue references or explicit no-recovery outcomes.
 
-- [ ] `W05.P08.S28` - Delete ErrorCode.default_suggestion and define only the current catalogue-backed error action or explicit no-recovery projection; `src/cadrumo/core/errors/_registry.py`.
+- [x] `W05.P08.S28` - Delete ErrorCode.default_suggestion and define only the current catalogue-backed error action or explicit no-recovery projection; `src/cadrumo/core/errors/_registry.py`.
 - [ ] `W05.P08.S29` - Fail when an adjudicated exception-override producer lacks an exclusive migration Step; `dev/cli_action_census_dispositions.py`.
 - [ ] `W05.P08.S30` - Prove registered error recovery resolves against the live command and input surface; `src/cadrumo/entrypoints/cli/tests/test_error_registry_contract.py`.
 - [ ] `W05.P08.S50` - Migrate core error-code defaults to catalogue action identities or explicit no-recovery outcomes; `src/cadrumo/core/errors/registry/_core.py`.
@@ -128,6 +128,9 @@ Convert registered defaults and exception-level action overrides into catalogue 
 - [ ] `W05.P08.S63` - Delete the retired CadrumoError suggestion parameter and attribute so every unmigrated exception producer fails loudly; `src/cadrumo/core/errors/__init__.py`.
 - [ ] `W05.P08.S64` - Migrate entrypoint error-code defaults to catalogue action identities or explicit no-recovery outcomes; `src/cadrumo/core/errors/registry/_entrypoints.py`.
 - [ ] `W05.P08.S65` - Replace ancillary core install and repair suggestion producers with canonical action references or explicit no-recovery outcomes; `src/cadrumo/core/_optional_extras.py; src/cadrumo/core/external_constants.py`.
+- [ ] `W05.P08.S96` - Migrate residual modelo exception-override action selectors and forwarding bridge to typed conditions and canonical actions; `src/cadrumo/application/modelo/_export.py; src/cadrumo/application/modelo/_profile_readiness_gate.py; src/cadrumo/application/modelo/_projection.py; src/cadrumo/application/modelo/_reconcile.py`.
+- [ ] `W05.P08.S97` - Migrate the active transaction-catalogue workflow refusal from its legacy exception continuation to a typed verdict or explicit no-recovery outcome; `src/cadrumo/application/workflow/_models.py`.
+- [ ] `W05.P08.S99` - Migrate justificante exception action forwarding through cooperative MRO to the retired-error boundary and canonical typed actions; `src/cadrumo/domain/justificante/_errors.py`.
 
 ### Phase `W05.P09` - Diagnostics overview and provisioning
 
@@ -182,6 +185,7 @@ Complete the auth, wizard, ledger, deadline, live, adapter, renderer, and locale
 - [ ] `W05.P10.S92` - Replace overview renderer action producers and co-located renderers with the shared resolved action projection; `src/cadrumo/entrypoints/cli/_overview_rendering.py`.
 - [ ] `W05.P10.S93` - Migrate residual MCP action producers and transport notices to the shared resolved action projection; `src/cadrumo/entrypoints/mcp/_tools.py; src/cadrumo/entrypoints/mcp/_transport.py`.
 - [ ] `W05.P10.S94` - Migrate LLM recovery and continuation producers to typed conditions and canonical actions; `src/cadrumo/llm`.
+- [ ] `W05.P10.S98` - Migrate application-registry exception-action forwarding to the retired-error boundary and canonical typed actions; `src/cadrumo/application/registry/_diff.py`.
 
 ## Wave `W06` - Prove action chains and close honestly
 

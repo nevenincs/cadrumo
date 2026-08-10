@@ -165,6 +165,7 @@ def test_contract_models_are_strict_and_immutable() -> None:
         setattr(root, "purpose", "mutated")  # noqa: B010 - frozen-model refusal is the assertion
 
 
+
 def test_operator_surface_application_package_has_no_typer_dependency() -> None:
     import subprocess
     import sys

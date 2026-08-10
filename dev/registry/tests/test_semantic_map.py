@@ -5,7 +5,12 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry import CasillaFieldKind
+from cadrumo.domain.calculations.registry import (
+    CasillaFieldKind,
+    ExportComputedKey,
+    ExportDraftAttribute,
+    ExportHeaderKey,
+)
 
 from .._semantic_map import SemanticMap, SemanticMapEntry
 
@@ -39,9 +44,14 @@ def _entry_payload(kind: str, **semantic_payload: object) -> dict[str, object]:
         ("casilla", {"casilla_id": "casilla.03"}, "casilla_id", "casilla.03"),
         ("binding", {"binding": "declarante.nif"}, "binding", "declarante.nif"),
         ("literal", {"literal": "T"}, "literal", "T"),
-        ("header", {"header_key": "record_type"}, "header_key", "record_type"),
-        ("draft", {"draft_attribute": "filing_year"}, "draft_attribute", "filing_year"),
-        ("computed", {"computed_key": "envelope_closing_tag"}, "computed_key", "envelope_closing_tag"),
+        ("header", {"header_key": "program_version"}, "header_key", ExportHeaderKey.PROGRAM_VERSION),
+        ("draft", {"draft_attribute": "filing_year"}, "draft_attribute", ExportDraftAttribute.FILING_YEAR),
+        (
+            "computed",
+            {"computed_key": "envelope_closing_tag"},
+            "computed_key",
+            ExportComputedKey.ENVELOPE_CLOSING_TAG,
+        ),
         ("filler", {}, None, None),
         ("checksum", {}, None, None),
     ],
@@ -142,3 +152,20 @@ def test_semantic_map_rejects_parser_coordinates_and_renderer_shape() -> None:
                 offset=17,
             ),
         )
+
+
+@pytest.mark.parametrize(
+    ("kind", "payload", "deleted"),
+    (
+        ("header", {"header_key": "presenter_nif"}, "presenter_nif"),
+        ("draft", {"draft_attribute": "modelo"}, "modelo"),
+        ("computed", {"computed_key": "record_checksum"}, "record_checksum"),
+    ),
+)
+def test_semantic_map_rejects_deleted_selector_tokens(
+    kind: str,
+    payload: dict[str, object],
+    deleted: str,
+) -> None:
+    with pytest.raises(ValidationError, match=deleted):
+        SemanticMapEntry.model_validate(_entry_payload(kind, **payload))

@@ -176,28 +176,26 @@ def test_m130_casilla_01_folds_seeded_ledger_income_on_live_calculate(
 
     # Real prior-year M100 net-income observation (upstream minoración substrate).
     obs_repo = CalculationObservationRepository(objects=m130_objects)
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            RegistryModeloObservation(
+    obs_repo.save(obs_repo.prepare_observation_envelope(
+        RegistryModeloObservation(
+            modelo="100",
+            filing_year=_M130_PRIOR_YEAR,
+            period="0A",
+            observations=registry_grounded_observations(
                 modelo="100",
                 filing_year=_M130_PRIOR_YEAR,
                 period="0A",
-                observations=registry_grounded_observations(
-                    modelo="100",
-                    filing_year=_M130_PRIOR_YEAR,
-                    period="0A",
-                    casilla_values={
-                        _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _M130_PRIOR_YEAR_NET_INCOME,
-                        _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
-                        _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
-                        _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
-                    },
-                ),
+                casilla_values={
+                    _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _M130_PRIOR_YEAR_NET_INCOME,
+                    _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
+                    _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
+                    _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
+                },
             ),
-            source_kind=APP_FILING_SOURCE_KIND,
-            captured_at=_T0,
-        )
-    )
+        ),
+        source_kind=APP_FILING_SOURCE_KIND,
+        captured_at=_T0,
+    ))
 
     # Non-vacuity: casilla 01 binds the income aggregation source under test, and
     # the seeds are distinct (so a copy/contamination cannot satisfy the sum).
@@ -263,28 +261,26 @@ def test_m130_casilla_06_prefills_from_net_paid_professional_invoice_on_live_cal
     tx_repo.save(TransactionCatalogue.from_transactions((tx,)))
 
     obs_repo = CalculationObservationRepository(objects=m130_objects)
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            RegistryModeloObservation(
+    obs_repo.save(obs_repo.prepare_observation_envelope(
+        RegistryModeloObservation(
+            modelo="100",
+            filing_year=_M130_PRIOR_YEAR,
+            period="0A",
+            observations=registry_grounded_observations(
                 modelo="100",
                 filing_year=_M130_PRIOR_YEAR,
                 period="0A",
-                observations=registry_grounded_observations(
-                    modelo="100",
-                    filing_year=_M130_PRIOR_YEAR,
-                    period="0A",
-                    casilla_values={
-                        _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _M130_PRIOR_YEAR_NET_INCOME,
-                        _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
-                        _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
-                        _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
-                    },
-                ),
+                casilla_values={
+                    _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _M130_PRIOR_YEAR_NET_INCOME,
+                    _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
+                    _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
+                    _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
+                },
             ),
-            source_kind=APP_FILING_SOURCE_KIND,
-            captured_at=_T0,
-        )
-    )
+        ),
+        source_kind=APP_FILING_SOURCE_KIND,
+        captured_at=_T0,
+    ))
 
     revision = _revision("130", _M130_REVISION)
     assert any(

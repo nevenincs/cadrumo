@@ -221,23 +221,21 @@ def _seed_prior_year_m100(obs_repo: CalculationObservationRepository, *, filing_
     in 0224, the other rendimiento-source casillas are zero for a
     pure-actividad-económica filer.
     """
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            registry_grounded_modelo_observation(
-                modelo="100",
-                filing_year=filing_year,
-                period="0A",
-                casilla_values={
-                    _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
-                    _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
-                    _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
-                    _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
-                },
-            ),
-            source_kind="app_filing",
-            captured_at=_CLOCK,
-        )
-    )
+    obs_repo.save(obs_repo.prepare_observation_envelope(
+        registry_grounded_modelo_observation(
+            modelo="100",
+            filing_year=filing_year,
+            period="0A",
+            casilla_values={
+                _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
+                _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
+                _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
+                _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
+            },
+        ),
+        source_kind="app_filing",
+        captured_at=_CLOCK,
+    ))
 
 
 def test_modelo_130_enrolls_two_renta_years_via_prior_year_minoracion(repos: _Repos) -> None:

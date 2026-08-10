@@ -341,7 +341,11 @@ def test_every_production_run_record_derives_its_coverage_from_a_source() -> Non
                 offenders.append(f"{where} passes raw counts instead of a derived coverage")
                 continue
             derived = next(
-                (keyword.value for keyword in node.keywords if keyword.arg == "coverage"),
+                (
+                    keyword.value
+                    for keyword in node.keywords
+                    if keyword.arg == "coverage"
+                ),
                 None,
             )
             is_derived = (

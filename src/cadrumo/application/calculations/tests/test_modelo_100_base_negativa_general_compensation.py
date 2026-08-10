@@ -128,18 +128,16 @@ def _seed_prior_negative_base(*, saldo: Decimal, obs_repo: CalculationObservatio
     The ``previous_filing`` carry binding resolves this into the current year's
     opening pending (casilla 1388).
     """
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            registry_grounded_modelo_observation(
-                modelo=_MODELO,
-                filing_year=_FILING_YEAR - 1,
-                period=_PERIOD,
-                casilla_values={_PRIOR_NEGATIVE_BASE_CASILLA: saldo},
-            ),
-            source_kind="app_filing",
-            captured_at=_CLOCK,
-        )
-    )
+    obs_repo.save(obs_repo.prepare_observation_envelope(
+        registry_grounded_modelo_observation(
+            modelo=_MODELO,
+            filing_year=_FILING_YEAR - 1,
+            period=_PERIOD,
+            casilla_values={_PRIOR_NEGATIVE_BASE_CASILLA: saldo},
+        ),
+        source_kind="app_filing",
+        captured_at=_CLOCK,
+    ))
 
 
 def _zeroed_channels(snapshot: RegistrySnapshot) -> tuple[dict[BindingId, Decimal], dict[RelationId, Decimal]]:

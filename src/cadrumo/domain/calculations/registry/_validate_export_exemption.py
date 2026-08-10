@@ -76,7 +76,7 @@ See Also:
         The closed vocabulary, one member per adjudicated exemption shape.
     :func:`~domain.calculations.registry.fixed_width_record_casilla_ids`
         The shared derivation of which casillas a record set addresses.
-    :func:`~application.filing.assert_export_mirrors_manifest`
+    :func:`~application.filing._export_parity.assert_export_mirrors_manifest`
         The pre-write gate whose required set this protects.
 """
 

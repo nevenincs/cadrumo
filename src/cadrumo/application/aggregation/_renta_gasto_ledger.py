@@ -1,7 +1,7 @@
 """Repository-backed Renta deductible-expense (gasto) aggregation for Modelo 130.
 
 Loads ledger rows through
-:class:`~domain.transactions.TransactionCatalogueRepository`.
+:class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository`.
 
 Used by: :mod:`~._modelo_bindings` (source mesh) for Modelo 130 casilla 02
 ("Gastos") aggregation.

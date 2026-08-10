@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import typer
 
@@ -16,7 +17,38 @@ from .._common import activate_subcommand_output_language as _activate_subcomman
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from ._status_rendering import precondition_action_lines
 
+if TYPE_CHECKING:
+    from ....application.auth import AuthConfigureResult
+
 auth_app = typer.Typer(name="auth", help=tr("cli.config.auth.help"), no_args_is_help=True)
+
+
+def _auth_configure_lines(configure_result: AuthConfigureResult) -> list[str]:
+    """Render the operator text dump for a completed auth configure.
+
+    Cl@ve Móvil is the only provider that binds a taxpayer identity, so its
+    three identity lines (and the alignment detail, when the backend states
+    one) are emitted for that provider alone.
+    """
+    lines = [
+        f"provider\t{configure_result.provider}",
+        f"file\t{configure_result.file}",
+        f"status\t{'configured' if configure_result.complete else 'incomplete'}",
+    ]
+    if not configure_result.complete:
+        lines.append(f"incomplete_reason\t{configure_result.incomplete_reason}")
+    if configure_result.provider != "clave_movil":
+        return lines
+    lines.extend(
+        (
+            f"profile_tax_id\t{'present' if configure_result.profile_tax_id_present else 'missing'}",
+            f"clave_identity\t{'present' if configure_result.provider_identity_present else 'missing'}",
+            f"identity_alignment\t{configure_result.identity_alignment}",
+        ),
+    )
+    if configure_result.identity_alignment_detail:
+        lines.append(f"identity_alignment_detail\t{configure_result.identity_alignment_detail}")
+    return lines
 
 
 def _run_provider_auth_operation[AuthResultT](
@@ -143,23 +175,7 @@ def auth_configure(
         configure_result,
         precondition_action=precondition_action,
     )
-    lines = [
-        f"provider\t{configure_result.provider}",
-        f"file\t{configure_result.file}",
-        f"status\t{'configured' if configure_result.complete else 'incomplete'}",
-    ]
-    if not configure_result.complete:
-        lines.append(f"incomplete_reason\t{configure_result.incomplete_reason}")
-    if configure_result.provider == "clave_movil":
-        lines.extend(
-            (
-                f"profile_tax_id\t{'present' if configure_result.profile_tax_id_present else 'missing'}",
-                f"clave_identity\t{'present' if configure_result.provider_identity_present else 'missing'}",
-                f"identity_alignment\t{configure_result.identity_alignment}",
-            ),
-        )
-        if configure_result.identity_alignment_detail:
-            lines.append(f"identity_alignment_detail\t{configure_result.identity_alignment_detail}")
+    lines = _auth_configure_lines(configure_result)
     lines.extend(precondition_action_lines(precondition_action))
     _emit_envelope(ctx, command="config.auth.configure", result=auth_configure_payload, lines=lines)
 
@@ -203,7 +219,11 @@ def auth_status(
         result=envelope_result,
         lines=(
             _auth_status_summary_line(payload),
-            *(f"{key}\t{value}" for key, value in payload.items() if key != "active_profile_precondition_action"),
+            *(
+                f"{key}\t{value}"
+                for key, value in payload.items()
+                if key != "active_profile_precondition_action"
+            ),
             *precondition_action_lines(precondition_action),
         ),
     )
@@ -278,7 +298,11 @@ def auth_test(
         command="config.auth.test",
         result=envelope_result,
         lines=(
-            *(f"{key}\t{value}" for key, value in payload.items() if key != "active_profile_precondition_action"),
+            *(
+                f"{key}\t{value}"
+                for key, value in payload.items()
+                if key != "active_profile_precondition_action"
+            ),
             *precondition_action_lines(precondition_action),
         ),
     )

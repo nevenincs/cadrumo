@@ -262,29 +262,27 @@ def _seed_prior_year_m130_minoracion(objects: SecureObjectRepository) -> None:
     observation_repo = CalculationObservationRepository(objects=objects)
     for target_year in _M130_DIAGNOSTIC_YEARS:
         prior_year = target_year - 1
-        observation_repo.save(
-            observation_repo.prepare_observation_envelope(
-                RegistryModeloObservation(
+        observation_repo.save(observation_repo.prepare_observation_envelope(
+            RegistryModeloObservation(
+                modelo="100",
+                filing_year=prior_year,
+                period=_M100_ANNUAL_PERIOD,
+                observations=registry_grounded_observations(
                     modelo="100",
                     filing_year=prior_year,
                     period=_M100_ANNUAL_PERIOD,
-                    observations=registry_grounded_observations(
-                        modelo="100",
-                        filing_year=prior_year,
-                        period=_M100_ANNUAL_PERIOD,
-                        casilla_values={
-                            _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
-                            _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
-                            _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
-                            _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
-                            _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0"),
-                        },
-                    ),
+                    casilla_values={
+                        _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
+                        _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
+                        _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
+                        _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
+                        _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0"),
+                    },
                 ),
-                source_kind="app_filing",
-                captured_at=datetime(target_year, 4, 6, 12, 0, tzinfo=UTC),
-            )
-        )
+            ),
+            source_kind="app_filing",
+            captured_at=datetime(target_year, 4, 6, 12, 0, tzinfo=UTC),
+        ))
 
 
 def _seed_taxpayer_profile() -> None:

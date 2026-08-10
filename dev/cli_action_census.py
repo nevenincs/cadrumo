@@ -225,7 +225,10 @@ def repository_sources(revision: str) -> tuple[tuple[str, str], ...]:
     with tarfile.open(fileobj=io.BytesIO(completed.stdout), mode="r:") as archive:
         for member in archive:
             path = member.name
-            if not member.isfile() or Path(path).suffix not in _FIXED_POINT_SOURCE_SUFFIXES:
+            if (
+                not member.isfile()
+                or Path(path).suffix not in _FIXED_POINT_SOURCE_SUFFIXES
+            ):
                 continue
             source_file = archive.extractfile(member)
             if source_file is None:
@@ -442,7 +445,11 @@ class _SourceReference:
 
 
 def _is_fixed_point_production_path(path: str) -> bool:
-    return path.startswith(f"{SOURCE_ROOT}/") and "/tests/" not in path and not Path(path).name.startswith("test_")
+    return (
+        path.startswith(f"{SOURCE_ROOT}/")
+        and "/tests/" not in path
+        and not Path(path).name.startswith("test_")
+    )
 
 
 def fixed_point_sources(revision: str) -> FixedPointSources:
@@ -534,7 +541,9 @@ def _direct_reference(
         return _direct_reference(node.value, aliases, bindings)
     if isinstance(node, ast.JoinedStr):
         references = [
-            reference for value in node.values if (reference := _direct_reference(value, aliases, bindings)) is not None
+            reference
+            for value in node.values
+            if (reference := _direct_reference(value, aliases, bindings)) is not None
         ]
         return references[0] if len(references) == 1 else None
     return None
@@ -663,7 +672,9 @@ class _DiscoveryVisitor(ast.NodeVisitor):
                 for reference in references:
                     self._add(DiscoveryKind.REFUSAL_SITE, ast.unparse(node.exc.func), node, reference)
             elif (
-                isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value.startswith(COMMAND_PREFIX)
+                isinstance(node, ast.Constant)
+                and isinstance(node.value, str)
+                and node.value.startswith(COMMAND_PREFIX)
             ):
                 self._add(
                     DiscoveryKind.COMMAND_FORM,
@@ -1059,7 +1070,10 @@ def main(argv: list[str] | None = None) -> int:
     if arguments.close_fixed_point and not arguments.fixed_point:
         parser.error("--close-fixed-point requires --fixed-point")
     if (
-        arguments.state or arguments.write_state or arguments.admit_observed or arguments.admit_alias
+        arguments.state
+        or arguments.write_state
+        or arguments.admit_observed
+        or arguments.admit_alias
     ) and not arguments.fixed_point:
         parser.error("--state, --write-state, --admit-observed, and --admit-alias require --fixed-point")
     if arguments.fixed_point:

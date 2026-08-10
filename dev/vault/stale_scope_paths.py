@@ -99,7 +99,8 @@ def main() -> int:
         print(f"{plan}\t{row_id}\t{path}")
     print(f"\n{len(findings)} open row(s) name a scope path that does not exist.", file=sys.stderr)
     print(
-        "PATHS ONLY. A row whose prose premise is falsified while its paths still resolve is invisible to this report.",
+        "PATHS ONLY. A row whose prose premise is falsified while its paths still "
+        "resolve is invisible to this report.",
         file=sys.stderr,
     )
     return 1 if findings else 0

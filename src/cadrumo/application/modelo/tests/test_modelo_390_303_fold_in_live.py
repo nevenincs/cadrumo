@@ -189,29 +189,27 @@ def _seed_m303_quarters(*, obs_repo: CalculationObservationRepository) -> None:
     ``app_filing`` source_kind.
     """
     for period, casillas in _M303_BY_PERIOD.items():
-        obs_repo.save(
-            obs_repo.prepare_observation_envelope(
-                RegistryModeloObservation(
+        obs_repo.save(obs_repo.prepare_observation_envelope(
+            RegistryModeloObservation(
+                modelo="303",
+                filing_year=_YEAR,
+                period=period,
+                observations=registry_grounded_observations(
                     modelo="303",
                     filing_year=_YEAR,
                     period=period,
-                    observations=registry_grounded_observations(
-                        modelo="303",
-                        filing_year=_YEAR,
-                        period=period,
-                        casilla_values=casillas,
-                    ),
+                    casilla_values=casillas,
                 ),
-                source_kind=APP_FILING_SOURCE_KIND,
-                captured_at=_T0,
-                result_disposition=ResultDispositionProjection(
-                    disposition=ResultDisposition.COMPENSACION,
-                    provenance_kind="app_filing",
-                    provenance_locator=f"test-local-filing:{_YEAR}:{period}",
-                ),
-                normalize_m303_carry=True,
-            )
-        )
+            ),
+            source_kind=APP_FILING_SOURCE_KIND,
+            captured_at=_T0,
+            result_disposition=ResultDispositionProjection(
+                disposition=ResultDisposition.COMPENSACION,
+                provenance_kind="app_filing",
+                provenance_locator=f"test-local-filing:{_YEAR}:{period}",
+            ),
+            normalize_m303_carry=True,
+        ))
 
 
 def _store_ready_profile(secure_objects: SecureObjectRepository) -> None:

@@ -1047,7 +1047,7 @@ class Invoice(BaseModel):
         intra-community classification, OSS classifier dispatch) work
         with the closed substrate enum without a per-call lowercase /
         membership check. Anchored to
-        :data:`cadrumo.domain.invoices.EU_MEMBER_STATE_CODES` which
+        :data:`domain.invoices._validators.EU_MEMBER_STATE_CODES` which
         derives from :class:`cadrumo.domain.iva.EUMemberState`.
         """
         if not is_eu_member_state_code(self.counterparty_country):

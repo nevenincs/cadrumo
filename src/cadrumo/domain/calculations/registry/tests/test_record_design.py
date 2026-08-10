@@ -832,7 +832,6 @@ def test_registered_record_design_sources_are_discovered_and_parseable() -> None
     assert {path.suffix.lower() for path in sources.values()} >= {".pdf", ".xls", ".xlsx"}
     assert sum(len(sheet.fields) for sheets in parsed.values() for sheet in sheets) > len(sources)
 
-
 # Run out-of-process: any sibling test that parses a workbook or PDF imports these
 # backends into the shared session, so an in-process check cannot observe absence.
 _PARSER_BACKEND_IMPORT_PROBE = """

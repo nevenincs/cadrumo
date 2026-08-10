@@ -60,14 +60,7 @@ def test_box_59_carries_substantive_intra_community_supply_grounding() -> None:
     not apply to an exempt entrega) must be gone. Asserted against the loaded
     registry revision, both 2009 and 2023.
     """
-    for revision_id in (
-        "2009-y-siguientes",
-        "2023",
-        "2024-hasta-08-y-2t",
-        "2024-desde-09-y-3t",
-        "2025",
-        "2026-y-siguientes",
-    ):
+    for revision_id in ("2009-y-siguientes", "2023", "2024-hasta-08-y-2t", "2024-desde-09-y-3t", "2025", "2026-y-siguientes"):
         revision = _m303_revision(revision_id)
         casilla_59 = next(casilla for casilla in revision.casillas if casilla.number == "59")
         refs = tuple(casilla_59.legal_refs)
@@ -86,14 +79,7 @@ def test_box_60_carries_substantive_export_grounding() -> None:
     asimiladas" leg. Asserted against the loaded registry revision, both 2009
     and 2023.
     """
-    for revision_id in (
-        "2009-y-siguientes",
-        "2023",
-        "2024-hasta-08-y-2t",
-        "2024-desde-09-y-3t",
-        "2025",
-        "2026-y-siguientes",
-    ):
+    for revision_id in ("2009-y-siguientes", "2023", "2024-hasta-08-y-2t", "2024-desde-09-y-3t", "2025", "2026-y-siguientes"):
         revision = _m303_revision(revision_id)
         casilla_60 = next(casilla for casilla in revision.casillas if casilla.number == "60")
         refs = tuple(casilla_60.legal_refs)
@@ -107,14 +93,7 @@ def test_box_60_binding_selects_export_and_assimilated_export_categories() -> No
         IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
         IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
     }
-    for revision_id in (
-        "2009-y-siguientes",
-        "2023",
-        "2024-hasta-08-y-2t",
-        "2024-desde-09-y-3t",
-        "2025",
-        "2026-y-siguientes",
-    ):
+    for revision_id in ("2009-y-siguientes", "2023", "2024-hasta-08-y-2t", "2024-desde-09-y-3t", "2025", "2026-y-siguientes"):
         revision = _m303_revision(revision_id)
         binding = next(item for item in revision.bindings if item.id == "modelo-303-casilla-60-exportaciones-base")
         selector_dict: Any = selector_as_dict(binding)

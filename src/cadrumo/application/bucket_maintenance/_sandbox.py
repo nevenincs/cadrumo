@@ -624,6 +624,63 @@ def restore_sandbox(command: RestoreSandboxCommand) -> RestoreSandboxResult:
     return RestoreSandboxResult(bucket_id=outcome.bucket_id, label=outcome.label, occurred_at=outcome.occurred_at)
 
 
+def _prepare_merge_writes(
+    *,
+    target_bucket_id: BucketId,
+    source_transactions: tuple[Transaction, ...],
+    source_work_units: tuple[WorkUnit, ...],
+    source_revisions: tuple[CalculationRevision, ...],
+    source_filing_records: tuple[ModeloRecord, ...],
+) -> tuple[list[SecureObjectWrite], TransactionCatalogueRepository | None, TransactionCatalogue | None]:
+    """Fold every promoted row into its target catalogue and prepare one write each.
+
+    Runs inside the caller's target-bucket storage session and commits
+    nothing: it returns the prepared writes plus, when the ledger scope was
+    requested, the transaction repository and merged catalogue the caller
+    needs to drive the single commit.
+
+    Preparation validates every affected target catalogue before that one
+    commit. ``to_secure_object_write`` performs the target-bucket ownership
+    check before any write is submitted, and a sandbox filing record is
+    intentionally foreign to its promotion target, so that refusal leaves
+    every prepared sibling catalogue untouched.
+    """
+    writes: list[SecureObjectWrite] = []
+    transaction_repository: TransactionCatalogueRepository | None = None
+    merged_transactions: TransactionCatalogue | None = None
+
+    if source_transactions:
+        transaction_repository = TransactionCatalogueRepository(bucket_id=target_bucket_id)
+        existing_transactions = transaction_repository.load()
+        merged_transaction_rows: dict[str, Transaction] = dict(existing_transactions.transactions)
+        for transaction in source_transactions:
+            merged_transaction_rows[transaction.transaction_id] = transaction
+        merged_transactions = TransactionCatalogue(transactions=merged_transaction_rows)
+
+    if source_work_units:
+        work_unit_repository = WorkUnitCatalogueRepository(bucket_id=target_bucket_id)
+        work_unit_catalogue = work_unit_repository.load()
+        for unit in source_work_units:
+            work_unit_catalogue = upsert_work_unit(work_unit_catalogue, unit)
+        writes.append(work_unit_repository.to_secure_object_write(work_unit_catalogue))
+
+    if source_revisions:
+        revision_repository = CalculationRevisionCatalogueRepository(bucket_id=target_bucket_id)
+        revision_catalogue = revision_repository.load()
+        for revision in source_revisions:
+            revision_catalogue = upsert_calculation_revision(revision_catalogue, revision)
+        writes.append(revision_repository.to_secure_object_write(revision_catalogue))
+
+    if source_filing_records:
+        filing_repository = ModeloRecordCatalogueRepository(bucket_id=target_bucket_id)
+        filing_catalogue = filing_repository.load()
+        for record in source_filing_records:
+            filing_catalogue = upsert_filing_record(filing_catalogue, record)
+        writes.append(filing_repository.to_secure_object_write(filing_catalogue))
+
+    return writes, transaction_repository, merged_transactions
+
+
 def merge_sandbox(command: MergeSandboxCommand) -> MergeSandboxResult:
     """Promote ``command.scope`` from a sandbox bucket into ``command.target_bucket_id``.
 
@@ -693,42 +750,13 @@ def merge_sandbox(command: MergeSandboxCommand) -> MergeSandboxResult:
         merged_counts["filing_records"] = len(source_filing_records)
 
     with profile_storage_session(command.target_bucket_id):
-        writes: list[SecureObjectWrite] = []
-        transaction_repository: TransactionCatalogueRepository | None = None
-        merged_transactions: TransactionCatalogue | None = None
-
-        if source_transactions:
-            transaction_repository = TransactionCatalogueRepository(bucket_id=command.target_bucket_id)
-            existing_transactions = transaction_repository.load()
-            merged_transaction_rows: dict[str, Transaction] = dict(existing_transactions.transactions)
-            for transaction in source_transactions:
-                merged_transaction_rows[transaction.transaction_id] = transaction
-            merged_transactions = TransactionCatalogue(transactions=merged_transaction_rows)
-
-        if source_work_units:
-            work_unit_repository = WorkUnitCatalogueRepository(bucket_id=command.target_bucket_id)
-            work_unit_catalogue = work_unit_repository.load()
-            for unit in source_work_units:
-                work_unit_catalogue = upsert_work_unit(work_unit_catalogue, unit)
-            writes.append(work_unit_repository.to_secure_object_write(work_unit_catalogue))
-
-        if source_revisions:
-            revision_repository = CalculationRevisionCatalogueRepository(bucket_id=command.target_bucket_id)
-            revision_catalogue = revision_repository.load()
-            for revision in source_revisions:
-                revision_catalogue = upsert_calculation_revision(revision_catalogue, revision)
-            writes.append(revision_repository.to_secure_object_write(revision_catalogue))
-
-        if source_filing_records:
-            filing_repository = ModeloRecordCatalogueRepository(bucket_id=command.target_bucket_id)
-            filing_catalogue = filing_repository.load()
-            for record in source_filing_records:
-                filing_catalogue = upsert_filing_record(filing_catalogue, record)
-            # ``to_secure_object_write`` performs the target-bucket ownership
-            # check before any write is submitted. A sandbox filing record is
-            # intentionally foreign to its promotion target, so this refusal
-            # leaves every prepared sibling catalogue untouched.
-            writes.append(filing_repository.to_secure_object_write(filing_catalogue))
+        writes, transaction_repository, merged_transactions = _prepare_merge_writes(
+            target_bucket_id=command.target_bucket_id,
+            source_transactions=source_transactions,
+            source_work_units=source_work_units,
+            source_revisions=source_revisions,
+            source_filing_records=source_filing_records,
+        )
 
         occurred_at = now()
         payload = {

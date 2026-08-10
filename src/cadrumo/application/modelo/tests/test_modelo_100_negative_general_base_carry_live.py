@@ -116,23 +116,21 @@ def _save_observation(
     period: str,
     casilla_values: dict[CasillaId, Decimal],
 ) -> None:
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            RegistryModeloObservation(
+    obs_repo.save(obs_repo.prepare_observation_envelope(
+        RegistryModeloObservation(
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            observations=registry_grounded_observations(
                 modelo=modelo,
                 filing_year=filing_year,
                 period=period,
-                observations=registry_grounded_observations(
-                    modelo=modelo,
-                    filing_year=filing_year,
-                    period=period,
-                    casilla_values=casilla_values,
-                ),
+                casilla_values=casilla_values,
             ),
-            source_kind=APP_FILING_SOURCE_KIND,
-            captured_at=_CLOCK,
-        )
-    )
+        ),
+        source_kind=APP_FILING_SOURCE_KIND,
+        captured_at=_CLOCK,
+    ))
 
 
 def _seed_prior_m100_generated_pending(

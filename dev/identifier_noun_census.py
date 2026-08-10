@@ -1,15 +1,15 @@
 """Suffix-independent census of identifier-shaped fields, by NOUN vocabulary.
 
-WHY THIS EXISTS, and why it is not optional polish. The identifier-enrollment
-campaign's original AST census matched field NAMES against a suffix heuristic
+WHY THIS EXISTS, and why it is not optional polish. The first census of
+identifier-shaped fields matched field NAMES against a suffix heuristic
 (``_id``, ``_ref``, ``_code``, ``_key``, ``_number``, ``_csv``) and counted 589
 bare-``str`` candidates. That count is a FLOOR, and this is proven rather than
-suspected: ``clave_liquidacion`` is an AEAT-issued identifier the campaign
-enrolls by name, and it does not appear in the 589 at all, because it is a
+suspected: ``clave_liquidacion`` is an AEAT-issued identifier this
+codebase enrols by name, and it does not appear in the 589 at all, because it is a
 plain Spanish noun carrying no such suffix. A surface measured only by suffix
 therefore cannot report its own completeness, and enrolling exactly 589 while
 calling the surface closed would reproduce the "artefact present, work absent"
-failure the campaign exists to avoid.
+failure a completeness claim must not reproduce.
 
 This census reads the PROSE instead of the name: a field whose documentation
 calls it an *identificador*, a *clave*, a *número* or a *referencia* is an
@@ -177,7 +177,7 @@ def annotation_text(node: ast.AnnAssign) -> str:
 def is_bare_str(annotation: str) -> bool:
     """Whether the annotation is an unaliased ``str``, optionally optional.
 
-    The campaign's subject is fields carrying no namespace type. ``str``,
+    The subject is fields carrying no namespace type. ``str``,
     ``str | None`` and ``list[str]`` are bare; anything naming an alias is
     already enrolled or already typed by some other authority.
     """

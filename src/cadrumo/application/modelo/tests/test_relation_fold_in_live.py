@@ -177,18 +177,16 @@ def _seed_115_quarters(*, obs_repo: CalculationObservationRepository) -> dict[Ca
             binding_values=binding_values,
             date_context={"filing_period": date(_YEAR, 12, 31)},
         )
-        obs_repo.save(
-            obs_repo.prepare_observation_envelope(
-                RegistryModeloObservation(
-                    modelo="115",
-                    filing_year=_YEAR,
-                    period=period,
-                    observations=result.observations,
-                ),
-                source_kind="app_filing",
-                captured_at=_T0,
-            )
-        )
+        obs_repo.save(obs_repo.prepare_observation_envelope(
+            RegistryModeloObservation(
+                modelo="115",
+                filing_year=_YEAR,
+                period=period,
+                observations=result.observations,
+            ),
+            source_kind="app_filing",
+            captured_at=_T0,
+        ))
         for cid in totals:
             totals[cid] += result.values[cid]
     return totals

@@ -378,6 +378,17 @@ class CasillaDefinition(RegistryModel):
             raise RegistryValidationError(f"casilla {self.id!r} alternate_bindings must be unique")
         if self.input_kind == InputKind.BOUND and self.formula is not None:
             raise RegistryValidationError(f"bound casilla {self.id!r} must not declare formula")
+        self._validate_export_exposure()
+        self._validate_singleton_role_declaration()
+        return self
+
+    def _validate_export_exposure(self) -> None:
+        """Hold internal_only, export_refs and the exemption reason coherent.
+
+        All three axes answer one question -- whether an official record
+        addresses this casilla -- so a casilla may assert at most one of
+        "app-internal", "exported" and "exempt from the completeness gate".
+        """
         if self.internal_only and self.export_refs:
             raise RegistryValidationError(
                 f"internal_only casilla {self.id!r} must not declare export_refs "
@@ -401,21 +412,29 @@ class CasillaDefinition(RegistryModel):
                 f"internal_only casilla {self.id!r} must be computed "
                 "(an internal ceiling has no legitimate computation surface unless formula-derived)",
             )
-        if self.semantic_role_cardinality == "intentional_singleton":
-            if self.semantic_role is None:
+
+    def _validate_singleton_role_declaration(self) -> None:
+        """Require a declared singleton cardinality to carry its role and reason.
+
+        This is the per-casilla coherence half; the cross-casilla check that a
+        role claimed as a singleton is not actually shared runs at registry
+        scope over the whole modelo tuple.
+        """
+        if self.semantic_role_cardinality != "intentional_singleton":
+            if self.semantic_role_cardinality_reason is not None:
                 raise RegistryValidationError(
-                    f"casilla {self.id!r} declares intentional singleton role cardinality without semantic_role",
+                    f"casilla {self.id!r} declares semantic_role_cardinality_reason "
+                    "without intentional singleton cardinality",
                 )
-            if self.semantic_role_cardinality_reason is None:
-                raise RegistryValidationError(
-                    f"casilla {self.id!r} declares intentional singleton role cardinality without reason",
-                )
-        elif self.semantic_role_cardinality_reason is not None:
+            return
+        if self.semantic_role is None:
             raise RegistryValidationError(
-                f"casilla {self.id!r} declares semantic_role_cardinality_reason "
-                "without intentional singleton cardinality",
+                f"casilla {self.id!r} declares intentional singleton role cardinality without semantic_role",
             )
-        return self
+        if self.semantic_role_cardinality_reason is None:
+            raise RegistryValidationError(
+                f"casilla {self.id!r} declares intentional singleton role cardinality without reason",
+            )
 
 
 class CalculationCompletenessCasilla(RegistryModel):
@@ -707,6 +726,38 @@ class RelationDefinition(RegistryModel):
         return self
 
 
+#: The complete fixed-width shape each explicit value policy requires, as
+#: ``(data_type, padding, justification, carries_decimals, date_format)``.
+#: Every policy is unsigned, so the sign axis is asserted once beside the
+#: lookup rather than repeated per policy. A policy absent from this table has
+#: no reviewed wire shape and is refused.
+_VALUE_POLICY_SHAPES: Mapping[ExportValuePolicy, tuple[str, str, str, bool, str | None]] = {
+    ExportValuePolicy.SELECTED_1_UNSELECTED_0: ("integer", "left_zero", "right", False, None),
+    ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS: ("integer", "left_zero", "right", False, None),
+    ExportValuePolicy.UNSIGNED_INTEGER: ("integer", "left_zero", "right", False, None),
+    ExportValuePolicy.ENUMERATED_DIGITS: ("integer", "left_zero", "right", False, None),
+    ExportValuePolicy.FOUR_DIGIT_YEAR: ("integer", "left_zero", "right", False, None),
+    ExportValuePolicy.TWO_DIGIT_MONTH: ("integer", "left_zero", "right", False, None),
+    ExportValuePolicy.TWO_DIGIT_DAY: ("integer", "left_zero", "right", False, None),
+    ExportValuePolicy.IMPLIED_DECIMAL: ("decimal", "left_zero", "right", True, None),
+    ExportValuePolicy.YYYYMMDD: ("date", "none", "none", False, "aaaammdd"),
+    ExportValuePolicy.DIGIT_STRING: ("text", "none", "none", False, None),
+    ExportValuePolicy.IDENTIFIER_DIGITS: ("text", "none", "none", False, None),
+}
+
+_VALUE_POLICY_UNRENDERABLE_KINDS = {CasillaFieldKind.FILLER, CasillaFieldKind.LITERAL, CasillaFieldKind.CHECKSUM}
+
+
+def _is_canonical_digit_run(value: str, length: int) -> bool:
+    """Accept only a zero-canonical ASCII digit run that fits the wire slot.
+
+    ``str(int(value))`` rejects a leading-zero spelling: the slot pads on the
+    wire, so ``"01"`` and ``"1"`` would otherwise both address the same
+    enumerated member under two spellings.
+    """
+    return bool(value) and value.isascii() and value.isdigit() and str(int(value)) == value and len(value) <= length
+
+
 class ExportFieldDefinition(RegistryModel):
     id: ExportFieldId
     offset: OneBasedExportOffset | None = None
@@ -767,6 +818,16 @@ class ExportFieldDefinition(RegistryModel):
         self._validate_allowed_values()
         return self
 
+    def _wire_shape(self) -> tuple[str, str, str, bool, str | None]:
+        """Project the declared shape onto the axes a value policy constrains."""
+        return (
+            self.data_type,
+            self.padding,
+            self.justification,
+            self.decimals is not None,
+            self.date_format,
+        )
+
     def _validate_allowed_values(self) -> None:
         """Constrain an exact reviewed semantic integer domain."""
         if self.allowed_values is None:
@@ -780,92 +841,33 @@ class ExportFieldDefinition(RegistryModel):
             raise RegistryValidationError(
                 f"export field {self.id!r} allowed_values must be non-empty and unique",
             )
+        length = self.length
         if (
-            self.kind in {CasillaFieldKind.FILLER, CasillaFieldKind.LITERAL, CasillaFieldKind.CHECKSUM}
-            or self.data_type != "integer"
+            self.kind in _VALUE_POLICY_UNRENDERABLE_KINDS
             or self.signed
-            or self.padding != "left_zero"
-            or self.justification != "right"
-            or self.decimals is not None
-            or self.date_format is not None
-            or self.length is None
+            or length is None
+            or self._wire_shape() != _VALUE_POLICY_SHAPES[ExportValuePolicy.ENUMERATED_DIGITS]
         ):
             raise RegistryValidationError(
                 f"export field {self.id!r} allowed_values requires an unsigned right-justified "
                 "left-zero-padded fixed-width integer",
             )
-        invalid = tuple(
-            value
-            for value in self.allowed_values
-            if not value
-            or not value.isascii()
-            or not value.isdigit()
-            or str(int(value)) != value
-            or len(value) > self.length
-        )
+        invalid = tuple(value for value in self.allowed_values if not _is_canonical_digit_run(value, length))
         if invalid:
             raise RegistryValidationError(
-                f"export field {self.id!r} allowed_values contains noncanonical or out-of-width entries: {invalid!r}",
+                f"export field {self.id!r} allowed_values contains noncanonical or out-of-width entries: "
+                f"{invalid!r}",
             )
 
     def _validate_value_policy(self) -> None:
         """Require each explicit policy to match its complete fixed-width shape."""
         if self.value_policy is None:
             return
-        if self.kind in {CasillaFieldKind.FILLER, CasillaFieldKind.LITERAL, CasillaFieldKind.CHECKSUM}:
+        if self.kind in _VALUE_POLICY_UNRENDERABLE_KINDS:
             raise RegistryValidationError(
                 f"export field {self.id!r} cannot declare value_policy on kind {self.kind!r}",
             )
-        integer_policies = {
-            ExportValuePolicy.SELECTED_1_UNSELECTED_0,
-            ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS,
-            ExportValuePolicy.UNSIGNED_INTEGER,
-            ExportValuePolicy.ENUMERATED_DIGITS,
-            ExportValuePolicy.FOUR_DIGIT_YEAR,
-            ExportValuePolicy.TWO_DIGIT_MONTH,
-            ExportValuePolicy.TWO_DIGIT_DAY,
-        }
-        digit_identity_policies = {
-            ExportValuePolicy.DIGIT_STRING,
-            ExportValuePolicy.IDENTIFIER_DIGITS,
-        }
-        common_unsigned = not self.signed and self.justification == "right"
-        valid_shape = False
-        if self.value_policy in integer_policies:
-            valid_shape = (
-                self.data_type == "integer"
-                and common_unsigned
-                and self.padding == "left_zero"
-                and self.decimals is None
-                and self.date_format is None
-            )
-        elif self.value_policy is ExportValuePolicy.IMPLIED_DECIMAL:
-            valid_shape = (
-                self.data_type == "decimal"
-                and common_unsigned
-                and self.padding == "left_zero"
-                and self.decimals is not None
-                and self.date_format is None
-            )
-        elif self.value_policy is ExportValuePolicy.YYYYMMDD:
-            valid_shape = (
-                self.data_type == "date"
-                and not self.signed
-                and self.padding == "none"
-                and self.justification == "none"
-                and self.decimals is None
-                and self.date_format == "aaaammdd"
-            )
-        elif self.value_policy in digit_identity_policies:
-            valid_shape = (
-                self.data_type == "text"
-                and not self.signed
-                and self.padding == "none"
-                and self.justification == "none"
-                and self.decimals is None
-                and self.date_format is None
-            )
-        if not valid_shape:
+        if self.signed or _VALUE_POLICY_SHAPES.get(self.value_policy) != self._wire_shape():
             raise RegistryValidationError(
                 f"export field {self.id!r} value_policy {self.value_policy.value!r} conflicts with its field shape",
             )

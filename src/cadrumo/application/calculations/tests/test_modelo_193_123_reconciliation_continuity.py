@@ -272,13 +272,11 @@ def _compute_year_123_totals(
     }
     for period, inputs in quarters.items():
         result = _calculate_123(filing_year=filing_year, period=period, casilla_inputs=inputs)
-        obs_repo.save(
-            obs_repo.prepare_observation_envelope(
-                _123_observation(filing_year=filing_year, period=period, result=result),
-                source_kind="app_filing",
-                captured_at=_CLOCK,
-            )
-        )
+        obs_repo.save(obs_repo.prepare_observation_envelope(
+            _123_observation(filing_year=filing_year, period=period, result=result),
+            source_kind="app_filing",
+            captured_at=_CLOCK,
+        ))
         for cid in totals:
             totals[cid] += result.values[cid]
     return totals

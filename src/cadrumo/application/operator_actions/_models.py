@@ -33,7 +33,6 @@ class PreconditionVerdict(
     presentation text or an executable command.
     """
 
-
 __all__ = [
     "ActionArgumentBinding",
     "ActionReference",

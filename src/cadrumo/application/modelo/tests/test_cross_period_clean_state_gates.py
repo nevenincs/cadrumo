@@ -230,30 +230,28 @@ def _seed_303_cross_period_sources(
                 expected_tax_id="X1234567L",
                 clock=_CLOCK,
             )
-        observation_repository.save(
-            observation_repository.prepare_observation_envelope(
-                RegistryModeloObservation(
+        observation_repository.save(observation_repository.prepare_observation_envelope(
+            RegistryModeloObservation(
+                modelo="303",
+                filing_year=2025,
+                period=period,
+                observations=registry_grounded_observations(
                     modelo="303",
                     filing_year=2025,
                     period=period,
-                    observations=registry_grounded_observations(
-                        modelo="303",
-                        filing_year=2025,
-                        period=period,
-                        casilla_values=values,
-                    ),
+                    casilla_values=values,
                 ),
-                source_kind="aeat_sede_justificante",
-                captured_at=_CLOCK,
-                stamped_revision_id=source_snapshot.revision.id,
-                source_metadata={
-                    "aeat_register_status": "ALTA",
-                    "aeat_expediente_id": f"EXP-303-2025-{period}",
-                    "aeat_justificante_csv": evidence_reference_id,
-                    "authenticated_identity": "X1234567L",
-                },
-            )
-        )
+            ),
+            source_kind="aeat_sede_justificante",
+            captured_at=_CLOCK,
+            stamped_revision_id=source_snapshot.revision.id,
+            source_metadata={
+                "aeat_register_status": "ALTA",
+                "aeat_expediente_id": f"EXP-303-2025-{period}",
+                "aeat_justificante_csv": evidence_reference_id,
+                "authenticated_identity": "X1234567L",
+            },
+        ))
 
 
 def _seed_source_filing_record_without_import_flow(
@@ -373,7 +371,6 @@ def test_cross_period_clean_state_blockers_remain_factual_without_recovery_prose
     assert finding.severity.value == "blocking"
     assert "missing_expected_group_member_roster" in str(finding.message_facts["blocker_codes"]).split("|")
     assert "next_action" not in finding.model_dump(mode="json")
-
 
 def test_verify_modelo_390_persists_cross_period_clean_state_blockers_when_prior_filings_are_missing(
     tmp_path: Path,

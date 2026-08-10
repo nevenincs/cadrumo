@@ -249,13 +249,19 @@ _DOTTED_ROLE = re.compile(r":(?:class|func|meth|attr|data|exc|obj|mod):`~?([A-Za
 #                and genuinely absent from the registry facade, so the roles
 #                naming ``domain.calculations.registry.CasillaId`` were pointed
 #                at a package that never owned it.
+#   110 ->  18   ninety-two repoints, resolved by DEFINING module rather than by
+#                exporting module. "Shortest public module that exports it" is the
+#                wrong query: it picks re-exporters over owners, and would have
+#                aimed seventeen roles at ``application.state_projection``, which
+#                exports several repositories and owns none of them.
 #
-# Of the 110 remaining, 63 name a symbol some PUBLIC module or package does
-# export -- mechanical repoints, though spread thin enough that no single
-# substitution covers them. The other 47 name something only private modules
-# define, across 40 symbols, and each is a judgement about whether the prose is
-# entitled to reach past a facade at all.
-_UNRESOLVED_DOTTED_REFERENCE_CEILING = 110
+# The 18 that remain are NOT a backlog: each names a symbol defined in MORE THAN
+# ONE module, across 14 symbols. Ambiguous ownership is an architectural question
+# -- either one module is the owner and the others hold copies, which is a
+# duplication finding in its own right, or the name is reused for two concepts.
+# Neither is resolvable by picking the shortest path, so they are left for a
+# decision rather than guessed at.
+_UNRESOLVED_DOTTED_REFERENCE_CEILING = 18
 
 # A derived scan selecting nothing satisfies the ceiling assertion perfectly.
 # These floors sit far below the real figures so ordinary churn never moves them.

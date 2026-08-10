@@ -6531,6 +6531,12 @@ errors:
     locked_storage_master_key_keychain: The operating-system keychain is locked. Unlock
       it (Touch ID, Windows Hello or your credential-manager unlock) and try again.
   prefix:
+    auth: Auth.
+    error: Error.
+    fail: Failed.
+    integrity: Integrity.
+    internal: Internal.
+    locked: Locked.
     refused: Refused.
   refused:
     auth_configure_no_active_bucket: Authentication cannot be configured without an
@@ -69776,7 +69782,6 @@ review:
       item_not_found: Review item not found.
       reserved_kind: Review kind is reserved and is not an emitted review item.
       unknown_kind: 'Unknown review kind. Accepted --kind values: %{accepted_kinds}.'
-      unsupported_item_type: 'Unsupported review item type: %{item_type}.'
   transaction:
     summary: Transaction pending classification
 sheets:

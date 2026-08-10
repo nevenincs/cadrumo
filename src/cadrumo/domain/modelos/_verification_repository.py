@@ -1,6 +1,6 @@
 """Encrypted SQL repository for verification reports.
 
-:class:`~cadrumo.domain.modelos.VerificationReportCatalogueRepository` persists
+:class:`~adapters.persistence.profile.modelos_verification_reports.VerificationReportCatalogueRepository` persists
 and loads :class:`VerificationReport` entries in a
 :class:`VerificationReportCatalogue` via
 :class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository` at
@@ -32,7 +32,7 @@ class VerificationReportPersistenceError(ModeloError):
     """Raised when the verification-report catalogue cannot be persisted or loaded.
 
     This wraps storage-boundary failures from
-    :class:`~cadrumo.domain.modelos.VerificationReportCatalogueRepository` while
+    :class:`~adapters.persistence.profile.modelos_verification_reports.VerificationReportCatalogueRepository` while
     preserving translated recovery context for callers.
     """
 

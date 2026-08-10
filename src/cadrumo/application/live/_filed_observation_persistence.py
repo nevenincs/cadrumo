@@ -64,6 +64,7 @@ from ...domain.modelos import (
     ExternalEvidence,
     ExternalEvidenceKind,
     ModeloRecord,
+    ModeloRecordCatalogue,
     ModeloRecordCatalogueRepositoryProtocol,
     is_justificante_backed_external_evidence,
     upsert_filing_record,
@@ -261,6 +262,77 @@ def persist_filed_justificante_metadata(
     )
 
 
+@dataclass(frozen=True, slots=True)
+class _FilingStampOutcome:
+    """What stamping one parsed justificante did to the filing catalogue.
+
+    The id tuples carry at most one entry each; they are tuples so the caller
+    folds them in without re-testing which of the two outcomes occurred.
+    """
+
+    catalogue: ModeloRecordCatalogue
+    stamped_record_ids: tuple[str, ...] = ()
+    conflicting_record_ids: tuple[str, ...] = ()
+
+
+def _stamp_filing_with_filed_justificante(
+    justificante: Justificante,
+    *,
+    observation: FiledDeclaracionObservation,
+    artefact: FiledDeclaracionArtefact,
+    bucket_id: str,
+    catalogue: ModeloRecordCatalogue,
+) -> _FilingStampOutcome:
+    """Stamp the current filing record with this justificante's evidence.
+
+    The filing is stamped only when the justificante matches the observation and
+    the current :class:`ModeloRecord`. Existing matching evidence is accepted
+    idempotently; conflicting evidence is reported rather than overwritten.
+    """
+    current = catalogue.current_for(
+        bucket_id=bucket_id,
+        modelo=observation.modelo,
+        filing_year=observation.ejercicio,
+        period=observation.period,
+    )
+    if current is None:
+        return _FilingStampOutcome(catalogue)
+    if not _filed_justificante_can_stamp_filing(
+        justificante,
+        observation=observation,
+        filing=current,
+    ):
+        return _FilingStampOutcome(catalogue)
+    if current.aeat_accepted and current.external_evidence is not None:
+        if _existing_justificante_evidence_matches(current, justificante):
+            return _FilingStampOutcome(catalogue, stamped_record_ids=(current.filing_record_id,))
+        logger.warning(
+            "refusing to overwrite existing AEAT evidence on filing record %s from filed-history csv %s",
+            current.filing_record_id,
+            justificante.csv,
+        )
+        return _FilingStampOutcome(catalogue, conflicting_record_ids=(current.filing_record_id,))
+    stamped = current.model_copy(
+        update={
+            "external_evidence": ExternalEvidence(
+                kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
+                reference_id=justificante.csv,
+                imported_at=artefact.captured_at,
+            ),
+            "aeat_accepted": True,
+        },
+    )
+    updated = upsert_filing_record(catalogue, stamped)
+    _emit_filed_justificante_evidence_event(
+        bucket_id=bucket_id,
+        filing=stamped,
+        observation=observation,
+        justificante=justificante,
+        occurred_at=artefact.captured_at,
+    )
+    return _FilingStampOutcome(updated, stamped_record_ids=(stamped.filing_record_id,))
+
+
 def enroll_filed_justificante_evidence(
     observation: FiledDeclaracionObservation,
     *,
@@ -302,50 +374,16 @@ def enroll_filed_justificante_evidence(
         justificante_repo.save(justificante)
         saved_csvs.append(justificante.csv)
 
-        current = filing_catalogue.current_for(
-            bucket_id=bucket_id,
-            modelo=observation.modelo,
-            filing_year=observation.ejercicio,
-            period=observation.period,
-        )
-        if current is None:
-            continue
-        if not _filed_justificante_can_stamp_filing(
+        outcome = _stamp_filing_with_filed_justificante(
             justificante,
             observation=observation,
-            filing=current,
-        ):
-            continue
-        if current.aeat_accepted and current.external_evidence is not None:
-            if _existing_justificante_evidence_matches(current, justificante):
-                stamped_record_ids.append(current.filing_record_id)
-                continue
-            conflicting_record_ids.append(current.filing_record_id)
-            logger.warning(
-                "refusing to overwrite existing AEAT evidence on filing record %s from filed-history csv %s",
-                current.filing_record_id,
-                justificante.csv,
-            )
-            continue
-        stamped = current.model_copy(
-            update={
-                "external_evidence": ExternalEvidence(
-                    kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
-                    reference_id=justificante.csv,
-                    imported_at=artefact.captured_at,
-                ),
-                "aeat_accepted": True,
-            },
-        )
-        filing_catalogue = upsert_filing_record(filing_catalogue, stamped)
-        _emit_filed_justificante_evidence_event(
+            artefact=artefact,
             bucket_id=bucket_id,
-            filing=stamped,
-            observation=observation,
-            justificante=justificante,
-            occurred_at=artefact.captured_at,
+            catalogue=filing_catalogue,
         )
-        stamped_record_ids.append(stamped.filing_record_id)
+        filing_catalogue = outcome.catalogue
+        stamped_record_ids.extend(outcome.stamped_record_ids)
+        conflicting_record_ids.extend(outcome.conflicting_record_ids)
     if stamped_record_ids:
         filing_repo.save(filing_catalogue)
     return FiledJustificanteEnrollmentResult(

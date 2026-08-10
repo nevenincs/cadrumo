@@ -3,12 +3,11 @@ tags:
   - '#reference'
   - '#cli-action-envelope-hardening'
 date: '2026-08-09'
-modified: '2026-08-09'
+modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:eb53e19d45394d49bd950f0b54c2cda499e19325574965ef4697c26815e418a2'
+body_hash: 'sha256:b70ed232b450efc529f612628e12f6511569affff87364bf0710825ffe49bff4'
 related: []
 ---
-
 # `cli-action-envelope-hardening` reference: `Blast-radius census method and baseline`
 
 This reference defines the repeatable census that must precede the campaign
@@ -146,3 +145,20 @@ than fake execution.
   `src/cadrumo/application/storage_write_policy.py`,
   `src/cadrumo/application/workflow`, and
   `src/cadrumo/entrypoints/cli/tests/test_suggestion_command_conformance.py`.
+## Historical error-code default preimage
+
+The live candidate-disposition ledger deliberately contains only the current
+source universe. Retired `ErrorCode.default_suggestion` declarations are instead
+recorded by the dedicated non-runtime preimage ledger
+`dev/error_code_default_suggestion_preimage.json`. Its parser
+`dev/error_code_default_suggestion_preimage_ledger.py` reads immutable source
+commit `930ef9f4017a23cccaf4990d287beb014fc9723c` through Git, AST-extracts every
+former declaration, and requires ordered multiset equality with the checked-in
+rows.
+
+Each of the 612 rows retains the full source commit, error code, error qualname,
+registry shard, exact old-value expression source, source location, and its one
+exclusive downstream migration Step (`S50` through `S57` or `S64`). The ledger
+is historical migration evidence only: the live `ErrorCode` schema remains
+policy-free and runtime actions or explicit no-recovery outcomes continue to be
+resolved through the typed application and action-catalogue contracts.

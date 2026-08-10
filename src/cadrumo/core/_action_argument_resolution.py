@@ -19,6 +19,18 @@ _FIELD_KEY_PATTERN = r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)*$"
 _NAMESPACED_ID_PATTERN = r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$"
 
 
+def _validate_evidence_id_pairing(
+    source: ActionArgumentSource | None,
+    source_evidence_id: str | None,
+) -> None:
+    """Carry ``source_evidence_id`` exactly when the source is condition evidence."""
+    from_condition_evidence = source is ActionArgumentSource.CONDITION_EVIDENCE
+    if from_condition_evidence and source_evidence_id is None:
+        raise ValueError("condition-evidence action arguments require source_evidence_id")
+    if not from_condition_evidence and source_evidence_id is not None:
+        raise ValueError("only condition-evidence action arguments can carry source_evidence_id")
+
+
 class ActionArgumentResolution(BaseModel):
     """One resolved or missing argument with its factual provenance."""
 
@@ -39,20 +51,14 @@ class ActionArgumentResolution(BaseModel):
     @model_validator(mode="after")
     def _validate_resolution(self) -> Self:
         """Keep resolved and missing argument states mutually exclusive."""
-        if self.status is ActionArgumentStatus.RESOLVED:
-            if self.value is None or self.source is None or self.source_key is None:
-                raise ValueError("resolved action arguments require value, source, and source_key")
-            if self.source is ActionArgumentSource.CONDITION_EVIDENCE and self.source_evidence_id is None:
-                raise ValueError("condition-evidence action arguments require source_evidence_id")
-            if self.source is not ActionArgumentSource.CONDITION_EVIDENCE and self.source_evidence_id is not None:
-                raise ValueError("only condition-evidence action arguments can carry source_evidence_id")
-        elif (
-            self.value is not None
-            or self.source is not None
-            or self.source_key is not None
-            or self.source_evidence_id is not None
-        ):
-            raise ValueError("missing action arguments cannot carry value or source")
+        if self.status is not ActionArgumentStatus.RESOLVED:
+            carried = (self.value, self.source, self.source_key, self.source_evidence_id)
+            if any(fact is not None for fact in carried):
+                raise ValueError("missing action arguments cannot carry value or source")
+            return self
+        if any(fact is None for fact in (self.value, self.source, self.source_key)):
+            raise ValueError("resolved action arguments require value, source, and source_key")
+        _validate_evidence_id_pairing(self.source, self.source_evidence_id)
         return self
 
 

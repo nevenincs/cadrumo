@@ -6,7 +6,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:3f23190c5bc151aa6411c94ae6b30ab8baf9de9a7738ab6af714d2673752d3af'
+body_hash: 'sha256:6f1245998a05038cff25dd195c93687f426a8b7106f2774663be9f06dc70da55'
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S01]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S02]]'
@@ -37,6 +37,9 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-W04-P06-summary]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W04-P07-S24]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W04-P07-S25]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W04-P07-S26]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W04-P07-S27]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S28]]'
   - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
   - '[[2026-08-09-cli-action-envelope-hardening-plan]]'
   - '[[2026-08-09-cli-action-envelope-hardening-reference]]'
@@ -67,6 +70,9 @@ related:
   - '[[2026-08-10-cli-action-envelope-hardening-s23-workflow-run-localization-audit]]'
   - '[[2026-08-10-cli-action-envelope-hardening-s24-modelo-preconditions-audit]]'
   - '[[2026-08-10-cli-action-envelope-hardening-s25-lifecycle-envelope-independent-review-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s26-canonical-action-chain-closure-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s27-modelo-recovery-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s28-error-default-preimage-audit]]'
   - '[[2026-08-10-cli-action-envelope-hardening-workflow-producers-renderer-audit]]'
 ---
 
@@ -108,6 +114,9 @@ Auto-generated index of all documents tagged with `#cli-action-envelope-hardenin
 - `2026-08-10-cli-action-envelope-hardening-s23-workflow-run-localization-audit` - `cli-action-envelope-hardening` audit: `s23 workflow run localization`
 - `2026-08-10-cli-action-envelope-hardening-s24-modelo-preconditions-audit` - `cli-action-envelope-hardening` audit: `s24 modelo preconditions`
 - `2026-08-10-cli-action-envelope-hardening-s25-lifecycle-envelope-independent-review-audit` - `cli-action-envelope-hardening` audit: `S25 lifecycle envelope independent review`
+- `2026-08-10-cli-action-envelope-hardening-s26-canonical-action-chain-closure-audit` - `cli-action-envelope-hardening` audit: `S26 canonical action-chain closure`
+- `2026-08-10-cli-action-envelope-hardening-s27-modelo-recovery-audit` - 2026-08-10-cli-action-envelope-hardening-s27-modelo-recovery-audit
+- `2026-08-10-cli-action-envelope-hardening-s28-error-default-preimage-audit` - `cli-action-envelope-hardening` audit: `S28 error-code default preimage independent review`
 - `2026-08-10-cli-action-envelope-hardening-workflow-producers-renderer-audit` - `cli-action-envelope-hardening` audit: `S22-S23 typed workflow producer and renderer review`
 
 ### exec
@@ -141,6 +150,9 @@ Auto-generated index of all documents tagged with `#cli-action-envelope-hardenin
 - `2026-08-09-cli-action-envelope-hardening-W04-P06-summary` - `cli-action-envelope-hardening` `W04.P06` summary
 - `2026-08-09-cli-action-envelope-hardening-W04-P07-S24` - Migrate adjudicated modelo work and verification predicates to typed verdicts
 - `2026-08-09-cli-action-envelope-hardening-W04-P07-S25` - Replace lifecycle suggestion construction with resolved typed action notices
+- `2026-08-09-cli-action-envelope-hardening-W04-P07-S26` - Replace unknown-revision and verification continuations with bound or explicitly conditional actions
+- `2026-08-09-cli-action-envelope-hardening-W04-P07-S27` - 2026-08-09-cli-action-envelope-hardening-W04-P07-S27
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S28` - Delete ErrorCode.default_suggestion and define only the current catalogue-backed error action or explicit no-recovery projection
 
 ### plan
 

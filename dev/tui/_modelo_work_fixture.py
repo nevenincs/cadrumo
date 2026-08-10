@@ -14,7 +14,7 @@ The fixture shape mirrors the one the oracle-grounded wizard CLI test suite
 (``entrypoints/cli/tests/test_modelo_work_wizard.py``,
 ``_modelo_work_ux_support.py``) already proves against for Modelo 130: the
 same profile facts, the same ``resolve_registry_revision_for_work_target`` +
-``ensure_modelo_work_unit_for_visible_target`` pair the CLI's own
+``ensure_modelo_work_unit_for_active_target`` pair the CLI's own
 ``work create`` command calls, and the same
 :func:`~cadrumo.application.user_profile.profile_storage_session` binding an
 application-layer call outside a CLI command's own bootstrap needs.
@@ -114,7 +114,7 @@ def ensure_modelo_work_unit(bucket_id: str) -> str:
     ``aeat app modelo work create`` calls --
     :func:`~cadrumo.application.modelo.resolve_registry_revision_for_work_target`
     then
-    :func:`~cadrumo.application.modelo.ensure_modelo_work_unit_for_visible_target`
+    :func:`~cadrumo.application.modelo.ensure_modelo_work_unit_for_active_target`
     -- rather than hand-building a :class:`~cadrumo.domain.modelos.WorkUnit`,
     so the unit this surface renders is addressed exactly as an operator's
     ``work create`` or the wizard's own resolution would address it.
@@ -123,7 +123,7 @@ def ensure_modelo_work_unit(bucket_id: str) -> str:
     than erroring or duplicating it.
     """
     from cadrumo.application.modelo import (
-        ensure_modelo_work_unit_for_visible_target,
+        ensure_modelo_work_unit_for_active_target,
         resolve_registry_revision_for_work_target,
     )
     from cadrumo.core import Period
@@ -135,7 +135,7 @@ def ensure_modelo_work_unit(bucket_id: str) -> str:
         period=period,
         registry_revision_id=None,
     )
-    ensure_result = ensure_modelo_work_unit_for_visible_target(
+    ensure_result = ensure_modelo_work_unit_for_active_target(
         bucket_id=bucket_id,
         modelo=MODELO,
         filing_year=FILING_YEAR,

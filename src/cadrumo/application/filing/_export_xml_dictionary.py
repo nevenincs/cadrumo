@@ -276,7 +276,7 @@ def _append_declaration_aux(root: ElementTree.Element[str], layout: ExportLayout
 
     Both children are ``minOccurs="1"``, so a block missing either is invalid and
     is not worth writing: when ``aux_version`` is undeclared this writes nothing,
-    and :func:`~application.filing.assert_xml_declaration_aux_declared` refuses
+    and :func:`~application.filing._export_parity.assert_xml_declaration_aux_declared` refuses
     the export at the write door rather than letting a partial block reach disk.
     """
     if layout.aux_idioma is None or layout.aux_version is None:

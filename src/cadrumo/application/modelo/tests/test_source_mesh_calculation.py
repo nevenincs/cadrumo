@@ -230,7 +230,9 @@ def test_modelo_349_refuses_intracom_ledger_rows_without_operator_rows(
     assert intracom_sale.transaction_id in sample_transaction_ids
     failure = exc_info.value.precondition_failure
     assert failure is not None
-    assert failure.scenario_id == ("modelo.work.calculate.m349.operator_rows.intracom_ledger_without_operator_rows")
+    assert failure.scenario_id == (
+        "modelo.work.calculate.m349.operator_rows.intracom_ledger_without_operator_rows"
+    )
     assert failure.verdict.no_recovery_outcome is not None
     assert cr_repo.load().revisions == {}
 

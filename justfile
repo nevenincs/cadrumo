@@ -384,12 +384,16 @@ runner-image-test: runner-image-build
     # the image, so this is the worst case a real state volume can present.
     docker run --rm --mount type=tmpfs,destination=/home/runner --entrypoint bash cadrumo-runner-linux -c 'set -e; test "$(ls -A /home/runner | wc -l)" = "0"; gh --version > /dev/null; just --version > /dev/null; brew --version > /dev/null; test -x /usr/local/bin/cadrumo-runner-entry.sh; echo "tools and entrypoint survive a volume mounted over /home/runner"'
 
-# Verify codebase security posture using semgrep scans. Single command, no
-# platform-specific preamble needed, so one recipe covers both shells.
-[doc('Verify codebase security posture using semgrep scans.')]
+# Verify codebase security posture using semgrep scans. The runner
+# (dev.audit.security) owns the semgrep invocation AND its parsing (JSON,
+# not the text report, which renders matched code plus surrounding context --
+# 55,378 lines for 365 findings on this tree), so this recipe and audit-all's
+# security dimension cannot drift apart or disagree. Pass --full for the
+# uncapped finding list.
+[doc('Verify codebase security posture using semgrep scans; capped console report, --full for everything.')]
 [group('static-checks')]
 check-security:
-    @uvx --from semgrep==1.168.0 semgrep scan --quiet --config auto src/cadrumo
+    @uv run --no-sync python -m dev.audit.security
 
 # Check if the RAG service daemon is running.
 [group('static-checks')]
@@ -507,7 +511,7 @@ test-integration:
 [doc('Run the dev/ tooling gates that no other lane reaches (audit, deploy, env, locales, sanitizer, registry, docs, agent-eval, ingest-harness subsystems).')]
 [group('testing')]
 test-dev-tooling:
-    @uv run --no-sync pytest -q -n {{pytest_workers}} -m "(unit or integration) and not resident_service and not external_tool" dev/audit/tests dev/deploy/tests dev/env/tests dev/locales/tests dev/tests dev/sanitizer/tests dev/registry/tests dev/registry/newmodelo/tests dev/registry/aeip/tests dev/docs/preprocess/tests dev/docs/sequences/tests dev/docs/terminology/tests dev/docs/terminology_handbook/tests dev/agent_eval/tests dev/ingest_harness/tests
+    @uv run --no-sync pytest -q -n {{pytest_workers}} -m "(unit or integration) and not resident_service and not external_tool" dev/audit/tests dev/corpus/tests dev/deploy/tests dev/env/tests dev/locales/tests dev/tests dev/sanitizer/tests dev/registry/tests dev/registry/newmodelo/tests dev/registry/aeip/tests dev/docs/preprocess/tests dev/docs/sequences/tests dev/docs/terminology/tests dev/docs/terminology_handbook/tests dev/agent_eval/tests dev/ingest_harness/tests
 
 # Run the dev-tree workflow/tooling conformance gates that CI runs per-push
 # (workflow structural pins, evidence-transport conformance, shard-plugin
@@ -656,12 +660,13 @@ audit-complexity:
 
 # Scan for dead code. The whitelist clears individually-justified
 # false positives (contract-fixed signature params); see its docstring.
-# src/cadrumo is named explicitly because a positional whitelist path
-# overrides (not merges with) the config `paths`.
+# The runner (dev.audit.dead_code) owns the vulture invocation AND its
+# parsing, so this recipe and audit-all's dead-code dimension cannot drift
+# apart or disagree. Pass --full for the uncapped finding list.
 [doc('Scan for dead code, clearing individually-justified false positives via the whitelist.')]
 [group('audits')]
 audit-dead-code:
-    @uv run --no-sync vulture --config pyproject.toml src/cadrumo dev/vulture_whitelist.py
+    @uv run --no-sync python -m dev.audit.dead_code
 
 # Scan for copy-paste code duplication. Aggregate line + capped clone list.
 # The runner owns the jscpd invocation AND its parsing, so this recipe and the
@@ -684,21 +689,22 @@ audit-checkout-drift:
 audit-rag QUERY:
     @uv run --no-sync vaultspec-rag search "{{QUERY}}" --port 8766 --timeout 45.0
 
-# Run all advisory audits with section headers; tolerant of individual findings.
+# Run all advisory audits (complexity, dead code, duplication, checkout
+# drift, security) as one composed red/amber/green dashboard; tolerant of
+# individual findings (always exits 0). The runner (dev.audit.advisory) owns
+# the composition, so this recipe cannot drift from what it reports. Full,
+# uncapped results are persisted to dev/audit/.runs/ every run (summary.json
+# for machine parsing, summary.md for the human-readable uncapped text).
 # Advisory-audit sibling of `check-all` (the fast static gates).
-[doc('Run all advisory audits with section headers; tolerant of individual findings.')]
+[doc('Run all advisory audits as one composed red/amber/green dashboard; full results persisted to dev/audit/.runs/.')]
 [group('audits')]
 audit-all:
-    @echo "=== complexity ==="
-    -@just audit-complexity
-    @echo "=== dead code ==="
-    -@just audit-dead-code
-    @echo "=== duplication ==="
-    -@just audit-duplication
-    @echo "=== checkout drift ==="
-    -@just audit-checkout-drift
-    @echo "=== security ==="
-    -@just check-security
+    @uv run --no-sync python -m dev.audit.advisory
+
+# Same composed advisory-audit dashboard, machine-readable.
+[group('audits')]
+audit-all-json:
+    @uv run --no-sync python -m dev.audit.advisory --json
 
 # Monthly code-health report: shadowing, duplication, layering, complexity,
 # each classified red/amber/green. Composes the scanners above (plus

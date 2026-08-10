@@ -292,19 +292,17 @@ def _file_year_quarters_and_reconcile(
         annual_ledger.extend(ledger)
         q_result = _calculate_303_quarter(filing_year=filing_year, period=period, observations=ledger)
         quarter_devengada[period] = q_result.values[_M303_CUOTA_DEVENGADA_TOTAL_CASILLA]
-        repository.save(
-            repository.prepare_observation_envelope(
-                _registry_observation(modelo="303", filing_year=filing_year, period=period, result=q_result),
-                source_kind="app_filing",
-                captured_at=_CLOCK,
-                result_disposition=ResultDispositionProjection(
-                    disposition=_filing_result_disposition(q_result),
-                    provenance_kind="app_filing",
-                    provenance_locator=f"test-local-filing:{filing_year}:{period}",
-                ),
-                normalize_m303_carry=True,
-            )
-        )
+        repository.save(repository.prepare_observation_envelope(
+            _registry_observation(modelo="303", filing_year=filing_year, period=period, result=q_result),
+            source_kind="app_filing",
+            captured_at=_CLOCK,
+            result_disposition=ResultDispositionProjection(
+                disposition=_filing_result_disposition(q_result),
+                provenance_kind="app_filing",
+                provenance_locator=f"test-local-filing:{filing_year}:{period}",
+            ),
+            normalize_m303_carry=True,
+        ))
     annual_result, produced = _calculate_390_annual(
         filing_year=filing_year,
         annual_ledger=tuple(annual_ledger),

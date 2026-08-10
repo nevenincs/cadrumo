@@ -13,6 +13,5 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.application.evidence._ids
    cadrumo.application.evidence._models
    cadrumo.application.evidence._service

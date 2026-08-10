@@ -381,7 +381,7 @@ _LAZY_EXPORTS: dict[str, str] = {
                 "build_profile_preflight_requirement",
                 "format_profile_path_requirements",
                 "format_profile_path_requirements",
-                "format_profile_preflight_requirement",
+    "format_profile_preflight_requirement",
                 "format_profile_selector_requirements",
             ),
         ),

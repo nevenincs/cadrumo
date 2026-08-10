@@ -15,7 +15,7 @@ See Also:
     :func:`application.workflow._events.emit_workflow_state_reset`
         Writes the append-only ``workflow_state.reset`` bucket event before the
         state row is removed.
-    :class:`~domain.buckets.BucketEventHistoryRepository`
+    :class:`~adapters.persistence.profile.buckets.BucketEventHistoryRepository`
         Stores the emitted reset event in the bucket event history.
     :class:`~application.workflow.WorkflowResult`
         Terminal workflow run record persisted separately by

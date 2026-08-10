@@ -230,7 +230,9 @@ _NIF_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.nif.prompt"
 # first: the closest existing leaves (cli.config.descendiente.*) carry
 # CLI-flag-specific prose, so wizard-namespace keys are minted here.
 _MESES_INVALID_RANGE_LOCALE_KEY = "wizard.setup.descendientes.meses-madre-trabajo.invalid_range"
-_ALTA_POSTERIOR_INVALID_RANGE_LOCALE_KEY = "wizard.setup.descendientes.alta-posterior-nacimiento-mes.invalid_range"
+_ALTA_POSTERIOR_INVALID_RANGE_LOCALE_KEY = (
+    "wizard.setup.descendientes.alta-posterior-nacimiento-mes.invalid_range"
+)
 _RENTAS_INVALID_NEGATIVE_LOCALE_KEY = "wizard.setup.descendientes.rentas-anuales.invalid_negative"
 _GASTOS_INVALID_NEGATIVE_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia.invalid_negative"
 _GASTOS_MENSUALES_INVALID_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia-mensuales.invalid_grammar"

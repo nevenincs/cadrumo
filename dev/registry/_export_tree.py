@@ -16,18 +16,17 @@ from typing import Final, Literal, cast
 import rtoml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from cadrumo.core import is_link_like
 from cadrumo.domain.calculations.registry import (
     ENCODING_ALIAS_MAP,
-    ExportEncoding,
     CasillaFieldKind,
-    ExportJustification,
+    ExportEncoding,
     ExportFieldDefinition,
+    ExportJustification,
     ExportLayoutDefinition,
-    ExportPadding,
     ExportLayoutId,
-    ExportValuePolicy,
+    ExportPadding,
     ExportRecordDefinition,
+    ExportValuePolicy,
     ModeloId,
     RegistryValidationError,
     RevisionId,
@@ -70,6 +69,7 @@ _DECIMAL_CONTENT_RE: Final[re.Pattern[str]] = re.compile(
     re.IGNORECASE,
 )
 _INTEGER_CONTENT_RE: Final[re.Pattern[str]] = re.compile(r"^(?P<whole>\d+)\s*enteros?$", re.IGNORECASE)
+_DATE_CONTENT: Final[str] = "aaaammdd"
 _SINGLETON_POLICY_SHAPES: Final[
     Mapping[ExportValuePolicy, Literal["integer", "decimal", "date", "digit_identity"]]
 ] = {
@@ -85,7 +85,6 @@ _SINGLETON_POLICY_SHAPES: Final[
     ExportValuePolicy.TWO_DIGIT_MONTH: "integer",
     ExportValuePolicy.TWO_DIGIT_DAY: "integer",
 }
-_DATE_CONTENT: Final[str] = "aaaammdd"
 _TEXT_TYPES: Final[frozenset[str]] = frozenset({"a", "an"})
 _NUMERIC_TYPES: Final[frozenset[str]] = frozenset({"n", "num"})
 _OFFICIAL_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
@@ -147,8 +146,8 @@ def render_complete_export_tree(
     The caller selects a fresh target owned by the generation transaction.  This
     function does not validate or publish a surrounding revision; those
     responsibilities deliberately remain later generator steps.
-    _validate_transport_profile(joined, transport_profile)
     """
+    _validate_transport_profile(joined, transport_profile)
     if joined.variable_envelopes:
         identities = ", ".join(repr(envelope.record_identity) for envelope in joined.variable_envelopes)
         raise RegistryValidationError(
@@ -187,9 +186,9 @@ def render_complete_export_tree(
         ),
         loaded_layout=layout,
         export_root=target_export_dir,
+        field_derivations=tuple(derivations),
         render_profile=render_profile,
         render_profile_source_evidence=render_profile_source_evidence,
-        field_derivations=tuple(derivations),
     )
     return RenderedExportTree(
         layout=layout,
@@ -225,7 +224,7 @@ def _validate_transport_profile(joined: JoinedRecordDesign, profile: ExportTreeT
 def _prepare_target(target_export_dir: Path) -> None:
     if target_export_dir.name != "export":
         raise RegistryValidationError(f"generated export target must be named 'export', got {target_export_dir.name!r}")
-    if is_link_like(target_export_dir):
+    if target_export_dir.is_symlink() or target_export_dir.is_junction():
         raise RegistryValidationError(f"generated export target must not be a link: {target_export_dir}")
     if target_export_dir.exists():
         if not target_export_dir.is_dir():
@@ -351,13 +350,13 @@ def _normalise_field(
             export_record_id=export_record_id,
             derivation_code=derivation_code,
         )
+    if type_code in _NUMERIC_TYPES:
         if parser_field.content is None or not parser_field.content.strip():
             return _render_profile_numeric_derivation(
                 joined_field,
                 render_profile,
                 export_record_id=export_record_id,
             )
-    if type_code in _NUMERIC_TYPES:
         return _numeric_derivation(joined_field, export_record_id=export_record_id)
     raise RegistryValidationError(
         f"official field {semantic_entry.export_field_id!r} declares unsupported AEAT type {parser_field.aeat_type!r}",
@@ -478,6 +477,7 @@ def _numeric_derivation(
         f"official numeric field {joined_field.semantic_entry.export_field_id!r} has ambiguous content {content!r}",
     )
 
+
 def _render_profile_numeric_derivation(
     joined_field: JoinedRecordDesignField,
     profile: RenderProfile,
@@ -587,7 +587,6 @@ def _render_profile_anchor(joined_field: JoinedRecordDesignField) -> RenderProfi
     )
 
 
-
 def _require_numeric_extent(joined_field: JoinedRecordDesignField, *, expected_length: int) -> None:
     actual_length = joined_field.parser_field.length
     if actual_length != expected_length:
@@ -608,9 +607,9 @@ def _schema_field(
     export_record_id: str,
     derivation_code: ExportFieldDerivationCode,
     date_format: str | None = None,
+    decimals: int | None = None,
     value_policy: ExportValuePolicy | None = None,
     allowed_values: tuple[str, ...] | None = None,
-    decimals: int | None = None,
 ) -> ExportFieldDerivation:
     parser_field = joined_field.parser_field
     semantic_entry = joined_field.semantic_entry
@@ -636,9 +635,9 @@ def _schema_field(
                 "justification": justification,
                 "date_format": date_format,
                 "decimals": decimals,
+                "signed": signed,
                 "value_policy": value_policy,
                 "allowed_values": allowed_values,
-                "signed": signed,
                 "legal_refs": semantic_entry.legal_refs,
                 "source_refs": semantic_entry.source_refs,
             },

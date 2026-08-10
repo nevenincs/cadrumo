@@ -444,7 +444,7 @@ async def _dismiss_pre303_alert_modal_if_present(page: Page) -> None:
     ``"show"``-class check at all) was ruled the incorrect half of a critical
     double declaration against the auth reader's copy and is deleted, not
     kept as an alternative -- see
-    :func:`~adapters.outbound.aeat.dismiss_pre303_alert_modal_if_present` for
+    :func:`~adapters.outbound.aeat._representation_gate.dismiss_pre303_alert_modal_if_present` for
     the collapsed predicate and the residual evidence gap this ruling
     accepts. Unlike the auth caller, this one supplies a diagnostic: a
     decline here is NEW behaviour (the deleted version would have clicked in

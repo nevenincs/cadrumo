@@ -7021,6 +7021,12 @@ errors:
       Desbloquéalo (Touch ID, Windows Hello o el desbloqueo del gestor de credenciales)
       y vuelve a intentarlo.
   prefix:
+    auth: Autenticación.
+    error: Error.
+    fail: Falló.
+    integrity: Integridad.
+    internal: Interno.
+    locked: Bloqueado.
     refused: Rechazado.
   refused:
     auth_configure_no_active_bucket: No se puede configurar la autenticación sin un
@@ -72621,7 +72627,6 @@ review:
         emitido.
       unknown_kind: 'Tipo de elemento de revisión desconocido. Valores --kind admitidos:
         %{accepted_kinds}.'
-      unsupported_item_type: 'Tipo de elemento de revisión no admitido: %{item_type}.'
   transaction:
     summary: Transacción pendiente de clasificación
 sheets:

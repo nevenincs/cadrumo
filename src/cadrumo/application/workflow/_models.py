@@ -81,7 +81,7 @@ from .._workflow_review_models import (
     LedgerReviewRecord,
     WorkflowEvent,
 )
-from ..operator_actions import PreconditionVerdict
+from ..operator_actions import ConditionEvidence, PreconditionVerdict
 from ._engine_helpers import CertificateSeverityValue, DeadlineRole, FilingWindowState
 from ._profile_bucket_models import ProfileBucketPointer as ProfileBucketPointer
 from ._profile_bucket_scan import resolve_profile_bucket
@@ -330,7 +330,6 @@ def active_transaction_catalogue_repository(
         raise LedgerNoActiveBucketError(
             translated_message="application.workflow.errors.no_active_profile_bucket",
             context={"repository": "transaction_catalogue", "operation": "resolve_active_bucket"},
-            suggestion="aeat config profile create NAME",
         ) from exc
     return TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects)
 
@@ -584,14 +583,14 @@ class WorkflowDeadlineContextDetails(_WorkflowStepDetail):
 
     @model_validator(mode="after")
     def _validate_context(self) -> WorkflowDeadlineContextDetails:
-        """Keep deadline metadata internally coherent rather than loosely optional."""
+        """Keep deadline metadata internally coherent rather than loosely optional.
+
+        A context carries exactly one of three mutually exclusive shapes — an
+        overdue observation, a binding filing window, or an informational one —
+        each with its own coherence rule below.
+        """
         if self.overdue is not None or self.extemporanea is not None:
-            if self.overdue is not True or self.extemporanea is not True:
-                raise ValueError("overdue deadline context requires overdue and extemporanea to be true")
-            if self.closes_on is None or self.opens_on is not None:
-                raise ValueError("overdue deadline context requires only closes_on")
-            if self.filing_window is not None or self.deadline_role is not None:
-                raise ValueError("overdue deadline context cannot carry filing-window metadata")
+            self._validate_overdue_shape()
             return self
 
         if (self.filing_window is None) != (self.deadline_role is None):
@@ -602,19 +601,40 @@ class WorkflowDeadlineContextDetails(_WorkflowStepDetail):
             return self
 
         if self.deadline_role is DeadlineRole.BINDING:
-            if self.filing_window is not FilingWindowState.FUTURE:
-                raise ValueError("binding deadline context requires a future filing window")
-            if self.opens_on is None or self.closes_on is None:
-                raise ValueError("binding deadline context requires opens_on and closes_on")
+            self._validate_binding_shape()
             return self
 
+        self._validate_informational_shape()
+        return self
+
+    def _both_boundary_dates_declared(self) -> bool:
+        """Return whether the context carries both filing-window boundary dates."""
+        return self.opens_on is not None and self.closes_on is not None
+
+    def _validate_overdue_shape(self) -> None:
+        """Require an overdue observation to carry only its closing date."""
+        if self.overdue is not True or self.extemporanea is not True:
+            raise ValueError("overdue deadline context requires overdue and extemporanea to be true")
+        if self.closes_on is None or self.opens_on is not None:
+            raise ValueError("overdue deadline context requires only closes_on")
+        if self.filing_window is not None or self.deadline_role is not None:
+            raise ValueError("overdue deadline context cannot carry filing-window metadata")
+
+    def _validate_binding_shape(self) -> None:
+        """Require a binding role to name a future window bounded on both sides."""
+        if self.filing_window is not FilingWindowState.FUTURE:
+            raise ValueError("binding deadline context requires a future filing window")
+        if not self._both_boundary_dates_declared():
+            raise ValueError("binding deadline context requires opens_on and closes_on")
+
+    def _validate_informational_shape(self) -> None:
+        """Require an informational window to be either absent or fully dated."""
         if self.filing_window is FilingWindowState.ABSENT:
             if self.opens_on is not None or self.closes_on is not None:
                 raise ValueError("absent informational windows cannot carry boundary dates")
-            return self
-        if self.opens_on is None or self.closes_on is None:
+            return
+        if not self._both_boundary_dates_declared():
             raise ValueError("dated informational windows require opens_on and closes_on")
-        return self
 
 
 class WorkflowInboxSkippedDetails(_WorkflowStepDetail):
@@ -700,28 +720,31 @@ class WorkflowAuthCheckDetails(_WorkflowStepDetail):
     def _validate_provider_shape(self) -> WorkflowAuthCheckDetails:
         """Make configured and skipped provider observations disjoint shapes."""
         if self.provider_check_skipped:
-            if self.skip_reason is not WorkflowDiagnosticSkipReason.NOT_WIRED:
-                raise ValueError("skipped provider checks require the not_wired reason")
-            if any(
-                value is not None
-                for value in (
-                    self.provider_kind,
-                    self.cert_not_after,
-                    self.cert_severity,
-                    self.cert_days_until_expiry,
-                )
-            ):
-                raise ValueError("skipped provider checks cannot carry certificate facts")
+            self._validate_skipped_shape()
             return self
 
         if self.provider_kind is None or self.skip_reason is not None:
             raise ValueError("configured provider checks require provider_kind and no skip reason")
         certificate_values = (self.cert_not_after, self.cert_severity, self.cert_days_until_expiry)
-        if any(value is not None for value in certificate_values) and any(
-            value is None for value in certificate_values
-        ):
+        declared = tuple(value for value in certificate_values if value is not None)
+        if declared and len(declared) != len(certificate_values):
             raise ValueError("certificate expiry facts must be provided together")
         return self
+
+    def _validate_skipped_shape(self) -> None:
+        """Require a skipped provider check to carry no provider or certificate facts."""
+        if self.skip_reason is not WorkflowDiagnosticSkipReason.NOT_WIRED:
+            raise ValueError("skipped provider checks require the not_wired reason")
+        if any(
+            value is not None
+            for value in (
+                self.provider_kind,
+                self.cert_not_after,
+                self.cert_severity,
+                self.cert_days_until_expiry,
+            )
+        ):
+            raise ValueError("skipped provider checks cannot carry certificate facts")
 
 
 class WorkflowPreflightFailedDetails(_WorkflowStepDetail):
@@ -823,6 +846,31 @@ def _parse_workflow_locale_key(value: object) -> str:
 WorkflowLocaleKey = Annotated[str, BeforeValidator(_parse_workflow_locale_key)]
 
 
+def _evidence_carries_prose(evidence: ConditionEvidence) -> bool:
+    """Return whether one evidence record holds rendered or exception prose.
+
+    Workflow refusal evidence is a locale-neutral fact map. A prose-shaped key
+    token, a value carrying whitespace, or a value shaped like a rendered
+    ``SomeError: ...`` line all mark presentation text that must not reach a
+    durable record.
+    """
+    key_tokens = {token for key in evidence.values for token in re.split(r"[._]", key)}
+    if key_tokens & _WORKFLOW_PROSE_EVIDENCE_KEY_TOKENS:
+        return True
+    string_values = tuple(value for value in evidence.values.values() if isinstance(value, str))
+    return any(
+        any(character.isspace() for character in value) or _WORKFLOW_EXCEPTION_TEXT_PATTERN.match(value) is not None
+        for value in string_values
+    )
+
+
+def _reject_prose_precondition_evidence(verdict: PreconditionVerdict) -> None:
+    """Refuse a verdict whose evidence would persist rendered or exception prose."""
+    for evidence in verdict.evidence:
+        if _evidence_carries_prose(evidence):
+            raise ValueError("workflow precondition evidence cannot persist rendered or exception prose")
+
+
 class WorkflowStep(BaseModel):
     """A single step in a :class:`WorkflowResult`."""
 
@@ -839,24 +887,17 @@ class WorkflowStep(BaseModel):
 
     @model_validator(mode="after")
     def _check_timestamps(self) -> WorkflowStep:
-        if self.ended_at is not None and self.ended_at < self.started_at:
-            raise ValueError(f"ended_at ({self.ended_at}) precedes started_at ({self.started_at})")
-        if self.ended_at is not None and self.success is None:
-            raise ValueError("completed steps must set success explicitly")
+        if self.ended_at is not None:
+            if self.ended_at < self.started_at:
+                raise ValueError(f"ended_at ({self.ended_at}) precedes started_at ({self.started_at})")
+            if self.success is None:
+                raise ValueError("completed steps must set success explicitly")
         if self.precondition_verdict is not None and self.success is not False:
             raise ValueError("precondition verdicts belong only to explicitly failed workflow steps")
         if isinstance(self.details, _PRECONDITION_DETAIL_TYPES) and self.precondition_verdict is None:
             raise ValueError("refusal detail records require a typed precondition verdict")
         if self.precondition_verdict is not None:
-            for evidence in self.precondition_verdict.evidence:
-                evidence_key_tokens = {token for key in evidence.values for token in re.split(r"[._]", key)}
-                string_values = tuple(value for value in evidence.values.values() if isinstance(value, str))
-                if evidence_key_tokens & _WORKFLOW_PROSE_EVIDENCE_KEY_TOKENS or any(
-                    any(character.isspace() for character in value)
-                    or _WORKFLOW_EXCEPTION_TEXT_PATTERN.match(value) is not None
-                    for value in string_values
-                ):
-                    raise ValueError("workflow precondition evidence cannot persist rendered or exception prose")
+            _reject_prose_precondition_evidence(self.precondition_verdict)
         return self
 
 
@@ -884,13 +925,15 @@ class WorkflowResult(BaseModel):
             raise ValueError("ended_at precedes started_at")
         if self.final_stage not in {WorkflowStage.DONE, WorkflowStage.ABORTED}:
             raise ValueError(f"final_stage must be DONE or ABORTED; got {self.final_stage.value}")
-        if self.final_stage is WorkflowStage.ABORTED and self.aborted_reason is None:
+        if self.final_stage is WorkflowStage.DONE:
+            if self.aborted_reason is not None:
+                raise ValueError("DONE results must not carry an aborted_reason")
+            return self
+        if self.aborted_reason is None:
             raise ValueError("ABORTED results must carry an aborted_reason")
-        if self.final_stage is WorkflowStage.DONE and self.aborted_reason is not None:
-            raise ValueError("DONE results must not carry an aborted_reason")
-        if self.final_stage is WorkflowStage.ABORTED and (not self.steps or self.steps[-1].success is not False):
+        if not self.steps or self.steps[-1].success is not False:
             raise ValueError("ABORTED results must end with an explicitly failed workflow step")
-        if self.final_stage is WorkflowStage.ABORTED and self.steps[-1].precondition_verdict is None:
+        if self.steps[-1].precondition_verdict is None:
             raise ValueError("ABORTED results must end with a typed precondition verdict")
         return self
 

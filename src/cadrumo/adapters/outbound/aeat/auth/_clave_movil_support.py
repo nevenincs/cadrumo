@@ -215,7 +215,10 @@ def render_progress_banner(
     log file.
     """
     if used_non_qr_fallback:
-        instruction = "Open the Cl@ve app and confirm the pending AEAT request; a push notification may not appear"
+        instruction = (
+            "Open the Cl@ve app and confirm the pending AEAT request; "
+            "a push notification may not appear"
+        )
     else:
         instruction = "Scan the QR code in the visible browser with the Cl@ve app and confirm the AEAT request"
     if verification_code:

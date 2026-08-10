@@ -13,7 +13,6 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.adapters.outbound.aeat.export._formats
    cadrumo.adapters.outbound.aeat.export._submitters
 
 Submodules

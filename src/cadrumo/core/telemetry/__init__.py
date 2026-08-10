@@ -2,7 +2,7 @@
 
 Every existing telemetry primitive in this codebase (
 :class:`~adapters.outbound.llm.LLMRunTelemetryRecorder`, the MCP
-:class:`~entrypoints.mcp.ToolCallTelemetryRecord`) is local-only by
+:class:`~entrypoints.mcp._telemetry.ToolCallTelemetryRecord`) is local-only by
 construction: encrypted secure storage or a local JSONL file, never a network
 call. This package is the one deliberate, narrow exception -- a REMOTE
 telemetry tier an operator may opt into to help improve the project.

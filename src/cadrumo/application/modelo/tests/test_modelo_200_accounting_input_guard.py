@@ -234,7 +234,9 @@ def test_m200_refuses_business_ledger_rows_without_accounting_result_input(
     assert error.context["ledger_transaction_count"] == 3
     failure = error.precondition_failure
     assert failure is not None
-    assert failure.scenario_id == ("modelo.work.calculate.m200.accounting_result.ledger_rows_without_accounting_result")
+    assert failure.scenario_id == (
+        "modelo.work.calculate.m200.accounting_result.ledger_rows_without_accounting_result"
+    )
     assert failure.verdict.no_recovery_outcome is not None
 
 

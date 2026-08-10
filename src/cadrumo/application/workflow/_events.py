@@ -16,7 +16,7 @@ See Also:
         execute the emit-before-delete recovery route.
     :class:`~cadrumo.domain.buckets.BucketEvent`
         Immutable audit event emitted for ``workflow_state.reset``.
-    :class:`~cadrumo.domain.buckets.BucketEventHistoryRepository`
+    :class:`~adapters.persistence.profile.buckets.BucketEventHistoryRepository`
         Append-only secure repository that stores the reset event.
 """
 

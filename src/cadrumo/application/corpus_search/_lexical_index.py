@@ -55,6 +55,7 @@ _CHUNK_TARGET = 1200
 _CHUNK_HARD_MAX = 1500
 
 
+
 def bundled_corpus_html_root() -> Path:
     """Return the on-disk path of the bundled normatives HTML corpus."""
     return bundled_path(*_CORPUS_HTML_PARTS)

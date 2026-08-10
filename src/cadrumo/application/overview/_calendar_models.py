@@ -220,7 +220,6 @@ class OverviewCalendarFilingEvidence(_CalendarJustificanteStateInvariant):
     justificante_verified: bool = False
     evidence_source: str | None = Field(default=None, min_length=1, max_length=64)
 
-
 class OverviewCalendarEntry(BaseModel):
     """One legal ``(modelo, period)`` row in the calendar view.
 
@@ -340,7 +339,6 @@ class OverviewCalendarEvent(_CalendarJustificanteStateInvariant):
     justificante_verified: bool | None = None
     verified_justificante_csv: str | None = Field(default=None, min_length=1, max_length=64)
 
-
 class CalendarWarning(BaseModel):
     """One under-specified-profile warning attached to a calendar query."""
 
@@ -372,7 +370,6 @@ class SuppressedCalendarEntry(BaseModel):
     period: _CalendarPeriod
     verdict: ApplicabilityVerdict
     reason: str = Field(min_length=1)
-
 
 class OverviewCalendar(BaseModel):
     """Result of an ``aeat app overview calendar`` query.

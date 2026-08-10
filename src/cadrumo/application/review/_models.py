@@ -107,7 +107,7 @@ class FindingReviewItem(_ReviewItemBase):
     ``source`` is ``None`` for the placeholder row emitted when a draft
     has no findings but is in a DRAFT or VALIDATED status. Otherwise it
     carries the verbatim
-    :class:`cadrumo.application.filing.ModeloValidationFinding`.
+    :class:`domain.filing.ModeloValidationFinding`.
 
     Attributes:
         kind: Literal discriminator pinned to

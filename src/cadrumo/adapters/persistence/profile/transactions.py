@@ -19,7 +19,7 @@ its secure-object coupling is SQL/crypto-bound; the domain package owns only the
 pure surface — the :class:`~domain.transactions.ImportSummary` record, the
 :func:`~domain.transactions.transaction_object_key` /
 :func:`transaction_index_object_key` key-derivation helpers, and the
-:data:`~domain.transactions.TX_BUCKET_NAMESPACE` /
+:data:`~adapters.persistence.profile.transactions.TX_BUCKET_NAMESPACE` /
 schema-version constants that name the persisted envelope contract. The
 namespace/version constants are redeclared here as the persisted-envelope
 contract; the strings are preserved to avoid orphaning stored envelopes.

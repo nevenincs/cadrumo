@@ -325,7 +325,9 @@ def _intermediate_relative_closing(
     workbook_format: RecordDesignWorkbookFormat,
 ) -> RecordDesignIntermediateRelativeSuffixMarker | RecordDesignIntermediateCompositeRelativeClosing:
     if isinstance(closing, RecordDesignCompositeRelativeClosing):
-        parts = tuple(_intermediate_relative_suffix(part, workbook_format=workbook_format) for part in closing.parts)
+        parts = tuple(
+            _intermediate_relative_suffix(part, workbook_format=workbook_format) for part in closing.parts
+        )
         return RecordDesignIntermediateCompositeRelativeClosing(
             tag_prefix=parts[0],
             modelo=parts[1],

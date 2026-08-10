@@ -21,6 +21,10 @@ consumed in the body:
 * ``source_citation`` — a keyword-only parameter on
   ``dev.docs.terminology_handbook._curation.set_language_field`` kept as part of the public
   curation API signature.
+* ``cache_discovery`` — the ``googleapiclient.discovery.build`` keyword
+  contract on the ``_SheetsDiscoveryBuilder`` Protocol stub
+  (:mod:`cadrumo.application.storage.calc_sheets._parity_harness`). The name is
+  the google API client's keyword and is part of the structural type.
 
 Vulture marks a name "used" when it appears in a whitelist file. Referencing
 each name once here clears the false positive while leaving every other
@@ -59,3 +63,8 @@ def _reduce_ex(protocol: object) -> None:
 def _set_language_field(source_citation: object) -> None:
     """Mirror ``set_language_field`` keyword-only API parameter."""
     source_citation  # noqa: B018
+
+
+def _sheets_discovery_build(cache_discovery: object) -> None:
+    """Mirror ``_SheetsDiscoveryBuilder.__call__`` keyword contract."""
+    cache_discovery  # noqa: B018

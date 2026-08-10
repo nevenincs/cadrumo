@@ -3,7 +3,7 @@
 :class:`InvoiceCatalogueSourceResolver` reads the
 :class:`~domain.invoices.InvoiceCatalogue` selected by
 :attr:`~application.aggregation.CalculationSourceContext.bucket_id` through
-:class:`~domain.invoices.InvoiceCatalogueRepository`. It projects those records
+:class:`~adapters.persistence.profile.invoices.InvoiceCatalogueRepository`. It projects those records
 into the calculation mesh as
 :class:`~application.aggregation.CalculationSourceResolution` values for
 :attr:`~core.BindingSourceKind.COLLECTIBLE_INVOICE` and

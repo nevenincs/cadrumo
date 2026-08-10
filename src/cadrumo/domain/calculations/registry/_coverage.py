@@ -9,7 +9,7 @@ verified before coverage is assessed.
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Literal
 
@@ -107,6 +107,20 @@ class RegistryCoverageAudit(CoverageModel):
 ConstructEvidenceKind = Literal["formula", "parameter", "binding", "relation", "selector"]
 ConstructEvidenceStatus = Literal["grounded", "inherited", "unresolved", "unmeasured", "unvalidated"]
 
+_COMPLETE_REFS_REQUIRED_BY_STATUS: Mapping[ConstructEvidenceStatus, str] = {
+    "grounded": "grounded construct evidence requires legal and source refs",
+    "inherited": "inherited selector evidence requires owning binding refs",
+    "unvalidated": "unvalidated construct evidence requires declared legal and source refs",
+}
+"""Statuses that claim complete evidence, mapped to their refusal when it is absent.
+
+A status absent from this mapping makes no completeness claim, so its refs are
+governed by the forbidding checks instead.
+"""
+
+_AUTHORITY_CHECKED_STATUSES: frozenset[ConstructEvidenceStatus] = frozenset({"grounded", "inherited"})
+"""Statuses that may only be reached through the validated audit fold."""
+
 
 class _AuthorityCheckProof:
     """Opaque proof object held only by the validated audit fold."""
@@ -144,34 +158,42 @@ class ConstructEvidenceRow(CoverageModel):
 
     @model_validator(mode="after")
     def _validate_evidence_shape(self) -> ConstructEvidenceRow:
-        if self.kind == "selector":
-            if self.binding_id is None:
-                raise RegistryValidationError("selector evidence rows must identify their owning binding")
-            if self.construct_id != self.binding_id:
-                raise RegistryValidationError("selector evidence construct_id must equal binding_id")
-        elif self.binding_id is not None:
-            raise RegistryValidationError("only selector evidence rows may declare binding_id")
-
+        self._validate_binding_identity()
         has_legal = bool(self.legal_refs)
         has_source = bool(self.source_refs)
-        if self.status == "grounded" and not (has_legal and has_source):
-            raise RegistryValidationError("grounded construct evidence requires legal and source refs")
-        if self.status == "inherited":
-            if self.kind != "selector":
-                raise RegistryValidationError("only selector evidence may be inherited")
-            if not (has_legal and has_source):
-                raise RegistryValidationError("inherited selector evidence requires owning binding refs")
-        if self.status in {"grounded", "inherited"} and not self.authority_checked:
+        self._validate_claimed_evidence(complete_refs=has_legal and has_source)
+        self._validate_withheld_evidence(has_legal=has_legal, has_source=has_source)
+        return self
+
+    def _validate_binding_identity(self) -> None:
+        """Refuse a row whose ``binding_id`` does not match its selector kind."""
+        if self.kind != "selector":
+            if self.binding_id is not None:
+                raise RegistryValidationError("only selector evidence rows may declare binding_id")
+            return
+        if self.binding_id is None:
+            raise RegistryValidationError("selector evidence rows must identify their owning binding")
+        if self.construct_id != self.binding_id:
+            raise RegistryValidationError("selector evidence construct_id must equal binding_id")
+
+    def _validate_claimed_evidence(self, *, complete_refs: bool) -> None:
+        """Refuse a status claiming evidence it does not carry or was not authorised to claim."""
+        if self.status == "inherited" and self.kind != "selector":
+            raise RegistryValidationError("only selector evidence may be inherited")
+        incomplete_refusal = _COMPLETE_REFS_REQUIRED_BY_STATUS.get(self.status)
+        if incomplete_refusal is not None and not complete_refs:
+            raise RegistryValidationError(incomplete_refusal)
+        if self.status in _AUTHORITY_CHECKED_STATUSES and not self.authority_checked:
             raise RegistryValidationError(
                 "complete construct evidence requires an authority-checked registry validation boundary",
             )
-        if self.status == "unvalidated" and not (has_legal and has_source):
-            raise RegistryValidationError("unvalidated construct evidence requires declared legal and source refs")
+
+    def _validate_withheld_evidence(self, *, has_legal: bool, has_source: bool) -> None:
+        """Refuse a status disclaiming evidence while carrying more refs than it may."""
         if self.status == "unresolved" and has_legal and has_source:
             raise RegistryValidationError("unresolved construct evidence cannot carry complete refs")
         if self.status == "unmeasured" and (has_legal or has_source):
             raise RegistryValidationError("unmeasured construct evidence cannot carry refs")
-        return self
 
 
 class ConstructEvidenceLedger(CoverageModel):

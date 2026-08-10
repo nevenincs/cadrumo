@@ -187,13 +187,11 @@ def _save_member_322_observation(
     ``(modelo, filing_year, period)`` persist as distinct rows the resolver
     enumerates, rather than overwriting one another.
     """
-    repository.save(
-        repository.prepare_observation_envelope(
-            observation,
-            source_kind="app_filing",
-            member_nif=member_nif,
-        )
-    )
+    repository.save(repository.prepare_observation_envelope(
+        observation,
+        source_kind="app_filing",
+        member_nif=member_nif,
+    ))
 
 
 def _resolve_353_aggregate(

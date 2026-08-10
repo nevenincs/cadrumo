@@ -4,7 +4,7 @@ Auth configuration and login actions mutate
 :class:`application.workflow.WorkflowState`, validate the active bucket
 through :func:`application.workflow.assess_active_profile_health`, and
 emit durable :class:`domain.buckets.BucketEvent` records through
-:class:`domain.buckets.BucketEventHistoryRepository`.
+:class:`adapters.persistence.profile.buckets.BucketEventHistoryRepository`.
 
 Status, test, and preflight surfaces consume the canonical
 :func:`application.state_projection.build_operator_state_projection`
@@ -168,7 +168,7 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
             pointer does not resolve to a registered bucket.
 
     See Also:
-        :class:`domain.buckets.BucketEventHistoryRepository`
+        :class:`adapters.persistence.profile.buckets.BucketEventHistoryRepository`
             Durable per-bucket event history that receives the typed auth event.
         :class:`application.workflow.ActiveProfileHealth`
             Redacted health verdict used to accept or refuse the active bucket.

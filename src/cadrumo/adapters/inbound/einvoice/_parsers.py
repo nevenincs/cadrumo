@@ -445,31 +445,55 @@ def _category_for(code: str | None) -> str | None:
     return mapped or None
 
 
-def _parse_cii(root: Element) -> ParsedEInvoice:
-    """Parse a UN/CEFACT Cross Industry Invoice."""
-    parsed = ParsedEInvoice(shape=DocumentShape.XML_CII)
+def _apply_cii_document_header(root: Element, parsed: ParsedEInvoice) -> None:
+    """Read the number, date and statutory mention off the ExchangedDocument."""
     docs = _find_all(root, "ExchangedDocument")
-    if docs:
-        parsed.invoice_number = _first_text(docs[0], "ID")
-        parsed.invoice_date = _first_text(docs[0], "DateTimeString")
-        # CII's document-level IncludedNote is the BT-22 counterpart of UBL's
-        # cbc:Note, scoped to the ExchangedDocument so a line-level note cannot
-        # be mistaken for the document's statutory mention.
-        for note in _find_all(docs[0], "IncludedNote"):
-            content = _first_text(note, "Content")
-            if content:
-                parsed.regime_legend = content
-                break
+    if not docs:
+        return
+    parsed.invoice_number = _first_text(docs[0], "ID")
+    parsed.invoice_date = _first_text(docs[0], "DateTimeString")
+    # CII's document-level IncludedNote is the BT-22 counterpart of UBL's
+    # cbc:Note, scoped to the ExchangedDocument so a line-level note cannot
+    # be mistaken for the document's statutory mention.
+    for note in _find_all(docs[0], "IncludedNote"):
+        content = _first_text(note, "Content")
+        if content:
+            parsed.regime_legend = content
+            break
+
+
+def _apply_cii_parties(root: Element, parsed: ParsedEInvoice) -> None:
+    """Read both parties' identity and address off their CII trade-party blocks."""
     for party_name, target in (("SellerTradeParty", "supplier"), ("BuyerTradeParty", "customer")):
         found = _find_all(root, party_name)
-        if found:
-            setattr(parsed, f"{target}_tax_id", _vat_id(found[0]))
-            # A direct child: the party subtree also carries a contact's
-            # PersonName and may carry a SpecifiedLegalOrganization trading
-            # name, neither of which is the party's own stated name.
-            setattr(parsed, f"{target}_name", _direct_child_text(found[0], "Name"))
-            setattr(parsed, f"{target}_postal_code", _cii_postal_code(found[0]))
-            setattr(parsed, f"{target}_country_code", _cii_country_code(found[0]))
+        if not found:
+            continue
+        setattr(parsed, f"{target}_tax_id", _vat_id(found[0]))
+        # A direct child: the party subtree also carries a contact's
+        # PersonName and may carry a SpecifiedLegalOrganization trading
+        # name, neither of which is the party's own stated name.
+        setattr(parsed, f"{target}_name", _direct_child_text(found[0], "Name"))
+        setattr(parsed, f"{target}_postal_code", _cii_postal_code(found[0]))
+        setattr(parsed, f"{target}_country_code", _cii_country_code(found[0]))
+
+
+def _apply_cii_trade_tax(tax: Element, parsed: ParsedEInvoice) -> None:
+    """Append one ApplicableTradeTax tier, keeping the first stated category."""
+    parsed.iva_breakdown.append(
+        (
+            _decimal(_first_text(tax, "RateApplicablePercent")),
+            _decimal(_first_text(tax, "BasisAmount")),
+            _decimal(_first_text(tax, "CalculatedAmount")),
+        ),
+    )
+    if parsed.iva_category is None:
+        parsed.iva_category = _category_for(_first_text(tax, "CategoryCode"))
+    if parsed.regime_legend is None:
+        parsed.regime_legend = _first_text(tax, "ExemptionReason")
+
+
+def _apply_cii_settlement(root: Element, parsed: ParsedEInvoice) -> None:
+    """Read the currency, the header totals and the per-rate tax breakdown."""
     for settlement in _find_all(root, "ApplicableHeaderTradeSettlement"):
         parsed.currency = _first_text(settlement, "InvoiceCurrencyCode")
         for total in _find_all(settlement, "SpecifiedTradeSettlementHeaderMonetarySummation"):
@@ -477,19 +501,17 @@ def _parse_cii(root: Element) -> ParsedEInvoice:
             parsed.iva_amount = _decimal(_first_text(total, "TaxTotalAmount"))
             parsed.grand_total = _decimal(_first_text(total, "GrandTotalAmount"))
         for tax in _find_all(settlement, "ApplicableTradeTax"):
-            rate = _decimal(_first_text(tax, "RateApplicablePercent"))
-            base = _decimal(_first_text(tax, "BasisAmount"))
-            amount = _decimal(_first_text(tax, "CalculatedAmount"))
-            parsed.iva_breakdown.append((rate, base, amount))
-            if parsed.iva_category is None:
-                parsed.iva_category = _category_for(_first_text(tax, "CategoryCode"))
-            if parsed.regime_legend is None:
-                parsed.regime_legend = _first_text(tax, "ExemptionReason")
+            _apply_cii_trade_tax(tax, parsed)
+
+
+def _cii_lines(root: Element) -> list[ParsedEInvoiceLine]:
+    """Read each line item, taking the LAST stated rate as that line's rate."""
+    lines: list[ParsedEInvoiceLine] = []
     for item in _find_all(root, "IncludedSupplyChainTradeLineItem"):
         rate = None
         for tax in _find_all(item, "ApplicableTradeTax"):
             rate = _decimal(_first_text(tax, "RateApplicablePercent"))
-        parsed.lines.append(
+        lines.append(
             ParsedEInvoiceLine(
                 description=_first_text(item, "Name"),
                 quantity=_decimal(_first_text(item, "BilledQuantity")),
@@ -498,6 +520,16 @@ def _parse_cii(root: Element) -> ParsedEInvoice:
                 iva_rate=rate,
             ),
         )
+    return lines
+
+
+def _parse_cii(root: Element) -> ParsedEInvoice:
+    """Parse a UN/CEFACT Cross Industry Invoice."""
+    parsed = ParsedEInvoice(shape=DocumentShape.XML_CII)
+    _apply_cii_document_header(root, parsed)
+    _apply_cii_parties(root, parsed)
+    _apply_cii_settlement(root, parsed)
+    parsed.lines.extend(_cii_lines(root))
     return parsed
 
 

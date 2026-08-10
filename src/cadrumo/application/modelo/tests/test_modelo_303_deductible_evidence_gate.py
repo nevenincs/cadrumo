@@ -377,12 +377,15 @@ def test_modelo_303_verify_blocks_on_deductible_gap_and_only_warns_on_the_output
     assert any(finding.kind is ModeloVerificationFindingKind.ADVISORY for finding in evidence_findings)
     assert all("next_action" not in finding.model_dump(mode="json") for finding in evidence_findings)
     evidence_projections = tuple(
-        projection for projection in verification.finding_preconditions if projection.finding in evidence_findings
+        projection
+        for projection in verification.finding_preconditions
+        if projection.finding in evidence_findings
     )
     assert len(evidence_projections) == len(evidence_findings)
     assert all(
         projection.precondition_failure is not None
-        and projection.precondition_failure.scenario_id == "modelo.work.verify.deductible_vat_evidence.missing"
+        and projection.precondition_failure.scenario_id
+        == "modelo.work.verify.deductible_vat_evidence.missing"
         and projection.precondition_failure.verdict.action is None
         and projection.precondition_failure.verdict.no_recovery_outcome is not None
         for projection in evidence_projections

@@ -109,48 +109,44 @@ def _seed_prior_quarter(secure_objects: SecureObjectRepository) -> None:
     it raises a registry validation error naming the missing casilla — so a partial
     seed would exercise that refusal instead of the control this test is for.
     """
-    CalculationObservationRepository(objects=secure_objects).save(
-        CalculationObservationRepository(objects=secure_objects).prepare_observation_envelope(
-            RegistryModeloObservation(
+    CalculationObservationRepository(objects=secure_objects).save(CalculationObservationRepository(objects=secure_objects).prepare_observation_envelope(
+        RegistryModeloObservation(
+            modelo=Modelo.M130.value,
+            filing_year=_YEAR,
+            period=_PRIOR_QUARTER,
+            observations=registry_grounded_observations(
                 modelo=Modelo.M130.value,
                 filing_year=_YEAR,
                 period=_PRIOR_QUARTER,
-                observations=registry_grounded_observations(
-                    modelo=Modelo.M130.value,
-                    filing_year=_YEAR,
-                    period=_PRIOR_QUARTER,
-                    casilla_values={
-                        _M130_C07: Decimal("412.55"),
-                        _M130_C16: Decimal("0"),
-                        _M130_SALDO_NEGATIVO: Decimal("0"),
-                    },
-                ),
+                casilla_values={
+                    _M130_C07: Decimal("412.55"),
+                    _M130_C16: Decimal("0"),
+                    _M130_SALDO_NEGATIVO: Decimal("0"),
+                },
             ),
-            source_kind=ObservationSourceKind.APP_FILING,
-            captured_at=_T0,
-        )
-    )
+        ),
+        source_kind=ObservationSourceKind.APP_FILING,
+        captured_at=_T0,
+    ))
     # The cross-modelo prior-year net-income carry reads Modelo 100. Once ANY
     # observation is present the registry resolver refuses a still-absent
     # requirement rather than skipping it, so the control seeds the whole prior
     # history a taxpayer with a complete record would have.
-    CalculationObservationRepository(objects=secure_objects).save(
-        CalculationObservationRepository(objects=secure_objects).prepare_observation_envelope(
-            RegistryModeloObservation(
+    CalculationObservationRepository(objects=secure_objects).save(CalculationObservationRepository(objects=secure_objects).prepare_observation_envelope(
+        RegistryModeloObservation(
+            modelo=Modelo.M100.value,
+            filing_year=_YEAR - 1,
+            period="0A",
+            observations=registry_grounded_observations(
                 modelo=Modelo.M100.value,
                 filing_year=_YEAR - 1,
                 period="0A",
-                observations=registry_grounded_observations(
-                    modelo=Modelo.M100.value,
-                    filing_year=_YEAR - 1,
-                    period="0A",
-                    casilla_values=dict.fromkeys(_M100_NET_INCOME_CASILLAS, Decimal("0")),
-                ),
+                casilla_values=dict.fromkeys(_M100_NET_INCOME_CASILLAS, Decimal("0")),
             ),
-            source_kind=ObservationSourceKind.APP_FILING,
-            captured_at=_T0,
-        )
-    )
+        ),
+        source_kind=ObservationSourceKind.APP_FILING,
+        captured_at=_T0,
+    ))
 
 
 def test_every_unsatisfiable_previous_filing_binding_is_named(tmp_path: Path) -> None:

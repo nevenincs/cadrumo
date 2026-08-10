@@ -207,7 +207,10 @@ def _raise_if_m390_303_reconciliation_would_save_silent_zero(
     if str(work_unit.modelo) != Modelo.M390.value or work_unit.period.registry_token != _M390_ANNUAL_PERIOD_CODE:
         return
 
-    missing: list[tuple[RelationId, BindingId, CasillaId, CasillaId]] = []
+    missing_relations: list[RelationId] = []
+    missing_bindings: list[BindingId] = []
+    missing_targets: list[CasillaId] = []
+    missing_annuals: list[CasillaId] = []
     for relation_id, binding_id, target_casilla, _source_casilla, annual_casilla in _m390_303_reconciliation_targets(
         snapshot,
     ):
@@ -215,24 +218,27 @@ def _raise_if_m390_303_reconciliation_would_save_silent_zero(
             continue
         if _calculated_decimal(casilla_values.get(annual_casilla)) == _ZERO:
             continue
-        missing.append((relation_id, binding_id, target_casilla, annual_casilla))
+        missing_relations.append(relation_id)
+        missing_bindings.append(binding_id)
+        missing_targets.append(target_casilla)
+        missing_annuals.append(annual_casilla)
 
-    if not missing:
+    if not missing_bindings:
         return
 
-    missing_relation_ids = frozenset(relation_id for relation_id, _binding_id, _target, _annual in missing)
+    missing_periods = _m390_303_required_periods(snapshot, frozenset(missing_relations))
     raise ModeloCrossPeriodCleanStateError(
         translated_message="application.modelo.errors.cross_period_clean_state_incomplete",
         context={
             "modelo": str(work_unit.modelo),
             "filing_year": str(work_unit.filing_year),
             "period": work_unit.period.registry_token,
-            "finding_count": len(missing),
+            "finding_count": len(missing_bindings),
             "reason": "missing_clean_cross_period_303_filings_or_observations",
-            "missing_303_periods": _m390_303_required_periods(snapshot, missing_relation_ids),
-            "missing_303_reconciliation_bindings": tuple(binding_id for _rel, binding_id, _target, _annual in missing),
-            "zero_reconciliation_casillas_at_risk": tuple(target for _rel, _binding, target, _annual in missing),
-            "nonzero_annual_casillas": tuple(annual for _rel, _binding, _target, annual in missing),
+            "missing_303_periods": missing_periods,
+            "missing_303_reconciliation_bindings": tuple(missing_bindings),
+            "zero_reconciliation_casillas_at_risk": tuple(missing_targets),
+            "nonzero_annual_casillas": tuple(missing_annuals),
         },
         precondition_failure=build_modelo_precondition_failure(
             subject_leaf_key="modelo.work.calculate",
@@ -243,11 +249,11 @@ def _raise_if_m390_303_reconciliation_would_save_silent_zero(
                 "modelo": str(work_unit.modelo),
                 "year": work_unit.filing_year,
                 "period": work_unit.period.registry_token,
-                "missing_item_count": len(missing),
-                "missing_periods": "|".join(_m390_303_required_periods(snapshot, missing_relation_ids)),
-                "missing_binding_ids": "|".join(str(binding_id) for _rel, binding_id, _target, _annual in missing),
-                "target_casilla_ids": "|".join(str(target) for _rel, _binding, target, _annual in missing),
-                "annual_casilla_ids": "|".join(str(annual) for _rel, _binding, _target, annual in missing),
+                "missing_item_count": len(missing_bindings),
+                "missing_periods": "|".join(missing_periods),
+                "missing_binding_ids": "|".join(missing_bindings),
+                "target_casilla_ids": "|".join(missing_targets),
+                "annual_casilla_ids": "|".join(missing_annuals),
             },
             provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
         ),

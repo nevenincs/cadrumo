@@ -78,6 +78,17 @@ def _is_presentation_fact_key(key: str) -> bool:
     return any(token in _PRESENTATION_FACT_TOKENS for token in re.split(r"[._]", key))
 
 
+def _is_blank_or_spaced_string_fact(item: _FindingFactValue) -> bool:
+    """Return whether a string fact is blank or carries whitespace.
+
+    Non-string facts are never rejected here; a string fact must be a non-blank
+    locale-neutral token, so any internal or surrounding whitespace disqualifies it.
+    """
+    if not isinstance(item, str):
+        return False
+    return not item or item != item.strip() or any(ch.isspace() for ch in item)
+
+
 class VerificationCompletenessStatus(StrEnum):
     """Top-level verdict from one verification run.
 
@@ -156,10 +167,7 @@ class ModeloVerificationFinding(BaseModel):
             raise ValueError("verification finding fact keys must be stable identifiers")
         if any(_is_presentation_fact_key(key) for key in value):
             raise ValueError("verification finding facts cannot carry presentation semantics")
-        if any(
-            isinstance(item, str) and (not item or item != item.strip() or any(ch.isspace() for ch in item))
-            for item in value.values()
-        ):
+        if any(_is_blank_or_spaced_string_fact(item) for item in value.values()):
             raise ValueError("verification finding string facts must be non-blank locale-neutral tokens")
         return MappingProxyType(dict(sorted(value.items())))
 

@@ -417,6 +417,47 @@ def _register_preflight_command(
             raise typer.Exit(code=2)
 
 
+def _resolve_validate_target_pointer(
+    name: str | None,
+    *,
+    resolve_active_profile_pointer: Callable[[], _ProfileBucketPointer | None],
+) -> _ProfileBucketPointer:
+    """Resolve the profile the validate verb targets, refusing clearly when it cannot.
+
+    A named profile resolves through the shared label reader (tombstoned
+    records included, because validating one is legitimate); an omitted name
+    falls back to the active profile pointer.
+    """
+    from ....application.workflow import ProfileLabelAmbiguousError as _ProfileLabelAmbiguousError
+    from ....application.workflow import read_profile_bucket as _read_profile_bucket
+
+    if name is None:
+        pointer = resolve_active_profile_pointer()
+        if pointer is None:
+            raise _no_active_profile_refusal()
+        return pointer
+    try:
+        pointer = _read_profile_bucket(name, include_tombstoned=True)
+    except _ProfileLabelAmbiguousError as exc:
+        # ``ProfileLabelAmbiguousError`` is a ``WorkflowError``, NOT a
+        # ``ValueError``; refuse clearly with the dedicated ambiguity
+        # message rather than escaping to an unhandled traceback.
+        raise _CliRefusedBoundaryError(
+            translated_message="errors.refused.refused_profile_label_ambiguous",
+        ) from exc
+    except ValueError as exc:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.unknown_profile",
+            context={"name": name},
+        ) from exc
+    if pointer is None:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.unknown_profile",
+            context={"name": name},
+        )
+    return pointer
+
+
 def _register_validate_command(
     profile_app: typer.Typer,
     *,
@@ -443,34 +484,12 @@ def _register_validate_command(
         _activate_subcommand_output_language(ctx, output_language)
         from ....application.modelo import modelo_work_profile_baseline_validation_issues
         from ....application.user_profile import ProfileValidationService
-        from ....application.workflow import ProfileLabelAmbiguousError as _ProfileLabelAmbiguousError
-        from ....application.workflow import read_profile_bucket as _read_profile_bucket
         from ....domain.user_profile import ProfileNotFoundError, load_user_profile_schema
 
-        if name is not None:
-            try:
-                pointer = _read_profile_bucket(name, include_tombstoned=True)
-            except _ProfileLabelAmbiguousError as exc:
-                # ``ProfileLabelAmbiguousError`` is a ``WorkflowError``, NOT a
-                # ``ValueError``; refuse clearly with the dedicated ambiguity
-                # message rather than escaping to an unhandled traceback.
-                raise _CliRefusedBoundaryError(
-                    translated_message="errors.refused.refused_profile_label_ambiguous",
-                ) from exc
-            except ValueError as exc:
-                raise _CliRefusedBoundaryError(
-                    translated_message="cli.config.profile.unknown_profile",
-                    context={"name": name},
-                ) from exc
-            if pointer is None:
-                raise _CliRefusedBoundaryError(
-                    translated_message="cli.config.profile.unknown_profile",
-                    context={"name": name},
-                )
-        else:
-            pointer = resolve_active_profile_pointer()
-            if pointer is None:
-                raise _no_active_profile_refusal()
+        pointer = _resolve_validate_target_pointer(
+            name,
+            resolve_active_profile_pointer=resolve_active_profile_pointer,
+        )
         try:
             record = _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
         except ProfileNotFoundError as exc:

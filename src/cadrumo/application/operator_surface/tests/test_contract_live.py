@@ -130,10 +130,9 @@ def test_live_operator_surface_reconciles_raw_click_paths_callbacks_and_mcp_poli
     help_only_callback_paths = frozenset(CALLBACK_EXCLUSION_REASON_BY_CLI_PATH)
     assert raw_callback_paths == callback_schema_paths | callback_reuse_paths | help_only_callback_paths
     assert frozenset(CALLBACK_SCHEMA_KEY_BY_CLI_PATH.values()) == GROUP_CALLBACK_SCHEMA_KEYS
-    assert (
-        frozenset(key for key in CALLBACK_SCHEMA_KEY_BY_CLI_PATH.values() if key.startswith("root."))
-        == ROOT_LANDING_SCHEMA_KEYS
-    )
+    assert frozenset(
+        key for key in CALLBACK_SCHEMA_KEY_BY_CLI_PATH.values() if key.startswith("root.")
+    ) == ROOT_LANDING_SCHEMA_KEYS
 
     primary_path_by_key = dict(raw_terminal_path_by_key)
     for callback_path, key in CALLBACK_SCHEMA_KEY_BY_CLI_PATH.items():
@@ -164,7 +163,8 @@ def test_live_operator_surface_reconciles_raw_click_paths_callbacks_and_mcp_poli
     descriptor_by_key = {descriptor.command_key: descriptor for descriptor in descriptors}
     assert len(descriptor_by_key) == len(descriptors), "MCP exposed one command identity more than once"
     expected_mcp_keys = (
-        frozenset(raw_terminal_path_by_key) | frozenset(CALLBACK_SCHEMA_KEY_BY_CLI_PATH.values())
+        frozenset(raw_terminal_path_by_key)
+        | frozenset(CALLBACK_SCHEMA_KEY_BY_CLI_PATH.values())
     ) - ROOT_LANDING_SCHEMA_KEYS
     assert frozenset(descriptor_by_key) == expected_mcp_keys, (
         "MCP descriptors did not equal raw terminal commands plus declared callback schema surfaces: "
@@ -266,9 +266,9 @@ def test_live_operator_surface_reconciles_raw_click_paths_callbacks_and_mcp_poli
         for row in reconciled_by_key.values()
         for path in (row.live_leaf.canonical_cli_path, *row.live_leaf.alias_cli_paths)
     }
-    assert reconciled_raw_paths == (frozenset(raw_terminals) | callback_schema_paths | callback_reuse_paths), (
-        "the reconciliation omitted or invented a raw envelope-emitting Click path"
-    )
+    assert reconciled_raw_paths == (
+        frozenset(raw_terminals) | callback_schema_paths | callback_reuse_paths
+    ), "the reconciliation omitted or invented a raw envelope-emitting Click path"
 
     excluded_from_mcp = frozenset(key for key, row in reconciled_by_key.items() if not row.mcp_exposure.exposed)
     assert excluded_from_mcp == ROOT_LANDING_SCHEMA_KEYS

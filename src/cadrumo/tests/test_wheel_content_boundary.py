@@ -143,7 +143,9 @@ def test_distributions_exclude_repository_development_infrastructure(
 
     for archive_kind, members in (("wheel", wheel_members), ("sdist", sdist_members)):
         offenders = sorted(
-            member for member in members if Path(member).parts and Path(member).parts[0] in _FORBIDDEN_REPOSITORY_ROOTS
+            member
+            for member in members
+            if Path(member).parts and Path(member).parts[0] in _FORBIDDEN_REPOSITORY_ROOTS
         )
         assert not offenders, f"{archive_kind} delivers development-only repository members: {offenders[:10]!r}"
 

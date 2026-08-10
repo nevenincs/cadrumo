@@ -104,17 +104,15 @@ def test_calculation_observation_survives_encrypted_storage_roundtrip(
     with isolated_runtime_profile(tmp_path=tmp_path):
         original = _populated_observation()
         repo = CalculationObservationRepository()
-        repo.save(
-            repo.prepare_observation_envelope(
-                original,
-                source_kind="aeat_sede_justificante",
-                captured_at=_CAPTURED_AT,
-                source_metadata={
-                    "aeat_register_status": "ALTA",
-                    "aeat_expediente_id": "202530300000001Z",
-                },
-            )
-        )
+        repo.save(repo.prepare_observation_envelope(
+            original,
+            source_kind="aeat_sede_justificante",
+            captured_at=_CAPTURED_AT,
+            source_metadata={
+                "aeat_register_status": "ALTA",
+                "aeat_expediente_id": "202530300000001Z",
+            },
+        ))
         loaded = repo.load_observation("303", Period.from_year_and_code(2025, "1T"))
 
         assert loaded is not None
@@ -159,13 +157,11 @@ def test_calculation_observation_repository_rejects_printed_number_reference(
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
         with pytest.raises(ObservationCasillaReferenceError) as raised:
-            repo.save(
-                repo.prepare_observation_envelope(
-                    observation,
-                    source_kind="aeat_sede_justificante",
-                    captured_at=_CAPTURED_AT,
-                )
-            )
+            repo.save(repo.prepare_observation_envelope(
+                observation,
+                source_kind="aeat_sede_justificante",
+                captured_at=_CAPTURED_AT,
+            ))
 
         assert "canonical casilla.id values" in str(raised.value)
         assert raised.value.context is not None
@@ -200,13 +196,11 @@ def test_calculation_observation_repository_rejects_printed_operand_casilla_ref(
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
         with pytest.raises(ObservationCasillaReferenceError) as raised:
-            repo.save(
-                repo.prepare_observation_envelope(
-                    observation,
-                    source_kind="aeat_sede_justificante",
-                    captured_at=_CAPTURED_AT,
-                )
-            )
+            repo.save(repo.prepare_observation_envelope(
+                observation,
+                source_kind="aeat_sede_justificante",
+                captured_at=_CAPTURED_AT,
+            ))
 
         assert raised.value.context is not None
         assert raised.value.context["modelo"] == "303"
@@ -289,13 +283,11 @@ def test_calculation_observation_absent_by_design_flag_survives_encrypted_storag
         )
 
         repo = CalculationObservationRepository()
-        repo.save(
-            repo.prepare_observation_envelope(
-                absent_by_design_observation,
-                source_kind="aeat_sede_justificante",
-                captured_at=_CAPTURED_AT,
-            )
-        )
+        repo.save(repo.prepare_observation_envelope(
+            absent_by_design_observation,
+            source_kind="aeat_sede_justificante",
+            captured_at=_CAPTURED_AT,
+        ))
         loaded = repo.load_observation("130", Period.from_year_and_code(2026, "1T"))
 
         assert loaded is not None
@@ -334,31 +326,27 @@ def test_second_observation_under_one_natural_key_leaves_the_first_unreachable(
         repo = CalculationObservationRepository()
         period = Period.from_year_and_code(2025, "1T")
 
-        repo.save(
-            repo.prepare_observation_envelope(
-                _populated_observation(),
-                source_kind="aeat_sede_justificante",
-                captured_at=_CAPTURED_AT,
-                source_metadata={
-                    "aeat_register_status": "ALTA",
-                    "aeat_expediente_id": "202530300000001Z",
-                },
-            )
-        )
-        repo.save(
-            repo.prepare_observation_envelope(
-                _populated_observation(),
-                source_kind="operator_manual",
-                captured_at=_CAPTURED_AT + timedelta(days=1),
-                source_metadata={"local_observation_kind": "operator_supplied"},
-                # This displacement is now refused by default. The intent is stated
-                # explicitly because what this test measures is the COST of
-                # displacing official evidence, not whether it is permitted -- the
-                # refusal is measured separately. Removing this argument would turn
-                # a cost measurement into a duplicate of the guard's own test.
-                replace_official_evidence=True,
-            )
-        )
+        repo.save(repo.prepare_observation_envelope(
+            _populated_observation(),
+            source_kind="aeat_sede_justificante",
+            captured_at=_CAPTURED_AT,
+            source_metadata={
+                "aeat_register_status": "ALTA",
+                "aeat_expediente_id": "202530300000001Z",
+            },
+        ))
+        repo.save(repo.prepare_observation_envelope(
+            _populated_observation(),
+            source_kind="operator_manual",
+            captured_at=_CAPTURED_AT + timedelta(days=1),
+            source_metadata={"local_observation_kind": "operator_supplied"},
+            # This displacement is now refused by default. The intent is stated
+            # explicitly because what this test measures is the COST of
+            # displacing official evidence, not whether it is permitted -- the
+            # refusal is measured separately. Removing this argument would turn
+            # a cost measurement into a duplicate of the guard's own test.
+            replace_official_evidence=True,
+        ))
 
         loaded = repo.load_observation("303", period)
         assert loaded is not None
@@ -387,20 +375,16 @@ def test_calculation_observation_iter_modelo_enumerates_decrypted_records(
         repo = CalculationObservationRepository()
         target = _populated_observation()
         other = RegistryModeloObservation(modelo="130", filing_year=2025, period="2T")
-        repo.save(
-            repo.prepare_observation_envelope(
-                target,
-                source_kind="aeat_sede_justificante",
-                captured_at=datetime(2026, 5, 21, 12, 0, tzinfo=UTC),
-            )
-        )
-        repo.save(
-            repo.prepare_observation_envelope(
-                other,
-                source_kind="aeat_sede_justificante",
-                captured_at=datetime(2026, 5, 21, 12, 1, tzinfo=UTC),
-            )
-        )
+        repo.save(repo.prepare_observation_envelope(
+            target,
+            source_kind="aeat_sede_justificante",
+            captured_at=datetime(2026, 5, 21, 12, 0, tzinfo=UTC),
+        ))
+        repo.save(repo.prepare_observation_envelope(
+            other,
+            source_kind="aeat_sede_justificante",
+            captured_at=datetime(2026, 5, 21, 12, 1, tzinfo=UTC),
+        ))
 
         loaded = tuple(repo.iter_modelo("303"))
 
@@ -446,13 +430,11 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         original = _populated_observation()
         repo = CalculationObservationRepository()
-        repo.save(
-            repo.prepare_observation_envelope(
-                original,
-                source_kind="aeat_sede_justificante",
-                captured_at=_CAPTURED_AT,
-            )
-        )
+        repo.save(repo.prepare_observation_envelope(
+            original,
+            source_kind="aeat_sede_justificante",
+            captured_at=_CAPTURED_AT,
+        ))
 
         object_key = observation_key("303", Period.from_year_and_code(2025, "1T"))
         with session_scope(profile.repository._engine) as session:

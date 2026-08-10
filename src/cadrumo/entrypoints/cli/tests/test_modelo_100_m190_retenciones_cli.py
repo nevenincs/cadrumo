@@ -71,23 +71,21 @@ def _seed_m100_2025_profile(runtime_profile: TestRuntimeProfile) -> None:
 
 
 def _seed_prior_year_zero_carry(runtime_profile: TestRuntimeProfile) -> None:
-    CalculationObservationRepository(objects=runtime_profile.repository).save(
-        CalculationObservationRepository(objects=runtime_profile.repository).prepare_observation_envelope(
-            RegistryModeloObservation(
+    CalculationObservationRepository(objects=runtime_profile.repository).save(CalculationObservationRepository(objects=runtime_profile.repository).prepare_observation_envelope(
+        RegistryModeloObservation(
+            modelo="100",
+            filing_year=2024,
+            period="0A",
+            observations=registry_grounded_observations(
                 modelo="100",
                 filing_year=2024,
                 period="0A",
-                observations=registry_grounded_observations(
-                    modelo="100",
-                    filing_year=2024,
-                    period="0A",
-                    casilla_values={"1391": Decimal("0")},
-                ),
+                casilla_values={"1391": Decimal("0")},
             ),
-            source_kind=APP_FILING_SOURCE_KIND,
-            captured_at=_CAPTURED_AT,
-        )
-    )
+        ),
+        source_kind=APP_FILING_SOURCE_KIND,
+        captured_at=_CAPTURED_AT,
+    ))
 
 
 def test_m100_2025_cli_m190_annual_retenciones_populates_0596(

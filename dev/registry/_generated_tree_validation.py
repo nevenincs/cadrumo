@@ -13,7 +13,6 @@ from dataclasses import dataclass
 from datetime import date
 from pathlib import Path, PurePosixPath
 
-from cadrumo.core import is_link_like
 from cadrumo.domain.calculations.registry import (
     ExportLayoutDefinition,
     RegistrySnapshot,
@@ -71,9 +70,9 @@ def validate_generated_export_tree(
     context: GeneratedExportTreeValidationContext,
     joined: JoinedRecordDesign,
     semantic_map: SemanticMap,
+    rendered: RenderedExportTree,
     render_profile: RenderProfile,
     render_profile_source_evidence: RenderProfileSourceEvidence,
-    rendered: RenderedExportTree,
 ) -> ValidatedGeneratedExportTree:
     """Prove that one complete, isolated generated tree is filing-selectable.
 
@@ -118,9 +117,9 @@ def validate_generated_export_tree(
         semantic_map=semantic_map,
         target=context.target,
         loaded_layout=loaded_layout,
+        field_derivations=rendered.field_derivations,
         render_profile=render_profile,
         render_profile_source_evidence=render_profile_source_evidence,
-        field_derivations=rendered.field_derivations,
     )
 
     authority = ValidatedRegistryAuthority.load(registry_root, source_root=source_root)
@@ -180,7 +179,7 @@ def _require_isolated_target_context(
     for name in ("revision.toml", "export"):
         _require_existing_non_link(revision_root / name, subject=f"generated target revision member {name!r}")
     stale_sibling_manifest = revision_root / "export.provenance.json"
-    if stale_sibling_manifest.exists() or is_link_like(stale_sibling_manifest):
+    if stale_sibling_manifest.exists() or stale_sibling_manifest.is_symlink() or stale_sibling_manifest.is_junction():
         raise RegistryValidationError(
             f"generated target revision refuses stale sibling export provenance manifest: {stale_sibling_manifest}",
         )
@@ -273,7 +272,7 @@ def _require_directory(path: Path, *, subject: str) -> Path:
 
 
 def _require_existing_non_link(path: Path, *, subject: str) -> None:
-    if is_link_like(path):
+    if path.is_symlink() or path.is_junction():
         raise RegistryValidationError(f"{subject} must not be a link: {path}")
     if not path.exists():
         raise RegistryValidationError(f"{subject} is missing: {path}")
@@ -282,6 +281,6 @@ def _require_existing_non_link(path: Path, *, subject: str) -> None:
 def _children_without_links(directory: Path, *, subject: str) -> tuple[Path, ...]:
     children = tuple(sorted(directory.iterdir(), key=lambda path: path.name))
     for child in children:
-        if is_link_like(child):
+        if child.is_symlink() or child.is_junction():
             raise RegistryValidationError(f"{subject} contains a linked member: {child}")
     return children

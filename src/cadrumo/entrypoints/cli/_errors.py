@@ -71,7 +71,6 @@ _UNDER_TEST: ContextVar[bool] = ContextVar("cadrumo_cli_error_boundary_under_tes
 _ACTIVE_COMMAND_ID: ContextVar[str | None] = ContextVar("cadrumo_cli_active_command_id", default=None)
 _WRAPPED_CALLBACKS: dict[int, Callable[..., object]] = {}
 
-
 class _ReconfigurableTextIO(Protocol):
     """Structural type for a text stream that supports ``reconfigure``."""
 

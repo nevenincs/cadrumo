@@ -166,6 +166,25 @@ def _service_factory(credentials: object) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE
     return build("drive", "v3", credentials=credentials, cache_discovery=False)
 
 
+def _is_owned_drive_match(entry: dict[str, Any], *, prefix: str, object_key_hmac: str) -> bool:
+    """Confirm a listed Drive entry is THIS object and is Cadrumo-owned.
+
+    The 8-hex filename prefix is only a search key, so a listing can return
+    entries this provider must not touch: a foreign file (operator-placed
+    content that happens to share the prefix) and a different Cadrumo object
+    that collides on the prefix (an extremely rare HMAC collision) are both
+    refused here rather than matched.
+    """
+    name = str(entry.get("name", ""))
+    if not (name.startswith(f"{prefix}--") and name.endswith(_FILE_EXTENSION)):
+        return False
+    app_properties = entry.get("appProperties") or {}
+    return (
+        app_properties.get(_OWNERSHIP_KEY) == _OWNERSHIP_VALUE
+        and app_properties.get("object_key_hmac") == object_key_hmac
+    )
+
+
 class GoogleDriveProvider:
     """Bytes-in / bytes-out :class:`StorageProvider` backed by Google Drive v3."""
 
@@ -450,19 +469,8 @@ class GoogleDriveProvider:
             response = self._execute(service.files().list(**kwargs), action="find_file")
             files = response.get("files", []) if isinstance(response, dict) else []
             for entry in files:
-                name = str(entry.get("name", ""))
-                if not (name.startswith(f"{prefix}--") and name.endswith(_FILE_EXTENSION)):
-                    continue
-                app_properties = entry.get("appProperties") or {}
-                if app_properties.get(_OWNERSHIP_KEY) != _OWNERSHIP_VALUE:
-                    # Foreign file: operator-placed content that happens to
-                    # share the 8-hex prefix. Refuse to touch it.
-                    continue
-                if app_properties.get("object_key_hmac") != object_key_hmac:
-                    # Different Cadrumo object that shares the prefix (extremely
-                    # rare HMAC collision). Refuse to touch it.
-                    continue
-                return entry
+                if _is_owned_drive_match(entry, prefix=prefix, object_key_hmac=object_key_hmac):
+                    return entry
             page_token = next_drive_page_token(
                 response.get("nextPageToken") if isinstance(response, dict) else None,
                 seen_tokens=seen_tokens,

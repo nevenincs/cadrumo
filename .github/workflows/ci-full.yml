@@ -78,6 +78,13 @@ jobs:
         run: |
           just check-style
           just check-relative-imports
+          # `check-format` was reachable from nowhere before this line. It exists
+          # as a recipe, and `prek.toml` carries a `ruff-format --check` hook, but
+          # no workflow invoked the recipe and the hook only fires for a committer
+          # who runs it -- so two configured gates covered formatting and their
+          # intersection was empty. Unformatted files reached HEAD unimpeded and
+          # `ruff format --check .` was not green tree-wide.
+          just check-format
 
       - name: Import architecture
         run: just check-imports

@@ -28,7 +28,7 @@ class _ObservationPayload(Protocol):
     """Structural interface for the observation envelope payload consumed here.
 
     Matches the public attribute surface of
-    :class:`~application.calculations._observations_repository._ObservationPayload`
+    :class:`~application.calculations._cross_period_models._ObservationPayload`
     without importing its private name.
     """
 

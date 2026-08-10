@@ -57,14 +57,12 @@ def _save_prior_prorrata_observation(
         period=_SETTLEMENT_PERIOD,
         casilla_values={_PORCENTAJE_ID: percentage},
     )
-    repo.save(
-        repo.prepare_observation_envelope(
-            observation,
-            source_kind=_SOURCE_KIND,
-            captured_at=_CLOCK,
-            stamped_revision_id=stamped_revision_id,
-        )
-    )
+    repo.save(repo.prepare_observation_envelope(
+        observation,
+        source_kind=_SOURCE_KIND,
+        captured_at=_CLOCK,
+        stamped_revision_id=stamped_revision_id,
+    ))
 
 
 def test_seed_happy_path_uses_prior_settlement_observation(tmp_path: Path) -> None:

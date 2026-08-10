@@ -148,30 +148,28 @@ def _seed_prior_m200_evidence(*, bucket_id: str) -> None:
         expected_tax_id=_TAX_ID,
         clock=_CLOCK,
     )
-    CalculationObservationRepository().save(
-        CalculationObservationRepository().prepare_observation_envelope(
-            RegistryModeloObservation(
+    CalculationObservationRepository().save(CalculationObservationRepository().prepare_observation_envelope(
+        RegistryModeloObservation(
+            modelo="200",
+            filing_year=2024,
+            period="0A",
+            observations=registry_grounded_observations(
                 modelo="200",
                 filing_year=2024,
                 period="0A",
-                observations=registry_grounded_observations(
-                    modelo="200",
-                    filing_year=2024,
-                    period="0A",
-                    casilla_values=casilla_values,
-                ),
+                casilla_values=casilla_values,
             ),
-            source_kind="aeat_sede_justificante",
-            captured_at=_CLOCK,
-            stamped_revision_id=snapshot.revision.id,
-            source_metadata={
-                "aeat_register_status": "ALTA",
-                "aeat_expediente_id": "EXP-M200-2024-0A",
-                "aeat_justificante_csv": evidence_reference_id,
-                "authenticated_identity": _TAX_ID,
-            },
-        )
-    )
+        ),
+        source_kind="aeat_sede_justificante",
+        captured_at=_CLOCK,
+        stamped_revision_id=snapshot.revision.id,
+        source_metadata={
+            "aeat_register_status": "ALTA",
+            "aeat_expediente_id": "EXP-M200-2024-0A",
+            "aeat_justificante_csv": evidence_reference_id,
+            "authenticated_identity": _TAX_ID,
+        },
+    ))
 
 
 def _calculate_m202(

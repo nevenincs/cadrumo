@@ -133,7 +133,6 @@ class ExtractedFieldAnchors(_ExtractedInvoiceFieldClaims):
     that check needs the document and this schema does not have it.
     """
 
-
 class ExtractedRoleEvidence(BaseModel):
     """The printed context assigning each identity value to a party role.
 
@@ -351,7 +350,7 @@ def _grounded_date(raw: str | None) -> str | None:
     form the document actually shows (mirroring the text-layer heuristic's
     ``_DATE_RE``); ISO-8601 is tried second in case the model normalises the
     printed value itself. Only these two real, registered
-    :data:`~core.parsing._DateFmt` members are ever passed -- an invented
+    :data:`~core.parsing._dates._DateFmt` members are ever passed -- an invented
     format string silently degrades to one of the two delegates
     (:func:`~core.parsing._parse_date` has no third branch), which would
     make a "fallback" attempt a silent no-op duplicate.

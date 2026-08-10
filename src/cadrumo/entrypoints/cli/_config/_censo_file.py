@@ -98,7 +98,6 @@ def censo_file(
     from ....application.user_profile import apply_cotejo
     from ....application.workflow import workflow_state_repository
     from ....domain.censo import censo_facts_from_certificado
-
     certificado = parse_certificado_censal_bytes(file.read_bytes())
     facts = censo_facts_from_certificado(certificado)
 
@@ -189,7 +188,8 @@ def censo_pull(
         workflow_state_repository().save(apply_censal_read(state, read))
 
     adopted = tuple(
-        CensoFactPayload(path=fact.path, value=str(fact.value), source=fact.source) for fact in reconciliation.adopted
+        CensoFactPayload(path=fact.path, value=str(fact.value), source=fact.source)
+        for fact in reconciliation.adopted
     )
     divergences = tuple(
         CensoPullDivergencePayload(

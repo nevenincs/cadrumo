@@ -5,7 +5,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:f7bc9df6541fda0bdf02216e05908c16d04963b577aaaf8756525ff9401e2288'
+body_hash: 'sha256:d773bb49ed2777f5fdba8e252217ec29be4464dcfc48bd0a4d35f2f0c4c57f3d'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
@@ -20,7 +20,7 @@ Independent review of S41 against the active plan row, accepted generator-author
 
 The final snapshot has one public policy enum owner and one registry fixed-width codec. Development profiles consume the public required policy type rather than a local literal taxonomy. Runtime fields use the optional public type, and an enumeration domain is valid if and only if its policy is `ENUMERATED_DIGITS`. The mapper projects all eleven public policies through an exhaustive keyed shape contract with explicit refusal for an unsupported policy. No fake, mock, stub, patch, monkeypatch, skip, xfail, or mirrored production logic appears in the reviewed tests.
 
-The final import boundary routes development semantic-map `CasillaId` through its canonical core home. The reviewer independently collected 274 focused policy, codec, parser, render-profile, and real mapper passes; scoped Ruff passed and strict scoped BasedPyright reported zero errors, warnings, or notes. The executor's broader selected lane collected 290 passes with the same clean static gates. The requested all-policy mapper test invokes the real S32 derivation for all eleven enum members and asserts the resulting production `ExportFieldDefinition` shapes plus exact enum-key coverage. Two broader provenance tests remain excluded because paused S32 work has not yet reconciled their signature and schema expectations; no S41 test fails.
+The final import boundary routes development semantic-map `CasillaId` through its canonical core home. The reviewer independently collected 274 focused policy, codec, parser, render-profile, and real mapper passes; scoped Ruff passed and strict scoped BasedPyright reported zero errors, warnings, or notes. The executor's broader selected lane collected 290 passes with the same clean static gates. The requested all-policy mapper test invokes the real S32 derivation for all eleven enum members and asserts the resulting production `ExportFieldDefinition` shapes plus exact enum-key coverage. Two broader provenance tests remain excluded because paused S32 work has not yet reconciled their signature and schema expectations; no S41 test fails. An adjacent filing, registry, and adapter lane produced 173 passes and 23 failures. Those failures exercise policy-free pre-existing S38 strict-absence and verifier behavior: blank generic numeric values refuse, and XML parsed record identity does not match the verifier lookup. None traverses an S41 policy, schema, parser-normalization, or mapper path, so they are deferred to the S38 or follow-on boundary rather than classified as an S41 regression.
 
 S41 intentionally evolves the historical S40 snapshot: generic policy-free `allowed_values` is removed and the domain becomes the required member set of the canonical enumeration policy. This does not create a competing authority or conflict with the accepted fixed-width amendment; it completes the later approved plan row while preserving the registry codec as runtime owner.
 

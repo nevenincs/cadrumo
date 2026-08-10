@@ -59,14 +59,12 @@ def _observation() -> RegistryModeloObservation:
 
 def _save_official(repo: CalculationObservationRepository) -> None:
     """Seed the slot with captured AEAT evidence."""
-    repo.save(
-        repo.prepare_observation_envelope(
-            _observation(),
-            source_kind="aeat_sede_justificante",
-            captured_at=_CAPTURED_AT,
-            source_metadata=_OFFICIAL_METADATA,
-        )
-    )
+    repo.save(repo.prepare_observation_envelope(
+        _observation(),
+        source_kind="aeat_sede_justificante",
+        captured_at=_CAPTURED_AT,
+        source_metadata=_OFFICIAL_METADATA,
+    ))
 
 
 def _assert_slot_still_official(repo: CalculationObservationRepository) -> None:
@@ -90,13 +88,11 @@ def test_a_non_official_write_over_captured_evidence_is_refused(tmp_path: Path, 
         _save_official(repo)
 
         with pytest.raises(ObservationEvidenceDisplacementError):
-            repo.save(
-                repo.prepare_observation_envelope(
-                    _observation(),
-                    source_kind=source_kind,
-                    captured_at=_CAPTURED_AT + timedelta(days=1),
-                )
-            )
+            repo.save(repo.prepare_observation_envelope(
+                _observation(),
+                source_kind=source_kind,
+                captured_at=_CAPTURED_AT + timedelta(days=1),
+            ))
 
         _assert_slot_still_official(repo)
 
@@ -136,15 +132,13 @@ def test_the_operator_can_displace_evidence_deliberately(tmp_path: Path) -> None
         repo = CalculationObservationRepository()
         _save_official(repo)
 
-        repo.save(
-            repo.prepare_observation_envelope(
-                _observation(),
-                source_kind="operator_manual",
-                captured_at=_CAPTURED_AT + timedelta(days=1),
-                source_metadata={"local_observation_kind": "operator_supplied"},
-                replace_official_evidence=True,
-            )
-        )
+        repo.save(repo.prepare_observation_envelope(
+            _observation(),
+            source_kind="operator_manual",
+            captured_at=_CAPTURED_AT + timedelta(days=1),
+            source_metadata={"local_observation_kind": "operator_supplied"},
+            replace_official_evidence=True,
+        ))
 
         loaded = repo.load_observation("303", Period.from_year_and_code(2025, "1T"))
         assert loaded is not None
@@ -162,14 +156,12 @@ def test_official_evidence_may_replace_official_evidence(tmp_path: Path) -> None
         repo = CalculationObservationRepository()
         _save_official(repo)
 
-        repo.save(
-            repo.prepare_observation_envelope(
-                _observation(),
-                source_kind="aeat_sede_live_capture",
-                captured_at=_CAPTURED_AT + timedelta(days=2),
-                source_metadata=_OFFICIAL_METADATA,
-            )
-        )
+        repo.save(repo.prepare_observation_envelope(
+            _observation(),
+            source_kind="aeat_sede_live_capture",
+            captured_at=_CAPTURED_AT + timedelta(days=2),
+            source_metadata=_OFFICIAL_METADATA,
+        ))
 
         loaded = repo.load_observation("303", Period.from_year_and_code(2025, "1T"))
         assert loaded is not None
@@ -180,22 +172,18 @@ def test_a_manual_row_may_be_corrected_by_another_manual_row(tmp_path: Path) -> 
     """Nothing official is at stake, so the guard must stay out of the way."""
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
-        repo.save(
-            repo.prepare_observation_envelope(
-                _observation(),
-                source_kind="operator_manual",
-                captured_at=_CAPTURED_AT,
-                source_metadata={"local_observation_kind": "operator_supplied"},
-            )
-        )
+        repo.save(repo.prepare_observation_envelope(
+            _observation(),
+            source_kind="operator_manual",
+            captured_at=_CAPTURED_AT,
+            source_metadata={"local_observation_kind": "operator_supplied"},
+        ))
 
-        repo.save(
-            repo.prepare_observation_envelope(
-                _observation(),
-                source_kind="app_filing",
-                captured_at=_CAPTURED_AT + timedelta(days=1),
-            )
-        )
+        repo.save(repo.prepare_observation_envelope(
+            _observation(),
+            source_kind="app_filing",
+            captured_at=_CAPTURED_AT + timedelta(days=1),
+        ))
 
         loaded = repo.load_observation("303", Period.from_year_and_code(2025, "1T"))
         assert loaded is not None
@@ -212,13 +200,11 @@ def test_an_empty_slot_accepts_a_non_official_write(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
 
-        repo.save(
-            repo.prepare_observation_envelope(
-                _observation(),
-                source_kind="app_filing",
-                captured_at=_CAPTURED_AT,
-            )
-        )
+        repo.save(repo.prepare_observation_envelope(
+            _observation(),
+            source_kind="app_filing",
+            captured_at=_CAPTURED_AT,
+        ))
 
         loaded = repo.load_observation("303", Period.from_year_and_code(2025, "1T"))
         assert loaded is not None

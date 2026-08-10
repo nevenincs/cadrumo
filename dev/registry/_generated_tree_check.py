@@ -12,7 +12,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from cadrumo.core import is_link_like
 from cadrumo.domain.calculations.registry import (
     ExportLayoutDefinition,
     RegistryError,
@@ -100,9 +99,9 @@ def check_generated_export_tree(
         context=context.validation,
         joined=joined,
         semantic_map=semantic_map,
+        rendered=rendered,
         render_profile=render_profile,
         render_profile_source_evidence=render_profile_source_evidence,
-        rendered=rendered,
     )
     published_layout = _load_exact_published_layout(
         published_export_root,
@@ -115,9 +114,9 @@ def check_generated_export_tree(
         semantic_map=semantic_map,
         target=context.validation.target,
         loaded_layout=published_layout,
+        field_derivations=rendered.field_derivations,
         render_profile=render_profile,
         render_profile_source_evidence=render_profile_source_evidence,
-        field_derivations=rendered.field_derivations,
     )
     if normalised_loader_semantics(published_layout) != normalised_loader_semantics(candidate.layout):
         raise RegistryValidationError("published export loader semantics do not match fresh generated semantics")
@@ -154,7 +153,7 @@ def _prepare_check_roots(context: GeneratedExportTreeCheckContext) -> tuple[Path
         root=candidate_registry_root,
         subject="generated check candidate revision root",
     )
-    if candidate_export_root.exists() or is_link_like(candidate_export_root):
+    if candidate_export_root.exists() or candidate_export_root.is_symlink() or candidate_export_root.is_junction():
         raise RegistryValidationError(
             f"generated check candidate export must be absent before fresh rendering: {candidate_export_root}",
         )
@@ -246,7 +245,7 @@ def _read_regular_tree_bytes(root: Path, *, subject: str) -> dict[str, bytes]:
 
     def visit(directory: Path) -> None:
         for child in sorted(directory.iterdir(), key=lambda path: path.name):
-            if is_link_like(child):
+            if child.is_symlink() or child.is_junction():
                 raise RegistryValidationError(f"{subject} contains a linked member: {child}")
             relative = child.relative_to(root).as_posix()
             if child.is_dir():
@@ -306,7 +305,7 @@ def _require_existing_link_free_descendant(path: Path, *, root: Path, subject: s
 
 
 def _require_existing_non_link(path: Path, *, subject: str) -> None:
-    if is_link_like(path):
+    if path.is_symlink() or path.is_junction():
         raise RegistryValidationError(f"{subject} must not be a link: {path}")
     if not path.exists():
         raise RegistryValidationError(f"{subject} is missing: {path}")
@@ -314,7 +313,7 @@ def _require_existing_non_link(path: Path, *, subject: str) -> None:
 
 def _require_no_obsolete_sibling_manifest(revision_root: Path, *, subject: str) -> None:
     obsolete = revision_root / "export.provenance.json"
-    if obsolete.exists() or is_link_like(obsolete):
+    if obsolete.exists() or obsolete.is_symlink() or obsolete.is_junction():
         raise RegistryValidationError(f"{subject} refuses obsolete sibling provenance manifest: {obsolete}")
 
 
@@ -327,7 +326,7 @@ def _require_no_obsolete_direct_paths(
     direct_modelo = target_registry_root / "modelos" / f"{modelo_id}.toml"
     direct_revision = target_registry_root / "modelos" / modelo_id / "revisions" / f"{revision_id}.toml"
     for path in (direct_modelo, direct_revision):
-        if path.exists() or is_link_like(path):
+        if path.exists() or path.is_symlink() or path.is_junction():
             raise RegistryValidationError(f"generated check refuses obsolete direct registry path: {path}")
 
 

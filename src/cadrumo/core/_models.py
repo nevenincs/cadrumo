@@ -4,7 +4,7 @@ Provides the canonical :data:`STRICT_FROZEN_CONFIG` used across domain,
 application, and adapter pydantic models that require strict-mode, frozen,
 no-extra-fields configuration. It is a :class:`pydantic.ConfigDict` value shared
 by records that need immutable boundary contracts, including
-:class:`domain.calculations.registry.RegistryModel`,
+:class:`domain.calculations.registry._schema_base.RegistryModel`,
 :class:`core._optional_extras.OptionalExtra`, and encrypted-storage
 envelope records.
 

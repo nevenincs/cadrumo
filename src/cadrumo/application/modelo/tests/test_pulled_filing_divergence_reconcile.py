@@ -414,33 +414,31 @@ def _persist_pulled_filing(
     returns; the write path exposes no parameter for it, so it is not a fixture
     choice to make.
     """
-    repository.save(
-        repository.prepare_observation_envelope(
-            RegistryModeloObservation(
+    repository.save(repository.prepare_observation_envelope(
+        RegistryModeloObservation(
+            modelo=_MODELO,
+            filing_year=_FILING_YEAR,
+            period=_PERIOD_CODE,
+            # ``filing_period`` is omitted because the model's own before-validator
+            # hydrates it from filing_year and period and then refuses any value
+            # inconsistent with them, so no differing value is constructible.
+            observations=registry_grounded_observations(
                 modelo=_MODELO,
                 filing_year=_FILING_YEAR,
                 period=_PERIOD_CODE,
-                # ``filing_period`` is omitted because the model's own before-validator
-                # hydrates it from filing_year and period and then refuses any value
-                # inconsistent with them, so no differing value is constructible.
-                observations=registry_grounded_observations(
-                    modelo=_MODELO,
-                    filing_year=_FILING_YEAR,
-                    period=_PERIOD_CODE,
-                    casilla_values=casilla_values,
-                ),
+                casilla_values=casilla_values,
             ),
-            source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
-            captured_at=_CAPTURED_AT,
-            stamped_revision_id=str(_law_resolved_revision().id),
-            source_metadata={
-                "aeat_register_status": "ALTA",
-                "aeat_expediente_id": _SYNTHETIC_EXPEDIENTE_ID,
-                "authenticated_identity": _SYNTHETIC_TAX_ID,
-                "aeat_justificante_csv": _SYNTHETIC_JUSTIFICANTE_CSV,
-            },
-        )
-    )
+        ),
+        source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
+        captured_at=_CAPTURED_AT,
+        stamped_revision_id=str(_law_resolved_revision().id),
+        source_metadata={
+            "aeat_register_status": "ALTA",
+            "aeat_expediente_id": _SYNTHETIC_EXPEDIENTE_ID,
+            "authenticated_identity": _SYNTHETIC_TAX_ID,
+            "aeat_justificante_csv": _SYNTHETIC_JUSTIFICANTE_CSV,
+        },
+    ))
 
 
 def test_no_pulled_filing_produces_no_findings(
@@ -503,7 +501,8 @@ def test_a_pulled_filing_against_an_empty_bucket_produces_no_findings(
         filed={subject.id: _FILED_AMOUNT},
     )
     assert [row.casilla_id for row in unscoped] == [subject.id], (
-        "the two sides must genuinely disagree without the scope, or this case proves nothing about the narrowing"
+        "the two sides must genuinely disagree without the scope, or this case proves "
+        "nothing about the narrowing"
     )
 
 

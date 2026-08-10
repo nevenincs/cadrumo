@@ -20,7 +20,7 @@ the register, not the observation catalogue.
 See Also:
     :func:`~application.prorrata_register.seed_carried_prior_definitiva_entry`
         Whole-entity carried seed sourced from the prior Modelo 303 observation.
-    :func:`~application.calculations.build_interrumpida_tres_ultimos_seed`
+    :func:`~application.calculations._prorrata_regularizacion.build_interrumpida_tres_ultimos_seed`
         The art. 105.Cinco interrupted-activity seed, already sector-parameterised.
     :func:`~domain.iva.compute_prorrata_definitiva_anual`
         Pure substrate that computes the year-end definitive percentage from the

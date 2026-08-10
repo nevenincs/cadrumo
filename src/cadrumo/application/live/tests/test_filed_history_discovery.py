@@ -524,6 +524,7 @@ def _filed_130_observation_for_tests():
     from ....core import CasillaValueKind
     from ....core.config import Settings
 
+
     body = b"130-2026-1T-submitted-file"
     external = Settings.external_constants().aeat
     url = f"{external.domains.www6}{external.sede_paths.declarations_listing}"

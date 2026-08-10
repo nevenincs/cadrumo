@@ -199,7 +199,6 @@ def _readiness_lines(
     period: str | None,
 ) -> list[str]:
     export_context = _export_readiness_context(report)
-    export_ready = export_context is None
     lines = [
         f"profile_id\t{report.profile_id}",
         f"modelo\t{modelo}",
@@ -224,19 +223,32 @@ def _readiness_lines(
             f"aeat app modelo bindings list --modelo {modelo} --year {filing_year} "
             f"--period {command_period} --missing",
         )
-    lines.extend(
-        [
-            f"ledger_preflight_required\t{report.ledger_preflight_required}",
-            f"ledger_ready\t{report.ledger_ready if report.ledger_ready is not None else ''}",
-            "ledger_ready_scope\ttransaction_preflight_only",
-            f"ledger_period\t{report.ledger_period or ''}",
-            f"ledger_checked\t{report.ledger_checked_transaction_count}",
-            f"ledger_issues\t{len(report.ledger_issues)}",
-            f"export_ready\t{export_ready}",
-            f"export_refusal\t{export_context['reason'] if export_context is not None else ''}",
-            _readiness_finish_line(export_context),
-        ],
-    )
+    lines.extend(_readiness_ledger_export_lines(report, export_context))
+    lines.extend(_readiness_detail_lines(report))
+    if _ledger_ready_but_bindings_missing(report):
+        lines.append(
+            "readiness_note\tledger_ready only means the period ledger rows passed transaction preflight; "
+            "missing_bindings/source_binding_ready still decide source completeness.",
+        )
+    return lines
+
+
+def _readiness_ledger_export_lines(report, export_context) -> list[str]:
+    return [
+        f"ledger_preflight_required\t{report.ledger_preflight_required}",
+        f"ledger_ready\t{report.ledger_ready if report.ledger_ready is not None else ''}",
+        "ledger_ready_scope\ttransaction_preflight_only",
+        f"ledger_period\t{report.ledger_period or ''}",
+        f"ledger_checked\t{report.ledger_checked_transaction_count}",
+        f"ledger_issues\t{len(report.ledger_issues)}",
+        f"export_ready\t{export_context is None}",
+        f"export_refusal\t{export_context['reason'] if export_context is not None else ''}",
+        _readiness_finish_line(export_context),
+    ]
+
+
+def _readiness_detail_lines(report) -> list[str]:
+    lines: list[str] = []
     for requirement in report.missing:
         legal_refs = ", ".join(requirement.legal_refs) or "-"
         modelos = ", ".join(requirement.modelos) or "-"
@@ -244,15 +256,14 @@ def _readiness_lines(
             f"{requirement.section_key}.{requirement.field_key}\t{requirement.selector}\t"
             f"{requirement.label}\t{legal_refs}\t{modelos}",
         )
-    for binding in report.missing_bindings:
-        lines.append(f"missing_binding\t{binding.binding_id}\t{binding.source}\t{binding.input_channel}")
-    for issue in report.ledger_issues:
-        lines.append(f"ledger_issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}")
-    if _ledger_ready_but_bindings_missing(report):
-        lines.append(
-            "readiness_note\tledger_ready only means the period ledger rows passed transaction preflight; "
-            "missing_bindings/source_binding_ready still decide source completeness.",
-        )
+    lines.extend(
+        f"missing_binding\t{binding.binding_id}\t{binding.source}\t{binding.input_channel}"
+        for binding in report.missing_bindings
+    )
+    lines.extend(
+        f"ledger_issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}"
+        for issue in report.ledger_issues
+    )
     return lines
 
 

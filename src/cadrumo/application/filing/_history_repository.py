@@ -16,7 +16,7 @@ See Also:
         Strict payload persisted by this repository.
     :mod:`application.filing._runtime_repository`
         Active-profile bucket resolution and runtime secure-object creation.
-    :class:`domain.modelos.ModeloRecordCatalogueRepository`
+    :class:`adapters.persistence.profile.modelos_filing.ModeloRecordCatalogueRepository`
         FINANCIAL-class repository for authoritative work-unit filing records.
     :data:`adapters.persistence.storage.APPLICATION_FILING_HISTORY_NAMESPACE`
         Namespace, sensitivity, schema-version, and object-key contract for
@@ -62,7 +62,7 @@ class ModeloHistoryRepository(SecureBoundRepository[ModeloHistory]):
     See Also:
         :class:`ModeloHistory`
             Strict payload stored by this repository.
-        :class:`domain.modelos.ModeloRecordCatalogueRepository`
+        :class:`adapters.persistence.profile.modelos_filing.ModeloRecordCatalogueRepository`
             FINANCIAL-class filing-record catalogue for current and superseded
             work-unit lifecycle records.
     """

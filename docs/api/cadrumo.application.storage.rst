@@ -14,3 +14,4 @@ Subpackages
    :maxdepth: 4
 
    cadrumo.application.storage.calc_sheets
+   cadrumo.application.storage.sync_runs

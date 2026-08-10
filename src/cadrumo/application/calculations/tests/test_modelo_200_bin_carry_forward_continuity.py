@@ -115,23 +115,21 @@ _CLOCK = datetime(2027, 1, 20, 9, 0, 0, tzinfo=UTC)
 
 def _seed_m200_bin_stock(*, source_year: int, stock: Decimal, obs_repo: CalculationObservationRepository) -> None:
     """Record a prior-year M200 end-of-year BIN stock (casilla 00671)."""
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            RegistryModeloObservation(
+    obs_repo.save(obs_repo.prepare_observation_envelope(
+        RegistryModeloObservation(
+            modelo=_MODELO_200,
+            filing_year=source_year,
+            period="0A",
+            observations=registry_grounded_observations(
                 modelo=_MODELO_200,
                 filing_year=source_year,
                 period="0A",
-                observations=registry_grounded_observations(
-                    modelo=_MODELO_200,
-                    filing_year=source_year,
-                    period="0A",
-                    casilla_values={_M200_BIN_PENDIENTE_FUTUROS: stock},
-                ),
+                casilla_values={_M200_BIN_PENDIENTE_FUTUROS: stock},
             ),
-            source_kind="app_filing",
-            captured_at=_CLOCK,
-        )
-    )
+        ),
+        source_kind="app_filing",
+        captured_at=_CLOCK,
+    ))
 
 
 def _calculate_200(

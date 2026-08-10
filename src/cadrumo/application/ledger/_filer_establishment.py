@@ -86,7 +86,6 @@ authority's ``domicilio_fiscal``, which is why the recovery the refusal names is
 a censal read rather than a hand-entered value.
 """
 
-
 def resolve_filer_territorial_scope(
     *,
     profile_record: UserProfileRecord | None,

@@ -124,20 +124,11 @@ def validate_fixed_width_shape(field: _ExportField) -> None:
     }[field.padding]
     if field.justification is not expected:
         raise RegistryValidationError(
-            f"export field {field.id!r} padding {field.padding.value!r} requires justification {expected.value!r}",
+            f"export field {field.id!r} padding {field.padding.value!r} requires "
+            f"justification {expected.value!r}",
         )
-    if field.signed and field.data_type != "money":
-        raise RegistryValidationError(
-            f"export field {field.id!r} can declare signed only for money data",
-        )
-    if field.signed and field.length < 2:
-        raise RegistryValidationError(f"signed export field {field.id!r} requires at least two bytes")
-    if field.signed and (
-        field.padding is not ExportPadding.LEFT_ZERO or field.justification is not ExportJustification.RIGHT
-    ):
-        raise RegistryValidationError(
-            f"signed export field {field.id!r} requires left-zero padding and right justification",
-        )
+    if field.signed:
+        _validate_signed_shape(field)
 
 
 def render_fixed_width_export_field(field: _ExportField, value: object) -> str:
@@ -151,26 +142,7 @@ def render_fixed_width_export_field(field: _ExportField, value: object) -> str:
         value = field.literal
     value = project_export_value(field.value_policy, value)
     _require_allowed_value(field, value)
-    if field.data_type == "money":
-        rendered = _render_money(field, value)
-    elif field.data_type == "decimal":
-        if field.decimals is None:
-            raise RegistryValidationError(f"decimal export field {field.id!r} must declare decimals")
-        rendered = _render_scaled_numeric(field, value, scale=field.decimals)
-    elif field.data_type == "integer":
-        rendered = _render_integer(field, value)
-    elif field.data_type == "boolean":
-        rendered = _pad(field, _render_boolean(value))
-    else:
-        if value is None:
-            text = ""
-        elif isinstance(value, str):
-            text = value
-        else:
-            raise RegistryValidationError(
-                f"export field {field.id!r} {field.data_type!r} value must be text or absent",
-            )
-        rendered = _pad(field, text)
+    rendered = _render_typed_value(field, value)
     validate_export_wire_value(field.value_policy, rendered)
     return rendered
 
@@ -197,26 +169,7 @@ def parse_fixed_width_export_field(
         if raw != expected:
             raise RegistryValidationError(f"export literal field {field.id!r} does not match the registry layout")
         return field.literal
-    parsed: ParsedExportPolicyValue
-    if field.data_type == "money":
-        parsed = _parse_scaled_numeric(field, raw, scale=2)
-    elif field.data_type == "decimal":
-        if field.decimals is None:
-            raise RegistryValidationError(f"decimal export field {field.id!r} must declare decimals")
-        parsed = _parse_scaled_numeric(field, raw, scale=field.decimals)
-    elif field.data_type == "integer":
-        parsed = _parse_integer(field, raw)
-    elif field.data_type == "boolean":
-        text = _unpad(field, raw)
-        if text == "":
-            parsed = None
-        elif text == "X":
-            parsed = True
-        else:
-            raise RegistryValidationError("boolean export field must contain canonical X or blank wire data")
-    else:
-        text = _unpad(field, raw)
-        parsed = text if text else None
+    parsed: ParsedExportPolicyValue = _parse_typed_value(field, raw)
     _require_allowed_value(field, parsed)
     parsed = normalize_parsed_export_policy_value(field.value_policy, raw, parsed)
     if field.value_policy is None and render_fixed_width_export_field(field, parsed) != raw:
@@ -249,6 +202,73 @@ def pad_fixed_width_text(
     if justification is not ExportJustification.LEFT:
         raise RegistryValidationError("right-space padding requires left justification")
     return value.ljust(length, " ")
+
+
+def _validate_signed_shape(field: _ExportField) -> None:
+    """Refuse a signed declaration the fixed-width sign marker cannot carry."""
+    assert field.length is not None
+    if field.data_type != "money":
+        raise RegistryValidationError(
+            f"export field {field.id!r} can declare signed only for money data",
+        )
+    if field.length < 2:
+        raise RegistryValidationError(f"signed export field {field.id!r} requires at least two bytes")
+    if field.padding is not ExportPadding.LEFT_ZERO or field.justification is not ExportJustification.RIGHT:
+        raise RegistryValidationError(
+            f"signed export field {field.id!r} requires left-zero padding and right justification",
+        )
+
+
+def _require_decimals(field: _ExportField) -> int:
+    if field.decimals is None:
+        raise RegistryValidationError(f"decimal export field {field.id!r} must declare decimals")
+    return field.decimals
+
+
+def _render_typed_value(field: _ExportField, value: object) -> str:
+    """Render one already-projected value under the field's declared data type."""
+    if field.data_type == "money":
+        return _render_money(field, value)
+    if field.data_type == "decimal":
+        return _render_scaled_numeric(field, value, scale=_require_decimals(field))
+    if field.data_type == "integer":
+        return _render_integer(field, value)
+    if field.data_type == "boolean":
+        return _pad(field, _render_boolean(value))
+    return _pad(field, _render_text(field, value))
+
+
+def _parse_typed_value(field: _ExportField, raw: str) -> ParsedExportPolicyValue:
+    """Parse one padded wire value under the field's declared data type."""
+    if field.data_type == "money":
+        return _parse_scaled_numeric(field, raw, scale=2)
+    if field.data_type == "decimal":
+        return _parse_scaled_numeric(field, raw, scale=_require_decimals(field))
+    if field.data_type == "integer":
+        return _parse_integer(field, raw)
+    if field.data_type == "boolean":
+        return _parse_boolean(field, raw)
+    text = _unpad(field, raw)
+    return text if text else None
+
+
+def _render_text(field: _ExportField, value: object) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value
+    raise RegistryValidationError(
+        f"export field {field.id!r} {field.data_type!r} value must be text or absent",
+    )
+
+
+def _parse_boolean(field: _ExportField, raw: str) -> bool | None:
+    text = _unpad(field, raw)
+    if text == "":
+        return None
+    if text == "X":
+        return True
+    raise RegistryValidationError("boolean export field must contain canonical X or blank wire data")
 
 
 def _coerce_numeric(field: _ExportField, value: object) -> Decimal:

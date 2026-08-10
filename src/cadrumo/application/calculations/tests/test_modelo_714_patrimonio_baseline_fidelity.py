@@ -202,14 +202,8 @@ def test_both_years_base_exceeds_filing_obligation_threshold(tmp_path: Path) -> 
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
-        repo.save(
-            repo.prepare_observation_envelope(_year_n_observation(), source_kind="app_filing", captured_at=_CLOCK_N)
-        )
-        repo.save(
-            repo.prepare_observation_envelope(
-                _year_n_plus_1_observation(), source_kind="app_filing", captured_at=_CLOCK_N_PLUS_1
-            )
-        )
+        repo.save(repo.prepare_observation_envelope(_year_n_observation(), source_kind="app_filing", captured_at=_CLOCK_N))
+        repo.save(repo.prepare_observation_envelope(_year_n_plus_1_observation(), source_kind="app_filing", captured_at=_CLOCK_N_PLUS_1))
         loaded_n = _find_observation(repo, filing_year=_YEAR_N, period="0A")
         loaded_n1 = _find_observation(repo, filing_year=_YEAR_N_PLUS_1, period="0A")
 

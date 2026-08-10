@@ -18,10 +18,10 @@ key computed outputs.
 This is a presentation summary only. It does not derive the fichero
 ``Tipo de declaración`` result disposition, apply Modelo 303 refund elections,
 or decide cross-period carry-forward; that single determined fact belongs to
-:func:`cadrumo.application.modelo.resolve_modelo_result_disposition`.
+:func:`application.modelo._result_disposition_resolution.resolve_modelo_result_disposition`.
 
 See Also:
-    :func:`cadrumo.application.modelo.resolve_modelo_result_disposition`
+    :func:`application.modelo._result_disposition_resolution.resolve_modelo_result_disposition`
         Determines the filed result disposition that export and carry-forward
         persistence read.
     :func:`cadrumo.application.filing.summarise_calculation`

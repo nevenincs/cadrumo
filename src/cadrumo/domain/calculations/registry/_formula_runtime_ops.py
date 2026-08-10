@@ -235,7 +235,7 @@ def resolve_bracket(
 def resolve_parameter(parameter: ParameterDefinition, date_context: Mapping[str, date]) -> Decimal:
     """Resolve one dated value from a :class:`ParameterDefinition`.
 
-    Exactly one :class:`~domain.calculations.registry.DatedValue` must match
+    Exactly one :class:`~domain.calculations.registry._schema_formula.DatedValue` must match
     the selected date axes for the parameter lookup to be deterministic.
     """
     if not parameter.values:

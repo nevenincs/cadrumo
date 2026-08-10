@@ -4,7 +4,7 @@ A logical profile fragments across a bucket directory, a plaintext
 :class:`~cadrumo.adapters.persistence.storage.bucket.BucketManifest`, an
 encrypted :class:`~cadrumo.domain.user_profile.UserProfileRecord` row in a
 per-bucket SQLite database, and an append-only
-:class:`~cadrumo.domain.buckets.BucketEventHistoryRepository`.
+:class:`~adapters.persistence.profile.buckets.BucketEventHistoryRepository`.
 The :class:`ProfileRepository` owns cross-store aggregate ordering. The shared
 reentrant active-profile pointer transaction coordinates same-root pointer
 access, while the core pointer API owns byte-level persistence. Creation writes

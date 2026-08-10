@@ -222,27 +222,25 @@ def _seed_prior_m200_closing_stock(*, obs_repo: CalculationObservationRepository
     historical filing the ``filing_year_delta = -1`` carries fold into the current
     ejercicio.
     """
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            RegistryModeloObservation(
+    obs_repo.save(obs_repo.prepare_observation_envelope(
+        RegistryModeloObservation(
+            modelo=_M200,
+            filing_year=_PRIOR_YEAR,
+            period="0A",
+            observations=registry_grounded_observations(
                 modelo=_M200,
                 filing_year=_PRIOR_YEAR,
                 period="0A",
-                observations=registry_grounded_observations(
-                    modelo=_M200,
-                    filing_year=_PRIOR_YEAR,
-                    period="0A",
-                    casilla_values={
-                        _PRIOR_BIN_PENDIENTE_FUTUROS: _PRIOR_BIN_STOCK,
-                        _PRIOR_SALDO_FINAL_NO_CUMPLIDO: _PRIOR_DOTACIONES_NO_CUMPLIDO,
-                        _PRIOR_SALDO_FINAL_CUMPLIDO: _PRIOR_DOTACIONES_CUMPLIDO,
-                    },
-                ),
+                casilla_values={
+                    _PRIOR_BIN_PENDIENTE_FUTUROS: _PRIOR_BIN_STOCK,
+                    _PRIOR_SALDO_FINAL_NO_CUMPLIDO: _PRIOR_DOTACIONES_NO_CUMPLIDO,
+                    _PRIOR_SALDO_FINAL_CUMPLIDO: _PRIOR_DOTACIONES_CUMPLIDO,
+                },
             ),
-            source_kind=APP_FILING_SOURCE_KIND,
-            captured_at=_T0,
-        )
-    )
+        ),
+        source_kind=APP_FILING_SOURCE_KIND,
+        captured_at=_T0,
+    ))
 
 
 def _seed_zero_m202_pagos(*, obs_repo: CalculationObservationRepository) -> None:
@@ -255,26 +253,24 @@ def _seed_zero_m202_pagos(*, obs_repo: CalculationObservationRepository) -> None
     the cross-year BIN / dotaciones carries the sole subject of the assertions.
     """
     for period in _M202_PAGO_PERIODS:
-        obs_repo.save(
-            obs_repo.prepare_observation_envelope(
-                RegistryModeloObservation(
+        obs_repo.save(obs_repo.prepare_observation_envelope(
+            RegistryModeloObservation(
+                modelo=_M202,
+                filing_year=_FILING_YEAR,
+                period=period,
+                observations=registry_grounded_observations(
                     modelo=_M202,
                     filing_year=_FILING_YEAR,
                     period=period,
-                    observations=registry_grounded_observations(
-                        modelo=_M202,
-                        filing_year=_FILING_YEAR,
-                        period=period,
-                        casilla_values={
-                            _M202_PAGO_OUTPUT: Decimal("0"),
-                            _M202_PAGO_OUTPUT_40_2: Decimal("0"),
-                        },
-                    ),
+                    casilla_values={
+                        _M202_PAGO_OUTPUT: Decimal("0"),
+                        _M202_PAGO_OUTPUT_40_2: Decimal("0"),
+                    },
                 ),
-                source_kind=APP_FILING_SOURCE_KIND,
-                captured_at=_T0,
-            )
-        )
+            ),
+            source_kind=APP_FILING_SOURCE_KIND,
+            captured_at=_T0,
+        ))
 
 
 def _calculate_m200(
