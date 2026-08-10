@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#canonical-identifiers'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:baf7c872e5137f46337589d48ee09b260c633ef44bac7389711e5f361f515faf'
+body_hash: 'sha256:3dc2c34809c502efbc081ef6722f66cde607e8bda7e0d5f15dc43e377ddd96ef'
 related:
   - "[[2026-08-07-canonical-identifiers-reference]]"
   - "[[2026-08-07-justificante-identity-matching-adr]]"
@@ -618,3 +618,155 @@ assumed complete.
   the ratchet gate is considered to describe the full surface; the ratchet
   gate itself still gates on the property, not a count, per the original
   Implementation.
+
+
+## Amendment (2026-08-10): the CSV half of Option 3's rejection rests on a falsified premise
+
+### What was claimed, and what is actually true
+
+Three places in this record carry one claim, taken from
+`2026-08-07-canonical-identifiers-reference` item 1: that the loosest CSV
+type (`JustificanteCsv`, 4-64, no pattern) "is the one proven to parse real
+live-captured receipts".
+
+- Considerations, third bullet.
+- Considered options item 3, the outright rejection of immediate tightening.
+- Rationale, "Option 3 (immediate tightening) was rejected on direct
+  evidence".
+
+**The claim is false, and the distinction it collapses is the whole defect.**
+`JustificanteCsv` is the field type standing on the parse path, so real
+receipts do flow through it - that much is true and is all the reference
+actually observed. It was then read as the stronger claim that the loose
+bound is *required* by the artefacts. Nothing in this repository requires it.
+The evidence separating the two was already committed when this record was
+written; it was never consulted.
+
+### The measurement, re-derived independently for this amendment
+
+**Real AEAT-issued values.** Three, captured from live Sede sessions against
+one taxpayer's IRPF filings for 2021, 2022 and 2023 and byte-identical
+across two independent capture rounds (`2026-04-25-aeat-verify-research`,
+`2026-04-26-aeat-verify-audit`): `FNBB57PE9KZ5TN4R`, `MZRSYDRL5JMPJPRT`,
+`TUD4V9XAUV7QJ8QV`. Each is exactly sixteen uppercase alphanumeric
+characters. Each clears `core/_aeat_csv.py`'s 8-32 uppercase-alphanumeric
+contract with eight characters of headroom below and sixteen above.
+
+**Controls, run against the same instrument.** `tiny`, `CSV-ORIG-001` and
+`abcdefgh` are each refused by that bound - on length, on character class and
+on case respectively. The instrument discriminates, so a clean pass on the
+three real values is information rather than an artefact of a matcher that
+accepts everything.
+
+**The committed fixture corpus is not empty of CSVs**, contrary to the
+implementing plan's stronger restatement. The 60 parser-anchor justificante
+PDFs under `src/cadrumo/tests/fixtures/justificantes/` carry 34 distinct CSV
+tokens, drawn into the page body by their generators
+(`_generate_modelo_100_corpus.py:310,336`; `_generate_base.py:75-101,143`)
+and recorded in each sidecar's `replacements_applied`. Every one of the 34 is
+exactly sixteen uppercase alphanumeric characters.
+
+**The replay this record defers already ships, already runs, and already
+asserts a bound tighter than the one it defers.**
+`adapters/inbound/justificante/tests/test_corpus_sidecar_roundtrip.py`
+carries `pytestmark = [unit, hex_inbound_adapter]`, so it is selected by the
+default lane. It parses every fixture and asserts, per fixture,
+`record.csv.isalnum() and record.csv.isupper()` and
+`8 <= len(record.csv) <= 24` (lines 244-249). The parse path the reference
+cited as proof of the loose type is the same path that has been enforcing
+uppercase-alphanumeric and a length floor of eight the whole time.
+
+**A third, independent corroboration of the shape.**
+`dev/sanitizer/_records.py::CsvReplacement` refuses any synthetic CSV that is
+not exactly sixteen uppercase alphanumeric characters, with its own refusal
+cases (`csv-short`, `csv-lowercase`). It is a component that handles real
+captured documents and it encodes the same observation without reference to
+this campaign.
+
+### Consequent rulings
+
+**1. Option 3's CSV rejection is withdrawn.** `core/_aeat_csv.py`'s 8-32 plus
+uppercase-alphanumeric pattern is canonical for the CSV namespace, and
+`JustificanteCsv`'s 4-64-no-pattern bound is retired rather than kept as a
+second opinion. `AeatCsv` takes the 8-32 shape. Note what this does and does
+not tighten: the retype does tighten the FIELD, but it cannot break the parse
+path, because everything that path is proven to produce already satisfies
+8-24, which is strictly inside 8-32.
+
+**2. Option 3's `expediente_id` rejection STANDS, unamended.** That bound
+genuinely is an observed range on external variability, its own module
+comment says so, and its correct disposition is a discriminated provenance
+pair rather than a tightening - a separate open decision, not this
+amendment's business. **A reader must not generalise this CSV correction into
+a licence to tighten the other AEAT-issued namespaces.** The substitutability
+pre-filter selects the tighter type here for reasons specific to CSV and to
+nothing else.
+
+**3. The Constraint reading "CSV's stored representation MUST NOT change in
+the same Step that promotes it into `core/identity/`" is HALF discharged.**
+Its evidence gate on real-receipt parsing is satisfied by the measurement
+above. Its storage-key-orphaning half is untouched and still binds: the
+justificante secure-object key is the CSV value verbatim, so enumerating
+every derived key (`W02.P03.S14`) remains a precondition of the retype.
+
+**4. Implementation Step 3's own wording was wrong in two further details.**
+It calls for replaying "the two real captured receipt fixtures already in the
+corpus". There are three real captured values, not two; and they are recorded
+as *values* in this vault's research and audit records, not as receipt
+*artefacts* in the committed corpus - the captured PDFs lived in an untracked
+scratch directory and the committed corpus is synthetic. That distinction is
+precisely why the evidence was missed twice.
+
+### The failure mode, named so it is not repeated
+
+Both misses are one error: **a census that looks for the container and
+concludes the content does not exist.** The reference looked for a type that
+parses real receipts and found the one standing on the path. The plan's
+`W02.P03` re-planning note looked for captured justificante PDFs, found only
+`synthetic_generated` fixtures, and escalated the conclusion from "no
+artefact" to "no empirical grounding exists or can be obtained", and then to
+"no fixture of ANY provenance carries a CSV token at all" - which the 34
+tokens above falsify directly. Each step was locally reasonable and each
+widened the claim. Search for the value, not only for the artefact that
+carried it.
+
+### The control the retype must pass, and the limit on this evidence
+
+**A ruling that a bound is correct is not a measurement of whom it refuses.**
+A literal sweep of `csv="..."` assignments across `src` and `dev` finds nine
+distinct values the 8-32 bound refuses: `CSV-ACK-1`, `CSV-ORIG-001`,
+`CSV123`, `CSVREG-303-2025-1T`, `JUST-2025-130-2T-KINDS`,
+`JUST-2025-303-1T-RECT-WIZARD`, `JUST-2025-303-2T-RECT-HANDBUILT`,
+`JUST-303-2025-1T` and `OTHER`. All nine are synthetic placeholders in test
+modules and none is an AEAT-issued value. **That count is a FLOOR, not a
+census** - a literal sweep cannot see a value passed positionally, built by
+an f-string, or bound to a module-level constant, so the run is the arbiter.
+The retype's close condition is therefore not "the new refusal fires" but
+"the legitimate population still passes": the corpus roundtrip regression
+above must stay green across all 60 fixtures, and the refused set at run time
+must contain no value of AEAT provenance.
+
+**The limit, stated rather than buried.** Three real values from one
+taxpayer's IRPF filings is a narrow sample, and the 34 fixture tokens are
+synthetic and share one generator, so they corroborate the shape this project
+chose rather than independently sampling what AEAT issues. What makes 8-32
+safe is the margin and the risk asymmetry, not the sample size: every
+observed value sits at sixteen characters, mid-window, and what
+4-64-no-pattern uniquely admits is `tiny` and `CSV-ORIG-001` as filing
+evidence. Anyone revisiting this decision must weigh that sentence rather
+than the count of supporting values.
+
+### Implementing rows opened by this amendment
+
+This amendment rules on code and is not self-executing. `W02.P03.S13` and
+`W02.P03.S22` in `2026-08-07-canonical-identifiers-plan` are rewritten in the
+same action, because both were authored on the falsified premise in its
+strongest form and would otherwise instruct an executor to record in a Step
+record that no empirical grounding was possible. `W02.P03.S23` is resolved
+rather than left standing as OBSOLETE AS WRITTEN. Additionally the retype
+(`W02.P03.S17`) must delete `JustificanteCsv`'s own docstring claim that the
+receipt domain "owns the bound because it owns the artefact the value is read
+from": that sentence asserts the ownership this amendment overturns, and
+leaving it standing over a retyped alias would reproduce the defect at source
+level, where the next reader meets it first.
+
