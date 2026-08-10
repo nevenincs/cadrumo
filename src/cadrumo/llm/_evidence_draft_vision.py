@@ -198,7 +198,7 @@ class LocalVisionDocumentTranscriber:
             # forwarding that identifier to another vendor asks for a model it
             # does not serve. Refuse rather than send a name that cannot resolve.
             msg = f"a vision model must be named explicitly for provider {provider.value!r}; no default exists for it"
-            raise LLMConfigError(msg, suggestion="pass model=<vendor vision model id>")
+            raise LLMConfigError(msg)
         else:
             self._model = model
         # A local vision model on consumer hardware can take minutes; give the
@@ -283,7 +283,6 @@ class LocalVisionDocumentTranscriber:
         if not evidence_images:
             raise PurchaseInvoiceEvidenceInputError(
                 "vision transcription was given no pages to read",
-                suggestion="aeat app ledger evidence list",
             )
         request = LLMRequest(
             prompt=self._prompt.template,
@@ -299,7 +298,6 @@ class LocalVisionDocumentTranscriber:
             raise PurchaseInvoiceEvidenceInputError(
                 "the vision model returned no text for this document, so it was not read and nothing "
                 "was guessed from it",
-                suggestion="aeat config provision pull",
             )
         return DocumentTranscription(
             text=text,

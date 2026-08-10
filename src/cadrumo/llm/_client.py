@@ -24,17 +24,15 @@ from pydantic import BaseModel, ConfigDict, Field, SecretStr
 from ..core.config import Settings
 from ..core.errors import get_registered_error_code
 from ..core.hashing import content_hash_hex
-from ..core.i18n import tr
 from ..core.logging import get_logger
 from ..core.time import now
-from ._consent import EVIDENCE_CONSENT_REFUSAL_LOCALE_KEY, provider_reads_off_host
+from ._consent import provider_reads_off_host
 from ._errors import (
     LLMBusyError,
     LLMCacheError,
     LLMConfigError,
     LLMConsentError,
     LLMContentionError,
-    LLMError,
     LLMRateLimitError,
 )
 
@@ -516,7 +514,6 @@ class LLMClient:
                 self._require_load_headroom(provider, provider_request.model)
                 completion = await self._complete_with_retries(adapter, provider_request)
         except Exception as exc:  # LLM provider adapters surface heterogeneous exceptions; log+re-raise here
-            self._attach_local_degradation_remediation(exc, provider=provider, model=model)
             _LOGGER.error(
                 "llm request failed provider=%s model=%s request_id=%s",
                 provider.value,
@@ -626,59 +623,7 @@ class LLMClient:
             return
         raise LLMContentionError(
             message=snapshot.detail or f"loading {model!r} was refused: this machine has no measured headroom",
-            suggestion=snapshot.remediation or None,
             context={"model": model, "causes": ", ".join(cause.value for cause in snapshot.causes)},
-        )
-
-    @staticmethod
-    def _attach_local_degradation_remediation(
-        exc: BaseException,
-        *,
-        provider: LLMProvider,
-        model: str,
-    ) -> None:
-        """Give an on-host degradation the remediation that resolves it.
-
-        Local degradation -- the runtime is not running, the model was never
-        pulled, it is still loading, it died mid-read -- reaches the operator as
-        a transport failure whose text says a connection failed. That is true
-        and useless: the operator needs the verb, and this CLI's operator is an
-        agent that will follow whatever next step it is given, or invent one if
-        given none.
-
-        **The remediation names the provision verb and nothing else.** Where the
-        deployment has a cloud route configured, naming it here would read as
-        the offered next step, and the agent-operator would take it -- turning a
-        local outage into an off-host read of a taxpayer's document that nobody
-        chose. The consent gate would still refuse an evidence-marked request,
-        but a refusal is not the right last line of defence for a suggestion
-        that should never have been written; a non-evidence request would not
-        even meet that gate.
-
-        ``verify`` leads because it DIAGNOSES: this layer cannot tell an absent
-        model from a stopped runtime from a slow load, and ``verify`` reports
-        exactly which of the three it is, while ``pull`` would be wrong advice
-        in two of the three cases and would start a multi-gigabyte download in
-        one of them.
-
-        Attaches rather than wraps. The failure's type is the transport's honest
-        answer and callers already dispatch on it; replacing it to add a string
-        would trade a true classification for a presentational one. An error
-        that already carries its own suggestion keeps it -- a nearer layer knew
-        something more specific.
-
-        Args:
-            exc: The failure about to be re-raised.
-            provider: The provider this dispatch ran at.
-            model: The resolved model, named in the remediation.
-        """
-        if provider_reads_off_host(provider) or not isinstance(exc, LLMError):
-            return
-        if getattr(exc, "suggestion", None):
-            return
-        exc.suggestion = (
-            f"aeat config provision verify --model {model}  "
-            f"(then 'aeat config provision pull --model {model}' if it is not installed)"
         )
 
     @staticmethod
@@ -802,11 +747,6 @@ class LLMClient:
             )
             raise LLMBusyError(
                 message=msg,
-                suggestion=(
-                    "Retry once the running read finishes. Raise "
-                    "CADRUMO_LLM_LOCAL_INFERENCE_CONCURRENCY only on a machine with "
-                    "headroom for a second simultaneous model load."
-                ),
             )
         try:
             yield
@@ -875,7 +815,6 @@ class LLMClient:
             raise LLMConsentError(
                 translated_message=_EVIDENCE_CONSENT_DISPATCH_REFUSAL_LOCALE_KEY,
                 context={"provider": provider.value},
-                suggestion=tr(EVIDENCE_CONSENT_REFUSAL_LOCALE_KEY),
             )
         self.consent_ledger.append(
             evidence_content_address=token.evidence_content_address,
@@ -946,10 +885,6 @@ class LLMClient:
         )
         raise LLMConfigError(
             message=msg,
-            suggestion=(
-                "Route the vision read at a provider that forwards images "
-                "(set CADRUMO_LLM_PROVIDER, or pass provider_override on the request)."
-            ),
         )
 
     def _record_run_telemetry(
@@ -1016,7 +951,7 @@ class LLMClient:
             try:
                 require_optional_extra(ANTHROPIC_EXTRA)
             except MissingOptionalExtraError as exc:
-                raise LLMConfigError(message=str(exc), suggestion=exc.install_hint) from exc
+                raise LLMConfigError(message=str(exc)) from exc
             from ._providers.anthropic import AnthropicAdapter
 
             return AnthropicAdapter(

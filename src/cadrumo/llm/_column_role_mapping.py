@@ -510,7 +510,6 @@ class SemanticColumnRoleMapper:
         if not selection.selected or selection.runtime_id is None:
             raise LLMConfigError(
                 message=selection.detail or "no catalogued model can serve the tabular-mapping role on this machine",
-                suggestion=selection.remediation or None,
             )
         return selection.runtime_id
 
