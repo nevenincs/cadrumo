@@ -6,7 +6,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:77a4242e7b1aa6290b2dea68bd7fdf16080ada1c7f1e06ddb3fce0bd24cb4348'
+body_hash: 'sha256:debb4aec65848f94d3d0b66a2104220b4b79e1c75d4afd9591349e2733896b52'
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P01-S01]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P01-S02]]'
@@ -19,6 +19,7 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W02-P03-S07]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W02-P03-S08]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W02-P03-S09]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-W02-P03-S32]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W02-P03-S37]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W02-P03-S38]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W02-P03-S40]]'
@@ -34,6 +35,7 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S35]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S36]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S39]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S42]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-m303-retired-revision-s39-audit]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
@@ -64,6 +66,9 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-s38-fixed-width-codec-audit]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-s40-allowed-values-audit]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-s41-singleton-value-policy-audit]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-s42-semantic-map-fragment-loader-audit]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-s43-variable-envelope-recognition-audit]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-semantic-map-fragment-loader-reference]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-source-authority-research]]'
 ---
 
@@ -106,6 +111,8 @@ Auto-generated index of all documents tagged with `#aeat-export-fragment-generat
 - `2026-08-10-aeat-export-fragment-generator-authority-s38-fixed-width-codec-audit` - `aeat-export-fragment-generator-authority` audit: `s38 fixed width codec`
 - `2026-08-10-aeat-export-fragment-generator-authority-s40-allowed-values-audit` - `aeat-export-fragment-generator-authority` audit: `s40 allowed values`
 - `2026-08-10-aeat-export-fragment-generator-authority-s41-singleton-value-policy-audit` - `aeat-export-fragment-generator-authority` audit: `s41 singleton value policy`
+- `2026-08-10-aeat-export-fragment-generator-authority-s42-semantic-map-fragment-loader-audit` - `aeat-export-fragment-generator-authority` audit: `s42 semantic map fragment loader`
+- `2026-08-10-aeat-export-fragment-generator-authority-s43-variable-envelope-recognition-audit` - `aeat-export-fragment-generator-authority` audit: `s43 variable envelope recognition`
 
 ### exec
 
@@ -120,6 +127,7 @@ Auto-generated index of all documents tagged with `#aeat-export-fragment-generat
 - `2026-08-10-aeat-export-fragment-generator-authority-W02-P03-S07` - Implement fail-closed parser-to-semantic-map joining without fuzzy or positional matching
 - `2026-08-10-aeat-export-fragment-generator-authority-W02-P03-S08` - Render the complete target export tree with stable partitioning and canonical TOML serialization
 - `2026-08-10-aeat-export-fragment-generator-authority-W02-P03-S09` - Emit source, map, schema, semantic, and file digests in the provenance manifest
+- `2026-08-10-aeat-export-fragment-generator-authority-W02-P03-S32` - Resolve only absent exact-anchor wire facts through the validated render profile, refuse official-content conflicts and uncovered or hash-drifting profiles, keep variable envelopes outside fixed-width output, and add the canonical profile digest and schema version to provenance
 - `2026-08-10-aeat-export-fragment-generator-authority-W02-P03-S37` - Add explicit reviewed value-policy semantics for selected-1-unselected-0 numeric checkboxes and four-digit-year-final-two-digits fields to the export schema, filing writer, parser, verifier, and registry record renderer, with strict invalid-value refusal and real emitted-byte tests
 - `2026-08-10-aeat-export-fragment-generator-authority-W02-P03-S38` - Consolidate strict fixed-width integer, money, boolean, padding, and sign coercion behind canonical public domain policies consumed by the filing writer, parser, verifier, and outbound registry renderer, deleting redeclared normalization behavior, rejecting lossy truncation and silent zero-or-blank substitution, and proving both production routes emit and refuse identically
 - `2026-08-10-aeat-export-fragment-generator-authority-W02-P03-S40` - Add a canonical exact allowed-values constraint for reviewed fixed-width integer enumerations to the export schema and sole registry codec, reject incompatible or noncanonical domains, enforce render and parse symmetrically, and carry the constraint through loader-semantic provenance without a second value-policy taxonomy
@@ -135,10 +143,15 @@ Auto-generated index of all documents tagged with `#aeat-export-fragment-generat
 - `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S35` - Pin every Modelo 303 official record-design source to its explicit `record_design_epoch`
 - `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S36` - Replace the spanning Modelo 303 revision with five explicit revision/source bindings: `2023`, `2024-hasta-08-y-2t`, `2024-desde-09-y-3t`, `2025`, and `2026-y-siguientes`. Prove production period-token selection at every early, late, annual, and future boundary, negative cross-token refusal, year-only 2024 ambiguity refusal, and exactly one matching record-design source reference per selected revision without a date-only selector, source-period duplication, alias, bridge, or legacy fallback
 - `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S39` - Remove every executable and test dependency on the deleted Modelo 303 `2023-y-siguientes` revision across domain, application, adapter, CLI, and fixture surfaces. Route production callers through the law-determined period selector and use an explicit surviving revision only where the test subject requires a concrete identity. Delete compatibility aliases, bridges, fallback literals, and copied selector logic, and add a structural gate that fails if the retired id or an equivalent redeclared selector reappears outside the single intentional negative-refusal assertion
+- `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S42` - Define one strict canonical persisted semantic-map fragment format and public loader/facade with deterministic filename-ordered compilation, exact schema validation, duplicate and collision refusal, and real reviewability tests, without consulting legacy export trees or adding aliases
 
 ### plan
 
 - `2026-08-10-aeat-export-fragment-generator-authority-plan` - `aeat-export-fragment-generator-authority` plan
+
+### reference
+
+- `2026-08-10-aeat-export-fragment-generator-authority-semantic-map-fragment-loader-reference` - `aeat-export-fragment-generator-authority` reference: `semantic-map fragment loader`
 
 ### research
 

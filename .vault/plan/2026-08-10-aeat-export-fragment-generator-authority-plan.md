@@ -4,7 +4,7 @@ tags:
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
 modified: '2026-08-10'
-body_hash: 'sha256:b63db10616d2fa287f5be9c9b602ecbeca38db2322bfd6d88d4110367a74a204'
+body_hash: 'sha256:7538d138a2070b6c75b16968d94b255ae1ab918ed781ac129a9b8a49e91247e9'
 tier: L3
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
