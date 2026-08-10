@@ -150,6 +150,10 @@ def ollama_chat_reply(
 ) -> Mapping[str, object]:
     """Return a well-formed Ollama ``/api/chat`` completion envelope.
 
+    The ``role`` is carried because the real runtime always sends it; a builder
+    that omitted it would be describing a wire shape nothing on the other end
+    ever produces.
+
     Args:
         content: The assistant message content the caller wants echoed back.
         model: The model name the runtime would report.
@@ -161,7 +165,7 @@ def ollama_chat_reply(
     """
     return {
         "model": model,
-        "message": {"content": content},
+        "message": {"role": "assistant", "content": content},
         "prompt_eval_count": prompt_eval_count,
         "eval_count": eval_count,
     }

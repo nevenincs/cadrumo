@@ -21,33 +21,48 @@ would be comparing the stub to itself -- and an assertion about a discrepancy
 between them would pass without the code under test ever being consulted. Each
 caller supplies markers drawn from its own documents.
 
+The bind-thread-shutdown plumbing and the wire envelope come from the shared
+loopback home; only the transcription-keyed reply behaviour, which is what this
+module is about, is declared here.
+
 See Also:
     :func:`~application.ledger.transcribe_text_layer`
         Produces the text this endpoint is keyed on.
-    ``application/tests/test_provisioning_hardware_contention.py``
-        The loopback shape this adopts, so the tree carries one pattern.
 """
 
 from __future__ import annotations
 
 import json
-import threading
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from http import HTTPStatus
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from typing import ClassVar, override
+from typing import ClassVar
 
 from ....core.config import override_settings
+from ....tests.loopback_llm import (
+    SilentLoopbackHandler,
+    ollama_chat_reply,
+    read_json_body,
+    serving_loopback,
+    write_json_response,
+)
 
-__all__ = ["ReaderReply", "serving_a_loopback_reader"]
+__all__ = ["READING_RUNTIME_MODEL", "ReaderReply", "serving_a_loopback_reader"]
 
 #: One document's answer: a marker that identifies it in the transcription, and
 #: the flat field/anchor object the reader would return for it.
 ReaderReply = tuple[str, Mapping[str, str]]
 
+READING_RUNTIME_MODEL = "qwen2.5:7b"
+"""The model name the reading runtime reports on this route.
 
-class _LoopbackRequestHandler(BaseHTTPRequestHandler):
+Shared by the ledger reading suites that declare their own handler behaviour, so
+the reply envelope names one runtime rather than three independently-typed
+spellings of it.
+"""
+
+
+class _LoopbackRequestHandler(SilentLoopbackHandler):
     """A real local endpoint speaking the reading runtime's ``/api/chat`` shape."""
 
     replies: ClassVar[Sequence[ReaderReply]] = ()
@@ -60,25 +75,17 @@ class _LoopbackRequestHandler(BaseHTTPRequestHandler):
         return self.fallback
 
     def do_POST(self) -> None:
-        body = self.rfile.read(int(self.headers.get("content-length", "0")))
-        prompt = json.dumps(json.loads(body.decode("utf-8"))["messages"])
-        payload = json.dumps(
-            {
-                "model": "qwen2.5:7b",
-                "message": {"role": "assistant", "content": json.dumps(dict(self._fields_for(prompt)))},
-                "prompt_eval_count": 100,
-                "eval_count": 50,
-            },
-        ).encode("utf-8")
-        self.send_response(HTTPStatus.OK)
-        self.send_header("content-type", "application/json")
-        self.send_header("content-length", str(len(payload)))
-        self.end_headers()
-        self.wfile.write(payload)
-
-    @override
-    def log_message(self, format: str, *args: object) -> None:
-        """Silence the handler's stderr access log."""
+        prompt = json.dumps(read_json_body(self)["messages"])
+        write_json_response(
+            self,
+            ollama_chat_reply(
+                json.dumps(dict(self._fields_for(prompt))),
+                model=READING_RUNTIME_MODEL,
+                prompt_eval_count=100,
+                eval_count=50,
+            ),
+            status=HTTPStatus.OK,
+        )
 
 
 @contextmanager
@@ -103,14 +110,6 @@ def serving_a_loopback_reader(
     """
     _LoopbackRequestHandler.replies = tuple(replies)
     _LoopbackRequestHandler.fallback = dict(fallback or {})
-    server = ThreadingHTTPServer(("127.0.0.1", 0), _LoopbackRequestHandler)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    chat_url = f"http://127.0.0.1:{server.server_port}/api/chat"
-    try:
+    with serving_loopback(_LoopbackRequestHandler, path="/api/chat") as chat_url:
         with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
             yield chat_url
-    finally:
-        server.shutdown()
-        server.server_close()
-        thread.join(timeout=5)
