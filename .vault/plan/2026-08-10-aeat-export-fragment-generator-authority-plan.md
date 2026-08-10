@@ -4,7 +4,7 @@ tags:
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
 modified: '2026-08-10'
-body_hash: 'sha256:1804439e32b24ef8b7bae822225d5ec0a7cc6eb3c8e7bf070b95311724296c16'
+body_hash: 'sha256:5d006d87a6d66e5452637ca91893e15efce1b5c6faa2148f046cd4a3aa945128'
 tier: L3
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
@@ -52,7 +52,7 @@ Implement complete revision generation only after the authority contracts are fi
 Join exact parser anchors to reviewed semantics and render a complete target revision.
 
 - [x] `W02.P03.S07` - Implement fail-closed parser-to-semantic-map joining without fuzzy or positional matching; `dev/registry/`.
-- [x] `W02.P03.S08` - Render the complete target export tree with stable partitioning and canonical TOML serialization; `dev/registry/`.
+- [ ] `W02.P03.S08` - Render the complete target export tree with stable partitioning and canonical TOML serialization; `dev/registry/`.
 - [ ] `W02.P03.S09` - Emit source, map, schema, semantic, and file digests in the provenance manifest; `dev/registry/`.
 
 ### Phase `W02.P04` - publication and check mode
