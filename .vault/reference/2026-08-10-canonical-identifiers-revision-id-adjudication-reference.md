@@ -5,7 +5,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:497e49114a33c80110762f8994d2469f70aa18e8c86cea98923fe4eaa86c1c18'
+body_hash: 'sha256:af4ff5e5523a1f1b5b4d8bdb316a0356f1e4716b1e1b80117a0ace6f7eeea424'
 related:
   - "[[2026-08-07-canonical-identifiers-plan]]"
 ---
@@ -17,45 +17,119 @@ changed.** The row asked for twelve sites in one file; this is the measured popu
 its per-concept classification, so the scheduling decision can be made against class sizes
 rather than an assumed denominator.
 
-## Why the row could not be executed as scoped
+## The population
 
-`W05.P07.S35` reads "the twelve bare `revision_id` sites" and scopes itself to a single
-registry module. Measured at HEAD:
+Instrument for every count below: AST over `git show HEAD:<path>` bytes - parameter
+annotations and annotated assignments, tests excluded. Reading the object store rather than
+the working tree matters because the tree carries a large uncommitted registry migration.
 
 | measurement | value |
 |---|---|
 | annotated `revision_id` sites, production `src/` | **308** across 115 files |
-| bare `str` | **130** |
+| bare `str` | 130 |
 | `str \| None` | 85 |
+| **adjudicated here** | **215** |
 | already `CalculationRevisionId` | 24 (+16 optional) |
 | already `RevisionId` | 16 |
 | the row's named file holds | **1** of the 130 |
 
-Instrument: AST over `git show HEAD:<path>` bytes - parameter annotations and annotated
-assignments, tests excluded. Reading the object store rather than the working tree matters
-here because the tree carries a large uncommitted registry migration.
-
-**The 85 `str | None` sites are the declared unmeasured remainder.** They are not classified
-below and no claim is made about them. Naming them is deliberate: a population defined only
-by what was convenient to measure cannot converge.
+`W05.P07.S35` reads "the twelve bare `revision_id` sites" and scopes itself to a single
+registry module. The optional half was adjudicated on the same basis rather than deferred,
+because a class landed over half a population reports closed while it is not.
 
 ## The finding that makes this an adjudication rather than a sweep
 
-Three different concepts wear the name `revision_id`:
+Four different concepts wear the name `revision_id`:
 
 - the **hex-64 calculation revision** - a content-addressed id of a calculation this system produced
 - the **registry revision slug** - a law-determined tag such as `2019-y-siguientes`, published by AEAT orden
-- the **law-determined stamp** - the registry revision a source filing resolved to at capture time, which carry-read code re-confirms before trusting a value
+- the **law-determined stamp** - the registry revision a source filing resolved to at capture time, re-confirmed before a carry is trusted
+- the **secure-object row version** - an optimistic-concurrency token in the encrypted store, belonging to a different domain entirely
 
 That is the campaign's standing goal appearing in the **type layer** rather than the module
-layer: one name, three referents. A mechanical retype would silently constrain the two
-concepts it does not fit.
+layer. A mechanical retype would silently constrain the three concepts it does not fit.
+
+## Classification
+
+| class | retype to | bare `str` | `str \| None` | total |
+|---|---|---|---|---|
+| **A** registry revision slug | `RevisionId` | 85 | 27 | **112** |
+| **B** hex-64 calculation revision | `CalculationRevisionId` | 35 | 25 | **60** |
+| **C** law-determined stamp | `RevisionId` | 7 | 1 | **8** |
+| **D** MUST NOT TOUCH | nothing | 3 | 32 | **35** |
+
+### Class A - registry revision slug (112)
+
+Every bare `revision_id` site adjudicated sits beside `modelo`, `filing_year` and `period` -
+the registry coordinate axes - or resolves a `ModeloRevision`, or builds the
+`registry:{modelo}:{revision}` schema marker. All four sites carrying a docstring document a
+registry revision, one with the literal example `2019-y-siguientes`. The optional half is
+concentrated in work addressing, the registry authority and snapshot construction, and the
+workflow resume resolvers.
+
+**One caution for whoever executes it:** the registry authority's `snapshot` and
+`select_revision` take an optional `revision_id`. The revision-resolution rule permits a
+stored id to be **asserted equal** to the law-determined resolution and forbids it being
+**injected as the selector**. A retype must preserve whichever semantics those call sites
+already have - this document classifies the type, it does not audit the direction.
+
+### Class B - hex-64 calculation revision (60)
+
+Includes 3 `new_revision_id` in the amendment actions, which build a draft from a baseline
+`CalculationRevision` and are therefore this concept under a different name - invisible to a
+name-based sweep.
+
+### Class C - the law-determined stamp (8)
+
+7 bare fields and parameters, plus exactly 1 optional - a save-path parameter that derives
+the law-determined value when omitted.
+
+**The defect this class was searched for does not exist.** No model or dataclass field
+declares an optional `stamped_revision_id`, so the required-non-empty rule is not violated
+anywhere. The persisted authority already carries `min_length=1, max_length=128` and a
+description confirming it holds the registry revision the source filing resolved to; the
+bare sites are downstream projections, not the persistence boundary. Retyping them neither
+creates nor closes that guarantee.
+
+One asymmetry to carry into execution: `RevisionId` adds a **pattern** the persisted field
+does not have, so the projections would become stricter than the field they project. Safe
+against the measured population, and only against it.
+
+### Class D - NOT this taxonomy, must not be retyped (35)
+
+**14 short-form sites.** `short_calculation_revision_id`,
+`short_current_calculation_revision_id`, `short_filed_calculation_revision_id` - a
+12-character abbreviation. Neither canonical type admits it: the hex-64 alias requires the
+full 64 and the slug is a different concept. The selector that parses it accepts an
+alternation of 12 or 64 characters deliberately. Retyping either way refuses a live value.
+
+**21 secure-object row versions.** An optimistic-concurrency token for the encrypted store,
+reachable through `expected_revision_id`, `previous_revision_id` and `current_revision_id`,
+and through the revision-chain machinery that derives, verifies self-consistency and builds
+ancestor ids. Not a modelo, registry or calculation revision. Every one of these matches any
+grep for the row's own vocabulary, and every one breaks if retyped.
+
+**Class D is 16% of the population and was 2% before the optional half was measured.** That
+ratio is the argument for measuring it first.
+
+## Two instrument failures, both caught, both worth keeping
+
+1. **A path-based filter cannot find a concept declared outside its path.** Bucketing
+   secure-object sites by `/storage/sql/` and filename missed **five** `to_secure_object_write`
+   methods in the profile persistence adapters and the bucket protocol - all returning
+   `SecureObjectWrite`, all unambiguously the storage concept. They were recovered by reading
+   each site's producer, which is the discipline this document claims to apply, applied to
+   its own output. A denominator inherits the shape of the instrument that produced it.
+2. **The bare-`str` pass alone would have understated Class D by a factor of ten.** Optionality
+   is where the divergent concepts concentrate, because a short form is absent until
+   calculated and a row version is absent on first write. Landing Class A on the bare half
+   would have looked complete and left 32 must-not-touch sites unexamined.
 
 ## Substitutability, measured before any verdict
 
 `RevisionId` carries `min_length=1`, `max_length=128` and a lowercase ref pattern where a
-bare `str` carries none, **so every retype NARROWS its site.** A narrowing is only safe if
-the real population satisfies the new constraint, so that was measured rather than assumed:
+bare `str` carries none, **so every retype NARROWS its site.** A narrowing is safe only if
+the real population satisfies the constraint, so that was measured:
 
 ```
 distinct revision ids in the registry tree at HEAD : 41
@@ -63,72 +137,17 @@ distinct revision ids in the registry tree at HEAD : 41
   refused                                          :  0
 ```
 
-**Class A is therefore safe.** Had even one real id carried an uppercase character the
-retype would have refused a legitimate value, and nothing downstream would have caught it.
-
-## Classification
-
-### Class A - registry revision slug, retype onto `RevisionId` (85 sites)
-
-56 bare `revision_id`, 5 `registry_revision_id`, 5 `left_` + 4 `right_revision_id`,
-3 `expected_revision_id` in the loader, 2 `target_`, 2 `year_a_` + 2 `year_b_`,
-2 `selected_`, and one each of `requested_`, `resolved_`, `declaring_` and
-`latest_revision_id`.
-
-**Verdict: promotable.** Every bare `revision_id` site adjudicated sits beside `modelo`,
-`filing_year` and `period` - the registry coordinate axes - or resolves a `ModeloRevision`
-directly, or builds the `registry:{modelo}:{revision}` schema marker. Every one of the four
-sites carrying a docstring documents a registry revision, one of them with the literal
-example `2019-y-siguientes`. The adjudication was made against each site's producer, not
-its name.
-
-### Class B - hex-64 calculation revision, retype onto `CalculationRevisionId` (35 sites)
-
-32 `calculation_revision_id`, plus 3 `new_revision_id` in the amendment actions, which build
-a draft calculation revision from a baseline `CalculationRevision` and are therefore this
-concept under a different name.
-
-**Verdict: promotable.**
-
-### Class C - the law-determined stamp (7 sites)
-
-All 7 are `stamped_revision_id`. By shape this is a registry slug, so it retypes onto
-`RevisionId`.
-
-**Verdict: promotable, and it strengthens these sites - but the reason it is safe is not the
-one it looks like.** The persisted authority already carries `min_length=1, max_length=128`
-and a description confirming it holds the registry revision the source filing resolved to.
-The seven bare-`str` sites are downstream projections and parameters, not the persistence
-boundary. **The requirement that a missing or invalid stamp refuse at strict load is already
-met where it must be met**, so retyping the projections neither creates nor closes that
-guarantee.
-
-One asymmetry to carry into execution: `RevisionId` adds a **pattern** the persisted field
-does not have. Against the measured population that refuses nothing, but it means the
-projections would become strictly stricter than the field they project. That is acceptable
-only while the 41-id measurement holds, and it is a measurement rather than a property.
-
-### Class D - NOT this taxonomy, must not be retyped (3 sites)
-
-- **2 x `short_calculation_revision_id`** - a 12-character short form. Neither canonical type
-  admits it: `CalculationRevisionId` requires the full 64 and `RevisionId` is a different
-  concept. The selector that parses it accepts an alternation of 12 or 64 characters
-  deliberately. Retyping either way refuses a live, in-use value.
-- **1 x `expected_revision_id` in the secure-object SQL adapter** - this is a **storage row
-  version** used for optimistic concurrency, sitting beside `namespace` and
-  `current_revision_id` and producing a secure-object revision-conflict error. It is not a
-  modelo revision, a registry revision or a calculation revision. It matches the name
-  pattern and belongs to a different domain entirely.
-
-**Class D is the reason a name-based sweep would have been wrong.** All three sites are
-reachable by any grep for the row's own vocabulary, and all three break if retyped.
+**This is a measurement with an expiry, not a property.** All 41 satisfy the pattern *today*.
+A future revision id carrying a single uppercase character would make a landed retype refuse
+a live value, silently, at a boundary nothing else guards. Whoever lands Class A owns that
+exposure and should say so in the commit message rather than in this document alone.
 
 ## Corroboration, and why it is worth stating
 
 24 sites already carry `CalculationRevisionId` and 16 already carry `RevisionId` - unprompted
-instances that predate this adjudication. The two-concept split is therefore load-bearing in
-the tree already, not a property constructed to fit the evidence. Where a proposed
-classification has no unprompted instances, it may be describing its author; here it has 40.
+instances predating this adjudication. The concept split is therefore load-bearing in the
+tree already, not a property constructed to fit the evidence. Where a proposed classification
+has no unprompted instances it may be describing its author; here it has 40.
 
 ## Two defects found while measuring, neither actioned
 
@@ -138,12 +157,12 @@ classification has no unprompted instances, it may be describing its author; her
    the system would reject.
 2. **`W05.P07.S36` instructed minting a duplicate.** It named a "new `RegistryRevisionId`
    alias" for the concept `RevisionId` already owns. Amended 2026-08-11 to retype onto
-   `RevisionId` and create nothing. Recorded here because the row is this document's consumer
-   and would otherwise have executed against it.
+   `RevisionId` and create nothing.
 
 ## What this document does not decide
 
-Whether Class A, B and C become one row each, one plan, or stay as `W05.P07.S35`/`S36`. That
-is a scheduling call and the class sizes above are what it needs. The 85 `str | None` sites
-remain unmeasured and would have to be adjudicated on the same basis before any class could
-be called complete.
+Whether A, B and C become one row each, one plan, or stay as `W05.P07.S35`/`S36`. That is a
+scheduling call and the class sizes above are what it needs. **There is no longer an
+unmeasured remainder** in the annotated population: all 215 bare and optional sites are
+classified. The 93 sites already carrying a canonical type are correct as they stand and
+need no work.
