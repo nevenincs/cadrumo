@@ -81,6 +81,7 @@ _STATUS_CATALOGUE: dict[str, object] = {
                     "active": "ST-ACTIVE",
                     "setup_incomplete": "ST-INCOMPLETE",
                     "tombstoned": "ST-TOMBSTONED",
+                    "unknown": "ST-UNKNOWN",
                 },
             },
             "auth": {
@@ -205,15 +206,16 @@ async def test_profiles_table_rows_and_active_marker() -> None:
 
 
 @pytest.mark.asyncio
-async def test_unmapped_profile_status_renders_the_raw_token_not_active() -> None:
-    # A lifecycle token with no mapped label must render verbatim, never as a
-    # reassuring "active" label on a status surface.
+async def test_unmapped_profile_status_renders_an_operator_label_not_the_token() -> None:
+    # A future lifecycle token must remain visibly unknown without exposing
+    # the storage vocabulary or being misrepresented as active.
     data = StatusPageData(profiles=(StatusProfileRow(label="mystery", status="future_state", active=False),))
     app = StatusApp(data)
     async with app.run_test(size=_TERMINAL_SIZE):
         table = app.query_one("#profiles-table", DataTable)
         row = tuple(str(cell) for cell in table.get_row_at(0))
-        assert row[1] == "future_state"
+        assert row[1] == "ST-UNKNOWN"
+        assert "future_state" not in row
         assert row[1] != "ST-ACTIVE"
 
 

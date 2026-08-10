@@ -12,7 +12,7 @@ Discardable: the whole harness is this directory plus a gitignored `.state/`.
 
 ```sh
 uv run --no-sync python -m dev.tui surfaces
-uv run --no-sync python -m dev.tui open setup
+uv run --no-sync python -m dev.tui open manager
 uv run --no-sync python -m dev.tui press down enter
 uv run --no-sync python -m dev.tui type "12345678Z"
 uv run --no-sync python -m dev.tui undo
@@ -66,17 +66,17 @@ the same bucket and active-profile pointer. Without it everyone shares
 
 ## Surfaces
 
-`setup`, `setup-modify`, `registration`, `login`, `manager`, `status`, `form`.
+`registration`, `login`, `manager`, `status`, `form`, `modelo-work-wizard`.
 
 Each is built through the same doors the CLI uses — the real registration and
-login doors, the real overview and status projections, the real setup
-definition. Nothing is a stand-in, because a reading over a stand-in is a
-reading about the stand-in.
+login doors, the real overview and status projections, and the live modelo work
+wizard. Nothing is a stand-in, because a reading over a stand-in is a reading
+about the stand-in.
 
 ## The frame
 
 ```
-──────── frame 2 ──────── setup · 100x30 · dark · 443ms ────────
+──────── frame 2 ──────── modelo-work-wizard · 100x30 · dark · 443ms ────────
 <the painted cells>
 ── focus: OptionList
 ── chain: OptionList → Button#btn-back → Button#btn-next → Button#btn-review

@@ -148,21 +148,19 @@ class CredentialApp[OutcomeT](App[OutcomeT | None]):
         """Render one unexpected failure with a durable next step.
 
         Domain errors have registered, translated messages. A low-level
-        failure such as ``OSError(EBADF)`` does not, so resolving it through
-        the registry would itself raise and erase the original diagnostic.
-        The fallback keeps that concrete OS message, then the shared internal
-        error guidance tells the operator where to look next.
+        failure does not, and its exception text is diagnostic vocabulary
+        rather than operator guidance. The fallback therefore renders only
+        the shared recovery instruction; the original exception remains on
+        ``self.error`` for diagnostics.
         """
         try:
             from ....core.errors import resolve_error_message
 
             detail = resolve_error_message(error).strip()
         except (LookupError, TypeError, ValueError):
-            detail = str(error).strip()
-        if not detail:
-            detail = type(error).__name__
+            detail = ""
         guidance = tr("errors.internal.internal_cli_unexpected_boundary")
-        return f"{detail} {guidance}"
+        return f"{detail} {guidance}".strip()
 
     def default_refusal(self) -> str:
         """Text shown when a refusal arrived carrying no message of its own.

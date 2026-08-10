@@ -258,11 +258,10 @@ class StatusApp(App[None]):
             tr("flows.status.profiles.column.active"),
         )
         for index, row in enumerate(self._data.profiles):
-            # An unmapped lifecycle token renders as its raw value, never a
-            # reassuring "active" label: a future status member must not be
-            # silently misreported as healthy on a status surface.
+            # An unmapped lifecycle token is not operator copy. It must still
+            # refuse to look healthy, but without exposing the storage token.
             status_key = _PROFILE_STATUS_KEYS.get(row.status)
-            status_label = tr(status_key) if status_key is not None else row.status
+            status_label = tr(status_key) if status_key is not None else tr("flows.status.profiles.status.unknown")
             marker = _ACTIVE_MARKER if row.active else ""
             table.add_row(row.label, status_label, marker, key=f"profile-{index}")
 

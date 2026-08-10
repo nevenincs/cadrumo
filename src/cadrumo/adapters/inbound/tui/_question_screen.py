@@ -38,6 +38,7 @@ from textual.widgets.option_list import Option
 from ....application.flows import (
     assemble_page_copy,
     assemble_section_titles,
+    resolve_copy,
     validate_widget_shape,
     visible_sequence,
 )
@@ -48,9 +49,11 @@ from ._confirm_screen import confirm_restart_dialog
 from ._theme import ContentScroll
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     from textual.events import Key
 
-    from ....application.flows import ChoiceCopy, PageCopy, VisiblePage
+    from ....application.flows import ChoiceCopy, FlowPage, PageCopy, ValidationVerdict, VisiblePage
     from ._app import FlowTuiApp
 
 _TEXTUAL_INPUT_WIDGETS = frozenset(
@@ -63,6 +66,48 @@ _TEXTUAL_INPUT_WIDGETS = frozenset(
         FlowWidgetKind.DECIMAL,
     },
 )
+
+
+def _operator_answer(page: FlowPage, raw: str) -> str:
+    """Render a committed answer without exposing a closed-choice token."""
+    if not raw:
+        return ""
+    if page.widget is FlowWidgetKind.CONFIRM:
+        parsed = parse_bool(raw)
+        if parsed is not None:
+            return tr("flows.confirm.yes" if parsed else "flows.confirm.no")
+    if page.widget is FlowWidgetKind.COMPARE_SELECT and raw == DEFER_TOKEN:
+        return tr("flows.compare_select.defer_label")
+    if page.widget in {FlowWidgetKind.SELECT, FlowWidgetKind.COMPARE_SELECT, FlowWidgetKind.CHECKBOX}:
+        labels = {choice.value: choice.label for choice in assemble_page_copy(page).choices}
+        tokens = raw.split(",") if page.widget is FlowWidgetKind.CHECKBOX else [raw]
+        if any(token not in labels for token in tokens):
+            return tr("flows.tui.choice_unavailable")
+        return ", ".join(labels[token] for token in tokens)
+    return raw
+
+
+def _operator_verdict(
+    verdict: ValidationVerdict,
+    *,
+    prompts: Mapping[str, str],
+    current_prompt: str,
+    choices: Mapping[str, str],
+) -> str:
+    """Resolve one verdict after replacing machine identifiers with copy."""
+    context = dict(verdict.context)
+    for key in ("page_id", "page_key", "page"):
+        if key in context:
+            context[key] = prompts.get(str(context[key]), current_prompt)
+    if "fields" in context and isinstance(context["fields"], list):
+        context["fields"] = [
+            prompts.get(str(value), tr("flows.review.question_unavailable")) for value in context["fields"]
+        ]
+    if "choices" in context and isinstance(context["choices"], list):
+        context["choices"] = [
+            choices.get(str(value), tr("flows.tui.choice_unavailable")) for value in context["choices"]
+        ]
+    return tr(verdict.message_key or "", **context)
 
 
 class QuestionScreen(Screen[None]):
@@ -92,8 +137,9 @@ class QuestionScreen(Screen[None]):
         host and the panel into one auto-height scroll container makes that
         container unable to scroll and pushes the overflow onto the Screen.
         """
-        yield Static(id="flow-header")
-        yield ProgressBar(id="flow-progress", show_eta=False)
+        with Vertical(id="flow-top"):
+            yield Static(id="flow-header")
+            yield ProgressBar(id="flow-progress", show_eta=False)
         with (
             ContentScroll(id="page-scroll", classes="cadrumo-scroll"),
             Vertical(classes="cadrumo-column"),
@@ -167,16 +213,26 @@ class QuestionScreen(Screen[None]):
         # The section id is an internal slug; the operator-facing title is the
         # section's resolved copy, so both the header and the panel below read
         # in the active profile's language.
-        section_title = assemble_section_titles(app.definition).get(entry.section_id, entry.section_id)
-        self.query_one("#flow-header", Static).update(
-            tr(
+        section_title = assemble_section_titles(app.definition).get(entry.section_id)
+        if section_title is None:
+            section_title = tr("flows.tui.section_unavailable")
+        flow_title = resolve_copy(app.definition.title)
+        if section_title == flow_title:
+            header = tr(
+                "flows.tui.header_single_section",
+                flow=flow_title,
+                position=position + 1,
+                total=len(sequence),
+            )
+        else:
+            header = tr(
                 "flows.tui.header",
-                flow=app.definition.id,
+                flow=flow_title,
                 position=position + 1,
                 total=len(sequence),
                 section=section_title,
-            ),
-        )
+            )
+        self.query_one("#flow-header", Static).update(header)
         self.query_one("#flow-progress", ProgressBar).update(total=len(sequence), progress=position + 1)
         # The bordered question panel carries the section as its title so the
         # operator always sees which part of the flow they are in.
@@ -227,14 +283,29 @@ class QuestionScreen(Screen[None]):
         marker = (
             tr("flows.progress.current_answer_secret")
             if entry.page.widget is FlowWidgetKind.SECRET
-            else tr("flows.progress.current_answer", value=current)
+            else tr("flows.progress.current_answer", value=_operator_answer(entry.page, current))
         )
         return f"✓ {marker}"
 
     @staticmethod
     def _commit_verdicts_text(app: FlowTuiApp, entry: VisiblePage) -> str:
         verdicts = app.state.verdicts.get(entry.key, ())
-        return "\n".join(tr(v.message_key, **v.context) for v in verdicts if v.message_key)
+        copy = assemble_page_copy(entry.page)
+        prompts = {
+            visible.key: assemble_page_copy(visible.page).prompt
+            for visible in visible_sequence(app.definition, app.state)
+        }
+        choices = {choice.value: choice.label for choice in copy.choices}
+        return "\n".join(
+            _operator_verdict(
+                verdict,
+                prompts=prompts,
+                current_prompt=copy.prompt,
+                choices=choices,
+            )
+            for verdict in verdicts
+            if verdict.message_key
+        )
 
     def refresh_answer_zones(self) -> None:
         """Refresh the echo and verdict zones without re-mounting the widget.
@@ -335,7 +406,18 @@ class QuestionScreen(Screen[None]):
         if entry is None:
             return
         _canonical, verdict = validate_widget_shape(entry.page, event.value)
-        hint = "" if verdict.ok else f"✗ {tr(verdict.message_key or '', **verdict.context)}"
+        copy = assemble_page_copy(entry.page)
+        hint = (
+            ""
+            if verdict.ok
+            else "✗ "
+            + _operator_verdict(
+                verdict,
+                prompts={entry.key: copy.prompt},
+                current_prompt=copy.prompt,
+                choices={},
+            )
+        )
         self.query_one("#live-validation", Static).update(hint)
 
     def on_input_submitted(self, event: Input.Submitted) -> None:

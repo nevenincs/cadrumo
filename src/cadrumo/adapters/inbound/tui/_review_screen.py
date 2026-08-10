@@ -34,9 +34,10 @@ from ....application.flows import (
     review,
     visible_sequence,
 )
-from ....core.flows import PageStatus
+from ....core.flows import FlowMode, PageStatus
 from ....core.i18n import tr
 from ._confirm_screen import confirm_restart_dialog
+from ._question_screen import _operator_answer, _operator_verdict
 
 if TYPE_CHECKING:
     from ._app import FlowTuiApp
@@ -115,7 +116,7 @@ class ReviewScreen(Screen[None]):
                 "flows.review.header_tui",
                 answered=projection.answered_count,
                 remaining=projection.required_remaining,
-                eligible=str(projection.submit_eligible).lower(),
+                eligible=tr("flows.confirm.yes" if projection.submit_eligible else "flows.confirm.no"),
             ),
         )
         table = self.query_one("#review-table", DataTable)
@@ -143,22 +144,38 @@ class ReviewScreen(Screen[None]):
                 current_section = row.section_id
                 table.add_row(
                     "",
-                    section_titles.get(row.section_id, row.section_id),
+                    section_titles.get(row.section_id, tr("flows.review.section_unavailable")),
                     "",
                     "",
                     key=f"{_SECTION_HEADING_PREFIX}{row.section_id}",
                 )
-            prompt = prompts.get(row.key, "")
-            if not row.jumpable:
+            prompt = prompts.get(row.key)
+            if prompt is None:
+                prompt = tr("flows.review.question_unavailable")
+            elif not row.jumpable:
                 prompt = f"{prompt} {tr('flows.review.orphan_marker')}".strip()
             table.add_row(
                 _STATUS_GLYPHS.get(row.status, "?"),
-                prompt or row.key,
+                prompt,
                 self._answer_cell(app, row.key),
                 self._registered_cell(app, row.key),
                 key=row.key,
             )
-        blocking_text = "\n".join(tr(v.message_key, **v.context) for v in projection.blocking if v.message_key)
+        choice_labels = {
+            choice.value: choice.label
+            for entry in visible_sequence(app.definition, app.state)
+            for choice in assemble_page_copy(entry.page).choices
+        }
+        blocking_text = "\n".join(
+            _operator_verdict(
+                verdict,
+                prompts=prompts,
+                current_prompt=tr("flows.review.question_unavailable"),
+                choices=choice_labels,
+            )
+            for verdict in projection.blocking
+            if verdict.message_key
+        )
         blocking = self.query_one("#review-blocking", Static)
         blocking.update(blocking_text)
         # The red-bordered blocking box only occupies space when it carries a
@@ -167,7 +184,10 @@ class ReviewScreen(Screen[None]):
         if checkpoint_available(app.definition, app.state.mode):
             save_note = ""
         else:
-            save_note = tr("flows.review.save_unavailable", mode=app.state.mode.value)
+            mode_label = tr(
+                "flows.review.mode_create" if app.state.mode is FlowMode.CREATE else "flows.review.mode_modify",
+            )
+            save_note = tr("flows.review.save_unavailable", mode=mode_label)
         self.query_one("#review-save-note", Static).update(save_note)
         self.query_one("#btn-submit", Button).disabled = not projection.submit_eligible
         table.focus()
@@ -183,7 +203,8 @@ class ReviewScreen(Screen[None]):
         answer = app.state.answers.get(page_key, "")
         if answer and app.is_secret_page(page_key):
             return tr("flows.progress.current_answer_secret")
-        return answer
+        entry = next((item for item in visible_sequence(app.definition, app.state) if item.key == page_key), None)
+        return answer if entry is None else _operator_answer(entry.page, answer)
 
     @staticmethod
     def _registered_cell(app: FlowTuiApp, page_key: str) -> str:
@@ -198,7 +219,8 @@ class ReviewScreen(Screen[None]):
         registered = app.registered_values.get(page_key, "")
         if registered and app.is_secret_page(page_key):
             return tr("flows.progress.current_answer_secret")
-        return registered
+        entry = next((item for item in visible_sequence(app.definition, app.state) if item.key == page_key), None)
+        return registered if entry is None else _operator_answer(entry.page, registered)
 
     def _prompts_by_key(self, app: FlowTuiApp) -> dict[str, str]:
         """Resolved prompt copy per visible page key (orphans keep their key)."""

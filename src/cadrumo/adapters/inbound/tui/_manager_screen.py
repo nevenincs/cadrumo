@@ -451,7 +451,11 @@ class ProfileManagerApp(App[None]):
         missing_fields = self.overview.missing_required_fields
         resolved_paths = {field.path for field in missing_fields}
         missing_labels = [field.label for field in missing_fields]
-        missing_labels.extend(path for path in self.overview.missing_required if path not in resolved_paths)
+        missing_labels.extend(
+            tr("flows.manager.required_field_unavailable")
+            for path in self.overview.missing_required
+            if path not in resolved_paths
+        )
         requirements = (
             tr(
                 "cli.diagnostics.summary.profile_missing_fields",
@@ -497,10 +501,16 @@ class ProfileManagerApp(App[None]):
         label = f"{field.label}{_REQUIRED_MARK}" if field.required else field.label
         if field.row_index is not None:
             label = f"{field.row_index}{_ROW_INDEX_SEPARATOR}{label}"
+        value = field.value or ""
+        if value and field.choices:
+            value = next(
+                (choice.label for choice in field.choices if choice.value == value),
+                tr("flows.manager.choice_unavailable"),
+            )
         return (
             _PRESENT_GLYPH if field.present else _ABSENT_GLYPH,
             label,
-            field.value or "",
+            value,
         )
 
     @staticmethod
@@ -822,7 +832,7 @@ class ProfileManagerApp(App[None]):
         else:
             from ....core.errors import CadrumoError, resolve_error_message
 
-            rendered = resolve_error_message(error) if isinstance(error, CadrumoError) else str(error)
+            rendered = resolve_error_message(error) if isinstance(error, CadrumoError) else ""
         self._refuse(rendered or tr(message_key))
 
     def _report(self, message: str) -> None:

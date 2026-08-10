@@ -79,7 +79,16 @@ if TYPE_CHECKING:
 _COPY_REF = "flows.test.copy"
 _COPY_CATALOGUE: dict[str, object] = {
     "flows": {
-        "test": {"copy": "Dato solicitado", "desc": "DESC-TEXT", "prov": "PROV-TEXT"},
+        "test": {
+            "copy": "Dato solicitado",
+            "desc": "DESC-TEXT",
+            "prov": "PROV-TEXT",
+            "title": "FLOW-TITLE",
+        },
+        "tui": {
+            "header": "{flow} / {position} / {total} / {section}",
+            "header_single_section": "{flow} / {position} / {total}",
+        },
         # A candidate frame that interpolates both slots, so the COMPARE_SELECT
         # provenance is observable in the rendered label under the fixture root.
         "compare_select": {"candidate": "{label} :: {provenance}"},
@@ -234,6 +243,21 @@ async def _answer_all_required(pilot: Pilot[None], app: FlowTuiApp) -> None:
 
 
 @pytest.mark.asyncio
+async def test_question_header_renders_the_flow_title_not_its_internal_id() -> None:
+    definition = _definition().model_copy(update={"title": _copy("flows.test.title")})
+    app = FlowTuiApp(definition, mode=FlowMode.MODIFY, registered_values=_REGISTERED_VALUES)
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.pause()
+        header = app.screen.query_one("#flow-header", Static)
+        progress = app.screen.query_one("#flow-progress", ProgressBar)
+        rendered = str(header.content)
+
+        assert "FLOW-TITLE" in rendered
+        assert app.definition.id not in rendered
+        assert header.region.bottom <= progress.region.y, "the progress bar must not paint over the title"
+
+
+@pytest.mark.asyncio
 async def test_next_button_commits_the_pending_input_before_advancing() -> None:
     app = _app()
     async with app.run_test(size=_TERMINAL_SIZE) as pilot:
@@ -300,10 +324,24 @@ async def test_review_table_renders_the_registered_value_beside_the_answer() -> 
         assert set(rows) == {"p_name", "p_kind", "p_note"}
         assert rows["p_name"][2] == app.state.answers["p_name"]
         assert rows["p_name"][3] == _REGISTERED_VALUES["p_name"]
-        assert rows["p_kind"][3] == _REGISTERED_VALUES["p_kind"]
+        assert rows["p_kind"][3] == tr(_COPY_REF)
+        assert _REGISTERED_VALUES["p_kind"] not in rows["p_kind"][3]
         # A page the domain supplied no registered value for renders blank,
         # never a placeholder the operator could read as a record.
         assert rows["p_note"][3] == ""
+
+
+@pytest.mark.asyncio
+async def test_closed_choice_answer_renders_its_label_not_its_storage_token() -> None:
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await _answer_all_required(pilot, app)
+        await pilot.press("f2")
+
+        answer_cell = _review_rows(app)["p_kind"][2]
+        assert answer_cell == tr(_COPY_REF)
+        assert app.state.answers["p_kind"] == "alpha", "the positive control must store a distinct token"
+        assert "alpha" not in answer_cell
 
 
 @pytest.mark.asyncio
@@ -600,8 +638,16 @@ async def test_ctrl_s_is_inert_in_a_mode_declaring_checkpointing_unavailable(tmp
 
 
 def test_declared_checkpointing_without_a_store_refuses_at_construction() -> None:
-    with pytest.raises(FlowCheckpointError):
+    definition = _definition()
+    with pytest.raises(FlowCheckpointError) as excinfo:
         FlowTuiApp(_definition(), mode=FlowMode.CREATE)
+
+    assert excinfo.value.context == {
+        "flow_id": tr(str(definition.title.ref)),
+        "mode": tr("flows.review.mode_create"),
+    }
+    assert definition.id not in excinfo.value.context.values()
+    assert FlowMode.CREATE.value not in excinfo.value.context.values()
 
 
 def test_declared_checkpointing_without_a_store_refuses_before_the_run_starts() -> None:

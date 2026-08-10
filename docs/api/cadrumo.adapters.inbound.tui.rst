@@ -24,5 +24,6 @@ Submodules
    cadrumo.adapters.inbound.tui._registration_screen
    cadrumo.adapters.inbound.tui._review_screen
    cadrumo.adapters.inbound.tui._select
+   cadrumo.adapters.inbound.tui._status_bar
    cadrumo.adapters.inbound.tui._status_screen
    cadrumo.adapters.inbound.tui._theme

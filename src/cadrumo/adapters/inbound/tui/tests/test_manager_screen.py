@@ -590,7 +590,8 @@ async def test_a_refusing_action_reports_it_instead_of_taking_the_screen_down(tm
             await wait_until_settled(app, pilot)
             reported = _notice(app)
             assert app.is_running, "the screen must survive a refusing action"
-            assert "NO-CERTIFICATE-REGISTERED" in reported
+            assert reported == tr("flows.manager.action.failed")
+            assert "NO-CERTIFICATE-REGISTERED" not in reported
             app.exit(None)
 
 
