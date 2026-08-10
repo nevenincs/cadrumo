@@ -850,7 +850,7 @@ class _UnresolvedRelationIds(NamedTuple):
 def _unresolved_relation_ids(
     snapshot: RegistrySnapshot,
     *,
-    relation_values: RelationResolutionSet,
+    relation_values: RelationValues,
     requirements_by_relation: Mapping[RelationId, RegistryFoldRequirement],
     modelo_id: str,
 ) -> _UnresolvedRelationIds:

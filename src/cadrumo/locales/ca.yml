@@ -4330,6 +4330,13 @@ cli:
         mode_unenforced: Aquesta plataforma no implementa els bits de permisos POSIX,
           així que no s'han comprovat els permisos de l'arrel.
       errors:
+        reason:
+          durable_lifecycle: una destinació seleccionada té un cicle de vida durador
+          durable_state: l'àrea conté estat durador
+          no_reclaimable_targets: la taxonomia no declara destinacions alliberables
+          not_root_scoped: una destinació seleccionada no pertany a l'arrel
+          protected_descendant: una destinació seleccionada conté dades declarades
+            protegides
         reclaim_area_refused: 'Es rebutja alliberar %{area}: %{reason}. Les %{entries}
           entrades romanen intactes.'
         reclaim_area_unconfirmed: Alliberar %{area} elimina %{entries} entrades i
@@ -4379,6 +4386,11 @@ cli:
         area_argument_help: Àrea d'emmagatzematge que es vol mostrar
         area_help: Mostra una àrea d'emmagatzematge completa
       values:
+        area:
+          cache: memòria cau
+          exports: exportacions
+          logs: registres
+          state: estat
         lifecycle:
           durable: duradora
           mixed: mixta
@@ -6287,6 +6299,10 @@ errors:
       suportada; introdueix les dades censals manualment.
     certificado_not_a_pdf: El fitxer proporcionat no és un PDF; s'esperava el Certificado
       de Situación Censal descarregat de la Seu.
+  context_labels:
+    area: àrea
+    entry_count: nombre d'entrades
+    reason: motiu
   error:
     error_access_gate_submission: La política de control d'accés ha rebutjat una operació
       d'enviament.
@@ -6854,6 +6870,8 @@ errors:
     locked_storage_master_key_keychain: L'anell de claus del sistema operatiu està
       bloquejat. Desbloqueja'l (Touch ID, Windows Hello o el desbloqueig del gestor
       de credencials) i torna-ho a provar.
+  prefix:
+    refused: Rebutjat.
   refused:
     auth_configure_no_active_bucket: No es pot configurar l'autenticació sense un
       perfil actiu. Crea un perfil amb `aeat config profile create NOM` i torna-ho
@@ -7461,10 +7479,10 @@ flows:
     language:
       unavailable: Aquest perfil no ofereix cap configuració d'idioma.
     progress: '{present} de {total} camps emplenats, en falten {missing} per presentar'
-    required_complete: Hi és tota la informació del perfil requerida per l'esquema.
     recovery_boundary: 'La creació i la rotació del codi de recuperació només es fan
       des del terminal: aeat config recovery create / aeat config recovery rotate.
       Les 24 paraules es mostren una sola vegada i no es poden tornar a mostrar.'
+    required_complete: Hi és tota la informació del perfil requerida per l'esquema.
     section_title: '{title} - {present}/{total}'
     title: 'Perfil: {profile}'
   progress:

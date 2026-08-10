@@ -19,6 +19,20 @@ class StorageManagementError(CadrumoError):
     """Base for refusals raised while inspecting or reclaiming the storage tree."""
 
 
+def _area_display(area: StorageArea) -> str:
+    """Return a localized text label while retaining the enum as the API value."""
+    return tr(f"cli.config.storage.values.area.{area.value}", default=area.value)
+
+
+_REASON_KEYS = {
+    "the area contains durable state": "cli.config.storage.errors.reason.durable_state",
+    "the taxonomy declares no reclaimable targets": "cli.config.storage.errors.reason.no_reclaimable_targets",
+    "a selected target is not root-scoped": "cli.config.storage.errors.reason.not_root_scoped",
+    "a selected target has a durable lifecycle": "cli.config.storage.errors.reason.durable_lifecycle",
+    "a selected target contains protected declared data": "cli.config.storage.errors.reason.protected_descendant",
+}
+
+
 class StorageReclaimRefusedError(StorageManagementError):
     """Refusal to delete an area that cannot pass the derived preflight."""
 
@@ -29,24 +43,30 @@ class StorageReclaimRefusedError(StorageManagementError):
         entry_count: int,
         reason: str,
     ) -> None:
+        display_reason = tr(_REASON_KEYS[reason], default=reason)
         super().__init__(
             tr(
                 "cli.config.storage.errors.reclaim_area_refused",
                 default=("refusing to reclaim %{area}: %{reason}; nothing was removed."),
-                area=area.value,
+                area=_area_display(area),
                 entries=str(entry_count),
-                reason=reason,
+                reason=display_reason,
             ),
             context={
                 "area": area.value,
                 "entry_count": str(entry_count),
-                "reason": reason,
+                "reason": display_reason,
             },
             suggestion="aeat config storage list",
         )
         self.area = area
         self.entry_count = entry_count
-        self.reason = reason
+        self._reason = reason
+
+    @property
+    def reason(self) -> str:
+        """Return the stable service reason while text rendering stays localized."""
+        return self._reason
 
 
 class StorageReclaimUnconfirmedError(StorageManagementError):
@@ -61,7 +81,7 @@ class StorageReclaimUnconfirmedError(StorageManagementError):
             tr(
                 "cli.config.storage.errors.reclaim_area_unconfirmed",
                 default=("reclaiming %{area} deletes up to %{entries} entries and needs explicit confirmation."),
-                area=area.value,
+                area=_area_display(area),
                 entries=str(entry_count),
             ),
             context={

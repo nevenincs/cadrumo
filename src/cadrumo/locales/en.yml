@@ -4033,6 +4033,12 @@ cli:
         mode_unenforced: This platform does not implement POSIX permission bits, so
           root permissions were not checked.
       errors:
+        reason:
+          durable_lifecycle: a selected target has a durable lifecycle
+          durable_state: the area contains durable state
+          no_reclaimable_targets: the taxonomy declares no reclaimable targets
+          not_root_scoped: a selected target is not root-scoped
+          protected_descendant: a selected target contains protected declared data
         reclaim_area_refused: 'Refusing to reclaim %{area}: %{reason}. %{entries}
           entries remain untouched.'
         reclaim_area_unconfirmed: Reclaiming %{area} deletes %{entries} entries and
@@ -4082,6 +4088,11 @@ cli:
         area_argument_help: Storage area to show
         area_help: Show one storage area in full
       values:
+        area:
+          cache: cache
+          exports: exports
+          logs: logs
+          state: state
         lifecycle:
           durable: durable
           mixed: mixed
@@ -5904,6 +5915,10 @@ errors:
       yet supported; enter the censal facts manually instead.
     certificado_not_a_pdf: The supplied file is not a PDF; expected the Certificado
       de Situación Censal downloaded from Sede.
+  context_labels:
+    area: area
+    entry_count: entry count
+    reason: reason
   error:
     error_access_gate_submission: The access-gate policy rejected a submission operation.
     error_access_gate_submission_preflight: Access-gate preflight rejected a write
@@ -6417,6 +6432,8 @@ errors:
       within the timeout. Another process holds it; wait and try again.
     locked_storage_master_key_keychain: The operating-system keychain is locked. Unlock
       it (Touch ID, Windows Hello or your credential-manager unlock) and try again.
+  prefix:
+    refused: Refused.
   refused:
     auth_configure_no_active_bucket: Authentication cannot be configured without an
       active profile. Create a profile with `aeat config profile create NAME` and
@@ -6996,10 +7013,10 @@ flows:
     language:
       unavailable: This profile does not offer a language setting.
     progress: '{present} of {total} fields filled in, {missing} still needed for filing'
-    required_complete: All schema-required profile information is present.
     recovery_boundary: 'Recovery-code creation and rotation are terminal-only: aeat
       config recovery create / aeat config recovery rotate. The 24 words are shown
       once and cannot be shown again.'
+    required_complete: All schema-required profile information is present.
     section_title: '{title} - {present}/{total}'
     title: 'Profile: {profile}'
   progress:

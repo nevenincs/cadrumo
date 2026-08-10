@@ -137,8 +137,46 @@ class TestTextOutputIsReadable:
         assert "Área" in result.output
         assert "Ciclo de vida" in result.output
         assert "Información:" in result.output
+        for area_label in ("estado", "registros", "caché", "exportaciones"):
+            assert area_label in result.output
         assert "Storage root" not in result.output
         assert "Lifecycle" not in result.output
+
+    def test_spanish_durable_refusal_localizes_heading_reason_and_context(self, tmp_path) -> None:
+        with override_settings(cadrumo_local_storage_root=tmp_path):
+            target = storage_path(StorageCategory.BLOBS)
+            target.mkdir(parents=True, exist_ok=True)
+            (target / "durable.bin").write_bytes(b"preserve")
+            result = invoke_cached_cli(
+                ["config", "storage", "reclaim", "state", "--yes", "--output-language", "es"]
+            )
+
+        output = semantic_cli_output(result)
+        assert result.exit_code != 0
+        assert "Rechazado." in output
+        assert "el área contiene estado duradero" in output
+        assert "área: estado" in output
+        assert "número de entradas:" in output
+        assert "motivo:" in output
+        assert "Refused" not in output
+        assert "the area contains durable state" not in output
+
+    def test_spanish_unconfirmed_refusal_localizes_heading_and_context(self, tmp_path) -> None:
+        with override_settings(cadrumo_local_storage_root=tmp_path):
+            target = storage_path(StorageCategory.LLM_CACHE)
+            target.mkdir(parents=True, exist_ok=True)
+            (target / "cached.bin").write_bytes(b"rebuild")
+            result = invoke_cached_cli(
+                ["config", "storage", "reclaim", "cache", "--output-language", "es"]
+            )
+
+        output = semantic_cli_output(result)
+        assert result.exit_code != 0
+        assert "Rechazado." in output
+        assert "caché" in output
+        assert "área: caché" in output
+        assert "número de entradas:" in output
+        assert "Refused" not in output
 
 
 class TestCheckKeepsInternalNodesPrivate:

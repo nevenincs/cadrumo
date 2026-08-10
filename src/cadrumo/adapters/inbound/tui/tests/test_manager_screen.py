@@ -116,6 +116,56 @@ async def test_the_page_shows_every_declared_field_including_the_empty_ones(tmp_
 
 
 @pytest.mark.asyncio
+async def test_header_names_schema_required_information_instead_of_reposting_completion_counts(tmp_path) -> None:
+    """The pinned context answers what is missing using schema-owned labels."""
+    from .. import PinnedStatusBar
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        overview = _live_overview()
+
+        app = ProfileManagerApp(overview, persist=_persist)
+        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+            await pilot.pause()
+            summary = app.query_one("#manager-status", PinnedStatusBar).summary
+            assert summary == tr(
+                "cli.diagnostics.summary.profile_missing_fields",
+                count=len(overview.missing_required),
+                fields=", ".join(field.label for field in overview.missing_required_fields),
+            )
+            assert str(overview.present_count) + " of " + str(overview.total_count) not in summary
+            app.exit(None)
+
+
+@pytest.mark.asyncio
+async def test_header_renders_the_profile_envelopes_typed_advisories(tmp_path) -> None:
+    """The manager consumes Notice directly instead of inventing advisory text."""
+    from .....core.json_contract import Notice, NoticeSeverity
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        overview = _live_overview().model_copy(
+            update={
+                "notices": (
+                    Notice(
+                        severity=NoticeSeverity.WARNING,
+                        code="test.manager.profile_advisory",
+                        message="SCHEMA-ENVELOPE-ADVISORY",
+                    ),
+                ),
+            },
+        )
+
+        app = ProfileManagerApp(overview, persist=_persist)
+        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+            await pilot.pause()
+            rendered = str(app.query_one("#manager-notice-band #notice-0", Static).content)
+            assert "SCHEMA-ENVELOPE-ADVISORY" in rendered
+            assert app.query_one("#manager-header", Widget).region.y < app.query_one("#manager-body", Widget).region.y
+            app.exit(None)
+
+
+@pytest.mark.asyncio
 async def test_editing_a_row_writes_through_to_the_encrypted_record(tmp_path) -> None:
     """Save persists: the value survives a reload from storage.
 
@@ -197,8 +247,8 @@ async def test_editing_one_field_repaints_that_row_without_rebuilding_the_tables
             assert [id(table) for table in app.query(DataTable)] == [id(table) for table in tables], (
                 "the tables must survive the edit; remounting them is the full rebuild this replaced"
             )
-            assert app.query_one("#manager-status", PinnedStatusBar).summary != progress, (
-                "the filled-in count must follow the edit"
+            assert app.query_one("#manager-status", PinnedStatusBar).summary == progress, (
+                "editing an optional field must not change the schema-required information"
             )
             app.exit(None)
 

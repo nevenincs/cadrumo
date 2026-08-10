@@ -85,7 +85,7 @@ def build_status_page_data() -> StatusPageData:
         profiles=_build_profile_rows(active_uuid),
         auth=_build_auth_view(state, active_uuid=active_uuid),
         recovery=_build_recovery_view(),
-        notices=_build_notices(active_uuid, record=record),
+        notices=build_active_profile_notices(record) if active_uuid is not None else (),
     )
 
 
@@ -229,17 +229,17 @@ def _build_recovery_view() -> StatusRecoveryView:
     )
 
 
-def _build_notices(active_uuid: str | None, *, record: UserProfileRecord | None) -> tuple[Notice, ...]:
-    """Project application-layer advisories onto the status page's notices zone.
+def build_active_profile_notices(record: UserProfileRecord | None) -> tuple[Notice, ...]:
+    """Project application advisories for every active-profile surface.
 
-    The status page is where an operator checks in on a profile's health,
-    so this is the natural landing spot for the same typed
+    The status page and manager both report the active profile's health,
+    so they consume the same typed
     :class:`~cadrumo.core.json_contract.Notice` values a CLI envelope
     already carries — never a second, TUI-only advisory vocabulary.
     Degrades to no notices for a locked or absent bucket, matching every
     other zone this page builds.
     """
-    if active_uuid is None:
+    if record is None:
         return ()
     notices: list[Notice] = []
     from ....application.user_profile import censo_divergence_notice
