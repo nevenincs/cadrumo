@@ -71,7 +71,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import content_hash_hex, sha256_hex
-from ...core.identity import BucketId, ContentDigest
+from ...core.identity import BucketId, ContentDigest, tax_id_identity_token
 from ..calculations import ObservationSourceKind
 from ._errors import LiveApplicationInputError
 from ._snapshot_base import (
@@ -750,7 +750,7 @@ def register_capture_as_filing_evidence(
 
 def _expected_tax_id_for_filing_record(filing: ModeloRecord) -> str:
     if filing.member_nif is not None and filing.member_nif.strip():
-        return filing.member_nif.strip().upper()
+        return tax_id_identity_token(filing.member_nif)
     from ...core.errors import CadrumoError
     from ..user_profile import UserProfileLifecycleRepository, record_to_values
 
