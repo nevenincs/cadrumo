@@ -77,7 +77,7 @@ def test_test_operator_auth_reports_the_active_profile() -> None:
 
     result = run_operator_auth_test("certificate")
 
-    assert result.active_profile == _BUCKET_ID
+    assert result.active_profile == _PROFILE_LABEL
     assert result.active_profile_registered is True
     assert result.active_profile_record_present is True
     assert result.active_profile_status

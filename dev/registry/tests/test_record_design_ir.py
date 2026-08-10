@@ -44,9 +44,12 @@ def test_intermediate_retains_the_verified_binary_and_shipped_parser_coordinates
     assert intermediate.source.source_sha256 == resolved.source.sha256
     assert intermediate.source.design_epoch == resolved.source.record_design_epoch
     assert intermediate.source.workbook_format is RecordDesignWorkbookFormat.XLSX
-    assert len(intermediate.sheets) == len(parsed_sheets)
+    fixed_parser_sheets = tuple(sheet for sheet in parsed_sheets if sheet.variable_envelope is None)
+    assert len(intermediate.sheets) == len(fixed_parser_sheets)
+    assert {sheet.sheet for sheet in intermediate.sheets} == {sheet.name for sheet in fixed_parser_sheets}
+    assert "DP200000" not in {sheet.sheet for sheet in intermediate.sheets}
 
-    parser_sheet = parsed_sheets[0]
+    parser_sheet = fixed_parser_sheets[0]
     intermediate_sheet = intermediate.sheets[0]
     assert intermediate_sheet.sheet == parser_sheet.name
     assert intermediate_sheet.record_identity == parser_sheet.name
@@ -66,3 +69,25 @@ def test_intermediate_retains_the_verified_binary_and_shipped_parser_coordinates
     assert intermediate_field.normalized_description == parser_field.description
     assert intermediate_field.validation == parser_field.validation
     assert intermediate_field.content == parser_field.content
+
+    assert len(intermediate.variable_envelopes) == 1
+    envelope = intermediate.variable_envelopes[0]
+    assert envelope.sheet == "DP200000"
+    assert envelope.record_identity == "DP200000"
+    assert envelope.prefix_extent == 328
+    assert max(field.offset + field.length - 1 for field in envelope.prefix_fields) == 328
+    assert (envelope.body_source_cell, envelope.body_offset, envelope.body_length) == (
+        "A14",
+        329,
+        "Variable",
+    )
+    assert (
+        envelope.closing_source_cell,
+        envelope.closing_offset,
+        envelope.closing_length,
+    ) == ("A15", "***", 18)
+    assert (
+        envelope.total_source_cell,
+        envelope.total_label,
+        envelope.total_length,
+    ) == ("A16", "total", "Variable")

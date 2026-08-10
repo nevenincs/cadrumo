@@ -104,7 +104,7 @@ def test_work_unit_text_lines_render_human_state_label_but_payload_keeps_token()
 
     with override_settings(cadrumo_output_language="en"):
         lines = work_unit_lines(unit)
-        list_lines = work_unit_list_lines((unit,), bucket_id=None, include_discarded=False)
+        list_lines = work_unit_list_lines((unit,), include_discarded=False)
 
     assert f"state\t{CalculationRevisionState.BORRADOR.value}" not in lines
     assert "state\tdraft" in lines

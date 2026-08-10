@@ -178,6 +178,43 @@ def test_work_list_projects_next_step_as_typed_action(_isolated_cli_backend: Pat
     assert notice["action"] == {
         "action_id": "operator.modelo.work.status",
         "target_command_key": "modelo.work.status",
+        "cli_path": ["app", "modelo", "work", "status"],
+    }
+
+
+def test_work_list_and_status_text_name_profile_once_without_bucket_placeholders(
+    _isolated_cli_backend: Path,
+) -> None:
+    """Profile-scoped text uses the operator label, never a storage identity."""
+    _create_profile()
+    work_unit_id = _create_m130_work_unit()
+
+    listed = _invoke(["app", "modelo", "work", "list"])
+    assert listed.exit_code == 0, listed.output
+    status = _invoke(["app", "modelo", "work", "status", work_unit_id[-12:]])
+    assert status.exit_code == 0, status.output
+
+    for result in (listed, status):
+        assert result.output.count("active_profile\toperator") == 1
+        assert "bucket_id" not in result.output
+        assert "<profile-id>" not in result.output
+        assert "<bucket-id>" not in result.output
+    short_work_unit_id = work_unit_id[-12:]
+    assert f"next_action\taeat app modelo work status {short_work_unit_id}" in listed.output
+    assert f"next_action\taeat app modelo work calculate {short_work_unit_id}" in status.output
+
+    status_json = _invoke(["--format", "json", "app", "modelo", "work", "status", short_work_unit_id])
+    assert status_json.exit_code == 0, status_json.output
+    action = next(
+        item["action"]
+        for item in _notices(status_json.output)
+        if item["code"] == "modelo.work.status.next_action"
+    )
+    assert action == {
+        "action_id": "operator.modelo.work.calculate",
+        "target_command_key": "modelo.work.calculate",
+        "cli_path": ["app", "modelo", "work", "calculate"],
+        "arguments": {"work_unit_id": short_work_unit_id},
     }
 
 

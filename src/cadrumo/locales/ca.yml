@@ -3180,6 +3180,11 @@ cli:
           --year %{year} --period %{period}' i torna a executar verify/file per al
           mateix model/any/període. Els ids exactes continuen disponibles com a via
           avançada.
+        id_selector_ambiguous: 'L''id de treball mostrat {selector} coincideix amb
+          més d''una unitat de treball activa. Utilitza l''id complet de 64 caràcters
+          de la unitat de treball entre els candidats següents.
+
+          {candidates}'
         include_discarded_help: Incloure les unitats descartades en el llistat (excloses
           per defecte)
         invalid_binding_key: 'La clau --binding no és un BindingId vàlid (alfanumèric
@@ -4392,7 +4397,7 @@ cli:
           mixed: mixta
           reclaimable: alliberable
         occupancy:
-          absent: absent
+          absent: inexistent
           empty: buida
           populated: amb dades
           unresolved: sense resoldre
@@ -5719,8 +5724,6 @@ cli:
       session_unchecked: La sessió i la preparació no s'infereixen del perfil seleccionat.
       tagline: Flux local amb l'Agència Estatal d'Administració Tributària (AEAT)
         per a contribuents i assessors.
-      welcome_profile_unavailable: 'Perfil actiu: no disponible. Repara el perfil
-        seleccionat abans del treball vinculat al perfil.'
     language_help: Idioma de la sortida i del text d'ajuda (en, es, ca, hu).
     profile_help: Nom del perfil actiu.
     quiet_help: Mostra només els errors.

@@ -66,7 +66,16 @@ def test_initial_actions_are_deterministic_and_lookup_by_stable_identity() -> No
                 ),
             ),
         ),
-        "operator.modelo.work.status": ("modelo.work.status", ()),
+        "operator.modelo.work.status": (
+            "modelo.work.status",
+            (
+                ActionArgumentBindingSpecification(
+                    argument_name="work_unit_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="work_unit_id",
+                ),
+            ),
+        ),
         "operator.overview.explain": (
             "overview.explain",
             (

@@ -2956,6 +2956,11 @@ cli:
           app modelo work calculate --modelo %{modelo} --year %{year} --period %{period}'
           and then rerun verify/file for that same modelo/year/period. Exact ids remain
           available as an advanced escape hatch.
+        id_selector_ambiguous: 'The displayed work id {selector} matches more than
+          one active work unit. Use the full 64-character work-unit id from the candidates
+          below.
+
+          {candidates}'
         include_discarded_help: Include discarded work units in the listing (excluded
           by default)
         invalid_binding_key: '--binding key is not a valid BindingId (lowercase alphanumeric
@@ -5082,9 +5087,6 @@ cli:
     coverage:
       incomplete_summary: '%{count} filing obligation(s) could not be positively scoped
         for this profile and may be under-reported: %{modelos}.'
-      investigate: '%{count} filing obligation(s) could not be positively scoped for
-        this profile and may be under-reported: %{modelos}. Investigate each with
-        ''aeat app overview explain <modelo>''.'
     drafts: Drafts
     explain:
       help: Decompose a modelo's applicability against the active profile. Surfaces
@@ -5116,8 +5118,6 @@ cli:
         01-12 (months). Combine with --year to choose the year.'
       year_help: Filing year (e.g. 2026).
     post_filing:
-      pending: '%{count} AEAT post-filing event(s) require attention: %{kinds}. Review
-        them with ''aeat app live notifications list''.'
       pending_summary: '%{count} AEAT post-filing event(s) require attention: %{kinds}.'
     prepare:
       help: 'Walk through the data-preparation steps for one modelo/period in order:
@@ -5359,11 +5359,6 @@ cli:
         profile.
       tagline: Local-first workflow with the Spanish Tax Agency (AEAT) for taxpayers
         and advisers.
-      welcome_no_profile: 'Active profile: none. Create one before profile-scoped
-        work.'
-      welcome_profile: 'Active profile: `%{profile}`.'
-      welcome_profile_unavailable: 'Active profile: unavailable. Repair the selected
-        profile before profile-scoped work.'
     language_help: Language for output and help text (en, es, ca, hu).
     profile_help: Name of the active profile.
     quiet_help: Show errors only.

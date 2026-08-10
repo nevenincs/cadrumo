@@ -12,7 +12,7 @@ from ....adapters.persistence.storage import SecretStoreError
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
-from .._common import _active_profile_label, _emit_envelope
+from .._common import _emit_envelope, active_profile_label
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from ._custody_secret import register_secret_custody_commands
 
@@ -300,7 +300,7 @@ def _register_logout_command(app: typer.Typer) -> None:
         _activate_subcommand_output_language(ctx, output_language)
         from ....application.user_profile import logout_active_profile
 
-        signed_out_label = _active_profile_label()
+        signed_out_label = active_profile_label()
         signed_out = logout_active_profile()
         logged_out_profile = signed_out_label or signed_out
 

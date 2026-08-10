@@ -3117,6 +3117,11 @@ cli:
           --year %{year} --period %{period}'', majd futtasd újra a verify/file műveletet
           ugyanarra a modellre/évre/időszakra. A pontos azonosítók továbbra is elérhetők
           haladó menekülőútként.'
+        id_selector_ambiguous: 'A megjelenített {selector} munkaazonosító egynél több
+          aktív munkaegységre illeszkedik. Használja az alábbi jelöltek egyikének
+          teljes, 64 karakteres munkaegység-azonosítóját.
+
+          {candidates}'
         include_discarded_help: Eldobott munkaegységek bevonása a listába (alapértelmezés
           szerint kizárva).
         invalid_binding_key: 'A --binding kulcsa nem érvényes BindingId (kisbetűs
@@ -5665,8 +5670,6 @@ cli:
       session_unchecked: A munkamenet és készültség nem következik a kiválasztott
         profilból.
       tagline: Helyi munkafolyamat a spanyol adóhatósággal (AEAT) adózóknak és tanácsadóknak.
-      welcome_profile_unavailable: 'Aktív profil: nem érhető el. Javítsd a kijelölt
-        profilt a profilhoz kötött munka előtt.'
     language_help: A kimenet és a súgószöveg nyelve (en, es, ca, hu).
     profile_help: Az aktív profil neve.
     quiet_help: Csak a hibák megjelenítése.

@@ -352,11 +352,10 @@ def work_unit_payload(unit) -> WorkUnitPayload:
     )
 
 
-def work_unit_lines(unit) -> list[str]:
+def work_unit_lines(unit, *, include_bucket_id: bool = True) -> list[str]:
     lines = [
         f"work_unit_id\t{unit.work_unit_id}",
         f"short_work_unit_id\t{short_id(unit.work_unit_id) or ''}",
-        f"bucket_id\t{unit.bucket_id}",
         f"modelo\t{unit.modelo}",
         f"filing_year\t{unit.filing_year}",
         f"period\t{unit.period.registry_token}",
@@ -371,6 +370,8 @@ def work_unit_lines(unit) -> list[str]:
         f"created_at\t{unit.created_at.isoformat()}",
         f"updated_at\t{unit.updated_at.isoformat()}",
     ]
+    if include_bucket_id:
+        lines.insert(2, f"bucket_id\t{unit.bucket_id}")
     if unit.discarded_at is not None:
         lines.append(f"discarded_at\t{unit.discarded_at.isoformat()}")
     if unit.discarded_by is not None:
@@ -383,20 +384,18 @@ def work_unit_lines(unit) -> list[str]:
     return lines
 
 
-def work_unit_list_lines(units, *, bucket_id: str | None, include_discarded: bool) -> list[str]:
+def work_unit_list_lines(units, *, include_discarded: bool) -> list[str]:
     lines = [
         "operation\tmodelo.work.list",
-        f"bucket_id_filter\t{bucket_id or ''}",
         f"include_discarded\t{include_discarded}",
         f"work_unit_count\t{len(units)}",
-        "short_work_unit_id\twork_unit_id\tbucket_id\tmodelo\tyear\tperiod\trevision_id\tstate\tcurrent_revision\tfiled_revision\tname",
+        "short_work_unit_id\twork_unit_id\tmodelo\tyear\tperiod\trevision_id\tstate\tcurrent_revision\tfiled_revision\tname",
     ]
     lines.extend(
         "\t".join(
             (
                 short_id(unit.work_unit_id) or "",
                 unit.work_unit_id,
-                unit.bucket_id,
                 str(unit.modelo),
                 str(unit.filing_year),
                 unit.period.registry_token,
@@ -911,7 +910,7 @@ def verification_report_notices(report) -> list[Notice]:
     """
     notices: list[Notice] = []
     for finding in report.findings:
-        message, next_action = _render_verification_finding_text(finding)
+        message, _ = _render_verification_finding_text(finding)
         context: dict[str, str] = {
             "severity": finding.severity.value,
             "kind": finding.kind.value,

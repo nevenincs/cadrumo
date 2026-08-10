@@ -10,7 +10,7 @@ projection.
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -210,6 +210,13 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
         ActionCatalogueEntry(
             action_id="operator.modelo.work.status",
             target_command_key="modelo.work.status",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="work_unit_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="work_unit_id",
+                ),
+            ),
         ),
         ActionCatalogueEntry(
             action_id="operator.modelo.export",
@@ -282,7 +289,7 @@ def lookup_action(action_id: str) -> ActionCatalogueEntry:
     return OPERATOR_ACTION_CATALOGUE.lookup(action_id)
 
 
-def next_action(action_id: str) -> ResolvedActionReference:
+def next_action(action_id: str, *, arguments: Mapping[str, str] | None = None) -> ResolvedActionReference:
     """Resolve a declared operator action into a :class:`Notice`-attachable reference.
 
     Forward guidance on a SUCCESS path used to be a literal ``aeat ...`` string
@@ -301,6 +308,7 @@ def next_action(action_id: str) -> ResolvedActionReference:
 
     Args:
         action_id: A namespaced id declared in the operator action catalogue.
+        arguments: Optional declared target-argument values for this success path.
 
     Returns:
         The reference to attach as ``Notice(action=...)``.
@@ -309,9 +317,17 @@ def next_action(action_id: str) -> ResolvedActionReference:
         KeyError: ``action_id`` is not declared in the catalogue.
     """
     entry = lookup_action(action_id)
+    supplied_names = set(arguments or {})
+    declared_names = {item.argument_name for item in entry.argument_specifications}
+    if not supplied_names <= declared_names:
+        unknown_names = tuple(sorted(supplied_names - declared_names))
+        raise ValueError(
+            f"operator action arguments are not declared for {action_id}: {unknown_names}",
+        )
     return ResolvedActionReference(
         action_id=entry.action_id,
         target_command_key=entry.target_command_key,
+        arguments=arguments,
     )
 
 

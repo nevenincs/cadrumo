@@ -85,7 +85,11 @@ def _active_profile(tmp_path: Path) -> Iterator[None]:
 
     with isolated_profile_storage_root(tmp_path=tmp_path), profile_create_storage_span(_PROFILE_ID):
         workflow_state_repository().update(
-            lambda state: register_minimal_profile(state, profile_id=_PROFILE_ID),
+            lambda state: register_minimal_profile(
+                state,
+                profile_id=_PROFILE_ID,
+                display_name="Manager Censal Pull Test",
+            ),
         )
         yield
 

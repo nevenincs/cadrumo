@@ -35,7 +35,7 @@ from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.calculations.registry import RegistrySnapshotError
 from ...domain.contribuyente import parse_tax_region
 from ...domain.modelos import WorkUnit
-from ._common import _emit_envelope
+from ._common import _emit_envelope, active_profile_label
 from ._modelo_cli_support import resolve_explicit_or_active_bucket_id
 from ._modelo_payloads import (
     WorkCreateResult,
@@ -450,7 +450,10 @@ def _register_work_list_command(work_app: typer.Typer, deps: _LifecycleDeps) -> 
                 "work_units": [work_unit_payload(unit) for unit in units],
             },
         )
-        lines = work_unit_list_lines(units, bucket_id=bucket_id, include_discarded=include_discarded)
+        lines = [
+            f"active_profile\t{active_profile_label() or ''}",
+            *work_unit_list_lines(units, include_discarded=include_discarded),
+        ]
         next_step = Notice(
             severity=NoticeSeverity.INFO,
             code="modelo.work.list.next_action",
@@ -458,7 +461,10 @@ def _register_work_list_command(work_app: typer.Typer, deps: _LifecycleDeps) -> 
                 "cli.app.modelo.work.list_next_action_summary",
                 default="Inspect one work unit's full state before drafting or recalculating it.",
             ),
-            action=next_action("operator.modelo.work.status"),
+            action=next_action(
+                "operator.modelo.work.status",
+                arguments={"work_unit_id": units[0].work_unit_id[-12:]} if len(units) == 1 else None,
+            ),
         )
         _emit_envelope(ctx, command="modelo.work.list", result=result, lines=lines, notices=[next_step])
 
@@ -492,7 +498,11 @@ def _register_work_status_command(work_app: typer.Typer, deps: _LifecycleDeps) -
             bucket_id=bucket_id,
         )
         result = WorkStatusResult.model_validate(work_unit_payload(unit).model_dump(mode="python"))
-        lines = ["operation\tmodelo.work.status", *work_unit_lines(unit)]
+        lines = [
+            f"active_profile\t{active_profile_label() or ''}",
+            "operation\tmodelo.work.status",
+            *work_unit_lines(unit, include_bucket_id=False),
+        ]
         next_step = Notice(
             severity=NoticeSeverity.INFO,
             code="modelo.work.status.next_action",
@@ -500,7 +510,10 @@ def _register_work_status_command(work_app: typer.Typer, deps: _LifecycleDeps) -
                 "cli.app.modelo.work.status_next_action_summary",
                 default="Draft or recalculate this work unit, then verify the resulting draft.",
             ),
-            action=next_action("operator.modelo.work.calculate"),
+            action=next_action(
+                "operator.modelo.work.calculate",
+                arguments={"work_unit_id": unit.work_unit_id[-12:]},
+            ),
         )
         _emit_envelope(ctx, command="modelo.work.status", result=result, lines=lines, notices=[next_step])
 
