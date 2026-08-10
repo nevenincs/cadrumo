@@ -21,11 +21,12 @@ sensitive in a tax / PII sense:
   here.
 * :attr:`ErrorPayload.message` is free-form and may contain traceback
   fragments with file paths or captured user input.
-* :class:`ArgumentRecord` values are redacted for secret-named
-  parameters by
-  :func:`cadrumo.entrypoints.cli._observability.build_arguments`
-  (``password`` / ``secret`` / ``token`` / etc. → ``"***"``). Other
-  argument values are recorded verbatim.
+* :class:`ArgumentRecord` values are recorded verbatim. This layer
+  performs no redaction of its own, so any producer populating
+  :attr:`RunTrace.arguments` must redact secret-named parameters
+  against :data:`cadrumo.core.redaction.ALWAYS_REDACT_KEY_TERMS`
+  *before* constructing the record — once a value reaches this model it
+  is written to the JSONL trace as given.
 * :attr:`RunTrace.cert_fingerprint` is a SHA-256 of the configured
   PKCS#12 on disk — a stable identity marker of the operator's cert,
   not a secret, but identifying.
