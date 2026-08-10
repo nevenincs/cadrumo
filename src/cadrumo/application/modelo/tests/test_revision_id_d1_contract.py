@@ -84,11 +84,12 @@ class TestS01CreationGate:
     def test_refuses_explicit_revision_that_diverges_from_law_determined(self) -> None:
         """An explicit --revision that is NOT the law-determined revision is refused.
 
-        M303 has two revisions:
+        M303 has three revisions:
         - ``2009-y-siguientes`` covers 2009-2022
-        - ``2023-y-siguientes`` covers 2023-onwards
+        - ``2023-y-siguientes`` covers 2023-2025 (``valid_to = 2025-12-31``)
+        - ``2026-y-siguientes`` covers 2026-onwards
 
-        For year 2026, period 1T the law-determined revision is ``2023-y-siguientes``.
+        For year 2026, period 1T the law-determined revision is ``2026-y-siguientes``.
         Supplying ``2009-y-siguientes`` (a real revision that does NOT cover 2026)
         must be refused.
         """
@@ -103,7 +104,7 @@ class TestS01CreationGate:
         # Must name the requested revision
         assert "2009-y-siguientes" in msg
         # Must name the law-determined revision
-        assert "2023-y-siguientes" in msg
+        assert "2026-y-siguientes" in msg
         # Must state the binding is fixed by law
         assert "law" in msg.lower() or "fixed by" in msg.lower()
 
@@ -122,19 +123,19 @@ class TestS01CreationGate:
             )
         msg = str(exc_info.value)
         assert "2009-y-siguientes" in msg, "message must name the requested revision"
-        assert "2023-y-siguientes" in msg, "message must name the law-determined revision"
+        assert "2026-y-siguientes" in msg, "message must name the law-determined revision"
         # Should direct operator to re-create without --revision
         assert "re-create" in msg.lower() or "--revision" in msg.lower() or "without" in msg.lower()
 
     def test_returns_correct_law_determined_revision_for_m303_2026(self) -> None:
-        """Smoke test: M303 2026 1T resolves to the 2023-y-siguientes revision."""
+        """Smoke test: M303 2026 1T resolves to the 2026-y-siguientes revision."""
         result = resolve_registry_revision_for_work_target(
             modelo="303",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
             registry_revision_id=None,
         )
-        assert result == "2023-y-siguientes"
+        assert result == "2026-y-siguientes"
 
     def test_refuses_revision_that_covers_year_but_not_period(self) -> None:
         """The PRECISE D1 hole: a revision that COVERS the filing year but NOT the period.
@@ -203,7 +204,7 @@ class TestS02CalcTimeAssertion:
     def _stale_work_unit(self, bucket_id: str) -> WorkUnit:
         """Construct a WorkUnit whose revision_id is stale (no longer law-determined).
 
-        For M303 2026 1T the current law-determined revision is ``2023-y-siguientes``.
+        For M303 2026 1T the current law-determined revision is ``2026-y-siguientes``.
         We pin ``revision_id=2009-y-siguientes`` (a real registry revision,
         but one that covers 2009-2022, not 2026).  After a hypothetical registry
         correction this is the shape a pre-gate unit would have.
@@ -256,7 +257,7 @@ class TestS02CalcTimeAssertion:
         # Must name the work unit's stale revision
         assert "2009-y-siguientes" in msg, "message must name the stale (pinned) revision"
         # Must name the current law-determined revision
-        assert "2023-y-siguientes" in msg, "message must name the law-determined revision"
+        assert "2026-y-siguientes" in msg, "message must name the law-determined revision"
         # Must direct operator to re-create the work unit
         assert "re-create" in msg.lower() or "recreate" in msg.lower() or "re-create" in msg
 
@@ -272,7 +273,7 @@ class TestS02CalcTimeAssertion:
         from .._calculation_helpers import resolve_registry_snapshot_for_work_unit
 
         bucket_id, repo = work_unit_repo
-        correct_revision_id = "2023-y-siguientes"
+        correct_revision_id = "2026-y-siguientes"
         work_unit_id = derive_work_unit_id(
             bucket_id=bucket_id,
             modelo="303",
@@ -322,7 +323,7 @@ class TestS02RevisionForWorkUnitAssertion:
     ) -> None:
         """``_revision_for_work_unit`` refuses when the unit's revision_id is stale.
 
-        Uses M303 2026 1T: the law-determined revision is ``2023-y-siguientes``;
+        Uses M303 2026 1T: the law-determined revision is ``2026-y-siguientes``;
         the seeded unit pins the stale ``2009-y-siguientes``.
         """
         from .._calculate_input import _revision_for_work_unit
@@ -356,7 +357,7 @@ class TestS02RevisionForWorkUnitAssertion:
 
         msg = str(exc_info.value)
         assert "2009-y-siguientes" in msg, "message must name the stale (pinned) revision"
-        assert "2023-y-siguientes" in msg, "message must name the law-determined revision"
+        assert "2026-y-siguientes" in msg, "message must name the law-determined revision"
         assert "re-create" in msg.lower()
 
     def test_revision_for_work_unit_passes_for_correctly_pinned_revision(
@@ -367,7 +368,7 @@ class TestS02RevisionForWorkUnitAssertion:
         from .._calculate_input import _revision_for_work_unit
 
         bucket_id, _ = work_unit_repo
-        correct_revision_id = "2023-y-siguientes"
+        correct_revision_id = "2026-y-siguientes"
         work_unit_id = derive_work_unit_id(
             bucket_id=bucket_id,
             modelo="303",

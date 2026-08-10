@@ -159,7 +159,7 @@ def _intracom_ledger_transaction(provider_id: str, *, booked_date: date = date(2
 @pytest.mark.parametrize(
     ("modelo", "filing_year", "period", "revision_id", "binding_id"),
     [
-        ("303", 2026, "1T", "2023-y-siguientes", "modelo-303-iva-repercutido-general-cuota"),
+        ("303", 2026, "1T", "2026-y-siguientes", "modelo-303-iva-repercutido-general-cuota"),
         ("100", 2025, "0A", "2025", "renta-2025-ledger-expense-0199-deductible"),
     ],
 )
@@ -273,7 +273,7 @@ def test_modelo_349_monthly_refuses_midmonth_intracom_ledger_rows_without_operat
 @pytest.mark.parametrize(
     ("modelo", "filing_year", "period", "revision_id", "casilla_id"),
     [
-        ("303", 2026, "1T", "2023-y-siguientes", "iva.repercutido.general"),
+        ("303", 2026, "1T", "2026-y-siguientes", "iva.repercutido.general"),
         ("100", 2025, "0A", "2025", "0199"),
     ],
 )
