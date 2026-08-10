@@ -21,6 +21,7 @@ Submodules
    cadrumo.application.filing._history_models
    cadrumo.application.filing._history_repository
    cadrumo.application.filing._import
+   cadrumo.application.filing._producer_snapshot
    cadrumo.application.filing._review
    cadrumo.application.filing._runtime_repository
    cadrumo.application.filing.errors
