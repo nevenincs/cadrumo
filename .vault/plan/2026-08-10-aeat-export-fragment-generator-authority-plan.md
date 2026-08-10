@@ -4,7 +4,7 @@ tags:
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
 modified: '2026-08-10'
-body_hash: 'sha256:2b8f802a6aebef009815ca6a6c6ae0fdf2603a26d3bd52b7c8fbf5e0f0432536'
+body_hash: 'sha256:abac4572e090992dd9f572f7f2a6144e77888bbc55a20c10ce8edeffb150a7d1'
 tier: L3
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
@@ -34,6 +34,7 @@ Make the exact binary and typed parser output the complete coordinate authority.
 - [x] `W01.P01.S01` - Extend the existing validated source catalogue with hash-pinned binary selection and reject inapplicable or drifting sources; `src/cadrumo/_data/registry/aeat/legal/is.toml`.
 - [x] `W01.P01.S02` - Define the typed intermediate representation with complete source anchors, coordinates, validation metadata, and declared totals; `dev/registry/`.
 - [x] `W01.P01.S03` - Prove the intermediate representation consumes shipped parser output and never extracted derivatives; `src/cadrumo/domain/calculations/registry/tests/`.
+- [ ] `W01.P01.S30` - Recover official cached positive integers from Total and Total: rows without extent inference, and model DP200000 as a typed variable envelope/composition wrapper outside fixed-width generation with a separately proven composition contract; `src/cadrumo/domain/calculations/registry/; dev/registry/`.
 
 ### Phase `W01.P02` - semantic map and provenance contracts
 
@@ -42,6 +43,7 @@ Separate authored registry meaning from official coordinates and make their join
 - [x] `W01.P02.S04` - Define the per-modelo per-design semantic-map schema keyed by exact parser anchors; `dev/registry/`.
 - [x] `W01.P02.S05` - Validate mapping bijection and require canonical identifiers, legal references, and source references to resolve through existing registry catalogues while constraining typed anomaly exceptions; `dev/registry/`.
 - [x] `W01.P02.S06` - Define the adjacent non-loader provenance manifest and normalized loader-semantic digest; `dev/registry/`.
+- [ ] `W01.P02.S31` - Define and validate the exhaustive per-modelo, per-design, source-SHA-pinned render-profile authority with exact-anchor coverage, explicit unsigned Num versus signed N handling, individually grounded rules for all 126 smaller fields, and no legacy-tree oracle or implicit defaults; `dev/registry/`.
 
 ## Wave `W02` - deterministic atomic generator
 
@@ -54,6 +56,7 @@ Join exact parser anchors to reviewed semantics and render a complete target rev
 - [x] `W02.P03.S07` - Implement fail-closed parser-to-semantic-map joining without fuzzy or positional matching; `dev/registry/`.
 - [ ] `W02.P03.S08` - Render the complete target export tree with stable partitioning and canonical TOML serialization; `dev/registry/`.
 - [x] `W02.P03.S09` - Emit source, map, schema, semantic, and file digests in the provenance manifest; `dev/registry/`.
+- [ ] `W02.P03.S32` - Resolve only absent exact-anchor wire facts through the validated render profile, refuse official-content conflicts and uncovered or hash-drifting profiles, keep variable envelopes outside fixed-width output, and add the canonical profile digest and schema version to provenance; `dev/registry/`.
 
 ### Phase `W02.P04` - publication and check mode
 
@@ -74,6 +77,7 @@ Cover every authority boundary with positive and negative real-behavior tests.
 - [ ] `W03.P05.S13` - Prove parser completeness, declared totals, source applicability, and source-hash enforcement; `dev/registry/tests/`.
 - [ ] `W03.P05.S14` - Prove missing, duplicate, ambiguous, fuzzy, and illegal-exception mappings refuse the whole design; `dev/registry/tests/`.
 - [ ] `W03.P05.S15` - Prove offset, length, source-anchor, target-revision, and generated-file mutations are detected; `dev/registry/tests/`.
+- [ ] `W03.P05.S33` - Prove refusal for missing, duplicate, overlapping, conflicting, unknown-anchor, inapplicable, defaulted, legacy-derived, or source-hash-drifting profile authority, plus official Total: recovery, Num and signed-N behavior, and non-truncation of DP200000; `dev/registry/tests/`.
 
 ### Phase `W03.P06` - repository and byte gates
 
@@ -82,6 +86,7 @@ Verify generated layouts as loadable complete structures and as real emitted fil
 - [ ] `W03.P06.S16` - Prove deterministic double generation and repository check mode on real bundled sources; `dev/registry/tests/`.
 - [ ] `W03.P06.S17` - Run extent, overlap, declared-total, applicability, and full-registry-load gates on generated trees; `src/cadrumo/domain/calculations/registry/tests/`.
 - [ ] `W03.P06.S18` - Prove representative fields land at official byte offsets across each regenerated revision boundary; `src/cadrumo/application/filing/tests/`.
+- [ ] `W03.P06.S34` - Prove complete real-source exact-anchor coverage including all 126 smaller fields, the separate variable-envelope composition contract before generation, strict loader equality, profile-bearing provenance, deterministic regeneration, and real emitted bytes; `dev/registry/tests/; src/cadrumo/domain/calculations/registry/tests/; src/cadrumo/application/filing/tests/`.
 
 ## Wave `W04` - regenerate and release relayout waves
 
