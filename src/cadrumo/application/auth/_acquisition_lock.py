@@ -30,16 +30,19 @@ from pydantic import BaseModel, Field, ValidationError
 from ...core import (
     LOCKFILE_UNLINK_RETRY_SECONDS,
     STRICT_FROZEN_CONFIG,
+    ActionConditionality,
+    ActionEvidenceProvenance,
     AuthProviderKind,
+    NoRecoveryOutcome,
     pid_is_alive,
     unlink_lockfile,
 )
 from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
-from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...core.time import coerce_utc_aware
 from ...core.time import now as _utc_now
+from ..operator_actions import ConditionEvidence, PreconditionVerdict
 
 if TYPE_CHECKING:
     from ...core.config import Settings
@@ -89,6 +92,47 @@ class AuthAcquisitionLockStatus(BaseModel):
 
 class AuthAcquisitionLockedError(CadrumoError):
     """Raised when another process is already acquiring AEAT auth."""
+
+    def __init__(
+        self,
+        *,
+        status: AuthAcquisitionLockStatus,
+        translated_message: str,
+    ) -> None:
+        """Retain the observed lock state as an explicit non-actionable verdict.
+
+        A live acquisition must not be cleared or retried automatically: that
+        could create the duplicate external petition the lock prevents. The
+        status is therefore factual evidence with an operator-decision outcome,
+        not a prose-derived recovery command.
+        """
+        super().__init__(
+            translated_message=translated_message,
+            context=_status_context(status),
+        )
+        condition_id = "auth.acquisition_lock.available"
+        self._precondition_verdict = PreconditionVerdict(
+            failed_condition_id=condition_id,
+            evidence=(
+                ConditionEvidence(
+                    condition_id=condition_id,
+                    evidence_id="auth.acquisition_lock.state",
+                    provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                    values={
+                        "lock_available": False,
+                        "lock_recoverable": status.recoverable,
+                        "lock_state": status.state.value,
+                    },
+                ),
+            ),
+            conditionality=ActionConditionality.NOT_APPLICABLE,
+            no_recovery_outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+        )
+
+    @property
+    def terminal_precondition_verdict(self) -> PreconditionVerdict:
+        """Expose the application-owned lock conflict to the generic CLI boundary."""
+        return self._precondition_verdict
 
 
 def auth_acquisition_lock_path(
@@ -277,8 +321,7 @@ def acquire_auth_acquisition_lock(
                 continue
             raise AuthAcquisitionLockedError(
                 translated_message="application.auth.acquisition_lock.errors.lock_held",
-                context=_status_context(status),
-                suggestion=tr("application.auth.acquisition_lock.errors.lock_held_suggestion"),
+                status=status,
             ) from None
         try:
             with os.fdopen(fd, "w", encoding=UTF_8_ENCODING) as file:
@@ -293,7 +336,7 @@ def acquire_auth_acquisition_lock(
         status = inspect_auth_acquisition_lock(settings, kind)
         raise AuthAcquisitionLockedError(
             translated_message="application.auth.acquisition_lock.errors.acquire_failed",
-            context=_status_context(status),
+            status=status,
         )
 
     try:

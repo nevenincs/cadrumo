@@ -884,15 +884,6 @@ role = "producer"
 reason = "src/cadrumo/application/aggregation/_service.py:332 provider_for_modelo: AggregationUnsupportedModeloError supplies 'suggestion' as the current action or no-recovery value (use one of 111, 115, 123, 180, 190, 193, 347, 349, 720) for its consumer."
 
 [[disposition]]
-path = "src/cadrumo/application/auth/_acquisition_lock.py"
-enclosing_symbol = "acquire_auth_acquisition_lock"
-candidate_role = "producer"
-alias = "suggestion"
-action_identity = "tr('application.auth.acquisition_lock.errors.lock_held_suggestion')"
-role = "producer"
-reason = "src/cadrumo/application/auth/_acquisition_lock.py:278 acquire_auth_acquisition_lock: AuthAcquisitionLockedError supplies 'suggestion' as the current action or no-recovery value (tr('application.auth.acquisition_lock.errors.lock_held_suggestion')) for its consumer."
-
-[[disposition]]
 path = "src/cadrumo/application/auth/_certificate_sources_operator.py"
 enclosing_symbol = "_gate_active_bucket"
 candidate_role = "producer"

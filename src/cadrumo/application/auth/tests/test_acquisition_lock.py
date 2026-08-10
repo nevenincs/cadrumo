@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import AuthProviderKind
+from ....core import ActionConditionality, AuthProviderKind, NoRecoveryOutcome
 from ....core.config import Settings
 from ....core.external_constants import UTF_8_ENCODING
 from .._acquisition_lock import (
@@ -77,6 +77,22 @@ def test_auth_acquisition_lock_blocks_second_live_owner(tmp_path: Path) -> None:
         assert excinfo.value.context is not None
         assert excinfo.value.context["state"] == "held"
         assert excinfo.value.context["pid"] == os.getpid()
+        assert not hasattr(excinfo.value, "suggestion")
+        verdict = excinfo.value.terminal_precondition_verdict
+        assert verdict.failed_condition_id == "auth.acquisition_lock.available"
+        assert verdict.evidence[0].model_dump(mode="json") == {
+            "condition_id": "auth.acquisition_lock.available",
+            "evidence_id": "auth.acquisition_lock.state",
+            "provenance": "application_state",
+            "values": {
+                "lock_available": False,
+                "lock_recoverable": False,
+                "lock_state": "held",
+            },
+        }
+        assert verdict.action is None
+        assert verdict.conditionality is ActionConditionality.NOT_APPLICABLE
+        assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
 
     final_status = inspect_auth_acquisition_lock(settings, AuthProviderKind.CLAVE_MOVIL)
     assert final_status.state is AuthAcquisitionLockState.ABSENT
