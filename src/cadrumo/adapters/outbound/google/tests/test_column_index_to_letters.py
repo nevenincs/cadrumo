@@ -1,6 +1,6 @@
 """Contract test for the A1 column-letter conversion helper.
 
-The pull adapter uses `_column_index_to_letters` to build the Sheets
+The pull adapter uses `column_index_to_letters` to build the Sheets
 batchGet range for each row-set's data block. Off-by-one or wrong
 boundary handling would either skip columns silently or fetch
 columns the engine never wrote — a class of silent-loss bug that
@@ -11,12 +11,12 @@ from __future__ import annotations
 
 import pytest
 
-from .._calc_sheets_pull import _column_index_to_letters
+from .....application.storage.calc_sheets import column_index_to_letters
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
-def test_column_index_to_letters_at_boundaries() -> None:
+def testcolumn_index_to_letters_at_boundaries() -> None:
     cases: tuple[tuple[int, str], ...] = (
         (1, "A"),
         (2, "B"),
@@ -35,10 +35,10 @@ def test_column_index_to_letters_at_boundaries() -> None:
     )
 
     for column, expected in cases:
-        assert _column_index_to_letters(column) == expected, column
+        assert column_index_to_letters(column) == expected, column
 
 
-def test_column_index_to_letters_rejects_non_positive_values() -> None:
+def testcolumn_index_to_letters_rejects_non_positive_values() -> None:
     cases: tuple[tuple[str, int], ...] = (
         ("zero", 0),
         ("negative", -1),
@@ -46,7 +46,7 @@ def test_column_index_to_letters_rejects_non_positive_values() -> None:
 
     for case_id, column in cases:
         try:
-            _column_index_to_letters(column)
+            column_index_to_letters(column)
         except ValueError as exc:
             assert "must be 1-based and positive" in str(exc), case_id
         else:

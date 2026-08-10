@@ -88,7 +88,7 @@ class TabName(StrEnum):
 _A1_COLUMN = re.compile(r"^[A-Z]{1,3}$")
 
 
-def _column_index_to_letters(column: int) -> str:
+def column_index_to_letters(column: int) -> str:
     """Translate a 1-based column index to an A1 column letter string.
 
     Converts a positive integer column index (1-based, matching Google
@@ -120,7 +120,7 @@ def _column_index_to_letters(column: int) -> str:
 def column_letters_to_index(letters: str) -> int:
     """Translate an A1 column letter string to a 1-based column index.
 
-    Inverse of ``_column_index_to_letters``. Accepts one to three upper-case
+    Inverse of ``column_index_to_letters``. Accepts one to three upper-case
     ASCII letters: ``"A"`` → 1, ``"Z"`` → 26, ``"AA"`` → 27.
 
     Args:
@@ -157,7 +157,7 @@ class SheetCellAddress(BaseModel):
 
     @model_validator(mode="after")
     def _a1_matches_row_column(self) -> SheetCellAddress:
-        letters = _column_index_to_letters(self.column)
+        letters = column_index_to_letters(self.column)
         expected = f"{letters}{self.row}"
         if self.a1 != expected:
             raise CalcSheetsRecordError(
@@ -182,7 +182,7 @@ class SheetCellAddress(BaseModel):
         Returns:
             :class:`SheetCellAddress`: A validated ``SheetCellAddress`` instance.
         """
-        letters = _column_index_to_letters(column)
+        letters = column_index_to_letters(column)
         return cls(tab=tab, row=row, column=column, a1=f"{letters}{row}")
 
     def qualified(self) -> str:
@@ -877,7 +877,7 @@ __all__ = [
     "SheetTariffTableRow",
     "SheetValueCell",
     "TabName",
-    "_column_index_to_letters",
     "_utc_now",
+    "column_index_to_letters",
     "column_letters_to_index",
 ]

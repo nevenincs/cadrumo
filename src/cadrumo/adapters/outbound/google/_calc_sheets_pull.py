@@ -66,6 +66,7 @@ from ....application.storage.calc_sheets import (
     SheetExportPlan,
     SheetLayout,
     collect_row_sets,
+    column_index_to_letters,
     plan_layout,
     registry_sha,
 )
@@ -965,8 +966,8 @@ def _read_row_set_edits(
 def _row_set_block_range(row_set: Any) -> str:
     """Build the A1 range covering the 50-row data block of one row-set."""
     last_column = max(col.header_address.column for col in row_set.columns)
-    start_col_letters = _column_index_to_letters(1)
-    end_col_letters = _column_index_to_letters(last_column)
+    start_col_letters = column_index_to_letters(1)
+    end_col_letters = column_index_to_letters(last_column)
     start_row = row_set.first_data_row
     end_row = row_set.first_data_row + 49
     return f"'{row_set.tab.value}'!{start_col_letters}{start_row}:{end_col_letters}{end_row}"
@@ -1043,18 +1044,6 @@ def _decode_row_set_cell(
         return None
     coerced_value: Decimal | str | None = str(coerced) if isinstance(coerced, bool) else coerced
     return RowSetCellEdit(binding=binding_id, row_index=local_row, value=coerced_value)
-
-
-def _column_index_to_letters(column: int) -> str:
-    """Convert a 1-based column index to A1 letters (1 -> A, 27 -> AA)."""
-    if column < 1:
-        raise OutboundStorageValidationError("column index must be 1-based and positive")
-    letters: list[str] = []
-    remaining = column
-    while remaining > 0:
-        remaining, ordinal = divmod(remaining - 1, 26)
-        letters.append(chr(ord("A") + ordinal))
-    return "".join(reversed(letters))
 
 
 class PullCoverageDiscrepancy(BaseModel):

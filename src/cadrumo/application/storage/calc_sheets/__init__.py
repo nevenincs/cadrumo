@@ -81,6 +81,7 @@ from ._records import (
     SheetTariffTableRow,
     SheetValueCell,
     TabName,
+    column_index_to_letters,
     column_letters_to_index,
 )
 from ._theme import (
@@ -155,6 +156,7 @@ __all__ = [
     "build_offline_workbook",
     "collect_parity_rows",
     "collect_row_sets",
+    "column_index_to_letters",
     "column_letters_to_index",
     "evidence_table",
     "guide_stamps",
