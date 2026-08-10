@@ -19,7 +19,7 @@ is still looking at it.
 from __future__ import annotations
 
 import pytest
-from textual.widgets import Input, OptionList, Static
+from textual.widgets import Input, Label, OptionList, Static
 
 from .....application.user_profile import (
     ProfileRepository,
@@ -208,6 +208,26 @@ async def test_a_plain_text_field_is_still_typed_into(tmp_path) -> None:
             assert app.screen.query("#edit-input"), "a free-text field must keep its box"
             assert not app.screen.query("#edit-options")
             assert not app.screen.query("#edit-hint"), "a name box explains itself; a hint there is noise"
+            app.exit(None)
+
+
+@pytest.mark.asyncio
+async def test_edit_dialog_uses_the_operator_label_without_exposing_the_schema_path(tmp_path) -> None:
+    """A storage address is not usable guidance and must never enter the dialog."""
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+
+        app = _manager()
+        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+            await pilot.pause()
+            field = app._field_by_key[_TEXT_PATH]
+            assert field.label != field.path, "the fixture needs distinct operator and storage names"
+            _open(app, _TEXT_PATH)
+            await pilot.pause()
+
+            assert str(app.screen.query_one("#edit-label", Label).render()) == field.label
+            assert not app.screen.query("#edit-path")
+            assert field.path not in app.export_screenshot()
             app.exit(None)
 
 
