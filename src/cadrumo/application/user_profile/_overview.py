@@ -46,6 +46,7 @@ from ...core import ClaveMovilRoute
 from ...core.classification import SensitivityClass
 from ...core.i18n import tr
 from ...core.json_contract import Notice
+from ...core.redaction import ALWAYS_REDACT_KEY_TERMS
 
 # ``UserProfileStatus`` is a pydantic FIELD type below, so it must resolve at
 # runtime; deferring it to TYPE_CHECKING leaves the model undefined and every
@@ -80,21 +81,15 @@ A fixed-width glyph run rather than the value's own length, so the mask
 does not leak how long the secret is.
 """
 
-_MASK_KEYWORDS: Final[frozenset[str]] = frozenset(
+_MASK_KEYWORDS: Final[frozenset[str]] = ALWAYS_REDACT_KEY_TERMS | frozenset(
     {
-        "password",
-        "passphrase",
-        "secret",
         "secreto",
         "contraseña",
         "clave",
-        "credential",
-        "token",
         "key",
     },
 )
-"""Substrings that mark a credential-shaped fact the schema has NOT
-classified. Defence in depth for exactly that case: a fact reaching a
+"""Substrings that mark a sensitive fact the schema has NOT classified. Defence in depth for exactly that case: a fact reaching a
 surface under a path no schema field declares still masks if it is named
 like a credential.
 
@@ -115,7 +110,18 @@ Bare ``key`` deliberately subsumes the compound key names --
 ``api_key``, ``apikey``, ``private_key``, ``private key`` -- so they are
 not listed separately. That subsumption is load-bearing rather than
 incidental, and is pinned by a test: trimming ``key`` from this set
-would silently unmask every compound key field.
+would silently unmask every compound key field. It stays a local
+addition and must NOT be promoted to the shared base, where it would
+match ``header_key``, ``producer_key`` and ``casilla_key`` tree-wide.
+
+The set composes :data:`cadrumo.core.redaction.ALWAYS_REDACT_KEY_TERMS`
+rather than redeclaring terms beside it. It previously did not, and was
+missing eight base terms -- ``nif``, ``tax_id``, ``nie``, ``bearer``,
+``certificate``, ``cookie``, ``authorization``, ``pkcs12`` -- so an
+undeclared fact named like a NIF rendered in the clear on this surface
+while the logging and live-diagnostic predicates both redacted it. Only
+the additions above are declared here; a term that must never diverge
+belongs in the base.
 """
 
 _NAMESPACE_FIELD_TYPES: Final[frozenset[ProfileFieldType]] = frozenset(

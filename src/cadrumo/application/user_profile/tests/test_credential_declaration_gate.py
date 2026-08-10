@@ -61,9 +61,43 @@ from ....domain.user_profile import (
     ProfileSnapshotPolicy,
     load_user_profile_schema,
 )
-from .._overview import _MASK_KEYWORDS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_CREDENTIAL_EVIDENCE_KEYWORDS: Final[frozenset[str]] = frozenset(
+    {
+        "password",
+        "passphrase",
+        "secret",
+        "secreto",
+        "contraseña",
+        "clave",
+        "credential",
+        "token",
+        "key",
+    },
+)
+"""Substrings whose presence in a field's path or description PRESUMES a credential.
+
+This was read off ``_overview._MASK_KEYWORDS`` until that set was recomposed onto
+the shared redaction base, and the two must not be the same vocabulary again --
+they answer different questions. The masking predicate asks *should this value be
+hidden from an operator*, for which a NIF, a tax id and a certificate reference
+all qualify. This gate asks the narrower *is this field a misdeclared credential*,
+and a NIF is not a credential: it is an identity fact that the schema correctly
+declares ``IDENTITY`` rather than ``SECRET``.
+
+Sharing one constant across both questions would have flagged twelve correctly
+declared identity and financial fields the moment the masking side widened --
+``identity.tax_id``, ``auth.dni_nie``, ``renta_spouse.tax_id``, the representante
+NIFs -- and would have re-presumed ``auth.provider`` a credential on the word
+``certificate`` in its description, which is precisely the prose-driven
+misclassification ``_overview`` documents having already fixed once.
+
+The terms here are the credential-naming ones, in both languages, and deliberately
+carry no identity term. Bare ``key`` stays for the same reason it does on the
+masking side: it subsumes ``api_key``, ``apikey``, ``private_key``.
+"""
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -164,7 +198,7 @@ def _presumed_credential(schema: ProfileSchemaDefinition) -> dict[str, list[str]
         for field in section.fields:
             path = f"{section.key}.{field.key}"
             haystack = f"{path} {field.description}".casefold()
-            evidence = [keyword for keyword in _MASK_KEYWORDS if keyword in haystack]
+            evidence = [keyword for keyword in _CREDENTIAL_EVIDENCE_KEYWORDS if keyword in haystack]
             if section.key in _CREDENTIAL_SECTIONS:
                 evidence.append(f"section:{section.key}")
             if evidence:
@@ -251,7 +285,7 @@ def test_the_gate_refuses_an_innocuously_named_field_in_a_credential_section() -
         description="Value the QR route asks a holder to confirm.",
     )
     haystack = f"auth.{field.key} {field.description}".casefold()
-    assert not [word for word in _MASK_KEYWORDS if word in haystack], (
+    assert not [word for word in _CREDENTIAL_EVIDENCE_KEYWORDS if word in haystack], (
         "this proof needs a field the lexical arm would NOT match"
     )
 
