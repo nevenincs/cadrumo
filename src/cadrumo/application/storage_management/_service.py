@@ -281,6 +281,9 @@ def reclaim_storage_area(
     )
     _preflight_reclaim_targets(area, candidates, resolved)
     targets = _minimal_paths(path for _, _, path in candidates)
+    storage_root = Path(resolved.cadrumo_local_storage_root).resolve(strict=False)
+    for target in targets:
+        _validate_reclaim_target(area, target, storage_root)
     entry_count = sum(_immediate_entry_count(path) for path in targets)
     if not confirmed:
         raise StorageReclaimUnconfirmedError(area, entry_count=entry_count)
@@ -293,10 +296,7 @@ def reclaim_storage_area(
         entries = (target,) if target.is_file() else tuple(sorted(target.iterdir()))
         for entry in entries:
             try:
-                if entry.is_dir() and not entry.is_symlink():
-                    shutil.rmtree(entry)
-                else:
-                    entry.unlink()
+                _remove_reclaim_entry(entry)
             except OSError:
                 retained.append(entry)
                 _LOGGER.debug("reclaim could not remove %s", entry, exc_info=True)
@@ -330,6 +330,7 @@ def _preflight_reclaim_targets(
         for category, location in STORAGE_TAXONOMY.items()
         if location.scope is StorageScope.ROOT
     )
+    storage_root = Path(settings.cadrumo_local_storage_root).resolve(strict=False)
     for category, location, target in candidates:
         if location.scope is not StorageScope.ROOT:
             raise StorageReclaimRefusedError(
@@ -343,6 +344,7 @@ def _preflight_reclaim_targets(
                 entry_count=0,
                 reason="a selected target has a durable lifecycle",
             )
+        _validate_reclaim_target(area, target, storage_root)
         for other, other_location, other_path in root_members:
             if other is category or not other_path.is_relative_to(target):
                 continue
@@ -352,6 +354,47 @@ def _preflight_reclaim_targets(
                     entry_count=_immediate_entry_count(target),
                     reason="a selected target contains protected declared data",
                 )
+
+
+def _validate_reclaim_target(area: StorageArea, target: Path, storage_root: Path) -> None:
+    """Refuse a declared target whose live filesystem location is redirected.
+
+    ``storage_path`` is memoized because settings construct the same paths many
+    times. A target can therefore retain its lexical in-root path after that
+    directory is replaced by a symlink or Windows junction. Resolve the live
+    target independently at the destructive boundary and refuse link-like
+    targets even when they redirect to another location beneath the root.
+    """
+    if target.is_symlink() or target.is_junction():
+        raise StorageReclaimRefusedError(
+            area,
+            entry_count=0,
+            reason="a selected target is not root-scoped",
+        )
+    try:
+        resolved_target = target.resolve(strict=False)
+    except OSError as exc:
+        raise StorageReclaimRefusedError(
+            area,
+            entry_count=0,
+            reason="a selected target is not root-scoped",
+        ) from exc
+    if not resolved_target.is_relative_to(storage_root):
+        raise StorageReclaimRefusedError(
+            area,
+            entry_count=0,
+            reason="a selected target is not root-scoped",
+        )
+
+
+def _remove_reclaim_entry(entry: Path) -> None:
+    """Remove one selected entry without following a link-like directory."""
+    if entry.is_junction():
+        entry.rmdir()
+    elif entry.is_symlink() or not entry.is_dir():
+        entry.unlink()
+    else:
+        shutil.rmtree(entry)
 
 
 def _area_inventory_row(

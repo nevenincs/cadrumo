@@ -55,9 +55,11 @@ if TYPE_CHECKING:
     from ....application.live import FiledHistoryOnboardingRun
     from ....application.user_profile import CensalReconciliation, EffectiveFact, ProfileOverview
     from ....core import AuthProviderKind
+    from ....core import ClaveMovilRoute
     from ....domain.user_profile import ProfileFieldDefinition, ProfileSectionDefinition
 
 _AUTH_PROVIDER_PATH = "auth.provider"
+_AUTH_CLAVE_MOVIL_ROUTE_PATH = "auth.clave_movil_route"
 _AUTH_DNI_NIE_PATH = "auth.dni_nie"
 _AUTH_SOPORTE_PATH = "auth.numero_soporte"
 _AUTH_FECHA_VALIDEZ_PATH = "auth.fecha_validez"
@@ -65,6 +67,7 @@ _IDENTITY_TAX_ID_PATH = "identity.tax_id"
 
 _AUTH_PROFILE_PATHS = (
     _AUTH_PROVIDER_PATH,
+    _AUTH_CLAVE_MOVIL_ROUTE_PATH,
     _AUTH_DNI_NIE_PATH,
     _AUTH_SOPORTE_PATH,
     _AUTH_FECHA_VALIDEZ_PATH,
@@ -86,6 +89,7 @@ It is committed on its own terms in :func:`_commit_auth_choice`.
 
 _AUTH_PAGE_PATHS = (
     _AUTH_PROVIDER_PATH,
+    _AUTH_CLAVE_MOVIL_ROUTE_PATH,
     _IDENTITY_TAX_ID_PATH,
     _AUTH_DNI_NIE_PATH,
     _AUTH_SOPORTE_PATH,
@@ -670,6 +674,8 @@ def _run_certificate() -> ManagerActionOutcome:
     """
     from ....adapters.inbound.tui import ManagerActionDisposition, ManagerActionOutcome
     from ....application.auth import list_operator_certificate_sources
+    from ....core import ClaveMovilRoute
+    from ....core.config import load_settings
     from ._manager_frontend import build_active_profile_overview, present_form
 
     listing = list_operator_certificate_sources()
@@ -680,6 +686,11 @@ def _run_certificate() -> ManagerActionOutcome:
             suggested_tax_id=_suggested_tax_id(on_record),
             certificate_names=tuple(source.name for source in listing.sources),
             active_certificate=listing.active_source,
+            suggested_route=(
+                ClaveMovilRoute.APP_REQUEST
+                if load_settings().cadrumo_clave_prefer_non_qr
+                else ClaveMovilRoute.QR
+            ),
         ),
     )
     if collected is None:
@@ -717,6 +728,7 @@ def _auth_form_page(
     suggested_tax_id: str,
     certificate_names: Sequence[str],
     active_certificate: str,
+    suggested_route: ClaveMovilRoute,
 ) -> FormPage:
     """Build the page the authentication action shows.
 
@@ -760,7 +772,7 @@ def _auth_form_page(
         The :class:`~cadrumo.adapters.inbound.tui.FormPage` to present.
     """
     from ....adapters.inbound.tui import FormField, FormFieldKind, FormPage, form_choices
-    from ....core import AuthProviderKind
+    from ....core import AuthProviderKind, ClaveMovilRoute
 
     fields = [
         FormField(
@@ -780,6 +792,21 @@ def _auth_form_page(
             label=tr("flows.manager.action.auth_tax_id"),
             value=on_record.get(_IDENTITY_TAX_ID_PATH, "") or suggested_tax_id,
             validate=_validated_tax_id,
+        ),
+        FormField(
+            key=_AUTH_CLAVE_MOVIL_ROUTE_PATH,
+            label=tr("flows.manager.action.auth_clave_movil_route"),
+            value=on_record.get(_AUTH_CLAVE_MOVIL_ROUTE_PATH, suggested_route.value),
+            kind=FormFieldKind.SINGLE_CHOICE,
+            choices=form_choices(
+                [
+                    (ClaveMovilRoute.QR.value, tr("flows.manager.action.auth_clave_movil_route_qr")),
+                    (
+                        ClaveMovilRoute.APP_REQUEST.value,
+                        tr("flows.manager.action.auth_clave_movil_route_app_request"),
+                    ),
+                ],
+            ),
         ),
         FormField(
             key=_AUTH_DNI_NIE_PATH,
@@ -914,7 +941,7 @@ def _clave_refusal(collected: Mapping[str, str]) -> str | None:
         The refusal to show, or ``None`` when the answer is usable.
     """
     from ....application.auth import clave_auth_facts_from_profile_values, resolve_clave_credentials
-    from ....core import AuthProviderKind
+    from ....core import AuthProviderKind, ClaveMovilRoute
     from ....core.config import load_settings
 
     settings = load_settings()
@@ -934,7 +961,8 @@ def _clave_refusal(collected: Mapping[str, str]) -> str | None:
         )
     if credentials.provider_kind is not AuthProviderKind.CLAVE_MOVIL:
         return None
-    if not settings.cadrumo_clave_prefer_non_qr:
+    route = ClaveMovilRoute(collected[_AUTH_CLAVE_MOVIL_ROUTE_PATH])
+    if route is ClaveMovilRoute.QR:
         return None
     if not credentials.contraste:
         return tr("flows.manager.action.auth_contraste_missing")

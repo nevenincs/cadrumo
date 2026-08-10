@@ -2951,6 +2951,7 @@ cli:
         history_help: Show every lifecycle event for one work unit
         history_next_action: Review this work unit's current state before choosing
           its next operation.
+        history_next_action_summary: Review this work unit's current state.
         history_work_unit_id_help: Work unit id whose lifecycle you want to view
         id_is_work_unit_not_calc_revision_natural: This id is a work-unit-id, but
           verify/file need a calculation-revision-id. For the common path, run 'aeat
@@ -2971,6 +2972,8 @@ cli:
           {choices}.
         invalid_work_unit_id: work_unit_id must be a 64-character lowercase hex string
           (SHA-256 digest)
+        invalid_work_unit_lookup_id: work_unit_id must be a lowercase hexadecimal
+          SHA-256 id or unambiguous prefix
         kv_empty_key_error: '{flag} key must not be empty; got {spec}.'
         kv_format_error: '{flag} must be written as {key_label}={value_label}. This
           is a key-value entry: put the field name on the left of one equals sign
@@ -2978,6 +2981,8 @@ cli:
         list_help: List registered work units, optionally filtered by profile
         list_next_action: Inspect one work unit's full state before choosing whether
           to draft, recalculate, or verify it.
+        list_next_action_summary: Inspect one work unit's full state before drafting
+          or recalculating it.
         m184_socio_handoff_message: 'Régimen de atribución de rentas: socio %{nif}
           (%{nombre}) receives an attributed base of %{importe} EUR (%{porcentaje}%
           share). On the socio''s own workspace, record it as attribution_received
@@ -3174,6 +3179,8 @@ cli:
         status_help: Show the metadata of one work unit
         status_next_action: Choose whether this unit should be drafted, recalculated,
           or verified next.
+        status_next_action_summary: Draft or recalculate this work unit, then verify
+          the resulting draft.
         verify_help: Verify a draft calculation revision against the verified-complete
           contract
         verify_idempotent_noop: 'Idempotent no-op: calculation revision %{calculation_revision_id}
@@ -3183,6 +3190,10 @@ cli:
         verify_next_action_incomplete: Verification found blocking items (see the
           notices above). Resolve them and recalculate this work unit before verifying
           it again.
+        verify_next_action_granted_summary: Verification passed. Export the filing
+          artefact.
+        verify_next_action_incomplete_summary: Verification found blocking items.
+          Resolve them, recalculate, then run verification again.
         verify_selector_help: Draft revision selector (current, latest-draft, or explicit).
         wizard_help: Walk the work unit's outstanding manual inputs one at a time,
           in plain language, then calculate
@@ -4033,6 +4044,12 @@ cli:
         mode_unenforced: This platform does not implement POSIX permission bits, so
           root permissions were not checked.
       errors:
+        reason:
+          durable_lifecycle: a selected target has a durable lifecycle
+          durable_state: the area contains durable state
+          no_reclaimable_targets: the taxonomy declares no reclaimable targets
+          not_root_scoped: a selected target is not root-scoped
+          protected_descendant: a selected target contains protected declared data
         reclaim_area_refused: 'Refusing to reclaim %{area}: %{reason}. %{entries}
           entries remain untouched.'
         reclaim_area_unconfirmed: Reclaiming %{area} deletes %{entries} entries and
@@ -4082,6 +4099,11 @@ cli:
         area_argument_help: Storage area to show
         area_help: Show one storage area in full
       values:
+        area:
+          cache: cache
+          exports: exports
+          logs: logs
+          state: state
         lifecycle:
           durable: durable
           mixed: mixed
@@ -4653,6 +4675,7 @@ cli:
       parent_id: Parent transaction id
       pending: Pending review
       period: Period
+      profile: Profile
       purchase_invoice_evidence_id: Purchase invoice evidence
       readiness_issues: Readiness issues
       ready: Ready
@@ -5070,8 +5093,10 @@ cli:
     calendar_local_modelo_events_unavailable: Local modelo event evidence is unavailable
       for this calendar row.
     coverage:
-      investigate: The filing obligation %{modelo} could not be positively scoped
-        for this profile and may be under-reported. Review its filing explanation.
+      incomplete_summary: '%{count} filing obligation(s) could not be positively scoped
+        for this profile and may be under-reported: %{modelos}.'
+      investigate: '%{count} filing obligation(s) could not be positively scoped for
+        this profile and may be under-reported: %{modelos}.'
     drafts: Drafts
     explain:
       help: Decompose a modelo's applicability against the active profile. Surfaces
@@ -5105,6 +5130,7 @@ cli:
     post_filing:
       pending: '%{count} AEAT post-filing event(s) require attention: %{kinds}. Review
         the affected notifications.'
+      pending_summary: '%{count} AEAT post-filing event(s) require attention: %{kinds}.'
     prepare:
       help: 'Walk through the data-preparation steps for one modelo/period in order:
         import transactions, classify them, attach purchase-invoice evidence, register
@@ -5151,6 +5177,7 @@ cli:
       next_modelo_work_command: '  aeat app modelo work create - start a modelo declaration
         from your ledger data.'
       next_review_command: '  aeat app ledger review - review imported rows.'
+      next_step_available: A recommended next step is available in the overview output.
       next_work_calculate_command: '  aeat app modelo work list - resume an in-progress
         modelo work unit.'
       next_work_create_command: '  aeat app modelo work create - start a work unit
@@ -5903,6 +5930,10 @@ errors:
       yet supported; enter the censal facts manually instead.
     certificado_not_a_pdf: The supplied file is not a PDF; expected the Certificado
       de Situación Censal downloaded from Sede.
+  context_labels:
+    area: area
+    entry_count: entry count
+    reason: reason
   error:
     error_access_gate_submission: The access-gate policy rejected a submission operation.
     error_access_gate_submission_preflight: Access-gate preflight rejected a write
@@ -6416,6 +6447,8 @@ errors:
       within the timeout. Another process holds it; wait and try again.
     locked_storage_master_key_keychain: The operating-system keychain is locked. Unlock
       it (Touch ID, Windows Hello or your credential-manager unlock) and try again.
+  prefix:
+    refused: Refused.
   refused:
     auth_configure_no_active_bucket: Authentication cannot be configured without an
       active profile. Create a profile with `aeat config profile create NAME` and
@@ -6902,6 +6935,8 @@ flows:
       add_row_required: This is required; the row cannot be added without it.
       add_row_section: Which section to add to
       auth_clave_incomplete: Cl@ve still needs %{missing}. Nothing was saved.
+      auth_clave_movil_route: Cl@ve Móvil confirmation route
+      auth_clave_movil_route_qr: QR code in a visible browser
       auth_contraste_missing: 'Cl@ve Móvil without QR needs the contraste from your
         document: the support number for a NIE, or the validity date for a DNI. Nothing
         was saved.'
@@ -6994,11 +7029,10 @@ flows:
         again.
     language:
       unavailable: This profile does not offer a language setting.
-    progress: '{present} of {total} fields filled in, {missing} still needed for filing'
-    required_complete: All schema-required profile information is present.
     recovery_boundary: 'Recovery-code creation and rotation are terminal-only: aeat
       config recovery create / aeat config recovery rotate. The 24 words are shown
       once and cannot be shown again.'
+    required_complete: All schema-required profile information is present.
     section_title: '{title} - {present}/{total}'
     title: 'Profile: {profile}'
   progress:

@@ -1,6 +1,6 @@
 [schema]
 id = "cadrumo.user_profile"
-version = 4
+version = 5
 title = "Cadrumo user profile schema"
 snapshot_policy = "immutable_secure_snapshot_hash"
 remove_policy = "live_profile_tombstone_retain_snapshots"
@@ -180,6 +180,14 @@ required = false
 sensitivity = "identity"
 description = "How this taxpayer identifies to AEAT. Cl@ve Movil and Cl@ve Permanente authenticate the person directly and need their DNI/NIE; the certificate provider authenticates with an installed electronic certificate instead. The choice decides which of the fields below are required."
 enum_values = ["certificate", "clave_movil", "clave_permanente"]
+
+[[sections.fields]]
+key = "clave_movil_route"
+type = "enum"
+required = false
+sensitivity = "operational"
+description = "How Cl@ve Movil should ask for confirmation: show a QR code in a visible browser, or identify with DNI/NIE plus contraste and send a request to the Cl@ve app."
+enum_values = ["qr", "app_request"]
 
 # THE THREE FIELDS BELOW SPLIT ACROSS TWO SENSITIVITY CLASSES, and the split is
 # the point rather than an oversight. dni_nie NAMES the taxpayer; the contraste

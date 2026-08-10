@@ -63,9 +63,13 @@ def test_operator_progress_banner_goes_to_stderr_not_stdout(capsys: pytest.Captu
     installs via ``operator_progress_sink``."""
 
     from .. import _emit_operator_progress
+    from ....adapters.outbound.aeat import OperatorProgress
 
-    _emit_operator_progress("AEAT page verification code: YLL")
+    _emit_operator_progress(
+        OperatorProgress(message="AEAT page verification code: YLL", timeout_seconds=120),
+    )
 
     captured = capsys.readouterr()
     assert "YLL" in captured.err
+    assert "Time remaining 2:00" in captured.err
     assert "YLL" not in captured.out

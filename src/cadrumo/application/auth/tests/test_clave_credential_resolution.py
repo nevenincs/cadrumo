@@ -22,7 +22,7 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from ....core import AuthProviderKind
+from ....core import AuthProviderKind, ClaveMovilRoute
 from ....core.config import override_settings
 from ....core.resources import resources
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -195,6 +195,43 @@ def test_qr_route_is_not_refused_for_a_missing_contraste() -> None:
         _bound, expected_identity = _prepare_clave_auth(settings, AuthProviderKind.CLAVE_MOVIL)
 
     assert expected_identity == _TAX_ID
+
+
+def test_profile_qr_route_overrides_an_environment_app_request() -> None:
+    """The encrypted profile owns the route once the operator chooses it."""
+    _register_profile(
+        **{
+            "auth.dni_nie": _TAX_ID,
+            "auth.clave_movil_route": ClaveMovilRoute.QR.value,
+        },
+    )
+    with override_settings(
+        cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID),
+        cadrumo_clave_prefer_non_qr=True,
+    ) as settings:
+        bound, expected_identity = _prepare_clave_auth(settings, AuthProviderKind.CLAVE_MOVIL)
+
+    assert expected_identity == _TAX_ID
+    assert bound.cadrumo_clave_prefer_non_qr is False
+
+
+def test_profile_app_request_route_requires_contraste_and_reaches_provider_settings() -> None:
+    """The non-QR choice is both validated and bound onto the live provider."""
+    _register_profile(
+        **{
+            "auth.dni_nie": _TAX_ID,
+            "auth.numero_soporte": _SOPORTE,
+            "auth.clave_movil_route": ClaveMovilRoute.APP_REQUEST.value,
+        },
+    )
+    with override_settings(
+        cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID),
+        cadrumo_clave_prefer_non_qr=False,
+    ) as settings:
+        bound, expected_identity = _prepare_clave_auth(settings, AuthProviderKind.CLAVE_MOVIL)
+
+    assert expected_identity == _TAX_ID
+    assert bound.cadrumo_clave_prefer_non_qr is True
 
 
 def test_dni_validity_date_from_settings_satisfies_the_contraste() -> None:

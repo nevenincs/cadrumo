@@ -3173,6 +3173,7 @@ cli:
           de treball
         history_next_action: Revisa l'estat actual d'aquesta unitat de treball abans
           de triar la seva operació següent.
+        history_next_action_summary: Revisa l'estat actual d'aquesta unitat de treball.
         history_work_unit_id_help: Id d'unitat de treball el cicle de vida de la qual
           vols veure
         id_is_work_unit_not_calc_revision_natural: Aquest id és un id d'unitat de
@@ -3195,6 +3196,8 @@ cli:
           un de: {choices}.'
         invalid_work_unit_id: work_unit_id ha de ser una cadena hex en minúscules
           de 64 caràcters (resum SHA-256)
+        invalid_work_unit_lookup_id: work_unit_id ha de ser un identificador SHA-256
+          hexadecimal en minúscules o un prefix inequívoc
         kv_empty_key_error: La clau de {flag} no pot estar buida; s'ha rebut {spec}.
         kv_format_error: '{flag} s''ha d''escriure com {key_label}={value_label}.
           És una entrada clau-valor: posa el nom del camp a l''esquerra d''un únic
@@ -3203,6 +3206,8 @@ cli:
           per perfil
         list_next_action: Inspecciona l'estat complet d'una unitat de treball abans
           de triar si preparar-la, recalcular-la o verificar-la.
+        list_next_action_summary: Inspecciona l'estat complet d'una unitat de treball
+          abans de crear o recalcular-ne l'esborrany.
         m184_socio_handoff_message: 'Règim d''atribució de rendes: el soci %{nif}
           (%{nombre}) rep una base atribuïda de %{importe} EUR (participació del %{porcentaje}%).
           En el seu propi espai de treball, el soci l''ha de registrar com a fets
@@ -3409,6 +3414,8 @@ cli:
         status_help: Mostrar les metadades d'una unitat de treball
         status_next_action: Tria si aquesta unitat s'ha de preparar, recalcular o
           verificar a continuació.
+        status_next_action_summary: Crea o recalcula aquesta unitat de treball i després
+          verifica l'esborrany resultant.
         verify_help: Verificar una revisió draft contra el contracte verified-complete
         verify_idempotent_noop: 'Operació idempotent sense efecte: la revisió de càlcul
           %{calculation_revision_id} ja està verificada; s''ha retornat l''informe
@@ -4328,6 +4335,13 @@ cli:
         mode_unenforced: Aquesta plataforma no implementa els bits de permisos POSIX,
           així que no s'han comprovat els permisos de l'arrel.
       errors:
+        reason:
+          durable_lifecycle: una destinació seleccionada té un cicle de vida durador
+          durable_state: l'àrea conté estat durador
+          no_reclaimable_targets: la taxonomia no declara destinacions alliberables
+          not_root_scoped: una destinació seleccionada no pertany a l'arrel
+          protected_descendant: una destinació seleccionada conté dades declarades
+            protegides
         reclaim_area_refused: 'Es rebutja alliberar %{area}: %{reason}. Les %{entries}
           entrades romanen intactes.'
         reclaim_area_unconfirmed: Alliberar %{area} elimina %{entries} entrades i
@@ -4377,6 +4391,11 @@ cli:
         area_argument_help: Àrea d'emmagatzematge que es vol mostrar
         area_help: Mostra una àrea d'emmagatzematge completa
       values:
+        area:
+          cache: memòria cau
+          exports: exportacions
+          logs: registres
+          state: estat
         lifecycle:
           durable: duradora
           mixed: mixta
@@ -4995,6 +5014,7 @@ cli:
       parent_id: id_pare
       pending: Pendents de revisió
       period: Període
+      profile: Perfil
       purchase_invoice_evidence_id: Evidència de factura de compra
       readiness_issues: Incidències de preparació
       ready: Preparat
@@ -5512,6 +5532,8 @@ cli:
       next_modelo_work_command: '  aeat app modelo work create - iniciar una declaració
         de model a partir de les dades del teu llibre.'
       next_review_command: '  aeat app ledger review - revisar files importades.'
+      next_step_available: Hi ha un pas següent recomanat disponible a la sortida
+        del resum.
       next_work_calculate_command: '  aeat app modelo work list - reprendre una unitat
         de treball de model en curs.'
       next_work_create_command: '  aeat app modelo work create - iniciar una unitat
@@ -5707,8 +5729,6 @@ cli:
       session_unchecked: La sessió i la preparació no s'infereixen del perfil seleccionat.
       tagline: Flux local amb l'Agència Estatal d'Administració Tributària (AEAT)
         per a contribuents i assessors.
-      welcome_no_profile: 'Perfil actiu: cap. Crea''n un abans del treball vinculat
-        al perfil.'
       welcome_profile: 'Perfil actiu: `%{profile}`.'
       welcome_profile_unavailable: 'Perfil actiu: no disponible. Repara el perfil
         seleccionat abans del treball vinculat al perfil.'
@@ -6285,6 +6305,10 @@ errors:
       suportada; introdueix les dades censals manualment.
     certificado_not_a_pdf: El fitxer proporcionat no és un PDF; s'esperava el Certificado
       de Situación Censal descarregat de la Seu.
+  context_labels:
+    area: àrea
+    entry_count: nombre d'entrades
+    reason: motiu
   error:
     error_access_gate_submission: La política de control d'accés ha rebutjat una operació
       d'enviament.
@@ -6852,6 +6876,8 @@ errors:
     locked_storage_master_key_keychain: L'anell de claus del sistema operatiu està
       bloquejat. Desbloqueja'l (Touch ID, Windows Hello o el desbloqueig del gestor
       de credencials) i torna-ho a provar.
+  prefix:
+    refused: Rebutjat.
   refused:
     auth_configure_no_active_bucket: No es pot configurar l'autenticació sense un
       perfil actiu. Crea un perfil amb `aeat config profile create NOM` i torna-ho
@@ -7458,11 +7484,10 @@ flows:
         a provar.
     language:
       unavailable: Aquest perfil no ofereix cap configuració d'idioma.
-    progress: '{present} de {total} camps emplenats, en falten {missing} per presentar'
-    required_complete: Hi és tota la informació del perfil requerida per l'esquema.
     recovery_boundary: 'La creació i la rotació del codi de recuperació només es fan
       des del terminal: aeat config recovery create / aeat config recovery rotate.
       Les 24 paraules es mostren una sola vegada i no es poden tornar a mostrar.'
+    required_complete: Hi és tota la informació del perfil requerida per l'esquema.
     section_title: '{title} - {present}/{total}'
     title: 'Perfil: {profile}'
   progress:

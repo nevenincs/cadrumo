@@ -3131,6 +3131,8 @@ cli:
           ezek közül: {choices}.'
         invalid_work_unit_id: A work_unit_id értékének 64 karakteres kisbetűs hex-karakterláncnak
           kell lennie (SHA-256 kivonat).
+        invalid_work_unit_lookup_id: A work_unit_id értékének kisbetűs hexadecimális
+          SHA-256-azonosítónak vagy egyértelmű előtagnak kell lennie
         kv_empty_key_error: 'A(z) {flag} kulcsa nem lehet üres; kapott: {spec}.'
         kv_format_error: 'A(z) {flag} értéket {key_label}={value_label} alakban kell
           megadni. Ez egy kulcs-érték bejegyzés: A kulcs a bal oldalon áll, utána
@@ -4272,6 +4274,12 @@ cli:
         mode_unenforced: Ez a platform nem valósítja meg a POSIX jogosultsági biteket,
           ezért a gyökér jogosultságait nem ellenőriztük.
       errors:
+        reason:
+          durable_lifecycle: egy kijelölt cél életciklusa tartós
+          durable_state: a terület tartós állapotot tartalmaz
+          no_reclaimable_targets: a taxonómia nem jelöl felszabadítható célokat
+          not_root_scoped: egy kijelölt cél nem gyökérhatókörű
+          protected_descendant: egy kijelölt cél védett deklarált adatot tartalmaz
         reclaim_area_refused: 'A(z) %{area} felszabadítása elutasítva: %{reason}.
           %{entries} bejegyzés érintetlen maradt.'
         reclaim_area_unconfirmed: A(z) %{area} felszabadítása %{entries} bejegyzést
@@ -4322,6 +4330,11 @@ cli:
         area_argument_help: A megjelenítendő tárolóterület
         area_help: Egy tárolóterület teljes megjelenítése
       values:
+        area:
+          cache: gyorsítótár
+          exports: exportok
+          logs: naplók
+          state: állapot
         lifecycle:
           durable: tartós
           mixed: vegyes
@@ -4928,6 +4941,7 @@ cli:
       parent_id: Szülő tranzakcióazonosító
       pending: Felülvizsgálatra vár
       period: Időszak
+      profile: Profil
       purchase_invoice_evidence_id: Beszerzési számla bizonylat
       readiness_issues: Készültségi problémák
       ready: Kész
@@ -5461,6 +5475,8 @@ cli:
       next_modelo_work_command: '  aeat app modelo work create - nyomtatvány-bevallás
         indítása a főkönyvi adatokból.'
       next_review_command: '  aeat app ledger review - importált sorok ellenőrzése.'
+      next_step_available: Az áttekintés kimenetében elérhető egy ajánlott következő
+        lépés.
       next_work_calculate_command: '  aeat app modelo work list - folyamatban lévő
         modellómunka-egység folytatása.'
       next_work_create_command: '  aeat app modelo work create - új munkaegység indítása
@@ -6231,6 +6247,10 @@ errors:
       add meg a censal adatokat kézzel.
     certificado_not_a_pdf: A megadott fájl nem PDF; a Sede-ről letöltött Certificado
       de Situación Censal szükséges.
+  context_labels:
+    area: terület
+    entry_count: bejegyzések száma
+    reason: ok
   error:
     error_access_gate_submission: A hozzáférési kapu szabályzata elutasított egy benyújtási
       műveletet.
@@ -6748,6 +6768,8 @@ errors:
     locked_storage_master_key_keychain: Az operációs rendszer kulcstára zárolt. Oldja
       fel a zárolást (Touch ID, Windows Hello vagy a hitelesítőkezelő), és próbálja
       újra.
+  prefix:
+    refused: Elutasítva.
   refused:
     auth_configure_no_active_bucket: Hitelesítés nem konfigurálható aktív profil nélkül.
       Hozzon létre profilt az  paranccsal, és próbálja újra.
@@ -7335,11 +7357,10 @@ flows:
         majd próbáld újra.
     language:
       unavailable: Ez a profil nem kínál nyelvi beállítást.
-    progress: '{present} / {total} mező kitöltve, {missing} hiányzik a benyújtáshoz'
-    required_complete: A séma által megkövetelt összes profiladat rendelkezésre áll.
     recovery_boundary: 'A helyreállítási kód létrehozása és megújítása kizárólag a
       terminálról történik: aeat config recovery create / aeat config recovery rotate.
       A 24 szó egyszer jelenik meg, és nem jeleníthető meg újra.'
+    required_complete: A séma által megkövetelt összes profiladat rendelkezésre áll.
     section_title: '{title} - {present}/{total}'
     title: 'Profil: {profile}'
   progress:

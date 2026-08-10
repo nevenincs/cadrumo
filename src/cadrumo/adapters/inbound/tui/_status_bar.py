@@ -13,11 +13,14 @@ into presentation and could hide or restyle the very diagnostic being shown.
 
 from __future__ import annotations
 
+import math
+from time import monotonic
 from typing import Final, Literal
 
 from textual.app import ComposeResult
 from textual.containers import Vertical
 from textual.reactive import reactive
+from textual.timer import Timer
 from textual.widgets import Static
 
 StatusTone = Literal["idle", "progress", "success", "warning", "error"]
@@ -79,6 +82,9 @@ class PinnedStatusBar(Vertical):
         super().__init__(id=id, classes=classes)
         self._summary = self._require_text(summary, field="summary")
         self._message = ""
+        self._countdown_message = ""
+        self._countdown_deadline: float | None = None
+        self._countdown_timer: Timer | None = None
         self.add_class("tone-idle")
 
     @staticmethod
@@ -108,23 +114,53 @@ class PinnedStatusBar(Vertical):
 
     def clear_message(self) -> None:
         """Return the message line to idle while preserving its reserved row."""
+        self._cancel_countdown()
         self._set_message("idle", "")
 
-    def show_progress(self, message: str) -> None:
+    def show_progress(self, message: str, *, timeout_seconds: int | None = None) -> None:
         """Show an operation that is still running."""
-        self._set_message("progress", message)
+        self._cancel_countdown()
+        if timeout_seconds is None:
+            self._set_message("progress", message)
+            return
+        if timeout_seconds <= 0:
+            raise ValueError("timeout_seconds must be positive")
+        self._countdown_message = self._require_text(message, field="message")
+        self._countdown_deadline = monotonic() + timeout_seconds
+        self._render_countdown()
+        self._countdown_timer = self.set_interval(1, self._render_countdown)
 
     def show_success(self, message: str) -> None:
         """Show a completed operation."""
+        self._cancel_countdown()
         self._set_message("success", message)
 
     def show_warning(self, message: str) -> None:
         """Show a completed operation requiring attention."""
+        self._cancel_countdown()
         self._set_message("warning", message)
 
     def show_error(self, message: str) -> None:
         """Show a refusal or failure requiring operator action."""
+        self._cancel_countdown()
         self._set_message("error", message)
+
+    def _render_countdown(self) -> None:
+        deadline = self._countdown_deadline
+        if deadline is None:
+            return
+        remaining = max(0, math.ceil(deadline - monotonic()))
+        minutes, seconds = divmod(remaining, 60)
+        self._set_message("progress", f"{self._countdown_message} Time remaining {minutes}:{seconds:02d}.")
+        if remaining == 0 and self._countdown_timer is not None:
+            self._countdown_timer.pause()
+
+    def _cancel_countdown(self) -> None:
+        if self._countdown_timer is not None:
+            self._countdown_timer.pause()
+        self._countdown_timer = None
+        self._countdown_deadline = None
+        self._countdown_message = ""
 
     def _set_message(self, tone: StatusTone, message: str) -> None:
         rendered = self._require_text(message, field="message")

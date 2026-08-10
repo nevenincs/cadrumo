@@ -133,7 +133,7 @@ def config_storage_show(
     )
     lines = _field_lines(
         (
-            (_label("area", "Area"), row.area.value),
+            (_label("area", "Area"), _value_label("area", row.area.value)),
             (_label("occupancy", "Occupancy"), _value_label("occupancy", row.occupancy.value)),
             (_label("lifecycle", "Lifecycle"), _value_label("lifecycle", row.disposition.value)),
             (_label("resolved_paths", "Resolved paths"), str(row.resolved_paths)),
@@ -188,7 +188,7 @@ def config_storage_check(
             lines.extend(
                 (
                     f"  - {_public_issue_kind(issue.kind).value}",
-                    f"    {_label('area', 'Area')}: {issue.area.value if issue.area else '-'}",
+                    f"    {_label('area', 'Area')}: {_value_label('area', issue.area.value) if issue.area else '-'}",
                     f"    {_label('path', 'Path')}: {report.storage_root}",
                     f"    {_label('detail', 'Detail')}: {_public_issue_detail(issue.kind)}",
                 ),
@@ -314,7 +314,7 @@ def config_storage_reclaim(
     )
     lines = _field_lines(
         (
-            (_label("area", "Area"), report.area.value),
+            (_label("area", "Area"), _value_label("area", report.area.value)),
             (_label("targets", "Targets"), str(report.target_count)),
             (_label("removed_entries", "Removed entries"), str(report.removed_entries)),
             (_label("retained_entries", "Retained entries"), str(report.retained_entries)),
@@ -392,7 +392,7 @@ def _inventory_lines(report: StorageAreaInventoryReport) -> list[str]:
     lines.extend(("", f"{_label('areas', 'Areas')} ({len(report.rows)}):"))
     rows = [
         (
-            row.area.value,
+            _value_label("area", row.area.value),
             _value_label("lifecycle", row.disposition.value),
             _value_label("occupancy", row.occupancy.value),
             str(row.entry_count),

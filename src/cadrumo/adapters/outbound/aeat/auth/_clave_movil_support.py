@@ -21,7 +21,7 @@ from .....core.identity import IdentityError, validate_spanish_tax_id
 from .....core.logging import get_logger
 from .....domain.calculations.registry import RemoteStateGuardPolicy
 from ....persistence.storage import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE
-from .._operator_progress import emit_operator_progress, operator_progress_sink
+from .._operator_progress import OperatorProgress, emit_operator_progress, operator_progress_sink
 from ._errors import AuthConfigurationError, AuthError
 
 if TYPE_CHECKING:
@@ -215,41 +215,21 @@ def render_progress_banner(
     sees the verification code during the wait rather than having to read the
     log file.
     """
-    lines = [
-        "",
-        "-------------------------------------------------------------",
-        " AEAT Cl@ve Movil login",
-        "-------------------------------------------------------------",
-    ]
     if used_non_qr_fallback:
-        lines.extend(
-            (
-                " - AEAT is showing the Cl@ve Movil non-QR confirmation flow.",
-                " - Open the Cl@ve app; a push notification may not appear.",
-                " - Approve only if the app request matches the AEAT verification code below.",
-            ),
+        instruction = (
+            "Open the Cl@ve app and confirm the pending AEAT request; "
+            "a push notification may not appear"
         )
     else:
-        lines.extend(
-            (
-                " - A browser window just opened showing a QR code.",
-                " - Scan the QR with the Cl@ve app if it is available to you.",
-                " - This is the QR branch, not the configured non-QR fallback.",
-            ),
-        )
+        instruction = "Scan the QR code in the visible browser with the Cl@ve app and confirm the AEAT request"
     if verification_code:
-        lines.extend(("", f" AEAT page verification code: {verification_code}"))
-    lines.extend(
-        (
-            "",
-            f" Waiting up to {timeout_seconds // 60}m {timeout_seconds % 60:02d}s for AEAT to complete auth...",
-            "-------------------------------------------------------------",
-            "",
-        ),
+        instruction = f"{instruction}. Verify that code {verification_code} matches in both places"
+    progress = OperatorProgress(
+        message=f"Cl@ve Movil: {instruction}.",
+        timeout_seconds=timeout_seconds,
     )
-    banner = "\n".join(lines)
-    log.info("auth.waiting_banner banner=%r", banner)
-    emit_operator_progress(banner)
+    log.info("auth.waiting_banner banner=%r", progress.render())
+    emit_operator_progress(progress)
 
 
 __all__ = [

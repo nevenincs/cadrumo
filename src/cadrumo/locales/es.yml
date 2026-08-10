@@ -3222,6 +3222,8 @@ cli:
           uno de {choices}.
         invalid_work_unit_id: work_unit_id debe ser una cadena hex en minúsculas de
           64 caracteres (resumen SHA-256)
+        invalid_work_unit_lookup_id: work_unit_id debe ser un identificador SHA-256
+          hexadecimal en minúsculas o un prefijo inequívoco
         kv_empty_key_error: La clave de {flag} no puede estar vacía; se recibió {spec}.
         kv_format_error: '{flag} debe escribirse como {key_label}={value_label}. Es
           una entrada clave-valor: pon el nombre del campo a la izquierda de un único
@@ -4365,6 +4367,13 @@ cli:
         mode_unenforced: Esta plataforma no implementa los bits de permisos POSIX,
           así que no se han comprobado los permisos de la raíz.
       errors:
+        reason:
+          durable_lifecycle: un destino seleccionado tiene un ciclo de vida duradero
+          durable_state: el área contiene estado duradero
+          no_reclaimable_targets: la taxonomía no declara destinos liberables
+          not_root_scoped: un destino seleccionado no pertenece a la raíz
+          protected_descendant: un destino seleccionado contiene datos declarados
+            protegidos
         reclaim_area_refused: 'Se rechaza liberar %{area}: %{reason}. Las %{entries}
           entradas permanecen intactas.'
         reclaim_area_unconfirmed: Liberar %{area} elimina %{entries} entradas y requiere
@@ -4414,6 +4423,11 @@ cli:
         area_argument_help: Área de almacenamiento que se va a mostrar
         area_help: Muestra un área de almacenamiento completa
       values:
+        area:
+          cache: caché
+          exports: exportaciones
+          logs: registros
+          state: estado
         lifecycle:
           durable: duradera
           mixed: mixta
@@ -5034,6 +5048,7 @@ cli:
       parent_id: id_padre
       pending: Pendientes de revisión
       period: Periodo
+      profile: Perfil
       purchase_invoice_evidence_id: Evidencia de factura de compra
       readiness_issues: Incidencias de preparación
       ready: Preparado
@@ -5561,6 +5576,8 @@ cli:
       next_modelo_work_command: '  aeat app modelo work create - iniciar una declaración
         de modelo a partir de los datos de tu libro.'
       next_review_command: '  aeat app ledger review - revisar filas importadas.'
+      next_step_available: Hay un siguiente paso recomendado disponible en la salida
+        del resumen.
       next_work_calculate_command: '  aeat app modelo work list - retomar una unidad
         de trabajo de modelo en curso.'
       next_work_create_command: '  aeat app modelo work create - iniciar una unidad
@@ -6339,6 +6356,10 @@ errors:
       soportada; introduce los datos censales manualmente.
     certificado_not_a_pdf: El archivo proporcionado no es un PDF; se esperaba el Certificado
       de Situación Censal descargado de la Sede.
+  context_labels:
+    area: área
+    entry_count: número de entradas
+    reason: motivo
   error:
     error_access_gate_submission: La política de control de acceso rechazó una operación
       de envío.
@@ -6898,6 +6919,8 @@ errors:
     locked_storage_master_key_keychain: El llavero del sistema operativo está bloqueado.
       Desbloquéalo (Touch ID, Windows Hello o el desbloqueo del gestor de credenciales)
       y vuelve a intentarlo.
+  prefix:
+    refused: Rechazado.
   refused:
     auth_configure_no_active_bucket: No se puede configurar la autenticación sin un
       perfil activo. Crea un perfil con `aeat config profile create NOMBRE` y vuelve
@@ -7508,11 +7531,11 @@ flows:
         vuelve a intentarlo.
     language:
       unavailable: Este perfil no ofrece un ajuste de idioma.
-    progress: '{present} de {total} campos rellenados, faltan {missing} para presentar'
-    required_complete: Está presente toda la información del perfil requerida por el esquema.
     recovery_boundary: 'El código de recuperación se crea y se rota solo desde la
       terminal: aeat config recovery create / aeat config recovery rotate. Las 24
       palabras se muestran una sola vez y no se pueden volver a mostrar.'
+    required_complete: Está presente toda la información del perfil requerida por
+      el esquema.
     section_title: '{title} - {present}/{total}'
     title: 'Perfil: {profile}'
   progress:
