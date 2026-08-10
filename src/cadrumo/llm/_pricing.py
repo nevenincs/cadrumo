@@ -57,8 +57,11 @@ def estimate_cost_usd(provider: LLMProvider, model: str, input_tokens: int, outp
         output_tokens: Completion-side token count.
 
     Returns:
-        Estimated cost in USD, quantised to 6 decimal places using
-        banker-rounded :data:`decimal.ROUND_HALF_UP`;
+        Estimated cost in USD, quantised to 6 decimal places with
+        :data:`decimal.ROUND_HALF_UP` -- half away from zero, matching how
+        this tree rounds money everywhere else, and distinct from banker's
+        rounding (:data:`decimal.ROUND_HALF_EVEN`), which resolves a tie to
+        the even digit instead;
         :data:`decimal.Decimal('0')` for the local provider, which is free
         rather than unpriced; and ``None`` when no table entry prices this
         provider and model.
