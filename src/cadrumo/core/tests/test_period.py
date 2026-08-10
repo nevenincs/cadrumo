@@ -14,10 +14,12 @@ from .. import (
     PeriodKind,
     RegistryPeriodCode,
     StandardPeriodCode,
+    _period,
     accepted_filing_period_codes,
     accepted_filing_period_patterns,
     accepted_period_codes,
     accepted_period_patterns,
+    aggregation,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -32,6 +34,12 @@ ADMINISTRATIVE_TOKENS = ("ALTA", "MODIFICACION", "BAJA", "COMUNICACION", "VARIAC
 #: registry's revision matcher treats it as COVERING the concrete ``EVENT-1`` /
 #: ``EVENT-2`` operator scopes, so it stands for a set of periods, not one.
 SYMBOLIC_EVENT_SELECTOR = "EVENT-N"
+
+
+def test_period_kind_has_one_core_definition_without_aggregation_shadow() -> None:
+    """The public classifier is the core-period type, never an aggregation subset."""
+    assert PeriodKind is _period.PeriodKind
+    assert "PeriodKind" not in vars(aggregation)
 
 
 class TestStandardPeriodCode:
