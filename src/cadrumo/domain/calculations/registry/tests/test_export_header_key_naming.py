@@ -69,7 +69,24 @@ STEM_PAIRS: Final[tuple[tuple[str, str], ...]] = (
     ("nif", "taxid"),
 )
 
-_HEADER_KEY = re.compile(r'^\s*header_key\s*=\s*"([^"]+)"', re.MULTILINE)
+#: The field names that carry an export header concept.
+#:
+#: BOTH spellings, deliberately. The corpus is mid-migration from ``header_key``
+#: to ``producer_key``, and a gate that scans only the outgoing name returns an
+#: empty set the moment that migration lands -- firing the population guard
+#: below as "broken scan" at exactly the point the tree became healthy.
+#:
+#: That is the same defect this file's docstring warns about one level up: it
+#: pins a check to a name that is itself moving. I made it while writing the
+#: warning. Scanning both names means the gate follows the corpus through the
+#: rename instead of going blind at it, and the third spelling -- if there ever
+#: is one -- is added here rather than by rewriting the scan.
+_HEADER_FIELD_NAMES: Final = ("header_key", "producer_key")
+
+_HEADER_KEY = re.compile(
+    r"^\s*(?:" + "|".join(_HEADER_FIELD_NAMES) + r')\s*=\s*"([^"]+)"',
+    re.MULTILINE,
+)
 
 
 def _repository_root() -> Path:
@@ -86,14 +103,17 @@ def header_keys_at_revision(revision: str) -> frozenset[str]:
     as a fact about HEAD produced a confidently wrong finding earlier in this
     corpus's history.
     """
-    listing = subprocess.run(  # noqa: S603 - fixed executable and arguments
-        ["git", "grep", "-h", "header_key", revision, "--", "src/cadrumo/_data/registry"],  # noqa: S607
-        capture_output=True,
-        text=True,
-        check=False,
-        cwd=_repository_root(),
-    ).stdout
-    return frozenset(_HEADER_KEY.findall(listing))
+    tokens: set[str] = set()
+    for field_name in _HEADER_FIELD_NAMES:
+        listing = subprocess.run(  # noqa: S603 - fixed executable and arguments
+            ["git", "grep", "-h", field_name, revision, "--", "src/cadrumo/_data/registry"],  # noqa: S607
+            capture_output=True,
+            text=True,
+            check=False,
+            cwd=_repository_root(),
+        ).stdout
+        tokens.update(_HEADER_KEY.findall(listing))
+    return frozenset(tokens)
 
 
 def english_stem_offenders(tokens: frozenset[str]) -> tuple[tuple[str, str], ...]:
