@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field, TypeAdapter, field_serializer, field_vali
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import IntracomOperationType
+from ...core.money import CENT
 from ...core.decimal import coerce_decimal
 from ...core.errors import CoreValidationError
 from ...core.external_constants import DEFAULT_CURRENCY
@@ -65,9 +66,7 @@ from ._validators import (
 _STRING_OBJECT_MAPPING = TypeAdapter(dict[str, object])
 _OBJECT_SEQUENCE = TypeAdapter(tuple[object, ...])
 
-_LINE_TOLERANCE = Decimal("0.01")
 
-_RETENCION_TOLERANCE: Final[Decimal] = Decimal("0.01")
 """Rounding slack allowed between a declared retención amount and rate.
 
 The invoice-level totals are compared *exactly* because each is a sum of
@@ -75,8 +74,8 @@ line figures that were themselves already rounded to the cent. A retención
 amount is not a sum: it is a rate applied to the base, so the recorded figure
 legitimately differs from the recomputed product in the last cent depending on
 where the issuer rounded. One cent is the same slack
-:data:`_LINE_TOLERANCE` grants the line-level ``subtotal * iva_rate`` product,
-for the same reason.
+:data:`~core.money.CENT` grants the line-level ``subtotal * iva_rate``
+product, for the same reason.
 """
 
 _SIMPLIFICADA_MANDATORY_TAX_ID_CATEGORIES: Final[frozenset[IvaCategory]] = frozenset(
@@ -435,7 +434,7 @@ class InvoiceLine(BaseModel):
     @model_validator(mode="after")
     def _validate_arithmetic(self) -> Self:
         expected_subtotal = (self.quantity * self.unit_price).quantize(Decimal("0.0001"))
-        if abs(self.subtotal - expected_subtotal) > _LINE_TOLERANCE:
+        if abs(self.subtotal - expected_subtotal) > CENT:
             raise InvoiceValidationError("subtotal must equal quantity * unit_price within 1 cent")
         # The undated helper: this checks the line's ARITHMETIC, which needs the
         # number the operator applied, not whether the statute still offers it.
@@ -451,7 +450,7 @@ class InvoiceLine(BaseModel):
                 raise InvoiceValidationError("iva_amount must be zero for EXEMPT / NOT_SUBJECT lines")
         else:
             expected_iva = (self.subtotal * rate).quantize(Decimal("0.0001"))
-            if abs(self.iva_amount - expected_iva) > _LINE_TOLERANCE:
+            if abs(self.iva_amount - expected_iva) > CENT:
                 raise InvoiceValidationError("iva_amount must equal subtotal * iva_rate within 1 cent")
         return self
 
@@ -789,7 +788,7 @@ class Invoice(BaseModel):
             )
         if self.retention_rate is not None and self.retention_amount is not None:
             expected_retencion = (self.base_total * self.retention_rate).quantize(Decimal("0.0001"))
-            if abs(self.retention_amount - expected_retencion) > _RETENCION_TOLERANCE:
+            if abs(self.retention_amount - expected_retencion) > CENT:
                 raise InvoiceValidationError(
                     "retention_amount must equal base_total * retention_rate within 1 cent",
                 )

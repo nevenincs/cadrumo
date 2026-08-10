@@ -125,6 +125,7 @@ from ...core.aggregation import (
     RetencionScheme,
     work_income_retencion_treatment,
 )
+from ...core.money import CENT
 from ...domain.transactions import (
     professional_activity_retencion_rates,
     statutory_activity_retencion_rates,
@@ -181,18 +182,17 @@ class _UnresolvedHint(Enum):
 
 _UNRESOLVED_HINT: Final = _UnresolvedHint.TOKEN
 
-#: Cent tolerance for the amount comparison: the statutory withholding is a single
-#: ``base * rate`` product rounded once to cents (money-2), so the maximum honest
-#: rounding gap between the operator amount and the recomputed expected amount is
-#: half a cent. A one-cent tolerance accepts that gap while still catching a
-#: genuinely divergent rate.
-_RATE_MATCH_TOLERANCE_EUR = Decimal("0.01")
-
 
 def _conforms_to_fixed_rate(base: Decimal, amount: Decimal, rate: Decimal) -> bool:
-    """Return whether ``amount`` is ``base * rate`` within the cent tolerance."""
+    """Return whether ``amount`` is ``base * rate`` within the cent quantum.
+
+    The statutory withholding is a single ``base * rate`` product rounded once
+    to cents (money-2), so the largest honest gap between the operator's amount
+    and the recomputed expectation is half a cent. Bounding at :data:`CENT`
+    accepts that gap while still catching a genuinely divergent rate.
+    """
     expected = base * rate
-    return abs(amount - expected) <= _RATE_MATCH_TOLERANCE_EUR
+    return abs(amount - expected) <= CENT
 
 
 def administrador_retencion_rate_advisory_observations(
