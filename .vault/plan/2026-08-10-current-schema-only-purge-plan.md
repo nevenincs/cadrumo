@@ -4,7 +4,7 @@ tags:
   - '#current-schema-only-purge'
 date: '2026-08-10'
 modified: '2026-08-10'
-body_hash: 'sha256:a5b279f85dca35337020e8705e58e30e62cf5a2c4d2ea927bc847e9e3807aa08'
+body_hash: 'sha256:9a446decb32a5a0ccc7309f49841c0a9c9e6ccb8d8a99698f1566847a1bc2ee3'
 tier: L3
 related:
   - '[[2026-07-09-compatibility-lifecycle-adr]]'
@@ -121,6 +121,8 @@ Fail official Modelo 303 observation writes before repository mutation when
 - [ ] `W03.P07.S21` - REOPENED AFTER REVERT. Refuse an official Modelo 303 observation persisted with no resolved result disposition, at a boundary where the legitimate and under-declaring populations can actually be told apart. Two attempts at the envelope boundary both over-refused, because the carry-casilla condition collapses to is-an-M303-observation and the legitimate population carries no declaration-type header either. The discriminating fact is not present in the payload, so the screen belongs where the disposition resolves or downstream of it, and this row must first establish which boundary that is; `boundary to be determined, NOT src/cadrumo/application/calculations/_observations_repository.py prepare_observation_envelope which has been tried twice and reverted`.
 - [x] `W03.P07.S22` - Require Modelo 303 result_disposition before any filing persistence write. Cause of the two failures standing against this row is now established and it is NOT this row. Both frames come from one pre-existing red test that calls persist_filed_revision directly, passing an observation repository and no disposition, so the guard in its ORIGINAL downstream position refused it identically. The hoist moved only where the refusal is raised, from after five repository writes to before them, which is what the row asked for and which improves that test's failure rather than causing it; `src/cadrumo/application/modelo/_revision_persistence.py and the extracted guard in _filed_revision_observation.py`.
 - [ ] `W03.P07.S23` - Prove under-declared Modelo 303 observations are refused and current dispositions round trip; `src/cadrumo/application/calculations/tests/test_m303_carry_ingress.py`.
+- [ ] `W03.P07.S27` - Resolve the red prorrata settlement-writeback test, which calls persist_filed_revision directly with an observation repository and no disposition. BLOCKED ON the ADR amendment: it is red for the same root cause the amendment exists to decide, a filing-boundary requirement sitting on a caller that is not filing, and a local repair here would paper over exactly that question; `src/cadrumo/application/calculations/tests/test_prorrata_regularizacion.py and whatever the amendment rules the filing requirement should key on`.
+- [ ] `W03.P07.S28` - Establish what the M303 carry normalisation path actually is, given that production READERS call it directly and are then required to supply a fact only a filing produces. The iva compensation history module, the annual partition loader and the iva wallet gate all call the normalise or validate functions without the door opt-in, so the gated ingress is not a filing boundary either and the remedy of moving the screen inside it is not available; `src/cadrumo/application/calculations/_m303_carry_ingress.py and its direct callers in _iva_compensation_history.py, _iva_compensation_annual_partition.py and modelo/_iva_wallet_gate.py`.
 
 ## Parallelization
 
