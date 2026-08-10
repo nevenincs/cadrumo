@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#unstructured-document-ingestion'
 date: '2026-08-08'
-modified: '2026-08-08'
+modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:a571d129e2ba4d850440e9bf67ad6d3ed394664867291d9ba58b0775e085aa72'
+body_hash: 'sha256:df509bea4cfde43c59f34db2378b946bccf736656ba97dd7985ac2918efb692b'
 step_id: 'S225'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -32,10 +32,18 @@ One measured observation, not a defect. The attribution field set carries both r
 
 ## Verification
 
-    uv run --no-sync pytest src/cadrumo/application/ledger/tests -n0 -q -m unit
-    3 failed, 1221 passed, 26 deselected
+**Superseding reading, and the one this row closes on.** Run by the single test-run authority at `4664fa299e`:
 
-The three failures are a peer's uncommitted rewrite of the relief guard, live in the working tree while this sweep ran. Attributed by reading the uncommitted diff, which adds a direction condition to the uncatalogued-country branch that the failing helpers do not supply.
+    unit lane          1267 passed / 1 failed / 29 deselected
+    integration lane   ran, no failures
+
+The single failure is `test_attach_evidence_under_finalized_revision.py::test_stale_revision_advisory_names_no_harmful_recovery_verb`, which reads a `suggestion` field off a `Notice` that no longer carries one — the typed-notice-action migration's orphaned consumer, already rowed separately and owned elsewhere. Zero failures attributable to this sweep.
+
+**The reading it supersedes is recorded rather than deleted, because why it was void is the more useful half.** The original entry cited `3 failed, 1221 passed` from a run the sweeping worker executed itself, in breach of the single-authority rule. Those figures are not merely unverified but UNFALSIFIABLE: they were contaminated by a peer's uncommitted rewrite of the relief guard, live in the working tree and being edited between two runs of the identical subset, which is why the same command produced three failures and then six with different names. That peer work has since vanished without landing, so no tree exists — at HEAD, in any working copy, or in any reflog — against which three-or-six could ever be reproduced.
+
+So this row had never had an admissible reading until now. Its conclusion did not change; its evidence did.
+
+The attribution in the original entry was nonetheless correct, and reaching the right cause after two contaminated readings is not the same as the process working. A serialised queue would not have produced either reading.
 
 ## Notes
 
