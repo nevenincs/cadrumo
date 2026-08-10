@@ -786,7 +786,7 @@ def _auth_form_page(
     fields = [
         FormField(
             key=_AUTH_PROVIDER_PATH,
-            label=tr("flows.manager.action.auth_provider"),
+            label=_auth_field_label(_AUTH_PROVIDER_PATH),
             # Cl@ve Movil is the opening answer for a profile that has not
             # answered yet, because registering a certificate needs a file
             # and a secret through a separate verb: an operator setting up
@@ -794,17 +794,17 @@ def _auth_form_page(
             value=on_record.get(_AUTH_PROVIDER_PATH, AuthProviderKind.CLAVE_MOVIL.value),
             kind=FormFieldKind.SINGLE_CHOICE,
             choices=form_choices([(kind.value, _provider_label(kind)) for kind in AuthProviderKind]),
-            validate=lambda value: None if value else tr("flows.manager.action.auth_provider"),
+            validate=lambda value: None if value else _auth_field_label(_AUTH_PROVIDER_PATH),
         ),
         FormField(
             key=_IDENTITY_TAX_ID_PATH,
-            label=tr("flows.manager.action.auth_tax_id"),
+            label=_auth_field_label(_IDENTITY_TAX_ID_PATH),
             value=on_record.get(_IDENTITY_TAX_ID_PATH, "") or suggested_tax_id,
             validate=_validated_tax_id,
         ),
         FormField(
             key=_AUTH_CLAVE_MOVIL_ROUTE_PATH,
-            label=tr("flows.manager.action.auth_clave_movil_route"),
+            label=_auth_field_label(_AUTH_CLAVE_MOVIL_ROUTE_PATH),
             value=on_record.get(_AUTH_CLAVE_MOVIL_ROUTE_PATH, suggested_route.value),
             kind=FormFieldKind.SINGLE_CHOICE,
             choices=form_choices(
@@ -819,17 +819,17 @@ def _auth_form_page(
         ),
         FormField(
             key=_AUTH_DNI_NIE_PATH,
-            label=tr("flows.manager.action.auth_dni_nie"),
+            label=_auth_field_label(_AUTH_DNI_NIE_PATH),
             value=on_record.get(_AUTH_DNI_NIE_PATH, "") or suggested_tax_id,
         ),
         FormField(
             key=_AUTH_SOPORTE_PATH,
-            label=tr("flows.manager.action.auth_numero_soporte"),
+            label=_auth_field_label(_AUTH_SOPORTE_PATH),
             value=on_record.get(_AUTH_SOPORTE_PATH, ""),
         ),
         FormField(
             key=_AUTH_FECHA_VALIDEZ_PATH,
-            label=tr("flows.manager.action.auth_fecha_validez"),
+            label=_auth_field_label(_AUTH_FECHA_VALIDEZ_PATH),
             value=on_record.get(_AUTH_FECHA_VALIDEZ_PATH, ""),
             validate=_validated_schema_value,
         ),

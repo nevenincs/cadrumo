@@ -100,8 +100,12 @@ def _assert_complete_parser_projection(
     parsed_sheets: tuple[RecordDesignSheet, ...],
 ) -> None:
     """Compare every parser coordinate to the IR without re-parsing any source."""
-    assert len(intermediate.sheets) == len(parsed_sheets)
-    for intermediate_sheet, parsed_sheet in zip(intermediate.sheets, parsed_sheets, strict=True):
+    fixed_sheets = tuple(sheet for sheet in parsed_sheets if sheet.variable_envelope is None)
+    parsed_envelopes = tuple(
+        sheet.variable_envelope for sheet in parsed_sheets if sheet.variable_envelope is not None
+    )
+    assert len(intermediate.sheets) == len(fixed_sheets)
+    for intermediate_sheet, parsed_sheet in zip(intermediate.sheets, fixed_sheets, strict=True):
         assert intermediate_sheet.sheet == parsed_sheet.name
         assert intermediate_sheet.record_identity == parsed_sheet.name
         assert intermediate_sheet.declared_total == parsed_sheet.total_positions
@@ -118,3 +122,24 @@ def _assert_complete_parser_projection(
             assert intermediate_field.normalized_description == parsed_field.description
             assert intermediate_field.validation == parsed_field.validation
             assert intermediate_field.content == parsed_field.content
+
+    assert len(intermediate.variable_envelopes) == len(parsed_envelopes)
+    for intermediate_envelope, parsed_envelope in zip(
+        intermediate.variable_envelopes,
+        parsed_envelopes,
+        strict=True,
+    ):
+        assert parsed_envelope is not None
+        assert intermediate_envelope.sheet == parsed_envelope.name
+        assert intermediate_envelope.record_identity == parsed_envelope.name
+        assert intermediate_envelope.prefix_extent == parsed_envelope.prefix_extent
+        assert len(intermediate_envelope.prefix_fields) == len(parsed_envelope.prefix_fields)
+        assert intermediate_envelope.body_source_row == parsed_envelope.body.row
+        assert intermediate_envelope.body_offset == parsed_envelope.body.offset
+        assert intermediate_envelope.body_length == parsed_envelope.body.length
+        assert intermediate_envelope.closing_source_row == parsed_envelope.closing_suffix.row
+        assert intermediate_envelope.closing_offset == parsed_envelope.closing_suffix.offset
+        assert intermediate_envelope.closing_length == parsed_envelope.closing_suffix.length
+        assert intermediate_envelope.total_source_row == parsed_envelope.variable_total.row
+        assert intermediate_envelope.total_label == parsed_envelope.variable_total.label
+        assert intermediate_envelope.total_length == parsed_envelope.variable_total.length

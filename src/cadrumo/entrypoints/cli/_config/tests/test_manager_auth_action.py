@@ -421,9 +421,16 @@ def test_the_contraste_strings_are_translated_in_every_catalogue(locale: str, ke
     see a key that is untranslated in English too; reading the leaf back
     is what catches it.
     """
-    rendered = tr(key, locale=locale)
+    substitutions = (
+        {"nie_field": "SCHEMA-NIE-FIELD", "dni_field": "SCHEMA-DNI-FIELD"}
+        if key == "flows.manager.action.auth_contraste_missing"
+        else {}
+    )
+    rendered = tr(key, locale=locale, **substitutions)
     assert rendered != key, f"{locale} still holds {key} as its own value"
     assert "%{" not in rendered, f"{locale} left a placeholder uninterpolated: {rendered!r}"
+    for schema_label in substitutions.values():
+        assert schema_label in rendered, f"{locale} drops the schema field label: {rendered!r}"
 
 
 @pytest.fixture(name="active_profile")
