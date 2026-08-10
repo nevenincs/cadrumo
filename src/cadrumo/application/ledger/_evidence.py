@@ -62,7 +62,7 @@ from ...adapters.persistence.storage import (
     SecureBoundRepository,
     secure_object_repository_for_bucket,
 )
-from ...core import STRICT_FROZEN_CONFIG
+from ...core import STRICT_FROZEN_CONFIG, Hex64Str
 from ...core.config import Settings
 from ...core.errors import CadrumoError
 from ...core.external_constants import PDF_EXTENSION, PDF_MIME_TYPE, XML_MIME_TYPE
@@ -148,7 +148,7 @@ class PurchaseInvoiceEvidence(BaseModel):
     # storage is not evidence -- `source_path` is a provenance breadcrumb only and is
     # never read for bytes (sensitive-financial-data-secure-storage-only), so a
     # byte-less record would be an unreadable claim about a file we do not hold.
-    attachment_id: str = Field(min_length=64, max_length=64)
+    attachment_id: Hex64Str
     media_kind: MediaKind
     supplier: str | None = None
     invoice_number: str | None = None

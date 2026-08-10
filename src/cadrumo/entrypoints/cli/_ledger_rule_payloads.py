@@ -19,6 +19,7 @@ from datetime import datetime
 
 from pydantic import Field, model_validator
 
+from ...core import Hex64Str
 from ...core.json_contract import OutputSchema, register_schema
 from ...domain.transactions import BusinessClassification, LedgerClassificationRule
 from ._decimal_wire import DecimalWireText
@@ -37,7 +38,7 @@ class ClassificationRulePayload(OutputSchema):
     values run before higher ones.
     """
 
-    rule_id: str = Field(min_length=64, max_length=64)
+    rule_id: Hex64Str
     description_pattern: str = Field(min_length=1)
     classification: BusinessClassification
     category_id: str | None = None
@@ -96,7 +97,7 @@ class RuleApplyMatchPayload(OutputSchema):
 
     transaction_id: str
     description: str
-    matched_rule_id: str = Field(min_length=64, max_length=64)
+    matched_rule_id: Hex64Str
     classification: BusinessClassification
 
 
@@ -113,7 +114,7 @@ class RuleApplyAppliedPayload(OutputSchema):
     """
 
     transaction_id: str
-    matched_rule_id: str = Field(min_length=64, max_length=64)
+    matched_rule_id: Hex64Str
     classification: BusinessClassification
 
 

@@ -10,7 +10,7 @@ from typing import Self
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Art104TresExclusion, Period
+from ...core import Art104TresExclusion, Hex64Str, Period
 
 # CLASSIFIED_BY_MANUAL is re-exported for constants centralisation tests.
 from ...core.external_constants import (
@@ -466,11 +466,11 @@ class SplitTransactionResult(BaseModel):
 
     bucket_id: BucketId
     parent_transaction_id: TransactionId
-    split_group_id: str = Field(min_length=64, max_length=64)
+    split_group_id: Hex64Str
     child_transaction_ids: tuple[str, ...]
     parent_transaction: Transaction
     child_transactions: tuple[Transaction, ...]
-    bucket_event_id: str = Field(min_length=64, max_length=64)
+    bucket_event_id: Hex64Str
 
 
 class MergeTransactionsResult(BaseModel):
@@ -479,13 +479,13 @@ class MergeTransactionsResult(BaseModel):
     model_config = _STRICT_FROZEN
 
     bucket_id: BucketId
-    split_group_id: str = Field(min_length=64, max_length=64)
+    split_group_id: Hex64Str
     parent_transaction_id: TransactionId
     merged_transaction_id: TransactionId
     source_child_ids: tuple[str, ...]
     merged_transaction: Transaction
     parent_transaction: Transaction
-    bucket_event_id: str = Field(min_length=64, max_length=64)
+    bucket_event_id: Hex64Str
 
 
 class LedgerImportOperationResult(BaseModel):
@@ -494,7 +494,7 @@ class LedgerImportOperationResult(BaseModel):
     model_config = _STRICT_FROZEN
 
     summary: ImportSummary
-    import_batch_id: str | None = Field(default=None, min_length=64, max_length=64)
+    import_batch_id: Hex64Str | None = None
     bucket_event_ids: tuple[str, ...] = ()
 
 
@@ -894,7 +894,7 @@ class LedgerExportResult(BaseModel):
     model_config = _STRICT_FROZEN
 
     bucket_id: BucketId
-    export_id: str = Field(min_length=64, max_length=64)
+    export_id: Hex64Str
     export_format: ExportSerializationFormat
     media_type: str = Field(min_length=1)
     filename_extension: str = Field(min_length=1)

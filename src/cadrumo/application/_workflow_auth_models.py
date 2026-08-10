@@ -145,7 +145,7 @@ class CertificateSecretMutationIntent(BaseModel):
     event_kind: CertificateSecretMutationEventKind
     started_at: datetime
     prior_present: bool
-    request_witness: str | None = Field(default=None, min_length=64, max_length=64)
+    request_witness: Hex64Str | None = None
     completion_witness: str | None = None
 
     @model_validator(mode="after")

@@ -26,6 +26,7 @@ from ...core import (
     ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS,
     Art104TresExclusion,
     ConceptoIngreso,
+    Hex64Str,
     TipoActividad,
     fold_diacritics,
 )
@@ -416,7 +417,7 @@ class TransactionEvidenceProvenanceEntry(BaseModel):
     actor: str = Field(min_length=1, max_length=64)
     source_command: str = Field(min_length=1, max_length=128)
     linked_at: datetime
-    bucket_event_id: str | None = Field(default=None, min_length=64, max_length=64)
+    bucket_event_id: Hex64Str | None = None
 
     @field_validator("evidence_id", "actor", "source_command", "bucket_event_id")
     @classmethod
@@ -438,7 +439,7 @@ class TransactionEditLineageEntry(BaseModel):
     actor: str = Field(min_length=1, max_length=64)
     source_command: str = Field(min_length=1, max_length=128)
     edited_at: datetime
-    bucket_event_id: str | None = Field(default=None, min_length=64, max_length=64)
+    bucket_event_id: Hex64Str | None = None
 
     @field_validator("previous_transaction_id", "actor", "source_command", "bucket_event_id")
     @classmethod
@@ -462,7 +463,7 @@ class TransactionLifecycleLineageEntry(BaseModel):
     source_command: str = Field(min_length=1, max_length=128)
     changed_at: datetime
     reason: str = ""
-    bucket_event_id: str | None = Field(default=None, min_length=64, max_length=64)
+    bucket_event_id: Hex64Str | None = None
 
     @model_validator(mode="before")
     @classmethod
@@ -517,7 +518,7 @@ class SplitLineage(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    split_group_id: str = Field(min_length=64, max_length=64)
+    split_group_id: Hex64Str
     role: SplitRole
     sibling_transaction_ids: tuple[str, ...] = ()
 
@@ -531,17 +532,6 @@ class SplitLineage(BaseModel):
         if isinstance(raw_role, str):
             payload["role"] = SplitRole(raw_role)
         return payload
-
-    @field_validator("split_group_id")
-    @classmethod
-    def _require_lowercase_hex(cls, value: str) -> str:
-        try:
-            int(value, 16)
-        except ValueError as exc:
-            raise TransactionValidationError("split_group_id must be a 64-character lowercase hex digest") from exc
-        if value != value.lower():
-            raise TransactionValidationError("split_group_id must be lowercase")
-        return value
 
     @field_validator("sibling_transaction_ids", mode="before")
     @classmethod
