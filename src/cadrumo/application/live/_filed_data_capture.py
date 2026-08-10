@@ -784,7 +784,23 @@ async def capture_filed_data_bulk(
         surface=SyncSurface.FILED_DECLARATIONS,
         resolved_scope=bounded_scope_description(tuple(resolved_modelos), suffix=f"{year_from}-{year_to}"),
         succeeded=not failures,
-        unit_count=len(calculation_observation_keys),
+        # What the run REACHED, read off the accumulator's own tally -- the same
+        # one the sweep limit is measured against, and the only counter that is
+        # incremented in every mode.
+        #
+        # Deliberately NOT the enrolled key count. Enrolment narrows the
+        # population twice: `select_latest_filed_observations_in_history_order`
+        # collapses to the latest observation per (modelo, ejercicio, period),
+        # and a BEST_EFFORT enrolment failure drops its observation into
+        # `failures` instead. A recapture advisory, meanwhile, is raised once per
+        # observation ABSORBED. Pairing those two populations let
+        # `divergence_count` exceed `unit_count` and refuse the record at the end
+        # of a real sweep -- after every unit had already been fetched and
+        # written, and worst precisely when the run went worst. Both counts now
+        # come from the accumulator, so the record's bound holds by construction
+        # rather than by coincidence. The enrolled tally is not lost: it is
+        # `calculation_observation_count` on the report below.
+        unit_count=accumulator.absorbed_count,
         # One advisory per divergent filing, so the notices ARE the count.
         divergence_count=len(accumulator.recapture_notices),
         completed_at=now(),
