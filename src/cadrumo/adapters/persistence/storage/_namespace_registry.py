@@ -29,7 +29,7 @@ from ._storage_path_definitions import (
 from .errors import NamespaceRegistryError
 
 SECURE_OBJECT_SCHEMA_VERSION_V1 = 1
-_WORKFLOW_RUN_SCHEMA_VERSION_V2 = 2
+_WORKFLOW_RUN_SCHEMA_VERSION_V3 = 3
 SECURE_OBJECT_CATALOGUE_KEY = "catalogue"
 SECURE_OBJECT_DEFAULT_KEY = "default"
 SECURE_OBJECT_WORKFLOW_STATE_KEY = "state"
@@ -270,7 +270,7 @@ WORKFLOW_RUN_NAMESPACE = SecureObjectNamespaceDefinition(
     namespace="cadrumo.application.workflow.runs",
     owner="cadrumo.application.workflow",
     sensitivity=SensitivityClass.FINANCIAL,
-    schema_version=_WORKFLOW_RUN_SCHEMA_VERSION_V2,
+    schema_version=_WORKFLOW_RUN_SCHEMA_VERSION_V3,
     object_key_grammar="{run_id}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,

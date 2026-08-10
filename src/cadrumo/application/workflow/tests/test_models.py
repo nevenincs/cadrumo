@@ -9,7 +9,8 @@ stability and the validators on :class:`cadrumo.application.workflow.WorkflowSte
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
+from decimal import Decimal
 from typing import Any, cast
 
 import pytest
@@ -22,6 +23,7 @@ from ....adapters.outbound.aeat.browser import (
 )
 from ....adapters.outbound.aeat.browser._site_health import _URL_ADAPTER
 from ....core import Modelo, Period
+from ....domain.deadlines import ModeloDeadline, ObligationStatus, RecargoBand, Recovery
 from ....tests.aeat_literal_fixtures import aeat_url
 from ...operator_actions import (
     ActionArgumentBinding,
@@ -37,7 +39,9 @@ from .. import (
     SiteHealthAlert,
     WorkflowAbortReason,
     WorkflowDeadlineContextDetails,
+    WorkflowObligationFacts,
     WorkflowResult,
+    WorkflowSiteHealthFacts,
     WorkflowStage,
     WorkflowStep,
     WorkflowValidationFailedDetails,
@@ -97,7 +101,7 @@ class TestWorkflowStepValidation:
             started_at=now,
             ended_at=now,
             success=True,
-            summary_locale_key="application.workflow.steps.deadline_checked",
+            summary_locale_key="application.workflow.steps.deadline_open",
             details=WorkflowDeadlineContextDetails(
                 kind="deadline_context",
                 modelo=Modelo.M303,
@@ -139,7 +143,7 @@ class TestWorkflowStepValidation:
                     "started_at": now,
                     "ended_at": now,
                     "success": True,
-                    "summary_locale_key": "application.workflow.steps.deadline_checked",
+                    "summary_locale_key": "application.workflow.steps.deadline_open",
                     "details": {
                         "kind": "deadline_context",
                         "modelo": Modelo.M303,
@@ -158,6 +162,18 @@ class TestWorkflowStepValidation:
                 ended_at=now,
                 success=True,
                 summary_locale_key="Profile loaded successfully",
+            )
+
+    def test_summary_rejects_an_unemitted_dotted_locale_key(self) -> None:
+        """Only engine-produced identities may enter persisted workflow records."""
+        now = datetime(2026, 4, 12, tzinfo=UTC)
+        with pytest.raises(ValidationError, match="closed workflow producer keys"):
+            WorkflowStep(
+                stage=WorkflowStage.COMPUTING_DEADLINES,
+                started_at=now,
+                ended_at=now,
+                success=True,
+                summary_locale_key="application.workflow.steps.deadline_checked",
             )
 
     def test_actionable_precondition_verdict_round_trips_without_command_prose(self) -> None:
@@ -200,7 +216,20 @@ class TestWorkflowStepValidation:
         assert reconstructed == step
         assert reconstructed.precondition_verdict == verdict
 
-    def test_precondition_evidence_rejects_rendered_or_exception_prose(self) -> None:
+    @pytest.mark.parametrize(
+        ("evidence_key", "evidence_value"),
+        (
+            ("state_code", "Draft input is not ready"),
+            ("failure_reason", "runtime_error"),
+            ("failure_exception", "runtime_error"),
+            ("failure_code", "RuntimeError:boom"),
+        ),
+    )
+    def test_precondition_evidence_rejects_rendered_or_exception_prose(
+        self,
+        evidence_key: str,
+        evidence_value: str,
+    ) -> None:
         now = datetime(2026, 4, 12, tzinfo=UTC)
         verdict = PreconditionVerdict(
             failed_condition_id="workflow.draft.ready",
@@ -209,7 +238,7 @@ class TestWorkflowStepValidation:
                     condition_id="workflow.draft.ready",
                     evidence_id="workflow.draft.failure",
                     provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
-                    values={"failure_detail": "Draft input is not ready"},
+                    values={evidence_key: evidence_value},
                 ),
             ),
             conditionality=ActionConditionality.NOT_APPLICABLE,
@@ -260,7 +289,7 @@ class TestWorkflowStepValidation:
             started_at=now,
             ended_at=now,
             success=False,
-            summary_locale_key="application.workflow.steps.submission_unsafe",
+            summary_locale_key="application.workflow.steps.preflight_failed",
             precondition_verdict=verdict,
         )
 
@@ -276,8 +305,8 @@ class TestSiteHealthAlert:
         evidence = SiteHealthEvidence(
             url=_URL_ADAPTER.validate_python(aeat_url("sede", "/")),
             http_status=503,
-            html_fragment="<html>mantenimiento</html>",
-            detected_markers=("mantenimiento",),
+            html_fragment="<html>servicio temporalmente no disponible</html>",
+            detected_markers=("servicio temporalmente no disponible",),
         )
         return SiteHealthStatus(
             state=SiteHealthState.MANTENIMIENTO,
@@ -286,19 +315,32 @@ class TestSiteHealthAlert:
         )
 
     def test_alert_composes_stage_and_status(self) -> None:
+        status = self._status()
         alert = SiteHealthAlert(
             stage=WorkflowStage.BUILDING_DRAFT,
-            status=self._status(),
+            status=WorkflowSiteHealthFacts.from_status(status),
             run_id="run-1234",
         )
         assert alert.stage is WorkflowStage.BUILDING_DRAFT
         assert alert.status.state is SiteHealthState.MANTENIMIENTO
+        assert alert.status.alert_code == "workflow.site.mantenimiento"
+        assert alert.status.http_status == 503
+        assert alert.status.detected_marker_count == 1
+        persisted = alert.model_dump_json()
+        assert status.evidence.html_fragment not in persisted
+        assert str(status.evidence.url) not in persisted
+        assert status.evidence.detected_markers[0] not in persisted
+
+    def test_workflow_projection_rejects_adapter_evidence_shape(self) -> None:
+        """Raw adapter evidence cannot cross the strict workflow boundary."""
+        with pytest.raises(ValidationError):
+            WorkflowSiteHealthFacts.model_validate(self._status().model_dump())
 
     def test_alert_rejects_empty_run_id(self) -> None:
         with pytest.raises(ValidationError, match=r"at least 1 character"):
             SiteHealthAlert(
                 stage=WorkflowStage.BUILDING_DRAFT,
-                status=self._status(),
+                status=WorkflowSiteHealthFacts.from_status(self._status()),
                 run_id="",
             )
 
@@ -389,3 +431,42 @@ class TestWorkflowResultTerminal:
         blob = original.model_dump_json()
         reconstructed = WorkflowResult.model_validate_json(blob)
         assert reconstructed == original
+
+
+def test_workflow_obligation_projection_excludes_source_language_and_raw_recovery_command() -> None:
+    """The real domain deadline projects to stable persisted facts only."""
+    deadline = ModeloDeadline(
+        modelo=Modelo.M303,
+        period=_period(2025),
+        opens_on=date(2025, 4, 1),
+        closes_on=date(2025, 4, 20),
+        payment_cutoff_on=date(2025, 4, 15),
+        status=ObligationStatus.OVERDUE,
+        applies_because="Régimen general de IVA.",
+        boe_references=("orden-hfp-105-2017:art-1",),
+        recovery=Recovery(
+            still_filable=True,
+            recargo_band=RecargoBand(
+                id="completed_months_2",
+                min_completed_months=2,
+                max_completed_months=2,
+                surcharge_pct=Decimal("3.00"),
+                interest_applies=False,
+                legal_ref="ley-58-2003:art-27.2",
+            ),
+            next_command="aeat app modelo work calculate WORK_UNIT_ID",
+        ),
+    )
+
+    projected = WorkflowObligationFacts.from_deadline(deadline)
+    payload = projected.model_dump(mode="json")
+
+    assert projected.modelo is Modelo.M303
+    assert projected.period == _period(2025)
+    assert projected.recovery is not None
+    assert projected.recovery.recargo_band_id == "completed_months_2"
+    assert "applies_because" not in payload
+    assert isinstance(payload["recovery"], dict)
+    assert "next_command" not in payload["recovery"]
+    assert "Régimen general de IVA." not in projected.model_dump_json()
+    assert "aeat app modelo" not in projected.model_dump_json()

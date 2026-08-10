@@ -55,11 +55,6 @@ def classify_cert_expiry(
     return ("OK", days_until_expiry)
 
 
-def summary_text(en: str) -> str:
-    """Build a workflow summary string."""
-    return en
-
-
 def enum_value(value: object) -> str:
     """Return ``Enum.value`` when present, otherwise ``str(value)``."""
     if value is None:
@@ -68,34 +63,11 @@ def enum_value(value: object) -> str:
     return str(raw)
 
 
-def draft_blocking_finding_descriptions(draft: object) -> tuple[str, ...]:
-    """Summarise the ERROR/WARNING findings that keep a built draft out of the ready state.
-
-    The ``BUILDING_DRAFT`` gate aborts with ``DRAFT_HAS_ERRORS`` whenever the
-    builder hands back a draft still below ``LISTO_PARA_PRESENTAR``. Without the
-    underlying findings the abort is opaque (operators see only
-    ``status=BORRADOR``), so this projects each blocking finding to a compact
-    ``severity:code (casilla)`` description the abort step can surface.
-    """
-    findings = getattr(draft, "findings", ()) or ()
-    descriptions: list[str] = []
-    for finding in findings:
-        severity = enum_value(getattr(finding, "severity", None))
-        if severity not in {"error", "warning"}:
-            continue
-        code = enum_value(getattr(finding, "code", None)) or "unknown"
-        casilla = enum_value(getattr(finding, "casilla_id", None))
-        descriptions.append(f"{severity}:{code}" + (f" ({casilla})" if casilla else ""))
-    return tuple(descriptions)
-
-
 __all__ = [
     "DeadlineRole",
     "FilingWindowState",
     "classify_cert_expiry",
-    "draft_blocking_finding_descriptions",
     "enum_value",
     "registry_filing_year",
     "registry_period_token",
-    "summary_text",
 ]

@@ -35,18 +35,16 @@ from ...domain.deadlines import (
     compute_obligation_schedule,
     next_deadline,
 )
-from ._engine_helpers import summary_text as _summary_text
+from ..operator_actions import (
+    ActionConditionality,
+    ConditionEvidence,
+    ConditionEvidenceProvenance,
+    NoRecoveryOutcome,
+    PreconditionVerdict,
+)
 from ._errors import WorkflowAbortSignalError
 from ._models import WorkflowAbortReason, WorkflowPurpose, WorkflowStage, WorkflowStep
 from ._protocols import DeadlineEngineProtocol
-
-_MISSING_OBLIGATION_SUMMARY = (
-    "No pending filing obligation for this modelo/period at the current date "
-    "(the AEAT filing-obligation window is not open). Filing-to-fichero does "
-    "not require this step: export the verified-complete revision with "
-    "'aeat app modelo export' — that is the local finish line. 'work file' "
-    "is the optional internal mark-as-filed step for when the obligation window is open."
-)
 
 
 def resolve_deadline_stage_obligation(
@@ -94,20 +92,29 @@ def abort_missing_deadline_obligation(
     steps: list[WorkflowStep],
 ) -> NoReturn:
     """Record and raise the deadline-stage no-obligation abort."""
-    summary = _summary_text(_MISSING_OBLIGATION_SUMMARY)
     steps.append(
         WorkflowStep(
             stage=WorkflowStage.COMPUTING_DEADLINES,
             started_at=started,
             ended_at=_utcnow(),
             success=False,
-            summary=summary,
+            summary_locale_key="application.workflow.steps.deadline_missing",
+            precondition_verdict=PreconditionVerdict(
+                failed_condition_id="workflow.deadline.filing_window_open",
+                evidence=(
+                    ConditionEvidence(
+                        condition_id="workflow.deadline.filing_window_open",
+                        evidence_id="workflow.deadline.window",
+                        provenance=ConditionEvidenceProvenance.DOMAIN_EVALUATION,
+                        values={"filing_window_open": False},
+                    ),
+                ),
+                conditionality=ActionConditionality.NOT_APPLICABLE,
+                no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            ),
         ),
     )
-    raise WorkflowAbortSignalError(
-        reason=WorkflowAbortReason.NO_PENDING_OBLIGATION,
-        summary=summary,
-    )
+    raise WorkflowAbortSignalError(reason=WorkflowAbortReason.NO_PENDING_OBLIGATION)
 
 
 def _deadline_stage_schedule(

@@ -16,15 +16,18 @@ from __future__ import annotations
 import hashlib
 import json
 from datetime import UTC, date, datetime, timedelta
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
+from ....adapters.outbound.aeat.browser import SiteHealthState
 from ....adapters.persistence.storage import ClassificationError, Envelope, EnvelopeVersionError, SensitivityClass
 from ....core import Modelo, Period, StorageCategory, storage_path
 from ....core.config import override_settings
 from ....core.external_constants import OutputLanguage
+from ....domain.deadlines import ObligationStatus
 from ....domain.submission import ModeloDraftStatus
 from ....tests.secure_sql import isolated_runtime_profile
 from ...operator_actions import (
@@ -34,15 +37,20 @@ from ...operator_actions import (
     ActionReference,
     ConditionEvidence,
     ConditionEvidenceProvenance,
+    NoRecoveryOutcome,
     PreconditionVerdict,
 )
 from .._errors import WorkflowError
 from .._models import (
+    SiteHealthAlert,
     WorkflowAbortReason,
     WorkflowDeadlineContextDetails,
+    WorkflowDeadlineRecoveryFacts,
     WorkflowDraftNotReadyDetails,
     WorkflowFailureDetails,
+    WorkflowObligationFacts,
     WorkflowResult,
+    WorkflowSiteHealthFacts,
     WorkflowStage,
     WorkflowStep,
 )
@@ -97,7 +105,24 @@ def _populated_run() -> WorkflowResult:
         ended_at=_RUN_ENDED_AT,
         final_stage=WorkflowStage.ABORTED,
         aborted_reason=WorkflowAbortReason.DEADLINE_PASSED,
-        obligation=None,
+        obligation=WorkflowObligationFacts(
+            modelo=Modelo.M303,
+            period=_PERIOD,
+            opens_on=date(2025, 4, 1),
+            closes_on=date(2025, 4, 20),
+            payment_cutoff_on=date(2025, 4, 15),
+            status=ObligationStatus.OVERDUE,
+            boe_references=("ley-58-2003:art-27.2",),
+            recovery=WorkflowDeadlineRecoveryFacts(
+                still_filable=True,
+                recargo_band_id="completed_months_2",
+                min_completed_months=2,
+                max_completed_months=2,
+                surcharge_pct=Decimal("3.00"),
+                interest_applies=False,
+                legal_ref="ley-58-2003:art-27.2",
+            ),
+        ),
         draft_id="d" * 64,
         submission_id=None,
         steps=(
@@ -142,7 +167,20 @@ def _populated_run() -> WorkflowResult:
 
 
 def _operationally_aborted_run() -> WorkflowResult:
-    """An aborted run whose terminal failure is not a precondition refusal."""
+    """An operational abort with an explicit terminal no-recovery verdict."""
+    terminal_verdict = PreconditionVerdict(
+        failed_condition_id="workflow.execution.completed",
+        evidence=(
+            ConditionEvidence(
+                condition_id="workflow.execution.completed",
+                evidence_id="workflow.execution.error_code",
+                provenance=ConditionEvidenceProvenance.RUNTIME_OBSERVATION,
+                values={"error_code": "workflow.runtime.failure"},
+            ),
+        ),
+        conditionality=ActionConditionality.NOT_APPLICABLE,
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+    )
     return WorkflowResult(
         run_id="o" * 16,
         started_at=_RUN_STARTED_AT,
@@ -160,6 +198,7 @@ def _operationally_aborted_run() -> WorkflowResult:
                     kind="workflow_failure",
                     error_code="workflow.runtime.failure",
                 ),
+                precondition_verdict=terminal_verdict,
             ),
         ),
         summary_locale_key="application.workflow.results.aborted",
@@ -170,13 +209,13 @@ def _operationally_aborted_run() -> WorkflowResult:
     )
 
 
-def _structurally_legacy_envelope_bytes(
+def _workflow_run_v2_envelope_bytes(
     result: WorkflowResult,
     *,
     schema_version: int,
     classification: SensitivityClass,
 ) -> bytes:
-    """Return a v1-shaped run envelope the closed v2 payload rejects."""
+    """Return committed v2 bytes carrying the retired domain deadline shape."""
     envelope = Envelope[WorkflowResult](
         schema_version=schema_version,
         written_at=_MUTATED_RUN_WRITTEN_AT,
@@ -185,14 +224,20 @@ def _structurally_legacy_envelope_bytes(
     )
     legacy = json.loads(envelope.model_dump_json())
     payload = legacy["payload"]
-    payload["summary"] = "run aborted before submission"
-    del payload["summary_locale_key"]
-    del payload["summary_details"]
-    for step in payload["steps"]:
-        step["summary"] = "legacy workflow diagnostic"
-        del step["summary_locale_key"]
-        step["details"] = {"legacy_detail": "untyped"}
-        step.pop("precondition_verdict", None)
+    obligation = payload["obligation"]
+    assert obligation is not None
+    obligation["applies_because"] = "Source-language applicability explanation"
+    recovery = obligation["recovery"]
+    assert recovery is not None
+    recovery["recargo_band"] = {
+        "id": recovery.pop("recargo_band_id"),
+        "min_completed_months": recovery.pop("min_completed_months"),
+        "max_completed_months": recovery.pop("max_completed_months"),
+        "surcharge_pct": recovery.pop("surcharge_pct"),
+        "interest_applies": recovery.pop("interest_applies"),
+        "legal_ref": recovery.pop("legal_ref"),
+    }
+    recovery["next_command"] = "aeat app modelo work calculate WORK_UNIT_ID"
     return json.dumps(legacy).encode("utf-8")
 
 
@@ -217,7 +262,7 @@ def test_workflow_run_survives_encrypted_storage_roundtrip(
         assert loaded.resumed_from == "p" * 16
         assert len(loaded.steps) == 2
         assert loaded.steps[1].success is False
-        # The v2 details record preserves typed facts and the canonical
+        # The v3 run record preserves typed facts and the canonical
         # precondition verdict without persisting rendered prose.
         details = loaded.steps[1].details
         assert details is not None
@@ -227,7 +272,54 @@ def test_workflow_run_survives_encrypted_storage_roundtrip(
         assert details.blocking_finding_codes == ("modelo.required_binding", "modelo.schema_mismatch")
         assert loaded.steps[1].precondition_verdict == _draft_not_ready_verdict()
         assert loaded.summary_locale_key == "application.workflow.results.aborted"
-        assert _RUN_VERSION == 2
+        assert _RUN_VERSION == 3
+
+
+def test_site_health_projection_survives_encrypted_roundtrip_without_source_evidence(
+    tmp_path: Path,
+) -> None:
+    """Only stable site-health facts survive workflow-run persistence."""
+    original = _operationally_aborted_run()
+    expected_status = WorkflowSiteHealthFacts(
+        alert_code="workflow.site.rate_limited",
+        state=SiteHealthState.RATE_LIMITED,
+        observed_at=_RUN_ENDED_AT,
+        http_status=429,
+        retry_after_seconds=30,
+        detected_marker_count=2,
+    )
+    failed_step = original.steps[0].model_copy(
+        update={
+            "summary_locale_key": "application.workflow.steps.site_unavailable",
+            "site_health_alert": SiteHealthAlert(
+                stage=WorkflowStage.RUNNING_PREFLIGHT,
+                status=expected_status,
+                run_id=original.run_id,
+            ),
+        },
+    )
+    original = original.model_copy(
+        update={
+            "aborted_reason": WorkflowAbortReason.SITE_UNAVAILABLE,
+            "steps": (failed_step,),
+        },
+    )
+
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        save_run(original)
+        loaded = load_run(original.run_id)
+
+    alert = loaded.steps[0].site_health_alert
+    assert alert is not None
+    assert alert.status == expected_status
+    assert set(alert.status.model_dump()) == {
+        "alert_code",
+        "state",
+        "observed_at",
+        "http_status",
+        "retry_after_seconds",
+        "detected_marker_count",
+    }
 
 
 def test_workflow_run_serialization_is_output_language_invariant() -> None:
@@ -339,22 +431,25 @@ def test_workflow_run_aborted_reason_drift_surfaces_at_load(
             load_run(original.run_id)
 
 
-def test_operationally_aborted_run_roundtrips_without_precondition_verdict(tmp_path: Path) -> None:
-    """Operational aborts are not falsely represented as precondition refusals."""
+def test_operationally_aborted_run_roundtrips_with_terminal_no_recovery_verdict(tmp_path: Path) -> None:
+    """Operational aborts preserve an explicit canonical terminal outcome."""
     with isolated_runtime_profile(tmp_path=tmp_path):
         original = _operationally_aborted_run()
         save_run(original)
 
-        assert load_run(original.run_id) == original
+        loaded = load_run(original.run_id)
+        assert loaded == original
+        assert loaded.steps[-1].precondition_verdict is not None
+        assert loaded.steps[-1].precondition_verdict.no_recovery_outcome is NoRecoveryOutcome.TERMINAL
 
 
-def test_workflow_run_v1_is_refused_before_typed_v2_hydration(tmp_path: Path) -> None:
-    """A structurally old v1 run is refused by its header on both read paths."""
+def test_workflow_run_v2_is_refused_before_locale_neutral_v3_hydration(tmp_path: Path) -> None:
+    """A committed v2 run is refused before its language-bearing obligation hydrates."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         original = _populated_run()
         repository = WorkflowRunRepository(objects=profile.repository)
-        old_version = _RUN_VERSION - 1
-        payload = _structurally_legacy_envelope_bytes(
+        old_version = 2
+        payload = _workflow_run_v2_envelope_bytes(
             original,
             schema_version=old_version,
             classification=_RUN_SENSITIVITY,
@@ -365,27 +460,27 @@ def test_workflow_run_v1_is_refused_before_typed_v2_hydration(tmp_path: Path) ->
             namespace=_RUN_NAMESPACE,
             object_key=original.run_id,
             classification=_RUN_SENSITIVITY,
-            # The registered write boundary correctly refuses an outer v1 row.
+            # The registered write boundary correctly refuses an outer v2 row.
             # Persist a current outer row whose decrypted inner envelope claims
-            # v1 so the production workflow loader's exact-version check is
+            # v2 so the production workflow loader's exact-version check is
             # exercised directly rather than short-circuited by the substrate.
             schema_version=_RUN_VERSION,
             written_at=_MUTATED_RUN_WRITTEN_AT,
             payload=payload,
         )
 
-        with pytest.raises(EnvelopeVersionError, match=r"requires 2"):
+        with pytest.raises(EnvelopeVersionError, match=r"requires 3"):
             repository.load(original.run_id)
-        with pytest.raises(EnvelopeVersionError, match=r"requires 2"):
+        with pytest.raises(EnvelopeVersionError, match=r"requires 3"):
             repository.list()
 
 
-def test_workflow_run_inner_classification_is_refused_before_v2_hydration(tmp_path: Path) -> None:
+def test_workflow_run_inner_classification_is_refused_before_v3_hydration(tmp_path: Path) -> None:
     """A wrong inner classification never reaches the typed workflow-result reader."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         original = _populated_run()
         repository = WorkflowRunRepository(objects=profile.repository)
-        payload = _structurally_legacy_envelope_bytes(
+        payload = _workflow_run_v2_envelope_bytes(
             original,
             schema_version=_RUN_VERSION,
             classification=SensitivityClass.OPERATIONAL,

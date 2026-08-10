@@ -120,24 +120,18 @@ class WorkflowAbortSignalError(WorkflowError):  # internal control-flow signal, 
 
     Attributes:
         reason: The :class:`WorkflowAbortReason` that classifies the bailout.
-        summary: Human-readable :class:`str` summary surfaced on
-            the resulting :class:`WorkflowResult`.
     """
 
     def __init__(
         self,
         *,
         reason: WorkflowAbortReason,
-        summary: str,
     ) -> None:
-        """Construct with the abort reason and human-readable summary.
+        """Construct with the closed abort reason.
 
         Args:
             reason: The :class:`WorkflowAbortReason` that classifies the
                 bailout.
-            summary: Human-readable summary surfaced on the resulting
-                :class:`WorkflowResult`.
         """
         super().__init__(reason.value)
         self.reason = reason
-        self.summary = summary

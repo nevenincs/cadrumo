@@ -49,7 +49,7 @@ def _result(run_id: str, started: datetime) -> WorkflowResult:
         started_at=started,
         ended_at=started,
         success=True,
-        summary="translation",
+        summary_locale_key="application.workflow.steps.profile_loaded",
     )
     return WorkflowResult(
         run_id=run_id,
@@ -58,7 +58,7 @@ def _result(run_id: str, started: datetime) -> WorkflowResult:
         final_stage=WorkflowStage.DONE,
         aborted_reason=None,
         steps=(step,),
-        summary="translation",
+        summary_locale_key="application.workflow.results.completed",
     )
 
 
@@ -74,7 +74,7 @@ class TestPersistenceRoundTrip:
         raw = _database_bytes(tmp_path)
         assert b"secure_objects" in raw
         assert original.run_id.encode("utf-8") not in raw
-        assert b"translation" not in raw
+        assert b"application.workflow.steps.profile_loaded" not in raw
 
     def test_load_missing_raises(self, tmp_path: Path) -> None:
         with pytest.raises(WorkflowError) as excinfo:

@@ -6,7 +6,7 @@ import pytest
 
 from ....core import Period
 from ...calculations import CalculationObservationRepository
-from ...workflow import WorkflowRunRepository
+from ...workflow import WorkflowDeadlineContextDetails, WorkflowRunRepository
 from .._filed_revision_observation import APP_FILING_SOURCE_KIND
 from ._file_flow_support import (
     DEFAULT_130_BASELINE_INPUTS,
@@ -220,9 +220,9 @@ def test_file_records_verified_modelo_130_2024_as_late_non_official_local_filing
     assert target_run.final_stage is WorkflowStage.DONE
     computing = next(step for step in target_run.steps if step.stage is WorkflowStage.COMPUTING_DEADLINES)
     assert computing.success is True
-    assert computing.details is not None
-    assert computing.details.get("overdue") == "true"
-    assert computing.details.get("extemporanea") == "true"
+    assert isinstance(computing.details, WorkflowDeadlineContextDetails)
+    assert computing.details.overdue is True
+    assert computing.details.extemporanea is True
 
     assert target_filing_records(list_filing_records(filing_repository=fr_repo), work_unit) == (filing,)
 
@@ -268,8 +268,13 @@ def test_file_refuses_future_period_before_filing_window_opens(repos: Repos) -> 
         )
 
     assert gate_error.value.result.aborted_reason is WorkflowAbortReason.NO_PENDING_OBLIGATION
-    assert "opens on" in gate_error.value.result.summary
-    assert "aeat app modelo export" in gate_error.value.result.summary
+    terminal_step = gate_error.value.result.steps[-1]
+    assert terminal_step.summary_locale_key == "application.workflow.steps.deadline_future"
+    assert isinstance(terminal_step.details, WorkflowDeadlineContextDetails)
+    assert terminal_step.details.filing_window is not None
+    assert terminal_step.details.filing_window.value == "future"
+    assert terminal_step.precondition_verdict is not None
+    assert terminal_step.precondition_verdict.failed_condition_id == "workflow.deadline.filing_window_open"
     refreshed = get_calculation_revision(
         revision.calculation_revision_id,
         calculation_repository=cr_repo,
