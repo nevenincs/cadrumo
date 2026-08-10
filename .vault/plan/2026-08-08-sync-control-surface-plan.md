@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#sync-control-surface'
 date: '2026-08-08'
-modified: '2026-08-08'
-body_hash: 'sha256:d6d04569ab6ee8f3c6c1426228c993c5ca03d7509e26e6e48fe65398d4ac614b'
+modified: '2026-08-10'
+body_hash: 'sha256:4ba719565843cc268b6ed503e4eef0bae806a34f80718de5b8ddc8ad4b889609'
 tier: L2
 related:
   - '[[2026-08-08-sync-control-surface-adr]]'
@@ -45,7 +45,7 @@ One flag spelled the same way on both mutating verbs, with the preview payload d
 - [ ] `P02.S01` - relocate the recapture divergence computation to run BEFORE the upsert instead of after it, preserving the existing notice; `src/cadrumo/application/live/_filed_data_capture.py`.
 - [ ] `P02.S02` - add the dry-run short-circuit to the filed sweep, returning the divergence set the upsert would introduce without writing; `src/cadrumo/application/live/_filed_data_capture.py`.
 - [ ] `P02.S03` - expose the filed sweep dry-run flag and carry its state as primary result data on the envelope, never as a notice; `src/cadrumo/entrypoints/cli/_app_live.py`.
-- [ ] `P02.S04` - reuse the verify parity comparison to build the export preview, rather than growing a second differ; `src/cadrumo/application/storage/calc_sheets/_parity_harness.py`.
+- [x] `P02.S04` - reuse the verify parity comparison to build the export preview, rather than growing a second differ; `src/cadrumo/application/storage/calc_sheets/_parity_harness.py`.
 - [ ] `P02.S05` - add the dry-run short-circuit and flag to the Sheets export, reporting the ranges it would clear and the cells that would change; `src/cadrumo/entrypoints/cli/_config/_google_sync_calc.py`.
 - [ ] `P02.S06` - prove a dry-run writes nothing on either surface, by asserting the store and the remote plan are byte-identical across a preview run; `src/cadrumo/application/live/tests/`.
 
