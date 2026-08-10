@@ -44,7 +44,10 @@ def _surfaced_reason(*, found_but_unusable: bool) -> str:
     assert decision.blocked is True, "both situations must still block; only the sentence differs"
 
     payload = IvaWalletAuthorityDecisionPayload(
-        taxpayer_ref=decision.taxpayer_ref,
+        # Production sources this from the history REPORT, not the decision, so
+        # it is scaffolding here rather than a mirror of the call site. The
+        # field under test is ``reason``; this only has to be a valid ref.
+        taxpayer_ref=decision.taxpayer_nif,
         target_year=decision.target_year,
         target_period=decision.target_period,
         selected_authority=decision.selected_authority,
