@@ -4,7 +4,7 @@ tags:
   - '#current-schema-only-purge'
 date: '2026-08-10'
 modified: '2026-08-10'
-body_hash: 'sha256:568d488c8499092a88349a61a2c3f2a70f6bfa60c24c959dd746f177b41ecaea'
+body_hash: 'sha256:56b3c5125ef3ab684dacf29f2dc2cbe5908822eb0acb2634f5a52216e2d5c7db'
 tier: L3
 related:
   - '[[2026-07-09-compatibility-lifecycle-adr]]'
@@ -87,8 +87,9 @@ Make all encrypted wrapper format claims explicit and exact before key access.
 - [x] `W02.P05.S09` - Prove CipherEnvelope marker refusal occurs before master-key access; `src/cadrumo/adapters/persistence/storage/envelope/tests/test_cipher_envelope_version_gate.py`.
 - [x] `W02.P05.S10` - Require and preflight the exact current WrappedMasterKey marker before decryption; `src/cadrumo/adapters/persistence/storage/master_key/_recovery.py`.
 - [x] `W02.P05.S11` - Prove wrapped-master-key marker refusal precedes real unwrap; `src/cadrumo/adapters/persistence/storage/master_key/tests/test_recovery.py`.
-- [ ] `W02.P05.S12` - Require explicit current encrypted-bundle envelope payload and KDF markers; `src/cadrumo/application/user_profile/_bundle_encryption.py`.
-- [ ] `W02.P05.S13` - Prove encrypted-bundle marker refusal and current passphrase round trip; `src/cadrumo/application/user_profile/tests/test_bundle_export.py`.
+- [x] `W02.P05.S12` - Require explicit current encrypted-bundle envelope payload and KDF markers; `src/cadrumo/application/user_profile/_bundle_encryption.py`.
+- [x] `W02.P05.S13` - Prove encrypted-bundle marker refusal and current passphrase round trip; `src/cadrumo/application/user_profile/tests/test_bundle_export.py`.
+- [ ] `W02.P05.S25` - Gate the encrypted-bundle kdf_version marker against the current Argon2 version, promoting that version onto the master-key package facade as the precondition; `src/cadrumo/application/user_profile/_bundle_encryption.py and the master-key package facade that must export the Argon2 version constant`.
 
 ### Phase `W02.P06` - Harden local custody metadata
 
