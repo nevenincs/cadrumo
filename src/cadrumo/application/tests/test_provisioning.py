@@ -9,19 +9,18 @@ Ollama endpoint and a controlled Playwright cache directory; no mocks.
 from __future__ import annotations
 
 import json
-import threading
 from collections.abc import Iterator
 from contextlib import contextmanager
 from http import HTTPStatus
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import ClassVar, override
+from typing import ClassVar
 
 import pytest
 
 from ...core import ExternalPathRole, MissingOptionalExtraError, OptionalExtra, require_optional_extra
 from ...core.config import override_settings
 from ...core.errors import CadrumoError, CoreError
+from ...tests.loopback_llm import SilentLoopbackHandler, serving_loopback, write_raw_response
 from ..provisioning import (
     OPTIONAL_EXTRAS,
     PLAYWRIGHT_BROWSERS_ROOT_ROLE,
@@ -36,8 +35,15 @@ from ..provisioning import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-class _OllamaTagsEndpoint(BaseHTTPRequestHandler):
-    """Loopback Ollama endpoint returning one configured ``/api/tags`` body."""
+class _OllamaTagsEndpoint(SilentLoopbackHandler):
+    """Loopback Ollama endpoint returning one configured ``/api/tags`` body.
+
+    The body is written verbatim rather than through a well-formed envelope
+    builder, because every case here supplies a DELIBERATELY malformed shape --
+    a bare list, a null inventory, a numeric model name. A builder that could
+    only emit the correct envelope would silently repair the very defect the
+    probe is asked to survive.
+    """
 
     payload: ClassVar[object]
 
@@ -45,30 +51,14 @@ class _OllamaTagsEndpoint(BaseHTTPRequestHandler):
         if self.path != "/api/tags":
             self.send_error(HTTPStatus.NOT_FOUND)
             return
-        encoded = json.dumps(self.payload).encode("utf-8")
-        self.send_response(HTTPStatus.OK)
-        self.send_header("content-type", "application/json")
-        self.send_header("content-length", str(len(encoded)))
-        self.end_headers()
-        self.wfile.write(encoded)
-
-    @override
-    def log_message(self, format: str, *args: object) -> None:
-        """Silence loopback-server request logging during tests."""
+        write_raw_response(self, json.dumps(self.payload).encode("utf-8"), status=HTTPStatus.OK)
 
 
 @contextmanager
 def _serve_ollama_tags(payload: object) -> Iterator[str]:
     _OllamaTagsEndpoint.payload = payload
-    server = ThreadingHTTPServer(("127.0.0.1", 0), _OllamaTagsEndpoint)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    try:
-        yield f"http://127.0.0.1:{server.server_port}"
-    finally:
-        server.shutdown()
-        server.server_close()
-        thread.join(timeout=3)
+    with serving_loopback(_OllamaTagsEndpoint, path="") as endpoint:
+        yield endpoint
 
 
 def test_probe_ollama_vision_unreachable_returns_unavailable_with_remediation() -> None:
