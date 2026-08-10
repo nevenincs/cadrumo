@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#aeat-liabilities-sanciones'
 date: '2026-08-07'
-modified: '2026-08-08'
-body_hash: 'sha256:e78428f479962ae0129c1df319ed47f3e60b1af8b25c1b5301e7d64b8b248896'
+modified: '2026-08-10'
+body_hash: 'sha256:3e438e9e8e2d662ddd4f0039c81d5c084a24e8bd1d46fb0e463cb967655daca4'
 tier: L2
 related:
   - '[[2026-08-07-aeat-liabilities-sanciones-adr]]'
@@ -21,21 +21,43 @@ calculation input, gated by a fail-closed read-landing guard given its
 adjacency to AEAT's payment flow. Grounded throughout by
 `2026-08-07-aeat-liabilities-sanciones-research`.
 
-Phases P01-P04 are buildable and independently verifiable today: the domain
-type and its closed enums, the snapshot service, the guard skeleton (shipped
-refusing by construction), and the list/view/latest CLI read surface. None of
-them touch AEAT, none of them need a specimen, and none of them need new
-legal grounding, because they display AEAT's own reported figures without
-interpreting them.
+Phases P01-P04 and P07 are **closed**, each with a matching execution
+record: the domain type and its closed enums, the snapshot service, the
+guard skeleton shipped refusing by construction, the list/view/latest CLI
+read surface, and real es/en/ca/hu values for its help and label keys. None
+of them touched AEAT, none needed a specimen, and none needed new legal
+grounding, because they display AEAT's own reported figures without
+interpreting them. The P07 blocker - in-flight `en.yml`/`hu.yml` peer WIP -
+was discharged when that WIP landed; the row closed with the rest of the
+CLI unit, as its own text records.
+
+**What the closed set still owes against this plan's standing goal.** The
+goal is that an operator can see, inside the application, what AEAT
+currently reports as owed. What P01-P04 deliver is the shape of that
+register, not its contents: `_DEUDAS_READ_PATH_PREFIXES` is the empty tuple,
+no `walk_deudas_consulta` exists, no `pull` verb exists, and `app live deudas
+pull` appears in neither `PROFILE_BOUND_WRITE_VERB_PATHS` nor the
+operator-orientation harness document. An operator today gets three verbs
+over zero rows. That is the honest interim state the governing ADR named
+("the feature ships visibly incomplete until a specimen exists"), and
+closing thirteen rows does not move the goal - it leaves the goal entirely
+behind Phase P05.
 
 Phase P05 is blocked end-to-end on an operator-authorised live specimen
 capture of "Consultar deudas" and is not startable before then; it carries
 the DOM parse function, the guard's real allowed prefixes, the `pull` verb,
 its write-guard enrollment, and the harness sweep together because each
-depends on the same capture. Phase P06 is blocked on named human legal
-reviewers per `aeat-calculation-grounding`'s human-reviewed mandate; an agent
-must never author these entries. Phase P07 is blocked on the in-flight
-`en.yml`/`hu.yml` peer WIP landing in the shared worktree.
+depends on the same capture. Until that capture exists the guard's empty
+prefix tuple is the correct posture, not a gap: it refuses every landing,
+and a specimen-dependent row can only narrow the refused surface, never
+widen it by omission.
+
+Phase P06 is blocked on named human legal reviewers per
+`aeat-calculation-grounding`'s human-reviewed mandate; an agent must never
+author these entries. That block is deeper than reviewer assignment alone:
+none of LGT arts. 28, 65, 82, 163, 167-173 or 178-212 is bundled under
+`src/cadrumo/_data/corpus/normatives/html/`, so the corpus must be fetched
+and live-cross-checked against BOE before a human review is even possible.
 
 Divergence reconciliation against filed declarations (the ADR's rejected
 option 2) is out of scope for this plan and requires its own ADR once P05
