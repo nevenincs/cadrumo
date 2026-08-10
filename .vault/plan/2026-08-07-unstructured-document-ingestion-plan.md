@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-10'
-body_hash: 'sha256:9ea9b01bc3e11cf4553eddd818cc2afc9323673fa80dcc59ed8bbb70b00bce58'
+body_hash: 'sha256:8fcd69c5d99e5e9758f8b16722588dc1d4b33c0bd142cc80d0c2c0da65ea32b7'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -38,6 +38,10 @@ Explicitly deferred, carried from the ADR rather than dropped, and none planned 
 **Read every remaining row as STALE until you have re-measured its premise.** At 82% completion, eight of roughly eighteen rows examined in one working session were premise-false or already delivered at HEAD, and that is the dominant condition of this plan rather than noise in it. The cause is structural and is a side effect of a discipline this campaign is otherwise right to keep: rows here record findings in great detail, with measurements, file locators and reasoning, and a detailed row reads as authoritative long after it has stopped being true. A row saying "zero occurrences in the e-invoice parser" was accurate when written and false two days later; a row recording 176 red key-echoes was accurate when written and the backlog was drained by another lane the same week.
 
 Two of those eight would have caused ACTIVE HARM if executed as written rather than merely wasted effort, which is why this is a correctness note and not a housekeeping one. One would have nulled Spanish casilla labels to satisfy an honesty gate that was already green, breaking the mandatory-Spanish-source contract in the process — the row described that conversion as "mechanical and honest", and it was mechanical. Another would have sent a lane to the taxonomy owner to add an enum member that already existed, because the note it was correcting described a missing PRODUCER in words that read as a missing member.
+
+**The decay is a property of this plan, not a tally of past mistakes, and the distinction changes what a reader should do.** Every falsified premise found so far was TRUE when authored and became false through work landing elsewhere — a registry period selector corrected, a guard found to be wired after being described as dormant, symbols recorded as absent that had moved to a sibling package, a known-failure count that was a floor over a population nothing had executed. In a tree taking on the order of a hundred and seventy commits a day, a row's premise decays faster than the row is executed. Four corrections read as bad luck and invite no behaviour; a property tells the next owner what to do on every row they pick up.
+
+**The dangerous shape is a row that is wrong in a way its executor can fully satisfy.** The absent-symbols row is the worked example: it invited promoting those symbols onto a facade, which would have recreated two homes for a relocated class and undone a split the campaign had already performed — and the executor would have finished the row exactly as written. A row that is merely hard announces itself; a row that is satisfiable and wrong does not. Where a premise is load-bearing, state the measurement and the date beside it so a later reader can tell what has to be re-checked rather than re-reading the whole claim.
 
 So premise verification is the FIRST action on a row, not a preliminary to it: re-measure the claim against HEAD before planning the change, and prefer the shipped predicate over a simplification of it — a locale probe using plain equality under-counts against a gate that also folds trailing punctuation. Two further traps have bitten here specifically. A row's prose names a file as a HINT, never as the concept's home: one row was called open after searching the file its text named, while the implementation sat complete in a sibling module. And an agent's notes about a mutation experiment read exactly like a description of shipped state, so "the folding restored" in an execution record was a description of a probe rather than of the tree.
 
@@ -468,12 +472,12 @@ Lands the review surface, the blocking-findings gate, assertion-shaped correctio
 - [ ] `W09.P17.S312` - Measure whether the CLI redaction rule set matches a Spanish CIF in a free-text position, and record the answer as coverage gap or deliberate false-positive avoidance rather than assuming either; `src/cadrumo/core/redaction`.
 - [ ] `W09.P17.S313` - Rewrite the outbound LLM adapter facade docstring to describe what that package now is, four persistence-backed stores, and point the client surface at the sibling package that owns it, rather than describing the pre-split surface or promoting symbols back; `src/cadrumo/adapters/outbound/llm`.
 - [ ] `W09.P17.S314` - Re-point the two consent-gate cross-references in the evidence draft text module at the module that actually defines the gate, since the cited adapter module does not exist; `src/cadrumo/llm`.
-- [ ] `W09.P17.S315` - Determine whether package docstring examples are collected as doctests anywhere in the suite, and record the answer, so a shipped example that raises is either caught by a gate or knowingly ungated; `dev/docs`.
-- [ ] `W09.P17.S316` - Sweep the remaining stale outbound LLM cross-references by asking the live module whether each named symbol is exported, never by matching the reference string, since more than a third of the population is valid; `src/cadrumo/llm`.
+- [x] `W09.P17.S315` - Determine whether package docstring examples are collected as doctests anywhere in the suite, and record the answer, so a shipped example that raises is either caught by a gate or knowingly ungated; `dev/docs`.
+- [x] `W09.P17.S316` - Sweep the remaining stale outbound LLM cross-references by asking the live module whether each named symbol is exported, never by matching the reference string, since more than a third of the population is valid; `src/cadrumo/llm`.
 - [ ] `W09.P17.S317` - Gate docstring cross-references so a role naming a symbol its cited module does not export fails, with an anti-vacuity control proving the detector fires; `src/cadrumo/tests`.
-- [ ] `W09.P17.S318` - Funnel the wizard save-exit notice through the shared output boundary, matching the sibling emitter in the same module that already does; `src/cadrumo/application/wizard`.
-- [ ] `W09.P17.S319` - Establish whether the integration lane is executed by any blocking check and plan against the population rather than the known-failure count, since that count is a floor over modules that have never been executed; `dev/ci`.
-- [ ] `W09.P17.S320` - Correct the overstated redaction rationale carried in the streamed-progress fix, which claims the funnel masks filesystem paths when it masks only embedded identifiers; `src/cadrumo/entrypoints/cli`.
+- [x] `W09.P17.S318` - Funnel the wizard save-exit notice through the shared output boundary, matching the sibling emitter in the same module that already does; `src/cadrumo/application/wizard`.
+- [x] `W09.P17.S319` - Establish whether the integration lane is executed by any blocking check and plan against the population rather than the known-failure count, since that count is a floor over modules that have never been executed; `dev/ci`.
+- [x] `W09.P17.S320` - Correct the overstated redaction rationale carried in the streamed-progress fix, which claims the funnel masks filesystem paths when it masks only embedded identifiers; `src/cadrumo/entrypoints/cli`.
 
 ## Wave `W10` - Consent lifecycle, deinstallation, and surface conformance
 
