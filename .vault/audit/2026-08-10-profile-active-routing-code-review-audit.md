@@ -5,7 +5,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:2de894ccf83a36b152680a0fcfa41d578b2a0a27b18f8b8ed42bd16bb2c6be02'
+body_hash: 'sha256:182535c7f27a9f06b5d4e263ad47379bbd40b4f0ced57f17b90c6a68575621a6'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
 ---
