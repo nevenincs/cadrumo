@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import ast
+import inspect
+
 import pytest
 
 from ....core.json_contract import ActionArgumentSource, ActionArgumentStatus, ResolvedActionArgument
@@ -11,7 +14,7 @@ from ...operator_actions import (
     ActionCatalogueEntry,
     ActionReference,
 )
-from .. import resolve_catalogue_action, resolve_notice_action
+from .. import ResolvedCatalogueAction, _action_resolution, resolve_catalogue_action, resolve_notice_action
 from .._manifest import (
     InputSchemaInventoryRow,
     LiveLeafInventoryRow,
@@ -22,6 +25,7 @@ from .._manifest import (
     ReconciledOperatorLeaf,
     ResultSchemaInventoryRow,
 )
+from .._manifest import ResolvedCatalogueAction as ManifestResolvedCatalogueAction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -200,7 +204,7 @@ def test_catalogue_and_producer_argument_declarations_fail_closed() -> None:
             ),
         ),
     )
-    with pytest.raises(ValueError, match="lacks declarations for required inputs"):
+    with pytest.raises(ValueError, match="insufficient action argument specifications"):
         resolve_catalogue_action(
             action=ActionReference(action_id="operator.profile.custom_create"),
             catalogue=incomplete_catalogue,
@@ -223,3 +227,24 @@ def test_catalogue_and_producer_argument_declarations_fail_closed() -> None:
             catalogue=OPERATOR_ACTION_CATALOGUE,
             reconciliation=reconciliation,
         )
+
+
+def test_notice_resolution_uses_the_manifest_owned_catalogue_action_record() -> None:
+    """The notice bridge consumes the manifest record rather than a parallel DTO."""
+    assert ResolvedCatalogueAction is ManifestResolvedCatalogueAction
+    resolution_module = ast.parse(inspect.getsource(_action_resolution))
+    assert not any(
+        isinstance(node, ast.ClassDef) and node.name == ManifestResolvedCatalogueAction.__name__
+        for node in ast.walk(resolution_module)
+    )
+
+    resolution = resolve_catalogue_action(
+        action=ActionReference(action_id="operator.profile.create"),
+        catalogue=OPERATOR_ACTION_CATALOGUE,
+        reconciliation=_reconciliation(
+            target_command_key="config.profile.create",
+            required_input_names=("profile_name",),
+        ),
+    )
+
+    assert type(resolution) is ManifestResolvedCatalogueAction

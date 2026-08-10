@@ -8,44 +8,14 @@ authorities before projecting a next action onto a successful notice.
 
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict, model_validator
-
 from ...core.json_contract import (
     ActionArgumentStatus,
     ResolvedActionArgument,
     ResolvedActionReference,
     ResolvedNoticeAction,
 )
-from ..operator_actions import ActionCatalogue, ActionCatalogueEntry, ActionReference
-from ._manifest import OperatorSurfaceReconciliation, ReconciledOperatorLeaf
-
-_STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
-
-
-class ResolvedCatalogueAction(BaseModel):
-    """One catalogue declaration joined to its live target and required inputs."""
-
-    model_config = _STRICT_FROZEN
-
-    declaration: ActionCatalogueEntry
-    target_leaf: ReconciledOperatorLeaf
-
-    @model_validator(mode="after")
-    def _validate_required_input_declarations(self) -> ResolvedCatalogueAction:
-        """Require the catalogue to declare a source for every live required input."""
-        input_schema = self.target_leaf.input_schema
-        if input_schema is None:
-            raise ValueError(
-                f"operator action target has no reconciled input schema: {self.declaration.target_command_key}",
-            )
-        declared_names = {specification.argument_name for specification in self.declaration.argument_specifications}
-        missing_names = sorted(set(input_schema.required_input_names) - declared_names)
-        if missing_names:
-            raise ValueError(
-                f"operator action catalogue lacks declarations for required inputs "
-                f"of {self.declaration.target_command_key}: {', '.join(missing_names)}",
-            )
-        return self
+from ..operator_actions import ActionCatalogue, ActionReference
+from ._manifest import OperatorSurfaceReconciliation, ResolvedCatalogueAction
 
 
 def resolve_catalogue_action(
@@ -140,7 +110,6 @@ def resolve_notice_action(
 
 
 __all__ = [
-    "ResolvedCatalogueAction",
     "resolve_catalogue_action",
     "resolve_notice_action",
 ]
