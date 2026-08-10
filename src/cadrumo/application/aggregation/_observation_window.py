@@ -54,6 +54,16 @@ def hashed_tax_id_token(tax_id: str, *, field_name: str) -> str:
         field_name: The field name to report in the blank-token refusal, so
             each caller's diagnostic names its own parameter.
 
+    This stays package-private on purpose. The live IVA surface composes the
+    same two steps for its own subject ref and deliberately does not call this:
+    the blank refusal below is required here, where a perceptor with no
+    identifier cannot be keyed, and wrong there, where a subjectless row is a
+    legitimate domain value that must still project. Widening this to serve both
+    would mean either dropping the refusal the perceptor repositories depend on,
+    or raising a retenciones-perceptor diagnostic out of an IVA wallet read. The
+    shared part is one composition over :func:`tax_id_identity_token`, which is
+    already the single identity authority.
+
     Raises:
         AggregationValidationError: ``tax_id`` normalises to a blank token.
     """

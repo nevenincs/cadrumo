@@ -532,6 +532,16 @@ def _taxpayer_ref(taxpayer_nif: str | None) -> str:
     one digest, worn by every blank row, and shaped exactly like a real
     subject's ref. The guard and the emptying live in different modules, so
     neither reads as wrong on its own.
+
+    The aggregation package holds its own normalise-then-hash step for perceptor
+    keys. This deliberately does not reuse it, and the reason is recorded so the
+    two are not folded on the strength of looking alike: that one REFUSES a
+    blank token, which is wrong here because a subjectless row is a legitimate
+    domain value that must still project; and it returns the full digest, where
+    this surface wants a short CLI-safe ref. What the two genuinely share is one
+    composition over :func:`tax_id_identity_token` -- already the single
+    identity authority both go through. The hashing spelling repeats; the
+    identity rule does not.
     """
     if taxpayer_nif is None:
         return _ABSENT_TAXPAYER_REF
