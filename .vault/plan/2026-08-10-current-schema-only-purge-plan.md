@@ -4,7 +4,7 @@ tags:
   - '#current-schema-only-purge'
 date: '2026-08-10'
 modified: '2026-08-10'
-body_hash: 'sha256:0f31be202466b2641ecbb651d53220cfe57f38acaf599cb997832fc62c405894'
+body_hash: 'sha256:6373cb5ef2f6fcb3a8b4612ddf1d3882303699ca6e36b1bc2656d044f8ec084a'
 tier: L3
 related:
   - '[[2026-07-09-compatibility-lifecycle-adr]]'
@@ -103,7 +103,7 @@ write.
 - [ ] `W02.P06.S18` - Prove file-fallback key loading refuses missing and non-current KDF markers; `src/cadrumo/adapters/persistence/storage/master_key/tests/test_master_key_file_fallback.py`.
 - [ ] `W02.P06.S19` - Make BucketManifest key_schedule mandatory; `src/cadrumo/adapters/persistence/storage/bucket/_manifest.py`.
 - [ ] `W02.P06.S20` - Prove real manifest reads require and preserve the current key schedule; `src/cadrumo/adapters/persistence/storage/bucket/tests/test_manifest_io.py`.
-- [ ] `W02.P06.S26` - Make the master-key KDF preflight model require a real version, replacing the optional-and-defaulting-to-absent field that lets a marker-less file pass the check the preflight exists to perform; `src/cadrumo/adapters/persistence/storage/master_key/_master_key_records.py preflight model and its single read call site, with no writer or derivation path touched`.
+- [x] `W02.P06.S26` - Make the master-key KDF preflight model require a real version, replacing the optional-and-defaulting-to-absent field that lets a marker-less file pass the check the preflight exists to perform; `src/cadrumo/adapters/persistence/storage/master_key/_master_key_records.py preflight model and its single read call site, with no writer or derivation path touched`.
 
 ## Wave `W03` - Close the Modelo 303 observation write boundary
 
@@ -116,7 +116,7 @@ Fail official Modelo 303 observation writes before repository mutation when
 `result_disposition` is absent.
 
 - [ ] `W03.P07.S21` - Require result_disposition for applicable official Modelo 303 observation payloads; `src/cadrumo/application/calculations/_observations_repository.py`.
-- [ ] `W03.P07.S22` - Require Modelo 303 result_disposition before any filing persistence write; `src/cadrumo/application/modelo/_revision_persistence.py`.
+- [x] `W03.P07.S22` - Require Modelo 303 result_disposition before any filing persistence write; `src/cadrumo/application/modelo/_revision_persistence.py`.
 - [ ] `W03.P07.S23` - Prove under-declared Modelo 303 observations are refused and current dispositions round trip; `src/cadrumo/application/calculations/tests/test_m303_carry_ingress.py`.
 
 ## Parallelization
