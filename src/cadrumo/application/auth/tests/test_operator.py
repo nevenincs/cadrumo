@@ -576,7 +576,7 @@ def test_live_auth_preflight_reports_redacted_clave_profile_alignment() -> None:
     report = build_live_auth_preflight_report("clave_movil", settings=settings)
 
     assert report.provider == "clave_movil"
-    assert report.active_profile == _BUCKET_ID
+    assert report.active_profile == _PROFILE_LABEL
     assert report.profile_tax_id_present is True
     assert report.provider_identity_present is True
     assert report.identity_alignment == "matches"

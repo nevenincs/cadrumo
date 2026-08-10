@@ -39,6 +39,186 @@ def test_profile_bound_write_verb_catalogue_has_unique_entries() -> None:
     assert "config reset" not in PROFILE_BOUND_WRITE_VERB_PATHS
 
 
+_STORAGE_WRITE_POLICY_SCENARIOS = (
+    (
+        "bootstrap_exempt",
+        "config profile create operator",
+        True,
+        "explicit",
+        None,
+        {
+            "allowed": True,
+            "code": "bootstrap_exempt",
+            "profile_bound_write": False,
+            "bootstrap_exempt": True,
+            "route_kind": None,
+            "message_key": "",
+            "detail_message_key": "",
+            "verdict": None,
+        },
+    ),
+    (
+        "no_verb_path",
+        None,
+        False,
+        "root",
+        None,
+        {
+            "allowed": True,
+            "code": "no_verb_path",
+            "profile_bound_write": False,
+            "bootstrap_exempt": False,
+            "route_kind": None,
+            "message_key": "",
+            "detail_message_key": "",
+            "verdict": None,
+        },
+    ),
+    (
+        "non_profile_bound_verb",
+        "config login does-not-exist",
+        False,
+        "root",
+        None,
+        {
+            "allowed": True,
+            "code": "non_profile_bound_verb",
+            "profile_bound_write": False,
+            "bootstrap_exempt": False,
+            "route_kind": None,
+            "message_key": "",
+            "detail_message_key": "",
+            "verdict": None,
+        },
+    ),
+    (
+        "leaf_refusal_delegated",
+        "app modelo work create",
+        False,
+        "root",
+        ("app", "modelo", "work", "create", "--modelo", "151", "--year", "2025", "--period", "ANNUAL"),
+        {
+            "allowed": True,
+            "code": "leaf_refusal_delegated",
+            "profile_bound_write": True,
+            "bootstrap_exempt": False,
+            "route_kind": None,
+            "message_key": "",
+            "detail_message_key": "",
+            "verdict": None,
+        },
+    ),
+    (
+        "allowed_active_bucket",
+        "app modelo work calculate work-1",
+        False,
+        "active",
+        None,
+        {
+            "allowed": True,
+            "code": "allowed_active_bucket",
+            "profile_bound_write": True,
+            "bootstrap_exempt": False,
+            "route_kind": "active_bucket_database",
+            "message_key": "",
+            "detail_message_key": "",
+            "verdict": None,
+        },
+    ),
+    (
+        "refused_root_fallback",
+        "app ledger add",
+        False,
+        "root",
+        None,
+        {
+            "allowed": False,
+            "code": "refused_root_fallback",
+            "profile_bound_write": True,
+            "bootstrap_exempt": False,
+            "route_kind": "root_fallback_database",
+            "message_key": "cli.config.errors.no_active_profile",
+            "detail_message_key": "",
+            "verdict": {
+                "failed_condition_id": "profile.active",
+                "evidence": [
+                    {
+                        "condition_id": "profile.active",
+                        "evidence_id": "profile.active.storage_route",
+                        "provenance": "runtime_observation",
+                        "values": {
+                            "active_bucket_attached": False,
+                            "active_profile_present": False,
+                            "route_kind": "root_fallback_database",
+                        },
+                    },
+                ],
+                "action": {"action_id": "operator.profile.create"},
+                "argument_bindings": [
+                    {
+                        "argument_name": "profile_name",
+                        "status": "missing",
+                        "value": None,
+                        "source": None,
+                        "source_key": None,
+                        "source_evidence_id": None,
+                    },
+                ],
+                "missing_argument_names": ["profile_name"],
+                "conditionality": "requires_arguments",
+                "no_recovery_outcome": None,
+            },
+        },
+    ),
+    (
+        "refused_explicit_database_url",
+        "config google login",
+        False,
+        "explicit",
+        None,
+        {
+            "allowed": False,
+            "code": "refused_explicit_database_url",
+            "profile_bound_write": True,
+            "bootstrap_exempt": False,
+            "route_kind": "explicit_database_url",
+            "message_key": "errors.storage.runtime.not_ready",
+            "detail_message_key": "errors.storage.runtime.route_not_active_bucket",
+            "verdict": {
+                "failed_condition_id": "storage.route.active_bucket",
+                "evidence": [
+                    {
+                        "condition_id": "storage.route.active_bucket",
+                        "evidence_id": "storage.route.active_bucket.classification",
+                        "provenance": "runtime_observation",
+                        "values": {
+                            "active_bucket_attached": False,
+                            "database_url_explicit": True,
+                            "explicit_route_setting": "CADRUMO_DATABASE_URL",
+                            "route_kind": "explicit_database_url",
+                            "storage_root_setting": "CADRUMO_LOCAL_STORAGE_ROOT",
+                        },
+                    },
+                ],
+                "action": None,
+                "argument_bindings": [],
+                "missing_argument_names": [],
+                "conditionality": "not_applicable",
+                "no_recovery_outcome": "operator_decision",
+            },
+        },
+    ),
+)
+
+
+def test_storage_write_policy_scenario_keys_reconcile_live_classifications() -> None:
+    scenario_keys = tuple(row[0] for row in _STORAGE_WRITE_POLICY_SCENARIOS)
+    duplicate_keys = {key for key in scenario_keys if scenario_keys.count(key) > 1}
+
+    assert not duplicate_keys
+    assert set(scenario_keys) == {code.value for code in StorageWritePolicyCode}
+
+
 @pytest.mark.parametrize(
     (
         "scenario_key",
@@ -48,183 +228,8 @@ def test_profile_bound_write_verb_catalogue_has_unique_entries() -> None:
         "argv_tokens",
         "expected",
     ),
-    (
-        pytest.param(
-            "bootstrap-exempt",
-            "config profile create operator",
-            True,
-            "explicit",
-            None,
-            {
-                "allowed": True,
-                "code": "bootstrap_exempt",
-                "profile_bound_write": False,
-                "bootstrap_exempt": True,
-                "route_kind": None,
-                "message_key": "",
-                "detail_message_key": "",
-                "verdict": None,
-            },
-            id="bootstrap-exempt",
-        ),
-        pytest.param(
-            "no-verb-path",
-            None,
-            False,
-            "root",
-            None,
-            {
-                "allowed": True,
-                "code": "no_verb_path",
-                "profile_bound_write": False,
-                "bootstrap_exempt": False,
-                "route_kind": None,
-                "message_key": "",
-                "detail_message_key": "",
-                "verdict": None,
-            },
-            id="no-verb-path",
-        ),
-        pytest.param(
-            "non-profile-bound-verb",
-            "config login does-not-exist",
-            False,
-            "root",
-            None,
-            {
-                "allowed": True,
-                "code": "non_profile_bound_verb",
-                "profile_bound_write": False,
-                "bootstrap_exempt": False,
-                "route_kind": None,
-                "message_key": "",
-                "detail_message_key": "",
-                "verdict": None,
-            },
-            id="non-profile-bound-verb",
-        ),
-        pytest.param(
-            "non-m210-leaf-refusal-delegated",
-            "app modelo work create",
-            False,
-            "root",
-            ("app", "modelo", "work", "create", "--modelo", "151", "--year", "2025", "--period", "ANNUAL"),
-            {
-                "allowed": True,
-                "code": "leaf_refusal_delegated",
-                "profile_bound_write": True,
-                "bootstrap_exempt": False,
-                "route_kind": None,
-                "message_key": "",
-                "detail_message_key": "",
-                "verdict": None,
-            },
-            id="non-m210-leaf-refusal-delegated",
-        ),
-        pytest.param(
-            "active-bucket",
-            "app modelo work calculate work-1",
-            False,
-            "active",
-            None,
-            {
-                "allowed": True,
-                "code": "allowed_active_bucket",
-                "profile_bound_write": True,
-                "bootstrap_exempt": False,
-                "route_kind": "active_bucket_database",
-                "message_key": "",
-                "detail_message_key": "",
-                "verdict": None,
-            },
-            id="active-bucket",
-        ),
-        pytest.param(
-            "root-fallback-refusal",
-            "app ledger add",
-            False,
-            "root",
-            None,
-            {
-                "allowed": False,
-                "code": "refused_root_fallback",
-                "profile_bound_write": True,
-                "bootstrap_exempt": False,
-                "route_kind": "root_fallback_database",
-                "message_key": "cli.config.errors.no_active_profile",
-                "detail_message_key": "",
-                "verdict": {
-                    "failed_condition_id": "profile.active",
-                    "evidence": [
-                        {
-                            "condition_id": "profile.active",
-                            "evidence_id": "profile.active.storage_route",
-                            "provenance": "runtime_observation",
-                            "values": {
-                                "active_bucket_attached": False,
-                                "active_profile_present": False,
-                                "route_kind": "root_fallback_database",
-                            },
-                        },
-                    ],
-                    "action": {"action_id": "operator.profile.create"},
-                    "argument_bindings": [
-                        {
-                            "argument_name": "profile_name",
-                            "status": "missing",
-                            "value": None,
-                            "source": None,
-                            "source_key": None,
-                            "source_evidence_id": None,
-                        },
-                    ],
-                    "missing_argument_names": ["profile_name"],
-                    "conditionality": "requires_arguments",
-                    "no_recovery_outcome": None,
-                },
-            },
-            id="root-fallback-refusal",
-        ),
-        pytest.param(
-            "explicit-database-refusal",
-            "config google login",
-            False,
-            "explicit",
-            None,
-            {
-                "allowed": False,
-                "code": "refused_explicit_database_url",
-                "profile_bound_write": True,
-                "bootstrap_exempt": False,
-                "route_kind": "explicit_database_url",
-                "message_key": "errors.storage.runtime.not_ready",
-                "detail_message_key": "errors.storage.runtime.route_not_active_bucket",
-                "verdict": {
-                    "failed_condition_id": "storage.route.active_bucket",
-                    "evidence": [
-                        {
-                            "condition_id": "storage.route.active_bucket",
-                            "evidence_id": "storage.route.active_bucket.classification",
-                            "provenance": "runtime_observation",
-                            "values": {
-                                "active_bucket_attached": False,
-                                "database_url_explicit": True,
-                                "explicit_route_setting": "CADRUMO_DATABASE_URL",
-                                "route_kind": "explicit_database_url",
-                                "storage_root_setting": "CADRUMO_LOCAL_STORAGE_ROOT",
-                            },
-                        },
-                    ],
-                    "action": None,
-                    "argument_bindings": [],
-                    "missing_argument_names": [],
-                    "conditionality": "not_applicable",
-                    "no_recovery_outcome": "operator_decision",
-                },
-            },
-            id="explicit-database-refusal",
-        ),
-    ),
+    _STORAGE_WRITE_POLICY_SCENARIOS,
+    ids=[row[0] for row in _STORAGE_WRITE_POLICY_SCENARIOS],
 )
 def test_storage_write_policy_exact_scenario_matrix(
     tmp_path: Path,
@@ -252,6 +257,7 @@ def test_storage_write_policy_exact_scenario_matrix(
         argv_tokens=argv_tokens,
     )
 
+    assert scenario_key == expected["code"]
     assert decision.model_dump(mode="json") == expected, scenario_key
     if decision.verdict is not None:
         assert (decision.verdict.action is not None) is not (decision.verdict.no_recovery_outcome is not None)

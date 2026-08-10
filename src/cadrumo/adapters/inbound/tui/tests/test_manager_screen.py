@@ -432,6 +432,62 @@ async def test_a_returned_refusal_is_not_styled_as_a_success(tmp_path) -> None:
 
 
 @pytest.mark.asyncio
+async def test_censal_sync_projects_an_old_profile_refusal_into_actionable_schema_copy(tmp_path) -> None:
+    """The mounted shipped action must never expose a missing profile path as a KeyError."""
+    from .....core import AuthProviderKind
+    from .....core.config import override_settings
+    from .....domain.user_profile import load_user_profile_schema, profile_field_label
+    from .....entrypoints.cli._config._manager_actions import (
+        _AUTH_DNI_NIE_PATH,
+        _AUTH_FECHA_VALIDEZ_PATH,
+        _AUTH_PROVIDER_PATH,
+        _AUTH_SOPORTE_PATH,
+        _commit_auth_choice,
+        censal_pull_action,
+    )
+    from .. import PinnedStatusBar
+
+    with (
+        isolated_profile_storage_root(tmp_path=tmp_path),
+        override_settings(
+            cadrumo_output_language="en",
+            cadrumo_clave_prefer_non_qr=True,
+            cadrumo_clave_movil_dni_nie=None,
+            cadrumo_clave_movil_nie_soporte=None,
+            cadrumo_clave_movil_dni_fecha=None,
+            cadrumo_clave_permanente_dni_nie=None,
+        ),
+    ):
+        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        _commit_auth_choice(
+            {
+                _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
+                _AUTH_DNI_NIE_PATH: "00000000T",
+                _AUTH_SOPORTE_PATH: "",
+                _AUTH_FECHA_VALIDEZ_PATH: "",
+            },
+        )
+        app = ProfileManagerApp(
+            _live_overview(),
+            persist=_persist,
+            actions=[censal_pull_action()],
+        )
+        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+            await pilot.pause()
+            await pilot.click("#action-censal-pull")
+            await wait_until_settled(app, pilot)
+
+            message = app.query_one("#manager-status", PinnedStatusBar).message
+            schema = load_user_profile_schema()
+            for path in (_AUTH_SOPORTE_PATH, _AUTH_FECHA_VALIDEZ_PATH):
+                section, _field = path.split(".", 1)
+                assert profile_field_label(section, schema.field(path)) in message
+            assert "retry sync" in message
+            assert "auth." not in message
+            app.exit(None)
+
+
+@pytest.mark.asyncio
 async def test_an_action_runs_and_reports_what_it_did(tmp_path) -> None:
     """The bar renders one button per action and shows its message."""
     from .. import ManagerAction, ManagerActionOutcome

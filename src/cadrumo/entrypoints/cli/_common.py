@@ -126,7 +126,6 @@ def case_insensitive_choice(enum_class: type[StrEnum]) -> typer_click_types.Para
 # runtime import; the ``TYPE_CHECKING`` block keeps static checkers
 # resolving them.
 if TYPE_CHECKING:
-    from ..mcp._input_schema import VerbInputSchema
     from ...adapters.persistence.profile.filing_drafts import ModeloDraftRepository
     from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -141,6 +140,7 @@ if TYPE_CHECKING:
     from ...domain.invoices import InvoiceCatalogue
     from ...domain.transactions import TransactionCatalogue
     from ...domain.user_profile import UserProfileRecord
+    from ..mcp._input_schema import VerbInputSchema
 
 __all__ = [
     "active_profile_label",
