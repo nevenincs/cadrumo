@@ -501,6 +501,11 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
     ) -> ObservationEnvelopePayload:
         """Build one validated observation envelope without writing it.
 
+        Every writer traverses this method, so it is where the official-evidence
+        guard lives -- see :meth:`_refuse_official_evidence_displacement`, which
+        also states which store that guard covers and which sibling observation
+        repositories it does not.
+
         ``member_nif`` is an optional grupo-de-entidades member NIF. When
         supplied, the storage identifier is widened (see
         :func:`member_observation_key`) so distinct members' filings for the
