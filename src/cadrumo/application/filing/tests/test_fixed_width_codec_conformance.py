@@ -22,9 +22,9 @@ from ....domain.calculations.registry import (
 from ....domain.filing import (
     FilingExportValidationError,
     ModeloDraft,
-    ModeloDraftStatus,
     registry_schema_version,
 )
+from ....domain.submission import ModeloDraftStatus
 from ....domain.modelos import ModeloExportError
 from .._export import _RecordRenderRow, _render_record
 

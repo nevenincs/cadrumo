@@ -32,12 +32,12 @@ from .....domain.filing import (
     CasillaChange,
     ModeloComplementaria,
     ModeloDraft,
-    ModeloDraftStatus,
     ModeloValue,
     ModeloValueKind,
     compute_modelo_draft_id,
     registry_schema_version,
 )
+from .....domain.submission import ModeloDraftStatus
 from .....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...storage import FILING_AMENDMENTS_NAMESPACE, Envelope, SecureObjectRowIdentityError
 from ...storage.sql.secure_objects import SecureObjectRepository
