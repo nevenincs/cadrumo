@@ -182,7 +182,24 @@ def main(argv: list[str] | None = None) -> int:
     summary["probed"] = len(results)
 
     if args.json:
-        print(json.dumps({"summary": summary, "records": [asdict(r) for r in results]}, indent=2, sort_keys=True))
+        # The reading note travels IN the payload rather than only in this
+        # module's docstring. A consumer of --json never sees the text footer,
+        # and "vacuous: 31" beside "refuses: 0" is exactly the shape someone
+        # totals into an all-clear -- which is the misreading that already
+        # nearly cost a confirmed defect.
+        document = {
+            "summary": summary,
+            "reading_note": (
+                "VACUOUS means UNMEASURED, never passing: the probe never reached the "
+                "constraint, so the field's behaviour is unknown. Do not add it to a "
+                "protected or passing count. REFUSES means only that the ANNOTATION "
+                "enforced the shape; a field protected by a class-level field_validator "
+                "reads as ACCEPTS_NON_HEX here, because a one-field holder carries no "
+                "class validators."
+            ),
+            "records": [asdict(r) for r in results],
+        }
+        print(json.dumps(document, indent=2, sort_keys=True))
         return 0
 
     for item in sorted(results, key=lambda r: (r.verdict.value, r.path, r.field)):
