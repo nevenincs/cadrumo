@@ -74,6 +74,7 @@ from ...core.config import Settings as _Settings
 from ...core.config import load_settings as _load_settings
 from ...core.errors import CadrumoError as _CadrumoError
 from ...core.hashing import sha256_hex as _sha256_hex
+from ...core.identity import tax_id_identity_token as _tax_id_identity_token
 from ...core.resources import resources as _resources
 from ...core.time import now
 from ...domain.iva_compensation import IvaCompensationAuthoritySource as _IvaCompensationAuthoritySource
@@ -525,7 +526,7 @@ def _taxpayer_ref(taxpayer_nif: str | None) -> str:
     """
     if taxpayer_nif is None:
         return _ABSENT_TAXPAYER_REF
-    digest = _sha256_hex(taxpayer_nif.strip().upper().encode("utf-8"))
+    digest = _sha256_hex(_tax_id_identity_token(taxpayer_nif).encode("utf-8"))
     return f"sha256:{digest[:12]}"
 
 
