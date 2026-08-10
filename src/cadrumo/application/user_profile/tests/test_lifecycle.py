@@ -732,3 +732,54 @@ def test_load_refuses_a_stored_record_declaring_no_schema_version(
 
     with pytest.raises(EnvelopeVersionError, match="declares no schema_version"):
         UserProfileLifecycleRepository().load(_PROFILE_BUCKET_ID)
+
+
+def test_iter_records_refuses_a_stored_row_declaring_no_schema_version(
+    secure_objects: SecureObjectRepository,
+    schema: ProfileSchemaDefinition,
+) -> None:
+    """The iterating read site refuses the walk rather than stepping past the row.
+
+    Asserted as a RAISE and not as a count. A guard that skipped the row would
+    return a listing that is merely short, and short is indistinguishable from
+    complete on a surface whose whole job is to enumerate what the operator
+    has -- so a test counting records could pass while the profile vanished
+    from every listing.
+
+    ``iter_records`` is a generator, so the refusal surfaces on iteration; the
+    walk is forced with ``list`` rather than by calling it alone.
+    """
+    svc = _service(secure_objects, schema)
+    svc.register(
+        RegisterProfileCommand(
+            profile_id=_PROFILE_BUCKET_ID,
+            display_name="Operator",
+            facts=_all_required_facts(schema),
+        ),
+    )
+    repository = UserProfileLifecycleRepository()
+    seeded = list(repository.iter_records())
+    assert [record.profile_id for record in seeded] == [_PROFILE_BUCKET_ID]
+
+    object_key = user_profile_value_object_key(_PROFILE_BUCKET_ID)
+    record = secure_objects.load(
+        USER_PROFILE_VALUE_NAMESPACE,
+        object_key,
+        expected_class=_USER_PROFILE_VALUE_SENSITIVITY,
+        max_supported_version=_USER_PROFILE_VALUE_VERSION,
+    )
+    assert record is not None
+    envelope = json.loads(record.payload.decode("utf-8"))
+    assert "schema_version" in envelope["payload"], "the writer must stamp it for this proof to be meaningful"
+    del envelope["payload"]["schema_version"]
+    secure_objects.save(
+        namespace=USER_PROFILE_VALUE_NAMESPACE,
+        object_key=object_key,
+        classification=record.classification,
+        schema_version=record.schema_version,
+        written_at=record.written_at,
+        payload=json.dumps(envelope).encode("utf-8"),
+    )
+
+    with pytest.raises(EnvelopeVersionError, match="declares no schema_version"):
+        list(UserProfileLifecycleRepository().iter_records())

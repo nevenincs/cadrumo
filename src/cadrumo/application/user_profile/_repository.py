@@ -629,12 +629,30 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
         the configured schema version. The lifecycle service consumes
         this iterator to list live profiles without reaching for the
         repository's private secure-object reference.
+
+        A row whose stored bytes declare no schema version aborts the walk.
+        The alternative -- yielding the rows around it -- returns a listing
+        that is short and indistinguishable from a complete one, which is the
+        worse failure for a surface whose whole job is to enumerate what the
+        operator has.
         """
         for raw in self._objects.list_records(
             USER_PROFILE_VALUE_NAMESPACE,
             expected_class=_USER_PROFILE_VALUE_SENSITIVITY,
             max_supported_version=_USER_PROFILE_VALUE_VERSION,
         ):
+            # Refuses the whole walk rather than skipping the row. An
+            # unstamped payload means the store holds something this build
+            # cannot say it understands, and an iteration that steps past it
+            # yields a SHORT list that looks complete -- a profile the operator
+            # owns silently absent from every listing, with nothing anywhere
+            # saying so. The neighbouring failure already takes this position:
+            # a drifted row raises rather than being dropped from the yield.
+            _require_stored_payload_schema_version(
+                raw.payload,
+                namespace=USER_PROFILE_VALUE_NAMESPACE,
+                subject="user profile record",
+            )
             # Extract the profile_id from the hashed object key is not
             # possible (keys are stored hashed); use the bucket_id as
             # the context identifier so the error is still actionable.
