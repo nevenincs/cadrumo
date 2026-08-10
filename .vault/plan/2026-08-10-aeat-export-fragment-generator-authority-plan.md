@@ -4,7 +4,7 @@ tags:
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
 modified: '2026-08-10'
-body_hash: 'sha256:61ac767ef14bfb857c29f4eb11b51ece468722eb236c7198e33b3f6da379cd40'
+body_hash: 'sha256:30b2a65793fc85105a675ba2c9559a3351f58f679bca02da35ce074ef47b1907'
 tier: L3
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
@@ -91,7 +91,7 @@ Use the proven authority to replace unverified trees, close the blocked split sp
 
 Regenerate the highest-priority calculation-model revisions and discharge the held relayout obligations.
 
-- [ ] `W04.P07.S35` - Pin every Modelo 303 official record-design source to its explicit `record_design_epoch` (`2023`, `2024-early`, `2024-late`, `2025`, and `2026`) and prove `resolve_record_design_binary` verifies each explicit source reference against its hash, epoch, and filing year while refusing mismatches, filename inference, fallback, and legacy-layout consultation. Catalogue-wide or date-only uniqueness is not an acceptance criterion because the official 2024 source windows overlap; `src/cadrumo/_data/registry/aeat/legal/iva.toml; src/cadrumo/domain/calculations/registry/tests/`.
+- [x] `W04.P07.S35` - Pin every Modelo 303 official record-design source to its explicit `record_design_epoch` (`2023`, `2024-early`, `2024-late`, `2025`, and `2026`) and prove `resolve_record_design_binary` verifies each explicit source reference against its hash, epoch, and filing year while refusing mismatches, filename inference, fallback, and legacy-layout consultation. Catalogue-wide or date-only uniqueness is not an acceptance criterion because the official 2024 source windows overlap; `src/cadrumo/_data/registry/aeat/legal/iva.toml; src/cadrumo/domain/calculations/registry/tests/`.
 - [ ] `W04.P07.S36` - Replace the spanning Modelo 303 revision with five explicit revision/source bindings: `2023`, `2024-hasta-08-y-2t`, `2024-desde-09-y-3t`, `2025`, and `2026-y-siguientes`. Prove production period-token selection at every early, late, annual, and future boundary, negative cross-token refusal, year-only 2024 ambiguity refusal, and exactly one matching record-design source reference per selected revision without a date-only selector, source-period duplication, alias, bridge, or legacy fallback; `src/cadrumo/_data/registry/aeat/modelos/303/revisions/; src/cadrumo/domain/calculations/registry/tests/`.
 - [ ] `W04.P07.S19` - Author and review semantic maps for the required Modelo 303 design epochs; `dev/registry/mappings/modelo_303/`.
 - [ ] `W04.P07.S20` - Atomically generate and validate complete export trees and provenance manifests for all five explicit Modelo 303 revisions, then delete `2023-y-siguientes` and every superseded or partial manual successor tree with no alias, bridge, or fallback; `src/cadrumo/_data/registry/aeat/modelos/303/revisions/`.
