@@ -33,7 +33,7 @@ from xml.etree import ElementTree
 
 from defusedxml import ElementTree as DefusedElementTree
 
-from ...core import CasillaId, Modelo
+from ...core import CasillaId, FilingProducerKey, Modelo
 from ...core.decimal import coerce_decimal, try_parse_canonical_decimal
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ...domain.calculations.registry import (
@@ -105,7 +105,7 @@ def render_xml_dictionary_layout(
     layout: ExportLayoutDefinition,
     *,
     draft: ModeloDraft,
-    headers: dict[str, str],
+    headers: Mapping[FilingProducerKey, object],
     dictionary_values: Mapping[str, object] | None = None,
     schema_provider: RegistrySchemaAccessor,
 ) -> bytes:
@@ -138,7 +138,6 @@ def render_xml_dictionary_layout(
         source_root=schema_provider.source_root,
     )
     _append_declaration_aux(root, layout)
-    normalized_headers = {key.lower(): value for key, value in headers.items()}
     casilla_values: dict[CasillaId, object] = {value.casilla_id: value.value for value in draft.values}
     unfiled_paths: frozenset[str] = (
         _modelo_100_unfiled_comunidad_paths(entries, casilla_values)
@@ -152,7 +151,7 @@ def render_xml_dictionary_layout(
             entry,
             draft=draft,
             casilla_values=casilla_values,
-            headers=normalized_headers,
+            headers=headers,
             dictionary_values=dictionary_values or {},
         )
         if rendered is None or rendered == "":
@@ -201,7 +200,7 @@ def expected_xml_dictionary_root_identity(
     }
 
 
-def read_xml_dictionary_root_identity(payload: bytes) -> dict[str, str]:
+def read_xml_dictionary_root_identity(payload: bytes) -> Mapping[str, str]:
     """Return the root identity attributes carried by an exported XML declaration.
 
     Args:
@@ -209,7 +208,7 @@ def read_xml_dictionary_root_identity(payload: bytes) -> dict[str, str]:
 
     Returns:
         The declared root attributes, keyed as
-        :func:`xml_dictionary_root_identity` writes them. A key is absent when
+        :func:`expected_xml_dictionary_root_identity` writes them. A key is absent when
         the file omits that attribute, which the caller must treat as a
         divergence rather than as a match.
 
@@ -379,30 +378,8 @@ def _xml_dictionary_element_order(
             root ``Declaracion`` element to walk from.
     """
     root = _xml_dictionary_xsd_root(source, source_root=source_root)
-    named_types = {
-        node.get("name"): node for node in root.iter(f"{_XSD_NS}complexType") if node.get("name") is not None
-    }
+    named_types = {name: node for node in root.iter(f"{_XSD_NS}complexType") if (name := node.get("name")) is not None}
     order: dict[str, tuple[str, ...]] = {}
-
-    def walk(path: str, type_node: ElementTree.Element[str] | None, seen: frozenset[str]) -> None:
-        if type_node is None or path in order:
-            return
-        children = _xsd_declared_children(type_node)
-        if not children:
-            return
-        order[path] = tuple(str(child.get("name")) for child in children)
-        for child in children:
-            child_path = f"{path}/{child.get('name')}"
-            declared_type = child.get("type")
-            if declared_type is not None and declared_type in named_types:
-                # A type that reaches itself would recurse without end; its
-                # order is already recorded at the shallower path.
-                if declared_type in seen:
-                    continue
-                walk(child_path, named_types[declared_type], seen | {declared_type})
-            else:
-                walk(child_path, child.find(f"{_XSD_NS}complexType"), seen)
-
     declaration = next(
         (node for node in root if node.tag == f"{_XSD_NS}element" and node.get("name") == _XML_DICTIONARY_ROOT_TAG),
         None,
@@ -411,8 +388,56 @@ def _xml_dictionary_element_order(
         raise FilingExportValidationError(
             f"XML dictionary XSD source {source.id!r} declares no {_XML_DICTIONARY_ROOT_TAG!r} root element",
         )
-    walk("", declaration.find(f"{_XSD_NS}complexType"), frozenset())
+    _record_xsd_child_order(
+        "",
+        declaration.find(f"{_XSD_NS}complexType"),
+        named_types=named_types,
+        order=order,
+        seen=frozenset(),
+    )
     return order
+
+
+def _record_xsd_child_order(
+    path: str,
+    type_node: ElementTree.Element[str] | None,
+    *,
+    named_types: Mapping[str, ElementTree.Element[str]],
+    order: dict[str, tuple[str, ...]],
+    seen: frozenset[str],
+) -> None:
+    """Record ``path``'s declared child order into ``order``, then descend into each child's type.
+
+    ``seen`` carries the named types already open on this branch, so a type that
+    reaches itself terminates instead of recursing without end.
+    """
+    if type_node is None or path in order:
+        return
+    children = _xsd_declared_children(type_node)
+    if not children:
+        return
+    order[path] = tuple(str(child.get("name")) for child in children)
+    for child in children:
+        child_path = f"{path}/{child.get('name')}"
+        declared_type = child.get("type")
+        if declared_type is None or declared_type not in named_types:
+            _record_xsd_child_order(
+                child_path,
+                child.find(f"{_XSD_NS}complexType"),
+                named_types=named_types,
+                order=order,
+                seen=seen,
+            )
+        elif declared_type not in seen:
+            # A type that reaches itself would recurse without end; its
+            # order is already recorded at the shallower path.
+            _record_xsd_child_order(
+                child_path,
+                named_types[declared_type],
+                named_types=named_types,
+                order=order,
+                seen=seen | {declared_type},
+            )
 
 
 # The rows whose rendered text is a domain token that AEAT files under a code of
@@ -444,7 +469,7 @@ def _xml_dictionary_rendered_value(
     *,
     draft: ModeloDraft,
     casilla_values: dict[CasillaId, object],
-    headers: dict[str, str],
+    headers: Mapping[FilingProducerKey, object],
     dictionary_values: Mapping[str, object],
 ) -> str | None:
     raw = casilla_values.get(entry.casilla_id) if entry.casilla_id is not None else None
@@ -604,7 +629,7 @@ def _modelo_100_sign_branch_value(entry: XmlDictionaryEntry, raw: object) -> obj
 def _xml_dictionary_non_casilla_value(
     entry: XmlDictionaryEntry,
     *,
-    headers: dict[str, str],
+    headers: Mapping[FilingProducerKey, object],
     dictionary_values: Mapping[str, object],
 ) -> object | None:
     """Resolve a row no casilla addresses, keeping the value's Python type.
@@ -634,15 +659,8 @@ def _xml_dictionary_non_casilla_value(
     Returns:
         The value to render, or ``None`` when neither channel addresses the row.
     """
-    declared = dictionary_values.get(entry.field_id)
-    if declared is not None:
-        return declared
-    path_tail = entry.path.rsplit("/", 1)[-1].lstrip("@").lower()
-    for key in (entry.field_id.lower(), path_tail):
-        value = headers.get(key)
-        if value is not None:
-            return value
-    return None
+    del headers
+    return dictionary_values.get(entry.field_id)
 
 
 def _format_xml_dictionary_value(data_type: str, value: object) -> str:

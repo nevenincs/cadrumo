@@ -26,7 +26,7 @@ bindings = [
     "modelo-130-actividad-economica-rendimiento-neto-cumulative",
     "modelo-130-actividad-economica-gastos-cumulative",
 ]
-export_layouts = ["modelo-130-fichero-boe"]
+support_removal_decisions = ["modelo-130-fichero-boe-support-removal"]
 extraction_profiles = ["modelo-130-declaracion-pdf"]
 live_cross_references = ["modelo-130-static-official", "modelo-130-filed-declarations-read"]
 workbook_parity_refs = ["modelo-130-dr-xls"]

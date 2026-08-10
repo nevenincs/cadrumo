@@ -46,6 +46,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ....core import FilingProducerKey
 from ._aeat_hosts import REMOTE_READ_SCHEME, canonical_remote_hostname
 from ._export_value_policy import (
     ExportValuePolicy,
@@ -476,12 +477,8 @@ from ._schema import (
     DependencyClassificationDefinition,
     EvidenceTier,
     ExportComputedKey,
-    ExportComputedKeyValue,
     ExportDraftAttribute,
-    ExportDraftAttributeValue,
     ExportFieldDefinition,
-    ExportHeaderKey,
-    ExportHeaderKeyValue,
     ExportLayoutDefinition,
     ExportRecordDefinition,
     ExportSemanticPayloadAxis,
@@ -694,7 +691,9 @@ def __getattr__(name: str) -> object:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
     from importlib import import_module
 
-    value = getattr(import_module(module_name, __name__), name)
+    # module_name is resolved from this package's own closed _LAZY_EXPORTS
+    # mapping above, never from caller-supplied input.
+    value = getattr(import_module(module_name, __name__), name)  # nosemgrep: python.lang.security.audit.non-literal-import.non-literal-import
     globals()[name] = value
     return value
 
@@ -791,14 +790,11 @@ __all__ = [
     "EvidenceTier",
     "EvidenceTierCoverageGate",
     "ExportComputedKey",
-    "ExportComputedKeyValue",
     "ExportDraftAttribute",
-    "ExportDraftAttributeValue",
     "ExportEncoding",
     "ExportFieldDefinition",
     "ExportFieldId",
-    "ExportHeaderKey",
-    "ExportHeaderKeyValue",
+    "FilingProducerKey",
     "ExportJustification",
     "ExportLayoutDefinition",
     "ExportLayoutId",

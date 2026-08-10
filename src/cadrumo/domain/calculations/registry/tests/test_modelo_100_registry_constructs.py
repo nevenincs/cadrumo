@@ -394,7 +394,7 @@ def _assert_spouse_joint_gating(bindings_by_id: Mapping[str, DataBindingDefiniti
     """Spouse-only bindings gate on declaration type 2 (joint)."""
     for binding_id in _SPOUSE_REQUIRED_BINDINGS:
         selector = selector_as_dict(bindings_by_id[binding_id])
-        assert selector["required_when_profile_key"] == "filing_export.declaration_type", (
+        assert selector["required_when_profile_key"] == "renta_filing.declaration_type", (
             f"{binding_id}: required_when_profile_key={selector['required_when_profile_key']!r}"
         )
         assert selector["required_when_value"] == "2", (

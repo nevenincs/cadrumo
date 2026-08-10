@@ -219,6 +219,7 @@ from ._producer_snapshot import (
     FilingModelProfileFacts,
     FilingProducerSnapshot,
     FilingProducerSnapshotError,
+    GeneralFilingProfileFacts,
     M202UnsupportedProducerId,
     Modelo111ProfileFacts,
     Modelo202ActivityFacts,
@@ -226,6 +227,7 @@ from ._producer_snapshot import (
     PresenterIdentity,
     RefundAccountSelection,
     SelectedFilingAccount,
+    TaxpayerIdentityFacts,
     build_filing_producer_snapshot,
 )
 from ._review import (
@@ -968,6 +970,7 @@ __all__ = [
     "FilingModelProfileFacts",
     "FilingProducerSnapshot",
     "FilingProducerSnapshotError",
+    "GeneralFilingProfileFacts",
     "JustificanteImportResult",
     "M202UnsupportedProducerId",
     "Modelo111ProfileFacts",
@@ -983,6 +986,7 @@ __all__ = [
     "PresenterIdentity",
     "RefundAccountSelection",
     "SelectedFilingAccount",
+    "TaxpayerIdentityFacts",
     "approval_stale_reasons",
     "approve_draft",
     "assert_export_artifact_matches_receipt",

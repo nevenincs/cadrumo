@@ -7,7 +7,6 @@ data_type = "integer"
 semantic_role = "perceptor_count"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-123-2019-casilla-01"]
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
 
@@ -20,7 +19,6 @@ semantic_role = "base_retenciones_ingresos_a_cuenta"
 constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"] }
 required = false
 input_kind = "manual"
-export_refs = ["modelo-123-2019-casilla-02"]
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
 
@@ -33,7 +31,6 @@ semantic_role = "retenciones_ingresos_a_cuenta"
 constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"] }
 required = false
 input_kind = "manual"
-export_refs = ["modelo-123-2019-casilla-03"]
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
 
@@ -45,7 +42,6 @@ data_type = "money"
 semantic_role = "ingresos_ejercicios_anteriores"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-123-2019-casilla-04"]
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
 
@@ -57,7 +53,6 @@ data_type = "money"
 semantic_role = "regularizacion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-123-2019-casilla-05"]
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
 
@@ -70,7 +65,6 @@ semantic_role = "suma_retenciones_regularizacion"
 required = false
 input_kind = "computed"
 formula = "modelo-123-2019-total-liquidacion"
-export_refs = ["modelo-123-2019-casilla-06"]
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
 
@@ -82,7 +76,6 @@ data_type = "money"
 semantic_role = "resultado_anteriores_autoliquidaciones"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-123-2019-casilla-07"]
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
 
@@ -96,7 +89,6 @@ constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "ley-
 required = false
 input_kind = "computed"
 formula = "modelo-123-2019-resultado-ingresar"
-export_refs = ["modelo-123-2019-casilla-08"]
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
 

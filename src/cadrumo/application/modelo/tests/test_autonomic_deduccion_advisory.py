@@ -69,7 +69,7 @@ def m100_2025_snapshot() -> RegistrySnapshot:
 def _base_facts(**overrides: str) -> tuple[UserProfileFact, ...]:
     base: dict[str, str] = {
         "tax_residence.ccaa": "madrid",
-        "filing_export.declaration_type": "1",
+        "renta_filing.declaration_type": "1",
         "renta_taxpayer.marital_status": "1",
         "renta_family.descendiente.0.birth_date": "2024-06-01",
         "renta_family.descendiente.0.convivencia": "true",
@@ -101,7 +101,7 @@ def test_advisory_fires_for_indeterminate_conjunta_unit_with_eligible_descendant
     seeded_bucket: str,
 ) -> None:
     """A tributación-conjunta Madrid filer with an eligible child gets the D4 advisory."""
-    _seed(seeded_bucket, _base_facts(**{"filing_export.declaration_type": "2"}))
+    _seed(seeded_bucket, _base_facts(**{"renta_filing.declaration_type": "2"}))
 
     finding = _madrid_nacimiento_adopcion_eligibility_advisory_finding(
         m100_2025_snapshot,
@@ -163,7 +163,7 @@ def test_advisory_silent_when_casilla_already_populated(
     seeded_bucket: str,
 ) -> None:
     """A non-zero casilla 1039 means the auto-trigger already fired; nothing to advise."""
-    _seed(seeded_bucket, _base_facts(**{"filing_export.declaration_type": "2"}))
+    _seed(seeded_bucket, _base_facts(**{"renta_filing.declaration_type": "2"}))
 
     finding = _madrid_nacimiento_adopcion_eligibility_advisory_finding(
         m100_2025_snapshot,
@@ -181,7 +181,7 @@ def test_advisory_silent_for_non_madrid_indeterminate_unit(
     """A conjunta filer outside Madrid never triggers the Madrid-specific advisory."""
     _seed(
         seeded_bucket,
-        _base_facts(**{"tax_residence.ccaa": "cataluna", "filing_export.declaration_type": "2"}),
+        _base_facts(**{"tax_residence.ccaa": "cataluna", "renta_filing.declaration_type": "2"}),
     )
 
     finding = _madrid_nacimiento_adopcion_eligibility_advisory_finding(
@@ -202,7 +202,7 @@ def test_advisory_silent_for_indeterminate_unit_with_no_eligible_descendant(
         seeded_bucket,
         _base_facts(
             **{
-                "filing_export.declaration_type": "2",
+                "renta_filing.declaration_type": "2",
                 "renta_family.descendiente.0.birth_date": "2019-01-01",
             },
         ),
@@ -241,7 +241,7 @@ def test_advisory_weighted_count_matches_calculate_path_candidate_count(
     """
     facts = _base_facts(
         **{
-            "filing_export.declaration_type": "2",
+            "renta_filing.declaration_type": "2",
             "renta_family.descendiente.0.custodia_compartida": "true",
         },
     )

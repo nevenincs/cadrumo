@@ -244,7 +244,7 @@ def test_two_entitled_filers_declaring_individually_each_take_half() -> None:
     facts: dict[str, object] = {
         "renta_family.descendiente.0.birth_date": f"{year - 10}-05-01",
         "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value,
-        "filing_export.declaration_type": "1",
+        "renta_filing.declaration_type": "1",
     }
     _inject(facts, snapshot)
     assert facts[_estatal_key(year)] == _parameter(snapshot, "primer-hijo") * Decimal("0.5")
@@ -262,7 +262,7 @@ def test_conjunta_return_is_not_prorated() -> None:
     facts: dict[str, object] = {
         "renta_family.descendiente.0.birth_date": f"{year - 10}-05-01",
         "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value,
-        "filing_export.declaration_type": "2",
+        "renta_filing.declaration_type": "2",
     }
     _inject(facts, snapshot)
     assert facts[_estatal_key(year)] == _parameter(snapshot, "primer-hijo")
@@ -275,7 +275,7 @@ def test_unpartnered_individual_filer_takes_the_full_minimo() -> None:
     facts: dict[str, object] = {
         "renta_family.descendiente.0.birth_date": f"{year - 10}-05-01",
         "renta_taxpayer.marital_status": RentaMaritalStatus.SOLTERO.value,
-        "filing_export.declaration_type": "1",
+        "renta_filing.declaration_type": "1",
     }
     _inject(facts, snapshot)
     assert facts[_estatal_key(year)] == _parameter(snapshot, "primer-hijo")
@@ -293,7 +293,7 @@ def test_explicit_override_beats_the_derivation_in_both_directions() -> None:
     base: dict[str, object] = {
         "renta_family.descendiente.0.birth_date": f"{year - 10}-05-01",
         "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value,
-        "filing_export.declaration_type": "1",
+        "renta_filing.declaration_type": "1",
     }
 
     claims_full = {**base, "renta_family.descendiente.0.prorrata_minimo": "false"}
@@ -313,7 +313,7 @@ def test_shared_custody_still_prorates_without_any_partner_signal() -> None:
         "renta_family.descendiente.0.birth_date": f"{year - 10}-05-01",
         "renta_family.descendiente.0.custodia_compartida": "true",
         "renta_taxpayer.marital_status": RentaMaritalStatus.SOLTERO.value,
-        "filing_export.declaration_type": "1",
+        "renta_filing.declaration_type": "1",
     }
     _inject(facts, snapshot)
     assert facts[_estatal_key(year)] == _parameter(snapshot, "primer-hijo") * Decimal("0.5")

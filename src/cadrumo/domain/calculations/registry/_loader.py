@@ -17,9 +17,10 @@ from typing import Literal, cast, get_args, get_origin
 
 from pydantic import BaseModel, ValidationError
 
-from ....core import OBJECT_TUPLE_ADAPTER, freeze_toml, read_toml
+from ....core import FilingProducerKey, OBJECT_TUPLE_ADAPTER, freeze_toml, read_toml
 from ._compiled_cache import load_compiled_registry_cache, store_compiled_registry_cache
 from ._errors import RegistryLoadError, RegistryValidationError
+from ._export_semantics import ExportComputedKey, ExportDraftAttribute
 from ._loader_cache import (
     BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS,
     MUTABLE_REGISTRY_FINGERPRINT_TTL_SECONDS,
@@ -207,6 +208,7 @@ def _build_modelo_definition_from_data(source_path: Path, data: Mapping[str, obj
             revision_id=revision_id,
             raw_revision=raw_revision_table,
         )
+        payload = _compile_revision_export_semantics(source_path, payload)
         try:
             revision = ModeloRevision.model_validate(payload)
         except ValidationError as exc:
@@ -260,6 +262,80 @@ def _passthrough_toml_row(raw: object) -> dict[str, object]:
     # copies this replaces, so the escape hatch is declared once.
     # nosemgrep: no-cast-in-domain-application
     return dict(cast(Mapping[str, object], raw)) if isinstance(raw, Mapping) else {"value": raw}
+
+
+def _compile_export_semantic_field(source_path: Path, raw_field: object) -> dict[str, object]:
+    """Construct closed export selector enums at the TOML compiler boundary.
+
+    Strict registry models deliberately accept only enum members.  This is the
+    one boundary where committed TOML's scalar token becomes that member; no
+    model validator, renderer, or application call site may repeat it.
+    """
+    field = _as_toml_table(raw_field)
+    if field is None:
+        return _passthrough_toml_row(raw_field)
+    if "header_key" in field:
+        raise RegistryLoadError(
+            f"{source_path}: legacy export field header_key is not accepted; use producer_key with a canonical "
+            "FilingProducerKey identity",
+        )
+    payload = dict(field)
+    for name, enum_type in (
+        ("producer_key", FilingProducerKey),
+        ("draft_attribute", ExportDraftAttribute),
+        ("computed_key", ExportComputedKey),
+    ):
+        raw_value = payload.get(name)
+        if raw_value is None or isinstance(raw_value, enum_type):
+            continue
+        if not isinstance(raw_value, str):
+            raise RegistryLoadError(
+                f"{source_path}: export field {name} must be a canonical string token, got "
+                f"{type(raw_value).__name__!r}",
+            )
+        try:
+            payload[name] = enum_type(raw_value)
+        except ValueError as exc:
+            raise RegistryLoadError(
+                f"{source_path}: export field {name} {raw_value!r} is not a canonical {enum_type.__name__}",
+            ) from exc
+    return payload
+
+
+def _compile_revision_export_semantics(source_path: Path, payload: Mapping[str, object]) -> dict[str, object]:
+    """Compile every export field's TOML token before strict schema construction."""
+    compiled = dict(payload)
+    layouts = _as_toml_array(payload.get("export_layouts"))
+    if layouts is None:
+        return compiled
+    compiled_layouts: list[dict[str, object]] = []
+    for raw_layout in layouts:
+        layout = _as_toml_table(raw_layout)
+        if layout is None:
+            compiled_layouts.append(_passthrough_toml_row(raw_layout))
+            continue
+        compiled_layout = dict(layout)
+        records = _as_toml_array(layout.get("records"))
+        if records is None:
+            compiled_layouts.append(compiled_layout)
+            continue
+        compiled_records: list[dict[str, object]] = []
+        for raw_record in records:
+            record = _as_toml_table(raw_record)
+            if record is None:
+                compiled_records.append(_passthrough_toml_row(raw_record))
+                continue
+            compiled_record = dict(record)
+            fields = _as_toml_array(record.get("fields"))
+            if fields is not None:
+                compiled_record["fields"] = tuple(
+                    _compile_export_semantic_field(source_path, raw_field) for raw_field in fields
+                )
+            compiled_records.append(compiled_record)
+        compiled_layout["records"] = tuple(compiled_records)
+        compiled_layouts.append(compiled_layout)
+    compiled["export_layouts"] = tuple(compiled_layouts)
+    return compiled
 
 
 def _localised_casilla_aliases(

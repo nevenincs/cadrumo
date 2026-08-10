@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.outbound.aeat.export import RegistryFixedWidthRecordRenderer
-from ....core import CasillaId, Period
+from ....core import CasillaId, FilingProducerKey, Period
 from ....domain.calculations.registry import (
     CasillaFieldKind,
     ExportFieldDefinition,
@@ -24,9 +24,10 @@ from ....domain.filing import (
     ModeloDraft,
     registry_schema_version,
 )
-from ....domain.submission import ModeloDraftStatus
 from ....domain.modelos import ModeloExportError
+from ....domain.submission import ModeloDraftStatus
 from .._export import _RecordRenderRow, _render_record
+from ._export_support import _typed_producer_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -160,7 +161,8 @@ def _application_bytes(record: ExportRecordDefinition, values: Mapping[CasillaId
     rendered = _render_record(
         record,
         draft=_draft(),
-        headers={},
+        producer_values={},
+        producer_snapshot=_typed_producer_snapshot(),
         casilla_values=dict(values),
         binding_values={},
         row=_RecordRenderRow(row_index=None, active_binding_ids=frozenset()),
@@ -202,7 +204,7 @@ def test_real_amendment_header_internal_boolean_spelling_emits_exact_wire_byte(
             "offset": 538,
             "length": 1,
             "kind": "header",
-            "header_key": "complementaria",
+            "producer_key": FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA,
             "data_type": "boolean",
             "required": False,
             "padding": "right_space",
@@ -224,7 +226,8 @@ def test_real_amendment_header_internal_boolean_spelling_emits_exact_wire_byte(
     rendered = _render_record(
         record,
         draft=_draft(),
-        headers={"complementaria": internal_value},
+        producer_values={FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA: internal_value},
+        producer_snapshot=_typed_producer_snapshot(complementaria=internal_value == "true"),
         casilla_values={},
         binding_values={},
         row=_RecordRenderRow(row_index=None, active_binding_ids=frozenset()),

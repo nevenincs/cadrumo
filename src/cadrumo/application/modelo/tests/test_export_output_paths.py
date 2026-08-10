@@ -29,9 +29,6 @@ from ....domain.modelos import (
     upsert_calculation_revision,
     upsert_filing_record,
 )
-from ....domain.user_profile import UserProfileFact
-from ...user_profile import projection_for_taxpayer, set_active_fields
-from ...workflow import workflow_state_repository
 from .._action_errors import (
     ModeloChargeAccountMissingError,
     ModeloPaymentElectionCapabilityRefusedError,
@@ -111,38 +108,27 @@ def test_export_modelo_303_wallet_only_revision_writes_fichero_with_redacted_wal
     assert "synthetic-modelo-303-export" not in event_json
 
 
-def _project_persisted_charge_profile(*, charge_iban: str | None) -> TaxpayerProfile:
-    """Project the stored active profile through its canonical taxpayer boundary."""
-    facts = [
-        UserProfileFact(path="filing_export.iban", value="ES9121000418450200051332"),
-        UserProfileFact(path="filing_export.swift_bic", value="CHASUS33XXX"),
-        UserProfileFact(path="filing_export.bank_name", value="Refund Only Bank"),
-        UserProfileFact(path="filing_export.bank_address", value="Refund Street 1"),
-        UserProfileFact(path="filing_export.bank_city", value="New York"),
-        UserProfileFact(path="filing_export.bank_country_code", value="US"),
-    ]
-    if charge_iban is not None:
-        facts.append(UserProfileFact(path="filing_export.charge_iban", value=charge_iban))
-    workflow_state_repository().update(lambda state: set_active_fields(state, tuple(facts)))
-    persisted = workflow_state_repository().load().active_profile_record()
-    assert persisted is not None
-    profile = projection_for_taxpayer(persisted)
-    assert profile.iva.refund_account is not None
-    assert profile.iva.refund_account.iban == "ES9121000418450200051332"
-    if charge_iban is None:
-        assert profile.iva.charge_account is None
-    else:
-        assert profile.iva.charge_account is not None
-        assert profile.iva.charge_account.iban == charge_iban
-    return profile
+def _typed_profile_with_charge_account(*, taxpayer_nif: str, charge_iban: str | None) -> TaxpayerProfile:
+    """Build the real typed account input consumed by the export snapshot.
+
+    Account selection is transient filing input.  It is not reconstructed from
+    a persisted user-profile export namespace.
+    """
+    return TaxpayerProfile(
+        tax_id=taxpayer_nif,
+        iva_regime=IVARegime.GENERAL,
+        iva=ModeloIVAProfile(
+            charge_account=ChargeAccount(iban=charge_iban) if charge_iban is not None else None,
+        ),
+    )
 
 
-def test_public_domiciliacion_export_projects_persisted_charge_iban_to_did_only(
+def test_public_domiciliacion_export_selects_typed_charge_account_for_did_only(
     isolated_backend: None,
     tmp_path: Path,
 ) -> None:
-    """Public export reaches S18's charge-only DID composer from persisted facts."""
-    _taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = _build_verified_modelo_303_revision(
+    """Public export reaches DID only through the typed selected-account snapshot."""
+    taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = _build_verified_modelo_303_revision(
         positive_result=True,
     )
     charge_iban = "ES7921000813610123456789"
@@ -155,7 +141,7 @@ def test_public_domiciliacion_export_projects_persisted_charge_iban_to_did_only(
             actor="operator",
             payment_election=PaymentElection.DOMICILIACION,
         ),
-        workflow_profile=_project_persisted_charge_profile(charge_iban=charge_iban),
+        workflow_profile=_typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=charge_iban),
         work_unit_repository=work_repo,
         calculation_repository=calc_repo,
         bucket_event_repository=event_repo,
@@ -466,7 +452,7 @@ def test_public_domiciliacion_without_persisted_charge_account_refuses(
                 actor="operator",
                 payment_election=PaymentElection.DOMICILIACION,
             ),
-            workflow_profile=_project_persisted_charge_profile(charge_iban=None),
+        workflow_profile=_typed_profile_with_charge_account(taxpayer_nif=_taxpayer_nif, charge_iban=None),
             work_unit_repository=work_repo,
             calculation_repository=calc_repo,
             bucket_event_repository=event_repo,
@@ -494,7 +480,10 @@ def test_public_cuenta_corriente_payment_election_is_capability_refused(
                 actor="operator",
                 payment_election=PaymentElection.CUENTA_CORRIENTE,
             ),
-            workflow_profile=_project_persisted_charge_profile(charge_iban="ES7921000813610123456789"),
+        workflow_profile=_typed_profile_with_charge_account(
+            taxpayer_nif=_taxpayer_nif,
+            charge_iban="ES7921000813610123456789",
+        ),
             work_unit_repository=work_repo,
             calculation_repository=calc_repo,
             bucket_event_repository=event_repo,

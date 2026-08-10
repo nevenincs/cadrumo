@@ -258,7 +258,7 @@ def _seed_autónomo_profile(runtime_profile: TestRuntimeProfile) -> None:
             UserProfileFact(path="provenance.source", value="manual_cli"),
             # Declaration type (person vs entity) — required by binding validation
             # in modelo-100 formulas.
-            UserProfileFact(path="filing_export.declaration_type", value="1"),
+            UserProfileFact(path="renta_filing.declaration_type", value="1"),
             # Birth date drives the M100 ``age_at_year_end`` operator used by
             # the mínimo del contribuyente formula and any age-sensitive tramo.
             # Use a deterministic 1980 value so the taxpayer is 44 in 2024

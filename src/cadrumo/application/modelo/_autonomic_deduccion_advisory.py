@@ -86,7 +86,7 @@ def _madrid_nacimiento_adopcion_eligibility_advisory_finding(
     Loads the bucket's :class:`~domain.user_profile.UserProfileRecord`
     directly (the same source the calculate-path injector reads) so the verify
     path can see the ``tax_residence.ccaa`` / ``renta_taxpayer.marital_status`` /
-    ``filing_export.declaration_type`` / ``renta_family.descendiente.*`` facts
+    ``renta_filing.declaration_type`` / ``renta_family.descendiente.*`` facts
     that :class:`~domain.deadlines.TaxpayerProfile` does not carry.
 
     Fires only when ALL of the following hold: the revision is the 2025 M100
