@@ -22,6 +22,7 @@ from contextlib import contextmanager
 from http import HTTPStatus
 from pathlib import Path
 from queue import Queue
+from typing import override
 
 import pytest
 
@@ -319,6 +320,7 @@ def _serve_ollama(reply_text: str) -> Iterator[tuple[str, Queue[dict[str, object
     events: Queue[dict[str, object]] = Queue()
 
     class _OllamaEndpoint(SilentLoopbackHandler):
+        @override
         def do_POST(self) -> None:
             events.put({"body": read_json_body(self)})
             write_json_response(

@@ -75,10 +75,12 @@ class _ModelStoreLoopbackHandler(SilentLoopbackHandler):
     #: When true, the delete is accepted but the store is left untouched.
     delete_is_a_lie: ClassVar[bool] = False
 
+    @override
     def do_GET(self) -> None:
         self.events.put({"method": "GET", "path": self.path})
         write_json_response(self, {"models": list(self.models)}, status=HTTPStatus.OK)
 
+    @override
     def do_DELETE(self) -> None:
         raw = read_text_body(self)
         payload: dict[str, object] = json.loads(raw) if raw else {}

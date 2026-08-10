@@ -22,6 +22,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from http import HTTPStatus
 from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -99,6 +100,7 @@ def _serve_scripted(script: _Script) -> Iterator[str]:
     lock = threading.Lock()
 
     class _Endpoint(SilentLoopbackHandler):
+        @override
         def do_POST(self) -> None:
             body = read_json_body(self)
             with lock:

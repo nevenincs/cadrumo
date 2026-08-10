@@ -22,7 +22,7 @@ from collections.abc import Iterator
 from http import HTTPStatus
 from io import BytesIO
 from pathlib import Path
-from typing import ClassVar
+from typing import ClassVar, override
 
 import pytest
 
@@ -140,6 +140,7 @@ class _ReaderEndpoint(SilentLoopbackHandler):
 
     reply: ClassVar[str] = ""
 
+    @override
     def do_POST(self) -> None:
         read_json_body(self)
         write_json_response(

@@ -23,6 +23,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from http import HTTPStatus
 from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -121,6 +122,7 @@ def _serve_ollama() -> Iterator[tuple[str, list[str]]]:
     arrivals: list[str] = []
 
     class _Endpoint(SilentLoopbackHandler):
+        @override
         def do_POST(self) -> None:
             read_json_body(self)
             arrivals.append(self.path)
