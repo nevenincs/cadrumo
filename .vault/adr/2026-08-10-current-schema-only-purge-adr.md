@@ -5,7 +5,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:5d244713d61e6df200f27b0c820b6460b91994d156967ed896a095f960a5b3b1'
+body_hash: 'sha256:d2cd63ad27e3f158f724cf0646685673862c3f141a2a442f49ef81a7cce82194'
 related:
   - "[[2026-07-09-compatibility-lifecycle-adr]]"
   - "[[2026-05-06-secure-persistence-enforcement-adr]]"
@@ -320,4 +320,52 @@ callers named. Two rows open with this amendment: one to place the static
 author-facing gate once placement is decided, and one to own the wallet-gate
 swallow above. Neither may be closed by asserting that this record says the gate
 exists.
+
+
+### Correction to this amendment: the gate cuts a live defect's supply, not a future bypass
+
+The section above frames the residual exposure as a FUTURE bypass, which made the
+static gate a prudent hardening with no urgency. That framing is withdrawn. Three
+facts, each re-derived at HEAD rather than relayed:
+
+**The flag defaults to `False`.** The persistence door's `normalize_m303_carry`
+parameter is declared `bool = False`, and the normalisation behind it is the only
+thing that populates the disposition and the compensation basis on an M303
+envelope. So an M303 envelope written without the flag is non-canonical **by
+construction**, and the fixed-point assertion described above raises on exactly
+that shape.
+
+**The write side is reachable from the operator CLI.**
+`record_operator_local_observation` accepts `modelo` as a bare `str` with no
+restriction and is wired into the records CLI. No legacy data, no cross-build
+artefact and no unusual profile is needed at any link in the chain.
+
+**The read side converts the refusal into an affirmative zero.** The wallet gate
+loads M303 observations by modelo and period with no source-kind filter, meets
+the assertion, catches the refusal and returns `None` — and its consumer does not
+branch on that `None`, passing it through beside an activity-start first-period
+proof. An envelope this build cannot interpret becomes a **proven first-period
+zero** on a compensación.
+
+So the gate's case is no longer "prevent a hypothetical new caller". It is **cut
+off the production of the non-canonical envelopes a downstream gate is currently
+laundering into affirmative zeros.** That is a materially stronger argument for
+building it than deferring it, and `W03.P07.S30` inherits it.
+
+**One consequence for the gate's SCOPE, and it narrows nothing.** The screen this
+amendment withdrew was scoped to *official* source kinds. The live chain above
+reaches the shared door through an OPERATOR_MANUAL write, so the write side has
+no guard at all today for any source kind. The eventual gate is therefore scoped
+by **what a caller writes into a shared persistence door**, never by source-kind
+officialness — a scope that would have excluded the very path the defect uses.
+
+**The two ends are one hole seen from both sides.** The write-side gap and the
+read-side laundering sit in different rows with different close conditions, and
+nothing in either record connects them: one says the populations were not
+separable, the other says a return type cannot express its outcomes. This
+amendment rules on the WRITE end only. **What it leaves open at the read end is
+stated rather than implied:** the wallet gate's swallow is not fixed by any gate
+built under `S30`, because cutting off new non-canonical envelopes does nothing
+about the ones a taxpayer's profile may already hold. `W03.P07.S31` owns that end
+and the two must close together or the story stays half told.
 
