@@ -133,7 +133,7 @@ class LLMRunTelemetryRecorder:
             Logical daily run-telemetry path for operator display only.
 
         Raises:
-            :exc:`~adapters.outbound.llm.LLMCacheError`: When the storage
+            :exc:`~llm.LLMCacheError`: When the storage
             write fails.
         """
         path = self.root_dir / f"run-telemetry-{record.started_at.date().isoformat()}.jsonl"

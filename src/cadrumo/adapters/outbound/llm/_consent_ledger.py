@@ -4,7 +4,7 @@ Persists one :class:`~domain.evidence_consent.EvidenceConsentLedgerEntry` per
 off-host evidence dispatch that a consent token permitted, to encrypted
 secure-object storage under
 :data:`~adapters.persistence.storage.LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE`.
-The entry is appended by :class:`~adapters.outbound.llm.LLMClient` at the same
+The entry is appended by :class:`~llm.LLMClient` at the same
 choke point that HONOURS the token, before the cache read and before any
 adapter exists, so a dispatch that cannot append refuses rather than
 transmitting unrecorded. Completeness is therefore a property of the code path
@@ -21,7 +21,7 @@ document.
 
 **It is deliberately not pruned.** Its three sibling LLM stores (cache, usage,
 run-telemetry) are swept by
-:meth:`~adapters.outbound.llm.LLMClient._sweep_retention_stores` because they
+:meth:`~llm.LLMClient._sweep_retention_stores` because they
 are diagnostic and regenerable. This one is neither: a consent withdrawal reads
 it to enumerate which artefacts depend on a cloud read, so an entry aged out of
 existence would make that withdrawal silently incomplete.

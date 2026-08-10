@@ -1,6 +1,6 @@
 """Encrypted content-addressed cache for LLM responses.
 
-Each :class:`~adapters.outbound.llm.CachedEntry` is stored under
+Each :class:`~llm.CachedEntry` is stored under
 :data:`~adapters.persistence.storage.LLM_CACHE_NAMESPACE` as an encrypted
 secure object with :class:`~core.classification.SensitivityClass`
 ``DIAGNOSTIC`` classification so operator-identifying inputs are redacted
@@ -49,9 +49,9 @@ _CACHE_SENSITIVITY = LLM_CACHE_NAMESPACE.sensitivity
 class LLMCache:
     """Persist LLM responses through encrypted secure objects.
 
-    The cache derives :class:`~adapters.outbound.llm.CacheKey` values from
-    :class:`~adapters.outbound.llm.LLMRequest` content and persists
-    :class:`~adapters.outbound.llm.LLMResponse` payloads through
+    The cache derives :class:`~llm.CacheKey` values from
+    :class:`~llm.LLMRequest` content and persists
+    :class:`~llm.LLMResponse` payloads through
     :func:`~adapters.persistence.storage.secure_object_repository_for_active_bucket`.
 
     Args:
@@ -62,15 +62,15 @@ class LLMCache:
         self.root_dir = root_dir or load_settings().cadrumo_llm_cache_dir
 
     def build_key(self, request: LLMRequest, provider: LLMProvider, model: str) -> CacheKey:
-        """Derive a :class:`~adapters.outbound.llm.CacheKey` from the request.
+        """Derive a :class:`~llm.CacheKey` from the request.
 
         Args:
-            request: Structured :class:`~adapters.outbound.llm.LLMRequest`.
-            provider: Effective :class:`~adapters.outbound.llm.LLMProvider`.
+            request: Structured :class:`~llm.LLMRequest`.
+            provider: Effective :class:`~llm.LLMProvider`.
             model: Effective model for the request.
 
         Returns:
-            Deterministic :class:`~adapters.outbound.llm.CacheKey`
+            Deterministic :class:`~llm.CacheKey`
             components.
         """
         prompt_material = "\n".join([request.system or "", request.prompt])
@@ -95,8 +95,8 @@ class LLMCache:
         """Read a cached response, if present.
 
         Args:
-            request: Structured :class:`~adapters.outbound.llm.LLMRequest`.
-            provider: Effective :class:`~adapters.outbound.llm.LLMProvider`.
+            request: Structured :class:`~llm.LLMRequest`.
+            provider: Effective :class:`~llm.LLMProvider`.
             model: Effective model for the request.
 
         The decoded entry is bound back to the key that was asked for before
@@ -109,11 +109,11 @@ class LLMCache:
         the bucket key, never that the row holds what was requested.
 
         Returns:
-            Cached :class:`~adapters.outbound.llm.LLMResponse` when
+            Cached :class:`~llm.LLMResponse` when
             present, otherwise ``None``.
 
         Raises:
-            :exc:`~adapters.outbound.llm.LLMCacheError`: When the cached
+            :exc:`~llm.LLMCacheError`: When the cached
             payload is present but cannot be parsed, or when it decodes to
             an entry belonging to a different cache key.
         """
@@ -163,15 +163,15 @@ class LLMCache:
         redacted text only.
 
         Args:
-            request: Structured :class:`~adapters.outbound.llm.LLMRequest`.
-            response: Public :class:`~adapters.outbound.llm.LLMResponse`
+            request: Structured :class:`~llm.LLMRequest`.
+            response: Public :class:`~llm.LLMResponse`
                 to persist.
 
         Returns:
-            Persisted :class:`~adapters.outbound.llm.CachedEntry` model.
+            Persisted :class:`~llm.CachedEntry` model.
 
         Raises:
-            :exc:`~adapters.outbound.llm.LLMCacheError`: When redaction
+            :exc:`~llm.LLMCacheError`: When redaction
             produces a non-dict result or the storage write fails with an
             OS-level error.
         """
@@ -220,10 +220,10 @@ class LLMCache:
         return entry
 
     def stats(self) -> CacheStats:
-        """Return encrypted cache counts as a :class:`~adapters.outbound.llm.CacheStats`.
+        """Return encrypted cache counts as a :class:`~llm.CacheStats`.
 
         Returns:
-            :class:`~adapters.outbound.llm.CacheStats` with aggregate
+            :class:`~llm.CacheStats` with aggregate
             entry count and total decrypted JSON byte size for this logical
             cache partition.
         """
@@ -254,7 +254,7 @@ class LLMCache:
             Number of removed cache objects.
 
         Raises:
-            :exc:`~adapters.outbound.llm.LLMCacheError`: When a cache
+            :exc:`~llm.LLMCacheError`: When a cache
             entry cannot be parsed during iteration.
         """
         settings = load_settings()
@@ -287,7 +287,7 @@ class LLMCache:
         encrypted records the cache wrote.
 
         Raises:
-            :exc:`~adapters.outbound.llm.LLMCacheError`: When a cache
+            :exc:`~llm.LLMCacheError`: When a cache
             entry cannot be parsed during iteration.
         """
         rows: list[tuple[CachedEntry, str]] = []
@@ -352,7 +352,7 @@ class LLMCache:
         therefore cannot alias one secure-object row before this binding check.
 
         Raises:
-            :exc:`~adapters.outbound.llm.LLMCacheError`: On any divergence.
+            :exc:`~llm.LLMCacheError`: On any divergence.
         """
         stored_object_key = self._object_key_for(self._key_of(entry))
         if stored_object_key != object_key:
