@@ -103,20 +103,10 @@ _DEFAULT_IVA_IMPORT_CASES: tuple[tuple[str, str], ...] = (
         "cadrumo.entrypoints.cli._ledger_inventory_cli",
         "_ledger_inventory_cli must import DEFAULT_IVA_GENERAL_RATE_PCT from cadrumo.core.external_constants",
     ),
-    (
-        "cadrumo.domain.contribuyente.assets",
-        "cadrumo.domain.contribuyente.assets must import DEFAULT_IVA_GENERAL_RATE_PCT from cadrumo.core.external_constants",
-    ),
-    (
-        "cadrumo.domain.contribuyente.inventory",
-        "contribuyente.inventory must import DEFAULT_IVA_GENERAL_RATE_PCT from cadrumo.core.external_constants",
-    ),
 )
 _DEFAULT_IVA_IMPORT_IDS = (
     "inventory-service",
     "ledger-inventory-cli",
-    "contribuyente-assets",
-    "contribuyente-inventory",
 )
 
 _IVA_DECIMAL_LITERAL_CASES: tuple[tuple[str, str, str], ...] = (
@@ -343,6 +333,18 @@ def test_default_iva_general_rate_pct_matches_registry() -> None:
 
     registry_rate = lookup_rate(EUMemberState.ES, IvaRateKind.GENERAL, date(2026, 1, 1))
     assert registry_rate.pct == DEFAULT_IVA_GENERAL_RATE_PCT
+
+
+def test_default_iva_general_rate_pct_has_core_as_its_only_public_home() -> None:
+    """The IVA default is public only from ``core.external_constants``."""
+    from ...domain.contribuyente import assets, inventory
+    from .. import external_constants
+
+    constant_name = "DEFAULT_IVA_GENERAL_RATE_PCT"
+    assert constant_name in vars(external_constants)
+    for legacy_facade in (assets, inventory):
+        assert constant_name not in legacy_facade.__all__
+        assert constant_name not in vars(legacy_facade)
 
 
 def test_inventory_movement_add_iva_rate_default_matches_core_constant() -> None:

@@ -322,7 +322,7 @@ rounding = "money-2"
 #   [76] = regularización cuotas art. 80.Cinco.5ª LIVA (rectificación)
 # Source: aeat-modelo-303-procedure (instrucciones casilla 64) and boe-modelo-303-2008-form
 # (Orden EHA/3786/2008 form spec, casilla 64 row).
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-hac-819-2024:art-1"]
 source_refs = ["aeat-dr-303-2026", "boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
 
 [[revisions.2026-y-siguientes.formulas.source_citations]]
@@ -356,7 +356,7 @@ rounding = "money-2"
 # For taxpayers in territorio común, [65] = 100 and [66] = [64].
 # Formula: [66] = [64] × ([65] / 100).
 # Source: aeat-modelo-303-procedure (instrucciones casilla 66) and boe-modelo-303-2008-form.
-legal_refs = ["rd-1624-1992:art-71"]
+legal_refs = ["rd-1624-1992:art-71", "orden-hac-819-2024:art-1"]
 source_refs = ["aeat-dr-303-2026", "boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
 
 [[revisions.2026-y-siguientes.formulas.source_citations]]
@@ -394,7 +394,7 @@ rounding = "money-2"
 # For standard single-régimen filings with no importation IVA and no joint-taxation
 # adjustment: [77]=0, [68]=0, so [69] = [66] - [78].
 # Source: aeat-modelo-303-procedure (instrucciones casilla 69) and boe-modelo-303-2008-form.
-legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30"]
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-hac-819-2024:art-1"]
 source_refs = ["aeat-dr-303-2026", "boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
 
 [[revisions.2026-y-siguientes.formulas.source_citations]]
@@ -439,7 +439,7 @@ rounding = "money-2"
 #   [112] = pago a cuenta de entregas de gasolinas, gasóleos y biocarburantes atribuido al Estado.
 # For standard first filings of the period: [70]=[109]=[112]=0, so [71] = [69].
 # Source: aeat-dr-303-2026 and aeat-modelo-303-procedure.
-legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30"]
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-hac-819-2024:art-1"]
 source_refs = ["aeat-dr-303-2026", "boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
 
 [[revisions.2026-y-siguientes.formulas.source_citations]]

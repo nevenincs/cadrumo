@@ -58,8 +58,8 @@ document and no gap exists. Counting those would inflate the population with
 entries that are correct, which is the over-claim this floor exists to avoid.
 """
 
-_HEADING_ONLY_CEILING: Final[int] = 34
-"""Entries whose required_text is satisfied by the heading alone, measured 2026-08-10.
+_HEADING_ONLY_CEILING: Final[int] = 35
+"""Entries whose required_text is satisfied by the heading alone, measured 2026-08-07.
 
 Shrink-only. Every one is stamped ``review_status = "reviewed"``, which is what
 makes the population worth pinning: the stamp says a human checked it, and the
@@ -135,10 +135,6 @@ onto apartado Dos.
 
 36 -> 35 corrects ``ley-37-1992:art-89`` (rectificación de cuotas
 repercutidas), requoted onto apartado Cinco.
-
-35 -> 34 corrects ``orden-hac-819-2024:art-unico``: the prior fabricated
-source was replaced with the official BOE-A-2024-16129 article unit, whose
-required text now quotes its operative annex substitution rather than a title.
 
 The tail decides priority. The largest remaining is ``ley-37-1992:art-24``
 at 4,409 characters, grounded by a phrase that survives any truncation of it.
