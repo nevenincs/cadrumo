@@ -168,9 +168,7 @@ def test_dependency_finding_carries_registry_requirement_refs() -> None:
     findings = _cross_period_clean_state_findings(verdict, activity_start_date=None)
 
     blocking = next(
-        f
-        for f in findings
-        if f.message_locale_key == "application.modelo.findings.cross_period_dependency_unclean"
+        f for f in findings if f.message_locale_key == "application.modelo.findings.cross_period_dependency_unclean"
     )
     assert set(_CROSS_PERIOD_DEPENDENCY_LEGAL_REFS) <= set(blocking.legal_refs)
     assert "rd-439-2007:art-110" in blocking.legal_refs
@@ -184,9 +182,7 @@ def test_non_compensacion_dependency_finding_cites_lgt_only() -> None:
     findings = _cross_period_clean_state_findings(verdict, activity_start_date=None)
 
     blocking = next(
-        f
-        for f in findings
-        if f.message_locale_key == "application.modelo.findings.cross_period_dependency_unclean"
+        f for f in findings if f.message_locale_key == "application.modelo.findings.cross_period_dependency_unclean"
     )
     assert tuple(blocking.legal_refs) == _CROSS_PERIOD_DEPENDENCY_LEGAL_REFS
     assert _IVA_COMPENSATION_CARRY_LEGAL_REF not in blocking.legal_refs
@@ -200,9 +196,7 @@ def test_missing_activity_start_finding_cites_censo_alta() -> None:
     findings = _cross_period_clean_state_findings(verdict, activity_start_date=None)
 
     activity_start = next(
-        f
-        for f in findings
-        if f.message_locale_key == "application.modelo.findings.cross_period_activity_start_missing"
+        f for f in findings if f.message_locale_key == "application.modelo.findings.cross_period_activity_start_missing"
     )
     assert tuple(activity_start.legal_refs) == _CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS
 

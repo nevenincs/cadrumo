@@ -131,14 +131,16 @@ def _save(repo: CalculationObservationRepository) -> ObservationEnvelopePayload:
     this fixture establishes: a payload saved as a member row and read as a
     single-filer row would come back as ``None``.
     """
-    repo.save(repo.prepare_observation_envelope(
-        _observation(),
-        source_kind="aeat_sede_justificante",
-        captured_at=_CAPTURED_AT,
-        member_nif="B12345678",
-        source_metadata={"aeat_register_status": "ALTA", "aeat_expediente_id": "202530300000001Z"},
-        source_headers=_header_facts(),
-    ))
+    repo.save(
+        repo.prepare_observation_envelope(
+            _observation(),
+            source_kind="aeat_sede_justificante",
+            captured_at=_CAPTURED_AT,
+            member_nif="B12345678",
+            source_metadata={"aeat_register_status": "ALTA", "aeat_expediente_id": "202530300000001Z"},
+            source_headers=_header_facts(),
+        )
+    )
     loaded = repo.load(member_observation_key("303", _PERIOD, "B12345678"))
     assert loaded is not None, "the observation did not come back at all"
     return loaded

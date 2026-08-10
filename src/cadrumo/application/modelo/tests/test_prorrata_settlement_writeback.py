@@ -83,7 +83,9 @@ def _seed_verified_m303_revision(
 ) -> tuple[CalculationRevision, WorkUnit]:
     values = dict(_SETTLEMENT_VALUES if casilla_values is None else casilla_values)
     period = Period.from_year_and_code(2026, period_code)
-    revision_id = resources().modelos.authority.snapshot("303", filing_year=2026, period=period.registry_token).revision.id
+    revision_id = (
+        resources().modelos.authority.snapshot("303", filing_year=2026, period=period.registry_token).revision.id
+    )
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET_ID,
         modelo="303",

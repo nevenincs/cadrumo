@@ -95,9 +95,7 @@ def test_an_untouched_calculation_raises_no_divergence_against_a_full_filed_side
 def test_one_supplied_input_opens_its_own_casillas_and_not_the_rest() -> None:
     """Population is per casilla: one supplied figure must not unlock the whole revision."""
     revision = _m130_revision()
-    manual_ids = sorted(
-        casilla.id for casilla in revision.casillas if casilla.input_kind is InputKind.MANUAL
-    )
+    manual_ids = sorted(casilla.id for casilla in revision.casillas if casilla.input_kind is InputKind.MANUAL)
     assert manual_ids, "subject revision declares no manual casilla; the test would be vacuous"
     supplied = manual_ids[0]
 
@@ -106,9 +104,7 @@ def test_one_supplied_input_opens_its_own_casillas_and_not_the_rest() -> None:
         calculation=_calculation(inputs={supplied: "500.00"}),
     )
 
-    candidates = {
-        casilla.id for casilla in revision.casillas if casilla.input_kind is not InputKind.INFORMATIONAL
-    }
+    candidates = {casilla.id for casilla in revision.casillas if casilla.input_kind is not InputKind.INFORMATIONAL}
     comparable = set(scope.comparable_casilla_ids)
     assert supplied in comparable
     assert comparable < candidates, "a single supplied input must not make every casilla comparable"
@@ -117,9 +113,7 @@ def test_one_supplied_input_opens_its_own_casillas_and_not_the_rest() -> None:
 def test_a_populated_casilla_still_surfaces_a_real_disagreement() -> None:
     """The narrowing must not silence the disagreement it was built to preserve."""
     revision = _m130_revision()
-    manual_ids = sorted(
-        casilla.id for casilla in revision.casillas if casilla.input_kind is InputKind.MANUAL
-    )
+    manual_ids = sorted(casilla.id for casilla in revision.casillas if casilla.input_kind is InputKind.MANUAL)
     assert manual_ids, "subject revision declares no manual casilla; the test would be vacuous"
     supplied = manual_ids[0]
 

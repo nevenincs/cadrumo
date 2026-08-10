@@ -30,7 +30,6 @@ from ._remote_state_models import (
 )
 
 
-
 def _string_object_mapping(value: object) -> dict[str, object] | None:
     if not isinstance(value, Mapping):
         return None

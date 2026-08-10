@@ -81,22 +81,24 @@ def _save_source_observation(
     source_casilla_ids: tuple[CasillaId, ...],
     stamped_revision_id: str,
 ) -> None:
-    repository.save(repository.prepare_observation_envelope(
-        registry_grounded_modelo_observation(
-            modelo=_MODELO,
-            filing_year=_YEAR,
-            period=_SOURCE_PERIOD,
-            casilla_values=_source_values(source_casilla_ids),
-        ),
-        source_kind="aeat_sede_justificante",
-        captured_at=_CLOCK,
-        stamped_revision_id=stamped_revision_id,
-        source_metadata={
-            "aeat_register_status": "ALTA",
-            "aeat_expediente_id": "EXP-303-2025-1T",
-            "authenticated_identity": _TAX_ID,
-        },
-    ))
+    repository.save(
+        repository.prepare_observation_envelope(
+            registry_grounded_modelo_observation(
+                modelo=_MODELO,
+                filing_year=_YEAR,
+                period=_SOURCE_PERIOD,
+                casilla_values=_source_values(source_casilla_ids),
+            ),
+            source_kind="aeat_sede_justificante",
+            captured_at=_CLOCK,
+            stamped_revision_id=stamped_revision_id,
+            source_metadata={
+                "aeat_register_status": "ALTA",
+                "aeat_expediente_id": "EXP-303-2025-1T",
+                "authenticated_identity": _TAX_ID,
+            },
+        )
+    )
 
 
 def _cross_period_refused(

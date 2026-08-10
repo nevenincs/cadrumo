@@ -180,21 +180,23 @@ def _seed_quarterly_filing(
     :meth:`CalculationObservationRepository.save_observation` write path with the
     non-official ``app_filing`` source_kind.
     """
-    obs_repo.save(obs_repo.prepare_observation_envelope(
-        RegistryModeloObservation(
-            modelo=source_modelo,
-            filing_year=_YEAR,
-            period=period,
-            observations=registry_grounded_observations(
+    obs_repo.save(
+        obs_repo.prepare_observation_envelope(
+            RegistryModeloObservation(
                 modelo=source_modelo,
                 filing_year=_YEAR,
                 period=period,
-                casilla_values=casilla_values,
+                observations=registry_grounded_observations(
+                    modelo=source_modelo,
+                    filing_year=_YEAR,
+                    period=period,
+                    casilla_values=casilla_values,
+                ),
             ),
-        ),
-        source_kind=APP_FILING_SOURCE_KIND,
-        captured_at=_T0,
-    ))
+            source_kind=APP_FILING_SOURCE_KIND,
+            captured_at=_T0,
+        )
+    )
 
 
 def _calculate_annual(
@@ -647,9 +649,17 @@ def test_m190_verify_accepts_observation_backed_m111_cross_period_evidence(
         and finding.message_facts.get("source_filing_year") == 2024
     )
     assert m111_findings, cross_period_findings
-    assert all("missing_current_filing_record" in str(finding.message_facts["blocker_codes"]).split("|") for finding in m111_findings)
-    assert not any("missing_observation" in str(finding.message_facts["blocker_codes"]).split("|") for finding in m111_findings)
-    assert not any("missing_observed_casilla" in str(finding.message_facts["blocker_codes"]).split("|") for finding in m111_findings)
+    assert all(
+        "missing_current_filing_record" in str(finding.message_facts["blocker_codes"]).split("|")
+        for finding in m111_findings
+    )
+    assert not any(
+        "missing_observation" in str(finding.message_facts["blocker_codes"]).split("|") for finding in m111_findings
+    )
+    assert not any(
+        "missing_observed_casilla" in str(finding.message_facts["blocker_codes"]).split("|")
+        for finding in m111_findings
+    )
 
 
 def test_m190_verify_accepts_filed_1t_m111_and_attested_no_obligation_zero_quarters(

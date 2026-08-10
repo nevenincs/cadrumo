@@ -125,8 +125,7 @@ def test_the_stamp_reaches_the_output_of_a_run_that_really_hits_the_ceiling() ->
     assert "Timeout" in output, f"the run did not end at the pytest-timeout ceiling: {output!r}"
 
     assert STAMP_PREFIX in output, (
-        f"no host-load stamp reached the output of a timed-out run; "
-        f"returncode={result.returncode} output={output!r}"
+        f"no host-load stamp reached the output of a timed-out run; returncode={result.returncode} output={output!r}"
     )
 
     stamp = next(line for line in output.splitlines() if line.startswith(STAMP_PREFIX))

@@ -178,26 +178,28 @@ def _seed_prior_year_m100(obs_repo: CalculationObservationRepository) -> None:
     a fresh bucket the engine raises if that prior-year value is absent. This is
     upstream substrate, not the casilla under test.
     """
-    obs_repo.save(obs_repo.prepare_observation_envelope(
-        RegistryModeloObservation(
-            modelo="100",
-            filing_year=_PRIOR_YEAR,
-            period="0A",
-            observations=registry_grounded_observations(
+    obs_repo.save(
+        obs_repo.prepare_observation_envelope(
+            RegistryModeloObservation(
                 modelo="100",
                 filing_year=_PRIOR_YEAR,
                 period="0A",
-                casilla_values={
-                    _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
-                    _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
-                    _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
-                    _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
-                },
+                observations=registry_grounded_observations(
+                    modelo="100",
+                    filing_year=_PRIOR_YEAR,
+                    period="0A",
+                    casilla_values={
+                        _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
+                        _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
+                        _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
+                        _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
+                    },
+                ),
             ),
-        ),
-        source_kind=APP_FILING_SOURCE_KIND,
-        captured_at=_T0,
-    ))
+            source_kind=APP_FILING_SOURCE_KIND,
+            captured_at=_T0,
+        )
+    )
 
 
 def _seed_prior_1t_m130_filing(
@@ -241,7 +243,9 @@ def _seed_prior_1t_m130_filing(
             casilla_values=casillas,
         ),
     )
-    obs_repo.save(obs_repo.prepare_observation_envelope(observation, source_kind=APP_FILING_SOURCE_KIND, captured_at=_T0))
+    obs_repo.save(
+        obs_repo.prepare_observation_envelope(observation, source_kind=APP_FILING_SOURCE_KIND, captured_at=_T0)
+    )
     return observation
 
 

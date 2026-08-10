@@ -158,12 +158,14 @@ def test_below_threshold_context_persists_exempt_assessment_metadata(tmp_path: P
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
-        repo.save(repo.prepare_observation_envelope(
-            obs,
-            source_kind="app_filing",
-            captured_at=_CLOCK_N,
-            source_metadata=_threshold_source_metadata(assessment),
-        ))
+        repo.save(
+            repo.prepare_observation_envelope(
+                obs,
+                source_kind="app_filing",
+                captured_at=_CLOCK_N,
+                source_metadata=_threshold_source_metadata(assessment),
+            )
+        )
         loaded = _find_observation(repo, filing_year=_YEAR_N, period="0A")
 
         assert loaded is not None, f"year-N observation not found for ({_MODELO!r}, {_YEAR_N}, '0A') after save"
@@ -187,12 +189,14 @@ def test_at_threshold_context_persists_not_exempt_assessment_metadata(tmp_path: 
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
-        repo.save(repo.prepare_observation_envelope(
-            obs,
-            source_kind="app_filing",
-            captured_at=_CLOCK_N_PLUS_2,
-            source_metadata=_threshold_source_metadata(assessment),
-        ))
+        repo.save(
+            repo.prepare_observation_envelope(
+                obs,
+                source_kind="app_filing",
+                captured_at=_CLOCK_N_PLUS_2,
+                source_metadata=_threshold_source_metadata(assessment),
+            )
+        )
         loaded = _find_observation(repo, filing_year=_YEAR_N_PLUS_2, period="0A")
 
         assert loaded is not None
@@ -217,18 +221,22 @@ def test_exemption_assessments_are_independent_across_annual_contexts(tmp_path: 
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
-        repo.save(repo.prepare_observation_envelope(
-            obs_n,
-            source_kind="app_filing",
-            captured_at=_CLOCK_N,
-            source_metadata=_threshold_source_metadata(assessment_n),
-        ))
-        repo.save(repo.prepare_observation_envelope(
-            obs_n2,
-            source_kind="app_filing",
-            captured_at=_CLOCK_N_PLUS_2,
-            source_metadata=_threshold_source_metadata(assessment_n2),
-        ))
+        repo.save(
+            repo.prepare_observation_envelope(
+                obs_n,
+                source_kind="app_filing",
+                captured_at=_CLOCK_N,
+                source_metadata=_threshold_source_metadata(assessment_n),
+            )
+        )
+        repo.save(
+            repo.prepare_observation_envelope(
+                obs_n2,
+                source_kind="app_filing",
+                captured_at=_CLOCK_N_PLUS_2,
+                source_metadata=_threshold_source_metadata(assessment_n2),
+            )
+        )
         loaded_n = _find_observation(repo, filing_year=_YEAR_N, period="0A")
         loaded_n2 = _find_observation(repo, filing_year=_YEAR_N_PLUS_2, period="0A")
 
@@ -266,12 +274,14 @@ def test_anti_tautology_proof_missing_turnover_metadata_surfaces_as_inequality(t
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
-        repo.save(repo.prepare_observation_envelope(
-            obs_n,
-            source_kind="app_filing",
-            captured_at=_CLOCK_N,
-            source_metadata=full_metadata,
-        ))
+        repo.save(
+            repo.prepare_observation_envelope(
+                obs_n,
+                source_kind="app_filing",
+                captured_at=_CLOCK_N,
+                source_metadata=full_metadata,
+            )
+        )
         loaded = _find_observation(repo, filing_year=_YEAR_N, period="0A")
 
         assert loaded is not None
@@ -299,12 +309,14 @@ def test_enrollment_recorder_evidences_two_distinct_annual_contexts_and_matches_
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
         # --- Year N: below threshold, exempt -----------------------------
-        repo.save(repo.prepare_observation_envelope(
-            obs_n,
-            source_kind="app_filing",
-            captured_at=_CLOCK_N,
-            source_metadata=_threshold_source_metadata(assessment_n),
-        ))
+        repo.save(
+            repo.prepare_observation_envelope(
+                obs_n,
+                source_kind="app_filing",
+                captured_at=_CLOCK_N,
+                source_metadata=_threshold_source_metadata(assessment_n),
+            )
+        )
         loaded_n = _find_observation(repo, filing_year=_YEAR_N, period="0A")
         assert loaded_n is not None
         assert loaded_n.observation == obs_n
@@ -312,12 +324,14 @@ def test_enrollment_recorder_evidences_two_distinct_annual_contexts_and_matches_
         _count_n = sum(1 for _p in repo.iter_modelo(_MODELO) if _p.observation.filing_year == _YEAR_N)
 
         # --- Year N+2: at threshold, not exempt --------------------------
-        repo.save(repo.prepare_observation_envelope(
-            obs_n2,
-            source_kind="app_filing",
-            captured_at=_CLOCK_N_PLUS_2,
-            source_metadata=_threshold_source_metadata(assessment_n2),
-        ))
+        repo.save(
+            repo.prepare_observation_envelope(
+                obs_n2,
+                source_kind="app_filing",
+                captured_at=_CLOCK_N_PLUS_2,
+                source_metadata=_threshold_source_metadata(assessment_n2),
+            )
+        )
         loaded_n2 = _find_observation(repo, filing_year=_YEAR_N_PLUS_2, period="0A")
         assert loaded_n2 is not None
         assert loaded_n2.observation == obs_n2

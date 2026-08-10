@@ -32,7 +32,6 @@ from ..contribuyente import (
 from ._errors import DeadlineValidationError
 
 
-
 class IVARegime(StrEnum):
     """The IVA regime a taxpayer files under.
 

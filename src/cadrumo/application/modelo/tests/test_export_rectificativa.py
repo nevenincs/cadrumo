@@ -64,6 +64,7 @@ _PRIOR_FILING_RECORD_ID = "a" * 64
 # 1..11 of the page-3 record.
 _PAGE_03_MARKER = b"<T30303000>"
 
+
 def _seed_amendment_revision(
     *,
     bucket_id: str,
@@ -293,10 +294,7 @@ def test_rectificativa_indicator_renders_in_fichero_page_3(isolated_backend: Non
 
     layout = provider.get_subview("303").export_layouts[0]
     rectificativa_field = next(
-        field
-        for record in layout.records
-        for field in record.fields
-        if field.header_key == "autoliq_rectificativa"
+        field for record in layout.records for field in record.fields if field.header_key == "autoliq_rectificativa"
     )
     assert rectificativa_field.offset is not None
     assert rectificativa_field.length == 1

@@ -102,7 +102,9 @@ def test_domiciliacion_uses_only_the_explicit_charge_iban() -> None:
 
     assert block == {"iban": _CHARGE_IBAN}
     assert _REFUND_IBAN not in block.values()
-    assert not ({"sepa_marca", "swift_bic", "bank_name", "bank_address", "bank_city", "bank_country_code"} & block.keys())
+    assert not (
+        {"sepa_marca", "swift_bic", "bank_name", "bank_address", "bank_city", "bank_country_code"} & block.keys()
+    )
 
     did = _render_domiciliacion_did(block)
     assert did[22:56].rstrip() == _CHARGE_IBAN

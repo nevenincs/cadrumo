@@ -95,9 +95,7 @@ def _classify_error(entry: Mapping[str, object]) -> tuple[str, tuple[str, ...]]:
             return check, _CHECK_FIELDS[check]
     loc = entry.get("loc", ())
     fields = (
-        tuple(str(part) for part in OBJECT_TUPLE_ADAPTER.validate_python(loc))
-        if isinstance(loc, (tuple, list))
-        else ()
+        tuple(str(part) for part in OBJECT_TUPLE_ADAPTER.validate_python(loc)) if isinstance(loc, (tuple, list)) else ()
     )
     return _GENERIC_CHECK, fields
 

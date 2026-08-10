@@ -259,13 +259,11 @@ def test_no_module_speaking_an_llm_wire_subclasses_the_stdlib_handler(
     violations = [
         violation
         for path, tree in modules
-        for violation in rival_handler_class_violations(
-            repo_relative(path), tree, is_canonical=path in homes
-        )
+        for violation in rival_handler_class_violations(repo_relative(path), tree, is_canonical=path in homes)
     ]
 
-    assert violations == [], (
-        "loopback inference endpoints must subclass the shared home's handler:\n" + "\n".join(violations)
+    assert violations == [], "loopback inference endpoints must subclass the shared home's handler:\n" + "\n".join(
+        violations
     )
 
 
@@ -284,14 +282,10 @@ def test_no_module_speaking_an_llm_wire_builds_its_own_server(
     violations = [
         violation
         for path, tree in modules
-        for violation in rival_server_construction_violations(
-            repo_relative(path), tree, is_canonical=path in homes
-        )
+        for violation in rival_server_construction_violations(repo_relative(path), tree, is_canonical=path in homes)
     ]
 
-    assert violations == [], (
-        "the loopback serving plumbing belongs to the shared home:\n" + "\n".join(violations)
-    )
+    assert violations == [], "the loopback serving plumbing belongs to the shared home:\n" + "\n".join(violations)
 
 
 def test_the_home_itself_trips_both_detectors_when_scanned_as_a_rival(
@@ -379,7 +373,7 @@ def _declares_a_stdlib_handler(tree: ast.AST) -> bool:
 # green, which is the failure mode this gate exists to undo.
 # --------------------------------------------------------------------------
 
-_HAND_COPIED_ENDPOINT = '''
+_HAND_COPIED_ENDPOINT = """
 import json
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -400,9 +394,9 @@ def serve():
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     return f"http://127.0.0.1:{server.server_port}/api/chat"
-'''
+"""
 
-_ALIASED_HAND_COPIED_ENDPOINT = '''
+_ALIASED_HAND_COPIED_ENDPOINT = """
 import http.server as _hs
 from http.server import BaseHTTPRequestHandler as _Base
 
@@ -417,9 +411,9 @@ def serve():
 
 
 ENDPOINT_PATH = "/v1/chat/completions"
-'''
+"""
 
-_TELEMETRY_SHAPE = '''
+_TELEMETRY_SHAPE = """
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 
@@ -431,9 +425,9 @@ class _RecordingTelemetryEndpoint(BaseHTTPRequestHandler):
 
 def serve():
     return ThreadingHTTPServer(("127.0.0.1", 0), _RecordingTelemetryEndpoint)
-'''
+"""
 
-_COMPLIANT_CALLER = '''
+_COMPLIANT_CALLER = """
 from http import HTTPStatus
 
 from ...tests.loopback_llm import SilentLoopbackHandler, ollama_chat_reply, serving_loopback, write_json_response
@@ -446,7 +440,7 @@ class _Endpoint(SilentLoopbackHandler):
 
 def serve():
     return serving_loopback(_Endpoint, path="/api/chat")
-'''
+"""
 
 _PROSE_ONLY_MENTION = '''
 """A module documenting the /api/chat contract without speaking it.

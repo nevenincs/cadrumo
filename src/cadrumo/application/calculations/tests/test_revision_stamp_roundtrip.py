@@ -96,12 +96,14 @@ def test_stamped_revision_id_survives_encrypted_storage_roundtrip(tmp_path: Path
     with isolated_runtime_profile(tmp_path=tmp_path):
         revision_id = _law_revision_id()
         repo = CalculationObservationRepository()
-        repo.save(repo.prepare_observation_envelope(
-            _minimal_observation(),
-            source_kind=_SOURCE_KIND,
-            captured_at=_CLOCK,
-            stamped_revision_id=revision_id,
-        ))
+        repo.save(
+            repo.prepare_observation_envelope(
+                _minimal_observation(),
+                source_kind=_SOURCE_KIND,
+                captured_at=_CLOCK,
+                stamped_revision_id=revision_id,
+            )
+        )
         loaded = repo.load_observation(_MODELO, _filing_period())
 
         assert loaded is not None
@@ -117,11 +119,13 @@ def test_save_observation_derives_stamped_revision_id(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path):
         expected = _law_revision_id()
         repo = CalculationObservationRepository()
-        repo.save(repo.prepare_observation_envelope(
-            _minimal_observation(),
-            source_kind=_SOURCE_KIND,
-            captured_at=_CLOCK,
-        ))
+        repo.save(
+            repo.prepare_observation_envelope(
+                _minimal_observation(),
+                source_kind=_SOURCE_KIND,
+                captured_at=_CLOCK,
+            )
+        )
         loaded = repo.load_observation(_MODELO, _filing_period())
 
         assert loaded is not None
@@ -134,12 +138,14 @@ def test_stamped_revision_id_iter_modelo_propagates_stamp(tmp_path: Path) -> Non
     with isolated_runtime_profile(tmp_path=tmp_path):
         revision_id = _law_revision_id()
         repo = CalculationObservationRepository()
-        repo.save(repo.prepare_observation_envelope(
-            _minimal_observation(),
-            source_kind=_SOURCE_KIND,
-            captured_at=_CLOCK,
-            stamped_revision_id=revision_id,
-        ))
+        repo.save(
+            repo.prepare_observation_envelope(
+                _minimal_observation(),
+                source_kind=_SOURCE_KIND,
+                captured_at=_CLOCK,
+                stamped_revision_id=revision_id,
+            )
+        )
         payloads = tuple(repo.iter_modelo(_MODELO))
 
         assert len(payloads) == 1
@@ -175,12 +181,14 @@ def test_stamped_revision_id_anti_tautology_missing_refuses_load(tmp_path: Path)
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         revision_id = _law_revision_id()
         repo = CalculationObservationRepository()
-        repo.save(repo.prepare_observation_envelope(
-            _minimal_observation(),
-            source_kind=_SOURCE_KIND,
-            captured_at=_CLOCK,
-            stamped_revision_id=revision_id,
-        ))
+        repo.save(
+            repo.prepare_observation_envelope(
+                _minimal_observation(),
+                source_kind=_SOURCE_KIND,
+                captured_at=_CLOCK,
+                stamped_revision_id=revision_id,
+            )
+        )
 
         object_key = observation_key(_MODELO, _filing_period())
         with session_scope(get_engine(profile.settings)) as session:
@@ -271,12 +279,14 @@ def test_carry_divergent_stamp_refuses_single_observation(tmp_path: Path) -> Non
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
-        repo.save(repo.prepare_observation_envelope(
-            _m303_carry_source_observation(),
-            source_kind=_SOURCE_KIND,
-            captured_at=_CLOCK,
-            stamped_revision_id=_DIVERGENT_REVISION_ID,  # divergent: wrong revision
-        ))
+        repo.save(
+            repo.prepare_observation_envelope(
+                _m303_carry_source_observation(),
+                source_kind=_SOURCE_KIND,
+                captured_at=_CLOCK,
+                stamped_revision_id=_DIVERGENT_REVISION_ID,  # divergent: wrong revision
+            )
+        )
 
         snapshot = resources().modelos.authority.snapshot(
             "303",
@@ -306,12 +316,14 @@ def test_carry_matching_stamp_carries_cleanly(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
         revision_id = _law_revision_id("303", _M303_CARRY_YEAR, _M303_CARRY_SOURCE_PERIOD)
-        repo.save(repo.prepare_observation_envelope(
-            _m303_carry_source_observation(),
-            source_kind=_SOURCE_KIND,
-            captured_at=_CLOCK,
-            stamped_revision_id=revision_id,
-        ))
+        repo.save(
+            repo.prepare_observation_envelope(
+                _m303_carry_source_observation(),
+                source_kind=_SOURCE_KIND,
+                captured_at=_CLOCK,
+                stamped_revision_id=revision_id,
+            )
+        )
 
         snapshot = resources().modelos.authority.snapshot(
             "303",

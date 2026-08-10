@@ -43,10 +43,7 @@ def test_calendar_dtos_are_publicly_owned_by_models_not_builder_module() -> None
 
     assert set(overview.__all__) >= _PUBLIC_CALENDAR_MODEL_NAMES
     assert set(_calendar_models.__all__) >= _PUBLIC_CALENDAR_MODEL_NAMES
-    assert all(
-        getattr(overview, name) is getattr(_calendar_models, name)
-        for name in _PUBLIC_CALENDAR_MODEL_NAMES
-    )
+    assert all(getattr(overview, name) is getattr(_calendar_models, name) for name in _PUBLIC_CALENDAR_MODEL_NAMES)
     assert _PUBLIC_CALENDAR_MODEL_NAMES.isdisjoint(vars(calendar_builder))
 
 

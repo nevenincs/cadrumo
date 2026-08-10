@@ -81,10 +81,7 @@ def project_export_value(policy: ExportValuePolicy | None, value: object) -> obj
     if policy is None:
         return value
     if isinstance(value, ParsedExportPolicyWireValue):
-        if (
-            policy is not ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS
-            or value.policy is not policy
-        ):
+        if policy is not ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS or value.policy is not policy:
             raise RegistryValidationError(
                 "parsed export wire values are admitted only for the matching non-invertible short-year policy",
             )

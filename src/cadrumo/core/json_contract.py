@@ -147,6 +147,7 @@ class ActionConditionEvidence(PreconditionEvidence):
     condition, decide applicability, or resolve an action catalogue.
     """
 
+
 class ResolvedActionReference(PreconditionActionIdentity):
     """One catalogue action after an outer resolver supplied its canonical target.
 
@@ -199,6 +200,7 @@ class ResolvedPreconditionAction(
     catalogue and live-schema resolution. The DTO only proves that the action
     target and each argument were resolved before presentation.
     """
+
 
 class ResolvedNoticeAction(BaseModel):
     """A fully materialised next action carried by a successful notice.

@@ -148,9 +148,7 @@ def test_mutation_assigning_a_candidate_box_to_a_live_partition_is_detected() ->
     revision = _m390_revision()
     candidate_box = min(_candidate_box_numbers())
     live_box_id = next(
-        casilla_id
-        for partition in derive_rate_box_partitions(revision)
-        for casilla_id in partition.box_casilla_ids
+        casilla_id for partition in derive_rate_box_partitions(revision) for casilla_id in partition.box_casilla_ids
     )
     mutated = revision.model_copy(
         update={

@@ -503,10 +503,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
         except ValueError:
             return False
         surface = self._clave_surface()
-        return (
-            surface.dialogo_representacion_path_marker in path
-            and surface.selector_access_path_marker not in path
-        )
+        return surface.dialogo_representacion_path_marker in path and surface.selector_access_path_marker not in path
 
     @staticmethod
     def _exception_already_has_diagnostic(exc: Exception) -> bool:

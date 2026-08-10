@@ -240,16 +240,18 @@ def _seed_115_observations(obs_repo: CalculationObservationRepository) -> dict[C
             binding_values={},
             date_context={"filing_period": date(_YEAR, 12, 31)},
         )
-        obs_repo.save(obs_repo.prepare_observation_envelope(
-            RegistryModeloObservation(
-                modelo="115",
-                filing_year=_YEAR,
-                period=period,
-                observations=result.observations,
-            ),
-            source_kind="app_filing",
-            captured_at=_T0,
-        ))
+        obs_repo.save(
+            obs_repo.prepare_observation_envelope(
+                RegistryModeloObservation(
+                    modelo="115",
+                    filing_year=_YEAR,
+                    period=period,
+                    observations=result.observations,
+                ),
+                source_kind="app_filing",
+                captured_at=_T0,
+            )
+        )
         for output_cid in totals:
             totals[output_cid] += result.values[output_cid]
     return totals
@@ -351,11 +353,13 @@ def _seed_m303_prorrata_work_unit(work_unit_repository: WorkUnitCatalogueReposit
         modelo="303",
         filing_year=_PRORRATA_YEAR,
         period=_PRORRATA_PERIOD,
-        revision_id=resources().modelos.authority.snapshot(
+        revision_id=resources()
+        .modelos.authority.snapshot(
             "303",
             filing_year=_PRORRATA_YEAR,
             period=_PRORRATA_PERIOD.registry_token,
-        ).revision.id,
+        )
+        .revision.id,
         repository=work_unit_repository,
         clock=_PRORRATA_T0,
     )

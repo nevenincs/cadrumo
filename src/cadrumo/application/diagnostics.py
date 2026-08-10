@@ -447,9 +447,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
                     # exception text leaks internal plumbing; the
                     # summary + typed profile verdict already guide the operator.
                     detail=None if missing_active_bucket_session else _compact_exception(exc),
-                    next_action=(
-                        None if missing_active_bucket_session else "aeat config repair reset-progress --yes"
-                    ),
+                    next_action=(None if missing_active_bucket_session else "aeat config repair reset-progress --yes"),
                     precondition_verdict=(
                         _required_profile_health_verdict(profile_health) if missing_active_bucket_session else None
                     ),
@@ -941,7 +939,7 @@ def _profile_check(
             next_action=(
                 None
                 if profile_health is not None
-                else "aeat config profile create NAME --tax-id <TAX_ID> " "--activity <ACTIVITY>"
+                else "aeat config profile create NAME --tax-id <TAX_ID> --activity <ACTIVITY>"
             ),
             precondition_verdict=(
                 _required_profile_health_verdict(profile_health) if profile_health is not None else None

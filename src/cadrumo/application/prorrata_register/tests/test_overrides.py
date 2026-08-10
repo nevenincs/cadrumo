@@ -61,12 +61,14 @@ def _save_prior_prorrata_observation(repo: CalculationObservationRepository, *, 
         period=_SETTLEMENT_PERIOD,
         casilla_values={_PORCENTAJE_ID: percentage},
     )
-    repo.save(repo.prepare_observation_envelope(
-        observation,
-        source_kind=_SOURCE_KIND,
-        captured_at=_CLOCK,
-        stamped_revision_id=_prior_revision_id(),
-    ))
+    repo.save(
+        repo.prepare_observation_envelope(
+            observation,
+            source_kind=_SOURCE_KIND,
+            captured_at=_CLOCK,
+            stamped_revision_id=_prior_revision_id(),
+        )
+    )
 
 
 def _carried_entry(*, percentage: Decimal) -> ProrrataRegisterEntry:

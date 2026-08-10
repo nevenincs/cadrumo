@@ -105,9 +105,7 @@ def _assert_complete_parser_projection(
 ) -> None:
     """Compare every parser coordinate to the IR without re-parsing any source."""
     fixed_sheets = tuple(sheet for sheet in parsed_sheets if sheet.variable_envelope is None)
-    parsed_envelopes = tuple(
-        sheet.variable_envelope for sheet in parsed_sheets if sheet.variable_envelope is not None
-    )
+    parsed_envelopes = tuple(sheet.variable_envelope for sheet in parsed_sheets if sheet.variable_envelope is not None)
     assert len(intermediate.sheets) == len(fixed_sheets)
     for intermediate_sheet, parsed_sheet in zip(intermediate.sheets, fixed_sheets, strict=True):
         assert intermediate_sheet.sheet == parsed_sheet.name

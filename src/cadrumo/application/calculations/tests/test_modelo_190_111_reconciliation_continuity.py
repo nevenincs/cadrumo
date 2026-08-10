@@ -374,11 +374,13 @@ def _compute_year_111_totals(
     }
     for period, inputs in quarters.items():
         result = _calculate_111(filing_year=filing_year, period=period, casilla_inputs=inputs)
-        obs_repo.save(obs_repo.prepare_observation_envelope(
-            _111_observation(filing_year=filing_year, period=period, result=result),
-            source_kind="app_filing",
-            captured_at=_CLOCK,
-        ))
+        obs_repo.save(
+            obs_repo.prepare_observation_envelope(
+                _111_observation(filing_year=filing_year, period=period, result=result),
+                source_kind="app_filing",
+                captured_at=_CLOCK,
+            )
+        )
         for cid in totals:
             if cid in result.values:
                 totals[cid] += result.values[cid]

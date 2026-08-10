@@ -148,9 +148,7 @@ def _validate_anomaly_exceptions(
 def _validate_variable_envelope_boundary(intermediate: RecordDesignIntermediate) -> None:
     """Retain envelopes as distinct, unjoined composition authorities."""
     fixed_keys = {(sheet.sheet, sheet.record_identity) for sheet in intermediate.sheets}
-    envelope_keys = tuple(
-        (envelope.sheet, envelope.record_identity) for envelope in intermediate.variable_envelopes
-    )
+    envelope_keys = tuple((envelope.sheet, envelope.record_identity) for envelope in intermediate.variable_envelopes)
     duplicate_envelopes = _duplicate_record_keys(envelope_keys)
     if duplicate_envelopes:
         raise RegistryValidationError(

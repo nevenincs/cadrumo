@@ -147,7 +147,9 @@ def _seed_m303_external_baseline(
         modelo="303",
         filing_year=filing_year,
         period=period,
-        revision_id=resources().modelos.authority.snapshot("303", filing_year=filing_year, period=period.registry_token).revision.id,
+        revision_id=resources()
+        .modelos.authority.snapshot("303", filing_year=filing_year, period=period.registry_token)
+        .revision.id,
         repository=wu_repo,
         clock=_T0,
     )

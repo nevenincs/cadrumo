@@ -133,6 +133,7 @@ class ExtractedFieldAnchors(_ExtractedInvoiceFieldClaims):
     that check needs the document and this schema does not have it.
     """
 
+
 class ExtractedRoleEvidence(BaseModel):
     """The printed context assigning each identity value to a party role.
 

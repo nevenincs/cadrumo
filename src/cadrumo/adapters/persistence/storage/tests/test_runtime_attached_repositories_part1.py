@@ -432,10 +432,12 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
 
     with _active_runtime(tmp_path, _BUCKET_A_ID):
         ModeloHistoryRepository(bucket_id=_BUCKET_A_ID).save(history_a)
-        CalculationObservationRepository(bucket_id=_BUCKET_A_ID).save(CalculationObservationRepository(bucket_id=_BUCKET_A_ID).prepare_observation_envelope(
-            observation_a,
-            source_kind="operator_manual",
-        ))
+        CalculationObservationRepository(bucket_id=_BUCKET_A_ID).save(
+            CalculationObservationRepository(bucket_id=_BUCKET_A_ID).prepare_observation_envelope(
+                observation_a,
+                source_kind="operator_manual",
+            )
+        )
         IvaWalletDecisionRepository().save_decision(decision_a)
         IvaCompensationHistoryRepository(bucket_id=_BUCKET_A_ID).save_period(_iva_state(_BUCKET_A_ID))
         save_usage_ratios(usage_a, bucket_id=_BUCKET_A_ID)
@@ -460,10 +462,12 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
         assert IvaCompensationHistoryRepository(bucket_id=_BUCKET_B_ID).list_periods() == ()
         assert load_usage_ratios(bucket_id=_BUCKET_B_ID) == UsageRatioProfile()
         ModeloHistoryRepository(bucket_id=_BUCKET_B_ID).save(history_b)
-        CalculationObservationRepository(bucket_id=_BUCKET_B_ID).save(CalculationObservationRepository(bucket_id=_BUCKET_B_ID).prepare_observation_envelope(
-            observation_b,
-            source_kind="operator_manual",
-        ))
+        CalculationObservationRepository(bucket_id=_BUCKET_B_ID).save(
+            CalculationObservationRepository(bucket_id=_BUCKET_B_ID).prepare_observation_envelope(
+                observation_b,
+                source_kind="operator_manual",
+            )
+        )
         IvaWalletDecisionRepository().save_decision(decision_b)
         IvaCompensationHistoryRepository(bucket_id=_BUCKET_B_ID).save_period(_iva_state(_BUCKET_B_ID))
         save_usage_ratios(usage_b, bucket_id=_BUCKET_B_ID)

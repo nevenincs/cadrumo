@@ -200,28 +200,30 @@ def _seed_modelo_303_1t_clean_state(
         expected_tax_id=taxpayer_tax_id,
         clock=datetime(2026, 5, 21, 11, 1, tzinfo=UTC),
     )
-    CalculationObservationRepository().save(CalculationObservationRepository().prepare_observation_envelope(
-        RegistryModeloObservation(
-            modelo="303",
-            filing_year=2026,
-            period="1T",
-            observations=registry_grounded_observations(
+    CalculationObservationRepository().save(
+        CalculationObservationRepository().prepare_observation_envelope(
+            RegistryModeloObservation(
                 modelo="303",
                 filing_year=2026,
                 period="1T",
-                casilla_values=values,
+                observations=registry_grounded_observations(
+                    modelo="303",
+                    filing_year=2026,
+                    period="1T",
+                    casilla_values=values,
+                ),
             ),
-        ),
-        source_kind="aeat_sede_justificante",
-        captured_at=datetime(2026, 5, 21, 11, 2, tzinfo=UTC),
-        stamped_revision_id=source_snapshot.revision.id,
-        source_metadata={
-            "aeat_register_status": "ALTA",
-            "aeat_expediente_id": "EXP-303-2026-1T",
-            "aeat_justificante_csv": "JUST-303-2026-1T",
-            "authenticated_identity": taxpayer_tax_id,
-        },
-    ))
+            source_kind="aeat_sede_justificante",
+            captured_at=datetime(2026, 5, 21, 11, 2, tzinfo=UTC),
+            stamped_revision_id=source_snapshot.revision.id,
+            source_metadata={
+                "aeat_register_status": "ALTA",
+                "aeat_expediente_id": "EXP-303-2026-1T",
+                "aeat_justificante_csv": "JUST-303-2026-1T",
+                "authenticated_identity": taxpayer_tax_id,
+            },
+        )
+    )
 
 
 def _wallet_decision_repository_at(sidecar_root: Path) -> tuple[IvaWalletDecisionRepository, Settings]:
