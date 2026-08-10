@@ -105,11 +105,11 @@ from ..filing import (
     assert_export_artifact_matches_receipt,
     build_draft,
     build_runtime_schema_provider,
+    did_page_required,
     export_draft,
     export_layout_renderability_reason,
     filing_profile_from_taxpayer,
 )
-from ..filing._export_parity import did_page_required
 from ..filing.runtime import RegistrySchemaAccessor
 from ._action_errors import (
     CalculationRevisionNotFoundError,

@@ -27,7 +27,7 @@ from ._identity_gate import (
     SessionIdentityState,
     identity_gate_refusal,
 )
-from ._input_schema import build_verb_input_schemas
+from ._input_schema import VerbInputSchema, VerbLeafKind, build_verb_input_schemas, cli_argv_for
 from ._persona_scope import (
     PERSONA_TOOL_SCOPES,
     AgentPersona,
@@ -49,10 +49,13 @@ __all__ = [
     "McpToolDescriptor",
     "PersonaToolScope",
     "SessionIdentityState",
+    "VerbInputSchema",
+    "VerbLeafKind",
     "annotations_for_command",
     "build_server",
     "build_tool_descriptors",
     "build_verb_input_schemas",
+    "cli_argv_for",
     "command_key_for_tool",
     "confirmation_for_tool",
     "faithfulness_check",

@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
+from ....core import CasillaId, validated_casilla_id
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -14,6 +14,37 @@ _VERIFICATION_FINDING_CASILLA: CasillaId = validated_casilla_id(
     surface="_VERIFICATION_FINDING_CASILLA",
 )
 _TEST_FINDING_LEGAL_REFS = ("ley-58-2003:art-119",)
+
+
+def test_verification_finding_message_resolves_from_each_supported_locale_catalogue() -> None:
+    """The CLI boundary renders typed facts through the selected locale catalogue."""
+    from ....core.config import override_settings
+    from ....domain.modelos import (
+        ModeloVerificationFinding,
+        ModeloVerificationFindingKind,
+        ModeloVerificationFindingSeverity,
+    )
+    from .._modelo_rendering import _render_verification_finding_message
+
+    locale_key = "application.modelo.findings.cross_casilla_invariant_violated"
+    predicate_id = "test-predicate"
+    finding = ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        message_locale_key=locale_key,
+        message_facts={"predicate_id": predicate_id},
+        legal_refs=_TEST_FINDING_LEGAL_REFS,
+    )
+    rendered: dict[str, str] = {}
+    for locale in ("en", "es", "ca", "hu"):
+        with override_settings(cadrumo_output_language=locale):
+            rendered[locale] = _render_verification_finding_message(finding)
+
+    assert len(set(rendered.values())) == len(rendered)
+    for message in rendered.values():
+        assert locale_key not in message
+        assert "%{" not in message
+        assert predicate_id in message
 
 
 def test_verification_report_lines_preserve_persisted_findings_without_recovery_reconstruction() -> None:
@@ -36,7 +67,8 @@ def test_verification_report_lines_preserve_persisted_findings_without_recovery_
         ModeloVerificationFinding(
             kind=ModeloVerificationFindingKind.BLOCKING_RULE,
             severity=ModeloVerificationFindingSeverity.BLOCKING,
-            message="cross-casilla predicate failed",
+            message_locale_key="application.modelo.findings.cross_casilla_invariant_violated",
+            message_facts={"predicate_id": "test-predicate"},
             legal_refs=_TEST_FINDING_LEGAL_REFS,
         ),
     )
@@ -68,7 +100,7 @@ def test_verification_report_payload_resolves_the_exact_registry_recovery_verdic
     """A live verification exposes only the typed action paired by the application."""
     from datetime import UTC, datetime
 
-    from ....application.modelo._verification_preconditions import (
+    from ....application.modelo import (
         VerificationFindingPreconditionProjection,
         build_verification_precondition_failure,
     )
@@ -93,7 +125,8 @@ def test_verification_report_payload_resolves_the_exact_registry_recovery_verdic
         ModeloVerificationFinding(
             kind=ModeloVerificationFindingKind.BLOCKING_RULE,
             severity=ModeloVerificationFindingSeverity.BLOCKING,
-            message="cross-casilla predicate failed",
+            message_locale_key="application.modelo.findings.cross_casilla_invariant_violated",
+            message_facts={"predicate_id": "test-predicate"},
             legal_refs=_TEST_FINDING_LEGAL_REFS,
         ),
     )
@@ -217,7 +250,8 @@ def test_verification_report_view_exposes_finding_legal_and_source_refs() -> Non
             kind=ModeloVerificationFindingKind.BLOCKING_RULE,
             severity=ModeloVerificationFindingSeverity.BLOCKING,
             casilla_id=_VERIFICATION_FINDING_CASILLA,
-            message="cuota repercutida is under-declared",
+            message_locale_key="application.modelo.findings.missing_required_casilla",
+            message_facts={"casilla_id": str(_VERIFICATION_FINDING_CASILLA)},
             legal_refs=legal,
             source_refs=sources,
         ),

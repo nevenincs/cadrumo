@@ -26,8 +26,7 @@ from typer.main import get_command as typer_get_command
 from ....core.config import override_settings
 from ....entrypoints.cli import app as cli_app
 from ....entrypoints.cli import command_schema_refs
-from ....entrypoints.mcp._input_schema import VerbLeafKind, build_verb_input_schemas
-from ....entrypoints.mcp._tools import build_tool_descriptors
+from ....entrypoints.mcp import VerbLeafKind, build_tool_descriptors, build_verb_input_schemas
 from ....entrypoints.schema_surface import (
     CALLBACK_EXCLUSION_REASON_BY_CLI_PATH,
     CALLBACK_RESULT_REUSE_BY_CLI_PATH,

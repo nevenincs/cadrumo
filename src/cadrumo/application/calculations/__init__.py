@@ -137,6 +137,7 @@ from ._m303_carry_ingress import (
     M303_DECLARATION_TYPE_HEADER_KEY,
     M303CarryIngressError,
     normalize_m303_carry_observation_envelope,
+    validate_normalized_m303_carry_observation_envelope,
 )
 from ._maritime_exemption_service import MaritimeExemptionResult, resolve_maritime_exemption
 from ._multi_year import (
@@ -296,4 +297,5 @@ __all__ = [
     "resolve_relations_from_local_store",
     "revision_carry_outcome",
     "seed_iva_compensation_period",
+    "validate_normalized_m303_carry_observation_envelope",
 ]

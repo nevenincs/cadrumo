@@ -82,6 +82,7 @@ from ._common import (
     preserve_requested_cli_leaf,
     project_cli_policy_refusal,
     requested_cli_leaf,
+    resolve_cli_precondition_action,
 )
 from ._errors import CliCommandGroupUnavailableError as _CliCommandGroupUnavailableError
 from ._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
@@ -1374,4 +1375,5 @@ __all__ = [
     "calculation_revision_payload",
     "command_schema_refs",
     "main",
+    "resolve_cli_precondition_action",
 ]

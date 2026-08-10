@@ -43,7 +43,7 @@ from ...core.cli_metadata import is_metadata_invocation
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
-from ...core.json_contract import ResolvedPreconditionAction
+from ...core.json_contract import Notice, NoticeSeverity, ResolvedActionArgument, ResolvedPreconditionAction
 from ...core.output_rendering import OutputFormat, render_command_output
 from ._command_suggestions import INVOCATION_REMAINDER_META_KEY
 
@@ -129,17 +129,18 @@ if TYPE_CHECKING:
     from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ...application.auth import AuthProviderListing
+    from ...application.modelo import ModeloWorkLifecycleContinuation
     from ...application.operator_actions import ActionReference, PreconditionVerdict
     from ...application.operator_surface import OperatorSurfaceReconciliation
     from ...application.workflow import WorkflowState
     from ...core import Period
-    from ...core.json_contract import Notice, ResolvedActionArgument, ResolvedActionReference, ResolvedNoticeAction
+    from ...core.json_contract import ResolvedActionReference, ResolvedNoticeAction
     from ...domain.deadlines import TaxpayerProfile
     from ...domain.filing import ModeloDraft
     from ...domain.invoices import InvoiceCatalogue
     from ...domain.transactions import TransactionCatalogue
     from ...domain.user_profile import UserProfileRecord
-    from ..mcp._input_schema import VerbInputSchema
+    from ..mcp import VerbInputSchema
 
 __all__ = [
     "active_profile_label",
@@ -147,6 +148,7 @@ __all__ = [
     "emit_progress_line",
     "parse_decimal_amount",
     "parse_optional_decimal_amount",
+    "resolve_lifecycle_continuation_notice",
     "resolve_notice_action",
 ]
 
@@ -470,7 +472,7 @@ def emit_progress_line(line: str) -> None:
 @cache
 def _live_action_input_schema(command_key: str) -> VerbInputSchema:
     """Resolve one action target through the live Click input-schema authority."""
-    from ..mcp._input_schema import build_verb_input_schemas
+    from ..mcp import build_verb_input_schemas
 
     return build_verb_input_schemas((command_key,))[command_key]
 
@@ -532,7 +534,7 @@ def _action_text_lines(notices: Sequence[Notice]) -> tuple[str, ...]:
     """Derive executable text commands from the same resolved action DTOs as JSON."""
     from ...core.json_contract import ResolvedNoticeAction
     from ...core.product_identity import PRODUCT_IDENTITY
-    from ..mcp._input_schema import cli_argv_for
+    from ..mcp import cli_argv_for
 
     lines: list[str] = []
     for notice in notices:
@@ -665,6 +667,37 @@ def resolve_notice_action(
     )
 
 
+def resolve_lifecycle_continuation_notice(continuation: ModeloWorkLifecycleContinuation) -> Notice:
+    """Project an application-owned lifecycle continuation through the live action resolver."""
+    action = None
+    if continuation.action is not None:
+        action = resolve_notice_action(
+            action=continuation.action,
+            argument_bindings=tuple(
+                ResolvedActionArgument(
+                    argument_name=binding.argument_name,
+                    status=binding.status,
+                    value=binding.value,
+                    source=binding.source,
+                    source_key=binding.source_key,
+                    source_evidence_id=binding.source_evidence_id,
+                )
+                for binding in continuation.argument_bindings
+            ),
+        )
+    context = {key: str(value) for key, value in continuation.evidence.values.items()}
+    context["continuation_outcome"] = (
+        "action_available" if continuation.no_recovery_outcome is None else continuation.no_recovery_outcome.value
+    )
+    return Notice(
+        severity=NoticeSeverity.INFO,
+        code=continuation.notice_code,
+        message=tr(continuation.summary_locale_key, **continuation.evidence.values),
+        action=action,
+        context=context,
+    )
+
+
 def _current_operator_surface_reconciliation() -> OperatorSurfaceReconciliation:
     """Build the complete current CLI surface reconciliation without inference."""
     from ...application.operator_surface import (
@@ -680,8 +713,7 @@ def _current_operator_surface_reconciliation() -> OperatorSurfaceReconciliation:
         reconcile_operator_surface_inventory,
     )
     from ...application.storage_write_policy import is_profile_bound_write_verb_path
-    from ...entrypoints.mcp._input_schema import build_verb_input_schemas
-    from ...entrypoints.mcp._tools import build_tool_descriptors
+    from ...entrypoints.mcp import build_tool_descriptors, build_verb_input_schemas
     from ...entrypoints.schema_surface import CALLBACK_RESULT_REUSE_BY_CLI_PATH, ROOT_LANDING_SCHEMA_KEYS
     from ._app_contract import command_schema_refs
 

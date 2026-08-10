@@ -15,7 +15,7 @@ from ....core import read_pointer
 from ....core.errors import ErrorCategory, get_error_exit_code
 from ....tests.cli_runner import invoke_cached_cli, semantic_cli_output
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...mcp._input_schema import build_verb_input_schemas, cli_argv_for
+from ...mcp import build_verb_input_schemas, cli_argv_for
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
