@@ -60,10 +60,9 @@ Hex16Str = Annotated[
 ]
 """The canonical hex-16 constrained shape (lowercase, exactly 16 hex chars).
 
-The truncated-content-address counterpart of :data:`Hex64Str`, and governed
-by the same discipline: a concept carrying this shape declares its OWN
-semantic alias assigned FROM this primitive, never by re-declaring the
-``StringConstraints(...)`` call.
+The truncated-content-address counterpart of :data:`Hex64Str`, and governed by
+the same discipline: a concept carrying this shape USES this primitive, and
+never re-declares the ``StringConstraints(...)`` call.
 """
 
 Hex64Str = Annotated[
@@ -72,18 +71,29 @@ Hex64Str = Annotated[
 ]
 """The canonical hex-64 constrained shape (lowercase, exactly 64 hex chars).
 
-Every unrelated hex-64 IDENTITY concept the codebase carries — a registry
-snapshot id, a ledger transaction id, a content digest, a bucket event id, a
-durable auth-operation id, and any future concept sharing this shape — is
-declared as its OWN semantic alias assigned FROM this one primitive
-(``SnapshotId = Hex64Str``), never by re-declaring the
-``StringConstraints(...)`` call. One declaration means a future shape change
-(a different digest width, admitting uppercase) is made once, here, and
-every semantic alias picks it up; each alias still keeps its own name so a
-value of one identity concept is never confused for another at the call
-site, even though they are not distinguishable at the type-checker level
-(plain ``Annotated[str, ...]`` aliases carry no nominal distinction; the
-naming discipline is the enforcement).
+Every unrelated hex-64 concept the codebase carries — a registry snapshot id, a
+ledger transaction id, a content digest, a bucket event id, a durable
+auth-operation id — USES this primitive, or the one existing semantic alias for
+that concept in :mod:`core.identity`. It is never re-declared by writing the
+``StringConstraints(...)`` call or the pattern out again. One declaration means
+a future shape change — a different digest width, admitting uppercase — is made
+once, here, and reaches every consumer.
+
+**Do not mint a new per-concept alias.** A field whose concept already has one
+(``TransactionId``, ``WorkUnitId``, ``FilingRecordId``, ``SnapshotId``,
+``InvoiceId``, ``CalculationRevisionId``, ``VerificationReportId``,
+``ContentDigest``) uses it; a field whose concept has none takes ``Hex64Str``
+directly, or ``ContentDigest`` where the value is a payload digest.
+
+This reverses an earlier instruction in this docstring, and the reason is worth
+keeping because the earlier argument is easy to re-derive. A per-concept alias
+was said to stop a value of one identity being confused for another at the call
+site. It cannot: a plain ``Annotated[str, ...]`` alias carries **no nominal
+distinction**, so a type checker separates ``TransactionId`` from
+``SnapshotId`` exactly as much as it separates two ``str`` fields — not at all.
+The protection was naming convention, never enforcement. Weighed against a
+codebase that had accumulated dozens of parallel spellings of one shape, the
+convention cost more than it bought.
 """
 
 __all__ = ["HEX_PATTERN_16", "HEX_PATTERN_64", "HEX_PATTERN_128", "Hex16Str", "Hex64Str"]

@@ -262,7 +262,7 @@ def _redacted_sensitive_context_value(value: object, *, key: str) -> object | No
         return value
     if isinstance(value, str):
         text = _redact_diagnostic_context_text(value)
-        return _evidence_ref(text) if text else None
+        return evidence_ref(text) if text else None
     mapping = _string_object_mapping(value)
     if mapping is not None:
         redacted = _redacted_sensitive_context_mapping(mapping)
@@ -275,7 +275,7 @@ def _redacted_sensitive_context_value(value: object, *, key: str) -> object | No
             if item is not None
         )
         return items
-    return _evidence_ref(bounded_context_text(value))
+    return evidence_ref(bounded_context_text(value))
 
 
 def _redacted_sensitive_context_mapping(context: object) -> dict[str, object]:
@@ -297,7 +297,7 @@ def _redacted_sequence_context_value(value: object, *, key: str) -> object | Non
         return value
     if isinstance(value, str):
         text = _redact_diagnostic_context_text(value)
-        return _evidence_ref(text) if text else None
+        return evidence_ref(text) if text else None
     return _redacted_context_value(value, key=key)
 
 
@@ -328,10 +328,18 @@ def _auth_diagnostic_ref(error: BaseException) -> str | None:
     diagnostic_id = typed_context.get("diagnostic_id")
     if not isinstance(diagnostic_id, str) or not diagnostic_id.strip():
         return None
-    return _evidence_ref(diagnostic_id)
+    return evidence_ref(diagnostic_id)
 
 
-def _evidence_ref(value: str) -> str:
+def evidence_ref(value: str) -> str:
+    """Return the stable, non-reversing reference this package prints for a value.
+
+    A diagnostic that has to name a sensitive value names this instead. The
+    truncation width is the reason the helper is shared rather than
+    reimplemented: one reference is only comparable to another if every
+    producer truncates identically, and a second copy is one edit away from
+    silently disagreeing about that width.
+    """
     digest = sha256_hex(value.strip().encode("utf-8"))
     return f"sha256:{digest[:12]}"
 
@@ -339,5 +347,6 @@ def _evidence_ref(value: str) -> str:
 __all__ = [
     "auth_outcome",
     "bounded_context_text",
+    "evidence_ref",
     "surface_outcome",
 ]

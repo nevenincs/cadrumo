@@ -69,7 +69,7 @@ from ...core.json_contract import Notice, NoticeSeverity
 from ...core.resources import bundled_path, resources
 from ...core.time import now
 from ...domain.calculations.registry import RegistryModeloObservation, ValidatedRegistryAuthority
-from ..storage.sync_runs import bounded_scope_description, record_sync_run
+from ..storage.sync_runs import bounded_scope_description, coverage_of, record_sync_run
 from ._errors import LiveApplicationInputError, LiveIvaSurfaceTimeoutError
 from ._filed_capture_finalizer import FiledCaptureFailurePolicy, finalize_filed_capture
 from ._filed_data import (
@@ -379,6 +379,26 @@ class _CaptureAccumulator:
     #: cannot serve as the tally because a preview persists nothing and would
     #: leave it empty, which would silently uncap a limited sweep.
     absorbed_count: int = 0
+
+    @property
+    def reached_count(self) -> int:
+        """Units this run REACHED, answering :class:`SyncRunCoverageSource`.
+
+        The surface-neutral name the sync-run store asks for, mapped onto this
+        sweep's own tally. Both coverage counts are read off this one object so
+        they cannot be drawn from different populations.
+        """
+        return self.absorbed_count
+
+    @property
+    def divergences(self) -> Sequence[Notice]:
+        """Divergences found among the reached units, one entry each.
+
+        Bounded by :attr:`reached_count` by construction: :meth:`absorb` appends
+        at most one advisory per observation and increments the tally on the
+        same pass, so the sync-run coverage bound cannot be violated from here.
+        """
+        return self.recapture_notices
 
     def absorb(
         self,
@@ -784,11 +804,9 @@ async def capture_filed_data_bulk(
         surface=SyncSurface.FILED_DECLARATIONS,
         resolved_scope=bounded_scope_description(tuple(resolved_modelos), suffix=f"{year_from}-{year_to}"),
         succeeded=not failures,
-        # What the run REACHED, read off the accumulator's own tally -- the same
-        # one the sweep limit is measured against, and the only counter that is
-        # incremented in every mode.
+        # BOTH coverage counts from ONE object, which is the whole contract.
         #
-        # Deliberately NOT the enrolled key count. Enrolment narrows the
+        # Deliberately not the enrolled key count. Enrolment narrows the
         # population twice: `select_latest_filed_observations_in_history_order`
         # collapses to the latest observation per (modelo, ejercicio, period),
         # and a BEST_EFFORT enrolment failure drops its observation into
@@ -796,13 +814,9 @@ async def capture_filed_data_bulk(
         # observation ABSORBED. Pairing those two populations let
         # `divergence_count` exceed `unit_count` and refuse the record at the end
         # of a real sweep -- after every unit had already been fetched and
-        # written, and worst precisely when the run went worst. Both counts now
-        # come from the accumulator, so the record's bound holds by construction
-        # rather than by coincidence. The enrolled tally is not lost: it is
-        # `calculation_observation_count` on the report below.
-        unit_count=accumulator.absorbed_count,
-        # One advisory per divergent filing, so the notices ARE the count.
-        divergence_count=len(accumulator.recapture_notices),
+        # written, and worst precisely when the run went worst. The enrolled
+        # tally is not lost: it is `calculation_observation_count` below.
+        coverage=coverage_of(accumulator),
         completed_at=now(),
     )
     return BulkFiledDataCaptureReport(

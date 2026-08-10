@@ -23,6 +23,7 @@ carries a gate here rather than a review:
 
 from __future__ import annotations
 
+import ast
 import json
 from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
@@ -39,7 +40,13 @@ from .....tests.secure_sql import isolated_profile_storage_root
 from .....tests.user_profile import register_minimal_profile
 from ....user_profile import profile_create_storage_span
 from ....workflow import workflow_state_repository
-from .._records import SyncRunRecord, SyncRunRecordRepository, bounded_scope_description
+from .._records import (
+    SyncRunCoverage,
+    SyncRunRecord,
+    SyncRunRecordRepository,
+    bounded_scope_description,
+    coverage_of,
+)
 from .._persist import record_sync_run
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -157,8 +164,7 @@ def test_two_runs_over_one_surface_do_not_collapse(active_profile: str) -> None:
         surface=SyncSurface.FILED_DECLARATIONS,
         resolved_scope="303 2025-2025",
         succeeded=True,
-        unit_count=3,
-        divergence_count=0,
+        coverage=SyncRunCoverage(unit_count=3, divergence_count=0),
         completed_at=_COMPLETED_AT,
     )
     second = record_sync_run(
@@ -166,8 +172,7 @@ def test_two_runs_over_one_surface_do_not_collapse(active_profile: str) -> None:
         surface=SyncSurface.FILED_DECLARATIONS,
         resolved_scope="303 2026-2026",
         succeeded=False,
-        unit_count=1,
-        divergence_count=1,
+        coverage=SyncRunCoverage(unit_count=1, divergence_count=1),
         completed_at=_COMPLETED_AT + timedelta(hours=1),
     )
 
@@ -189,8 +194,7 @@ def test_the_record_and_its_bucket_event_land_together(active_profile: str) -> N
         surface=SyncSurface.CALC_SHEETS_EXPORT,
         resolved_scope="100 2026-0A",
         succeeded=True,
-        unit_count=42,
-        divergence_count=1,
+        coverage=SyncRunCoverage(unit_count=42, divergence_count=1),
         completed_at=_COMPLETED_AT,
     )
 
@@ -255,6 +259,107 @@ def test_more_divergences_than_units_reached_is_refused() -> None:
             divergence_count=3,
             completed_at=_COMPLETED_AT,
         )
+
+
+class _Run:
+    """A real coverage source: one object that answers for one population.
+
+    Not a stand-in for a collaborator the code under test would otherwise call.
+    The protocol IS "an object that knows both numbers", so an object knowing
+    both numbers is the genuine article rather than a double of one.
+    """
+
+    def __init__(self, *, reached: int, divergences: tuple[str, ...]) -> None:
+        self._reached = reached
+        self._divergences = divergences
+
+    @property
+    def reached_count(self) -> int:
+        return self._reached
+
+    @property
+    def divergences(self) -> tuple[str, ...]:
+        return self._divergences
+
+
+def test_coverage_reads_both_counts_off_one_source() -> None:
+    """The derivation is the guarantee: two numbers, one object, no second read."""
+    coverage = coverage_of(_Run(reached=4, divergences=("303-1T", "303-2T")))
+
+    assert coverage.unit_count == 4
+    assert coverage.divergence_count == 2
+
+
+def test_a_source_claiming_more_divergences_than_it_reached_is_refused() -> None:
+    """The backstop still bites when a source lies about its own population.
+
+    Deriving from one object is what stops a CALLER pairing two populations. It
+    cannot stop an object that misreports itself, so the bound survives on the
+    coverage model as well -- and this is the half that proves it is not
+    decorative.
+    """
+    with pytest.raises(ValidationError, match="cannot have diverged"):
+        coverage_of(_Run(reached=1, divergences=("303-1T", "303-2T")))
+
+
+def test_every_production_run_record_derives_its_coverage_from_a_source() -> None:
+    """The floor: nothing in production hand-pairs the two counts.
+
+    Making the invalid pair unrepresentable protects the path THROUGH
+    ``coverage_of``. It says nothing about a future call site that builds a
+    coverage from two literals, or constructs a record directly. So this walks
+    production and requires every ``record_sync_run`` call to pass a ``coverage``
+    argument that is a ``coverage_of(...)`` call.
+
+    A structural assertion pinned to the one call site we know about would go
+    green the moment a second writer appeared -- which is precisely how the
+    original defect arrived. This asserts a property of the whole tree instead.
+
+    The non-empty floor below is load-bearing: a walk that resolved no call
+    sites at all would pass this test while proving nothing, which is the
+    failure mode that makes a green gate worse than no gate.
+    """
+    package_root = Path(__file__).resolve().parents[4]
+    offenders: list[str] = []
+    call_sites: list[str] = []
+
+    for module in package_root.rglob("*.py"):
+        if "tests" in module.parts:
+            continue
+        tree = ast.parse(module.read_text(encoding="utf-8"), filename=str(module))
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            func = node.func
+            name = func.attr if isinstance(func, ast.Attribute) else getattr(func, "id", None)
+            if name != "record_sync_run":
+                continue
+            where = f"{module.relative_to(package_root).as_posix()}:{node.lineno}"
+            call_sites.append(where)
+            passed = {keyword.arg for keyword in node.keywords}
+            if "unit_count" in passed or "divergence_count" in passed:
+                offenders.append(f"{where} passes raw counts instead of a derived coverage")
+                continue
+            derived = next(
+                (
+                    keyword.value
+                    for keyword in node.keywords
+                    if keyword.arg == "coverage"
+                ),
+                None,
+            )
+            is_derived = (
+                isinstance(derived, ast.Call)
+                and getattr(derived.func, "id", getattr(derived.func, "attr", None)) == "coverage_of"
+            )
+            if not is_derived:
+                offenders.append(f"{where} builds its coverage without coverage_of")
+
+    assert call_sites, (
+        "no production record_sync_run call site was found, so this gate proved nothing; "
+        "the walk or the verb name has drifted"
+    )
+    assert not offenders, "coverage must be derived from one source at every production writer: " + "; ".join(offenders)
 
 
 def test_a_naive_completion_instant_is_refused() -> None:

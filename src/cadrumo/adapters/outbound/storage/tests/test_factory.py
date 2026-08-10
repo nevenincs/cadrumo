@@ -146,7 +146,6 @@ def test_factory_rejects_google_drive_without_root_before_loading_credentials(tm
     exc = raised.value
     assert exc.translated_message == "adapters.outbound.storage.factory.errors.drive_root_missing"
     assert exc.context == {"profile": "factory-drive-missing-root"}
-    assert exc.suggestion == "aeat config google folder set <id>"
 
 
 def test_drive_root_whitespace_override_uses_persisted_profile_configuration(tmp_path: Path) -> None:
@@ -173,7 +172,6 @@ def test_factory_rejects_google_drive_without_registered_client(tmp_path: Path) 
     exc = raised.value
     assert exc.translated_message == "adapters.outbound.storage.factory.errors.google_client_missing"
     assert exc.context == {"profile": "factory-drive-missing-client"}
-    assert exc.suggestion == "aeat config google register --client-json <path>"
 
 
 def test_factory_rejects_google_drive_without_persisted_token(tmp_path: Path) -> None:
@@ -202,7 +200,6 @@ def test_factory_rejects_google_drive_without_persisted_token(tmp_path: Path) ->
     exc = raised.value
     assert exc.translated_message == "adapters.outbound.storage.factory.errors.google_token_missing"
     assert exc.context == {"profile": "factory-drive-missing-token"}
-    assert exc.suggestion == "aeat config google login"
 
 
 # ---------------------------------------------------------------------------
@@ -276,7 +273,6 @@ def test_build_google_credentials_with_impersonation_selection_dispatches_to_imp
         build_google_credentials(profile=profile)
 
     assert raised.value.context == {"target_principal": _TARGET_PRINCIPAL}
-    assert raised.value.suggestion == "gcloud auth application-default login"
 
 
 def test_get_storage_provider_google_drive_dispatches_impersonation_selection_through_full_factory(

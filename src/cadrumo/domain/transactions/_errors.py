@@ -46,8 +46,7 @@ class StoredTransactionDriftError(TransactionPersistenceError):
         """
         super().__init__(
             translated_message="errors.storage.stored_data_validation_boundary",
-            context={"bucket_id": bucket_id, "recovery": "aeat config repair --help"},
-            suggestion="aeat config repair --help",
+            context={"bucket_id": bucket_id},
         )
         self.bucket_id = bucket_id
         self.original_exception = error
@@ -61,14 +60,12 @@ class LedgerStorageError(TransactionPersistenceError):
         message: str | None = None,
         *,
         context: Mapping[str, object] | None = None,
-        suggestion: str | None = None,
         translated_message: str = "errors.fail.fail_financial_ledger_storage",
     ) -> None:
         """Initialise a financial-ledger storage failure with structured metadata."""
         super().__init__(
             message,
             context=context,
-            suggestion=suggestion,
             translated_message=translated_message,
         )
 
