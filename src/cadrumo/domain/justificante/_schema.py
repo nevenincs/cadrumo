@@ -17,7 +17,7 @@ from pathlib import Path
 from pydantic import AnyHttpUrl, BaseModel, Field, ValidationInfo, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG, Period, PeriodError
-from ...core.identity import AeatCsv, AeatPresentationId
+from ...core.identity import AeatCsv, AeatPresentationId, ContentDigest
 
 
 class JustificanteParserBackend(StrEnum):
@@ -75,7 +75,7 @@ class Justificante(BaseModel):
     total_a_devolver: Decimal | None = None
     verification_url: AnyHttpUrl
     source_pdf_path: Path
-    source_pdf_sha256: str = Field(..., pattern=r"^[0-9a-f]{64}$")
+    source_pdf_sha256: ContentDigest
     parsed_at: datetime
 
     @field_validator("period", mode="before")

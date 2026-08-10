@@ -30,7 +30,6 @@ from pathlib import Path
 import pytest
 
 from ....application.user_profile import UserProfileLifecycleRepository
-from ....core.resources import resources
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.modelo_cli import create_modelo_work_unit_via_cli
@@ -428,7 +427,7 @@ def test_modelo_303_calculate_surface_is_reachable(
         modelo="303",
         filing_year=2026,
         period="1T",
-        revision=str(resources().modelos.authority.snapshot("303", filing_year=2026, period="1T").revision.id),
+        revision="2023-y-siguientes",
     )
 
     # Supply zero-value manual casillas so the engine can complete the

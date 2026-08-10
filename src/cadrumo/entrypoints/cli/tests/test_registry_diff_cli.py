@@ -1,8 +1,9 @@
 """CLI tests for ``aeat app registry diff-revisions``.
 
-Grounds every assertion against the two *real* Modelo 303 revisions selected
-by the bundled authority for the historical filing years; the expected
-identifiers are read from those snapshots, per
+Grounds every assertion against the two *real* Modelo 303 registry revisions
+shipped in the bundled tree (``2009-y-siguientes`` covering 2009-2022,
+``2023-y-siguientes`` covering 2023 onward); the expected identifiers were
+read directly off the diff service against this known real revision pair, per
 :mod:`cadrumo.application.registry.tests.test_diff`.
 """
 
@@ -13,7 +14,6 @@ import json
 import pytest
 
 from ....application.registry import RegistryRevisionDiffReport
-from ....domain.calculations.registry import bundled_authority
 from ._registry_cli_fixtures import (
     _isolated_registry_cli_backend,
     _isolated_secure_backend,
@@ -25,10 +25,6 @@ _REGISTRY_CLI_FIXTURES = (_isolated_registry_cli_backend, _isolated_secure_backe
 
 _M303_PRE_YEAR = 2022
 _M303_POST_YEAR = 2023
-
-
-def _m303_revision_for(filing_year: int) -> str:
-    return str(bundled_authority().snapshot("303", filing_year=filing_year, period="1T").revision.id)
 
 
 def _diff_cli_args(*, from_year: int, to_year: int, output_format: str = "json") -> list[str]:
@@ -57,8 +53,8 @@ def test_diff_revisions_cli_reports_json_envelope_for_real_revision_pair() -> No
     payload = RegistryRevisionDiffReport.model_validate(envelope["result"])
 
     assert payload.same_revision is False
-    assert payload.from_revision_id == _m303_revision_for(_M303_PRE_YEAR)
-    assert payload.to_revision_id == _m303_revision_for(_M303_POST_YEAR)
+    assert payload.from_revision_id == "2009-y-siguientes"
+    assert payload.to_revision_id == "2023-y-siguientes"
     added_ids = {casilla.id for casilla in payload.added_casillas}
     assert "iva.autoconsumo.promotor.base" in added_ids
     changed_formula_ids = {formula.id for formula in payload.changed_formulas}
@@ -75,8 +71,7 @@ def test_diff_revisions_cli_reports_same_revision_for_years_in_one_window() -> N
     payload = RegistryRevisionDiffReport.model_validate(envelope["result"])
 
     assert payload.same_revision is True
-    expected_revision = _m303_revision_for(2015)
-    assert payload.from_revision_id == payload.to_revision_id == expected_revision
+    assert payload.from_revision_id == payload.to_revision_id == "2009-y-siguientes"
     assert payload.added_casillas == ()
     assert payload.changed_formulas == ()
 
@@ -85,8 +80,8 @@ def test_diff_revisions_cli_text_output_names_both_revision_ids() -> None:
     result = invoke_cached_cli(_diff_cli_args(from_year=_M303_PRE_YEAR, to_year=_M303_POST_YEAR, output_format="text"))
 
     assert result.exit_code == 0, result.output
-    assert _m303_revision_for(_M303_PRE_YEAR) in result.output
-    assert _m303_revision_for(_M303_POST_YEAR) in result.output
+    assert "2009-y-siguientes" in result.output
+    assert "2023-y-siguientes" in result.output
     assert "added_casilla" in result.output
 
 

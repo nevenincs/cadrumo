@@ -195,7 +195,6 @@ class BienesInversionIvaRegisterRepository:
                 raise BienInversionRecordError(
                     f"bien de inversion {record.identifier!r} already exists",
                     context={"record_id": record.identifier},
-                    suggestion=None,
                     translated_message="adapters.persistence.profile.bienes_inversion.errors.record_already_exists",
                 )
             return BienesInversionIvaRegister(records=(*current.records, record))

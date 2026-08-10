@@ -38,7 +38,7 @@ from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage import LIVE_M036_DECLARATION_NAMESPACE
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.hashing import sha256_hex
-from ...core.identity import BucketId, ProfileId
+from ...core.identity import BucketId, ContentDigest, ProfileId
 from ...core.time import now
 from ...domain.buckets import (
     BucketEventObjectType,
@@ -133,10 +133,7 @@ class M036DeclarationResult(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    declaration_id: str = Field(
-        min_length=64,
-        max_length=64,
-        pattern=r"^[0-9a-f]{64}$",
+    declaration_id: ContentDigest = Field(
         description=(
             "SHA-256 hex content-address derived from (profile_id, event_kind, declared_on, sede_justificante)."
         ),

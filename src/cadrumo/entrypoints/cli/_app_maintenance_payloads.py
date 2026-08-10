@@ -25,13 +25,14 @@ from __future__ import annotations
 from pydantic import Field
 
 from ...application.user_profile import ProfileBundleExportPurpose
+from ...core import Hex64Str
 from ...core.json_contract import OutputSchema, register_schema
 
 
 class ReconciledProfileExportPayload(OutputSchema):
     """One crash-interrupted export the sweep resolved and cleared."""
 
-    operation_id: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
+    operation_id: Hex64Str
     destination: str = Field(min_length=1)
     purpose: ProfileBundleExportPurpose
 

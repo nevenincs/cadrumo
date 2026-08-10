@@ -53,5 +53,5 @@ failure_semantics = "fail_hard"
 # the primitive targets drops LIVA art. 9 and art. 79 (autoconsumo) and art. 84
 # (inversión del sujeto pasivo) with them: the profile no longer claims to read
 # an autoconsumo base or a reverse-charge cuota off the page.
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1", "orden-hac-819-2024:art-1"]
 source_refs = ["aeat-dr-303-2026", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]

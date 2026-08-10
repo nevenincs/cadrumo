@@ -6,7 +6,6 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.resources import resources
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from .envelope_helpers import unwrap_schema_envelope as _payload
@@ -74,10 +73,10 @@ def test_profile_preflight_names_profile_only_scope_for_m100() -> None:
 
 
 @pytest.mark.parametrize(
-    ("profile_name", "modelo", "filing_year", "period"),
+    ("profile_name", "modelo", "filing_year", "period", "revision_id"),
     (
-        ("lucia_defaults_broken", "303", "2024", "1T"),
-        ("ana_defaults_broken", "100", "2025", "0A"),
+        ("lucia_defaults_broken", "303", "2024", "1T", "2023-y-siguientes"),
+        ("ana_defaults_broken", "100", "2025", "0A", "2025"),
     ),
     ids=("m303-defaulted-profile", "m100-defaulted-profile"),
 )
@@ -86,17 +85,9 @@ def test_defaulted_profile_readiness_surfaces_block_before_modelo_work(
     modelo: str,
     filing_year: str,
     period: str,
+    revision_id: str,
 ) -> None:
     _create_defaulted_natural_person_profile(profile_name)
-    revision_id = str(
-        resources()
-        .modelos.authority.snapshot(
-            modelo,
-            filing_year=int(filing_year),
-            period=period,
-        )
-        .revision.id,
-    )
 
     validate = invoke_cached_cli(["config", "profile", "validate", profile_name])
     assert validate.exit_code == 2, validate.output

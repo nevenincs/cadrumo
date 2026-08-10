@@ -76,6 +76,13 @@ adapters:
         spreadsheet_id_blank: Google spreadsheet id must not be blank.
         workbook_snapshot_mismatch: The Google Sheet metadata does not match the calculation
           snapshot.
+      suggestions:
+        reexport_then_pull: Re-export the workbook with `aeat config google sync calc
+          export`, then pull it again.
+        reexport_workbook: Re-export the workbook with `aeat config google sync calc
+          export` so app-managed metadata is refreshed.
+        verify_exported_workbook: Verify the spreadsheet was originally created by
+          `aeat config google sync calc export` against this profile.
     oauth_flow:
       errors:
         browser_launcher_refused: The operating system browser launcher refused to
@@ -99,9 +106,22 @@ adapters:
           scope.
         unsecured_mode_refused: Google OAuth refused because the secret store is running
           in unsecured mode and the active profile carries a real Spanish tax identifier.
+      suggestions:
+        close_loopback_port: Close the application holding a stray loopback port and
+          retry.
+        open_consent_url_manually: Open the printed consent URL manually in your browser.
+        repair_profile_state: Run `aeat config profile status` and repair or switch
+          the active profile before retrying the Google command.
+        run_from_interactive_terminal: Run 'aeat config google login' from an interactive
+          terminal with a web browser available.
+        use_keyring_or_synthetic: Set CADRUMO_SECRET_STORE_BACKEND=keyring or switch
+          the active profile to a synthetic test tax identifier.
     profile_binding:
       errors:
         no_active_profile: No active Cadrumo profile is bound for Google OAuth.
+      suggestions:
+        create_profile: Run `aeat config profile create NAME --tax-id <NIF/CIF/DNI/NIE>`
+          and then retry the Google command.
   inbound:
     declaracion:
       errors:
@@ -923,14 +943,7 @@ application:
         modelo calculation cannot continue.
       calculation_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
         filing year %{filing_year}, period %{period} could not be resolved.
-      calculation_revision_id_is_discarded_work_unit: The supplied calculation revision
-        id %{calculation_revision_id} identifies discarded work unit %{work_unit_id}.
-        It cannot be calculated.
-      calculation_revision_id_is_work_unit: The supplied calculation revision id %{calculation_revision_id}
-        identifies work unit %{work_unit_id}.
       calculation_revision_not_found: No calculation revision found with id=%{calculation_revision_id}.
-      calculation_revision_parent_work_unit_discarded: Calculation revision %{calculation_revision_id}
-        belongs to discarded work unit %{work_unit_id}.
       caller_casilla_source_binding_conflict: 'Caller casilla inputs cannot override
         bucket-derived source-bound casillas (source bound casillas): %{casillas}.'
       computed_casilla_binding_conflict: 'Bucket-derived inputs target computed casillas
@@ -1083,12 +1096,12 @@ application:
       work_unit_already_discarded: The work unit is already discarded.
       work_unit_create_discarded: This filing target was discarded. Creating it again
         resolves to the same discarded work unit, so the target cannot be resumed.
-      work_unit_discarded_cannot_calculate: Work unit %{work_unit_id} is in state
-        %{work_unit_state} and cannot be calculated.
-      work_unit_discarded_cannot_import: Work unit %{work_unit_id} is in state %{work_unit_state}
-        and cannot be imported.
-      work_unit_filing_year_period_mismatch: Filing year %{filing_year} does not match
-        period year %{period_year} for %{period}.
+      work_unit_discarded_cannot_calculate: Work unit %{work_unit_id} is discarded
+        and cannot be calculated. Create a fresh work unit on the same modelo, year,
+        and period to continue.
+      work_unit_discarded_cannot_import: Work unit %{work_unit_id} is discarded and
+        cannot be imported. Create a fresh work unit on the same modelo, year, and
+        period to continue.
       work_unit_mutation_refused: The work unit is discarded, and re-creating the
         same filing target is refused rather than returning a fresh unit.
       work_unit_not_found: No modelo work unit found with id=%{work_unit_id}.
@@ -1142,26 +1155,20 @@ application:
         is declared.
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
-      cross_casilla_invariant_violated: Cross-casilla invariant %{predicate_id} is
-        violated.
-      cross_period_activity_start_missing: The activity-start date needed to adjudicate
-        prior-period obligations is missing for modelo %{target_modelo}, filing year
-        %{target_filing_year}, period %{target_period}.
-      cross_period_dependency_unclean: 'Cross-period dependency is not clean: modelo=%{source_modelo}
-        year=%{source_filing_year} period=%{source_period} origin=%{origin_code} origin_ids=%{origin_ids}
-        blockers=%{blocker_codes}.'
+      cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
+        %{expression}'
+      cross_period_dependency_unclean: 'cross-period dependency is not clean: modelo=%{modelo}
+        year=%{year} period=%{period} origin=%{origin} origin_ids=%{origin_ids} blockers=%{blockers}'
       cross_period_dependency_unclean_evidence_next_action: Capture/import AEAT evidence
         for the source dependency. Run `%{target_capture}`, `%{source_justificante_capture}`,
         `%{import_official_record}`, or `%{reconcile_file}`; rerun verification.
-      cross_period_first_year_fractional_suppression: The dependency on modelo %{source_modelo},
-        filing year %{source_filing_year}, period %{source_period} is outside the
-        activity window beginning %{activity_start_date}.
-      cross_period_m111_no_retenciones: The dependency on modelo %{source_modelo},
-        filing year %{source_filing_year}, period %{source_period} is satisfied by
-        the declared no-withholdings fact %{profile_fact_id}.
       cross_period_modelo_not_applicable:
-        message: 'Cross-period dependencies on source modelos outside the taxpayer’s
-          filing scope were classified as not applicable: %{source_modelos}.'
+        message: 'Cross-period dependencies on source modelos the taxpayer does not
+          file were scoped out as not applicable: {modelos}. For suffered retenciones,
+          enter the income-certificate amount with --binding KEY=VALUE, not --casilla.
+          KEY=VALUE means the binding id on the left of one equals sign and the value
+          on the right. For mutually exclusive pagos fraccionados, confirm the activity-estimation
+          regime on the profile.'
         next_action: 'Use `aeat app modelo bindings list --missing` to identify the
           retenciones binding. Supply the certificate amount with --binding KEY=VALUE
           where applicable: put the binding id on the left of one equals sign and
@@ -1169,10 +1176,10 @@ application:
           a mutually exclusive pago-fraccionado modelo was scoped out.'
       cross_period_non_official_local_chain:
         message: 'cross-period carry used a same-year locally-filed prior period with
-          no external AEAT evidence: modelo=%{source_modelo} year=%{source_filing_year}
-          period=%{source_period} origin=%{origin_code}. The within-year chain is
-          admitted for local export, but the carried value is locally evidenced (app_filing),
-          not AEAT-evidenced; file every period with AEAT externally.'
+          no external AEAT evidence: modelo=%{source_modelo} year=%{filing_year} period=%{period}
+          origin=%{origin}. The within-year chain is admitted for local export, but
+          the carried value is locally evidenced (app_filing), not AEAT-evidenced;
+          file every period with AEAT externally.'
         next_action: Export and file each period with AEAT externally, then upgrade
           the local chain with official evidence; use `aeat app live justificante
           pull` when live access is available, or `aeat app modelo filing-record import
@@ -1180,18 +1187,13 @@ application:
           CASILLA=VALUE` / `aeat app modelo reconcile file WORK_UNIT_ID --file PATH`
           for evidence you already hold.
       cross_period_operator_declared_suppression: 'cross-period dependency scoped
-        out as no-prior-obligation (pre-activity): modelo=%{source_modelo} year=%{source_filing_year}
-        period=%{source_period} origin=%{origin_code}. The period falls strictly before
-        the operator-declared activity-start date %{activity_start_date}, which has
-        not yet been corroborated against an AEAT censo snapshot.'
+        out as no-prior-obligation (pre-activity): modelo=%{modelo} year=%{year} period=%{period}
+        origin=%{origin}. The period falls strictly before the operator-declared activity-start
+        date %{activity_start_date}, which has not yet been corroborated against an
+        AEAT censo snapshot.'
       cross_period_operator_declared_suppression_next_action: Confirm the recorded
         activity-start date is correct. Once the live AEAT censo read is available,
         the date will be corroborated and this advisory cleared.
-      cross_period_zero_value_previous_filing: The zero-value prior filing for modelo
-        %{source_modelo}, filing year %{source_filing_year}, period %{source_period}
-        satisfies the dependency for modelo %{target_modelo}, period %{target_period}.
-      cuota_less_ledger_row_base_missing: Ledger transaction %{transaction_id} uses
-        IVA category %{iva_category_code} but has no taxable base.
       dt12a_reduccion_antiquity_next_action: Confirm more than two years have passed
         since the first aportacion to the plan de pensiones, unless the prestacion
         is by invalidez (ley-35-2006:dt-12).
@@ -1208,25 +1210,14 @@ application:
         = %{ingreso_value} but casilla %{reduccion_id} (reduccion trabajo) is zero.
         If this income includes a plan-de-pensiones capital rescate with pre-31-Dec-2006
         aportaciones, a 40%% DT 12a LIRPF reduccion may apply.'
-      foreign_asset_redeclaration: Modelo %{modelo_code} position %{position_key}
-        in group %{group_code} increased from %{prior_value_eur} EUR to %{current_value_eur}
-        EUR and exceeds the redeclaration increase threshold of %{redeclaration_increase_threshold_eur}
-        EUR.
       iva_wallet_next_action: Review the IVA wallet reconciliation decision before
         verifying or exporting this Modelo 303.
-      iva_wallet_precondition_failed: IVA-wallet condition %{condition_id} failed
-        under scenario %{scenario_id}.
-      ledger_snapshot_drift: 'The ledger snapshot for modelo %{modelo}, filing year
-        %{filing_year}, period %{period} changed after calculation: %{changed_count}
-        changed and %{removed_count} removed rows out of %{anchored} anchored rows.'
-      m210_agrupacion_renta_invalid: Modelo %{modelo_id} rent grouping is invalid
-        for period %{period_code} (%{error_type}).
       m210_baseline_tipo_deferred:
         next_action: No baseline rate is published in the bundled corpus for tipo_renta=%{tipo_renta}.
           Set %{requirements} to claim the applicable Convenio rate, or wait for the
           baseline corpus to incorporate this row.
-      m210_convenio_lob_advisory: 'M210_CONVENIO_LOB_ADVISORY: the Convenio Espana-%{country_code}
-        (%{document_id}) treaty rate has been applied for tipo_renta=%{tipo_renta_code}.
+      m210_convenio_lob_advisory: 'M210_CONVENIO_LOB_ADVISORY: the Convenio Espana-%{cc}
+        (%{document_id}) treaty rate has been applied for tipo_renta=%{tipo_renta}.
         Treaty relief is available only to a genuine beneficial owner resident in
         that state who satisfies the treaty''s limitation-of-benefits conditions;
         confirm eligibility before relying on this rate.'
@@ -1238,10 +1229,6 @@ application:
         next_action: Author a Convenio España-{cc} treaty override row for tipo_renta={tipo_renta}
           under registry/aeat/treaties/, or clear {requirements} to fall back to the
           TRLIRNR Art 25 baseline.
-      m210_rate_unavailable: The Modelo 210 tax rate could not be resolved (%{reason_code}).
-      m303_m349_intracom_reconciliation_mismatch: 'The intra-community totals for
-        filing year %{filing_year}, period %{period_code} do not reconcile: Modelo
-        303=%{m303_total}, Modelo 349=%{m349_total}, difference=%{gap}.'
       madrid_nacimiento_adopcion_eligibility_advisory: 'MADRID_NACIMIENTO_ADOPCION_ELIGIBILITY_ADVISORY:
         casilla %{casilla_id} is zero but the filer has a Madrid nacimiento/adopcion-eligible
         descendant (weighted count %{weighted_count}). Auto-trigger is fail-closed
@@ -1295,8 +1282,6 @@ application:
       modelo_202_base_imponible_previa_determinada_cuando_resultado_positivo: Resultado
         contable is positive but the base imponible previa is zero; review the base
         imponible determination.
-      modelo_202_modality_incomplete: The Modelo 202 modality is incomplete; profile
-        fact %{profile_fact_id} must be resolved.
       modelo_210_2025_inmobiliaria_implica_base_imponible: Tipo de renta is inmobiliaria
         but the base imponible is zero; review the imputed-rent base imponible determination
         (valor catastral, coeficiente, días de imputación).
@@ -1321,29 +1306,12 @@ application:
         boxes before filing.
       modelo_714_cuota_integra_implica_total_cuota_integra: Cuota íntegra is positive
         but total cuota íntegra is zero; review the total cuota íntegra transcription.
-      objective_estimation_exclusion_threshold_exceeded: 'Modelo %{modelo_id}, filing
-        year %{filing_year}: declared value %{declared} for profile fact %{profile_field_id}
-        exceeds threshold %{threshold} from parameter %{parameter_id}.'
-      oss_evidence_missing: The Modelo 369 OSS source is declared but no persisted
-        OSS evidence is available.
-      oss_source_unrouted: 'OSS observations remain outside the calculation bindings:
-        %{source_ref_count} identified sources and %{unidentified_source_count} unidentified
-        sources.'
-      pulled_filing_casilla_mismatch: 'Filed casilla %{casilla_number} differs from
-        the computed value for filing year %{filing_year}, period %{period_code}:
-        computed=%{computed_value}, filed=%{filed_value}, kind=%{mismatch_kind}.'
-      registry_advisory_predicate_fired: Registry advisory predicate %{predicate_id}
-        applies to this verification.
       registry_snapshot_unresolved: registry snapshot for modelo=%{modelo} filing_year=%{filing_year}
         period=%{period} could not be resolved
       representante_fiscal_required:
         next_action: Designate a fiscal representative in Spain by setting {requirements}
           via the `aeat config profile edit` command. TRLIRNR Art. 10 requires non-EEA
           IRNR filers to declare a representative for AEAT communications.
-      transaction_evidence_missing_deductible: A deductible IVA source lacks the required
-        transaction evidence (source=%{source_kind_code}, reason=%{diagnostic_reason_code}).
-      transaction_evidence_missing_output: An output IVA source has no attached transaction
-        evidence (source=%{source_kind_code}, reason=%{diagnostic_reason_code}).
     iva_wallet:
       correct_no_record: No seeded compensation record exists for %{filing_year}/%{period}.
         Run 'aeat app modelo iva-wallet seed' first; correction overwrites an existing
@@ -2873,8 +2841,7 @@ cli:
           file it'
         amend_wizard_kind_help: complementaria adds to the prior tax due; sustitutiva
           fully replaces the prior filing; rectificativa is the unified correction
-          mechanism for modelos whose orden implements it (e.g. Modelo 303 from filing
-          year 2023).
+          mechanism for modelos whose orden implements it (e.g. Modelo 303 from 2023-y-siguientes).
         amend_wizard_kind_prompt: Amendment kind (%{choices})
         amend_wizard_no_corrections: No casilla was corrected; the amendment wizard
           needs at least one changed value.
@@ -2949,7 +2916,7 @@ cli:
         create_quiet_help: Skip human-readable confirmation output; the --format json
           envelope, notices, and exit code are unaffected.
         create_reused: Existing work unit returned (idempotent on modelo/year/period/revision);
-          nothing new was created.
+          nothing new was created. Rename it with `aeat app modelo work rename`.
         create_reused_name_match: Existing work unit returned (idempotent on modelo/year/period/revision);
           nothing new was created. The supplied --name matches the stored name.
         create_reused_renamed: Existing work unit returned (idempotent on modelo/year/period/revision);
@@ -2996,8 +2963,6 @@ cli:
           AEAT
         file_idempotent_noop: 'Idempotent no-op: calculation revision %{calculation_revision_id}
           is already filed; returned the existing filing record without changes.'
-        file_internal_disambiguation: This filing is internal only and is not submitted
-          to the AEAT.
         formula_operation_calculation: calculation
         formula_operation_clamp: limit
         formula_operation_conditional: conditional
@@ -3018,8 +2983,14 @@ cli:
         history_help: Show every lifecycle event for one work unit
         history_next_action_summary: Review this work unit's current state.
         history_work_unit_id_help: Work unit id whose lifecycle you want to view
+        id_is_work_unit_not_calc_revision_natural: This id is a work-unit-id, but
+          verify/file need a calculation-revision-id. For the common path, run 'aeat
+          app modelo work calculate --modelo %{modelo} --year %{year} --period %{period}'
+          and then rerun verify/file for that same modelo/year/period. Exact ids remain
+          available as an advanced escape hatch.
         id_selector_ambiguous: 'The displayed work id {selector} matches more than
-          one active work unit.
+          one active work unit. Use the full 64-character work-unit id from the candidates
+          below.
 
           {candidates}'
         include_discarded_help: Include discarded work units in the listing (excluded
@@ -3027,15 +2998,15 @@ cli:
         invalid_binding_key: '--binding key is not a valid BindingId (lowercase alphanumeric
           plus . _ : - separators, max 128 chars)'
         invalid_calculation_revision_id: calculation_revision_id must be a 64-character
-          lowercase hexadecimal SHA-256 digest; received {value}.
+          lowercase hex string (SHA-256 digest)
         invalid_casilla_key: '--casilla key is not a valid CasillaId (alphanumeric
           plus . _ : - separators, max 64 chars)'
         invalid_relation_key: The --relation key is not a valid RelationId. Use a
           lowercase kebab or dotted relation id.
-        invalid_revision_selector: 'The revision selector {value} is invalid. Permitted
-          values: {choices}.'
-        invalid_work_unit_id: work_unit_id must be a 64-character lowercase hexadecimal
-          SHA-256 digest; received {value}.
+        invalid_revision_selector: Unknown revision selector {value}; choose one of
+          {choices}.
+        invalid_work_unit_id: work_unit_id must be a 64-character lowercase hex string
+          (SHA-256 digest)
         invalid_work_unit_lookup_id: work_unit_id must be a lowercase hexadecimal
           SHA-256 id or unambiguous prefix
         kv_empty_key_error: '{flag} key must not be empty; got {spec}.'
@@ -3043,9 +3014,8 @@ cli:
           is a key-value entry: put the field name on the left of one equals sign
           and the value on the right. Received {spec}.'
         list_help: List registered work units, optionally filtered by profile
-        list_no_active_work_summary: No active work unit is available to continue.
-        list_selection_required_summary: Choose one work unit before continuing.
-        list_single_status_summary: One work unit is available for inspection.
+        list_next_action_summary: Inspect one work unit's full state before drafting
+          or recalculating it.
         m184_socio_handoff_message: 'Régimen de atribución de rentas: socio %{nif}
           (%{nombre}) receives an attributed base of %{importe} EUR (%{porcentaje}%
           share). On the socio''s own workspace, record it as attribution_received
@@ -3178,10 +3148,8 @@ cli:
           work-unit id. Prefer --modelo --year --period.
         revision_help: Stable id of the targeted registry modelo revision; run `aeat
           app modelo describe MODELO` to see the available revision ids.
-        revision_selector_ambiguous: 'More than one calculation revision matches this
-          selector.
-
-          {candidates}'
+        revision_selector_ambiguous: More than one calculation revision matches this
+          selector. Choose one explicitly. {candidates}
         revision_selector_help: Revision selector.
         revision_show_help: Show one stored calculation revision's persisted casilla
           values (without recomputing)
@@ -3226,13 +3194,13 @@ cli:
           and --sal-capital-social.
         sal_reserva_not_decimal: '--sal-* values must be decimal amounts; received:
           {value}. Use a dot decimal separator with no thousands grouping, e.g. 1234.56.'
-        selector_ambiguous: 'More than one active work unit matches this modelo, year,
-          and period.
-
-          {candidates}'
+        selector_ambiguous: More than one active work unit matches this modelo/year/period.
+          Choose a registry revision or pass an explicit work-unit id. {candidates}
         selector_not_found: No active work unit matches this modelo, year, and period.
-        selector_revision_conflict: An active work unit already exists for this modelo,
-          year, and period with registry revision {existing_revision}; requested {requested_revision}.
+          Run aeat app modelo work create first.
+        selector_revision_conflict: An active work unit already exists for this modelo/year/period
+          with registry revision {existing_revision}; requested {requested_revision}.
+          Resume the existing work unit, discard it explicitly, or pass an exact id.
         set_not_decimal: The --set value must be a decimal; got {value}.
         set_override_help: Corrected casilla value with CASILLA_ID=DECIMAL syntax
           (repeatable; at least one required)
@@ -3241,9 +3209,9 @@ cli:
         state_label_presentado: filed
         state_label_presentado_supersedido: superseded filing
         state_label_verificado_completo: verified complete
-        status_calculate_summary: This active work unit can be calculated.
-        status_discarded_summary: This work unit is discarded, so calculation is unavailable.
         status_help: Show the metadata of one work unit
+        status_next_action_summary: Draft or recalculate this work unit, then verify
+          the resulting draft.
         verify_help: Verify a draft calculation revision against the verified-complete
           contract
         verify_idempotent_noop: 'Idempotent no-op: calculation revision %{calculation_revision_id}
@@ -7248,6 +7216,10 @@ llm:
         acknowledgement.'
       mint_refused: 'Refused: off-host reading of taxpayer evidence is not permitted
         for this invocation.'
+      refused: Read the document on this host by routing it at the LOCAL provider,
+        or, if an off-host read is intended, set CADRUMO_EVIDENCE_CLOUD_UPLOAD_PERMITTED=true
+        and acknowledge this specific read. A gestor deployment (CADRUMO_EVIDENCE_GESTOR_MODE=true)
+        cannot be acknowledged at all.
 mcp:
   call:
     timeout: '''{command}'' exceeded the {tier}-tier time limit ({seconds}s) and was
@@ -65266,10 +65238,6 @@ modelo:
           iva-resultado-regimen-general:
             help: null
             label: General regime result
-      construct:
-        modelo-303-iva-autoliquidacion:
-          field:
-            title: null
       field:
         official_name: null
         title: null
@@ -65655,1570 +65623,518 @@ modelo:
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: null
               label: Deductible input VAT on domestic current transactions
+          construct:
+            modelo-303-iva-autoliquidacion:
+              field:
+                title: null
           field:
             label: null
-        '2023':
+        2023-y-siguientes:
           casilla:
             '01':
-              help: null
-              label: null
+              help: 'Box 01: taxable base for accrued VAT under the general regime
+                super-reduced 4% rate.'
+              label: Accrued VAT, general regime super-reduced 4% rate - taxable base
             '02':
-              help: null
-              label: null
+              help: 'Box 02: rate percentage for accrued VAT under the general regime
+                super-reduced 4% rate.'
+              label: Accrued VAT, general regime super-reduced 4% rate - rate percentage
             '03':
-              help: null
-              label: null
+              help: 'Box 03: VAT amount for accrued VAT under the general regime super-reduced
+                4% rate.'
+              label: Accrued VAT, general regime super-reduced 4% rate - VAT amount
             '04':
-              help: null
-              label: null
+              help: 'Box 04: taxable base for accrued VAT under the general regime
+                reduced 10% rate.'
+              label: Accrued VAT, general regime reduced 10% rate - taxable base
             '05':
-              help: null
-              label: null
+              help: 'Box 05: rate percentage for accrued VAT under the general regime
+                reduced 10% rate.'
+              label: Accrued VAT, general regime reduced 10% rate - rate percentage
             '06':
-              help: null
-              label: null
+              help: 'Box 06: VAT amount for accrued VAT under the general regime reduced
+                10% rate.'
+              label: Accrued VAT, general regime reduced 10% rate - VAT amount
             '07':
-              help: null
-              label: null
+              help: 'Box 07: taxable base for accrued VAT under the general regime
+                standard 21% rate.'
+              label: Accrued VAT, general regime standard 21% rate - taxable base
             08:
-              help: null
-              label: null
+              help: 'Box 08: rate percentage for accrued VAT under the general regime
+                standard 21% rate.'
+              label: Accrued VAT, general regime standard 21% rate - rate percentage
             09:
-              help: null
-              label: null
+              help: 'Box 09: VAT amount for accrued VAT under the general regime standard
+                21% rate.'
+              label: Accrued VAT, general regime standard 21% rate - VAT amount
             '10':
-              help: null
-              label: null
+              help: 'Box 10: base for accrued VAT on intra-Community acquisitions
+                of goods and services.'
+              label: Accrued VAT on intra-Community acquisitions of goods and services
+                - base
             '108':
-              help: null
-              label: null
+              help: 'Box 108: other adjustments in a corrective return for cases determined
+                by discrepancy with administrative criterion.'
+              label: Corrective return - other adjustments in cases determined by
+                discrepancy with administrative criterion
             '109':
-              help: null
-              label: null
+              help: 'Box 109: refunds agreed by AEAT for previous self-assessments
+                for the same year and period.'
+              label: Result - refunds agreed by AEAT for previous self-assessments
+                for the same year and period
             '11':
-              help: null
-              label: null
+              help: 'Box 11: VAT amount for accrued VAT on intra-Community acquisitions
+                of goods and services.'
+              label: Accrued VAT on intra-Community acquisitions of goods and services
+                - VAT amount
             '111':
-              help: null
-              label: null
+              help: 'Box 111: correction amount reported in a corrective return.'
+              label: Corrective return - correction amount
             '12':
-              help: null
-              label: null
+              help: 'Box 12: base for accrued VAT on other reverse-charge transactions
+                excluding intra-Community acquisitions.'
+              label: Accrued VAT on other reverse-charge transactions excluding intra-Community
+                acquisitions - base
             '120':
-              help: null
-              label: null
+              help: 'Box 120: additional information on transactions not subject to
+                VAT due to place-of-supply rules, excluding box 123.'
+              label: Additional information - transactions not subject due to place-of-supply
+                rules, excluding box 123
             '122':
-              help: null
-              label: null
+              help: 'Box 122: additional information on transactions subject to reverse
+                charge.'
+              label: Additional information - transactions subject to reverse charge
             '123':
-              help: null
-              label: null
+              help: 'Box 123: additional information on transactions not subject under
+                place-of-supply rules for one-stop shop special schemes.'
+              label: Additional information - transactions not subject under one-stop
+                shop special schemes place-of-supply rules
             '124':
-              help: null
-              label: null
+              help: 'Box 124: additional information on transactions subject under
+                one-stop shop special schemes.'
+              label: Additional information - transactions subject under one-stop
+                shop special schemes
             '13':
-              help: null
-              label: null
+              help: 'Box 13: VAT amount for accrued VAT on other reverse-charge transactions
+                excluding intra-Community acquisitions.'
+              label: Accrued VAT on other reverse-charge transactions excluding intra-Community
+                acquisitions - VAT amount
             '14':
-              help: null
-              label: null
+              help: 'Box 14: taxable base for changes to accrued VAT taxable bases
+                and amounts.'
+              label: Changes to accrued VAT taxable bases and amounts - taxable base
             '15':
-              help: null
-              label: null
+              help: 'Box 15: VAT amount for changes to accrued VAT taxable bases and
+                amounts.'
+              label: Changes to accrued VAT taxable bases and amounts - VAT amount
             '150':
-              help: null
-              label: null
+              help: 'Box 150: taxable base for accrued VAT under the general regime
+                new rate tier 1.'
+              label: Accrued VAT, general regime new rate tier 1 - taxable base
             '151':
-              help: null
-              label: null
+              help: 'Box 151: rate percentage for accrued VAT under the general regime
+                new rate tier 1.'
+              label: Accrued VAT, general regime new rate tier 1 - rate percentage
             '152':
-              help: null
-              label: null
+              help: 'Box 152: VAT amount for accrued VAT under the general regime
+                new rate tier 1.'
+              label: Accrued VAT, general regime new rate tier 1 - VAT amount
             '153':
-              help: null
-              label: null
+              help: 'Box 153: taxable base for accrued VAT under the general regime
+                new rate tier 2.'
+              label: Accrued VAT, general regime new rate tier 2 - taxable base
             '154':
-              help: null
-              label: null
+              help: 'Box 154: rate percentage for accrued VAT under the general regime
+                new rate tier 2.'
+              label: Accrued VAT, general regime new rate tier 2 - rate percentage
             '155':
-              help: null
-              label: null
+              help: 'Box 155: VAT amount for accrued VAT under the general regime
+                new rate tier 2.'
+              label: Accrued VAT, general regime new rate tier 2 - VAT amount
             '156':
-              help: null
-              label: null
+              help: 'Box 156: taxable base for the 0.5% equivalence surcharge.'
+              label: Equivalence surcharge at 0.5% - taxable base
             '157':
-              help: null
-              label: null
+              help: 'Box 157: rate percentage for the 0.5% equivalence surcharge.'
+              label: Equivalence surcharge at 0.5% - rate percentage
             '158':
-              help: null
-              label: null
+              help: 'Box 158: surcharge amount for the 0.5% equivalence surcharge.'
+              label: Equivalence surcharge at 0.5% - surcharge amount
             '16':
-              help: null
-              label: null
+              help: 'Box 16: taxable base for the 1.0% equivalence surcharge.'
+              label: Equivalence surcharge at 1.0% - taxable base
             '165':
-              help: null
-              label: null
+              help: 'Box 165: taxable base for accrued VAT under the general regime
+                2% rate from 2024.'
+              label: Accrued VAT, general regime 2% rate from 2024 - taxable base
             '166':
-              help: null
-              label: null
+              help: 'Box 166: rate percentage for accrued VAT under the general regime
+                2% rate from 2024.'
+              label: Accrued VAT, general regime 2% rate from 2024 - rate percentage
             '167':
-              help: null
-              label: null
+              help: 'Box 167: VAT amount for accrued VAT under the general regime
+                2% rate from 2024.'
+              label: Accrued VAT, general regime 2% rate from 2024 - VAT amount
             '168':
-              help: null
-              label: null
+              help: 'Box 168: taxable base for the new equivalence surcharge rate
+                from 2024.'
+              label: New equivalence surcharge rate from 2024 - taxable base
             '169':
-              help: null
-              label: null
+              help: 'Box 169: rate percentage for the new equivalence surcharge rate
+                from 2024.'
+              label: New equivalence surcharge rate from 2024 - rate percentage
             '17':
-              help: null
-              label: null
+              help: 'Box 17: rate percentage for the 1.0% equivalence surcharge.'
+              label: Equivalence surcharge at 1.0% - rate percentage
             '170':
-              help: null
-              label: null
+              help: 'Box 170: surcharge amount for the new equivalence surcharge rate
+                from 2024.'
+              label: New equivalence surcharge rate from 2024 - surcharge amount
             '18':
-              help: null
-              label: null
+              help: 'Box 18: surcharge amount for the 1.0% equivalence surcharge.'
+              label: Equivalence surcharge at 1.0% - surcharge amount
             '19':
-              help: null
-              label: null
+              help: 'Box 19: taxable base for the 1.4% equivalence surcharge.'
+              label: Equivalence surcharge at 1.4% - taxable base
             '20':
-              help: null
-              label: null
+              help: 'Box 20: rate percentage for the 1.4% equivalence surcharge.'
+              label: Equivalence surcharge at 1.4% - rate percentage
             '21':
-              help: null
-              label: null
+              help: 'Box 21: surcharge amount for the 1.4% equivalence surcharge.'
+              label: Equivalence surcharge at 1.4% - surcharge amount
             '22':
-              help: null
-              label: null
+              help: 'Box 22: taxable base for the 5.2% equivalence surcharge.'
+              label: Equivalence surcharge at 5.2% - taxable base
             '23':
-              help: null
-              label: null
+              help: 'Box 23: rate percentage for the 5.2% equivalence surcharge.'
+              label: Equivalence surcharge at 5.2% - rate percentage
             '24':
-              help: null
-              label: null
+              help: 'Box 24: surcharge amount for the 5.2% equivalence surcharge.'
+              label: Equivalence surcharge at 5.2% - surcharge amount
             '25':
-              help: null
-              label: null
+              help: 'Box 25: taxable base for changes to equivalence surcharge bases
+                and amounts.'
+              label: Changes to equivalence surcharge bases and amounts - taxable
+                base
             '26':
-              help: null
-              label: null
+              help: 'Box 26: surcharge amount for changes to equivalence surcharge
+                bases and amounts.'
+              label: Changes to equivalence surcharge bases and amounts - surcharge
+                amount
             '27':
-              help: null
-              label: null
+              help: 'Box 27: total accrued VAT amount.'
+              label: Total accrued VAT amount
             '28':
-              help: null
-              label: null
+              help: 'Box 28: base for deductible VAT on domestic current transactions.'
+              label: Deductible VAT on domestic current transactions - base
             '29':
-              help: null
-              label: null
+              help: 'Box 29: VAT amount for deductible VAT on domestic current transactions.'
+              label: Deductible VAT on domestic current transactions - VAT amount
             '30':
-              help: null
-              label: null
+              help: 'Box 30: base for deductible VAT on domestic capital goods.'
+              label: Deductible VAT on domestic capital goods - base
             '31':
-              help: null
-              label: null
+              help: 'Box 31: VAT amount for deductible VAT on domestic capital goods.'
+              label: Deductible VAT on domestic capital goods - VAT amount
             '32':
-              help: null
-              label: null
+              help: 'Box 32: base for deductible VAT on imports of current goods.'
+              label: Deductible VAT on imports of current goods - base
             '33':
-              help: null
-              label: null
+              help: 'Box 33: VAT amount for deductible VAT on imports of current goods.'
+              label: Deductible VAT on imports of current goods - VAT amount
             '34':
-              help: null
-              label: null
+              help: 'Box 34: base for deductible VAT on imports of capital goods.'
+              label: Deductible VAT on imports of capital goods - base
             '35':
-              help: null
-              label: null
+              help: 'Box 35: VAT amount for deductible VAT on imports of capital goods.'
+              label: Deductible VAT on imports of capital goods - VAT amount
             '36':
-              help: null
-              label: null
+              help: 'Box 36: base for deductible VAT on intra-Community acquisitions
+                of current goods.'
+              label: Deductible VAT on intra-Community acquisitions of current goods
+                - base
             '37':
-              help: null
-              label: null
+              help: 'Box 37: VAT amount for deductible VAT on intra-Community acquisitions
+                of current goods.'
+              label: Deductible VAT on intra-Community acquisitions of current goods
+                - VAT amount
             '38':
-              help: null
-              label: null
+              help: 'Box 38: base for deductible VAT on intra-Community acquisitions
+                of capital goods.'
+              label: Deductible VAT on intra-Community acquisitions of capital goods
+                - base
             '39':
-              help: null
-              label: null
+              help: 'Box 39: VAT amount for deductible VAT on intra-Community acquisitions
+                of capital goods.'
+              label: Deductible VAT on intra-Community acquisitions of capital goods
+                - VAT amount
             '40':
-              help: null
-              label: null
+              help: 'Box 40: base for deduction corrections.'
+              label: Deduction corrections - base
             '41':
-              help: null
-              label: null
+              help: 'Box 41: VAT amount for deduction corrections.'
+              label: Deduction corrections - VAT amount
             '42':
-              help: null
-              label: null
+              help: 'Box 42: compensation amount under the special agriculture, livestock
+                and fisheries scheme.'
+              label: Special agriculture, livestock and fisheries scheme compensations
+                - amount
             '43':
-              help: null
-              label: null
+              help: 'Box 43: VAT amount for capital goods regularization.'
+              label: Capital goods regularization - amount
             '44':
-              help: null
-              label: null
+              help: 'Box 44: VAT amount for pro rata regularization using the final
+                percentage.'
+              label: Pro rata regularization using final percentage - amount
             '45':
-              help: null
-              label: null
+              help: 'Box 45: total deductible VAT amount.'
+              label: Total deductible amount
             '47':
-              help: null
-              label: null
+              help: 'Box 47: sum of payments on account for all activities under the
+                simplified regime in Q1, Q2, or Q3.'
+              label: Simplified regime, Q1-Q3 - sum of payments on account for all
+                activities
             '48':
-              help: null
-              label: null
+              help: 'Box 48: sum of amounts derived from all simplified-regime activities
+                in Q4.'
+              label: Simplified regime, Q4 - sum of derived amounts for all activities
             '49':
-              help: null
-              label: null
+              help: 'Box 49: sum of payments on account made during the year under
+                the simplified regime in Q4.'
+              label: Simplified regime, Q4 - sum of payments on account made in the
+                year
             '50':
-              help: null
-              label: null
+              help: 'Box 50: simplified-regime Q4 result calculated as box 48 minus
+                box 49.'
+              label: Simplified regime, Q4 - result ([48] - [49])
             '51':
-              help: null
-              label: null
+              help: 'Box 51: accrued VAT on intra-Community acquisitions of goods
+                under the simplified regime.'
+              label: Simplified regime - accrued VAT on intra-Community acquisitions
+                of goods
             '52':
-              help: null
-              label: null
+              help: 'Box 52: accrued VAT on supplies of fixed assets under the simplified
+                regime.'
+              label: Simplified regime - accrued VAT on supplies of fixed assets
             '53':
-              help: null
-              label: null
+              help: 'Box 53: accrued VAT under the simplified regime from transactions
+                subject to reverse charge.'
+              label: Simplified regime - accrued VAT from reverse-charge transactions
             '54':
-              help: null
-              label: null
+              help: 'Box 54: total resulting VAT amount under the simplified regime.'
+              label: Simplified regime - total resulting amount
             '55':
-              help: null
-              label: null
+              help: 'Box 55: deductible VAT on acquisition or import of fixed assets
+                under the simplified regime.'
+              label: Simplified regime - deductible VAT on acquisition or import of
+                fixed assets
             '56':
-              help: null
-              label: null
+              help: 'Box 56: deductible VAT from capital goods regularization under
+                the simplified regime.'
+              label: Simplified regime - deductible VAT from capital goods regularization
             '57':
-              help: null
-              label: null
+              help: 'Box 57: total deductible VAT under the simplified regime, calculated
+                as box 55 plus box 56.'
+              label: Simplified regime - total deductible VAT ([55] + [56])
             '58':
-              help: null
-              label: null
+              help: 'Box 58: simplified-regime result calculated as box 54 minus box
+                57.'
+              label: Simplified regime result ([54] - [57])
             '59':
-              help: null
-              label: null
+              help: 'Box 59: additional information on intra-Community supplies of
+                goods and services.'
+              label: Additional information - intra-Community supplies of goods and
+                services
             '60':
-              help: null
-              label: null
+              help: 'Box 60: additional information on exports and assimilated transactions.'
+              label: Additional information - exports and assimilated transactions
             '62':
-              help: null
-              label: null
+              help: 'Box 62: taxable base for cash accounting supplies accrued under
+                Article 75 LIVA.'
+              label: Additional information - cash accounting supplies accrued under
+                Article 75 LIVA - taxable base
             '63':
-              help: null
-              label: null
+              help: 'Box 63: VAT amount for cash accounting supplies accrued under
+                Article 75 LIVA.'
+              label: Additional information - cash accounting supplies accrued under
+                Article 75 LIVA - VAT amount
             '64':
-              help: null
-              label: null
+              help: 'Box 64: sum of results, calculated as box 46 plus box 58 plus
+                box 76.'
+              label: Result - sum of results ([46] + [58] + [76])
             '65':
-              help: null
-              label: null
+              help: 'Box 65: percentage of the result attributable to the State Tax
+                Administration.'
+              label: Result - percentage attributable to the State Tax Administration
             '66':
-              help: null
-              label: null
+              help: 'Box 66: amount attributable to the State Tax Administration,
+                calculated as box 64 times box 65 divided by 100.'
+              label: Result - amount attributable to the State Tax Administration
+                ([64] x [65] / 100)
             '68':
-              help: null
-              label: null
+              help: 'Box 68: annual regularization result for joint taxation.'
+              label: Result - joint taxation annual regularization result
             '70':
-              help: null
-              label: null
+              help: 'Box 70: amounts payable from previous self-assessments for the
+                same year and period.'
+              label: Result - amounts payable from previous self-assessments for the
+                same year and period
             '71':
-              help: null
-              label: null
+              help: 'Box 71: final result calculated as box 69 minus box 70 plus box
+                109.'
+              label: Final result ([69] - [70] + [109])
             '74':
-              help: null
-              label: null
+              help: 'Box 74: taxable base for acquisitions under the cash accounting
+                scheme.'
+              label: Additional information - cash accounting acquisitions - taxable
+                base
             '75':
-              help: null
-              label: null
+              help: 'Box 75: VAT amount for acquisitions under the cash accounting
+                scheme.'
+              label: Additional information - cash accounting acquisitions - VAT amount
             '76':
-              help: null
-              label: null
+              help: 'Box 76: result adjustment for regularization under Article 80.Five.5
+                LIVA.'
+              label: Result - regularization under Article 80.Five.5 LIVA
             '77':
-              help: null
-              label: null
+              help: 'Box 77: import VAT assessed by Customs that is pending payment.'
+              label: Result - import VAT assessed by Customs pending payment
             modulos-iva-1-unidades:
               help: null
-              label: null
+              label: 'Módulo 1 (Employed staff): number of units'
             modulos-iva-2-unidades:
               help: null
-              label: null
+              label: 'Módulo 2 (activity-specific unit: distance travelled, vehicle
+                load or premises floor area): number of units'
             modulos-iva-3-unidades:
               help: null
-              label: null
+              label: 'Módulo 3 (activity-specific unit: electricity or other energy
+                consumption): number of units'
             modulos-iva-cuota-derivada:
               help: null
-              label: null
+              label: Tax liability under the simplified regime (the greater of net
+                tax due after deductibles/flat-rate reduction, or the minimum tax
+                liability)
             modulos-iva-cuota-devengada:
               help: null
-              label: null
+              label: Tax due on ordinary transactions (Σ módulo units × annual tax
+                due per unit)
             modulos-iva-epigrafe:
               help: null
-              label: null
+              label: IAE heading of the activity under the simplified VAT regime (módulos)
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
-              label: null
+              help: Tax year to which the self-assessment refers.
+              label: Self-assessment tax year
             x-chim6r1ee1in4qbfchng:
-              help: null
-              label: null
+              help: 'Quarterly period for the self-assessment: 1Q, 2Q, 3Q, or 4Q.'
+              label: Quarterly period
             x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushec9gn6p8:
-              help: null
-              label: null
+              help: Taxable base for self-supply by a property developer, based on
+                construction cost.
+              label: Taxable base for property developer self-supply
             x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushecdqmut31:
-              help: null
-              label: null
+              help: VAT amount for property developer self-supply, calculated at 21%
+                of the taxable base.
+              label: VAT amount for property developer self-supply
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
-              help: null
-              label: null
+              help: Deductible self-assessed VAT on domestic transactions subject
+                to reverse charge.
+              label: Deductible reverse-charge VAT on domestic transactions
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
-              help: null
-              label: null
+              help: Accrued self-assessed VAT on domestic transactions subject to
+                reverse charge.
+              label: Accrued reverse-charge VAT on domestic transactions
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
-              help: null
-              label: null
+              help: Self-assessed VAT amount on intra-Community acquisitions under
+                the reverse-charge rules.
+              label: Reverse-charge VAT amount on intra-Community acquisitions
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
-              help: null
-              label: null
+              help: Deductible self-assessed VAT on intra-Community acquisitions of
+                goods and services.
+              label: Deductible reverse-charge VAT on intra-Community acquisitions
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
-              help: null
-              label: null
+              help: Accrued self-assessed VAT on intra-Community acquisitions of goods
+                and services.
+              label: Accrued reverse-charge VAT on intra-Community acquisitions
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
-              help: null
-              label: null
+              help: Add up the self-charged taxable base accrued on intra-Community
+                acquisitions.
+              label: Taxable base of accrued reverse-charge VAT on intra-Community
+                acquisitions
             x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
-              help: null
-              label: null
+              help: VAT amounts pending from prior periods that are applied in this
+                period.
+              label: Prior-period offsets applied in this period
             x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
-              help: null
-              label: null
+              help: VAT offset balance available to carry forward after this period.
+              label: Offset balance available at period end
             x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
-              help: null
-              label: null
+              help: VAT offset balance generated by this period's self-assessment.
+              label: Offset balance generated in this period
             x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
-              help: null
-              label: null
+              help: VAT amounts to offset that remain pending from prior periods.
+              label: Amounts to offset pending from prior periods
             x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
-              help: null
-              label: null
+              help: Prior-period VAT offsets that remain pending for later periods.
+              label: Prior-period offsets pending for later periods
             x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
-              help: null
-              label: null
+              help: Total deductible VAT amount, including domestic input VAT and
+                deductible reverse-charge VAT.
+              label: Total deductible VAT amount
             x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
-              help: null
-              label: null
+              help: Total accrued VAT amount, including output VAT and applicable
+                reverse-charge VAT.
+              label: Total accrued VAT amount
             x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
-              help: null
-              label: null
+              help: General pro rata percentage calculated from deductible-right turnover
+                over total turnover.
+              label: General pro rata percentage
             x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
-              help: null
-              label: null
+              help: Annual transaction volume that gives the right to deduct VAT.
+              label: Annual turnover giving deduction rights
             x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
-              help: null
-              label: null
+              help: Total annual transaction volume used for the general pro rata
+                calculation.
+              label: Total annual turnover
             x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
-              help: null
-              label: null
+              help: VAT adjustment for capital goods under the investment-goods regularization
+                rules.
+              label: Capital goods adjustment
             x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
-              help: null
-              label: null
+              help: Total output VAT calculated at the standard 21% rate.
+              label: Output VAT amount at the standard rate (21%)
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
-              help: null
-              label: null
+              help: Total output VAT calculated at the reduced 10% rate.
+              label: Output VAT amount at the reduced rate (10%)
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
-              help: null
-              label: null
+              help: Transitional box under RD-ley 4/2024 for the reduced rate, coexisting
+                with the ordinary 10% reduced rate.
+              label: Output VAT amount at the transitional reduced rate (5%/7.5%)
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
-              help: null
-              label: null
+              help: Total output VAT calculated at the super-reduced 4% rate.
+              label: Output VAT amount at the super-reduced rate (4%)
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
-              help: null
-              label: null
+              help: Transitional box under RD-ley 4/2024 for the super-reduced rate,
+                coexisting with the ordinary 4% super-reduced rate.
+              label: Output VAT amount at the transitional super-reduced rate (2%)
             x-d5r62bjiclpnar3kc5i6u:
-              help: null
-              label: null
+              help: Result of the self-assessment after the Modelo 303 adjustment
+                formula.
+              label: Self-assessment result
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
-              help: null
-              label: null
+              help: General regime result calculated as accrued VAT minus deductible
+                VAT.
+              label: General regime result
             x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
-              help: null
-              label: null
+              help: Deductible input VAT borne on imports of current goods.
+              label: Deductible input VAT on imports of current goods
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
-              help: null
-              label: null
-          field:
-            label: null
-        2024-desde-09-y-3t:
-          casilla:
-            '01':
-              help: null
-              label: null
-            '02':
-              help: null
-              label: null
-            '03':
-              help: null
-              label: null
-            '04':
-              help: null
-              label: null
-            '05':
-              help: null
-              label: null
-            '06':
-              help: null
-              label: null
-            '07':
-              help: null
-              label: null
-            08:
-              help: null
-              label: null
-            09:
-              help: null
-              label: null
-            '10':
-              help: null
-              label: null
-            '108':
-              help: null
-              label: null
-            '109':
-              help: null
-              label: null
-            '11':
-              help: null
-              label: null
-            '111':
-              help: null
-              label: null
-            '12':
-              help: null
-              label: null
-            '120':
-              help: null
-              label: null
-            '122':
-              help: null
-              label: null
-            '123':
-              help: null
-              label: null
-            '124':
-              help: null
-              label: null
-            '13':
-              help: null
-              label: null
-            '14':
-              help: null
-              label: null
-            '15':
-              help: null
-              label: null
-            '150':
-              help: null
-              label: null
-            '151':
-              help: null
-              label: null
-            '152':
-              help: null
-              label: null
-            '153':
-              help: null
-              label: null
-            '154':
-              help: null
-              label: null
-            '155':
-              help: null
-              label: null
-            '156':
-              help: null
-              label: null
-            '157':
-              help: null
-              label: null
-            '158':
-              help: null
-              label: null
-            '16':
-              help: null
-              label: null
-            '165':
-              help: null
-              label: null
-            '166':
-              help: null
-              label: null
-            '167':
-              help: null
-              label: null
-            '168':
-              help: null
-              label: null
-            '169':
-              help: null
-              label: null
-            '17':
-              help: null
-              label: null
-            '170':
-              help: null
-              label: null
-            '18':
-              help: null
-              label: null
-            '19':
-              help: null
-              label: null
-            '20':
-              help: null
-              label: null
-            '21':
-              help: null
-              label: null
-            '22':
-              help: null
-              label: null
-            '23':
-              help: null
-              label: null
-            '24':
-              help: null
-              label: null
-            '25':
-              help: null
-              label: null
-            '26':
-              help: null
-              label: null
-            '27':
-              help: null
-              label: null
-            '28':
-              help: null
-              label: null
-            '29':
-              help: null
-              label: null
-            '30':
-              help: null
-              label: null
-            '31':
-              help: null
-              label: null
-            '32':
-              help: null
-              label: null
-            '33':
-              help: null
-              label: null
-            '34':
-              help: null
-              label: null
-            '35':
-              help: null
-              label: null
-            '36':
-              help: null
-              label: null
-            '37':
-              help: null
-              label: null
-            '38':
-              help: null
-              label: null
-            '39':
-              help: null
-              label: null
-            '40':
-              help: null
-              label: null
-            '41':
-              help: null
-              label: null
-            '42':
-              help: null
-              label: null
-            '43':
-              help: null
-              label: null
-            '44':
-              help: null
-              label: null
-            '45':
-              help: null
-              label: null
-            '47':
-              help: null
-              label: null
-            '48':
-              help: null
-              label: null
-            '49':
-              help: null
-              label: null
-            '50':
-              help: null
-              label: null
-            '51':
-              help: null
-              label: null
-            '52':
-              help: null
-              label: null
-            '53':
-              help: null
-              label: null
-            '54':
-              help: null
-              label: null
-            '55':
-              help: null
-              label: null
-            '56':
-              help: null
-              label: null
-            '57':
-              help: null
-              label: null
-            '58':
-              help: null
-              label: null
-            '59':
-              help: null
-              label: null
-            '60':
-              help: null
-              label: null
-            '62':
-              help: null
-              label: null
-            '63':
-              help: null
-              label: null
-            '64':
-              help: null
-              label: null
-            '65':
-              help: null
-              label: null
-            '66':
-              help: null
-              label: null
-            '68':
-              help: null
-              label: null
-            '70':
-              help: null
-              label: null
-            '71':
-              help: null
-              label: null
-            '74':
-              help: null
-              label: null
-            '75':
-              help: null
-              label: null
-            '76':
-              help: null
-              label: null
-            '77':
-              help: null
-              label: null
-            modulos-iva-1-unidades:
-              help: null
-              label: null
-            modulos-iva-2-unidades:
-              help: null
-              label: null
-            modulos-iva-3-unidades:
-              help: null
-              label: null
-            modulos-iva-cuota-derivada:
-              help: null
-              label: null
-            modulos-iva-cuota-devengada:
-              help: null
-              label: null
-            modulos-iva-epigrafe:
-              help: null
-              label: null
-            x-chim6r1ecll6asj3d5hmiro:
-              help: null
-              label: null
-            x-chim6r1ee1in4qbfchng:
-              help: null
-              label: null
-            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushec9gn6p8:
-              help: null
-              label: null
-            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushecdqmut31:
-              help: null
-              label: null
-            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
-              help: null
-              label: null
-            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
-              help: null
-              label: null
-            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
-              help: null
-              label: null
-            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
-              help: null
-              label: null
-            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
-              help: null
-              label: null
-            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
-              help: null
-              label: null
-            x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
-              help: null
-              label: null
-            x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
-              help: null
-              label: null
-            x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
-              help: null
-              label: null
-            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
-              help: null
-              label: null
-            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
-              help: null
-              label: null
-            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
-              help: null
-              label: null
-            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
-              help: null
-              label: null
-            x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
-              help: null
-              label: null
-            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
-              help: null
-              label: null
-            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
-              help: null
-              label: null
-            x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
-              help: null
-              label: null
-            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
-              help: null
-              label: null
-            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
-              help: null
-              label: null
-            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
-              help: null
-              label: null
-            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
-              help: null
-              label: null
-            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
-              help: null
-              label: null
-            x-d5r62bjiclpnar3kc5i6u:
-              help: null
-              label: null
-            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
-              help: null
-              label: null
-            x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
-              help: null
-              label: null
-            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
-              help: null
-              label: null
-          field:
-            label: null
-        2024-hasta-08-y-2t:
-          casilla:
-            '01':
-              help: null
-              label: null
-            '02':
-              help: null
-              label: null
-            '03':
-              help: null
-              label: null
-            '04':
-              help: null
-              label: null
-            '05':
-              help: null
-              label: null
-            '06':
-              help: null
-              label: null
-            '07':
-              help: null
-              label: null
-            08:
-              help: null
-              label: null
-            09:
-              help: null
-              label: null
-            '10':
-              help: null
-              label: null
-            '108':
-              help: null
-              label: null
-            '109':
-              help: null
-              label: null
-            '11':
-              help: null
-              label: null
-            '111':
-              help: null
-              label: null
-            '12':
-              help: null
-              label: null
-            '120':
-              help: null
-              label: null
-            '122':
-              help: null
-              label: null
-            '123':
-              help: null
-              label: null
-            '124':
-              help: null
-              label: null
-            '13':
-              help: null
-              label: null
-            '14':
-              help: null
-              label: null
-            '15':
-              help: null
-              label: null
-            '150':
-              help: null
-              label: null
-            '151':
-              help: null
-              label: null
-            '152':
-              help: null
-              label: null
-            '153':
-              help: null
-              label: null
-            '154':
-              help: null
-              label: null
-            '155':
-              help: null
-              label: null
-            '156':
-              help: null
-              label: null
-            '157':
-              help: null
-              label: null
-            '158':
-              help: null
-              label: null
-            '16':
-              help: null
-              label: null
-            '165':
-              help: null
-              label: null
-            '166':
-              help: null
-              label: null
-            '167':
-              help: null
-              label: null
-            '168':
-              help: null
-              label: null
-            '169':
-              help: null
-              label: null
-            '17':
-              help: null
-              label: null
-            '170':
-              help: null
-              label: null
-            '18':
-              help: null
-              label: null
-            '19':
-              help: null
-              label: null
-            '20':
-              help: null
-              label: null
-            '21':
-              help: null
-              label: null
-            '22':
-              help: null
-              label: null
-            '23':
-              help: null
-              label: null
-            '24':
-              help: null
-              label: null
-            '25':
-              help: null
-              label: null
-            '26':
-              help: null
-              label: null
-            '27':
-              help: null
-              label: null
-            '28':
-              help: null
-              label: null
-            '29':
-              help: null
-              label: null
-            '30':
-              help: null
-              label: null
-            '31':
-              help: null
-              label: null
-            '32':
-              help: null
-              label: null
-            '33':
-              help: null
-              label: null
-            '34':
-              help: null
-              label: null
-            '35':
-              help: null
-              label: null
-            '36':
-              help: null
-              label: null
-            '37':
-              help: null
-              label: null
-            '38':
-              help: null
-              label: null
-            '39':
-              help: null
-              label: null
-            '40':
-              help: null
-              label: null
-            '41':
-              help: null
-              label: null
-            '42':
-              help: null
-              label: null
-            '43':
-              help: null
-              label: null
-            '44':
-              help: null
-              label: null
-            '45':
-              help: null
-              label: null
-            '47':
-              help: null
-              label: null
-            '48':
-              help: null
-              label: null
-            '49':
-              help: null
-              label: null
-            '50':
-              help: null
-              label: null
-            '51':
-              help: null
-              label: null
-            '52':
-              help: null
-              label: null
-            '53':
-              help: null
-              label: null
-            '54':
-              help: null
-              label: null
-            '55':
-              help: null
-              label: null
-            '56':
-              help: null
-              label: null
-            '57':
-              help: null
-              label: null
-            '58':
-              help: null
-              label: null
-            '59':
-              help: null
-              label: null
-            '60':
-              help: null
-              label: null
-            '62':
-              help: null
-              label: null
-            '63':
-              help: null
-              label: null
-            '64':
-              help: null
-              label: null
-            '65':
-              help: null
-              label: null
-            '66':
-              help: null
-              label: null
-            '68':
-              help: null
-              label: null
-            '70':
-              help: null
-              label: null
-            '71':
-              help: null
-              label: null
-            '74':
-              help: null
-              label: null
-            '75':
-              help: null
-              label: null
-            '76':
-              help: null
-              label: null
-            '77':
-              help: null
-              label: null
-            modulos-iva-1-unidades:
-              help: null
-              label: null
-            modulos-iva-2-unidades:
-              help: null
-              label: null
-            modulos-iva-3-unidades:
-              help: null
-              label: null
-            modulos-iva-cuota-derivada:
-              help: null
-              label: null
-            modulos-iva-cuota-devengada:
-              help: null
-              label: null
-            modulos-iva-epigrafe:
-              help: null
-              label: null
-            x-chim6r1ecll6asj3d5hmiro:
-              help: null
-              label: null
-            x-chim6r1ee1in4qbfchng:
-              help: null
-              label: null
-            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushec9gn6p8:
-              help: null
-              label: null
-            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushecdqmut31:
-              help: null
-              label: null
-            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
-              help: null
-              label: null
-            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
-              help: null
-              label: null
-            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
-              help: null
-              label: null
-            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
-              help: null
-              label: null
-            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
-              help: null
-              label: null
-            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
-              help: null
-              label: null
-            x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
-              help: null
-              label: null
-            x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
-              help: null
-              label: null
-            x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
-              help: null
-              label: null
-            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
-              help: null
-              label: null
-            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
-              help: null
-              label: null
-            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
-              help: null
-              label: null
-            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
-              help: null
-              label: null
-            x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
-              help: null
-              label: null
-            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
-              help: null
-              label: null
-            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
-              help: null
-              label: null
-            x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
-              help: null
-              label: null
-            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
-              help: null
-              label: null
-            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
-              help: null
-              label: null
-            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
-              help: null
-              label: null
-            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
-              help: null
-              label: null
-            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
-              help: null
-              label: null
-            x-d5r62bjiclpnar3kc5i6u:
-              help: null
-              label: null
-            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
-              help: null
-              label: null
-            x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
-              help: null
-              label: null
-            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
-              help: null
-              label: null
-          field:
-            label: null
-        '2025':
-          casilla:
-            '01':
-              help: null
-              label: null
-            '02':
-              help: null
-              label: null
-            '03':
-              help: null
-              label: null
-            '04':
-              help: null
-              label: null
-            '05':
-              help: null
-              label: null
-            '06':
-              help: null
-              label: null
-            '07':
-              help: null
-              label: null
-            08:
-              help: null
-              label: null
-            09:
-              help: null
-              label: null
-            '10':
-              help: null
-              label: null
-            '108':
-              help: null
-              label: null
-            '109':
-              help: null
-              label: null
-            '11':
-              help: null
-              label: null
-            '111':
-              help: null
-              label: null
-            '12':
-              help: null
-              label: null
-            '120':
-              help: null
-              label: null
-            '122':
-              help: null
-              label: null
-            '123':
-              help: null
-              label: null
-            '124':
-              help: null
-              label: null
-            '13':
-              help: null
-              label: null
-            '14':
-              help: null
-              label: null
-            '15':
-              help: null
-              label: null
-            '150':
-              help: null
-              label: null
-            '151':
-              help: null
-              label: null
-            '152':
-              help: null
-              label: null
-            '153':
-              help: null
-              label: null
-            '154':
-              help: null
-              label: null
-            '155':
-              help: null
-              label: null
-            '156':
-              help: null
-              label: null
-            '157':
-              help: null
-              label: null
-            '158':
-              help: null
-              label: null
-            '16':
-              help: null
-              label: null
-            '165':
-              help: null
-              label: null
-            '166':
-              help: null
-              label: null
-            '167':
-              help: null
-              label: null
-            '168':
-              help: null
-              label: null
-            '169':
-              help: null
-              label: null
-            '17':
-              help: null
-              label: null
-            '170':
-              help: null
-              label: null
-            '18':
-              help: null
-              label: null
-            '19':
-              help: null
-              label: null
-            '20':
-              help: null
-              label: null
-            '21':
-              help: null
-              label: null
-            '22':
-              help: null
-              label: null
-            '23':
-              help: null
-              label: null
-            '24':
-              help: null
-              label: null
-            '25':
-              help: null
-              label: null
-            '26':
-              help: null
-              label: null
-            '27':
-              help: null
-              label: null
-            '28':
-              help: null
-              label: null
-            '29':
-              help: null
-              label: null
-            '30':
-              help: null
-              label: null
-            '31':
-              help: null
-              label: null
-            '32':
-              help: null
-              label: null
-            '33':
-              help: null
-              label: null
-            '34':
-              help: null
-              label: null
-            '35':
-              help: null
-              label: null
-            '36':
-              help: null
-              label: null
-            '37':
-              help: null
-              label: null
-            '38':
-              help: null
-              label: null
-            '39':
-              help: null
-              label: null
-            '40':
-              help: null
-              label: null
-            '41':
-              help: null
-              label: null
-            '42':
-              help: null
-              label: null
-            '43':
-              help: null
-              label: null
-            '44':
-              help: null
-              label: null
-            '45':
-              help: null
-              label: null
-            '47':
-              help: null
-              label: null
-            '48':
-              help: null
-              label: null
-            '49':
-              help: null
-              label: null
-            '50':
-              help: null
-              label: null
-            '51':
-              help: null
-              label: null
-            '52':
-              help: null
-              label: null
-            '53':
-              help: null
-              label: null
-            '54':
-              help: null
-              label: null
-            '55':
-              help: null
-              label: null
-            '56':
-              help: null
-              label: null
-            '57':
-              help: null
-              label: null
-            '58':
-              help: null
-              label: null
-            '59':
-              help: null
-              label: null
-            '60':
-              help: null
-              label: null
-            '62':
-              help: null
-              label: null
-            '63':
-              help: null
-              label: null
-            '64':
-              help: null
-              label: null
-            '65':
-              help: null
-              label: null
-            '66':
-              help: null
-              label: null
-            '68':
-              help: null
-              label: null
-            '70':
-              help: null
-              label: null
-            '71':
-              help: null
-              label: null
-            '74':
-              help: null
-              label: null
-            '75':
-              help: null
-              label: null
-            '76':
-              help: null
-              label: null
-            '77':
-              help: null
-              label: null
-            modulos-iva-1-unidades:
-              help: null
-              label: null
-            modulos-iva-2-unidades:
-              help: null
-              label: null
-            modulos-iva-3-unidades:
-              help: null
-              label: null
-            modulos-iva-cuota-derivada:
-              help: null
-              label: null
-            modulos-iva-cuota-devengada:
-              help: null
-              label: null
-            modulos-iva-epigrafe:
-              help: null
-              label: null
-            x-chim6r1ecll6asj3d5hmiro:
-              help: null
-              label: null
-            x-chim6r1ee1in4qbfchng:
-              help: null
-              label: null
-            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushec9gn6p8:
-              help: null
-              label: null
-            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushecdqmut31:
-              help: null
-              label: null
-            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
-              help: null
-              label: null
-            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
-              help: null
-              label: null
-            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
-              help: null
-              label: null
-            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
-              help: null
-              label: null
-            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
-              help: null
-              label: null
-            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
-              help: null
-              label: null
-            x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
-              help: null
-              label: null
-            x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
-              help: null
-              label: null
-            x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
-              help: null
-              label: null
-            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
-              help: null
-              label: null
-            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
-              help: null
-              label: null
-            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
-              help: null
-              label: null
-            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
-              help: null
-              label: null
-            x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
-              help: null
-              label: null
-            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
-              help: null
-              label: null
-            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
-              help: null
-              label: null
-            x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
-              help: null
-              label: null
-            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
-              help: null
-              label: null
-            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
-              help: null
-              label: null
-            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
-              help: null
-              label: null
-            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
-              help: null
-              label: null
-            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
-              help: null
-              label: null
-            x-d5r62bjiclpnar3kc5i6u:
-              help: null
-              label: null
-            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
-              help: null
-              label: null
-            x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
-              help: null
-              label: null
-            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
-              help: null
-              label: null
+              help: Deductible input VAT borne on domestic current transactions.
+              label: Deductible input VAT on domestic current transactions
+          construct:
+            modelo-303-iva-autoliquidacion:
+              field:
+                title: null
           field:
             label: null
         2026-y-siguientes:
@@ -67554,15 +66470,18 @@ modelo:
               label: Additional information - cash accounting supplies accrued under
                 Article 75 LIVA - VAT amount
             '64':
-              help: null
-              label: null
+              help: 'Box 64: sum of results, calculated as box 46 plus box 58 plus
+                box 76.'
+              label: Result - sum of results ([46] + [58] + [76])
             '65':
               help: 'Box 65: percentage of the result attributable to the State Tax
                 Administration.'
               label: Result - percentage attributable to the State Tax Administration
             '66':
-              help: null
-              label: null
+              help: 'Box 66: amount attributable to the State Tax Administration,
+                calculated as box 64 times box 65 divided by 100.'
+              label: Result - amount attributable to the State Tax Administration
+                ([64] x [65] / 100)
             '68':
               help: 'Box 68: annual regularization result for joint taxation.'
               label: Result - joint taxation annual regularization result
@@ -67572,8 +66491,9 @@ modelo:
               label: Result - amounts payable from previous self-assessments for the
                 same year and period
             '71':
-              help: null
-              label: null
+              help: 'Box 71: final result calculated as box 69 minus box 70 plus box
+                109.'
+              label: Final result ([69] - [70] + [109])
             '74':
               help: 'Box 74: taxable base for acquisitions under the cash accounting
                 scheme.'
@@ -67592,22 +66512,27 @@ modelo:
               label: Result - import VAT assessed by Customs pending payment
             modulos-iva-1-unidades:
               help: null
-              label: null
+              label: 'Módulo 1 (Employed staff): number of units'
             modulos-iva-2-unidades:
               help: null
-              label: null
+              label: 'Módulo 2 (activity-specific unit: distance travelled, vehicle
+                load or premises floor area): number of units'
             modulos-iva-3-unidades:
               help: null
-              label: null
+              label: 'Módulo 3 (activity-specific unit: electricity or other energy
+                consumption): number of units'
             modulos-iva-cuota-derivada:
               help: null
-              label: null
+              label: Tax liability under the simplified regime (the greater of net
+                tax due after deductibles/flat-rate reduction, or the minimum tax
+                liability)
             modulos-iva-cuota-devengada:
               help: null
-              label: null
+              label: Tax due on ordinary transactions (Σ módulo units × annual tax
+                due per unit)
             modulos-iva-epigrafe:
               help: null
-              label: null
+              label: IAE heading of the activity under the simplified VAT regime (módulos)
             x-chim6r1ecll6asj3d5hmiro:
               help: Tax year to which the self-assessment refers.
               label: Self-assessment tax year
@@ -67615,11 +66540,13 @@ modelo:
               help: 'Quarterly period for the self-assessment: 1Q, 2Q, 3Q, or 4Q.'
               label: Quarterly period
             x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushec9gn6p8:
-              help: null
-              label: null
+              help: Taxable base for self-supply by a property developer, based on
+                construction cost.
+              label: Taxable base for property developer self-supply
             x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushecdqmut31:
-              help: null
-              label: null
+              help: VAT amount for property developer self-supply, calculated at 21%
+                of the taxable base.
+              label: VAT amount for property developer self-supply
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
               help: Deductible self-assessed VAT on domestic transactions subject
                 to reverse charge.
@@ -67702,8 +66629,9 @@ modelo:
                 coexisting with the ordinary 4% super-reduced rate.
               label: Output VAT amount at the transitional super-reduced rate (2%)
             x-d5r62bjiclpnar3kc5i6u:
-              help: null
-              label: null
+              help: Result of the self-assessment after the Modelo 303 adjustment
+                formula.
+              label: Self-assessment result
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
               help: General regime result calculated as accrued VAT minus deductible
                 VAT.
@@ -67714,6 +66642,10 @@ modelo:
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: Deductible input VAT borne on domestic current transactions.
               label: Deductible input VAT on domestic current transactions
+          construct:
+            modelo-303-iva-autoliquidacion:
+              field:
+                title: null
           field:
             label: null
     '308':

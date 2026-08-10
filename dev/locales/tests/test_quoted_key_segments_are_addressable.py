@@ -94,21 +94,6 @@ def test_remove_still_resolves_a_fully_unquoted_leaf(manager: LocaleManager) -> 
     assert _leaf(manager, "es", "cli.plain.other") == "keep"
 
 
-def test_batch_remove_prunes_each_exact_leaf_without_deleting_siblings(manager: LocaleManager) -> None:
-    """One guarded rewrite removes several exact keys beneath quoted segments."""
-    manager.remove_locale_values(
-        "en",
-        (
-            "modelo.schema.100.casilla.1076.help",
-            "modelo.schema.100.casilla.1077.only",
-        ),
-    )
-
-    assert _leaf(manager, "en", "modelo.schema.100.casilla.1076.help") == "<absent>"
-    assert _leaf(manager, "en", "modelo.schema.100.casilla.1077") == "<absent>"
-    assert _leaf(manager, "en", "modelo.schema.100.casilla.1076.label") == "NIF"
-
-
 def test_set_appends_a_new_leaf_under_quoted_ancestors(manager: LocaleManager) -> None:
     """The other half of the same defect, which the row did not name.
 

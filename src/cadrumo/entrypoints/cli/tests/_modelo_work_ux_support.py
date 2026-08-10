@@ -10,7 +10,6 @@ import json
 from ....application.wizard import _catalogue as _wizard_catalogue
 from ....application.wizard import _persistence as _wizard_persistence
 from ....core.aggregation import BindingSourceKind
-from ....core.resources import resources
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.modelo_cli import create_modelo_work_unit_via_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
@@ -128,7 +127,7 @@ def _create_m303_work_unit() -> str:
         modelo="303",
         filing_year=2025,
         period="1T",
-        revision=str(resources().modelos.authority.snapshot("303", filing_year=2025, period="1T").revision.id),
+        revision="2023-y-siguientes",
     )
 
 

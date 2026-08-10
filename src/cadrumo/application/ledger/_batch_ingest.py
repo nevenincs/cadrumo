@@ -44,6 +44,7 @@ from typing import TYPE_CHECKING, Final, Literal, get_args, override
 from pydantic import BaseModel, Field
 
 from ...core import LOCAL_TRANSPORT_LABEL, STRICT_FROZEN_CONFIG
+from ...core.identity import ContentDigest
 from ...domain.iva import InvoiceKind
 
 if TYPE_CHECKING:
@@ -131,7 +132,7 @@ class BatchItemResult(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    content_address: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
+    content_address: ContentDigest
     identity: str = Field(min_length=1)
     direction: InvoiceKind
     source_name: str = ""

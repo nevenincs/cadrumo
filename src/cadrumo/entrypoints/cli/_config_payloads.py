@@ -39,7 +39,7 @@ from ...application.workflow import ProfileHealthStatus, ProfileSource
 from ...core import HEX_PATTERN_64, Period
 from ...core.config import SecretStoreBackend
 from ...core.errors import BaseSeverity
-from ...core.identity import BucketId, ProfileId
+from ...core.identity import BucketId, ContentDigest, ProfileId
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction, register_schema
 from ...core.time import validate_utc_aware
 from ...domain.user_profile import UserProfileStatus
@@ -1158,7 +1158,7 @@ class ConfigProfileArchiveExportResult(OutputSchema):
     profile_id: str
     display_name: str
     out: str
-    manifest_digest: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
+    manifest_digest: ContentDigest
     recovery_wrap_present: bool
 
 
@@ -1174,7 +1174,7 @@ class ConfigProfileArchiveImportResult(OutputSchema):
     """
 
     profile_id: BucketId
-    manifest_digest: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
+    manifest_digest: ContentDigest
     archive_schema_version: int = Field(ge=1)
 
 
@@ -1190,7 +1190,7 @@ class ConfigProfileArchiveInspectResult(OutputSchema):
     """
 
     profile_id: BucketId
-    manifest_digest: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
+    manifest_digest: ContentDigest
     recovery_wrap_present: bool
     archive_schema_version: int = Field(ge=1)
     created_at: datetime

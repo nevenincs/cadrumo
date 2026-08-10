@@ -16,7 +16,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
-from ...core.identity import BucketId
+from ...core.identity import BucketId, ContentDigest
 from ...core.time import UtcInstant
 from ...domain.retention import RetentionFloorAssessment
 from ...domain.user_profile import UserProfileStatus
@@ -348,7 +348,7 @@ class ExportBucketResult(BaseModel):
 
     bucket_id: BucketId
     output_path: Path
-    manifest_digest: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
+    manifest_digest: ContentDigest
     recovery_wrap_present: bool
     occurred_at: UtcInstant
 
@@ -383,7 +383,7 @@ class ImportBucketResult(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
-    manifest_digest: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
+    manifest_digest: ContentDigest
     archive_schema_version: int = Field(ge=1)
     occurred_at: UtcInstant
 
@@ -416,7 +416,7 @@ class InspectBucketArchiveResult(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
-    manifest_digest: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
+    manifest_digest: ContentDigest
     recovery_wrap_present: bool
     archive_schema_version: int = Field(ge=1)
     created_at: UtcInstant

@@ -160,7 +160,7 @@ class TestExportExemptCasillasAreOutOfPdfScope:
     def _m303_revision() -> ModeloRevision:
         # Resolved from (modelo, filing year, period) rather than indexed by a
         # literal revision id. AEAT re-cuts revision layouts -- this modelo's
-        # a broad M303 revision was decomposed into four narrower revisions -- and
+        # "2023-y-siguientes" was decomposed into four narrower revisions -- and
         # a literal key dies the moment that happens, on a test whose subject is
         # unrelated to the re-cut.
         from ....domain.calculations.registry import bundled_authority

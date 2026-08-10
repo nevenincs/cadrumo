@@ -58,9 +58,9 @@ def test_complete_registry_tree_locales_compile_and_validate_cleanly() -> None:
         "Flag indicating if the entity is non-profit and subject to the Title II regime of Law 49/2002."
     )
 
-    # Verify Modelo 303's 2023 revision.
+    # Verify Modelo 303 (revision 2023-y-siguientes)
     m303 = modelos_by_id["303"]
-    rev303 = m303.revisions["2023"]
+    rev303 = m303.revisions["2023-y-siguientes"]
     casilla_303_gen = next(c for c in rev303.casillas if c.id == "iva.repercutido.general")
     assert casilla_303_gen.get_label("en") == "Output VAT amount at the standard rate (21%)"
     assert casilla_303_gen.get_label("ca") == "Quota IVA repercutit al tipus general (21%)"

@@ -214,7 +214,6 @@ class AssetsLedgerRepository:
                 raise AssetRecordError(
                     f"asset {asset.identifier!r} already exists",
                     context={"asset_id": asset.identifier},
-                    suggestion=None,
                     translated_message="adapters.persistence.profile.assets.errors.asset_already_exists",
                 )
             return AssetsLedgerDocument(assets=(*current.assets, asset))

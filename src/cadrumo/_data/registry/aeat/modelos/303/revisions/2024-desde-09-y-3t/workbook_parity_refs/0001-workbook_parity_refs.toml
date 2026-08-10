@@ -1,9 +1,0 @@
-[[revisions.2024-desde-09-y-3t.workbook_parity_refs]]
-id = "modelo-303-dr-2024-late"
-workbook_source = "aeat-dr-303-2024-late"
-fixture_id = "modelo-303-2024-late-record-design-layout"
-formula_coverage = "record_design_layout"
-runner_required = false
-tolerance = "0.00"
-legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2024-late"]
