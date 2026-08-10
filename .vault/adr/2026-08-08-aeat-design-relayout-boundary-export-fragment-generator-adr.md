@@ -1,17 +1,18 @@
 ---
 tags:
-  - '#adr'
-  - '#aeat-design-relayout-boundary'
+  - "#adr"
+  - "#aeat-design-relayout-boundary"
 date: '2026-08-08'
-modified: '2026-08-08'
-body_schema: 'body-v1'
-body_hash: 'sha256:1558801fd1ea4cad7f5abd2a4a3066a0334dc8c2c8c1d6b633bbf1e68be25ead'
 related:
-  - '[[2026-08-07-aeat-design-relayout-boundary-adr]]'
-  - '[[2026-08-08-aeat-design-relayout-boundary-plan]]'
-  - '[[2026-08-07-aeat-design-relayout-boundary-research]]'
+  - "[[2026-08-07-aeat-design-relayout-boundary-adr]]"
+  - "[[2026-08-08-aeat-design-relayout-boundary-plan]]"
+  - "[[2026-08-07-aeat-design-relayout-boundary-research]]"
+superseded_by: '2026-08-10-aeat-export-fragment-generator-authority-adr'
+modified: '2026-08-10'
+body_schema: 'body-v1'
+body_hash: 'sha256:b5d5f0bed44800627d3352180d55c2e1ff38f3dd21863c2779949129e7d43699'
 ---
-# `aeat-design-relayout-boundary` adr: `the export fragment tree is generated from the bundled diseno, never transcribed` | (**status:** `accepted`)
+# `aeat-design-relayout-boundary` adr: `the export fragment tree is generated from the bundled diseno, never transcribed` | (**status:** `superseded`)
 
 ## Problem Statement
 

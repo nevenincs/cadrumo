@@ -5,7 +5,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:6611359f4b7003a99ae1d6b1edd7c33d34bc6f363344f1914335bf02c33677aa'
+body_hash: 'sha256:2a0accdc15fcbb7a47b74025a0712888b7b0a81f6a481c98ed5aff2f992f0cdf'
 related:
   - "[[2026-08-09-cli-action-envelope-hardening-adr]]"
 ---
@@ -62,6 +62,15 @@ binding/conditionality/XOR/duplicate cases or perform an action-bearing
 cannot import the application models, these copied wire semantics could drift
 without the focused suite failing.
 
+Resolution: closed on 2026-08-10. The direct core suite now exercises
+duplicate evidence and arguments, failed-condition mismatch, missing evidence
+and fact references, exact value and type matching, resolved/missing binding
+shape, duplicate and inconsistent missing names, action/no-recovery XOR, and
+invalid conditionality. Full JSON-text envelope round trips cover both a
+resolved action with target and bindings and an explicit terminal no-recovery
+outcome. The tests instantiate production wire DTOs without importing or
+mirroring application models.
+
 ### downstream-suggestion-cutover | low | Legacy notice producers now fail at construction until later migration waves
 
 The intentional no-compatibility removal of `Notice.suggestion` has an exact
@@ -86,3 +95,8 @@ each producer and its readers/serialized expectations to resolved typed actions
 in its planned wave; do not reintroduce `suggestion`, accept reserved action
 keys in context, or add a compatibility adapter. The exact break remains
 construction-time Pydantic rejection at each unmigrated `Notice` producer.
+
+The medium recommendation is satisfied. Re-review verification passed 22
+focused tests, Ruff, and basedpyright with zero errors, warnings, or notes. The
+low 51-site planned cutover debt remains open unchanged; no compatibility field
+or action side channel was restored.

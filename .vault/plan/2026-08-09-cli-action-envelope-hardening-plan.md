@@ -4,7 +4,7 @@ tags:
   - '#cli-action-envelope-hardening'
 date: '2026-08-09'
 modified: '2026-08-10'
-body_hash: 'sha256:b4a5284b54d9b9cacabc0e0da5f7215b03b1ef48ce6370d876ea950695aa4d12'
+body_hash: 'sha256:4fe4925808516878d2fa454cc493f43c1f6b88af1e7d2d2f5fad8979faee0bb8'
 tier: L3
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
@@ -64,7 +64,7 @@ Define strict condition, evidence, action, binding, conditionality, and no-recov
 
 Resolve typed actions against the live command surface and project them consistently through envelope, manifest, and MCP contracts.
 
-- [ ] `W02.P04.S11` - Project resolved typed actions through notices while keeping localized text derived; `src/cadrumo/core/json_contract.py`.
+- [x] `W02.P04.S11` - Project resolved typed actions through notices while keeping localized text derived; `src/cadrumo/core/json_contract.py`.
 - [ ] `W02.P04.S12` - Carry resolved precondition actions in error envelopes and retire default suggestions as authority; `src/cadrumo/core/errors/_registry.py`.
 - [ ] `W02.P04.S13` - Add manifest action-profile records that reference condition and action identities without predicates; `src/cadrumo/application/operator_surface/_models.py`.
 - [ ] `W02.P04.S14` - Resolve catalogue actions against live command and input schemas and reject insufficient bindings; `src/cadrumo/application/operator_surface/_manifest.py`.
