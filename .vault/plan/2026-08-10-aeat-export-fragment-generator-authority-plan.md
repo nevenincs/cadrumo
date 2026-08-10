@@ -4,7 +4,7 @@ tags:
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
 modified: '2026-08-10'
-body_hash: 'sha256:080c3457e5a206c0dc1940d9fba54cf1ec692a62fbb348a8f289f43a19faca6b'
+body_hash: 'sha256:1f46533aa4908eaf859b2e99000c70599e1682efbf245633330c6ca3041cdf67'
 tier: L3
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
@@ -83,10 +83,6 @@ Cover every authority boundary with positive and negative real-behavior tests.
 
 Verify generated layouts as loadable complete structures and as real emitted filing bytes.
 
-- [ ] `W03.P06.S17` - Run extent, overlap, declared-total, applicability, and full-registry-load gates on generated trees; `src/cadrumo/domain/calculations/registry/tests/`.
-- [ ] `W03.P06.S18` - Prove representative fields land at official byte offsets across each regenerated revision boundary; `src/cadrumo/application/filing/tests/`.
-- [ ] `W03.P06.S34` - Prove complete real-source exact-anchor coverage including all 126 smaller fields, the separate variable-envelope composition contract before generation, strict loader equality, profile-bearing provenance, deterministic regeneration, and real emitted bytes; `dev/registry/tests/; src/cadrumo/domain/calculations/registry/tests/; src/cadrumo/application/filing/tests/`.
-
 ## Wave `W04` - regenerate and release relayout waves
 
 Use the proven authority to replace unverified trees, close the blocked split spans, and restore architecture-consistent model bindings.
@@ -97,7 +93,7 @@ Regenerate the highest-priority calculation-model revisions and discharge the he
 
 - [ ] `W04.P07.S19` - Author and review semantic maps for the required Modelo 303 design epochs; `dev/registry/mappings/modelo_303/`.
 - [ ] `W04.P07.S20` - Generate and validate complete Modelo 303 revision trees and provenance manifests, then delete every superseded manual export tree with no fallback; `src/cadrumo/_data/registry/aeat/modelos/303/revisions/`.
-- [ ] `W03.P06.S16` - Using one S19/S20 regenerated Modelo 303 revision, load the complete hash-verified bundled binary through `load_record_design_intermediate`, join the persisted reviewed semantic map and exact source-bound render profile, generate twice into two disjoint empty temporary registry roots, and assert identical complete member sets, bytes, provenance, and normalized loader semantics; then run `check_generated_export_tree` independently against the committed S20 target, prove published hashes remain unchanged, and prove source, map, profile, provenance, member drift, direct-revision, single-file, and obsolete-manifest artifacts refuse. Synthetic intermediates, freshly rendered comparison targets, legacy trees, and copied target bytes are forbidden as acceptance inputs; `dev/registry/tests/`.
+- [ ] `W04.P07.S16` - Using one S19/S20 regenerated Modelo 303 revision, load the complete hash-verified bundled binary through `load_record_design_intermediate`, join the persisted reviewed semantic map and exact source-bound render profile, generate twice into two disjoint empty temporary registry roots, and assert identical complete member sets, bytes, provenance, and normalized loader semantics. Then run `check_generated_export_tree` independently against the committed S20 target, prove published hashes remain unchanged, and prove source, map, profile, provenance, member drift, direct-revision, single-file, and obsolete-manifest artifacts refuse. Synthetic intermediates, freshly rendered comparison targets, legacy trees, and copied target bytes are forbidden as acceptance inputs; `dev/registry/tests/`.
 - [ ] `W04.P07.S21` - Generate and validate complete Modelo 390 revision trees and provenance manifests, then delete every superseded manual export tree with no fallback; `src/cadrumo/_data/registry/aeat/modelos/390/revisions/`.
 
 ### Phase `W04.P08` - campaign integration and release
@@ -107,6 +103,9 @@ Re-run relayout, binding, calculation, and export proofs before exact-scope deli
 - [ ] `W04.P08.S22` - Bootstrap explicit Modelo 200 semantic maps, generate and re-key its held revisions from provenance, then delete the superseded manual fragment tree; `src/cadrumo/_data/registry/aeat/modelos/200/revisions/`.
 - [ ] `W04.P08.S23` - Delete obsolete single-file and direct-revision registry loader compatibility paths and their migration tests after generated replacements land; `src/cadrumo/domain/calculations/registry/`.
 - [ ] `W04.P08.S24` - Replace record-design derivative fallbacks and print-only unmeasured outcomes with hard failures and structural no-legacy guards for generated targets; `src/cadrumo/domain/calculations/registry/tests/`.
+- [ ] `W04.P08.S17` - After S20, S21, S22, S23, and S24, run extent, overlap, declared-total, applicability, and complete-registry-load gates against every committed generated Modelo 303, 390, and 200 revision. Require profile-bearing provenance for every target and fail on an absent or unparseable official binary, absent fixed-record total, uncovered revision, geometry gap or overlap, applicability mismatch, loader inequality, manual or direct-revision tree, single-file surface, extracted derivative, or unmeasured outcome. Prove every gate non-vacuous with real filesystem mutations that make it red; `src/cadrumo/domain/calculations/registry/tests/`.
+- [ ] `W04.P08.S34` - Against the committed S22 Modelo 200 targets, prove exact hash-pinned real-source and persisted-map/profile coverage exactly once for every fixed-width anchor, including all 126 smaller fields. Prove the committed S30 variable-envelope contract precedes generation, excludes DP200000 from fixed-width members, and emits its open/body/close composition without truncation. Prove strict loader equality, profile-bearing provenance, deterministic generation into two disjoint empty roots, independent check mode against the committed target, and real emitted bytes. Synthetic intermediates, copied target bytes, legacy inputs, defaults, and derivative fallbacks are forbidden; `dev/registry/tests/; src/cadrumo/domain/calculations/registry/tests/; src/cadrumo/application/filing/tests/`.
+- [ ] `W04.P08.S18` - After S17 and S34, prove every regenerated Modelo 303, 390, and 200 revision boundary through production revision selection, calculation/binding resolution, typed observations, filing-draft assembly, and `export_draft`. For each boundary, assert a distinguishing declared value at its official byte offset and prove an adjacent-layout mutation reds. Across the modelo set, exercise manual, computed, and binding-backed fields. Prove M303 totals retain every standard, reduced, super-reduced, recargo, and autorepercutido tier, M390 annual totals reconcile with the quarterly model, and M200 binding-backed values reach their mapped fields. Directly injected scalar fixtures may not substitute for calculation or binding production; `src/cadrumo/application/filing/tests/`.
 - [ ] `W04.P08.S25` - Reconcile the relayout plan rows and superseded assumptions against generated and deletion evidence; `.vault/plan/2026-08-08-aeat-design-relayout-boundary-plan.md`.
 - [ ] `W04.P08.S27` - Run formal code review and resolve every high and medium finding; `.vault/audit/`.
 - [ ] `W04.P08.S28` - Run focused static, registry, binding, calculation, export, emitted-byte, and no-legacy gates and record exact proof boundaries; `src/cadrumo/`.
@@ -114,7 +113,7 @@ Re-run relayout, binding, calculation, and export proofs before exact-scope deli
 
 ## Parallelization
 
-Waves are ordered. Within Wave 1, parser-source modelling and semantic-map schema work may proceed in parallel after the shared intermediate representation is fixed. Within Wave 3, mutation-gate groups may run in parallel against the landed generator. Revision generation in Wave 4 is serialized per target tree to keep provenance and review boundaries exact. S16 is serially blocked by S19 and S20 and must execute in the order `S19 -> S20 -> S16`; the two-field `_intermediate`, `_semantic_map`, and `_write_isolated_generated_authority_tree` harness cannot satisfy its real-source acceptance contract.
+Waves are ordered. Within Wave 1, parser-source modelling and semantic-map schema work may proceed in parallel after the shared intermediate representation is fixed. Within Wave 3, mutation-gate groups may run in parallel against the landed generator. Revision generation in Wave 4 is serialized per target tree to keep provenance and review boundaries exact. S16 is serially blocked by S19 and S20 and must execute in the order `S19 -> S20 -> S16`; S21 follows the S16 proof for the next revision family. S22, S23, and S24 then establish the Modelo 200 target, delete obsolete loader compatibility, and hard-fail every derivative or unmeasured legacy path before repository-wide gates. The cross-model repository gate sequence is `S17 -> S34 -> S18`, followed by reconciliation, review, focused verification, and delivery in `S25 -> S27 -> S28 -> S29`. The complete serialized release sequence is `S19 -> S20 -> S16 -> S21 -> S22 -> S23 -> S24 -> S17 -> S34 -> S18 -> S25 -> S27 -> S28 -> S29`; the two-field `_intermediate`, `_semantic_map`, and `_write_isolated_generated_authority_tree` harness cannot satisfy the real-source acceptance contract.
 
 ## Verification
 
