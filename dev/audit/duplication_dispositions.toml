@@ -53,8 +53,8 @@
 
 [meta]
 generated_from = "just audit-duplication (jscpd@4.2.0)"
-observed_groups = 3
-duplicated_pct = "0.01"
+observed_groups = 0
+duplicated_pct = "0.00"
 files_analyzed = 1486
 source_root = "src/cadrumo"
 count_is_advisory = true
@@ -81,47 +81,10 @@ count_is_advisory = true
 #
 #   * Semantic duplication, per the banner at the top of this file.
 
-# `observed_groups` is jscpd's own inventory size for this scan: it equals the
-# sum of `cluster_owned` + `intentional` + `advisory_residue` below. The single
-# `actionable` group sits below jscpd's min-lines/min-tokens floor (see its
-# section) and is therefore outside that inventory -- the summary total is
-# `observed_groups` plus that one extra, tracked group.
+# `observed_groups` is jscpd's own inventory size for this scan and equals the
+# sum of `cluster_owned` + `intentional` + `advisory_residue` below.
 [summary]
 cluster_owned = 0
-intentional = 1
-advisory_residue = 2
-actionable = 1
-
-# ---------------------------------------------------------------------------
-# intentional: recorded intentional non-consolidation / constraint-divergent
-# ---------------------------------------------------------------------------
-
-[[group]]
-classification = "intentional"
-where = ["llm/_invoice_field_grounding.py [95-117]", "llm/_invoice_field_grounding.py [134-156]"]
-rationale = "ExtractedFieldAnchors is deliberately a mirror of ExtractedInvoiceFields, by its own docstring: the two carry different KINDS of claim -- a field holds the value in its declared form, an anchor holds the form the document actually printed -- and the whole anti-fabrication argument rests on being able to compare them field-by-field. Folding them into one model with an attribute-naming convention would erase that structural distinction."
-
-# ---------------------------------------------------------------------------
-# advisory-residue: low-value duplication left as visible debt (not a mandate)
-# ---------------------------------------------------------------------------
-
-[[group]]
-classification = "advisory-residue"
-where = ["application/modelo/_calculation_source_staging.py [180-193]", "application/modelo/_calculation_source_staging.py [258-271]"]
-rationale = "Repeated source-staging block within one module; low-value residue."
-
-[[group]]
-classification = "advisory-residue"
-where = ["application/diagnostics_run_health.py [620-626]", "application/diagnostics_run_health.py [712-719]"]
-rationale = "Repeated health-metric shaping block within one module; low-value residue."
-
-# ---------------------------------------------------------------------------
-# actionable: resolved in this commit (below jscpd's min-lines/min-tokens
-# floor, so absent from jscpd's own inventory, but a real substitutable
-# redeclaration confirmed by direct inspection)
-# ---------------------------------------------------------------------------
-
-[[group]]
-classification = "actionable"
-where = ["entrypoints/cli/_ledger_classify_cli.py [24-26]", "entrypoints/cli/_ledger_support.py [35-39]"]
-rationale = "_TransactionRepo Protocol (single `bucket_id: str` property) was redeclared byte-identically in _ledger_classify_cli.py. Substitutable (identical shape). Fixed: deleted the local redeclaration and imported the canonical protocol from ._ledger_support, matching _ledger.py."
+intentional = 0
+advisory_residue = 0
+actionable = 0
