@@ -217,9 +217,53 @@ def source_diagnostic_notice(diagnostic: CalculationSourceDiagnostic, *, code: s
         "relation_id": diagnostic.relation_id,
         "casilla_id": diagnostic.casilla_id,
         "source_ref": diagnostic.source_ref,
+        # Non-command remediation stays distinct from the diagnosis so machine
+        # consumers need not recover it from prose. Executable command identity
+        # remains reserved for Notice.action by the Notice validator.
+        "remedy": diagnostic.remedy,
     }
     context.update({key: value for key, value in optional.items() if value})
     return advisory_notice(code, diagnostic.message, context=context)
+
+
+def source_diagnostic_notice_text(notice: Notice) -> str:
+    """Render one source diagnosis together with its non-command remedy."""
+    context = notice.context or {}
+    remedy = context.get("remedy")
+    message = notice.message if remedy is None else f"{notice.message} {remedy}"
+    return tr(
+        "cli.app.modelo.work.calculate_source_advisory",
+        message=message,
+        default="ADVISORY: %{message}",
+    )
+
+
+def next_action_notice(
+    code: str,
+    message: str,
+    *,
+    suggestion: str | None = None,
+    context: dict[str, str] | None = None,
+) -> Notice:
+    """Project a post-action next-step hint onto the envelope notices channel.
+
+    The :attr:`NoticeSeverity.INFO` sibling of :func:`advisory_notice`: it turns
+    the "what should the operator run next" guidance emitted after a work-unit
+    read or a verification into an info-severity
+    :class:`~cadrumo.core.json_contract.Notice` whose ``suggestion`` is the
+    follow-on ``aeat ...`` command. The lifecycle read verbs (``work list`` /
+    ``work status`` / ``work history``) and ``work verify`` call this instead of
+    a bespoke ``next`` / ``suggestion`` payload field, so every next-step hint
+    rides the one uniform notices surface per the
+    ``aeat-cli-contract`` rule. Being ``info`` severity
+    it never flips the envelope ``status`` away from ``success``.
+    """
+    return Notice(
+        severity=NoticeSeverity.INFO,
+        code=code,
+        message=message,
+        context=context,
+    )
 
 
 def short_id(value: str | None) -> str | None:

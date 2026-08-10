@@ -55,7 +55,13 @@ _RevisionId = Annotated[
 ]
 _WorkUnitLookupId = Annotated[
     str,
-    StringConstraints(strip_whitespace=True, to_lower=True, pattern=r"^[0-9a-f]+$", min_length=1, max_length=64),
+    StringConstraints(
+        strip_whitespace=True,
+        to_lower=True,
+        pattern=r"^(?:[0-9a-f]{12}|[0-9a-f]{64})$",
+        min_length=12,
+        max_length=64,
+    ),
 ]
 
 
@@ -118,11 +124,14 @@ class ModeloWorkSelectorContradictionError(ModeloWorkSelectorError, ValueError):
 class ModeloWorkVisibleTargetAmbiguousError(ModeloWorkSelectorError):
     """Raised when a visible target matches multiple active work units."""
 
-    def __init__(self, candidates: tuple[ModeloWorkUnitCandidate, ...]) -> None:
+    def __init__(self, candidates: tuple[ModeloWorkUnitCandidate, ...], *, selector: str | None = None) -> None:
         self.candidates = candidates
-        super().__init__(
-            "modelo work target is ambiguous; choose a registry revision or explicit work_unit_id",
-        )
+        self.selector = selector
+        if selector is None:
+            message = "modelo work target is ambiguous; choose a registry revision or exact work_unit_id"
+        else:
+            message = f"modelo work id selector {selector!r} is ambiguous; use the full 64-character work_unit_id"
+        super().__init__(message)
 
 
 class ModeloWorkRevisionConflictError(ModeloWorkSelectorError):
@@ -378,6 +387,7 @@ def resolve_modelo_work_unit(
         if len(matches) > 1:
             raise ModeloWorkVisibleTargetAmbiguousError(
                 tuple(ModeloWorkUnitCandidate.from_work_unit(unit) for unit in matches),
+                selector=request.work_unit_id,
             )
         work_unit = matches[0]
         _validate_explicit_work_unit_matches_request(work_unit, request, resolved_bucket_id=bucket_id)

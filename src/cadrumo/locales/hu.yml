@@ -3107,8 +3107,8 @@ cli:
           Importált külső bizonyítékot (justificante / CSV-nyilvántartás / élő rögzítés)
           kell tartalmaznia.
         history_help: Egy munkaegység minden életciklus-eseményének megjelenítése.
-        history_next_action: A következő művelet kiválasztása előtt tekintsd át ennek
-          a munkaegységnek az aktuális állapotát.
+        history_next_action_summary: Tekintse át ennek a munkaegységnek a jelenlegi
+          állapotát.
         history_work_unit_id_help: Annak a munkaegységnek az azonosítója, amelynek
           életciklusát meg szeretné tekinteni.
         id_is_work_unit_not_calc_revision_natural: 'Ez az azonosító munkaegység-azonosító,
@@ -3117,6 +3117,9 @@ cli:
           --year %{year} --period %{period}'', majd futtasd újra a verify/file műveletet
           ugyanarra a modellre/évre/időszakra. A pontos azonosítók továbbra is elérhetők
           haladó menekülőútként.'
+        id_selector_ambiguous: A megjelenített {selector} munkaazonosító több aktív
+          munkaegységre illeszkedik. Használja az alábbi jelöltek egyikének teljes,
+          64 karakteres munkaegység-azonosítóját.`n{candidates}
         include_discarded_help: Eldobott munkaegységek bevonása a listába (alapértelmezés
           szerint kizárva).
         invalid_binding_key: 'A --binding kulcsa nem érvényes BindingId (kisbetűs
@@ -3140,8 +3143,8 @@ cli:
           érték: {spec}.'
         list_help: Regisztrált munkaegységek listázása, opcionálisan profil szerint
           szűrve.
-        list_next_action: Egy munkaegység teljes állapotának áttekintése után válaszd
-          ki, hogy előkészíted, újraszámolod vagy ellenőrzöd.
+        list_next_action_summary: Tekintse meg egy munkaegység teljes állapotát a
+          vázlat elkészítése vagy újraszámítása előtt.
         m184_socio_handoff_message: 'Jövedelem-hozzárendelési rendszer (régimen de
           atribución de rentas): a(z) %{nif} tag (%{nombre}) %{importe} EUR hozzárendelt
           adóalapot kap (%{porcentaje}% részesedés). A tagnak a saját munkaterületén
@@ -3349,18 +3352,17 @@ cli:
         state_label_presentado_supersedido: Felülírt beadás
         state_label_verificado_completo: Teljesen ellenőrizve
         status_help: Egy munkaegység metaadatainak megjelenítése.
-        status_next_action: Válaszd ki, hogy ezt az egységet legközelebb elő kell-e
-          készíteni, újra kell-e számolni vagy ellenőrizni kell.
+        status_next_action_summary: Készítse el vagy számolja újra ezt a munkaegységet,
+          majd ellenőrizze az eredményül kapott vázlatot.
         verify_help: Tervezet számítási revízió hitelesítése a hitelesített-teljes
           szerződéssel szemben.
         verify_idempotent_noop: 'Idempotens nincs-művelet: a(z) %{calculation_revision_id}
           számítási revízió már ellenőrzött; a meglévő ellenőrzési jelentés változatlanul
           lett visszaadva.'
-        verify_next_action_granted: Az ellenőrzés sikeres volt. A bevallási fájl exportálása
-          előtt válassza ki a szükséges exportálási célhelyet és anyagi beállításokat.
-        verify_next_action_incomplete: Az ellenőrzés blokkoló tételeket talált (lásd
-          a fenti értesítéseket). Oldja meg őket, majd számolja újra ezt a munkaegységet,
-          mielőtt ismét ellenőrizné.
+        verify_next_action_granted_summary: Az ellenőrzés sikeres. Exportálja a benyújtási
+          dokumentumot.
+        verify_next_action_incomplete_summary: Az ellenőrzés blokkoló tételeket talált.
+          Oldja meg őket, számolja újra, majd futtassa újra az ellenőrzést.
         verify_selector_help: Piszkozat-revízió választó (current, latest-draft vagy
           explicit).
         wizard_help: Végigvezet a munkaegység hiányzó kézi mezőin, majd kiszámítja
@@ -5423,8 +5425,7 @@ cli:
         01-12 (hónapok). Az évhez kombináld a --year kapcsolóval.'
       year_help: Bevallási év (pl. 2026).
     post_filing:
-      pending: '%{count} AEAT bevallás utáni esemény igényel figyelmet: %{kinds}.
-        Tekintse át az érintett értesítéseket.'
+      pending_summary: '%{count} AEAT benyújtás utáni esemény figyelmet igényel: %{kinds}.'
     prepare:
       help: 'Végigvezet az adatelőkészítés lépésein egy modellhez/időszakhoz sorban:
         tranzakciók importálása, besorolásuk, beszerzési számla igazolások csatolása,
@@ -5669,11 +5670,6 @@ cli:
       session_unchecked: A munkamenet és készültség nem következik a kiválasztott
         profilból.
       tagline: Helyi munkafolyamat a spanyol adóhatósággal (AEAT) adózóknak és tanácsadóknak.
-      welcome_no_profile: 'Aktív profil: nincs. A profilhoz kötött munka előtt hozz
-        létre egyet.'
-      welcome_profile: 'Aktív profil: `%{profile}`.'
-      welcome_profile_unavailable: 'Aktív profil: nem érhető el. Javítsd a kijelölt
-        profilt a profilhoz kötött munka előtt.'
     language_help: A kimenet és a súgószöveg nyelve (en, es, ca, hu).
     profile_help: Az aktív profil neve.
     quiet_help: Csak a hibák megjelenítése.
@@ -7264,6 +7260,9 @@ flows:
       add_row_section: Melyik szakaszhoz
       auth_clave_incomplete: 'A Cl@ve még ezt igényli: %{missing}. Semmi sem lett
         elmentve.'
+      auth_clave_movil_route: Cl@ve Móvil útvonal
+      auth_clave_movil_route_app_request: Kérés az alkalmazásban
+      auth_clave_movil_route_qr: QR-kód
       auth_contraste_missing: 'A QR nélküli Cl@ve Móvil útvonalhoz a dokumentum ellenőrző
         adata szükséges: NIE esetén a támogatási szám, DNI esetén az érvényességi
         dátum. Semmi sem lett elmentve.'
@@ -68827,6 +68826,8 @@ profile:
         share_pct:
           label: Hozzárendelt részesedés aránya
       auth:
+        clave_movil_route:
+          label: Cl@ve Móvil útvonal
         dni_nie:
           label: DNI vagy NIE a Cl@ve-hoz
         fecha_validez:

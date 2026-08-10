@@ -11,8 +11,8 @@ from __future__ import annotations
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
-from ....core import OperatorProgress
 
+from ....core import OperatorProgress
 
 _OPERATOR_PROGRESS_SINK: ContextVar[Callable[[OperatorProgress], None] | None] = ContextVar(
     "_aeat_auth_operator_progress_sink",

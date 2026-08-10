@@ -2949,8 +2949,6 @@ cli:
           Must carry imported external evidence (justificante / CSV register / live
           capture)
         history_help: Show every lifecycle event for one work unit
-        history_next_action: Review this work unit's current state before choosing
-          its next operation.
         history_next_action_summary: Review this work unit's current state.
         history_work_unit_id_help: Work unit id whose lifecycle you want to view
         id_is_work_unit_not_calc_revision_natural: This id is a work-unit-id, but
@@ -2958,6 +2956,9 @@ cli:
           app modelo work calculate --modelo %{modelo} --year %{year} --period %{period}'
           and then rerun verify/file for that same modelo/year/period. Exact ids remain
           available as an advanced escape hatch.
+        id_selector_ambiguous: The displayed work id {selector} matches more than
+          one active work unit. Use the full 64-character work-unit id from the candidates
+          below.`n{candidates}
         include_discarded_help: Include discarded work units in the listing (excluded
           by default)
         invalid_binding_key: '--binding key is not a valid BindingId (lowercase alphanumeric
@@ -2979,8 +2980,6 @@ cli:
           is a key-value entry: put the field name on the left of one equals sign
           and the value on the right. Received {spec}.'
         list_help: List registered work units, optionally filtered by profile
-        list_next_action: Inspect one work unit's full state before choosing whether
-          to draft, recalculate, or verify it.
         list_next_action_summary: Inspect one work unit's full state before drafting
           or recalculating it.
         m184_socio_handoff_message: 'Régimen de atribución de rentas: socio %{nif}
@@ -3177,19 +3176,12 @@ cli:
         state_label_presentado_supersedido: superseded filing
         state_label_verificado_completo: verified complete
         status_help: Show the metadata of one work unit
-        status_next_action: Choose whether this unit should be drafted, recalculated,
-          or verified next.
         status_next_action_summary: Draft or recalculate this work unit, then verify
           the resulting draft.
         verify_help: Verify a draft calculation revision against the verified-complete
           contract
         verify_idempotent_noop: 'Idempotent no-op: calculation revision %{calculation_revision_id}
           is already verified; returned the existing verification report without changes.'
-        verify_next_action_granted: Verification passed. Choose the required export
-          destination and material selections before exporting the filing artefact.
-        verify_next_action_incomplete: Verification found blocking items (see the
-          notices above). Resolve them and recalculate this work unit before verifying
-          it again.
         verify_next_action_granted_summary: Verification passed. Export the filing
           artefact.
         verify_next_action_incomplete_summary: Verification found blocking items.
@@ -5093,10 +5085,8 @@ cli:
     calendar_local_modelo_events_unavailable: Local modelo event evidence is unavailable
       for this calendar row.
     coverage:
-      incomplete_summary: '%{count} filing obligation(s) could not be positively scoped
-        for this profile and may be under-reported: %{modelos}.'
-      investigate: '%{count} filing obligation(s) could not be positively scoped for
-        this profile and may be under-reported: %{modelos}.'
+      investigate: The filing obligation %{modelo} could not be positively scoped
+        for this profile and may be under-reported. Review its filing explanation.
     drafts: Drafts
     explain:
       help: Decompose a modelo's applicability against the active profile. Surfaces
@@ -5128,8 +5118,6 @@ cli:
         01-12 (months). Combine with --year to choose the year.'
       year_help: Filing year (e.g. 2026).
     post_filing:
-      pending: '%{count} AEAT post-filing event(s) require attention: %{kinds}. Review
-        the affected notifications.'
       pending_summary: '%{count} AEAT post-filing event(s) require attention: %{kinds}.'
     prepare:
       help: 'Walk through the data-preparation steps for one modelo/period in order:
@@ -5371,11 +5359,6 @@ cli:
         profile.
       tagline: Local-first workflow with the Spanish Tax Agency (AEAT) for taxpayers
         and advisers.
-      welcome_no_profile: 'Active profile: none. Create one before profile-scoped
-        work.'
-      welcome_profile: 'Active profile: `%{profile}`.'
-      welcome_profile_unavailable: 'Active profile: unavailable. Repair the selected
-        profile before profile-scoped work.'
     language_help: Language for output and help text (en, es, ca, hu).
     profile_help: Name of the active profile.
     quiet_help: Show errors only.
@@ -6935,8 +6918,9 @@ flows:
       add_row_required: This is required; the row cannot be added without it.
       add_row_section: Which section to add to
       auth_clave_incomplete: Cl@ve still needs %{missing}. Nothing was saved.
-      auth_clave_movil_route: Cl@ve Móvil confirmation route
-      auth_clave_movil_route_qr: QR code in a visible browser
+      auth_clave_movil_route: Cl@ve Móvil route
+      auth_clave_movil_route_app_request: Request in app
+      auth_clave_movil_route_qr: QR code
       auth_contraste_missing: 'Cl@ve Móvil without QR needs the contraste from your
         document: the support number for a NIE, or the validity date for a DNI. Nothing
         was saved.'
@@ -68248,6 +68232,8 @@ profile:
         share_pct:
           label: Attributed participation percentage
       auth:
+        clave_movil_route:
+          label: Cl@ve Móvil route
         dni_nie:
           label: DNI or NIE for Cl@ve
         fecha_validez:

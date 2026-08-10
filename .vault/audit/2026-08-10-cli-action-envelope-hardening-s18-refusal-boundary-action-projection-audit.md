@@ -5,30 +5,11 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:65feb1e53adced76643063ef2740c56050440752239b02e7febf240e455a775d'
+body_hash: 'sha256:3cffa320ca8cfa7bcb91e395abe15b9e37e3a00fe89e4f8516b5ab0a739a6121'
 related:
   - "[[2026-08-09-cli-action-envelope-hardening-adr]]"
   - "[[2026-08-09-cli-action-envelope-hardening-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace cli-action-envelope-hardening with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `cli-action-envelope-hardening` audit: `S18 refusal boundary action projection`
 

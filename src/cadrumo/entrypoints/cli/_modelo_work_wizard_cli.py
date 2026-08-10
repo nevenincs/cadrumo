@@ -83,6 +83,7 @@ from ._modelo_rendering import (
     calculation_revision_lines,
     calculation_revision_payload,
     source_diagnostic_notice,
+    source_diagnostic_notice_text,
 )
 from ._modelo_work_options import (
     _ActorOpt,
@@ -736,6 +737,7 @@ def _emit_wizard_result(
             source_diagnostic_notice(diagnostic, code="modelo.work.wizard.source_advisory")
             for diagnostic in diagnostics
         )
+        lines.extend(source_diagnostic_notice_text(notice) for notice in notices)
     _emit_envelope(ctx, command="modelo.work.wizard", result=result, lines=lines, notices=notices or None)
 
 

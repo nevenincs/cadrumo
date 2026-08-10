@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import cast
 
 import pytest
+from pydantic import ValidationError
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -254,6 +255,42 @@ def test_explicit_work_unit_id_accepts_displayed_short_id(work_repo: WorkUnitCat
 
     assert resolution.state is ModeloWorkSelectorState.RESOLVED
     assert resolution.work_unit == unit
+
+
+def test_work_unit_id_selector_refuses_abbreviations_shorter_than_the_displayed_id() -> None:
+    """Mutable work may be addressed only by the published 12-char handle or full id."""
+    with pytest.raises(ValidationError, match="work_unit_id"):
+        ModeloWorkSelectorRequest(work_unit_id="a")
+
+
+def test_displayed_short_id_collision_refuses_with_the_supplied_selector(
+    work_repo: WorkUnitCatalogueRepository,
+) -> None:
+    first = _seed_work_unit(work_repo)
+    suffix = first.work_unit_id[-12:]
+    second_id = f"{'f' * 52}{suffix}"
+    assert second_id != first.work_unit_id
+    second = first.model_copy(
+        update={
+            "work_unit_id": second_id,
+            "revision_id": "collision-test-revision",
+            "name": "collision test unit",
+            "updated_at": _T0 + timedelta(minutes=1),
+        },
+    )
+    work_repo.save(upsert_work_unit(work_repo.load(), second))
+
+    with pytest.raises(ModeloWorkVisibleTargetAmbiguousError) as raised:
+        resolve_modelo_work_unit(
+            ModeloWorkSelectorRequest(work_unit_id=suffix),
+            repository=work_repo,
+        )
+
+    assert raised.value.selector == suffix
+    assert {candidate.work_unit_id for candidate in raised.value.candidates} == {
+        first.work_unit_id,
+        second_id,
+    }
 
 
 def test_explicit_work_unit_id_validates_supplied_natural_key_flags(work_repo: WorkUnitCatalogueRepository) -> None:

@@ -3199,8 +3199,7 @@ cli:
           vivo)
         history_help: Muestra todos los eventos del ciclo de vida de una unidad de
           trabajo
-        history_next_action: Revisa el estado actual de esta unidad de trabajo antes
-          de elegir su siguiente operación.
+        history_next_action_summary: Revisa el estado actual de esta unidad de trabajo.
         history_work_unit_id_help: Id de unidad de trabajo cuyo ciclo de vida quieres
           ver
         id_is_work_unit_not_calc_revision_natural: Este id es un id de unidad de trabajo,
@@ -3208,6 +3207,9 @@ cli:
           ejecuta 'aeat app modelo work calculate --modelo %{modelo} --year %{year}
           --period %{period}' y vuelve a ejecutar verify/file para ese mismo modelo/año/periodo.
           Los ids exactos siguen disponibles como vía avanzada.
+        id_selector_ambiguous: El id de trabajo mostrado {selector} coincide con más
+          de una unidad de trabajo activa. Usa el id completo de 64 caracteres de
+          una de las candidatas siguientes.`n{candidates}
         include_discarded_help: Incluir las unidades descartadas en el listado (excluidas
           por defecto)
         invalid_binding_key: 'La clave --binding no es un BindingId válido (alfanumérico
@@ -3230,8 +3232,8 @@ cli:
           signo igual y el valor a la derecha. Se recibió {spec}.'
         list_help: Listar las unidades de trabajo registradas, opcionalmente filtradas
           por perfil
-        list_next_action: Inspecciona el estado completo de una unidad de trabajo
-          antes de elegir si prepararla, recalcularla o verificarla.
+        list_next_action_summary: Inspecciona el estado completo de una unidad de
+          trabajo antes de crear o recalcular su borrador.
         m184_socio_handoff_message: 'Régimen de atribución de rentas: el socio %{nif}
           (%{nombre}) recibe una base atribuida de %{importe} EUR (participación del
           %{porcentaje}%). En su propio espacio de trabajo, el socio debe registrarla
@@ -3434,18 +3436,16 @@ cli:
         state_label_presentado_supersedido: Presentación sustituida
         state_label_verificado_completo: Verificado completo
         status_help: Mostrar los metadatos de una unidad de trabajo
-        status_next_action: Elige si esta unidad debe prepararse, recalcularse o verificarse
-          a continuación.
+        status_next_action_summary: Crea o recalcula esta unidad de trabajo y después
+          verifica el borrador resultante.
         verify_help: Verificar una revisión draft contra el contrato verified-complete
         verify_idempotent_noop: 'Operación idempotente sin efecto: la revisión de
           cálculo %{calculation_revision_id} ya está verificada; se devolvió el informe
           de verificación existente sin cambios.'
-        verify_next_action_granted: La verificación se ha superado. Elija el destino
-          de exportación y las selecciones materiales requeridas antes de exportar
-          el artefacto de presentación.
-        verify_next_action_incomplete: La verificación encontró elementos bloqueantes
-          (consulte los avisos anteriores). Resuélvalos y recalcule esta unidad de
-          trabajo antes de verificarla de nuevo.
+        verify_next_action_granted_summary: La verificación se superó. Exporta el
+          artefacto de presentación.
+        verify_next_action_incomplete_summary: La verificación encontró elementos
+          bloqueantes. Resuélvelos, recalcula y vuelve a ejecutar la verificación.
         verify_selector_help: Selector de revisión borrador (current, latest-draft
           o explicit).
         wizard_help: Guía paso a paso por las casillas manuales pendientes de la unidad
@@ -5525,8 +5525,8 @@ cli:
         0A (anual), 01-12 (meses). Combínalo con --year para elegir el año.'
       year_help: Año de declaración (p. ej. 2026).
     post_filing:
-      pending: '%{count} evento(s) posteriores a la presentación de AEAT requieren
-        atención: %{kinds}. Revise las notificaciones afectadas.'
+      pending_summary: '%{count} evento(s) de la AEAT posterior(es) a la presentación
+        requieren atención: %{kinds}.'
     prepare:
       help: 'Recorre los pasos de preparación de datos para un modelo/periodo en orden:
         importar transacciones, clasificarlas, adjuntar justificantes de facturas
@@ -5775,11 +5775,6 @@ cli:
       session_unchecked: La sesión y la preparación no se infieren del perfil seleccionado.
       tagline: Flujo local con la Agencia Estatal de Administración Tributaria (AEAT)
         para contribuyentes y asesores.
-      welcome_no_profile: 'Perfil activo: ninguno. Crea uno antes del trabajo vinculado
-        al perfil.'
-      welcome_profile: 'Perfil activo: `%{profile}`.'
-      welcome_profile_unavailable: 'Perfil activo: no disponible. Repara el perfil
-        seleccionado antes del trabajo vinculado al perfil.'
     language_help: Idioma de la salida y del texto de ayuda (en, es, ca, hu).
     profile_help: Nombre del perfil activo.
     quiet_help: Mostrar solo los errores.
@@ -7437,6 +7432,9 @@ flows:
       add_row_section: A qué sección se añade
       auth_clave_incomplete: A Cl@ve todavía le falta %{missing}. No se ha guardado
         nada.
+      auth_clave_movil_route: Ruta de Cl@ve Móvil
+      auth_clave_movil_route_app_request: Solicitud en la aplicación
+      auth_clave_movil_route_qr: Código QR en un navegador visible
       auth_contraste_missing: 'Cl@ve Móvil sin QR necesita el contraste de su documento:
         el número de soporte si es un NIE, o la fecha de validez si es un DNI. No
         se ha guardado nada.'
@@ -70959,6 +70957,8 @@ profile:
         share_pct:
           label: Porcentaje de participación atribuido
       auth:
+        clave_movil_route:
+          label: Ruta de Cl@ve Móvil
         dni_nie:
           label: DNI o NIE para Cl@ve
         fecha_validez:

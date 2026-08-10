@@ -231,6 +231,29 @@ class PreconditionVerdict(BaseModel):
         if has_action == has_no_recovery:
             raise ValueError("a precondition verdict requires exactly one action or no_recovery_outcome")
 
+        self._reject_arguments_their_evidence_does_not_support()
+
+        missing_from_bindings = tuple(
+            item.argument_name for item in self.argument_bindings if item.status is ActionArgumentStatus.MISSING
+        )
+        if self.missing_argument_names != missing_from_bindings:
+            raise ValueError("missing_argument_names must exactly match missing action arguments")
+
+        self._reject_conditionality_the_outcome_contradicts(
+            has_no_recovery=has_no_recovery,
+            missing_from_bindings=missing_from_bindings,
+        )
+        return self
+
+    def _reject_arguments_their_evidence_does_not_support(self) -> None:
+        """Refuse any condition-evidence argument the declared evidence cannot back.
+
+        The value equality is deliberately type-strict. A binding whose value
+        merely compares equal to its evidence fact -- ``1`` against ``True``, or
+        a string against the number it spells -- would present the operator an
+        argument the evidence does not actually state, which is the whole thing
+        this projection exists to rule out.
+        """
         evidence_by_id = {item.evidence_id: item for item in self.evidence}
         for binding in self.argument_bindings:
             if binding.source is not ActionArgumentSource.CONDITION_EVIDENCE:
@@ -246,12 +269,19 @@ class PreconditionVerdict(BaseModel):
             if type(binding.value) is not type(evidence_value) or binding.value != evidence_value:
                 raise ValueError("condition-evidence action argument value must exactly match its evidence fact")
 
-        missing_from_bindings = tuple(
-            item.argument_name for item in self.argument_bindings if item.status is ActionArgumentStatus.MISSING
-        )
-        if self.missing_argument_names != missing_from_bindings:
-            raise ValueError("missing_argument_names must exactly match missing action arguments")
+    def _reject_conditionality_the_outcome_contradicts(
+        self,
+        *,
+        has_no_recovery: bool,
+        missing_from_bindings: tuple[str, ...],
+    ) -> None:
+        """Refuse a conditionality the verdict's own shape rules out.
 
+        Conditionality is not free-standing: it is derivable from whether a
+        recovery exists and whether its arguments resolved. Declaring it anyway
+        and then checking it here is what makes a mismatch between the two an
+        error rather than a silent reinterpretation of the verdict.
+        """
         if has_no_recovery:
             if self.argument_bindings or self.missing_argument_names:
                 raise ValueError("no-recovery outcomes cannot carry action arguments")
@@ -263,7 +293,6 @@ class PreconditionVerdict(BaseModel):
             raise ValueError("missing action arguments require requires_arguments conditionality")
         elif not missing_from_bindings and self.conditionality is not ActionConditionality.IMMEDIATE:
             raise ValueError("fully resolved recovery actions require immediate conditionality")
-        return self
 
 
 __all__ = [

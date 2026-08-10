@@ -934,7 +934,7 @@ def work_history(
         severity=NoticeSeverity.INFO,
         code="modelo.work.history.next_action",
         message=tr(
-            "cli.app.modelo.work.history_next_action",
+            "cli.app.modelo.work.history_next_action_summary",
             default="Review this work unit's current state before choosing its next operation.",
         ),
         action=resolve_notice_action(

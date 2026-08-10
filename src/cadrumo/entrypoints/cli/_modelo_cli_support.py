@@ -661,7 +661,7 @@ def work_candidate_lines(candidates: tuple[ModeloWorkUnitCandidate, ...]) -> str
     """Return tabular candidate guidance for ambiguous visible filing targets."""
     rows = [
         "candidates:",
-        "short_id\tmodelo\tyear\tperiod\trevision_id\tstate\tcurrent\tfiled\tname",
+        "short_id\tmodelo\tyear\tperiod\trevision_id\tstate\tcurrent\tfiled\tfull_work_unit_id",
     ]
     for candidate in candidates:
         rows.append(
@@ -685,6 +685,18 @@ def work_candidate_lines(candidates: tuple[ModeloWorkUnitCandidate, ...]) -> str
 def selector_bad_parameter(exc: BaseException) -> typer.BadParameter:
     """Translate visible-target and revision selector refusals for Typer."""
     if isinstance(exc, ModeloWorkVisibleTargetAmbiguousError):
+        if exc.selector is not None:
+            return typer.BadParameter(
+                tr(
+                    "cli.app.modelo.work.id_selector_ambiguous",
+                    default=(
+                        "The displayed work id {selector} matches more than one active work unit. "
+                        "Use the full 64-character work-unit id from the candidates below.\n{candidates}"
+                    ),
+                    selector=exc.selector,
+                    candidates=work_candidate_lines(exc.candidates),
+                ),
+            )
         return typer.BadParameter(
             tr(
                 "cli.app.modelo.work.selector_ambiguous",

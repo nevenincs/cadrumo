@@ -232,7 +232,7 @@ def _register_work_verify_command(work_app: typer.Typer, *, deps: _VerificationD
                     severity=NoticeSeverity.INFO,
                     code="modelo.work.verify.next_action_granted",
                     message=tr(
-                        "cli.app.modelo.work.verify_next_action_granted",
+                        "cli.app.modelo.work.verify_next_action_granted_summary",
                         default=(
                             "Verification passed. Choose the required export destination and material selections "
                             "before exporting the filing artefact."
@@ -247,7 +247,7 @@ def _register_work_verify_command(work_app: typer.Typer, *, deps: _VerificationD
                     severity=NoticeSeverity.INFO,
                     code="modelo.work.verify.next_action_incomplete",
                     message=tr(
-                        "cli.app.modelo.work.verify_next_action_incomplete",
+                        "cli.app.modelo.work.verify_next_action_incomplete_summary",
                         default=(
                             "Verification found blocking items (see the notices above). "
                             "Resolve them and recalculate this work unit before verifying it again."

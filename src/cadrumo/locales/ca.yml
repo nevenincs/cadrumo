@@ -3171,8 +3171,6 @@ cli:
           viu)
         history_help: Mostra tots els esdeveniments del cicle de vida d'una unitat
           de treball
-        history_next_action: Revisa l'estat actual d'aquesta unitat de treball abans
-          de triar la seva operació següent.
         history_next_action_summary: Revisa l'estat actual d'aquesta unitat de treball.
         history_work_unit_id_help: Id d'unitat de treball el cicle de vida de la qual
           vols veure
@@ -3182,6 +3180,9 @@ cli:
           --year %{year} --period %{period}' i torna a executar verify/file per al
           mateix model/any/període. Els ids exactes continuen disponibles com a via
           avançada.
+        id_selector_ambiguous: L'id de treball mostrat {selector} coincideix amb més
+          d'una unitat de treball activa. Utilitzeu l'id complet de 64 caràcters d'una
+          de les candidates següents.`n{candidates}
         include_discarded_help: Incloure les unitats descartades en el llistat (excloses
           per defecte)
         invalid_binding_key: 'La clau --binding no és un BindingId vàlid (alfanumèric
@@ -3204,8 +3205,6 @@ cli:
           signe igual i el valor a la dreta. S''ha rebut {spec}.'
         list_help: Llistar les unitats de treball registrades, opcionalment filtrades
           per perfil
-        list_next_action: Inspecciona l'estat complet d'una unitat de treball abans
-          de triar si preparar-la, recalcular-la o verificar-la.
         list_next_action_summary: Inspecciona l'estat complet d'una unitat de treball
           abans de crear o recalcular-ne l'esborrany.
         m184_socio_handoff_message: 'Règim d''atribució de rendes: el soci %{nif}
@@ -3412,20 +3411,16 @@ cli:
         state_label_presentado_supersedido: Presentació substituïda
         state_label_verificado_completo: Verificat complet
         status_help: Mostrar les metadades d'una unitat de treball
-        status_next_action: Tria si aquesta unitat s'ha de preparar, recalcular o
-          verificar a continuació.
         status_next_action_summary: Crea o recalcula aquesta unitat de treball i després
           verifica l'esborrany resultant.
         verify_help: Verificar una revisió draft contra el contracte verified-complete
         verify_idempotent_noop: 'Operació idempotent sense efecte: la revisió de càlcul
           %{calculation_revision_id} ja està verificada; s''ha retornat l''informe
           de verificació existent sense canvis.'
-        verify_next_action_granted: La verificació s'ha superat. Trieu la destinació
-          d'exportació i les seleccions materials requerides abans d'exportar l'artefacte
-          de presentació.
-        verify_next_action_incomplete: La verificació ha trobat elements bloquejants
-          (vegeu els avisos anteriors). Resoleu-los i recalculeu aquesta unitat de
-          treball abans de verificar-la de nou.
+        verify_next_action_granted_summary: La verificació ha estat satisfactòria.
+          Exporteu l'artefacte de presentació.
+        verify_next_action_incomplete_summary: La verificació ha trobat elements bloquejadors.
+          Resoleu-los, recalculeu i torneu a executar la verificació.
         verify_selector_help: Selector de revisió esborrany (current, latest-draft
           o explícit).
         wizard_help: Guia pas a pas per les caselles manuals pendents de la unitat
@@ -5481,8 +5476,8 @@ cli:
         0A (anual), 01-12 (mesos). Combina''l amb --year per triar l''any.'
       year_help: Any de declaració (p. ex. 2026).
     post_filing:
-      pending: '%{count} esdeveniment(s) posteriors a la presentació d''AEAT requereixen
-        atenció: %{kinds}. Reviseu les notificacions afectades.'
+      pending_summary: '%{count} esdeveniment(s) de l''AEAT posterior(s) a la presentació
+        requereixen atenció: %{kinds}.'
     prepare:
       help: 'Recorre els passos de preparació de dades per a un model/període en ordre:
         importar transaccions, classificar-les, adjuntar justificants de factures
@@ -5729,9 +5724,6 @@ cli:
       session_unchecked: La sessió i la preparació no s'infereixen del perfil seleccionat.
       tagline: Flux local amb l'Agència Estatal d'Administració Tributària (AEAT)
         per a contribuents i assessors.
-      welcome_profile: 'Perfil actiu: `%{profile}`.'
-      welcome_profile_unavailable: 'Perfil actiu: no disponible. Repara el perfil
-        seleccionat abans del treball vinculat al perfil.'
     language_help: Idioma de la sortida i del text d'ajuda (en, es, ca, hu).
     profile_help: Nom del perfil actiu.
     quiet_help: Mostra només els errors.
@@ -7391,6 +7383,9 @@ flows:
       add_row_required: És obligatori; la fila no es pot afegir sense aquesta dada.
       add_row_section: A quina secció s'afegeix
       auth_clave_incomplete: A Cl@ve encara li falta %{missing}. No s'ha desat res.
+      auth_clave_movil_route: Ruta de Cl@ve Mòbil
+      auth_clave_movil_route_app_request: Sol·licitud a l'aplicació
+      auth_clave_movil_route_qr: Codi QR
       auth_contraste_missing: 'Cl@ve Mòbil sense QR necessita el contrast del vostre
         document: el número de suport si és un NIE, o la data de validesa si és un
         DNI. No s''ha desat res.'
@@ -68711,6 +68706,8 @@ profile:
         share_pct:
           label: Percentatge de participació atribuït
       auth:
+        clave_movil_route:
+          label: Ruta de Cl@ve Mòbil
         dni_nie:
           label: DNI o NIE per a Cl@ve
         fecha_validez:

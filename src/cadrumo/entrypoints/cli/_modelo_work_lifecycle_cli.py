@@ -461,7 +461,7 @@ def _register_work_list_command(work_app: typer.Typer, deps: _LifecycleDeps) -> 
             severity=NoticeSeverity.INFO,
             code="modelo.work.list.next_action",
             message=tr(
-                "cli.app.modelo.work.list_next_action",
+                "cli.app.modelo.work.list_next_action_summary",
                 default=("The list can contain multiple work units. Choose one concrete work unit before continuing."),
             ),
             context={"work_unit_count": str(len(units))},
@@ -503,7 +503,7 @@ def _register_work_status_command(work_app: typer.Typer, deps: _LifecycleDeps) -
             severity=NoticeSeverity.INFO,
             code="modelo.work.status.next_action",
             message=tr(
-                "cli.app.modelo.work.status_next_action",
+                "cli.app.modelo.work.status_next_action_summary",
                 default=("This work unit can now be recalculated and then verified."),
             ),
             action=resolve_notice_action(
