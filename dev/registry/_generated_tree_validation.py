@@ -18,8 +18,8 @@ from cadrumo.domain.calculations.registry import (
     RegistrySnapshot,
     RegistryValidationError,
     ValidatedRegistryAuthority,
+    load_modelo_directory,
 )
-from cadrumo.domain.calculations.registry._loader import load_modelo_directory
 
 from ._export_tree import RenderedExportTree
 from ._provenance_manifest import (

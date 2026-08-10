@@ -20,8 +20,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from cadrumo.core import exclusive_file_lock, fsync_parent_dir
 from cadrumo.core.hashing import canonical_json_bytes, hash_file
-from cadrumo.domain.calculations.registry import RegistryValidationError
-from cadrumo.domain.calculations.registry._loader import load_modelo_directory
+from cadrumo.domain.calculations.registry import RegistryValidationError, load_modelo_directory
 
 from ._export_tree import RenderedExportTree
 from ._generated_tree_validation import (

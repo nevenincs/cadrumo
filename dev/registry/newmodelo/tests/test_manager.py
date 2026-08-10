@@ -182,7 +182,7 @@ def test_scaffolded_tree_reaches_directory_mode_validation(tmp_path: Path) -> No
     deliberately incomplete TODO metadata. This proves the scaffold reaches semantic
     validation rather than failing earlier on a malformed directory layout.
     """
-    from cadrumo.domain.calculations.registry._loader import load_modelo_directory
+    from cadrumo.domain.calculations.registry import load_modelo_directory
 
     manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
     manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)

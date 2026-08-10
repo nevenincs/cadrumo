@@ -16,8 +16,8 @@ from cadrumo.domain.calculations.registry import (
     ExportLayoutDefinition,
     RegistryError,
     RegistryValidationError,
+    load_modelo_directory,
 )
-from cadrumo.domain.calculations.registry._loader import load_modelo_directory
 
 from ._export_tree import ExportRenderProfile, render_complete_export_tree
 from ._generated_tree_validation import (
