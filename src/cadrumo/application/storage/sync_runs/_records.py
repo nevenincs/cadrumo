@@ -45,8 +45,9 @@ that are identical in every other field and mean entirely different things.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import datetime
-from typing import ClassVar, override
+from typing import ClassVar, Protocol, override, runtime_checkable
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -62,9 +63,12 @@ from ....core.time import validate_utc_aware
 from ....domain.buckets import BucketEventId
 
 __all__ = [
+    "SyncRunCoverage",
+    "SyncRunCoverageSource",
     "SyncRunRecord",
     "SyncRunRecordRepository",
     "bounded_scope_description",
+    "coverage_of",
     "sync_run_record_key",
 ]
 
@@ -73,6 +77,90 @@ __all__ = [
 #: past a kilobyte, so an unbounded field would refuse the default sweep at the
 #: end of the run -- after every unit had already been fetched and written.
 _RESOLVED_SCOPE_MAX_LENGTH = 256
+
+
+@runtime_checkable
+class SyncRunCoverageSource(Protocol):
+    """One object that knows BOTH what a run reached and what diverged.
+
+    The whole point of the protocol is that it is a single object. A run's two
+    coverage counts have to be drawn from one population, and the way they stop
+    being drawn from one population is a caller reading each from a different
+    place -- which is not a hypothetical. The filed sweep once paired advisories
+    raised per observation ABSORBED against the count of observations
+    successfully ENROLLED, two populations that narrow apart under a
+    latest-per-period collapse and under a best-effort enrolment failure. The
+    record refused the impossible pair at the very end of a real run, after
+    every unit had already been fetched and written.
+
+    Passing counts as two integers makes that mistake expressible at every call
+    site. Passing one source makes it expressible only by writing an object that
+    lies about itself, which is a far higher bar and one a reviewer can see.
+
+    The member names are deliberately surface-neutral rather than borrowed from
+    the filed sweep's own vocabulary, because the second surface has to satisfy
+    the same contract without renaming it.
+    """
+
+    @property
+    def reached_count(self) -> int:
+        """How many units the run REACHED, counted in every mode."""
+        ...
+
+    @property
+    def divergences(self) -> Sequence[object]:
+        """The divergences found among those reached units, one entry each."""
+        ...
+
+
+class SyncRunCoverage(BaseModel):
+    """What one run covered: units reached, and how many of them diverged.
+
+    Built only through :func:`coverage_of`, so the two counts always come from
+    one source. The bound below is therefore a backstop against a lying source
+    rather than the primary defence -- the primary defence is that there is
+    nowhere to pass two unrelated numbers in.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    unit_count: int = Field(ge=0)
+    divergence_count: int = Field(ge=0)
+
+    @field_validator("divergence_count")
+    @classmethod
+    def _divergences_are_bounded_by_units(cls, value: int, info: object) -> int:
+        """Refuse more divergences than units reached."""
+        data = getattr(info, "data", {})
+        unit_count = data.get("unit_count")
+        if unit_count is not None and value > unit_count:
+            raise ValueError(
+                f"divergence_count {value} exceeds unit_count {unit_count}: "
+                "a unit that was never reached cannot have diverged",
+            )
+        return value
+
+
+def coverage_of(source: SyncRunCoverageSource) -> SyncRunCoverage:
+    """Derive both coverage counts from one source, which is the entire contract.
+
+    Read both numbers off ``source`` and nothing else. A caller that wants to
+    record a run over a surface teaches that surface's own accumulator to answer
+    :attr:`SyncRunCoverageSource.reached_count` and
+    :attr:`SyncRunCoverageSource.divergences`, rather than picking two counts at
+    the call site and hoping they describe the same population.
+
+    Args:
+        source: The run's own accumulator, or anything else that can answer for
+            one population.
+
+    Returns:
+        The validated pair, ready to hand to :func:`record_sync_run`.
+    """
+    return SyncRunCoverage(
+        unit_count=source.reached_count,
+        divergence_count=len(source.divergences),
+    )
 
 
 class SyncRunRecord(BaseModel):
@@ -147,10 +235,15 @@ class SyncRunRecord(BaseModel):
         """Refuse more divergences than units reached.
 
         A unit the run never reached cannot have been found to diverge, so a
-        record claiming otherwise is describing a run that did not happen. The
-        check runs at construction rather than at read, because the invalid
-        state is only ever produced by a caller counting one of the two
-        against the wrong population.
+        record claiming otherwise is describing a run that did not happen.
+
+        This repeats the bound :class:`SyncRunCoverage` already enforces, and
+        the repetition is deliberate rather than an oversight. The two guard
+        different paths: coverage guards CONSTRUCTION, where the invalid pair
+        is authored, while this guards the LOAD, where a corrupted or
+        hand-edited on-disk payload never passed through coverage at all. A
+        persisted boundary that trusts its writer has no defence against bytes
+        the writer did not produce.
         """
         data = getattr(info, "data", {})
         unit_count = data.get("unit_count")

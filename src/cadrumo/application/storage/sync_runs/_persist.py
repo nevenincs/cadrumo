@@ -35,7 +35,7 @@ from ....domain.buckets import (
     append_bucket_event,
     derive_bucket_event_id,
 )
-from ._records import SyncRunRecord, SyncRunRecordRepository
+from ._records import SyncRunCoverage, SyncRunRecord, SyncRunRecordRepository
 
 __all__ = [
     "record_sync_run",
@@ -58,8 +58,7 @@ def record_sync_run(
     surface: SyncSurface,
     resolved_scope: str,
     succeeded: bool,
-    unit_count: int,
-    divergence_count: int,
+    coverage: SyncRunCoverage,
     completed_at: datetime,
     actor: str = "system",
 ) -> SyncRunRecord:
@@ -84,8 +83,12 @@ def record_sync_run(
             independently of ``divergence_count``, because a clean run can find
             divergences and a failed run can find none for want of getting far
             enough to look.
-        unit_count: How many units the run REACHED, never the intended total.
-        divergence_count: How many of those reached units diverged.
+        coverage: What the run covered, derived from ONE source through
+            :func:`coverage_of`. Taken as a derived pair rather than as two
+            integers because two integer parameters let a caller pair counts
+            drawn from different populations, which is exactly how a run once
+            reported more divergences than units and refused its own record at
+            the end of a real sweep.
         completed_at: UTC instant the run finished, successfully or not.
         actor: Who invoked the run.
 
@@ -104,8 +107,8 @@ def record_sync_run(
         "surface": surface.value,
         "resolved_scope": resolved_scope,
         "succeeded": str(succeeded).lower(),
-        "unit_count": str(unit_count),
-        "divergence_count": str(divergence_count),
+        "unit_count": str(coverage.unit_count),
+        "divergence_count": str(coverage.divergence_count),
     }
     event_id = derive_bucket_event_id(
         bucket_id=bucket_id,
@@ -122,8 +125,8 @@ def record_sync_run(
         surface=surface,
         resolved_scope=resolved_scope,
         succeeded=succeeded,
-        unit_count=unit_count,
-        divergence_count=divergence_count,
+        unit_count=coverage.unit_count,
+        divergence_count=coverage.divergence_count,
         completed_at=completed_at,
     )
 
