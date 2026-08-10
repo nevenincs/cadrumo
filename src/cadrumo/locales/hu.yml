@@ -7263,9 +7263,9 @@ flows:
       auth_clave_movil_route: Cl@ve Móvil útvonal
       auth_clave_movil_route_app_request: Kérés az alkalmazásban
       auth_clave_movil_route_qr: QR-kód
-      auth_contraste_missing: 'A QR nélküli Cl@ve Móvil útvonalhoz a dokumentum ellenőrző
-        adata szükséges: NIE esetén a támogatási szám, DNI esetén az érvényességi
-        dátum. Semmi sem lett elmentve.'
+      auth_contraste_missing: 'A Cl@ve Móvil alkalmazáskéréséhez egy okmány-ellenőrző
+        adat szükséges: NIE esetén %{nie_field}, DNI esetén %{dni_field}. Nyissa meg
+        az Azonosítás részt, töltse ki a megfelelő mezőt, majd próbálja újra a szinkronizálást.'
       auth_dni_nie: DNI vagy NIE, amellyel azonosítja magát
       auth_fecha_validez: A dokumentum érvényességi dátuma, ÉÉÉÉ-HH-NN (DNI esetén)
       auth_fecha_validez_invalid: Az érvényességi dátumot ÉÉÉÉ-HH-NN alakban adja

@@ -6921,9 +6921,9 @@ flows:
       auth_clave_movil_route: Cl@ve Móvil route
       auth_clave_movil_route_app_request: Request in app
       auth_clave_movil_route_qr: QR code
-      auth_contraste_missing: 'Cl@ve Móvil without QR needs the contraste from your
-        document: the support number for a NIE, or the validity date for a DNI. Nothing
-        was saved.'
+      auth_contraste_missing: 'Cl@ve Móvil Request in app needs one document contrast:
+        %{nie_field} for a NIE, or %{dni_field} for a DNI. Open Identification, fill
+        the applicable field, and retry sync.'
       auth_dni_nie: DNI or NIE you identify with
       auth_fecha_validez: Validity date on the document, YYYY-MM-DD (DNI holders)
       auth_fecha_validez_invalid: Enter the validity date as YYYY-MM-DD, for example

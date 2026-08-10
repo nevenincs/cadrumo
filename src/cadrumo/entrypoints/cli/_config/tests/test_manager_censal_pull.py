@@ -45,13 +45,16 @@ from .....application.user_profile import (
 from .....application.workflow import workflow_state_repository
 from .....core import AuthProviderKind
 from .....core.config import override_settings
-from .....domain.user_profile import UserProfileFact
+from .....domain.user_profile import UserProfileFact, load_user_profile_schema, profile_field_label
 from .....tests.secure_sql import isolated_profile_storage_root
 from .....tests.user_profile import register_minimal_profile
 from .._manager_actions import (
+    _AUTH_CLAVE_MOVIL_ROUTE_PATH,
     _AUTH_DNI_NIE_PATH,
+    _AUTH_FECHA_VALIDEZ_PATH,
     _AUTH_PROVIDER_PATH,
     _AUTH_SOPORTE_PATH,
+    _auth_facts_on_record,
     _censal_pull_summary,
     _censal_pull_unavailable,
     _commit_auth_choice,
@@ -167,11 +170,19 @@ def test_a_profile_with_no_provider_chosen_cannot_pull_yet() -> None:
 
 @pytest.mark.usefixtures("active_profile")
 def test_an_incomplete_clave_setup_cannot_pull_yet() -> None:
-    """The non-QR route needs a contraste, and this profile has neither form."""
+    """The refusal names schema fields and a corrective action, never an internal path."""
     _record_auth(**{_AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value, _AUTH_DNI_NIE_PATH: "00000000T"})
 
     with override_settings(cadrumo_clave_prefer_non_qr=True, **_NO_CLAVE_SETTINGS):
-        assert _censal_pull_unavailable() is not None
+        refusal = _censal_pull_unavailable()
+
+    assert refusal is not None
+    schema = load_user_profile_schema()
+    for path in (_AUTH_SOPORTE_PATH, _AUTH_FECHA_VALIDEZ_PATH):
+        section, _field = path.split(".", 1)
+        assert profile_field_label(section, schema.field(path)) in refusal
+    assert "retry sync" in refusal
+    assert "auth." not in refusal
 
 
 @pytest.mark.usefixtures("active_profile")
@@ -183,6 +194,9 @@ def test_a_qr_operator_carrying_no_contraste_is_ready_to_pull() -> None:
     defect the authentication page carried one layer up.
     """
     _record_auth(**{_AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value, _AUTH_DNI_NIE_PATH: "00000000T"})
+    assert _AUTH_CLAVE_MOVIL_ROUTE_PATH not in _auth_facts_on_record(), (
+        "the fixture must represent a profile saved before the route field existed"
+    )
 
     with override_settings(cadrumo_clave_prefer_non_qr=False, **_NO_CLAVE_SETTINGS):
         assert _censal_pull_unavailable() is None
