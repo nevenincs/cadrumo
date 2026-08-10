@@ -162,7 +162,9 @@ def field_description(node: ast.AnnAssign) -> str:
             return keyword.value.value
         if isinstance(keyword.value, ast.JoinedStr):
             return " ".join(
-                part.value for part in keyword.value.values if isinstance(part, ast.Constant) and isinstance(part.value, str)
+                part.value
+                for part in keyword.value.values
+                if isinstance(part, ast.Constant) and isinstance(part.value, str)
             )
     return ""
 
@@ -226,7 +228,7 @@ class _NounVisitor(ast.NodeVisitor):
         self._stack: list[str] = []
         self.candidates: list[NounCandidate] = []
 
-    def visit_ClassDef(self, node: ast.ClassDef) -> None:  # noqa: N802 - ast API
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
         self._stack.append(node.name)
         prose = attribute_prose(ast.get_docstring(node))
         for statement in node.body:
@@ -318,7 +320,11 @@ def main(argv: list[str] | None = None) -> int:
 
     candidates = census(args.revision)
     summary = _summarise(candidates)
-    shown = tuple(item for item in candidates if not item.matches_suffix_heuristic) if args.only_missed_by_suffix else candidates
+    shown = (
+        tuple(item for item in candidates if not item.matches_suffix_heuristic)
+        if args.only_missed_by_suffix
+        else candidates
+    )
 
     if args.json:
         print(json.dumps({"summary": summary, "records": [asdict(item) for item in shown]}, indent=2, sort_keys=True))
