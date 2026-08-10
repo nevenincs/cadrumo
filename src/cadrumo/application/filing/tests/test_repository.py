@@ -18,8 +18,8 @@ from ....adapters.persistence.storage import Envelope, SensitivityClass
 from ....adapters.persistence.storage.bucket import bucket_paths
 from ....adapters.persistence.storage.errors import ClassificationError
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....core import Period
-from ....domain.calculations.registry import CasillaId, RegistrySnapshotRef, validated_casilla_id
+from ....core import CasillaId, Period, validated_casilla_id
+from ....domain.calculations.registry import RegistrySnapshotRef
 from ....domain.filing import (
     ModeloDraft,
     ModeloDraftStatus,

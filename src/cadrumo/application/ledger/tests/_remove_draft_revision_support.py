@@ -6,8 +6,7 @@ from datetime import datetime
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import Period
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
+from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogue,

@@ -17,13 +17,12 @@ from pathlib import Path
 import pytest
 
 from ....application.aggregation import WithholdingSourceResolver, persist_percepcion_observations
-from ....core import Period
+from ....core import Period, validated_casilla_id
 from ....core.aggregation import RetencionClave
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     WithholdingObservation,
     resolve_bound_inputs_by_casilla_id,
-    validated_casilla_id,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext

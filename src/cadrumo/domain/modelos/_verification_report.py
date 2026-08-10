@@ -20,18 +20,21 @@ retry collapses onto the same report rather than accumulating.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Iterator, Mapping
 from datetime import datetime
+from decimal import Decimal
 from enum import StrEnum
+from types import MappingProxyType
 from typing import Annotated, override
 
-from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
+from pydantic import BaseModel, Field, StringConstraints, field_serializer, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, ElidedProse
+from ...core import STRICT_FROZEN_CONFIG, CasillaId
 from ...core.hashing import content_hash_hex
 from ...core.identity import CalculationRevisionId, VerificationReportId
 from ...core.time import validate_utc_aware
-from ..calculations.registry import CasillaId, LegalRefId, SourceRefId, VerificationExpectationId
+from ..calculations.registry import LegalRefId, SourceRefId, VerificationExpectationId
 from ._errors import ModeloValidationError
 
 ModeloActorLabel = Annotated[
@@ -44,22 +47,35 @@ Strips surrounding whitespace; must be 1–64 characters after stripping.
 Used as ``verified_by`` on :class:`VerificationReport` to record the actor
 label fed into the content-addressed id derivation.
 """
-_FindingMessage = Annotated[str, ElidedProse(500, strip_whitespace=True)]
-"""Operator-facing finding prose, elided at the cap rather than refused.
+_LOCALE_KEY_PATTERN = r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$"
+_FACT_KEY_PATTERN = r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)*$"
+_PRESENTATION_FACT_TOKENS = frozenset(
+    {
+        "action",
+        "command",
+        "help",
+        "hint",
+        "instruction",
+        "label",
+        "message",
+        "next",
+        "prose",
+        "remediation",
+        "suggestion",
+        "text",
+        "title",
+    },
+)
+_FindingLocaleKey = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=3, max_length=200, pattern=_LOCALE_KEY_PATTERN),
+]
+_FindingFactValue = str | int | bool | Decimal
 
-A verification finding is the artifact that explains why a filing was blocked,
-and its text is assembled from registry ids, casilla numbers, and the amounts a
-reconciliation disagreed on — a length that belongs to the taxpayer's data
-rather than to whoever wrote the sentence. Refusing one over its length raises
-out of ``verify`` with a raw validation error, so the operator loses the report
-AND the reason for it, at exactly the moment the finding mattered most. The
-sharpest builder in the tree leaves 102 characters for eight interpolated
-terms; shortening the sentence is strictly the lesser loss.
 
-The cap still binds: it is a floor for shipped copy, not a licence to write
-past it. Authoring-time headroom assertions still belong on messages whose
-length scales with taxpayer data.
-"""
+def _is_presentation_fact_key(key: str) -> bool:
+    """Return whether a fact key attempts to smuggle presentation semantics."""
+    return any(token in _PRESENTATION_FACT_TOKENS for token in re.split(r"[._]", key))
 
 
 class VerificationCompletenessStatus(StrEnum):
@@ -115,7 +131,7 @@ class ModeloVerificationFinding(BaseModel):
     A finding may point at the affected :class:`CasillaId`, the registry
     :class:`VerificationExpectationId` that raised it, and the
     :class:`LegalRefId` / :class:`SourceRefId` provenance that grounds the
-    operator-facing message.
+    locale-neutral finding identity.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -124,9 +140,36 @@ class ModeloVerificationFinding(BaseModel):
     severity: ModeloVerificationFindingSeverity
     casilla_id: CasillaId | None = None
     expectation_id: VerificationExpectationId | None = None
-    message: _FindingMessage
+    message_locale_key: _FindingLocaleKey
+    message_facts: Mapping[str, _FindingFactValue] = Field(default_factory=dict)
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
     source_refs: tuple[SourceRefId, ...] = ()
+
+    @field_validator("message_facts")
+    @classmethod
+    def _freeze_message_facts(
+        cls,
+        value: Mapping[str, _FindingFactValue],
+    ) -> Mapping[str, _FindingFactValue]:
+        """Admit deterministic typed facts, never prose or rendering instructions."""
+        if any(not re.fullmatch(_FACT_KEY_PATTERN, key) for key in value):
+            raise ValueError("verification finding fact keys must be stable identifiers")
+        if any(_is_presentation_fact_key(key) for key in value):
+            raise ValueError("verification finding facts cannot carry presentation semantics")
+        if any(
+            isinstance(item, str) and (not item or item != item.strip() or any(ch.isspace() for ch in item))
+            for item in value.values()
+        ):
+            raise ValueError("verification finding string facts must be non-blank locale-neutral tokens")
+        return MappingProxyType(dict(sorted(value.items())))
+
+    @field_serializer("message_facts")
+    def _serialize_message_facts(
+        self,
+        value: Mapping[str, _FindingFactValue],
+    ) -> dict[str, _FindingFactValue]:
+        """Serialize the immutable fact map as a deterministic JSON object."""
+        return dict(value)
 
 
 def derive_verification_report_id(

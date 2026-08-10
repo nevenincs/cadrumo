@@ -15,17 +15,15 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import BindingSourceKind, Period
+from ....core import BindingSourceKind, CasillaId, Period, validated_casilla_id
 from ....core.errors import ErrorCategory, get_registered_error_code
 from ....core.resources import resources
 from ....domain.buckets import BucketEventType
 from ....domain.calculations.registry import (
     BindingId,
-    CasillaId,
     RegistrySnapshot,
     RegistryValidationError,
     RelationId,
-    validated_casilla_id,
 )
 from ....domain.modelos import derive_calculation_revision_id
 from ....domain.user_profile import UserProfileFact, UserProfileRecord

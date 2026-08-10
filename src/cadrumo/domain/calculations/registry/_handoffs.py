@@ -8,12 +8,12 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-from ....core import STRICT_FROZEN_CONFIG
+from ....core import STRICT_FROZEN_CONFIG, CasillaId
 from ....core.aggregation import BindingSourceKind, RelationAggregationOp
 from ._authority import ValidatedRegistryAuthority
 from ._bindings import bound_casilla_binding_ids
 from ._errors import RegistryValidationError
-from ._ids import BindingId, CasillaId, LegalRefId, ModeloId, RelationId, RevisionId, SourceRefId
+from ._ids import BindingId, LegalRefId, ModeloId, RelationId, RevisionId, SourceRefId
 from ._relation_aggregation import relation_aggregation_op
 from ._relations import RegistryFoldRequirement, relation_source_requirements
 from ._schema import (

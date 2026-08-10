@@ -26,8 +26,8 @@ from decimal import Decimal
 
 import pytest
 
+from ....core import validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import validated_casilla_id
 from ....domain.deadlines import EntityType, IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from .._verification_predicates import _evaluate_predicate_expression
 

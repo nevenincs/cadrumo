@@ -28,8 +28,8 @@ from decimal import Decimal
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from ....core import Period
-from ....domain.calculations.registry import BindingId, CasillaId, validated_casilla_id
+from ....core import CasillaId, Period, validated_casilla_id
+from ....domain.calculations.registry import BindingId
 from ....domain.filing import ModeloInputs
 from ....domain.submission import ModeloDraftStatus
 from .. import build_draft, build_runtime_schema_provider

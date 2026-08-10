@@ -422,7 +422,7 @@ def parse_column_role_mapping_response(text: str, headers: Sequence[str]) -> Col
 class SemanticColumnRoleMapper:
     """Establish one table's column roles with a language model, once per file.
 
-    Binds to :class:`~adapters.outbound.llm.LLMClient` and nothing lower, so
+    Binds to :class:`~llm.LLMClient` and nothing lower, so
     which engine answers -- an on-host runtime or a gated hosted one -- is
     configuration rather than a fact this class holds.
 
@@ -510,7 +510,6 @@ class SemanticColumnRoleMapper:
         if not selection.selected or selection.runtime_id is None:
             raise LLMConfigError(
                 message=selection.detail or "no catalogued model can serve the tabular-mapping role on this machine",
-                suggestion=selection.remediation or None,
             )
         return selection.runtime_id
 

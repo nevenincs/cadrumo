@@ -21,6 +21,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from .....core import STRICT_FROZEN_CONFIG
 from .....core.config import AEAT_CERTIFICATE_PROTECTED_URL, assert_canonical_protected_resource
+from .....core.identity import ContentDigest
 from .....core.time import validate_utc_aware
 from ._errors import AeatLoginAssertionError
 
@@ -45,7 +46,7 @@ class PersistedSessionMetadata(BaseModel):
     certificate_nif: str = Field(min_length=1)
     authenticated_at: datetime
     idle_deadline: datetime
-    storage_state_sha256: str = Field(min_length=64, max_length=64)
+    storage_state_sha256: ContentDigest
     protected_resource_url: str = AEAT_CERTIFICATE_PROTECTED_URL
 
     @field_validator("authenticated_at", "idle_deadline")

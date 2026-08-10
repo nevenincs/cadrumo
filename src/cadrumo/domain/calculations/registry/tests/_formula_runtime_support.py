@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+from .....core import validated_casilla_id
 from .....core.resources import bundled_path
 from .._authority import ValidatedRegistryAuthority
-from .._ids import validated_casilla_id
 from .._schema import CasillaId, DataBindingDefinition, RegistrySnapshot
 from .._snapshot import build_snapshot
 

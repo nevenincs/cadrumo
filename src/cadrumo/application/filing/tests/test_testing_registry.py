@@ -7,8 +7,7 @@ from decimal import Decimal, InvalidOperation
 import pytest
 from pydantic import ValidationError
 
-from ....core import Period
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
+from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.filing import (
     ModeloBuilderError,
     ModeloDraft,

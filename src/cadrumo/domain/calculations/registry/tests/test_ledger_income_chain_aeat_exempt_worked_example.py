@@ -80,7 +80,7 @@ from pathlib import Path
 import pytest
 
 from .....application.aggregation import aggregate_renta_m100_income_ledger
-from .....core import Period
+from .....core import CasillaId, Period, validated_casilla_id
 from .....core.aggregation import LedgerIncomeGrounding
 from .....core.resources import bundled_path
 from ....iva import InvoiceKind, IvaCategory, category_cuota_is_zero_by_law
@@ -95,12 +95,10 @@ from ....transactions import (
     TransactionLifecycleState,
 )
 from .. import (
-    CasillaId,
     ModeloRevision,
     build_snapshot,
     resolve_ledger_renta_income_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,
-    validated_casilla_id,
 )
 from .._schema_input_kind import InputKind
 from ._registry_schema_support import _committed_modelo

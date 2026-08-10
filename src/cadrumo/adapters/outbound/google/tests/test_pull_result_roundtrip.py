@@ -30,7 +30,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from .....domain.calculations.registry import CasillaId, validated_casilla_id
+from .....core import CasillaId, validated_casilla_id
 from .._calc_sheets_pull import (
     BindingEdit,
     MetadataMatchState,

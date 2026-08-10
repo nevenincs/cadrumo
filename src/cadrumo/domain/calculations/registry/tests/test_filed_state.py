@@ -8,6 +8,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
 from .._bindings import RegistryModeloObservation
 from .._errors import RegistryValidationError
@@ -17,7 +18,6 @@ from .._filed_state import (
     compare_calculation_to_filed_observation,
 )
 from .._formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
-from .._ids import CasillaId, validated_casilla_id
 from .._schema import RegistrySnapshot
 from .._snapshot import build_snapshot
 from ._registry_schema_support import _committed_modelo

@@ -19,7 +19,8 @@ from __future__ import annotations
 
 from graphlib import TopologicalSorter
 
-from ._ids import BindingId, CasillaId, ParameterId, RelationId
+from ....core import CasillaId
+from ._ids import BindingId, ParameterId, RelationId
 from ._schema import FormulaExpression, ModeloRevision
 
 # These walkers are pure O(expression-node) traversals and intentionally

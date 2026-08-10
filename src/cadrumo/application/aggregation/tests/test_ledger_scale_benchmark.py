@@ -75,9 +75,9 @@ from ....application.modelo import (
     create_work_unit,
     persist_filed_revision_observation,
 )
-from ....core import Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....core.hashing import sha256_hex
-from ....domain.calculations.registry import CasillaId, RegistryModeloObservation, validated_casilla_id
+from ....domain.calculations.registry import RegistryModeloObservation
 from ....domain.invoices import InvoiceCatalogue
 from ....domain.transactions import (
     BusinessClassification,

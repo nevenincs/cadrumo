@@ -4,7 +4,7 @@ Reading a taxpayer's invoice at a hosted model removes that document from the
 host, which `sensitive-financial-data-secure-storage-only` permits only behind
 an explicit, per-invocation, default-off, gestor-barred acknowledgement. This
 module holds the decision function and the carrier that proves the decision was
-taken; :meth:`~adapters.outbound.llm.LLMClient.complete` applies it at the
+taken; :meth:`~llm.LLMClient.complete` applies it at the
 single dispatch point so no caller can construct a request that reaches around
 it.
 
@@ -39,19 +39,14 @@ from typing import Never, Self, override
 from pydantic import BaseModel, ConfigDict, Field, model_serializer, model_validator
 
 from ..core.config import LLMProvider, Settings
-from ..core.i18n import tr
 from ._errors import LLMConsentError
 
 __all__ = [
-    "EVIDENCE_CONSENT_REFUSAL_LOCALE_KEY",
     "EvidenceConsentToken",
     "cloud_evidence_read_permitted",
     "mint_evidence_consent_token",
     "provider_reads_off_host",
 ]
-
-EVIDENCE_CONSENT_REFUSAL_LOCALE_KEY = "llm.evidence.consent.refused"
-"""Locale key for the operator-facing refusal raised at the dispatch point."""
 
 _MINT_REFUSAL_LOCALE_KEY = "llm.evidence.consent.mint_refused"
 
@@ -227,6 +222,5 @@ def mint_evidence_consent_token(
     if not cloud_evidence_read_permitted(settings, profile_eligible=profile_eligible, acknowledged=acknowledged):
         raise LLMConsentError(
             translated_message=_MINT_REFUSAL_LOCALE_KEY,
-            suggestion=tr(EVIDENCE_CONSENT_REFUSAL_LOCALE_KEY),
         )
     return EvidenceConsentToken(surface=surface, evidence_content_address=evidence_content_address)

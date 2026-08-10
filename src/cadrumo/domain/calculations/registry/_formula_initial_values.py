@@ -24,14 +24,14 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from ....core import BindingSourceKind
+from ....core import BindingSourceKind, CasillaId
 from ....core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS
 from ._binding_selector_utils import selector_as_dict as _binding_selector_as_dict
 from ._bindings import CasillaObservation, bound_casilla_binding_ids, resolve_bound_casilla_binding_value
 from ._bindings_previous_filing import PreviousModeloSelector
 from ._casilla_membership import casillas_by_id
 from ._errors import RegistryValidationError
-from ._ids import BindingId, CasillaId
+from ._ids import BindingId
 from ._schema import CasillaDefinition, DataBindingDefinition, InputKind, ModeloRevision
 
 _ZERO = Decimal("0")

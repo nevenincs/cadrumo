@@ -41,15 +41,14 @@ from pathlib import Path
 
 import pytest
 
+from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaId,
     IvaLedgerObservation,
     RegistryCalculationResult,
     calculate_registry_snapshot,
     resolve_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
-    validated_casilla_id,
 )
 from ....domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
 from ....tests.secure_sql import isolated_runtime_profile

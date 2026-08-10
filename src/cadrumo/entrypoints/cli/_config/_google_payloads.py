@@ -35,8 +35,9 @@ from typing import Literal
 from pydantic import Field
 
 from ....adapters.outbound.storage import ProviderKind
+from ....core import CasillaId
 from ....core.json_contract import OutputSchema, register_schema
-from ....domain.calculations.registry import CasillaId, FormulaId, LegalRefId, RelationId, SourceRefId
+from ....domain.calculations.registry import FormulaId, LegalRefId, RelationId, SourceRefId
 
 
 @register_schema("config.google.register")

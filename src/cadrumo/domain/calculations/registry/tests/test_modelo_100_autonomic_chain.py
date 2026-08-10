@@ -27,7 +27,7 @@ from __future__ import annotations
 
 import pytest
 
-from .. import CasillaId, validated_casilla_id
+from .....core import CasillaId, validated_casilla_id
 from .._schema import ModeloDefinition
 from ._registry_schema_support import _committed_modelo
 

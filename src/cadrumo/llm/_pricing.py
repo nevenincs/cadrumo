@@ -1,9 +1,9 @@
 """Provider pricing helpers for cost estimation.
 
 Holds the public per-million-token pricing table for each supported
-:class:`adapters.outbound.llm.LLMProvider` and exposes
-:func:`estimate_cost_usd` so :class:`adapters.outbound.llm.LLMClient`
-can stamp every :class:`adapters.outbound.llm.LLMResponse` with a
+:class:`llm.LLMProvider` and exposes
+:func:`estimate_cost_usd` so :class:`llm.LLMClient`
+can stamp every :class:`llm.LLMResponse` with a
 deterministic USD cost estimate. The local provider always reports zero.
 """
 
@@ -49,7 +49,7 @@ def estimate_cost_usd(provider: LLMProvider, model: str, input_tokens: int, outp
     would put the defect back under a different name.
 
     Args:
-        provider: The :class:`adapters.outbound.llm.LLMProvider`
+        provider: The :class:`llm.LLMProvider`
             that produced the response.
         model: Provider-resolved model identifier (e.g.
             ``"claude-sonnet-4-6-20260101"``).

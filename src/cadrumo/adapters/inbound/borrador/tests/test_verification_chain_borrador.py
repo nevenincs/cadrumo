@@ -68,12 +68,11 @@ from decimal import Decimal
 
 import pytest
 
+from .....core import CasillaId, validated_casilla_id
 from .....core.resources import resources
 from .....domain.calculations.registry import (
-    CasillaId,
     RegistryValidationError,
     calculate_registry_snapshot,
-    validated_casilla_id,
 )
 from .....tests import FIXTURES_DIR
 from .. import ArtefactKind, BorradorParseError, BorradorParseMode, parse_borrador

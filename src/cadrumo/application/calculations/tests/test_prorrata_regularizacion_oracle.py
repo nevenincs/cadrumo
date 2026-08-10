@@ -42,13 +42,12 @@ from pathlib import Path
 
 import pytest
 
+from ....core import CasillaId, validated_casilla_id
 from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import (
-    CasillaId,
     ManualWorkedExamplePayload,
     calculate_registry_snapshot,
     resolve_bound_inputs_by_casilla_id,
-    validated_casilla_id,
 )
 from ....domain.iva import (
     InputClassification,

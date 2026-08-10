@@ -7,10 +7,6 @@ from typing import Annotated
 
 from pydantic import Field
 
-from ....core import CasillaId as CasillaId
-from ....core import validated_casilla_id as validated_casilla_id
-from ....core import validated_casilla_id_map as validated_casilla_id_map
-
 _MODELO_RE = r"^\d{3}$"
 _REF_RE = r"^[a-z0-9][a-z0-9._:-]*[a-z0-9]$|^[a-z0-9]$"
 _SOURCE_ID_RE = r"^[a-z0-9]+(?:-[a-z0-9]+)+$"

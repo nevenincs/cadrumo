@@ -19,7 +19,8 @@ from typing import Annotated, Literal
 
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
-from ..calculations.registry import CasillaId, ModeloId
+from ...core import CasillaId
+from ..calculations.registry import ModeloId
 from ._errors import ManualValidationError
 from ._ids import ManualId, ManualPart
 

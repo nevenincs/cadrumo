@@ -24,7 +24,7 @@ from typing import Literal, TypeGuard
 
 from pydantic import BaseModel, Field, TypeAdapter, field_validator, model_validator
 
-from ....core import STRICT_FROZEN_CONFIG, Period
+from ....core import STRICT_FROZEN_CONFIG, CasillaId, Period
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind, CounterpartSourceKind
 from ...iva_compensation import (
     M303_COMPENSATION_APLICADA_CASILLA,
@@ -92,7 +92,7 @@ from ._donativo_bindings import (
     DonativoSelector as _DonativoSelector,
 )
 from ._errors import RegistryValidationError
-from ._ids import BindingId, CasillaId, FormulaId, LegalRefId, ModeloId, OracleId, SourceRefId
+from ._ids import BindingId, FormulaId, LegalRefId, ModeloId, OracleId, SourceRefId
 from ._invoice_bindings import (
     INVOICE_BINDING_SOURCE_KINDS,
     InvoiceObservation,
@@ -741,7 +741,7 @@ def binding_source_modelo(binding: DataBindingDefinition) -> ModeloId | None:
     return None
 
 
-class _ProfileSelector(BaseModel):
+class ProfileSelector(BaseModel):
     """Strict validator for the selector mapping of a profile-source binding.
 
     Profile-source bindings read values from the taxpayer profile substrate
@@ -782,7 +782,7 @@ class _ProfileSelector(BaseModel):
     required_when_value: str | None = Field(default=None, min_length=1, max_length=256)
 
     @model_validator(mode="after")
-    def _validate_profile_shape(self) -> _ProfileSelector:
+    def _validate_profile_shape(self) -> ProfileSelector:
         has_scalar = self.profile_key is not None
         has_composite = bool(self.profile_keys)
         has_collection = self.profile_model is not None
@@ -811,11 +811,6 @@ class _ProfileSelector(BaseModel):
                 "profile selector required_when_profile_key and required_when_value must be declared together",
             )
         return self
-
-
-ProfileSelector = _ProfileSelector
-"""Public typed facade for the profile-source selector model."""
-
 
 _MANUAL_INPUT_RECORD_SHAPE_KEYS: frozenset[str] = frozenset(("record", "field", "offset", "length"))
 """Canonical record-field shape keys on the manual_input selector.
@@ -946,7 +941,7 @@ _BINDING_SELECTOR_REGISTRY: dict[BindingSourceKind, type[BaseModel]] = {
     BindingSourceKind.REFUND_OPERATION: _RefundSelector,
     BindingSourceKind.DONATIVO_DONOR: _DonativoSelector,
     BindingSourceKind.MANUAL_INPUT: _ManualInputSelector,
-    BindingSourceKind.PROFILE: _ProfileSelector,
+    BindingSourceKind.PROFILE: ProfileSelector,
 }
 
 
@@ -1044,7 +1039,7 @@ _BINDING_VALIDATOR_REGISTRY: dict[BindingSourceKind, _BindingFamilyValidator] = 
     BindingSourceKind.DONATIVO_DONOR: validate_donativo_binding,
     BindingSourceKind.WITHHOLDING: validate_withholding_binding_selector_shape,
     BindingSourceKind.MANUAL_INPUT: _validate_selector_only(_ManualInputSelector),
-    BindingSourceKind.PROFILE: _validate_selector_only(_ProfileSelector),
+    BindingSourceKind.PROFILE: _validate_selector_only(ProfileSelector),
 }
 
 

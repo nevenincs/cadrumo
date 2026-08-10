@@ -8,11 +8,10 @@ from functools import lru_cache
 
 import pytest
 
-from .....core import Period
+from .....core import CasillaId, Period, validated_casilla_id
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
 from .. import (
-    CasillaId,
     LegalRefId,
     ModeloDefinition,
     OssIossLedgerObservation,
@@ -20,7 +19,6 @@ from .. import (
     RegistryValidator,
     extract_record_design,
     resolve_ledger_oss_aggregation_binding_values,
-    validated_casilla_id,
 )
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
 

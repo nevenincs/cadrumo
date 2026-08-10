@@ -7,9 +7,9 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaId, RegistrySnapshot, validated_casilla_id
+from ....domain.calculations.registry import RegistrySnapshot
 from ....domain.modelos import ModeloError
 from .. import _art20_advisory as art20_advisory
 from .. import _binding_resolution as binding_resolution

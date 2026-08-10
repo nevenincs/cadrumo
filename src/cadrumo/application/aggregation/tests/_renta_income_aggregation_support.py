@@ -7,8 +7,7 @@ from decimal import Decimal
 from pathlib import Path
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
+from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,

@@ -1,4 +1,4 @@
-"""Typed ``--json`` payload schemas for ``aeat config profile censo pull``.
+"""Typed ``--json`` payload schemas for ``aeat config profile censo``.
 
 The pull reports its reconciliation rather than only its outcome: which
 paths it adopted because the profile left them blank, and which paths AEAT
@@ -21,12 +21,14 @@ from ....core.json_contract import OutputSchema, register_schema
 from ....domain.user_profile import UserProfileFact
 
 
-class CensoPullFactPayload(OutputSchema):
-    """One censal fact adopted from the AEAT consulta read.
+class CensoFactPayload(OutputSchema):
+    """One censal fact projected by either file or live-read transport.
 
-    ``source`` carries the AEAT-verified censal-read provenance token —
-    unlike the operator-supplied artefact door, this read is the authority
-    itself.
+    ``source`` keeps each transport's declared provenance token: a G313
+    artefact remains non-official while a census read remains AEAT-verified.
+    The canonical domain fact contract validates both shapes, so this shared
+    wire row refuses malformed paths and undeclared or oversized provenance
+    instead of giving each transport a parallel validator.
     """
 
     path: str
@@ -34,10 +36,18 @@ class CensoPullFactPayload(OutputSchema):
     source: str
 
     @model_validator(mode="after")
-    def _validate_canonical_profile_fact(self) -> CensoPullFactPayload:
+    def _validate_canonical_profile_fact(self) -> CensoFactPayload:
         """Keep the presentation row on the domain's profile path/provenance contract."""
         UserProfileFact(path=self.path, value=self.value, source=self.source)
         return self
+
+
+@register_schema("config.profile.censo.file")
+class CensoFileIngestResult(OutputSchema):
+    """Result of ``config profile censo file``: previewed or enrolled facts."""
+
+    applied: bool
+    facts: tuple[CensoFactPayload, ...] = ()
 
 
 class CensoPullDivergencePayload(OutputSchema):
@@ -78,13 +88,14 @@ class CensoPullResult(OutputSchema):
 
     applied: bool
     source_url: str
-    adopted: tuple[CensoPullFactPayload, ...] = ()
-    unchanged: tuple[CensoPullFactPayload, ...] = ()
+    adopted: tuple[CensoFactPayload, ...] = ()
+    unchanged: tuple[CensoFactPayload, ...] = ()
     divergences: tuple[CensoPullDivergencePayload, ...] = ()
 
 
 __all__ = [
+    "CensoFactPayload",
+    "CensoFileIngestResult",
     "CensoPullDivergencePayload",
-    "CensoPullFactPayload",
     "CensoPullResult",
 ]

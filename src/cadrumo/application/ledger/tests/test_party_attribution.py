@@ -34,6 +34,7 @@ from .._grounded_reading import ground_draft_against_transcription
 from .._party_attribution import (
     ATTRIBUTION_ESTABLISHING_ORIGINS,
     PARTY_ATTRIBUTED_ADDRESS_FIELDS,
+    party_addresses,
     party_attribution_advisory,
 )
 
@@ -108,6 +109,38 @@ def _grounded(draft: InvoiceDraft) -> InvoiceDraft:
 def _stamp(draft: InvoiceDraft, field: str) -> bool:
     envelope = next(item for item in draft.provenance if item.field == field)
     return envelope.attribution_unverified
+
+
+def test_the_canonical_party_table_owns_fields_and_operator_roles_for_both_advisories() -> None:
+    """Country and postal checks cannot re-declare a different pair of parties."""
+    assert [
+        (
+            party.role,
+            party.postal_field,
+            party.country_field,
+            party.country_code_field,
+            party.stated_country_code_field,
+            party.operator_role,
+        )
+        for party in party_addresses()
+    ] == [
+        (
+            "supplier",
+            "supplier_postal_code",
+            "supplier_country",
+            "supplier_country_code",
+            "supplier_stated_country_code",
+            "issuing",
+        ),
+        (
+            "customer",
+            "customer_postal_code",
+            "customer_country",
+            "customer_country_code",
+            "customer_stated_country_code",
+            "billed",
+        ),
+    ]
 
 
 def test_the_reading_path_stamps_every_model_read_party_address_value() -> None:

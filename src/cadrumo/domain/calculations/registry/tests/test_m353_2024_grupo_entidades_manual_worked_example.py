@@ -68,16 +68,15 @@ from typing import Any
 
 import pytest
 
+from .....core import CasillaId, validated_casilla_id
 from .....core.resources import resources
 from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
 from .. import (
-    CasillaId,
     IvaLedgerObservation,
     ValidatedRegistryAuthority,
     calculate_registry_snapshot,
     resolve_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
-    validated_casilla_id,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

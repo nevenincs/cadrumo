@@ -64,20 +64,20 @@ from collections.abc import Sequence
 from decimal import Decimal
 
 from ...core import (
+    CasillaId,
     ExportLayoutFormat,
     PriorDomiciliationElection,
     ResultDisposition,
     result_disposition_requires_bank_account,
+    validated_casilla_id,
 )
 from ...domain.calculations.registry import (
     CalculationCompletenessManifest,
-    CasillaId,
     ExportLayoutDefinition,
     ExportRecordDefinition,
     RateBoxPartition,
     fixed_width_record_casilla_ids,
     rate_box_coverage_shortfalls,
-    validated_casilla_id,
     xml_dictionary_entries,
 )
 from ...domain.filing import CasillaCollection, FilingExportError, ModeloDraft

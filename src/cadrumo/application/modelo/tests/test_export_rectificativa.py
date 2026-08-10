@@ -25,8 +25,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ....core import Period
-from ....domain.calculations.registry import CasillaId
+from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.deadlines import (
     IVARegime,
     ModeloIVAProfile,
@@ -244,7 +243,7 @@ def test_rectificativa_indicator_renders_in_fichero_page_3(isolated_backend: Non
         build_runtime_schema_provider,
         export_draft,
     )
-    from ....domain.calculations.registry import validated_casilla_id
+
     from ....domain.submission import ModeloDraftStatus
 
     tax_id = "B12345674"

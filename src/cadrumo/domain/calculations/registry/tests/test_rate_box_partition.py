@@ -15,6 +15,7 @@ from decimal import Decimal
 
 import pytest
 
+from .....core import validated_casilla_id
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from .....domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
 from .. import (
@@ -24,7 +25,6 @@ from .. import (
     PeriodSelector,
     derive_rate_box_partitions,
     rate_box_coverage_shortfalls,
-    validated_casilla_id,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

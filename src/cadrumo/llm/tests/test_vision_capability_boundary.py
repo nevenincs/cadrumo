@@ -129,7 +129,6 @@ class TestTextOnlyProviderRefusesImages:
         message = str(caught.value)
         assert LLMProvider.OPENAI.value in message
         assert "cannot accept images" in message
-        assert caught.value.suggestion is not None
 
     def test_the_refusal_also_covers_gemini(self, tmp_path: Path) -> None:
         """The second text-only adapter is gated by the same one guard.

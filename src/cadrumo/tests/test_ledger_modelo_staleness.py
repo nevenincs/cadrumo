@@ -49,8 +49,7 @@ from ..application.aggregation import (
     stale_filed_revisions,
 )
 from ..application.ledger import ManualLedgerTransactionPatch, update_manual_transaction_fields
-from ..core import Period
-from ..domain.calculations.registry import CasillaId, validated_casilla_id
+from ..core import CasillaId, Period, validated_casilla_id
 from ..domain.iva import IvaCategory
 from ..domain.modelos import (
     CalculationRevision,

@@ -65,12 +65,9 @@ class PlaywrightStealthEvasion:
         try:
             from playwright_stealth import Stealth
         except ImportError as e:
-            from .....core import BROWSER_EXTRA
-
             logger.error("playwright-stealth is not installed; evasion failed", exc_info=True)
             raise BrowserEvasionError(
                 "playwright-stealth is required for this evasion strategy.",
-                suggestion=BROWSER_EXTRA.install_hint,
             ) from e
 
         await Stealth().apply_stealth_async(context)

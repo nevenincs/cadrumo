@@ -10,6 +10,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
+from .....core import CasillaId, validated_casilla_id
 from .....core.resources import resources
 from ....iva import (
     IvaCategory,
@@ -17,14 +18,12 @@ from ....iva import (
     IvaRateKind,
 )
 from .. import (
-    CasillaId,
     IvaLedgerObservation,
     ModeloRevision,
     RegistryCalculationResult,
     calculate_registry_snapshot,
     resolve_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
-    validated_casilla_id,
 )
 from .._binding_selector_utils import selector_as_dict
 from ._ledger_iva_aggregation_support import (
@@ -61,7 +60,7 @@ def test_box_59_carries_substantive_intra_community_supply_grounding() -> None:
     not apply to an exempt entrega) must be gone. Asserted against the loaded
     registry revision, both 2009 and 2023.
     """
-    for revision_id in ("2009-y-siguientes", "2023-y-siguientes"):
+    for revision_id in ("2009-y-siguientes", "2023", "2024-hasta-08-y-2t", "2024-desde-09-y-3t", "2025", "2026-y-siguientes"):
         revision = _m303_revision(revision_id)
         casilla_59 = next(casilla for casilla in revision.casillas if casilla.number == "59")
         refs = tuple(casilla_59.legal_refs)
@@ -80,7 +79,7 @@ def test_box_60_carries_substantive_export_grounding() -> None:
     asimiladas" leg. Asserted against the loaded registry revision, both 2009
     and 2023.
     """
-    for revision_id in ("2009-y-siguientes", "2023-y-siguientes"):
+    for revision_id in ("2009-y-siguientes", "2023", "2024-hasta-08-y-2t", "2024-desde-09-y-3t", "2025", "2026-y-siguientes"):
         revision = _m303_revision(revision_id)
         casilla_60 = next(casilla for casilla in revision.casillas if casilla.number == "60")
         refs = tuple(casilla_60.legal_refs)
@@ -94,7 +93,7 @@ def test_box_60_binding_selects_export_and_assimilated_export_categories() -> No
         IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
         IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
     }
-    for revision_id in ("2009-y-siguientes", "2023-y-siguientes"):
+    for revision_id in ("2009-y-siguientes", "2023", "2024-hasta-08-y-2t", "2024-desde-09-y-3t", "2025", "2026-y-siguientes"):
         revision = _m303_revision(revision_id)
         binding = next(item for item in revision.bindings if item.id == "modelo-303-casilla-60-exportaciones-base")
         selector_dict: Any = selector_as_dict(binding)
@@ -156,7 +155,7 @@ def test_modelo_303_2009_revision_domestic_base_aggregates_from_ledger() -> None
 
     The 2009 revision (inline-declared) carried the cuota ledger bindings (and the
     compensación carry + verification) but lacked the domestic-base bindings that
-    the 2023-y-siguientes revision has, so casillas 01/04/07/28 were
+    the post-2022 revision family has, so casillas 01/04/07/28 were
     ``input_kind = "manual"`` and a ledger-driven 2009-2022 M303 left the base at 0
     while the cuota resolved — a "cuota without base" under-declaration. This fixes
     that by back-filling the four base bindings (``fact = "base_amount_sum"``,
@@ -223,7 +222,7 @@ def test_recargo_equivalencia_cuota_aggregates_by_tier_from_recargo_amount() -> 
     routed by category to the matching tier binding — not from re-running the sum
     under test. Proves the recargo_amount_sum fact closes the recargo silent zero.
     """
-    revision = _m303_revision("2023-y-siguientes")
+    revision = _m303_revision("2025")
     general = _observation(
         applied_rate=Decimal("0.21"),
         ledger_id="rec-general",
@@ -350,7 +349,7 @@ def _calculate_303_2009_from_observations(
     """Calculate helper scoped to the 2009-y-siguientes revision's own binding set.
 
     Unlike :func:`_calculate_303_from_observations` (which seeds the
-    2023-y-siguientes-only ``modelo-303-autoconsumo-promotor-base`` /
+    post-2022-only ``modelo-303-autoconsumo-promotor-base`` /
     ``modelo-303-profile-state-attribution-ratio`` bindings), the
     2009-y-siguientes revision declares only
     ``modelo-303-compensacion-pendiente-anteriores`` as a manual binding fact.
@@ -372,7 +371,7 @@ def _calculate_303_2009_from_observations(
 def test_modelo_303_2009_revision_cuota_devengada_total_anti_tautology_recargo_changes_total() -> None:
     """The 2009-y-siguientes casilla-27 total now includes recargo de equivalencia.
 
-    Backport of the 2023-y-siguientes casilla-27 grounding (see the comment on
+    Backport of the post-2022 casilla-27 grounding (see the comment on
     ``modelo-303-iva-cuota-devengada-total`` in this revision's
     formulas/0001-formulas.toml): the 2009-y-siguientes revision (filing years
     2009-2022) summed only the five non-recargo devengado components, silently
@@ -383,7 +382,7 @@ def test_modelo_303_2009_revision_cuota_devengada_total_anti_tautology_recargo_c
     projects onto in the export layout); the 2009 revision's literal-number
     casilla 27 remains a separate ``input_kind = manual`` casilla with no
     projection formula wired from the computed total on this revision
-    (unlike 2023-y-siguientes' ``modelo-303-dr303-27-projection``) — a
+    (unlike the post-2022 ``modelo-303-dr303-27-projection``) — a
     pre-existing, separate structural gap out of scope of this recargo fix.
 
     Anti-tautology: this does not hand-compute the with-recargo absolute
@@ -393,7 +392,7 @@ def test_modelo_303_2009_revision_cuota_devengada_total_anti_tautology_recargo_c
     recargo zeroed — and asserts the delta in the devengada total equals
     exactly the dropped recargo_amount. A formula that ignored the recargo
     terms, or always returned a constant, would fail this check — mirroring
-    the 2023-y-siguientes pattern in
+    the post-2022 pattern in
     ``test_casilla_27_anti_tautology_recargo_changes_total_cuota_devengada``.
     """
 

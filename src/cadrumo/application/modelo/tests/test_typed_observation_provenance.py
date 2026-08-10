@@ -24,14 +24,13 @@ from decimal import Decimal
 
 import pytest
 
+from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaId,
     CasillaObservation,
     RegistryCalculationResult,
     RegistrySnapshot,
     expression_casilla_refs,
-    validated_casilla_id,
 )
 from ....domain.modelos import (
     CalculationRevision,

@@ -72,17 +72,15 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period, ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from ....core import CasillaId, Period, ProrrataProvisionalProvenance, ProrrataRegisterRegime, validated_casilla_id
 from ....core.aggregation import BindingSourceKind
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     BindingId,
-    CasillaId,
     InputKind,
     RegistryModeloObservation,
     calculate_registry_snapshot,
     resolve_bound_inputs_by_casilla_id,
-    validated_casilla_id,
 )
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
@@ -346,7 +344,11 @@ def _seed_m303_prorrata_work_unit(work_unit_repository: WorkUnitCatalogueReposit
         modelo="303",
         filing_year=_PRORRATA_YEAR,
         period=_PRORRATA_PERIOD,
-        revision_id="2023-y-siguientes",
+        revision_id=resources().modelos.authority.snapshot(
+            "303",
+            filing_year=_PRORRATA_YEAR,
+            period=_PRORRATA_PERIOD.registry_token,
+        ).revision.id,
         repository=work_unit_repository,
         clock=_PRORRATA_T0,
     )

@@ -9,7 +9,8 @@ import pytest
 
 from .....core.aggregation import BindingSourceKind
 from .....core.resources import bundled_path
-from .._bindings import _ProfileSelector
+from .. import _bindings
+from .._bindings import ProfileSelector, selector_model_for_source
 from .._loader import load_catalogue_file, load_modelo_path
 from .._schema import RegistryCatalogues, RegistrySnapshot
 from .._schema_input_kind import InputKind
@@ -65,8 +66,8 @@ _EXPECTED_ROW_BINDING_TARGETS: Mapping[str, tuple[str, str]] = {
 }
 
 
-def _profile_selector(value: object) -> _ProfileSelector:
-    assert isinstance(value, _ProfileSelector)
+def _profile_selector(value: object) -> ProfileSelector:
+    assert isinstance(value, ProfileSelector)
     return value
 
 
@@ -89,6 +90,19 @@ def _modelo_100_2024_snapshot() -> RegistrySnapshot:
     modelo = load_modelo_path(bundled_path("registry", "aeat", "modelos", "100"))
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
     return build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2024, period="0A")
+
+
+def test_profile_selector_is_the_single_profile_dispatch_authority() -> None:
+    """The live registry dispatch and loaded profile bindings share one class."""
+    assert selector_model_for_source(BindingSourceKind.PROFILE) is ProfileSelector
+    assert not hasattr(_bindings, "_ProfileSelector")
+
+    snapshot = _modelo_100_2024_snapshot()
+    profile_bindings = tuple(
+        binding for binding in snapshot.revision.bindings if binding.source is BindingSourceKind.PROFILE
+    )
+    assert profile_bindings
+    assert all(isinstance(binding.selector, ProfileSelector) for binding in profile_bindings)
 
 
 def test_modelo_100_2024_profile_family_surface_is_bound_to_profile_registry_facts() -> None:

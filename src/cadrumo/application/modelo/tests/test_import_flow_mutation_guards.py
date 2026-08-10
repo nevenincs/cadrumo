@@ -12,8 +12,7 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import Period
-from ....domain.calculations.registry import validated_casilla_id
+from ....core import Period, validated_casilla_id
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionAmendmentKind,

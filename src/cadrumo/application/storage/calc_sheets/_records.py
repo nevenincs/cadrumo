@@ -38,12 +38,12 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_serializer, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ....core import Period
+from ....core import CasillaId, Period
+from ....core.identity import ContentDigest
 from ....core.time import now as _utc_now
 from ....core.time import validate_utc_aware
 from ....domain.calculations.registry import (
     BindingId,
-    CasillaId,
     FormulaId,
     LegalRefId,
     ModeloId,
@@ -553,7 +553,7 @@ class SheetEvidenceFacet(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    snapshot_fingerprint: str | None = Field(default=None, min_length=64, max_length=64)
+    snapshot_fingerprint: ContentDigest | None = None
     contributor_rows: tuple[SheetEvidenceContributorRow, ...] = ()
     manual_entries: tuple[SheetEvidenceManualEntry, ...] = ()
 

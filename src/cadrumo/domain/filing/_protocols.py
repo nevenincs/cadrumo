@@ -18,12 +18,11 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 if TYPE_CHECKING:  # pragma: no cover — type-only import
-    from ...core import Period
+    from ...core import CasillaId, Period
     from ...core.identity import SubjectTaxId
     from ..calculations.registry import (
         BindingId,
         CasillaConstraints,
-        CasillaId,
         FormulaId,
         LegalRefId,
         RelationId,

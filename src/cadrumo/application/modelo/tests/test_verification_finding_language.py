@@ -1,4 +1,4 @@
-"""Language regression coverage for modelo verification findings."""
+"""Locale-neutral identity coverage for modelo verification findings."""
 
 from __future__ import annotations
 
@@ -7,9 +7,10 @@ from pathlib import Path
 
 import pytest
 
+from ....core import CasillaId, validated_casilla_id
 from ....core.config import override_settings
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaDefinition, CasillaId, validated_casilla_id
+from ....domain.calculations.registry import CasillaDefinition
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...user_profile import UserProfileLifecycleRepository
@@ -42,29 +43,26 @@ def _save_active_profile_language(runtime: TestRuntimeProfile, language: str) ->
     )
 
 
-def _missing_required_message() -> str:
+def _missing_required_finding_identity() -> tuple[str, dict[str, str | int | bool]]:
     finding = missing_required_casilla_finding(
         _CASILLA_01,
-        "wu-language-regression",
         casilla_def=_m130_casilla_definition(_CASILLA_01),
     )
-    assert finding.message is not None
-    return finding.message
+    return finding.message_locale_key, dict(finding.message_facts)
 
 
-def test_missing_required_casilla_finding_uses_active_profile_output_language(tmp_path: Path) -> None:
-    """The missing-required finding body follows the active profile language."""
+def test_missing_required_casilla_finding_is_independent_of_active_profile_language(tmp_path: Path) -> None:
+    """Active profile language does not alter the finding's durable identity or facts."""
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
         _save_active_profile_language(runtime, "ca")
         with override_settings(cadrumo_output_language=None):
-            catalan_message = _missing_required_message()
+            catalan_identity = _missing_required_finding_identity()
 
         _save_active_profile_language(runtime, "es")
         with override_settings(cadrumo_output_language=None):
-            spanish_message = _missing_required_message()
+            spanish_identity = _missing_required_finding_identity()
 
-    assert catalan_message != spanish_message
-    assert "La casella obligatòria" in catalan_message
-    assert "La casilla requerida" in spanish_message
-    assert "La casilla requerida" not in catalan_message
+    expected = ("application.modelo.findings.missing_required_casilla", {"casilla_id": str(_CASILLA_01)})
+    assert catalan_identity == expected
+    assert spanish_identity == expected

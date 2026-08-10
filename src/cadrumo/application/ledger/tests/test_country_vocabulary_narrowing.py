@@ -216,6 +216,7 @@ def test_the_check_runs_on_the_issuing_side_too() -> None:
 
     assert advisory is not None
     assert advisory.fields == ("supplier_stated_country_code",)
+    assert advisory.parties[0].role == "issuing"
 
 
 @pytest.mark.parametrize("code", ["US", "DE", "ES", "XI"])

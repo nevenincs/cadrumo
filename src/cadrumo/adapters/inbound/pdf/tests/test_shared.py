@@ -14,8 +14,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from .....core import CasillaId, validated_casilla_id
 from .....core.errors import CadrumoError
-from .....domain.calculations.registry import CasillaId, validated_casilla_id
 from .. import ExtractedCasilla, PdfModeloImportError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]

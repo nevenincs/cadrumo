@@ -37,9 +37,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ...core import TipoRentaIrnr
-from ...core.i18n import tr
-from ...domain.calculations.registry import CasillaId, RegistrySnapshot
+from ...core import CasillaId, TipoRentaIrnr
+from ...domain.calculations.registry import RegistrySnapshot
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.modelos import (
     ModeloError,
@@ -100,12 +99,12 @@ def _m210_convenio_lob_advisory_finding(
         kind=ModeloVerificationFindingKind.ADVISORY,
         severity=ModeloVerificationFindingSeverity.WARNING,
         casilla_id=tipo_renta_id,
-        message=tr(
-            "application.modelo.findings.m210_convenio_lob_advisory",
-            cc=override.country_code,
-            document_id=override.document_id,
-            tipo_renta=tipo_renta.value,
-        ),
+        message_locale_key="application.modelo.findings.m210_convenio_lob_advisory",
+        message_facts={
+            "country_code": override.country_code,
+            "document_id": override.document_id,
+            "tipo_renta_code": tipo_renta.value,
+        },
         legal_refs=override.legal_refs,
     )
 

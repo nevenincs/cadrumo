@@ -539,7 +539,7 @@ def test_non_alta_calendar_event_is_not_enriched_by_matching_verified_evidence()
         period=_PERIOD_2025_1T,
         aeat_submission_state=OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED,
         aeat_reference_id="12345678901234567890",
-        verified_justificante_csv="JUST-303-2025-1T",
+        verified_justificante_csv="JUST3032025X1T7",
         justificante_verified=True,
     )
 
@@ -603,7 +603,7 @@ def test_official_calculation_observation_sources_are_calendar_submission_eviden
 
 
 def test_official_calculation_observation_source_with_matching_justificante_is_verified() -> None:
-    csv = "JUST-303-2025-1T"
+    csv = "JUST3032025X1T7"
     payload = _calculation_observation_payload(
         source_kind="aeat_csv_register",
         source_metadata={
@@ -630,7 +630,7 @@ def test_official_calculation_observation_source_with_matching_justificante_is_v
 
 
 def test_verified_modelo_record_receipt_time_survives_calculation_observation_merge() -> None:
-    csv = "JUST-303-2025-1T"
+    csv = "JUST3032025X1T7"
     payload = _calculation_observation_payload(
         source_kind="aeat_sede_justificante",
         source_metadata={
@@ -668,15 +668,15 @@ def test_verified_modelo_record_receipt_time_survives_calculation_observation_me
 @pytest.mark.parametrize(
     "justificante_metadata",
     (
-        pytest.param({"aeat_justificante_csv": "JUST-303-2025-1T"}, id="single-csv"),
-        pytest.param({"aeat_justificante_csvs": "OTHER,JUST-303-2025-1T"}, id="plural-csvs"),
-        pytest.param({"aeat_justificante_csv": "just-303-2025-1t"}, id="case-insensitive-csv"),
+        pytest.param({"aeat_justificante_csv": "JUST3032025X1T7"}, id="single-csv"),
+        pytest.param({"aeat_justificante_csvs": "OTHER,JUST3032025X1T7"}, id="plural-csvs"),
+        pytest.param({"aeat_justificante_csv": "just3032025x1t7"}, id="case-insensitive-csv"),
     ),
 )
 def test_sede_calculation_observation_with_matching_justificante_metadata_is_verified(
     justificante_metadata: dict[str, str],
 ) -> None:
-    csv = "JUST-303-2025-1T"
+    csv = "JUST3032025X1T7"
     payload = _calculation_observation_payload(
         source_kind="aeat_sede_justificante",
         source_metadata={
@@ -703,7 +703,7 @@ def test_sede_calculation_observation_with_matching_justificante_metadata_is_ver
 
 
 def test_sede_calculation_observation_conflicting_case_equivalent_justificantes_do_not_verify() -> None:
-    csv = "JUST-303-2025-1T"
+    csv = "JUST3032025X1T7"
     payload = _calculation_observation_payload(
         source_kind="aeat_sede_justificante",
         source_metadata={
@@ -734,14 +734,14 @@ def test_sede_calculation_observation_with_wrong_justificante_metadata_is_not_ve
         source_metadata={
             "aeat_register_status": "ALTA",
             "aeat_expediente_id": "12345678901234567890",
-            "aeat_justificante_csv": "JUST-303-2025-1T",
+            "aeat_justificante_csv": "JUST3032025X1T7",
             "authenticated_identity": "X1234567L",
         },
     )
 
     evidence = calendar_filing_evidence_from_sources(
         calculation_observations=(payload,),
-        justificantes=(_justificante_metadata(csv="JUST-303-2025-1T", tax_id="Y7654321Z"),),
+        justificantes=(_justificante_metadata(csv="JUST3032025X1T7", tax_id="Y7654321Z"),),
         expected_tax_id="X1234567L",
     )
 
@@ -767,10 +767,10 @@ def test_sede_calculation_observation_requires_valid_register_metadata() -> None
             {
                 "aeat_register_status": "ALTA",
                 "authenticated_identity": "X1234567L",
-                "aeat_justificante_csv": "JUST-303-2025-1T",
+                "aeat_justificante_csv": "JUST3032025X1T7",
             },
             "X1234567L",
-            "JUST-303-2025-1T",
+            "JUST3032025X1T7",
         ),
         (
             "missing-authenticated-identity",

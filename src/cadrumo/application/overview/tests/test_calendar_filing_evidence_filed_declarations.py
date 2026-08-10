@@ -138,7 +138,7 @@ def test_filed_declaration_observation_without_stored_justificante_is_observed_o
 
 def test_imported_justificante_record_marks_aeat_verified_without_implying_local_calculation() -> None:
     imported_at = datetime(2025, 4, 16, 11, 0, tzinfo=UTC)
-    csv = "JUST-303-2025-1T"
+    csv = "JUST3032025X1T7"
     evidence = calendar_filing_evidence_from_sources(
         filing_records=(
             _modelo_record(
@@ -164,7 +164,7 @@ def test_imported_justificante_record_marks_aeat_verified_without_implying_local
 
 
 def test_imported_justificante_record_for_nonmatching_receipt_metadata_is_not_verified() -> None:
-    csv = "JUST-303-2025-1T"
+    csv = "JUST3032025X1T7"
     cases = (
         ("wrong-taxpayer", "303", 2025, _PERIOD_2025_1T, "Y7654321Z"),
         ("wrong-modelo", "130", 2025, _PERIOD_2025_1T, "X1234567L"),

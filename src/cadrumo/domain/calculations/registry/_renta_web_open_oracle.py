@@ -9,7 +9,7 @@ from typing import Final, Literal, Protocol
 
 from pydantic import AnyUrl, BaseModel, Field, field_validator
 
-from ....core import STRICT_FROZEN_CONFIG
+from ....core import STRICT_FROZEN_CONFIG, CasillaId, validated_casilla_id
 from ....core.config import Settings
 from ....core.decimal import coerce_finite_european_decimal, normalize_decimal_separators
 from ._errors import RegistryValidationError
@@ -17,7 +17,7 @@ from ._external_grounding import (
     BUNDLED_ORACLE_EVIDENCE_LOCATOR_MAX_LENGTH,
     require_bundled_oracle_evidence_locator,
 )
-from ._ids import CasillaId, OracleId, validated_casilla_id
+from ._ids import OracleId
 from ._live_parity import (
     OracleSurfaceKind,
     ParityFieldComparison,

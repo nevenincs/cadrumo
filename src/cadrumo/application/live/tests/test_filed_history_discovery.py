@@ -27,7 +27,7 @@ from ....adapters.outbound.aeat.sede import (
     FiledDeclarationAvailability,
     FiledDeclarationAvailabilityReport,
 )
-from ....core import FiledHistoryDiscoverySignal, Period, RegisterScopingSignal
+from ....core import FiledHistoryDiscoverySignal, Period, RegisterScopingSignal, validated_casilla_id
 from ....domain.deadlines import TaxpayerProfile
 from .._filed_data_capture import (
     ExpectedFiledDeclarationGrid,
@@ -523,7 +523,7 @@ def _filed_130_observation_for_tests():
     )
     from ....core import CasillaValueKind
     from ....core.config import Settings
-    from ....domain.calculations.registry import validated_casilla_id
+
 
     body = b"130-2026-1T-submitted-file"
     external = Settings.external_constants().aeat
@@ -672,7 +672,8 @@ def test_the_breakdown_keys_on_period_not_on_the_query_pair() -> None:
 
 
 def _stored_130_registry_observation(*, casilla_03: str):
-    from ....domain.calculations.registry import RegistryModeloObservation, validated_casilla_id
+    from ....core import validated_casilla_id
+    from ....domain.calculations.registry import RegistryModeloObservation
     from ....tests.registry_observations import registry_grounded_observations
 
     return RegistryModeloObservation(
@@ -711,7 +712,8 @@ def test_a_casilla_the_stored_revision_never_held_is_not_a_divergence() -> None:
     extraction improvement -- a casilla newly READ is not a casilla AMENDED, and
     reporting it as one would train the operator to ignore the alert.
     """
-    from ....domain.calculations.registry import RegistryModeloObservation, validated_casilla_id
+    from ....core import validated_casilla_id
+    from ....domain.calculations.registry import RegistryModeloObservation
     from ....tests.registry_observations import registry_grounded_observations
 
     stored_without_03 = RegistryModeloObservation(

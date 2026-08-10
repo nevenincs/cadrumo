@@ -31,9 +31,8 @@ from ...application.modelo import (
     parse_casilla_value_spreadsheet,
     record_operator_local_observation,
 )
-from ...core import Period, PeriodError
+from ...core import CasillaId, Period, PeriodError, validated_casilla_id
 from ...core.i18n import tr
-from ...domain.calculations.registry import CasillaId, validated_casilla_id
 from ...domain.modelos import ExternalEvidenceKind, ModeloCode, ModeloValidationError
 from ._common import MODELO_CODE_CHOICE, _declared_tax_id, _emit_envelope
 from ._modelo_payloads import (
@@ -281,9 +280,10 @@ def filing_record_import(
             actor=actor or _actor(),
             expected_tax_id=expected_tax_id,
         )
+    except WorkUnitMutationRefusedError:
+        raise
     except (
         WorkUnitNotFoundError,
-        WorkUnitMutationRefusedError,
         ExternalModeloImportError,
     ) as exc:
         raise _bad_from_error(exc) from exc

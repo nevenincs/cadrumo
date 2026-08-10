@@ -45,19 +45,16 @@ from functools import cache
 import pdfplumber
 import pytest
 
-from .....core import Period
+from .....core import CasillaId, Period, validated_casilla_id, validated_casilla_id_map
 from .....core.aggregation import RetencionClave
 from .....tests import FIXTURES_DIR
 from ....period import calculation_filing_date
 from .. import (
-    CasillaId,
     RegistryCalculationResult,
     WithholdingObservation,
     calculate_registry_snapshot,
     resolve_bound_inputs_by_casilla_id,
     resolve_withholding_binding_values,
-    validated_casilla_id,
-    validated_casilla_id_map,
 )
 from .._authority import ValidatedRegistryAuthority
 from .._binding_selector_utils import selector_as_dict

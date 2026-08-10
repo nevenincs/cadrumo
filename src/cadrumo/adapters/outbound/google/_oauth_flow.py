@@ -32,7 +32,6 @@ from typing import NoReturn
 
 from ....adapters.persistence.storage.master_key import looks_like_real_tax_id
 from ....core.config import SecretStoreBackend, load_settings
-from ....core.i18n import tr
 from ....core.time import now
 from ....core.tty import stdin_is_tty
 from ....domain.user_profile import ProfileNotFoundError
@@ -67,14 +66,12 @@ def require_interactive_terminal() -> None:
 
     Raises:
         :exc:`adapters.outbound.google.GoogleAuthNonInteractiveError`:
-            When ``sys.stdin`` is not attached to a terminal. The exception
-            carries the interactive-terminal prerequisite as a suggestion.
+            When ``sys.stdin`` is not attached to a terminal.
     """
     if not stdin_is_tty():
         raise GoogleAuthNonInteractiveError(
             "google OAuth refused: interactive browser consent requires a controlling terminal",
             context={"reason": "stdin_not_a_tty"},
-            suggestion=tr("adapters.google.oauth_flow.suggestions.run_from_interactive_terminal"),
             translated_message="adapters.google.oauth_flow.errors.non_interactive",
         )
 
@@ -107,7 +104,6 @@ def check_unsecured_mode_safety(profile: str, tax_id: str) -> None:
         raise GoogleAuthUnsecuredModeRefusedError(
             "google OAuth refused: secret store is unsecured and the active profile carries a real NIF",
             context={"profile": profile, "backend": "unsecured"},
-            suggestion=tr("adapters.google.oauth_flow.suggestions.use_keyring_or_synthetic"),
             translated_message="adapters.google.oauth_flow.errors.unsecured_mode_refused",
         )
 
@@ -139,7 +135,6 @@ def resolve_active_tax_id(profile_id: str) -> str:
         raise GoogleAuthProfileUnboundError(
             "google OAuth refused: active profile bucket manifest could not be resolved",
             context={"profile": profile_id, "reason": "profile_bucket_manifest_missing"},
-            suggestion=tr("adapters.google.oauth_flow.suggestions.repair_profile_state"),
             translated_message="adapters.google.oauth_flow.errors.profile_state_unresolved",
         )
     service = build_lifecycle_service(bucket_id=pointer.bucket_id)
@@ -149,7 +144,6 @@ def resolve_active_tax_id(profile_id: str) -> str:
         raise GoogleAuthProfileUnboundError(
             "google OAuth refused: active profile record could not be resolved",
             context={"profile": profile_id, "bucket_id": pointer.bucket_id, "reason": "profile_record_missing"},
-            suggestion=tr("adapters.google.oauth_flow.suggestions.repair_profile_state"),
             translated_message="adapters.google.oauth_flow.errors.profile_state_unresolved",
         ) from exc
     return fact_value(record, "identity.tax_id") or ""
@@ -201,7 +195,6 @@ def credentials_to_records(
         raise GoogleAuthScopeInsufficientError(
             f"consent screen returned without granting required scopes: {missing!r}",
             context={"missing_scopes": list(missing), "account_email": account_email},
-            suggestion="aeat config google login",
             translated_message="adapters.google.oauth_flow.errors.scope_missing",
         )
     token = OAuthToken(refresh_token=refresh_token, token_uri=token_uri)
@@ -273,7 +266,6 @@ def _run_local_server(client: OAuthClient) -> tuple[str, str, str, tuple[str, ..
     except ImportError as exc:
         raise GoogleAuthNetworkError(
             f"google-auth-oauthlib not importable: {exc}",
-            suggestion="pip install cadrumo[google]",
             translated_message="adapters.google.oauth_flow.errors.oauthlib_not_importable",
         ) from exc
 
@@ -301,7 +293,6 @@ def _run_local_server(client: OAuthClient) -> tuple[str, str, str, tuple[str, ..
     except OSError as exc:
         raise GoogleAuthLoopbackBindError(
             f"loopback receiver failed to bind: {exc}",
-            suggestion=tr("adapters.google.oauth_flow.suggestions.close_loopback_port"),
             translated_message="adapters.google.oauth_flow.errors.loopback_bind_failed",
         ) from exc
     except Exception as exc:
@@ -326,7 +317,6 @@ def _raise_local_server_error(exc: Exception) -> NoReturn:
     if "browser" in message or "webbrowser" in message:
         raise GoogleAuthBrowserOpenError(
             f"OS browser launcher refused: {exc}",
-            suggestion=tr("adapters.google.oauth_flow.suggestions.open_consent_url_manually"),
             translated_message="adapters.google.oauth_flow.errors.browser_launcher_refused",
         ) from exc
     if "transport" in message or "connect" in message or "network" in message:
@@ -373,7 +363,6 @@ def _decode_email_from_id_token(credentials: object, *, audience: str) -> str:
         raise GoogleAuthScopeInsufficientError(
             "Google did not return an id_token; the OAuth consent did not include the openid+email scopes",
             context={"audience": audience},
-            suggestion="aeat config google login",
             translated_message="adapters.google.oauth_flow.errors.id_token_missing",
         )
     try:
@@ -382,7 +371,6 @@ def _decode_email_from_id_token(credentials: object, *, audience: str) -> str:
     except ImportError as exc:
         raise GoogleAuthNetworkError(
             f"google-auth id_token module not importable: {exc}",
-            suggestion="pip install cadrumo[google]",
             translated_message="adapters.google.oauth_flow.errors.id_token_module_not_importable",
         ) from exc
     try:
@@ -398,7 +386,6 @@ def _decode_email_from_id_token(credentials: object, *, audience: str) -> str:
         raise GoogleAuthScopeInsufficientError(
             "id_token verified but carries no `email` claim",
             context={"audience": audience},
-            suggestion="aeat config google login",
             translated_message="adapters.google.oauth_flow.errors.email_claim_missing",
         )
     return email

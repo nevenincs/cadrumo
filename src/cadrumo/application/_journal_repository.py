@@ -27,7 +27,7 @@ from typing import Protocol
 
 from pydantic import ValidationError
 
-from ..core import StorageCategory, exclusive_file_lock, storage_location
+from ..core import StorageCategory, exclusive_file_lock, is_link_like, storage_location
 from ..core.atomic_write import atomic_write_hardened_text
 from ..core.errors import CadrumoError
 from ..core.external_constants import UTF_8_ENCODING
@@ -35,11 +35,6 @@ from ..core.external_constants import UTF_8_ENCODING
 JOURNAL_OPERATION_ID_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 _DIRECTORY_MODE = 0o700
 _FILE_MODE = 0o600
-
-
-def is_link_like(path: Path) -> bool:
-    """Return whether ``path`` is a symlink or a Windows junction."""
-    return path.is_symlink() or path.is_junction()
 
 
 class JournalOperation(Protocol):
@@ -218,5 +213,4 @@ class JournalRepositoryBase[T: JournalOperation]:
 __all__ = [
     "JournalOperation",
     "JournalRepositoryBase",
-    "is_link_like",
 ]

@@ -46,9 +46,8 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import AuthProviderKind, Period, ResultDisposition
+from ....core import AuthProviderKind, CasillaId, Period, ResultDisposition, validated_casilla_id
 from ....core.config import Settings
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.deadlines import ChargeAccount, IVARegime, ModeloIVAProfile, RefundAccount, TaxpayerProfile
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile

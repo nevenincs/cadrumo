@@ -44,15 +44,14 @@ from decimal import Decimal
 
 import pytest
 
+from .....core import CasillaId, validated_casilla_id
 from .....core.resources import resources
 from ....iva import ProrrataInputs, ProrrataKind, compute_prorrata_general
 from .. import (
-    CasillaId,
     RegistryRoundingCode,
     calculate_registry_snapshot,
     resolve_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
-    validated_casilla_id,
 )
 from .._formula_runtime_ops import apply_rounding
 
@@ -66,7 +65,7 @@ _VOLUMEN_CON_DERECHO_ID: CasillaId = validated_casilla_id(
     surface="test casilla id",
 )
 
-#: 2020 resolves to the 2009-y-siguientes revision, 2024 to 2023-y-siguientes.
+#: 2020 resolves to the 2009-y-siguientes revision, 2024 to its early-period epoch.
 #: The art. 104.Dos sentence has stood unamended since BOE-A-1992-28740, so it
 #: binds both.
 _LIVE_FILING_YEARS = (2020, 2024)

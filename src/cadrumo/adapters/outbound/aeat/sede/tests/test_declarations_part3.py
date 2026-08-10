@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ......domain.calculations.registry import CasillaId, validated_casilla_id
+from ......core import CasillaId, validated_casilla_id
 from ._declarations_support import (
     UTC,
     Decimal,

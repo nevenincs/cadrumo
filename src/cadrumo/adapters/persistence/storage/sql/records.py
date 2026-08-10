@@ -24,6 +24,7 @@ from enum import StrEnum
 from pydantic import BaseModel, Field
 
 from .....core import STRICT_FROZEN_CONFIG
+from .....core.identity import ContentDigest
 
 
 class PortalAuthMethod(StrEnum):
@@ -99,6 +100,6 @@ class CorpusArtifactRecord(_StrictFrozen):
     year: int = Field(ge=1900, le=2100)
     modelo_id: int = Field(ge=1)
     file_path: str = Field(min_length=1, max_length=1024)
-    sha256: str = Field(min_length=64, max_length=64)
+    sha256: ContentDigest
     source_url: str = Field(min_length=1, max_length=1024)
     fetched_at: datetime

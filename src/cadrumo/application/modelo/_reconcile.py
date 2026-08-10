@@ -879,6 +879,12 @@ def _total_targets_for_work_unit(work_unit: WorkUnit) -> dict[str, _TotalTarget]
     from ._calculation_helpers import resolve_registry_snapshot_for_work_unit
 
     snapshot = resolve_registry_snapshot_for_work_unit(work_unit)
+    # Deliberately NOT folded through fold_reconciliation_total_casilla_ids.
+    # That fold answers "which casilla is the total for this kind" and returns
+    # the mapping alone; this site needs the tolerance, legal_refs and
+    # source_refs of the EXPECTATION THAT DECLARED THE KIND, and the fold
+    # discards that linkage. Consuming it here would mean re-deriving the owning
+    # expectation from the casilla id, which is the coupling the fold removes.
     targets: dict[str, _TotalTarget] = {}
     for expectation in snapshot.revision.verification_expectations:
         for kind, casilla_id in expectation.reconciliation_total_casilla_ids.items():

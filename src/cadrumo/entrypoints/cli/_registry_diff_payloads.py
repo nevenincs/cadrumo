@@ -32,8 +32,9 @@ See Also:
 
 from __future__ import annotations
 
+from ...core import CasillaId
 from ...core.json_contract import OutputSchema, register_schema
-from ...domain.calculations.registry import CasillaId, FormulaId, LegalRefId, ParameterId, RevisionId
+from ...domain.calculations.registry import FormulaId, LegalRefId, ParameterId, RevisionId
 
 
 class CasillaDiffPayload(OutputSchema):

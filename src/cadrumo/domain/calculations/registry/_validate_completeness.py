@@ -9,8 +9,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from ....core import CasillaId
 from ._casilla_membership import casillas_by_id
-from ._ids import CasillaId
 from ._record_design_coverage import calculation_closure_casilla_ids
 from ._schema import CalculationCompletenessCasilla, CasillaDefinition, ModeloRevision
 

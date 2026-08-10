@@ -105,10 +105,6 @@ def require_drive_entry_id(
         raise OutboundStorageValidationError(
             f"Drive returned an app-owned entry named {name!r} without a usable id",
             context={"parent_id": parent_id, "name": name, "entry_id": repr(raw_id)},
-            suggestion=(
-                "retry the operation; if it persists, the Drive listing is returning "
-                "malformed metadata and the entry should be inspected directly in Drive"
-            ),
         )
     return raw_id
 
@@ -124,7 +120,6 @@ def find_owned_drive_entry(
     list_action: str,
     backfill_action: str,
     conflict_message: str,
-    conflict_suggestion: str | None = None,
 ) -> dict[str, Any] | None:
     """Return the app-owned Drive entry of ``name`` under ``parent_id``, if any.
 
@@ -142,7 +137,6 @@ def find_owned_drive_entry(
         list_action: Action label for the list call's error context.
         backfill_action: Action label for the marker-backfill call.
         conflict_message: Message raised when a foreign-owned entry is found.
-        conflict_suggestion: Optional remediation for that refusal.
 
     Returns:
         The owned entry mapping, or ``None`` when no such entry exists.
@@ -180,7 +174,6 @@ def find_owned_drive_entry(
         raise OutboundStorageConflictError(
             conflict_message,
             context={"parent_id": parent_id, "name": name},
-            suggestion=conflict_suggestion,
         )
     return None
 

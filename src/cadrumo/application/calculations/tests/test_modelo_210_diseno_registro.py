@@ -31,12 +31,12 @@ from pathlib import Path
 
 import pytest
 
+from ....core import validated_casilla_id
 from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import (
     BindingId,
     calculate_registry_snapshot,
     resolve_bound_inputs_by_casilla_id,
-    validated_casilla_id,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 

@@ -45,9 +45,9 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import BindingId, CasillaId, validated_casilla_id
+from ....domain.calculations.registry import BindingId
 from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
 from ....domain.user_profile import ProfileSchemaValidationError, UserProfileFact
 from ....tests.secure_sql import isolated_profile_storage_root

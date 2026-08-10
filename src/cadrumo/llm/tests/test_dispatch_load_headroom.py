@@ -302,13 +302,8 @@ def test_a_contention_refusal_is_sent_once_and_never_retried(tmp_path: Path) -> 
         assert arrivals == []
 
 
-def test_the_refusal_carries_the_authority_s_own_remediation(tmp_path: Path) -> None:
-    """The verdict travels whole, because the remediations are not interchangeable.
-
-    Reclaiming memory the runtime holds is an action the operator can take here;
-    memory a peer process holds is not. Flattening both into one message would
-    tell an operator to unload something they do not own.
-    """
+def test_the_refusal_carries_the_authority_s_own_detail(tmp_path: Path) -> None:
+    """The error preserves the measured authority's fact without selecting an action."""
     resident = RuntimeResident(name=_CATALOGUED_MODEL, size_bytes=2 * _GIB, size_vram_bytes=2 * _GIB)
     starved = _profile(free_vram_bytes=256 * 1024**2, free_ram_bytes=48 * _GIB)
     snapshot = assess_model_load_contention(
@@ -327,7 +322,6 @@ def test_the_refusal_carries_the_authority_s_own_remediation(tmp_path: Path) -> 
 
     assert snapshot.admitted is False
     assert str(refusal.value) == snapshot.detail
-    assert refusal.value.suggestion == snapshot.remediation
 
 
 def test_an_off_host_dispatch_is_not_headroom_checked(tmp_path: Path) -> None:

@@ -37,9 +37,8 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.errors import SecureObjectRevisionConflictError
-from ....core import Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.buckets import BucketEventObjectType, BucketEventType
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.modelos import CalculationRevisionState, ExternalEvidenceKind, WorkUnit
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile

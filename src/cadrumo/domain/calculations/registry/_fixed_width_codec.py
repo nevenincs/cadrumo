@@ -13,6 +13,8 @@ from ....core.money import round_to_cents
 from ._errors import RegistryValidationError
 from ._export_value_policy import (
     ExportValuePolicy,
+    ParsedExportPolicyValue,
+    normalize_parsed_export_policy_value,
     project_export_value,
     validate_export_wire_value,
 )
@@ -151,27 +153,33 @@ def render_fixed_width_export_field(field: _ExportField, value: object) -> str:
     value = project_export_value(field.value_policy, value)
     _require_allowed_value(field, value)
     if field.data_type == "money":
-        return _render_money(field, value)
-    if field.data_type == "decimal":
+        rendered = _render_money(field, value)
+    elif field.data_type == "decimal":
         if field.decimals is None:
             raise RegistryValidationError(f"decimal export field {field.id!r} must declare decimals")
-        return _render_scaled_numeric(field, value, scale=field.decimals)
-    if field.data_type == "integer":
-        return _render_integer(field, value)
-    if field.data_type == "boolean":
-        return _pad(field, _render_boolean(value))
-    if value is None:
-        text = ""
-    elif isinstance(value, str):
-        text = value
+        rendered = _render_scaled_numeric(field, value, scale=field.decimals)
+    elif field.data_type == "integer":
+        rendered = _render_integer(field, value)
+    elif field.data_type == "boolean":
+        rendered = _pad(field, _render_boolean(value))
     else:
-        raise RegistryValidationError(
-            f"export field {field.id!r} {field.data_type!r} value must be text or absent",
-        )
-    return _pad(field, text)
+        if value is None:
+            text = ""
+        elif isinstance(value, str):
+            text = value
+        else:
+            raise RegistryValidationError(
+                f"export field {field.id!r} {field.data_type!r} value must be text or absent",
+            )
+        rendered = _pad(field, text)
+    validate_export_wire_value(field.value_policy, rendered)
+    return rendered
 
 
-def parse_fixed_width_export_field(field: _ExportField, raw: str) -> Decimal | str | bool | None:
+def parse_fixed_width_export_field(
+    field: _ExportField,
+    raw: str,
+) -> ParsedExportPolicyValue:
     """Parse and validate one complete exact-width field from wire text."""
     if field.length is None:
         raise RegistryValidationError(f"export field {field.id!r} must declare length")
@@ -190,7 +198,7 @@ def parse_fixed_width_export_field(field: _ExportField, raw: str) -> Decimal | s
         if raw != expected:
             raise RegistryValidationError(f"export literal field {field.id!r} does not match the registry layout")
         return field.literal
-    parsed: Decimal | str | bool | None
+    parsed: ParsedExportPolicyValue
     if field.data_type == "money":
         parsed = _parse_scaled_numeric(field, raw, scale=2)
     elif field.data_type == "decimal":
@@ -211,6 +219,7 @@ def parse_fixed_width_export_field(field: _ExportField, raw: str) -> Decimal | s
         text = _unpad(field, raw)
         parsed = text if text else None
     _require_allowed_value(field, parsed)
+    parsed = normalize_parsed_export_policy_value(field.value_policy, raw, parsed)
     if field.value_policy is None and render_fixed_width_export_field(field, parsed) != raw:
         raise RegistryValidationError(f"export field {field.id!r} contains noncanonical fixed-width data")
     return parsed

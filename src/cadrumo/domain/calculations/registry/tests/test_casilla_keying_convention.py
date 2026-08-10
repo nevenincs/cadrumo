@@ -7,15 +7,14 @@ from decimal import Decimal
 
 import pytest
 
+from .....core import CasillaId, validated_casilla_id
 from .....core.resources import resources
 from .. import (
-    CasillaId,
     RegistrySnapshot,
     RegistryValidationError,
     calculate_registry_snapshot,
     casilla_noncanonical_reference_targets,
     format_noncanonical_casilla_reference,
-    validated_casilla_id,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

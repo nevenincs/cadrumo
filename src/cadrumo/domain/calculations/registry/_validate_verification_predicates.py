@@ -9,8 +9,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from ....core import CasillaId
 from ....core.decimal import try_parse_canonical_decimal
-from ._ids import CasillaId
 from ._schema_scalars import registry_scalar_value_type
 from ._schema_surfaces import CasillaDefinition
 from ._schema_verification import (
@@ -50,7 +50,12 @@ def _parsed_expression(
     return parsed if parsed is not None and parsed.operator is operator else None
 
 
-def _malformed_expression_failure(prefix: str, owner: str, expression: str, operator: VerificationPredicateOperator) -> str:
+def _malformed_expression_failure(
+    prefix: str,
+    owner: str,
+    expression: str,
+    operator: VerificationPredicateOperator,
+) -> str:
     return f"{prefix}: {owner} {operator.value} expression {expression!r} is malformed"
 
 
@@ -117,7 +122,9 @@ def _casilla_equals_implies_nonzero_predicate_failures(
     failures = _text_antecedent_failures(prefix, owner, operator, antecedent_id, casillas, casilla_by_id)
     if not parsed.literal:
         failures.append(f"{prefix}: {owner} {operator.value} literal must be non-empty")
-    failures.extend(_numeric_casilla_failures(prefix, owner, operator, "consequent", consequent_id, casillas, casilla_by_id))
+    failures.extend(
+        _numeric_casilla_failures(prefix, owner, operator, "consequent", consequent_id, casillas, casilla_by_id),
+    )
     return failures
 
 
@@ -176,8 +183,12 @@ def _casilla_equals_implies_diverges_predicate_failures(
     failures = _text_antecedent_failures(prefix, owner, operator, antecedent_id, casillas, casilla_by_id)
     if not parsed.literal:
         failures.append(f"{prefix}: {owner} {operator.value} literal must be non-empty")
-    failures.extend(_numeric_casilla_failures(prefix, owner, operator, "casilla_a", casilla_a_id, casillas, casilla_by_id))
-    failures.extend(_numeric_casilla_failures(prefix, owner, operator, "casilla_b", casilla_b_id, casillas, casilla_by_id))
+    failures.extend(
+        _numeric_casilla_failures(prefix, owner, operator, "casilla_a", casilla_a_id, casillas, casilla_by_id),
+    )
+    failures.extend(
+        _numeric_casilla_failures(prefix, owner, operator, "casilla_b", casilla_b_id, casillas, casilla_by_id),
+    )
     return failures
 
 
@@ -217,7 +228,10 @@ def _deduccion_requires_adquisicion_before_predicate_failures(
                 f"(scalar family 'str' or 'date'), not data_type {casilla.data_type!r}",
             )
     if not _is_iso_date_literal(parsed.cutoff):
-        failures.append(f"{prefix}: {owner} {operator.value} cutoff {parsed.cutoff!r} must be an ISO date literal (YYYY-MM-DD)")
+        failures.append(
+            f"{prefix}: {owner} {operator.value} cutoff {parsed.cutoff!r} must be an ISO date literal "
+            "(YYYY-MM-DD)",
+        )
     return failures
 
 

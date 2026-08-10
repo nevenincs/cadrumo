@@ -2,7 +2,7 @@
 
 Defines the normalized request and response shapes that every concrete provider
 adapter (Anthropic, OpenAI, Gemini, and local) consumes and produces,
-so the higher-level :class:`~adapters.outbound.llm.LLMClient` can stay
+so the higher-level :class:`~llm.LLMClient` can stay
 provider-agnostic. Adapters live in sibling modules under
 :mod:`llm._providers`.
 """
@@ -91,7 +91,7 @@ class _ProviderAdapter(ABC):
     """Private interface every concrete provider adapter implements.
 
     Concrete subclasses bind :attr:`provider` to a member of
-    :class:`~adapters.outbound.llm.LLMProvider` and implement
+    :class:`~llm.LLMProvider` and implement
     :meth:`complete` to translate the normalized
     :class:`ProviderRequest` into a vendor-specific call.
 

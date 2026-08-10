@@ -4,17 +4,15 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import BindingSourceKind
+from .....core import BindingSourceKind, CasillaId, validated_casilla_id
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from ..._export_field_kind import CasillaFieldKind
 from .. import (
-    CasillaId,
     DataBindingDefinition,
     ExportFieldDefinition,
     ExportLayoutDefinition,
     ExportRecordDefinition,
     derive_export_layouts_from_bindings,
-    validated_casilla_id,
 )
 from .._schema import PeriodSelector
 from ._registry_schema_support import _committed_registry_tree

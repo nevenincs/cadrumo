@@ -44,8 +44,8 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 from pydantic import ValidationError
 
-from ....core import Period
-from ....domain.calculations.registry import CasillaObservation, validated_casilla_id
+from ....core import Period, validated_casilla_id
+from ....domain.calculations.registry import CasillaObservation
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,

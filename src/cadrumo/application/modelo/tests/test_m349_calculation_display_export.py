@@ -9,16 +9,14 @@ from typing import Any
 import pytest
 
 from ....application.filing import _filing_binding_values, render_layout
-from ....core import Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import bundled_path
 from ....domain.calculations.registry import (
-    CasillaId,
     RegistrySnapshot,
     RegistrySnapshotRef,
     calculate_registry_snapshot,
     load_modelo_path,
     resolve_bound_inputs_by_casilla_id,
-    validated_casilla_id,
 )
 from ....domain.filing import (
     ModeloCasillaProvenance,

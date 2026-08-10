@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
@@ -13,6 +14,7 @@ from .. import (
     ExportLayoutDefinition,
     ExportRecordDefinition,
     ExportValuePolicy,
+    ParsedExportPolicyWireValue,
     RegistryValidationError,
     parse_export_payload,
     project_export_value,
@@ -114,7 +116,7 @@ def test_none_policy_is_inert_and_not_an_inferred_default() -> None:
     assert project_export_value(None, marker) is marker
 
 
-def test_schema_hydrates_only_the_two_public_policy_tokens() -> None:
+def test_schema_hydrates_only_public_policy_tokens() -> None:
     baseline = _field(ExportValuePolicy.SELECTED_1_UNSELECTED_0).model_dump(mode="python")
     hydrated = ExportFieldDefinition.model_validate(
         baseline | {"value_policy": ExportValuePolicy.SELECTED_1_UNSELECTED_0.value},
@@ -123,6 +125,55 @@ def test_schema_hydrates_only_the_two_public_policy_tokens() -> None:
     assert hydrated.value_policy is ExportValuePolicy.SELECTED_1_UNSELECTED_0
     with pytest.raises(ValidationError):
         ExportFieldDefinition.model_validate(baseline | {"value_policy": "checkbox-default"})
+
+
+@pytest.mark.parametrize(
+    ("policy", "value", "expected"),
+    (
+        (ExportValuePolicy.UNSIGNED_INTEGER, Decimal("12"), Decimal("12")),
+        (ExportValuePolicy.IMPLIED_DECIMAL, "12.50", Decimal("12.50")),
+        (ExportValuePolicy.ENUMERATED_DIGITS, "2", Decimal("2")),
+        (ExportValuePolicy.DIGIT_STRING, "0123", "0123"),
+        (ExportValuePolicy.IDENTIFIER_DIGITS, "0012345678901", "0012345678901"),
+        (ExportValuePolicy.FOUR_DIGIT_YEAR, 2026, "2026"),
+        (ExportValuePolicy.TWO_DIGIT_MONTH, 8, "08"),
+        (ExportValuePolicy.TWO_DIGIT_DAY, "9", "09"),
+        (ExportValuePolicy.YYYYMMDD, date(2024, 2, 29), "20240229"),
+    ),
+)
+def test_reviewed_singleton_policies_project_exact_semantic_values(
+    policy: ExportValuePolicy,
+    value: object,
+    expected: object,
+) -> None:
+    assert project_export_value(policy, value) == expected
+
+
+@pytest.mark.parametrize(
+    ("policy", "value"),
+    (
+        (ExportValuePolicy.UNSIGNED_INTEGER, Decimal("1.5")),
+        (ExportValuePolicy.UNSIGNED_INTEGER, -1),
+        (ExportValuePolicy.UNSIGNED_INTEGER, Decimal("-0")),
+        (ExportValuePolicy.IMPLIED_DECIMAL, float("nan")),
+        (ExportValuePolicy.IMPLIED_DECIMAL, "1e2"),
+        (ExportValuePolicy.IMPLIED_DECIMAL, Decimal("-0.00")),
+        (ExportValuePolicy.ENUMERATED_DIGITS, True),
+        (ExportValuePolicy.DIGIT_STRING, 123),
+        (ExportValuePolicy.DIGIT_STRING, "１２３"),
+        (ExportValuePolicy.IDENTIFIER_DIGITS, "12 3"),
+        (ExportValuePolicy.FOUR_DIGIT_YEAR, "026"),
+        (ExportValuePolicy.TWO_DIGIT_MONTH, 13),
+        (ExportValuePolicy.TWO_DIGIT_DAY, "00"),
+        (ExportValuePolicy.YYYYMMDD, "20230229"),
+    ),
+)
+def test_reviewed_singleton_policies_refuse_noncanonical_semantic_values(
+    policy: ExportValuePolicy,
+    value: object,
+) -> None:
+    with pytest.raises(RegistryValidationError):
+        project_export_value(policy, value)
 
 
 @pytest.mark.parametrize("policy", tuple(ExportValuePolicy))
@@ -171,7 +222,10 @@ def test_parser_accepts_exact_policy_wire_tokens_and_refuses_mutations(
     invalid: tuple[bytes, ...],
 ) -> None:
     layout = _layout(_field(policy))
-    assert parse_export_payload(layout, valid).fields[0].raw == valid.decode("ascii")
+    parsed = parse_export_payload(layout, valid).fields[0]
+    assert parsed.raw == valid.decode("ascii")
+    if policy is ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS:
+        assert parsed.value == ParsedExportPolicyWireValue(policy=policy, raw="26")
     for mutation in invalid:
         with pytest.raises(RegistryValidationError):
             parse_export_payload(layout, mutation)
@@ -185,6 +239,7 @@ def test_runtime_policy_tokens_have_one_production_owner_and_consumers_import_th
         path.as_posix(): token
         for path in src_root.rglob("*.py")
         if path != owner
+        if "tests" not in path.parts
         for token in tokens
         if token in path.read_text(encoding="utf-8")
     }

@@ -24,13 +24,12 @@ from decimal import Decimal
 
 import pytest
 
+from ......core import CasillaId, validated_casilla_id
 from ......core.resources import bundled_path
 from ......domain.calculations.registry import (
-    CasillaId,
     RentaWebOpenLivePayload,
     RentaWebOpenSyntheticProfile,
     serialize_renta_web_open_replay_decimal,
-    validated_casilla_id,
 )
 from ......tests.live_gate import requires_live_enabled
 from .._renta_web_open import collect_renta_web_open_observation

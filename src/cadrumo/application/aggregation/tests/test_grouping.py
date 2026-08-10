@@ -7,9 +7,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import BindingSourceKind, Modelo, Period
+from ....core import BindingSourceKind, Modelo, Period, validated_casilla_id
 from ....core.aggregation import LedgerIncomeGrounding, RetencionScheme
-from ....domain.calculations.registry import validated_casilla_id
 from ....domain.transactions import TransactionCatalogue
 from .._errors import AggregationPeriodError
 from .._grouping import cumulative_year_to_date_window, fold_casilla_observations, group_and_collect_names

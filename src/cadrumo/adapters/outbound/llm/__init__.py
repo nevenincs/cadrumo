@@ -1,59 +1,41 @@
-"""Public facade for outbound model-provider completion adapters.
+"""The persistence-backed stores that sit beside an outbound model-provider call.
 
-The package root defines the ``__all__`` contract for public imports. Use these
-top-level re-exports for :class:`LLMClient`, :class:`LLMRequest`,
-:class:`LLMResponse`, :class:`LLMProvider`, cache records
-(:class:`LLMCache`, :class:`CacheKey`, :class:`CacheStats`,
-:class:`CachedEntry`), prompt types (:class:`PromptRegistry` and
-:class:`PromptDefinition`), usage records (:class:`UsageRecorder`,
-:class:`UsageRecord`, and :class:`UsageSummary`), model records
-(:class:`Translation` and :class:`MultimodalImageInput`), rasterisation, and
-exported error types.
+The ``__all__`` contract of this package is four encrypted stores and the two
+record types the telemetry store produces -- nothing else. The completion
+surface itself lives in :mod:`llm`: :class:`~llm.LLMClient` and its
+:class:`~llm.LLMRequest` / :class:`~llm.LLMResponse` records, the
+:class:`~llm.LLMProvider` enum, the prompt registry, the strict model types,
+the PDF rasterisation helper and the error hierarchy are all imported from
+there, not from here.
 
-The async-first :meth:`LLMClient.complete` flow reads :class:`LLMCache` before a
-provider call, writes content-addressed encrypted cache entries on misses,
-records usage on hits and misses, and returns :class:`LLMResponse`.
-Cache types include :class:`CacheKey`, :class:`CacheStats`, and
-:class:`CachedEntry`; persisted cache data is encrypted secure-object storage,
-not plaintext files.
+:class:`LLMCache` derives a content address from request content and provider
+and serves a repeat completion without a provider call. Entries are encrypted
+secure objects classified ``DIAGNOSTIC``, never plaintext files.
 
-Prompt handling uses :class:`PromptRegistry` and :class:`PromptDefinition` for
-versioned prompt definitions/templates. :class:`UsageRecorder` persists
-redacted :class:`UsageRecord` values to encrypted secure-object storage and
-produces :class:`UsageSummary` reports. :class:`LLMRunTelemetryRecorder`
-persists local-only :class:`LLMRunRecord` run-timing/outcome metadata (never
-prompt or response text) and produces :class:`LLMRunTelemetrySummary` reports,
-backing the ``aeat app diagnostics run-health`` operator surface.
-:class:`EvidenceConsentLedger` persists one
+:class:`UsageRecorder` persists per-call usage and cost to the same encrypted
+backend, routed through the structured redaction pass first, so NIFs and
+bearer-shaped tokens never reach storage.
+
+:class:`LLMRunTelemetryRecorder` persists one local-only :class:`LLMRunRecord`
+per invocation -- provider label, duration, success flag, optional error kind,
+and never prompt or response text -- and folds them into
+:class:`LLMRunTelemetrySummary` reports backing the
+``aeat app diagnostics run-health`` operator surface. It has no network
+transport of any kind.
+
+:class:`EvidenceConsentLedger` appends one
 :class:`domain.evidence_consent.EvidenceConsentLedgerEntry` per off-host
 evidence dispatch a consent token permitted -- the content address, provider,
 model and surface, never the bytes -- and is the only one of these four stores
-that refuses rather than degrading when its write fails. The entry's record
-shape and natural key grammar are owned by :mod:`domain.evidence_consent`, not
-re-exported here.
-Strict model
-types include :class:`Translation` and transient :class:`MultimodalImageInput`,
-whose base64 bytes are not persisted; only content SHA participates in cache
-keys.
+that refuses rather than degrading when its write fails, so an unrecordable
+dispatch does not transmit. The entry's record shape and natural key grammar
+are owned by :mod:`domain.evidence_consent`, not re-exported here.
 
-Use :func:`rasterise_pdf_pages_to_base64_png` for in-memory, on-host PDF-to-PNG
-rasterisation for local vision inputs. Exported exceptions include
-:exc:`LLMError`, :exc:`LLMCacheError`, :exc:`LLMConfigError`,
-:exc:`LLMPdfRasterisationError`, :exc:`LLMProviderError`, and
-:exc:`LLMRateLimitError`. Importing this outbound adapter must remain silent.
-
-Examples:
-    Issue a completion via the high-level client:
-
-    >>> import asyncio
-    >>> from cadrumo.adapters.outbound.llm import LLMClient, LLMRequest
-    >>> async def main() -> None:
-    ...     client = LLMClient()
-    ...     response = await client.complete(
-    ...         LLMRequest(prompt="Summarize the requested modelo in one sentence.")
-    ...     )
-    ...     # response.text contains the completion; print in real usage
-    >>> # asyncio.run(main())  # requires a live LLM provider; omitted from doctest
+Every store resolves the active profile bucket's encrypted secure-object
+repository at each read and write rather than holding one, so a store is
+constructed from a settings-derived partition alone while its operations
+require a live bucket session. Importing this outbound adapter must remain
+silent.
 """
 
 from ._cache import LLMCache

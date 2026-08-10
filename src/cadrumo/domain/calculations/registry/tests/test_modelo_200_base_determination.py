@@ -35,7 +35,7 @@ from decimal import Decimal
 
 import pytest
 
-from .. import CasillaId, validated_casilla_id
+from .....core import CasillaId, validated_casilla_id
 from .._formula_runtime import calculate_registry_snapshot
 from .._schema import InputKind
 from ._registry_schema_support import _committed_snapshot

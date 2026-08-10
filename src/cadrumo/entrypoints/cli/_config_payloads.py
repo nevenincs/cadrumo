@@ -42,7 +42,7 @@ from ...core.errors import BaseSeverity
 from ...core.identity import BucketId, ProfileId
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction, register_schema
 from ...core.time import validate_utc_aware
-from ...domain.user_profile import UserProfileFact, UserProfileStatus
+from ...domain.user_profile import UserProfileStatus
 
 # The two wizard-owned profile result schemas register through the manifest's
 # explicit lazy schema-owner table, NOT here: the `config` group imports this
@@ -916,9 +916,7 @@ class AuthStatusPayload(OutputSchema):
         active_profile_precondition_action: ResolvedPreconditionAction | None,
     ) -> AuthStatusPayload:
         """Project the application readiness result onto the CLI wire contract."""
-        if (result.active_profile_precondition_verdict is None) is not (
-            active_profile_precondition_action is None
-        ):
+        if (result.active_profile_precondition_verdict is None) is not (active_profile_precondition_action is None):
             raise ValueError("auth status precondition action must match the application verdict")
         return cls(
             provider=result.provider,
@@ -961,9 +959,7 @@ class AuthTestPayload(AuthStatusPayload):
         active_profile_precondition_action: ResolvedPreconditionAction | None,
     ) -> AuthTestPayload:
         """Project the deeper application probe onto the CLI wire contract."""
-        if (result.active_profile_precondition_verdict is None) is not (
-            active_profile_precondition_action is None
-        ):
+        if (result.active_profile_precondition_verdict is None) is not (active_profile_precondition_action is None):
             raise ValueError("auth test precondition action must match the application verdict")
         return cls(
             provider=result.provider,
@@ -1532,36 +1528,3 @@ class AuthDiagnosticsReportResult(OutputSchema):
     diagnostic_id: str = Field(min_length=1)
     phone_state: AuthDiagnosticPhoneState
     reported_at: datetime
-
-
-# Descendiente verb result schemas
-
-
-class CensoFileFactPayload(OutputSchema):
-    """One candidate censal fact projected from the G313 certificate.
-
-    ``source`` carries the non-official artefact provenance token, never
-    an AEAT-verified stamp. Re-validated against the canonical
-    :class:`~cadrumo.domain.user_profile.UserProfileFact` contract -- the
-    same check the sibling :class:`CensoPullFactPayload` already applies --
-    so a malformed path or an undeclared/oversized source is refused
-    rather than forwarded.
-    """
-
-    path: str
-    value: str
-    source: str
-
-    @model_validator(mode="after")
-    def _validate_canonical_profile_fact(self) -> CensoFileFactPayload:
-        """Keep the presentation row on the domain's profile path/provenance contract."""
-        UserProfileFact(path=self.path, value=self.value, source=self.source)
-        return self
-
-
-@register_schema("config.profile.censo.file")
-class CensoFileIngestResult(OutputSchema):
-    """Result of ``config profile censo file``: previewed or enrolled facts."""
-
-    applied: bool
-    facts: tuple[CensoFileFactPayload, ...] = ()

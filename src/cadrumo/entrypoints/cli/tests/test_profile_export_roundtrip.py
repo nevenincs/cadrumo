@@ -36,11 +36,9 @@ from click.testing import Result
 from pydantic import ValidationError
 
 from ....domain.calculations.registry import (
-    CasillaId,
     CasillaObservation,
     LegalRefId,
     SourceRefId,
-    validated_casilla_id,
 )
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -154,7 +152,7 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
         get_master_key_provider,
     )
     from ....application.modelo import create_work_unit
-    from ....core import Period, resolve_active_bucket_id
+    from ....core import CasillaId, Period, resolve_active_bucket_id, validated_casilla_id
     from ....core.config import override_settings
     from ....domain.modelos import (
         CalculationRevision,

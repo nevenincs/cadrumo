@@ -16,11 +16,11 @@ from typing import Literal
 from dev.registry._scenario_filing_period import hydrate_scenario_filing_period
 from pydantic import BaseModel, Field, model_validator
 
-from .....core import STRICT_FROZEN_CONFIG, BindingSourceKind, Period
+from .....core import STRICT_FROZEN_CONFIG, BindingSourceKind, CasillaId, Period
 from .._authority import ValidatedRegistryAuthority
 from .._errors import RegistrySnapshotError, RegistryValidationError
 from .._formula_runtime import RegistryCalculationEntry, RegistryCalculationResult, calculate_registry_snapshot
-from .._ids import BindingId, CasillaId, LegalRefId, RelationId, SourceRefId
+from .._ids import BindingId, LegalRefId, RelationId, SourceRefId
 from .._period_selector_match import selector_period_matches_request
 from .._runtime_graph import expression_binding_refs
 from .._schema import ModeloRevision

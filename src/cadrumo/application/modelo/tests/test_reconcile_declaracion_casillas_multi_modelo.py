@@ -38,10 +38,10 @@ from ....adapters.inbound.declaracion import InboundDeclaracionObservation, Temp
 from ....adapters.inbound.pdf import ExtractedCasilla
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import Period
+from ....core import Period, validated_casilla_id
 from ....core.resources import resources
 from ....core.time import now
-from ....domain.calculations.registry import RegistrySnapshotRef, validated_casilla_id
+from ....domain.calculations.registry import RegistrySnapshotRef
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,

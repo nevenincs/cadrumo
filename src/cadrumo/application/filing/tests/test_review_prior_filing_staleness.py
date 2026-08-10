@@ -32,12 +32,10 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.calculations.registry import (
-    CasillaId,
     CasillaObservation,
     RegistryModeloObservation,
-    validated_casilla_id,
 )
 from ....domain.submission import ModeloDraftStatus
 from ....tests.secure_sql import TestRuntimeProfile

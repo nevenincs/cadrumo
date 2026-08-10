@@ -28,7 +28,6 @@ from uuid import uuid4
 
 from .....core.config import unwrap_optional_secret
 from .....core.external_constants import UTF_8_ENCODING
-from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.time import now
 from .....domain.calculations.registry import RemoteOperation, assert_remote_operation_allowed
@@ -268,10 +267,6 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
                 "verification_code_present": bool(verification_code),
                 "diagnostic_id": diagnostic_id,
             },
-            suggestion=(
-                "Inspect the encrypted Cl@ve diagnostic artefact, then retry with QR mode "
-                "(CADRUMO_CLAVE_PREFER_NON_QR=false) if the non-QR form no longer reaches the wait page."
-            ),
         )
 
     async def _raise_if_pending_request_error(self, page: BrowserPageLike) -> None:
@@ -285,8 +280,8 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
         This happens when a prior login left an unresolved request
         alive server-side. The polling loop that normally redirects on
         browser-side completion is never rendered, so the authenticator would otherwise
-        sit on the page until the outer timeout fires. Fail fast with a
-        clear remediation message.
+        sit on the page until the outer timeout fires. Fail fast with the
+        observed pending-request facts.
         """
         content = getattr(page, "content", None)
         if content is None:
@@ -309,7 +304,6 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
                     "detected_markers": tuple(marker for marker in pending_markers if marker in normalized),
                     "diagnostic_id": diagnostic_id,
                 },
-                suggestion=tr("adapters.aeat.clave_movil.suggestions.reject_pending_request"),
                 translated_message="adapters.aeat.clave_movil.errors.pending_petition_blocked",
             )
 
@@ -457,6 +451,12 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
                 "captured_at": captured_at.isoformat(),
                 "auth_attempt": self._attempt_context(),
             }
+            if self._is_authenticated_representation_landing(url):
+                payload.update(
+                    phone_state="app_prompted_and_accepted",
+                    phone_state_source="aeat_authenticated_landing",
+                    phone_state_observed_at=captured_at.isoformat(),
+                )
             content = getattr(page, "content", None)
             if content is not None:
                 try:
@@ -495,6 +495,18 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
         except Exception:  # diagnostic dump is best-effort; Playwright screenshot/content errors must not raise
             log.warning("ClaveMovilAuthProvider: diagnostic dump failed", exc_info=True)
             return None
+
+    def _is_authenticated_representation_landing(self, url: str) -> bool:
+        """Return whether AEAT exposed its post-Cl@ve representation gate."""
+        try:
+            path = urlsplit(url).path
+        except ValueError:
+            return False
+        surface = self._clave_surface()
+        return (
+            surface.dialogo_representacion_path_marker in path
+            and surface.selector_access_path_marker not in path
+        )
 
     @staticmethod
     def _exception_already_has_diagnostic(exc: Exception) -> bool:
@@ -581,7 +593,6 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
                     "landing_url": getattr(page, "url", None),
                     "blocked_operation": "representative_or_unknown_representation_gate",
                 },
-                suggestion="Do not provide represented-third-party data through this driver.",
             ) from exc
 
     async def _wait_for_own_name_representation_selector(self, page: BrowserPageLike) -> str:
@@ -617,7 +628,6 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
                     "landing_url": getattr(page, "url", None),
                     "blocked_operation": "representative_or_unknown_representation_gate",
                 },
-                suggestion="Use only the authenticated profile user's own-name access for read-only AEAT pulls.",
             )
         return own_name is not None and _html_input_checked(own_name)
 

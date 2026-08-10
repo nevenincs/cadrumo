@@ -27,12 +27,12 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict
 
+from ...core import CasillaId as _CasillaId
 from ...core.resources import bundled_path as _bundled_path
 from ...domain.calculations.registry import AmbiguousRevisionSelectionError as _AmbiguousRevisionSelectionError
 from ...domain.calculations.registry import (
     CasillaDefinition as _CasillaDefinition,
 )
-from ...domain.calculations.registry import CasillaId as _CasillaId
 from ...domain.calculations.registry import (
     DataBindingDefinition as _DataBindingDefinition,
 )

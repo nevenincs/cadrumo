@@ -10,6 +10,7 @@ from typing import cast
 import pytest
 import typer
 
+from ....application.auth import acquire_auth_acquisition_lock
 from ....application.modelo import ModeloWorkflowGateError
 from ....application.operator_actions import (
     ActionArgumentBinding,
@@ -27,8 +28,9 @@ from ....core import (
     ActionArgumentStatus,
     ActionConditionality,
     ActionEvidenceProvenance,
+    AuthProviderKind,
 )
-from ....core.config import override_settings
+from ....core.config import Settings, override_settings
 from ....core.errors import ErrorCategory, get_error_exit_code
 from ....tests.cli_runner import invoke_cached_cli, invoke_typer_app, semantic_cli_output
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -200,6 +202,50 @@ def test_real_root_no_recovery_refusal_projects_the_closed_outcome(tmp_path: Pat
     assert action["missing_argument_names"] == []
     assert action["conditionality"] == "not_applicable"
     assert action["no_recovery_outcome"] == "operator_decision"
+
+
+def test_auth_acquisition_conflict_projects_factual_no_recovery_to_json(tmp_path: Path) -> None:
+    """A real held auth lock reaches the CLI only through its typed verdict."""
+    auth_app = typer.Typer()
+    settings = Settings(cadrumo_token_dir=tmp_path / "tokens")
+
+    @auth_app.command()
+    @command_error_boundary
+    def acquire(json_out: bool = typer.Option(False, "--json")) -> None:
+        del json_out
+        with (
+            acquire_auth_acquisition_lock(settings, AuthProviderKind.CLAVE_MOVIL, ttl_seconds=60),
+            acquire_auth_acquisition_lock(settings, AuthProviderKind.CLAVE_MOVIL, ttl_seconds=60),
+        ):
+            pass
+
+    with override_settings(cadrumo_active_profile="operator"):
+        result = invoke_typer_app(auth_app, ["--json"], catch_exceptions=False)
+
+    assert result.exit_code == get_error_exit_code(ErrorCategory.LOCKED), result.output
+    document = json.loads(result.stderr)
+    action = document["error"]["action"]
+    assert action == {
+        "failed_condition_id": "auth.acquisition_lock.available",
+        "evidence": [
+            {
+                "condition_id": "auth.acquisition_lock.available",
+                "evidence_id": "auth.acquisition_lock.state",
+                "provenance": "application_state",
+                "values": {
+                    "lock_available": False,
+                    "lock_recoverable": False,
+                    "lock_state": "held",
+                },
+            },
+        ],
+        "action": None,
+        "argument_bindings": [],
+        "missing_argument_names": [],
+        "conditionality": "not_applicable",
+        "no_recovery_outcome": "operator_decision",
+    }
+    assert "suggestion" not in document["error"]
 
 
 def test_boundary_fails_closed_on_a_malformed_typed_projection_marker() -> None:

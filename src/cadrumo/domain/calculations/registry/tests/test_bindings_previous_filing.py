@@ -21,9 +21,9 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
+from .....core import CasillaId, validated_casilla_id
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from .. import (
-    CasillaId,
     CasillaObservation,
     DataBindingDefinition,
     ModeloRevision,
@@ -31,7 +31,6 @@ from .. import (
     previous_filing_observation_requirements,
     resolve_previous_filing_binding_values,
     same_ejercicio_prior_quarter_anchors,
-    validated_casilla_id,
 )
 from .._errors import RegistryValidationError
 from .._schema import BindingSelectorMap, PeriodSelector

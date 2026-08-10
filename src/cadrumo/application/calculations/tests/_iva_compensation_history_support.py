@@ -17,9 +17,9 @@ from ....adapters.outbound.aeat.sede import (
     IvaCompensationWalletRow,
     ObservedCasillaValue,
 )
-from ....core import CasillaValueKind, Period
+from ....core import CasillaId, CasillaValueKind, Period, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaId, RegistrySnapshot, validated_casilla_id
+from ....domain.calculations.registry import RegistrySnapshot
 from ....domain.iva_compensation import IvaCompensationPeriodState
 
 #: A checksum-valid synthetic NIF. ``IvaCompensationPeriodState.taxpayer_nif``

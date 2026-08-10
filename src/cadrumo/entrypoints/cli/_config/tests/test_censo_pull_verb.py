@@ -33,7 +33,7 @@ from .....application.user_profile import CENSO_SOURCE_TAG
 from .....core.config import Settings
 from .....tests.cli_runner import invoke_cached_cli
 from .. import _censo_file
-from .._censo_payloads import CensoPullDivergencePayload, CensoPullFactPayload, CensoPullResult
+from .._censo_payloads import CensoFactPayload, CensoPullDivergencePayload, CensoPullResult
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -193,7 +193,7 @@ def test_censo_pull_fact_payload_refuses_noncanonical_path_or_provenance(path: s
     """Censo fact rows inherit the same path/provenance validation as stored facts."""
 
     with pytest.raises(ValidationError):
-        CensoPullFactPayload(path=path, value="28013", source=source)
+        CensoFactPayload(path=path, value="28013", source=source)
 
 
 def test_a_cleared_path_is_not_reported_as_a_declared_value() -> None:
@@ -361,8 +361,8 @@ def test_a_populated_result_renders_every_outcome_through_the_real_emit_path() -
     each reach the text output, and a cleared path renders as a marker
     rather than as an empty field that reads like a glitch.
     """
-    adopted = CensoPullFactPayload(path="contact.fiscal_address", value="CALLE MAYOR 1", source="aeat_censo_read")
-    unchanged = CensoPullFactPayload(path="contact.postcode", value="28013", source="aeat_censo_read")
+    adopted = CensoFactPayload(path="contact.fiscal_address", value="CALLE MAYOR 1", source="aeat_censo_read")
+    unchanged = CensoFactPayload(path="contact.postcode", value="28013", source="aeat_censo_read")
     cleared = CensoPullDivergencePayload(
         path="contact.fiscal_address_cadastral_reference",
         profile_value=None,

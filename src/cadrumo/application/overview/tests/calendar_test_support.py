@@ -15,9 +15,9 @@ from ....adapters.outbound.aeat.sede import (
     FiledDeclaracionArtefact,
     FiledDeclaracionObservation,
 )
-from ....core import Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaId, RegistryModeloObservation, validated_casilla_id
+from ....domain.calculations.registry import RegistryModeloObservation
 from ....domain.deadlines import (
     DeadlineEngine,
     EntityType,
@@ -151,7 +151,7 @@ def filed_declaration_artefact(
 
 def justificante_metadata(
     *,
-    csv: str = "JUST-303-2025-1T",
+    csv: str = "JUST3032025X1T7",
     modelo: str = "303",
     filing_year: int = 2025,
     period: Period = PERIOD_2025_1T,

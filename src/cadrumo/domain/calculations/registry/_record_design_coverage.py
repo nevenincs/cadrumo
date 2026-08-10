@@ -13,10 +13,11 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
+from ....core import CasillaId
 from ._bindings import binding_source_casilla_ids, binding_source_modelo
 from ._casilla_membership import casillas_by_id
 from ._errors import RegistryValidationError
-from ._ids import CasillaId, LegalRefId
+from ._ids import LegalRefId
 from ._record_design_schema import RecordDesignSheet
 from ._runtime_graph import expression_casilla_refs
 from ._schema import CasillaDefinition, DataBindingDefinition, ModeloRevision

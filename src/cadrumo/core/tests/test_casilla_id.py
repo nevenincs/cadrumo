@@ -6,9 +6,25 @@ from decimal import Decimal
 
 import pytest
 
-from .. import validated_casilla_id, validated_casilla_id_map
+from ...domain.calculations import registry
+from .. import CasillaId, validated_casilla_id, validated_casilla_id_map
+from .. import __all__ as core_exports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def test_casilla_id_capabilities_are_public_only_from_core() -> None:
+    canonical_capabilities = {
+        "CasillaId": CasillaId,
+        "validated_casilla_id": validated_casilla_id,
+        "validated_casilla_id_map": validated_casilla_id_map,
+    }
+
+    for name, capability in canonical_capabilities.items():
+        assert name in core_exports
+        assert capability.__module__ == "cadrumo.core._casilla_id"
+        assert not hasattr(registry, name)
+        assert name not in registry.__all__
 
 
 def test_validated_casilla_id_rejects_non_string_values_without_coercion() -> None:

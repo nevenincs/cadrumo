@@ -6,8 +6,8 @@ from decimal import Decimal
 
 import pytest
 
+from ....core import CasillaId
 from ....domain.calculations.registry import (
-    CasillaId,
     VerificationPredicateDefinition,
 )
 from ....domain.modelos import (

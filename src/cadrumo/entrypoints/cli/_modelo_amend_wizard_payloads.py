@@ -13,9 +13,10 @@ from __future__ import annotations
 
 from pydantic import Field
 
+from ...core import CasillaId
 from ...core.identity import FilingRecordId
 from ...core.json_contract import OutputSchema, register_schema
-from ...domain.calculations.registry import CasillaId, LegalRefId, SourceRefId
+from ...domain.calculations.registry import LegalRefId, SourceRefId
 from ...domain.modelos import CalculationRevisionAmendmentKind
 from ._modelo_payloads import ModeloRecordPayload
 

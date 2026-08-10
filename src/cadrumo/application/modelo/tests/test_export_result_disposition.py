@@ -7,9 +7,9 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import PaymentElection, Period, RefundElection
+from ....core import CasillaId, PaymentElection, Period, RefundElection
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaId, CasillaObservation
+from ....domain.calculations.registry import CasillaObservation
 from ....domain.deadlines import (
     IVARegime,
     ModeloIVAProfile,

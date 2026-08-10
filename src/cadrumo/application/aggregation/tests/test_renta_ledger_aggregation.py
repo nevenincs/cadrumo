@@ -26,9 +26,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.categories import SpendingCategory
 from ....domain.renta import (
     RentaDeductibilityContext,

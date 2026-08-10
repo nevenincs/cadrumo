@@ -16,8 +16,8 @@ from __future__ import annotations
 
 import pytest
 
+from .....core import CasillaId, validated_casilla_id
 from .._errors import RegistrySnapshotError, RegistryValidationError
-from .._ids import CasillaId, validated_casilla_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _REFERENCED_BEFORE_EVALUATION_CASILLA: CasillaId = validated_casilla_id(

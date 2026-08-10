@@ -20,6 +20,7 @@ from ...core import (
     STRICT_FROZEN_CONFIG as _STRICT_FROZEN,
 )
 from ...core import (
+    ActionArgumentResolution,
     ActionArgumentSource,
     ActionArgumentStatus,
     ActionConditionality,
@@ -96,41 +97,10 @@ class ActionReference(BaseModel):
     action_id: str = Field(pattern=_NAMESPACED_ID_PATTERN, min_length=3, max_length=160)
 
 
-class ActionArgumentBinding(BaseModel):
+class ActionArgumentBinding(ActionArgumentResolution):
     """One recovery-action argument and the verdict data that can supply it."""
 
     model_config = _STRICT_FROZEN
-
-    argument_name: str = Field(pattern=_FIELD_KEY_PATTERN, min_length=1, max_length=120)
-    status: ActionArgumentStatus
-    value: str | int | bool | Decimal | None = None
-    source: ActionArgumentSource | None = None
-    source_key: str | None = Field(default=None, pattern=_FIELD_KEY_PATTERN, min_length=1, max_length=160)
-    source_evidence_id: str | None = Field(
-        default=None,
-        pattern=_NAMESPACED_ID_PATTERN,
-        min_length=3,
-        max_length=160,
-    )
-
-    @model_validator(mode="after")
-    def _validate_resolution(self) -> ActionArgumentBinding:
-        """Keep resolved and missing argument states unambiguous."""
-        if self.status is ActionArgumentStatus.RESOLVED:
-            if self.value is None or self.source is None or self.source_key is None:
-                raise ValueError("resolved action arguments require value, source, and source_key")
-            if self.source is ActionArgumentSource.CONDITION_EVIDENCE and self.source_evidence_id is None:
-                raise ValueError("condition-evidence action arguments require source_evidence_id")
-            if self.source is not ActionArgumentSource.CONDITION_EVIDENCE and self.source_evidence_id is not None:
-                raise ValueError("only condition-evidence action arguments can carry source_evidence_id")
-        elif (
-            self.value is not None
-            or self.source is not None
-            or self.source_key is not None
-            or self.source_evidence_id is not None
-        ):
-            raise ValueError("missing action arguments cannot carry value or source")
-        return self
 
 
 class PreconditionVerdict(BaseModel):

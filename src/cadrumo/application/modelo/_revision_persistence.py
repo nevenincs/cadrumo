@@ -44,7 +44,14 @@ from typing import TYPE_CHECKING
 
 from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from ...core import M210GrossIncomeSourceMode, Modelo, ProrrataRegisterRegime, ResultDisposition
+from ...core import (
+    CasillaId,
+    M210GrossIncomeSourceMode,
+    Modelo,
+    ProrrataRegisterRegime,
+    ResultDisposition,
+    validated_casilla_id,
+)
 from ...core.hashing import sha256_hex
 from ...domain.buckets import (
     BucketEvent,
@@ -57,11 +64,9 @@ from ...domain.buckets import build_bucket_event as _build_domain_bucket_event
 from ...domain.buckets import emit_bucket_event as _emit_domain_bucket_event
 from ...domain.calculations.registry import (
     BindingId,
-    CasillaId,
     CasillaObservation,
     RegistryCalculationUnresolvedOutcome,
     RelationId,
-    validated_casilla_id,
 )
 from ...domain.iva import is_m303_annual_settlement_period
 from ...domain.modelos import (

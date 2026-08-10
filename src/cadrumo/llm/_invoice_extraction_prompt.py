@@ -240,7 +240,7 @@ def invoice_extraction_prompt_registry() -> PromptRegistry:
     """Return the registry holding the pre-substitution extraction template.
 
     The template is versioned prompt metadata, which is exactly what
-    :class:`~adapters.outbound.llm.PromptRegistry` already stores -- so it is
+    :class:`~llm.PromptRegistry` already stores -- so it is
     registered there rather than reachable only as a module constant. The
     compiler then asks the registry for its template instead of closing over one,
     which is what lets the id and version travel onto the compiled artefact.
@@ -249,7 +249,7 @@ def invoice_extraction_prompt_registry() -> PromptRegistry:
     would mint an equal object and lose the identity a caller can compare.
 
     Returns:
-        :class:`~adapters.outbound.llm.PromptRegistry`: A registry carrying the
+        :class:`~llm.PromptRegistry`: A registry carrying the
         extraction template at :data:`INVOICE_EXTRACTION_PROMPT_VERSION`.
     """
     registry = PromptRegistry()

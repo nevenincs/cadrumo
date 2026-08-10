@@ -63,7 +63,7 @@ from ...core import (
     result_disposition_is_refund,
 )
 from ...core.hashing import sha256_hex
-from ...core.identity import BucketId, CalculationRevisionId, WorkUnitId
+from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, WorkUnitId
 from ...core.logging import get_logger
 from ...core.time import now as _utc_now
 from ...domain import filing as filing_domain
@@ -314,7 +314,7 @@ class ModeloExportResult(BaseModel):
     period: Period
     output_path: Path
     byte_size: int = Field(ge=0)
-    file_sha256: str = Field(min_length=64, max_length=64)
+    file_sha256: ContentDigest
     format: str = Field(min_length=1)
     exported_at: datetime
     actor: str = Field(min_length=1, max_length=128)

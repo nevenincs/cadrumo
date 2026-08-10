@@ -16,8 +16,8 @@ from graphlib import CycleError
 
 import pytest
 
+from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
-from .._ids import CasillaId, validated_casilla_id
 from .._loader import load_registry_tree
 from .._runtime_graph import (
     enum_consumed_binding_ids,

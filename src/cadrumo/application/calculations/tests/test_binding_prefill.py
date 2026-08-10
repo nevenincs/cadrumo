@@ -9,11 +9,10 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period, derive_result_disposition, result_disposition_casilla_ids
+from ....core import CasillaId, Period, derive_result_disposition, result_disposition_casilla_ids, validated_casilla_id
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaId,
     IvaLedgerObservation,
     RegistryCalculationResult,
     RegistryModeloObservation,
@@ -22,7 +21,6 @@ from ....domain.calculations.registry import (
     materialize_relation_binding_values,
     resolve_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
-    validated_casilla_id,
 )
 from ....domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
 from ....domain.iva_compensation import IvaCompensationCasillaReferenceError, IvaCompensationPeriodState

@@ -243,11 +243,17 @@ def test_coherent_presentation_then_acceptance_is_accepted() -> None:
 
 @pytest.mark.parametrize(
     "malformed_csv",
-    ("A", "ABC", "X" * 65),
-    ids=("one-char", "three-chars", "sixty-five-chars"),
+    ("A", "ABCDEFG", "X" * 33, "ABCD-1234-EFGH"),
+    ids=("one-char", "seven-chars", "thirty-three-chars", "hyphenated"),
 )
 def test_justificante_csv_outside_the_receipt_domain_bounds_is_refused(malformed_csv: str) -> None:
-    """A submission record cannot hold a CSV the receipt domain would reject."""
+    """A submission record cannot hold a CSV the receipt domain would reject.
+
+    Case is deliberately NOT a refusal axis. A lowercase CSV is a real AEAT
+    identifier written in a different case, not a malformed one, so it is
+    normalised rather than rejected -- covered positively by
+    :func:`test_a_lowercase_csv_is_normalised_rather_than_refused`.
+    """
     with pytest.raises(ValidationError):
         _aggregate(
             status=SubmissionStatus.PRESENTADA,
@@ -256,15 +262,54 @@ def test_justificante_csv_outside_the_receipt_domain_bounds_is_refused(malformed
         )
 
 
+def test_a_lowercase_csv_is_normalised_rather_than_refused() -> None:
+    """A lowercase CSV is stored in canonical form, not refused.
+
+    This is the capability the retired receipt-domain alias was about to
+    delete. Case-insensitive matching of one CSV against another is a named,
+    tested behaviour of the calendar evidence surface -- two case-equivalent
+    values are the SAME identifier and are expected to conflict as one. A
+    pattern-only alias would have refused the lowercase side at the model
+    boundary and removed that behaviour silently.
+
+    The normalisation runs BEFORE the constraint rather than after it, which
+    is the whole reason it works: a trailing uppercase transform would run
+    after the pattern check and still refuse the value it was added to accept.
+    """
+    filing = _aggregate(
+        status=SubmissionStatus.PRESENTADA,
+        attempt_statuses=(SubmissionStatus.PRESENTADA,),
+        justificante_csv="csvlive3031t2025",
+    )
+
+    assert filing.justificante_csv == "CSVLIVE3031T2025"
+
+
 def test_justificante_csv_within_the_receipt_domain_bounds_is_accepted() -> None:
-    """Valid parity: the shared bound admits exactly what Justificante admits."""
+    """Valid parity: the shared bound admits exactly what the receipt admits.
+
+    The parity claim is the point and it survives the bound moving. Both fields
+    now carry the canonical AEAT CSV type rather than a receipt-domain alias
+    with its own wider bound, so the values exercising the boundary changed
+    from four-and-sixty-four to eight-and-thirty-two.
+
+    Case did NOT become significant, and saying so here matters because the
+    first version of this docstring claimed it did. A lowercase CSV is
+    normalised to canonical form and accepted, not refused -- so parity is a
+    claim about two axes, admission AND normal form, and the assertion below
+    covers both.
+
+    What did not change is what this test is for: a submission record must not
+    be able to store a receipt identifier the receipt domain would refuse to
+    parse.
+    """
     from pydantic import TypeAdapter
 
-    from ....domain.justificante import JustificanteCsv
+    from ....core.identity import AeatCsv
 
-    receipt_bound = TypeAdapter(JustificanteCsv)
+    receipt_bound = TypeAdapter(AeatCsv)
 
-    for csv in ("ABCD", "Z" * 64):
+    for csv in ("ABCD1234", "Z" * 32):
         filing = _aggregate(
             status=SubmissionStatus.PRESENTADA,
             attempt_statuses=(SubmissionStatus.PRESENTADA,),
@@ -275,6 +320,11 @@ def test_justificante_csv_within_the_receipt_domain_bounds_is_accepted() -> None
         # domain admits is the value the submission record stores.
         assert receipt_bound.validate_python(csv) == csv
 
-    for rejected in ("ABC", "X" * 65):
+    for rejected in ("ABCDEFG", "X" * 33):
         with pytest.raises(ValidationError):
             receipt_bound.validate_python(rejected)
+
+    # Parity extends to the normalisation, not only to accept-versus-refuse:
+    # a lowercase value is admitted by BOTH sides and admitted as the SAME
+    # canonical form, so the two surfaces cannot key one identifier two ways.
+    assert receipt_bound.validate_python("abcd1234") == "ABCD1234"

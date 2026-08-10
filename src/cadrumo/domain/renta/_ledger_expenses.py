@@ -20,8 +20,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, Modelo
-from ..calculations.registry import CasillaId
+from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, CasillaId, Modelo
 from ..categories import (
     CategoryCitation,
     CategoryProfile,

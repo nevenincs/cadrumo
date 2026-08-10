@@ -270,7 +270,7 @@ def test_local_calendar_filing_evidence_requires_parseable_matching_filed_justif
 
 
 def test_local_calendar_filing_evidence_resolves_persisted_justificante_metadata() -> None:
-    csv = "JUST-303-2025-1T"
+    csv = "JUST3032025X1T7"
     with profile_storage_session(PRIMARY_PROFILE_ID):
         repo = ModeloRecordCatalogueRepository(bucket_id=PRIMARY_PROFILE_ID)
         repo.save(upsert_filing_record(repo.load(), _modelo_record_with_external_justificante(csv=csv)))

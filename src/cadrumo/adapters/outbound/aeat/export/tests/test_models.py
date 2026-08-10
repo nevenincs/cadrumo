@@ -148,7 +148,7 @@ class TestModeloPresentado:
         with pytest.raises(ValidationError, match=r"acknowledged_at|ACKNOWLEDGED"):
             self._filing(
                 status=SubmissionStatus.ACEPTADA,
-                justificante_csv="CSV123",
+                justificante_csv="FIXTURECSV1234X7",
                 justificante_pdf_path=Path("var/j.pdf"),
             )
 
@@ -163,7 +163,7 @@ class TestModeloPresentado:
         """Assert a fully ``ACKNOWLEDGED`` filing round-trips through JSON serialisation."""
         filing = self._filing(
             status=SubmissionStatus.ACEPTADA,
-            justificante_csv="CSV-ACK-1",
+            justificante_csv="FIXTURECSVACK001",
             justificante_pdf_path=Path("var/submissions/j1.pdf"),
             acknowledged_at=datetime(2026, 4, 12, 10, 5, 0, tzinfo=UTC),
         )

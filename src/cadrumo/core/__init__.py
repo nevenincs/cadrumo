@@ -80,6 +80,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ._action_argument_resolution import ActionArgumentResolution
 from ._aeat_csv import (
     AEAT_CSV_MAX_LENGTH,
     AEAT_CSV_MIN_LENGTH,
@@ -268,6 +269,13 @@ from ._result_disposition import (
     result_disposition_requires_bank_account,
 )
 from ._revision_review import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
+from ._spanish_stemming import (
+    SpanishStemmer,
+    spanish_stemmer,
+    spanish_word_tokens,
+    stem_spanish_terms,
+    stem_spanish_text,
+)
 from ._storage_taxonomy import (
     EXTERNAL_PATH_SETTINGS_FIELDS,
     FINGERPRINT_EXCLUDED_STORAGE_FIELDS,
@@ -359,6 +367,7 @@ if TYPE_CHECKING:
         foreign_asset_obligation_group,
     )
     from ._fsync import fsync_parent_dir
+    from ._link_safety import is_link_like
     from ._lockfile_unlink import LOCKFILE_UNLINK_RETRY_SECONDS, unlink_lockfile
     from ._pid_liveness import pid_is_alive
     from .aggregation import (
@@ -435,6 +444,7 @@ __all__: list[str] = [
     "STRUCTURED_DOCUMENT_SHAPES",
     "UNMODELED_OBLIGATIONS",
     "AcceleratorKind",
+    "ActionArgumentResolution",
     "ActionArgumentSource",
     "ActionArgumentStatus",
     "ActionConditionality",
@@ -532,6 +542,7 @@ __all__: list[str] = [
     "SectorDiferenciadoLetra",
     "SecureObjectWrite",
     "ServiceCapability",
+    "SpanishStemmer",
     "StandardPeriodCode",
     "StateRootInputs",
     "StorageArea",
@@ -579,6 +590,7 @@ __all__: list[str] = [
     "iban_mod_97",
     "is_administrative_period_token",
     "is_aeat_csv",
+    "is_link_like",
     "lineage_obligations",
     "live_state_root_inputs",
     "misclassified_floor_keys",
@@ -614,7 +626,11 @@ __all__: list[str] = [
     "result_disposition_casilla_ids",
     "result_disposition_is_refund",
     "result_disposition_requires_bank_account",
+    "spanish_stemmer",
+    "spanish_word_tokens",
     "stale_persisted_format_declarations",
+    "stem_spanish_terms",
+    "stem_spanish_text",
     "storage_location",
     "storage_path",
     "storage_tree_targets",
@@ -651,6 +667,10 @@ def __getattr__(name: str) -> object:
         from ._fsync import fsync_parent_dir
 
         return fsync_parent_dir
+    if name == "is_link_like":
+        from ._link_safety import is_link_like
+
+        return is_link_like
     if name == "pid_is_alive":
         from ._pid_liveness import pid_is_alive
 

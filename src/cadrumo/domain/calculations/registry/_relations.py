@@ -23,11 +23,11 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, field_validator
 
-from ....core import STRICT_FROZEN_CONFIG, Period
+from ....core import STRICT_FROZEN_CONFIG, CasillaId, Period
 from ....core.aggregation import RelationAggregationOp
 from ._binding_selector_utils import unique_tuple
 from ._errors import RegistryValidationError
-from ._ids import BindingId, CasillaId, LegalRefId, ModeloId, RelationId, SourceRefId
+from ._ids import BindingId, LegalRefId, ModeloId, RelationId, SourceRefId
 from ._observation_fold import gather_observed_requirement_values
 from ._period_offset_math import apply_period_offset
 from ._relation_aggregation import relation_aggregation_op

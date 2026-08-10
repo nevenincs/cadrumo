@@ -3,8 +3,9 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaId, ModeloRevision, validated_casilla_id
+from ....domain.calculations.registry import ModeloRevision
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ...user_profile import UserProfileLifecycleRepository
 

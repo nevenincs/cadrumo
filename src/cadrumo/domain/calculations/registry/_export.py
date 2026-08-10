@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 
+from ....core import CasillaId
 from ....core.aggregation import BindingAggregationOp
 from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import (
@@ -21,7 +22,7 @@ from ._binding_selector_utils import (
 from ._casilla_membership import casillas_by_id
 from ._errors import RegistryValidationError
 from ._fixed_width_codec import ExportJustification, ExportPadding
-from ._ids import CasillaId, ExportFieldId
+from ._ids import ExportFieldId
 from ._schema import (
     CasillaFieldKind,
     DataBindingDefinition,

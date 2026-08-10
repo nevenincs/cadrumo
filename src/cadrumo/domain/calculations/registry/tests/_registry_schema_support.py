@@ -11,11 +11,11 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
 from .. import (
     CasillaContinuidadEvolutionDefinition,
     CasillaDefinition,
-    CasillaId,
     ExportFieldDefinition,
     ExtractionTargetDefinition,
     FormulaExpression,
@@ -31,7 +31,6 @@ from .. import (
     build_snapshot,
     load_modelo_file,
     load_registry_tree,
-    validated_casilla_id,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

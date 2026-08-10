@@ -90,24 +90,49 @@ __all__ = [
 
 
 class PartyAddress(NamedTuple):
-    """One side of the document, named by the address fields that describe it."""
+    """One side of the document, named by every field and role its checks use.
+
+    ``role`` identifies the side in the ledger's supplier/customer vocabulary.
+    ``operator_role`` is the issuing/billed vocabulary the review surface shows
+    an operator.  Keeping both here prevents an advisory from silently
+    re-declaring the same two parties just to choose different words.
+    """
 
     role: str
     tax_id_field: str
     postal_field: str
     country_field: str
     country_code_field: str
+    stated_country_code_field: str
+    operator_role: str
 
 
 _PARTY_ADDRESSES: Final[tuple[PartyAddress, ...]] = (
-    PartyAddress("supplier", "supplier_tax_id", "supplier_postal_code", "supplier_country", "supplier_country_code"),
-    PartyAddress("customer", "customer_tax_id", "customer_postal_code", "customer_country", "customer_country_code"),
+    PartyAddress(
+        "supplier",
+        "supplier_tax_id",
+        "supplier_postal_code",
+        "supplier_country",
+        "supplier_country_code",
+        "supplier_stated_country_code",
+        "issuing",
+    ),
+    PartyAddress(
+        "customer",
+        "customer_tax_id",
+        "customer_postal_code",
+        "customer_country",
+        "customer_country_code",
+        "customer_stated_country_code",
+        "billed",
+    ),
 )
-"""Both sides, because the transposition this guards against swaps exactly two.
+"""Both sides and all their common fields, owned by one ledger table.
 
-Naming only the supplier would leave the customer's block unstamped, and on an
-invoice the filer issued the CUSTOMER is the counterparty -- the side the
-classification's territory question is actually asked of.
+The co-location resolver, attribution advisory, country-vocabulary advisory,
+and postal-shape finding all traverse this declaration.  A party-specific table
+beside any one of them would let its fields or its operator-facing role drift
+from the others.
 """
 
 PARTY_ATTRIBUTED_ADDRESS_FIELDS: Final[frozenset[str]] = frozenset(
@@ -184,12 +209,12 @@ class PartyAttributionAdvisory(BaseModel):
 
 
 def party_addresses() -> tuple[PartyAddress, ...]:
-    """Return both parties and the address fields that describe each.
+    """Return both parties and the fields and roles their checks use.
 
-    The one party table, exposed so the co-location resolver partitions the
-    document over exactly the sides this module stamps. Two tables would be the
-    drift that lets a resolver attribute a field nothing stamps, or stamp one
-    nothing attributes.
+    The one party table is exposed so every ledger advisory and the co-location
+    resolver traverse exactly the same sides. Two tables would let a resolver
+    or advisory name a field or a role the canonical ledger declaration does
+    not own.
     """
     return _PARTY_ADDRESSES
 

@@ -28,8 +28,8 @@ from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
 
-from ...core import Modelo
-from ...domain.calculations.registry import CasillaId, LegalRefId, SourceRefId
+from ...core import CasillaId, Modelo
+from ...domain.calculations.registry import LegalRefId, SourceRefId
 from ...domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -210,18 +210,18 @@ def m303_m349_intracom_reconcile_findings(
     if gap <= _M303_M349_RECONCILE_DEMINIMIS_EUR:
         return []
 
-    period_token = work_unit.period.registry_token
     return [
         ModeloVerificationFinding(
             kind=ModeloVerificationFindingKind.RECONCILIATION_MISMATCH,
             severity=ModeloVerificationFindingSeverity.WARNING,
-            message=(
-                f"Intra-community totals do not reconcile for {period_token} {work_unit.filing_year}: "
-                f"Modelo 303 declares {m303_total} EUR (box 10 acquisitions + box 59 supplies) but "
-                f"Modelo 349 resumen declares {m349_total} EUR (importe de las operaciones "
-                f"intracomunitarias) — a gap of {gap} EUR. Both declarations describe the same "
-                "intra-community activity and should agree before filing."
-            ),
+            message_locale_key="application.modelo.findings.m303_m349_intracom_reconciliation_mismatch",
+            message_facts={
+                "period_code": work_unit.period.registry_token,
+                "filing_year": work_unit.filing_year,
+                "m303_total": m303_total,
+                "m349_total": m349_total,
+                "gap": gap,
+            },
             legal_refs=_RECONCILE_LEGAL_REFS,
             source_refs=_RECONCILE_SOURCE_REFS,
         ),

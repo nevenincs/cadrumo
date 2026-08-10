@@ -7,8 +7,9 @@ from functools import lru_cache
 
 import pytest
 
+from ....core import CasillaId
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaId, VerificationPredicateDefinition
+from ....domain.calculations.registry import VerificationPredicateDefinition
 from ....domain.modelos import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,

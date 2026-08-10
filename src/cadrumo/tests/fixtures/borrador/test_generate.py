@@ -13,7 +13,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
+from ....core import CasillaId, validated_casilla_id
 from ._generate import (
     _format_spanish_decimal,
     _render_borrador_pdf,

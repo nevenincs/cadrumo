@@ -26,7 +26,7 @@ from urllib.parse import urlsplit
 
 from pydantic import AnyHttpUrl
 
-from .....core import CasillaValueKind, ExportLayoutFormat, Modelo, ObservedHeaderFact, Period
+from .....core import CasillaId, CasillaValueKind, ExportLayoutFormat, Modelo, ObservedHeaderFact, Period
 from .....core.config import Settings
 from .....core.external_constants import JSON_MIME_TYPE as _JSON_MIME_TYPE
 from .....core.hashing import sha256_hex
@@ -36,7 +36,6 @@ from .....core.time import now
 from .....domain.calculations.registry import (
     BindingId,
     CasillaFieldKind,
-    CasillaId,
     CasillaObservation,
     ExportFieldDefinition,
     ParsedExportFieldValue,
@@ -421,12 +420,6 @@ def _submitted_file_layout_refusal(
             "reason": reason,
         },
         translated_message=tr("adapters.sede.errors.submitted_file_layout_parse_failed"),
-        suggestion=(
-            "The reason names the export record the parse stopped on. Compare that record's "
-            "declaration in the modelo's registry export layout against what the exporter writes "
-            "for this disposition; a record the writer omits must be declared optional, not "
-            "required. Do not read the payload by byte offset instead."
-        ),
     )
 
 

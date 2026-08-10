@@ -11,11 +11,9 @@ from tempfile import TemporaryDirectory
 
 import pytest
 
-from ....core import Period, PriorDomiciliationElection
+from ....core import CasillaId, Period, PriorDomiciliationElection, validated_casilla_id
 from ....domain.calculations.registry import (
-    CasillaId,
     ExportLayoutDefinition,
-    validated_casilla_id,
 )
 from ....domain.filing import ModeloDraft
 from ....domain.submission import ModeloDraftStatus

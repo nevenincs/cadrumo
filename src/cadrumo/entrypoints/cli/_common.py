@@ -465,6 +465,15 @@ def emit_progress_line(line: str) -> None:
     This is deliberately not a second envelope: it carries no schema spine, no
     notices, and no sandbox banner. Callers gate the stream to text mode
     themselves, because in JSON the closing envelope already carries every row.
+
+    **What the funnel masks, stated because the change that introduced this
+    primitive overstated it.** The redaction policy substitutes embedded tax
+    identities and opaque record identifiers; it does NOT mask filesystem
+    paths. A streamed line naming a document by its path still emits that
+    path, and only an identity inside it is replaced. The protection this
+    primitive restores is identity and opaque-id masking on a channel that had
+    none, which is narrower than "the material the funnel exists to mask" and
+    is the accurate claim to reason from.
     """
     _render_and_echo(format_name=OutputFormat.TEXT.value, payload=None, lines=(line,))
 

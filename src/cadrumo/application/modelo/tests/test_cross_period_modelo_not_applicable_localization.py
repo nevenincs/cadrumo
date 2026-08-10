@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import Period
-from ....core.config import override_settings
-from ....domain.calculations.registry import CasillaId, SourceRefId, validated_casilla_id
+from ....core import CasillaId, Period, validated_casilla_id
+from ....domain.calculations.registry import SourceRefId
 from ...calculations import (
     CrossPeriodCleanStateVerdict,
     CrossPeriodDependencyEvidence,
@@ -22,8 +21,8 @@ _SOURCE_CASILLA_01: CasillaId = validated_casilla_id("01", surface="not-applicab
 _SOURCE_REF: SourceRefId = "aeat-modelo-303-procedure"
 
 
-def test_not_applicable_verify_finding_localizes_binding_kv_guidance() -> None:
-    """The verify advisory explains ``KEY=VALUE`` in the requested language."""
+def test_not_applicable_verify_finding_is_locale_neutral() -> None:
+    """The application emits a locale identity and exact source-modelo facts."""
 
     evidence = CrossPeriodDependencyEvidence(
         requirement=CrossPeriodDependencyRequirement(
@@ -46,14 +45,12 @@ def test_not_applicable_verify_finding_localizes_binding_kv_guidance() -> None:
         dependencies=(evidence,),
     )
 
-    with override_settings(cadrumo_output_language="hu"):
-        findings = _cross_period_clean_state_findings(verdict, activity_start_date=None)
+    findings = _cross_period_clean_state_findings(verdict, activity_start_date=None)
 
     assert len(findings) == 1
     finding = findings[0]
-    assert "KULCS=ÉRTÉK" in finding.message
-    assert "egyenlőségjel bal oldalán" in finding.message
-    assert "source modelos the taxpayer does not file" not in finding.message
+    assert finding.message_locale_key == "application.modelo.findings.cross_period_modelo_not_applicable.message"
+    assert dict(finding.message_facts) == {"source_modelo_count": 1, "source_modelos": "303"}
     assert "next_action" not in finding.model_dump(mode="json")
     assert set(_CROSS_PERIOD_DEPENDENCY_LEGAL_REFS) <= set(finding.legal_refs)
     assert tuple(finding.source_refs) == (_SOURCE_REF,)

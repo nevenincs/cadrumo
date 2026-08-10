@@ -48,7 +48,6 @@ from pydantic import AnyUrl, Field
 from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings
 from .....core.errors import SiteHealthError
-from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....domain.calculations.registry import (
     GroiObservation,
@@ -161,19 +160,13 @@ def _assert_query_browser_action(action: str) -> None:
     assert_query_browser_action_for(_READ_GUARD_POLICY, action)
 
 
-def _groi_shape_suggestion() -> str:
-    """Return the localised shape-change suggestion string for GROI error messages."""
-    return tr("adapters.aeat.sede.groi.suggestions.shape_change")
-
-
 _playwright_stage = build_playwright_stage_runner(
     surface_label="GROI",
     log_prefix="groi",
-    shape_suggestion=_groi_shape_suggestion,
     logger=logger,
 )
 
-_locate: _LocateHelper = make_locate_helper("GROI", _groi_shape_suggestion)
+_locate: _LocateHelper = make_locate_helper("GROI")
 
 
 class GroiNifVerdict(_SedeCheckerModel):
@@ -424,13 +417,6 @@ async def _assert_form_action_is_consult_endpoint(page: Page, *, timeout_ms: int
                 "expected_action": _EXPECTED_FORM_ACTION,
                 "observed_action": action or "<missing>",
             },
-            suggestion=(
-                "AEAT changed the GROI form's submission target. The driver "
-                "refuses to submit until the change is investigated and the "
-                "expected action constant is updated. This is the read-only "
-                "mandate's last line of defense before a click would post to "
-                "the new (potentially state-modifying) endpoint."
-            ),
         )
 
 

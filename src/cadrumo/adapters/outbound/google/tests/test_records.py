@@ -302,13 +302,12 @@ def test_every_leaf_carries_a_registered_error_code() -> None:
         assert leaf.code.code.startswith(("AUTH_GOOGLE", "REFUSED_GOOGLE", "FAIL_GOOGLE", "LOCKED_GOOGLE"))
 
 
-def test_google_auth_error_constructs_with_context_and_suggestion() -> None:
-    """Verify the CadrumoError constructor signature flows through cleanly."""
+def test_google_auth_error_constructs_with_factual_context_only() -> None:
+    """Google adapter errors retain facts without a legacy recovery field."""
 
     err = GoogleAuthRevokedError(
         "Refresh token revoked",
         context={"profile": "default"},
-        suggestion="aeat config google login --profile default",
     )
     assert err.context == {"profile": "default"}
-    assert err.suggestion == "aeat config google login --profile default"
+    assert not hasattr(err, "suggestion")

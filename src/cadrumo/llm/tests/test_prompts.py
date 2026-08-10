@@ -1,6 +1,6 @@
 """Unit tests for the prompt registry.
 
-Verifies that :class:`cadrumo.adapters.outbound.llm.PromptRegistry` resolves the
+Verifies that :class:`cadrumo.llm.PromptRegistry` resolves the
 highest registered version by default, honours explicit version pins, and that
 the seeded registry contains the prompts that downstream callers depend on.
 """

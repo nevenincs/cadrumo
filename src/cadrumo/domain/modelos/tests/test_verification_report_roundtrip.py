@@ -19,8 +19,8 @@ from pydantic import ValidationError
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.storage import MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE, SensitivityClass
+from ....core import CasillaId, validated_casilla_id
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations.registry import CasillaId, validated_casilla_id
 from .._calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -108,7 +108,8 @@ def _populated_report(revision_id: str) -> VerificationReport:
             kind=ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA,
             severity=ModeloVerificationFindingSeverity.BLOCKING,
             casilla_id=_IVA_DEVENGADO_CASILLA,
-            message="iva.devengado is required but unresolved",
+            message_locale_key="application.modelo.findings.missing_required_casilla",
+            message_facts={"casilla_id": str(_IVA_DEVENGADO_CASILLA)},
             legal_refs=_TEST_FINDING_LEGAL_REFS,
         ),
         ModeloVerificationFinding(
@@ -116,7 +117,8 @@ def _populated_report(revision_id: str) -> VerificationReport:
             severity=ModeloVerificationFindingSeverity.WARNING,
             casilla_id=None,
             expectation_id="iva-source-required",
-            message="prior-period source not yet pulled",
+            message_locale_key="application.modelo.findings.test_prior_period_source_missing",
+            message_facts={"expectation_id": "iva-source-required"},
             legal_refs=_TEST_FINDING_LEGAL_REFS,
         ),
     )
@@ -276,7 +278,8 @@ def test_verification_finding_requires_legal_refs() -> None:
         ModeloVerificationFinding(
             kind=ModeloVerificationFindingKind.BLOCKING_RULE,
             severity=ModeloVerificationFindingSeverity.BLOCKING,
-            message="cross-casilla predicate failed",
+            message_locale_key="application.modelo.findings.cross_casilla_invariant_violated",
+            message_facts={"predicate_id": "test-predicate"},
             legal_refs=(),
         )
 
@@ -292,11 +295,51 @@ def test_verification_finding_refuses_retired_free_form_recovery_text() -> None:
                 "kind": ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA,
                 "severity": ModeloVerificationFindingSeverity.BLOCKING,
                 "casilla_id": _IVA_DEVENGADO_CASILLA,
-                "message": "iva.devengado is required but unresolved",
+                "message_locale_key": "application.modelo.findings.missing_required_casilla",
+                "message_facts": {"casilla_id": str(_IVA_DEVENGADO_CASILLA)},
                 "next_action": "aeat app modelo work calculate",
                 "legal_refs": _TEST_FINDING_LEGAL_REFS,
             },
         )
+
+
+def test_verification_finding_refuses_retired_message_prose() -> None:
+    """The domain record has no compatibility field for rendered text."""
+    with pytest.raises(ValidationError, match="message"):
+        ModeloVerificationFinding.model_validate(
+            {
+                "kind": ModeloVerificationFindingKind.BLOCKING_RULE,
+                "severity": ModeloVerificationFindingSeverity.BLOCKING,
+                "message": "rendered prose",
+                "message_locale_key": "application.modelo.findings.test_blocked",
+                "message_facts": {},
+                "legal_refs": _TEST_FINDING_LEGAL_REFS,
+            },
+        )
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    (
+        ("message_locale_key", "Rendered prose"),
+        ("message_facts", {"next_hint": "operator.modelo.calculate"}),
+        ("message_facts", {"reason_code": "human readable prose"}),
+    ),
+)
+def test_verification_finding_rejects_presentation_in_locale_neutral_fields(
+    field: str,
+    value: object,
+) -> None:
+    payload: dict[str, object] = {
+        "kind": ModeloVerificationFindingKind.BLOCKING_RULE,
+        "severity": ModeloVerificationFindingSeverity.BLOCKING,
+        "message_locale_key": "application.modelo.findings.test_blocked",
+        "message_facts": {"reason_code": "blocked"},
+        "legal_refs": _TEST_FINDING_LEGAL_REFS,
+    }
+    payload[field] = value
+    with pytest.raises(ValidationError):
+        ModeloVerificationFinding.model_validate(payload)
 
 
 def test_verification_finding_rejects_blank_grounding_refs() -> None:
@@ -305,14 +348,16 @@ def test_verification_finding_rejects_blank_grounding_refs() -> None:
         ModeloVerificationFinding(
             kind=ModeloVerificationFindingKind.BLOCKING_RULE,
             severity=ModeloVerificationFindingSeverity.BLOCKING,
-            message="cross-casilla predicate failed",
+            message_locale_key="application.modelo.findings.cross_casilla_invariant_violated",
+            message_facts={"predicate_id": "test-predicate"},
             legal_refs=(" ",),
         )
     with pytest.raises(ValidationError, match="source_refs"):
         ModeloVerificationFinding(
             kind=ModeloVerificationFindingKind.BLOCKING_RULE,
             severity=ModeloVerificationFindingSeverity.BLOCKING,
-            message="cross-casilla predicate failed",
+            message_locale_key="application.modelo.findings.cross_casilla_invariant_violated",
+            message_facts={"predicate_id": "test-predicate"},
             legal_refs=_TEST_FINDING_LEGAL_REFS,
             source_refs=(" ",),
         )
@@ -332,7 +377,8 @@ def test_report_id_is_clock_free_for_an_identical_outcome() -> None:
         ModeloVerificationFinding(
             kind=ModeloVerificationFindingKind.BLOCKING_RULE,
             severity=ModeloVerificationFindingSeverity.BLOCKING,
-            message="reconciliation total mismatch over tolerance",
+            message_locale_key="application.modelo.findings.test_reconciliation_mismatch",
+            message_facts={},
             legal_refs=_TEST_FINDING_LEGAL_REFS,
         ),
     )
@@ -376,14 +422,16 @@ def test_report_id_diverges_when_findings_change() -> None:
     base_finding = ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.BLOCKING_RULE,
         severity=ModeloVerificationFindingSeverity.BLOCKING,
-        message="reconciliation total mismatch over tolerance",
+        message_locale_key="application.modelo.findings.test_reconciliation_mismatch",
+        message_facts={},
         legal_refs=_TEST_FINDING_LEGAL_REFS,
     )
     extra_finding = ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA,
         severity=ModeloVerificationFindingSeverity.BLOCKING,
         casilla_id=_IVA_DEVENGADO_CASILLA,
-        message="iva.devengado is required but unresolved",
+        message_locale_key="application.modelo.findings.missing_required_casilla",
+        message_facts={"casilla_id": str(_IVA_DEVENGADO_CASILLA)},
         legal_refs=_TEST_FINDING_LEGAL_REFS,
     )
     id_one = derive_verification_report_id(

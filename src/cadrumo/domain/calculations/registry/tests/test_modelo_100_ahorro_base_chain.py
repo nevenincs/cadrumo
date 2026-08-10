@@ -39,8 +39,9 @@ from decimal import Decimal
 
 import pytest
 
+from .....core import CasillaId, validated_casilla_id
 from .....core.aggregation import RelationAggregationOp
-from .. import CasillaId, RegistrySnapshot, calculate_registry_snapshot, validated_casilla_id
+from .. import RegistrySnapshot, calculate_registry_snapshot
 from .._authority import ValidatedRegistryAuthority
 from .._relation_aggregation import relation_aggregation_op
 from .._relations import resolve_relation_values

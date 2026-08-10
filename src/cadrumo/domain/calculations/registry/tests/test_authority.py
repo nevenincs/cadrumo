@@ -10,15 +10,13 @@ from pathlib import Path
 
 import pytest
 
-from .....core import Period
+from .....core import CasillaId, Period, validated_casilla_id
 from .....core.resources import resources
 from .. import (
-    CasillaId,
     RegistrySnapshotError,
     RegistryValidationError,
     ValidatedRegistryAuthority,
     calculate_registry_snapshot,
-    validated_casilla_id,
 )
 from .._loader import _collect_registry_tree_fingerprints, clear_fingerprint_cache
 from .._loader_cache import registry_disk_cache_dir

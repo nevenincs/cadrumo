@@ -81,7 +81,7 @@ See Also:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Final, NamedTuple
+from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel, Field
 
@@ -92,6 +92,7 @@ from ...domain.iva import (
     record_country_code_status,
     territorial_scope_for_country,
 )
+from ._party_attribution import PartyAddress, party_addresses
 
 if TYPE_CHECKING:
     from ._evidence_draft import InvoiceDraft
@@ -103,26 +104,6 @@ __all__ = [
     "country_vocabulary_advisory",
 ]
 
-
-class _Party(NamedTuple):
-    """One side of the document, named by the fields that state its country."""
-
-    stated_field: str
-    code_field: str
-    name_field: str
-    role: str
-
-
-_PARTIES: Final[tuple[_Party, ...]] = (
-    _Party("supplier_stated_country_code", "supplier_country_code", "supplier_country", "issuing"),
-    _Party("customer_stated_country_code", "customer_country_code", "customer_country", "billed"),
-)
-"""Both sides, because establishment is asked of each party independently.
-
-Checking only the supplier would pass every document whose CUSTOMER carried the
-unassigned code -- and on an invoice the filer issued, the customer IS the
-counterparty whose territory decides whether the operation is an export.
-"""
 
 _DETAIL_BY_STATUS: Final[dict[StatedCountryCodeStatus, str]] = {
     StatedCountryCodeStatus.UNASSIGNED: (
@@ -218,7 +199,7 @@ class CountryVocabularyAdvisory(BaseModel):
         return tuple(party for party in self.parties if party.status is status)
 
 
-def _territory_already_settled(draft: InvoiceDraft, party: _Party) -> bool:
+def _territory_already_settled(draft: InvoiceDraft, party: PartyAddress) -> bool:
     """Return whether this party's country evidence settled its territory anyway.
 
     Both spellings are consulted in the ladder's own order: the printed NAME
@@ -230,10 +211,10 @@ def _territory_already_settled(draft: InvoiceDraft, party: _Party) -> bool:
     Spain answers ``False``, as it does everywhere on this axis: it names the
     Member State while the IVA territory inside it stays undetermined.
     """
-    from_name = country_code_for_printed_country_name(getattr(draft, party.name_field, None))
+    from_name = country_code_for_printed_country_name(getattr(draft, party.country_field, None))
     if territorial_scope_for_country(from_name) is not None:
         return True
-    return territorial_scope_for_country(getattr(draft, party.code_field, None)) is not None
+    return territorial_scope_for_country(getattr(draft, party.country_code_field, None)) is not None
 
 
 def country_vocabulary_advisory(draft: InvoiceDraft) -> CountryVocabularyAdvisory | None:
@@ -263,8 +244,8 @@ def country_vocabulary_advisory(draft: InvoiceDraft) -> CountryVocabularyAdvisor
             a corrupt bundled table is a defect, not an unestablished party.
     """
     warnings: list[CountryVocabularyWarning] = []
-    for party in _PARTIES:
-        stated: str | None = getattr(draft, party.stated_field, None)
+    for party in party_addresses():
+        stated: str | None = getattr(draft, party.stated_country_code_field, None)
         status = record_country_code_status(stated)
         if status is None or status not in COUNTRY_VOCABULARY_ADVISED_STATUSES:
             continue
@@ -275,11 +256,13 @@ def country_vocabulary_advisory(draft: InvoiceDraft) -> CountryVocabularyAdvisor
         code = str(stated).strip().upper()
         warnings.append(
             CountryVocabularyWarning(
-                role=party.role,
-                field=party.stated_field,
+                role=party.operator_role,
+                field=party.stated_country_code_field,
                 stated_code=code,
                 status=status,
-                detail=f"the {party.role} party's country code {code!r} {_DETAIL_BY_STATUS[status]}",
+                detail=(
+                    f"the {party.operator_role} party's country code {code!r} {_DETAIL_BY_STATUS[status]}"
+                ),
             ),
         )
     if not warnings:

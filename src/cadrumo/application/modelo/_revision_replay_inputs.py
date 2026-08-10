@@ -24,7 +24,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from ...core import Modelo
+from ...core import CasillaId, Modelo
 from ...core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS, BindingSourceKind
 from ...core.resources import resources
 from ...domain import canonical_decimal_string
@@ -33,7 +33,6 @@ from ...domain.calculations.registry import (
     ApplicabilityVerdict,
     BindingId,
     CasillaDefinition,
-    CasillaId,
     DataBindingDefinition,
     InputKind,
     RegistrySnapshot,

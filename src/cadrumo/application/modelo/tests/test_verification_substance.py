@@ -6,7 +6,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....domain.calculations.registry import CasillaId, VerificationPredicateDefinition
+from ....core import CasillaId
+from ....domain.calculations.registry import VerificationPredicateDefinition
 from ....domain.modelos import ModeloError, ModeloVerificationFindingKind
 from .._verification_actions import (
     evaluate_advisory_predicate_fires,
@@ -125,7 +126,8 @@ def test_cap_le_when_positive_emits_blocking_rule_finding_for_violated_predicate
 
     assert len(findings) == 1
     assert findings[0].kind is ModeloVerificationFindingKind.BLOCKING_RULE
-    assert "modelo-130-c15-cap-by-c14" in findings[0].message
+    assert findings[0].message_locale_key == "application.modelo.findings.cross_casilla_invariant_violated"
+    assert dict(findings[0].message_facts) == {"predicate_id": "modelo-130-c15-cap-by-c14"}
 
 
 def test_cap_le_when_positive_emits_no_finding_when_within_cap() -> None:
@@ -185,7 +187,8 @@ def test_at_most_one_positive_emits_blocking_rule_finding() -> None:
 
     assert len(findings) == 1
     assert findings[0].kind is ModeloVerificationFindingKind.BLOCKING_RULE
-    assert "test-at-most-one-positive" in findings[0].message
+    assert findings[0].message_locale_key == "application.modelo.findings.cross_casilla_invariant_violated"
+    assert dict(findings[0].message_facts) == {"predicate_id": "test-at-most-one-positive"}
 
 
 # ---------------------------------------------------------------------------
@@ -454,7 +457,8 @@ def test_evaluate_verification_predicates_violation_produces_blocking_rule() -> 
     findings = evaluate_verification_predicates((predicate,), values, _workflow_profile())
     assert len(findings) == 1
     assert findings[0].kind is ModeloVerificationFindingKind.BLOCKING_RULE
-    assert "test-invariant" in findings[0].message
+    assert findings[0].message_locale_key == "application.modelo.findings.cross_casilla_invariant_violated"
+    assert dict(findings[0].message_facts) == {"predicate_id": "test-invariant"}
 
 
 def test_evaluate_verification_predicates_passing_predicate_no_finding() -> None:

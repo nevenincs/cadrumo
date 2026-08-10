@@ -127,7 +127,7 @@ from ...core import (
 from ...core.config import Settings
 from ...core.config import load_settings as _load_settings
 from ...core.external_constants import DEFAULT_CURRENCY, XML_MIME_TYPE
-from ...core.identity import same_tax_identifier
+from ...core.identity import ContentDigest, same_tax_identifier
 from ...core.parsing import parse_iso8601_date
 from ...domain.attachments import AttachmentNotFoundError, link_attachment_invoice, normalize_media_type
 from ...domain.currency import ExchangeRateProvider
@@ -702,7 +702,7 @@ class InvoiceDraft(BaseModel):
     iva_breakdown: tuple[InvoiceDraftRateBreakdown, ...] = ()
     iva_category: str | None = None
     suggested_kind: InvoiceKind | None = None
-    transcription_sha256: str | None = Field(default=None, min_length=64, max_length=64)
+    transcription_sha256: ContentDigest | None = None
     provenance: tuple[FieldProvenance, ...] = ()
     discrepancies: tuple[DraftDiscrepancyFinding, ...] = ()
     raw_text_length: int = 0

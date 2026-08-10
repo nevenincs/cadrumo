@@ -44,7 +44,8 @@ from decimal import Decimal
 
 import pytest
 
-from .. import CasillaId, RegistrySnapshot, calculate_registry_snapshot, validated_casilla_id
+from .....core import CasillaId, validated_casilla_id
+from .. import RegistrySnapshot, calculate_registry_snapshot
 from .._authority import ValidatedRegistryAuthority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

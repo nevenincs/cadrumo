@@ -25,10 +25,10 @@ from datetime import date as _date
 from decimal import Decimal
 from types import MappingProxyType
 
+from ...core import CasillaId, validated_casilla_id
 from ...core.parsing import parse_date
 from ...domain.calculations.registry import (
     KNOWN_PROFILE_FLAG_ADVISORY_FIELDS,
-    CasillaId,
     ParsedVerificationPredicate,
     RegistryCalculationUnresolvedOutcome,
     RegistrySnapshot,
@@ -36,7 +36,6 @@ from ...domain.calculations.registry import (
     VerificationPredicateDefinition,
     VerificationPredicateOperator,
     parse_verification_predicate_expression,
-    validated_casilla_id,
 )
 from ...domain.deadlines import FiscalResidency, TaxpayerProfile
 from ...domain.modelos import (
@@ -645,7 +644,10 @@ def _advisory_deduccion_requires_adquisicion_before_fires(
     _profile: TaxpayerProfile | None,
 ) -> bool | None:
     predicate = parse_verification_predicate_expression(expr)
-    if predicate is None or predicate.operator is not VerificationPredicateOperator.DEDUCCION_REQUIRES_ADQUISICION_BEFORE:
+    if (
+        predicate is None
+        or predicate.operator is not VerificationPredicateOperator.DEDUCCION_REQUIRES_ADQUISICION_BEFORE
+    ):
         return None
     if len(predicate.arguments) != 4:
         return False

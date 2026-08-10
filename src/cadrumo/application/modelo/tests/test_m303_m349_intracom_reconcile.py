@@ -23,9 +23,8 @@ import pytest
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
@@ -163,9 +162,10 @@ def test_advisory_fires_when_m303_intracom_exceeds_m349_resumen() -> None:
     assert finding.kind is ModeloVerificationFindingKind.RECONCILIATION_MISMATCH
     assert finding.severity is ModeloVerificationFindingSeverity.WARNING
     # 303 total 6000 + 4000 = 10000 vs 349 resumen 8000 -> gap 2000.
-    assert "10000" in finding.message
-    assert "8000" in finding.message
-    assert "2000" in finding.message
+    assert finding.message_locale_key == "application.modelo.findings.m303_m349_intracom_reconciliation_mismatch"
+    assert finding.message_facts["m303_total"] == Decimal("10000")
+    assert finding.message_facts["m349_total"] == Decimal("8000")
+    assert finding.message_facts["gap"] == Decimal("2000")
     assert finding.legal_refs  # grounded, non-empty
 
 
@@ -188,8 +188,8 @@ def test_advisory_fires_when_verifying_the_m349_side() -> None:
 
     assert len(findings) == 1
     assert findings[0].kind is ModeloVerificationFindingKind.RECONCILIATION_MISMATCH
-    assert "10000" in findings[0].message
-    assert "8000" in findings[0].message
+    assert findings[0].message_facts["m303_total"] == Decimal("10000")
+    assert findings[0].message_facts["m349_total"] == Decimal("8000")
 
 
 def test_no_finding_when_sibling_declaration_absent() -> None:

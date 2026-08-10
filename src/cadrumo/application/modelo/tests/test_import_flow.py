@@ -17,11 +17,11 @@ from pathlib import Path
 
 import pytest
 
+from ....core import CasillaId
 from ....domain.buckets import (
     BucketEventObjectType,
     BucketEventType,
 )
-from ....domain.calculations.registry import CasillaId
 from ....domain.modelos import (
     CalculationRevisionAmendmentKind,
     CalculationRevisionState,

@@ -49,8 +49,9 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
-from .. import CasillaId, ModeloRevision, build_snapshot, validated_casilla_id
+from .. import ModeloRevision, build_snapshot
 from .._errors import RegistryValidationError
 from .._loader import load_registry_tree
 from .._schema_input_kind import InputKind

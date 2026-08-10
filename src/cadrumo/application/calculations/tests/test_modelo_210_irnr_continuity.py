@@ -55,15 +55,14 @@ from pathlib import Path
 
 import pytest
 
+from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     BindingId,
-    CasillaId,
     RegistryCalculationResult,
     RegistryValidationError,
     calculate_registry_snapshot,
     resolve_bound_inputs_by_casilla_id,
-    validated_casilla_id,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest

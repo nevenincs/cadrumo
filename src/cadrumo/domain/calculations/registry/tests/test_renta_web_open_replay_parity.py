@@ -20,9 +20,9 @@ from pathlib import Path
 
 import pytest
 
+from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
-from .._ids import CasillaId, validated_casilla_id
 from .._remote_state_guard import RemoteStateGuardPolicy, remote_state_policy_from_cross_reference
 from .._renta_web_open_oracle import (
     RentaWebOpenOracle,

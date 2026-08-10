@@ -51,7 +51,7 @@ from enum import StrEnum
 from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...domain.calculations.registry import CasillaId
+from ...core import CasillaId
 
 
 class CasillaDivergenceKind(StrEnum):
@@ -72,6 +72,11 @@ class CasillaDivergenceKind(StrEnum):
 
 class CasillaDivergence(BaseModel):
     """One disagreement between a computed revision and a filed declaration.
+
+    The canonical per-casilla divergence carrier. A surface needing to say
+    "this casilla changed" reuses this rather than declaring its own record --
+    a weaker carrier holding only ids, without the values or the kind, was
+    added and reverted once already.
 
     ``computed_value`` / ``filed_value`` are ``None`` exactly when the
     corresponding side did not carry a value for ``casilla_id`` (a

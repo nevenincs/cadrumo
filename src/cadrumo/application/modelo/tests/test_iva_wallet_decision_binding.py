@@ -7,9 +7,9 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import BindingId, CasillaId, validated_casilla_id
+from ....domain.calculations.registry import BindingId
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from .._iva_wallet_gate import (
     ModeloIvaWalletReconciliationBlocked,
@@ -87,8 +87,8 @@ def _assert_missing_wallet_decision_error(exc: ModeloIvaWalletReconciliationBloc
         assert "requires a persisted IVA wallet" in str(exc)
         return
     assert exc.translated_message == "application.modelo.errors.iva_wallet_not_seeded"
-    assert exc.suggestion is not None
-    assert "iva-wallet seed" in exc.suggestion
+    assert exc.suggestion is None
+    assert exc.precondition_failure.scenario_id == "modelo.work.calculate.iva_wallet.not_seeded"
 
 
 def test_non_blocking_iva_wallet_decision_supplies_modelo_303_binding() -> None:

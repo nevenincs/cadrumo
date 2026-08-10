@@ -37,8 +37,9 @@ from pathlib import Path
 
 import pytest
 
+from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaId, RegistrySnapshot, validated_casilla_id
+from ....domain.calculations.registry import RegistrySnapshot
 from ....domain.modelos import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
@@ -113,7 +114,8 @@ def test_advisory_fires_for_indeterminate_conjunta_unit_with_eligible_descendant
     assert finding.severity is ModeloVerificationFindingSeverity.WARNING
     assert finding.casilla_id == _CASILLA_1039
     assert finding.legal_refs == ("ley-35-2006:art-77", "madrid-dl-1-2010:art-4", "madrid-dl-1-2010:art-18")
-    assert "1039" in finding.message
+    assert finding.message_locale_key == "application.modelo.findings.madrid_nacimiento_adopcion_eligibility_advisory"
+    assert finding.message_facts["casilla_id"] == _CASILLA_1039
     assert "next_action" not in finding.model_dump(mode="json")
 
 

@@ -16,8 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
+from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.submission import ModeloDraftStatus
 from .. import ModeloInputs, build_draft, build_runtime_schema_provider, export_draft
 from ..runtime import ModeloOperatorProfile

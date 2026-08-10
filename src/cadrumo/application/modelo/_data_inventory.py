@@ -30,13 +30,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from ...core import Period
+from ...core import CasillaId, Period
 from ...core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingSourceKind
 from ...core.i18n import output_language
 from ...core.logging import get_logger
 from ...domain.calculations.registry import (
     BindingId,
-    CasillaId,
     InputKind,
     LegalRefId,
     SourceRefId,

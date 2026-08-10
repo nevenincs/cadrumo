@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field, field_serializer, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CoreValidationError
+from ...core.identity import ContentDigest
 from ...core.parsing import normalise_iso_4217_currency
 from ...core.time import validate_utc_aware
 from ._errors import TransactionValidationError
@@ -67,7 +68,7 @@ class RawProvenance(BaseModel):
     model_config = _STRICT_FROZEN
 
     source_path: Path
-    source_sha256: str = Field(min_length=64, max_length=64)
+    source_sha256: ContentDigest
     source_row_index: int = Field(ge=1)
     source_format: SourceFormat
     ingested_at: datetime
@@ -91,14 +92,22 @@ class RawProvenance(BaseModel):
         # string form rather than collapsing to an empty name.
         return Path(name) if name else value
 
-    @field_validator("source_sha256")
+    @field_validator("source_sha256", mode="before")
     @classmethod
-    def _normalize_sha256(cls, value: str) -> str:
-        """Lowercase, strip, and assert ``source_sha256`` is 64 hex chars."""
-        normalized = value.strip().lower()
-        if len(normalized) != 64 or any(char not in "0123456789abcdef" for char in normalized):
-            raise TransactionValidationError("source_sha256 must be a 64-character lowercase hex digest")
-        return normalized
+    def _normalize_sha256(cls, value: object) -> object:
+        """Fold an uppercase digest to the canonical form BEFORE the shape check.
+
+        This is normalisation only; the shape is enforced by
+        :data:`~core.identity.ContentDigest`, which the field is typed as, and
+        restating it here would be a second register of one contract.
+
+        The ordering is the whole point. ``ContentDigest`` requires lowercase,
+        so an uppercase digest that this boundary has always accepted would be
+        refused by the annotation if the fold ran after it — an input contract
+        narrowed silently by a retype that was meant to widen enforcement, not
+        change what the boundary admits.
+        """
+        return value.strip().lower() if isinstance(value, str) else value
 
     @field_validator("ingested_at")
     @classmethod

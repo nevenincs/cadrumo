@@ -796,10 +796,30 @@ def redact_structured(value: object, *, rules: tuple[_RedactionRule, ...]) -> ob
     return value
 
 
-def _normalise_cli_key(key: object | None) -> str | None:
+#: Every run of characters a sensitivity-set key name cannot contain, collapsed
+#: to the single ``_`` those names separate their words with.
+_REDACTION_KEY_SEPARATOR_RE = re.compile(r"[^a-z0-9]+")
+
+
+def normalise_redaction_key(key: object | None) -> str:
+    """Fold a payload key to the snake-case token the sensitivity sets are written in.
+
+    Every sensitivity decision in this package and its consumers is a membership
+    test against a frozenset of lower-snake-case key names, so the key has to be
+    folded to that shape first. ``None`` and a key made entirely of separators
+    both fold to ``""``, which matches no name in any of those sets -- the sets
+    hold only non-empty tokens -- so the empty answer is "not classified" rather
+    than a value a caller must branch on.
+
+    Folding is :meth:`str.casefold`, not :meth:`str.lower`: casefold is the more
+    aggressive of the two, so more spellings collapse onto the ASCII token a
+    sensitivity set names. For a redaction classifier that direction is the safe
+    one -- it can only make a key match a *sensitive* name it would otherwise
+    have missed, never the reverse.
+    """
     if key is None:
-        return None
-    return re.sub(r"[^a-z0-9]+", "_", str(key).strip().lower()).strip("_")
+        return ""
+    return _REDACTION_KEY_SEPARATOR_RE.sub("_", str(key).casefold()).strip("_")
 
 
 def _is_cli_profile_reference(value: object) -> bool:
@@ -814,7 +834,7 @@ def _cli_placeholder_for_key(
 ) -> str | None:
     if value is None or value == "":
         return None
-    normalised = _normalise_cli_key(key)
+    normalised = normalise_redaction_key(key)
     # The profile/bucket opt-out only un-redacts the opaque profile/bucket
     # identifier surfaces; object keys (which can embed a NIF / period) and
     # every PII / token / URL pass stay redacted unconditionally.
@@ -840,7 +860,7 @@ def _is_revealed_identifier_key(key: object | None, value: object) -> bool:
     """
     if value is None or value == "":
         return False
-    normalised = _normalise_cli_key(key)
+    normalised = normalise_redaction_key(key)
     if normalised in _CLI_PROFILE_ID_KEYS or normalised in _CLI_BUCKET_ID_KEYS:
         return True
     return normalised in _CLI_PROFILE_REFERENCE_KEYS and _is_cli_profile_reference(value)
@@ -1064,6 +1084,7 @@ __all__ = [
     "CLI_OBJECT_KEY_PLACEHOLDER",
     "CLI_PROFILE_ID_PLACEHOLDER",
     "default_rules",
+    "normalise_redaction_key",
     "default_rules_for",
     "default_rules_for_class",
     "redact",

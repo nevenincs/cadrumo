@@ -35,7 +35,6 @@ from pydantic import AnyUrl, Field
 from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings
 from .....core.errors import SiteHealthError
-from .....core.i18n import tr
 from .....core.identity import normalise_nif_iva
 from .....core.logging import get_logger
 from .....domain.calculations.registry import (
@@ -136,18 +135,13 @@ def _assert_query_browser_action(action: str) -> None:
     assert_query_browser_action_for(_READ_GUARD_POLICY, action)
 
 
-def _nif_iva_shape_suggestion() -> str:
-    return tr("adapters.aeat.sede.nif_iva.suggestions.shape_change")
-
-
 _playwright_stage = build_playwright_stage_runner(
     surface_label="NIF-IVA",
     log_prefix="nif iva",
-    shape_suggestion=_nif_iva_shape_suggestion,
     logger=logger,
 )
 
-_locate: _LocateHelper = make_locate_helper("NIF-IVA", _nif_iva_shape_suggestion)
+_locate: _LocateHelper = make_locate_helper("NIF-IVA")
 
 DEFAULT_NIF_IVA_TIMEOUT_MS: int = 30000
 _COUNTRY_SELECTORS: tuple[str, ...] = (
@@ -448,19 +442,6 @@ async def collect_nif_iva_check_observations(
                     "auth_tested_unlocks": _GROI_AUTH_UNLOCK_DESCRIPTOR,
                     "auth_tested_does_not_unlock": _NIF_IVA_AUTH_LOCKED_DESCRIPTOR,
                 },
-                suggestion=(
-                    "Empirical finding (live probe 2026-05-07 via DefaultBrowserSession + "
-                    f"cl@ve-movil): the same authenticated session that unlocks the "
-                    f"{_GROI_AUTH_UNLOCK_DESCRIPTOR} Spanish-ROI consult surface is REJECTED by the "
-                    f"{_NIF_IVA_AUTH_LOCKED_DESCRIPTOR} foreign-EU surface. Next auth tier to test is "
-                    "X.509 certificate "
-                    "(via the certificate auth provider). If certificate also 4033s, the "
-                    "IXVI surface likely requires the caller's own NIF to be ROI-registered "
-                    "(modelo 036/037 box 582). Until either path lands, use the GROI "
-                    "adapter for Spanish-counterparty verification or pivot foreign-EU "
-                    "verification to the EU Commission's public VIES at ec.europa.eu "
-                    "(separate adapter; requires expanding the host-pinning allow-list)."
-                ),
             )
 
         _assert_read_landing(page)

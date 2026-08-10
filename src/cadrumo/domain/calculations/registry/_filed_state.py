@@ -8,11 +8,11 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-from ....core import STRICT_FROZEN_CONFIG, Period
+from ....core import STRICT_FROZEN_CONFIG, CasillaId, Period
 from ._bindings import CasillaObservation, RegistryModeloObservation
 from ._errors import RegistryValidationError
 from ._formula_runtime import RegistryCalculationResult
-from ._ids import CasillaId, FormulaId, LegalRefId, ModeloId, SourceRefId
+from ._ids import FormulaId, LegalRefId, ModeloId, SourceRefId
 
 __all__ = [
     "RegistryFiledStateComparison",
@@ -99,6 +99,14 @@ def compare_calculation_to_filed_observation(
     required_casilla_ids: Iterable[CasillaId],
 ) -> RegistryFiledStateComparison:
     """Compare local registry calculation values against filed AEAT casillas.
+
+    Not substitutable with ``casillas_a_recapture_would_change`` in
+    ``application/live``: that one compares two captures of the SAME filing and
+    deliberately ignores casillas present on only one side, whereas this one
+    reports them as missing-in-filed or extra-in-filed. Nor with the
+    revision-vs-revision delta in ``application/modelo/_projection.py``, which
+    compares two of the application's own calculations rather than local
+    against AEAT.
 
     Each :class:`RegistryFiledStateDrift` in the returned comparison
     carries ``formula_id``, ``legal_refs``, and ``source_refs`` from the

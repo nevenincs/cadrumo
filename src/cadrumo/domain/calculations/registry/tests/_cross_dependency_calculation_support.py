@@ -3,8 +3,8 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable, Mapping
 from decimal import Decimal
 
+from .....core import CasillaId, validated_casilla_id, validated_casilla_id_map
 from .....core.resources import resources
-from .. import CasillaId, validated_casilla_id, validated_casilla_id_map
 from .._bindings import CasillaObservation, RegistryModeloObservation
 from .._errors import NoRevisionForPeriodError
 from .._relations import RegistryFoldRequirement

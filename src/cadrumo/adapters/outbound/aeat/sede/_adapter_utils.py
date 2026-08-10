@@ -3,8 +3,8 @@
 Hosts the small text-normalisation, error-formatting, and selector-probe
 helpers consumed by every sede driver. Drivers (``_groi_check``,
 ``_nif_iva_check``, future siblings) inject their own surface label and
-shape-change suggestion so the helper output remains diagnostic without
-re-implementing the same logic per driver.
+share one factual shape-change failure without re-implementing the same
+logic per driver.
 
 :func:`make_locate_helper` and :func:`assert_query_browser_action_for` factor
 out the two private helper shapes that each checker driver used to duplicate.
@@ -24,7 +24,6 @@ from typing import TYPE_CHECKING, Any, Literal, Protocol
 from urllib.parse import urlsplit
 
 from .....core import STRICT_FROZEN_CONFIG, fold_diacritics
-from .....core import is_aeat_csv as _core_is_aeat_csv
 from .....core.config import Settings
 from .....core.external_constants import PDF_MIME_TYPE
 from .....core.i18n import tr
@@ -54,17 +53,6 @@ from ._errors import (
 _log = get_logger(__name__)
 _WHITESPACE_RE = compile(r"\s+")
 _EXTERNAL = Settings.external_constants()
-
-
-def is_aeat_csv(value: str) -> bool:
-    """Return whether ``value`` is one complete AEAT CSV identifier.
-
-    Delegates to the canonical :func:`core.is_aeat_csv` contract so the sede
-    adapters, the inbound justificante extractor, and the public verifier
-    cannot drift on what width AEAT actually issues. Re-exported here because
-    the sede modules already import their shape helpers from this module.
-    """
-    return _core_is_aeat_csv(value)
 
 
 def is_aeat_auth_gate_redirect(current_url: str) -> bool:
@@ -184,26 +172,20 @@ def require_playwright_page(raw_page: object) -> Page:
 
 def make_locate_helper(
     surface_label: str,
-    shape_suggestion: Callable[[], str],
 ) -> Callable[[Page, tuple[str, ...], str, str, int], Coroutine[Any, Any, Locator]]:
-    """Return a ``_locate`` coroutine pre-bound to ``surface_label`` and ``shape_suggestion``.
+    """Return a ``_locate`` coroutine pre-bound to ``surface_label``.
 
     Both the GROI and NIF-IVA drivers wrap :func:`first_visible_locator` with the
-    same body, differing only in the ``surface_label`` and ``shape_suggestion``
-    strings they inject. This factory eliminates that duplicate; each driver calls::
+    same body, differing only in the ``surface_label`` they inject. This factory
+    eliminates that duplicate; each driver calls::
 
-        _locate = make_locate_helper("GROI", _groi_shape_suggestion)
+        _locate = make_locate_helper("GROI")
 
     and then uses ``_locate(page, selectors, stage=..., description=..., timeout_ms=...)``
     directly.
 
     Args:
         surface_label: Sede surface name for log and error messages.
-        shape_suggestion: Thunk returning the localised guidance string
-            appended to :class:`~._errors.SedeParseError` when all
-            selectors fail. Passed as a callable, not a resolved string, so
-            the translation lookup runs only on that failure path instead
-            of forcing the locale catalogue to load at import time.
 
     Returns:
         An async callable with the same signature as the internal ``_locate``
@@ -226,7 +208,6 @@ def make_locate_helper(
             timeout_ms=timeout_ms,
             probe_timeout_ms=selector_probe_timeout_ms(),
             surface_label=surface_label,
-            shape_suggestion=shape_suggestion,
         )
 
     return _locate
@@ -315,10 +296,6 @@ def assert_read_landing(
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
             translated_message=tr("adapters.sede.errors.landing_unreadable"),
             context={"surface": surface, "landing_url": landing_url or "<empty>"},
-            suggestion=(
-                "Re-authenticate and retry. A landing with no scheme and host usually means the "
-                "browser never navigated, or AEAT served an interstitial."
-            ),
         )
     raw_landing = landing_url or ""
     try:
@@ -338,10 +315,6 @@ def assert_read_landing(
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
             translated_message=tr("adapters.sede.errors.landing_off_policy"),
             context={"surface": surface, "landing_url": raw_landing, "policy_id": policy.id},
-            suggestion=(
-                "This landing is off the surface's allowed hosts or carries an AEAT write-action "
-                "token. Do not widen the policy to admit it without establishing what AEAT served."
-            ),
         ) from exc
     landed_path = urlsplit(raw_landing).path
     folded_path = landed_path.casefold()
@@ -357,11 +330,6 @@ def assert_read_landing(
                 "landed_path": landed_path,
                 "allowed_path_prefixes": allowed_path_prefixes,
             },
-            suggestion=(
-                "AEAT dispatched this read somewhere the surface does not declare as a read page. "
-                "Establish what the landing is before declaring it; a filing tool or procedure "
-                "launcher is never added to the allow-list."
-            ),
         )
 
 
@@ -609,7 +577,6 @@ async def first_visible_locator(
     timeout_ms: int,
     probe_timeout_ms: int,
     surface_label: str,
-    shape_suggestion: Callable[[], str],
 ) -> Locator:
     """Return the first selector in ``selectors`` that resolves to a visible element.
 
@@ -633,8 +600,6 @@ async def first_visible_locator(
         probe_timeout_ms: Per-selector visibility probe budget (ms).
         surface_label: Sede surface name included in log and error
             messages (e.g. ``"GROI"``).
-        shape_suggestion: Thunk returning the localised guidance string
-            appended to :class:`SedeParseError` when all selectors fail.
 
     Returns:
         The first ``Locator`` from ``selectors`` whose element was
@@ -661,7 +626,6 @@ async def first_visible_locator(
         f"{surface_label} expected page element was not visible: {description}",
         failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
         context={"stage": stage, "expected": description, "timeout_ms": timeout_ms},
-        suggestion=shape_suggestion(),
     )
 
 

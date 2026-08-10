@@ -55,8 +55,9 @@ from decimal import Decimal
 
 import pytest
 
+from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
-from .. import CasillaId, build_snapshot, calculate_registry_snapshot, validated_casilla_id
+from .. import build_snapshot, calculate_registry_snapshot
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

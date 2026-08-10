@@ -26,14 +26,12 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from ....core import BindingSourceKind, Modelo, Period, ProrrataProvisionalProvenance
+from ....core import BindingSourceKind, CasillaId, Modelo, Period, ProrrataProvisionalProvenance, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaId,
     IvaLedgerObservation,
     casilla_noncanonical_reference_targets,
     declared_casilla_ids,
-    validated_casilla_id,
 )
 from ....domain.iva import (
     IvaCategory,
@@ -439,7 +437,7 @@ def test_generic_domestic_exempt_output_only_increases_prorrata_denominator() ->
     ("filing_year", "revision_id"),
     (
         (2020, "2009-y-siguientes"),
-        (2024, "2023-y-siguientes"),
+        (2024, "2024-hasta-08-y-2t"),
         (2026, "2026-y-siguientes"),
     ),
 )

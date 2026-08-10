@@ -29,7 +29,7 @@ from typing import Literal, NamedTuple, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ....core import STRICT_FROZEN_CONFIG, Modelo
+from ....core import STRICT_FROZEN_CONFIG, CasillaId, Modelo, validated_casilla_id
 from ....core.aggregation import (
     LEDGER_BINDING_SOURCE_KINDS,
     BindingAggregationOp,
@@ -54,7 +54,7 @@ from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import invariant_diagnostics, selector_against_model
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._errors import RegistryValidationError
-from ._ids import BindingId, CasillaId, validated_casilla_id
+from ._ids import BindingId
 from ._ledger_binding_resolution import (
     UnroutedLedgerQuantity,
     assert_quantity_readers_cover_independent_facts,

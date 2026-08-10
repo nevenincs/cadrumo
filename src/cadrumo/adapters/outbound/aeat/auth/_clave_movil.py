@@ -13,10 +13,11 @@ metadata without carrying credential material in the session record.
 
 Design summary:
 
-* Cl@ve Móvil is a human-in-the-loop flow. The provider observes only
-  AEAT browser state; it cannot know whether the Cl@ve app displayed,
-  accepted, rejected, or failed to receive a request unless the
-  operator reports that separately.
+* Cl@ve Móvil is a human-in-the-loop flow. A browser that remains on the
+  challenge page cannot reveal what happened on the phone. Conversely,
+  AEAT's authenticated representation or target landing proves that the
+  app request was accepted; diagnostics record that transition directly
+  and never ask the operator to restate it.
 * The provider opens a headed Playwright window on fresh login so the
   operator can scan the QR visually. Resume-from-storage-state runs
   headlessly because no human interaction is required.
@@ -966,10 +967,6 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
                     "selector_url": _url_diagnostic(selector_url),
                     **attempt_context,
                 },
-                suggestion=(
-                    "Retry the live read after confirming the AEAT Sede is reachable, or increase "
-                    "CADRUMO_BROWSER_NAVIGATION_TIMEOUT_MS for slow network conditions."
-                ),
             ) from exc
 
     async def _run_clave_challenge(
@@ -1040,12 +1037,6 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
                     **attempt_context,
                     "verification_code_present": bool(verification_code),
                 },
-                suggestion=(
-                    "`aeat config auth diagnostics report "
-                    f"{diagnostic_id} --phone-state app_did_not_prompt` if no Cl@ve app prompt appeared, "
-                    "or use app_prompted_and_accepted / app_prompted_not_accepted / operator_did_not_check "
-                    "for the observed phone state."
-                ),
             ) from exc
         return verification_code
 

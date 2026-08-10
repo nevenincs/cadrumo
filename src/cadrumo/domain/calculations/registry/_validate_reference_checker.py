@@ -9,7 +9,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ._ids import CasillaId, LegalRefId, SourceRefId
+from ....core import CasillaId
+from ._ids import LegalRefId, SourceRefId
 
 if TYPE_CHECKING:
     from ._snapshot import RegistrySnapshot

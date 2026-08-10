@@ -55,8 +55,9 @@ from pathlib import Path
 import pytest
 
 from ....application.user_profile import UserProfileLifecycleRepository
+from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaId, calculate_registry_snapshot, validated_casilla_id
+from ....domain.calculations.registry import calculate_registry_snapshot
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.modelo_cli import create_modelo_work_unit_via_cli

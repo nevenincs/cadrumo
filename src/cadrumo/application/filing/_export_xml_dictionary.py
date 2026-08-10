@@ -33,11 +33,10 @@ from xml.etree import ElementTree
 
 from defusedxml import ElementTree as DefusedElementTree
 
-from ...core import Modelo
+from ...core import CasillaId, Modelo
 from ...core.decimal import coerce_decimal, try_parse_canonical_decimal
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ...domain.calculations.registry import (
-    CasillaId,
     ExportLayoutDefinition,
     SourceReference,
     XmlDictionaryEntry,

@@ -153,7 +153,6 @@ def _drive_service(credentials: object) -> _DriveService:
         raise OutboundStorageNetworkError(
             "googleapiclient is not importable",
             context={"dependency": "google-api-python-client"},
-            suggestion="pip install cadrumo[google]",
         ) from exc
 
     # dynamic resource; the protocol pins the files().get_media().execute

@@ -178,10 +178,6 @@ async def fetch_iva_compensation_wallet(
                         "expected_url": redacted_url(_PRE303_PRESENTATION_URL),
                         "surface": "pre303_presentation_service",
                     },
-                    suggestion=(
-                        "Authenticate specifically for the Pre303 presentation service before reading "
-                        "the IVA compensation wallet."
-                    ),
                 )
             pre303_html = await page.content()
             discovered_wallet_url = discover_iva_compensation_wallet_entrypoint(
@@ -222,10 +218,6 @@ async def fetch_iva_compensation_wallet(
                     "expected_url": redacted_url(_WALLET_URL),
                     "surface": "iva_compensation_wallet",
                 },
-                suggestion=(
-                    "Authenticate specifically for the Pre303 presentation service, then retry the "
-                    "read-only wallet capture."
-                ),
             )
         # The terminal read, and the one that had no landing rule. The two
         # rules above sit on branches -- after the representation gate, and
@@ -261,10 +253,6 @@ async def fetch_iva_compensation_wallet(
                 str(exc),
                 failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
                 context=_wallet_page_shape_context(html, landing_url=page.url),
-                suggestion=(
-                    "Inspect the captured AEAT wallet page shape and update the read-only parser or "
-                    "navigation chain; do not hard-code operator wallet values into tests."
-                ),
             ) from exc
     finally:
         await close_async_resources(
@@ -424,7 +412,6 @@ async def _continue_own_name_representation(
                 "surface": surface,
                 "blocked_operation": "representative_or_unknown_representation_gate",
             },
-            suggestion="Do not provide represented-third-party data through this driver.",
         ) from exc
 
 
@@ -688,10 +675,6 @@ async def _submit_wallet_execute_gate_if_present(
                         post_execute_html,
                         landing_url=getattr(page, "url", "") or current_url,
                     ),
-                    suggestion=(
-                        "Treat this as an incomplete wallet read, not an empty wallet. Inspect the structural "
-                        "diagnostic before accepting zero compensation evidence."
-                    ),
                 )
         except PlaywrightError as exc:
             raise SedeNavigationError(
@@ -702,10 +685,6 @@ async def _submit_wallet_execute_gate_if_present(
                     "expected_url": redacted_url(expected_url),
                     "blocked_operation": "wallet_execute_read_query",
                 },
-                suggestion=(
-                    "Inspect the structural wallet shape diagnostic; do not provide or hard-code live "
-                    "taxpayer wallet values."
-                ),
             ) from exc
         return True
     return False

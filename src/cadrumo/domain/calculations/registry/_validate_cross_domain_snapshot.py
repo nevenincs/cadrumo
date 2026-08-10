@@ -9,8 +9,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Protocol
 
-from ....core import Modelo
-from ._ids import BindingId, CasillaId
+from ....core import CasillaId, Modelo
+from ._ids import BindingId
 
 if TYPE_CHECKING:
     from ._snapshot import RegistrySnapshot

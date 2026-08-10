@@ -9,11 +9,11 @@ from typing import Any, cast
 import pytest
 from pydantic import AnyUrl, ValidationError
 
+from .....core import CasillaId
 from ....contribuyente import PROFILE_KEYS, TaxResidenceProfile
 from ....contribuyente.family import RentaAscendantProfile, RentaDescendantProfile, RentaFamilyProfile
 from .. import (
     CasillaDefinition,
-    CasillaId,
     DataBindingDefinition,
     InputKind,
     RegistrySnapshot,

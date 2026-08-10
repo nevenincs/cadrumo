@@ -39,9 +39,9 @@ from ....adapters.persistence.storage.crypto import (
 )
 from ....adapters.persistence.storage.sql import SecureObjectRow
 from ....adapters.persistence.storage.sql.session import session_scope
-from ....core import Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations.registry import CasillaId, RegistrySnapshotRef, validated_casilla_id
+from ...calculations.registry import RegistrySnapshotRef
 from .._schema import (
     ModeloApprovalBasis,
     ModeloCasillaProvenance,

@@ -36,9 +36,9 @@ from collections.abc import Mapping, Sequence
 from decimal import Decimal
 from typing import NamedTuple
 
-from ...core import Modelo
+from ...core import CasillaId, Modelo
 from ...core.decimal import coerce_decimal
-from ...domain.calculations.registry import CasillaId, ModeloRevision
+from ...domain.calculations.registry import ModeloRevision
 from ...domain.contribuyente import DescendantInfo, RentaFamilyProfile, descendant_list_from_facts
 from ...domain.user_profile import ProfileNotFoundError
 from ..aggregation import CalculationSourceDiagnostic

@@ -7,12 +7,12 @@ from decimal import Decimal
 
 import pytest
 
+from .....core import CasillaId, validated_casilla_id
 from .....core.aggregation import RetencionClave
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
 from .....tests.registry_observations import registry_grounded_modelo_observation
 from .. import (
-    CasillaId,
     RegistryValidator,
     WithholdingObservation,
     build_snapshot,
@@ -21,7 +21,6 @@ from .. import (
     resolve_bound_inputs_by_casilla_id,
     resolve_relation_values_from_observations,
     resolve_withholding_binding_values,
-    validated_casilla_id,
 )
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
 

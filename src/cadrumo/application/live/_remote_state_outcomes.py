@@ -6,7 +6,6 @@ policy before they are copied into live IVA read outcomes.
 
 from __future__ import annotations
 
-import re
 from collections.abc import Mapping
 
 from pydantic import TypeAdapter
@@ -14,7 +13,12 @@ from pydantic import TypeAdapter
 from ...application.auth import AuthenticatedAeatSessionResult
 from ...core.classification import SensitivityClass
 from ...core.hashing import sha256_hex
-from ...core.redaction import ALWAYS_REDACT_KEY_TERMS, default_rules_for_class, redact
+from ...core.redaction import (
+    ALWAYS_REDACT_KEY_TERMS,
+    default_rules_for_class,
+    normalise_redaction_key,
+    redact,
+)
 from ._errors import LiveIvaAcquisitionFailureMode, classify_live_iva_acquisition_failure
 from ._remote_state_models import (
     IvaCompensationHistoryCaptureReport,
@@ -239,12 +243,8 @@ _SAFE_FAILURE_CONTEXT_KEYS = frozenset(
 )
 
 
-def _normalised_context_key(key: str) -> str:
-    return re.sub(r"[^a-z0-9]+", "_", key.casefold()).strip("_")
-
-
 def _is_sensitive_failure_context_key(key: str) -> bool:
-    normalised = _normalised_context_key(key)
+    normalised = normalise_redaction_key(key)
     if not normalised or normalised in _SAFE_FAILURE_CONTEXT_KEYS:
         return False
     if normalised in _SENSITIVE_FAILURE_CONTEXT_EXACT_KEYS:

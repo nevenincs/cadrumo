@@ -206,7 +206,6 @@ def execute_request(request: _ExecutableRequest, *, action: str) -> GoogleApiRes
             if status in (401, 403):
                 raise OutboundStoragePermissionError(
                     f"Google {action} refused (HTTP {status}): {exc}",
-                    suggestion="aeat config google login",
                     context={"action": action, "status": status},
                     translated_message="adapters.google.calc_sheets.errors.api_call_refused",
                 ) from exc

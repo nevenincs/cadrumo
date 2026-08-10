@@ -34,9 +34,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
+from ...core import CasillaId
 from ...core.external_constants import MODELO_100_ART_52_INDIVIDUAL_SUBLIMIT_EUR
-from ...core.i18n import tr
-from ...domain.calculations.registry import CasillaId
 from ...domain.modelos import (
     ModeloError,
     ModeloVerificationFinding,
@@ -127,12 +126,12 @@ def _art52_reduccion_advisory_finding(
             kind=ModeloVerificationFindingKind.ADVISORY,
             severity=ModeloVerificationFindingSeverity.WARNING,
             casilla_id=reduccion_id,
-            message=tr(
-                "application.modelo.findings.art52_reduccion_individual_sublimit_possible",
-                reduccion_id=reduccion_id,
-                reduccion_value=str(reduccion_value),
-                sublimit=str(MODELO_100_ART_52_INDIVIDUAL_SUBLIMIT_EUR),
-            ),
+            message_locale_key="application.modelo.findings.art52_reduccion_individual_sublimit_possible",
+            message_facts={
+                "reduccion_id": reduccion_id,
+                "reduccion_value": reduccion_value,
+                "sublimit": MODELO_100_ART_52_INDIVIDUAL_SUBLIMIT_EUR,
+            },
             legal_refs=("ley-35-2006:art-52",),
         )
     return None

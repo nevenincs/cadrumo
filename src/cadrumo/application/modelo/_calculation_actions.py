@@ -51,13 +51,18 @@ from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...core import M210_TIPO_RENTA_CODE_PROJECTION, M210GrossIncomeSourceMode, Modelo
+from ...core import (
+    M210_TIPO_RENTA_CODE_PROJECTION,
+    ActionEvidenceProvenance,
+    CasillaId,
+    M210GrossIncomeSourceMode,
+    Modelo,
+)
 from ...core.aggregation import BindingSourceKind
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry import (
     BindingId,
-    CasillaId,
     InputKind,
     ModeloRevision,
     RelationId,
@@ -1540,8 +1545,8 @@ def mark_revision_verificado_completo(
     )
     if existing.state is not CalculationRevisionState.BORRADOR:
         raise CalculationRevisionStateError(
-            f"calculation revision {calculation_revision_id!r} is in state "
-            f"{existing.state.value!r}; only DRAFT revisions can be marked verified-complete",
+            translated_message="errors.error.error_modelo_calculation_revision_state",
+            context={"calculation_revision_id": calculation_revision_id, "state": existing.state.value},
         )
     if existing.source_transaction_ids:
         # A ledger-derived revision owes a bundled evidence record pegged to its
@@ -1552,10 +1557,12 @@ def mark_revision_verificado_completo(
         # and the clean-state gates. Export then accepts it on the snapshot alone,
         # which is a reference to a bundle that was never written.
         raise CalculationRevisionStateError(
-            f"calculation revision {calculation_revision_id!r} derives "
-            f"{len(existing.source_transaction_ids)} casilla contributor(s) from the ledger; "
-            "a ledger-derived revision must be promoted through verification so its evidence "
-            "bundle is captured. Run the verify path instead of marking it verified-complete.",
+            translated_message="errors.error.error_modelo_calculation_revision_state",
+            context={
+                "calculation_revision_id": calculation_revision_id,
+                "source_transaction_count": len(existing.source_transaction_ids),
+                "state": existing.state.value,
+            },
         )
     from ._profile_readiness_gate import require_profile_ready_for_work_unit
 

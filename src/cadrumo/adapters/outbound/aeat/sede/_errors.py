@@ -28,7 +28,6 @@ class SedeError(CadrumoError):
         *,
         failure_mode: SedeFailureMode | str | None = None,
         context: Mapping[str, object] | None = None,
-        suggestion: str | None = None,
         translated_message: str | None = None,
     ) -> None:
         """Construct a Sede error with optional stable failure-mode context."""
@@ -42,7 +41,6 @@ class SedeError(CadrumoError):
         super().__init__(
             message,
             context=enriched_context or None,
-            suggestion=suggestion,
             translated_message=translated_message,
         )
 

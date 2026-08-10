@@ -10,8 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import Period
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
+from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.modelos import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
@@ -69,7 +68,7 @@ def test_registry_revision_divergence_produces_blocking_finding_with_grounding()
 
     assert finding.kind is ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN
     assert finding.severity is ModeloVerificationFindingSeverity.BLOCKING
-    assert "registry_revision_divergence" in finding.message
+    assert "registry_revision_divergence" in str(finding.message_facts["blocker_codes"]).split("|")
     assert "next_action" not in finding.model_dump(mode="json")
     assert "ley-58-2003:art-119" in finding.legal_refs
     assert finding.source_refs == _M303_REQUIREMENT_SOURCE_REFS

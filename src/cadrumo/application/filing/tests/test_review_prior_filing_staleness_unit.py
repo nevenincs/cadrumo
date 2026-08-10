@@ -22,11 +22,10 @@ from decimal import Decimal
 
 import pytest
 
+from ....core import CasillaId, validated_casilla_id
 from ....domain.calculations.registry import (
-    CasillaId,
     CasillaObservation,
     RegistryModeloObservation,
-    validated_casilla_id,
 )
 from ...calculations import ObservationEnvelopePayload
 from .. import empty_prior_filing_observations_fingerprint

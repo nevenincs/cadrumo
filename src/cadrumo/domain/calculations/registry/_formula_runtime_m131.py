@@ -31,6 +31,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+from ....core import CasillaId
 from ._errors import RegistryValidationError
 from ._formula_runtime_ops import (
     numeric_casilla_value as _numeric_casilla_value,
@@ -44,7 +45,7 @@ from ._formula_runtime_ops import (
 from ._formula_runtime_ops import (
     resolve_scalar_parameter as _resolve_scalar_parameter,
 )
-from ._ids import CasillaId, ParameterId
+from ._ids import ParameterId
 from ._schema import FormulaExpression
 
 if TYPE_CHECKING:

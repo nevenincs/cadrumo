@@ -60,13 +60,11 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     BindingId,
-    CasillaId,
     RegistryModeloObservation,
-    validated_casilla_id,
 )
 from ....domain.categories import SpendingCategory
 from ....domain.deadlines import EntityType, IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
@@ -668,11 +666,7 @@ def test_verify_accepts_autonoma_m100_with_official_m130_observations(
 
     assert report.calculation_revision_id == annual.calculation_revision_id
     assert report.granted_verificado_completo is True, report.findings
-    assert not [
-        finding
-        for finding in report.findings
-        if finding.severity.value == "blocking" or "formula-divergence" in finding.message
-    ]
+    assert not [finding for finding in report.findings if finding.severity.value == "blocking"]
 
 
 def test_autonoma_m100_salary_certificate_retenciones_export_replays_verified_total_pagos(
@@ -714,11 +708,7 @@ def test_autonoma_m100_salary_certificate_retenciones_export_replays_verified_to
 
     assert report.calculation_revision_id == annual.calculation_revision_id
     assert report.granted_verificado_completo is True, report.findings
-    assert not [
-        finding
-        for finding in report.findings
-        if finding.severity.value == "blocking" or "formula-divergence" in finding.message
-    ]
+    assert not [finding for finding in report.findings if finding.severity.value == "blocking"]
 
     # The operator reaches a verified revision and then cannot export it. Modelo
     # 100's XML layouts leave the declaration's mandatory Aux/VERSION undeclared,
@@ -829,6 +819,10 @@ def test_verify_gate_blocks_chain_carrying_non_official_prior_year(
         f"for the non-official prior-year carry; got {report.findings}"
     )
     assert any(
-        "modelo=130 year=2024 period=1T" in finding.message and "missing_current_filing_record" in finding.message
+        finding.message_locale_key == "application.modelo.findings.cross_period_dependency_unclean"
+        and finding.message_facts.get("source_modelo") == "130"
+        and finding.message_facts.get("source_filing_year") == 2024
+        and finding.message_facts.get("source_period") == "1T"
+        and "missing_current_filing_record" in str(finding.message_facts.get("blocker_codes", "")).split("|")
         for finding in unclean
     ), f"the unclean finding must name the missing official M130 quarterly filing record; got {unclean}"

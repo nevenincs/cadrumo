@@ -46,8 +46,8 @@ from ....adapters.inbound.declaracion import (
     TemplateRevision,
 )
 from ....adapters.inbound.pdf import ExtractedCasilla
-from ....core import Period
-from ....domain.calculations.registry import CasillaId, RegistrySnapshotRef, validated_casilla_id
+from ....core import CasillaId, Period, validated_casilla_id
+from ....domain.calculations.registry import RegistrySnapshotRef
 from .._schema import DiscrepancyCause, VerificationStatus
 from .._verify import (
     _classify_discrepancy,

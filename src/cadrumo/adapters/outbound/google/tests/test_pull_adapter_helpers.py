@@ -22,7 +22,6 @@ import pytest
 
 from .....application.storage.calc_sheets import CALC_SHEETS_ENGINE_VERSION, build_export_plan, registry_sha
 from .....core.decimal import coerce_decimal as _coerce_decimal
-from .....core.i18n import tr
 from .....core.resources import resources
 from ...storage import (
     OutboundStorageConflictError,
@@ -370,7 +369,7 @@ def test_merge_developer_metadata_refuses_conflicting_registry_identity_duplicat
 
     assert raised.value.context == {"conflicting_metadata_keys": ["cadrumo_registry_sha"]}
     assert raised.value.translated_message == "adapters.google.calc_sheets.errors.conflicting_duplicate_metadata"
-    assert raised.value.suggestion == tr("adapters.google.calc_sheets.suggestions.reexport_workbook")
+    assert not hasattr(raised.value, "suggestion")
 
 
 def test_merge_developer_metadata_allows_duplicate_exported_at_for_reapplied_same_slice() -> None:

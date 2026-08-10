@@ -47,10 +47,10 @@ from ...adapters.persistence.profile.justificante import JustificanteRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ...core import Period
+from ...core import CasillaId, Period
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
-from ...domain.calculations.registry import BindingId, CasillaId, RelationId
+from ...domain.calculations.registry import BindingId, RelationId
 from ...domain.justificante import Justificante
 from ...domain.modelos import (
     CalculationRevision,
@@ -65,19 +65,19 @@ from ...domain.modelos import (
     ModeloRecordStatus,
     WorkUnit,
     WorkUnitCatalogueRepositoryProtocol,
-    WorkUnitState,
     derive_calculation_revision_id,
     derive_filing_record_id,
     upsert_calculation_revision,
     upsert_filing_record,
     upsert_work_unit,
 )
-from ._action_errors import ExternalModeloImportError, WorkUnitMutationRefusedError, WorkUnitNotFoundError
+from ._action_errors import ExternalModeloImportError
 from ._calculation_helpers import external_filing_observations as _external_filing_observations
 from ._registry_helpers import reject_unknown_import_casillas as _reject_unknown_import_casillas
 from ._revision_persistence import build_modelo_bucket_event as _build_bucket_event
 from ._revision_persistence import modelo_bucket_event_write as _bucket_event_write
 from ._revision_persistence import supersede_prior_current_filing as _supersede_prior_current_filing
+from ._work_lifecycle import ActiveWorkUnitUse, require_active_work_unit
 
 _JUSTIFICANTE_BOUND_EVIDENCE_KINDS = frozenset(
     {
@@ -98,24 +98,12 @@ def _load_external_import_target[CasillaKey](
     cleaned_reference = _validated_external_reference(casilla_values, evidence_reference_id)
 
     work_units = work_unit_repository.load()
-    work_unit = work_units.get(work_unit_id)
-    # The catalogue may hold rows for more than one bucket, so a bare id lookup
-    # would let a caller import a bucket-B filing through A-bound stores: the
-    # sibling calculation, filing, and event repositories are supplied
-    # separately and none of them re-checks the target. A unit outside this
-    # repository's bucket is not addressable here and reads as not found, which
-    # also avoids confirming its existence to a caller with no claim on it.
-    repository_bucket = work_unit_repository.bucket_id
-    if work_unit is None or (repository_bucket is not None and work_unit.bucket_id != repository_bucket):
-        raise WorkUnitNotFoundError(
-            translated_message="application.modelo.errors.work_unit_not_found",
-            context={"work_unit_id": work_unit_id},
-        )
-    if work_unit.state is WorkUnitState.DESCARTADO:
-        raise WorkUnitMutationRefusedError(
-            translated_message="application.modelo.errors.work_unit_discarded_cannot_import",
-            context={"work_unit_id": work_unit_id},
-        )
+    work_unit = require_active_work_unit(
+        work_units,
+        work_unit_id=work_unit_id,
+        repository_bucket_id=work_unit_repository.bucket_id,
+        use=ActiveWorkUnitUse.IMPORT,
+    )
     snapshot, canonical_values = _reject_unknown_import_casillas(
         modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,

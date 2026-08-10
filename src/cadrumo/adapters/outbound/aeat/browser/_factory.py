@@ -320,7 +320,7 @@ async def _start_playwright() -> Playwright:
     try:
         require_optional_extra(BROWSER_EXTRA)
     except MissingOptionalExtraError as exc:
-        raise BrowserError(message=str(exc), suggestion=exc.install_hint) from exc
+        raise BrowserError(message=str(exc)) from exc
     from playwright.async_api import async_playwright
 
     playwright_manager = async_playwright()

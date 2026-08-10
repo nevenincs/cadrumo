@@ -12,15 +12,12 @@ here needs an environment-dependent seam.
 
 from __future__ import annotations
 
-import re
-
 import pytest
 
+from ....core import spanish_word_tokens
 from .._index import CommandDoc, CommandIndex, build_command_index
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_WORD_RE = re.compile(r"\w+", re.UNICODE)
 
 _DOCS = (
     CommandDoc(
@@ -54,8 +51,8 @@ def _index(docs: tuple[CommandDoc, ...] = _DOCS) -> CommandIndex:
 
 def _token_overlap_only(docs: tuple[CommandDoc, ...], query: str) -> set[str]:
     """The keys a naive exact-token-overlap scorer would match (no stemming)."""
-    wanted = set(_WORD_RE.findall(query.lower()))
-    return {doc.command_key for doc in docs if wanted & set(_WORD_RE.findall(doc.combined_text.lower()))}
+    wanted = set(spanish_word_tokens(query))
+    return {doc.command_key for doc in docs if wanted & set(spanish_word_tokens(doc.combined_text))}
 
 
 def test_stemmed_recall_reaches_a_command_exact_overlap_misses() -> None:

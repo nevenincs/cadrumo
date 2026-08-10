@@ -17,16 +17,14 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....core import Period, TaxDomain
+from ....core import CasillaId, Period, TaxDomain, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaId,
     FormulaId,
     ModeloDefinition,
     ModeloRevision,
     RegistrySnapshot,
     revision_reference_identity_failures,
-    validated_casilla_id,
 )
 from ....domain.filing import ModeloBuilderError
 from ..runtime import (

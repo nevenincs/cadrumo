@@ -9,9 +9,8 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.storage.errors import DecryptionError
-from ....core import BindingSourceKind
+from ....core import BindingSourceKind, CasillaId, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from .. import (
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,

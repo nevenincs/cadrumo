@@ -88,7 +88,6 @@ class ClaveMovilApprovalTimeoutError(AuthError):
         *,
         failure_mode: ClaveMovilFailureMode | str | None = None,
         context: dict[str, object] | None = None,
-        suggestion: str | None = None,
         translated_message: str | None = None,
     ) -> None:
         enriched_context = dict(context) if context is not None else {}
@@ -103,7 +102,6 @@ class ClaveMovilApprovalTimeoutError(AuthError):
         super().__init__(
             message,
             context=enriched_context or None,
-            suggestion=suggestion,
             translated_message=translated_message,
         )
 

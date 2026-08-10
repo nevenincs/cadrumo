@@ -22,9 +22,9 @@ from typing import Any
 
 import pytest
 
-from ....core import ExportLayoutFormat, PriorDomiciliationElection
+from ....core import CasillaId, ExportLayoutFormat, PriorDomiciliationElection, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaFieldKind, CasillaId, validated_casilla_id
+from ....domain.calculations.registry import CasillaFieldKind
 from ....domain.filing import FilingExportError
 from .._export import export_draft
 from .._export_parity import (

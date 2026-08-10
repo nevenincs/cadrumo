@@ -50,7 +50,11 @@ from ._aeat_hosts import REMOTE_READ_SCHEME, canonical_remote_hostname
 from ._export_value_policy import (
     ExportValuePolicy,
     ExportValuePolicyValue,
+    ParsedExportPolicyValue,
+    ParsedExportPolicyWireValue,
+    RequiredExportValuePolicyValue,
     coerce_export_value_policy,
+    normalize_parsed_export_policy_value,
     project_export_value,
     validate_export_wire_value,
 )
@@ -66,7 +70,6 @@ from ._fixed_width_codec import (
 from ._ids import (
     ApplicationLinkId,
     BindingId,
-    CasillaId,
     ConstructId,
     CrossReferenceId,
     DeadlineWindowId,
@@ -89,8 +92,6 @@ from ._ids import (
     WorkbookOutputId,
     WorkbookParityRefId,
     is_registry_id,
-    validated_casilla_id,
-    validated_casilla_id_map,
 )
 
 # Applicability is imported after _schema so its transitive import of
@@ -517,6 +518,7 @@ from ._schema_verification import (
     VerificationPredicateOperator,
     VerificationPredicateSpecification,
     VerificationPredicateSyntax,
+    fold_reconciliation_total_casilla_ids,
     parse_verification_predicate_expression,
     verification_predicate_operator_name,
 )
@@ -736,7 +738,6 @@ __all__ = [
     "CasillaDefinition",
     "CasillaFieldKind",
     "CasillaFieldKindValue",
-    "CasillaId",
     "CasillaObservation",
     "CensoModeloEventKind",
     "CensoModeloFoundationCommand",
@@ -867,6 +868,8 @@ __all__ = [
     "ParityVerdict",
     "ParsedExportFieldValue",
     "ParsedExportPayload",
+    "ParsedExportPolicyValue",
+    "ParsedExportPolicyWireValue",
     "PayerFact",
     "PeriodSelector",
     "ProfileKeyGrounding",
@@ -930,6 +933,7 @@ __all__ = [
     "RentaWebOpenReplayDriver",
     "RentaWebOpenSyntheticProfile",
     "RequiredCoverageTier",
+    "RequiredExportValuePolicyValue",
     "ResolvedConstruct",
     "ResolvedConstructMember",
     "ResolvedExportLayout",
@@ -1035,6 +1039,7 @@ __all__ = [
     "expression_relation_refs",
     "extract_record_design",
     "extract_record_design_pdf",
+    "fold_reconciliation_total_casilla_ids",
     "extract_record_design_pdf_bytes",
     "extract_record_design_workbook",
     "fixed_width_record_casilla_ids",
@@ -1066,6 +1071,7 @@ __all__ = [
     "materialize_relation_binding_values",
     "modelo_202_modality_from_inputs",
     "modelo_locale_key",
+    "normalize_parsed_export_policy_value",
     "pad_fixed_width_text",
     "parse_export_payload",
     "parse_fixed_width_export_field",
@@ -1166,8 +1172,6 @@ __all__ = [
     "validate_renta_web_open_expected_casilla_values",
     "validate_retenciones_aggregation_binding",
     "validate_text_input_targets",
-    "validated_casilla_id",
-    "validated_casilla_id_map",
     "validated_text_input_casilla_ids",
     "verify_legal_catalogue",
     "verify_legal_reference",

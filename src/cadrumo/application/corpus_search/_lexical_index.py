@@ -25,17 +25,14 @@ in-prose concept recall.
 
 from __future__ import annotations
 
-import importlib
 import json
-import re
 import sqlite3
 from collections.abc import Iterable, Iterator
 from pathlib import Path
-from typing import Protocol
 
 from pydantic import TypeAdapter
 
-from ...core import fts_or_group
+from ...core import fts_or_group, spanish_stemmer, spanish_word_tokens, stem_spanish_terms, stem_spanish_text
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.resources import bundled_path
 from ._models import CorpusChunk, CorpusDocument, CorpusIndexBuildResult, LexicalSearchHit
@@ -51,7 +48,6 @@ _EXTRACTED_JSON_SUFFIX = ".html.extracted.json"
 _CHUNK_TARGET = 1200
 _CHUNK_HARD_MAX = 1500
 
-_WORD_RE = re.compile(r"\w+", re.UNICODE)
 _JSON_OBJECT = TypeAdapter(dict[str, object])
 
 
@@ -180,27 +176,6 @@ def _split_oversized(paragraph: str) -> list[str]:
     return pieces
 
 
-class _SpanishStemmer(Protocol):
-    """The one ``snowballstemmer`` method this module uses; the package ships no stubs."""
-
-    def stemWords(self, words: list[str]) -> list[str]: ...  # noqa: N802 - matches the real C-extension method name
-
-
-def _spanish_stemmer() -> _SpanishStemmer:
-    module = importlib.import_module("snowballstemmer")
-    if not hasattr(module, "stemmer"):
-        raise RuntimeError("snowballstemmer module does not expose the typed stemmer factory")
-    return module.stemmer("spanish")
-
-
-def _stem_text(stemmer: _SpanishStemmer, text: str) -> str:
-    tokens = _WORD_RE.findall(text.lower())
-    if not tokens:
-        return ""
-    stemmed = stemmer.stemWords(tokens)
-    return " ".join(stemmed)
-
-
 def build_lexical_index(
     database_path: Path,
     chunks: Iterable[CorpusChunk],
@@ -220,7 +195,7 @@ def build_lexical_index(
     Returns:
         A :class:`CorpusIndexBuildResult` with the document and chunk counts.
     """
-    stemmer = _spanish_stemmer()
+    stemmer = spanish_stemmer()
     connection = sqlite3.connect(database_path)
     try:
         _create_schema(connection)
@@ -246,7 +221,7 @@ def build_lexical_index(
             )
             connection.execute(
                 "INSERT INTO chunks_fts(rowid, text_folded, text_stemmed) VALUES(?, ?, ?)",
-                (rowid, chunk.text, _stem_text(stemmer, chunk.text)),
+                (rowid, chunk.text, stem_spanish_text(stemmer, chunk.text)),
             )
             chunk_counts[chunk.source_path] = chunk_counts.get(chunk.source_path, 0) + 1
             titles.setdefault(chunk.source_path, chunk.doc_title)
@@ -325,14 +300,13 @@ def search_lexical(
             "corpus search limit must be positive",
             context={"limit": limit},
         )
-    folded_terms = _WORD_RE.findall(query.lower())
+    folded_terms = spanish_word_tokens(query)
     if not folded_terms:
         raise CorpusSearchInputError(
             "corpus search query carries no searchable terms",
             context={"query": query},
         )
-    stemmer = _spanish_stemmer()
-    stemmed_terms = stemmer.stemWords(folded_terms)
+    stemmed_terms = stem_spanish_terms(spanish_stemmer(), folded_terms)
     match_expression = f"text_folded : ({fts_or_group(folded_terms)}) OR text_stemmed : ({fts_or_group(stemmed_terms)})"
     connection = sqlite3.connect(database_path)
     try:

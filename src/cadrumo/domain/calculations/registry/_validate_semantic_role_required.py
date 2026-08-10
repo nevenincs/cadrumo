@@ -18,8 +18,9 @@ import re
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
 
+from ....core import CasillaId
 from ....core.i18n import MissingTranslationError
-from ._ids import CasillaId, ModeloId, RevisionId
+from ._ids import ModeloId, RevisionId
 from ._schema import ModeloDefinition
 
 type SemanticRoleCasillaOccurrence = tuple[ModeloId, RevisionId, CasillaId]

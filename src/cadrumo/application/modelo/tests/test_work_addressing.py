@@ -6,14 +6,21 @@ from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
+from typing import Literal
 
 import pytest
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
+from ....core import (
+    ActionArgumentSource,
+    ActionConditionality,
+    CasillaId,
+    NoRecoveryOutcome,
+    Period,
+    validated_casilla_id,
+)
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
@@ -27,12 +34,15 @@ from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (
+    CalculationRevisionNotFoundError,
     ModeloCalculationRevisionSelector,
     ModeloExactWorkUnitTarget,
     ModeloRevisionPick,
     ModeloVisibleFilingTarget,
     create_work_unit,
+    discard_work_unit,
     project_modelo_work_target,
+    resolve_modelo_revision_for_operator_target,
     resolve_modelo_revision_pick,
     resolve_modelo_work_unit_id,
 )
@@ -263,3 +273,91 @@ def test_revision_pick_defaults_are_command_specific_under_one_work_unit(
     file_pick = resolve_modelo_revision_pick(target=visible, pick=ModeloRevisionPick(default_for="file"))
     assert file_pick.calculation_revision_id == verified.calculation_revision_id
     assert file_pick.work_unit_id == work_unit.work_unit_id
+
+
+@pytest.mark.parametrize(
+    ("default_for", "subject_leaf_key"),
+    (("verify", "modelo.work.verify"), ("file", "modelo.work.file")),
+)
+def test_exact_work_unit_id_in_calculation_revision_slot_has_only_the_canonical_calculate_action(
+    addressing_repos: tuple[str, WorkUnitCatalogueRepository, CalculationRevisionCatalogueRepository],
+    default_for: Literal["verify", "file"],
+    subject_leaf_key: str,
+) -> None:
+    """The application, rather than the CLI, recognizes the exact persisted work-unit identity."""
+    bucket_id, work_repository, _calculation_repository = addressing_repos
+    work_unit = _seed_work_unit(work_repository, bucket_id=bucket_id)
+
+    with pytest.raises(CalculationRevisionNotFoundError) as raised:
+        resolve_modelo_revision_for_operator_target(
+            calculation_revision_id=work_unit.work_unit_id,
+            work_unit_id=None,
+            modelo=None,
+            year=None,
+            period=None,
+            registry_revision_id=None,
+            selector=ModeloCalculationRevisionSelector.CURRENT,
+            default_for=default_for,
+        )
+
+    failure = raised.value.precondition_failure
+    assert failure is not None
+    assert failure.subject_leaf_key == subject_leaf_key
+    assert failure.scenario_id == f"{subject_leaf_key}.calculation_revision.work_unit_target"
+    verdict = failure.verdict
+    assert verdict.failed_condition_id == f"{subject_leaf_key}.calculation_revision.addresses_calculation"
+    assert verdict.conditionality is ActionConditionality.IMMEDIATE
+    assert verdict.no_recovery_outcome is None
+    assert verdict.action is not None
+    assert verdict.action.action_id == "operator.modelo.work.calculate"
+    assert len(verdict.argument_bindings) == 1
+    binding = verdict.argument_bindings[0]
+    assert binding.argument_name == "work_unit_id"
+    assert binding.value == work_unit.work_unit_id
+    assert binding.source is ActionArgumentSource.VERDICT_CONTEXT
+    assert binding.source_key == "work_unit_id"
+
+
+@pytest.mark.parametrize(
+    ("default_for", "subject_leaf_key"),
+    (("verify", "modelo.work.verify"), ("file", "modelo.work.file")),
+)
+def test_discarded_work_unit_id_in_calculation_revision_slot_is_a_terminal_application_verdict(
+    addressing_repos: tuple[str, WorkUnitCatalogueRepository, CalculationRevisionCatalogueRepository],
+    default_for: Literal["verify", "file"],
+    subject_leaf_key: str,
+) -> None:
+    """A discarded work unit cannot be advertised as a calculable recovery target."""
+    bucket_id, work_repository, _calculation_repository = addressing_repos
+    work_unit = _seed_work_unit(work_repository, bucket_id=bucket_id)
+    discard_work_unit(
+        work_unit.work_unit_id,
+        actor="operator",
+        reason="test terminal selector state",
+        repository=work_repository,
+        clock=_T0 + timedelta(minutes=1),
+    )
+
+    with pytest.raises(CalculationRevisionNotFoundError) as raised:
+        resolve_modelo_revision_for_operator_target(
+            calculation_revision_id=work_unit.work_unit_id,
+            work_unit_id=None,
+            modelo=None,
+            year=None,
+            period=None,
+            registry_revision_id=None,
+            selector=ModeloCalculationRevisionSelector.CURRENT,
+            default_for=default_for,
+        )
+
+    failure = raised.value.precondition_failure
+    assert failure is not None
+    assert failure.subject_leaf_key == subject_leaf_key
+    assert failure.scenario_id == f"{subject_leaf_key}.calculation_revision.work_unit_target_discarded"
+    verdict = failure.verdict
+    assert verdict.failed_condition_id == f"{subject_leaf_key}.calculation_revision.addresses_calculation"
+    assert verdict.conditionality is ActionConditionality.NOT_APPLICABLE
+    assert verdict.action is None
+    assert verdict.argument_bindings == ()
+    assert verdict.missing_argument_names == ()
+    assert verdict.no_recovery_outcome is NoRecoveryOutcome.TERMINAL

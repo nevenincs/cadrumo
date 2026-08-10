@@ -46,12 +46,10 @@ from collections.abc import Mapping
 from decimal import Decimal
 from typing import Final
 
-from ...core import Modelo
+from ...core import CasillaId, Modelo, validated_casilla_id
 from ...domain.calculations.registry import (
-    CasillaId,
     RegistryValidationError,
     same_ejercicio_prior_quarter_anchors,
-    validated_casilla_id,
 )
 from ..aggregation import CalculationSourceDiagnostic
 from ..calculations import CalculationObservationRepository

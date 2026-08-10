@@ -11,16 +11,14 @@ import pytest
 from defusedxml import ElementTree as DefusedElementTree
 from pydantic import ValidationError
 
-from ....core import Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import bundled_path
 from ....domain.calculations.registry import (
     CasillaFieldKind,
-    CasillaId,
     ExportLayoutDefinition,
     RegistrySnapshotRef,
     RegistryValidationError,
     parse_export_payload,
-    validated_casilla_id,
     xml_dictionary_entries,
 )
 from ....domain.filing import (

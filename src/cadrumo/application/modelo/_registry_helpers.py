@@ -28,9 +28,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 
-from ...core import Period
+from ...core import CasillaId, Period, validated_casilla_id
 from ...domain.calculations.registry import (
-    CasillaId,
     InputKind,
     ModeloRevision,
     RegistrySnapshot,
@@ -41,7 +40,6 @@ from ...domain.calculations.registry import (
     casillas_by_id,
     format_noncanonical_casilla_reference,
     undeclared_casilla_ids,
-    validated_casilla_id,
 )
 from ...domain.modelos import (
     CalculationRevision,

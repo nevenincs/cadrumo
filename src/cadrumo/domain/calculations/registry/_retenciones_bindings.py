@@ -22,11 +22,11 @@ from typing import Literal, Protocol
 
 from pydantic import BaseModel, ConfigDict
 
-from ....core import BindingSourceKind
+from ....core import BindingSourceKind, CasillaId
 from ....core.aggregation import RetencionScheme
 from ._binding_selector_utils import selector_against_model
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
-from ._ids import BindingId, CasillaId
+from ._ids import BindingId
 from ._schema import DataBindingDefinition, ModeloRevision
 
 

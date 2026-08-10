@@ -15,14 +15,12 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....core.aggregation import BindingSourceKind
-from ....core.config import override_settings
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     BindingId,
     CasillaDefinition,
-    CasillaId,
     DataBindingDefinition,
     InputKind,
     ModeloRevision,
@@ -30,7 +28,6 @@ from ....domain.calculations.registry import (
     RegistryValidationError,
     VerificationPredicateDefinition,
     calculate_registry_snapshot,
-    validated_casilla_id,
 )
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.iva_compensation import IvaCompensationDivergence, IvaCompensationReconciliationDecision
@@ -50,7 +47,6 @@ from .._calculation_actions import (
 from .._calculation_preparation import _IVA_LEDGER_EXEMPT_REGIMES
 from .._iva_wallet_gate import (
     ModeloIvaWalletReconciliationBlocked,
-    iva_wallet_blocked_message,
 )
 from .._iva_wallet_gate import (
     apply_iva_compensation_decision_binding as _apply_iva_compensation_decision_binding,
@@ -400,58 +396,22 @@ def test_workflow_period_does_not_reinterpret_nonquarter_periods(period: str) ->
 # ---------------------------------------------------------------------------
 
 
-def test_cross_casilla_invariant_violated_message_is_localised() -> None:
-    """_evaluate_verification_predicates emits a tr()-rendered message for a violated predicate.
-
-    The predicate expression ``all_nonzero(["0001","0002"])`` fails when
-    both casillas are zero, producing a BLOCKING_RULE finding. The message
-    must carry the interpolated predicate_id and expression, must not be the
-    raw locale key, and must vary with the operator's output language — the
-    three properties that distinguish a catalogue-routed string from a raw
-    f-string. Asserting catalogue prose verbatim is deliberately avoided so
-    the contract survives a translation edit.
-    """
-    with override_settings(cadrumo_output_language="en"):
-        predicate, finding = _predicate_finding(
-            predicate_id="test-cross-casilla-001",
-            legal_ref="irpf:art1",
-            expression=f'all_nonzero(["{_PREDICATE_REQUIRED_LEFT_CASILLA}","{_PREDICATE_REQUIRED_RIGHT_CASILLA}"])',
-            casilla_values={
-                _PREDICATE_REQUIRED_LEFT_CASILLA: Decimal(0),
-                _PREDICATE_REQUIRED_RIGHT_CASILLA: Decimal(0),
-            },
-        )
-
-    # The message must contain the predicate_id and expression (from the locale template).
-    assert "test-cross-casilla-001" in finding.message
-    assert predicate.expression in finding.message
-    # Must not be the raw locale key surfaced as a self-referencing fallback.
-    assert finding.message != "application.modelo.findings.cross_casilla_invariant_violated"
-    # Must not be the old raw f-string format with repr apostrophes around predicate_id.
-    assert "'test-cross-casilla-001'" not in finding.message
-
-    # A catalogue-routed message renders differently per operator language; a
-    # hardcoded f-string would render identically in both.
-    rendered_by_language: dict[str, str] = {}
-    for language in ("es", "en"):
-        with override_settings(cadrumo_output_language=language):
-            _, localised = _predicate_finding(
-                predicate_id="test-cross-casilla-001",
-                legal_ref="irpf:art1",
-                expression=predicate.expression,
-                casilla_values={
-                    _PREDICATE_REQUIRED_LEFT_CASILLA: Decimal(0),
-                    _PREDICATE_REQUIRED_RIGHT_CASILLA: Decimal(0),
-                },
-            )
-        rendered_by_language[language] = localised.message
-        # Interpolation survives in every language.
-        assert "test-cross-casilla-001" in localised.message
-        assert predicate.expression in localised.message
-    assert rendered_by_language["es"] != rendered_by_language["en"]
+def test_cross_casilla_invariant_finding_is_locale_neutral() -> None:
+    """A violated registry predicate emits only a presentation identity and facts."""
+    _predicate, finding = _predicate_finding(
+        predicate_id="test-cross-casilla-001",
+        legal_ref="irpf:art1",
+        expression=f'all_nonzero(["{_PREDICATE_REQUIRED_LEFT_CASILLA}","{_PREDICATE_REQUIRED_RIGHT_CASILLA}"])',
+        casilla_values={
+            _PREDICATE_REQUIRED_LEFT_CASILLA: Decimal(0),
+            _PREDICATE_REQUIRED_RIGHT_CASILLA: Decimal(0),
+        },
+    )
+    assert finding.message_locale_key == "application.modelo.findings.cross_casilla_invariant_violated"
+    assert dict(finding.message_facts) == {"predicate_id": "test-cross-casilla-001"}
 
 
-def test_registry_snapshot_unresolved_finding_is_localised() -> None:
+def test_registry_snapshot_unresolved_finding_is_locale_neutral() -> None:
     """_collect_revision_verification_findings produces a localised message when the registry
     snapshot cannot be resolved for a non-existent modelo.
 
@@ -465,34 +425,24 @@ def test_registry_snapshot_unresolved_finding_is_localised() -> None:
     work_unit = _minimal_work_unit(modelo="999", period="0A", filing_year=2026)
     target = _minimal_calculation_revision(work_unit)
 
-    rendered_by_language: dict[str, str] = {}
-    for language in ("es", "en"):
-        with override_settings(cadrumo_output_language=language):
-            findings, _resolved, _missing, failures_by_finding_id = _collect_revision_verification_findings(
-                work_unit=work_unit,
-                target=target,
-                profile=_resident_profile(),
-                transaction_repository=None,
-            )
-
-        assert len(findings) == 1
-        finding = findings[0]
-        assert "999" in finding.message
-        assert "2026" in finding.message
-        assert "0A" in finding.message
-        # Must not be the raw locale key surfaced as a self-referencing fallback.
-        assert finding.message != "application.modelo.findings.registry_snapshot_unresolved"
-        failure = failures_by_finding_id[id(finding)]
-        assert failure.identity == (
-            "modelo.work.verify",
-            "modelo.work.verify.registry_snapshot.available",
-            "modelo.work.verify.registry_snapshot.unavailable",
-        )
-        assert failure.verdict.action is not None
-        assert failure.verdict.action.action_id == "operator.registry.verify"
-        rendered_by_language[language] = finding.message
-
-    assert rendered_by_language["es"] != rendered_by_language["en"]
+    findings, _resolved, _missing, failures_by_finding_id = _collect_revision_verification_findings(
+        work_unit=work_unit,
+        target=target,
+        profile=_resident_profile(),
+        transaction_repository=None,
+    )
+    assert len(findings) == 1
+    finding = findings[0]
+    assert finding.message_locale_key == "application.modelo.findings.registry_snapshot_unresolved"
+    assert dict(finding.message_facts) == {"modelo": "999", "filing_year": 2026, "period": "0A"}
+    failure = failures_by_finding_id[id(finding)]
+    assert failure.identity == (
+        "modelo.work.verify",
+        "modelo.work.verify.registry_snapshot.available",
+        "modelo.work.verify.registry_snapshot.unavailable",
+    )
+    assert failure.verdict.action is not None
+    assert failure.verdict.action.action_id == "operator.registry.verify"
 
 
 # ---------------------------------------------------------------------------
@@ -513,11 +463,12 @@ def test_dt12_reduccion_advisory_message_is_localised() -> None:
     finding = _dt12_reduccion_advisory_finding(revision, casilla_values)
 
     assert finding is not None
-    assert str(_DT12_INGRESO_CASILLA) in finding.message
-    assert "25000" in finding.message
-    assert str(_DT12_REDUCCION_CASILLA) in finding.message
-    # Locale template token "reduccion" must appear in the rendered string.
-    assert "reduccion" in finding.message.lower()
+    assert finding.message_locale_key == "application.modelo.findings.dt12a_reduccion_possible"
+    assert dict(finding.message_facts) == {
+        "ingreso_id": str(_DT12_INGRESO_CASILLA),
+        "ingreso_value": Decimal("25000"),
+        "reduccion_id": str(_DT12_REDUCCION_CASILLA),
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -545,12 +496,13 @@ def test_art20_reduccion_advisory_fires_within_band_and_is_localised() -> None:
     assert finding.severity == "warning"
     assert finding.casilla_id == _ART20_REDUCCION_CASILLA
     assert finding.legal_refs == ("ley-35-2006:art-20",)
-    assert str(_ART20_RNT_CASILLA) in finding.message
-    assert "12000" in finding.message
-    assert str(_ART20_REDUCCION_CASILLA) in finding.message
+    assert finding.message_locale_key == "application.modelo.findings.art20_reduccion_possible"
+    assert dict(finding.message_facts) == {
+        "rnt_id": str(_ART20_RNT_CASILLA),
+        "rnt_value": Decimal("12000"),
+        "reduccion_id": str(_ART20_REDUCCION_CASILLA),
+    }
     assert "next_action" not in finding.model_dump(mode="json")
-    # The advisory message must be the rendered locale value, not the raw key.
-    assert finding.message != "application.modelo.findings.art20_reduccion_possible"
 
 
 @pytest.mark.parametrize(
@@ -611,12 +563,13 @@ def test_art52_reduccion_advisory_fires_for_purely_individual_over_sublimit() ->
     assert finding.severity == "warning"
     assert finding.casilla_id == _ART52_REDUCCION_CASILLA
     assert finding.legal_refs == ("ley-35-2006:art-52",)
-    assert str(_ART52_REDUCCION_CASILLA) in finding.message
-    assert "3000" in finding.message
-    assert "1500" in finding.message
+    assert finding.message_locale_key == "application.modelo.findings.art52_reduccion_individual_sublimit_possible"
+    assert dict(finding.message_facts) == {
+        "reduccion_id": str(_ART52_REDUCCION_CASILLA),
+        "reduccion_value": Decimal("3000"),
+        "sublimit": Decimal("1500"),
+    }
     assert "next_action" not in finding.model_dump(mode="json")
-    # The advisory message must be the rendered locale value, not the raw key.
-    assert finding.message != "application.modelo.findings.art52_reduccion_individual_sublimit_possible"
 
 
 def test_art52_reduccion_advisory_silent_when_employer_backed() -> None:
@@ -709,10 +662,12 @@ def test_dt12_antiquity_advisory_fires_when_reduccion_applied() -> None:
     assert finding.severity == "warning"
     assert finding.casilla_id == _DT12_ANTIQUITY_REDUCCION_CASILLA
     assert finding.legal_refs == ("ley-35-2006:dt-12",)
-    assert str(_DT12_ANTIQUITY_REDUCCION_CASILLA) in finding.message
-    assert "4000" in finding.message
+    assert finding.message_locale_key == "application.modelo.findings.dt12a_reduccion_antiquity_possible"
+    assert dict(finding.message_facts) == {
+        "reduccion_id": str(_DT12_ANTIQUITY_REDUCCION_CASILLA),
+        "reduccion_value": Decimal("4000"),
+    }
     assert "next_action" not in finding.model_dump(mode="json")
-    assert finding.message != "application.modelo.findings.dt12a_reduccion_antiquity_possible"
 
 
 def test_dt12_antiquity_advisory_silent_when_reduccion_zero() -> None:
@@ -727,48 +682,29 @@ def test_dt12_antiquity_advisory_silent_when_roles_absent() -> None:
     assert _dt12_antiquity_advisory_finding(_test_revision(), {}) is None
 
 
-# ---------------------------------------------------------------------------
-# contract/contract — IVA wallet next_action is localised
-# ---------------------------------------------------------------------------
-
-
-def test_iva_wallet_blocked_message_is_localised() -> None:
-    """iva_wallet_blocked_message renders via tr() interpolating divergence and reason.
-
-    The returned string must contain the divergence and reason tokens as
-    produced by the locale template, not a raw f-string fallback.
-    """
-    decision = _blocked_wallet_decision(divergence="wallet_missing", reason="No history available.")
-
-    message = iva_wallet_blocked_message(decision)
-
-    # The divergence and reason tokens must appear in the rendered message.
-    assert "wallet_missing" in message
-    assert "No history available." in message
-    # Must not be the raw locale key (self-referencing fallback).
-    assert message != "application.modelo.errors.iva_wallet_blocked"
-    # Must reference the model number (invariant across all authored locales).
-    assert "303" in message
-
-
 def test_iva_wallet_blocked_exception_carries_translated_message_key() -> None:
-    """ModeloIvaWalletReconciliationBlocked raised via _raise_if_persisted... carries
-    translated_message='application.modelo.errors.iva_wallet_blocked'.
-
-    This test exercises the raise site through iva_wallet_blocked_message
-    indirectly by constructing the exception the same way the raise site does
-    after contract — with both the rendered message and the translated_message key.
-    """
     decision = _blocked_wallet_decision(divergence="filed_history_only", reason="Only filed history present.")
-    rendered = iva_wallet_blocked_message(decision)
+    with pytest.raises(ModeloIvaWalletReconciliationBlocked) as raised:
+        _apply_iva_compensation_decision_binding(
+            "303",
+            2026,
+            Period.from_year_and_code(2026, "1T"),
+            bucket_id=_BUCKET_ID,
+            revision=_test_revision(),
+            taxpayer_nif="12345678Z",
+            caller_binding_values={},
+            backend_binding_values={},
+            decision=decision,
+        )
 
-    exc = ModeloIvaWalletReconciliationBlocked(
-        rendered,
-        translated_message="application.modelo.errors.iva_wallet_blocked",
-    )
-
+    exc = raised.value
     assert exc.translated_message == "application.modelo.errors.iva_wallet_blocked"
-    assert "filed_history_only" in str(exc)
+    assert exc.precondition_failure.identity == (
+        "modelo.work.calculate",
+        "modelo.work.calculate.iva_wallet.ready",
+        "modelo.work.calculate.iva_wallet.blocked",
+    )
+    assert exc.suggestion is None
 
 
 def test_iva_wallet_unsupported_decision_type_is_localised() -> None:
@@ -1038,7 +974,7 @@ def test_iva_regime_cli_choices_cover_operator_selectable_wizard_values() -> Non
 # ---------------------------------------------------------------------------
 
 
-def test_missing_required_casilla_finding_message_is_localised() -> None:
+def test_missing_required_casilla_finding_is_locale_neutral() -> None:
     """_missing_required_casilla_finding renders message via tr().
 
     The returned finding message must contain the casilla_id token
@@ -1049,14 +985,11 @@ def test_missing_required_casilla_finding_message_is_localised() -> None:
         casilla_def=_m130_casilla_definition(_M130_INGRESOS_CASILLA),
     )
 
-    assert finding.message is not None
-    # The casilla_id must appear in the rendered message.
-    assert _M130_INGRESOS_CASILLA in finding.message
-    # Must not be the raw locale key surfaced as a self-referencing fallback.
-    assert finding.message != "application.modelo.findings.missing_required_casilla"
+    assert finding.message_locale_key == "application.modelo.findings.missing_required_casilla"
+    assert dict(finding.message_facts) == {"casilla_id": _M130_INGRESOS_CASILLA}
 
 
-def test_missing_required_casilla_finding_message_changes_with_casilla_id() -> None:
+def test_missing_required_casilla_finding_facts_change_with_casilla_id() -> None:
     """Each casilla_id produces a distinct, non-trivial finding message.
 
     The locale template interpolates %{casilla_id}; two calls with different
@@ -1072,6 +1005,6 @@ def test_missing_required_casilla_finding_message_changes_with_casilla_id() -> N
         casilla_def=_m130_casilla_definition(_M130_GASTOS_CASILLA),
     )
 
-    assert finding_a.message != finding_b.message
-    assert _M130_INGRESOS_CASILLA in finding_a.message
-    assert _M130_GASTOS_CASILLA in finding_b.message
+    assert finding_a.message_facts != finding_b.message_facts
+    assert finding_a.message_facts["casilla_id"] == _M130_INGRESOS_CASILLA
+    assert finding_b.message_facts["casilla_id"] == _M130_GASTOS_CASILLA

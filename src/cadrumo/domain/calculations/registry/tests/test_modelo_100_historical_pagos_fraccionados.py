@@ -14,12 +14,11 @@ from decimal import Decimal
 
 import pytest
 
+from .....core import CasillaId, validated_casilla_id
 from .. import (
-    CasillaId,
     RegistryCalculationResult,
     RegistrySnapshot,
     calculate_registry_snapshot,
-    validated_casilla_id,
 )
 from .._authority import ValidatedRegistryAuthority
 from .._binding_selector_utils import selector_as_dict

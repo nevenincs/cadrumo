@@ -50,7 +50,7 @@ from typing import Literal, Protocol
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Period
+from ...core import CasillaId, Period
 from ...core.aggregation import BindingSourceKind
 from ...core.identity import SubjectTaxId
 from ...core.resources import bundled_path
@@ -61,7 +61,6 @@ from ...domain.calculations.registry import (
     CalculationCompletenessManifest,
     CasillaConstraints,
     CasillaDefinition,
-    CasillaId,
     DataBindingDefinition,
     ExportLayoutDefinition,
     FormulaDefinition,
@@ -79,6 +78,7 @@ from ...domain.calculations.registry import (
     collect_registry_tree_fingerprints,
     derive_rate_box_partitions,
     expression_casilla_refs,
+    fold_reconciliation_total_casilla_ids,
     registry_scalar_value_type,
     revision_reference_identity_failures,
 )
@@ -682,9 +682,9 @@ def collection_from_snapshot(snapshot: RegistrySnapshot) -> RegistryCasillaColle
 
 
 def _subview_from_snapshot(snapshot: RegistrySnapshot) -> RegistryModeloSubview:
-    reconciliation_total_casilla_ids: dict[Literal["ingresar", "devolver"], CasillaId] = {}
-    for expectation in snapshot.revision.verification_expectations:
-        reconciliation_total_casilla_ids.update(expectation.reconciliation_total_casilla_ids)
+    reconciliation_total_casilla_ids = fold_reconciliation_total_casilla_ids(
+        snapshot.revision.verification_expectations,
+    )
     return RegistryModeloSubview(
         modelo_id=snapshot.modelo.id,
         revision_id=snapshot.revision.id,
@@ -698,7 +698,7 @@ def _subview_from_snapshot(snapshot: RegistrySnapshot) -> RegistryModeloSubview:
         source_ref_ids=tuple(sorted(snapshot.sources)),
         extraction_profile_ids=tuple(sorted(snapshot.extraction_profiles)),
         verification_expectation_ids=tuple(sorted(snapshot.verification_expectations)),
-        reconciliation_total_casilla_ids=dict(sorted(reconciliation_total_casilla_ids.items())),
+        reconciliation_total_casilla_ids=reconciliation_total_casilla_ids,
         export_layout_ids=tuple(sorted(layout.id for layout in snapshot.revision.export_layouts)),
         export_layouts=tuple(sorted(snapshot.revision.export_layouts, key=lambda layout: layout.id)),
         application_link_ids=tuple(sorted(snapshot.application_links)),

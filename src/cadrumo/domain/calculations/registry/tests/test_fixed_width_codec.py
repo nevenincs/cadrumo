@@ -15,6 +15,8 @@ from .. import (
     ExportJustification,
     ExportPadding,
     ExportRecordDefinition,
+    ExportValuePolicy,
+    ParsedExportPolicyWireValue,
     RegistryValidationError,
     parse_fixed_width_export_field,
     render_fixed_width_export_field,
@@ -166,7 +168,11 @@ def test_numeric_refuses_unhashable_invalid_values_through_the_typed_boundary(in
 
 
 def test_allowed_integer_domain_is_enforced_symmetrically_after_wire_normalization() -> None:
-    field = _field(length=2, allowed_values=("3", "1"))
+    field = _field(
+        length=2,
+        value_policy=ExportValuePolicy.ENUMERATED_DIGITS,
+        allowed_values=("3", "1"),
+    )
 
     assert field.allowed_values == ("1", "3")
     assert render_fixed_width_export_field(field, 1) == "01"
@@ -177,13 +183,180 @@ def test_allowed_integer_domain_is_enforced_symmetrically_after_wire_normalizati
         parse_fixed_width_export_field(field, "02")
 
 
-def test_schema_refuses_allowed_values_combined_with_a_value_policy() -> None:
-    with pytest.raises(ValidationError, match="cannot combine"):
+def test_schema_refuses_allowed_values_without_the_enumerated_policy() -> None:
+    with pytest.raises(ValidationError, match="requires value_policy"):
         _field(
             length=1,
             allowed_values=("1",),
             value_policy="selected-1-unselected-0",
         )
+    with pytest.raises(ValidationError, match="requires value_policy"):
+        _field(length=1, allowed_values=("1",))
+
+
+@pytest.mark.parametrize(
+    ("overrides", "value", "wire", "parsed"),
+    (
+        (
+            {"length": 1, "value_policy": ExportValuePolicy.SELECTED_1_UNSELECTED_0},
+            True,
+            "1",
+            Decimal(1),
+        ),
+        (
+            {"length": 2, "value_policy": ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS},
+            2026,
+            "26",
+            ParsedExportPolicyWireValue(
+                policy=ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS,
+                raw="26",
+            ),
+        ),
+        ({"length": 2, "value_policy": ExportValuePolicy.UNSIGNED_INTEGER}, 7, "07", Decimal(7)),
+        (
+            {"length": 5, "data_type": "decimal", "decimals": 2, "value_policy": ExportValuePolicy.IMPLIED_DECIMAL},
+            Decimal("12.34"),
+            "01234",
+            Decimal("12.34"),
+        ),
+        (
+            {
+                "length": 1,
+                "value_policy": ExportValuePolicy.ENUMERATED_DIGITS,
+                "allowed_values": ("1", "3"),
+            },
+            3,
+            "3",
+            Decimal(3),
+        ),
+        (
+            {
+                "length": 4,
+                "data_type": "text",
+                "padding": "none",
+                "justification": "none",
+                "value_policy": ExportValuePolicy.DIGIT_STRING,
+            },
+            "0123",
+            "0123",
+            "0123",
+        ),
+        (
+            {
+                "length": 13,
+                "data_type": "text",
+                "padding": "none",
+                "justification": "none",
+                "value_policy": ExportValuePolicy.IDENTIFIER_DIGITS,
+            },
+            "0012345678901",
+            "0012345678901",
+            "0012345678901",
+        ),
+        ({"length": 4, "value_policy": ExportValuePolicy.FOUR_DIGIT_YEAR}, 2026, "2026", Decimal(2026)),
+        ({"length": 2, "value_policy": ExportValuePolicy.TWO_DIGIT_MONTH}, 8, "08", Decimal(8)),
+        ({"length": 2, "value_policy": ExportValuePolicy.TWO_DIGIT_DAY}, "9", "09", Decimal(9)),
+        (
+            {
+                "length": 8,
+                "data_type": "date",
+                "padding": "none",
+                "justification": "none",
+                "date_format": "aaaammdd",
+                "value_policy": ExportValuePolicy.YYYYMMDD,
+            },
+            "20240229",
+            "20240229",
+            "20240229",
+        ),
+    ),
+)
+def test_complete_reviewed_policy_set_renders_and_parses_exact_wire_bytes(
+    overrides: dict[str, object],
+    value: object,
+    wire: str,
+    parsed: object,
+) -> None:
+    field = _field(**overrides)
+
+    assert render_fixed_width_export_field(field, value) == wire
+    actual = parse_fixed_width_export_field(field, wire)
+    assert actual == parsed
+    assert render_fixed_width_export_field(field, actual) == wire
+
+
+def test_enumeration_is_the_only_policy_that_can_combine_with_allowed_values() -> None:
+    field = _field(
+        length=1,
+        value_policy=ExportValuePolicy.ENUMERATED_DIGITS,
+        allowed_values=("1", "3"),
+    )
+    assert render_fixed_width_export_field(field, 1) == "1"
+    with pytest.raises(RegistryValidationError, match="outside allowed_values"):
+        render_fixed_width_export_field(field, 2)
+
+    with pytest.raises(ValidationError, match="requires value_policy"):
+        _field(
+            length=4,
+            value_policy=ExportValuePolicy.FOUR_DIGIT_YEAR,
+            allowed_values=("2026",),
+        )
+
+
+@pytest.mark.parametrize(
+    ("overrides", "raw"),
+    (
+        ({"length": 2, "value_policy": ExportValuePolicy.TWO_DIGIT_MONTH}, "13"),
+        ({"length": 2, "value_policy": ExportValuePolicy.TWO_DIGIT_DAY}, "00"),
+        ({"length": 4, "value_policy": ExportValuePolicy.FOUR_DIGIT_YEAR}, "0999"),
+        (
+            {
+                "length": 8,
+                "data_type": "date",
+                "padding": "none",
+                "justification": "none",
+                "date_format": "aaaammdd",
+                "value_policy": ExportValuePolicy.YYYYMMDD,
+            },
+            "20230229",
+        ),
+        (
+            {
+                "length": 4,
+                "data_type": "text",
+                "padding": "none",
+                "justification": "none",
+                "value_policy": ExportValuePolicy.DIGIT_STRING,
+            },
+            "12 3",
+        ),
+    ),
+)
+def test_policy_wire_mutations_are_refused_before_generic_parsing(
+    overrides: dict[str, object],
+    raw: str,
+) -> None:
+    with pytest.raises(RegistryValidationError):
+        parse_fixed_width_export_field(_field(**overrides), raw)
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    (
+        {"length": 2, "data_type": "text", "value_policy": ExportValuePolicy.UNSIGNED_INTEGER},
+        {"length": 5, "data_type": "integer", "value_policy": ExportValuePolicy.IMPLIED_DECIMAL},
+        {"length": 8, "data_type": "integer", "value_policy": ExportValuePolicy.YYYYMMDD},
+        {"length": 4, "value_policy": ExportValuePolicy.DIGIT_STRING},
+        {"length": 13, "value_policy": ExportValuePolicy.IDENTIFIER_DIGITS},
+        {"length": 3, "value_policy": ExportValuePolicy.FOUR_DIGIT_YEAR},
+        {"length": 1, "value_policy": ExportValuePolicy.TWO_DIGIT_MONTH},
+        {"length": 3, "value_policy": ExportValuePolicy.TWO_DIGIT_DAY},
+        {"length": 1, "value_policy": ExportValuePolicy.ENUMERATED_DIGITS},
+    ),
+)
+def test_schema_refuses_each_policy_on_an_inconsistent_shape(overrides: dict[str, object]) -> None:
+    with pytest.raises(ValidationError):
+        _field(**overrides)
 
 
 @pytest.mark.parametrize(
@@ -194,7 +367,7 @@ def test_schema_refuses_empty_duplicate_noncanonical_or_out_of_width_allowed_dom
     allowed_values: tuple[str, ...],
 ) -> None:
     with pytest.raises(ValidationError, match="allowed_values"):
-        _field(allowed_values=allowed_values)
+        _field(value_policy=ExportValuePolicy.ENUMERATED_DIGITS, allowed_values=allowed_values)
 
 
 @pytest.mark.parametrize(
@@ -209,8 +382,12 @@ def test_schema_refuses_empty_duplicate_noncanonical_or_out_of_width_allowed_dom
     ),
 )
 def test_schema_refuses_allowed_domains_on_incompatible_field_shapes(overrides: dict[str, object]) -> None:
-    with pytest.raises(ValidationError, match="allowed_values"):
-        _field(allowed_values=("1", "3"), **overrides)
+    with pytest.raises(ValidationError):
+        _field(
+            value_policy=ExportValuePolicy.ENUMERATED_DIGITS,
+            allowed_values=("1", "3"),
+            **overrides,
+        )
 
 
 def test_allowed_values_enforcement_has_one_canonical_codec_owner() -> None:

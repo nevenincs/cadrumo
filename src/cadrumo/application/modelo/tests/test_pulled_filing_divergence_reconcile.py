@@ -56,12 +56,11 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period
+from ....core import CasillaId, Period
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     BindingId,
     CasillaDefinition,
-    CasillaId,
     DataBindingDefinition,
     InputKind,
     ModeloRevision,
@@ -562,7 +561,7 @@ def test_a_diverging_casilla_raises_one_warning_carrying_that_casillas_own_groun
         observation_repository=observation_repository,
     )
 
-    assert len(findings) == 1, f"exactly one casilla disagrees; got {[row.message for row in findings]}"
+    assert len(findings) == 1, f"exactly one casilla disagrees; got {findings!r}"
     finding = findings[0]
     assert finding.kind is ModeloVerificationFindingKind.RECONCILIATION_MISMATCH
     assert finding.severity is ModeloVerificationFindingSeverity.WARNING, (
@@ -576,10 +575,10 @@ def test_a_diverging_casilla_raises_one_warning_carrying_that_casillas_own_groun
     assert finding.casilla_id == subject.id, (
         "the diverging casilla must be routable from the finding itself, not parsed out of its text"
     )
-    assert subject.number in finding.message
-    assert str(_LOCAL_AMOUNT) in finding.message
-    assert str(_FILED_AMOUNT) in finding.message
-    assert CasillaDivergenceKind.VALUE_MISMATCH.value in finding.message
+    assert finding.message_facts["casilla_number"] == subject.number
+    assert finding.message_facts["computed_value"] == _LOCAL_AMOUNT
+    assert finding.message_facts["filed_value"] == _FILED_AMOUNT
+    assert finding.message_facts["mismatch_kind"] == CasillaDivergenceKind.VALUE_MISMATCH.value
     assert "next_action" not in finding.model_dump(mode="json")
 
     assert finding.legal_refs == subject.legal_refs, (

@@ -26,13 +26,11 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period, ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from ....core import CasillaId, Period, ProrrataProvisionalProvenance, ProrrataRegisterRegime, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaId,
     InputKind,
     resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values,
-    validated_casilla_id,
 )
 from ....domain.invoices import InvoiceCatalogue
 from ....domain.prorrata_register import ProrrataRegisterEntry

@@ -35,10 +35,10 @@ from ....application.live import (
     select_declarations_for_capture,
 )
 from ....application.registry import verify_filed_state
-from ....core import AuthProviderKind, CasillaValueKind, Period
+from ....core import AuthProviderKind, CasillaId, CasillaValueKind, Period, validated_casilla_id
 from ....core.access_gate import AeatLiveReadNotEnabledError
 from ....core.resources import bundled_path, resources
-from ....domain.calculations.registry import CasillaId, calculate_registry_snapshot, validated_casilla_id
+from ....domain.calculations.registry import calculate_registry_snapshot
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from .. import _app_live
 from .._app_live import (

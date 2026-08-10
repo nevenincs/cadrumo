@@ -8,7 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.calculations.registry import CasillaId, LegalRefId, SourceRefId, validated_casilla_id
+from ....core import CasillaId, validated_casilla_id
+from ....domain.calculations.registry import LegalRefId, SourceRefId
 from ....domain.modelos import (
     LedgerFilingEvidence,
     LedgerFilingSnapshot,

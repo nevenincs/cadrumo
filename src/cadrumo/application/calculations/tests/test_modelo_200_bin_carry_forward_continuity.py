@@ -40,16 +40,15 @@ from pathlib import Path
 
 import pytest
 
+from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaId,
     RegistryCalculationResult,
     RegistryModeloObservation,
     RelationId,
     calculate_registry_snapshot,
     materialize_relation_binding_values,
     resolve_bound_inputs_by_casilla_id,
-    validated_casilla_id,
 )
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos import ModeloVerificationFindingKind

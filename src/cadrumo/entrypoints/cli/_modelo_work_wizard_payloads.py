@@ -15,8 +15,9 @@ from typing import Literal
 
 from pydantic import Field
 
+from ...core import CasillaId
 from ...core.json_contract import OutputSchema, register_schema
-from ...domain.calculations.registry import CasillaId, LegalRefId, SourceRefId
+from ...domain.calculations.registry import LegalRefId, SourceRefId
 from ._modelo_revision_payload_parts import CalculationRevisionProjectionFields
 
 #: Closed set of CLI input channels a wizard step resolves to: a direct

@@ -6,9 +6,9 @@ from decimal import Decimal
 import pytest
 
 from ....application.filing import ModeloOperatorProfile, build_draft, build_runtime_schema_provider
-from ....core import Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaId, InputKind, validated_casilla_id
+from ....domain.calculations.registry import InputKind
 from ....domain.deadlines import EntityType, IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from ....domain.modelos import (
     CalculationRevision,

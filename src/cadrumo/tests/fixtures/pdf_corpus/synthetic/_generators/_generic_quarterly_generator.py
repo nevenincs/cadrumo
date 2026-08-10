@@ -18,7 +18,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
-from ......domain.calculations.registry import CasillaId
+from ......core import CasillaId
 from ._generator_shared import (
     CasillaBox,
     draw_casilla_box,

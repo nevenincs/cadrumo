@@ -17,9 +17,8 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.iva import InvoiceKind
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
@@ -453,7 +452,7 @@ def test_modelo_303_verify_uses_attached_purchase_invoice_evidence(
         assert report.granted_verificado_completo is True
         assert report.completeness_status is VerificationCompletenessStatus.COMPLETE
         assert not any(
-            purchase.transaction_id in finding.message and "deductible VAT" in finding.message
+            finding.message_locale_key == "application.modelo.findings.transaction_evidence_missing_deductible"
             for finding in report.findings
         )
         stored = cr_repo.load().get(revision.calculation_revision_id)
@@ -558,7 +557,7 @@ def test_modelo_303_verify_and_file_credit_a_linked_validated_invoice(
         assert report.granted_verificado_completo is True
         assert report.completeness_status is VerificationCompletenessStatus.COMPLETE
         assert not any(
-            purchase.transaction_id in finding.message and "deductible VAT" in finding.message
+            finding.message_locale_key == "application.modelo.findings.transaction_evidence_missing_deductible"
             for finding in report.findings
         )
 

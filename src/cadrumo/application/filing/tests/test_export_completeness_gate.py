@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
+from ....core import CasillaId, validated_casilla_id
 from ....domain.filing import FilingExportError, ModeloDraft, ModeloValueKind
 from .._export import export_draft
 from ..runtime import RegistrySchemaAccessor

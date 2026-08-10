@@ -8,9 +8,8 @@ from typing import Any, cast
 
 import pytest
 
-from .....core import BindingSourceKind, IntracomOperationType
+from .....core import BindingSourceKind, CasillaId, IntracomOperationType
 from .. import (
-    CasillaId,
     InputKind,
     InvoiceObservation,
     invoice_binding_requirements,

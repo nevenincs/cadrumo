@@ -74,7 +74,7 @@ _MEAN_QUANTUM = Decimal("0.0001")
 class LlmUsageCostProviderMetrics(BaseModel):
     """Per-provider aggregate of the LLM usage/cost log.
 
-    Aggregated from :class:`~adapters.outbound.llm.UsageRecord` rows for a
+    Aggregated from :class:`~llm.UsageRecord` rows for a
     single :attr:`provider`. ``calls`` counts every recorded call (cache hits
     included); ``cache_hits`` counts the subset served from the local cache.
     """

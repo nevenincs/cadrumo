@@ -13,7 +13,7 @@ above structurally true rather than a claim -- this collector once carried its
 own copy of the antecedent/consequent test, which agreed with the verification
 side only for as long as nobody edited either.
 
-Modelo 303's 2023-y-siguientes revision used this mechanism in Stage 1, when
+Modelo 303's former post-2022 revision used this mechanism in Stage 1, when
 ledger-backed semantic totals could be positive while manual official
 Diseño-de-Registros cuota boxes stayed zero. Stage 2 now projects those boxes
 from their semantic sources and retired the Stage-1 ADVISORY predicates, so this
@@ -33,7 +33,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from ...domain.calculations.registry import CasillaId, ModeloRevision
+from ...core import CasillaId
+from ...domain.calculations.registry import ModeloRevision
 from ..aggregation import CalculationSourceDiagnostic
 
 __all__ = ["collect_official_box_unpopulated_diagnostics"]

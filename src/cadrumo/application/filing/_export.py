@@ -55,6 +55,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import (
+    CasillaId,
     ExportLayoutFormat,
     Period,
     PriorDomiciliationElection,
@@ -67,7 +68,6 @@ from ...core.time import now
 from ...domain.calculations.registry import (
     BindingId,
     CasillaFieldKind,
-    CasillaId,
     ExportFieldDefinition,
     ExportLayoutDefinition,
     ExportRecordDefinition,

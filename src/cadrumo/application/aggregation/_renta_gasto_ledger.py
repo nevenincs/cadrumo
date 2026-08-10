@@ -52,8 +52,7 @@ from pydantic import BaseModel, Field
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import ElidedProse, Modelo, Period
-from ...domain.calculations.registry import CasillaId, validated_casilla_id
+from ...core import CasillaId, ElidedProse, Modelo, Period, validated_casilla_id
 from ...domain.prorrata_register import ProrrataRegisterRepositoryProtocol
 from ...domain.transactions import (
     BusinessClassification,

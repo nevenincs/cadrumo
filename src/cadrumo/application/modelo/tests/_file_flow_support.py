@@ -17,7 +17,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....core.config import Settings
 from ....core.resources import resources
 from ....domain.buckets import (
@@ -27,12 +27,10 @@ from ....domain.buckets import (
     BucketEventType as BucketEventType,
 )
 from ....domain.calculations.registry import (
-    CasillaId,
     InputKind,
     RegistryModeloObservation,
     previous_filing_observation_requirements,
     relation_source_requirements,
-    validated_casilla_id,
 )
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos import (

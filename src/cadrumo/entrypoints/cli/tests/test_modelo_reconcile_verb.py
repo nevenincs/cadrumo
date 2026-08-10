@@ -20,8 +20,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....application.user_profile import profile_create_storage_span, set_active_fields
 from ....application.workflow import workflow_state_repository
-from ....core import Period
-from ....domain.calculations.registry import validated_casilla_id
+from ....core import Period, validated_casilla_id
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,

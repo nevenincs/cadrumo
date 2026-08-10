@@ -40,11 +40,11 @@ from __future__ import annotations
 
 import pytest
 
+from .....core import validated_casilla_id
 from .....core.resources import resources
 from .....domain.calculations.registry import (
     ExtractionProfileDefinition,
     ExtractionTargetDefinition,
-    validated_casilla_id,
 )
 from .._errors import DeclaracionParseError
 from .._parser import _numeric_casilla_anchors

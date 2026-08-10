@@ -61,14 +61,13 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Final, NamedTuple, TypedDict
 
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
-from ...core import BindingSourceKind, Modelo, Period
+from ...core import BindingSourceKind, CasillaId, Modelo, Period
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.logging import get_logger
 from ...core.parsing import parse_iso8601_date
 from ...core.time import now
 from ...domain.calculations.registry import (
     BindingId,
-    CasillaId,
     LegalRefId,
     ModeloId,
     ModeloRevision,

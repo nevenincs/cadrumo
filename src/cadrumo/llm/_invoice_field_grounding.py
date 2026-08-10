@@ -248,19 +248,16 @@ def parse_invoice_extraction_response(text: str) -> ExtractedInvoiceResponse:
     if payload is None:
         raise PurchaseInvoiceEvidenceInputError(
             f"invoice reading model returned no parsable JSON object: {text[:200]!r}",
-            suggestion="aeat app ledger evidence extract --evidence-id <id>",
         )
     try:
         raw = json.loads(payload)
     except ValueError as exc:
         raise PurchaseInvoiceEvidenceInputError(
             f"invoice reading model response was not valid JSON: {str(exc)[:200]}",
-            suggestion="aeat app ledger evidence extract --evidence-id <id>",
         ) from exc
     if not isinstance(raw, dict):
         raise PurchaseInvoiceEvidenceInputError(
             f"invoice reading model response was not a JSON object: {type(raw).__name__}",
-            suggestion="aeat app ledger evidence extract --evidence-id <id>",
         )
 
     values: dict[str, object] = {}
@@ -293,7 +290,6 @@ def parse_invoice_extraction_response(text: str) -> ExtractedInvoiceResponse:
     except ValueError as exc:
         raise PurchaseInvoiceEvidenceInputError(
             f"invoice reading model response failed schema validation: {str(exc)[:200]}",
-            suggestion="aeat app ledger evidence extract --evidence-id <id>",
         ) from exc
 
 

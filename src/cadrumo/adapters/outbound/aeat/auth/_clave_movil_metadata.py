@@ -19,6 +19,7 @@ from typing import Final
 from pydantic import BaseModel, ConfigDict, Field
 
 from .....core import AuthProviderKind
+from .....core.identity import ContentDigest
 
 AEAT_CLAVE_MOVIL_METADATA_SCHEMA_VERSION: Final[int] = 2
 """Schema version for Cl@ve Móvil :class:`ClaveMovilSessionMetadata` records."""
@@ -43,7 +44,7 @@ class ClaveMovilSessionMetadata(BaseModel):
     identity_nif: str = Field(min_length=1)
     authenticated_at: datetime
     idle_deadline: datetime
-    storage_state_sha256: str = Field(min_length=64, max_length=64)
+    storage_state_sha256: ContentDigest
     used_non_qr_fallback: bool = False
     verification_code: str | None = None
     landing_url: str | None = Field(

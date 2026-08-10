@@ -12,7 +12,7 @@ from decimal import Decimal
 
 import pytest
 
-from ......domain.calculations.registry import CasillaId, validated_casilla_id
+from ......core import CasillaId, validated_casilla_id
 from ._generic_quarterly_generator import (
     QuarterlyGenParams,
 )

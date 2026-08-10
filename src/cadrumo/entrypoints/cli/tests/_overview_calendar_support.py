@@ -19,8 +19,7 @@ from ....application.user_profile import (
     profile_storage_session,
 )
 from ....application.workflow import workflow_state_repository
-from ....core import Period
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
+from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.justificante import Justificante
 from ....domain.modelos import (
     ExternalEvidence,

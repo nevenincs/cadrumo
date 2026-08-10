@@ -10,8 +10,8 @@ import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 
+from ....core import CasillaId
 from ....core.i18n import MissingTranslationError
-from ._ids import CasillaId
 from ._schema import ModeloDefinition
 
 _UNRESOLVED_FORMAT_PLACEHOLDER = re.compile(r"\{[A-Za-z0-9_]+\}")

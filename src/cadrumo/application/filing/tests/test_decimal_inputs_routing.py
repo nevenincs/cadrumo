@@ -18,13 +18,12 @@ from decimal import Decimal
 
 import pytest
 
+from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaId,
     RegistrySnapshot,
     calculate_registry_snapshot,
     enum_consumed_binding_ids,
-    validated_casilla_id,
 )
 from .. import _filing_binding_values, _string_inputs_for_ids
 

@@ -10,15 +10,13 @@ from typing import Literal
 import pytest
 from pydantic import ValidationError as ValidationError
 
-from .....core import TaxDomain, freeze_toml
+from .....core import CasillaId, TaxDomain, freeze_toml, validated_casilla_id
 from .....core.classification import SensitivityClass
 from .....core.config import Settings
 from .. import (
-    CasillaId,
     InputKind,
     RegistryValidationError,
     ValidatedRegistryAuthority,
-    validated_casilla_id,
 )
 from .._schema import (
     ApplicationLinkDefinition,

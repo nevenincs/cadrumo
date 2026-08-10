@@ -73,7 +73,8 @@ from ._reconcile_casilla import detect_casilla_divergences
 from ._reconcile_population import resolve_casilla_population_scope
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry import CasillaDefinition, CasillaId, RegistrySnapshot
+    from ...core import CasillaId
+    from ...domain.calculations.registry import CasillaDefinition, RegistrySnapshot
     from ...domain.modelos import CalculationRevision, WorkUnit
     from ..calculations import CalculationObservationRepository
 
@@ -189,10 +190,7 @@ def pulled_filing_divergence_findings(
     if not divergences:
         return []
 
-    casillas_by_id: dict[CasillaId, CasillaDefinition] = {
-        casilla.id: casilla for casilla in registry_revision.casillas
-    }
-    period_token = work_unit.period.registry_token
+    casillas_by_id: dict[CasillaId, CasillaDefinition] = {casilla.id: casilla for casilla in registry_revision.casillas}
     findings: list[ModeloVerificationFinding] = []
     for divergence in divergences:
         casilla = casillas_by_id.get(divergence.casilla_id)
@@ -202,16 +200,17 @@ def pulled_filing_divergence_findings(
             ModeloVerificationFinding(
                 kind=ModeloVerificationFindingKind.RECONCILIATION_MISMATCH,
                 severity=ModeloVerificationFindingSeverity.WARNING,
-                # The subject rides a field, never only the prose. An automated
-                # operator routes on structure; leaving this unset would make the
-                # diverging casilla recoverable only by parsing the message.
+                # The subject rides a field, never a locale-rendered message.
                 casilla_id=divergence.casilla_id,
-                message=(
-                    f"Casilla {casilla.number} does not match the filing AEAT holds for "
-                    f"{period_token} {work_unit.filing_year}: this calculation produces "
-                    f"{divergence.computed_value}, the pulled declaration records "
-                    f"{divergence.filed_value} ({divergence.kind.value})."
-                ),
+                message_locale_key="application.modelo.findings.pulled_filing_casilla_mismatch",
+                message_facts={
+                    "casilla_number": casilla.number,
+                    "period_code": work_unit.period.registry_token,
+                    "filing_year": work_unit.filing_year,
+                    "computed_value": divergence.computed_value if divergence.computed_value is not None else "absent",
+                    "filed_value": divergence.filed_value if divergence.filed_value is not None else "absent",
+                    "mismatch_kind": divergence.kind.value,
+                },
                 legal_refs=casilla.legal_refs,
                 source_refs=casilla.source_refs,
             ),

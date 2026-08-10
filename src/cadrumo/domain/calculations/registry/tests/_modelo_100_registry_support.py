@@ -8,10 +8,10 @@ from pathlib import Path
 
 import pytest
 
+from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_url, configured_path
 from .. import (
-    CasillaId,
     ModeloDefinition,
     ModeloRevision,
     RegistryCatalogues,
@@ -20,7 +20,6 @@ from .. import (
     RegistryValidator,
     build_snapshot,
     load_registry_tree,
-    validated_casilla_id,
 )
 
 _DECLARATIONS_LISTING_URL = aeat_url("www6", configured_path("sede_paths", "declarations_listing"))

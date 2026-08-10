@@ -16,7 +16,8 @@ from typing import Literal, TypedDict
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from .._ids import CasillaId, LegalRefId, SourceRefId, validated_casilla_id
+from .....core import CasillaId, validated_casilla_id
+from .._ids import LegalRefId, SourceRefId
 from .._schema import (
     AlgorithmBindingDefinition,
     CasillaDefinition,

@@ -17,9 +17,8 @@ from typing import cast
 
 import pytest
 
-from ....core import Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.filing import ModeloBuilderError
 from .. import _filing_period_date, build_draft, build_runtime_schema_provider
 from ..runtime import ModeloOperatorProfile

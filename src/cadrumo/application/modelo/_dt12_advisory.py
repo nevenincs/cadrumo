@@ -20,8 +20,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from ...core.i18n import tr
-from ...domain.calculations.registry import CasillaId
+from ...core import CasillaId
 from ...domain.modelos import (
     ModeloError,
     ModeloVerificationFinding,
@@ -67,12 +66,12 @@ def _dt12_reduccion_advisory_finding(
             kind=ModeloVerificationFindingKind.BLOCKING_RULE,
             severity=ModeloVerificationFindingSeverity.WARNING,
             casilla_id=reduccion_id,
-            message=tr(
-                "application.modelo.findings.dt12a_reduccion_possible",
-                ingreso_id=ingreso_id,
-                ingreso_value=str(ingreso_value),
-                reduccion_id=reduccion_id,
-            ),
+            message_locale_key="application.modelo.findings.dt12a_reduccion_possible",
+            message_facts={
+                "ingreso_id": ingreso_id,
+                "ingreso_value": ingreso_value,
+                "reduccion_id": reduccion_id,
+            },
             legal_refs=("ley-35-2006:dt-12",),
         )
     return None

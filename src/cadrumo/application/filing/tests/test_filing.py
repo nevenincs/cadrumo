@@ -10,11 +10,11 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....core import Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....core.errors import BaseSeverity
 from ....core.i18n import Translatable as tr
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
+
 from ....domain.filing import ModeloDraftError
 from ....domain.invoices import InvoiceCatalogue
 from ....domain.submission import ModeloDraftStatus

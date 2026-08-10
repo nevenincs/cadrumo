@@ -18,7 +18,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from graphlib import CycleError
 
-from ._ids import BindingId, CasillaId, RelationId
+from ....core import CasillaId
+from ._ids import BindingId, RelationId
 from ._runtime_graph import formula_evaluation_order
 from ._schema import (
     CasillaDefinition,

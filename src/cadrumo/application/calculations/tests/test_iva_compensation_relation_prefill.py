@@ -10,9 +10,8 @@ from typing import Literal
 
 import pytest
 
-from ....core import ObservedHeaderFact, Period, ResultDisposition
+from ....core import CasillaId, ObservedHeaderFact, Period, ResultDisposition
 from ....domain.calculations.registry import (
-    CasillaId,
     RegistryModeloObservation,
     RegistryValidationError,
     materialize_relation_binding_values,

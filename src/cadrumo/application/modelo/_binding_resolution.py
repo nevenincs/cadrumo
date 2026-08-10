@@ -33,10 +33,10 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core import BindingSourceKind as _BindingSourceKind
+from ...core import CasillaId
 from ...core import Period as _Period
 from ...domain.calculations.registry import (
     BindingId,
-    CasillaId,
     InputKind,
     ModeloRevision,
     RegistrySnapshot,

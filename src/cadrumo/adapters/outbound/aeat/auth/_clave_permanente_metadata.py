@@ -31,6 +31,7 @@ from typing import Final
 from pydantic import BaseModel, ConfigDict, Field
 
 from .....core import AuthProviderKind
+from .....core.identity import ContentDigest
 
 AEAT_CLAVE_PERMANENTE_METADATA_SCHEMA_VERSION: Final[int] = 1
 """Schema version for Cl@ve Permanente metadata records."""
@@ -57,7 +58,7 @@ class ClavePermanenteSessionMetadata(BaseModel):
     identity_nif: str = Field(min_length=1)
     authenticated_at: datetime
     idle_deadline: datetime
-    storage_state_sha256: str = Field(min_length=64, max_length=64)
+    storage_state_sha256: ContentDigest
     landing_url: str | None = Field(
         default=None,
         description=(

@@ -6,12 +6,12 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from ....core import STRICT_FROZEN_CONFIG
+from ....core import STRICT_FROZEN_CONFIG, CasillaId
 from ....core.aggregation import BindingSourceKind
 from ._authority import ValidatedRegistryAuthority
 from ._bindings import bound_casilla_binding_ids
 from ._handoffs import RegistryRelationHandoffAudit, audit_registry_relation_handoffs
-from ._ids import BindingId, CasillaId, LegalRefId, ModeloId, RelationId, RevisionId, SourceRefId
+from ._ids import BindingId, LegalRefId, ModeloId, RelationId, RevisionId, SourceRefId
 from ._iva_wallet_relation_targets import is_iva_wallet_owned_relation_target
 
 __all__ = [

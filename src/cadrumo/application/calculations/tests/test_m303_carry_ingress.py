@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.outbound.aeat.sede._declarations_observations import _observed_header_facts_from_submitted_file
-from ....core import ObservedHeaderFact, Period, ResultDisposition
+from ....core import ObservedHeaderFact, Period, ResultDisposition, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation, casillas_by_id
 from ....domain.iva_compensation import (
@@ -47,7 +47,7 @@ def _exported_fichero(tmp_path: Path, *, declaration_type: str) -> bytes:
         build_runtime_schema_provider,
         export_draft,
     )
-    from ....domain.calculations.registry import validated_casilla_id
+
 
     period = Period.from_year_and_code(2025, "1T")
     provider = build_runtime_schema_provider(

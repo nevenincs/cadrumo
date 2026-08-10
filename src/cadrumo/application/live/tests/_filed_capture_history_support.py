@@ -20,10 +20,9 @@ from ....adapters.outbound.aeat.sede import (
 )
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import CasillaValueKind, ObservedHeaderFact, Period
+from ....core import CasillaId, CasillaValueKind, ObservedHeaderFact, Period, validated_casilla_id
 from ....core.external_constants import load_external_constants
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.modelos import (
     ExternalEvidence,
     ModeloCode,

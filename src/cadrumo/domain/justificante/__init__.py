@@ -59,11 +59,10 @@ from ._errors import (
     PdfExtractionCoverageMixin,
     PdfModeloImportError,
 )
-from ._schema import Justificante, JustificanteCsv, JustificanteParserBackend
+from ._schema import Justificante, JustificanteParserBackend
 
 __all__ = [
     "Justificante",
-    "JustificanteCsv",
     "JustificanteCsvNotFoundError",
     "JustificanteError",
     "JustificanteParseError",

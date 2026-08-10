@@ -10,8 +10,9 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 
+from ....core import CasillaId
 from ._casilla_membership import casillas_by_id, declared_casilla_ids
-from ._ids import BindingId, CasillaId, RelationId
+from ._ids import BindingId, RelationId
 from ._schema import (
     AlgorithmBindingDefinition,
     AlgorithmProviderDefinition,

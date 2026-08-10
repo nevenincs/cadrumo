@@ -33,9 +33,9 @@ from pathlib import Path
 
 import pytest
 
-from ....core import DescendantRelacion, Modelo
+from ....core import CasillaId, DescendantRelacion, Modelo
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaId, ModeloRevision
+from ....domain.calculations.registry import ModeloRevision
 from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
 from ....domain.user_profile import UserProfileFact
 from ....tests.secure_sql import isolated_profile_storage_root

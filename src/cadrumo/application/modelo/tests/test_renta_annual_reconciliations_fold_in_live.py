@@ -67,14 +67,12 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import BindingSourceKind, Period
+from ....core import BindingSourceKind, CasillaId, Period, validated_casilla_id
 from ....core.aggregation import RetencionClave
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaId,
     RegistryModeloObservation,
     WithholdingObservation,
-    validated_casilla_id,
 )
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
@@ -642,11 +640,16 @@ def test_m190_verify_accepts_observation_backed_m111_cross_period_evidence(
         if finding.kind.value == "cross_period_dependency_unclean" and finding.severity.value == "blocking"
     )
     assert cross_period_findings, report.findings
-    m111_findings = tuple(finding for finding in cross_period_findings if "modelo=111 year=2024" in finding.message)
-    assert m111_findings, [finding.message for finding in cross_period_findings]
-    assert all("missing_current_filing_record" in finding.message for finding in m111_findings)
-    assert not any("missing_observation" in finding.message for finding in m111_findings)
-    assert not any("missing_observed_casilla" in finding.message for finding in m111_findings)
+    m111_findings = tuple(
+        finding
+        for finding in cross_period_findings
+        if finding.message_facts.get("source_modelo") == "111"
+        and finding.message_facts.get("source_filing_year") == 2024
+    )
+    assert m111_findings, cross_period_findings
+    assert all("missing_current_filing_record" in str(finding.message_facts["blocker_codes"]).split("|") for finding in m111_findings)
+    assert not any("missing_observation" in str(finding.message_facts["blocker_codes"]).split("|") for finding in m111_findings)
+    assert not any("missing_observed_casilla" in str(finding.message_facts["blocker_codes"]).split("|") for finding in m111_findings)
 
 
 def test_m190_verify_accepts_filed_1t_m111_and_attested_no_obligation_zero_quarters(
@@ -689,11 +692,17 @@ def test_m190_verify_accepts_filed_1t_m111_and_attested_no_obligation_zero_quart
         if finding.kind.value == "cross_period_dependency_unclean" and finding.severity.value == "blocking"
     )
     assert not blocking_cross_period
-    messages = tuple(finding.message for finding in report.findings)
-    assert any("no-retenciones/no-obligation" in message and "period=2T" in message for message in messages)
-    assert any("no-retenciones/no-obligation" in message and "period=3T" in message for message in messages)
-    assert any("no-retenciones/no-obligation" in message and "period=4T" in message for message in messages)
-    assert not any("missing_current_filing_record" in message and "modelo=111" in message for message in messages)
+    m111_advisories = tuple(
+        finding
+        for finding in report.findings
+        if finding.message_locale_key == "application.modelo.findings.cross_period_m111_no_retenciones"
+    )
+    assert {finding.message_facts["source_period"] for finding in m111_advisories} == {"2T", "3T", "4T"}
+    assert not any(
+        finding.message_facts.get("source_modelo") == "111"
+        and "missing_current_filing_record" in str(finding.message_facts.get("blocker_codes", "")).split("|")
+        for finding in report.findings
+    )
 
 
 # ---------------------------------------------------------------------------

@@ -8,13 +8,12 @@ from functools import lru_cache
 from typing import Final
 
 from .....application.calculations import resolve_iva_compensation_annual_partition_binding_values
-from .....core import BindingSourceKind
+from .....core import BindingSourceKind, CasillaId, validated_casilla_id
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....core.resources import resources
 from ....iva import IvaCategory, IvaExemptionArticle, IvaFlowDirection, IvaRateKind
 from .. import (
     BindingId,
-    CasillaId,
     DataBindingDefinition,
     IvaLedgerObservation,
     ModeloRevision,
@@ -24,7 +23,6 @@ from .. import (
     materialize_relation_binding_values,
     resolve_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
-    validated_casilla_id,
 )
 from .._binding_selector_utils import selector_as_dict
 from .._relations import resolve_relation_values_from_observations

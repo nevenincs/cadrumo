@@ -91,9 +91,9 @@ from ....application.filing import (
     build_draft,
     build_runtime_schema_provider,
 )
-from ....core import Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import bundled_path, resources
-from ....domain.calculations.registry import BindingId, CasillaId, ValidatedRegistryAuthority, validated_casilla_id
+from ....domain.calculations.registry import BindingId, ValidatedRegistryAuthority
 from ....domain.period import calculation_filing_date
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile

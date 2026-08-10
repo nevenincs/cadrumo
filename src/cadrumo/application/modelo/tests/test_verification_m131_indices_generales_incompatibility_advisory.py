@@ -44,12 +44,11 @@ from decimal import Decimal
 
 import pytest
 
+from ....core import CasillaId, validated_casilla_id
 from ....core.resources import bundled_path
 from ....domain.calculations.registry import (
-    CasillaId,
     VerificationPredicateDefinition,
     load_modelo_path,
-    validated_casilla_id,
 )
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos import (
@@ -146,7 +145,8 @@ def test_emits_single_advisory_warning_finding_when_pequena_dimension_ignored() 
     assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY
     assert findings[0].severity is ModeloVerificationFindingSeverity.WARNING
     assert "orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades" in findings[0].legal_refs
-    assert findings[0].message
+    assert findings[0].message_locale_key == "application.modelo.findings.registry_advisory_predicate_fired"
+    assert dict(findings[0].message_facts) == {"predicate_id": _PEQUENA_DIMENSION_PREDICATE_ID}
 
 
 def test_emits_single_advisory_warning_finding_when_temporada_inicio_conflict() -> None:
@@ -159,7 +159,8 @@ def test_emits_single_advisory_warning_finding_when_temporada_inicio_conflict() 
     assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY
     assert findings[0].severity is ModeloVerificationFindingSeverity.WARNING
     assert "orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades" in findings[0].legal_refs
-    assert findings[0].message
+    assert findings[0].message_locale_key == "application.modelo.findings.registry_advisory_predicate_fired"
+    assert dict(findings[0].message_facts) == {"predicate_id": _TEMPORADA_INICIO_PREDICATE_ID}
 
 
 def test_no_findings_when_neither_flag_fires() -> None:

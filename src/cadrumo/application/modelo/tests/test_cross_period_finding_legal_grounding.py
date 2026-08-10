@@ -17,13 +17,11 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import (
-    CasillaId,
     LegalRefId,
     SourceRefId,
-    validated_casilla_id,
     verify_legal_catalogue,
 )
 from ....domain.modelos import ModeloVerificationFindingKind
@@ -149,7 +147,8 @@ def test_iva_compensacion_dependency_finding_cites_liva_and_lgt() -> None:
     blocking = next(
         f
         for f in findings
-        if f.kind is ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN and "not clean" in f.message
+        if f.kind is ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN
+        and f.message_locale_key == "application.modelo.findings.cross_period_dependency_unclean"
     )
     assert set(_CROSS_PERIOD_DEPENDENCY_LEGAL_REFS) <= set(blocking.legal_refs)
     assert _IVA_COMPENSATION_CARRY_LEGAL_REF in blocking.legal_refs
@@ -168,7 +167,11 @@ def test_dependency_finding_carries_registry_requirement_refs() -> None:
 
     findings = _cross_period_clean_state_findings(verdict, activity_start_date=None)
 
-    blocking = next(f for f in findings if "not clean" in f.message)
+    blocking = next(
+        f
+        for f in findings
+        if f.message_locale_key == "application.modelo.findings.cross_period_dependency_unclean"
+    )
     assert set(_CROSS_PERIOD_DEPENDENCY_LEGAL_REFS) <= set(blocking.legal_refs)
     assert "rd-439-2007:art-110" in blocking.legal_refs
     assert tuple(blocking.source_refs) == ("aeat-modelo-130-instructions",)
@@ -180,7 +183,11 @@ def test_non_compensacion_dependency_finding_cites_lgt_only() -> None:
 
     findings = _cross_period_clean_state_findings(verdict, activity_start_date=None)
 
-    blocking = next(f for f in findings if "not clean" in f.message)
+    blocking = next(
+        f
+        for f in findings
+        if f.message_locale_key == "application.modelo.findings.cross_period_dependency_unclean"
+    )
     assert tuple(blocking.legal_refs) == _CROSS_PERIOD_DEPENDENCY_LEGAL_REFS
     assert _IVA_COMPENSATION_CARRY_LEGAL_REF not in blocking.legal_refs
     assert tuple(blocking.source_refs) == _DEFAULT_DEPENDENCY_SOURCE_REFS
@@ -192,7 +199,11 @@ def test_missing_activity_start_finding_cites_censo_alta() -> None:
 
     findings = _cross_period_clean_state_findings(verdict, activity_start_date=None)
 
-    activity_start = next(f for f in findings if "no activity-start date" in f.message)
+    activity_start = next(
+        f
+        for f in findings
+        if f.message_locale_key == "application.modelo.findings.cross_period_activity_start_missing"
+    )
     assert tuple(activity_start.legal_refs) == _CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS
 
 
@@ -229,10 +240,9 @@ def test_not_applicable_suppression_summary_carries_dependency_legal_refs() -> N
     assert set(_CROSS_PERIOD_DEPENDENCY_LEGAL_REFS) <= set(summary.legal_refs)
     assert _IVA_COMPENSATION_CARRY_LEGAL_REF in summary.legal_refs
     assert tuple(summary.source_refs) == _DEFAULT_DEPENDENCY_SOURCE_REFS
-    assert "--binding CLAVE=VALOR" in summary.message
-    assert "único signo igual" in summary.message
+    assert summary.message_locale_key == "application.modelo.findings.cross_period_modelo_not_applicable.message"
+    assert summary.message_facts["source_modelos"] == "303"
     assert "next_action" not in summary.model_dump(mode="json")
-    assert "corresponding casilla" not in summary.message
 
 
 def test_non_official_local_chain_advisory_carries_dependency_legal_refs() -> None:

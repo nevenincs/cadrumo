@@ -20,8 +20,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Modelo, Period, ResultDisposition
-from ....domain.calculations.registry import CasillaId, CasillaObservation, validated_casilla_id
+from ....core import CasillaId, Modelo, Period, ResultDisposition, validated_casilla_id
+from ....domain.calculations.registry import CasillaObservation
 from ....domain.iva_compensation import M303_COMPENSATION_RESULTADO_CASILLA
 from ....domain.modelos import (
     CalculationRevision,
@@ -57,14 +57,14 @@ def _work_unit(bucket_id: str) -> WorkUnit:
             modelo=Modelo.M303.value,
             filing_year=2026,
             period=period,
-            revision_id="2023-y-siguientes",
+            revision_id="2026-y-siguientes",
         ),
         bucket_id=bucket_id,
         name="303-2026-1T",
         modelo=Modelo.M303.value,
         filing_year=2026,
         period=period,
-        revision_id="2023-y-siguientes",
+        revision_id="2026-y-siguientes",
         created_at=_CAPTURED_AT,
         updated_at=_CAPTURED_AT,
     )

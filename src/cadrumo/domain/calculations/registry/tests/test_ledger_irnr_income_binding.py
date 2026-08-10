@@ -22,14 +22,13 @@ from decimal import Decimal
 
 import pytest
 
+from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
 from .. import (
-    CasillaId,
     build_snapshot,
     resolve_ledger_irnr_income_aggregation_binding_values,
     unsupported_ledger_irnr_income_observations,
     validate_ledger_irnr_income_aggregation_binding_definition,
-    validated_casilla_id,
 )
 from .._binding_selector_utils import selector_as_dict
 from ._registry_schema_support import _committed_modelo

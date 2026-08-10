@@ -8,15 +8,13 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import Period
+from .....core import CasillaId, Period, validated_casilla_id
 from .....core.resources import resources
 from .....domain.calculations.registry import (
     BindingId,
-    CasillaId,
     RegistryValidationError,
     RelationId,
     calculate_registry_snapshot,
-    validated_casilla_id,
 )
 from .....domain.calculations.registry import (
     CasillaObservation as CasillaObservation,

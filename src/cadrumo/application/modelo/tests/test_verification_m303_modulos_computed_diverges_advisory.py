@@ -24,8 +24,9 @@ from decimal import Decimal
 
 import pytest
 
+from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaId, VerificationPredicateDefinition, validated_casilla_id
+from ....domain.calculations.registry import VerificationPredicateDefinition
 from ....domain.modelos import ModeloVerificationFindingKind
 from .._verification_actions import _evaluate_advisory_predicate_fires, _evaluate_verification_predicates
 from ._verification_substance_support import _workflow_profile
@@ -51,7 +52,7 @@ def _predicate() -> VerificationPredicateDefinition:
 
 def test_advisory_ships_on_the_2023_y_siguientes_revision() -> None:
     """The shipped registry revision carries the computed-diverges predicate."""
-    revision = resources().modelos.authority.validate_modelo("303").revisions["2023-y-siguientes"]
+    revision = resources().modelos.authority.snapshot("303", filing_year=2023, period="1T").revision
     target_predicate_id = "modelo-303-2023-modulos-iva-computed-diverges-de-c48"
     predicate = next(p for p in revision.verification_predicates if p.predicate_id == target_predicate_id)
     assert predicate.finding_kind == "ADVISORY"

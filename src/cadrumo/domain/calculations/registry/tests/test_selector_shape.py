@@ -37,8 +37,8 @@ from collections.abc import Mapping
 import pytest
 from pydantic import ValidationError
 
+from .....core import CasillaId, validated_casilla_id
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
-from .. import CasillaId, validated_casilla_id
 from .._binding_selector_utils import selector_as_dict
 from .._bindings import (
     _BINDING_SELECTOR_REGISTRY,

@@ -26,11 +26,11 @@ import json
 
 import pytest
 
+from .....core import CasillaId, validated_casilla_id
 from .._external_grounding import (
     BUNDLED_ORACLE_EVIDENCE_LOCATOR_MAX_LENGTH,
     RentaWebOpenReplayPayload,
 )
-from .._ids import CasillaId, validated_casilla_id
 from .._renta_web_open_oracle import RentaWebOpenReplayDriver
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

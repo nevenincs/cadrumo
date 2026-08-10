@@ -28,15 +28,13 @@ from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from ...core import Period
+from ...core import CasillaId, Period, validated_casilla_id
 from ...domain import canonical_decimal_string as _canonical_decimal_str
 from ...domain.calculations.registry import (
     BindingId,
-    CasillaId,
     ModeloRevision,
     RegistrySnapshot,
     RelationId,
-    validated_casilla_id,
 )
 from ...domain.modelos import WorkUnit
 from ..aggregation import CalculationSourceResolution, merge_source_resolutions_by_precedence

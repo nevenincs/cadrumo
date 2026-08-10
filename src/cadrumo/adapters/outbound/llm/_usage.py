@@ -1,6 +1,6 @@
 """Encrypted usage recorder for LLM calls.
 
-Persists :class:`adapters.outbound.llm.UsageRecord` payloads under
+Persists :class:`llm.UsageRecord` payloads under
 :data:`adapters.persistence.storage.LLM_USAGE_NAMESPACE` in the encrypted
 SQL secure-object backend and exposes load and aggregate helpers. Records are
 routed through :func:`core.redaction.redact_structured` at
@@ -35,7 +35,7 @@ class UsageRecorder:
     """Append LLM usage records to encrypted secure objects.
 
     Each call to :meth:`record` stores one redacted
-    :class:`adapters.outbound.llm.UsageRecord` through
+    :class:`llm.UsageRecord` through
     :func:`adapters.persistence.storage.secure_object_repository_for_active_bucket`
     under the recorder's logical root.
 
@@ -53,10 +53,10 @@ class UsageRecorder:
         self.root_dir = root_dir or load_settings().cadrumo_llm_usage_dir
 
     def build_record(self, response: LLMResponse, prompt_id: str, caller: str) -> UsageRecord:
-        """Build a :class:`adapters.outbound.llm.UsageRecord` from a response.
+        """Build a :class:`llm.UsageRecord` from a response.
 
         Args:
-            response: Public :class:`adapters.outbound.llm.LLMResponse`
+            response: Public :class:`llm.LLMResponse`
                 model.
             prompt_id: Stable prompt identifier (e.g. ``"translation_v1"``).
             caller: Stable caller identifier used for cost attribution.
@@ -95,7 +95,7 @@ class UsageRecorder:
             Logical daily usage path for operator display only.
 
         Raises:
-            :exc:`adapters.outbound.llm.LLMCacheError`: When the storage
+            :exc:`llm.LLMCacheError`: When the storage
             write fails.
         """
         path = self.root_dir / f"usage-{record.created_at.date().isoformat()}.jsonl"
@@ -135,7 +135,7 @@ class UsageRecorder:
             until: Inclusive upper date bound, or ``None`` for no upper bound.
 
         Returns:
-            Loaded :class:`adapters.outbound.llm.UsageRecord` entries in
+            Loaded :class:`llm.UsageRecord` entries in
             file-iteration order.
         """
         records: list[UsageRecord] = []
@@ -216,7 +216,7 @@ class UsageRecorder:
         return removed
 
     def summarize(self, since: date | None = None, until: date | None = None) -> UsageSummary:
-        """Aggregate usage records into a :class:`adapters.outbound.llm.UsageSummary`.
+        """Aggregate usage records into a :class:`llm.UsageSummary`.
 
         Args:
             since: Inclusive lower date bound, or ``None`` for no lower bound.

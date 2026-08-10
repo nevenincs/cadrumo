@@ -13,11 +13,10 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import Period
+from ....core import CasillaId, Period
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     KNOWN_VERIFICATION_PREDICATE_OPERATORS,
-    CasillaId,
     parse_verification_predicate_expression,
 )
 from ....domain.modelos import (

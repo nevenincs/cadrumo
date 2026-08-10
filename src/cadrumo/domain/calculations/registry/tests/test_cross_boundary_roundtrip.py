@@ -21,7 +21,7 @@ from typing import TypedDict, get_type_hints
 import pytest
 from pydantic import ValidationError
 
-from .....core import Period
+from .....core import CasillaId, Period, validated_casilla_id
 from .....core.identity import SubjectTaxId
 from ....filing import (
     ModeloBindingValue,
@@ -37,7 +37,7 @@ from ....modelos import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from .. import CasillaId, RegistrySnapshotRef, validated_casilla_id
+from .. import RegistrySnapshotRef
 from .._bindings import (
     CasillaObservation,
     OracleModeloObservation,

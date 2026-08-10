@@ -361,7 +361,7 @@ def _record_injected_classifier_run[T](run: Callable[[], T], *, provider: str) -
     time-unaware, per hexagonal layering -- the domain layer must not import the
     storage-touching recorder). Records duration and outcome via
     :class:`~adapters.outbound.llm.LLMRunTelemetryRecorder`, mirroring the
-    recording :class:`~adapters.outbound.llm.LLMClient.complete` performs
+    recording :class:`~llm.LLMClient.complete` performs
     for the on-host vision transport. A run-telemetry write failure never masks
     the real classification result or a real classifier error.
     """

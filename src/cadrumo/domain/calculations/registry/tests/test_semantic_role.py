@@ -25,9 +25,10 @@ from typing import Any, Literal, TypedDict
 import pytest
 from pydantic import ValidationError
 
+from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
 from .....tests.locales_root_fixture import locales_root_scope
-from .. import CasillaId, load_modelo_path, validated_casilla_id
+from .. import load_modelo_path
 from .._schema import (
     CasillaAlias,
     CasillaConstraints,
@@ -708,7 +709,7 @@ class TestTypoTwinWarning:
             ("100", "2025", "2155", "irpf_deduccion_murcia_vehiculo_importe"),
             ("100", "2025", "2246", "irpf_deduccion_canarias_acciones_participaciones"),
             # M303 compensacion-pendiente roles appear in both 2009-y-siguientes and
-            # 2023-y-siguientes revisions; the validator requires unique occurrence for
+            # post-2022 Modelo 303 revisions; the validator requires unique occurrence for
             # intentional_singleton, so they carry semantic_role_cardinality="shared".
             ("369", "esquema-union", "iva.union.de.services-cuota", "iva_oss_union_servicios_destino_de_cuota"),
             ("369", "esquema-union", "iva.union.fr.services-cuota", "iva_oss_union_servicios_destino_fr_cuota"),

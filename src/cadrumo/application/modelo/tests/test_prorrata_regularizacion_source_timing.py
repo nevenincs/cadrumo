@@ -29,9 +29,8 @@ from typing import Any
 
 import pytest
 
-from ....core import Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import bundled_path, resources
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
 from .._calculation_source_staging import (
     _PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS,

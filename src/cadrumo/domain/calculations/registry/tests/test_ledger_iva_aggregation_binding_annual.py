@@ -7,13 +7,11 @@ from decimal import Decimal
 
 import pytest
 
+from .....core import CasillaId
 from ....iva import (
     IvaCategory,
     IvaFlowDirection,
     IvaRateKind,
-)
-from .. import (
-    CasillaId,
 )
 from ._ledger_iva_aggregation_support import (
     _M303_COMPENSACION_GENERADA_PERIODO_CASILLA,

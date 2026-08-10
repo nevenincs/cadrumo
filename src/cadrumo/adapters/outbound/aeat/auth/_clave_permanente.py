@@ -561,10 +561,8 @@ class ClavePermanenteAuthProvider:
         if surface.elevation_sms_marker.casefold() in normalized:
             raise _login_error(
                 "AEAT requested SMS-OTP elevation, which the read-path Cl@ve "
-                "Permanente flow cannot satisfy headlessly. Use the "
-                "certificate or Cl@ve Móvil provider for this operation.",
+                "Permanente flow cannot satisfy headlessly.",
                 failure_mode=ClavePermanenteFailureMode.ELEVATION_REQUIRED,
-                suggestion="Retry with `--provider certificate` or `--provider clave_movil`.",
             )
         if surface.account_locked_marker.casefold() in normalized:
             raise _login_error(
@@ -668,10 +666,6 @@ class ClavePermanenteAuthProvider:
                     f"within {self._navigation_timeout_ms // 1000} seconds.",
                     failure_mode=ClavePermanenteFailureMode.INITIAL_NAVIGATION_TIMEOUT,
                     context={"timeout_ms": self._navigation_timeout_ms, "target_path": target_path},
-                    suggestion=(
-                        "Retry the live read after confirming the AEAT Sede is reachable, "
-                        "or increase CADRUMO_BROWSER_NAVIGATION_TIMEOUT_MS for slow network conditions."
-                    ),
                 ) from exc
 
             log.info("ClavePermanenteAuthProvider: starting fresh login")

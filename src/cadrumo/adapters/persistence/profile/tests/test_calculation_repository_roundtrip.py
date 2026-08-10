@@ -29,12 +29,11 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from .....core import CasillaId, validated_casilla_id
 from .....domain.calculations.registry import (
-    CasillaId,
     CasillaObservation,
     RegistryCalculationUnresolvedOutcome,
     RegistryUnresolvedOutcomeReason,
-    validated_casilla_id,
 )
 from .....domain.modelos import (
     CalculationRevision,

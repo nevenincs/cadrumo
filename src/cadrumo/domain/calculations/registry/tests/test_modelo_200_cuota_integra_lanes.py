@@ -29,6 +29,7 @@ from decimal import Decimal
 
 import pytest
 
+from .....core import CasillaId, validated_casilla_id
 from ....deadlines import (
     EntityType,
     IVARegime,
@@ -36,11 +37,9 @@ from ....deadlines import (
     TaxpayerProfile,
 )
 from .. import (
-    CasillaId,
     Modelo202Modality,
     calculate_registry_snapshot,
     derive_modelo_202_modality,
-    validated_casilla_id,
 )
 from ._registry_schema_support import _committed_snapshot
 

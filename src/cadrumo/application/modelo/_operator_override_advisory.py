@@ -32,7 +32,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from ...domain.calculations.registry import CasillaId, ModeloRevision, casillas_by_id
+from ...core import CasillaId
+from ...domain.calculations.registry import ModeloRevision, casillas_by_id
 from ..aggregation import CalculationSourceDiagnostic
 
 __all__ = ["collect_operator_override_divergence_diagnostics"]

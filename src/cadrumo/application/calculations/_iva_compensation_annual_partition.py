@@ -15,12 +15,11 @@ from decimal import Decimal
 from typing import Final
 
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
-from ...core import BindingSourceKind, Modelo, Period
+from ...core import BindingSourceKind, CasillaId, Modelo, Period
 from ...core.logging import get_logger
 from ...core.time import now
 from ...domain.calculations.registry import (
     BindingId,
-    CasillaId,
     ModeloRevision,
     RegistryModeloObservation,
     RegistrySnapshot,

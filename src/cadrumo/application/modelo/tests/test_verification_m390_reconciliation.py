@@ -8,11 +8,10 @@ from functools import lru_cache
 
 import pytest
 
+from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaId,
     VerificationPredicateDefinition,
-    validated_casilla_id,
 )
 from ....domain.modelos import (
     ModeloVerificationFindingKind,

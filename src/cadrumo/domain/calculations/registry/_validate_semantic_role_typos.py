@@ -9,7 +9,7 @@ from difflib import SequenceMatcher
 from functools import lru_cache
 from typing import NamedTuple, Protocol
 
-from ._ids import CasillaId
+from ....core import CasillaId
 from ._validate_semantic_role_axes import (
     semantic_roles_are_axis_siblings,
     semantic_roles_are_tax_domain_siblings,

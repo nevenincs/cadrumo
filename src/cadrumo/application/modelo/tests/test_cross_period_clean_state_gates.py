@@ -17,12 +17,10 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaId,
     RegistryModeloObservation,
-    validated_casilla_id,
 )
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.justificante import Justificante
@@ -371,7 +369,7 @@ def test_cross_period_clean_state_blockers_remain_factual_without_recovery_prose
     (finding,) = _cross_period_clean_state_findings(_clean_state_repair_verdict(evidence))
 
     assert finding.severity.value == "blocking"
-    assert "blockers=missing_expected_group_member_roster" in finding.message
+    assert "missing_expected_group_member_roster" in str(finding.message_facts["blocker_codes"]).split("|")
     assert "next_action" not in finding.model_dump(mode="json")
 
 def test_verify_modelo_390_persists_cross_period_clean_state_blockers_when_prior_filings_are_missing(
@@ -411,7 +409,8 @@ def test_verify_modelo_390_persists_cross_period_clean_state_blockers_when_prior
     assert report.granted_verificado_completo is False
     assert cross_period_findings
     assert any(
-        "modelo=303" in finding.message and "blockers=missing_observation" in finding.message
+        finding.message_facts.get("source_modelo") == "303"
+        and "missing_observation" in str(finding.message_facts["blocker_codes"]).split("|")
         for finding in cross_period_findings
     )
     assert all("next_action" not in finding.model_dump(mode="json") for finding in cross_period_findings)
@@ -462,7 +461,8 @@ def test_verify_modelo_390_refuses_csv_register_prior_filing_without_justificant
     )
     assert report.granted_verificado_completo is False
     assert any(
-        "period=1T" in finding.message and "blockers=missing_external_evidence_record" in finding.message
+        finding.message_facts.get("source_period") == "1T"
+        and "missing_external_evidence_record" in str(finding.message_facts["blocker_codes"]).split("|")
         for finding in cross_period_findings
     )
 
@@ -509,7 +509,8 @@ def test_verify_fails_closed_when_profile_records_no_activity_start_date(tmp_pat
     fail_closed_findings = tuple(
         finding
         for finding in report.findings
-        if finding.kind.value == "cross_period_dependency_unclean" and "no activity-start date" in finding.message
+        if finding.kind.value == "cross_period_dependency_unclean"
+        and finding.message_locale_key == "application.modelo.findings.cross_period_activity_start_missing"
     )
     assert fail_closed_findings
     finding = fail_closed_findings[0]

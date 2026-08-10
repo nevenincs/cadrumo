@@ -50,7 +50,7 @@ from decimal import Decimal
 
 import pytest
 
-from .. import CasillaId, validated_casilla_id
+from .....core import CasillaId, validated_casilla_id
 from .._formula_runtime import calculate_registry_snapshot
 from .._schema import InputKind, ParameterDefinition
 from .._validate_revision_rules import _bracket_coverage_gaps

@@ -39,8 +39,9 @@ from typing import Literal
 
 from pydantic import Field, field_validator, model_validator
 
+from ....core import CasillaId
 from ._errors import RegistryValidationError
-from ._ids import CasillaId, ExtractionProfileId
+from ._ids import ExtractionProfileId
 from ._schema_base import LegalRefs, RegistryModel, SourceRefs
 from ._schema_scalars import DecimalValue
 

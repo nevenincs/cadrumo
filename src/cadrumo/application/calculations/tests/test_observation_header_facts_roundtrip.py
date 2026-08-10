@@ -43,12 +43,10 @@ from ....adapters.persistence.storage.crypto import (
 )
 from ....adapters.persistence.storage.sql import SecureObjectRow
 from ....adapters.persistence.storage.sql.session import session_scope
-from ....core import ObservedHeaderFact, Period
+from ....core import CasillaId, ObservedHeaderFact, Period, validated_casilla_id
 from ....domain.calculations.registry import (
-    CasillaId,
     CasillaObservation,
     RegistryModeloObservation,
-    validated_casilla_id,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .._observations_repository import (

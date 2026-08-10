@@ -9,8 +9,8 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
-from ....core import M210GrossIncomeSourceMode
-from ...calculations.registry import CasillaId, RelationId, validated_casilla_id
+from ....core import CasillaId, M210GrossIncomeSourceMode, validated_casilla_id
+from ...calculations.registry import RelationId
 from .._calculation_revision import CalculationRevision, CalculationRevisionState, derive_calculation_revision_id
 from .._errors import ModeloValidationError
 

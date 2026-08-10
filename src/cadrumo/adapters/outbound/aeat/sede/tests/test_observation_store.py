@@ -11,9 +11,8 @@ from typing import Literal
 import pytest
 from pydantic import AnyHttpUrl
 
-from ......core import CasillaValueKind, Period
+from ......core import CasillaId, CasillaValueKind, Period, validated_casilla_id
 from ......core.config import Settings
-from ......domain.calculations.registry import CasillaId, validated_casilla_id
 from ......tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._errors import SedeValidationError
 from .._observation_store import FiledDeclaracionObservationStore
