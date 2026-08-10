@@ -424,24 +424,47 @@ def test_history_refuses_a_direct_available_generated_pair_mismatch_before_eithe
         )
 
 
-def test_history_refuses_legacy_envelopes_while_leaving_them_readable(tmp_path: Path) -> None:
+def test_generic_storage_admits_undisposed_official_m303_and_only_carry_refuses(tmp_path: Path) -> None:
+    """Generic storage persists official M303 evidence with no resolved disposition.
+
+    This records a KNOWN OPEN GAP, not a designed tolerance. An official Modelo
+    303 observation that resolves no result disposition is stored and reloads
+    equal; nothing refuses it until a downstream reader tries to treat it as
+    carry evidence. Until then the row sits in the store looking like every
+    other official observation.
+
+    A refusal was attempted at this write boundary twice and removed both
+    times. The reason it was removed is worth more than the attempts: the
+    discriminating fact is not present in the payload. Keying on a resolved
+    disposition refused callers whose disposition was fully evidenced by the
+    submitted-file declaration-type header; keying additionally on that header
+    still refused a large legitimate population that carries no header at all,
+    because the casilla that makes a row look carry-capable is the ordinary
+    statutory result box every M303 observation declares. So the condition
+    separating an under-declared row from a legitimate one cannot be read from
+    what the envelope carries at the moment it is written.
+
+    The gap is carried as tracked work rather than closed here. This test is
+    the honest statement of the current behaviour, so a later reader finds the
+    hole described rather than finding silence and inferring intent.
+    """
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = CalculationObservationRepository()
-        legacy = repository.save_observation(
+        undisposed = repository.save_observation(
             _observation(filing_year=2025, result=-_CREDIT, generated=_CREDIT),
             source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
             captured_at=_WHEN,
             source_headers=(_header("C"),),
         )
 
-        assert repository.load_observation("303", Period.from_year_and_code(2025, "1T")) == legacy
+        assert repository.load_observation("303", Period.from_year_and_code(2025, "1T")) == undisposed
         with pytest.raises(M303CarryIngressError):
             iva_compensation_state_from_observation_envelope(
-                legacy,
+                undisposed,
                 taxpayer_nif="12345678Z",
-                expediente_id="EXP-LEGACY",
+                expediente_id="EXP-UNDISPOSED",
                 status="ALTA",
-                source_observation_key="303:2025:1T:EXP-LEGACY",
+                source_observation_key="303:2025:1T:EXP-UNDISPOSED",
             )
 
 
