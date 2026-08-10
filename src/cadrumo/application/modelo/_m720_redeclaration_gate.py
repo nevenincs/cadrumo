@@ -62,6 +62,30 @@ def modelo_720_redeclaration_findings(
     nothing independent to compare, and a fabricated zero baseline would
     manufacture advisories on first-year filings.
 
+    **THIS ADVISORY CANNOT FIRE IN PRODUCTION TODAY, AND THAT IS A
+    DELIBERATE BOUNDARY RATHER THAN A DEFECT.** The evidence side is read
+    from the revision's foreign-asset row bindings, which are written only
+    when a caller supplies foreign-asset observations to the calculation.
+    No production caller does: the single calculate entry point takes an
+    input bundle carrying no observation field of any kind, and every
+    operator surface routes through it. So the resolver runs with an empty
+    collection, the evidence projection joins nothing, and the guard below
+    returns at its own evidence check.
+
+    The observations parameter on the aggregation path is an explicit
+    injection point left for a durable foreign-asset observation store that
+    was consciously not approved when this resolver was enrolled. Nothing is
+    broken between here and the registry: the producer, the row-binding
+    replay and this projection agree on binding id, row-index key and value
+    form.
+
+    The consequence is worth stating plainly, because everything visible
+    argues the other way. This module is wired to the verification path, its
+    end-to-end test passes, and the paragraph above correctly says no
+    formula, total or export gate can notice a re-declaration omission. A
+    reviewer doing everything right concludes the omission case is covered.
+    It is not covered, and it will not be until the store lands.
+
     Args:
         work_unit: The unit under verification; its modelo, filing year and
             period drive the law-determined revision resolution.

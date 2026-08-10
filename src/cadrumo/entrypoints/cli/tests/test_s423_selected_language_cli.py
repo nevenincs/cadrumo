@@ -199,7 +199,6 @@ def _create_modelo_revision(
         "draft_state",
         "formula_labels",
         "advisory_prefix",
-        "next_action",
         "already_verified_phrase",
     ),
     [
@@ -210,7 +209,6 @@ def _create_modelo_revision(
             "Esborrany",
             ("resta(", "màxim(", "percentatge(", "condicional(", "mínim("),
             "dependència entre períodes exclosa perquè no hi ha obligació prèvia",
-            "Confirmeu que la data d’inici de l’activitat registrada és correcta.",
             "ja està verificada",
         ),
         (
@@ -220,7 +218,6 @@ def _create_modelo_revision(
             "Piszkozat",
             ("kivonás(", "maximum(", "százalék(", "feltételes(", "minimum("),
             "az időszakok közötti függőség korábbi kötelezettség hiányában kizárva",
-            "Ellenőrizze, hogy a rögzített tevékenységkezdési dátum helyes.",
             "már ellenőrzött",
         ),
     ],
@@ -233,7 +230,6 @@ def test_selected_languages_cover_parser_calculation_and_verification_without_s1
     draft_state: str,
     formula_labels: tuple[str, ...],
     advisory_prefix: str,
-    next_action: str,
     already_verified_phrase: str,
 ) -> None:
     """Exercise the real entrypoint and persisted M130 work for each selected locale."""
@@ -353,7 +349,6 @@ def test_selected_languages_cover_parser_calculation_and_verification_without_s1
     verification_output = _combined_output(verification)
     assert verification.returncode == 0, verification_output
     assert advisory_prefix in verification_output
-    assert next_action in verification_output
     assert "cross-period dependency scoped out" not in verification_output
     assert "Confirm the recorded activity-start date" not in verification_output
 
@@ -441,11 +436,9 @@ def test_cross_locale_verify_reuses_one_persisted_report_and_localizes_its_proje
             break
     assert finding is not None
     message = finding["message"]
-    next_action = finding["next_action"]
     assert isinstance(message, str)
-    assert isinstance(next_action, str)
     assert "modelo=100 year=2025 period=0A origin=previous_filing_binding" in message
-    assert next_action.startswith("Confirm the recorded activity-start date is correct.")
+    assert "next_action" not in finding
 
 
 def test_cross_locale_non_granted_m390_verify_reuses_one_report_for_one_draft(tmp_path: Path) -> None:

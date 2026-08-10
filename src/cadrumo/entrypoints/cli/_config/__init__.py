@@ -24,7 +24,7 @@ from ....core.json_contract import NoticeSeverity as _NoticeSeverity
 from ....core.logging import get_logger as _get_logger
 from ....core.wizard_catalogue import get_setup_flow as _get_setup_flow
 from .._command_suggestions import CadrumoTyperGroup as _CadrumoTyperGroup
-from .._common import _emit_envelope, resolve_notice_action
+from .._common import _emit_envelope, resolve_cli_precondition_action, resolve_notice_action
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from ._apoderado import apoderado_app, register_apoderado_commands
@@ -53,6 +53,7 @@ from ._repair_profile import register_repair_profile_command
 from ._reset_cli import register_reset_commands
 from ._sandbox import register_sandbox_commands
 from ._status_rendering import blocked_readiness_status as _blocked_readiness_status
+from ._status_rendering import precondition_action_lines as _precondition_action_lines
 from ._status_rendering import unavailable_profile_record_status as _unavailable_profile_record_status
 from ._storage_cli import register_storage_commands as _register_storage_commands
 from ._storage_cli import storage_app as storage_app
@@ -603,21 +604,36 @@ def config_status(
     # profiles by their label, so resolve it for every display line.
     active_uuid = profile_health.active_profile
     _active_pointer = read_profile_bucket_by_id(active_uuid) if active_uuid else None
-    active_profile = _active_pointer.label if _active_pointer is not None else active_uuid
+    active_profile = _active_pointer.label if _active_pointer is not None else None
+    health_action = (
+        resolve_cli_precondition_action(profile_health.precondition_verdict)
+        if profile_health.precondition_verdict is not None
+        else None
+    )
     if profile_health.status == "none":
-        result = ConfigStatusResult(active_profile=None, registered_profile=False, configured=False)
+        result = ConfigStatusResult(
+            active_profile=None,
+            registered_profile=False,
+            configured=False,
+            precondition_action=health_action,
+        )
         _emit_envelope(
             ctx,
             command="config.profile.status",
             result=result,
             lines=(
                 tr("cli.config.status.empty_profile"),
-                f"next_action\t{profile_health.next_action}",
+                *_precondition_action_lines(health_action),
             ),
         )
         return
     if profile_health.status == "dangling_pointer":
-        result = ConfigStatusResult(active_profile=active_profile, registered_profile=False, configured=False)
+        result = ConfigStatusResult(
+            active_profile=active_profile,
+            registered_profile=False,
+            configured=False,
+            precondition_action=health_action,
+        )
         _emit_envelope(
             ctx,
             command="config.profile.status",
@@ -626,7 +642,7 @@ def config_status(
                 f"profile\t{active_profile}",
                 "readiness\tdangling_pointer",
                 "registered_profile\tmissing",
-                f"next_action\t{profile_health.next_action}",
+                *_precondition_action_lines(health_action),
             ),
         )
         raise typer.Exit(code=2)
@@ -635,7 +651,7 @@ def config_status(
             active_profile=active_profile,
             status=profile_health.status,
             profile_record_error=profile_health.profile_record_error,
-            next_action=profile_health.next_action,
+            precondition_action=health_action,
         )
         _emit_envelope(ctx, command="config.profile.status", result=result, lines=lines)
         raise typer.Exit(code=2)
@@ -646,7 +662,7 @@ def config_status(
             active_profile=active_profile,
             status="missing_profile_record",
             profile_record_error=None,
-            next_action=profile_health.next_action,
+            precondition_action=health_action,
         )
         _emit_envelope(ctx, command="config.profile.status", result=result, lines=lines)
         raise typer.Exit(code=2)
@@ -656,8 +672,7 @@ def config_status(
             active_profile=active_profile,
             profile_id=active_uuid,
             values=values,
-            line_next_action=profile_health.next_action,
-            result_next_action=profile_health.next_action,
+            precondition_action=health_action,
             missing_required=profile_health.missing_required,
         )
         _emit_envelope(ctx, command="config.profile.status", result=result, lines=lines)
@@ -674,8 +689,7 @@ def config_status(
             active_profile=active_profile,
             profile_id=None,
             values=values,
-            line_next_action=f"aeat config profile edit {active_profile}",
-            result_next_action=None,
+            precondition_action=None,
         )
         lines = (tr("cli.config.status.empty_profile"),) if active_profile is None else blocked_lines
         _emit_envelope(ctx, command="config.profile.status", result=result, lines=lines)
@@ -709,7 +723,6 @@ def config_status(
         configured=True,
         iva_regime=values.get("iva.regime", ""),
         tax_residence_ccaa=values.get("tax_residence.ccaa", ""),
-        next_action="aeat app overview status",
     )
     _emit_envelope(
         ctx,

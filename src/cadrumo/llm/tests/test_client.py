@@ -13,6 +13,7 @@ from contextlib import contextmanager
 from http import HTTPStatus
 from pathlib import Path
 from queue import Queue
+from typing import override
 
 import pytest
 from pydantic import SecretStr
@@ -57,6 +58,7 @@ def _serve_ollama(status: HTTPStatus = HTTPStatus.OK) -> Iterator[tuple[str, Que
     events: Queue[dict[str, object]] = Queue()
 
     class _OllamaEndpoint(SilentLoopbackHandler):
+        @override
         def do_POST(self) -> None:
             events.put({"path": self.path, "body": read_json_body(self)})
             payload = ollama_chat_reply(" local completion ") if status is HTTPStatus.OK else {"error": status.phrase}

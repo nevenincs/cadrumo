@@ -84,6 +84,7 @@ _PREDICATE_PROFILE_FIELD_REQUIRED = _re.compile(r'^profile_field_required\("(?P<
 _M349_NUMERO_RECTIFICACIONES_CASILLA: CasillaId = "decl.numero-rectificaciones"
 _M349_IMPORTE_RECTIFICACIONES_CASILLA: CasillaId = "decl.importe-rectificaciones"
 
+
 # Per-advisory fallback message for advisory predicates whose finding text is
 # not (yet) carried in the locale catalogue. The advisory finding message is
 # resolved via ``tr(advisory_key, default=...)``: a registered locale key still
@@ -515,6 +516,11 @@ def _m210_unresolved_outcome_findings(
     snapshot: RegistrySnapshot,
     year: int,
     tipo_renta: str,
+    blocking_finding_observer: Callable[
+        [ModeloVerificationFinding, RegistryCalculationUnresolvedOutcome],
+        None,
+    ]
+    | None = None,
 ) -> list[ModeloVerificationFinding]:
     """Convert typed M210 unresolved engine outcomes into verification findings.
 
@@ -530,6 +536,9 @@ def _m210_unresolved_outcome_findings(
         resolved_tipo_renta = tipo_renta or outcome.context.get("tipo_renta", "")
         _rate, obs_findings = _resolve_m210_rate(profile, resolved_tipo_renta, year, snapshot)
         findings.extend(obs_findings)
+        if blocking_finding_observer is not None:
+            for finding in obs_findings:
+                blocking_finding_observer(finding, outcome)
     return findings
 
 
@@ -812,6 +821,11 @@ def _evaluate_verification_predicates(
     casilla_values: Mapping[CasillaId, Decimal],
     profile: TaxpayerProfile,
     text_values: Mapping[CasillaId, str] = MappingProxyType({}),
+    blocking_finding_observer: Callable[
+        [ModeloVerificationFinding, VerificationPredicateDefinition],
+        None,
+    ]
+    | None = None,
 ) -> list[ModeloVerificationFinding]:
     """Evaluate Layer 2 cross-casilla predicates into verification findings.
 
@@ -865,18 +879,19 @@ def _evaluate_verification_predicates(
                 )
         else:
             if not _evaluate_predicate_expression(predicate.expression, casilla_values, profile):
-                findings.append(
-                    ModeloVerificationFinding(
-                        kind=ModeloVerificationFindingKind.BLOCKING_RULE,
-                        severity=ModeloVerificationFindingSeverity.BLOCKING,
-                        message=tr(
-                            "application.modelo.findings.cross_casilla_invariant_violated",
-                            predicate_id=predicate.predicate_id,
-                            expression=predicate.expression,
-                        ),
-                        legal_refs=tuple(str(r) for r in predicate.legal_refs),
+                finding = ModeloVerificationFinding(
+                    kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+                    severity=ModeloVerificationFindingSeverity.BLOCKING,
+                    message=tr(
+                        "application.modelo.findings.cross_casilla_invariant_violated",
+                        predicate_id=predicate.predicate_id,
+                        expression=predicate.expression,
                     ),
+                    legal_refs=tuple(str(r) for r in predicate.legal_refs),
                 )
+                findings.append(finding)
+                if blocking_finding_observer is not None:
+                    blocking_finding_observer(finding, predicate)
     return findings
 
 

@@ -1,4 +1,4 @@
-"""Real contract tests for verification finding precondition projections."""
+"""Real contract tests for modelo verification precondition projections."""
 
 from __future__ import annotations
 
@@ -15,22 +15,18 @@ from ....domain.modelos import (
     VerificationReport,
     derive_verification_report_id,
 )
-from ...operator_actions import (
-    ActionConditionality,
-    NoRecoveryOutcome,
-    lookup_action,
-)
+from ...operator_actions import ActionConditionality, ConditionEvidenceProvenance, NoRecoveryOutcome
 from .._verification_preconditions import (
     ModeloVerificationResult,
     VerificationFindingPreconditionProjection,
-    project_registry_snapshot_unresolved_finding,
-    project_verification_finding_no_recovery,
+    build_verification_precondition_failure,
     project_verification_findings,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CALCULATION_REVISION_ID = "a" * 64
+_WORK_UNIT_ID = "b" * 64
 _LEGAL_REFS = ("ley-58-2003:art-119",)
 
 
@@ -42,7 +38,7 @@ def _finding(*, severity: ModeloVerificationFindingSeverity) -> ModeloVerificati
             else ModeloVerificationFindingKind.ADVISORY
         ),
         severity=severity,
-        message="verification evidence is incomplete",
+        message="application.modelo.findings.test_evidence",
         legal_refs=_LEGAL_REFS,
     )
 
@@ -64,80 +60,97 @@ def _blocked_report(findings: tuple[ModeloVerificationFinding, ...]) -> Verifica
     )
 
 
-def test_warning_finding_has_no_recovery_slot() -> None:
-    projection = project_verification_finding_no_recovery(
-        _finding(severity=ModeloVerificationFindingSeverity.WARNING),
+def test_registry_snapshot_failure_is_exactly_linked_to_the_canonical_action() -> None:
+    finding = _finding(severity=ModeloVerificationFindingSeverity.BLOCKING)
+    failure = build_verification_precondition_failure(
         calculation_revision_id=_CALCULATION_REVISION_ID,
+        work_unit_id=_WORK_UNIT_ID,
+        condition_id="modelo.work.verify.registry_snapshot.available",
+        scenario_id="modelo.work.verify.registry_snapshot.unavailable",
+        evidence_id="modelo.work.verify.registry_snapshot",
+        evidence_values={"modelo": "303", "year": 2026, "period": "1T"},
+        provenance=ConditionEvidenceProvenance.REGISTRY_RECORD,
+        action_id="operator.registry.verify",
     )
 
-    assert projection.precondition_verdict is None
-
-
-def test_blocking_finding_projects_an_explicit_operator_decision_outcome() -> None:
-    projection = project_verification_finding_no_recovery(
-        _finding(severity=ModeloVerificationFindingSeverity.BLOCKING),
-        calculation_revision_id=_CALCULATION_REVISION_ID,
+    (projection,) = project_verification_findings(
+        (finding,),
+        failures_by_finding_id={id(finding): failure},
     )
 
-    verdict = projection.precondition_verdict
-    assert verdict is not None
-    assert verdict.failed_condition_id == "modelo.verification.blocking_rule"
-    assert verdict.action is None
-    assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
-    assert verdict.conditionality is ActionConditionality.NOT_APPLICABLE
-    assert verdict.evidence[0].values == {
-        "calculation_revision_id": _CALCULATION_REVISION_ID,
-        "finding_kind": "blocking_rule",
-        "is_blocking": True,
-    }
+    assert projection.precondition_failure is failure
+    assert failure.identity == (
+        "modelo.work.verify",
+        "modelo.work.verify.registry_snapshot.available",
+        "modelo.work.verify.registry_snapshot.unavailable",
+    )
+    assert failure.verdict.action is not None
+    assert failure.verdict.action.action_id == "operator.registry.verify"
+    assert failure.verdict.argument_bindings == ()
+    assert failure.verdict.conditionality is ActionConditionality.IMMEDIATE
 
 
-def test_registry_snapshot_projection_selects_the_registered_zero_argument_action() -> None:
-    projection = project_registry_snapshot_unresolved_finding(
-        _finding(severity=ModeloVerificationFindingSeverity.BLOCKING),
+def test_operator_decision_failure_preserves_branch_identity_and_typed_facts() -> None:
+    failure = build_verification_precondition_failure(
         calculation_revision_id=_CALCULATION_REVISION_ID,
+        work_unit_id=_WORK_UNIT_ID,
+        condition_id="modelo.work.verify.registry_predicate.satisfied",
+        scenario_id="modelo.work.verify.registry_predicate.failed",
+        evidence_id="modelo.work.verify.registry_predicate",
+        evidence_values={"predicate_id": "m303-base-cuota-consistent"},
+        provenance=ConditionEvidenceProvenance.REGISTRY_RECORD,
     )
 
-    verdict = projection.precondition_verdict
-    assert verdict is not None
-    assert verdict.failed_condition_id == "modelo.verification.registry_snapshot.available"
-    assert verdict.action is not None
-    assert verdict.action.action_id == "operator.registry.verify"
-    assert verdict.conditionality is ActionConditionality.IMMEDIATE
-    assert verdict.argument_bindings == ()
-    assert lookup_action(verdict.action.action_id).target_command_key == "registry.verify"
+    assert failure.verdict.action is None
+    assert failure.verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
+    assert failure.verdict.evidence[0].values["predicate_id"] == "m303-base-cuota-consistent"
+    assert "message" not in failure.model_dump(mode="json")
 
 
-def test_warning_cannot_be_given_a_blocking_precondition_verdict() -> None:
-    blocking_projection = project_verification_finding_no_recovery(
-        _finding(severity=ModeloVerificationFindingSeverity.BLOCKING),
+def test_warning_cannot_receive_a_failed_precondition() -> None:
+    blocking = _finding(severity=ModeloVerificationFindingSeverity.BLOCKING)
+    warning = _finding(severity=ModeloVerificationFindingSeverity.WARNING)
+    failure = build_verification_precondition_failure(
         calculation_revision_id=_CALCULATION_REVISION_ID,
+        work_unit_id=_WORK_UNIT_ID,
+        condition_id="modelo.work.verify.ledger_snapshot.current",
+        scenario_id="modelo.work.verify.ledger_snapshot.drift_detected",
+        evidence_id="modelo.work.verify.ledger_snapshot",
+        evidence_values={"snapshot_anchored": False},
+        provenance=ConditionEvidenceProvenance.PERSISTED_STATE,
     )
-    assert blocking_projection.precondition_verdict is not None
 
-    with pytest.raises(ValidationError, match="only blocking verification findings"):
-        VerificationFindingPreconditionProjection(
-            finding=_finding(severity=ModeloVerificationFindingSeverity.WARNING),
-            precondition_verdict=blocking_projection.precondition_verdict,
-        )
+    assert VerificationFindingPreconditionProjection(finding=blocking, precondition_failure=failure)
+    with pytest.raises(ValidationError, match="warning verification findings"):
+        VerificationFindingPreconditionProjection(finding=warning, precondition_failure=failure)
 
 
-def test_application_verification_result_pairs_the_exact_registry_branch_with_its_verdict() -> None:
-    registry_snapshot_finding = _finding(severity=ModeloVerificationFindingSeverity.BLOCKING)
-    warning_finding = _finding(severity=ModeloVerificationFindingSeverity.WARNING)
-    report = _blocked_report((registry_snapshot_finding, warning_finding))
+def test_application_result_requires_exact_ordered_finding_projection() -> None:
+    blocking = _finding(severity=ModeloVerificationFindingSeverity.BLOCKING)
+    warning = _finding(severity=ModeloVerificationFindingSeverity.WARNING)
+    failure = build_verification_precondition_failure(
+        calculation_revision_id=_CALCULATION_REVISION_ID,
+        work_unit_id=_WORK_UNIT_ID,
+        condition_id="modelo.work.verify.oss_evidence.present",
+        scenario_id="modelo.work.verify.oss_evidence.missing",
+        evidence_id="modelo.work.verify.oss_evidence",
+        evidence_values={"source_ref_count": 0},
+        provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+    )
+    projections = project_verification_findings(
+        (blocking, warning),
+        failures_by_finding_id={id(blocking): failure},
+    )
 
     result = ModeloVerificationResult(
-        report=report,
-        finding_preconditions=project_verification_findings(
-            (registry_snapshot_finding, warning_finding),
-            calculation_revision_id=_CALCULATION_REVISION_ID,
-            registry_snapshot_finding_ids=frozenset({id(registry_snapshot_finding)}),
-        ),
+        report=_blocked_report((blocking, warning)),
+        finding_preconditions=projections,
     )
+    assert result.finding_preconditions[0].precondition_failure is failure
+    assert result.finding_preconditions[1].precondition_failure is None
 
-    registry_verdict = result.finding_preconditions[0].precondition_verdict
-    assert registry_verdict is not None
-    assert registry_verdict.action is not None
-    assert registry_verdict.action.action_id == "operator.registry.verify"
-    assert result.finding_preconditions[1].precondition_verdict is None
+    with pytest.raises(ValidationError, match="in order"):
+        ModeloVerificationResult(
+            report=_blocked_report((blocking, warning)),
+            finding_preconditions=tuple(reversed(projections)),
+        )

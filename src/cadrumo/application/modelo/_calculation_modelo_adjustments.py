@@ -49,7 +49,9 @@ from ...domain.modelos import (
     ModeloDetailRow,
     WorkUnit,
 )
+from ..operator_actions import ConditionEvidenceProvenance
 from ._action_errors import ModeloCrossPeriodCleanStateError
+from ._preconditions import build_modelo_precondition_failure
 
 _M349_NUMERO_OPERADORES_BINDING: BindingId = "iva-349-declarante-numero-operadores"
 _M349_IMPORTE_OPERACIONES_BINDING: BindingId = "iva-349-declarante-importe-operaciones"
@@ -239,7 +241,23 @@ def _raise_if_m390_303_reconciliation_would_save_silent_zero(
             "zero_reconciliation_casillas_at_risk": tuple(target for _rel, _binding, target, _annual in missing),
             "nonzero_annual_casillas": tuple(annual for _rel, _binding, _target, annual in missing),
         },
-        suggestion="aeat app live filed pull-sources --modelo 303",
+        precondition_failure=build_modelo_precondition_failure(
+            subject_leaf_key="modelo.work.calculate",
+            condition_id="modelo.work.calculate.m390.reconciliation.complete",
+            scenario_id="modelo.work.calculate.m390.reconciliation.clean_m303_observations_missing",
+            evidence_id="modelo.work.calculate.m390.reconciliation",
+            evidence_values={
+                "modelo": str(work_unit.modelo),
+                "year": work_unit.filing_year,
+                "period": work_unit.period.registry_token,
+                "missing_item_count": len(missing),
+                "missing_periods": "|".join(_m390_303_required_periods(snapshot, missing_relation_ids)),
+                "missing_binding_ids": "|".join(str(binding_id) for _rel, binding_id, _target, _annual in missing),
+                "target_casilla_ids": "|".join(str(target) for _rel, _binding, target, _annual in missing),
+                "annual_casilla_ids": "|".join(str(annual) for _rel, _binding, _target, annual in missing),
+            },
+            provenance=ConditionEvidenceProvenance.DOMAIN_EVALUATION,
+        ),
     )
 
 

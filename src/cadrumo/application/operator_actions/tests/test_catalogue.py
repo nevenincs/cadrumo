@@ -56,6 +56,7 @@ def test_initial_actions_are_deterministic_and_lookup_by_stable_identity() -> No
         "operator.profile.import",
         "operator.profile.list",
         "operator.profile.login",
+        "operator.profile.repair_active_pointer",
         "operator.profile.repair_clear_active",
         "operator.profile.sandbox.restore",
         "operator.profile.status",
@@ -63,6 +64,18 @@ def test_initial_actions_are_deterministic_and_lookup_by_stable_identity() -> No
         "operator.storage.init",
     )
     assert lookup_action("operator.profile.create").target_command_key == "config.profile.create"
+    assert lookup_action("operator.profile.repair_active_pointer").argument_specifications == (
+        ActionArgumentBindingSpecification(
+            argument_name="clear_active",
+            source=ActionArgumentSource.VERDICT_CONTEXT,
+            source_key="clear_active",
+        ),
+        ActionArgumentBindingSpecification(
+            argument_name="yes",
+            source=ActionArgumentSource.REQUEST_CONTEXT,
+            source_key="yes",
+        ),
+    )
     assert lookup_action("operator.registry.verify").target_command_key == "registry.verify"
     assert lookup_action("operator.modelo.work.calculate").argument_specifications == (
         ActionArgumentBindingSpecification(

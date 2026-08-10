@@ -67,7 +67,11 @@ def test_active_profile_health_reports_missing_profile_record(tmp_path: Path) ->
     assert health.profile_record_present is False
     assert health.status == "missing_profile_record"
     assert health.repairable_by_clearing_pointer is True
-    assert health.next_action == "aeat config repair profile --clear-active --yes"
+    assert health.precondition_verdict is not None
+    assert health.precondition_verdict.action is not None
+    assert health.precondition_verdict.action.action_id == "operator.profile.repair_active_pointer"
+    assert health.precondition_verdict.missing_argument_names == ("yes",)
+    assert "next_action" not in health.model_dump(mode="json")
 
 
 def test_profile_health_keeps_its_label_snapshot_private_after_a_real_rename(tmp_path: Path) -> None:
@@ -88,7 +92,7 @@ def test_profile_health_keeps_its_label_snapshot_private_after_a_real_rename(tmp
     assert "active_profile_label" not in health.model_dump(mode="json")
 
 
-def test_active_profile_health_none_status_suggests_create_when_no_profile_is_registered(
+def test_active_profile_health_none_status_requires_a_profile_name_when_no_profile_is_registered(
     tmp_path: Path,
 ) -> None:
     """A genuinely empty storage root offers to create a profile, not log in to one."""
@@ -100,10 +104,13 @@ def test_active_profile_health_none_status_suggests_create_when_no_profile_is_re
 
     assert health.active_profile is None
     assert health.status == "none"
-    assert health.next_action == "aeat config profile create NAME --tax-id <TAX_ID> --activity <ACTIVITY>"
+    assert health.precondition_verdict is not None
+    assert health.precondition_verdict.action is not None
+    assert health.precondition_verdict.action.action_id == "operator.profile.create"
+    assert health.precondition_verdict.missing_argument_names == ("profile_name",)
 
 
-def test_active_profile_health_none_status_suggests_login_when_a_profile_is_registered(
+def test_active_profile_health_none_status_requires_a_profile_name_when_a_profile_is_registered(
     tmp_path: Path,
 ) -> None:
     """A registered-but-inactive profile is pointed at login, never a second create."""
@@ -115,7 +122,10 @@ def test_active_profile_health_none_status_suggests_login_when_a_profile_is_regi
 
     assert health.active_profile is None
     assert health.status == "none"
-    assert health.next_action == "aeat config login NAME"
+    assert health.precondition_verdict is not None
+    assert health.precondition_verdict.action is not None
+    assert health.precondition_verdict.action.action_id == "operator.profile.login"
+    assert health.precondition_verdict.missing_argument_names == ("name",)
 
 
 def test_profile_repair_clears_only_degraded_pointer(tmp_path: Path) -> None:
@@ -219,7 +229,10 @@ def test_profile_repair_preserves_pointer_when_master_key_unlock_fails(tmp_path:
     assert health.status == "profile_record_unreadable"
     assert "MasterKeyPassphraseMismatchError" in health.profile_record_error
     assert health.repairable_by_clearing_pointer is False
-    assert health.next_action == "restore access to the active profile secret store, then retry"
+    assert health.precondition_verdict is not None
+    assert health.precondition_verdict.action is None
+    assert health.precondition_verdict.no_recovery_outcome == "operator_decision"
+    assert health.precondition_verdict.failed_condition_id == "profile.secret_store.available"
     assert repaired.dry_run is True
     assert repaired.cleared_pointer is False
     assert repaired.after is None
@@ -293,5 +306,7 @@ def test_manifest_without_status_is_not_backfilled_from_profile_record(tmp_path:
 
         assert broken.status == "manifest_unreadable"
         assert broken.repairable_by_clearing_pointer is False
-        assert broken.next_action == "re-run without --profile, or pass --profile a readable profile"
+        assert broken.precondition_verdict is not None
+        assert broken.precondition_verdict.action is None
+        assert broken.precondition_verdict.no_recovery_outcome == "operator_decision"
         assert "status = " not in target.read_text(encoding="utf-8")

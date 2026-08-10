@@ -253,6 +253,11 @@ from ._participation_index_rebuild import (
     ParticipationRebuildStats,
     rebuild_participation_index,
 )
+from ._preconditions import (
+    MODELO_PRECONDITION_PROFILES,
+    ModeloPreconditionFailure,
+    build_modelo_precondition_failure,
+)
 from ._profile_binding import (
     ProfileBindingResolutionError,
     profile_resolved_binding_ids,
@@ -486,8 +491,7 @@ from ._verification_actions import verify_modelo_revision, verify_modelo_revisio
 from ._verification_preconditions import (
     ModeloVerificationResult,
     VerificationFindingPreconditionProjection,
-    project_registry_snapshot_unresolved_finding,
-    project_verification_finding_no_recovery,
+    build_verification_precondition_failure,
     project_verification_findings,
 )
 from ._work_addressing import (
@@ -556,6 +560,7 @@ __all__ = [
     "M145_COMMUNICATION_MODELO",
     "M145_COMMUNICATION_PERIOD",
     "M145_COMMUNICATION_SERVICE_OWNER",
+    "MODELO_PRECONDITION_PROFILES",
     "OPERATOR_MANUAL_OBSERVATION_SOURCE_KIND",
     "QUICKFILE_STAGE_ORDER",
     "STUB_MODELO_LOCALE_KEYS",
@@ -656,6 +661,7 @@ __all__ = [
     "ModeloMaritimeExemptionPreview",
     "ModeloPaymentElectionCapabilityRefusedError",
     "ModeloPaymentElectionIncompatibleError",
+    "ModeloPreconditionFailure",
     "ModeloPriorDomiciliationElectionRefusedError",
     "ModeloProfileReadinessError",
     "ModeloProjectInvalidDecimalOverrideError",
@@ -779,8 +785,10 @@ __all__ = [
     "authorization_advisory_for_modelo",
     "build_feedback_package",
     "build_m145_communication_service_contract",
+    "build_modelo_precondition_failure",
     "build_review_package",
     "build_revision_deadline_window_checker",
+    "build_verification_precondition_failure",
     "build_work_calculate_input_bundle",
     "calculate_modelo_revision",
     "calculate_modelo_revision_from_bucket_aggregation",
@@ -867,8 +875,6 @@ __all__ = [
     "project_modelo_100_from_m130",
     "project_modelo_work_target",
     "project_modelo_work_unit",
-    "project_registry_snapshot_unresolved_finding",
-    "project_verification_finding_no_recovery",
     "project_verification_findings",
     "public_key_hex_from_raw_bytes",
     "pulled_filing_divergence_findings",

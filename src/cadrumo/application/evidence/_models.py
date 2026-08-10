@@ -33,14 +33,9 @@ from ...core import STRICT_FROZEN_CONFIG, ElidedProse
 from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
-from ...core.identity import BucketId, ContentDigest
+from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, FilingRecordId, WorkUnitId
 from ...core.time import now
 from ...domain.buckets import BucketEventObjectType
-from ...domain.modelos import (
-    CalculationRevisionId,
-    FilingRecordId,
-    WorkUnitId,
-)
 from ._ids import BundleId
 
 

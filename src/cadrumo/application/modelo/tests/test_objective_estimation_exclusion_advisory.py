@@ -162,7 +162,7 @@ def test_revision_verification_collects_objective_estimation_exclusion_advisory(
         objective_estimation_prior_year_gross_income_eur=Decimal("250000.01"),
     )
 
-    findings, _resolved, _missing = _collect_revision_verification_findings(
+    findings, _resolved, _missing, _failures_by_finding_id = _collect_revision_verification_findings(
         work_unit=work_unit,
         target=_calculation_revision(work_unit),
         profile=profile,

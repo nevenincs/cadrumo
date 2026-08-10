@@ -25,6 +25,7 @@ The operating-layer text is read through the ``cadrumo.agent`` package facade
 
 from __future__ import annotations
 
+import json
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -35,6 +36,7 @@ from ...application.wizard import ensure_profile_keys_registered
 from ...application.workflow import ProfileHealthStatus, assess_active_profile_health_with_session
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ...core.i18n import tr
+from ...core.json_contract import ResolvedPreconditionAction
 from ._persona_scope import AgentPersona
 
 if TYPE_CHECKING:
@@ -105,7 +107,8 @@ class WhoamiIdentity(BaseModel):
     ``tax_id_present`` states whether the active profile carries a tax id
     (its legal identity). ``readiness`` is the active-profile health status
     (``ready`` / ``incomplete`` / ``none`` / a degraded-pointer status), and
-    ``next_action`` is the recovery step the health projection recommends.
+    ``precondition_action`` is the strict recovery verdict from that same
+    assessment, or ``None`` when the profile is ready.
 
     ``readiness`` carries the canonical
     :data:`~application.workflow.ProfileHealthStatus` taxonomy rather than a
@@ -121,7 +124,7 @@ class WhoamiIdentity(BaseModel):
     active_profile: str | None = None
     tax_id_present: bool = False
     readiness: ProfileHealthStatus
-    next_action: str = ""
+    precondition_action: ResolvedPreconditionAction | None = None
 
 
 class HarnessFloorPayload(BaseModel):
@@ -258,8 +261,9 @@ def build_whoami_identity() -> WhoamiIdentity:
 
     Wraps the active-profile health assessment
     (:func:`~application.workflow.assess_active_profile_health_with_session`): its
-    ``status`` is the ``readiness`` and its ``next_action`` the recovery
-    step. The display LABEL is captured by the same health assessment - the
+    ``status`` is the ``readiness`` and its typed precondition verdict is
+    projected through the canonical CLI action resolver. The display LABEL is
+    captured by the same health assessment - the
     same non-secret name the envelope-spine ``active_profile`` carries, never
     the redacted bucket/profile UUID the health projection's
     ``active_profile`` field holds. Reusing that captured value prevents a
@@ -284,11 +288,17 @@ def build_whoami_identity() -> WhoamiIdentity:
     ensure_profile_keys_registered()
     health = assess_active_profile_health_with_session()
     tax_id_present = health.profile_record_present and TAX_ID_FACT_PATH not in health.missing_required
+    from ..cli._common import resolve_cli_precondition_action
+
     return WhoamiIdentity(
         active_profile=health.active_profile_label,
         tax_id_present=tax_id_present,
         readiness=health.status,
-        next_action=health.next_action,
+        precondition_action=(
+            resolve_cli_precondition_action(health.precondition_verdict)
+            if health.precondition_verdict is not None
+            else None
+        ),
     )
 
 
@@ -300,8 +310,21 @@ def render_whoami_identity_text(identity: WhoamiIdentity) -> str:
         f"tax id on file: {'yes' if identity.tax_id_present else 'no'}",
         f"readiness: {identity.readiness}",
     ]
-    if identity.next_action:
-        lines.append(f"next: {identity.next_action}")
+    if identity.precondition_action is not None:
+        action = identity.precondition_action.model_dump(mode="json")
+        lines.extend(
+            f"precondition_action.{field_name}: "
+            f"{json.dumps(action[field_name], ensure_ascii=False, sort_keys=True, separators=(',', ':'))}"
+            for field_name in (
+                "failed_condition_id",
+                "evidence",
+                "action",
+                "argument_bindings",
+                "missing_argument_names",
+                "conditionality",
+                "no_recovery_outcome",
+            )
+        )
     return "\n".join(lines)
 
 
@@ -324,7 +347,7 @@ def build_whoami_tool() -> Tool:
         name=WHOAMI_TOOL,
         description=(
             "Report which taxpayer profile is active right now: its display name (label), whether a "
-            "tax id is on file, filing readiness, and the next step. Call this before any command that "
+            "tax id is on file, filing readiness, and any typed recovery verdict. Call this before any command that "
             "writes, files, or exports to confirm WHO you are acting for, and again after switching "
             "profiles - a filing must never run under the wrong identity (Erika must not file while "
             "Erik is the active profile)."

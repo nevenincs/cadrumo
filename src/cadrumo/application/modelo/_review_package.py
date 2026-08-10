@@ -57,14 +57,12 @@ from ...core.corpus_manifest import (
 )
 from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
-from ...core.identity import BucketId
+from ...core.identity import BucketId, CalculationRevisionId, WorkUnitId
 from ...core.time import now as _utc_now
 from ...domain.modelos import (
     CalculationRevision,
-    CalculationRevisionId,
     CalculationRevisionState,
     WorkUnit,
-    WorkUnitId,
 )
 
 #: Wire-format version of the review-package descriptor. Bumped when the

@@ -2,22 +2,23 @@
 
 from __future__ import annotations
 
-from ....application.operator_actions import next_action
-
 import typer
 
-from .._common import _emit_envelope
-from ._repair_profile import (
-    profile_record_missing_next_action as _profile_record_missing_next_action,
-)
-from ._repair_profile import (
-    profile_record_unreadable_next_action as _profile_record_unreadable_next_action,
-)
+from .._common import _emit_envelope, resolve_cli_precondition_action
+from ._status_rendering import precondition_action_lines
 
 
 def _emit_profile_record_missing(ctx: typer.Context, *, profile_id: str, bucket_id: str, label: str) -> None:
+    from ....application.workflow import unavailable_profile_record_verdict
     from .._config_payloads import ConfigProfileShowResult
 
+    action = resolve_cli_precondition_action(
+        unavailable_profile_record_verdict(
+            status="missing_profile_record",
+            source="none",
+            repairable_by_clearing_pointer=False,
+        )
+    )
     result = ConfigProfileShowResult(
         profile_id=profile_id,
         bucket_id=bucket_id,
@@ -25,7 +26,7 @@ def _emit_profile_record_missing(ctx: typer.Context, *, profile_id: str, bucket_
         registered_bucket=True,
         profile_record_present=False,
         configured=False,
-        next_action=_profile_record_missing_next_action(profile_id, label=label),
+        precondition_action=action,
     )
     _emit_envelope(
         ctx,
@@ -38,7 +39,7 @@ def _emit_profile_record_missing(ctx: typer.Context, *, profile_id: str, bucket_
             f"display_name\t{label}",
             "registered_bucket\tpresent",
             "profile_record\tmissing",
-            f"next_action\t{result.next_action}",
+            *precondition_action_lines(action),
         ),
     )
 
@@ -51,9 +52,17 @@ def _emit_profile_record_unreadable(
     label: str,
     error: Exception,
 ) -> None:
+    from ....application.workflow import unavailable_profile_record_verdict
     message = str(error).splitlines()[0] if str(error) else type(error).__name__
     from .._config_payloads import ConfigProfileShowResult
 
+    action = resolve_cli_precondition_action(
+        unavailable_profile_record_verdict(
+            status="profile_record_unreadable",
+            source="none",
+            repairable_by_clearing_pointer=False,
+        )
+    )
     result = ConfigProfileShowResult(
         profile_id=profile_id,
         bucket_id=bucket_id,
@@ -62,7 +71,7 @@ def _emit_profile_record_unreadable(
         profile_record_present=False,
         status="profile_record_unreadable",
         error=f"{type(error).__name__}: {message}",
-        next_action=_profile_record_unreadable_next_action(profile_id, label=label),
+        precondition_action=action,
     )
     _emit_envelope(
         ctx,
@@ -75,7 +84,7 @@ def _emit_profile_record_unreadable(
             f"display_name\t{label}",
             "registered_bucket\tpresent",
             "profile_record\tunreadable",
-            f"next_action\t{result.next_action}",
+            *precondition_action_lines(action),
         ),
     )
 

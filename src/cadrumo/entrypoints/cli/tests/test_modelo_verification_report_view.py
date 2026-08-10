@@ -5,7 +5,6 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ....core.config import override_settings
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -17,8 +16,8 @@ _VERIFICATION_FINDING_CASILLA: CasillaId = validated_casilla_id(
 _TEST_FINDING_LEGAL_REFS = ("ley-58-2003:art-119",)
 
 
-def test_verification_report_lines_includes_next_action_when_refused() -> None:
-    """A refused verification report surfaces a retrieval next_action pointer."""
+def test_verification_report_lines_preserve_persisted_findings_without_recovery_reconstruction() -> None:
+    """Report history renders factual findings and never invents a recovery command."""
     from datetime import UTC, datetime
 
     from ....domain.modelos import (
@@ -59,26 +58,21 @@ def test_verification_report_lines_includes_next_action_when_refused() -> None:
 
     lines = _verification_report_lines(report)
 
-    next_action_lines = [line for line in lines if line.startswith("next_action\t")]
-    assert len(next_action_lines) == 1
-    assert calc_id in next_action_lines[0]
-    assert "verification-report list" in next_action_lines[0]
+    finding_line = next(line for line in lines if line.startswith("finding\t"))
+    assert finding_line.endswith("\tnull")
+    assert not any("next_action" in line for line in lines)
+    assert not any("aeat app " in line for line in lines)
 
 
-@pytest.mark.parametrize(
-    ("language", "expected_phrase"),
-    (
-        ("ca", "Reviseu l'informe de verificació"),
-        ("hu", "Tekintse meg az ellenőrzési jelentést"),
-    ),
-)
-def test_refused_verification_report_next_action_line_uses_selected_language(
-    language: str,
-    expected_phrase: str,
-) -> None:
-    """The real tab-delimited CLI transport localizes prose, not its command token."""
+def test_verification_report_payload_resolves_the_exact_registry_recovery_verdict() -> None:
+    """A live verification exposes only the typed action paired by the application."""
     from datetime import UTC, datetime
 
+    from ....application.modelo._verification_preconditions import (
+        VerificationFindingPreconditionProjection,
+        build_verification_precondition_failure,
+    )
+    from ....application.operator_actions import ConditionEvidenceProvenance
     from ....domain.modelos import (
         ModeloVerificationFinding,
         ModeloVerificationFindingKind,
@@ -87,7 +81,12 @@ def test_refused_verification_report_next_action_line_uses_selected_language(
         VerificationReport,
         derive_verification_report_id,
     )
-    from .._modelo_rendering import verification_report_lines as _verification_report_lines
+    from .._modelo_rendering import (
+        verification_report_lines as _verification_report_lines,
+    )
+    from .._modelo_rendering import (
+        verification_report_payload as _verification_report_payload,
+    )
 
     calculation_revision_id = "e" * 64
     findings = (
@@ -113,17 +112,43 @@ def test_refused_verification_report_next_action_line_uses_selected_language(
         granted_verificado_completo=False,
     )
 
-    with override_settings(cadrumo_output_language=language):
-        next_action_line = next(line for line in _verification_report_lines(report) if line.startswith("next_action\t"))
+    precondition_failure = build_verification_precondition_failure(
+        calculation_revision_id=calculation_revision_id,
+        work_unit_id="w" * 64,
+        condition_id="modelo.work.verify.registry_snapshot.available",
+        scenario_id="modelo.work.verify.registry_snapshot.unavailable",
+        evidence_id="modelo.work.verify.registry_snapshot",
+        evidence_values={"modelo": "999"},
+        provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+        action_id="operator.registry.verify",
+    )
+    projection = VerificationFindingPreconditionProjection(
+        finding=findings[0],
+        precondition_failure=precondition_failure,
+    )
+    payload = _verification_report_payload(report, finding_preconditions=(projection,))
+    action = payload.findings[0].action
 
-    assert expected_phrase in next_action_line
-    assert "Review the verification report" not in next_action_line
-    assert calculation_revision_id in next_action_line
-    assert "aeat app modelo verification-report list" in next_action_line
+    assert action is not None
+    assert action.action is not None
+    assert action.action.model_dump(mode="json") == {
+        "action_id": "operator.registry.verify",
+        "target_command_key": "registry.verify",
+        "cli_path": ["app", "registry", "verify"],
+    }
+    assert action.conditionality.value == "immediate"
+    assert action.missing_argument_names == ()
+    assert action.no_recovery_outcome is None
+
+    lines = _verification_report_lines(report, finding_actions=(action,))
+    finding_line = next(line for line in lines if line.startswith("finding\t"))
+    assert '"action_id":"operator.registry.verify"' in finding_line
+    assert '"conditionality":"immediate"' in finding_line
+    assert "aeat app " not in finding_line
 
 
-def test_verification_report_lines_omits_next_action_when_granted() -> None:
-    """A granted verification report does NOT emit a next_action pointer."""
+def test_verification_report_lines_omits_recovery_when_granted() -> None:
+    """A granted verification report has neither findings nor a recovery field."""
     from datetime import UTC, datetime
 
     from ....domain.modelos import (
@@ -152,7 +177,7 @@ def test_verification_report_lines_omits_next_action_when_granted() -> None:
 
     lines = _verification_report_lines(report)
 
-    assert not any(line.startswith("next_action\t") for line in lines)
+    assert not any("next_action" in line for line in lines)
 
 
 def test_verification_report_view_exposes_finding_legal_and_source_refs() -> None:

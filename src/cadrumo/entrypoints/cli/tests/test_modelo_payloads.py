@@ -179,7 +179,6 @@ def test_verification_finding_payload_preserves_the_domain_contract() -> None:
         casilla_id=_PAYLOAD_CASILLA,
         expectation_id="m130-rendimiento-neto-non-negative",
         message="Rendimiento neto cannot be negative.",
-        next_action="Correct casilla 001 and rerun verification.",
         legal_refs=["ley-35-2006:art-28"],
         source_refs=["modelo-130-2025-instructions"],
     )
@@ -187,6 +186,7 @@ def test_verification_finding_payload_preserves_the_domain_contract() -> None:
     assert finding.kind is ModeloVerificationFindingKind.BLOCKING_RULE
     assert finding.severity is ModeloVerificationFindingSeverity.BLOCKING
     assert finding.model_dump(mode="json")["kind"] == "blocking_rule"
+    assert finding.model_dump(mode="json")["action"] is None
 
 
 def test_verification_finding_payload_rejects_ungrounded_or_malformed_rows() -> None:
@@ -204,6 +204,7 @@ def test_verification_finding_payload_rejects_ungrounded_or_malformed_rows() -> 
         ("message", ""),
         ("legal_refs", []),
         ("expectation_id", "bad expectation"),
+        ("next_action", "Correct casilla 001 and rerun verification."),
     ):
         with pytest.raises(ValidationError):
             FindingPayload.model_validate({**raw, field: value})

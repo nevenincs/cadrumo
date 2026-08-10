@@ -112,6 +112,7 @@ def test_modelo_111_calculate_verify_export_without_copied_ids(tmp_path: Path) -
     assert status_notice["action"]["action"] == {
         "action_id": "operator.modelo.work.calculate",
         "target_command_key": "modelo.work.calculate",
+        "cli_path": ["app", "modelo", "work", "calculate"],
     }
     assert status_notice["action"]["argument_bindings"][0]["value"] == work_unit_id
 
@@ -136,13 +137,12 @@ def test_modelo_111_calculate_verify_export_without_copied_ids(tmp_path: Path) -
     assert verified.exit_code == 0, verified.output
     assert _payload(verified.output)["calculation_revision_id"] == calculation_revision_id
     assert _payload(verified.output)["granted_verificado_completo"] is True
-    # A granted (clean) verify stays on the success spine (its single info
-    # next-action notice keeps status at success), in lock-step with its exit-0.
+    # A granted verification has no recovery action or speculative next-step
+    # notice: export requires additional material input that this verifier does
+    # not own.
     assert _envelope_status(verified.output) == "success", verified.output
     granted_notices = _notices(verified.output)
-    assert [n["code"] for n in granted_notices] == ["modelo.work.verify.next_action_granted"], verified.output
-    assert granted_notices[0]["severity"] == "info", verified.output
-    assert granted_notices[0]["action"] is None, verified.output
+    assert granted_notices == [], verified.output
 
     out = tmp_path / "modelo-111.txt"
     exported = _invoke(
@@ -283,17 +283,12 @@ def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_sta
     assert payload["calculation_revision_id"] == calculation_revision_id
     assert payload["granted_verificado_completo"] is False
     assert payload["findings"][0]["kind"] == "cross_period_dependency_unclean"
-    assert (
-        "aeat app live filed pull-sources --modelo 130 --year 2025 --period 1T" in payload["findings"][0]["next_action"]
-    )
-    assert (
-        "aeat app live justificante pull --modelo 100 --year 2024 --period 0A" in payload["findings"][0]["next_action"]
-    )
-    assert (
-        "aeat app modelo filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf"
-        in payload["findings"][0]["next_action"]
-    )
-    assert "aeat app modelo reconcile file WORK_UNIT_ID --file PATH" in payload["findings"][0]["next_action"]
+    finding_action = payload["findings"][0]["action"]
+    assert finding_action["action"] is None
+    assert finding_action["conditionality"] == "not_applicable"
+    assert finding_action["missing_argument_names"] == []
+    assert finding_action["no_recovery_outcome"] == "operator_decision"
+    assert "next_action" not in payload["findings"][0]
 
     # The shared-spine contract: a verify carrying a blocking finding must NOT
     # read status "success" with an empty notices list while exit code is 1.
@@ -308,19 +303,12 @@ def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_sta
         notice for notice in notices if notice["code"] == "modelo.work.verify.finding.cross_period_dependency_unclean"
     )
     # The finding's true severity survives onto a non-action notice; the
-    # blocking-vs-advisory distinction lives on the context while the domain
-    # result retains its free-form next_action guidance.
+    # blocking-vs-advisory distinction lives on the context while the result
+    # carries the application-owned typed recovery verdict.
     assert blocking["severity"] == "warning"
     assert blocking["context"]["severity"] == "blocking"
     assert blocking["context"]["kind"] == "cross_period_dependency_unclean"
     assert blocking["action"] is None
-    recalculate = next(notice for notice in notices if notice["code"] == "modelo.work.verify.next_action_incomplete")
-    assert recalculate["action"]["action"] == {
-        "action_id": "operator.modelo.work.calculate",
-        "target_command_key": "modelo.work.calculate",
-    }
-    assert recalculate["action"]["argument_bindings"][0]["argument_name"] == "work_unit_id"
-    assert recalculate["action"]["argument_bindings"][0]["value"] == work_unit_id
 
 
 def test_autonoma_m130_2024_1t_calculate_by_natural_key_from_blank_ledger_state() -> None:
@@ -522,6 +510,7 @@ def test_adjacent_work_commands_resolve_visible_targets() -> None:
     assert history_notice["action"]["action"] == {
         "action_id": "operator.modelo.work.status",
         "target_command_key": "modelo.work.status",
+        "cli_path": ["app", "modelo", "work", "status"],
     }
     assert history_notice["action"]["argument_bindings"][0]["value"] == work_unit_id
 

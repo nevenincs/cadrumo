@@ -19,9 +19,10 @@ from ....core.redaction import (
     CLI_PROFILE_ID_PLACEHOLDER,
     redact_structured_for_cli_output,
 )
-from .._common import _emit_envelope
+from .._common import _emit_envelope, resolve_cli_precondition_action
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from ._errors import ConfigBoundaryError as _ConfigBoundaryError
+from ._status_rendering import precondition_action_lines
 
 if typing.TYPE_CHECKING:
     from ....application.workflow import ActiveProfileHealth, ProfileBucketPointer
@@ -110,10 +111,12 @@ def _emit_pointer_repair(ctx: typer.Context, *, clear_active: bool, confirmed: b
     result = repair_active_profile_pointer(clear_active=clear_active, confirmed=confirmed)
     health = result.after or result.before
     active_profile = _repair_profile_label(health)
-    payload = result.model_dump(mode="json")
-    for field_name, snapshot in (("before", result.before), ("after", result.after)):
-        if snapshot is not None and isinstance(payload.get(field_name), dict):
-            payload[field_name]["active_profile"] = _repair_profile_label(snapshot)
+    payload = {
+        "dry_run": result.dry_run,
+        "cleared_pointer": result.cleared_pointer,
+        "before": _profile_health_payload(result.before),
+        "after": _profile_health_payload(result.after) if result.after is not None else None,
+    }
     payload = _redact_profile_repair_payload(payload)
     lines = [
         f"dry_run\t{result.dry_run}",
@@ -127,10 +130,21 @@ def _emit_pointer_repair(ctx: typer.Context, *, clear_active: bool, confirmed: b
     ]
     if health.profile_record_error:
         lines.append(f"profile_record_error\t{health.profile_record_error}")
-    if health.next_action:
-        lines.append(f"next_action\t{health.next_action}")
     repair_payload = RepairProfileResult.model_validate(payload)
+    health_payload = repair_payload.after or repair_payload.before
+    if health_payload is not None:
+        lines.extend(precondition_action_lines(health_payload.precondition_action))
     _emit_envelope(ctx, command="config.repair.profile", result=repair_payload, lines=lines)
+
+
+def _profile_health_payload(health: ActiveProfileHealth) -> dict[str, object]:
+    """Project one health verdict through the canonical CLI action resolver."""
+    payload = health.model_dump(mode="json", exclude={"precondition_verdict"})
+    payload["active_profile"] = _repair_profile_label(health)
+    if health.precondition_verdict is not None:
+        action = resolve_cli_precondition_action(health.precondition_verdict)
+        payload["precondition_action"] = action
+    return payload
 
 
 def _repair_profile_label(health: ActiveProfileHealth) -> str | None:
@@ -155,23 +169,6 @@ def _redact_profile_repair_payload(payload: dict[str, typing.Any]) -> dict[str, 
     return {str(k): v for k, v in redacted.items()}
 
 
-def _profile_record_repair_next_action(profile_id: str, *, label: str) -> str:
-    """Return the operator command for repairing an unavailable profile record."""
-    if profile_id == _resolve_active_bucket_id():
-        return "aeat config repair profile --clear-active --yes"
-    return f"aeat config repair profile --profile {label}"
-
-
-def profile_record_missing_next_action(profile_id: str, *, label: str) -> str:
-    """Return the operator command for repairing a missing profile record."""
-    return _profile_record_repair_next_action(profile_id, label=label)
-
-
-def profile_record_unreadable_next_action(profile_id: str, *, label: str) -> str:
-    """Return the operator command for repairing an unreadable profile record."""
-    return _profile_record_repair_next_action(profile_id, label=label)
-
-
 def _emit_profile_record_status(
     ctx: typer.Context,
     label: str,
@@ -180,6 +177,7 @@ def _emit_profile_record_status(
     read_profile_record: ProfileRecordReader,
 ) -> None:
     """Emit a non-secret status report for one registered profile bucket."""
+    from ....application.workflow import unavailable_profile_record_verdict
     from ....domain.user_profile import ProfileNotFoundError
     from .._config_payloads import RepairProfileResult
 
@@ -195,7 +193,13 @@ def _emit_profile_record_status(
             "registered_bucket": True,
             "profile_record_present": False,
             "status": "missing_profile_record",
-            "next_action": profile_record_missing_next_action(profile_id, label=pointer.label),
+            "precondition_action": resolve_cli_precondition_action(
+                unavailable_profile_record_verdict(
+                    status="missing_profile_record",
+                    source="none",
+                    repairable_by_clearing_pointer=False,
+                )
+            ),
         }
         repair_payload = RepairProfileResult.model_validate(redact_structured_for_cli_output(payload))
         _emit_envelope(
@@ -209,7 +213,7 @@ def _emit_profile_record_status(
                 f"display_name\t{pointer.label}",
                 "registered_bucket\tpresent",
                 "profile_record\tmissing",
-                f"next_action\t{payload['next_action']}",
+                *precondition_action_lines(repair_payload.precondition_action),
             ),
         )
         raise typer.Exit(code=2) from None
@@ -240,7 +244,6 @@ def _emit_profile_record_status(
         "registered_bucket": True,
         "profile_record_present": True,
         "status": record.status.value,
-        "next_action": f"aeat config login {pointer.label}",
     }
     repair_payload = RepairProfileResult.model_validate(redact_structured_for_cli_output(payload))
     _emit_envelope(
@@ -255,7 +258,6 @@ def _emit_profile_record_status(
             "registered_bucket\tpresent",
             "profile_record\tpresent",
             f"status\t{record.status.value}",
-            f"next_action\t{payload['next_action']}",
         ),
     )
 
@@ -267,6 +269,7 @@ def _emit_profile_record_unreadable_repair(
     profile_id: str,
     error: Exception,
 ) -> None:
+    from ....application.workflow import unavailable_profile_record_verdict
     from .._config_payloads import RepairProfileResult
 
     payload = {
@@ -277,7 +280,13 @@ def _emit_profile_record_unreadable_repair(
         "profile_record_present": False,
         "status": "profile_record_unreadable",
         "error": f"{type(error).__name__}: {str(error).splitlines()[0] if str(error) else type(error).__name__}",
-        "next_action": profile_record_unreadable_next_action(profile_id, label=pointer.label),
+        "precondition_action": resolve_cli_precondition_action(
+            unavailable_profile_record_verdict(
+                status="profile_record_unreadable",
+                source="none",
+                repairable_by_clearing_pointer=False,
+            )
+        ),
     }
     repair_payload = RepairProfileResult.model_validate(redact_structured_for_cli_output(payload))
     _emit_envelope(
@@ -291,13 +300,11 @@ def _emit_profile_record_unreadable_repair(
             f"display_name\t{pointer.label}",
             "registered_bucket\tpresent",
             "profile_record\tunreadable",
-            f"next_action\t{payload['next_action']}",
+            *precondition_action_lines(repair_payload.precondition_action),
         ),
     )
 
 
 __all__ = [
-    "profile_record_missing_next_action",
-    "profile_record_unreadable_next_action",
     "register_repair_profile_command",
 ]

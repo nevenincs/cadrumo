@@ -24,6 +24,7 @@ from contextlib import contextmanager
 from http import HTTPStatus
 from pathlib import Path
 from queue import Queue
+from typing import override
 
 import pytest
 from pydantic import BaseModel, SecretStr, ValidationError
@@ -128,6 +129,7 @@ def _serve_openai() -> Iterator[tuple[str, Queue[str]]]:
     bodies: Queue[str] = Queue()
 
     class _Endpoint(SilentLoopbackHandler):
+        @override
         def do_POST(self) -> None:
             bodies.put(read_text_body(self))
             write_json_response(

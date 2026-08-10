@@ -32,17 +32,16 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from ...core import Period
+from ...core.identity import CalculationRevisionId, WorkUnitId
 from ...core.resources import resources
 from ...domain.calculations.registry import RegistrySnapshotError, select_revision
 from ...domain.contribuyente import CCAA
 from ...domain.modelos import (
     CalculationRevision,
-    CalculationRevisionId,
     CalculationRevisionState,
     ModeloCode,
     ModeloError,
     WorkUnit,
-    WorkUnitId,
 )
 from ._calculation_actions import get_calculation_revision
 from ._registry_discovery import declared_modelo_period_tokens

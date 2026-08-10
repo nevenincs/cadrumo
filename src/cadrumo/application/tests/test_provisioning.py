@@ -13,7 +13,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from http import HTTPStatus
 from pathlib import Path
-from typing import ClassVar
+from typing import ClassVar, override
 
 import pytest
 
@@ -47,6 +47,7 @@ class _OllamaTagsEndpoint(SilentLoopbackHandler):
 
     payload: ClassVar[object]
 
+    @override
     def do_GET(self) -> None:
         if self.path != "/api/tags":
             self.send_error(HTTPStatus.NOT_FOUND)

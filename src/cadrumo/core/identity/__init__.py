@@ -92,6 +92,45 @@ family) do not consume this alias; they are referential identities outside
 the content-addressed-hex family.
 """
 
+WorkUnitId = _Hex64Str
+"""Hex-64 identity of one modelo work unit.
+
+The work unit is the addressable subject of the modelo workflow, so its
+identity is named by nearly every layer above the record: the workflow engine,
+the modelo application services, the persistence adapters and the CLI payload
+surface. Declared here because it adds no constraint beyond :data:`Hex64Str`,
+which is the discipline every hex-64 identity concept in this codebase follows.
+"""
+
+CalculationRevisionId = _Hex64Str
+"""Hex-64 identity of one calculation revision under a work unit.
+
+Declared here rather than in the modelo domain because the identity is
+consumed across package boundaries -- the modelo application surface and three
+CLI payload modules each name one -- and because it adds no constraint beyond
+:data:`Hex64Str`, which is the discipline every hex-64 identity concept in
+this codebase follows.
+"""
+
+FilingRecordId = _Hex64Str
+"""Hex-64 identity of one filing record bound to a calculation revision.
+
+Declared here rather than in the modelo domain because the identity is
+consumed across package boundaries -- the evidence and cross-period
+application surfaces and the CLI payload layer each name one -- and because it
+adds no constraint beyond :data:`Hex64Str`, which is the discipline every
+hex-64 identity concept in this codebase follows.
+"""
+
+VerificationReportId = _Hex64Str
+"""Hex-64 identity of one verification report bound to a calculation revision.
+
+Declared here rather than in the modelo domain because the identity is consumed
+across package boundaries — the CLI payload surface holds one — and because it
+adds no constraint beyond :data:`Hex64Str`, which is the discipline every
+hex-64 identity concept in this codebase follows.
+"""
+
 InvoiceId = _Hex64Str
 """Hex-64 content-addressed invoice identity.
 
@@ -154,8 +193,10 @@ __all__ = [
     "AeatExpedienteId",
     "AeatPresentationId",
     "BucketId",
+    "CalculationRevisionId",
     "ContentDigest",
     "ContentDigestOrAbsent",
+    "FilingRecordId",
     "IdentifierNamespace",
     "IdentityDocument",
     "IdentityError",
@@ -168,6 +209,8 @@ __all__ = [
     "SubjectTaxId",
     "TaxIdIdentityToken",
     "TransactionId",
+    "VerificationReportId",
+    "WorkUnitId",
     "iso_country_for_nif_iva_prefix",
     "nif_check_letter",
     "nif_iva_format_for_country",

@@ -25,8 +25,6 @@ See Also:
 
 from __future__ import annotations
 
-from ...application.operator_actions import next_action
-
 import tomllib
 from typing import Literal
 
@@ -38,6 +36,18 @@ from ...core import resolve_active_bucket_id
 from ...core.config import load_settings, override_settings
 from ...core.errors import CadrumoError
 from ...core.logging import get_logger
+from ..operator_actions import (
+    ActionArgumentBinding,
+    ActionArgumentSource,
+    ActionArgumentStatus,
+    ActionConditionality,
+    ActionReference,
+    ConditionEvidence,
+    ConditionEvidenceProvenance,
+    NoRecoveryOutcome,
+    PreconditionVerdict,
+)
+from ..profile_preconditions import inspect_active_profile_precondition
 from ..user_profile import (
     active_profile_pointer_transaction,
     list_profile_key_records,
@@ -83,7 +93,7 @@ class ActiveProfileHealth(BaseModel):
     profile_total_keys: int = 0
     missing_required: tuple[str, ...] = ()
     repairable_by_clearing_pointer: bool = False
-    next_action: str = ""
+    precondition_verdict: PreconditionVerdict | None = None
 
     _active_profile_label: str | None = PrivateAttr(default=None)
 
@@ -135,19 +145,182 @@ def _with_active_profile_label(health: ActiveProfileHealth, label: str | None) -
     return health.with_active_profile_label(label)
 
 
-def _no_active_profile_next_action() -> str:
-    """Return the operator-facing next action when no profile is active.
+_HEALTH_CONDITIONS: dict[ProfileHealthStatus, str] = {
+    "dangling_pointer": "profile.active.pointer_registered",
+    "missing_profile_record": "profile.active.record_present",
+    "profile_record_unreadable": "profile.active.record_readable",
+    "manifest_unreadable": "profile.active.manifest_readable",
+    "incomplete": "profile.configuration.complete",
+}
 
-    Distinguishes "no profile registered at all" (suggest create) from "at
-    least one profile is registered but none is active" (suggest login), so
-    an operator who has already created a profile and merely logged out is
-    never told to create a second one. ``list_profile_buckets`` reads only
-    manifest files and never unlocks a bucket, so this check is cheap and
-    safe to run on every no-active-profile status projection.
+_HEALTH_EVIDENCE_IDS: dict[ProfileHealthStatus, str] = {
+    "dangling_pointer": "profile.active.pointer.health",
+    "missing_profile_record": "profile.active.record.presence",
+    "profile_record_unreadable": "profile.active.record.readability",
+    "manifest_unreadable": "profile.active.manifest.readability",
+    "incomplete": "profile.configuration.completeness",
+}
+
+
+def unavailable_profile_record_verdict(
+    *,
+    status: Literal["missing_profile_record", "profile_record_unreadable"],
+    source: ProfileSource,
+    repairable_by_clearing_pointer: bool,
+) -> PreconditionVerdict:
+    """Classify an unreadable or absent profile record without CLI recovery prose.
+
+    A pointer-backed broken active profile has one safe local recovery: clear
+    that pointer after the operator supplies confirmation. An explicit profile
+    override, or a non-active record being inspected, has no command we can
+    honestly materialise from the observed facts, so it carries an explicit
+    ``operator_decision`` outcome instead.
     """
-    if list_profile_buckets():
-        return "aeat config login NAME"
-    return "aeat config profile create NAME --tax-id <TAX_ID> --activity <ACTIVITY>"
+    condition_id = _HEALTH_CONDITIONS[status]
+    evidence = _health_evidence(
+        condition_id=condition_id,
+        evidence_id=_HEALTH_EVIDENCE_IDS[status],
+        status=status,
+        source=source,
+        registered_bucket=True,
+        profile_record_present=False,
+        repairable_by_clearing_pointer=repairable_by_clearing_pointer,
+    )
+    if repairable_by_clearing_pointer:
+        return _pointer_repair_verdict(condition_id=condition_id, evidence=evidence)
+    return _operator_decision_verdict(condition_id=condition_id, evidence=evidence)
+
+
+def _health_precondition_verdict(health: ActiveProfileHealth) -> PreconditionVerdict | None:
+    """Return the one typed failed-condition outcome for a health snapshot."""
+    if health.status == "ready":
+        return None
+    if health.status == "none":
+        verdict = inspect_active_profile_precondition(
+            active_profile_present=False,
+            registered_profile_count=len(list_profile_buckets()),
+        )
+        if verdict is None:
+            raise RuntimeError("inactive-profile health did not produce a precondition verdict")
+        return verdict
+    if health.status == "missing_profile_record":
+        return unavailable_profile_record_verdict(
+            status=health.status,
+            source=health.source,
+            repairable_by_clearing_pointer=health.repairable_by_clearing_pointer,
+        )
+    if health.status == "profile_record_unreadable":
+        return unavailable_profile_record_verdict(
+            status=health.status,
+            source=health.source,
+            repairable_by_clearing_pointer=health.repairable_by_clearing_pointer,
+        )
+
+    condition_id = _HEALTH_CONDITIONS[health.status]
+    evidence = _health_evidence(
+        condition_id=condition_id,
+        evidence_id=_HEALTH_EVIDENCE_IDS[health.status],
+        status=health.status,
+        source=health.source,
+        registered_bucket=health.registered_bucket,
+        profile_record_present=health.profile_record_present,
+        repairable_by_clearing_pointer=health.repairable_by_clearing_pointer,
+        profile_present_keys=health.profile_present_keys,
+        profile_total_keys=health.profile_total_keys,
+        missing_required_count=len(health.missing_required),
+    )
+    if health.status in {"dangling_pointer", "manifest_unreadable"}:
+        if health.repairable_by_clearing_pointer:
+            return _pointer_repair_verdict(condition_id=condition_id, evidence=evidence)
+        return _operator_decision_verdict(condition_id=condition_id, evidence=evidence)
+    if health.status == "incomplete":
+        profile_name = health.active_profile_label
+        if profile_name is None:
+            return _operator_decision_verdict(condition_id=condition_id, evidence=evidence)
+        return PreconditionVerdict(
+            failed_condition_id=condition_id,
+            evidence=(evidence,),
+            action=ActionReference(action_id="operator.profile.edit"),
+            argument_bindings=(
+                ActionArgumentBinding(
+                    argument_name="profile_name",
+                    status=ActionArgumentStatus.RESOLVED,
+                    value=profile_name,
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="profile_name",
+                ),
+            ),
+            conditionality=ActionConditionality.IMMEDIATE,
+        )
+    raise RuntimeError(f"unsupported profile health status: {health.status}")
+
+
+def _health_evidence(
+    *,
+    condition_id: str,
+    evidence_id: str,
+    status: ProfileHealthStatus,
+    source: ProfileSource,
+    registered_bucket: bool,
+    profile_record_present: bool,
+    repairable_by_clearing_pointer: bool,
+    profile_present_keys: int = 0,
+    profile_total_keys: int = 0,
+    missing_required_count: int = 0,
+) -> ConditionEvidence:
+    """Build non-secret, non-identity evidence for one health condition."""
+    return ConditionEvidence(
+        condition_id=condition_id,
+        evidence_id=evidence_id,
+        provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+        values={
+            "health_status": status,
+            "profile_present_keys": profile_present_keys,
+            "profile_record_present": profile_record_present,
+            "profile_source": source,
+            "profile_total_keys": profile_total_keys,
+            "registered_bucket": registered_bucket,
+            "repairable_by_clearing_pointer": repairable_by_clearing_pointer,
+            "required_fields_missing_count": missing_required_count,
+        },
+    )
+
+
+def _pointer_repair_verdict(*, condition_id: str, evidence: ConditionEvidence) -> PreconditionVerdict:
+    """Return the confirm-required repair action for a broken active pointer."""
+    return PreconditionVerdict(
+        failed_condition_id=condition_id,
+        evidence=(evidence,),
+        action=ActionReference(action_id="operator.profile.repair_active_pointer"),
+        argument_bindings=(
+            ActionArgumentBinding(
+                argument_name="clear_active",
+                status=ActionArgumentStatus.RESOLVED,
+                value=True,
+                source=ActionArgumentSource.VERDICT_CONTEXT,
+                source_key="clear_active",
+            ),
+            ActionArgumentBinding(argument_name="yes", status=ActionArgumentStatus.MISSING),
+        ),
+        missing_argument_names=("yes",),
+        conditionality=ActionConditionality.REQUIRES_ARGUMENTS,
+    )
+
+
+def _operator_decision_verdict(*, condition_id: str, evidence: ConditionEvidence) -> PreconditionVerdict:
+    """Return a terminal policy outcome when no command is honestly available."""
+    return PreconditionVerdict(
+        failed_condition_id=condition_id,
+        evidence=(evidence,),
+        conditionality=ActionConditionality.NOT_APPLICABLE,
+        no_recovery_outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+    )
+
+
+def _finalise_health(health: ActiveProfileHealth, *, label: str | None) -> ActiveProfileHealth:
+    """Attach the snapshot label and one application-owned precondition verdict."""
+    labelled = _with_active_profile_label(health, label)
+    return labelled.model_copy(update={"precondition_verdict": _health_precondition_verdict(labelled)})
 
 
 def assess_active_profile_health(state: WorkflowState | None = None) -> ActiveProfileHealth:
@@ -158,15 +331,14 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
     source: ProfileSource = "env_override" if override else ("pointer" if active_profile is not None else "none")
     total_keys = len(list_profile_key_records())
     if active_profile is None:
-        return _with_active_profile_label(
+        return _finalise_health(
             ActiveProfileHealth(
                 active_profile=None,
                 source=source,
                 status="none",
                 profile_total_keys=total_keys,
-                next_action=_no_active_profile_next_action(),
             ),
-            None,
+            label=None,
         )
 
     try:
@@ -177,7 +349,7 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
             active_profile,
             exc_info=exc,
         )
-        return _with_active_profile_label(
+        return _finalise_health(
             ActiveProfileHealth(
                 active_profile=active_profile,
                 source=source,
@@ -186,17 +358,12 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
                 profile_record_error=_compact_error(exc),
                 profile_total_keys=total_keys,
                 repairable_by_clearing_pointer=source == "pointer",
-                next_action=(
-                    "aeat config repair profile --clear-active --yes"
-                    if source == "pointer"
-                    else "re-run without --profile, or pass --profile a readable profile"
-                ),
             ),
-            None,
+            label=None,
         )
     registered = registered_pointer is not None
     if not registered:
-        return _with_active_profile_label(
+        return _finalise_health(
             ActiveProfileHealth(
                 active_profile=active_profile,
                 source=source,
@@ -204,13 +371,8 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
                 registered_bucket=False,
                 profile_total_keys=total_keys,
                 repairable_by_clearing_pointer=source == "pointer",
-                next_action=(
-                    "aeat config repair profile --clear-active --yes"
-                    if source == "pointer"
-                    else "re-run without --profile, or pass --profile a registered profile"
-                ),
             ),
-            None,
+            label=None,
         )
     active_profile = registered_pointer.bucket_id
 
@@ -220,7 +382,7 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
     except (CadrumoError, OSError) as exc:
         # CadrumoError: decryption, session, or domain failures loading the workflow state row.
         # OSError: filesystem I/O failure reading the encrypted database file.
-        return _with_active_profile_label(
+        return _finalise_health(
             ActiveProfileHealth(
                 active_profile=active_profile,
                 source=source,
@@ -229,13 +391,8 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
                 profile_record_error=_compact_error(exc),
                 profile_total_keys=total_keys,
                 repairable_by_clearing_pointer=source == "pointer",
-                next_action=(
-                    "aeat config repair profile --clear-active --yes"
-                    if source == "pointer"
-                    else "re-run without --profile, or pass --profile a readable profile"
-                ),
             ),
-            registered_pointer.label,
+            label=registered_pointer.label,
         )
     try:
         with override_settings(cadrumo_active_profile=registered_pointer.bucket_id):
@@ -243,7 +400,7 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
     except (CadrumoError, ValueError) as exc:
         # CadrumoError: domain or registry failures resolving the profile record.
         # ValueError (including pydantic ValidationError): stored record fails strict validation.
-        return _with_active_profile_label(
+        return _finalise_health(
             ActiveProfileHealth(
                 active_profile=active_profile,
                 source=source,
@@ -252,16 +409,11 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
                 profile_record_error=_compact_error(exc),
                 profile_total_keys=total_keys,
                 repairable_by_clearing_pointer=source == "pointer",
-                next_action=(
-                    "aeat config repair profile --clear-active --yes"
-                    if source == "pointer"
-                    else "re-run without --profile, or pass --profile a readable profile"
-                ),
             ),
-            registered_pointer.label,
+            label=registered_pointer.label,
         )
     if record is None:
-        return _with_active_profile_label(
+        return _finalise_health(
             ActiveProfileHealth(
                 active_profile=active_profile,
                 source=source,
@@ -269,19 +421,14 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
                 registered_bucket=True,
                 profile_total_keys=total_keys,
                 repairable_by_clearing_pointer=source == "pointer",
-                next_action=(
-                    "aeat config repair profile --clear-active --yes"
-                    if source == "pointer"
-                    else "re-run without --profile, or pass --profile a readable profile"
-                ),
             ),
-            registered_pointer.label,
+            label=registered_pointer.label,
         )
 
     values = record_to_path_values(record)
     validation = validate_profile_values(values)
     status: ProfileHealthStatus = "ready" if validation.valid else "incomplete"
-    return _with_active_profile_label(
+    return _finalise_health(
         ActiveProfileHealth(
             active_profile=active_profile,
             source=source,
@@ -291,13 +438,8 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
             profile_present_keys=validation.present_keys,
             profile_total_keys=validation.total_keys,
             missing_required=validation.missing_required,
-            next_action=(
-                "aeat app overview status"
-                if validation.valid
-                else f"aeat config profile edit {registered_pointer.label}"
-            ),
         ),
-        registered_pointer.label,
+        label=registered_pointer.label,
     )
 
 
@@ -373,9 +515,8 @@ def assess_active_profile_health_with_session() -> ActiveProfileHealth:
         }:
             repairable = before.source == "pointer"
             updates["repairable_by_clearing_pointer"] = repairable
-            if repairable:
-                updates["next_action"] = "aeat config repair profile --clear-active --yes"
-        return reassessed.model_copy(update=updates)
+        refreshed = reassessed.model_copy(update=updates)
+        return refreshed.model_copy(update={"precondition_verdict": _health_precondition_verdict(refreshed)})
     except (CadrumoError, OSError, ImportError) as exc:
         # CadrumoError: keyring/master-key domain failures.
         # OSError: filesystem-backed secret-store I/O failures.
@@ -384,7 +525,19 @@ def assess_active_profile_health_with_session() -> ActiveProfileHealth:
             update={
                 "profile_record_error": _compact_error(exc),
                 "repairable_by_clearing_pointer": False,
-                "next_action": "restore access to the active profile secret store, then retry",
+                "precondition_verdict": _operator_decision_verdict(
+                    condition_id="profile.secret_store.available",
+                    evidence=ConditionEvidence(
+                        condition_id="profile.secret_store.available",
+                        evidence_id="profile.secret_store.access",
+                        provenance=ConditionEvidenceProvenance.RUNTIME_OBSERVATION,
+                        values={
+                            "profile_record_present": before.profile_record_present,
+                            "profile_source": before.source,
+                            "secret_store_accessible": False,
+                        },
+                    ),
+                ),
             }
         )
 
@@ -404,4 +557,5 @@ __all__ = [
     "assess_active_profile_health",
     "assess_active_profile_health_with_session",
     "repair_active_profile_pointer",
+    "unavailable_profile_record_verdict",
 ]

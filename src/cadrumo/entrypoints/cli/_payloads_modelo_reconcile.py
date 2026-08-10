@@ -27,9 +27,8 @@ from ...application.modelo import (
     TaxationRecommendation,
 )
 from ...core import Modelo
-from ...core.identity import BucketId
+from ...core.identity import BucketId, WorkUnitId
 from ...core.json_contract import OutputSchema, register_schema
-from ...domain.modelos import WorkUnitId
 from ._decimal_wire import DecimalWireText
 
 

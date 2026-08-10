@@ -72,6 +72,7 @@ def _auth_field_label(path: str) -> str:
     section_key, _field_key = path.split(".", 1)
     return profile_field_label(section_key, load_user_profile_schema().field(path))
 
+
 _AUTH_PROFILE_PATHS = (
     _AUTH_PROVIDER_PATH,
     _AUTH_CLAVE_MOVIL_ROUTE_PATH,
@@ -710,12 +711,7 @@ def _run_certificate() -> ManagerActionOutcome:
 
     chosen_certificate, configure_result = _commit_auth_choice(collected)
     if not configure_result.complete:
-        message = tr(
-            "flows.manager.action.certificate_incomplete",
-            provider=provider,
-            reason=configure_result.incomplete_reason,
-            next_action=configure_result.next_action,
-        )
+        message = configure_result.incomplete_reason
     else:
         message = tr("flows.manager.action.certificate_done", name=chosen_certificate or "-", provider=provider)
     return ManagerActionOutcome(

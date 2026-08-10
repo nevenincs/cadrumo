@@ -20,9 +20,8 @@ global). The authoritative sources walked here are:
 - the locale catalogue's ``cli.*`` leaf strings that embed an ``aeat app`` /
   ``aeat config`` invocation - help text, refusal messages, and next-action
   hints rendered to the operator;
-- the workflow engine's ``next_action`` detail strings and the modelo verify
-  renderer's ``next_action`` line, which name a recovery command on a failed
-  draft.
+- the workflow engine's ``next_action`` detail strings, which name a recovery
+  command on a failed draft.
 
 The hint-string extraction reuses the documented-command gate's command-line
 decomposition and live-tree resolution (``_parse_command_line``,
@@ -99,16 +98,14 @@ def _has_params(value: object) -> TypeGuard[_CommandWithParams]:
 # ---------------------------------------------------------------------------
 
 
-# Workflow-engine and verify-renderer next_action strings are authored as Python
-# literals (not registry/locale data), so they are pinned here explicitly. The
-# gate asserts each resolves; a rename of the cited command reds this list, which
-# is exactly the protection the rename safety net depends on.
+# Workflow-engine next_action strings are authored as Python literals (not
+# registry/locale data), so they are pinned here explicitly. The gate asserts
+# each resolves; a rename of the cited command reds this list, which is exactly
+# the protection the rename safety net depends on.
 _LITERAL_HINT_STRINGS: tuple[str, ...] = (
     # cadrumo.application.workflow._engine: draft-build-refused next_action.
     "aeat app modelo work calculate",
     # cadrumo.application.workflow._engine: draft-has-errors next_action.
-    "aeat app modelo verification-report list --calculation-revision-id <calculation_revision_id>",
-    # cadrumo.entrypoints.cli._modelo_rendering: verify report next_action line.
     "aeat app modelo verification-report list --calculation-revision-id <calculation_revision_id>",
     # cadrumo.entrypoints.cli._modelo_rendering: local-finish-line guidance.
     "aeat app modelo export",

@@ -233,8 +233,12 @@ def test_m200_refuses_business_ledger_rows_without_accounting_result_input(
     assert error.context is not None
     assert error.context["required_casilla_id"] == _RESULTADO_CONTABLE
     assert error.context["ledger_transaction_count"] == 3
-    assert error.suggestion is not None
-    assert "--casilla 00501=<resultado-contable>" in error.suggestion
+    failure = error.precondition_failure
+    assert failure is not None
+    assert failure.scenario_id == (
+        "modelo.work.calculate.m200.accounting_result.ledger_rows_without_accounting_result"
+    )
+    assert failure.verdict.no_recovery_outcome is not None
 
 
 def test_m200_uses_explicit_accounting_result_even_when_reviewed_ledger_rows_exist(

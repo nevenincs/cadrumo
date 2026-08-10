@@ -83,6 +83,20 @@ def test_test_operator_auth_reports_the_active_profile() -> None:
     assert result.active_profile_status
 
 
+def test_auth_status_preserves_the_active_profile_typed_verdict() -> None:
+    """Auth status forwards the state projection verdict without recovery prose."""
+
+    result = inspect_operator_auth("certificate")
+
+    assert not hasattr(result, "active_profile_next_action")
+    verdict = result.active_profile_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == "profile.active.pointer_registered"
+    assert verdict.action is None
+    assert verdict.no_recovery_outcome is not None
+    assert verdict.no_recovery_outcome.value == "operator_decision"
+
+
 def test_auth_status_is_not_blocked_by_unreadable_workspace_drafts() -> None:
     """Auth readiness is local-auth state, not a workspace-wide integrity scan.
 
@@ -391,9 +405,9 @@ def test_configure_operator_auth_certificate_without_file_is_incomplete() -> Non
     The certificate provider cannot be used without a certificate file;
     configuring it without ``--file`` records only the provider
     selection. The result must mark itself ``complete=False``, carry an
-    ``incomplete_reason``, and point ``next_action`` at the command that
-    supplies the file — never tell the operator the provider is
-    configured when it is not usable.
+    ``incomplete_reason``, and retain the application-owned failed
+    precondition — never tell the operator the provider is configured when it
+    is not usable or invent a command for a file the operator has not chosen.
     """
 
     workflow_state_repository().update(_register_operator_profile())
@@ -406,9 +420,17 @@ def test_configure_operator_auth_certificate_without_file_is_incomplete() -> Non
     )
     assert result.incomplete_reason, "an incomplete result must explain what is missing"
     assert "certificate" in result.incomplete_reason.lower()
-    assert "--file" in result.next_action and "configure" in result.next_action, (
-        f"next_action must name the command that supplies the file — got {result.next_action!r}"
-    )
+    assert not hasattr(result, "next_action")
+    verdict = result.precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == "auth.certificate.file_ready"
+    assert verdict.action is None
+    assert verdict.no_recovery_outcome.value == "operator_decision"
+    assert verdict.evidence[0].values == {
+        "certificate_file_provided": False,
+        "certificate_file_resolves": False,
+        "provider": "certificate",
+    }
 
 
 def test_configure_operator_auth_certificate_with_file_is_complete(tmp_path: Path) -> None:
@@ -424,6 +446,7 @@ def test_configure_operator_auth_certificate_with_file_is_complete(tmp_path: Pat
     assert result.complete is True, f"a supplied resolvable file must be complete — got {result.complete!r}"
     assert result.incomplete_reason == ""
     assert result.file == str(cert_path)
+    assert result.precondition_verdict is None
 
 
 def test_configure_operator_auth_certificate_with_unresolved_file_is_incomplete(tmp_path: Path) -> None:
@@ -440,7 +463,11 @@ def test_configure_operator_auth_certificate_with_unresolved_file_is_incomplete(
         f"an unresolvable certificate path must not report success — got complete={result.complete!r}"
     )
     assert result.incomplete_reason
-    assert "--file" in result.next_action and "configure" in result.next_action
+    verdict = result.precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == "auth.certificate.file_ready"
+    assert verdict.evidence[0].values["certificate_file_provided"] is True
+    assert verdict.evidence[0].values["certificate_file_resolves"] is False
 
 
 def test_auth_status_and_test_agree_when_no_provider_configured() -> None:
@@ -703,10 +730,10 @@ def test_configure_clave_movil_mismatch_carries_an_explanatory_detail() -> None:
     """An ``identity_alignment: mismatch`` must explain what mismatches.
 
     A bare ``mismatch`` token tells the operator nothing. The result
-    must carry an ``identity_alignment_detail``
-    that names both compared values — the Cl@ve DNI/NIE and the active
-    profile tax id — and a ``next_action`` that routes to the actual
-    fix, not a futile ``auth test``.
+    must carry an ``identity_alignment_detail`` that names both compared
+    values — the Cl@ve DNI/NIE and the active profile tax id — plus an exact
+    typed no-recovery outcome because the application cannot choose which
+    identity the operator should change.
     """
 
     workflow_state_repository().update(
@@ -726,10 +753,12 @@ def test_configure_clave_movil_mismatch_carries_an_explanatory_detail() -> None:
     assert result.incomplete_reason == result.identity_alignment_detail
     assert "00000000T" in result.identity_alignment_detail
     assert "00000001R" in result.identity_alignment_detail
-    assert "auth test" not in result.next_action, (
-        "a misaligned Cl@ve identity cannot pass auth test; the next "
-        f"action must route to the fix — got {result.next_action!r}"
-    )
+    verdict = result.precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == "auth.clave_movil.identity_aligned"
+    assert verdict.action is None
+    assert verdict.no_recovery_outcome.value == "operator_decision"
+    assert verdict.evidence[0].values["identity_alignment"] == "mismatch"
 
 
 def test_configure_clave_movil_match_carries_no_alignment_detail() -> None:
@@ -750,6 +779,7 @@ def test_configure_clave_movil_match_carries_no_alignment_detail() -> None:
     assert result.identity_alignment_detail == ""
     assert result.complete is True
     assert result.incomplete_reason == ""
+    assert result.precondition_verdict is None
 
 
 def test_configure_clave_movil_without_provider_identity_is_incomplete() -> None:
@@ -770,7 +800,10 @@ def test_configure_clave_movil_without_provider_identity_is_incomplete() -> None
     assert result.identity_alignment == "clave_identity_missing"
     assert result.complete is False
     assert result.incomplete_reason == result.identity_alignment_detail
-    assert "--file" not in result.next_action
+    verdict = result.precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == "auth.clave_movil.identity_aligned"
+    assert verdict.evidence[0].values["identity_alignment"] == "clave_identity_missing"
 
 
 def test_operator_auth_test_reports_profile_scoped_clave_session() -> None:

@@ -75,6 +75,7 @@ from ..workflow import WorkflowEngine, WorkflowRunRepository
 from ._action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
+    ModeloPreconditionErrorMixin,
     ModeloRecordNotFoundError,
     VerificationReportNotFoundError,
     WorkUnitNotFoundError,
@@ -100,7 +101,7 @@ if TYPE_CHECKING:
     from ..calculations import IvaWalletDecisionRepository
 
 
-class ModeloFilingEvidenceMissingError(ModeloError):
+class ModeloFilingEvidenceMissingError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised when internal filing would seal deductible IVA without evidence."""
 
 
@@ -401,14 +402,6 @@ def _require_filing_preconditions(
     raise_if_deductible_vat_evidence_missing(
         target,
         error_type=ModeloFilingEvidenceMissingError,
-        surface="internal filing",
-        # Same ordering caveat as the export gate: this revision's evidence bundle
-        # was frozen at verify, so a later attach cannot unblock this filing.
-        suggestion=(
-            "aeat app ledger evidence add PATH; "
-            "aeat app ledger attach TRANSACTION_ID --purchase-invoice-evidence-id EVIDENCE_ID  "
-            "# link BEFORE `aeat app modelo work calculate`"
-        ),
     )
     require_profile_ready_for_work_unit(work_unit)
     _require_persisted_required_bindings_resolved(

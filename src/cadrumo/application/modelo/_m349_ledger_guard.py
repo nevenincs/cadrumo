@@ -16,7 +16,9 @@ from ...core import Modelo
 from ...domain.iva import IvaCategory
 from ...domain.modelos import Modelo349OperadorRow, ModeloDetailRow, WorkUnit
 from ...domain.transactions import TransactionCatalogueRepositoryProtocol, TransactionLifecycleState
+from ..operator_actions import ConditionEvidenceProvenance
 from ._action_errors import ModeloAggregationBindingError
+from ._preconditions import build_modelo_precondition_failure
 
 _M349_INTRACOM_LEDGER_CATEGORIES = frozenset(
     {
@@ -64,7 +66,21 @@ def raise_if_m349_intracom_ledger_rows_need_operator_rows(
             "transaction_count": len(transaction_ids),
             "sample_transaction_ids": transaction_ids[:3],
         },
-        suggestion="aeat app ledger invoice add --help",
+        precondition_failure=build_modelo_precondition_failure(
+            subject_leaf_key="modelo.work.calculate",
+            condition_id="modelo.work.calculate.m349.operator_rows.present",
+            scenario_id="modelo.work.calculate.m349.operator_rows.intracom_ledger_without_operator_rows",
+            evidence_id="modelo.work.calculate.m349.operator_rows",
+            evidence_values={
+                "work_unit_id": work_unit.work_unit_id,
+                "modelo": Modelo.M349.value,
+                "year": work_unit.filing_year,
+                "period": work_unit.period.registry_token,
+                "transaction_count": len(transaction_ids),
+                "sample_transaction_ids": "|".join(transaction_ids[:3]),
+            },
+            provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+        ),
     )
 
 

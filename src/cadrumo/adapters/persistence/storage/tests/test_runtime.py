@@ -14,14 +14,12 @@ from .....core.config import Settings, StorageRouteKind, override_settings
 from .....core.errors import CadrumoError, resolve_error_message
 from .....core.external_constants import OutputLanguage
 from .._namespace_registry import STORAGE_NAMESPACE_REGISTRY, WORKFLOW_STATE_NAMESPACE
-from ..bucket import bucket_paths, provision_bucket_directory, write_bucket_output_language_hint
+from ..bucket import bucket_paths
 from ..errors import StorageValidationError
 from ..master_key import BucketSession, activate_session
 from ..runtime import (
     StorageRuntime,
     StorageRuntimeReadinessCode,
-    _normalise_supported_language,
-    _settings_output_language,
     inspect_bucket_storage_runtime,
     inspect_storage_runtime,
 )
@@ -74,39 +72,6 @@ def _sealed_session(bucket_id: str) -> BucketSession:
 
 def _issue_codes(runtime: StorageRuntime) -> tuple[StorageRuntimeReadinessCode, ...]:
     return tuple(issue.code for issue in runtime.readiness.issues)
-
-
-@pytest.mark.parametrize(
-    ("value", "expected"),
-    (
-        (" EN ", OutputLanguage.EN.value),
-        ("", None),
-        ("zz", None),
-        (True, None),
-        (OutputLanguage.CA, OutputLanguage.CA.value),
-    ),
-)
-def test_storage_runtime_normalizes_only_supported_language_values(value: object, expected: str | None) -> None:
-    assert _normalise_supported_language(value) == expected
-
-
-def test_storage_runtime_explicit_settings_language_precedes_bucket_hint(tmp_path: Path) -> None:
-    provision_bucket_directory(tmp_path, _BUCKET_A_ID)
-    assert write_bucket_output_language_hint(
-        storage_root=tmp_path,
-        bucket_id=_BUCKET_A_ID,
-        language=OutputLanguage.CA,
-    )
-
-    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_BUCKET_A_ID):
-        assert _settings_output_language() == OutputLanguage.CA.value
-
-    with override_settings(
-        cadrumo_local_storage_root=tmp_path,
-        cadrumo_active_profile=_BUCKET_A_ID,
-        cadrumo_output_language=" HU ",
-    ):
-        assert _settings_output_language() == OutputLanguage.HU.value
 
 
 def test_runtime_ready_when_route_and_active_session_match(tmp_path: Path) -> None:
@@ -242,14 +207,16 @@ def test_named_bucket_runtime_refuses_live_explicit_database_url(tmp_path: Path)
     assert runtime.route_kind is StorageRouteKind.EXPLICIT_DATABASE_URL
     assert _issue_codes(runtime) == (StorageRuntimeReadinessCode.ROUTE_NOT_ACTIVE_BUCKET,)
     issue = runtime.readiness.issues[0]
-    assert "CADRUMO_DATABASE_URL" in issue.message
-    assert "CADRUMO_LOCAL_STORAGE_ROOT" in issue.recovery_hint
+    assert issue.model_dump(mode="json") == {"code": StorageRuntimeReadinessCode.ROUTE_NOT_ACTIVE_BUCKET.value}
     with pytest.raises(StorageValidationError) as raised:
         runtime.require_ready()
     assert isinstance(raised.value, CadrumoError)
     assert raised.value.context is not None
-    assert "CADRUMO_DATABASE_URL" in str(raised.value.context["recovery"])
-    assert "CADRUMO_LOCAL_STORAGE_ROOT" in str(raised.value.context["recovery"])
+    assert raised.value.context == {
+        "details": StorageRuntimeReadinessCode.ROUTE_NOT_ACTIVE_BUCKET.value,
+        "readiness_code": StorageRuntimeReadinessCode.ROUTE_NOT_ACTIVE_BUCKET.value,
+        "readiness_issue_codes": (StorageRuntimeReadinessCode.ROUTE_NOT_ACTIVE_BUCKET.value,),
+    }
 
 
 def test_named_bucket_runtime_rejects_blank_bucket_with_localized_validation(tmp_path: Path) -> None:
@@ -357,7 +324,7 @@ def test_runtime_bound_repository_refuses_write_after_session_bucket_changes(tmp
         )
 
     assert raised.value.translated_message == "errors.storage.runtime.not_ready"
-    assert "active bucket session changed" in rendered
+    assert StorageRuntimeReadinessCode.SESSION_CHANGED.value in rendered
     assert loaded is None
 
 
@@ -387,7 +354,7 @@ def test_runtime_bound_repository_refuses_raw_key_write_after_session_bucket_cha
         raw_row_exists = repo.exists_by_raw_key(namespace, hashed_object_key)
 
     assert raised.value.translated_message == "errors.storage.runtime.not_ready"
-    assert "active bucket session changed" in rendered
+    assert StorageRuntimeReadinessCode.SESSION_CHANGED.value in rendered
     assert raw_row_exists is False
 
 
@@ -422,7 +389,7 @@ def test_runtime_bound_repository_refuses_write_after_session_becomes_unsecured(
         )
 
     assert raised.value.translated_message == "errors.storage.runtime.not_ready"
-    assert "unsecured backend" in rendered
+    assert StorageRuntimeReadinessCode.UNSECURED_BACKEND.value in rendered
     assert loaded is None
 
 
@@ -462,7 +429,7 @@ def test_runtime_bound_repository_refuses_quarantine_after_session_bucket_change
         )
 
     assert raised.value.translated_message == "errors.storage.runtime.not_ready"
-    assert "active bucket session changed" in rendered
+    assert StorageRuntimeReadinessCode.SESSION_CHANGED.value in rendered
     assert loaded is not None
     assert loaded.payload == b"quarantine-guard-payload"
 
@@ -528,14 +495,13 @@ def test_runtime_repository_factory_refuses_unready_runtime(tmp_path: Path) -> N
     runtime = inspect_storage_runtime(settings, now=_NOW)
 
     with override_settings(cadrumo_output_language="en"):
-        with pytest.raises(StorageValidationError, match="storage runtime is not ready") as raised:
+        with pytest.raises(StorageValidationError) as raised:
             runtime.secure_object_repository()
-
         rendered = resolve_error_message(raised.value)
 
     assert raised.value.translated_message == "errors.storage.runtime.not_ready"
     assert "Storage runtime is not ready for profile-bound storage" in rendered
-    assert "unlock a profile" in rendered
+    assert StorageRuntimeReadinessCode.NO_ACTIVE_SESSION.value in rendered
 
 
 def test_cold_bootstrap_repository_is_available_before_profile_selection(tmp_path: Path) -> None:
@@ -555,7 +521,7 @@ def test_default_route_repository_carries_namespace_registry_before_profile_sele
     assert repository.namespace_registry is STORAGE_NAMESPACE_REGISTRY
 
 
-def test_active_bucket_repository_refusal_carries_localized_details(tmp_path: Path) -> None:
+def test_active_bucket_repository_refusal_carries_typed_readiness_facts(tmp_path: Path) -> None:
     with override_settings(
         cadrumo_local_storage_root=tmp_path,
         cadrumo_active_profile=None,
@@ -567,8 +533,8 @@ def test_active_bucket_repository_refusal_carries_localized_details(tmp_path: Pa
 
     assert raised.value.translated_message == "errors.storage.runtime.not_ready"
     assert raised.value.context is not None
-    assert "No active bucket session" in str(raised.value.context["details"])
-    assert "No active bucket session" in rendered
+    assert raised.value.context["details"] == StorageRuntimeReadinessCode.NO_ACTIVE_SESSION.value
+    assert StorageRuntimeReadinessCode.NO_ACTIVE_SESSION.value in rendered
 
 
 def test_cold_bootstrap_repository_refuses_active_profile(tmp_path: Path) -> None:
@@ -614,7 +580,7 @@ def test_default_route_repository_refuses_settings_scoped_active_profile_without
 ) -> None:
     settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
 
-    with pytest.raises(StorageValidationError, match="no active bucket session"):
+    with pytest.raises(StorageValidationError):
         secure_object_repository_for_active_bucket_or_default_route(settings)
 
 
@@ -627,21 +593,21 @@ def test_default_route_repository_refuses_pointer_scoped_active_profile_without_
 
     with (
         override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None),
-        pytest.raises(StorageValidationError, match="no active bucket session"),
+        pytest.raises(StorageValidationError),
     ):
         secure_object_repository_for_active_bucket_or_default_route()
 
 
 def test_runtime_repository_factory_rechecks_live_session(tmp_path: Path) -> None:
     cases = (
-        (None, "no active bucket session"),
-        (_session(_BUCKET_B_ID), "active bucket session changed"),
-        (_sealed_session(_BUCKET_A_ID), "active bucket session is sealed"),
+        (None, StorageRuntimeReadinessCode.NO_ACTIVE_SESSION),
+        (_session(_BUCKET_B_ID), StorageRuntimeReadinessCode.SESSION_CHANGED),
+        (_sealed_session(_BUCKET_A_ID), StorageRuntimeReadinessCode.SESSION_SEALED),
         (
             _session(_BUCKET_A_ID, opened_at=datetime(2000, 1, 1, tzinfo=UTC), idle_minutes=5),
-            "active bucket session has expired",
+            StorageRuntimeReadinessCode.SESSION_EXPIRED,
         ),
-        (_session(_BUCKET_A_ID, unsecured_backend=True), "active bucket session uses unsecured backend"),
+        (_session(_BUCKET_A_ID, unsecured_backend=True), StorageRuntimeReadinessCode.UNSECURED_BACKEND),
     )
     settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
 
@@ -652,6 +618,8 @@ def test_runtime_repository_factory_rechecks_live_session(tmp_path: Path) -> Non
         replacement_context = nullcontext() if replacement_session is None else activate_session(replacement_session)
         with (
             replacement_context,
-            pytest.raises(StorageValidationError, match=match),
+            pytest.raises(StorageValidationError) as raised,
         ):
             runtime.secure_object_repository()
+        assert raised.value.context is not None
+        assert raised.value.context["readiness_code"] == match.value

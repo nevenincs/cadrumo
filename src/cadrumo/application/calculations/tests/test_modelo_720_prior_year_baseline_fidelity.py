@@ -657,9 +657,26 @@ def test_enrollment_recorder_evidences_two_distinct_annual_cycles_and_matches_ma
     This test covers the enrollment cycle, not binding resolution: the
     `previous_filing` baseline bindings are live registry data and are exercised
     by test_previous_filing_baseline_drives_redeclaration_advisory_for_omitted_grown_cuentas
-    above. What remains unwired for M720 is the ADVISORY TRIGGER itself —
+    above. What remains unwired for M720 is the advisory's INPUT, not its
+    trigger. The trigger is live:
     :func:`~application.calculations.modelo_720_redeclaration_advisory_findings`
-    has no production caller and `verify_modelo_revision` never invokes it.
+    is reached on the verification path through the application-layer gate,
+    which resolves the law-determined revision and folds the evidence,
+    prior-baseline and declaration observations before calling it.
+
+    What does not arrive is the evidence. The single production calculate
+    entry point takes an input bundle carrying no observation field of any
+    kind, so the foreign-asset resolver always runs with an empty collection,
+    the revision's row bindings carry no asset rows, and the gate returns at
+    its own `if not evidence.observations` guard. That boundary is
+    deliberate rather than missing: the campaign that enrolled the resolver
+    recorded that it did not approve a durable foreign-asset observation
+    store, and the explicit observations parameter is the injection point
+    left for one.
+
+    So a reader arriving here should look at the supply, not the wiring. The
+    wiring question is settled and re-deriving it has already cost this
+    codebase one wrong finding reported upward.
     """
     obs_n = _year_n_observation()
     obs_n1 = _year_n_plus_1_observation()

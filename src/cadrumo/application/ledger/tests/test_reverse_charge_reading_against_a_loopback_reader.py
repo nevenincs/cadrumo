@@ -37,7 +37,7 @@ from decimal import Decimal
 from http import HTTPStatus
 from pathlib import Path
 from queue import Queue
-from typing import ClassVar
+from typing import ClassVar, override
 
 import pytest
 
@@ -110,6 +110,7 @@ class _LoopbackRequestHandler(SilentLoopbackHandler):
     reply: ClassVar[str]
     requests: ClassVar[Queue[dict[str, object]]]
 
+    @override
     def do_POST(self) -> None:
         self.requests.put(dict(read_json_body(self)))
         write_json_response(

@@ -314,15 +314,12 @@ class SecureObjectRepository:
 
         from ..errors import SessionExpiredError
         from ..master_key import current_active_bucket_session, evaluate_idle, session_serves_bucket
-        from ..runtime import _runtime_not_ready_error
+        from ..runtime import StorageRuntimeReadinessCode, runtime_not_ready_error
 
         session = current_active_bucket_session()
         if session is None:
             if self._require_secure_active_session:
-                raise _runtime_not_ready_error(
-                    "storage runtime is not ready for profile-bound storage: no active bucket session.",
-                    message_key="errors.storage.runtime.no_active_session",
-                )
+                raise runtime_not_ready_error(StorageRuntimeReadinessCode.NO_ACTIVE_SESSION)
             return
         now = _utc_now()
         outcome = evaluate_idle(session=session, now=now)
@@ -331,17 +328,11 @@ class SecureObjectRepository:
                 "the active profile session has expired; run `aeat config login NAME` to re-activate.",
             )
         if self._require_secure_active_session and session.unsecured_backend:
-            raise _runtime_not_ready_error(
-                "storage runtime is not ready for profile-bound storage: active bucket session uses unsecured backend.",
-                message_key="errors.storage.runtime.unsecured_backend",
-            )
+            raise runtime_not_ready_error(StorageRuntimeReadinessCode.UNSECURED_BACKEND)
         if self._active_session_bucket_id is not None and not session_serves_bucket(
             session, self._active_session_bucket_id
         ):
-            raise _runtime_not_ready_error(
-                "storage runtime is not ready for profile-bound storage: active bucket session changed.",
-                message_key="errors.storage.runtime.session_changed",
-            )
+            raise runtime_not_ready_error(StorageRuntimeReadinessCode.SESSION_CHANGED)
         session.touch(now)
 
     def exists(self, namespace: str, object_key: str) -> bool:

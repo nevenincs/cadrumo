@@ -355,9 +355,13 @@ def test_modelo_303_verify_blocks_on_deductible_gap_and_only_warns_on_the_output
     ]
     warning = [finding for finding in report.findings if finding.severity is ModeloVerificationFindingSeverity.WARNING]
     assert blocking != []
+    assert warning != []
     expected_source_refs = tuple(dict.fromkeys(ref for obs in revision.observations for ref in obs.source_refs))
     evidence_findings = [
-        finding for finding in report.findings if "VAT" in finding.message and ("no linked evidence" in finding.message)
+        finding
+        for finding in report.findings
+        if finding.source_refs == expected_source_refs
+        and finding.kind in {ModeloVerificationFindingKind.BLOCKING_RULE, ModeloVerificationFindingKind.ADVISORY}
     ]
     assert evidence_findings
     assert all(finding.source_refs == expected_source_refs for finding in evidence_findings)
@@ -370,34 +374,26 @@ def test_modelo_303_verify_blocks_on_deductible_gap_and_only_warns_on_the_output
     )
     # The deductible finding is BLOCKING while the output side stays an
     # ADVISORY; each remains factual and has no persisted recovery prose.
-    assert any(
-        finding.kind is ModeloVerificationFindingKind.BLOCKING_RULE
-        and purchase.transaction_id in finding.message
-        and "deductible VAT" in finding.message
-        for finding in blocking
-    )
-    assert any(
-        finding.kind is ModeloVerificationFindingKind.ADVISORY
-        and sale.transaction_id in finding.message
-        and "output VAT" in finding.message
-        for finding in warning
-    )
+    assert any(finding.kind is ModeloVerificationFindingKind.BLOCKING_RULE for finding in evidence_findings)
+    assert any(finding.kind is ModeloVerificationFindingKind.ADVISORY for finding in evidence_findings)
     assert all("next_action" not in finding.model_dump(mode="json") for finding in evidence_findings)
     evidence_projections = tuple(
         projection
         for projection in verification.finding_preconditions
-        if "VAT" in projection.finding.message and "no linked evidence" in projection.finding.message
+        if projection.finding in evidence_findings
     )
     assert len(evidence_projections) == len(evidence_findings)
     assert all(
-        projection.precondition_verdict is not None
-        and projection.precondition_verdict.action is None
-        and projection.precondition_verdict.no_recovery_outcome is not None
+        projection.precondition_failure is not None
+        and projection.precondition_failure.scenario_id
+        == "modelo.work.verify.deductible_vat_evidence.missing"
+        and projection.precondition_failure.verdict.action is None
+        and projection.precondition_failure.verdict.no_recovery_outcome is not None
         for projection in evidence_projections
         if projection.finding.severity is ModeloVerificationFindingSeverity.BLOCKING
     )
     assert all(
-        projection.precondition_verdict is None
+        projection.precondition_failure is None
         for projection in evidence_projections
         if projection.finding.severity is ModeloVerificationFindingSeverity.WARNING
     )
@@ -763,9 +759,14 @@ def test_modelo_303_export_refuses_legacy_verified_deductible_vat_missing_eviden
 
     assert exc_info.value.context is not None
     assert exc_info.value.context["reason"] == "deductible_vat_evidence_missing"
-    assert exc_info.value.suggestion is not None
-    assert "aeat app ledger evidence add" in exc_info.value.suggestion
-    assert "--purchase-invoice-evidence-id" in exc_info.value.suggestion
+    failure = exc_info.value.precondition_failure
+    assert failure is not None
+    assert failure.identity == (
+        "modelo.export",
+        "modelo.export.deductible_vat_evidence.present",
+        "modelo.export.deductible_vat_evidence.missing",
+    )
+    assert failure.verdict.no_recovery_outcome is not None
     assert not output_path.exists()
     assert not output_path.with_name(output_path.name + ".tmp").exists()
 
@@ -793,7 +794,12 @@ def test_modelo_303_internal_file_refuses_legacy_verified_deductible_vat_missing
 
     assert exc_info.value.context is not None
     assert exc_info.value.context["reason"] == "deductible_vat_evidence_missing"
-    assert exc_info.value.suggestion is not None
-    assert "aeat app ledger evidence add" in exc_info.value.suggestion
-    assert "--purchase-invoice-evidence-id" in exc_info.value.suggestion
+    failure = exc_info.value.precondition_failure
+    assert failure is not None
+    assert failure.identity == (
+        "modelo.work.file",
+        "modelo.work.file.deductible_vat_evidence.present",
+        "modelo.work.file.deductible_vat_evidence.missing",
+    )
+    assert failure.verdict.no_recovery_outcome is not None
     assert tuple(filing_repo.load().values()) == ()

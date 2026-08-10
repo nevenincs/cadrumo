@@ -15,7 +15,8 @@ it loads the registry authority only for repair commands that ask for that
 validation.
 
 Every warn/fail :class:`DiagnosticCheck` is actionable by construction: it must
-carry either ``next_action`` or ``dead_end`` and the validator raises
+carry a legacy local ``next_action``, an application-owned
+``precondition_verdict``, or a ``dead_end`` and the validator raises
 :class:`~application._errors.DiagnosticModelError` if a row is silent or
 ambiguous. Renderers and CLI payloads can therefore treat the repair report as a
 typed contract, not a best-effort text scan.
@@ -62,6 +63,7 @@ from ..core.redaction import CLI_PROFILE_ID_PLACEHOLDER
 from ..core.resources import bundled_path
 from ..core.time import now
 from ._errors import DiagnosticModelError
+from .operator_actions import PreconditionVerdict
 
 # The browser adapter, the registry authority, the secure-object
 # repository, the workflow store, and the wizard-status projection are
@@ -144,7 +146,7 @@ class DiagnosticFinding(BaseModel):
     it. The profile-keys check emits one finding per unset key; a
     failing check emits one finding per concrete cause. Findings are
     explanatory children, not a replacement for the parent row's required
-    ``next_action`` or ``dead_end`` recovery channel.
+    recovery channel.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -158,11 +160,12 @@ class DiagnosticFinding(BaseModel):
 class DiagnosticCheck(BaseModel):
     """One concrete config repair check.
 
-    A failing or warning row MUST carry exactly one of ``next_action`` (an
-    exact ``aeat ...`` command string the operator can run) or ``dead_end``
-    (a short explanation of why no automated route exists). A row that
-    supplies neither, or both, is a :class:`pydantic.ValidationError` at
-    construction time by raising
+    A failing or warning row MUST carry exactly one recovery outcome:
+    ``next_action`` for an as-yet-unmigrated local diagnostic,
+    ``precondition_verdict`` for an application-owned typed refusal, or
+    ``dead_end`` for a short explanation of why no automated route exists.
+    A row that supplies neither, or more than one, is a
+    :class:`pydantic.ValidationError` at construction time by raising
     :class:`~application._errors.DiagnosticModelError`. ``ok`` rows MUST
     carry neither.
 
@@ -180,25 +183,30 @@ class DiagnosticCheck(BaseModel):
     summary: str
     detail: str | None = None
     next_action: str | None = None
+    precondition_verdict: PreconditionVerdict | None = None
     dead_end: str | None = None
     audience: DiagnosticAudience = "operator"
     findings: tuple[DiagnosticFinding, ...] = ()
 
     @model_validator(mode="after")
     def _enforce_actionable_contract(self) -> DiagnosticCheck:
-        next_action = self.next_action if self.next_action else None
-        dead_end = self.dead_end if self.dead_end else None
-        if next_action is not None and dead_end is not None:
-            raise DiagnosticModelError("DiagnosticCheck may set at most one of `next_action` or `dead_end`, not both")
+        outcomes = (
+            self.next_action if self.next_action else None,
+            self.precondition_verdict,
+            self.dead_end if self.dead_end else None,
+        )
+        outcome_count = sum(outcome is not None for outcome in outcomes)
+        if outcome_count > 1:
+            raise DiagnosticModelError("DiagnosticCheck may set at most one recovery outcome")
         if self.status in {"fail", "warn"}:
-            if next_action is None and dead_end is None:
+            if outcome_count == 0:
                 raise DiagnosticModelError(
                     f"DiagnosticCheck(status={self.status!r}) must populate one of "
-                    "`next_action` or `dead_end`; silent failing rows are forbidden",
+                    "`next_action`, `precondition_verdict`, or `dead_end`; silent failing rows are forbidden",
                 )
         else:  # status == "ok"
-            if next_action is not None or dead_end is not None:
-                raise DiagnosticModelError("DiagnosticCheck(status='ok') must not carry `next_action` or `dead_end`")
+            if outcome_count != 0:
+                raise DiagnosticModelError("DiagnosticCheck(status='ok') must not carry a recovery outcome")
         return self
 
 
@@ -437,12 +445,13 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
                     # expected diagnostic verdict, not a fault to report
                     # verbatim. Surfacing the raw NoActiveBucketSession
                     # exception text leaks internal plumbing; the
-                    # summary + next_action already guide the operator.
+                    # summary + typed profile verdict already guide the operator.
                     detail=None if missing_active_bucket_session else _compact_exception(exc),
                     next_action=(
-                        profile_health.next_action or "aeat config login NAME"
-                        if missing_active_bucket_session
-                        else "aeat config repair reset-progress --yes"
+                        None if missing_active_bucket_session else "aeat config repair reset-progress --yes"
+                    ),
+                    precondition_verdict=(
+                        _required_profile_health_verdict(profile_health) if missing_active_bucket_session else None
                     ),
                 ),
             )
@@ -547,9 +556,11 @@ def _ok_site_health_status(url: str) -> SiteHealthStatus:
 def render_config_repair_text(report: ConfigRepairReport) -> str:
     """Render a compact human-readable repair report.
 
-    Preserves :attr:`DiagnosticCheck.audience` and the mutually exclusive
-    ``next_action`` / ``dead_end`` contract so operator-actionable rows and
-    internal application defects are visibly different in text output.
+    Preserves :attr:`DiagnosticCheck.audience` and never reconstructs command
+    prose from an application-owned :attr:`DiagnosticCheck.precondition_verdict`.
+    Operator-actionable rows and internal application defects therefore remain
+    visibly different without giving the diagnostics layer a second action
+    resolver.
     """
     lines = [
         f"{tr('cli.diagnostics.repair.overall_label', default='Overall')}\t{report.overall}",
@@ -820,7 +831,7 @@ def _active_profile_storage_check(health: ActiveProfileHealth) -> DiagnosticChec
         status="warn",
         summary=summary,
         detail=detail,
-        next_action=health.next_action,
+        precondition_verdict=_required_profile_health_verdict(health),
     )
 
 
@@ -832,18 +843,13 @@ def _profile_unavailable_check(health: ActiveProfileHealth) -> DiagnosticCheck:
             status="warn",
             summary=tr("cli.diagnostics.summary.profile_unreadable", status=health.status),
             detail=health.profile_record_error or None,
-            next_action=health.next_action,
+            precondition_verdict=_required_profile_health_verdict(health),
         )
     return DiagnosticCheck(
         name="profile.readiness",
         status="warn",
         summary=tr("cli.diagnostics.summary.profile_none", default="No profile configured"),
-        # Read the already-computed next action rather than re-hardcoding a
-        # create-profile suggestion here: assess_active_profile_health
-        # distinguishes "no profile registered" from "a profile exists but
-        # none is active" and suggests login, not a second create, for the
-        # latter.
-        next_action=health.next_action,
+        precondition_verdict=_required_profile_health_verdict(health),
     )
 
 
@@ -925,21 +931,20 @@ def _profile_check(
             status="warn",
             summary=tr("cli.diagnostics.summary.profile_unreadable", status=profile_health.status),
             detail=profile_health.profile_record_error or None,
-            next_action=profile_health.next_action,
+            precondition_verdict=_required_profile_health_verdict(profile_health),
         )
     if report.active_profile is None:
         return DiagnosticCheck(
             name="profile.readiness",
             status="warn",
             summary=tr("cli.diagnostics.summary.profile_none"),
-            # Prefer the health projection's next action (login vs create,
-            # depending on whether a profile is registered but inactive) over
-            # a hardcoded create-profile suggestion; only fall back when no
-            # health snapshot was supplied.
             next_action=(
-                profile_health.next_action
+                None
                 if profile_health is not None
-                else "aeat config profile create NAME --tax-id <TAX_ID> --activity <ACTIVITY>"
+                else "aeat config profile create NAME --tax-id <TAX_ID> " "--activity <ACTIVITY>"
+            ),
+            precondition_verdict=(
+                _required_profile_health_verdict(profile_health) if profile_health is not None else None
             ),
         )
     unset_findings = _unset_profile_key_findings(state)
@@ -1029,8 +1034,23 @@ def _auth_unavailable_check(health: ActiveProfileHealth) -> DiagnosticCheck:
         name="auth.readiness",
         status="warn",
         summary=tr("cli.diagnostics.summary.auth_state_unreadable"),
-        next_action=health.next_action or "aeat config login NAME",
+        precondition_verdict=_required_profile_health_verdict(health),
     )
+
+
+def _required_profile_health_verdict(health: ActiveProfileHealth) -> PreconditionVerdict:
+    """Return the health assessment's required typed refusal outcome.
+
+    ``ActiveProfileHealth`` owns the applicability decision. A diagnostics
+    consumer may preserve that verdict, but cannot infer a second recovery from
+    the health status or from an error message.
+    """
+    verdict = health.precondition_verdict
+    if verdict is None:
+        raise DiagnosticModelError(
+            f"non-ready active-profile health {health.status!r} has no precondition verdict",
+        )
+    return verdict
 
 
 def _auth_check(report: WizardStatusReport) -> DiagnosticCheck:

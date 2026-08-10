@@ -42,7 +42,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
-from typing import Final, Protocol
+from typing import Final, NamedTuple, Protocol
 
 from ...core import Modelo
 from ...core import Period as _Period
@@ -644,41 +644,74 @@ def lazily_reconcile_local_iva_compensation_for_work_unit(
         return None
     from ..calculations import reconcile_modelo_303_iva_compensation
 
+    evidence = _prior_period_carry_evidence(work_unit, snapshot=snapshot)
     report = reconcile_modelo_303_iva_compensation(
         snapshot,
         taxpayer_nif=taxpayer_nif,
         wallet=None,
         decision_repository=repository,
-        local_recurrence=_validated_observation_envelope_local_iva_compensation_recurrence(
-            work_unit,
-            snapshot=snapshot,
-        ),
+        local_recurrence=evidence.recurrence,
         # The generic previous-filing reader can still read legacy envelopes for
         # unrelated consumers. The lazy Modelo 303 wallet gate instead admits
         # only the explicit disposition-aware envelope recurrence below.
         use_repository_local_recurrence=False,
-        # Missing local recurrence proves a zero only when the profile's
-        # activity-start date scopes every Modelo 303 prior-compensation
-        # dependency out as pre-activity. Otherwise the reconciliation must keep
-        # failing closed as missing wallet/local history.
-        treat_absent_recurrence_as_first_period=_activity_start_proves_first_iva_period(work_unit, snapshot),
+        # A stored prior-period observation this build cannot use is NOT an
+        # absence. Its presence proves the taxpayer had a prior Modelo 303
+        # period, which is the exact fact the activity-start proof asserts did
+        # not exist, so it can never ground a first-period zero. Only a genuine
+        # absence reaches the activity-start question. This previously read the
+        # activity-start proof alone, and an unreadable envelope became a proven
+        # zero on the compensación.
+        treat_absent_recurrence_as_first_period=(
+            not evidence.prior_period_observation_found and _activity_start_proves_first_iva_period(work_unit, snapshot)
+        ),
         persist=persist,
     )
     return report.decision
 
 
-def _validated_observation_envelope_local_iva_compensation_recurrence(
+class _PriorPeriodCarryEvidence(NamedTuple):
+    """What the wallet gate learned about the prior Modelo 303 period.
+
+    ``recurrence`` is the usable carry projection, or ``None`` when this build
+    cannot turn the stored observation into one.
+    ``prior_period_observation_found`` answers the separate question of whether
+    an observation for that period was persisted at all. An observation that
+    exists but cannot be used still proves the period existed, so only a genuine
+    absence may ground a first-period zero on the compensación.
+    """
+
+    recurrence: LocalIvaCompensationRecurrence | None
+    prior_period_observation_found: bool
+
+
+_NO_PRIOR_PERIOD_OBSERVATION: Final = _PriorPeriodCarryEvidence(
+    recurrence=None,
+    prior_period_observation_found=False,
+)
+
+
+def _prior_period_carry_evidence(
     work_unit: WorkUnit,
     *,
     snapshot: RegistrySnapshot,
-) -> LocalIvaCompensationRecurrence | None:
-    """Return only validated filed M303 envelope recurrence for the wallet gate.
+) -> _PriorPeriodCarryEvidence:
+    """Return validated filed M303 envelope recurrence, and whether one was stored.
 
     A prior calculation revision records a local calculation, not the filed
     declaration's disposition. It therefore cannot establish this recurrence.
     Missing, legacy, revision-refused, or disposition-conflicting envelopes
-    deliberately return no evidence, allowing the normal wallet gate to block
-    rather than select an invented carry amount.
+    yield no usable recurrence, so the wallet gate blocks rather than selecting
+    an invented carry amount.
+
+    Every case that found a stored observation and could not use it additionally
+    reports it as present. Previously all of them returned a bare ``None``
+    indistinguishable from a genuine absence, and the caller paired that ``None``
+    with the profile's activity-start proof to reach ``first_period_zero`` -- so
+    an envelope this build could not read was converted into a proven zero on the
+    compensación, laundering a taxpayer's carried credit into nothing. The
+    docstring claimed the gate blocked in those cases, which was true of every
+    path except the one that mattered.
     """
     requirements = tuple(
         requirement
@@ -691,7 +724,7 @@ def _validated_observation_envelope_local_iva_compensation_recurrence(
         and _M303_PRIOR_COMPENSATION_BINDING_ID in requirement.binding_ids
     )
     if len(requirements) != 1 or len(requirements[0].periods) != 1:
-        return None
+        return _NO_PRIOR_PERIOD_OBSERVATION
     requirement = requirements[0]
     source_period = (
         requirement.filing_periods[0]
@@ -700,7 +733,8 @@ def _validated_observation_envelope_local_iva_compensation_recurrence(
     )
     payload = CalculationObservationRepository().load_observation(Modelo.M303.value, source_period)
     if payload is None:
-        return None
+        return _NO_PRIOR_PERIOD_OBSERVATION
+    found = _PriorPeriodCarryEvidence(recurrence=None, prior_period_observation_found=True)
     observation = payload.observation
     if (
         observation.filing_year != requirement.filing_year
@@ -712,26 +746,28 @@ def _validated_observation_envelope_local_iva_compensation_recurrence(
             source_period=observation.period,
         ).refused
     ):
-        return None
+        return found
     try:
         validated = validate_normalized_m303_carry_observation_envelope(payload)
     except M303CarryIngressError:
-        return None
+        return found
     amount = validated.observation.casilla_values.get(_M303_AVAILABLE_COMPENSATION_CASILLA_ID)
     if amount is None:
-        return None
-    return LocalIvaCompensationRecurrence(
-        binding_id=_M303_PRIOR_COMPENSATION_BINDING_ID,
-        amount=amount,
-        source_kind=str(validated.source_kind),
-        source_modelo=Modelo.M303.value,
-        source_filing_year=requirement.filing_year,
-        source_periods=(source_period,),
-        resolved_at=validated.captured_at,
-        source_locator=(
-            "observation-envelope:"
-            f"{Modelo.M303.value}:{source_period.filing_year}:{source_period.registry_token}"
+        return found
+    return _PriorPeriodCarryEvidence(
+        recurrence=LocalIvaCompensationRecurrence(
+            binding_id=_M303_PRIOR_COMPENSATION_BINDING_ID,
+            amount=amount,
+            source_kind=str(validated.source_kind),
+            source_modelo=Modelo.M303.value,
+            source_filing_year=requirement.filing_year,
+            source_periods=(source_period,),
+            resolved_at=validated.captured_at,
+            source_locator=(
+                f"observation-envelope:{Modelo.M303.value}:{source_period.filing_year}:{source_period.registry_token}"
+            ),
         ),
+        prior_period_observation_found=True,
     )
 
 

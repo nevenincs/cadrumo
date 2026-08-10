@@ -668,6 +668,64 @@ def test_first_iva_period_m303_1t_uses_wallet_first_period_zero(repos: _Repos) -
     assert revision.casilla_values[_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA] == Decimal("0")
 
 
+def _persist_unreadable_prior_303(period_code: str = "4T", filing_year: int = 2024) -> None:
+    """Store a prior-period Modelo 303 observation the carry gate cannot interpret.
+
+    Written the way the operator CLI writes one: an unrestricted local observation
+    with no carry normalisation, so it carries neither a result disposition nor the
+    normalized available/generated pair the carry consumer requires.
+    """
+    CalculationObservationRepository().save_observation(
+        RegistryModeloObservation(
+            modelo="303",
+            filing_year=filing_year,
+            period=period_code,
+            observations=registry_grounded_observations(
+                modelo="303",
+                filing_year=filing_year,
+                period=period_code,
+                casilla_values={_M303_COMPENSACION_DISPONIBLE_CASILLA: Decimal("850.00")},
+            ),
+        ),
+        source_kind="operator_manual",
+        captured_at=_T1,
+    )
+
+
+def test_unreadable_prior_303_observation_cannot_prove_a_first_period_zero(repos: _Repos) -> None:
+    """A stored prior observation this build cannot read must block, never prove zero.
+
+    The profile carries first-period activity-start evidence, so the activity-start
+    proof holds and the gate would previously have produced ``first_period_zero``.
+    But an observation for the prior period IS stored -- which is itself proof the
+    taxpayer had a prior Modelo 303 period, the exact fact that proof asserts did
+    not exist. The carry consumer cannot interpret the envelope and must surface
+    that as a refusal rather than as an absence, or a taxpayer's carried credit is
+    laundered into a zero on the compensación with no signal.
+    """
+    wu_repo, cr_repo, _fr_repo, _vr_repo, bv_repo = repos
+    _seed_first_303_activity_profile(repos)
+    _persist_unreadable_prior_303()
+    work_unit = create_work_unit(
+        bucket_id=_BUCKET_ID,
+        modelo="303",
+        filing_year=2025,
+        period=Period.from_year_and_code(2025, "1T"),
+        revision_id="2023-y-siguientes",
+        repository=wu_repo,
+        clock=_T1,
+    )
+
+    with pytest.raises(ModeloIvaWalletReconciliationBlocked):
+        calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            bucket_event_repository=bv_repo,
+            clock=_T1,
+        )
+
+
 def _persist_prior_303(repository: CalculationObservationRepository) -> None:
     """Persist a prior-period 303 observation carrying the compensation carry casilla.
 

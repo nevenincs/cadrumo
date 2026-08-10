@@ -32,8 +32,8 @@ from ...application.aggregation import (
 from ...application.calculations import ObservationSourceKind, PriorDomiciliationElectionProjection
 from ...application.modelo import validate_modelo_work_deadline_posture
 from ...core import BindingSourceKind, PaymentElection, Period, RefundElection, ResultDisposition
-from ...core.identity import BucketId
-from ...core.json_contract import OutputSchema, register_schema
+from ...core.identity import BucketId, CalculationRevisionId, FilingRecordId, VerificationReportId, WorkUnitId
+from ...core.json_contract import OutputSchema, ResolvedPreconditionAction, register_schema
 from ...domain.buckets import (
     BucketActorLabel,
     BucketEventId,
@@ -53,15 +53,11 @@ from ...domain.calculations.registry import (
     WithholdingClaveBreakdown,
 )
 from ...domain.modelos import (
-    CalculationRevisionId,
     ExternalEvidenceKind,
-    FilingRecordId,
     ModeloCode,
     ModeloRecordStatus,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
-    VerificationReportId,
-    WorkUnitId,
 )
 from ._decimal_wire import DecimalWireText
 from ._modelo_aux_payloads import (
@@ -231,14 +227,20 @@ class CalculationRevisionPayload(OutputSchema):
 
 
 class FindingPayload(OutputSchema):
-    """One verification finding row."""
+    """One localized verification finding with its resolved recovery verdict.
+
+    Persisted findings remain factual audit records.  A live verification can
+    additionally attach the schema-resolved precondition verdict produced by
+    the application service; historical report reads deliberately leave it
+    absent rather than reconstructing recovery advice from finding prose.
+    """
 
     kind: ModeloVerificationFindingKind
     severity: ModeloVerificationFindingSeverity
     casilla_id: CasillaId | None = None
     expectation_id: VerificationExpectationId | None = None
     message: str = Field(min_length=1, max_length=500)
-    next_action: str | None = Field(default=None, min_length=1, max_length=500)
+    action: ResolvedPreconditionAction | None = None
     legal_refs: list[LegalRefId] = Field(min_length=1)
     source_refs: list[SourceRefId] = Field(default_factory=list)
 

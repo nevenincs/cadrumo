@@ -93,6 +93,8 @@ import pytest  # noqa: E402
 
 from cadrumo.tests import register_collection_storage_root_cleanup  # noqa: E402
 from cadrumo.tests._deselection_hook import apply as _report_deselection  # noqa: E402
+from cadrumo.tests._host_load_hook import arm_pre_timeout_stamp as _arm_host_load_stamp  # noqa: E402
+from cadrumo.tests._host_load_hook import disarm_pre_timeout_stamp as _disarm_host_load_stamp  # noqa: E402
 from cadrumo.tests._marker_hook import apply as _apply_marker_contract  # noqa: E402
 from cadrumo.tests._worker_count_hook import resolve_auto_num_workers as _resolve_auto_num_workers  # noqa: E402
 
@@ -110,6 +112,23 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
 def pytest_xdist_auto_num_workers(config: pytest.Config) -> int | None:
     """Delegate to the shared ``CADRUMO_PYTEST_WORKERS`` worker-count resolver."""
     return _resolve_auto_num_workers(config)
+
+
+def pytest_timeout_set_timer(item: pytest.Item, settings: object) -> None:
+    """Delegate to the shared pre-fire host-load stamp.
+
+    Deliberately returns ``None``: the hookspec is ``firstresult`` and
+    pytest-timeout's own implementation is ``trylast``, so returning a value
+    here would stop the call and leave the real timeout ceiling uninstalled.
+    """
+    _arm_host_load_stamp(item, settings)
+    return None
+
+
+def pytest_timeout_cancel_timer(item: pytest.Item) -> None:
+    """Delegate to the shared host-load stamp's cancel counterpart."""
+    _disarm_host_load_stamp(item)
+    return None
 
 
 def pytest_terminal_summary(

@@ -177,6 +177,7 @@ from ._profile_health import (
     assess_active_profile_health,
     assess_active_profile_health_with_session,
     repair_active_profile_pointer,
+    unavailable_profile_record_verdict,
 )
 
 # ---- protocols (no application deps) ----------------------------------------
@@ -299,6 +300,7 @@ __all__ = [
     "resolve_profile_bucket",
     "resume_modelo_workflow",
     "save_run",
+    "unavailable_profile_record_verdict",
     "update_declaration_pointer",
     "utc_now",
     "workflow_resume_candidate_lines",

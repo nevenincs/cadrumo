@@ -36,9 +36,9 @@ import pytest
 from ....adapters.persistence.storage.errors import SessionExpiredError, StorageValidationError
 from ....adapters.persistence.storage.master_key import BucketSession
 from ....adapters.persistence.storage.master_key._active_session import _active_session
+from ....adapters.persistence.storage.runtime import StorageRuntimeReadinessCode
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....adapters.persistence.storage.sql.secure_objects import SensitivityClass
-from ....core.config import override_settings
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -186,17 +186,18 @@ def test_profile_bound_repository_without_active_session_fails_closed(
     The repository returned by ``isolated_runtime_profile`` is bound to
     that profile's active bucket session. After the context exits there
     is no active session, so the freshness poll must fail closed with
-    the translated storage-runtime readiness error instead of silently
-    accepting a stale repository handle.
+    the typed storage-runtime readiness facts instead of silently accepting a
+    stale repository handle.
     """
 
     assert _active_session.get() is None
-    with (
-        override_settings(cadrumo_output_language="en"),
-        pytest.raises(StorageValidationError, match="no active bucket session") as raised,
-    ):
+    with pytest.raises(StorageValidationError) as raised:
         _inactive_repository._check_session_freshness()
 
     assert raised.value.translated_message == "errors.storage.runtime.not_ready"
-    assert raised.value.context is not None
-    assert "No active bucket session" in str(raised.value.context["details"])
+    assert raised.value.context == {
+        "details": StorageRuntimeReadinessCode.NO_ACTIVE_SESSION.value,
+        "readiness_code": StorageRuntimeReadinessCode.NO_ACTIVE_SESSION.value,
+        "readiness_issue_codes": (StorageRuntimeReadinessCode.NO_ACTIVE_SESSION.value,),
+    }
+    assert "no active bucket session" not in str(raised.value).casefold()

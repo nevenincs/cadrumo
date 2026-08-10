@@ -3,8 +3,11 @@
 The public surface exposes :class:`ModeloCode`, :class:`WorkUnit`,
 :class:`CalculationRevision`, :class:`ModeloRecord`, :class:`VerificationReport`,
 their in-memory catalogues, encrypted repository boundaries, repository
-protocols, row DTOs, derivation and upsert helpers, :class:`ExternalEvidence`,
-and :obj:`WorkUnitId`. :class:`ModeloCode` validates identifier shape only;
+protocols, row DTOs, derivation and upsert helpers, and
+:class:`ExternalEvidence`. The record identities themselves are not exported
+here: they are consumed across package boundaries and live at
+:mod:`core.identity`, aliased from the one canonical hex-64 primitive.
+:class:`ModeloCode` validates identifier shape only;
 filing availability and revision targeting are resolved through registry-aware
 flows anchored on :class:`domain.calculations.registry.ModeloRevision`.
 
@@ -113,7 +116,6 @@ from ._iae_exemption import (
     Modelo840IaeExemptionStatus,
     assess_modelo_840_iae_cifra_negocios_exemption,
 )
-from ._ids import CalculationRevisionId, FilingRecordId, VerificationReportId, WorkUnitId
 from ._ledger_filing_snapshot import (
     LedgerEvidenceRow,
     LedgerFilingEvidence,
@@ -181,7 +183,6 @@ __all__ = (
     "CalculationRevisionAmendmentKind",
     "CalculationRevisionCatalogue",
     "CalculationRevisionCatalogueRepositoryProtocol",
-    "CalculationRevisionId",
     "CalculationRevisionPersistenceError",
     "CalculationRevisionState",
     "CalculationSourceIssue",
@@ -189,7 +190,6 @@ __all__ = (
     "Dt12WindowEligibility",
     "ExternalEvidence",
     "ExternalEvidenceKind",
-    "FilingRecordId",
     "LedgerEvidenceRow",
     "LedgerFilingEvidence",
     "LedgerFilingSnapshot",
@@ -232,12 +232,10 @@ __all__ = (
     "VerificationReport",
     "VerificationReportCatalogue",
     "VerificationReportCatalogueRepositoryProtocol",
-    "VerificationReportId",
     "VerificationReportPersistenceError",
     "WorkUnit",
     "WorkUnitCatalogue",
     "WorkUnitCatalogueRepositoryProtocol",
-    "WorkUnitId",
     "WorkUnitPersistenceError",
     "WorkUnitState",
     "assert_revision_snapshot_evidence_coverage",

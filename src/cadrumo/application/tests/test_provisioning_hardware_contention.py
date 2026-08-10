@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from http import HTTPStatus
 from queue import Queue
-from typing import ClassVar
+from typing import ClassVar, override
 
 import pytest
 
@@ -416,10 +416,12 @@ class _RuntimeLoopbackHandler(SilentLoopbackHandler):
     residents: ClassVar[list[dict[str, object]]] = []
     events: ClassVar[Queue[dict[str, object]]]
 
+    @override
     def do_GET(self) -> None:
         self.events.put({"method": "GET", "path": self.path})
         write_json_response(self, {"models": list(self.residents)}, status=HTTPStatus.OK)
 
+    @override
     def do_POST(self) -> None:
         self.events.put({"method": "POST", "path": self.path, "body": dict(read_json_body(self))})
         write_json_response(self, {"done": True}, status=HTTPStatus.OK)

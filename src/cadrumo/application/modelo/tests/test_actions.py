@@ -468,7 +468,7 @@ def test_registry_snapshot_unresolved_finding_is_localised() -> None:
     rendered_by_language: dict[str, str] = {}
     for language in ("es", "en"):
         with override_settings(cadrumo_output_language=language):
-            findings, _resolved, _missing = _collect_revision_verification_findings(
+            findings, _resolved, _missing, failures_by_finding_id = _collect_revision_verification_findings(
                 work_unit=work_unit,
                 target=target,
                 profile=_resident_profile(),
@@ -482,6 +482,14 @@ def test_registry_snapshot_unresolved_finding_is_localised() -> None:
         assert "0A" in finding.message
         # Must not be the raw locale key surfaced as a self-referencing fallback.
         assert finding.message != "application.modelo.findings.registry_snapshot_unresolved"
+        failure = failures_by_finding_id[id(finding)]
+        assert failure.identity == (
+            "modelo.work.verify",
+            "modelo.work.verify.registry_snapshot.available",
+            "modelo.work.verify.registry_snapshot.unavailable",
+        )
+        assert failure.verdict.action is not None
+        assert failure.verdict.action.action_id == "operator.registry.verify"
         rendered_by_language[language] = finding.message
 
     assert rendered_by_language["es"] != rendered_by_language["en"]

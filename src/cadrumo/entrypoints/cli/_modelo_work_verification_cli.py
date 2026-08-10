@@ -1,7 +1,7 @@
 """Typer registration for modelo work verification and internal filing.
 
 This transport module resolves operator revision targets, calls
-:func:`verify_modelo_revision` or
+:func:`verify_modelo_revision_with_preconditions` or
 :func:`file_modelo_revision`, and serializes the
 resulting :class:`VerificationReport` or
 :class:`ModeloRecord` into :class:`WorkVerifyResult` and
@@ -41,24 +41,17 @@ from ...application.modelo import (
     WorkUnitNotFoundError,
     file_modelo_revision,
     require_profile_ready_for_work_unit,
-    verify_modelo_revision,
+    verify_modelo_revision_with_preconditions,
 )
-from ...application.operator_actions import ActionReference
 from ...application.workflow import workflow_state_repository
 from ...core import PaymentElection, PriorDomiciliationElection, RefundElection
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
-from ...core.json_contract import (
-    ActionArgumentSource,
-    ActionArgumentStatus,
-    Notice,
-    NoticeSeverity,
-    ResolvedActionArgument,
-)
+from ...core.json_contract import Notice, NoticeSeverity
 from ...core.resources import resources
 from ...domain.calculations.registry import RegistrySnapshotError, derive_taxpayer_files_economic_activity
 from ...domain.modelos import CalculationRevisionState
-from ._common import _emit_envelope, _filing_taxpayer_or_refuse, resolve_notice_action
+from ._common import _emit_envelope, _filing_taxpayer_or_refuse
 from ._modelo_cli_support import load_calculation_revision, load_work_unit
 from ._modelo_payloads import (
     CrossPeriodCleanStatePayload,
@@ -191,7 +184,7 @@ def _register_work_verify_command(work_app: typer.Typer, *, deps: _VerificationD
             # existing granting report unchanged (no re-run, no duplicate lifecycle
             # event). Capture that before the call to surface it as an info Notice.
             already_verified = selected_revision.state is not CalculationRevisionState.BORRADOR
-            report = verify_modelo_revision(
+            verification = verify_modelo_revision_with_preconditions(
                 selected_revision.calculation_revision_id,
                 actor=actor or deps.resolve_default_actor(),
                 workflow_profile=workflow_profile,
@@ -206,8 +199,19 @@ def _register_work_verify_command(work_app: typer.Typer, *, deps: _VerificationD
         ) as exc:
             raise deps.bad_parameter_from_error(exc) from exc
 
-        result = WorkVerifyResult.model_validate(verification_report_payload(report).model_dump(mode="python"))
-        lines = ["operation\tmodelo.work.verify", *verification_report_lines(report)]
+        report = verification.report
+        report_payload = verification_report_payload(
+            report,
+            finding_preconditions=verification.finding_preconditions,
+        )
+        result = WorkVerifyResult.model_validate(report_payload.model_dump(mode="python"))
+        lines = [
+            "operation\tmodelo.work.verify",
+            *verification_report_lines(
+                report,
+                finding_actions=tuple(finding.action for finding in report_payload.findings),
+            ),
+        ]
         notices = verification_report_notices(report)
         if already_verified:
             noop_message = tr(
@@ -226,47 +230,6 @@ def _register_work_verify_command(work_app: typer.Typer, *, deps: _VerificationD
                 ),
             )
             lines.append(noop_message)
-        if report.granted_verificado_completo:
-            notices.append(
-                Notice(
-                    severity=NoticeSeverity.INFO,
-                    code="modelo.work.verify.next_action_granted",
-                    message=tr(
-                        "cli.app.modelo.work.verify_next_action_granted_summary",
-                        default=(
-                            "Verification passed. Choose the required export destination and material selections "
-                            "before exporting the filing artefact."
-                        ),
-                    ),
-                    context={"export_requires_material_input": "true"},
-                ),
-            )
-        else:
-            notices.append(
-                Notice(
-                    severity=NoticeSeverity.INFO,
-                    code="modelo.work.verify.next_action_incomplete",
-                    message=tr(
-                        "cli.app.modelo.work.verify_next_action_incomplete_summary",
-                        default=(
-                            "Verification found blocking items (see the notices above). "
-                            "Resolve them and recalculate this work unit before verifying it again."
-                        ),
-                    ),
-                    action=resolve_notice_action(
-                        action=ActionReference(action_id="operator.modelo.work.calculate"),
-                        argument_bindings=(
-                            ResolvedActionArgument(
-                                argument_name="work_unit_id",
-                                status=ActionArgumentStatus.RESOLVED,
-                                value=selected_revision.work_unit_id,
-                                source=ActionArgumentSource.VERDICT_CONTEXT,
-                                source_key="work_unit_id",
-                            ),
-                        ),
-                    ),
-                ),
-            )
         notices.extend(
             m184_socio_handoff_notices(load_calculation_revision(selected_revision.calculation_revision_id)),
         )

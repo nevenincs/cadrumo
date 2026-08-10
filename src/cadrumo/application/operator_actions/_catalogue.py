@@ -175,6 +175,22 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
+            action_id="operator.profile.repair_active_pointer",
+            target_command_key="config.repair.profile",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="clear_active",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="clear_active",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="yes",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="yes",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
             action_id="operator.profile.edit",
             target_command_key="config.profile.edit",
             argument_specifications=(

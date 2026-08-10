@@ -32,12 +32,11 @@ from pydantic import BaseModel, Field, StringConstraints, field_validator, model
 
 from ...core import STRICT_FROZEN_CONFIG, Period
 from ...core.hashing import content_hash_hex
-from ...core.identity import BucketId
+from ...core.identity import BucketId, WorkUnitId
 from ..calculations.registry import RevisionId
 from ..contribuyente import CCAA
 from ._codes import ModeloCode
 from ._errors import ModeloValidationError
-from ._ids import WorkUnitId
 
 
 class WorkUnitState(StrEnum):

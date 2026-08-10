@@ -23,6 +23,7 @@ from http import HTTPStatus
 from io import BytesIO
 from pathlib import Path
 from queue import Queue
+from typing import override
 
 import pytest
 from PIL import Image
@@ -97,6 +98,7 @@ def _serve_openai() -> Iterator[tuple[str, Queue[dict[str, object]]]]:
     events: Queue[dict[str, object]] = Queue()
 
     class _Endpoint(SilentLoopbackHandler):
+        @override
         def do_POST(self) -> None:
             events.put({"body": read_json_body(self)})
             write_json_response(self, openai_chat_reply(" text-only completion "), status=HTTPStatus.OK)
