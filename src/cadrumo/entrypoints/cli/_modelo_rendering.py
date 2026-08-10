@@ -17,18 +17,28 @@ and uniform :class:`~cadrumo.core.json_contract.Notice` rows into
 
 from __future__ import annotations
 
+import json
 import re as _re
+from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 from ...application.modelo import (
     ModeloWorkDeadlinePosture,
+    VerificationFindingPreconditionProjection,
     calculation_result_summary,
     modelo_work_deadline_posture,
 )
 from ...core.i18n import tr
-from ...core.json_contract import Notice, NoticeSeverity
+from ...core.json_contract import Notice, NoticeSeverity, ResolvedPreconditionAction
 from ...domain.calculations.registry import BooleanBindingEncodedValue
-from ...domain.modelos import CalculationRevision, CalculationRevisionState, Modelo184MemberRow
+from ...domain.modelos import (
+    CalculationRevision,
+    CalculationRevisionState,
+    Modelo184MemberRow,
+    ModeloVerificationFinding,
+    VerificationReport,
+)
+from ._common import resolve_cli_precondition_action
 from ._modelo_payloads import (
     BindingEncodedOptionPayload,
     CalculationRevisionPayload,
@@ -64,23 +74,11 @@ _CROSS_PERIOD_DEPENDENCY_UNCLEAN_MESSAGE = _re.compile(
     r"period=(?P<period>\S+) origin=(?P<origin>\S+) origin_ids=(?P<origin_ids>.+) "
     r"blockers=(?P<blockers>.+)",
 )
-_CROSS_PERIOD_DEPENDENCY_UNCLEAN_EVIDENCE_NEXT_ACTION = _re.compile(
-    r"Capture/import AEAT evidence for source modelo=\S+ year=\d+ period=\S+\. Run "
-    r"`(?P<target_capture>aeat app live filed pull-sources --modelo \S+ --year \d+ --period \S+)`, "
-    r"`(?P<source_justificante_capture>aeat app live justificante pull --modelo \S+ --year \d+ --period \S+)`, "
-    r"`(?P<import_official_record>aeat app modelo filing-record import WORK_UNIT_ID --evidence-kind "
-    r"aeat_justificante_pdf --evidence-id CSV --set CASILLA=VALUE)`, or "
-    r"`(?P<reconcile_file>aeat app modelo reconcile file WORK_UNIT_ID --file PATH)`; rerun verification\.",
-)
 _CROSS_PERIOD_OPERATOR_DECLARED_SUPPRESSION_MESSAGE = _re.compile(
     r"cross-period dependency scoped out as no-prior-obligation \(pre-activity\): "
     r"modelo=(?P<modelo>\S+) year=(?P<year>\d+) period=(?P<period>\S+) origin=(?P<origin>\S+)\. "
     r"The period falls strictly before the operator-declared activity-start date "
     r"(?P<activity_start_date>\S+), which has not yet been corroborated against an AEAT censo snapshot\.",
-)
-_CROSS_PERIOD_OPERATOR_DECLARED_SUPPRESSION_NEXT_ACTION = (
-    "Confirm the recorded activity-start date is correct. Once the live AEAT censo read is "
-    "available, the date will be corroborated and this advisory cleared."
 )
 
 
@@ -244,34 +242,6 @@ def source_diagnostic_notice_text(notice: Notice) -> str:
         "cli.app.modelo.work.calculate_source_advisory",
         message=message,
         default="ADVISORY: %{message}",
-    )
-
-
-def next_action_notice(
-    code: str,
-    message: str,
-    *,
-    suggestion: str | None = None,
-    context: dict[str, str] | None = None,
-) -> Notice:
-    """Project a post-action next-step hint onto the envelope notices channel.
-
-    The :attr:`NoticeSeverity.INFO` sibling of :func:`advisory_notice`: it turns
-    the "what should the operator run next" guidance emitted after a work-unit
-    read or a verification into an info-severity
-    :class:`~cadrumo.core.json_contract.Notice` whose ``suggestion`` is the
-    follow-on ``aeat ...`` command. The lifecycle read verbs (``work list`` /
-    ``work status`` / ``work history``) and ``work verify`` call this instead of
-    a bespoke ``next`` / ``suggestion`` payload field, so every next-step hint
-    rides the one uniform notices surface per the
-    ``aeat-cli-contract`` rule. Being ``info`` severity
-    it never flips the envelope ``status`` away from ``success``.
-    """
-    return Notice(
-        severity=NoticeSeverity.INFO,
-        code=code,
-        message=message,
-        context=context,
     )
 
 
@@ -886,7 +856,7 @@ def filing_record_lines(record) -> list[str]:
     return lines
 
 
-def verification_report_notices(report) -> list[Notice]:
+def verification_report_notices(report: VerificationReport) -> list[Notice]:
     """Project every verification finding onto the envelope notices channel.
 
     A verify run that is NOT granted ``verificado_completo`` carries
@@ -910,9 +880,9 @@ def verification_report_notices(report) -> list[Notice]:
     :attr:`Notice.context` so a machine consumer can still distinguish a
     blocking finding from an advisory one. ``legal_refs`` / ``source_refs``
     ride on the context too, mirroring the regulatory grounding the
-    text-mode ``finding_legal_refs`` lines render. The full finding message and
-    free-form ``next_action`` remain in the canonical finding result contract;
-    neither is inferred into an executable notice action.
+    text-mode ``finding_legal_refs`` lines render. Recovery remains only on the
+    typed finding action in the command result; a notice never infers an
+    executable action from a finding kind or message.
 
     A granted (clean) verify carries no findings, so this returns an empty
     list and the envelope stays :attr:`EnvelopeStatus.SUCCESS`.
@@ -935,38 +905,64 @@ def verification_report_notices(report) -> list[Notice]:
             Notice(
                 severity=NoticeSeverity.WARNING,
                 code=f"modelo.work.verify.finding.{finding.kind.value}",
-                message=(
-                    f"Verification reported a {finding.kind.value} finding. "
-                    "See the structured finding result for details."
-                ),
+                message=_render_verification_finding_message(finding),
                 context=context,
             ),
         )
     return notices
 
 
-def verification_report_payload(report) -> VerificationReportPayload:
+def _resolved_finding_actions(
+    report: VerificationReport,
+    finding_preconditions: Sequence[VerificationFindingPreconditionProjection] | None,
+) -> tuple[ResolvedPreconditionAction | None, ...]:
+    """Resolve only the application-supplied verdicts paired to ``report``.
+
+    A persisted report intentionally has no recovery projection: its findings
+    are audit facts, not a transport for historical command reconstruction.
+    When a live verification supplies projections, their exact report order is
+    mandatory so the CLI cannot assign an action by matching prose or a kind.
+    """
+    if finding_preconditions is None:
+        return (None,) * len(report.findings)
+    if tuple(projection.finding for projection in finding_preconditions) != report.findings:
+        raise ValueError("verification finding preconditions must match the report in order")
+    return tuple(
+        (
+            resolve_cli_precondition_action(projection.precondition_failure.verdict)
+            if projection.precondition_failure is not None
+            else None
+        )
+        for projection in finding_preconditions
+    )
+
+
+def verification_report_payload(
+    report: VerificationReport,
+    *,
+    finding_preconditions: Sequence[VerificationFindingPreconditionProjection] | None = None,
+) -> VerificationReportPayload:
     """Project a domain report into the shared verification JSON payload.
 
     Both ``aeat app modelo work verify`` and ``verification-report view/list``
     use this function so persisted :class:`cadrumo.domain.modelos.VerificationReport`
-    rows expose identical
+    rows expose identical factual
     :class:`~cadrumo.entrypoints.cli._modelo_payloads.VerificationReportPayload`
     fields, including nested
     :class:`~cadrumo.entrypoints.cli._modelo_payloads.FindingPayload` legal and
     source references.
     """
     findings: list[FindingPayload] = []
-    for finding in report.findings:
-        message, next_action = _render_verification_finding_text(finding)
+    actions = _resolved_finding_actions(report, finding_preconditions)
+    for finding, action in zip(report.findings, actions, strict=True):
         findings.append(
             FindingPayload(
                 kind=finding.kind,
                 severity=finding.severity,
                 casilla_id=finding.casilla_id,
                 expectation_id=finding.expectation_id,
-                message=message,
-                next_action=next_action,
+                message=_render_verification_finding_message(finding),
+                action=action,
                 legal_refs=list(finding.legal_refs),
                 source_refs=list(finding.source_refs),
             ),
@@ -984,14 +980,19 @@ def verification_report_payload(report) -> VerificationReportPayload:
     )
 
 
-def verification_report_lines(report) -> list[str]:
+def verification_report_lines(
+    report: VerificationReport,
+    *,
+    finding_actions: Sequence[ResolvedPreconditionAction | None] | None = None,
+) -> list[str]:
     """Render the text transport for a verification report.
 
     The line shape complements
     :func:`~cadrumo.entrypoints.cli._modelo_rendering.verification_report_payload`:
     text output keeps the report ids, completeness verdict, missing casillas,
-    and each finding's legal/source references visible without inventing fields
-    outside the persisted :class:`cadrumo.domain.modelos.VerificationReport`.
+    and each finding's legal/source references visible. A live verification may
+    additionally append the exact resolved precondition-action DTO; report
+    history never recreates recovery instructions from persisted facts.
     """
     lines = [
         f"verification_report_id\t{report.verification_report_id}",
@@ -1006,8 +1007,10 @@ def verification_report_lines(report) -> list[str]:
     ]
     for casilla_id in report.missing_required_casilla_ids:
         lines.append(f"missing_casilla_id\t{casilla_id}")
-    for finding in report.findings:
-        message, next_action = _render_verification_finding_text(finding)
+    actions = (None,) * len(report.findings) if finding_actions is None else tuple(finding_actions)
+    if len(actions) != len(report.findings):
+        raise ValueError("verification finding actions must match the report in order")
+    for finding, action in zip(report.findings, actions, strict=True):
         casilla = finding.casilla_id or ""
         lines.append(
             "\t".join(
@@ -1016,8 +1019,8 @@ def verification_report_lines(report) -> list[str]:
                     finding.kind.value,
                     finding.severity.value,
                     casilla,
-                    message,
-                    next_action or "",
+                    _render_verification_finding_message(finding),
+                    _verification_finding_action_text(action),
                 ),
             ),
         )
@@ -1025,75 +1028,46 @@ def verification_report_lines(report) -> list[str]:
             lines.append(f"finding_legal_refs\t{casilla}\t{', '.join(finding.legal_refs)}")
         if finding.source_refs:
             lines.append(f"finding_source_refs\t{casilla}\t{', '.join(finding.source_refs)}")
-    if not report.granted_verificado_completo:
-        lines.append(
-            "next_action\t"
-            + tr(
-                "cli.app.modelo.verification_report.next_action",
-                command=(
-                    "aeat app modelo verification-report list "
-                    f"--calculation-revision-id {report.calculation_revision_id}"
-                ),
-            ),
-        )
     return lines
 
 
-def _render_verification_finding_text(finding) -> tuple[str, str | None]:
+def _verification_finding_action_text(action: ResolvedPreconditionAction | None) -> str:
+    """Render the exact typed finding recovery as a deterministic table cell."""
+    value = None if action is None else action.model_dump(mode="json")
+    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+
+def _render_verification_finding_message(finding: ModeloVerificationFinding) -> str:
+    """Localize recognized finding prose without deriving recovery semantics."""
     dependency_match = _CROSS_PERIOD_DEPENDENCY_UNCLEAN_MESSAGE.fullmatch(finding.message)
-    evidence_action_match = (
-        _CROSS_PERIOD_DEPENDENCY_UNCLEAN_EVIDENCE_NEXT_ACTION.fullmatch(finding.next_action)
-        if finding.next_action is not None
-        else None
-    )
-    if dependency_match is not None and evidence_action_match is not None:
-        return (
-            tr(
-                "application.modelo.findings.cross_period_dependency_unclean",
-                default=(
-                    "cross-period dependency is not clean: modelo=%{modelo} year=%{year} "
-                    "period=%{period} origin=%{origin} origin_ids=%{origin_ids} blockers=%{blockers}"
-                ),
-                modelo=dependency_match["modelo"],
-                year=dependency_match["year"],
-                period=dependency_match["period"],
-                origin=dependency_match["origin"],
-                origin_ids=dependency_match["origin_ids"],
-                blockers=dependency_match["blockers"],
+    if dependency_match is not None:
+        return tr(
+            "application.modelo.findings.cross_period_dependency_unclean",
+            default=(
+                "cross-period dependency is not clean: modelo=%{modelo} year=%{year} "
+                "period=%{period} origin=%{origin} origin_ids=%{origin_ids} blockers=%{blockers}"
             ),
-            tr(
-                "application.modelo.findings.cross_period_dependency_unclean_evidence_next_action",
-                default=(
-                    "Capture/import AEAT evidence for the source dependency. Run `%{target_capture}`, "
-                    "`%{source_justificante_capture}`, `%{import_official_record}`, or `%{reconcile_file}`; "
-                    "rerun verification."
-                ),
-                target_capture=evidence_action_match["target_capture"],
-                source_justificante_capture=evidence_action_match["source_justificante_capture"],
-                import_official_record=evidence_action_match["import_official_record"],
-                reconcile_file=evidence_action_match["reconcile_file"],
-            ),
+            modelo=dependency_match["modelo"],
+            year=dependency_match["year"],
+            period=dependency_match["period"],
+            origin=dependency_match["origin"],
+            origin_ids=dependency_match["origin_ids"],
+            blockers=dependency_match["blockers"],
         )
     match = _CROSS_PERIOD_OPERATOR_DECLARED_SUPPRESSION_MESSAGE.fullmatch(finding.message)
-    if match is not None and finding.next_action == _CROSS_PERIOD_OPERATOR_DECLARED_SUPPRESSION_NEXT_ACTION:
-        return (
-            tr(
-                "application.modelo.findings.cross_period_operator_declared_suppression",
-                default=(
-                    "cross-period dependency scoped out as no-prior-obligation (pre-activity): "
-                    "modelo=%{modelo} year=%{year} period=%{period} origin=%{origin}. The period falls "
-                    "strictly before the operator-declared activity-start date %{activity_start_date}, which has "
-                    "not yet been corroborated against an AEAT censo snapshot."
-                ),
-                modelo=match["modelo"],
-                year=match["year"],
-                period=match["period"],
-                origin=match["origin"],
-                activity_start_date=match["activity_start_date"],
+    if match is not None:
+        return tr(
+            "application.modelo.findings.cross_period_operator_declared_suppression",
+            default=(
+                "cross-period dependency scoped out as no-prior-obligation (pre-activity): "
+                "modelo=%{modelo} year=%{year} period=%{period} origin=%{origin}. The period falls "
+                "strictly before the operator-declared activity-start date %{activity_start_date}, which has "
+                "not yet been corroborated against an AEAT censo snapshot."
             ),
-            tr(
-                "application.modelo.findings.cross_period_operator_declared_suppression_next_action",
-                default=_CROSS_PERIOD_OPERATOR_DECLARED_SUPPRESSION_NEXT_ACTION,
-            ),
+            modelo=match["modelo"],
+            year=match["year"],
+            period=match["period"],
+            origin=match["origin"],
+            activity_start_date=match["activity_start_date"],
         )
-    return finding.message, finding.next_action
+    return finding.message
