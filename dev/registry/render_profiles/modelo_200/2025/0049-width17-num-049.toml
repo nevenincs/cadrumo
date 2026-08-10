@@ -1,0 +1,373 @@
+schema_version = 1
+fragment_id = "width17-num-049"
+singleton_rules = []
+
+[[width_17_rules]]
+rule_kind = "width_17_membership"
+aeat_type = "Num"
+integer_digits = 15
+decimal_digits = 2
+sign_policy = "unsigned"
+
+[[width_17_rules.anchors]]
+sheet = "DP200024"
+source_row = 53
+source_cell = "A53"
+ordinal = 48
+record_identity = "DP200024"
+
+[[width_17_rules.anchors]]
+sheet = "DP200024"
+source_row = 54
+source_cell = "A54"
+ordinal = 49
+record_identity = "DP200024"
+
+[[width_17_rules.anchors]]
+sheet = "DP200024"
+source_row = 55
+source_cell = "A55"
+ordinal = 50
+record_identity = "DP200024"
+
+[[width_17_rules.anchors]]
+sheet = "DP200024"
+source_row = 56
+source_cell = "A56"
+ordinal = 51
+record_identity = "DP200024"
+
+[[width_17_rules.anchors]]
+sheet = "DP200024"
+source_row = 57
+source_cell = "A57"
+ordinal = 52
+record_identity = "DP200024"
+
+[[width_17_rules.anchors]]
+sheet = "DP200024"
+source_row = 58
+source_cell = "A58"
+ordinal = 53
+record_identity = "DP200024"
+
+[[width_17_rules.anchors]]
+sheet = "DP200024"
+source_row = 59
+source_cell = "A59"
+ordinal = 54
+record_identity = "DP200024"
+
+[[width_17_rules.anchors]]
+sheet = "DP200024"
+source_row = 60
+source_cell = "A60"
+ordinal = 55
+record_identity = "DP200024"
+
+[[width_17_rules.anchors]]
+sheet = "DP200024"
+source_row = 61
+source_cell = "A61"
+ordinal = 56
+record_identity = "DP200024"
+
+[[width_17_rules.anchors]]
+sheet = "DP200024"
+source_row = 62
+source_cell = "A62"
+ordinal = 57
+record_identity = "DP200024"
+
+[[width_17_rules.anchors]]
+sheet = "DP200024"
+source_row = 63
+source_cell = "A63"
+ordinal = 58
+record_identity = "DP200024"
+
+[[width_17_rules.anchors]]
+sheet = "DP200024"
+source_row = 64
+source_cell = "A64"
+ordinal = 59
+record_identity = "DP200024"
+
+[[width_17_rules.anchors]]
+sheet = "DP200024"
+source_row = 65
+source_cell = "A65"
+ordinal = 60
+record_identity = "DP200024"
+
+[[width_17_rules.anchors]]
+sheet = "DP200024"
+source_row = 66
+source_cell = "A66"
+ordinal = 61
+record_identity = "DP200024"
+
+[[width_17_rules.anchors]]
+sheet = "DP200024"
+source_row = 67
+source_cell = "A67"
+ordinal = 62
+record_identity = "DP200024"
+
+[[width_17_rules.anchors]]
+sheet = "DP200024"
+source_row = 68
+source_cell = "A68"
+ordinal = 63
+record_identity = "DP200024"
+
+[[width_17_rules.anchors]]
+sheet = "DP200024"
+source_row = 69
+source_cell = "A69"
+ordinal = 64
+record_identity = "DP200024"
+
+[[width_17_rules.anchors]]
+sheet = "DP200025"
+source_row = 14
+source_cell = "A14"
+ordinal = 9
+record_identity = "DP200025"
+
+[[width_17_rules.anchors]]
+sheet = "DP200025"
+source_row = 23
+source_cell = "A23"
+ordinal = 18
+record_identity = "DP200025"
+
+[[width_17_rules.anchors]]
+sheet = "DP200025"
+source_row = 32
+source_cell = "A32"
+ordinal = 27
+record_identity = "DP200025"
+
+[[width_17_rules.anchors]]
+sheet = "DP200025"
+source_row = 41
+source_cell = "A41"
+ordinal = 36
+record_identity = "DP200025"
+
+[[width_17_rules.anchors]]
+sheet = "DP200025"
+source_row = 50
+source_cell = "A50"
+ordinal = 45
+record_identity = "DP200025"
+
+[[width_17_rules.anchors]]
+sheet = "DP200025"
+source_row = 59
+source_cell = "A59"
+ordinal = 54
+record_identity = "DP200025"
+
+[[width_17_rules.anchors]]
+sheet = "DP200025"
+source_row = 65
+source_cell = "A65"
+ordinal = 60
+record_identity = "DP200025"
+
+[[width_17_rules.anchors]]
+sheet = "DP200026"
+source_row = 11
+source_cell = "A11"
+ordinal = 6
+record_identity = "DP200026"
+
+[[width_17_rules.anchors]]
+sheet = "DP200026"
+source_row = 12
+source_cell = "A12"
+ordinal = 7
+record_identity = "DP200026"
+
+[[width_17_rules.anchors]]
+sheet = "DP200026"
+source_row = 13
+source_cell = "A13"
+ordinal = 8
+record_identity = "DP200026"
+
+[[width_17_rules.anchors]]
+sheet = "DP200026"
+source_row = 14
+source_cell = "A14"
+ordinal = 9
+record_identity = "DP200026"
+
+[[width_17_rules.anchors]]
+sheet = "DP200026"
+source_row = 15
+source_cell = "A15"
+ordinal = 10
+record_identity = "DP200026"
+
+[[width_17_rules.anchors]]
+sheet = "DP200026"
+source_row = 16
+source_cell = "A16"
+ordinal = 11
+record_identity = "DP200026"
+
+[[width_17_rules.anchors]]
+sheet = "DP200026"
+source_row = 17
+source_cell = "A17"
+ordinal = 12
+record_identity = "DP200026"
+
+[[width_17_rules.anchors]]
+sheet = "DP200026"
+source_row = 28
+source_cell = "A28"
+ordinal = 23
+record_identity = "DP200026"
+
+[[width_17_rules.anchors]]
+sheet = "DP200026"
+source_row = 29
+source_cell = "A29"
+ordinal = 24
+record_identity = "DP200026"
+
+[[width_17_rules.anchors]]
+sheet = "DP200026"
+source_row = 30
+source_cell = "A30"
+ordinal = 25
+record_identity = "DP200026"
+
+[[width_17_rules.anchors]]
+sheet = "DP200026"
+source_row = 31
+source_cell = "A31"
+ordinal = 26
+record_identity = "DP200026"
+
+[[width_17_rules.anchors]]
+sheet = "DP200026"
+source_row = 32
+source_cell = "A32"
+ordinal = 27
+record_identity = "DP200026"
+
+[[width_17_rules.anchors]]
+sheet = "DP200026"
+source_row = 33
+source_cell = "A33"
+ordinal = 28
+record_identity = "DP200026"
+
+[[width_17_rules.anchors]]
+sheet = "DP200026"
+source_row = 34
+source_cell = "A34"
+ordinal = 29
+record_identity = "DP200026"
+
+[[width_17_rules.anchors]]
+sheet = "DP200026"
+source_row = 35
+source_cell = "A35"
+ordinal = 30
+record_identity = "DP200026"
+
+[[width_17_rules.anchors]]
+sheet = "DP200026"
+source_row = 36
+source_cell = "A36"
+ordinal = 31
+record_identity = "DP200026"
+
+[[width_17_rules.anchors]]
+sheet = "DP200026"
+source_row = 37
+source_cell = "A37"
+ordinal = 32
+record_identity = "DP200026"
+
+[[width_17_rules.anchors]]
+sheet = "DP200026"
+source_row = 38
+source_cell = "A38"
+ordinal = 33
+record_identity = "DP200026"
+
+[[width_17_rules.anchors]]
+sheet = "DP200026"
+source_row = 39
+source_cell = "A39"
+ordinal = 34
+record_identity = "DP200026"
+
+[[width_17_rules.anchors]]
+sheet = "DP200026"
+source_row = 40
+source_cell = "A40"
+ordinal = 35
+record_identity = "DP200026"
+
+[[width_17_rules.anchors]]
+sheet = "DP200026"
+source_row = 41
+source_cell = "A41"
+ordinal = 36
+record_identity = "DP200026"
+
+[[width_17_rules.anchors]]
+sheet = "DP200026"
+source_row = 42
+source_cell = "A42"
+ordinal = 37
+record_identity = "DP200026"
+
+[[width_17_rules.anchors]]
+sheet = "DP200026"
+source_row = 48
+source_cell = "A48"
+ordinal = 43
+record_identity = "DP200026"
+
+[[width_17_rules.anchors]]
+sheet = "DP200026"
+source_row = 49
+source_cell = "A49"
+ordinal = 44
+record_identity = "DP200026"
+
+[[width_17_rules.anchors]]
+sheet = "DP200026"
+source_row = 50
+source_cell = "A50"
+ordinal = 45
+record_identity = "DP200026"
+
+[[width_17_rules.anchors]]
+sheet = "DP200026"
+source_row = 51
+source_cell = "A51"
+ordinal = 46
+record_identity = "DP200026"
+
+[width_17_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "A121"
+expected_normalized_statement = "NOTA: Los importes son de 15 enteros (o N + 14) y 2 decimales"
+justification = "The official workbook note governs the reviewed width-17 amount membership; Num is unsigned, while N reserves its leading position for N on negatives and blank on nonnegative values."
+
+[design_identity]
+modelo = "200"
+design_epoch = "2025"
+source_ref = "aeat-dr-200-2025"
+source_sha256 = "a4506d24b7973a745d1225d59147078e03f14a30791a229d852b37f757442505"

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import ast
+import inspect
 from pathlib import Path
 
 import pytest
@@ -9,26 +11,35 @@ import rtoml
 from pydantic import ValidationError
 
 from cadrumo.core.resources import bundled_path
-from cadrumo.domain.calculations.registry import RegistryValidationError, load_catalogue_file
+from cadrumo.domain.calculations.registry import (
+    RegistryValidationError,
+    load_catalogue_file,
+    resolve_record_design_binary,
+)
 
+from .. import _render_profile
 from .._record_design_ir import (
     RecordDesignIntermediate,
     RecordDesignWorkbookFormat,
     load_record_design_intermediate,
 )
 from .._render_profile import (
+    OfficialSourceEvidence,
     RenderProfile,
     RenderProfileAnchor,
     RenderProfileDesignIdentity,
     RenderProfileFragment,
     RenderProfileSourceEvidence,
     RenderProfileSourceEvidenceEntry,
-    ReviewedEvidence,
+    ReviewedPolicyDecision,
     SingletonNumericRule,
     Width17MembershipRule,
     load_and_validate_render_profile,
+    load_render_profile,
+    load_render_profile_source_evidence,
     project_render_profile_eligibility,
     validate_render_profile,
+    validate_render_profile_authority,
 )
 from .._semantic_map import SemanticMap
 from .._semantic_map_join import (
@@ -168,6 +179,7 @@ def _width_rule(aeat_type: str, anchor: RenderProfileAnchor) -> Width17Membershi
         "decimal_digits": 2,
         "sign_policy": "unsigned" if aeat_type == "Num" else "n-prefix-negative-blank-nonnegative",
         "evidence": {
+            "authority_kind": "official_source",
             "source_sheet": "DP200001",
             "source_cell": "A121",
             "expected_normalized_statement": "The official source states the amount digit allocation here.",
@@ -183,11 +195,13 @@ def _singleton(anchor: RenderProfileAnchor) -> SingletonNumericRule:
         anchor=anchor,
         aeat_type="Num",
         semantic_kind="digit_string",
+        value_policy="digit-string",
         integer_digits=2,
         decimal_digits=0,
         sign_policy="unsigned",
         allowed_values=(),
-        evidence=ReviewedEvidence(
+        evidence=OfficialSourceEvidence(
+            authority_kind="official_source",
             source_sheet=anchor.sheet,
             source_cell=anchor.source_cell or "",
             expected_normalized_statement="Independent review identifies this exact field as a two-digit string.",
@@ -251,7 +265,9 @@ def test_complete_profile_covers_only_blank_fixed_numeric_fields_and_preserves_n
 
     assert profile.width_17_rules[0].sign_policy == "unsigned"
     assert profile.width_17_rules[1].sign_policy == "n-prefix-negative-blank-nonnegative"
-    assert profile.singleton_rules[0].evidence.source_cell == profile.singleton_rules[0].anchor.source_cell
+    evidence = profile.singleton_rules[0].evidence
+    assert isinstance(evidence, OfficialSourceEvidence)
+    assert evidence.source_cell == profile.singleton_rules[0].anchor.source_cell
 
 
 @pytest.mark.parametrize(
@@ -353,23 +369,44 @@ def test_profile_models_refuse_implicit_defaults_selectors_and_sign_conflicts() 
     with pytest.raises(ValidationError, match="sign policy"):
         Width17MembershipRule.model_validate(unsigned_payload)
 
+    policy_payload = _singleton(_anchor(12)).model_dump(mode="python")
+    policy_payload["semantic_kind"] = "checkbox"
+    policy_payload["value_policy"] = "selected-1-unselected-0"
+    policy_payload["integer_digits"] = 1
+    policy_payload["allowed_values"] = ("0", "1")
+    policy_payload["evidence"] = {
+        "authority_kind": "reviewed_policy",
+        "decision_id": "m200-2025-dp200001-r0012",
+        "governed_anchor": _anchor(13),
+        "decision_statement": "Encode selected as 1 and absent or unselected as 0.",
+        "justification": "Reviewed exact-anchor decision, not official-source text.",
+    }
+    with pytest.raises(ValidationError, match="exact governed anchor"):
+        SingletonNumericRule.model_validate(policy_payload)
+
+    policy_payload["evidence"]["governed_anchor"] = _anchor(12)
+    policy_payload["value_policy"] = "enumerated-digits"
+    with pytest.raises(ValidationError, match="selected-1-unselected-0"):
+        SingletonNumericRule.model_validate(policy_payload)
+
 
 @pytest.mark.parametrize(
-    ("semantic_kind", "integer_digits", "decimal_digits", "allowed_values", "error"),
+    ("semantic_kind", "value_policy", "integer_digits", "decimal_digits", "allowed_values", "error"),
     (
-        ("date_yyyymmdd", 7, 0, (), "exactly 8 integer digits"),
-        ("date_yyyymmdd", 8, 1, (), "exactly 8 integer digits"),
-        ("integer", 0, 0, (), "positive integer digits"),
-        ("integer", 2, 1, (), "0 decimal digits"),
-        ("decimal", 2, 0, (), "positive integer and decimal digits"),
-        ("percentage_decimal", 0, 2, (), "positive integer and decimal digits"),
-        ("digit_string", 1, 1, (), "0 decimal digits"),
-        ("identifier_digits", 1, 1, (), "0 decimal digits"),
-        ("enumeration", 1, 1, ("01", "02"), "0 decimal digits"),
+        ("date_yyyymmdd", "yyyymmdd", 7, 0, (), "exactly 8 integer digits"),
+        ("date_yyyymmdd", "yyyymmdd", 8, 1, (), "exactly 8 integer digits"),
+        ("integer", "unsigned-integer", 0, 0, (), "positive integer digits"),
+        ("integer", "unsigned-integer", 2, 1, (), "0 decimal digits"),
+        ("decimal", "implied-decimal", 2, 0, (), "positive integer and decimal digits"),
+        ("percentage_decimal", "implied-decimal", 0, 2, (), "positive integer and decimal digits"),
+        ("digit_string", "digit-string", 1, 1, (), "0 decimal digits"),
+        ("identifier_digits", "identifier-digits", 1, 1, (), "0 decimal digits"),
+        ("enumeration", "enumerated-digits", 1, 1, ("01", "02"), "0 decimal digits"),
     ),
 )
 def test_singleton_schema_refuses_semantic_kind_wire_contradictions(
     semantic_kind: str,
+    value_policy: str,
     integer_digits: int,
     decimal_digits: int,
     allowed_values: tuple[str, ...],
@@ -379,6 +416,7 @@ def test_singleton_schema_refuses_semantic_kind_wire_contradictions(
     payload = _singleton(_anchor(12)).model_dump(mode="python")
     payload.update(
         semantic_kind=semantic_kind,
+        value_policy=value_policy,
         integer_digits=integer_digits,
         decimal_digits=decimal_digits,
         allowed_values=allowed_values,
@@ -424,8 +462,8 @@ def test_fragment_loader_compiles_by_filename_and_refuses_fragment_identity_drif
         load_and_validate_render_profile(tmp_path, _joined(), _source_evidence())
 
 
-def test_real_m200_ir_refuses_absent_authority_and_excludes_variable_envelope() -> None:
-    """The real source stays blocked until every smaller blank numeric anchor is reviewed."""
+def test_real_m200_profile_exactly_covers_source_eligibility_and_excludes_variable_envelope() -> None:
+    """The committed profile validates exhaustively against the hash-verified source."""
     source_root = bundled_path()
     catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "is.toml"))
     intermediate = load_record_design_intermediate(
@@ -438,11 +476,173 @@ def test_real_m200_ir_refuses_absent_authority_and_excludes_variable_envelope() 
     eligibility = project_render_profile_eligibility(
         field for sheet in intermediate.sheets for field in sheet.fields
     )
-    assert eligibility.smaller_fields
+    design_identity = RenderProfileDesignIdentity(
+        modelo="200",
+        design_epoch=intermediate.source.design_epoch,
+        source_ref=intermediate.source.source_ref,
+        source_sha256=intermediate.source.source_sha256,
+    )
+    resolved = resolve_record_design_binary(
+        source_root,
+        catalogues.sources,
+        source_ref="aeat-dr-200-2025",
+        filing_year=2025,
+        design_epoch="2025",
+    )
+    profile_directory = Path(__file__).parents[1] / "render_profiles" / "modelo_200" / "2025"
+    profile = load_render_profile(profile_directory)
+    evidence = load_render_profile_source_evidence(resolved.path, profile)
+    validate_render_profile_authority(profile, design_identity, eligibility, evidence)
+
+    eligible_anchors = {
+        RenderProfileAnchor(
+            sheet=field.sheet,
+            source_row=field.source_row,
+            source_cell=field.source_cell,
+            ordinal=field.ordinal,
+            record_identity=field.record_identity,
+        )
+        for field in eligibility.all_fields
+    }
+    governed_anchors = {
+        *(anchor for rule in profile.width_17_rules for anchor in rule.anchors),
+        *(rule.anchor for rule in profile.singleton_rules),
+    }
+    assert governed_anchors == eligible_anchors
+    assert {rule.anchor for rule in profile.singleton_rules} == {
+        RenderProfileAnchor(
+            sheet=field.sheet,
+            source_row=field.source_row,
+            source_cell=field.source_cell,
+            ordinal=field.ordinal,
+            record_identity=field.record_identity,
+        )
+        for field in eligibility.smaller_fields
+    }
     assert set(eligibility.all_fields) == set(eligibility.width_17_fields) | set(eligibility.smaller_fields)
     assert not set(eligibility.width_17_fields).intersection(eligibility.smaller_fields)
     assert intermediate.variable_envelopes
     assert not any(field.sheet == "DP200000" for field in eligibility.all_fields)
 
+    checkbox_rows = {
+        *(('DP200001', row) for row in (24, 27)),
+        *(('DP200001', row) for row in range(29, 106)),
+        *(('DP200001', row) for row in range(107, 110)),
+        ('DP200001B', 22),
+        ('DP200001B', 23),
+        ('DP200002B', 149),
+        ('DP200020B', 39),
+    }
+    checkbox_rules = {rule for rule in profile.singleton_rules if rule.semantic_kind == "checkbox"}
+    assert {(rule.anchor.sheet, rule.anchor.source_row) for rule in checkbox_rules} == checkbox_rows
+    assert all(
+        rule.allowed_values == ("0", "1")
+        and rule.value_policy == "selected-1-unselected-0"
+        and isinstance(rule.evidence, ReviewedPolicyDecision)
+        and rule.evidence.governed_anchor == rule.anchor
+        for rule in checkbox_rules
+    )
+    year_rules = {rule for rule in profile.singleton_rules if rule.semantic_kind == "year_last_two_digits"}
+    assert {(rule.anchor.sheet, rule.anchor.source_row) for rule in year_rules} == {
+        ("DP200DID", 17),
+        ("DP200DID", 20),
+    }
+    assert all(
+        rule.value_policy == "four-digit-year-final-two-digits"
+        and isinstance(rule.evidence, ReviewedPolicyDecision)
+        and rule.evidence.governed_anchor == rule.anchor
+        for rule in year_rules
+    )
+    assert all(
+        isinstance(rule.evidence, OfficialSourceEvidence)
+        for rule in profile.singleton_rules
+        if rule not in checkbox_rules | year_rules
+    )
+
+
+def test_real_source_loader_refuses_nonexistent_cell_statement_and_sha_mutations() -> None:
+    """Source claims resolve from the binary and every identity or text drift fails closed."""
+    source_root = bundled_path()
+    catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "is.toml"))
+    resolved = resolve_record_design_binary(
+        source_root,
+        catalogues.sources,
+        source_ref="aeat-dr-200-2025",
+        filing_year=2025,
+        design_epoch="2025",
+    )
+    profile = load_render_profile(
+        Path(__file__).parents[1] / "render_profiles" / "modelo_200" / "2025",
+    )
+    first_rule = profile.width_17_rules[0]
+    assert isinstance(first_rule.evidence, OfficialSourceEvidence)
+
+    missing_rule = first_rule.model_copy(
+        update={
+            "evidence": first_rule.evidence.model_copy(update={"source_cell": "Z999"}),
+        },
+    )
+    missing_profile = profile.model_copy(
+        update={"width_17_rules": (missing_rule, profile.width_17_rules[1])},
+    )
+    with pytest.raises(RegistryValidationError, match="does not contain source text"):
+        load_render_profile_source_evidence(resolved.path, missing_profile)
+
+    evidence = load_render_profile_source_evidence(resolved.path, profile)
+    mismatched_rule = first_rule.model_copy(
+        update={
+            "evidence": first_rule.evidence.model_copy(
+                update={"expected_normalized_statement": "Contradicted official source text"},
+            ),
+        },
+    )
+    mismatched_profile = profile.model_copy(
+        update={"width_17_rules": (mismatched_rule, profile.width_17_rules[1])},
+    )
+    eligibility = project_render_profile_eligibility(
+        field
+        for sheet in load_record_design_intermediate(
+            source_root,
+            catalogues.sources,
+            source_ref="aeat-dr-200-2025",
+            filing_year=2025,
+            design_epoch="2025",
+        ).sheets
+        for field in sheet.fields
+    )
+    with pytest.raises(RegistryValidationError, match="does not match verified source"):
+        validate_render_profile_authority(
+            mismatched_profile,
+            profile.design_identity,
+            eligibility,
+            evidence,
+        )
+
+    drifted = profile.model_copy(
+        update={
+            "design_identity": profile.design_identity.model_copy(
+                update={"source_sha256": "b" * 64},
+            ),
+        },
+    )
+    with pytest.raises(RegistryValidationError, match="SHA-256"):
+        load_render_profile_source_evidence(resolved.path, drifted)
+
+
+def test_profile_authority_has_no_legacy_tree_or_layout_oracle() -> None:
+    """The authority depends only on parser IR and exact joined source fields."""
+    module = ast.parse(inspect.getsource(_render_profile))
+    local_imports = {
+        node.module
+        for node in ast.walk(module)
+        if isinstance(node, ast.ImportFrom) and node.level and node.module is not None
+    }
+    assert local_imports == {"_record_design_ir", "_semantic_map_join"}
+
+
+def test_real_profile_fragments_stay_below_the_reviewability_line_cap() -> None:
+    """Deterministic partitioning keeps every authored fragment reviewable."""
     profile_directory = Path(__file__).parents[1] / "render_profiles" / "modelo_200" / "2025"
-    assert not profile_directory.exists()
+    paths = tuple(profile_directory.glob("*.toml"))
+    assert paths
+    assert all(len(path.read_text(encoding="utf-8").splitlines()) <= 500 for path in paths)

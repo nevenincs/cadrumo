@@ -1,0 +1,201 @@
+schema_version = 1
+fragment_id = "singletons-001"
+width_17_rules = []
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 14
+source_cell = "A14"
+ordinal = 9
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "E14"
+expected_normalized_statement = "Ejercicio"
+justification = "Reviewed official-source conclusion for exact field DP200001 row 14, combining this exact description and declared width with the AEAT common numeric, exercise/type, justificante, or period instructions applicable to that named field."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 16
+source_cell = "A16"
+ordinal = 11
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "E16"
+expected_normalized_statement = "Periodo Impositivo - Año inicio"
+justification = "Reviewed official-source conclusion for exact field DP200001 row 16, combining this exact description and declared width with the AEAT common numeric, exercise/type, justificante, or period instructions applicable to that named field."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "month_mm"
+value_policy = "two-digit-month"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 17
+source_cell = "A17"
+ordinal = 12
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "E17"
+expected_normalized_statement = "Periodo Impositivo - Mes inicio"
+justification = "Reviewed official-source conclusion for exact field DP200001 row 17, combining this exact description and declared width with the AEAT common numeric, exercise/type, justificante, or period instructions applicable to that named field."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "day_dd"
+value_policy = "two-digit-day"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 18
+source_cell = "A18"
+ordinal = 13
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "E18"
+expected_normalized_statement = "Periodo Impositivo - Día Inicio"
+justification = "Reviewed official-source conclusion for exact field DP200001 row 18, combining this exact description and declared width with the AEAT common numeric, exercise/type, justificante, or period instructions applicable to that named field."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 19
+source_cell = "A19"
+ordinal = 14
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "E19"
+expected_normalized_statement = "Periodo Impositivo - Año final"
+justification = "Reviewed official-source conclusion for exact field DP200001 row 19, combining this exact description and declared width with the AEAT common numeric, exercise/type, justificante, or period instructions applicable to that named field."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "month_mm"
+value_policy = "two-digit-month"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 20
+source_cell = "A20"
+ordinal = 15
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "E20"
+expected_normalized_statement = "Periodo Impositivo - Mes final"
+justification = "Reviewed official-source conclusion for exact field DP200001 row 20, combining this exact description and declared width with the AEAT common numeric, exercise/type, justificante, or period instructions applicable to that named field."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "day_dd"
+value_policy = "two-digit-day"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 21
+source_cell = "A21"
+ordinal = 16
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "E21"
+expected_normalized_statement = "Periodo Impositivo - Día final"
+justification = "Reviewed official-source conclusion for exact field DP200001 row 21, combining this exact description and declared width with the AEAT common numeric, exercise/type, justificante, or period instructions applicable to that named field."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["1", "2", "3"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 22
+source_cell = "A22"
+ordinal = 17
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "E22"
+expected_normalized_statement = "Identificación - Tipo de ejercicio"
+justification = "Reviewed official-source conclusion for exact field DP200001 row 22, combining this exact description and declared width with the AEAT common numeric, exercise/type, justificante, or period instructions applicable to that named field."
+
+[design_identity]
+modelo = "200"
+design_epoch = "2025"
+source_ref = "aeat-dr-200-2025"
+source_sha256 = "a4506d24b7973a745d1225d59147078e03f14a30791a229d852b37f757442505"

@@ -1,0 +1,207 @@
+schema_version = 1
+fragment_id = "singletons-014"
+width_17_rules = []
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DP200002"
+source_row = 146
+source_cell = "A146"
+ordinal = 141
+record_identity = "DP200002"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200002"
+source_cell = "H44"
+expected_normalized_statement = "3 enteros y 2 decimales"
+justification = "Reviewed official-source analogy for exact field DP200002 row 146; the cited repeated block states the same wire representation and the exact field description identifies the same semantic role."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DP200002"
+source_row = 147
+source_cell = "A147"
+ordinal = 142
+record_identity = "DP200002"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200002"
+source_cell = "H44"
+expected_normalized_statement = "3 enteros y 2 decimales"
+justification = "Reviewed official-source analogy for exact field DP200002 row 147; the cited repeated block states the same wire representation and the exact field description identifies the same semantic role."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DP200002"
+source_row = 148
+source_cell = "A148"
+ordinal = 143
+record_identity = "DP200002"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200002"
+source_cell = "H44"
+expected_normalized_statement = "3 enteros y 2 decimales"
+justification = "Reviewed official-source analogy for exact field DP200002 row 148; the cited repeated block states the same wire representation and the exact field description identifies the same semantic role."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200002B"
+source_row = 149
+source_cell = "A149"
+ordinal = 144
+record_identity = "DP200002B"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m200-2025-dp200002b-r0149"
+decision_statement = "DP200002B source row 149: encode selected as 1 and absent or unselected as 0."
+justification = "Reviewed exact-anchor policy for DP200002B source row 149; it is not represented as official-source text."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DP200002B"
+source_row = 149
+source_cell = "A149"
+ordinal = 144
+record_identity = "DP200002B"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 2
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DP200015B"
+source_row = 97
+source_cell = "A97"
+ordinal = 92
+record_identity = "DP200015B"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200015B"
+source_cell = "G92"
+expected_normalized_statement = "2 enteros y 2 decimales"
+justification = "Reviewed official-source analogy for exact field DP200015B row 97; the cited repeated block states the same wire representation and the exact field description identifies the same semantic role."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 2
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DP200015B"
+source_row = 102
+source_cell = "A102"
+ordinal = 97
+record_identity = "DP200015B"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200015B"
+source_cell = "G92"
+expected_normalized_statement = "2 enteros y 2 decimales"
+justification = "Reviewed official-source analogy for exact field DP200015B row 102; the cited repeated block states the same wire representation and the exact field description identifies the same semantic role."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 2
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DP200016"
+source_row = 57
+source_cell = "A57"
+ordinal = 52
+record_identity = "DP200016"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200016"
+source_cell = "G52"
+expected_normalized_statement = "2 enteros y 2 decimales"
+justification = "Reviewed official-source analogy for exact field DP200016 row 57; the cited repeated block states the same wire representation and the exact field description identifies the same semantic role."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 2
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DP200016"
+source_row = 62
+source_cell = "A62"
+ordinal = 57
+record_identity = "DP200016"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200016"
+source_cell = "G52"
+expected_normalized_statement = "2 enteros y 2 decimales"
+justification = "Reviewed official-source analogy for exact field DP200016 row 62; the cited repeated block states the same wire representation and the exact field description identifies the same semantic role."
+
+[design_identity]
+modelo = "200"
+design_epoch = "2025"
+source_ref = "aeat-dr-200-2025"
+source_sha256 = "a4506d24b7973a745d1225d59147078e03f14a30791a229d852b37f757442505"

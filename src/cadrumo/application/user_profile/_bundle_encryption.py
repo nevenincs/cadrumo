@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+from typing import Final
 
 from pydantic import BaseModel, Field
 
@@ -17,7 +18,9 @@ from ._bundle import (
     validate_bundle_payload,
 )
 
-_ENCRYPTED_BUNDLE_ENVELOPE_SCHEMA_VERSION = 1
+_ENCRYPTED_BUNDLE_ENVELOPE_SCHEMA_VERSION: Final[int] = 1
+_ENCRYPTED_BUNDLE_PAYLOAD_MODEL: Final[str] = "UserProfilePortableExport"
+_ENCRYPTED_BUNDLE_KDF: Final[str] = "argon2id"
 _ENCRYPTED_BUNDLE_AAD = b"cadrumo.user-profile.portable-export.v1"
 
 
@@ -27,14 +30,23 @@ class EncryptedProfileBundleExport(BaseModel):
     The ciphertext wraps the exact ``UserProfilePortableExport`` JSON bytes.
     The envelope schema is transport metadata only; after decryption, callers
     still validate the original bundle model and its ``bundle_schema_version``.
+
+    The three markers that route how the ciphertext is interpreted --
+    ``encrypted_bundle_schema_version``, ``payload_model`` and ``kdf`` -- are
+    required and carry no default. Each is compared for equality on the read
+    path, and a default equal to the accepted value makes that comparison
+    blind to the one payload it exists to catch: a stored envelope omitting
+    the key hydrates AS the accepted value and passes a check the writer never
+    actually made. Every field on this record is stamped explicitly by
+    :func:`encrypt_profile_bundle_for_passphrase`.
     """
 
     model_config = _STRICT_FROZEN
 
-    encrypted_bundle_schema_version: int = Field(default=_ENCRYPTED_BUNDLE_ENVELOPE_SCHEMA_VERSION, ge=1)
-    payload_model: str = "UserProfilePortableExport"
+    encrypted_bundle_schema_version: int = Field(ge=1)
+    payload_model: str = Field(min_length=1)
     payload_schema_version: int
-    kdf: str = "argon2id"
+    kdf: str = Field(min_length=1)
     kdf_version: int
     memory_cost: int
     time_cost: int
@@ -65,7 +77,10 @@ def encrypt_profile_bundle_for_passphrase(
     payload = bundle.model_dump_json().encode(UTF_8_ENCODING)
     encrypted = encrypt_record(payload, key=sealing_key, associated_data=_ENCRYPTED_BUNDLE_AAD)
     return EncryptedProfileBundleExport(
+        encrypted_bundle_schema_version=_ENCRYPTED_BUNDLE_ENVELOPE_SCHEMA_VERSION,
+        payload_model=_ENCRYPTED_BUNDLE_PAYLOAD_MODEL,
         payload_schema_version=bundle.bundle_schema_version,
+        kdf=_ENCRYPTED_BUNDLE_KDF,
         kdf_version=params.version,
         memory_cost=params.memory_cost,
         time_cost=params.time_cost,
@@ -87,12 +102,26 @@ def decrypt_profile_bundle_with_passphrase(
     non-current ``bundle_schema_version`` propagates as
     :class:`UnsupportedBundleSchemaVersionError` (naming the version) rather
     than being flattened into the generic envelope error.
+
+    The two version gates below are deliberately different shapes, and the
+    difference is the presence of a migration mechanism. The PAYLOAD version is
+    checked against a floor-to-current range carrying a per-hop upgrader chain,
+    so an older payload has a defined route forward and the range is designed to
+    widen once the floor freezes; it is single-valued today only because the
+    floor still equals the current version. The TRANSPORT envelope has no floor,
+    no upgrader chain and no lineage enrolment, so nothing could ever carry an
+    older layout forward -- accepting one would mean reading bytes under a
+    structure this build does not implement. A ceiling there refused a newer
+    envelope while admitting every older one, which is the direction with no
+    recovery behind it, so the transport gate is exact.
     """
-    if envelope.encrypted_bundle_schema_version > _ENCRYPTED_BUNDLE_ENVELOPE_SCHEMA_VERSION:
+    if envelope.encrypted_bundle_schema_version != _ENCRYPTED_BUNDLE_ENVELOPE_SCHEMA_VERSION:
         raise EncryptedProfileBundleError(
-            "encrypted profile-bundle envelope schema was written by a newer application",
+            "encrypted profile-bundle envelope is at schema version "
+            f"{envelope.encrypted_bundle_schema_version}; this application reads "
+            f"{_ENCRYPTED_BUNDLE_ENVELOPE_SCHEMA_VERSION}",
         )
-    if envelope.payload_model != "UserProfilePortableExport":
+    if envelope.payload_model != _ENCRYPTED_BUNDLE_PAYLOAD_MODEL:
         raise EncryptedProfileBundleError(
             "encrypted profile-bundle envelope declares the wrong payload model",
         )
@@ -100,7 +129,7 @@ def decrypt_profile_bundle_with_passphrase(
         raise EncryptedProfileBundleError(
             "encrypted profile-bundle envelope declares an unsupported payload schema",
         )
-    if envelope.kdf != "argon2id":
+    if envelope.kdf != _ENCRYPTED_BUNDLE_KDF:
         raise EncryptedProfileBundleError(
             "encrypted profile-bundle envelope declares an unsupported KDF",
         )

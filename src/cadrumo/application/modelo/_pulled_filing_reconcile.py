@@ -159,6 +159,10 @@ def pulled_filing_divergence_findings(
             ModeloVerificationFinding(
                 kind=ModeloVerificationFindingKind.RECONCILIATION_MISMATCH,
                 severity=ModeloVerificationFindingSeverity.WARNING,
+                # The subject rides a field, never only the prose. An automated
+                # operator routes on structure; leaving this unset would make the
+                # diverging casilla recoverable only by parsing the message.
+                casilla_id=divergence.casilla_id,
                 message=(
                     f"Casilla {casilla.number} does not match the filing AEAT holds for "
                     f"{period_token} {work_unit.filing_year}: this calculation produces "

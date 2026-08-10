@@ -426,8 +426,12 @@ def test_a_diverging_casilla_raises_one_warning_carrying_that_casillas_own_groun
         "evidence that may simply be a later AEAT correction"
     )
 
-    # The finding carries no structured casilla coordinate, so the affected
-    # casilla and both magnitudes are only recoverable from the rendered text.
+    # The subject rides a field, not only the prose: an automated operator routes
+    # on structure, and a coordinate recoverable only by parsing a message is not
+    # a coordinate. The magnitudes stay message-only, which is presentation.
+    assert finding.casilla_id == subject.id, (
+        "the diverging casilla must be routable from the finding itself, not parsed out of its text"
+    )
     assert subject.number in finding.message
     assert str(_LOCAL_AMOUNT) in finding.message
     assert str(_FILED_AMOUNT) in finding.message
