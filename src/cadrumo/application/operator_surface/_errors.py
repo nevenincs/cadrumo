@@ -20,12 +20,11 @@ class OperatorSurfaceContractError(CadrumoError):
     """Registered application error for rejected operator-surface requests.
 
     The message is localized with a stable, non-secret ``surface`` / ``reason``
-    context payload, and optional ``suggestion`` text gives callers the accepted
-    follow-up command. Raw operator input is stored only in structured context
+    context payload. Raw operator input is stored only in structured context
     for the central error renderer to handle consistently.
     """
 
-    def __init__(self, surface: str, *, reason: str, suggestion: str | None = None) -> None:
+    def __init__(self, surface: str, *, reason: str) -> None:
         super().__init__(
             tr(
                 "cli.operator_surface.errors.contract_not_accepted",
@@ -34,7 +33,6 @@ class OperatorSurfaceContractError(CadrumoError):
                 reason=reason,
             ),
             context={"surface": surface, "reason": reason},
-            suggestion=suggestion,
         )
         self.surface = surface
         self.reason = reason
