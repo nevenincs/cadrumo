@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#cli-authority-quality-backlog'
 date: '2026-07-17'
-modified: '2026-07-24'
-body_hash: 'sha256:c6658cfe0cc88f81054374a8060532b152ac8ca84c1a14dac34413f7efbc73c1'
+modified: '2026-08-10'
+body_hash: 'sha256:fccc73864491563cbf2c956206b426437331cf157971ad9e4bd4eeae6460701a'
 tier: L2
 related:
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
@@ -18,6 +18,18 @@ related:
 ---
 
 # `cli-authority-quality-backlog` plan
+
+## Description
+
+Absorb the residue of the CLI authority campaign that is real work but carries neither an operator-safety defect nor a false-green risk. Every phase here is independently closeable and none blocks another plan. This plan is deferrable against spare capacity; it is not a prerequisite for any successor.
+
+Registry as-of honesty ships narrowly. The unscoped registry query accepts an as_of argument and silently ignores it, which is an accepted-parameter lie: the operator asks for a historical view, receives a current one, and gets no signal that the request was discarded. The fix is small and worth shipping on its own: honour the argument in revision validity selection, or refuse it with an instructive message naming the scoped form that does honour it. The decision record keeps scoped and unscoped selection distinct on purpose, so this is a honesty fix, not a merge.
+
+Hashing narrows to the recurrence gate. The eighteen exact one-shot bodies and four reducible file-hash bodies repeat substitutable mechanics, but rewriting them is low-value churn against a canonical service that already exists. Only the AST recurrence gate carries durable value: it prevents new reducible bodies from landing while allowing streaming, keyed, derivation, and certificate uses that are not substitutable and must not be blocked.
+
+Namespace adoption, filed capture, and the language-model review workflow are each genuine single-authority consolidations with no safety urgency. The namespace adoption check currently passes without proving binding, which makes it a weak gate rather than a wrong one. The language-model review phase depends on ledger evidence atomicity landing first, because both touch split persistence.
+
+## Steps
 
 ### Phase `P01` - Registry as-of honesty
 
@@ -90,6 +102,7 @@ Turn two honestly-flagged coverage gaps into non-vacuous gates: the law-determin
 
 - [x] `P09.S23` - Audit the roughly forty select_revision callers and prove every production calculation, verification, filing, export, and projection path resolves through the law-determined canonical resolver and only asserts a stored revision_id equal, never injects it; `src/cadrumo/domain/calculations/registry/tests/test_temporal.py`.
 - [x] `P09.S24` - Assert binding validator-dispatch completeness: every BindingSourceKind member has a dispatch entry in the validator registry or a documented mesh-only deferral, so a new source kind cannot ship unvalidated; `src/cadrumo/domain/calculations/registry/tests/test_binding_build_validation.py`.
+- [ ] `P09.S28` - Measure the legitimate population of direct create_work_unit callers and then close the filing-year gap that the select_revision caller audit structurally could not see, because create_work_unit is not itself a select_revision caller and so fell outside that audit's denominator entirely. It validates a supplied revision_id only for existence and for period-token membership, never against the filing year, so create_work_unit for modelo 303 filing_year 2026 carrying revision_id 2023-y-siguientes succeeds silently and builds a 2026 work unit under the 2023 revision's norms even though that revision's compiled period selector is capped at year_to 2025 and the authority resolves those coordinates to 2026-y-siguientes. Production is safe today only because every production caller resolves through resolve_registry_revision_for_work_target first, so the exposure is a FUTURE caller that does not, and the starting hypothesis to DISPROVE is a static gate constraining production call sites rather than a runtime refusal at the shared door, because whether a revision_id was law-resolved or hand-supplied is not visible in the arguments at all and a runtime predicate therefore cannot discriminate a fixture seeding a work unit from a production path that resolved correctly. Roughly ninety modules call create_work_unit directly, so the population must be measured before the mechanism is chosen; `src/cadrumo/application/modelo/_work_lifecycle.py and src/cadrumo/application/modelo/_registry_resources.py`.
 
 ### Phase `P10` - Entrypoints structural-duplication triage
 
@@ -102,18 +115,6 @@ The duplication-authority audit flags two low-severity structural duplications o
 The S58 distribution close review found the publish-workflow guardrail test enforces its no-build/no-publish claim only through exact-substring not-in-workflow-text guards, so a differently-spelled build or publish command inside the validate job would slip past both the substring guard and the parsed-YAML presence checks. Harden the guardrail with a structural assertion over every validate-job step.
 
 - [x] `P11.S26` - Add a structural no-build/no-publish assertion to the publish-workflow guardrail test: denylist-scan every step run and uses in the validate job (or pin the full step allowlist) so a differently-spelled build or publish command cannot slip past the exact-substring guards, gated on the guardrail test failing if any validate-job step invokes a build or publish tool; `dev/release/tests/test_publish_workflow.py`.
-
-## Description
-
-Absorb the residue of the CLI authority campaign that is real work but carries neither an operator-safety defect nor a false-green risk. Every phase here is independently closeable and none blocks another plan. This plan is deferrable against spare capacity; it is not a prerequisite for any successor.
-
-Registry as-of honesty ships narrowly. The unscoped registry query accepts an as_of argument and silently ignores it, which is an accepted-parameter lie: the operator asks for a historical view, receives a current one, and gets no signal that the request was discarded. The fix is small and worth shipping on its own: honour the argument in revision validity selection, or refuse it with an instructive message naming the scoped form that does honour it. The decision record keeps scoped and unscoped selection distinct on purpose, so this is a honesty fix, not a merge.
-
-Hashing narrows to the recurrence gate. The eighteen exact one-shot bodies and four reducible file-hash bodies repeat substitutable mechanics, but rewriting them is low-value churn against a canonical service that already exists. Only the AST recurrence gate carries durable value: it prevents new reducible bodies from landing while allowing streaming, keyed, derivation, and certificate uses that are not substitutable and must not be blocked.
-
-Namespace adoption, filed capture, and the language-model review workflow are each genuine single-authority consolidations with no safety urgency. The namespace adoption check currently passes without proving binding, which makes it a weak gate rather than a wrong one. The language-model review phase depends on ledger evidence atomicity landing first, because both touch split persistence.
-
-## Steps
 
 ## Parallelization
 
