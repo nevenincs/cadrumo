@@ -6,7 +6,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:d2b369d74bba968b29801a7aaeead891d85a64d01c28639e80c64af0bd0b0d59'
+body_hash: 'sha256:d0f9302b92f8de60dec7c5e02f650c2841d228cbd56b585193e84ffba89b831f'
 related:
   - '[[2026-06-21-m303-carry-reconciliation-adr]]'
   - '[[2026-08-07-m303-carry-reconciliation-S01]]'
@@ -41,6 +41,7 @@ related:
   - '[[2026-08-09-m303-carry-reconciliation-s08-code-review-audit]]'
   - '[[2026-08-09-m303-carry-reconciliation-s18-code-review-audit]]'
   - '[[2026-08-10-m303-carry-reconciliation-s13-filed-population-measurement-blocker-audit]]'
+  - '[[2026-08-10-m303-carry-reconciliation-s13-measurement-closure-review-audit]]'
   - '[[2026-08-10-m303-carry-reconciliation-s16-submitted-file-notice-route-audit]]'
   - '[[2026-08-10-m303-carry-reconciliation-s16-submitted-file-notice-route-reference]]'
   - '[[2026-08-10-m303-carry-reconciliation-s19-code-review-audit]]'
@@ -67,6 +68,7 @@ Auto-generated index of all documents tagged with `#m303-carry-reconciliation`.
 - `2026-08-09-m303-carry-reconciliation-s08-code-review-audit` - `m303-carry-reconciliation` audit: `M303 carry reconciliation S08 code review`
 - `2026-08-09-m303-carry-reconciliation-s18-code-review-audit` - `m303-carry-reconciliation` audit: `M303 S18 charge-account export review`
 - `2026-08-10-m303-carry-reconciliation-s13-filed-population-measurement-blocker-audit` - `m303-carry-reconciliation` audit: `M303 S13 filed-population measurement blocker`
+- `2026-08-10-m303-carry-reconciliation-s13-measurement-closure-review-audit` - `m303-carry-reconciliation` audit: `M303 S13 measurement closure review`
 - `2026-08-10-m303-carry-reconciliation-s16-submitted-file-notice-route-audit` - `m303-carry-reconciliation` audit: `M303 S16 submitted-file Notice route`
 - `2026-08-10-m303-carry-reconciliation-s19-code-review-audit` - `m303-carry-reconciliation` audit: `M303 S19 Nota 3 DID export review`
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:02fba40de2135579bef547553a8f3847586a8c8b2f2c70815e50d278e1099a73'
+body_hash: 'sha256:194dacc7fc3a56ee65cec48641f41f614dc6592a0e415081795b3553bf1f3e4f'
 step_id: 'S13'
 related:
   - "[[2026-08-07-m303-carry-reconciliation-plan]]"
@@ -24,19 +24,22 @@ related:
 - Inspect the persisted `FiledDeclaracionObservation` model and its encrypted production reader.
 - Run the read-only profile-status and storage-inventory commands without attempting login or credential access.
 - Inspect the plan and relevant repository history to distinguish a production measurement from fixture-only evidence.
+- After separately authorized profile unlock, enumerate the real encrypted observation store and emit only aggregate Modelo 303 artefact-kind counts.
 
 ## Outcome
 
-The required population was not measurable in this environment. The production
-reader is `FiledDeclaracionObservationStore.list_observations()`, which decrypts
-active-profile records; the shell has no unlocked active profile. The CLI
-refused the read-only status probe with `reason: absent`. Storage inventory
-shows a bucket database and keystore exist, but it does not expose decrypted
-observation artefact kinds.
+The first read-only attempt was blocked because the profile was not unlocked.
+After separately authorized profile unlock, the production reader
+`FiledDeclaracionObservationStore.list_observations()` ran under its active
+master-key provider. It returned zero Modelo 303 observations. Consequently,
+the target count is zero: no observed Modelo 303 declaration has a
+declaration-PDF artefact without a submitted-file artefact, because the current
+active-profile corpus contains no Modelo 303 observations at all.
 
-No declaration-render parser was added. The data model permits an observation
-to hold a declaration PDF without a submitted file, but the capture branches
-do not establish that such a Modelo 303 population exists. S13 remains open.
+No declaration-render parser was added. This establishes the current
+active-profile corpus measurement only, not a universal claim about all AEAT
+filings. The independent review replayed the aggregate, approved the explicit
+zero-target closure condition, and confirmed that no parser is warranted.
 
 ## Verification
 
@@ -56,9 +59,17 @@ The safe inventory reports populated bucket database and keystore categories,
 with the active-profile bucket redacted, but cannot enumerate decrypted filed
 observation artefacts.
 
+`uv run --no-sync python -`
+
+The read-only aggregate over `FiledDeclaracionObservationStore.list_observations()`
+reported `total_m303=0`, `m303_with_submitted_file=0`,
+`m303_with_declaration_pdf=0`, and
+`m303_declaration_pdf_without_submitted_file=0`. It inspected only `modelo` and
+artefact `kind`, and emitted no identifiers, artefact bodies, values, paths, or
+storage references.
+
 ## Notes
 
-The external blocker is authorization to unlock the existing local profile
-bucket. This record does not request a login, passphrase, or credential access;
-without that authorization the count of Modelo 303 observations with a
-declaration PDF and no submitted file is unknown rather than zero.
+The original access blocker is resolved by the separately authorized profile
+unlock. The measured zero target is caused by an empty Modelo 303 slice, so it
+does not establish submitted-file coverage for any non-empty M303 corpus.

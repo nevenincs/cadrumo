@@ -5,7 +5,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:97893f4c54421ea609fb43d2c1e27591ef41c247729fe5420f65256943ccde7a'
+body_hash: 'sha256:0270178e4f10336da1d52b95ada4f7684d5afc9eb4b906c1a1a28914f3b2c612'
 related:
   - "[[2026-08-07-m303-carry-reconciliation-plan]]"
   - "[[2026-08-07-m303-carry-reconciliation-S13]]"
@@ -31,6 +31,18 @@ status --json` probe refused with `reason: absent`; no active profile was
 unlocked. The storage inventory exposes only category-level state, not
 decrypted artefact kinds. Therefore no count, including zero, is established.
 
+### encrypted-live-corpus-resolved | low | The authorized production query found no Modelo 303 observations
+
+After the prior blocked attempt, the selected profile was separately unlocked
+and the real encrypted store was enumerated under its active master-key provider.
+The aggregate-only query returned `total_m303=0`,
+`m303_with_submitted_file=0`, `m303_with_declaration_pdf=0`, and
+`m303_declaration_pdf_without_submitted_file=0`. It read only `modelo` and
+artefact kinds and emitted no identifiers, artefact content, stored values,
+paths, or storage references. This resolves the access finding for the current
+active-profile corpus, but it does not turn an empty M303 slice into evidence
+that submitted-file coverage is complete in a non-empty corpus.
+
 ### conditional-capture-shape | medium | Repository invariants do not prove submitted-file universality
 
 The Sede capture records a submitted-file artefact only when a live declaration
@@ -48,13 +60,12 @@ operator's persisted filing population is empty or non-empty.
 
 ## Recommendations
 
-- Leave S13 open. Do not add a declaracion-render parser and do not mark the
-  population empty.
-- Under separately authorized active-profile access, enumerate the real
-  `FiledDeclaracionObservation` records and count Modelo 303 rows partitioned
-  by `submitted_file` and `declaration_pdf` artefact kinds. Retain only
-  aggregate counts and the measurement timestamp in a follow-up record.
-- If and only if the missing-submitted-file plus declaration-PDF count is
-  non-zero, ground recovery on which AEAT render slot contains a value, never
-  on the pre-printed C, I, or D letters, then obtain formal review before
-  implementation.
+- The prior leave-open recommendation is superseded by the authorized
+  aggregate-only measurement and its independent approval. Close S13 under its
+  explicit zero-target criterion without adding a declaracion-render parser.
+- Retain the scope boundary: the result concerns the current active-profile
+  corpus at measurement time, and provides no submitted-file coverage claim for
+  a non-empty M303 corpus.
+- If a later measurement finds a non-zero missing-submitted-file plus
+  declaration-PDF count, reopen the recovery question and ground it on which
+  AEAT render slot carries a value, never on the pre-printed C, I, or D letters.
