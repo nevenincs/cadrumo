@@ -42,10 +42,8 @@ class ConfigBoundaryError(CoreError):
         super().__init__(
             translated_message="errors.error.error_config_boundary",
             context={
-                "recovery": "aeat config repair --help",
                 "original": original,
             },
-            suggestion="aeat config repair --help",
         )
         self.original_exception: Exception = error
 

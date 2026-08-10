@@ -251,7 +251,6 @@ def google_login(
             raise GoogleAuthClientNotRegisteredError(
                 translated_message="cli.config.google.detail.client_unregistered",
                 context={"profile": active},
-                suggestion="aeat config google register --client-json <path>",
             )
         if refresh_only:
             metadata = load_metadata(active)
@@ -259,7 +258,6 @@ def google_login(
                 raise GoogleAuthExpiredError(
                     translated_message="cli.config.google.detail.no_metadata_for_refresh",
                     context={"profile": active},
-                    suggestion="aeat config google login",
                 )
             typed_refresh = GoogleLoginResult(
                 profile=active,
@@ -892,7 +890,6 @@ def _push_secure_object_mirror_rows(
         raise OutboundStorageValidationError(
             "non-dry-run Google sync push with --limit cannot produce a complete remote mirror manifest",
             context={"limit": str(limit)},
-            suggestion="run without --limit, or add --dry-run for bounded inspection",
             translated_message="cli.config.google.detail.sync_push_limit_requires_dry_run",
         )
 

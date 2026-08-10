@@ -29,6 +29,10 @@ from typing import TYPE_CHECKING, TypedDict
 import typer
 from pydantic import BaseModel, ConfigDict, SecretStr
 
+from ....application.cli_exception_preconditions import (
+    CliExceptionPrecondition,
+    cli_exception_no_recovery_verdict,
+)
 from ....application.operator_actions import ActionReference
 from ....core import NIST_PASSPHRASE_MIN_LENGTH
 from ....core.errors import CadrumoError as _CadrumoError
@@ -42,7 +46,12 @@ from ....core.json_contract import (
     NoticeSeverity,
     ResolvedActionArgument,
 )
-from .._common import _emit_envelope, _no_active_profile_refusal, resolve_notice_action
+from .._common import (
+    _emit_envelope,
+    _no_active_profile_refusal,
+    attach_cli_policy_verdict,
+    resolve_notice_action,
+)
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from ._secure_input import prompt_secret_no_echo, read_secrets_stdin
@@ -506,9 +515,14 @@ def _register_profile_export_command(profile_app: typer.Typer) -> None:
             )
             encrypted_mode = encrypt or secrets_stdin
         if out is None:
-            raise _CliRefusedBoundaryError(
-                translated_message="cli.config.profile.export_requires_destination",
-                suggestion="aeat config profile export NAME --to bundle.json --encrypt",
+            raise attach_cli_policy_verdict(
+                _CliRefusedBoundaryError(
+                    translated_message="cli.config.profile.export_requires_destination",
+                ),
+                verdict=cli_exception_no_recovery_verdict(
+                    CliExceptionPrecondition.PROFILE_EXPORT_REQUEST_COMPLETE,
+                    facts={"destination_supplied": False},
+                ),
             )
         _validate_export_transport_options(encrypt=encrypted_mode, cleartext_local=cleartext_local)
         passphrase = _export_passphrase_or_none(encrypted_mode, secrets_stdin=secrets_stdin)
@@ -620,9 +634,14 @@ def _validate_export_transport_options(*, encrypt: bool, cleartext_local: bool) 
             translated_message="cli.config.profile.export_transport_conflict",
         )
     if not encrypt and not cleartext_local:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.profile.export_requires_transport",
-            suggestion="aeat config profile export NAME --to bundle.json --encrypt",
+        raise attach_cli_policy_verdict(
+            _CliRefusedBoundaryError(
+                translated_message="cli.config.profile.export_requires_transport",
+            ),
+            verdict=cli_exception_no_recovery_verdict(
+                CliExceptionPrecondition.PROFILE_EXPORT_REQUEST_COMPLETE,
+                facts={"transport_selected": False},
+            ),
         )
 
 
@@ -668,9 +687,14 @@ def _register_profile_import_command(
 
             capability = interactive_capability()
             if capability is None:
-                raise _CliRefusedBoundaryError(
-                    translated_message="cli.config.profile.import_requires_path",
-                    suggestion="aeat config profile import bundle.json",
+                raise attach_cli_policy_verdict(
+                    _CliRefusedBoundaryError(
+                        translated_message="cli.config.profile.import_requires_path",
+                    ),
+                    verdict=cli_exception_no_recovery_verdict(
+                        CliExceptionPrecondition.PROFILE_IMPORT_PATH_SUPPLIED,
+                        facts={"path_supplied": False},
+                    ),
                 )
             collected = collect_import_request_interactively(label=label, capability=capability)
             path = collected.path

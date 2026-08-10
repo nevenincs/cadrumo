@@ -137,17 +137,27 @@ def _incomplete_profile_refusal(warnings: Sequence[CalendarWarning]) -> Exceptio
     not invalid operator input, so it is raised as a refusal rather than as a
     parameter error: nothing the operator typed on this command line is wrong.
 
-    ``fix_command`` is offered as the suggestion only when every warning agrees
-    on one, since suggesting one of several remediations would send the
-    operator to a command that resolves only part of what is blocking them.
+    Calendar warnings may describe several independent authorities.  Their
+    aggregate does not bind one executable recovery action, so the refusal
+    carries a typed no-recovery outcome rather than selecting one warning's
+    command string.
     """
+    from ...application.cli_exception_preconditions import (
+        CliExceptionPrecondition,
+        cli_exception_no_recovery_verdict,
+    )
+    from ._common import attach_cli_policy_verdict
     from ._errors import CliRefusedBoundaryError
 
-    fix_commands = {warning.fix_command for warning in warnings}
-    return CliRefusedBoundaryError(
-        translated_message="cli.overview.refused_incomplete_profile",
-        context={"requirements": _grounded_warning_summary(warnings)},
-        suggestion=next(iter(fix_commands)) if len(fix_commands) == 1 else None,
+    return attach_cli_policy_verdict(
+        CliRefusedBoundaryError(
+            translated_message="cli.overview.refused_incomplete_profile",
+            context={"requirements": _grounded_warning_summary(warnings)},
+        ),
+        verdict=cli_exception_no_recovery_verdict(
+            CliExceptionPrecondition.OVERVIEW_PROFILE_COMPLETE,
+            facts={"warning_count": len(warnings)},
+        ),
     )
 
 
@@ -171,10 +181,15 @@ def _undeclared_taxpayer_model_refusal(profile: TaxpayerProfile) -> Exception:
     an entity type but no income category is told about the income category,
     not sent back to a field they already filled in.
     """
+    from ...application.cli_exception_preconditions import (
+        CliExceptionPrecondition,
+        cli_exception_no_recovery_verdict,
+    )
     from ...application.user_profile import format_profile_selector_requirements
     from ...core.resources import resources
     from ...domain.calculations.registry import build_profile_grounding_index
     from ...domain.deadlines import EntityType
+    from ._common import attach_cli_policy_verdict
     from ._errors import CliRefusedBoundaryError
 
     missing: list[str] = []
@@ -182,18 +197,23 @@ def _undeclared_taxpayer_model_refusal(profile: TaxpayerProfile) -> Exception:
         missing.append(_ENTITY_TYPE_SELECTOR)
     elif profile.entity_type is EntityType.NATURAL_PERSON and not profile.irpf_income_categories:
         missing.append(_IRPF_INCOME_CATEGORIES_SELECTOR)
-    return CliRefusedBoundaryError(
-        translated_message="cli.overview.refused_undeclared_taxpayer_model",
-        context={
-            "requirements": ", ".join(
-                format_profile_selector_requirements(
-                    missing,
-                    schema=resources().user_profile_schema.singleton,
-                    grounding_index=build_profile_grounding_index(resources().modelos.authority),
+    return attach_cli_policy_verdict(
+        CliRefusedBoundaryError(
+            translated_message="cli.overview.refused_undeclared_taxpayer_model",
+            context={
+                "requirements": ", ".join(
+                    format_profile_selector_requirements(
+                        missing,
+                        schema=resources().user_profile_schema.singleton,
+                        grounding_index=build_profile_grounding_index(resources().modelos.authority),
+                    ),
                 ),
-            ),
-        },
-        suggestion="aeat config profile edit",
+            },
+        ),
+        verdict=cli_exception_no_recovery_verdict(
+            CliExceptionPrecondition.OVERVIEW_PROFILE_COMPLETE,
+            facts={"missing_selector_count": len(missing)},
+        ),
     )
 
 

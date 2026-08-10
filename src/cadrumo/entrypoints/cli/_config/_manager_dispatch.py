@@ -172,9 +172,11 @@ def open_the_edit_target_or_refuse(ctx: _TyperClickContext, supplied: object) ->
     if not isinstance(supplied, str) or not supplied.strip():
         return
 
+    from ....application.profile_preconditions import profile_session_failure_verdict
     from ....application.user_profile import resolve_login_target
-    from ....core import resolve_active_bucket_id
+    from ....core import ProfileSessionRefusalReason, resolve_active_bucket_id
     from .. import _authenticated_at_the_gate
+    from .._common import attach_cli_policy_verdict
     from .._errors import CliRefusedBoundaryError
 
     target = resolve_login_target(supplied)
@@ -186,10 +188,15 @@ def open_the_edit_target_or_refuse(ctx: _TyperClickContext, supplied: object) ->
     # alias for the same runtime object.
     if _authenticated_at_the_gate(cast(typer.Context, ctx), bucket_id=target.bucket_id):
         return
-    raise CliRefusedBoundaryError(
-        translated_message="cli.config.profile.edit_target_not_active",
-        context={"name": target.label},
-        suggestion=f"aeat config login {target.label}",
+    raise attach_cli_policy_verdict(
+        CliRefusedBoundaryError(
+            translated_message="cli.config.profile.edit_target_not_active",
+            context={"name": target.label},
+        ),
+        verdict=profile_session_failure_verdict(
+            ProfileSessionRefusalReason.ABSENT,
+            profile_name=target.label,
+        ),
     )
 
 

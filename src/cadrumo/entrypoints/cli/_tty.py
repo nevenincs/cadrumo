@@ -26,29 +26,11 @@ from ...core.tty import stderr_is_tty, stdin_is_tty, stdout_is_tty
 
 
 class NonTtyRefusedError(CadrumoError):
-    """Raised when a command requires interactive stdin but stdin is piped.
+    """Raised when a command requires interactive stdin but stdin is piped."""
 
-    Carries the operator-facing recovery hint on
-    :attr:`NonTtyRefusedError.suggestion` so the
-    renderer can append it to the standard refusal message.
-
-    Attributes:
-        suggestion: Copy-paste-ready recovery hint shown to the user.
-    """
-
-    def __init__(self, suggestion: str) -> None:
-        """Initialise the refusal with a copy-paste-ready suggestion.
-
-        The positional ``message`` is intentionally omitted so ``error.args``
-        remains empty. The CLI renderer then falls through to the error
-        registry's ``message_key="errors.refused.refused_cli_non_tty"`` for
-        locale resolution rather than short-circuiting on ``args[0]``.
-
-        Args:
-            suggestion: Recovery hint to attach to the refusal message.
-        """
-        super().__init__(suggestion=suggestion.strip() or None)
-        self.suggestion = suggestion
+    def __init__(self) -> None:
+        """Initialise a translated refusal without a recovery command template."""
+        super().__init__()
 
 
 def is_stdout_tty() -> bool:
@@ -122,17 +104,14 @@ def should_show_rich_progress(
     return is_stdout_tty() and is_stderr_tty()
 
 
-def refuse_if_stdin_non_tty(suggestion: str) -> None:
+def refuse_if_stdin_non_tty() -> None:
     """Raise a typed refusal when interactive stdin is unavailable.
-
-    Args:
-        suggestion: Copy-paste-ready recovery hint shown to the user.
 
     Raises:
         NonTtyRefusedError: When stdin is not a TTY.
     """
     if not is_stdin_tty():
-        raise NonTtyRefusedError(suggestion)
+        raise NonTtyRefusedError()
 
 
 __all__ = [
