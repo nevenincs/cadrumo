@@ -109,28 +109,6 @@ class FiledCasillaSkipRow(BaseModel):
     reason: str
 
 
-class FiledRecaptureDivergence(BaseModel):
-    """One re-captured filing whose casilla values this sweep would change.
-
-    The typed half of the recapture-divergence advisory. The advisory says the
-    same thing in prose on the notices channel; this record is the machine
-    surface a caller can act on, and it is what a dry run returns as its
-    PRIMARY result rather than as a diagnostic — a preview whose whole output
-    was a notice would put the answer on the channel reserved for incidental
-    diagnostics.
-    """
-
-    model_config = ConfigDict(frozen=True)
-
-    modelo: str
-    ejercicio: int
-    period: Period
-    expediente_id: str
-    #: Casilla ids whose stored value differs from the freshly captured one,
-    #: in the leaf comparison's own order.
-    changed_casillas: tuple[str, ...]
-
-
 class BulkFiledDataCaptureReport(FiledCaptureEvidenceTally):
     """Read-only bulk filed-declaration capture report."""
 
@@ -145,12 +123,10 @@ class BulkFiledDataCaptureReport(FiledCaptureEvidenceTally):
     #: changed, read before each upsert while the prior values still existed.
     recapture_notices: tuple[Notice, ...] = ()
     #: True when the sweep ran as a preview: it read AEAT and computed the
-    #: divergences below, and wrote nothing.
+    #: recapture advisories above, and wrote nothing.
     dry_run: bool = False
-    #: The divergence set the upsert would introduce. Populated on a dry run
-    #: and on a real one alike, since both read it before writing; on a dry run
-    #: it is the run's answer, on a real one it is what the run just did.
-    recapture_divergences: tuple[FiledRecaptureDivergence, ...] = ()
+
+
 class ExpedientesBulkCaptureFailureRow(BaseModel):
     """One failed expedientes register walk in a bulk run."""
 

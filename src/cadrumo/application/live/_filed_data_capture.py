@@ -87,7 +87,6 @@ from ._remote_state_models import (
     BulkFiledDataCaptureReport,
     FiledDataCaptureFailureRow,
     FiledDataCaptureReport,
-    FiledRecaptureDivergence,
     SourceFiledDataCaptureReport,
 )
 from ._remote_state_outcomes import bounded_context_text
@@ -374,9 +373,6 @@ class _CaptureAccumulator:
     #: Recapture-divergence advisories, one per re-captured filing whose casilla
     #: values this sweep changed. Read before each upsert, never after.
     recapture_notices: list[Notice] = field(default_factory=list)
-    #: The same divergences as typed records, for callers that must act on
-    #: them rather than read them.
-    recapture_divergences: list[FiledRecaptureDivergence] = field(default_factory=list)
     justificante_csvs_by_observation: dict[tuple[str, int, str, str], tuple[str, ...]] = field(default_factory=dict)
     casilla_count: int = 0
     #: Observations folded in, counted in every mode. ``observation_paths``
@@ -408,7 +404,6 @@ class _CaptureAccumulator:
         # any production path, so a corrected filing silently overwrote the
         # previously observed values and the operator was never told.
         self.recapture_notices.extend(recapture_divergence_notices((observation,)))
-        self.recapture_divergences.extend(recapture_divergences((observation,)))
         # The Sede capture deliberately preserves a submitted-file layout
         # refusal as observation metadata and then keeps the declaration-PDF
         # fallback available. Metadata alone is not an operator surface,
@@ -766,7 +761,6 @@ async def capture_filed_data_bulk(
             failures=tuple(failures),
             recapture_notices=tuple(accumulator.recapture_notices),
             dry_run=True,
-            recapture_divergences=tuple(accumulator.recapture_divergences),
         )
 
     finalization = finalize_filed_capture(
@@ -791,7 +785,8 @@ async def capture_filed_data_bulk(
         resolved_scope=bounded_scope_description(tuple(resolved_modelos), suffix=f"{year_from}-{year_to}"),
         succeeded=not failures,
         unit_count=len(calculation_observation_keys),
-        divergence_count=len(accumulator.recapture_divergences),
+        # One advisory per divergent filing, so the notices ARE the count.
+        divergence_count=len(accumulator.recapture_notices),
         completed_at=now(),
     )
     return BulkFiledDataCaptureReport(
@@ -806,7 +801,6 @@ async def capture_filed_data_bulk(
         failures=tuple(failures),
         skipped_casillas=finalization.skipped_casillas,
         recapture_notices=tuple(accumulator.recapture_notices),
-        recapture_divergences=tuple(accumulator.recapture_divergences),
     )
 
 
@@ -1598,43 +1592,6 @@ def found_more_than_expected_notices(run: FiledHistoryOnboardingRun) -> tuple[No
     )
 
 
-def recapture_divergences(
-    captured: tuple[FiledDeclaracionObservation, ...],
-    *,
-    repository: CalculationObservationRepository | None = None,
-) -> tuple[FiledRecaptureDivergence, ...]:
-    """Return what re-capturing ``captured`` would change, per filing.
-
-    The single traversal behind both the typed divergence set and the operator
-    advisory. They are two projections of one comparison, so they cannot
-    disagree about what changed; a second loop could, and a preview that
-    disagreed with the run it previews is worse than no preview.
-
-    Read BEFORE the capture is persisted; afterwards the prior values are gone.
-    """
-    from ..calculations import CalculationObservationRepository as _Repository
-
-    repo = repository if repository is not None else _Repository()
-    divergences: list[FiledRecaptureDivergence] = []
-    for observation in captured:
-        stored = repo.load_observation(observation.modelo, observation.period)
-        if stored is None:
-            continue
-        changed = casillas_a_recapture_would_change(observation, stored.observation)
-        if not changed:
-            continue
-        divergences.append(
-            FiledRecaptureDivergence(
-                modelo=observation.modelo,
-                ejercicio=observation.ejercicio,
-                period=observation.period,
-                expediente_id=observation.expediente_id,
-                changed_casillas=tuple(changed),
-            ),
-        )
-    return tuple(divergences)
-
-
 def recapture_divergence_notices(
     captured: tuple[FiledDeclaracionObservation, ...],
     *,
@@ -1648,14 +1605,19 @@ def recapture_divergence_notices(
     AEAT legitimately permits a complementaria — so this mirrors the shipped
     censo-divergence shape: a standing advisory, never a silent auto-resolve.
 
-    Projects :func:`recapture_divergences` onto the notices channel; the
-    comparison itself lives there and is not repeated here.
-
     Read BEFORE the capture is persisted; afterwards the prior values are gone.
     """
+    from ..calculations import CalculationObservationRepository as _Repository
+
+    repo = repository if repository is not None else _Repository()
     notices: list[Notice] = []
-    for divergence in recapture_divergences(captured, repository=repository):
-        changed = divergence.changed_casillas
+    for observation in captured:
+        stored = repo.load_observation(observation.modelo, observation.period)
+        if stored is None:
+            continue
+        changed = casillas_a_recapture_would_change(observation, stored.observation)
+        if not changed:
+            continue
         named = ", ".join(changed)
         notices.append(
             Notice(
@@ -1667,18 +1629,18 @@ def recapture_divergence_notices(
                         "Re-capturing modelo {modelo} {period} {ejercicio} changed {count} previously "
                         "observed casilla value(s): {casillas}. AEAT may hold a corrected filing."
                     ),
-                    modelo=divergence.modelo,
-                    period=divergence.period.registry_token,
-                    ejercicio=divergence.ejercicio,
+                    modelo=observation.modelo,
+                    period=observation.period.registry_token,
+                    ejercicio=observation.ejercicio,
                     count=len(changed),
                     casillas=named,
                 ),
                 context={
-                    "modelo": divergence.modelo,
-                    "ejercicio": str(divergence.ejercicio),
-                    "period": divergence.period.registry_token,
+                    "modelo": observation.modelo,
+                    "ejercicio": str(observation.ejercicio),
+                    "period": observation.period.registry_token,
                     "changed_casillas": named,
-                    "expediente_id": divergence.expediente_id,
+                    "expediente_id": observation.expediente_id,
                 },
             ),
         )
