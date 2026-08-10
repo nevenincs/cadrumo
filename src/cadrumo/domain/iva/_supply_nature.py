@@ -181,11 +181,16 @@ STATUTORY_CITATIONS: Final[tuple[StatutoryCitation, ...]] = (
 """Every LIVA article this axis can read, and what each one establishes.
 
 The general place-of-supply articles -- LIVA arts. 68 for goods and 69 and 70 for
-services -- are absent, and their absence is the table's principal limitation
-rather than an oversight: the bundled corpus does not carry their consolidated
-text, and a row asserting what an article establishes without the text to check it
-against would be exactly the fabricated grounding this codebase refuses. They are
-added when the corpus carries them.
+services -- are absent, and the reason is a property of this table's check rather
+than a missing corpus. Their consolidated text *is* bundled, as the ``#a68``,
+``#a69`` and ``#a70`` anchored units of
+``corpus/normatives/html/ley-37-1992.html``, and each already carries a reviewed
+legal-catalogue entry pinned to that anchor; do not go fetching them. What no row
+can do yet is name them the way the rows above name their provisions: the check
+below reads the whole file a row cites, and the consolidated law reaches the goods
+limb and the services limb alike, so a row citing it could only ever establish
+nothing. They are added when a citation the check can read a single article from
+exists.
 
 The consequence is worth stating plainly, because it bounds what this axis can do
 today: the articles present here reach the *exemption* and *special regime*
