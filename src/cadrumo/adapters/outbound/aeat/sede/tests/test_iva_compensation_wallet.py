@@ -525,6 +525,41 @@ def test_wallet_shape_context_redacts_url_query_and_input_values() -> None:
     assert context["raw_sha256"]
 
 
+def test_wallet_shape_context_carries_page_text_so_the_leak_assertion_can_fire() -> None:
+    """Positive control for the ``not in str(context)`` assertion above.
+
+    That assertion passes for two unrelated reasons it cannot tell apart:
+    because something redacted the value, or because the shape reader never
+    reads that attribute at all. Its canary sits in an ``input``'s ``value``,
+    which :func:`_wallet_page_shape_context` does not carry -- so on its own it
+    is evidence about the reader's field selection, not about redaction, and it
+    would read exactly the same if page text could never reach ``str(context)``
+    by any route.
+
+    This is what makes it evidence. The same canary is placed in ``input@id``,
+    which the reader does carry verbatim through ``bounded_text``, and the
+    assertion is inverted: it must be PRESENT. A change that stopped
+    page-derived text reaching ``str(context)`` reds this test at the moment
+    the sibling's pass would have gone vacuous, rather than silently.
+
+    It pins a CHANNEL, not a permission. Structural attribute names are
+    deliberately recorded in a shape diagnostic and ``value`` deliberately is
+    not; the pair states that distinction as something a run can check.
+    """
+    html = f"""
+    <html><body>
+      <form id="Form" method="post" action="{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}">
+        <input id="QUERY-CANARY" name="session" type="hidden" value="not-read" />
+      </form>
+    </body></html>
+    """
+
+    context = _wallet_page_shape_context(html, landing_url=IVA_COMPENSATION_WALLET_URL)
+
+    assert "QUERY-CANARY" in str(context)
+    assert context["inputs"][0]["id"] == "QUERY-CANARY"
+
+
 def test_wallet_shape_context_reports_discovered_wallet_entrypoints_without_query_values() -> None:
     html = f"""
     <html><body>
