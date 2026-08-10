@@ -39,7 +39,7 @@ from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.output_rendering import OutputFormat
 from ...domain.iva import InvoiceKind
-from ._common import _bad, _emit_envelope, _format_of, _state, _tx_repo, resolve_notice_action
+from ._common import _bad, _emit_envelope, _format_of, _state, _tx_repo, emit_progress_line, resolve_notice_action
 from ._ledger_evidence_batch_payloads import EvidenceBatchResult
 
 if TYPE_CHECKING:
@@ -121,7 +121,7 @@ def register_evidence_batch_command(evidence_app: typer.Typer) -> None:
             # `result` already carries every item, and echoing progress there
             # would both break the single-document contract and duplicate the
             # rows -- the second progress channel the design refuses.
-            on_item=(lambda item: typer.echo(_progress_line(item))) if text_mode else None,
+            on_item=(lambda item: emit_progress_line(_progress_line(item))) if text_mode else None,
         )
 
         _emit_envelope(
