@@ -66,9 +66,7 @@ def test_loads_fragments_in_filename_order_independent_of_creation_order(tmp_pat
     assert semantic_map.modelo == "303"
     assert semantic_map.design_epoch == "2026"
     assert tuple(record.export_record_id for record in semantic_map.records) == ("registro-tipo-1",)
-    assert tuple(entry.export_field_id for entry in semantic_map.entries) == (
-        "registro-tipo-1.declarante-nif",
-    )
+    assert tuple(entry.export_field_id for entry in semantic_map.entries) == ("registro-tipo-1.declarante-nif",)
 
 
 def test_compiled_semantics_have_canonical_order_across_fragments(tmp_path: Path) -> None:
@@ -262,10 +260,7 @@ def test_public_loader_has_one_toml_parser_owner() -> None:
         alias.name for node in ast.walk(tree) if isinstance(node, ast.Import) for alias in node.names
     }
     direct_imports = {
-        (alias.name, alias.asname)
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Import)
-        for alias in node.names
+        (alias.name, alias.asname) for node in ast.walk(tree) if isinstance(node, ast.Import) for alias in node.names
     }
     imported_aliases = {
         alias.asname or alias.name: f"{node.module}.{alias.name}"
@@ -279,9 +274,7 @@ def test_public_loader_has_one_toml_parser_owner() -> None:
         for alias in node.names
     }
     called_targets = {
-        _resolved_call_target(node.func, imported_aliases)
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Call)
+        _resolved_call_target(node.func, imported_aliases) for node in ast.walk(tree) if isinstance(node, ast.Call)
     }
 
     assert imported_modules == {
