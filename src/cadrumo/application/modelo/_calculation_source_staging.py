@@ -141,28 +141,46 @@ def resolve_prorrata_regularizacion_sources(
 
     caller_binding_values = dict(binding_values or {})
     caller_relation_values = dict(relation_values or {})
-    materialised = materialise_prorrata_regularizacion_current_year_values(
-        registry_snapshot=registry_snapshot,
-        work_unit=work_unit,
-        casilla_inputs=casilla_inputs or {},
-        backend_casilla_inputs=source_resolution.bound_inputs_by_casilla_id,
-        binding_values={**dict(source_resolution.binding_values), **caller_binding_values},
-        enum_binding_values={**dict(source_resolution.enum_binding_values), **dict(enum_binding_values or {})},
-        date_binding_values={**dict(source_resolution.date_binding_values), **dict(date_binding_values or {})},
-        text_casilla_inputs=text_casilla_inputs,
-        relation_values={**dict(source_resolution.relation_values), **caller_relation_values},
-        unresolved_relation_ids=tuple(
-            relation_id
-            for relation_id in source_resolution.unresolved_relation_ids
-            if relation_id not in caller_relation_values
-        ),
-        unresolved_binding_ids=tuple(
-            binding_id
-            for binding_id in source_resolution.unresolved_binding_ids
-            if binding_id not in caller_binding_values
-        ),
-        filing_period_date=filing_period_date,
-    )
+    effective_binding_values = {**dict(source_resolution.binding_values), **caller_binding_values}
+    revision_casillas = casillas_by_id(snapshot_revision)
+    if any(casilla_id not in revision_casillas for casilla_id in _PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS):
+        materialised = SourceResolutionRegistryValues(
+            values=MappingProxyType({}),
+            initial_casilla_ids=initial_value_casilla_ids(snapshot_revision),
+            missing_casilla_ids=_PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS,
+        )
+    else:
+        materialised = materialise_registry_values_for_source_resolution(
+            registry_snapshot=registry_snapshot,
+            work_unit=work_unit,
+            casilla_inputs=casilla_inputs or {},
+            backend_casilla_inputs=source_resolution.bound_inputs_by_casilla_id,
+            binding_values=effective_binding_values,
+            enum_binding_values={**dict(source_resolution.enum_binding_values), **dict(enum_binding_values or {})},
+            date_binding_values={**dict(source_resolution.date_binding_values), **dict(date_binding_values or {})},
+            text_casilla_inputs=text_casilla_inputs,
+            relation_values={**dict(source_resolution.relation_values), **caller_relation_values},
+            unresolved_relation_ids=tuple(
+                relation_id
+                for relation_id in source_resolution.unresolved_relation_ids
+                if relation_id not in caller_relation_values
+            ),
+            unresolved_binding_ids=tuple(
+                binding_id
+                for binding_id in source_resolution.unresolved_binding_ids
+                if binding_id not in caller_binding_values
+            ),
+            staging_binding_defaults={
+                binding_id: Decimal("0.00")
+                for binding_id in iva_wallet_owned_binding_ids_for_revision(
+                    modelo_id=str(registry_snapshot.modelo.id),
+                    revision_id=str(snapshot_revision.id),
+                    relations=snapshot_revision.relations,
+                )
+                if binding_id not in effective_binding_values
+            },
+            filing_period_date=filing_period_date,
+        ).select(_PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS)
     prorrata_resolution = ProrrataRegularizacionSourceResolver(
         current_year_values=materialised.values,
         missing_current_year_casilla_ids=materialised.missing_casilla_ids,
@@ -175,84 +193,6 @@ def resolve_prorrata_regularizacion_sources(
         unresolved_current_year_casilla_ids=materialised.unresolved_casilla_ids,
     ).resolve(context)
     return merge_source_resolutions((source_resolution, prorrata_resolution, bienes_resolution))
-
-
-def materialise_prorrata_regularizacion_current_year_values(
-    *,
-    registry_snapshot: RegistrySnapshot,
-    work_unit: WorkUnit,
-    casilla_inputs: Mapping[CasillaId, Decimal],
-    backend_casilla_inputs: Mapping[CasillaId, Decimal] | None,
-    binding_values: Mapping[BindingId, Decimal],
-    enum_binding_values: Mapping[BindingId, str] | None = None,
-    date_binding_values: Mapping[BindingId, date] | None = None,
-    text_casilla_inputs: Mapping[CasillaId, str] | None = None,
-    relation_values: Mapping[RelationId, Decimal] | None = None,
-    unresolved_relation_ids: tuple[RelationId, ...] = (),
-    unresolved_binding_ids: tuple[BindingId, ...] = (),
-    filing_period_date: date | None = None,
-) -> SourceResolutionRegistryValues:
-    """Materialise the current-year values needed by ``prorrata_regularizacion``.
-
-    Args:
-        registry_snapshot: The target revision's :class:`RegistrySnapshot`,
-            used to resolve the current-year casilla ids through the
-            registry engine.
-        work_unit: The :class:`WorkUnit` addressing the target filing,
-            threaded to the staged registry engine run.
-        casilla_inputs: Operator- and backend-supplied casilla values that
-            seed the staged registry run.
-        backend_casilla_inputs: Casilla values already bound by the backend
-            source resolution, seeded into the staged run.
-        binding_values: Decimal binding values overlaid on the staged run.
-        enum_binding_values: Enum (string) binding values for the staged run.
-        date_binding_values: Date binding values for the staged run.
-        text_casilla_inputs: Text-typed casilla inputs for the staged run.
-        relation_values: Relation values for the staged run.
-        unresolved_relation_ids: Relation ids still unresolved after the
-            backend pass, propagated so the engine does not treat them as zero.
-        unresolved_binding_ids: Binding ids still unresolved after the backend
-            pass, propagated so the engine does not treat them as zero.
-        filing_period_date: The filing period date used for period-sensitive
-            resolution.
-
-    Returns:
-        The narrowed :class:`SourceResolutionRegistryValues` for the four
-        prorrata current-year casillas, or an empty materialisation when the
-        revision does not declare all of them.
-    """
-    revision = registry_snapshot.revision
-    revision_casillas = casillas_by_id(revision)
-    if any(casilla_id not in revision_casillas for casilla_id in _PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS):
-        return SourceResolutionRegistryValues(
-            values=MappingProxyType({}),
-            initial_casilla_ids=initial_value_casilla_ids(revision),
-            missing_casilla_ids=_PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS,
-        )
-    materialised = materialise_registry_values_for_source_resolution(
-        registry_snapshot=registry_snapshot,
-        work_unit=work_unit,
-        casilla_inputs=casilla_inputs,
-        backend_casilla_inputs=backend_casilla_inputs,
-        binding_values=binding_values,
-        enum_binding_values=enum_binding_values,
-        date_binding_values=date_binding_values,
-        text_casilla_inputs=text_casilla_inputs,
-        relation_values=relation_values,
-        unresolved_relation_ids=unresolved_relation_ids,
-        unresolved_binding_ids=unresolved_binding_ids,
-        staging_binding_defaults={
-            binding_id: Decimal("0.00")
-            for binding_id in iva_wallet_owned_binding_ids_for_revision(
-                modelo_id=str(registry_snapshot.modelo.id),
-                revision_id=str(revision.id),
-                relations=revision.relations,
-            )
-            if binding_id not in binding_values
-        },
-        filing_period_date=filing_period_date,
-    )
-    return materialised.select(_PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS)
 
 
 def materialise_registry_values_for_source_resolution(
