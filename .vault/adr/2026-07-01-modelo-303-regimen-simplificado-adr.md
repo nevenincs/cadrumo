@@ -1,17 +1,17 @@
 ---
 tags:
-  - '#adr'
-  - '#modelo-303-regimen-simplificado'
+  - "#adr"
+  - "#modelo-303-regimen-simplificado"
 date: '2026-07-01'
-modified: '2026-07-17'
-body_hash: 'sha256:2a14228e1b466b5e99e91babbba5f826a2c5daf3796a53cb8e706c9176d38533'
 related:
-  - '[[2026-05-27-khalid-cli-testimonial-audit]]'
-  - '[[2026-04-12-modelo-303-390-adr]]'
-  - '[[2026-07-10-modelo-303-regimen-simplificado-research]]'
+  - "[[2026-05-27-khalid-cli-testimonial-audit]]"
+  - "[[2026-04-12-modelo-303-390-adr]]"
+  - "[[2026-07-10-modelo-303-regimen-simplificado-research]]"
+superseded_by: '2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr'
+modified: '2026-08-10'
+body_hash: 'sha256:367f8d69d68ae5f1d6461e39b2da5eec40c005d56dcc305b553358f2e0a4aa19'
 ---
-
-# `modelo-303-regimen-simplificado` adr: `modulos-based IVA cuota binding set` | (**status:** `proposed`)
+# `modelo-303-regimen-simplificado` adr: `modulos-based IVA cuota binding set` | (**status:** `superseded`)
 
 ## Problem Statement
 
