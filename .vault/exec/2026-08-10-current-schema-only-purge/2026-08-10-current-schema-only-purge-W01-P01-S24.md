@@ -5,7 +5,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:8cfd7b6cb0fe388dc2e15e2ba9eaebc0a19d0c98da9377574ab0e3eef395f7ca'
+body_hash: 'sha256:b0dcaf97a5b6ec844d5d02fa515c0d4d73d22c7a7ca981f5bc20aa1d80dc5cae'
 step_id: 'S24'
 related:
   - "[[2026-08-10-current-schema-only-purge-plan]]"
@@ -61,6 +61,28 @@ readable from disk. Required-ness would have closed both. That limit is recorded
 in the production docstring and the test docstring as well as here, so a later
 reader cannot mistake this row for full required-ness.
 
+**A third read site was found AFTER this row was first marked complete, and the
+row was reopened.** The initial change guarded the two single-record reads,
+because the boundary had been enumerated by searching for load methods rather
+than for every place the typed model is built from stored bytes. The iterating
+read hydrates every stored row of the namespace and the lifecycle service
+consumes it to list live profiles, so an unstamped payload still hydrated as
+current on the one path that enumerates everything. It is the most dangerous of
+the three and it was the one missed.
+
+The count is now established by pattern rather than by method name: three
+hydration sites, no fourth, confirmed independently on both sides. Enumerate a
+boundary by the OPERATION it performs, never by the names its methods happen to
+carry.
+
+**The iterating site refuses the walk rather than skipping the row.** A skip
+returns a listing that is short and indistinguishable from complete, on a surface
+whose only job is to enumerate what the operator has -- a profile absent from
+every listing with nothing saying so. The plural read fails more quietly than the
+singular one, because a partial collection has no shape a caller can inspect. The
+neighbouring failure mode already refuses rather than dropping, so skipping would
+have made one module answer the same question two ways.
+
 **The premise this rests on, re-confirmed at HEAD rather than inherited.** No
 production path can emit an unstamped record: one production construction site,
 which stamps id and version from the loaded schema; no use of the
@@ -69,8 +91,10 @@ file; and the field's default deriving from the same authority. If a write path
 ever appears that can emit an unstamped record, this remedy is insufficient and
 required-ness returns.
 
-The anti-tautology proof registers a profile through the real service, deletes
-the marker from the decrypted payload, re-saves through the real secure-object
-repository and asserts the reload refuses. It is guarded by a positive control
-asserting the writer stamped the marker in the first place, so the fixture cannot
-pass vacuously against a payload that never carried one.
+The anti-tautology proofs delete the marker from really-written payloads and
+assert refusal through the real repository. The iterating proof asserts a RAISE
+rather than a count, because a count would pass against a guard that silently
+dropped the row, and it forces the generator since the refusal surfaces only on
+iteration. Each is guarded by a positive control asserting the writer stamped the
+marker first, so no fixture can pass vacuously.
+
