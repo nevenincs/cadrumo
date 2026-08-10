@@ -66,7 +66,7 @@ def _seed_prior_year_percentage(obs_repo: CalculationObservationRepository, *, p
         period="4T",
         casilla_values={_PORCENTAJE_ID: percentage},
     )
-    obs_repo.save_observation(observation, source_kind="aeat_sede_justificante")
+    obs_repo.save(obs_repo.prepare_observation_envelope(observation, source_kind="aeat_sede_justificante"))
 
 
 def test_advisory_fires_when_prior_year_percentage_available_and_differs(tmp_path: Path) -> None:

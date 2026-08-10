@@ -563,14 +563,13 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
             from ._m303_carry_ingress import normalize_m303_carry_observation_envelope
 
             payload = normalize_m303_carry_observation_envelope(payload)
-        # Checked HERE, and here only, because this is the one function every
-        # writer traverses. The operator verb reaches storage through
-        # `save_observation`; the live capture and the local filing flow bypass
-        # it entirely and persist through a prepared write batch so the
-        # observation and its IVA history land in one transaction. Guarding the
-        # save would therefore cover one of the two ruled edges while being
-        # named for both. This runs before any write is prepared, so a refusal
-        # never has to reason about staged work inside a transaction.
+        # Checked HERE, and here only, because every writer prepares its
+        # envelope through this method. The operator verb persists the returned
+        # payload through the inherited repository save; the live capture and
+        # local filing flows turn it into a prepared write batch so the
+        # observation and its IVA history land in one transaction. This runs
+        # before any write is prepared, so a refusal never has to reason about
+        # staged work inside a transaction.
         if not replace_official_evidence:
             self._refuse_official_evidence_displacement(payload)
         return payload
@@ -624,44 +623,6 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
             translated_message="application.calculations.errors.observation_displaces_official_evidence_manual",
             context=context,
         )
-
-    def save_observation(
-        self,
-        observation: RegistryModeloObservation,
-        *,
-        source_kind: ObservationSourceKind | str,
-        captured_at: datetime | None = None,
-        member_nif: str | None = None,
-        stamped_revision_id: str | None = None,
-        source_metadata: Mapping[str, str] | None = None,
-        source_headers: tuple[ObservedHeaderFact, ...] = (),
-        result_disposition: ResultDispositionProjection | None = None,
-        prior_domiciliation_election: PriorDomiciliationElectionProjection | None = None,
-        normalize_m303_carry: bool = False,
-        replace_official_evidence: bool = False,
-    ) -> ObservationEnvelopePayload:
-        """Persist one envelope prepared through the canonical validation path.
-
-        ``replace_official_evidence`` is the operator's explicit statement that
-        displacing captured AEAT evidence at this slot is intended. It is
-        forwarded to the preparation step, which owns the refusal; nothing here
-        re-decides it.
-        """
-        payload = self.prepare_observation_envelope(
-            observation,
-            source_kind=source_kind,
-            captured_at=captured_at,
-            member_nif=member_nif,
-            stamped_revision_id=stamped_revision_id,
-            source_metadata=source_metadata,
-            source_headers=source_headers,
-            result_disposition=result_disposition,
-            prior_domiciliation_election=prior_domiciliation_election,
-            normalize_m303_carry=normalize_m303_carry,
-            replace_official_evidence=replace_official_evidence,
-        )
-        self.save(payload)
-        return payload
 
     def iter_modelo(self, modelo: str) -> Iterator[ObservationEnvelopePayload]:
         """Yield every persisted observation for ``modelo`` in unspecified order.

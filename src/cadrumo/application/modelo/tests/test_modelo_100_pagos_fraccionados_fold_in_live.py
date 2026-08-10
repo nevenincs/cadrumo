@@ -118,7 +118,7 @@ def _seed_m130_quarters(
     total = Decimal("0")
     for period in periods:
         value = _M130_C19_BY_PERIOD[period]
-        obs_repo.save_observation(
+        obs_repo.save(obs_repo.prepare_observation_envelope(
             RegistryModeloObservation(
                 modelo="130",
                 filing_year=_YEAR,
@@ -132,13 +132,13 @@ def _seed_m130_quarters(
             ),
             source_kind=APP_FILING_SOURCE_KIND,
             captured_at=_T0,
-        )
+        ))
         total += value
     return total
 
 
 def _seed_prior_year_m100_zero_carry(secure_objects: SecureObjectRepository) -> None:
-    CalculationObservationRepository(objects=secure_objects).save_observation(
+    CalculationObservationRepository(objects=secure_objects).save(CalculationObservationRepository(objects=secure_objects).prepare_observation_envelope(
         RegistryModeloObservation(
             modelo="100",
             filing_year=_YEAR - 1,
@@ -152,7 +152,7 @@ def _seed_prior_year_m100_zero_carry(secure_objects: SecureObjectRepository) -> 
         ),
         source_kind=APP_FILING_SOURCE_KIND,
         captured_at=_T0,
-    )
+    ))
 
 
 def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:

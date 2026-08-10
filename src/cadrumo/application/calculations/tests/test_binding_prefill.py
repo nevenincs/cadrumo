@@ -227,7 +227,7 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
         }
         repository = CalculationObservationRepository()
         for period, result in quarterly_results.items():
-            repository.save_observation(
+            repository.save(repository.prepare_observation_envelope(
                 _registry_observation(filing_year=2025, period=period, result=result),
                 source_kind="app_filing",
                 result_disposition=ResultDispositionProjection(
@@ -236,7 +236,7 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
                     provenance_locator=f"test-local-filing:2025:{period}",
                 ),
                 normalize_m303_carry=True,
-            )
+            ))
 
         snapshot = _snapshot("390", 2025, "0A")
 

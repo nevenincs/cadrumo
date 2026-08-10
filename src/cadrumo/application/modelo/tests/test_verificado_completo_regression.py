@@ -228,7 +228,7 @@ def _seed_clean_cross_period_sources_for_m130(
             expected_tax_id="X1234567L",
             clock=_T0,
         )
-        observation_repository.save_observation(
+        observation_repository.save(observation_repository.prepare_observation_envelope(
             RegistryModeloObservation(
                 modelo=requirement.source_modelo,
                 filing_year=requirement.filing_year,
@@ -251,7 +251,7 @@ def _seed_clean_cross_period_sources_for_m130(
                 "aeat_justificante_csv": evidence_reference_id,
                 "authenticated_identity": "X1234567L",
             },
-        )
+        ))
     return observation_repository
 
 

@@ -117,7 +117,7 @@ def test_approval_goes_stale_when_prior_filing_observation_changes(
     draft = _ready_draft(schema_provider)
     repository = CalculationObservationRepository(bucket_id=bucket_id)
 
-    repository.save_observation(_prior_observation(value="100.00"), source_kind="app_filing")
+    repository.save(repository.prepare_observation_envelope(_prior_observation(value="100.00"), source_kind="app_filing"))
     approved = approve_draft(
         draft,
         bucket_id=bucket_id,
@@ -130,7 +130,7 @@ def test_approval_goes_stale_when_prior_filing_observation_changes(
 
     # Mutate ONLY the prior filing: same (modelo, year, period) key, different
     # filed value, so the self-loaded observation-store digest must change.
-    repository.save_observation(_prior_observation(value="250.00"), source_kind="app_filing")
+    repository.save(repository.prepare_observation_envelope(_prior_observation(value="250.00"), source_kind="app_filing"))
 
     reasons = approval_stale_reasons(approved, bucket_id=bucket_id, schema_provider=schema_provider)
 
@@ -155,7 +155,7 @@ def test_approval_not_stale_when_prior_filing_observations_unchanged(
     draft = _ready_draft(schema_provider)
     repository = CalculationObservationRepository(bucket_id=bucket_id)
 
-    repository.save_observation(_prior_observation(value="100.00"), source_kind="app_filing")
+    repository.save(repository.prepare_observation_envelope(_prior_observation(value="100.00"), source_kind="app_filing"))
     approved = approve_draft(
         draft,
         bucket_id=bucket_id,

@@ -200,7 +200,7 @@ def _seed_modelo_303_1t_clean_state(
         expected_tax_id=taxpayer_tax_id,
         clock=datetime(2026, 5, 21, 11, 1, tzinfo=UTC),
     )
-    CalculationObservationRepository().save_observation(
+    CalculationObservationRepository().save(CalculationObservationRepository().prepare_observation_envelope(
         RegistryModeloObservation(
             modelo="303",
             filing_year=2026,
@@ -221,7 +221,7 @@ def _seed_modelo_303_1t_clean_state(
             "aeat_justificante_csv": "JUST-303-2026-1T",
             "authenticated_identity": taxpayer_tax_id,
         },
-    )
+    ))
 
 
 def _wallet_decision_repository_at(sidecar_root: Path) -> tuple[IvaWalletDecisionRepository, Settings]:

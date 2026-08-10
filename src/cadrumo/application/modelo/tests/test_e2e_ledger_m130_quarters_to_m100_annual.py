@@ -408,7 +408,7 @@ def _import_official_m130_result_observation(
         expected_tax_id=_TAX_ID,
         clock=_FILE_AT,
     )
-    observation_repo.save_observation(
+    observation_repo.save(observation_repo.prepare_observation_envelope(
         RegistryModeloObservation(
             modelo="130",
             filing_year=_YEAR,
@@ -429,7 +429,7 @@ def _import_official_m130_result_observation(
             "aeat_justificante_csv": evidence_reference_id,
             "authenticated_identity": _TAX_ID,
         },
-    )
+    ))
 
 
 def _seed_prior_year_m100(secure_objects: SecureObjectRepository) -> None:
@@ -442,7 +442,7 @@ def _seed_prior_year_m100(secure_objects: SecureObjectRepository) -> None:
     zero). Net income is set above the minoración ceiling so the minoración
     resolves to zero.
     """
-    CalculationObservationRepository(objects=secure_objects).save_observation(
+    CalculationObservationRepository(objects=secure_objects).save(CalculationObservationRepository(objects=secure_objects).prepare_observation_envelope(
         RegistryModeloObservation(
             modelo="100",
             filing_year=_PRIOR_YEAR,
@@ -462,7 +462,7 @@ def _seed_prior_year_m100(secure_objects: SecureObjectRepository) -> None:
         ),
         source_kind="app_filing",
         captured_at=_FILE_AT,
-    )
+    ))
 
 
 def _seed_taxpayer_profile() -> None:

@@ -1523,7 +1523,7 @@ def test_fixture_csv_constants_still_match_the_receipts() -> None:
 def test_binding_prefill_refuses_incomplete_prior_filing_observation(tmp_path: Path) -> None:
     with _secure_backend(tmp_path):
         repository = CalculationObservationRepository()
-        repository.save_observation(
+        repository.save(repository.prepare_observation_envelope(
             RegistryModeloObservation(
                 modelo="303",
                 filing_year=2026,
@@ -1537,7 +1537,7 @@ def test_binding_prefill_refuses_incomplete_prior_filing_observation(tmp_path: P
             ),
             source_kind="aeat_sede_justificante",
             captured_at=_CAPTURED_AT,
-        )
+        ))
 
         target_snapshot = _registry_snapshot("303", 2026, "2T")
 

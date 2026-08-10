@@ -274,7 +274,7 @@ def _seed_zero_m202_pagos() -> None:
     """
     obs_repo = CalculationObservationRepository()
     for period in _M202_PAGO_PERIODS:
-        obs_repo.save_observation(
+        obs_repo.save(obs_repo.prepare_observation_envelope(
             RegistryModeloObservation(
                 modelo=_M202,
                 filing_year=_FILING_YEAR,
@@ -291,7 +291,7 @@ def _seed_zero_m202_pagos() -> None:
             ),
             source_kind=APP_FILING_SOURCE_KIND,
             captured_at=_T0,
-        )
+        ))
 
 
 def _calculate_m200(

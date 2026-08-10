@@ -86,7 +86,7 @@ def obs_repo(tmp_path: Path) -> Iterator[CalculationObservationRepository]:
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = CalculationObservationRepository(objects=profile.repository)
-        repo.save_observation(
+        repo.save(repo.prepare_observation_envelope(
             registry_grounded_modelo_observation(
                 modelo="100",
                 filing_year=_FILING_YEAR - 1,
@@ -99,7 +99,7 @@ def obs_repo(tmp_path: Path) -> Iterator[CalculationObservationRepository]:
                 },
             ),
             source_kind="app_filing",
-        )
+        ))
         yield repo
 
 
@@ -177,10 +177,10 @@ def test_4t_casilla_05_equals_accumulation_identity_with_negative_07_and_nonzero
         "3T": (Decimal("600"), Decimal("90")),
     }
     for period, (casilla_07, casilla_16) in quarters.items():
-        obs_repo.save_observation(
+        obs_repo.save(obs_repo.prepare_observation_envelope(
             _prior_m130(period, casilla_07=casilla_07, casilla_16=casilla_16),
             source_kind="app_filing",
-        )
+        ))
 
     resolved = _resolve_casilla_05(obs_repo, target_period="4T")
 
@@ -204,10 +204,10 @@ def test_3t_casilla_05_sums_only_quarters_before_target(
         "3T": (Decimal("999"), Decimal("999")),  # the target's own row must be excluded
     }
     for period, (casilla_07, casilla_16) in quarters.items():
-        obs_repo.save_observation(
+        obs_repo.save(obs_repo.prepare_observation_envelope(
             _prior_m130(period, casilla_07=casilla_07, casilla_16=casilla_16),
             source_kind="app_filing",
-        )
+        ))
 
     resolved = _resolve_casilla_05(obs_repo, target_period="3T")
 
@@ -241,10 +241,10 @@ def test_not_captured_minoracion_proceeds_treating_absent_16_as_zero(
     only prior quarter (1T) carries 07 = 300 with NO casilla-16 entry; the carry
     resolves to max(0, 300) - 0 = 300 rather than raising.
     """
-    obs_repo.save_observation(
+    obs_repo.save(obs_repo.prepare_observation_envelope(
         _prior_m130("1T", casilla_07=Decimal("300"), casilla_16=None),
         source_kind="app_filing",
-    )
+    ))
 
     resolved = _resolve_casilla_05(obs_repo, target_period="2T")
 

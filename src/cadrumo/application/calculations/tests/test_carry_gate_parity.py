@@ -81,7 +81,7 @@ def _save_source_observation(
     source_casilla_ids: tuple[CasillaId, ...],
     stamped_revision_id: str,
 ) -> None:
-    repository.save_observation(
+    repository.save(repository.prepare_observation_envelope(
         registry_grounded_modelo_observation(
             modelo=_MODELO,
             filing_year=_YEAR,
@@ -96,7 +96,7 @@ def _save_source_observation(
             "aeat_expediente_id": "EXP-303-2025-1T",
             "authenticated_identity": _TAX_ID,
         },
-    )
+    ))
 
 
 def _cross_period_refused(

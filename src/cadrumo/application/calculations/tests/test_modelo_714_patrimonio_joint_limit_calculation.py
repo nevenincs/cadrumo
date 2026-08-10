@@ -223,7 +223,7 @@ def test_modelo_714_joint_limit_calculates_from_local_m100_observation(tmp_path:
     scenario = _SCENARIOS[2023]
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
-        repo.save_observation(_m100_observation(scenario), source_kind="app_filing", captured_at=_CAPTURED_AT)
+        repo.save(repo.prepare_observation_envelope(_m100_observation(scenario), source_kind="app_filing", captured_at=_CAPTURED_AT))
         result = _calculate_714_from_local_m100(scenario=scenario, repository=repo)
 
     _assert_joint_limit_outputs(result, scenario)
@@ -236,7 +236,7 @@ def test_modelo_714_joint_limit_calculation_enrolls_two_renta_years(tmp_path: Pa
         repo = CalculationObservationRepository()
         for filing_year in _RENTA_YEARS:
             scenario = _SCENARIOS[filing_year]
-            repo.save_observation(_m100_observation(scenario), source_kind="app_filing", captured_at=_CAPTURED_AT)
+            repo.save(repo.prepare_observation_envelope(_m100_observation(scenario), source_kind="app_filing", captured_at=_CAPTURED_AT))
             result = _calculate_714_from_local_m100(scenario=scenario, repository=repo)
             _assert_joint_limit_outputs(result, scenario)
             recorder.record_calculation_year(filing_year=filing_year, produced_value_count=len(result.values))

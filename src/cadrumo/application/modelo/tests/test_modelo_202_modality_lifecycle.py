@@ -148,7 +148,7 @@ def _seed_prior_m200_evidence(*, bucket_id: str) -> None:
         expected_tax_id=_TAX_ID,
         clock=_CLOCK,
     )
-    CalculationObservationRepository().save_observation(
+    CalculationObservationRepository().save(CalculationObservationRepository().prepare_observation_envelope(
         RegistryModeloObservation(
             modelo="200",
             filing_year=2024,
@@ -169,7 +169,7 @@ def _seed_prior_m200_evidence(*, bucket_id: str) -> None:
             "aeat_justificante_csv": evidence_reference_id,
             "authenticated_identity": _TAX_ID,
         },
-    )
+    ))
 
 
 def _calculate_m202(

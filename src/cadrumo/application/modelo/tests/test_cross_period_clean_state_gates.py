@@ -230,7 +230,7 @@ def _seed_303_cross_period_sources(
                 expected_tax_id="X1234567L",
                 clock=_CLOCK,
             )
-        observation_repository.save_observation(
+        observation_repository.save(observation_repository.prepare_observation_envelope(
             RegistryModeloObservation(
                 modelo="303",
                 filing_year=2025,
@@ -251,7 +251,7 @@ def _seed_303_cross_period_sources(
                 "aeat_justificante_csv": evidence_reference_id,
                 "authenticated_identity": "X1234567L",
             },
-        )
+        ))
 
 
 def _seed_source_filing_record_without_import_flow(

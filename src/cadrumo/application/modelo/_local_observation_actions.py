@@ -112,18 +112,20 @@ def record_operator_local_observation[CasillaKey](
     captured_by = actor.strip() or "operator-manual"
     key = observation_key(modelo, period)
     repo = repository or CalculationObservationRepository()
-    repo.save_observation(
-        observation,
-        source_kind=OPERATOR_MANUAL_OBSERVATION_SOURCE_KIND,
-        captured_at=captured_at,
-        stamped_revision_id=snapshot.revision.id,
-        source_metadata={
-            "local_observation_kind": "operator_supplied",
-            "captured_by": captured_by,
-            "official_evidence": "false",
-            "filing_record_created": "false",
-        },
-        replace_official_evidence=replace_official_evidence,
+    repo.save(
+        repo.prepare_observation_envelope(
+            observation,
+            source_kind=OPERATOR_MANUAL_OBSERVATION_SOURCE_KIND,
+            captured_at=captured_at,
+            stamped_revision_id=snapshot.revision.id,
+            source_metadata={
+                "local_observation_kind": "operator_supplied",
+                "captured_by": captured_by,
+                "official_evidence": "false",
+                "filing_record_created": "false",
+            },
+            replace_official_evidence=replace_official_evidence,
+        ),
     )
     return ModeloLocalObservationResult(
         modelo=modelo,

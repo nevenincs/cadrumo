@@ -296,7 +296,7 @@ def _seed_prior_year_m100(
     # The binding sums M100 casillas 0224/1479/1553/1577 and requires all four
     # observed; the net income lands in 0224, the other rendimiento-source
     # casillas are zero for a pure-actividad-económica filer.
-    obs_repo.save_observation(
+    obs_repo.save(obs_repo.prepare_observation_envelope(
         registry_grounded_modelo_observation(
             modelo="100",
             filing_year=2025,
@@ -312,7 +312,7 @@ def _seed_prior_year_m100(
         captured_at=_CLOCK,
         stamped_revision_id=stamped_revision_id,
         source_metadata=source_metadata,
-    )
+    ))
 
 
 def test_q1_loss_produces_carry_forward_saldo(repos: _Repos) -> None:
@@ -338,11 +338,11 @@ def test_q2_casilla_15_auto_resolves_from_prior_quarter_filing(repos: _Repos) ->
     """
     _wu_repo, _cr_repo, _bv_repo, obs_repo, _vr_repo, _filing_repo = repos
     q1 = _calculate_quarter(repos, period="1T", casilla_inputs=_Q1_INPUTS, binding_values=_Q1_BINDINGS)
-    obs_repo.save_observation(
+    obs_repo.save(obs_repo.prepare_observation_envelope(
         _observation_from_revision(q1, period="1T"),
         source_kind="app_filing",
         captured_at=_CLOCK,
-    )
+    ))
     _seed_prior_year_m100(obs_repo)
 
     q2_snapshot = resources().modelos.authority.snapshot("130", filing_year=2026, period="2T")
@@ -365,11 +365,11 @@ def test_q2_carry_forward_flows_into_casilla_15_value(repos: _Repos) -> None:
     """
     _wu_repo, _cr_repo, _bv_repo, obs_repo, _vr_repo, _filing_repo = repos
     q1 = _calculate_quarter(repos, period="1T", casilla_inputs=_Q1_INPUTS, binding_values=_Q1_BINDINGS)
-    obs_repo.save_observation(
+    obs_repo.save(obs_repo.prepare_observation_envelope(
         _observation_from_revision(q1, period="1T"),
         source_kind="app_filing",
         captured_at=_CLOCK,
-    )
+    ))
     _seed_prior_year_m100(obs_repo)
 
     q2_snapshot = resources().modelos.authority.snapshot("130", filing_year=2026, period="2T")
@@ -424,13 +424,13 @@ def test_sofia_q2_carry_forward_caps_to_positive_c14_and_verifies(repos: _Repos)
         period="1T",
         casilla_values=q1.casilla_values,
     )
-    obs_repo.save_observation(
+    obs_repo.save(obs_repo.prepare_observation_envelope(
         _observation_from_revision(q1, period="1T"),
         source_kind="aeat_sede_justificante",
         captured_at=_CLOCK,
         stamped_revision_id=q1_revision_stamp,
         source_metadata=q1_source_metadata,
-    )
+    ))
     m100_values = {
         _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: Decimal("20000"),
         _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
@@ -527,7 +527,7 @@ def test_casilla_15_copy_and_casilla_05_sum_carries_resolve_on_shared_fixture(re
     _wu_repo, _cr_repo, _bv_repo, obs_repo, _vr_repo, _filing_repo = repos
     _seed_prior_year_m100(obs_repo)
 
-    obs_repo.save_observation(
+    obs_repo.save(obs_repo.prepare_observation_envelope(
         registry_grounded_modelo_observation(
             modelo="130",
             filing_year=2026,
@@ -540,8 +540,8 @@ def test_casilla_15_copy_and_casilla_05_sum_carries_resolve_on_shared_fixture(re
         ),
         source_kind="app_filing",
         captured_at=_CLOCK,
-    )
-    obs_repo.save_observation(
+    ))
+    obs_repo.save(obs_repo.prepare_observation_envelope(
         registry_grounded_modelo_observation(
             modelo="130",
             filing_year=2026,
@@ -554,7 +554,7 @@ def test_casilla_15_copy_and_casilla_05_sum_carries_resolve_on_shared_fixture(re
         ),
         source_kind="app_filing",
         captured_at=_CLOCK,
-    )
+    ))
 
     snapshot_3t = resources().modelos.authority.snapshot("130", filing_year=2026, period="3T")
     resolved = resolve_bindings_from_local_store(snapshot_3t, repository=obs_repo).binding_values

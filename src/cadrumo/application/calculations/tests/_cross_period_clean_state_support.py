@@ -117,7 +117,7 @@ def _save_source_observation(
     source_kind: str = "aeat_sede_justificante",
     source_metadata: dict[str, str] | None = None,
 ) -> None:
-    repository.save_observation(
+    repository.save(repository.prepare_observation_envelope(
         registry_grounded_modelo_observation(
             modelo="303",
             filing_year=_M390_YEAR,
@@ -127,7 +127,7 @@ def _save_source_observation(
         source_kind=source_kind,
         captured_at=_CLOCK,
         source_metadata=source_metadata,
-    )
+    ))
 
 
 @cache
@@ -160,7 +160,7 @@ def _save_member_322_observation(
     source_casilla_ids: tuple[CasillaId, ...],
     source_metadata: dict[str, str] | None = None,
 ) -> None:
-    repository.save_observation(
+    repository.save(repository.prepare_observation_envelope(
         registry_grounded_modelo_observation(
             modelo="322",
             filing_year=_M353_YEAR,
@@ -171,7 +171,7 @@ def _save_member_322_observation(
         captured_at=_CLOCK,
         member_nif=member_nif,
         source_metadata=source_metadata,
-    )
+    ))
 
 
 def _seed_member_322_filing(

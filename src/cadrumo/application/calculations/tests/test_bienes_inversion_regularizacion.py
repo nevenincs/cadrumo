@@ -139,7 +139,7 @@ def test_source_resolver_projects_m390_binding_from_stamped_m303_prorrata_observ
         register_repository = BienesInversionIvaRegisterRepository(objects=profile.repository)
         register_repository.add(_register().records[0])
         observation_repository = CalculationObservationRepository(objects=profile.repository)
-        observation_repository.save_observation(
+        observation_repository.save(observation_repository.prepare_observation_envelope(
             RegistryModeloObservation(
                 modelo="303",
                 filing_year=_FILING_YEAR,
@@ -155,7 +155,7 @@ def test_source_resolver_projects_m390_binding_from_stamped_m303_prorrata_observ
             ),
             source_kind="operator_manual",
             stamped_revision_id=m303_snapshot.revision.id,
-        )
+        ))
 
         resolution = BienesInversionRegularizacionSourceResolver(
             missing_current_year_casilla_ids=(_CURRENT_YEAR_PRORRATA_ID,),

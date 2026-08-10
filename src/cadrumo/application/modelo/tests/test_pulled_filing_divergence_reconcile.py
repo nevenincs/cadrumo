@@ -414,7 +414,7 @@ def _persist_pulled_filing(
     returns; the write path exposes no parameter for it, so it is not a fixture
     choice to make.
     """
-    repository.save_observation(
+    repository.save(repository.prepare_observation_envelope(
         RegistryModeloObservation(
             modelo=_MODELO,
             filing_year=_FILING_YEAR,
@@ -438,7 +438,7 @@ def _persist_pulled_filing(
             "authenticated_identity": _SYNTHETIC_TAX_ID,
             "aeat_justificante_csv": _SYNTHETIC_JUSTIFICANTE_CSV,
         },
-    )
+    ))
 
 
 def test_no_pulled_filing_produces_no_findings(

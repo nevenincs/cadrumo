@@ -54,7 +54,7 @@ def _save_normalized_m303_carry_observation(
     disposition: ResultDisposition,
 ) -> None:
     """Persist real app-filing carry evidence through the production ingress."""
-    repository.save_observation(
+    repository.save(repository.prepare_observation_envelope(
         observation,
         source_kind="app_filing",
         captured_at=datetime(2027, 1, 30, 12, 0, tzinfo=UTC),
@@ -64,7 +64,7 @@ def _save_normalized_m303_carry_observation(
             provenance_locator=f"test-local-filing:{observation.filing_year}:{observation.period}",
         ),
         normalize_m303_carry=True,
-    )
+    ))
 
 
 def _prepare_m303_carry_envelope(

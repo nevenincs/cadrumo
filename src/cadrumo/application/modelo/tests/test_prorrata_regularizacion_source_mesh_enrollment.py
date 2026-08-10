@@ -150,7 +150,7 @@ def _save_current_year_source_observations(repository: CalculationObservationRep
     }
     for period, casilla_values in source_values_by_period.items():
         snapshot = resources().modelos.authority.snapshot("303", filing_year=_FILING_YEAR, period=period)
-        repository.save_observation(
+        repository.save(repository.prepare_observation_envelope(
             registry_grounded_modelo_observation(
                 modelo="303",
                 filing_year=_FILING_YEAR,
@@ -160,7 +160,7 @@ def _save_current_year_source_observations(repository: CalculationObservationRep
             source_kind="app_filing",
             captured_at=_CREATED_AT,
             stamped_revision_id=snapshot.revision.id,
-        )
+        ))
 
 
 def test_source_mesh_resolves_prorrata_regularizacion_binding(tmp_path: Path) -> None:

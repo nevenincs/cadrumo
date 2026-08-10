@@ -156,7 +156,7 @@ def _store_prior_303_compensation(
     filing_year: int = _TARGET_YEAR,
     period: str = "1T",
 ) -> None:
-    repo.save_observation(
+    repo.save(repo.prepare_observation_envelope(
         _prior_303_compensation_observation(
             amount=amount,
             filing_year=filing_year,
@@ -164,7 +164,7 @@ def _store_prior_303_compensation(
         ),
         source_kind="aeat_sede_justificante",
         captured_at=_DECIDED_AT,
-    )
+    ))
 
 
 def _work_unit_repositories():
