@@ -50,9 +50,10 @@ import contextlib
 import click
 import typer
 import typer._click.types
-from pydantic import BaseModel, TypeAdapter, ValidationError
+from pydantic import BaseModel, ValidationError
 from pydantic_core import ErrorDetails
 
+from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from ...core.flows import CheckpointAvailability, FlowMode
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ..flows import (
@@ -76,14 +77,12 @@ from ._models import WizardFlow, WizardQuestion, WizardWidget
 from ._persistence import WizardPersistMode
 from ._setup_legal_validators import attach_setup_legal_validators
 
-_OBJECT_SEQUENCE = TypeAdapter(tuple[object, ...])
-_TRANSLATION_CONTEXT = TypeAdapter(dict[str, object])
 
 
 def _translation_context(value: object) -> dict[str, object]:
     if not isinstance(value, Mapping):
         return {}
-    return _TRANSLATION_CONTEXT.validate_python(value)
+    return STR_KEYED_MAPPING_ADAPTER.validate_python(value)
 
 
 #: Which substrate :class:`FlowMode` each wizard verb drives. ``create``
@@ -808,7 +807,7 @@ def _canonical_from_flag_value(question: WizardQuestion, value: object) -> str |
     if question.widget is WizardWidget.CHECKBOX:
         if not isinstance(value, list | tuple):
             return None
-        tokens = [str(item) for item in _OBJECT_SEQUENCE.validate_python(value) if str(item)]
+        tokens = [str(item) for item in OBJECT_TUPLE_ADAPTER.validate_python(value) if str(item)]
         return ",".join(tokens) if tokens else None
     if question.widget is WizardWidget.INTEGER:
         if isinstance(value, int):

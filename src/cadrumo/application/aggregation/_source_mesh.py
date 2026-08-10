@@ -28,6 +28,7 @@ from typing import Annotated, Final, Literal, NamedTuple, Protocol, Self, runtim
 
 from pydantic import BaseModel, Field, TypeAdapter, field_serializer, field_validator, model_validator
 
+from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import BindingSourceKind, CasillaId, ElidedProse, M210GrossIncomeSourceMode, Period
 from ...core.decimal import coerce_decimal
@@ -49,8 +50,6 @@ from ._errors import AggregationValidationError, t
 RowBindingKey = tuple[BindingId, int]
 RowBindingValue = str | Decimal
 
-_STRING_OBJECT_MAPPING = TypeAdapter(dict[str, object])
-_OBJECT_SEQUENCE = TypeAdapter(tuple[object, ...])
 _ROW_BINDING_VALUES = TypeAdapter(dict[RowBindingKey, RowBindingValue])
 
 
@@ -234,7 +233,7 @@ def _infer_binding_source(payload: object) -> object:
     """Hydrate ``binding_source`` when the free ``source_kind`` token is canonical."""
     if not isinstance(payload, Mapping):
         return payload
-    data = _STRING_OBJECT_MAPPING.validate_python(payload)
+    data = STR_KEYED_MAPPING_ADAPTER.validate_python(payload)
     source = _binding_source_for_token(data.get("source_kind"))
     source_kind = data.get("source_kind")
     if isinstance(source_kind, BindingSourceKind):
@@ -689,7 +688,7 @@ class CalculationSourceResolution(BaseModel):
         if not isinstance(value, (tuple, list)):
             return value
         coerced: list[object] = []
-        for item in _OBJECT_SEQUENCE.validate_python(value):
+        for item in OBJECT_TUPLE_ADAPTER.validate_python(value):
             if isinstance(item, BindingSourceKind):
                 coerced.append(item)
                 continue
@@ -739,12 +738,12 @@ class CalculationSourceResolution(BaseModel):
             return _ROW_BINDING_VALUES.validate_python(value)
         if not isinstance(value, (list, tuple)):
             return value
-        items = _OBJECT_SEQUENCE.validate_python(value)
+        items = OBJECT_TUPLE_ADAPTER.validate_python(value)
         normalized: dict[tuple[object, object], object] = {}
         for item in items:
             if not isinstance(item, Mapping):
                 return items
-            row = _STRING_OBJECT_MAPPING.validate_python(item)
+            row = STR_KEYED_MAPPING_ADAPTER.validate_python(item)
             row_value = row.get("value")
             if row.get("value_kind") == "decimal":
                 row_value = coerce_decimal(row_value)

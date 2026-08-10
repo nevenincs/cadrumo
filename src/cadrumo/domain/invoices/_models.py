@@ -18,10 +18,10 @@ from decimal import Decimal
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Final, Self, override
 
-from pydantic import BaseModel, Field, TypeAdapter, field_serializer, field_validator, model_validator
+from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import IntracomOperationType
+from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER, IntracomOperationType
 from ...core.money import CENT
 from ...core.decimal import coerce_decimal
 from ...core.errors import CoreValidationError
@@ -63,8 +63,6 @@ from ._validators import (
     validate_iva_number,
 )
 
-_STRING_OBJECT_MAPPING = TypeAdapter(dict[str, object])
-_OBJECT_SEQUENCE = TypeAdapter(tuple[object, ...])
 
 
 """Rounding slack allowed between a declared retención amount and rate.
@@ -339,7 +337,7 @@ def _normalise_invoice_collections(payload: dict[str, object]) -> dict[str, obje
     if "linked_transaction_ids" in payload:
         payload["linked_transaction_ids"] = _normalise_linked_transaction_ids(payload["linked_transaction_ids"])
     if "lines" in payload and isinstance(payload["lines"], Sequence) and not isinstance(payload["lines"], str | bytes):
-        payload["lines"] = _OBJECT_SEQUENCE.validate_python(payload["lines"])
+        payload["lines"] = OBJECT_TUPLE_ADAPTER.validate_python(payload["lines"])
     return payload
 
 
@@ -388,7 +386,7 @@ class InvoiceLine(BaseModel):
             return data
         if not isinstance(data, Mapping):
             return data
-        payload = _STRING_OBJECT_MAPPING.validate_python(data)
+        payload = STR_KEYED_MAPPING_ADAPTER.validate_python(data)
         for key in ("quantity", "unit_price", "subtotal", "iva_amount"):
             if key in payload and not isinstance(payload[key], Decimal):
                 payload[key] = coerce_decimal(payload[key])
@@ -626,7 +624,7 @@ class Invoice(BaseModel):
             return data
         if not isinstance(data, Mapping):
             return data
-        payload = _STRING_OBJECT_MAPPING.validate_python(data)
+        payload = STR_KEYED_MAPPING_ADAPTER.validate_python(data)
         payload = normalise_invoice_enum_fields(payload)
         payload = normalise_invoice_string_fields(payload)
         payload = _normalise_invoice_dates(payload)
@@ -1080,7 +1078,7 @@ def _normalise_linked_transaction_ids(value: object) -> tuple[str, ...]:
     if not isinstance(value, Iterable):
         raise InvoiceValidationError("linked_transaction_ids must be iterable")
     seen: dict[str, None] = {}
-    for item in _OBJECT_SEQUENCE.validate_python(value):
+    for item in OBJECT_TUPLE_ADAPTER.validate_python(value):
         if not isinstance(item, str):
             raise InvoiceValidationError("each linked_transaction_id must be a string")
         normalized = item.strip().lower()
@@ -1116,7 +1114,7 @@ class InvoiceCatalogue(BaseModel):
         if isinstance(data, cls):
             return data
         if isinstance(data, Mapping):
-            payload = _STRING_OBJECT_MAPPING.validate_python(data)
+            payload = STR_KEYED_MAPPING_ADAPTER.validate_python(data)
             if payload and "invoices" not in payload:
                 raise InvoiceValidationError(
                     "invoice catalogue payload must carry its entries under the 'invoices' key; "
@@ -1125,7 +1123,7 @@ class InvoiceCatalogue(BaseModel):
             return payload
         if isinstance(data, Iterable) and not isinstance(data, str | bytes):
             invoices: dict[str, Invoice] = {}
-            for item in _OBJECT_SEQUENCE.validate_python(data):
+            for item in OBJECT_TUPLE_ADAPTER.validate_python(data):
                 invoice = item if isinstance(item, Invoice) else Invoice.model_validate(item)
                 if invoice.invoice_id in invoices:
                     raise InvoiceValidationError(f"duplicate invoice_id: {invoice.invoice_id}")

@@ -22,9 +22,9 @@ from collections.abc import Callable, Mapping
 from decimal import Decimal, InvalidOperation
 from typing import Literal, TypeGuard
 
-from pydantic import BaseModel, Field, TypeAdapter, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ....core import STRICT_FROZEN_CONFIG, CasillaId, Period
+from ....core import OBJECT_TUPLE_ADAPTER, STRICT_FROZEN_CONFIG, CasillaId, Period
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind, CounterpartSourceKind
 from ...iva_compensation import (
     M303_COMPENSATION_APLICADA_CASILLA,
@@ -299,7 +299,6 @@ __all__ = [
 #: One per-family ``validate(binding) -> list[str]`` accumulating validator. Every
 #: source family registers exactly one in :data:`_BINDING_VALIDATOR_REGISTRY`.
 _BindingFamilyValidator = Callable[[DataBindingDefinition], list[str]]
-_OBJECT_TUPLE_ADAPTER: TypeAdapter[tuple[object, ...]] = TypeAdapter(tuple[object, ...])
 
 
 def _is_object_mapping(value: object) -> TypeGuard[Mapping[object, object]]:
@@ -309,7 +308,7 @@ def _is_object_mapping(value: object) -> TypeGuard[Mapping[object, object]]:
 
 def _tuple_from_json_array(value: object) -> object:
     if isinstance(value, list):
-        return _OBJECT_TUPLE_ADAPTER.validate_python(value)
+        return OBJECT_TUPLE_ADAPTER.validate_python(value)
     return value
 
 
@@ -324,7 +323,7 @@ def _decimal_from_json_string(value: object) -> object:
 
 def _decimal_tuple_from_json_array(value: object) -> object:
     if isinstance(value, list):
-        return tuple(_decimal_from_json_string(item) for item in _OBJECT_TUPLE_ADAPTER.validate_python(value))
+        return tuple(_decimal_from_json_string(item) for item in OBJECT_TUPLE_ADAPTER.validate_python(value))
     return value
 
 

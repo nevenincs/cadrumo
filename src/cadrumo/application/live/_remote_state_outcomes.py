@@ -8,9 +8,9 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from pydantic import TypeAdapter
 
 from ...application.auth import AuthenticatedAeatSessionResult
+from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from ...core.classification import SensitivityClass
 from ...core.hashing import sha256_hex
 from ...core.redaction import (
@@ -29,20 +29,18 @@ from ._remote_state_models import (
     LiveIvaReadSurface,
 )
 
-_STRING_OBJECT_MAPPING = TypeAdapter(dict[str, object])
-_OBJECT_SEQUENCE = TypeAdapter(tuple[object, ...])
 
 
 def _string_object_mapping(value: object) -> dict[str, object] | None:
     if not isinstance(value, Mapping):
         return None
-    return _STRING_OBJECT_MAPPING.validate_python(value)
+    return STR_KEYED_MAPPING_ADAPTER.validate_python(value)
 
 
 def _object_sequence(value: object) -> tuple[object, ...] | None:
     if not isinstance(value, tuple | list):
         return None
-    return _OBJECT_SEQUENCE.validate_python(value)
+    return OBJECT_TUPLE_ADAPTER.validate_python(value)
 
 
 def surface_outcome(

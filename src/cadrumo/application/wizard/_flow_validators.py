@@ -20,8 +20,9 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from pydantic import TypeAdapter, ValidationError
+from pydantic import ValidationError
 
+from ...core import OBJECT_TUPLE_ADAPTER
 from ...core.flows import REPEATING_INSTANCE_SEPARATOR
 from ..flows import (
     CrossFieldValidator,
@@ -67,7 +68,6 @@ _CHECK_FIELDS: dict[str, tuple[str, ...]] = {
         "representante_fiscal_nombre",
     ),
 }
-_ERROR_LOCATION = TypeAdapter(tuple[object, ...])
 
 
 def _iter_pages(definition: FlowDefinition) -> tuple[FlowPage, ...]:
@@ -94,7 +94,7 @@ def _classify_error(entry: Mapping[str, object]) -> tuple[str, tuple[str, ...]]:
         if token in message:
             return check, _CHECK_FIELDS[check]
     loc = entry.get("loc", ())
-    fields = tuple(str(part) for part in _ERROR_LOCATION.validate_python(loc)) if isinstance(loc, (tuple, list)) else ()
+    fields = tuple(str(part) for part in OBJECT_TUPLE_ADAPTER.validate_python(loc)) if isinstance(loc, (tuple, list)) else ()
     return _GENERIC_CHECK, fields
 
 

@@ -30,9 +30,8 @@ import sqlite3
 from collections.abc import Iterable, Iterator
 from pathlib import Path
 
-from pydantic import TypeAdapter
 
-from ...core import fts_or_group, spanish_stemmer, spanish_word_tokens, stem_spanish_terms, stem_spanish_text
+from ...core import STR_KEYED_MAPPING_ADAPTER, fts_or_group, spanish_stemmer, spanish_word_tokens, stem_spanish_terms, stem_spanish_text
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.resources import bundled_path
 from ._models import CorpusChunk, CorpusDocument, CorpusIndexBuildResult, LexicalSearchHit
@@ -48,7 +47,6 @@ _EXTRACTED_JSON_SUFFIX = ".html.extracted.json"
 _CHUNK_TARGET = 1200
 _CHUNK_HARD_MAX = 1500
 
-_JSON_OBJECT = TypeAdapter(dict[str, object])
 
 
 def bundled_corpus_html_root() -> Path:
@@ -111,7 +109,7 @@ def _document_title(units: Iterable[object], *, fallback: str) -> str:
     for unit in units:
         if not isinstance(unit, dict):
             continue
-        title = _clean_optional(_JSON_OBJECT.validate_python(unit).get("title"))
+        title = _clean_optional(STR_KEYED_MAPPING_ADAPTER.validate_python(unit).get("title"))
         if title:
             return title
     return fallback

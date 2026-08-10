@@ -74,8 +74,8 @@ from collections.abc import Iterator, Mapping
 from datetime import date
 from decimal import Decimal, InvalidOperation
 
-from pydantic import TypeAdapter
 
+from ...core import STR_KEYED_MAPPING_ADAPTER
 from ...core import BindingSourceKind as _BindingSourceKind
 from ...core import CasillaId as _CasillaId
 from ...core import Period as _Period
@@ -748,13 +748,12 @@ _ROW_FIELD_DATA_TYPES: dict[str, str] = {
     "valuation_amount": "money",
 }
 
-_SELECTOR_METADATA = TypeAdapter(dict[str, object])
 
 
 def _binding_data_type(binding: object) -> str:
     selector: object = getattr(binding, "selector", None)
     if isinstance(selector, Mapping):
-        metadata = _SELECTOR_METADATA.validate_python(selector)
+        metadata = STR_KEYED_MAPPING_ADAPTER.validate_python(selector)
         raw_data_type = metadata.get("data_type")
         row_field = metadata.get("row_field")
     else:
