@@ -47,7 +47,12 @@ from ...core.external_constants import IVA_REGIME_MODELOS
 from ...core.i18n import tr as _tr
 from ...core.logging import get_logger as _get_logger
 from ...core.time import now
-from ...domain.calculations.registry import ApplicabilityVerdict, derive_modelo_applicability
+from ...domain.calculations.registry import (
+    ApplicabilityVerdict as _ApplicabilityVerdict,
+)
+from ...domain.calculations.registry import (
+    derive_modelo_applicability as _derive_modelo_applicability,
+)
 from ...domain.calculations.registry import taxpayer_model_is_declared as _taxpayer_model_is_declared
 from ...domain.deadlines import DeadlineEngine as _DeadlineEngine
 from ...domain.deadlines import DeadlineValidationError as _DeadlineValidationError
@@ -63,9 +68,6 @@ from ...domain.deadlines import shift_deadline as _shift_deadline
 from ...domain.modelos import WorkUnit as _WorkUnit
 from ...domain.modelos import WorkUnitState as _WorkUnitState
 from ._calendar_evidence import (
-    NO_AEAT_HISTORY_NOTICE_CODE as NO_AEAT_HISTORY_NOTICE_CODE,
-)
-from ._calendar_evidence import (
     authenticated_identity_matches_expected as _authenticated_identity_matches_expected,
 )
 from ._calendar_evidence import (
@@ -73,9 +75,6 @@ from ._calendar_evidence import (
 )
 from ._calendar_evidence import (
     calendar_events_with_filing_evidence as _calendar_events_with_filing_evidence,
-)
-from ._calendar_evidence import (
-    calendar_filing_evidence_from_sources as calendar_filing_evidence_from_sources,
 )
 from ._calendar_evidence import (
     dedupe_calendar_events as _dedupe_calendar_events,
@@ -92,34 +91,41 @@ from ._calendar_evidence import (
 from ._calendar_evidence import (
     justificantes_by_csv as _justificantes_by_csv,
 )
-from ._calendar_evidence import (
-    no_aeat_history_notice as no_aeat_history_notice,
+from ._calendar_models import (
+    CalendarCompleteness as _CalendarCompleteness,
 )
 from ._calendar_models import (
-    CalendarCompleteness,
-    OverviewAeatSubmissionState,
-    OverviewCalendar,
-    OverviewCalendarEntry,
-    OverviewCalendarEntrySource,
-    OverviewCalendarEvent,
-    OverviewCalendarEventType,
-    OverviewCalendarFilingEvidence,
-    OverviewCalendarRange,
-    OverviewLocalFilingState,
-    SuppressedCalendarEntry,
-    user_state_for,
+    OverviewAeatSubmissionState as _OverviewAeatSubmissionState,
 )
 from ._calendar_models import (
-    CalendarWarning as CalendarWarning,
+    OverviewCalendar as _OverviewCalendar,
 )
 from ._calendar_models import (
-    OverviewCensoEnrolmentState as OverviewCensoEnrolmentState,
+    OverviewCalendarEntry as _OverviewCalendarEntry,
 )
 from ._calendar_models import (
-    OverviewPeriodState as OverviewPeriodState,
+    OverviewCalendarEntrySource as _OverviewCalendarEntrySource,
 )
 from ._calendar_models import (
-    OverviewStatusReport as OverviewStatusReport,
+    OverviewCalendarEvent as _OverviewCalendarEvent,
+)
+from ._calendar_models import (
+    OverviewCalendarEventType as _OverviewCalendarEventType,
+)
+from ._calendar_models import (
+    OverviewCalendarFilingEvidence as _OverviewCalendarFilingEvidence,
+)
+from ._calendar_models import (
+    OverviewCalendarRange as _OverviewCalendarRange,
+)
+from ._calendar_models import (
+    OverviewLocalFilingState as _OverviewLocalFilingState,
+)
+from ._calendar_models import (
+    SuppressedCalendarEntry as _SuppressedCalendarEntry,
+)
+from ._calendar_models import (
+    user_state_for as _user_state_for,
 )
 from ._calendar_warnings import (
     _build_completeness_and_warnings,
@@ -128,12 +134,6 @@ from ._calendar_warnings import (
     _calendar_censo_reconciliation_warnings,
     _calendar_regime_incompatibility_warnings,
     _calendar_unverified_justificante_warnings,
-)
-from ._calendar_warnings import (
-    calendar_applicability_profile_keys_for_modelo as calendar_applicability_profile_keys_for_modelo,
-)
-from ._calendar_warnings import (
-    calendar_censo_enrolment_profile_keys as calendar_censo_enrolment_profile_keys,
 )
 from ._coverage import build_obligation_coverage
 
@@ -153,13 +153,13 @@ _LOCAL_WORK_UNIT_APPLIES_BECAUSE = (
 
 def _entry_intersects_range(
     obligation: _ModeloDeadline,
-    calendar_range: OverviewCalendarRange,
+    calendar_range: _OverviewCalendarRange,
 ) -> bool:
     """Return whether ``obligation``'s [opens_on, closes_on] intersects the range."""
     return obligation.closes_on >= calendar_range.from_date and obligation.opens_on <= calendar_range.to_date
 
 
-def _calendar_entry_key(entry: OverviewCalendarEntry) -> tuple[str, int, str]:
+def _calendar_entry_key(entry: _OverviewCalendarEntry) -> tuple[str, int, str]:
     return (
         entry.modelo,
         entry.filing_year or entry.period.filing_year,
@@ -193,7 +193,7 @@ def _work_unit_window_dates(unit: _WorkUnit) -> tuple[date, date, date | None]:
     return anchor, anchor, None
 
 
-def _work_unit_intersects_range(unit: _WorkUnit, calendar_range: OverviewCalendarRange) -> bool:
+def _work_unit_intersects_range(unit: _WorkUnit, calendar_range: _OverviewCalendarRange) -> bool:
     opens_on, closes_on, _payment_cutoff_on = _work_unit_window_dates(unit)
     return closes_on >= calendar_range.from_date and opens_on <= calendar_range.to_date
 
@@ -204,14 +204,14 @@ def _work_unit_has_filing_pointers(unit: _WorkUnit) -> bool:
 
 def _filing_evidence_has_local_state(
     unit: _WorkUnit,
-    filing_evidence: tuple[OverviewCalendarFilingEvidence, ...],
+    filing_evidence: tuple[_OverviewCalendarFilingEvidence, ...],
 ) -> bool:
     key = _work_unit_key(unit)
     for evidence in filing_evidence:
         if evidence.modelo is None or evidence.filing_year is None or evidence.period is None:
             continue
         evidence_key = (evidence.modelo, evidence.filing_year, evidence.period.registry_token)
-        if evidence_key == key and evidence.local_filing_state is not OverviewLocalFilingState.NOT_READY_TO_FILE:
+        if evidence_key == key and evidence.local_filing_state is not _OverviewLocalFilingState.NOT_READY_TO_FILE:
             return True
     return False
 
@@ -237,17 +237,17 @@ def _local_work_unit_status(
 
 def _filing_evidence_with_work_unit_pointers(
     unit: _WorkUnit,
-    filing_evidence: tuple[OverviewCalendarFilingEvidence, ...],
-) -> tuple[OverviewCalendarFilingEvidence, ...]:
+    filing_evidence: tuple[_OverviewCalendarFilingEvidence, ...],
+) -> tuple[_OverviewCalendarFilingEvidence, ...]:
     if not _work_unit_has_filing_pointers(unit):
         return filing_evidence
     if _filing_evidence_has_local_state(unit, filing_evidence):
         return filing_evidence
-    pointer_evidence = OverviewCalendarFilingEvidence(
+    pointer_evidence = _OverviewCalendarFilingEvidence(
         modelo=str(unit.modelo),
         filing_year=unit.filing_year,
         period=unit.period,
-        local_filing_state=OverviewLocalFilingState.READY_TO_FILE,
+        local_filing_state=_OverviewLocalFilingState.READY_TO_FILE,
         local_filing_record_id=unit.current_filing_record_id,
         local_calculation_revision_id=unit.filed_calculation_revision_id,
         evidence_source="work_unit_filing_pointers",
@@ -255,7 +255,7 @@ def _filing_evidence_with_work_unit_pointers(
     return (*filing_evidence, pointer_evidence)
 
 
-def _annotate_entry_with_work_unit(entry: OverviewCalendarEntry, unit: _WorkUnit) -> OverviewCalendarEntry:
+def _annotate_entry_with_work_unit(entry: _OverviewCalendarEntry, unit: _WorkUnit) -> _OverviewCalendarEntry:
     return entry.model_copy(
         update={
             "local_work_unit_id": unit.work_unit_id,
@@ -270,9 +270,9 @@ def _calendar_entry_from_work_unit(
     *,
     today: date,
     due_soon_days: int,
-    filing_evidence: tuple[OverviewCalendarFilingEvidence, ...],
+    filing_evidence: tuple[_OverviewCalendarFilingEvidence, ...],
     live_censo_verified_profile_keys: tuple[str, ...] | None,
-) -> OverviewCalendarEntry:
+) -> _OverviewCalendarEntry:
     opens_on, closes_on, payment_cutoff_on = _work_unit_window_dates(unit)
     effective_filing_evidence = _filing_evidence_with_work_unit_pointers(unit, filing_evidence)
     obligation = _ModeloDeadline(
@@ -292,7 +292,7 @@ def _calendar_entry_from_work_unit(
         live_censo_verified_profile_keys=live_censo_verified_profile_keys,
     ).model_copy(
         update={
-            "source": OverviewCalendarEntrySource.LOCAL_WORK_UNIT,
+            "source": _OverviewCalendarEntrySource.LOCAL_WORK_UNIT,
             "local_work_unit_id": unit.work_unit_id,
             "local_work_unit_name": unit.name,
             "local_work_unit_revision_id": unit.revision_id,
@@ -301,15 +301,15 @@ def _calendar_entry_from_work_unit(
 
 
 def _merge_work_units_into_entries(
-    entries: tuple[OverviewCalendarEntry, ...],
+    entries: tuple[_OverviewCalendarEntry, ...],
     *,
     work_units: tuple[_WorkUnit, ...],
-    calendar_range: OverviewCalendarRange,
+    calendar_range: _OverviewCalendarRange,
     today: date,
     due_soon_days: int,
-    filing_evidence: tuple[OverviewCalendarFilingEvidence, ...],
+    filing_evidence: tuple[_OverviewCalendarFilingEvidence, ...],
     live_censo_verified_profile_keys: tuple[str, ...] | None,
-) -> tuple[OverviewCalendarEntry, ...]:
+) -> tuple[_OverviewCalendarEntry, ...]:
     merged = list(entries)
     registry_index = {_calendar_entry_key(entry): index for index, entry in enumerate(entries)}
     annotated_registry_keys: set[tuple[str, int, str]] = set()
@@ -350,10 +350,10 @@ def _merge_work_units_into_entries(
 
 def calendar_events_from_expedientes_snapshots(
     snapshots: tuple[PersistedExpedientesSnapshot, ...],
-    calendar_range: OverviewCalendarRange,
+    calendar_range: _OverviewCalendarRange,
     *,
     expected_tax_id: str | None = None,
-) -> tuple[OverviewCalendarEvent, ...]:
+) -> tuple[_OverviewCalendarEvent, ...]:
     """Project persisted declaration-register snapshots into calendar events.
 
     Each in-range declaration becomes an :class:`OverviewCalendarEvent` when
@@ -362,7 +362,7 @@ def calendar_events_from_expedientes_snapshots(
     non-active rows remain historical events and cannot upgrade
     :class:`OverviewCalendarFilingEvidence`.
     """
-    events: list[OverviewCalendarEvent] = []
+    events: list[_OverviewCalendarEvent] = []
     for snapshot in sorted(snapshots, key=lambda item: item.captured_at):
         if not _authenticated_identity_matches_expected(
             getattr(snapshot, "authenticated_identity", None),
@@ -376,13 +376,13 @@ def calendar_events_from_expedientes_snapshots(
             _period = declaration.period
             summary = f"Modelo {declaration.modelo} {declaration.ejercicio} {_period.registry_token} filed at AEAT"
             aeat_submission_state = (
-                OverviewAeatSubmissionState.SUBMITTED_OBSERVED
+                _OverviewAeatSubmissionState.SUBMITTED_OBSERVED
                 if _is_active_aeat_filing_status(declaration.estado)
                 else None
             )
             events.append(
-                OverviewCalendarEvent(
-                    event_type=OverviewCalendarEventType.FILING,
+                _OverviewCalendarEvent(
+                    event_type=_OverviewCalendarEventType.FILING,
                     post_filing_kind=_PostFilingEventKind.DECLARACION_PRESENTADA,
                     event_date=event_date,
                     source="aeat_sede_expedientes",
@@ -405,11 +405,11 @@ def calendar_events_from_expedientes_snapshots(
 
 def calendar_events_from_notification_snapshots(
     snapshots: tuple[PersistedNotificationsSnapshot, ...],
-    calendar_range: OverviewCalendarRange,
+    calendar_range: _OverviewCalendarRange,
     *,
     as_of: date,
     expected_tax_id: str | None = None,
-) -> tuple[OverviewCalendarEvent, ...]:
+) -> tuple[_OverviewCalendarEvent, ...]:
     """Project persisted AEAT notifications into message events.
 
     Notifications become :class:`OverviewCalendarEventType.MESSAGE` rows only;
@@ -431,7 +431,7 @@ def calendar_events_from_notification_snapshots(
         A tuple of :class:`OverviewCalendarEvent` message observations inside
         ``calendar_range``.
     """
-    events: list[OverviewCalendarEvent] = []
+    events: list[_OverviewCalendarEvent] = []
     for snapshot in sorted(snapshots, key=lambda item: item.captured_at):
         snapshot_identity = getattr(snapshot, "authenticated_identity", None)
         if snapshot_identity is not None and not _authenticated_identity_matches_expected(
@@ -459,8 +459,8 @@ def calendar_events_from_notification_snapshots(
                 as_of=as_of,
             )
             events.append(
-                OverviewCalendarEvent(
-                    event_type=OverviewCalendarEventType.MESSAGE,
+                _OverviewCalendarEvent(
+                    event_type=_OverviewCalendarEventType.MESSAGE,
                     post_filing_kind=post_filing_kind,
                     notificacion_estado_servicio=estado_servicio,
                     event_date=event_date,
@@ -477,11 +477,11 @@ def calendar_events_from_notification_snapshots(
 
 def calendar_events_from_justificante_capture_snapshots(
     snapshots: tuple[JustificanteCaptureSnapshot, ...],
-    calendar_range: OverviewCalendarRange,
+    calendar_range: _OverviewCalendarRange,
     *,
     justificantes: tuple[Justificante, ...] = (),
     expected_tax_id: str | None = None,
-) -> tuple[OverviewCalendarEvent, ...]:
+) -> tuple[_OverviewCalendarEvent, ...]:
     """Project verified live justificante captures into calendar filing events.
 
     A :class:`~cadrumo.application.live.JustificanteCaptureSnapshot` becomes an
@@ -492,7 +492,7 @@ def calendar_events_from_justificante_capture_snapshots(
     new live read.
     """
     justificantes_by_csv = _justificantes_by_csv(justificantes)
-    events: list[OverviewCalendarEvent] = []
+    events: list[_OverviewCalendarEvent] = []
     for snapshot in sorted(snapshots, key=lambda item: item.captured_at):
         evidence = _filing_evidence_from_justificante_capture_snapshot(
             snapshot,
@@ -506,8 +506,8 @@ def calendar_events_from_justificante_capture_snapshots(
         if not calendar_range.covers(event_date):
             continue
         events.append(
-            OverviewCalendarEvent(
-                event_type=OverviewCalendarEventType.FILING,
+            _OverviewCalendarEvent(
+                event_type=_OverviewCalendarEventType.FILING,
                 post_filing_kind=_PostFilingEventKind.DECLARACION_PRESENTADA,
                 event_date=event_date,
                 source="aeat_sede_live_capture",
@@ -521,7 +521,7 @@ def calendar_events_from_justificante_capture_snapshots(
                 filing_year=snapshot.filing_year,
                 period=snapshot.period,
                 status="ALTA",
-                aeat_submission_state=OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED,
+                aeat_submission_state=_OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED,
                 aeat_submitted_at=submitted_at,
                 justificante_verified=True,
                 verified_justificante_csv=evidence.verified_justificante_csv,
@@ -551,14 +551,14 @@ def _notification_matches_expected_tax_id(
 
 def build_overview_calendar_events(
     *,
-    calendar_range: OverviewCalendarRange,
+    calendar_range: _OverviewCalendarRange,
     as_of: date,
     expedientes_snapshots: tuple[PersistedExpedientesSnapshot, ...] = (),
     notification_snapshots: tuple[PersistedNotificationsSnapshot, ...] = (),
     justificante_capture_snapshots: tuple[JustificanteCaptureSnapshot, ...] = (),
     justificantes: tuple[Justificante, ...] = (),
     expected_tax_id: str | None = None,
-) -> tuple[OverviewCalendarEvent, ...]:
+) -> tuple[_OverviewCalendarEvent, ...]:
     """Build observed events from persisted live-read snapshots.
 
     The snapshots are inputs loaded by the caller. This helper only
@@ -600,7 +600,7 @@ def build_overview_calendar_events(
     return _dedupe_calendar_events(events)
 
 
-def _event_demands_attention(event: OverviewCalendarEvent) -> bool:
+def _event_demands_attention(event: _OverviewCalendarEvent) -> bool:
     """Return whether one observed event demands operator attention.
 
     Two independent limbs, deliberately not collapsed into one: the procedural
@@ -615,8 +615,8 @@ def _event_demands_attention(event: OverviewCalendarEvent) -> bool:
 
 
 def actionable_post_filing_events(
-    events: tuple[OverviewCalendarEvent, ...],
-) -> tuple[OverviewCalendarEvent, ...]:
+    events: tuple[_OverviewCalendarEvent, ...],
+) -> tuple[_OverviewCalendarEvent, ...]:
     """Return the observed :class:`OverviewCalendarEvent` rows that demand operator attention.
 
     An event is actionable when its
@@ -647,11 +647,11 @@ def actionable_post_filing_events(
 
 def calendar_events_from_modelo_records(
     filing_records: tuple[ModeloRecord, ...],
-    calendar_range: OverviewCalendarRange,
+    calendar_range: _OverviewCalendarRange,
     *,
     justificantes: tuple[Justificante, ...] = (),
     expected_tax_id: str | None = None,
-) -> tuple[OverviewCalendarEvent, ...]:
+) -> tuple[_OverviewCalendarEvent, ...]:
     """Project persisted Modelo filing records into calendar filing events.
 
     A :class:`~cadrumo.domain.modelos.ModeloRecord` always contributes on the
@@ -671,7 +671,7 @@ def calendar_events_from_modelo_records(
         A tuple of :class:`OverviewCalendarEvent`, one per in-range record.
     """
     justificantes_by_csv = _justificantes_by_csv(justificantes)
-    events: list[OverviewCalendarEvent] = []
+    events: list[_OverviewCalendarEvent] = []
     for record in sorted(
         filing_records,
         key=lambda item: (item.filed_at, str(item.modelo), item.period.registry_token),
@@ -685,8 +685,8 @@ def calendar_events_from_modelo_records(
         if not calendar_range.covers(event_date):
             continue
         events.append(
-            OverviewCalendarEvent(
-                event_type=OverviewCalendarEventType.FILING,
+            _OverviewCalendarEvent(
+                event_type=_OverviewCalendarEventType.FILING,
                 post_filing_kind=_PostFilingEventKind.DECLARACION_PRESENTADA,
                 event_date=event_date,
                 source="modelo_filing_record",
@@ -705,7 +705,7 @@ def calendar_events_from_modelo_records(
     return _dedupe_calendar_events(events)
 
 
-def _modelo_record_calendar_event_date(record: ModeloRecord, evidence: OverviewCalendarFilingEvidence) -> date:
+def _modelo_record_calendar_event_date(record: ModeloRecord, evidence: _OverviewCalendarFilingEvidence) -> date:
     """Return the event date for a local Modelo record's calendar projection."""
     if evidence.justificante_verified and evidence.aeat_submitted_at is not None:
         return evidence.aeat_submitted_at.date()
@@ -715,9 +715,9 @@ def _modelo_record_calendar_event_date(record: ModeloRecord, evidence: OverviewC
 def _calendar_entry_from_obligation(
     obligation: _ModeloDeadline,
     *,
-    filing_evidence: tuple[OverviewCalendarFilingEvidence, ...],
+    filing_evidence: tuple[_OverviewCalendarFilingEvidence, ...],
     live_censo_verified_profile_keys: tuple[str, ...] | None,
-) -> OverviewCalendarEntry:
+) -> _OverviewCalendarEntry:
     try:
         shift = _shift_deadline(
             obligation.closes_on,
@@ -742,7 +742,7 @@ def _calendar_entry_from_obligation(
         holiday_refs = ()
         jurisdictions = ()
     period = obligation.period
-    return OverviewCalendarEntry(
+    return _OverviewCalendarEntry(
         modelo=obligation.modelo,
         period=period,
         opens_on=obligation.opens_on,
@@ -753,7 +753,7 @@ def _calendar_entry_from_obligation(
         jurisdictions=jurisdictions,
         payment_cutoff_on=obligation.payment_cutoff_on,
         status=obligation.status,
-        user_state=user_state_for(obligation.status),
+        user_state=_user_state_for(obligation.status),
         recovery=obligation.recovery,
         filing_year=period.filing_year,
         censo_enrolment_state=_calendar_censo_enrolment_state(
@@ -771,7 +771,7 @@ def _calendar_entry_from_obligation(
 
 def _schedules_for_calendar_range(
     profile: _TaxpayerProfile,
-    calendar_range: OverviewCalendarRange,
+    calendar_range: _OverviewCalendarRange,
     *,
     today: date,
     engine: _ScheduleProducer | None,
@@ -805,11 +805,11 @@ def _entries_and_suppressed_from_schedules(
     schedules: list[_Schedule],
     *,
     profile: _TaxpayerProfile,
-    calendar_range: OverviewCalendarRange,
+    calendar_range: _OverviewCalendarRange,
     show_suppressed: bool,
-    filing_evidence: tuple[OverviewCalendarFilingEvidence, ...],
+    filing_evidence: tuple[_OverviewCalendarFilingEvidence, ...],
     live_censo_verified_profile_keys: tuple[str, ...] | None,
-) -> tuple[list[OverviewCalendarEntry], list[SuppressedCalendarEntry], set[str]]:
+) -> tuple[list[_OverviewCalendarEntry], list[_SuppressedCalendarEntry], set[str]]:
     """Project every schedule's obligations into applicable calendar entries.
 
     Each modelo's applicability is DERIVED from the taxpayer model. Only a
@@ -824,17 +824,17 @@ def _entries_and_suppressed_from_schedules(
     core persona set; full per-modelo coverage is a deferred expansion (see
     ``_SEED_COVERAGE_NOTICE``).
     """
-    entries: list[OverviewCalendarEntry] = []
-    suppressed: list[SuppressedCalendarEntry] = []
+    entries: list[_OverviewCalendarEntry] = []
+    suppressed: list[_SuppressedCalendarEntry] = []
     coverage_surface_modelos: set[str] = set()
     for schedule in schedules:
         for obligation in schedule.obligations:
             intersects_range = _entry_intersects_range(obligation, calendar_range)
-            applicability = derive_modelo_applicability(profile, obligation.modelo)
-            if applicability.verdict is not ApplicabilityVerdict.APPLICABLE:
+            applicability = _derive_modelo_applicability(profile, obligation.modelo)
+            if applicability.verdict is not _ApplicabilityVerdict.APPLICABLE:
                 if show_suppressed and intersects_range:
                     suppressed.append(
-                        SuppressedCalendarEntry(
+                        _SuppressedCalendarEntry(
                             modelo=obligation.modelo,
                             period=obligation.period,
                             verdict=applicability.verdict,
@@ -857,17 +857,17 @@ def _entries_and_suppressed_from_schedules(
 
 def build_overview_calendar(
     profile: _TaxpayerProfile,
-    calendar_range: OverviewCalendarRange,
+    calendar_range: _OverviewCalendarRange,
     *,
     today: date,
     engine: _ScheduleProducer | None = None,
     raw_values: Mapping[str, object] | None = None,
     show_suppressed: bool = False,
-    events: tuple[OverviewCalendarEvent, ...] = (),
-    filing_evidence: tuple[OverviewCalendarFilingEvidence, ...] = (),
+    events: tuple[_OverviewCalendarEvent, ...] = (),
+    filing_evidence: tuple[_OverviewCalendarFilingEvidence, ...] = (),
     work_units: tuple[_WorkUnit, ...] = (),
     live_censo_verified_profile_keys: tuple[str, ...] | None = None,
-) -> OverviewCalendar:
+) -> _OverviewCalendar:
     """Build a typed calendar view for ``profile`` over ``calendar_range``.
 
     Composes the existing :class:`~cadrumo.domain.deadlines.DeadlineEngine`
@@ -931,12 +931,12 @@ def build_overview_calendar(
         # obligation universe as advised/undetermined rather than empty — an
         # undeclared profile can under-scope the most, so it must not read as
         # "nothing to file".
-        return OverviewCalendar(
+        return _OverviewCalendar(
             range=calendar_range,
             entries=(),
             generated_at=now(),
             warnings=(),
-            completeness=CalendarCompleteness(),
+            completeness=_CalendarCompleteness(),
             taxpayer_model_declared=False,
             incomplete_reason=_tr("cli.overview.taxpayer_model_undeclared"),
             events=_calendar_events_with_filing_evidence(events, filing_evidence),
@@ -991,7 +991,7 @@ def build_overview_calendar(
         coverage_surface_modelos | {entry.modelo for entry in entries_tuple},
         today=today,
     )
-    return OverviewCalendar(
+    return _OverviewCalendar(
         range=calendar_range,
         entries=entries_tuple,
         generated_at=now(),

@@ -54,11 +54,25 @@ from typing import TYPE_CHECKING
 from ...core import Modelo as _Modelo
 from ...core.decimal import coerce_decimal_strict as _coerce_decimal_strict
 from ...core.logging import get_logger as _get_logger
+from ...domain.calculations.registry import derive_modelo_applicability
 from ...domain.deadlines import (
     evaluate_multiple_pagadores_obligation as _evaluate_multiple_pagadores_obligation,
 )
 from ._calendar import (
+    actionable_post_filing_events,
+    build_overview_calendar,
+    build_overview_calendar_events,
+    calendar_events_from_expedientes_snapshots,
+    calendar_events_from_justificante_capture_snapshots,
+    calendar_events_from_modelo_records,
+    calendar_events_from_notification_snapshots,
+)
+from ._calendar_evidence import (
     NO_AEAT_HISTORY_NOTICE_CODE,
+    calendar_filing_evidence_from_sources,
+    no_aeat_history_notice,
+)
+from ._calendar_models import (
     CalendarCompleteness,
     CalendarWarning,
     OverviewAeatSubmissionState,
@@ -73,19 +87,11 @@ from ._calendar import (
     OverviewPeriodState,
     OverviewStatusReport,
     SuppressedCalendarEntry,
-    actionable_post_filing_events,
-    build_overview_calendar,
-    build_overview_calendar_events,
+    user_state_for,
+)
+from ._calendar_warnings import (
     calendar_applicability_profile_keys_for_modelo,
     calendar_censo_enrolment_profile_keys,
-    calendar_events_from_expedientes_snapshots,
-    calendar_events_from_justificante_capture_snapshots,
-    calendar_events_from_modelo_records,
-    calendar_events_from_notification_snapshots,
-    calendar_filing_evidence_from_sources,
-    derive_modelo_applicability,
-    no_aeat_history_notice,
-    user_state_for,
 )
 from ._coverage import (
     AdvisedObligation,

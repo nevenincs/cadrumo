@@ -24,8 +24,7 @@ from datetime import date
 
 import pytest
 
-from ....application.overview import OverviewCalendarEvent
-from ....application.overview._calendar_models import OverviewCalendarEventType
+from ....application.overview import OverviewCalendarEvent, OverviewCalendarEventType
 from ....core import NotificacionEstadoServicio
 from ....core.json_contract import strict_round_trip
 from .._overview_payloads import OverviewCalendarEventPayload
