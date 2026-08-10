@@ -48,7 +48,7 @@ from typing import override
 
 import pytest
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _SRC_ROOT = Path(__file__).resolve().parents[3]
 
