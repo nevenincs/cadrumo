@@ -12,8 +12,9 @@ The selector boundary implements the accepted visible-target addressing policy:
 the common operator target is active bucket/profile plus modelo, filing year,
 and period; raw work-unit and calculation-revision ids remain exact-addressing
 escape hatches. An explicit work-unit id is validated against any natural-key
-flags supplied beside it, discarded work units are ignored by default, and an
-ambiguous visible target refuses with candidate guidance instead of guessing.
+flags supplied beside it, discarded work units remain visible to natural-target
+resolution, and an ambiguous visible target refuses with candidate guidance
+instead of guessing.
 
 Command-specific revision defaults stay here rather than in CLI modules:
 verification selects the current draft, filing selects the current
@@ -121,7 +122,7 @@ class ModeloWorkSelectorContradictionError(ModeloWorkSelectorError, ValueError):
 
 
 class ModeloWorkVisibleTargetAmbiguousError(ModeloWorkSelectorError):
-    """Raised when a visible target matches multiple active work units."""
+    """Raised when a visible target matches multiple work units."""
 
     def __init__(self, candidates: tuple[ModeloWorkUnitCandidate, ...], *, selector: str | None = None) -> None:
         self.candidates = candidates
@@ -134,7 +135,7 @@ class ModeloWorkVisibleTargetAmbiguousError(ModeloWorkSelectorError):
 
 
 class ModeloWorkRevisionConflictError(ModeloWorkSelectorError):
-    """Raised when the requested registry revision conflicts with active work."""
+    """Raised when the requested registry revision conflicts with existing work."""
 
     def __init__(
         self,
@@ -145,7 +146,7 @@ class ModeloWorkRevisionConflictError(ModeloWorkSelectorError):
         self.requested_revision_id = requested_revision_id
         self.existing = existing
         super().__init__(
-            "modelo work target already has an active work unit for a different registry revision",
+            "modelo work target already has a work unit for a different registry revision",
         )
 
 
@@ -316,17 +317,19 @@ def resolve_modelo_work_bucket(request: ModeloWorkSelectorRequest) -> str:
     return active_bucket_id
 
 
-def visible_target_work_units(
+def natural_target_work_units(
     request: ModeloWorkSelectorRequest,
     *,
     repository: WorkUnitCatalogueRepositoryProtocol | None = None,
 ) -> tuple[WorkUnit, ...]:
-    """Return active :class:`cadrumo.domain.modelos.WorkUnit` records matching the visible target.
+    """Return every scoped work unit matching one natural filing target.
 
     The visible target is bucket/modelo/filing-year/period only. Registry
     revision is intentionally not part of this lookup so a conflicting
-    ``revision_id`` can be reported as a conflict against the existing active
-    work unit instead of silently selecting or creating a second target.
+    ``revision_id`` can be reported against the existing work unit instead of
+    silently selecting or creating a second target. Lifecycle state is not an
+    addressability filter: read surfaces must observe discarded units and
+    guarded mutations must reach their canonical terminal verdict.
     """
     if not request.has_visible_target:
         raise ModeloWorkSelectorContradictionError("modelo, filing_year, and period are required for natural lookup")
@@ -340,14 +343,84 @@ def visible_target_work_units(
             (
                 unit
                 for unit in catalogue.values()
-                if unit.state is not WorkUnitState.DESCARTADO
-                and unit.bucket_id == bucket_id
+                if unit.bucket_id == bucket_id
                 and unit.modelo == modelo
                 and unit.filing_year == filing_year
                 and unit.period == period
             ),
             key=lambda unit: (unit.revision_id, unit.created_at, unit.work_unit_id),
         ),
+    )
+
+
+def active_natural_target_work_units(
+    request: ModeloWorkSelectorRequest,
+    *,
+    repository: WorkUnitCatalogueRepositoryProtocol | None = None,
+) -> tuple[WorkUnit, ...]:
+    """Return only active natural-target units when an active-only operation explicitly requires it."""
+    return tuple(
+        unit
+        for unit in natural_target_work_units(request, repository=repository)
+        if unit.state is WorkUnitState.BORRADOR
+    )
+
+
+def _resolution_from_natural_matches(
+    request: ModeloWorkSelectorRequest,
+    *,
+    bucket_id: str,
+    matches: tuple[WorkUnit, ...],
+) -> ModeloWorkResolution:
+    """Materialize a natural-key result without assigning lifecycle policy to callers."""
+    if not matches:
+        return ModeloWorkResolution(
+            state=ModeloWorkSelectorState.ABSENT,
+            bucket_id=bucket_id,
+            modelo=request.modelo,
+            filing_year=request.filing_year,
+            period=request.period,
+            requested_revision_id=request.revision_id,
+        )
+    if len(matches) > 1:
+        raise ModeloWorkVisibleTargetAmbiguousError(
+            tuple(ModeloWorkUnitCandidate.from_work_unit(unit) for unit in matches),
+        )
+
+    work_unit = next(iter(matches))
+    if request.revision_id is not None and request.revision_id != work_unit.revision_id:
+        raise ModeloWorkRevisionConflictError(
+            requested_revision_id=request.revision_id,
+            existing=ModeloWorkUnitCandidate.from_work_unit(work_unit),
+        )
+    return ModeloWorkResolution(
+        state=ModeloWorkSelectorState.RESOLVED,
+        bucket_id=bucket_id,
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        requested_revision_id=request.revision_id,
+        work_unit=work_unit,
+        candidates=(ModeloWorkUnitCandidate.from_work_unit(work_unit),),
+    )
+
+
+def resolve_active_natural_modelo_work_unit(
+    request: ModeloWorkSelectorRequest,
+    *,
+    repository: WorkUnitCatalogueRepositoryProtocol | None = None,
+) -> ModeloWorkResolution:
+    """Resolve an active natural target only for create-or-reuse lifecycle operations."""
+    if request.work_unit_id is not None or not request.has_visible_target:
+        raise ModeloWorkSelectorContradictionError(
+            "an active natural selector requires modelo, filing_year, and period without work_unit_id"
+        )
+    bucket_id = resolve_modelo_work_bucket(request)
+    repo = repository or WorkUnitCatalogueRepository(bucket_id=bucket_id)
+    return _resolution_from_natural_matches(
+        request,
+        bucket_id=bucket_id,
+        matches=active_natural_target_work_units(request, repository=repo),
     )
 
 
@@ -360,7 +433,7 @@ def resolve_modelo_work_unit(
 
     The visible-target path deliberately searches by bucket/modelo/year/period
     before registry-revision exact targeting. That prevents a command from
-    silently creating or selecting a second active work unit for the same filing.
+    silently creating or selecting a second work unit for the same filing.
     """
     bucket_id = resolve_modelo_work_bucket(request)
     repo = repository or WorkUnitCatalogueRepository(bucket_id=bucket_id)
@@ -401,37 +474,10 @@ def resolve_modelo_work_unit(
             candidates=(ModeloWorkUnitCandidate.from_work_unit(work_unit),),
         )
 
-    matches = visible_target_work_units(request, repository=repo)
-    if not matches:
-        return ModeloWorkResolution(
-            state=ModeloWorkSelectorState.ABSENT,
-            bucket_id=bucket_id,
-            modelo=request.modelo,
-            filing_year=request.filing_year,
-            period=request.period,
-            requested_revision_id=request.revision_id,
-        )
-    if len(matches) > 1:
-        raise ModeloWorkVisibleTargetAmbiguousError(
-            tuple(ModeloWorkUnitCandidate.from_work_unit(unit) for unit in matches),
-        )
-
-    assert len(matches) == 1
-    work_unit = matches[0]
-    if request.revision_id is not None and request.revision_id != work_unit.revision_id:
-        raise ModeloWorkRevisionConflictError(
-            requested_revision_id=request.revision_id,
-            existing=ModeloWorkUnitCandidate.from_work_unit(work_unit),
-        )
-    return ModeloWorkResolution(
-        state=ModeloWorkSelectorState.RESOLVED,
+    return _resolution_from_natural_matches(
+        request,
         bucket_id=bucket_id,
-        modelo=work_unit.modelo,
-        filing_year=work_unit.filing_year,
-        period=work_unit.period,
-        requested_revision_id=request.revision_id,
-        work_unit=work_unit,
-        candidates=(ModeloWorkUnitCandidate.from_work_unit(work_unit),),
+        matches=natural_target_work_units(request, repository=repo),
     )
 
 
@@ -734,11 +780,13 @@ __all__ = [
     "ModeloWorkUnitCandidate",
     "ModeloWorkUnitNotFoundError",
     "ModeloWorkVisibleTargetAmbiguousError",
+    "active_natural_target_work_units",
+    "natural_target_work_units",
+    "resolve_active_natural_modelo_work_unit",
     "resolve_modelo_calculation_revision_pick",
     "resolve_modelo_work_bucket",
     "resolve_modelo_work_unit",
     "select_current_verified_revision",
     "select_exportable_revision",
     "select_modelo_calculation_revision",
-    "visible_target_work_units",
 ]

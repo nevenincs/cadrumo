@@ -47,7 +47,8 @@ _ZERO = Decimal("0")
 
 def _m210_blocking_finding(
     *,
-    message: str,
+    reason_code: str,
+    message_facts: dict[str, str | int],
     legal_refs: tuple[LegalRefId, ...],
     source_refs: tuple[SourceRefId, ...],
 ) -> ModeloVerificationFinding:
@@ -61,7 +62,8 @@ def _m210_blocking_finding(
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.BLOCKING_RULE,
         severity=ModeloVerificationFindingSeverity.BLOCKING,
-        message=message,
+        message_locale_key="application.modelo.findings.m210_rate_unavailable",
+        message_facts={"reason_code": reason_code, **message_facts},
         legal_refs=legal_refs,
         source_refs=source_refs,
     )
@@ -125,11 +127,12 @@ def _resolve_convenio_override(
 
     if override is None:
         finding = _m210_blocking_finding(
-            message=(
-                f"M210 Convenio rate row missing for country={country_code!r} "
-                f"tipo_renta={tipo_renta!r} year={year}; "
-                "predicate 'm210-convenio-rate-missing' fires"
-            ),
+            reason_code="convenio_rate_missing",
+            message_facts={
+                "country_code": country_code,
+                "tipo_renta_code": tipo_renta,
+                "filing_year": year,
+            },
             legal_refs=legal_refs,
             source_refs=source_refs,
         )
@@ -206,11 +209,11 @@ def resolve_m210_rate(
             if tipo_renta == TipoRentaIrnr.PENSION.value and _has_live_pension_tariff(snapshot, year):
                 return None, []
             finding = _m210_blocking_finding(
-                message=(
-                    f"M210 baseline tipo_renta={tipo_renta!r} year={year} has no "
-                    "published baseline rate in the bundled corpus; "
-                    "predicate 'm210-baseline-tipo-deferred' fires"
-                ),
+                reason_code="baseline_rate_unavailable",
+                message_facts={
+                    "tipo_renta_code": tipo_renta,
+                    "filing_year": year,
+                },
                 legal_refs=tuple(baseline_param.legal_refs),
                 source_refs=tuple(baseline_param.source_refs),
             )

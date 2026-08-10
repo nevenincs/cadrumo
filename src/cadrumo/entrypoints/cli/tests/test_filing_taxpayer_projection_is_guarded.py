@@ -50,9 +50,7 @@ _GUARDED_PROJECTION = "_filing_taxpayer_or_refuse"
 def _called_names(module_path: Path) -> set[str]:
     """Return every bare function name called in ``module_path``."""
     tree = ast.parse(module_path.read_text(encoding="utf-8"), filename=str(module_path))
-    return {
-        node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
-    }
+    return {node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}
 
 
 def test_every_filing_module_exists_where_this_gate_expects_it() -> None:

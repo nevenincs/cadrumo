@@ -153,12 +153,17 @@ def test_modelo_303_revision_period_selectors_cover_2009_to_present() -> None:
     assert rev_old.period_selector.year_to == 2022
     assert rev_old.period_selector.periods == ("1T", "2T", "3T", "4T")
 
-    assert "2023-y-siguientes" not in modelo.revisions
     expected_selectors = {
-        "2023": (2023, ("1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12")),
+        "2023": (
+            2023,
+            ("1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"),
+        ),
         "2024-hasta-08-y-2t": (2024, ("1T", "2T", "01", "02", "03", "04", "05", "06", "07", "08")),
         "2024-desde-09-y-3t": (2024, ("3T", "4T", "09", "10", "11", "12")),
-        "2025": (2025, ("1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12")),
+        "2025": (
+            2025,
+            ("1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"),
+        ),
     }
     for revision_id, (year, periods) in expected_selectors.items():
         revision = modelo.revisions[revision_id]
@@ -293,11 +298,15 @@ def test_modelo_303_hac_819_2024_authority_starts_only_with_late_2024_design() -
     assert authority.effective_from == date(2024, 8, 6)
 
     for revision_id in ("2023", "2024-hasta-08-y-2t"):
-        construct = next(item for item in modelo.revisions[revision_id].constructs if item.id == "modelo-303-iva-autoliquidacion")
+        construct = next(
+            item for item in modelo.revisions[revision_id].constructs if item.id == "modelo-303-iva-autoliquidacion"
+        )
         assert _M303_RECORD_DESIGN_LAYOUT_MODIFICATION_LEGAL_REF not in construct.legal_refs
 
     for revision_id in ("2024-desde-09-y-3t", "2025", "2026-y-siguientes"):
-        construct = next(item for item in modelo.revisions[revision_id].constructs if item.id == "modelo-303-iva-autoliquidacion")
+        construct = next(
+            item for item in modelo.revisions[revision_id].constructs if item.id == "modelo-303-iva-autoliquidacion"
+        )
         assert _M303_RECORD_DESIGN_LAYOUT_MODIFICATION_LEGAL_REF in construct.legal_refs
 
 

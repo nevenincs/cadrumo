@@ -68,8 +68,8 @@ number = "24"
 
 # Recargo equivalencia tipo 1.0pct - Cuota (casilla 18, manual input) becomes a
 # calculation-closure member the moment modelo-303-iva-cuota-devengada-total
-# sums it as a formula-expression arg, mirroring the 2023-y-siguientes
-# revision's identical formula (18/21/24 recargo-inclusive casilla-27 total).
+# sums it as a formula-expression arg, matching the identical formula in the
+# later explicit record-design revisions (18/21/24 recargo-inclusive casilla-27 total).
 [[revisions.2009-y-siguientes.completeness_manifest.casillas]]
 casilla_id = "18"
 number = "18"

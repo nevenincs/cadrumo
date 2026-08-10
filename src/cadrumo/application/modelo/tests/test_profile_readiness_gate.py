@@ -10,7 +10,7 @@ import pytest
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import Modelo, Period
+from ....core import Modelo, NoRecoveryOutcome, Period
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
@@ -31,7 +31,7 @@ from .. import (
     calculate_modelo_revision,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
     create_work_unit,
-    ensure_modelo_work_unit_for_visible_target,
+    ensure_modelo_work_unit_for_active_target,
     mark_revision_verificado_completo,
     modelo_applicability_refusal,
     pre_activity_period_refusal,
@@ -312,14 +312,24 @@ def test_create_work_unit_service_refuses_period_year_mismatch_with_typed_error(
                 clock=_NOW,
             )
 
-        assert "filing_year 2025 does not match period year 2026" in str(excinfo.value)
+        assert excinfo.value.translated_message == "application.modelo.errors.work_unit_filing_year_period_mismatch"
         assert excinfo.value.context == {
             "modelo": Modelo.M303.value,
             "filing_year": 2025,
             "period_year": 2026,
             "period": "1T",
             "revision_id": _M303_REVISION,
+            "filing_year_matches_period": False,
         }
+        failure = excinfo.value.precondition_failure
+        assert failure is not None
+        assert failure.identity == (
+            "modelo.work.create",
+            "modelo.work.create.period.filing_year.matches",
+            "modelo.work.create.period.filing_year.mismatch",
+        )
+        assert failure.verdict.action is None
+        assert failure.verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
         assert len(repository.load()) == 0
 
 
@@ -763,7 +773,7 @@ def test_visible_target_ensure_refuses_reused_pre_activity_m303_before_rename(tm
         )
 
         with pytest.raises(ModeloProfileReadinessError) as excinfo:
-            ensure_modelo_work_unit_for_visible_target(
+            ensure_modelo_work_unit_for_active_target(
                 bucket_id=_OPERATOR_PROFILE_ID,
                 modelo=Modelo.M303.value,
                 filing_year=2026,

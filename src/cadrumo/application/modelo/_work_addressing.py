@@ -8,9 +8,9 @@ central selector contract, and returns the matching
 This module is the application facade over the accepted addressing policy:
 operators address the active bucket/profile plus modelo, filing year, and period;
 raw ids remain advanced exact-addressing escape hatches. Ambiguous visible
-targets, contradictory exact-id plus natural-key flags, and discarded default
-matches are handled by :mod:`~cadrumo.application.modelo._selectors` rather than by
-CLI-local string logic.
+targets, contradictory exact-id plus natural-key flags, and discarded natural-key
+matches are handled by :mod:`~cadrumo.application.modelo._selectors` rather than
+by CLI-local string logic.
 
 Creation flows validate the law-determined registry revision before delegating
 to :func:`~cadrumo.application.modelo.create_work_unit`; an explicit
@@ -31,7 +31,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from ...core import Period
+from ...core import ActionEvidenceProvenance, Period
 from ...core.identity import CalculationRevisionId, WorkUnitId
 from ...core.resources import resources
 from ...domain.calculations.registry import RegistrySnapshotError, select_revision
@@ -42,8 +42,18 @@ from ...domain.modelos import (
     ModeloCode,
     ModeloError,
     WorkUnit,
+    WorkUnitState,
+)
+from ._action_errors import (
+    CalculationRevisionNotFoundError,
+    CalculationRevisionStateError,
+    ModeloPreconditionErrorMixin,
 )
 from ._calculation_actions import get_calculation_revision
+from ._preconditions import (
+    build_modelo_precondition_failure_for_scenario,
+    build_modelo_work_file_unverified_revision_failure,
+)
 from ._registry_discovery import declared_modelo_period_tokens
 from ._selectors import (
     ModeloCalculationRevisionDefault,
@@ -54,10 +64,12 @@ from ._selectors import (
     ModeloWorkResolution,
     ModeloWorkSelectorRequest,
     ModeloWorkSelectorState,
+    ModeloWorkUnitNotFoundError,
+    resolve_active_natural_modelo_work_unit,
     resolve_modelo_calculation_revision_pick,
     resolve_modelo_work_unit,
 )
-from ._work_lifecycle import create_work_unit, rename_work_unit
+from ._work_lifecycle import RevisionParentOperation, create_work_unit, rename_work_unit, require_revision_parent_active
 
 
 class ModeloRevisionPickError(ModeloError, ValueError):
@@ -262,8 +274,8 @@ type ModeloWorkTarget = ModeloVisibleFilingTarget | ModeloExactWorkUnitTarget | 
 """Supported work-target shapes for centralized modelo addressing."""
 
 
-class ModeloWorkAddressNotFoundError(ModeloError, LookupError):
-    """Raised when a natural modelo work address resolves no active work unit."""
+class ModeloWorkAddressNotFoundError(ModeloPreconditionErrorMixin, ModeloError, LookupError):
+    """Raised when a natural modelo work address resolves no work unit."""
 
 
 class ModeloWorkRegistryYearMismatchError(ModeloError, ValueError):
@@ -427,28 +439,198 @@ def resolve_modelo_revision_for_operator_target(
             registry_revision_id=registry_revision_id,
             bucket_id=bucket_id,
         )
+    try:
+        if default_for == "verify":
+            return resolve_verifiable_modelo_calculation_revision_address(
+                address=address,
+                calculation_revision_id=calculation_revision_id,
+                selector=selector,
+            )
+        if default_for == "file":
+            return resolve_fileable_modelo_calculation_revision_address(
+                address=address,
+                calculation_revision_id=calculation_revision_id,
+                selector=selector,
+            )
+        if default_for == "export":
+            return resolve_exportable_modelo_calculation_revision_address(
+                address=address,
+                calculation_revision_id=calculation_revision_id,
+                selector=selector,
+            )
+        return resolve_modelo_calculation_revision_address(
+            address=address,
+            calculation_revision_id=calculation_revision_id,
+            selector=selector,
+        )
+    except CalculationRevisionNotFoundError as error:
+        recovery_error = _calculation_revision_work_unit_target_error(
+            error=error,
+            calculation_revision_id=calculation_revision_id,
+            address=address,
+            default_for=default_for,
+        )
+        if recovery_error is error:
+            raise
+        raise recovery_error from error
+    except ModeloWorkAddressNotFoundError as error:
+        precondition_error = _natural_target_absent_precondition_error(
+            error=error,
+            address=address,
+            default_for=default_for,
+        )
+        if precondition_error is error:
+            raise
+        raise precondition_error from error
+    except ModeloWorkUnitNotFoundError as error:
+        precondition_error = _exact_work_unit_absent_precondition_error(
+            error=error,
+            address=address,
+            default_for=default_for,
+        )
+        if precondition_error is error:
+            raise
+        raise precondition_error from error
+
+
+def _calculation_revision_work_unit_target_error(
+    *,
+    error: CalculationRevisionNotFoundError,
+    calculation_revision_id: str | None,
+    address: ModeloWorkAddress,
+    default_for: ModeloCalculationRevisionDefault | None,
+) -> CalculationRevisionNotFoundError:
+    """Attach the declared calculate recovery when an exact work unit was supplied."""
     if default_for == "verify":
-        return resolve_verifiable_modelo_calculation_revision_address(
-            address=address,
-            calculation_revision_id=calculation_revision_id,
-            selector=selector,
-        )
-    if default_for == "file":
-        return resolve_fileable_modelo_calculation_revision_address(
-            address=address,
-            calculation_revision_id=calculation_revision_id,
-            selector=selector,
-        )
-    if default_for == "export":
-        return resolve_exportable_modelo_calculation_revision_address(
-            address=address,
-            calculation_revision_id=calculation_revision_id,
-            selector=selector,
-        )
-    return resolve_modelo_calculation_revision_address(
-        address=address,
-        calculation_revision_id=calculation_revision_id,
-        selector=selector,
+        subject_leaf_key = "modelo.work.verify"
+    elif default_for == "file":
+        subject_leaf_key = "modelo.work.file"
+    else:
+        return error
+    if calculation_revision_id is None or address != ModeloWorkAddress():
+        return error
+    try:
+        work_unit = resolve_modelo_work_unit_for_operator_target(work_unit_id=calculation_revision_id)
+    except ModeloWorkUnitNotFoundError:
+        return error
+    is_active = work_unit.state is WorkUnitState.BORRADOR
+    scenario_id = (
+        f"{subject_leaf_key}.calculation_revision.work_unit_target"
+        if is_active
+        else f"{subject_leaf_key}.calculation_revision.work_unit_target_discarded"
+    )
+    failure = build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key=subject_leaf_key,
+        scenario_id=scenario_id,
+        evidence_id=f"{subject_leaf_key}.calculation_revision.addressing",
+        evidence_values={
+            "calculation_revision_id": calculation_revision_id,
+            "work_unit_id": work_unit.work_unit_id,
+            "work_unit_state": work_unit.state.value,
+            "modelo": str(work_unit.modelo),
+            "filing_year": work_unit.filing_year,
+            "period": work_unit.period.registry_token,
+        },
+        provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+        action_argument_values={"work_unit_id": work_unit.work_unit_id} if is_active else None,
+    )
+    return CalculationRevisionNotFoundError(
+        translated_message=(
+            "application.modelo.errors.calculation_revision_id_is_work_unit"
+            if is_active
+            else "application.modelo.errors.calculation_revision_id_is_discarded_work_unit"
+        ),
+        context={
+            "calculation_revision_id": calculation_revision_id,
+            "work_unit_id": work_unit.work_unit_id,
+            "work_unit_state": work_unit.state.value,
+        },
+        precondition_failure=failure,
+    )
+
+
+def _natural_target_absent_precondition_error(
+    *,
+    error: ModeloWorkAddressNotFoundError,
+    address: ModeloWorkAddress,
+    default_for: ModeloCalculationRevisionDefault | None,
+) -> ModeloWorkAddressNotFoundError:
+    """Attach the declared no-action verdict to an absent natural verify/file target."""
+    if default_for == "verify":
+        subject_leaf_key = "modelo.work.verify"
+    elif default_for == "file":
+        subject_leaf_key = "modelo.work.file"
+    else:
+        return error
+    if (
+        address.work_unit_id is not None
+        or address.modelo is None
+        or address.filing_year is None
+        or address.period is None
+    ):
+        return error
+    failure = build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key=subject_leaf_key,
+        scenario_id=f"{subject_leaf_key}.work_address.natural_target_absent",
+        evidence_id=f"{subject_leaf_key}.work_address.addressing",
+        evidence_values={
+            "modelo": address.modelo,
+            "filing_year": address.filing_year,
+            "period": address.period.registry_token,
+            "registry_revision_id": address.registry_revision_id or "",
+            "bucket_id": address.bucket_id or "",
+        },
+        provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+    )
+    return ModeloWorkAddressNotFoundError(
+        str(error),
+        translated_message="errors.error.modelo_work_address_not_found",
+        context={
+            "modelo": address.modelo,
+            "filing_year": address.filing_year,
+            "period": address.period.registry_token,
+            "registry_revision_id": address.registry_revision_id or "",
+            "bucket_id": address.bucket_id or "",
+        },
+        precondition_failure=failure,
+    )
+
+
+def _exact_work_unit_absent_precondition_error(
+    *,
+    error: ModeloWorkUnitNotFoundError,
+    address: ModeloWorkAddress,
+    default_for: ModeloCalculationRevisionDefault | None,
+) -> ModeloWorkAddressNotFoundError | ModeloWorkUnitNotFoundError:
+    """Attach the declared no-action verdict to an absent exact verify/file work-unit target."""
+    if default_for == "verify":
+        subject_leaf_key = "modelo.work.verify"
+    elif default_for == "file":
+        subject_leaf_key = "modelo.work.file"
+    else:
+        return error
+    if address.work_unit_id is None:
+        return error
+    failure = build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key=subject_leaf_key,
+        scenario_id=f"{subject_leaf_key}.work_address.exact_work_unit_absent",
+        evidence_id=f"{subject_leaf_key}.work_address.addressing",
+        evidence_values={
+            "work_unit_id": address.work_unit_id,
+            "bucket_id": address.bucket_id or "",
+            "selector_kind": "work_unit_id",
+        },
+        provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+    )
+    return ModeloWorkAddressNotFoundError(
+        str(error),
+        translated_message="errors.error.modelo_work_address_not_found",
+        context={
+            "work_unit_id": address.work_unit_id,
+            "bucket_id": address.bucket_id or "",
+            "selector_kind": "work_unit_id",
+        },
+        precondition_failure=failure,
     )
 
 
@@ -543,7 +725,7 @@ def resolve_registry_revision_for_work_target(
     return revision_id
 
 
-def ensure_modelo_work_unit_for_visible_target(
+def ensure_modelo_work_unit_for_active_target(
     *,
     bucket_id: str,
     modelo: str,
@@ -566,13 +748,13 @@ def ensure_modelo_work_unit_for_visible_target(
         newly created.
     """
     requested_revision = registry_revision_id.strip() if registry_revision_id is not None else None
-    resolution = resolve_optional_modelo_work_address(
-        ModeloWorkAddress(
+    resolution = resolve_active_natural_modelo_work_unit(
+        ModeloWorkSelectorRequest(
             bucket_id=bucket_id,
-            modelo=modelo,
+            modelo=ModeloCode(modelo),
             filing_year=filing_year,
             period=period,
-            registry_revision_id=requested_revision,
+            revision_id=requested_revision,
         ),
     )
     if resolution.work_unit is not None:
@@ -610,7 +792,7 @@ def resolve_modelo_work_address(address: ModeloWorkAddress) -> ModeloWorkResolut
     """Resolve an operator-facing modelo work address to a required :class:`ModeloWorkResolution`."""
     resolution = resolve_optional_modelo_work_address(address)
     if resolution.state is ModeloWorkSelectorState.ABSENT or resolution.work_unit is None:
-        raise ModeloWorkAddressNotFoundError("no active modelo work unit matches the supplied address")
+        raise ModeloWorkAddressNotFoundError("no modelo work unit matches the supplied address")
     return resolution
 
 
@@ -647,18 +829,78 @@ def resolve_modelo_calculation_revision_address(
 
     ``default_for`` applies the command-specific selector default after the work
     unit is resolved. A bare exact calculation-revision id bypasses work-address
-    resolution and loads the revision directly.
+    resolution and loads the revision directly.  For verify and file only, a
+    positional exact token that names a persisted work unit is reconciled through
+    that unit's current-revision pointer.  This is not an alternate CLI grammar:
+    it closes the application-owned recovery edge where the exact persisted
+    identity initially has no calculation revision, calculation creates the
+    current revision, and the unchanged original invocation must then address it.
     """
     if calculation_revision_id is not None and address == ModeloWorkAddress():
-        return get_calculation_revision(calculation_revision_id)
+        revision = _resolve_exact_calculation_revision_or_current_work_unit_revision(
+            calculation_revision_id=calculation_revision_id,
+            default_for=default_for,
+        )
+        return _require_revision_parent_admitted_for_operation(revision, default_for=default_for)
 
     work_unit = resolve_modelo_work_address_unit(address)
-    return resolve_modelo_calculation_revision_pick(
+    revision = resolve_modelo_calculation_revision_pick(
         work_unit,
         selector=selector,
         calculation_revision_id=calculation_revision_id,
         default_for=default_for,
     ).revision
+    return _require_revision_parent_admitted_for_operation(revision, default_for=default_for)
+
+
+def _resolve_exact_calculation_revision_or_current_work_unit_revision(
+    *,
+    calculation_revision_id: str,
+    default_for: ModeloCalculationRevisionDefault | None,
+) -> CalculationRevision:
+    """Resolve an exact revision, or a current revision reached through its work unit.
+
+    ``work verify`` and ``work file`` have an existing, declared recovery for a
+    positional identifier which proves to be a work-unit id: calculate that unit.
+    Before calculation the unit has no current revision and the original lookup
+    must keep that verdict.  Afterwards, resolving the current pointer here makes
+    the exact same operator invocation executable.  A discarded parent remains
+    deliberately unresolved so the existing terminal profile is projected by the
+    caller's typed error path.
+    """
+    try:
+        return get_calculation_revision(calculation_revision_id)
+    except CalculationRevisionNotFoundError as revision_error:
+        if default_for not in {"verify", "file"}:
+            raise
+        try:
+            work_unit = resolve_modelo_work_unit_for_operator_target(work_unit_id=calculation_revision_id)
+        except ModeloWorkUnitNotFoundError:
+            raise revision_error from None
+        if work_unit.state is not WorkUnitState.BORRADOR or work_unit.current_calculation_revision_id is None:
+            raise revision_error from None
+        return get_calculation_revision(work_unit.current_calculation_revision_id)
+
+
+def _require_revision_parent_admitted_for_operation(
+    revision: CalculationRevision,
+    *,
+    default_for: ModeloCalculationRevisionDefault | None,
+) -> CalculationRevision:
+    """Refuse verify/file when a resolved revision belongs to a discarded work unit."""
+    if default_for == "verify":
+        operation = RevisionParentOperation.VERIFY
+    elif default_for == "file":
+        operation = RevisionParentOperation.FILE
+    else:
+        return revision
+    work_unit = resolve_modelo_work_unit_for_operator_target(work_unit_id=revision.work_unit_id)
+    require_revision_parent_active(
+        work_unit=work_unit,
+        calculation_revision_id=revision.calculation_revision_id,
+        operation=operation,
+    )
+    return revision
 
 
 def resolve_modelo_revision_pick(
@@ -732,10 +974,17 @@ def resolve_fileable_modelo_calculation_revision_address(
         selector=selector,
         default_for="file",
     )
-    return _require_revision_state(
-        revision,
-        allowed=(CalculationRevisionState.VERIFICADO_COMPLETO,),
-        purpose="filing",
+    if revision.state is CalculationRevisionState.VERIFICADO_COMPLETO:
+        return revision
+    work_unit = resolve_modelo_work_unit_for_operator_target(work_unit_id=revision.work_unit_id)
+    raise CalculationRevisionStateError(
+        translated_message="errors.error.error_modelo_calculation_revision_state",
+        context={"calculation_revision_id": revision.calculation_revision_id, "state": revision.state.value},
+        precondition_failure=build_modelo_work_file_unverified_revision_failure(
+            calculation_revision_id=revision.calculation_revision_id,
+            state=revision.state.value,
+            work_unit=work_unit,
+        ),
     )
 
 
@@ -779,7 +1028,7 @@ __all__ = [
     "ModeloWorkPeriodTokenError",
     "ModeloWorkRegistryYearMismatchError",
     "ModeloWorkTarget",
-    "ensure_modelo_work_unit_for_visible_target",
+    "ensure_modelo_work_unit_for_active_target",
     "modelo_work_address_from_operator_target",
     "project_modelo_work_target",
     "project_modelo_work_unit",

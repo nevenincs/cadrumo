@@ -57,7 +57,7 @@ class PreviousFilingSourceReference:
 
     The reference names the source
     :class:`~cadrumo.domain.calculations.registry.ModeloId`, required periods, and
-    source :class:`~cadrumo.domain.calculations.registry.CasillaId` values declared
+    source :class:`~cadrumo.core.CasillaId` values declared
     by one previous-filing binding selector.
     """
 

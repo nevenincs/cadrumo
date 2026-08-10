@@ -40,6 +40,7 @@ from ...core import (
 )
 from ...core.config import Settings, load_settings
 from ...core.i18n import tr
+from ...core.identity import tax_id_identity_token
 from ...core.time import now
 from .._workflow_auth_models import (
     AuthCleanupCertificateSource,
@@ -311,7 +312,7 @@ def _auth_configure_result(
 
     record = state.active_profile_record()
     values = record_to_path_values(record)
-    profile_tax_id = (values.get("identity.tax_id") or "").strip().upper()
+    profile_tax_id = tax_id_identity_token(values.get("identity.tax_id") or "")
     settings = load_settings()
     provider_identity = ""
     if provider == AuthProviderKind.CLAVE_MOVIL.value:

@@ -4,7 +4,7 @@
 services for one ``(modelo, filing_year, period)`` target and returns a typed
 :class:`QuickfileResult` recording every stage's outcome. It resolves readiness,
 resumes or creates the work unit
-(:func:`application.modelo.ensure_modelo_work_unit_for_visible_target`),
+(:func:`application.modelo.ensure_modelo_work_unit_for_active_target`),
 calculates a draft revision
 (:func:`application.modelo.calculate_modelo_work_revision`), verifies it
 (:func:`application.modelo.verify_modelo_revision`), and exports the
@@ -55,7 +55,7 @@ from ._calculate_input import WorkCalculateInputBundle, calculate_modelo_work_re
 from ._export import ModeloExportCommand, ModeloExportResult, export_modelo_revision
 from ._verification_actions import verify_modelo_revision
 from ._work_addressing import (
-    ensure_modelo_work_unit_for_visible_target,
+    ensure_modelo_work_unit_for_active_target,
     resolve_registry_revision_for_work_target,
 )
 
@@ -271,7 +271,7 @@ def run_modelo_quickfile(
 
     # ── Stage 2: create / resume the work unit ────────────────────────────
     try:
-        ensure_result = ensure_modelo_work_unit_for_visible_target(
+        ensure_result = ensure_modelo_work_unit_for_active_target(
             bucket_id=command.bucket_id,
             modelo=command.modelo,
             filing_year=command.filing_year,

@@ -686,7 +686,7 @@ def _prepare_clave_auth(
                 "route_field": _profile_field_label(_CLAVE_MOVIL_ROUTE_PATH),
             },
         )
-    bound_settings = _bind_clave_credentials_to_settings(
+    bound_settings = bind_clave_credentials_to_settings(
         settings,
         credentials,
         route=facts.clave_movil_route,
@@ -926,7 +926,7 @@ def _assert_active_profile_identity_matches_provider(
     return credentials.dni_nie
 
 
-def _bind_clave_credentials_to_settings(
+def bind_clave_credentials_to_settings(
     settings: Settings,
     credentials: ClaveCredentials,
     *,
@@ -1009,9 +1009,7 @@ def clave_auth_facts_from_profile_values(
         numero_soporte=_normalise_credential(values.get("auth.numero_soporte")),
         fecha_validez=_normalise_credential(values.get("auth.fecha_validez")),
         clave_movil_route=(
-            ClaveMovilRoute(route)
-            if (route := _normalise_credential(values.get("auth.clave_movil_route")))
-            else None
+            ClaveMovilRoute(route) if (route := _normalise_credential(values.get("auth.clave_movil_route"))) else None
         ),
         profile_status=profile_status,
     )

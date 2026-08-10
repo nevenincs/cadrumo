@@ -35,7 +35,7 @@ See Also:
     :class:`~cadrumo.application.calculations.CalculationObservationRepository`:
         Supplies the persisted prior-filing observations inspected by both
         advisories.
-    :class:`~cadrumo.domain.calculations.registry.CasillaId`:
+    :class:`~cadrumo.core.CasillaId`:
         The validated registry casilla key type used for the carry and advisory
         targets.
 """
@@ -137,7 +137,7 @@ def collect_prior_payment_not_deducted_diagnostics(
 
     Args:
         casilla_values: The computed casilla values (engine result), keyed by
-            :class:`~cadrumo.domain.calculations.registry.CasillaId`.
+            :class:`~cadrumo.core.CasillaId`.
         modelo: The modelo identifier of the filing being calculated. Used to
             confirm the modelo is 130 (the cumulative pago-fraccionado form this
             carry applies to) before any catalogue scan.

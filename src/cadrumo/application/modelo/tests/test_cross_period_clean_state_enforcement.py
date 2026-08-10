@@ -422,7 +422,7 @@ def test_verify_modelo_303_reports_clean_state_blocker_for_carry_forward_depende
 
     assert any(
         finding.kind is ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN
-        and "modelo=303" in finding.message
+        and finding.message_facts.get("source_modelo") == "303"
         for finding in report.findings
     )
 
@@ -462,7 +462,7 @@ def test_verify_salaried_taxpayer_m100_has_no_cross_period_withholding_block(tmp
         for finding in report.findings
         if finding.kind is ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN
         for modelo in withholding_pagos
-        if f"modelo={modelo}" in finding.message
+        if finding.message_facts.get("source_modelo") == modelo
     }
     # The M100->M100 prior-year self-carry is a separate first-filer concern, not a withholding dep.
     assert not blocked, f"salaried M100 must not be cross-period-blocked on withholding/pagos deps, got {blocked}"
@@ -531,13 +531,12 @@ def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(tmp_path:
     # flag tokens the guidance names in every locale, not the English wording.
     assert any(
         finding.kind is ModeloVerificationFindingKind.ADVISORY
-        and "--binding" in finding.message
-        and "--casilla" in finding.message
+        and finding.message_locale_key == "application.modelo.findings.cross_period_modelo_not_applicable.message"
         for finding in report.findings
     )
     assert any(
         finding.kind is ModeloVerificationFindingKind.ADVISORY
-        and "previous-filing carry treated as zero" in finding.message
+        and finding.message_locale_key == "application.modelo.findings.cross_period_zero_value_previous_filing"
         for finding in report.findings
     )
 
@@ -588,27 +587,29 @@ def test_file_modelo_390_passes_clean_state_with_imported_bound_justificantes(tm
                 expected_tax_id="X1234567L",
                 clock=_CLOCK,
             )
-            observations.save_observation(
-                RegistryModeloObservation(
-                    modelo=source_modelo,
-                    filing_year=filing_year,
-                    period=period,
-                    observations=registry_grounded_observations(
+            observations.save(
+                observations.prepare_observation_envelope(
+                    RegistryModeloObservation(
                         modelo=source_modelo,
                         filing_year=filing_year,
                         period=period,
-                        casilla_values=casilla_values,
+                        observations=registry_grounded_observations(
+                            modelo=source_modelo,
+                            filing_year=filing_year,
+                            period=period,
+                            casilla_values=casilla_values,
+                        ),
                     ),
-                ),
-                source_kind="aeat_sede_justificante",
-                captured_at=_CLOCK,
-                stamped_revision_id=source_snapshot.revision.id,
-                source_metadata={
-                    "aeat_register_status": "ALTA",
-                    "aeat_expediente_id": f"EXP-{source_modelo}-{filing_year}-{period}",
-                    "aeat_justificante_csv": evidence_reference_id,
-                    "authenticated_identity": "X1234567L",
-                },
+                    source_kind="aeat_sede_justificante",
+                    captured_at=_CLOCK,
+                    stamped_revision_id=source_snapshot.revision.id,
+                    source_metadata={
+                        "aeat_register_status": "ALTA",
+                        "aeat_expediente_id": f"EXP-{source_modelo}-{filing_year}-{period}",
+                        "aeat_justificante_csv": evidence_reference_id,
+                        "authenticated_identity": "X1234567L",
+                    },
+                )
             )
 
         revision_id = _seed_verified_revision(
@@ -637,24 +638,26 @@ def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(tmp_p
         requirement = next(
             item for item in cross_period_dependency_requirements(snapshot) if item.requires_member_fan_in
         )
-        CalculationObservationRepository().save_observation(
-            RegistryModeloObservation(
-                modelo="322",
-                filing_year=2026,
-                period="12",
-                observations=registry_grounded_observations(
+        CalculationObservationRepository().save(
+            CalculationObservationRepository().prepare_observation_envelope(
+                RegistryModeloObservation(
                     modelo="322",
                     filing_year=2026,
                     period="12",
-                    casilla_values={
-                        casilla_id: Decimal(index + 1)
-                        for index, casilla_id in enumerate(requirement.source_casilla_ids)
-                    },
+                    observations=registry_grounded_observations(
+                        modelo="322",
+                        filing_year=2026,
+                        period="12",
+                        casilla_values={
+                            casilla_id: Decimal(index + 1)
+                            for index, casilla_id in enumerate(requirement.source_casilla_ids)
+                        },
+                    ),
                 ),
-            ),
-            source_kind="aeat_sede_justificante",
-            captured_at=_CLOCK,
-            member_nif="A00000000",
+                source_kind="aeat_sede_justificante",
+                captured_at=_CLOCK,
+                member_nif="A00000000",
+            )
         )
         revision_id = _seed_verified_revision(
             bucket_id=profile.bucket_id,
@@ -679,9 +682,10 @@ def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(tmp_p
                 clock=_CLOCK,
             )
 
-    message = str(exc_info.value)
-    assert "incomplete_group_member_coverage" in message
-    assert "missing_expected_group_member_roster" not in message
+    failure = exc_info.value.precondition_failure
+    blocker_codes = str(failure.verdict.evidence[0].values["blocker_codes"]).split("|")
+    assert "incomplete_group_member_coverage" in blocker_codes
+    assert "missing_expected_group_member_roster" not in blocker_codes
 
 
 def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(tmp_path: Path) -> None:
@@ -690,24 +694,26 @@ def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(tmp_path: P
         requirement = next(
             item for item in cross_period_dependency_requirements(snapshot) if item.requires_member_fan_in
         )
-        CalculationObservationRepository().save_observation(
-            RegistryModeloObservation(
-                modelo="322",
-                filing_year=2026,
-                period="12",
-                observations=registry_grounded_observations(
+        CalculationObservationRepository().save(
+            CalculationObservationRepository().prepare_observation_envelope(
+                RegistryModeloObservation(
                     modelo="322",
                     filing_year=2026,
                     period="12",
-                    casilla_values={
-                        casilla_id: Decimal(index + 1)
-                        for index, casilla_id in enumerate(requirement.source_casilla_ids)
-                    },
+                    observations=registry_grounded_observations(
+                        modelo="322",
+                        filing_year=2026,
+                        period="12",
+                        casilla_values={
+                            casilla_id: Decimal(index + 1)
+                            for index, casilla_id in enumerate(requirement.source_casilla_ids)
+                        },
+                    ),
                 ),
-            ),
-            source_kind="aeat_sede_justificante",
-            captured_at=_CLOCK,
-            member_nif="A00000000",
+                source_kind="aeat_sede_justificante",
+                captured_at=_CLOCK,
+                member_nif="A00000000",
+            )
         )
         revision_id = _seed_verified_revision(
             bucket_id=profile.bucket_id,
@@ -736,9 +742,10 @@ def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(tmp_path: P
                 clock=_CLOCK,
             )
 
-    message = str(exc_info.value)
-    assert "incomplete_group_member_coverage" in message
-    assert "missing_expected_group_member_roster" not in message
+    failure = exc_info.value.precondition_failure
+    blocker_codes = str(failure.verdict.evidence[0].values["blocker_codes"]).split("|")
+    assert "incomplete_group_member_coverage" in blocker_codes
+    assert "missing_expected_group_member_roster" not in blocker_codes
 
 
 def test_no_prior_obligation_provenance_never_has_official_source_capability() -> None:

@@ -25,9 +25,10 @@ from ....core import AuthProviderKind
 from ....core.config import load_settings, override_settings
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
+from ..._state_projection_auth import build_auth_readiness
 from ...user_profile import profile_create_storage_span
 from ...workflow import workflow_state_repository
-from .._operator import _assert_login_precondition, build_live_auth_preflight_report
+from .._operator import _assert_login_precondition, build_live_auth_preflight_report, configure_operator_auth
 from .._operator_probes import (
     _live_auth_identity_kind,
     _live_auth_identity_state,
@@ -69,6 +70,37 @@ def test_probe_reports_a_profile_borne_credential_as_configured() -> None:
 
     assert credentials is not None
     assert credentials.dni_nie == _TAX_ID
+
+
+def test_backend_readiness_describes_the_profile_bound_clave_provider() -> None:
+    """The status backend sees the same effective credentials as live login.
+
+    The encrypted profile is the only identity source. This exercises the
+    production readiness builder and real provider description, so it fails if
+    status constructs the backend from empty environment settings.
+    """
+    _register_profile(
+        **{
+            "auth.dni_nie": _TAX_ID,
+            "auth.clave_movil_route": "qr",
+        },
+    )
+    configure_operator_auth("clave_movil")
+    state = workflow_state_repository().load()
+
+    with override_settings(cadrumo_clave_movil_dni_nie=None):
+        readiness = build_auth_readiness(
+            state,
+            provider_kind=AuthProviderKind.CLAVE_MOVIL,
+            provider_kind_is_authoritative=True,
+            requested_provider=None,
+            probe_live_backend=True,
+            credential_bucket_id=_BUCKET_ID,
+            certificate_credentials=None,
+        )
+
+    assert readiness.provider == "clave_movil"
+    assert readiness.configured is True
 
 
 def test_alignment_reports_a_match_for_a_profile_borne_credential() -> None:

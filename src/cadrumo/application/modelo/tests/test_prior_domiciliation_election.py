@@ -15,6 +15,7 @@ from ....application.calculations import (
     ResultDispositionProjection,
 )
 from ....core import ObservedHeaderFact, Period, PriorDomiciliationElection, ResultDisposition
+from ....core.resources import resources
 from ....domain.calculations.registry import RegistryModeloObservation
 from ....domain.modelos import (
     CalculationRevision,
@@ -69,7 +70,15 @@ def _source_header_disposition(
 
 def _work_unit(*, modelo: str = "303") -> WorkUnit:
     period = Period.from_year_and_code(2025, "1T")
-    revision_id = "2023-y-siguientes" if modelo == "303" else "2019-y-siguientes"
+    revision_id = (
+        resources()
+        .modelos.authority.snapshot(
+            modelo,
+            filing_year=period.filing_year,
+            period=period.registry_token,
+        )
+        .revision.id
+    )
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_BUCKET_ID,
@@ -184,14 +193,15 @@ def test_cancel_or_modify_refuses_raw_unsupported_and_non_rectificativa_requests
         work_unit,
         amendment_kind=amendment_kind,
         baseline_filing_record_id=(
-            _baseline_filing(work_unit).filing_record_id
-            if amendment_kind is not None
-            else None
+            _baseline_filing(work_unit).filing_record_id if amendment_kind is not None else None
         ),
     )
 
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile, pytest.raises(
-        ModeloPriorDomiciliationElectionRefusedError,
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path) as profile,
+        pytest.raises(
+            ModeloPriorDomiciliationElectionRefusedError,
+        ),
     ):
         resolve_prior_domiciliation_election(
             election=election,
@@ -303,17 +313,19 @@ def test_cancel_or_modify_refuses_every_missing_baseline_u_link(
         filing_repository = ModeloRecordCatalogueRepository(objects=profile.repository)
         filing_repository.save(upsert_filing_record(filing_repository.load(), baseline))
         observation_repository = CalculationObservationRepository(objects=profile.repository)
-        observation_repository.save_observation(
-            RegistryModeloObservation(
-                modelo="303",
-                filing_year=2025,
-                period="1T",
-            ),
-            source_kind=source_kind,
-            captured_at=_WHEN,
-            source_metadata={"aeat_justificante_csv": metadata_csv},
-            source_headers=source_headers,
-            result_disposition=result_disposition,
+        observation_repository.save(
+            observation_repository.prepare_observation_envelope(
+                RegistryModeloObservation(
+                    modelo="303",
+                    filing_year=2025,
+                    period="1T",
+                ),
+                source_kind=source_kind,
+                captured_at=_WHEN,
+                source_metadata={"aeat_justificante_csv": metadata_csv},
+                source_headers=source_headers,
+                result_disposition=result_disposition,
+            )
         )
         revision = _revision(
             work_unit,
@@ -339,17 +351,19 @@ def test_cancel_or_modify_persists_only_join_safe_baseline_u_provenance(tmp_path
         filing_repository = ModeloRecordCatalogueRepository(objects=profile.repository)
         filing_repository.save(upsert_filing_record(filing_repository.load(), baseline))
         observation_repository = CalculationObservationRepository(objects=profile.repository)
-        observation_repository.save_observation(
-            RegistryModeloObservation(
-                modelo="303",
-                filing_year=2025,
-                period="1T",
-            ),
-            source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
-            captured_at=_WHEN,
-            source_metadata={"aeat_justificante_csv": _EVIDENCE_REFERENCE},
-            source_headers=(_submitted_file_declaration_type("U"),),
-            result_disposition=_source_header_disposition(ResultDisposition.DOMICILIACION),
+        observation_repository.save(
+            observation_repository.prepare_observation_envelope(
+                RegistryModeloObservation(
+                    modelo="303",
+                    filing_year=2025,
+                    period="1T",
+                ),
+                source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
+                captured_at=_WHEN,
+                source_metadata={"aeat_justificante_csv": _EVIDENCE_REFERENCE},
+                source_headers=(_submitted_file_declaration_type("U"),),
+                result_disposition=_source_header_disposition(ResultDisposition.DOMICILIACION),
+            )
         )
         revision = _revision(
             work_unit,

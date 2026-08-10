@@ -167,7 +167,11 @@ def test_verify_modelo_303_surfaces_filed_history_only_wallet_decision_as_blocki
     )
 
     assert report.granted_verificado_completo is False
-    assert any("filed_history_only" in finding.message for finding in report.findings)
+    assert any(
+        finding.message_locale_key == "application.modelo.findings.iva_wallet_reconciliation_blocked"
+        and finding.message_facts.get("divergence_code") == "filed_history_only"
+        for finding in report.findings
+    )
     revision = CalculationRevisionCatalogueRepository().load().get(calc_rev_id)
     assert revision is not None
     assert revision.state is CalculationRevisionState.BORRADOR
@@ -204,7 +208,11 @@ def test_verify_modelo_303_uses_injected_wallet_decision_repository(
         dispose_engine(decision_settings)
 
     assert report.granted_verificado_completo is False
-    assert any("wallet_higher" in finding.message for finding in report.findings)
+    assert any(
+        finding.message_locale_key == "application.modelo.findings.iva_wallet_reconciliation_blocked"
+        and finding.message_facts.get("divergence_code") == "wallet_higher"
+        for finding in report.findings
+    )
     revision = CalculationRevisionCatalogueRepository().load().get(calc_rev_id)
     assert revision is not None
     assert revision.state is CalculationRevisionState.BORRADOR

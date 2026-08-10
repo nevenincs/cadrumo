@@ -49,6 +49,7 @@ def test_initial_actions_are_deterministic_and_lookup_by_stable_identity() -> No
         "operator.modelo.verification_report.list",
         "operator.modelo.work.calculate",
         "operator.modelo.work.status",
+        "operator.modelo.work.verify",
         "operator.overview.explain",
         "operator.overview.status",
         "operator.profile.create",
@@ -84,6 +85,13 @@ def test_initial_actions_are_deterministic_and_lookup_by_stable_identity() -> No
             source_key="work_unit_id",
             source_evidence_id="workflow.work_unit.addressing",
         ),
+        ActionArgumentBindingSpecification(
+            argument_name="work_unit_id",
+            source=ActionArgumentSource.VERDICT_CONTEXT,
+            source_key="work_unit_id",
+        ),
+    )
+    assert lookup_action("operator.modelo.work.verify").argument_specifications == (
         ActionArgumentBindingSpecification(
             argument_name="work_unit_id",
             source=ActionArgumentSource.VERDICT_CONTEXT,

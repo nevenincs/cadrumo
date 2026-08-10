@@ -174,15 +174,9 @@ def test_light_is_actually_lighter_than_dark() -> None:
     assert _relative_luminance(str(CADRUMO_LIGHT.background)) > _relative_luminance(str(CADRUMO_DARK.background))
 
 
-def test_the_content_column_is_a_proportion_not_a_cell_count() -> None:
-    """The column must scale with the terminal, never pin a width.
-
-    Cell constants were the original defect: a body pinned at 96 cells
-    wasted a wide terminal and clipped a narrow one. Raising the number
-    moves the problem; expressing it as a share removes it.
-    """
-    assert CONTENT_WIDTH_PERCENT.endswith("%")
-    assert 50 < int(CONTENT_WIDTH_PERCENT.rstrip("%")) < 100
+def test_the_content_column_uses_all_available_width() -> None:
+    """The shared column must not impose an artificial width ceiling."""
+    assert CONTENT_WIDTH_PERCENT == "100%"
 
 
 # ── rendered geometry ───────────────────────────────────────────────────────
@@ -209,7 +203,7 @@ def _registration_screen() -> RegistrationApp:
 
 
 def _gutters(app: App[Any]) -> tuple[int, int]:
-    """Return the empty cells left and right of the centred content column.
+    """Return the cells outside the full-width content column.
 
     ``App`` is invariant in its return type, so this reads any app rather
     than ``App[object]`` alone: the measurement touches screen geometry only
@@ -227,72 +221,36 @@ def _gutters(app: App[Any]) -> tuple[int, int]:
     [_registration_screen, lambda: StatusApp(StatusPageData())],
     ids=["registration", "status"],
 )
-async def test_the_content_column_lands_on_the_terminal_midline(
+async def test_the_content_column_consumes_the_available_terminal(
     build: Callable[[], App[object]],
     width: int,
     height: int,
 ) -> None:
-    """Left and right gutters must match to within one cell.
-
-    Measured from the real rendered ``region`` of the mounted widgets, not
-    from a screenshot: scraped output made the page look 9 cells off when
-    the true bias was 2, because unfilled prose lines read as gutter.
-
-    One cell of slack is the honest tolerance, not a fudge. When the space
-    left over after the column is odd it cannot be split evenly across a
-    cell grid, so a perfect-equality assertion would be unsatisfiable at
-    half the terminal widths in existence.
-    """
+    """Real mounted surfaces use every cell except an active scrollbar."""
     app = build()
     async with app.run_test(size=(width, height)) as pilot:
         await pilot.pause()
         left, right = _gutters(app)
-        assert abs(left - right) <= 1, f"off-centre at {width}x{height}: left={left} right={right}"
-        assert left > 0, "the column must not touch the terminal edge"
+        assert left == 0, f"left gutter at {width}x{height}: {left}"
+        assert 0 <= right <= SCROLLBAR_CELLS, f"unused width at {width}x{height}: left={left} right={right}"
         app.exit(None)
 
 
-@pytest.mark.asyncio
-async def test_dropping_the_left_reservation_really_does_shove_the_page() -> None:
-    """Anti-tautology: the guard above fails on the layout it was written for.
-
-    Reproduces the original defect by removing the compensating left
-    padding, leaving ``scrollbar-gutter: stable`` reserving on the right
-    alone. If this app centres, the assertion in the test above is
-    measuring nothing.
-    """
-
-    class UncompensatedApp(RegistrationApp):
-        CSS = RegistrationApp.CSS.replace("padding: 0 0 0 1;", "")
-
-    reference = _registration_screen()
-    app = UncompensatedApp(assess=reference._assess_passphrase, register=reference._create_profile)
-    async with app.run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
-        left, right = _gutters(app)
-        assert abs(left - right) > 1, f"the defect did not reproduce: left={left} right={right}"
-        app.exit(None)
-
-
-def test_the_scrollbar_reservation_is_declared_once_for_both_sides() -> None:
-    """The right-hand track and the left-hand pad come from one constant.
-
-    Typing the number twice is how they drift apart, and a drifted pair is
-    exactly the off-centre page above — so the stylesheet substitutes
-    :data:`SCROLLBAR_CELLS` into both and this pins that it happened.
-    """
+def test_the_outer_scrollbar_does_not_reserve_permanent_side_gutters() -> None:
+    """Only overflow may consume the single scrollbar cell."""
     assert f"scrollbar-size-vertical: {SCROLLBAR_CELLS};" in BASE_CSS
-    assert f"padding: 0 0 0 {SCROLLBAR_CELLS};" in BASE_CSS
+    assert "scrollbar-gutter: auto;" in BASE_CSS
+    assert "scrollbar-gutter: stable;" not in BASE_CSS
+    assert "padding: 0 0 0 1;" not in BASE_CSS
     assert "SCROLLBAR_CELLS" not in BASE_CSS, "an unsubstituted token would be invalid CSS"
 
 
-def test_no_surface_pins_a_cell_width_in_its_stylesheet() -> None:
-    """No screen may reintroduce a hardcoded width or max-width in cells.
+def test_no_surface_pins_or_caps_its_content_width() -> None:
+    """No screen may reintroduce a cell width or sub-full percentage cap.
 
-    Scans the shipped stylesheets for a bare integer width. Percentages and
-    ``fr`` units pass; ``width: 96`` or ``max-width: 110`` do not. This is
-    the regression guard for the whole fluid-layout property, which is
-    otherwise easy to undo one screen at a time.
+    Scans the shipped stylesheets rather than sampling one app. ``width: 96``
+    and ``width: 60%`` both waste or clip available terminal space; only a
+    full ``100%`` declaration is admitted for percentage widths.
     """
     import re
     from pathlib import Path
@@ -302,4 +260,7 @@ def test_no_surface_pins_a_cell_width_in_its_stylesheet() -> None:
     for module in sorted(tui_dir.glob("*.py")):
         for match in re.finditer(r"(max-)?width:\s*(\d+)\s*;", module.read_text(encoding="utf-8")):
             offenders.append(f"{module.name}: {match.group(0)}")
-    assert not offenders, f"hardcoded cell widths: {offenders}"
+        for match in re.finditer(r"(max-)?width:\s*(\d+)%\s*;", module.read_text(encoding="utf-8")):
+            if match.group(2) != "100":
+                offenders.append(f"{module.name}: {match.group(0)}")
+    assert not offenders, f"width limits: {offenders}"

@@ -117,7 +117,7 @@ def validate_work_unit_id(value: str) -> str:
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.work.invalid_work_unit_id",
-                default=(f"work_unit_id must be a 64-character lowercase hex string (SHA-256 digest); got {value!r}"),
+                value=value,
             ),
         )
     return stripped
@@ -130,10 +130,7 @@ def validate_calculation_revision_id(value: str) -> str:
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.work.invalid_calculation_revision_id",
-                default=(
-                    "calculation_revision_id must be a 64-character lowercase "
-                    f"hex string (SHA-256 digest); got {value!r}"
-                ),
+                value=value,
             ),
         )
     return stripped
@@ -662,10 +659,6 @@ def selector_bad_parameter(exc: BaseException) -> typer.BadParameter:
             return typer.BadParameter(
                 tr(
                     "cli.app.modelo.work.id_selector_ambiguous",
-                    default=(
-                        "The displayed work id {selector} matches more than one active work unit. "
-                        "Use the full 64-character work-unit id from the candidates below.\n{candidates}"
-                    ),
                     selector=exc.selector,
                     candidates=work_candidate_lines(exc.candidates),
                 ),
@@ -673,10 +666,6 @@ def selector_bad_parameter(exc: BaseException) -> typer.BadParameter:
         return typer.BadParameter(
             tr(
                 "cli.app.modelo.work.selector_ambiguous",
-                default=(
-                    "More than one active work unit matches this modelo/year/period. "
-                    "Choose a registry revision or pass an explicit work-unit id.\n{candidates}"
-                ),
                 candidates=work_candidate_lines(exc.candidates),
             ),
         )
@@ -684,11 +673,6 @@ def selector_bad_parameter(exc: BaseException) -> typer.BadParameter:
         return typer.BadParameter(
             tr(
                 "cli.app.modelo.work.selector_revision_conflict",
-                default=(
-                    "An active work unit already exists for this modelo/year/period with "
-                    "registry revision {existing_revision}; requested {requested_revision}. "
-                    "Resume the existing work unit, discard it explicitly, or pass an exact id."
-                ),
                 existing_revision=exc.existing.revision_id,
                 requested_revision=exc.requested_revision_id,
             ),
@@ -701,9 +685,6 @@ def selector_bad_parameter(exc: BaseException) -> typer.BadParameter:
         return typer.BadParameter(
             tr(
                 "cli.app.modelo.work.revision_selector_ambiguous",
-                default=(
-                    "More than one calculation revision matches this selector. Choose one explicitly.\n{candidates}"
-                ),
                 candidates=candidates,
             ),
         )
@@ -711,9 +692,6 @@ def selector_bad_parameter(exc: BaseException) -> typer.BadParameter:
         return typer.BadParameter(
             tr(
                 "cli.app.modelo.work.selector_not_found",
-                default=(
-                    "No active work unit matches this modelo/year/period. Run `aeat app modelo work create` first."
-                ),
             ),
         )
     return bad_parameter_from_localized_context(exc)
@@ -728,7 +706,6 @@ def parse_revision_selector(value: str) -> ModeloCalculationRevisionSelector:
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.work.invalid_revision_selector",
-                default="Unknown revision selector {value!r}; choose one of: {choices}.",
                 value=value,
                 choices=choices,
             ),

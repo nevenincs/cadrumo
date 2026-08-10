@@ -49,6 +49,7 @@ from ._record_design_coverage import (
     derive_diseno_coverage_casillas,
 )
 from ._record_design_schema import (
+    RecordDesignCompositeRelativeClosing,
     RecordDesignField,
     RecordDesignRelativeSuffixMarker,
     RecordDesignSheet,
@@ -445,10 +446,7 @@ def _extract_sheet_rows(
             f"but parsed fields fill {terminal_extent}",
         )
     variable_envelope: RecordDesignVariableEnvelope | None = None
-    exact_closing_suffixes = [suffix for suffix in relative_suffixes if suffix.length == 18]
-    recognises_variable_envelope = bool(
-        variable_body_marker_rows or relative_suffix_marker_rows or variable_total_marker_rows or mixed_total_rows
-    )
+    recognises_variable_envelope = bool(variable_body_marker_rows or mixed_total_rows)
     if recognises_variable_envelope:
         if mixed_total_rows:
             raise RegistryValidationError(
@@ -466,20 +464,19 @@ def _extract_sheet_rows(
             raise RegistryValidationError(
                 f"record-design sheet {sheet_name!r} declares duplicate variable-body markers",
             )
-        if len(relative_suffixes) > 1:
-            raise RegistryValidationError(
-                f"record-design sheet {sheet_name!r} declares duplicate relative closing suffixes",
-            )
         if len(variable_totals) > 1:
             raise RegistryValidationError(
                 f"record-design sheet {sheet_name!r} declares duplicate variable totals",
             )
-        if not variable_bodies or not exact_closing_suffixes or not variable_totals:
+        if not variable_bodies or not relative_suffixes or not variable_totals:
             raise RegistryValidationError(
                 f"record-design sheet {sheet_name!r} has an incomplete variable-envelope composition",
             )
         variable_body = variable_bodies[0]
-        closing_suffix = exact_closing_suffixes[0]
+        closing = _relative_closing(sheet_name, relative_suffixes)
+        closing_parts = _relative_closing_parts(closing)
+        first_closing_part = closing_parts[0]
+        last_closing_part = closing_parts[-1]
         variable_total = variable_totals[0]
         if total_positions is not None or terminal_extent is None:
             raise RegistryValidationError(
@@ -491,8 +488,13 @@ def _extract_sheet_rows(
                 f"after fixed prefix extent {terminal_extent}",
             )
         if not (
-            max(item.row for item in fields) < variable_body.row < closing_suffix.row < variable_total.row
-            and max(item.ordinal for item in fields) < variable_body.ordinal < closing_suffix.ordinal
+            max(item.row for item in fields)
+            < variable_body.row
+            < first_closing_part.row
+            <= last_closing_part.row
+            < variable_total.row
+            and max(item.ordinal for item in fields) < variable_body.ordinal < first_closing_part.ordinal
+            and first_closing_part.ordinal <= last_closing_part.ordinal
         ):
             raise RegistryValidationError(
                 f"record-design sheet {sheet_name!r} has misordered variable-envelope composition markers",
@@ -502,7 +504,7 @@ def _extract_sheet_rows(
             prefix_fields=tuple(fields),
             prefix_extent=terminal_extent,
             body=variable_body,
-            closing_suffix=closing_suffix,
+            closing=closing,
             variable_total=variable_total,
         )
     return RecordDesignSheet(
@@ -511,6 +513,39 @@ def _extract_sheet_rows(
         total_positions=total_positions,
         variable_envelope=variable_envelope,
     )
+
+
+def _relative_closing(
+    sheet_name: str,
+    suffixes: list[RecordDesignRelativeSuffixMarker],
+) -> RecordDesignRelativeSuffixMarker | RecordDesignCompositeRelativeClosing:
+    if len(suffixes) == 1 and suffixes[0].length == 18:
+        return suffixes[0]
+    if len(suffixes) != 6:
+        raise RegistryValidationError(
+            f"record-design sheet {sheet_name!r} has an incomplete or ambiguous relative closing",
+        )
+    try:
+        return RecordDesignCompositeRelativeClosing(
+            tag_prefix=suffixes[0],
+            modelo=suffixes[1],
+            discriminant=suffixes[2],
+            filing_year=suffixes[3],
+            period=suffixes[4],
+            tag_suffix=suffixes[5],
+        )
+    except ValidationError as exc:
+        raise RegistryValidationError(
+            f"record-design sheet {sheet_name!r} has a malformed composite relative closing: {exc}",
+        ) from exc
+
+
+def _relative_closing_parts(
+    closing: RecordDesignRelativeSuffixMarker | RecordDesignCompositeRelativeClosing,
+) -> tuple[RecordDesignRelativeSuffixMarker, ...]:
+    if isinstance(closing, RecordDesignCompositeRelativeClosing):
+        return closing.parts
+    return (closing,)
 
 
 def _require_contiguous_field_geometry(
@@ -537,7 +572,7 @@ def _is_blank_row(values: tuple[object, ...]) -> bool:
 def _find_header(worksheet: Worksheet) -> _WorkbookHeader:
     for row_number, row in enumerate(worksheet.iter_rows(min_row=1, max_row=10, values_only=True), start=1):
         values = tuple(row)
-        if _normalise_header_cell(_cell(values, 0)) not in {"no", "n"}:
+        if not _is_ordinal_header(_cell(values, 0)):
             continue
         try:
             offset_index = _required_header_index(values, "posic.")
@@ -569,7 +604,7 @@ def _find_header(worksheet: Worksheet) -> _WorkbookHeader:
 def _find_xls_header(worksheet: XlrdSheet) -> _WorkbookHeader:
     for rowx in range(min(10, worksheet.nrows)):
         values = tuple(worksheet.row_values(rowx))
-        if _normalise_header_cell(_cell(values, 0)) not in {"no", "n"}:
+        if not _is_ordinal_header(_cell(values, 0)):
             continue
         try:
             offset_index = _required_header_index(values, "posic.")
@@ -595,6 +630,11 @@ def _find_xls_header(worksheet: XlrdSheet) -> _WorkbookHeader:
             content_index=_optional_header_index(values, "contenido"),
         )
     raise RegistryValidationError(f"{worksheet.name!r} has no record-design header")
+
+
+def _is_ordinal_header(value: object | None) -> bool:
+    normalized = _normalise_header_cell(value)
+    return normalized in {"no", "n"} or re.fullmatch(r"version \d+(?:\.\d+)*", normalized) is not None
 
 
 def _cell(values: tuple[object, ...], index: int) -> object | None:
@@ -1437,6 +1477,7 @@ _REVERSED_VISUAL_CHART_TOKENS = {
 __all__ = [
     "DerivedDisenoCasilla",
     "DisenoCoverageReport",
+    "RecordDesignCompositeRelativeClosing",
     "RecordDesignField",
     "RecordDesignRelativeSuffixMarker",
     "RecordDesignSheet",

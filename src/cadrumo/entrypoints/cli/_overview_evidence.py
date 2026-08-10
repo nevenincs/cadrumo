@@ -336,7 +336,7 @@ def _stored_filed_justificante_matching_observation_csv(
         )
         return None
 
-    expected = (expected_tax_id or observation.authenticated_identity or "").strip().upper()
+    expected = (expected_tax_id or observation.authenticated_identity or "").strip()
     if not expected:
         return None
     if justificante.matches_filing_target(

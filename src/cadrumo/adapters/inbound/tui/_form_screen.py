@@ -28,6 +28,7 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import TYPE_CHECKING, ClassVar, override
 
+from rich.cells import cell_len
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
@@ -35,7 +36,7 @@ from textual.screen import ModalScreen, Screen
 from textual.widgets import Button, DataTable, Footer, Input, Label, OptionList, SelectionList, Static
 
 from ....core.i18n import tr
-from ._theme import BASE_CSS, ContentScroll, install_cadrumo_themes, toggle_appearance
+from ._theme import BASE_CSS, ContentDataTable, ContentScroll, install_cadrumo_themes, toggle_appearance
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator, Mapping, Sequence
@@ -132,20 +133,32 @@ Fixed length avoids leaking how long the secret is, which a per-character
 mask would not."""
 
 
+def _display_value(form_field: FormField, value: str) -> str:
+    """Render stored choice tokens only through their operator labels."""
+    if form_field.secret and value:
+        return _MASKED_TABLE_VALUE
+    if not value or form_field.kind is FormFieldKind.TEXT:
+        return value
+    labels_by_value = {choice.value: choice.label for choice in form_field.choices}
+    tokens = multi_choice_tokens(value) if form_field.kind is FormFieldKind.MULTI_CHOICE else (value,)
+    unavailable = tr("flows.manager.choice_unavailable")
+    return ", ".join(labels_by_value.get(token, unavailable) for token in tokens)
+
+
 _EDIT_DIALOG_CSS = """
 #edit-dialog {
     border: thick $accent;
     background: $surface;
-    padding: 1 3;
-    width: 60%;
+    padding: 0 1;
+    width: 100%;
     height: auto;
 }
 #edit-label { text-style: bold; }
-#edit-path { color: $text-muted; margin: 0 0 1 0; }
+#edit-path { color: $text-muted; margin: 0; }
 #edit-refusal { color: $error; }
-#edit-dialog Input { margin: 0 0 1 0; }
-#edit-actions { height: auto; align-horizontal: right; margin: 1 0 0 0; }
-#edit-actions Button { margin: 0 0 0 2; }
+#edit-dialog Input { margin: 0; }
+#edit-actions { height: auto; align-horizontal: right; margin: 0; }
+#edit-actions Button { margin: 0 0 0 1; }
 """
 """Dialog styling carried by the edit screens themselves.
 
@@ -328,9 +341,9 @@ class FormScreen(Screen["Mapping[str, str] | None"]):
 
     DEFAULT_CSS = """
     #form-table { height: auto; width: 100%; background: $surface; }
-    #form-refusal { color: $error; margin: 1 0 0 0; }
-    #form-actions { height: auto; align-horizontal: right; margin: 1 0 0 0; }
-    #form-actions Button { margin: 0 0 0 2; }
+    #form-refusal { color: $error; margin: 0; }
+    #form-actions { height: auto; align-horizontal: right; margin: 0; }
+    #form-actions Button { margin: 0 0 0 1; }
     """
 
     BINDINGS: ClassVar = [Binding("escape", "abandon", "", show=False)]
@@ -361,7 +374,7 @@ class FormScreen(Screen["Mapping[str, str] | None"]):
             Vertical(classes="cadrumo-column"),
             Vertical(id="form-body", classes="cadrumo-panel"),
         ):
-            yield DataTable(id="form-table", cursor_type="row", zebra_stripes=True)
+            yield ContentDataTable(id="form-table", cursor_type="row", zebra_stripes=True)
             yield Static(id="form-refusal")
             with Horizontal(id="form-actions"):
                 yield Button(tr("flows.manager.edit.cancel"), id="btn-form-cancel")
@@ -371,8 +384,6 @@ class FormScreen(Screen["Mapping[str, str] | None"]):
     def on_mount(self) -> None:
         self.query_one("#form-banner", Static).update(self._page.title)
         self.query_one("#form-body", Vertical).border_title = self._page.section
-        table: DataTable[str] = self.query_one("#form-table", DataTable)
-        table.add_columns(tr("flows.manager.column.field"), tr("flows.manager.column.value"))
         self._render_rows()
 
     def _render_rows(self) -> None:
@@ -386,11 +397,23 @@ class FormScreen(Screen["Mapping[str, str] | None"]):
         collision that only appears once the page becomes a screen.
         """
         table: DataTable[str] = self.query_one("#form-table", DataTable)
-        table.clear()
-        for form_field in self._page.fields:
-            value = self._values.get(form_field.key, "")
-            shown = _MASKED_TABLE_VALUE if form_field.secret and value else value
-            table.add_row(form_field.label, shown, key=form_field.key)
+        rows = tuple(
+            (
+                form_field.key,
+                form_field.label,
+                _display_value(form_field, self._values.get(form_field.key, "")),
+            )
+            for form_field in self._page.fields
+        )
+        field_heading = tr("flows.manager.column.field")
+        value_heading = tr("flows.manager.column.value")
+        field_width = max((cell_len(label) for _key, label, _value in rows), default=cell_len(field_heading))
+        value_width = max((cell_len(value) for _key, _label, value in rows), default=cell_len(value_heading))
+        table.clear(columns=True)
+        table.add_column(field_heading, width=max(cell_len(field_heading), field_width))
+        table.add_column(value_heading, width=max(cell_len(value_heading), value_width))
+        for key, label, shown in rows:
+            table.add_row(label, shown, key=key)
 
     def _field(self, key: str) -> FormField | None:
         return next((form_field for form_field in self._page.fields if form_field.key == key), None)

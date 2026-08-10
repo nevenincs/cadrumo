@@ -79,8 +79,7 @@ class ActionCatalogueEntry(BaseModel):
         name is not ambiguous.
         """
         identities = tuple(
-            (item.argument_name, item.source, item.source_key, item.source_evidence_id)
-            for item in value
+            (item.argument_name, item.source, item.source_key, item.source_evidence_id) for item in value
         )
         if len(set(identities)) != len(identities):
             raise ValueError("action argument source specifications must be unique")
@@ -320,6 +319,17 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
                     source_key="work_unit_id",
                     source_evidence_id="workflow.work_unit.addressing",
                 ),
+                ActionArgumentBindingSpecification(
+                    argument_name="work_unit_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="work_unit_id",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.modelo.work.verify",
+            target_command_key="modelo.work.verify",
+            argument_specifications=(
                 ActionArgumentBindingSpecification(
                     argument_name="work_unit_id",
                     source=ActionArgumentSource.VERDICT_CONTEXT,

@@ -34,9 +34,9 @@ if TYPE_CHECKING:
 
 
 CREDENTIAL_PANEL_CSS: Final[str] = """
-.field-label { text-style: bold; margin: 1 0 0 0; }
-.field-hint { color: $text-muted; margin: 0 0 1 0; }
-.credential-actions { height: auto; align-horizontal: right; margin: 1 0 0 0; }
+.field-label { text-style: bold; margin: 0; }
+.field-hint { color: $text-muted; margin: 0; }
+.credential-actions { height: auto; align-horizontal: right; margin: 0; }
 """
 """Layout the two credential panels share.
 

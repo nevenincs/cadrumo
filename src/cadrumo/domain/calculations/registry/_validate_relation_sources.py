@@ -25,6 +25,7 @@ from ._iva_wallet_relation_targets import (
     IvaWalletRevisionRelationTarget,
     iva_wallet_owned_relation_targets_for_revision,
 )
+from ._period_offset_math import apply_period_offset
 from ._relations import derive_offset_source_period
 from ._schema import (
     DataBindingDefinition,
@@ -39,10 +40,8 @@ from ._validate_relation_periods import (
     period_selectors_overlap as period_selectors_overlap,
 )
 from ._validate_relation_periods import (
-    relation_filing_year_delta,
-    relation_fixed_source_year,
     select_relation_source_revisions,
-    validate_source_year_coverage,
+    validate_relation_source_coordinate_coverage,
 )
 from ._validate_source_casilla_ids import source_casilla_id_reference_failure
 
@@ -110,36 +109,25 @@ def _validate_single_relation(
             f"matches no source revisions in modelo {source_modelo.id}",
         )
         return failures
-    for source_revision in source_revisions:
+    source_is_observation_history = _relation_is_prior_year_filing_carry(relation, revision)
+    covered_source_revisions, coordinate_failures = validate_relation_source_coordinate_coverage(
+        relation_scope,
+        relation=relation,
+        target_selector=revision.period_selector,
+        source_revisions=source_revisions,
+        source_periods=source_periods,
+        source_is_observation_history=source_is_observation_history,
+    )
+    failures.extend(coordinate_failures)
+    for source_revision, covered_source_periods in covered_source_revisions:
         failures.extend(
             _validate_relation_source_revision(
                 relation,
                 source_revision=source_revision,
                 relation_scope=relation_scope,
+                source_periods=covered_source_periods,
             ),
         )
-    # A relation that carries a PRIOR-YEAR copy of the operator's historical
-    # filing (a previous_filing binding fed by a strictly-negative
-    # filing_year_delta) references an observation that exists for any filed
-    # year, independent of whether this app models that year's engine. Such
-    # relations relax the year-coverage check (see
-    # ``validate_source_year_coverage``). Same-year periodic→annual roll-ups
-    # (annual_summary, filing_year_delta 0 / fixed year_from) stay strict: they
-    # aggregate the same ejercicio's filings, which the source modelo must
-    # model. The strictly-negative-delta gate is what separates a genuine
-    # cross-year prior carry from a same-year aggregation.
-    source_is_observation_history = _relation_is_prior_year_filing_carry(relation, revision)
-    failures.extend(
-        validate_source_year_coverage(
-            relation_scope,
-            target_selector=revision.period_selector,
-            source_revisions=source_revisions,
-            source_periods=source_periods,
-            filing_year_delta=relation_filing_year_delta(relation.source_revision_selector),
-            fixed_source_year=relation_fixed_source_year(relation.source_revision_selector),
-            source_is_observation_history=source_is_observation_history,
-        ),
-    )
     return failures
 
 
@@ -154,15 +142,12 @@ def _relation_is_prior_year_filing_carry(relation: RelationDefinition, revision:
     - The relation's target binding has ``source = "previous_filing"`` — the
       value is the operator's historical filing (an observation), not a
       modeled/derived computation.
-    - The relation references a STRICTLY-PRIOR ejercicio, i.e. its
-      ``source_revision_selector`` carries a strictly-negative
-      ``filing_year_delta``. This is what distinguishes a genuine cross-year
-      prior carry (M200 BIN N-1 -> N, M202 40.2 1P/2P) — which may legitimately
-      reference a year before the earliest modeled revision — from a same-year
-      periodic→annual roll-up (the 180/190/193 ←115/111/123 annual_summary
-      relations use a fixed ``year_from`` with delta 0, aggregate the same
-      ejercicio's filings, and MUST stay under the strict modeled-coverage
-      check so a widened target revision still demands matching source years).
+    - The effective source coordinate can fall in a strictly-prior ejercicio:
+      either the selector carries a negative ``filing_year_delta``, or its
+      period offset wraps across the New Year. This distinguishes a genuine
+      cross-year prior carry (M200 BIN N-1 -> N, M202 40.2 1P/2P, M303 1T ->
+      the preceding 4T) — which may legitimately reference a year before the
+      earliest modeled revision — from a same-year periodic→annual roll-up.
     """
     # The carry's target slot is the operator's historical filing (an
     # observation), whether the slot is declared as a direct previous_filing
@@ -175,8 +160,22 @@ def _relation_is_prior_year_filing_carry(relation: RelationDefinition, revision:
     )
     if not targets_observation_slot:
         return False
-    delta = relation.source_revision_selector.filing_year_delta
-    return delta is not None and delta < 0
+    selector_delta = relation.source_revision_selector.filing_year_delta or 0
+    if selector_delta < 0:
+        return True
+    if relation.source_period_offset_from_target is None:
+        return False
+    for target_period in relation.target_periods:
+        try:
+            offset_delta, _ = apply_period_offset(
+                relation.source_period_offset_from_target,
+                target_period=target_period,
+            )
+        except RegistryValidationError:
+            continue
+        if selector_delta + offset_delta < 0:
+            return True
+    return False
 
 
 def _validate_relation_source_revision(
@@ -184,6 +183,7 @@ def _validate_relation_source_revision(
     *,
     source_revision: ModeloRevision,
     relation_scope: str,
+    source_periods: tuple[str, ...],
 ) -> list[str]:
     failures: list[str] = []
     source_scope = f"{relation_scope} source revision {source_revision.id!r}"
@@ -194,8 +194,6 @@ def _validate_relation_source_revision(
         missing_failure=f"{source_scope} has no source casilla id {relation.source_casilla_id!r}",
     ):
         failures.append(failure)
-    source_periods, period_failures = _relation_source_periods_for_validation(relation)
-    failures.extend(f"{source_scope} {failure}" for failure in period_failures)
     unknown_source_periods = sorted(set(source_periods).difference(source_revision.period_selector.periods))
     if unknown_source_periods:
         failures.append(f"{source_scope} does not support source periods {unknown_source_periods!r}")

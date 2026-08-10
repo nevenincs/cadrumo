@@ -91,7 +91,7 @@ def test_objective_estimation_exclusion_advisory_fires_for_settled_year_excess()
     assert {finding.kind for finding in findings} == {ModeloVerificationFindingKind.ADVISORY}
     assert {finding.severity for finding in findings} == {ModeloVerificationFindingSeverity.WARNING}
     legal_refs_by_field = {
-        finding.message.split("field=")[1].split(" ")[0]: set(finding.legal_refs) for finding in findings
+        str(finding.message_facts["profile_field_id"]): set(finding.legal_refs) for finding in findings
     }
     assert legal_refs_by_field == {
         "objective_estimation_prior_year_gross_income_eur": {"ley-35-2006:dt-32"},
@@ -121,7 +121,7 @@ def test_objective_estimation_exclusion_advisory_applies_to_aeat_2025_scope() ->
     )
 
     assert len(findings) == 4
-    assert all("year=2025" in finding.message for finding in findings)
+    assert all(finding.message_facts["filing_year"] == 2025 for finding in findings)
     assert {finding.source_refs for finding in findings} == {("aeat-renta-2025-manual-parte1",)}
 
 
@@ -170,7 +170,9 @@ def test_revision_verification_collects_objective_estimation_exclusion_advisory(
     )
 
     matching = [
-        finding for finding in findings if "objective_estimation_prior_year_gross_income_eur" in finding.message
+        finding
+        for finding in findings
+        if finding.message_facts.get("profile_field_id") == "objective_estimation_prior_year_gross_income_eur"
     ]
     assert len(matching) == 1
     assert matching[0].kind is ModeloVerificationFindingKind.ADVISORY

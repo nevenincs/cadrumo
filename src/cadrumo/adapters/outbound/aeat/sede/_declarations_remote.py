@@ -17,12 +17,12 @@ from urllib.parse import parse_qs, urlsplit
 
 from pydantic import AnyUrl
 
+from .....core import is_aeat_csv
 from .....domain.calculations.registry import (
     RemoteOperation,
     RemoteStateGuardPolicy,
     assert_remote_operation_allowed,
 )
-from ._adapter_utils import is_aeat_csv
 from ._errors import SedeParseError
 
 

@@ -318,9 +318,10 @@ def _drive_wizard_calculation(
             answer = _run_wizard_steps((follow_up,), run_token=run_token)
             prompted.extend(answer)
             continue
+        except WorkUnitMutationRefusedError:
+            raise
         except (
             WorkUnitNotFoundError,
-            WorkUnitMutationRefusedError,
             CalculationRegistryUnavailableError,
             Modelo100BorradorBindingError,
             ModeloIvaWalletReconciliationBlocked,

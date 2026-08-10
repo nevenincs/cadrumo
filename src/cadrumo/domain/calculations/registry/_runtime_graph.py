@@ -35,7 +35,7 @@ from ._schema import FormulaExpression, ModeloRevision
 
 
 def expression_casilla_refs(expression: FormulaExpression) -> tuple[CasillaId, ...]:
-    """Return all :class:`~cadrumo.domain.calculations.registry.CasillaId` refs.
+    """Return all :class:`~cadrumo.core.CasillaId` refs.
 
     The input is a validated
     :class:`~cadrumo.domain.calculations.registry.FormulaExpression` tree.
@@ -229,7 +229,7 @@ def input_casilla_id_map(revision: ModeloRevision) -> dict[CasillaId, CasillaId]
     """Return the canonical casilla id map for a revision input.
 
     The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` supplies the
-    declared :class:`~cadrumo.domain.calculations.registry.CasillaId` values.
+    declared :class:`~cadrumo.core.CasillaId` values.
     """
     return {casilla.id: casilla.id for casilla in revision.casillas}
 

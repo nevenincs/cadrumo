@@ -83,7 +83,7 @@ def test_advisory_loads_attribution_facts_from_real_bucket(tmp_path: Path) -> No
     assert len(findings) == 1
     # The advisory loaded the attribution_received facts from the real encrypted
     # bucket (profile_record was not passed) and fired on the empty casilla.
-    assert "58100.00" in findings[0].message
+    assert findings[0].message_facts["total_base"] == Decimal("58100.00")
 
 
 def test_advisory_missing_profile_returns_no_finding(tmp_path: Path) -> None:

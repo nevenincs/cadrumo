@@ -144,14 +144,14 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
         BASE_CSS
         + CREDENTIAL_PANEL_CSS
         + """
-    #registration-intro { margin: 0 0 1 0; }
+    #registration-intro { margin: 0; }
     #registration-why {
         color: $text-muted;
         border-left: outer $accent;
-        padding: 0 0 0 2;
-        margin: 0 0 1 0;
+        padding: 0 0 0 1;
+        margin: 0;
     }
-    #strength-line { margin: 0 0 1 0; }
+    #strength-line { margin: 0; }
     .strength-refused { color: $error; }
     .strength-weak { color: $warning; }
     .strength-fair { color: $accent; }

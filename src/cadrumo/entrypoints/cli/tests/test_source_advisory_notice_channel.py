@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 
 from ....application.aggregation import CalculationSourceDiagnostic
-from .._modelo_work_calculate_cli import _work_calculate_source_advisory_output
 from .._modelo_rendering import source_diagnostic_notice
+from .._modelo_work_calculate_cli import _work_calculate_source_advisory_output
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -16,6 +16,7 @@ _MESSAGE = (
     "'iva.anual.repercutido.super-reducido' (420.00) reaches no rate box"
 )
 _REMEDY = "Record the IVA rate on the ledger rows that lack one, then recalculate"
+
 
 def _rate_box_diagnostic() -> CalculationSourceDiagnostic:
     return CalculationSourceDiagnostic(

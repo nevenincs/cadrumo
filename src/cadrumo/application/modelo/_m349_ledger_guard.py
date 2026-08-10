@@ -12,7 +12,7 @@ that refusal condition; it does not resolve registry binding values itself.
 from __future__ import annotations
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...core import Modelo
+from ...core import ActionEvidenceProvenance, Modelo
 from ...domain.iva import IvaCategory
 from ...domain.modelos import Modelo349OperadorRow, ModeloDetailRow, WorkUnit
 from ...domain.transactions import TransactionCatalogueRepositoryProtocol, TransactionLifecycleState
@@ -55,9 +55,7 @@ def raise_if_m349_intracom_ledger_rows_need_operator_rows(
         return
 
     raise ModeloAggregationBindingError(
-        "Modelo 349 calculation found intra-community ledger transactions, but no declarable operator rows "
-        "were available. Raw ledger classifications cannot safely produce Modelo 349 operator records; add "
-        "business invoices or pass operador detail rows with country, VAT number, legal name, clave, and amount.",
+        translated_message="errors.error.error_modelo_aggregation_binding",
         context={
             "modelo": Modelo.M349.value,
             "filing_year": work_unit.filing_year,

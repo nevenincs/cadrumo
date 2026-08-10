@@ -173,7 +173,6 @@ def _validate_work_unit_lookup_id(value: str) -> str:
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.work.invalid_work_unit_lookup_id",
-                default="work_unit_id must be a lowercase hexadecimal SHA-256 id or unambiguous prefix",
             ),
         )
     return normalized
@@ -264,8 +263,11 @@ def _resolve_revision_for_cli(
             selector=parsed_selector,
             default_for=default_for,
         )
+    except ModeloWorkAddressNotFoundError as exc:
+        if exc.precondition_failure is not None:
+            raise
+        raise _selector_bad_parameter(exc) from exc
     except (
-        ModeloWorkAddressNotFoundError,
         ModeloCalculationRevisionSelectorNotFoundError,
         ModeloCalculationRevisionSelectorStateError,
         ModeloCalculationRevisionSelectorAmbiguousError,

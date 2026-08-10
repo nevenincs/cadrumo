@@ -50,6 +50,7 @@ from ._status_bar import PinnedStatusBar
 from ._theme import (
     BASE_CSS,
     NOTICE_BAND_CSS,
+    ContentDataTable,
     ContentScroll,
     NoticeBand,
     install_cadrumo_themes,
@@ -226,10 +227,10 @@ class ProfileManagerApp(App[None]):
     #manager-requirements { width: 100%; height: auto; }
     .manager-section DataTable { height: auto; width: 100%; background: $surface; }
     #manager-actions { height: auto; width: 100%; }
-    #manager-actions Button { width: 100%; margin: 0 0 1 0; }
-    #manager-busy { display: none; height: 1; margin: 1 0 0 0; }
+    #manager-actions Button { width: 100%; margin: 0; }
+    #manager-busy { display: none; height: 1; margin: 0; }
     #manager-busy.busy { display: block; }
-    #manager-recovery-boundary { width: 100%; margin: 0 0 1 0; }
+    #manager-recovery-boundary { width: 100%; margin: 0; }
     """
     )
 
@@ -369,7 +370,7 @@ class ProfileManagerApp(App[None]):
             panel = self.query_one(f"#section-{section.key}", Static)
             panel.border_title = self._section_title(section)
             await panel.remove_children()
-            table: DataTable[str] = DataTable(cursor_type="row", zebra_stripes=True)
+            table: DataTable[str] = ContentDataTable(cursor_type="row", zebra_stripes=True)
             await panel.mount(table)
             self._table_by_section[section.key] = table
             self._columns_by_section[section.key] = [

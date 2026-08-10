@@ -7,7 +7,7 @@ only by declared ``casilla.id`` values.
 
 See Also:
     :mod:`core._casilla_id`
-        Shape validation for :class:`~domain.calculations.registry.CasillaId`.
+        Shape validation for :class:`~core.CasillaId`.
     :mod:`domain.calculations.registry._formula_runtime_ops`
         Runtime input canonicalisation that rejects undeclared casillas through
         these helpers.
@@ -66,7 +66,7 @@ def casillas_by_id(revision: ModeloRevision) -> dict[CasillaId, CasillaDefinitio
 def declared_casilla_ids(revision: ModeloRevision) -> frozenset[CasillaId]:
     """Return canonical ids declared by a registry revision.
 
-    The returned :class:`~domain.calculations.registry.CasillaId` set is
+    The returned :class:`~core.CasillaId` set is
     scoped to one :class:`~domain.calculations.registry.ModeloRevision`; it
     is stronger than shape validation alone.
     """
@@ -82,7 +82,7 @@ def undeclared_casilla_ids(
     The ``revision`` argument is a
     :class:`~domain.calculations.registry.ModeloRevision`. Use this after
     raw keys have already been validated as
-    :class:`~domain.calculations.registry.CasillaId` shape-compatible.
+    :class:`~core.CasillaId` shape-compatible.
     """
     return tuple(sorted(set(casilla_ids) - declared_casilla_ids(revision)))
 
@@ -94,7 +94,7 @@ def casilla_noncanonical_reference_tokens(revision: ModeloRevision) -> dict[str,
     :class:`~domain.calculations.registry.ModeloRevision`.
     The keys are printed numbers, form numbers, and export refs that are not
     canonical ``casilla.id`` values. Values are the canonical candidate
-    :class:`~domain.calculations.registry.CasillaId` entries.
+    :class:`~core.CasillaId` entries.
     """
     tokens: dict[str, set[CasillaId]] = {}
     for casilla in revision.casillas:

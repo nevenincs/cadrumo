@@ -7,6 +7,11 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
+from ....core import (
+    ActionConditionality,
+    ActionEvidenceProvenance,
+    NoRecoveryOutcome,
+)
 from ....domain.modelos import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -37,7 +42,8 @@ def _finding(*, severity: ModeloVerificationFindingSeverity) -> ModeloVerificati
             else ModeloVerificationFindingKind.ADVISORY
         ),
         severity=severity,
-        message="application.modelo.findings.test_evidence",
+        message_locale_key="application.modelo.findings.test_evidence",
+        message_facts={},
         legal_refs=_LEGAL_REFS,
     )
 
@@ -120,6 +126,8 @@ def test_warning_cannot_receive_a_failed_precondition() -> None:
     )
 
     assert VerificationFindingPreconditionProjection(finding=blocking, precondition_failure=failure)
+    with pytest.raises(ValidationError, match="blocking verification findings"):
+        VerificationFindingPreconditionProjection(finding=blocking)
     with pytest.raises(ValidationError, match="warning verification findings"):
         VerificationFindingPreconditionProjection(finding=warning, precondition_failure=failure)
 

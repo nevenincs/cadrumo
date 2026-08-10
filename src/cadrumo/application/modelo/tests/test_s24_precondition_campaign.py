@@ -164,6 +164,46 @@ _EXPECTED_PROFILE_IDENTITIES = {
         "modelo.work.verify.lifecycle_path.direct_cross_period_promotion_refused",
     ),
     (
+        "modelo.work.verify",
+        "modelo.work.verify.work_address.resolved",
+        "modelo.work.verify.work_address.exact_work_unit_absent",
+    ),
+    (
+        "modelo.work.verify",
+        "modelo.work.verify.work_address.resolved",
+        "modelo.work.verify.work_address.natural_target_absent",
+    ),
+    (
+        "modelo.work.file",
+        "modelo.work.file.work_address.resolved",
+        "modelo.work.file.work_address.exact_work_unit_absent",
+    ),
+    (
+        "modelo.work.file",
+        "modelo.work.file.work_address.resolved",
+        "modelo.work.file.work_address.natural_target_absent",
+    ),
+    (
+        "modelo.work.verify",
+        "modelo.work.verify.calculation_revision.addresses_calculation",
+        "modelo.work.verify.calculation_revision.work_unit_target",
+    ),
+    (
+        "modelo.work.verify",
+        "modelo.work.verify.calculation_revision.addresses_calculation",
+        "modelo.work.verify.calculation_revision.work_unit_target_discarded",
+    ),
+    (
+        "modelo.work.file",
+        "modelo.work.file.calculation_revision.addresses_calculation",
+        "modelo.work.file.calculation_revision.work_unit_target",
+    ),
+    (
+        "modelo.work.file",
+        "modelo.work.file.calculation_revision.addresses_calculation",
+        "modelo.work.file.calculation_revision.work_unit_target_discarded",
+    ),
+    (
         "modelo.work.calculate",
         "modelo.work.calculate.m390.reconciliation.complete",
         "modelo.work.calculate.m390.reconciliation.clean_m303_observations_missing",
@@ -194,6 +234,11 @@ _EXPECTED_PROFILE_IDENTITIES = {
         "modelo.work.file",
         "modelo.work.file.deductible_vat_evidence.present",
         "modelo.work.file.deductible_vat_evidence.missing",
+    ),
+    (
+        "modelo.work.file",
+        "modelo.work.file.calculation_revision.verified",
+        "modelo.work.file.calculation_revision.unverified",
     ),
     (
         "modelo.work.verify",
@@ -456,7 +501,12 @@ def test_profiles_are_exact_and_resolve_against_live_schemas() -> None:
     assert observed_identities == _EXPECTED_PROFILE_IDENTITIES | _RESERVED_PROFILE_IDENTITIES
     assert observed_identities - _EXPECTED_PROFILE_IDENTITIES == _RESERVED_PROFILE_IDENTITIES
     actionable = {row.declaration.action.action_id for row in resolution.profiles if row.declaration.action is not None}
-    assert actionable == {"operator.modelo.bindings.list", "operator.registry.verify"}
+    assert actionable == {
+        "operator.modelo.bindings.list",
+        "operator.modelo.work.calculate",
+        "operator.modelo.work.verify",
+        "operator.registry.verify",
+    }
     for row in resolution.profiles:
         if row.declaration.action is None:
             assert row.resolved_action is None

@@ -49,7 +49,7 @@ from .....core import AuthProviderDescription, AuthProviderKind
 from .....core.config import Settings as _Settings
 from .....core.config import unwrap_optional_secret
 from .....core.i18n import tr
-from .....core.identity import same_tax_identifier
+from .....core.identity import same_tax_identifier, tax_id_identity_token
 from .....core.logging import get_logger
 from .....core.time import now
 from .....domain.calculations.registry import canonical_remote_hostname
@@ -678,7 +678,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
                 return context
 
             path_values = record_to_path_values(record)
-            profile_identity = str(path_values.get("identity.tax_id") or "").strip().upper()
+            profile_identity = tax_id_identity_token(str(path_values.get("identity.tax_id") or ""))
             if not profile_identity:
                 selector_values = record_to_values(record)
                 profile_identity = str(selector_values.get("tax.id") or "").strip().upper()

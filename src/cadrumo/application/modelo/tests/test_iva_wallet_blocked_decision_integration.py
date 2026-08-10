@@ -122,8 +122,8 @@ def test_unpersisted_wallet_decision_cannot_feed_modelo_303_engine(tmp_path: Pat
                 clock=_DECIDED_AT,
             )
         assert exc_info.value.translated_message == "application.modelo.errors.iva_wallet_not_seeded"
-        assert exc_info.value.suggestion is not None
-        assert "iva-wallet seed" in exc_info.value.suggestion
+        assert exc_info.value.suggestion is None
+        assert exc_info.value.precondition_failure.scenario_id == "modelo.work.calculate.iva_wallet.not_seeded"
         assert len(calc_repo.load()) == 0
 
 

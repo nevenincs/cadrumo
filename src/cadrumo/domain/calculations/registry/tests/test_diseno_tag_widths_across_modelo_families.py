@@ -118,7 +118,7 @@ def test_an_unread_diseno_is_reported_as_unread_not_as_full_coverage() -> None:
     """
     unread = DisenoCoverageReport(
         modelo_id="303",
-        revision_id="2023-y-siguientes",
+        revision_id="2025",
         diseno_casillas=(),
         covered_casillas=(),
         coverage_gap_casillas=(),
@@ -133,7 +133,7 @@ def test_an_unread_diseno_is_reported_as_unread_not_as_full_coverage() -> None:
     read = derive_diseno_coverage_casillas(source, multi_segment=False)
     genuinely_read = DisenoCoverageReport(
         modelo_id="303",
-        revision_id="2023-y-siguientes",
+        revision_id="2025",
         diseno_casillas=read,
         covered_casillas=(),
         coverage_gap_casillas=read,

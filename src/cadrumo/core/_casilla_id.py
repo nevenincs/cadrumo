@@ -2,7 +2,7 @@
 
 The :data:`CasillaId` alias is the shared key for registry casillas,
 CLI ``--casilla`` inputs, parser observations, and calculation payloads.
-It is re-exported by :mod:`domain.calculations.registry` and anchors
+Its public home is :mod:`cadrumo.core`; it anchors
 :class:`~domain.calculations.registry.CasillaDefinition`,
 :class:`~domain.calculations.registry.CalculationCompletenessCasilla`,
 and filing snapshot facts such as

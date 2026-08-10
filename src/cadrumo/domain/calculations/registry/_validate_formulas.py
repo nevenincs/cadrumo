@@ -120,7 +120,7 @@ def validate_formula_expression(
     """Return reference-closure failures for one formula expression tree.
 
     The :class:`~cadrumo.domain.calculations.registry.FormulaExpression` may refer
-    to :class:`~cadrumo.domain.calculations.registry.CasillaId`,
+    to :class:`~cadrumo.core.CasillaId`,
     :class:`~cadrumo.domain.calculations.registry.BindingId`, parameter, and
     :class:`~cadrumo.domain.calculations.registry.RelationId` values. This recursive
     validator keeps every nested expression node inside the selected revision's

@@ -20,15 +20,14 @@ from typing import TYPE_CHECKING, Final, Self, override
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER, IntracomOperationType
-from ...core.money import CENT
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.decimal import coerce_decimal
 from ...core.errors import CoreValidationError
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import content_hash_hex
-from ...core.identity import BucketId, validate_spanish_tax_id
-from ...core.money import round_to_cents
+from ...core.identity import BucketId, InvoiceId, tax_id_identity_token, validate_spanish_tax_id
+from ...core.money import CENT, round_to_cents
 from ...core.parsing import normalise_iso_4217_currency
 from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
 from .. import canonical_decimal_string
@@ -52,7 +51,6 @@ from ._enums import (
     iva_rate_slot_percentage,
 )
 from ._errors import InvoiceValidationError
-from ...core.identity import InvoiceId
 from ._payload_normalisation import normalise_invoice_enum_fields, normalise_invoice_string_fields
 
 if TYPE_CHECKING:
@@ -62,8 +60,6 @@ from ._validators import (
     validate_country_code,
     validate_iva_number,
 )
-
-
 
 """Rounding slack allowed between a declared retención amount and rate.
 
@@ -194,7 +190,7 @@ def _normalise_invoice_counterparty(payload: dict[str, object]) -> dict[str, obj
     if "counterparty_country" in payload and isinstance(payload["counterparty_country"], str):
         payload["counterparty_country"] = validate_country_code(payload["counterparty_country"])
     if "counterparty_tax_id" in payload and isinstance(payload["counterparty_tax_id"], str):
-        tax_id_raw = payload["counterparty_tax_id"].strip().upper()
+        tax_id_raw = tax_id_identity_token(payload["counterparty_tax_id"])
         country = payload.get("counterparty_country")
         if isinstance(country, str) and country == "ES":
             payload["counterparty_tax_id"] = validate_spanish_tax_id(tax_id_raw)

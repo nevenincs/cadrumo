@@ -365,7 +365,7 @@ def validated_decimal_input_casilla_ids[InputKey, InputValue](
 ) -> dict[CasillaId, Decimal]:
     """Canonicalise decimal input keys against a :class:`ModeloRevision`.
 
-    Raw string keys become validated :class:`~domain.calculations.registry.CasillaId`
+    Raw string keys become validated :class:`~core.CasillaId`
     values, then :func:`domain.calculations.registry._casilla_membership.undeclared_casilla_ids`
     rejects inputs outside the revision's declared casilla set.
     """

@@ -55,6 +55,7 @@ from typing import Literal, TypedDict
 from ...core import DescendantRelacion
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors import ProfileAnswerTypeError
+from ...core.identity import tax_id_identity_token
 from ...core.parsing import parse_bool, parse_iso8601_date
 from ._guarderia_mensual import (
     is_plain_whole_number,
@@ -722,7 +723,7 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
     nif: str | None = None
     nif_raw = parts.get("NIF")
     if nif_raw:
-        nif = nif_raw.strip().upper()
+        nif = tax_id_identity_token(nif_raw)
 
     return DescendantInfo(
         birth_date=birth_date,

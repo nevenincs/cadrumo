@@ -165,9 +165,16 @@ __all__ = [
     "DecimalValue",
     "DependencyClassificationDefinition",
     "EvidenceTier",
+    "ExportComputedKey",
+    "ExportComputedKeyValue",
+    "ExportDraftAttribute",
+    "ExportDraftAttributeValue",
     "ExportFieldDefinition",
+    "ExportHeaderKey",
+    "ExportHeaderKeyValue",
     "ExportLayoutDefinition",
     "ExportRecordDefinition",
+    "ExportSemanticPayloadAxis",
     "ExportValuePolicyValue",
     "ExtractionProfileDefinition",
     "ExtractionTargetDefinition",
@@ -211,6 +218,7 @@ __all__ = [
     "VerificationExpectationDefinition",
     "VerificationPredicateDefinition",
     "WorkbookParityReference",
+    "export_semantic_payload_axis",
 ]
 
 from ._convenio import ConvenioAuthority
@@ -260,14 +268,22 @@ from ._schema_surfaces import (
     CasillaConstraints,
     CasillaContinuidadEvolutionDefinition,
     CasillaDefinition,
+    ExportComputedKey,
+    ExportComputedKeyValue,
+    ExportDraftAttribute,
+    ExportDraftAttributeValue,
     ExportFieldDefinition,
+    ExportHeaderKey,
+    ExportHeaderKeyValue,
     ExportLayoutDefinition,
     ExportRecordDefinition,
+    ExportSemanticPayloadAxis,
     ExportValuePolicyValue,
     OneBasedExportOffset,
     RelationDefinition,
     RelationPeriodAlignment,
     RelationRevisionSelector,
+    export_semantic_payload_axis,
 )
 
 # Scalar and annotated value types live in ``_schema_scalars``; retaining these

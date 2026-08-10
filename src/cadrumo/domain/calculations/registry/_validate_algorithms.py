@@ -6,7 +6,7 @@ reference closure.
 
 Provider declarations define deterministic callable contracts; binding
 declarations connect those contracts to
-:class:`~cadrumo.domain.calculations.registry.CasillaId` inputs and outputs. Both
+:class:`~cadrumo.core.CasillaId` inputs and outputs. Both
 must carry :class:`~cadrumo.domain.calculations.registry.LegalReference` and
 :class:`~cadrumo.domain.calculations.registry.SourceReference` grounding enforced by
 the :class:`~cadrumo.domain.calculations.registry._validate_evidence.EvidenceValidator`.
@@ -75,7 +75,7 @@ def validate_algorithm_binding_section(
     :class:`~cadrumo.domain.calculations.registry._schema.AlgorithmBindingDefinition`
     against its
     :class:`~cadrumo.domain.calculations.registry._schema.AlgorithmProviderDefinition`,
-    declared :class:`~cadrumo.domain.calculations.registry.CasillaId` values,
+    declared :class:`~cadrumo.core.CasillaId` values,
     resolvable input values, constants, and evidence-grounding requirements.
     """
     for alg_binding in revision.algorithm_bindings:

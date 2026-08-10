@@ -812,12 +812,12 @@ async def test_a_modal_secret_never_paints_its_value(tmp_path: Path) -> None:
 @pytest.mark.asyncio
 @pytest.mark.parametrize(("width", "height"), _SIZES)
 @pytest.mark.parametrize("review", [False, True], ids=["question", "review"])
-async def test_the_screen_itself_never_scrolls_on_a_flow_surface(
+async def test_a_flow_surface_has_exactly_one_visible_vertical_scroll_owner(
     width: int,
     height: int,
     review: bool,
 ) -> None:
-    """Scrolling belongs to one designated host, never to the Screen.
+    """Scrolling belongs to one designated host, never competing hosts.
 
     A Screen that scrolls is the signature of a surface whose own scroll
     container cannot: an ``auto`` height grows to fit its content, so the
@@ -862,5 +862,14 @@ async def test_the_screen_itself_never_scrolls_on_a_flow_surface(
         assert not screen.show_vertical_scrollbar, (
             f"{type(screen).__name__} is scrolling at {width}x{height}: its content overflows a "
             f"container that cannot scroll, so the operator sees two stacked vertical scrollbars"
+        )
+        visible_owners = [
+            widget
+            for widget in screen.walk_children()
+            if isinstance(widget, ScrollableContainer) and widget.display and widget.show_vertical_scrollbar
+        ]
+        assert len(visible_owners) == 1, (
+            f"expected one visible vertical scroll owner at {width}x{height}, got "
+            f"{[type(widget).__name__ for widget in visible_owners]}"
         )
         app.exit(None)

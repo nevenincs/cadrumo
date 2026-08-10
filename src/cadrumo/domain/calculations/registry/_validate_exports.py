@@ -6,7 +6,7 @@ binding reference closure.
 
 Export layouts are layout-authority surfaces: every
 :class:`~cadrumo.domain.calculations.registry.ExportFieldDefinition` must point at
-declared :class:`~cadrumo.domain.calculations.registry.CasillaId` or
+declared :class:`~cadrumo.core.CasillaId` or
 :class:`~cadrumo.domain.calculations.registry.BindingId` values and carry
 layout-authority evidence.
 
@@ -210,7 +210,7 @@ def _validate_export_field(
 
     The :class:`~cadrumo.domain.calculations.registry.ExportFieldDefinition` must
     cite layout-authority refs, target a declared
-    :class:`~cadrumo.domain.calculations.registry.CasillaId` or
+    :class:`~cadrumo.core.CasillaId` or
     :class:`~cadrumo.domain.calculations.registry.BindingId`, and respect literal
     byte-length constraints for its parent export record encoding.
     """

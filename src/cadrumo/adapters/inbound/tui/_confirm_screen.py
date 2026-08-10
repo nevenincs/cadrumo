@@ -26,14 +26,14 @@ _CONFIRM_DIALOG_CSS = """
 #confirm-dialog {
     border: thick $warning;
     background: $surface;
-    padding: 1 3;
-    width: 60%;
+    padding: 0 1;
+    width: 100%;
     height: auto;
 }
-#confirm-title { text-style: bold; margin: 0 0 1 0; }
-#confirm-message { color: $text; margin: 0 0 1 0; }
-#confirm-actions { height: auto; align-horizontal: right; margin: 1 0 0 0; }
-#confirm-actions Button { margin: 0 0 0 2; }
+#confirm-title { text-style: bold; margin: 0; }
+#confirm-message { color: $text; margin: 0; }
+#confirm-actions { height: auto; align-horizontal: right; margin: 0; }
+#confirm-actions Button { margin: 0 0 0 1; }
 """
 """Styling carried by the dialog itself, mirroring
 :mod:`~cadrumo.adapters.inbound.tui._field_edit_screen`: a host that did not

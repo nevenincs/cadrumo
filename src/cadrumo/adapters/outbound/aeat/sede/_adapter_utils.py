@@ -27,6 +27,7 @@ from .....core import STRICT_FROZEN_CONFIG, fold_diacritics
 from .....core.config import Settings
 from .....core.external_constants import PDF_MIME_TYPE
 from .....core.i18n import tr
+from .....core.identity import tax_id_identity_token
 
 if TYPE_CHECKING:
     from playwright.async_api import Locator, Page
@@ -641,7 +642,7 @@ def nif_check_operation_tail(expected: Mapping[str, object]) -> tuple[RemoteOper
     """
     tail: list[RemoteOperation] = [
         RemoteOperation(kind="browser_action", action=f"check-nif-{nif}")
-        for nif in sorted(str(key).strip().upper() for key in expected)
+        for nif in sorted(tax_id_identity_token(str(key)) for key in expected)
     ]
     tail.append(RemoteOperation(kind="browser_action", action="discard-session"))
     return tuple(tail)

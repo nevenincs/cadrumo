@@ -70,6 +70,7 @@ from ...domain import filing as filing_domain
 from ...domain.buckets import BucketEvent, BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
 from ...domain.calculations.registry import (
     DataBindingDefinition,
+    ExportHeaderKey,
     derive_modelo_202_modality,
     derive_taxpayer_files_economic_activity,
 )
@@ -577,7 +578,7 @@ def _ddmmaaaa(value: date) -> str:
     return f"{value.day:02d}{value.month:02d}{value.year:04d}"
 
 
-def _compose_charge_account_block(charge_account: ChargeAccount | None) -> dict[str, str]:
+def _compose_charge_account_block(charge_account: ChargeAccount | None) -> dict[ExportHeaderKey, str]:
     """Build the U DID block from the separately recorded debit authority.
 
     ``Domiciliación/Devolución - IBAN`` is the one DID position shared by the
@@ -593,10 +594,10 @@ def _compose_charge_account_block(charge_account: ChargeAccount | None) -> dict[
             "an authorisation to debit",
             suggestion="Record the charge-account IBAN before exporting this domiciliación election.",
         )
-    return {"iban": charge_account.iban}
+    return {ExportHeaderKey.IBAN: charge_account.iban}
 
 
-def _compose_refund_account_block(refund_account: RefundAccount | None) -> dict[str, str]:
+def _compose_refund_account_block(refund_account: RefundAccount | None) -> dict[ExportHeaderKey, str]:
     """Build the DR303 cuenta-devolución (DID) header fields for a refund.
 
     Called only when the determined disposition is a refund (devolución). Reads
@@ -636,31 +637,31 @@ def _compose_refund_account_block(refund_account: RefundAccount | None) -> dict[
     iban = refund_account.iban
     if iban is None:
         marca = SepaMarca.RESTO_PAISES
-    block: dict[str, str] = {"sepa_marca": marca.value}
+    block: dict[ExportHeaderKey, str] = {ExportHeaderKey.SEPA_MARCA: marca.value}
     if marca is SepaMarca.RESTO_PAISES:
         # Non-SEPA (Resto Países): the account is identified by SWIFT-BIC plus
         # the foreign-bank block; a non-SEPA account may carry no IBAN.
         block.update(
             {
-                "swift_bic": refund_account.swift_bic,
-                "bank_name": refund_account.bank_name,
-                "bank_address": refund_account.bank_address,
-                "bank_city": refund_account.bank_city,
-                "bank_country_code": refund_account.bank_country_code,
+                ExportHeaderKey.SWIFT_BIC: refund_account.swift_bic,
+                ExportHeaderKey.BANK_NAME: refund_account.bank_name,
+                ExportHeaderKey.BANK_ADDRESS: refund_account.bank_address,
+                ExportHeaderKey.BANK_CITY: refund_account.bank_city,
+                ExportHeaderKey.BANK_COUNTRY_CODE: refund_account.bank_country_code,
             },
         )
         if iban is not None:
-            block["iban"] = iban
+            block[ExportHeaderKey.IBAN] = iban
     elif iban is not None:
         # SEPA (Cuenta España / UE SEPA): identified by IBAN only.
-        block["iban"] = iban
+        block[ExportHeaderKey.IBAN] = iban
     return block
 
 
 def _apply_nota_three_refund_account_block(
     *,
     draft: ModeloDraft,
-    headers: dict[str, str],
+    headers: dict[ExportHeaderKey, str],
     workflow_profile: TaxpayerProfile,
     prior_domiciliation_election: PriorDomiciliationElection,
 ) -> None:
@@ -671,7 +672,7 @@ def _apply_nota_three_refund_account_block(
     regular header composer, so this fills only the additional Nota-3 path.
     """
     try:
-        disposition = ResultDisposition(headers["declaration_type"])
+        disposition = ResultDisposition(headers[ExportHeaderKey.DECLARATION_TYPE])
     except (KeyError, ValueError):
         disposition = None
     if disposition is ResultDisposition.DOMICILIACION or (
@@ -696,7 +697,7 @@ def _compose_export_headers(
     payment_election: PaymentElection = PaymentElection.INGRESO,
     resolved_result_disposition: ResultDisposition | None = None,
     prior_domiciliation_election: PriorDomiciliationElectionProjection | None = None,
-) -> dict[str, str]:
+) -> dict[ExportHeaderKey, str]:
     """Compose the full fichero-BOE export header dict for a revision.
 
     Supplies every header key the modelo export layouts may declare as
@@ -757,18 +758,19 @@ def _compose_export_headers(
             payment_election=payment_election,
         )
     declaration_type = resolved_result_disposition.value
-    headers: dict[str, str] = {
-        "declaration_type": declaration_type,
-        "surnames": surnames,
-        "name": name,
-        "full_name": full_name,
-        "entity_type": workflow_profile.entity_type.value if workflow_profile.entity_type is not None else "",
-        "fecha_inicio_periodo": _ddmmaaaa(period_start),
-        "fecha_fin_periodo": _ddmmaaaa(period_end),
-        "devengo_start_date": _ddmmaaaa(period_start),
-        "tax_id": tax_id,
-        "presenter_nif": tax_id,
-        "program_version": _PROGRAM_VERSION_CODE,
+    headers: dict[ExportHeaderKey, str] = {
+        ExportHeaderKey.DECLARATION_TYPE: declaration_type,
+        ExportHeaderKey.SURNAMES: surnames,
+        ExportHeaderKey.NAME: name,
+        ExportHeaderKey.FULL_NAME: full_name,
+        ExportHeaderKey.ENTITY_TYPE: (
+            workflow_profile.entity_type.value if workflow_profile.entity_type is not None else ""
+        ),
+        ExportHeaderKey.FECHA_INICIO_PERIODO: _ddmmaaaa(period_start),
+        ExportHeaderKey.FECHA_FIN_PERIODO: _ddmmaaaa(period_end),
+        ExportHeaderKey.DEVENGO_START_DATE: _ddmmaaaa(period_start),
+        ExportHeaderKey.TAX_ID: tax_id,
+        ExportHeaderKey.PROGRAM_VERSION: _PROGRAM_VERSION_CODE,
     }
 
     # REDEME indicator (DR303 page-1 position 110): "1" SI / "2" NO, written on
@@ -776,7 +778,7 @@ def _compose_export_headers(
     # on refunds). Maps the standing ``redeme_enrolled`` profile fact — the same
     # fact the disposition resolver reads to upgrade a monthly negative period to
     # a refund.
-    headers["redeme"] = "1" if workflow_profile.iva.redeme_enrolled else "2"
+    headers[ExportHeaderKey.REDEME] = "1" if workflow_profile.iva.redeme_enrolled else "2"
 
     # Bank-account (DID) block. Emitted for every disposition whose fichero must
     # carry an account, which is NOT the same as "a refund": the three refund
@@ -812,20 +814,20 @@ def _compose_export_headers(
         # 64-char ``amends_filing_record_id`` — and is populated by the
         # regime-aware rectificativa builder (deferred), so it is intentionally
         # left unset here rather than overflowing the field with an internal id.
-        headers["autoliq_rectificativa"] = "1"
+        headers[ExportHeaderKey.AMENDMENT_RECTIFICATIVE] = "1"
     elif revision.amendment_kind is not None:
-        headers["complementaria"] = (
+        headers[ExportHeaderKey.COMPLEMENTARIA] = (
             "true" if revision.amendment_kind is CalculationRevisionAmendmentKind.COMPLEMENTARIA else "false"
         )
-        headers["complementaria_page"] = headers["complementaria"]
+        headers[ExportHeaderKey.COMPLEMENTARIA_PAGE] = headers[ExportHeaderKey.COMPLEMENTARIA]
         if revision.amends_filing_record_id is not None:
-            headers["justificante_anterior"] = revision.amends_filing_record_id
-            headers["previous_justificante"] = revision.amends_filing_record_id
+            headers[ExportHeaderKey.JUSTIFICANTE_ANTERIOR] = revision.amends_filing_record_id
+            headers[ExportHeaderKey.PREVIOUS_JUSTIFICANTE] = revision.amends_filing_record_id
 
     if prior_domiciliation_election is not None and (
         prior_domiciliation_election.election is PriorDomiciliationElection.CANCEL_OR_MODIFY
     ):
-        headers["prior_domiciliation_action"] = "X"
+        headers[ExportHeaderKey.PRIOR_DOMICILIATION_ACTION] = "X"
 
     return headers
 
@@ -836,7 +838,7 @@ compose_export_headers = _compose_export_headers
 def _compose_export_dictionary_values(
     *,
     draft: ModeloDraft,
-    headers: Mapping[str, str],
+    headers: Mapping[ExportHeaderKey, str],
     bucket_id: str,
     profile_export_bindings: Sequence[DataBindingDefinition] = (),
 ) -> dict[str, object]:
@@ -888,8 +890,8 @@ def _compose_export_dictionary_values(
     # bytes identical to what the retired renderer escapes produced.
     values["DPNIF_D"] = draft.profile_tax_id
     values["DP_APENOM_D"] = compose_legal_full_name(
-        surnames=headers.get("surnames", ""),
-        name=headers.get("name", ""),
+        surnames=headers.get(ExportHeaderKey.SURNAMES, ""),
+        name=headers.get(ExportHeaderKey.NAME, ""),
     )
     return values
 
@@ -1158,7 +1160,7 @@ def _write_export_tmp(
     *,
     command: ModeloExportCommand,
     approved: ModeloDraft,
-    headers: dict[str, str],
+    headers: Mapping[str, str],
     dictionary_values: Mapping[str, object],
     prior_domiciliation_election: PriorDomiciliationElection,
     schema_provider: RegistrySchemaAccessor,

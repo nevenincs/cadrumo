@@ -123,7 +123,12 @@ def m210_agrupacion_renta_verification_findings(
             ModeloVerificationFinding(
                 kind=ModeloVerificationFindingKind.BLOCKING_RULE,
                 severity=ModeloVerificationFindingSeverity.BLOCKING,
-                message=str(exc),
+                message_locale_key="application.modelo.findings.m210_agrupacion_renta_invalid",
+                message_facts={
+                    "error_type": type(exc).__name__,
+                    "modelo_id": str(work_unit.modelo),
+                    "period_code": work_unit.period.registry_token,
+                },
                 legal_refs=(_M210_AGRUPACION_LEGAL_REF,),
                 source_refs=(_M210_AGRUPACION_SOURCE_REF,),
             ),

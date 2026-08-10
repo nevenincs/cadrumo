@@ -9,7 +9,7 @@ the calculation assembly layer overlays them by precedence: profile, backend
 mesh, borrador, and finally caller overrides.
 
 The module also owns the application-specific partial projection from available
-binding values to :class:`~cadrumo.domain.calculations.registry.CasillaId` inputs.
+binding values to :class:`~cadrumo.core.CasillaId` inputs.
 That differs from the domain registry's strict bound-input projection: live
 calculate paths may carry absent optional bindings while still projecting every
 value that did resolve.
@@ -188,7 +188,7 @@ def lift_previous_filing_casilla_overrides_to_bindings(
 
     The :class:`ModeloRevision` supplies the
     bound casilla and binding metadata. A caller may supply a
-    :class:`~cadrumo.domain.calculations.registry.CasillaId` override for a bound
+    :class:`~cadrumo.core.CasillaId` override for a bound
     casilla whose binding source is ``previous_filing`` when no resolver-produced
     binding value exists. This helper mirrors that override onto the matching
     :class:`~cadrumo.domain.calculations.registry.BindingId` so the registry
@@ -333,7 +333,7 @@ def resolve_available_bound_inputs_by_casilla_id(
 
     Returns:
         A ``dict`` keyed by
-        :class:`~cadrumo.domain.calculations.registry.CasillaId` for every bound
+        :class:`~cadrumo.core.CasillaId` for every bound
         casilla whose binding value is currently available.
 
     See Also:

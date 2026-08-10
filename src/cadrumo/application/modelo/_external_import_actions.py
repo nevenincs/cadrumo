@@ -384,7 +384,7 @@ def _require_bound_justificante_artifact(
     """
     if evidence_kind not in _JUSTIFICANTE_BOUND_EVIDENCE_KINDS:
         return
-    cleaned_expected_tax_id = (expected_tax_id or "").strip().upper()
+    cleaned_expected_tax_id = (expected_tax_id or "").strip()
     if not cleaned_expected_tax_id:
         raise ExternalModeloImportError(
             translated_message="application.modelo.errors.external_import_tax_id_missing",

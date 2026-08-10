@@ -3,7 +3,7 @@
 This module converts CLI override tokens into a
 :class:`WorkCalculateInputBundle`, resolves the active work unit's
 :class:`~cadrumo.domain.calculations.registry.ModeloRevision`, and validates
-canonical :class:`~cadrumo.domain.calculations.registry.CasillaId` values,
+canonical :class:`~cadrumo.core.CasillaId` values,
 binding channels, relation ids, and shortcut-derived semantic-role casillas
 before the calculate service persists a
 :class:`~cadrumo.domain.modelos.CalculationRevision`.

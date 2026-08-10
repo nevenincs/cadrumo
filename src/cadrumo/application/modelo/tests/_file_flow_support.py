@@ -375,6 +375,7 @@ def _workflow_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="X1234567L",
         iva_regime=IVARegime.GENERAL,
+        activity_start_date=date(2000, 1, 1),
         has_employees=False,
         pays_rent_with_retencion=False,
         does_intracomunitario=False,
@@ -442,7 +443,7 @@ def _seed_clean_cross_period_sources(
             filing_year=filing_year,
             period=source_period,
         )
-        evidence_reference_id = f"JUST-{source_modelo}-{filing_year}-{period}"
+        evidence_reference_id = f"CSV{source_modelo}{filing_year}{period}".upper()
         if current is None:
             persist_justificante_metadata(
                 evidence_reference_id,
@@ -474,27 +475,29 @@ def _seed_clean_cross_period_sources(
                 clock=_T0,
             )
             filing_catalogue = filing_repository.load()
-        observation_repository.save_observation(
-            RegistryModeloObservation(
-                modelo=source_modelo,
-                filing_year=filing_year,
-                period=period,
-                observations=registry_grounded_observations(
+        observation_repository.save(
+            observation_repository.prepare_observation_envelope(
+                RegistryModeloObservation(
                     modelo=source_modelo,
                     filing_year=filing_year,
                     period=period,
-                    casilla_values=values,
+                    observations=registry_grounded_observations(
+                        modelo=source_modelo,
+                        filing_year=filing_year,
+                        period=period,
+                        casilla_values=values,
+                    ),
                 ),
-            ),
-            source_kind="aeat_sede_justificante",
-            captured_at=_T0,
-            stamped_revision_id=source_snapshot.revision.id,
-            source_metadata={
-                "aeat_register_status": "ALTA",
-                "aeat_expediente_id": f"EXP-{source_modelo}-{filing_year}-{period}",
-                "aeat_justificante_csv": evidence_reference_id,
-                "authenticated_identity": "X1234567L",
-            },
+                source_kind="aeat_sede_justificante",
+                captured_at=_T0,
+                stamped_revision_id=source_snapshot.revision.id,
+                source_metadata={
+                    "aeat_register_status": "ALTA",
+                    "aeat_expediente_id": f"EXP-{source_modelo}-{filing_year}-{period}",
+                    "aeat_justificante_csv": evidence_reference_id,
+                    "authenticated_identity": "X1234567L",
+                },
+            )
         )
 
 

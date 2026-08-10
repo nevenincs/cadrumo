@@ -107,8 +107,9 @@ def test_facts_present_casilla_empty_fires_advisory(snapshot: RegistrySnapshot) 
     finding = findings[0]
     assert finding.kind is ModeloVerificationFindingKind.ADVISORY
     assert finding.severity is ModeloVerificationFindingSeverity.WARNING
-    assert _CASILLA_1577 in finding.message
-    assert "58100.00" in finding.message
+    assert finding.message_locale_key == "application.modelo.findings.attribution_received_unfolded"
+    assert finding.message_facts["casilla_id"] == _CASILLA_1577
+    assert finding.message_facts["total_base"] == Decimal("58100.00")
     assert {"ley-35-2006:art-86", "ley-35-2006:art-89"} <= set(finding.legal_refs)
 
 
@@ -122,8 +123,9 @@ def test_casilla_present_no_facts_fires_capture_advisory(snapshot: RegistrySnaps
     # default es output language, and the message routes through tr()):
     # the interpolated casilla id and the machine-token fact-group name survive
     # every locale, as does the Modelo 184 provenance reference in the message.
-    assert _CASILLA_1577 in finding.message
-    assert "attribution_received" in finding.message
+    assert finding.message_locale_key == "application.modelo.findings.attribution_received_uncaptured"
+    assert finding.message_facts["casilla_id"] == _CASILLA_1577
+    assert finding.message_facts["casilla_value"] == _BASE
     assert "next_action" not in finding.model_dump(mode="json")
 
 

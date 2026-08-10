@@ -103,7 +103,7 @@ _VALORES_N1 = Decimal("65000.00")
 _ACCOUNT_CLAVE = "C"
 _SECURITY_CLAVE = "V"
 
-_ADVISORY_MARKER = "re-declaration advisory"
+_REDECLARATION_LOCALE_KEY = "application.modelo.findings.foreign_asset_redeclaration"
 
 
 @contextmanager
@@ -141,19 +141,21 @@ def _calculate_and_verify(
     """Run the real year-N+1 M720 pipeline over a real persisted year-N baseline."""
     with _secure_backend(tmp_path):
         observation_repository = CalculationObservationRepository()
-        observation_repository.save_observation(
-            registry_grounded_modelo_observation(
-                modelo=Modelo.M720.value,
-                filing_year=_YEAR_N,
-                period=_PERIOD,
-                casilla_values={
-                    _CUENTAS_VALORACION: _CUENTAS_N,
-                    _VALORES_VALORACION: _VALORES_N,
-                    _INMUEBLES_VALORACION: _INMUEBLES_N,
-                },
-            ),
-            source_kind="app_filing",
-            captured_at=_CLOCK_N,
+        observation_repository.save(
+            observation_repository.prepare_observation_envelope(
+                registry_grounded_modelo_observation(
+                    modelo=Modelo.M720.value,
+                    filing_year=_YEAR_N,
+                    period=_PERIOD,
+                    casilla_values={
+                        _CUENTAS_VALORACION: _CUENTAS_N,
+                        _VALORES_VALORACION: _VALORES_N,
+                        _INMUEBLES_VALORACION: _INMUEBLES_N,
+                    },
+                ),
+                source_kind="app_filing",
+                captured_at=_CLOCK_N,
+            )
         )
 
         snapshot = resources().modelos.authority.snapshot(
@@ -212,11 +214,11 @@ def _redeclaration_findings(report: VerificationReport) -> tuple[ModeloVerificat
     """Return the re-declaration advisories, keeping their type for the callers.
 
     Typed as the real finding rather than ``object``: every caller reads
-    ``kind``, ``severity`` and ``message`` off the result, so erasing the
+    ``kind``, ``severity`` and structured identity off the result, so erasing the
     element type turned each of those assertions into an unchecked attribute
     access on the one helper whose whole job is to hand findings to them.
     """
-    return tuple(finding for finding in report.findings if _ADVISORY_MARKER in finding.message)
+    return tuple(finding for finding in report.findings if finding.message_locale_key == _REDECLARATION_LOCALE_KEY)
 
 
 def test_advisory_fires_through_real_verify_for_the_omitted_grown_cuentas_position(tmp_path: Path) -> None:
@@ -229,15 +231,22 @@ def test_advisory_fires_through_real_verify_for_the_omitted_grown_cuentas_positi
 
     assert finding.kind is ModeloVerificationFindingKind.ADVISORY
     assert finding.severity is ModeloVerificationFindingSeverity.WARNING
-    assert "cuentas" in finding.message
-    # The delta is the evidence total minus the carried prior baseline.
-    assert str(_CUENTAS_N1 - _CUENTAS_N) in finding.message
+    assert dict(finding.message_facts) == {
+        "modelo_code": "720",
+        "filing_year": _YEAR_N_PLUS_1,
+        "position_key": "cuentas",
+        "group_code": "cuentas",
+        "prior_value_eur": _CUENTAS_N,
+        "current_value_eur": _CUENTAS_N1,
+        "delta_value_eur": _CUENTAS_N1 - _CUENTAS_N,
+        "redeclaration_increase_threshold_eur": Decimal("20000"),
+    }
     # Grounding travels to the operator.
     assert "rd-1065-2007:art-42-bis" in finding.legal_refs
     assert finding.source_refs
 
     # The valores bloque grew by only €10,000 (<= the €20,000 delta) and must not fire.
-    assert "valores" not in finding.message
+    assert all(item.message_facts["group_code"] != "valores" for item in findings)
 
 
 def test_advisory_is_silent_when_the_grown_position_is_declared(tmp_path: Path) -> None:

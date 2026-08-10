@@ -22,47 +22,56 @@ from pathlib import Path
 import pytest
 
 from ....core.config import override_settings
+from ....core.resources import resources
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_sessionless_storage_root
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
+
 # Profile-scoped verbs an operator may reach on first contact. Each
 # opens the active-profile bucket database; with no profile every one
 # must produce the same clean translated refusal.
-_COLD_START_VERBS: tuple[tuple[str, ...], ...] = (
-    (
-        "app",
-        "modelo",
-        "readiness",
-        "--modelo",
-        "303",
-        "--revision-id",
-        "2023-y-siguientes",
-        "--year",
-        "2026",
-        "--period",
-        "1T",
-    ),
-    (
-        "app",
-        "modelo",
-        "work",
-        "create",
-        "--modelo",
-        "303",
-        "--year",
-        "2026",
-        "--period",
-        "1T",
-        "--revision",
-        "2023-y-siguientes",
-    ),
-    ("app", "modelo", "work", "list"),
-    ("app", "modelo", "work", "revisions"),
-    ("app", "ledger", "list"),
-    ("app", "overview", "status", "--period", "2026Q1"),
-)
+def _m303_revision_id(*, filing_year: int, period: str) -> str:
+    return str(resources().modelos.authority.snapshot("303", filing_year=filing_year, period=period).revision.id)
+
+
+def _cold_start_verbs() -> tuple[tuple[str, ...], ...]:
+    m303_revision_id = _m303_revision_id(filing_year=2026, period="1T")
+    return (
+        (
+            "app",
+            "modelo",
+            "readiness",
+            "--modelo",
+            "303",
+            "--revision-id",
+            m303_revision_id,
+            "--year",
+            "2026",
+            "--period",
+            "1T",
+        ),
+        (
+            "app",
+            "modelo",
+            "work",
+            "create",
+            "--modelo",
+            "303",
+            "--year",
+            "2026",
+            "--period",
+            "1T",
+            "--revision",
+            m303_revision_id,
+        ),
+        ("app", "modelo", "work", "list"),
+        ("app", "modelo", "work", "revisions"),
+        ("app", "ledger", "list"),
+        ("app", "overview", "status", "--period", "2026Q1"),
+    )
+
 
 # Internal plumbing strings that must never reach the operator.
 _LEAK_MARKERS: tuple[str, ...] = (
@@ -94,7 +103,7 @@ def _verb_label(verb: tuple[str, ...]) -> str:
 def test_cold_start_verbs_refuse_without_leaks_and_surface_profile_guidance(tmp_path: Path) -> None:
     """Each cold-start verb refuses cleanly and names ``profile create`` recovery guidance."""
 
-    for index, verb in enumerate(_COLD_START_VERBS):
+    for index, verb in enumerate(_cold_start_verbs()):
         label = _verb_label(verb)
         with override_settings(cadrumo_output_language="en"):
             with isolated_sessionless_storage_root(tmp_path=tmp_path / f"cold-start-{index}"):

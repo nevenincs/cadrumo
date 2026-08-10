@@ -114,6 +114,8 @@ class _BoundaryHandler(BaseHTTPRequestHandler):
               <button type="submit">Confirmar</button>
             </form>
             """
+        elif self.path == "/clave-movil-representation-missing":
+            html = "<main><h1>Representación autenticada</h1></main>"
         elif self.path in {"/clave-permanente-form-success", "/clave-permanente-form-invalid"}:
             action = _DEFAULT_CLAVE_TARGET_URL if self.path.endswith("success") else _PERMANENTE_IDP_URL
             html = f"""
@@ -196,11 +198,15 @@ class LocalHttpBoundary:
                 if _CLAVE_MOVIL.selector_access_path_marker in requested_url
                 else "/clave-movil-pending"
             )
-        elif scenario == "clave-movil-representation":
+        elif scenario in {"clave-movil-representation", "clave-movil-representation-missing"}:
             if _CLAVE_MOVIL.selector_access_path_marker in requested_url:
                 local_path = "/clave-movil-selector-representation"
             elif _CLAVE_MOVIL.dialogo_representacion_path_marker in requested_url:
-                local_path = "/clave-movil-representation"
+                local_path = (
+                    "/clave-movil-representation-missing"
+                    if scenario.endswith("-missing")
+                    else "/clave-movil-representation"
+                )
             else:
                 local_path = "/clave-success"
         elif scenario == "clave-permanente-success":

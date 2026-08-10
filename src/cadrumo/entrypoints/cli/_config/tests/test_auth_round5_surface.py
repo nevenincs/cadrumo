@@ -4,7 +4,7 @@ Covers the six findings closed by the round-5 remediation: B1 (configure /
 status agreement on configured), B2 (login refusal as user prose citing the
 live-tests safety gate), B3 (``--output-language`` parity on status / test /
 login), M4 (``auth test`` runs a real per-provider probe), M5 (severity
-agrees with summary), M6 (alignment next_action localised end-to-end).
+agrees with summary), and M6 (alignment outcome is typed end-to-end).
 
 Tests bypass the per-bucket secure-storage gate by driving the application
 layer directly through the canonical orchestration where the CLI surface
@@ -347,19 +347,29 @@ def test_severity_for_clave_movil_pending_is_not_error(
     assert status.health_summary, "pending state must produce a non-empty summary"
 
 
-# ── M6: alignment next_action is fully localised ───────────────────────────
+# ── M6: configure outcome stays typed ──────────────────────────────────────
 
 
-def test_clave_movil_mismatch_next_action_is_localised_in_catalan(
+def test_auth_configure_projects_an_incomplete_verdict_through_the_cli(
     _isolated_application_layer: None,
 ) -> None:
-    """Round-5 M6: the mismatch next_action does not drop into English.
+    """The real auth-configure handler resolves the application verdict without command reconstruction."""
 
-    Previously the next_action string was hard-coded English; in
-    Catalan / Spanish locales the mid-sentence English break was
-    observable. The next_action now resolves through the locale
-    catalogue.
-    """
+    workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id=_BUCKET_ID))
+
+    result = invoke_typer_app(config_app, ["auth", "configure", "--provider", "certificate"])
+
+    assert result.exit_code == 0, result.output
+    assert "next_action\t" not in result.output
+    assert 'precondition_action.failed_condition_id\t"auth.certificate.file_ready"' in result.output
+    assert "precondition_action.action\tnull" in result.output
+    assert 'precondition_action.no_recovery_outcome\t"operator_decision"' in result.output
+
+
+def test_clave_movil_mismatch_carries_a_typed_no_recovery_outcome(
+    _isolated_application_layer: None,
+) -> None:
+    """Round-5 M6: a mismatch retains application facts without localised command prose."""
 
     workflow_state_repository().update(
         lambda state: register_minimal_profile(
@@ -372,14 +382,11 @@ def test_clave_movil_mismatch_next_action_is_localised_in_catalan(
         cadrumo_clave_movil_dni_nie="00000001R",
         cadrumo_output_language="ca",
     ):
-        from .....core.i18n import clear_output_language_cache
-
-        clear_output_language_cache()
         result = configure_operator_auth("clave_movil")
 
-    next_action = result.next_action
-    assert next_action, "next_action must be populated for a clave_movil mismatch"
-    # The English literal that used to leak — "the profile whose tax id
-    # matches the Cl@ve DNI/NIE" — must not appear in the Catalan
-    # rendering.
-    assert "the profile whose tax id matches" not in next_action.lower()
+    assert not hasattr(result, "next_action")
+    verdict = result.precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == "auth.clave_movil.identity_aligned"
+    assert verdict.action is None
+    assert verdict.no_recovery_outcome.value == "operator_decision"

@@ -9,7 +9,13 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry import RegistryValidationError, extract_record_design
+from cadrumo.domain.calculations.registry import (
+    RecordDesignCompositeRelativeClosing,
+    RecordDesignRelativeSuffixMarker,
+    RegistryValidationError,
+    extract_record_design,
+    resolve_record_design_binary,
+)
 
 from .. import _record_design as record_design_module
 from ._record_design_support import (
@@ -34,18 +40,19 @@ _MODELO_303_DESIGNS = (
     ("aeat-dr-303-2025", 429),
     ("aeat-dr-303-2026", 430),
 )
-_PARTIAL_VARIABLE_ENVELOPE_FAILURES = {
-    "aeat-dr-131-2019-2023-v101": "incomplete variable-envelope composition",
-    "aeat-dr-131-2024": "incomplete variable-envelope composition",
-    "aeat-dr-131-2025": "incomplete variable-envelope composition",
-    "aeat-dr-131-2026": "incomplete variable-envelope composition",
-    "aeat-dr-232-2016": "duplicate relative closing suffixes",
-    "aeat-dr-232-2018": "incomplete variable-envelope composition",
-    "aeat-dr-390-2022": "incomplete variable-envelope composition",
-    "aeat-dr-390-2023": "incomplete variable-envelope composition",
-    "aeat-dr-390-2024": "incomplete variable-envelope composition",
-    "aeat-dr-390-2025": "incomplete variable-envelope composition",
-}
+_MODELO_220_DESIGNS = (
+    ("aeat-dr-220-2023", 2023, "2023"),
+    ("aeat-dr-220-2024", 2024, "2024"),
+    ("aeat-dr-220-2025", 2025, "2025"),
+)
+_M220_COMPOSITE_CLOSING_ROWS = (
+    (15, "***", 3, "An", "Constante", None, "</T"),
+    (16, "***", 3, "An", "Modelo", None, "220"),
+    (17, "***", 1, "An", "Discriminente", None, "(*)[A|E|I|0]"),
+    (18, "***", 4, "An", "Ejercicio de devengo", None, None),
+    (19, "***", 2, "An", "Período", None, "0A"),
+    (20, "***", 5, "An", "Constante", None, "0000>"),
+)
 
 
 def test_modelo_200_workbook_recovers_source_declared_totals_and_variable_envelope() -> None:
@@ -70,13 +77,14 @@ def test_modelo_200_workbook_recovers_source_declared_totals_and_variable_envelo
     envelope = envelope_sheet.variable_envelope
     assert envelope_sheet.total_positions is None
     assert envelope is not None
+    assert isinstance(envelope.closing, RecordDesignRelativeSuffixMarker)
     assert envelope.prefix_extent == 328
     assert max(field.offset + field.length - 1 for field in envelope.prefix_fields) == 328
     assert (envelope.body.row, envelope.body.offset, envelope.body.length) == (14, 329, "Variable")
     assert (
-        envelope.closing_suffix.row,
-        envelope.closing_suffix.offset,
-        envelope.closing_suffix.length,
+        envelope.closing.row,
+        envelope.closing.offset,
+        envelope.closing.length,
     ) == (15, "***", 18)
     assert (
         envelope.variable_total.row,
@@ -104,6 +112,7 @@ def test_modelo_303_workbooks_recognise_the_official_variable_envelope_shape(
     assert len(envelopes) == 1
     envelope = envelopes[0]
     assert envelope is not None
+    assert isinstance(envelope.closing, RecordDesignRelativeSuffixMarker)
     assert envelope.name == "DP30300"
     assert envelope.prefix_extent == 328
     assert (envelope.body.row, envelope.body.ordinal, envelope.body.offset, envelope.body.length) == (
@@ -113,10 +122,10 @@ def test_modelo_303_workbooks_recognise_the_official_variable_envelope_shape(
         "Variable",
     )
     assert (
-        envelope.closing_suffix.row,
-        envelope.closing_suffix.ordinal,
-        envelope.closing_suffix.offset,
-        envelope.closing_suffix.length,
+        envelope.closing.row,
+        envelope.closing.ordinal,
+        envelope.closing.offset,
+        envelope.closing.length,
     ) == (20, 15, "***", 18)
     assert (
         envelope.variable_total.row,
@@ -125,12 +134,59 @@ def test_modelo_303_workbooks_recognise_the_official_variable_envelope_shape(
     ) == (21, "total", "Variable")
 
 
+@pytest.mark.parametrize(("source_ref", "filing_year", "design_epoch"), _MODELO_220_DESIGNS)
+def test_modelo_220_workbooks_preserve_the_exact_composite_relative_closing(
+    source_ref: str,
+    filing_year: int,
+    design_epoch: str,
+) -> None:
+    """Each SHA-bound M220 design retains all six official closing rows."""
+    _modelo, catalogues = _committed_registry_tree()
+    resolved = resolve_record_design_binary(
+        bundled_path(),
+        catalogues.sources,
+        source_ref=source_ref,
+        filing_year=filing_year,
+        design_epoch=design_epoch,
+    )
+
+    parsed = extract_record_design(resolved.path)
+    envelopes = tuple(sheet.variable_envelope for sheet in parsed if sheet.variable_envelope is not None)
+
+    assert resolved.source.sha256 == catalogues.sources[source_ref].sha256
+    assert len(envelopes) == 1
+    envelope = envelopes[0]
+    assert envelope is not None
+    assert envelope.name == "T220000000"
+    assert envelope.prefix_extent == 328
+    assert (envelope.body.row, envelope.body.ordinal, envelope.body.offset, envelope.body.length) == (
+        19,
+        14,
+        329,
+        "Variable",
+    )
+    assert isinstance(envelope.closing, RecordDesignCompositeRelativeClosing)
+    assert tuple(
+        (part.row, part.ordinal, part.offset, part.length, part.type_code, part.content)
+        for part in envelope.closing.parts
+    ) == (
+        (20, 15, "***", 3, "An", "</T"),
+        (21, 16, "***", 3, "An", "220"),
+        (22, 17, "***", 1, "An", "(*)[A|E|I|0]"),
+        (23, 18, "***", 4, "An", None),
+        (24, 19, "***", 2, "An", "0A"),
+        (25, 20, "***", 5, "An", "0000>"),
+    )
+    assert (envelope.variable_total.row, envelope.variable_total.length) == (26, "Variable")
+
+
 def test_variable_envelope_recognition_has_no_record_name_selector() -> None:
     """The parser recognises official composition markers, never a known tab name."""
     source = inspect.getsource(record_design_module._extract_sheet_rows)
 
     assert "DP200000" not in source
     assert "DP30300" not in source
+    assert "T220000000" not in source
 
 
 def test_workbook_declared_total_must_equal_terminal_parsed_extent(tmp_path: Path) -> None:
@@ -202,7 +258,7 @@ def test_workbook_total_recovery_accepts_only_official_labels_and_positive_integ
                 (4, "***", 2, "An", "Second suffix", None, "CRLF"),
                 ("Total", None, "Variable", None, None, None, None),
             ),
-            "duplicate relative closing suffixes",
+            "incomplete or ambiguous relative closing",
         ),
         (
             (
@@ -274,28 +330,7 @@ def test_workbook_total_recovery_accepts_only_official_labels_and_positive_integ
         (
             (
                 (1, 1, 328, "An", "Fixed prefix", None, None),
-                (2, "***", 18, "An", "Closing suffix", None, '"</T200>"'),
-            ),
-            "incomplete variable-envelope composition",
-        ),
-        (
-            (
-                (1, 1, 328, "An", "Fixed prefix", None, None),
-                ("Total", None, "Variable", None, None, None, None),
-            ),
-            "incomplete variable-envelope composition",
-        ),
-        (
-            (
-                (1, 1, 328, "An", "Fixed prefix", None, None),
                 (None, 329, "Variable", "An", "Malformed variable body", None, None),
-            ),
-            "malformed variable-envelope marker in row 3",
-        ),
-        (
-            (
-                (1, 1, 328, "An", "Fixed prefix", None, None),
-                (None, "***", 18, "An", "Malformed closing suffix", None, '"</T200>"'),
             ),
             "malformed variable-envelope marker in row 3",
         ),
@@ -306,7 +341,7 @@ def test_workbook_total_recovery_accepts_only_official_labels_and_positive_integ
                 (3, "***", 17, "An", "Wrong-length closing suffix", None, '"</T200"'),
                 ("Total", None, "Variable", None, None, None, None),
             ),
-            "incomplete variable-envelope composition",
+            "incomplete or ambiguous relative closing",
         ),
         (
             (
@@ -357,6 +392,81 @@ def test_variable_envelope_rejects_malformed_composition(
 
     with pytest.raises(RegistryValidationError, match=message):
         extract_record_design(path)
+
+
+@pytest.mark.parametrize(
+    ("closing_rows", "message"),
+    (
+        (_M220_COMPOSITE_CLOSING_ROWS[:-1], "incomplete or ambiguous relative closing"),
+        (
+            (*_M220_COMPOSITE_CLOSING_ROWS, (21, "***", 1, "An", "Duplicate", None, "!")),
+            "incomplete or ambiguous relative closing",
+        ),
+        (
+            (
+                _M220_COMPOSITE_CLOSING_ROWS[0],
+                _M220_COMPOSITE_CLOSING_ROWS[2],
+                _M220_COMPOSITE_CLOSING_ROWS[1],
+                *_M220_COMPOSITE_CLOSING_ROWS[3:],
+            ),
+            "malformed composite relative closing",
+        ),
+        (
+            (
+                *_M220_COMPOSITE_CLOSING_ROWS[:4],
+                (19, "***", 2, "An", "Período", None, "1T"),
+                _M220_COMPOSITE_CLOSING_ROWS[5],
+            ),
+            "malformed composite relative closing",
+        ),
+    ),
+)
+def test_modelo_220_composite_relative_closing_refuses_incomplete_duplicate_reordered_or_ambiguous_rows(
+    tmp_path: Path,
+    closing_rows: tuple[tuple[object, ...], ...],
+    message: str,
+) -> None:
+    """The six-row contract fails closed without joining or defaulting parts."""
+    from openpyxl import Workbook
+
+    path = tmp_path / "malformed-m220-composite.xlsx"
+    workbook = Workbook()
+    worksheet = workbook.active
+    worksheet.title = "OFFICIAL-SHAPE"
+    worksheet.append(("Nº", "Posic.", "Lon", "Tipo", "Descripción", "Validación", "Contenido"))
+    worksheet.append((13, 1, 328, "An", "Fixed prefix", None, None))
+    worksheet.append((14, 329, "Variable", "An", "Variable body", None, None))
+    for row in closing_rows:
+        worksheet.append(row)
+    worksheet.append(("Total", None, "Variable", None, None, None, None))
+    workbook.save(path)
+    workbook.close()
+
+    with pytest.raises(RegistryValidationError, match=message):
+        extract_record_design(path)
+
+
+def test_closing_and_variable_total_without_a_body_do_not_reclassify_a_fixed_record(tmp_path: Path) -> None:
+    """Partial marker facts remain non-envelope facts unless a body or mixed total is present."""
+    from openpyxl import Workbook
+
+    path = tmp_path / "partial-marker-fixed-record.xlsx"
+    workbook = Workbook()
+    worksheet = workbook.active
+    worksheet.title = "FIXED"
+    worksheet.append(("Nº", "Posic.", "Lon", "Tipo", "Descripción", "Validación", "Contenido"))
+    worksheet.append((1, 1, 328, "An", "Fixed record", None, None))
+    worksheet.append((2, "***", 18, "An", "Relative marker", None, "</T200020250A0000>"))
+    worksheet.append(("Total", None, "Variable", None, None, None, None))
+    worksheet.append(("Total", None, 328, None, None, None, None))
+    workbook.save(path)
+    workbook.close()
+
+    parsed = extract_record_design(path)
+
+    assert len(parsed) == 1
+    assert parsed[0].total_positions == 328
+    assert parsed[0].variable_envelope is None
 
 
 @pytest.mark.parametrize(
@@ -713,14 +823,7 @@ def test_registered_record_design_sources_are_discovered_and_parseable() -> None
         if source.kind == "record_design"
     }
 
-    assert set(sources) >= set(_PARTIAL_VARIABLE_ENVELOPE_FAILURES)
-    source_items = tuple(
-        sorted(
-            (source_id, path)
-            for source_id, path in sources.items()
-            if source_id not in _PARTIAL_VARIABLE_ENVELOPE_FAILURES
-        ),
-    )
+    source_items = tuple(sorted(sources.items()))
     parsed_by_path = _official_record_designs(tuple(path for _source_id, path in source_items))
     parsed = {source_id: parsed_by_path[path] for source_id, path in source_items}
 
@@ -728,23 +831,6 @@ def test_registered_record_design_sources_are_discovered_and_parseable() -> None
     assert all(parsed.values())
     assert {path.suffix.lower() for path in sources.values()} >= {".pdf", ".xls", ".xlsx"}
     assert sum(len(sheet.fields) for sheets in parsed.values() for sheet in sheets) > len(sources)
-
-
-@pytest.mark.parametrize(
-    ("source_ref", "message"),
-    tuple(_PARTIAL_VARIABLE_ENVELOPE_FAILURES.items()),
-)
-def test_registered_partial_variable_envelopes_refuse_instead_of_truncating(
-    source_ref: str,
-    message: str,
-) -> None:
-    """Every official partial envelope is an explicit parser refusal, never a fixed record."""
-    _, catalogues = _committed_registry_tree()
-    source = catalogues.sources[source_ref]
-
-    with pytest.raises(RegistryValidationError, match=message):
-        extract_record_design(bundled_path() / source.corpus_path)
-
 
 # Run out-of-process: any sibling test that parses a workbook or PDF imports these
 # backends into the shared session, so an in-process check cannot observe absence.

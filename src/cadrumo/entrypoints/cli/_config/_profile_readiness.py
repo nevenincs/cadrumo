@@ -53,6 +53,7 @@ def _emit_profile_record_unreadable(
     error: Exception,
 ) -> None:
     from ....application.workflow import unavailable_profile_record_verdict
+
     message = str(error).splitlines()[0] if str(error) else type(error).__name__
     from .._config_payloads import ConfigProfileShowResult
 

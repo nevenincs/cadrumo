@@ -165,7 +165,7 @@ def validate_casilla_input_ids[CasillaKey, CasillaValue](
     The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` supplies the
     declared casilla ids, data types, and non-canonical reference targets used to
     reject ambiguous or malformed operator input. The returned mapping is keyed
-    by canonical :class:`~cadrumo.domain.calculations.registry.CasillaId` values and
+    by canonical :class:`~cadrumo.core.CasillaId` values and
     contains only ``Decimal`` numeric inputs that the registry engine may
     consume.
 
@@ -297,7 +297,7 @@ def reject_unknown_override_casillas[CasillaKey](
     """Refuse amendment override casillas outside the resolved revision.
 
     Keys are canonicalised as
-    :class:`~cadrumo.domain.calculations.registry.CasillaId` values and checked
+    :class:`~cadrumo.core.CasillaId` values and checked
     against the :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot`
     selected by ``modelo``, ``filing_year``, and :class:`~cadrumo.core.Period`.
     Printed-number aliases and ambiguous reused numbers raise
@@ -377,7 +377,7 @@ def reject_unknown_import_casillas[CasillaKey](
     The snapshot is a
     :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot`. The returned
     mapping is keyed by canonical
-    :class:`~cadrumo.domain.calculations.registry.CasillaId` values declared by the
+    :class:`~cadrumo.core.CasillaId` values declared by the
     selected :class:`~cadrumo.domain.calculations.registry.ModeloRevision`.
     Unknown, malformed, and non-canonical printed numbers raise
     :class:`~cadrumo.application.modelo.ExternalModeloImportError` so imported AEAT
@@ -454,7 +454,7 @@ def required_input_casilla_ids_for_revision(
     loaded. The first tuple contains required manual casillas from the selected
     :class:`~cadrumo.domain.calculations.registry.ModeloRevision`; the second
     contains declared manual, bound, and computed
-    :class:`~cadrumo.domain.calculations.registry.CasillaId` values that
+    :class:`~cadrumo.core.CasillaId` values that
     amendment/import paths may need to carry through replay.
     """
     try:

@@ -269,10 +269,10 @@ def test_non_convenio_country_zw_general_emits_missing_finding(
     assert rate is None
     assert len(findings) == 1
     finding = findings[0]
-    assert "m210-convenio-rate-missing" in finding.message
-    message_lower = finding.message.lower()
-    assert "zw" in message_lower
-    assert "general" in message_lower
+    assert finding.message_locale_key == "application.modelo.findings.m210_rate_unavailable"
+    assert finding.message_facts["reason_code"] == "convenio_rate_missing"
+    assert finding.message_facts["country_code"] == "ZW"
+    assert finding.message_facts["tipo_renta_code"] == "general"
 
 
 def test_resident_pension_uses_live_domestic_tariff_without_scalar_rate(
@@ -354,7 +354,7 @@ def test_m210_unresolved_outcome_findings_emits_convenio_missing_finding(
     )
 
     assert len(findings) == 1
-    assert "m210-convenio-rate-missing" in findings[0].message
+    assert findings[0].message_facts["reason_code"] == "convenio_rate_missing"
 
 
 def test_m210_unresolved_outcome_findings_emits_unknown_tipo_finding(
@@ -377,7 +377,7 @@ def test_m210_unresolved_outcome_findings_emits_unknown_tipo_finding(
     )
 
     assert len(findings) == 1
-    assert "m210-baseline-tipo-deferred" in findings[0].message
+    assert findings[0].message_facts["reason_code"] == "baseline_rate_unavailable"
 
 
 def test_m210_unresolved_outcome_findings_omits_finding_when_rate_resolves(
@@ -499,7 +499,8 @@ def test_representante_predicate_emits_blocking_finding_via_evaluator() -> None:
     assert len(findings) == 1
     finding = findings[0]
     assert finding.kind is ModeloVerificationFindingKind.BLOCKING_RULE
-    assert "m210-representante-fiscal-required" in finding.message
+    assert finding.message_locale_key == "application.modelo.findings.cross_casilla_invariant_violated"
+    assert finding.message_facts["predicate_id"] == "m210-representante-fiscal-required"
     assert "trlirnr-rdleg-5-2004:art-10" in finding.legal_refs
 
 

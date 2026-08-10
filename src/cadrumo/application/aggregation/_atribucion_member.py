@@ -16,6 +16,7 @@ from decimal import Decimal, InvalidOperation
 
 from ...core import BindingSourceKind
 from ...core.hashing import content_hash_hex
+from ...core.identity import tax_id_identity_token
 from ...core.resources import resources
 from ...domain.calculations.registry import AtributionMemberObservation, resolve_atribucion_binding_row_values
 from ...domain.modelos import Modelo184MemberRow
@@ -130,7 +131,7 @@ def _missing_fields(socio: _SocioFacts) -> frozenset[str]:
 
 
 def _socio_sort_key(socio: _SocioFacts) -> tuple[str, str]:
-    return ("ES", str(socio.values.get("nif", "")).strip().upper())
+    return ("ES", tax_id_identity_token(str(socio.values.get("nif", ""))))
 
 
 def _blank(value: object) -> bool:
@@ -183,7 +184,7 @@ def _diagnostic(message: str) -> CalculationSourceDiagnostic:
 def _observation_from_socio(socio: _SocioFacts, *, filing_year: int) -> AtributionMemberObservation:
     return AtributionMemberObservation(
         source_id=f"profile:attribution_entity_socios:{socio.index}",
-        member_tax_id=str(socio.values["nif"]).strip().upper(),
+        member_tax_id=tax_id_identity_token(str(socio.values["nif"])),
         member_legal_name=str(socio.values["name"]).strip(),
         transaction_date=date(filing_year, 1, 1),
         share_percentage=_decimal(socio.values["share_pct"]),
@@ -193,7 +194,7 @@ def _observation_from_socio(socio: _SocioFacts, *, filing_year: int) -> Atributi
 
 def _detail_row_from_socio(socio: _SocioFacts) -> Modelo184MemberRow:
     return Modelo184MemberRow(
-        nif=str(socio.values["nif"]).strip().upper(),
+        nif=tax_id_identity_token(str(socio.values["nif"])),
         nombre=str(socio.values["name"]).strip(),
         porcentaje=_decimal(socio.values["share_pct"]),
         importe=_decimal(socio.values["base_imponible_assigned"]),

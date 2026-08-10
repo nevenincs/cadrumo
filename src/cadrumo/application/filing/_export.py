@@ -44,7 +44,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
@@ -68,7 +68,10 @@ from ...core.time import now
 from ...domain.calculations.registry import (
     BindingId,
     CasillaFieldKind,
+    ExportComputedKey,
+    ExportDraftAttribute,
     ExportFieldDefinition,
+    ExportHeaderKey,
     ExportLayoutDefinition,
     ExportRecordDefinition,
     RegistryValidationError,
@@ -298,7 +301,7 @@ def export_draft(
     draft: ModeloDraft,
     *,
     output_path: Path,
-    headers: dict[str, str],
+    headers: Mapping[str, str],
     dictionary_values: Mapping[str, object] | None = None,
     prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP,
     schema_provider: RegistrySchemaAccessor | None = None,
@@ -612,7 +615,7 @@ def _render_export_layout(
     layout: ExportLayoutDefinition,
     *,
     draft: ModeloDraft,
-    headers: dict[str, str],
+    headers: Mapping[str, str],
     dictionary_values: Mapping[str, object] | None,
     prior_domiciliation_election: PriorDomiciliationElection,
     schema_provider: RegistrySchemaAccessor,
@@ -621,7 +624,7 @@ def _render_export_layout(
         return render_xml_dictionary_layout(
             layout,
             draft=draft,
-            headers=headers,
+            headers=dict(headers),
             dictionary_values=dictionary_values,
             schema_provider=schema_provider,
         )
@@ -637,11 +640,11 @@ def _render_layout(
     layout: ExportLayoutDefinition,
     *,
     draft: ModeloDraft,
-    headers: dict[str, str],
+    headers: Mapping[str, str],
     prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP,
 ) -> bytes:
     chunks: list[bytes] = []
-    normalized_headers = {key.lower(): value for key, value in headers.items()}
+    normalized_headers = _normalise_export_headers(headers)
     casilla_values: dict[CasillaId, object] = {value.casilla_id: value.value for value in draft.values}
     binding_values: dict[tuple[BindingId, int | None], object] = {
         (value.binding_id, value.row_index): value.value for value in draft.binding_values
@@ -673,6 +676,21 @@ def _render_layout(
 
 
 render_layout = _render_layout
+
+
+def _normalise_export_headers(headers: Mapping[str, str]) -> dict[ExportHeaderKey, str]:
+    """Hydrate the public boundary to the one closed header-key vocabulary."""
+    normalized: dict[ExportHeaderKey, str] = {}
+    for key, value in headers.items():
+        try:
+            member = ExportHeaderKey(key)
+        except ValueError:
+            raise FilingExportValidationError(
+                f"export header key {key!r} is not recognised; expected one of "
+                f"{[candidate.value for candidate in ExportHeaderKey]}",
+            ) from None
+        normalized[member] = value
+    return normalized
 
 
 def _record_render_rows(
@@ -759,7 +777,7 @@ def _render_record(
     record: ExportRecordDefinition,
     *,
     draft: ModeloDraft,
-    headers: dict[str, str],
+    headers: Mapping[ExportHeaderKey, str],
     casilla_values: dict[CasillaId, object],
     binding_values: dict[tuple[BindingId, int | None], object],
     row: _RecordRenderRow,
@@ -813,7 +831,7 @@ def _render_field(
     field: ExportFieldDefinition,
     *,
     draft: ModeloDraft,
-    headers: dict[str, str],
+    headers: Mapping[ExportHeaderKey, str],
     casilla_values: dict[CasillaId, object],
     binding_values: dict[tuple[BindingId, int | None], object],
     row_index: int | None,
@@ -835,7 +853,7 @@ def _field_value(
     field: ExportFieldDefinition,
     *,
     draft: ModeloDraft,
-    headers: dict[str, str],
+    headers: Mapping[ExportHeaderKey, str],
     casilla_values: dict[CasillaId, object],
     binding_values: dict[tuple[BindingId, int | None], object],
     row_index: int | None,
@@ -875,10 +893,10 @@ def _binding_field_value(
     return binding_values.get((field.binding, row_index))
 
 
-def _header_field_value(field: ExportFieldDefinition, headers: dict[str, str]) -> str:
+def _header_field_value(field: ExportFieldDefinition, headers: Mapping[ExportHeaderKey, str]) -> str:
     if field.header_key is None:
         raise FilingExportValidationError(f"export field {field.id!r} must declare header_key")
-    value = headers.get(field.header_key.lower())
+    value = headers.get(field.header_key)
     if field.required and (value is None or not value.strip()) and not _required_header_allows_blank(field, headers):
         raise FilingExportValidationError(f"export header {field.header_key!r} is required")
     return value.strip() if value else ""
@@ -893,36 +911,58 @@ _M202_LEGAL_ENTITY_BLANK_NAME_FIELD_IDS: frozenset[str] = frozenset(
 )
 
 
-def _required_header_allows_blank(field: ExportFieldDefinition, headers: dict[str, str]) -> bool:
+def _required_header_allows_blank(
+    field: ExportFieldDefinition,
+    headers: Mapping[ExportHeaderKey, str],
+) -> bool:
     """Allow only Modelo 202's individual-name slot to blank for legal entities."""
     return (
         str(field.id) in _M202_LEGAL_ENTITY_BLANK_NAME_FIELD_IDS
-        and field.header_key == "name"
-        and (headers.get("entity_type") or "").strip() == "legal_entity"
-        and bool((headers.get("surnames") or "").strip())
+        and field.header_key is ExportHeaderKey.NAME
+        and (headers.get(ExportHeaderKey.ENTITY_TYPE) or "").strip() == "legal_entity"
+        and bool((headers.get(ExportHeaderKey.SURNAMES) or "").strip())
     )
 
 
+def _envelope_closing_tag(draft: ModeloDraft) -> str:
+    year = str(draft.period.filing_year)
+    period_code = draft.period.registry_token
+    return f"</T{draft.modelo}0{year}{period_code}0000>"
+
+
+def _draft_profile_tax_id(draft: ModeloDraft) -> str:
+    return draft.profile_tax_id
+
+
+def _draft_filing_year(draft: ModeloDraft) -> str:
+    return str(draft.period.filing_year)
+
+
+def _draft_period_code(draft: ModeloDraft) -> str:
+    return draft.period.registry_token
+
+
+_COMPUTED_VALUE_PRODUCERS: Mapping[ExportComputedKey, Callable[[ModeloDraft], str]] = {
+    ExportComputedKey.ENVELOPE_CLOSING_TAG: _envelope_closing_tag,
+}
+
+_DRAFT_VALUE_PRODUCERS: Mapping[ExportDraftAttribute, Callable[[ModeloDraft], str]] = {
+    ExportDraftAttribute.PROFILE_TAX_ID: _draft_profile_tax_id,
+    ExportDraftAttribute.FILING_YEAR: _draft_filing_year,
+    ExportDraftAttribute.PERIOD_CODE: _draft_period_code,
+}
+
+
 def _computed_field_value(field: ExportFieldDefinition, draft: ModeloDraft) -> str:
-    if field.computed_key == "envelope_closing_tag":
-        year = str(draft.period.filing_year)
-        period_code = draft.period.registry_token
-        return f"</T{draft.modelo}0{year}{period_code}0000>"
-    raise FilingExportError(f"unsupported export computed field {field.computed_key!r}")
+    if field.computed_key is None:
+        raise FilingExportValidationError(f"export field {field.id!r} must declare computed_key")
+    return _COMPUTED_VALUE_PRODUCERS[field.computed_key](draft)
 
 
 def _draft_value(field: ExportFieldDefinition, draft: ModeloDraft) -> str:
-    if field.draft_attribute == "modelo":
-        return draft.modelo
-    if field.draft_attribute == "period":
-        return draft.period.registry_token
-    if field.draft_attribute == "profile_tax_id":
-        return draft.profile_tax_id
-    if field.draft_attribute == "filing_year":
-        return str(draft.period.filing_year)
-    if field.draft_attribute == "period_code":
-        return draft.period.registry_token
-    raise FilingExportError(f"unsupported draft export attribute {field.draft_attribute!r}")
+    if field.draft_attribute is None:
+        raise FilingExportValidationError(f"export field {field.id!r} must declare draft_attribute")
+    return _DRAFT_VALUE_PRODUCERS[field.draft_attribute](draft)
 
 
 def _format_field(field: ExportFieldDefinition, value: object) -> str:

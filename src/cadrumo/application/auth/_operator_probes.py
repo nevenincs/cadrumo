@@ -28,6 +28,7 @@ from ._operator_scope import active_profile_storage_span
 from ._probe_result import ProviderProbeResult
 from ._sessions import (
     ClaveCredentials,
+    bind_clave_credentials_to_settings,
     clave_auth_facts_from_profile_values,
     load_persisted_session,
     resolve_clave_credentials,
@@ -103,6 +104,32 @@ def probe_clave_credentials(
         provider_kind,
         settings=settings,
         facts=clave_auth_facts_from_profile_values(_active_profile_path_values(state)),
+    )
+
+
+def bind_profile_auth_settings(
+    provider_kind: AuthProviderKind | None,
+    *,
+    settings: Settings,
+    state: WorkflowState | None = None,
+) -> Settings:
+    """Bind the profile credentials that the selected backend will actually use.
+
+    Status and live authentication must construct a provider from the same
+    effective settings. This uses the live session resolver and binder rather
+    than reproducing their precedence rules in a readiness-only projection.
+    """
+    if provider_kind not in (AuthProviderKind.CLAVE_MOVIL, AuthProviderKind.CLAVE_PERMANENTE):
+        return settings
+    assert provider_kind is not None
+    facts = clave_auth_facts_from_profile_values(_active_profile_path_values(state))
+    credentials = resolve_clave_credentials(provider_kind, settings=settings, facts=facts)
+    if credentials is None:
+        return settings
+    return bind_clave_credentials_to_settings(
+        settings,
+        credentials,
+        route=facts.clave_movil_route,
     )
 
 

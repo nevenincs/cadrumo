@@ -60,7 +60,7 @@ def test_file_requires_verificado_completo_state(repos: Repos) -> None:
         bucket_event_repository=bv_repo,
         clock=T1,
     )
-    with pytest.raises(CalculationRevisionStateError, match=r"state|verified|VERIFIED"):
+    with pytest.raises(CalculationRevisionStateError, match=r"state|verified|VERIFIED") as raised:
         file_modelo_revision(
             revision.calculation_revision_id,
             actor="operator-A",
@@ -71,6 +71,13 @@ def test_file_requires_verificado_completo_state(repos: Repos) -> None:
             bucket_event_repository=bv_repo,
             clock=T2,
         )
+    failure = raised.value.precondition_failure
+    assert failure is not None
+    assert failure.scenario_id == "modelo.work.file.calculation_revision.unverified"
+    assert raised.value.terminal_precondition_verdict is failure.verdict
+    assert failure.verdict.action is not None
+    assert failure.verdict.action.action_id == "operator.modelo.work.verify"
+    assert failure.verdict.argument_bindings[0].value == work_unit.work_unit_id
 
 
 def test_file_creates_filing_record_and_advances_pointers(repos: Repos) -> None:

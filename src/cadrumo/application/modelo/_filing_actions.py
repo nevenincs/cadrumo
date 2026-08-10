@@ -46,7 +46,12 @@ from ...adapters.persistence.profile.modelos_calculation import CalculationRevis
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ...core import PaymentElection, PriorDomiciliationElection, RefundElection, ResultDisposition
+from ...core import (
+    PaymentElection,
+    PriorDomiciliationElection,
+    RefundElection,
+    ResultDisposition,
+)
 from ...core.config import Settings
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol
@@ -84,6 +89,7 @@ from ._iva_wallet_gate import (
     require_persisted_iva_compensation_decision_matches_revision as _require_iva_compensation_revision_match,
 )
 from ._ledger_evidence_gate import raise_if_deductible_vat_evidence_missing
+from ._preconditions import build_modelo_work_file_unverified_revision_failure
 from ._prior_domiciliation import resolve_prior_domiciliation_election
 from ._required_binding_gate import (
     require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
@@ -94,6 +100,7 @@ from ._verification_actions import (
     cross_period_expected_member_sets_from_profile,
     require_cross_period_clean_state,
 )
+from ._work_lifecycle import RevisionParentOperation, require_revision_parent_active
 from ._workflow_gate import build_revision_workflow_engine as _build_revision_workflow_engine
 from ._workflow_gate import run_revision_workflow_gate as _run_revision_workflow_gate
 
@@ -274,6 +281,11 @@ def file_modelo_revision(
         raise WorkUnitNotFoundError(
             f"calculation revision {calculation_revision_id!r} references missing work_unit_id={target.work_unit_id!r}",
         )
+    require_revision_parent_active(
+        work_unit=work_unit,
+        calculation_revision_id=calculation_revision_id,
+        operation=RevisionParentOperation.FILE,
+    )
     if target.state is CalculationRevisionState.PRESENTADO:
         # Idempotent re-file: this revision is already the current filed answer.
         # A retry of a completed single-subject file returns the existing VIGENTE
@@ -299,8 +311,13 @@ def file_modelo_revision(
             return existing
     if target.state is not CalculationRevisionState.VERIFICADO_COMPLETO:
         raise CalculationRevisionStateError(
-            f"calculation revision {calculation_revision_id!r} is in state "
-            f"{target.state.value!r}; only VERIFICADO_COMPLETO revisions can be filed",
+            translated_message="errors.error.error_modelo_calculation_revision_state",
+            context={"calculation_revision_id": calculation_revision_id, "state": target.state.value},
+            precondition_failure=build_modelo_work_file_unverified_revision_failure(
+                calculation_revision_id=calculation_revision_id,
+                state=target.state.value,
+                work_unit=work_unit,
+            ),
         )
 
     _require_filing_preconditions(
@@ -413,6 +430,7 @@ def _require_filing_preconditions(
         work_unit,
         target,
         repository=iva_compensation_decision_repository,
+        subject_leaf_key="modelo.work.file",
     )
     require_cross_period_clean_state(
         work_unit,
@@ -431,6 +449,7 @@ def _require_filing_preconditions(
         taxpayer_files_economic_activity=derive_taxpayer_files_economic_activity(workflow_profile),
         workflow_profile=workflow_profile,
         target_revision=target,
+        subject_leaf_key="modelo.work.file",
     )
 
 

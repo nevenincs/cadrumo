@@ -201,7 +201,7 @@ def test_diff_registry_revisions_surfaces_a_formula_regrounded_on_a_later_orden(
 
     assert resultado.target_casilla_id == "iva.resultado"
     assert "orden-eha-3786-2008:art-1" in set(resultado.from_legal_refs) - set(resultado.to_legal_refs)
-    assert "orden-hac-819-2024:art-1" in set(resultado.to_legal_refs) - set(resultado.from_legal_refs)
+    assert "orden-hac-819-2024:art-unico" in set(resultado.to_legal_refs) - set(resultado.from_legal_refs)
 
 
 def test_diff_registry_revisions_surfaces_a_formula_that_changed_only_its_legal_grounding() -> None:
