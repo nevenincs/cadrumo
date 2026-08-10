@@ -689,6 +689,18 @@ application:
         és anterior a l'admesa per aquesta aplicació; no es pot restaurar sense una
         migració.
   calculations:
+    errors:
+      observation_displaces_official_evidence_app_filing: 'Aquest model, exercici
+        i periode ja conte evidencia capturada de l''AEAT ({existing_source_kind}),
+        de manera que no s''hi pot desar a sobre una declaracio calculada localment.
+        Un recalcul local no es l''autoritat sobre allo presentat: si es correcte,
+        presenteu la correccio davant l''AEAT i descarregueu-ne el resultat. L''evidencia
+        capturada no es pot recuperar per cap via que exposi aquesta aplicacio.'
+      observation_displaces_official_evidence_manual: Aquest model, exercici i periode
+        ja conte evidencia capturada de l'AEAT ({existing_source_kind}). Desar-hi
+        una xifra manual la substitueix, i l'evidencia substituida no es pot recuperar
+        per cap via que exposi aquesta aplicacio. Torneu a executar-ho amb l'opcio
+        de substituir evidencia oficial si la substitucio es intencionada.
     iva_compensation:
       errors:
         correction_missing: No existeix cap registre de compensació sembrat per a

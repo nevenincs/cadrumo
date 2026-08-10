@@ -80,6 +80,7 @@ def record_operator_local_observation[CasillaKey](
     actor: str = "operator-manual",
     repository: CalculationObservationRepository | None = None,
     clock: datetime | None = None,
+    replace_official_evidence: bool = False,
 ) -> ModeloLocalObservationResult:
     """Persist an operator-supplied local observation for later calculation prefill.
 
@@ -122,6 +123,7 @@ def record_operator_local_observation[CasillaKey](
             "official_evidence": "false",
             "filing_record_created": "false",
         },
+        replace_official_evidence=replace_official_evidence,
     )
     return ModeloLocalObservationResult(
         modelo=modelo,

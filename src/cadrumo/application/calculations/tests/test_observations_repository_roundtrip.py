@@ -340,6 +340,12 @@ def test_second_observation_under_one_natural_key_leaves_the_first_unreachable(
             source_kind="operator_manual",
             captured_at=_CAPTURED_AT + timedelta(days=1),
             source_metadata={"local_observation_kind": "operator_supplied"},
+            # This displacement is now refused by default. The intent is stated
+            # explicitly because what this test measures is the COST of
+            # displacing official evidence, not whether it is permitted -- the
+            # refusal is measured separately. Removing this argument would turn
+            # a cost measurement into a duplicate of the guard's own test.
+            replace_official_evidence=True,
         )
 
         loaded = repo.load_observation("303", period)

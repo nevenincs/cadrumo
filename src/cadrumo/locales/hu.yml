@@ -649,6 +649,18 @@ application:
         megelőzi az alkalmazás által támogatott verziót; migráció nélkül nem állítható
         vissza.
   calculations:
+    errors:
+      observation_displaces_official_evidence_app_filing: 'Ez a modelo, ado ev es
+        idoszak mar tartalmaz az AEAT-tol rogzitett bizonyitekot ({existing_source_kind}),
+        ezert helyben szamitott bevallas nem menthato folebe. A helyi ujraszamitas
+        nem hiteles forras a benyujtott adatokra: ha helyes, nyujtsa be a helyesbitest
+        az AEAT-hoz, es toltse le az eredmenyt. A rogzitett bizonyitek ezen alkalmazas
+        egyetlen utvonalan sem allithato helyre.'
+      observation_displaces_official_evidence_manual: Ez a modelo, ado ev es idoszak
+        mar tartalmaz az AEAT-tol rogzitett bizonyitekot ({existing_source_kind}).
+        Egy kezi ertek mentese felulirja azt, es a felulirt bizonyitek ezen alkalmazas
+        egyetlen utvonalan sem allithato helyre. Futtassa ujra a hivatalos bizonyitek
+        felulirasat engedelyezo kapcsoloval, ha a felulirast szandekosan vegzi.
     iva_compensation:
       errors:
         correction_missing: 'Nincs beállított kompenzációs rekord ehhez: %{filing_year}/%{period};

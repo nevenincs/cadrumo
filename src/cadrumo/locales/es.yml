@@ -696,6 +696,18 @@ application:
         es anterior a la admitida por esta aplicación; no puede restaurarse sin una
         migración.
   calculations:
+    errors:
+      observation_displaces_official_evidence_app_filing: 'Este modelo, ejercicio
+        y periodo ya contiene evidencia capturada de la AEAT ({existing_source_kind}),
+        por lo que no se puede guardar encima una declaracion calculada localmente.
+        Un recalculo local no es la autoridad sobre lo presentado: si es correcto,
+        presente la correccion ante la AEAT y descargue el resultado. La evidencia
+        capturada no se puede recuperar por ninguna via que exponga esta aplicacion.'
+      observation_displaces_official_evidence_manual: Este modelo, ejercicio y periodo
+        ya contiene evidencia capturada de la AEAT ({existing_source_kind}). Guardar
+        aqui una cifra manual la sustituye, y la evidencia sustituida no se puede
+        recuperar por ninguna via que exponga esta aplicacion. Vuelva a ejecutarlo
+        con la opcion de sustituir evidencia oficial si la sustitucion es intencionada.
     iva_compensation:
       errors:
         correction_missing: No existe ningún registro de compensación sembrado para
