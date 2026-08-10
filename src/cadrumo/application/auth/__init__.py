@@ -70,7 +70,7 @@ See Also:
         Public workflow facade that owns
         :class:`application.workflow.WorkflowState` and
         :class:`application.workflow.ActiveProfileHealth`.
-    :class:`domain.buckets.BucketEventHistoryRepository`
+    :class:`adapters.persistence.profile.buckets.BucketEventHistoryRepository`
         Durable bucket event catalogue that receives auth configuration,
         session, lock, and clear events without secret payload material.
     :mod:`application.live`

@@ -21,7 +21,7 @@ coupling the port removes. The domain error carries the same diagnosis in its
 ``context``.
 
 See Also:
-    :class:`application.modelo.FicheroBoeRecordRenderer`
+    :class:`application.modelo._ports.FicheroBoeRecordRenderer`
         The structural port this class satisfies.
     :func:`domain.calculations.registry.render_fixed_width_export_field`
         The canonical exact-width field codec reused by this renderer.

@@ -10,140 +10,95 @@ trigger: always_on
 
 # AEAT agent orchestration, audit cadence, and campaign close
 
-Governs how agents are dispatched, how the standing audit runs, and what closing
-a campaign requires. Companion to `aeat-worktree-safety` (the commands).
+Governs dispatch, the standing audit, and campaign close. Companion to
+`aeat-worktree-safety` (the commands).
 
 ## Dispatch
 
-Drive campaigns through a persistent, role-based team — legal authority, ADR
-specialist, coders, reviewers, commit bot — resumed by name. Resume a standing
-teammate to reuse its context; do not spawn fresh one-shot agents for work a
-standing role owns. Delegate one issue at a time and keep handovers
-agent-agnostic — never hard-code a model vendor or launcher command into project
-instructions.
-
-**Discover with a swarm, not solo.** Solo search is unreliable here. For any
-non-trivial code-location, duplication or cross-domain question, dispatch
-parallel discovery agents, treat their output as inventory to confirm, and pair
-broad-concept discovery with a targeted `rg` for known symbols.
-
-**Lead every brief with the destructive-git prohibition stated verbatim AND the
-sanctioned alternative.** A brief that states only the prohibition leaves the
-agent to invent one under pressure.
-
-**Drive autonomously.** Long-running campaigns run open-ended: adjudicate,
-persist decisions in `.vault/`, and do not stall on confirmation for choices
-resolvable from the code, the rules, or sensible defaults. Treat suite runs as
-rolling checkpoints; never cap work as "final" or "done".
-
-**Before dispatching a Step**, grep `git log --grep` and check plan status — the
-team lands Steps in parallel and a Step may already be done. **Before a coder's
-first edit**, `git diff -- <file>` and abort on non-authored WIP.
-
-**Re-read HEAD before recommending or acting on any finding.** A peer fix can
-land between investigation and recommendation, so the *facts* stay valid while
-the "still-a-gap" *conclusion* must be recomputed at report time. A backgrounded
-agent's empty output file is not a death signal — transcripts flush at
-completion.
-
-**Absorb in-scope regressions.** Any regression a campaign's activity touches is
-in scope; there are no "pre-existing, not my problem" deferrals.
-
-**Work tracking:** there is no GitHub project board. Track work through issues,
-live worktrees and the vault pipeline only. Treat an issue as actively worked
-only when a worktree **and** a delegation exist. Balance capacity across the AEAT
-remote-synchronisation track and the financial-input track; bind financial-input
-work to the Transaction Data Pipeline step it serves, preserve provenance from
-ingest through handoff, and treat Google Sheets as a one-way export mirror, never
-an authority.
+- Drive campaigns through a persistent, role-based team resumed by name; do not
+  spawn one-shot agents for work a standing role owns. One issue per
+  delegation; handovers agent-agnostic (never hard-code a model vendor or
+  launcher command into project instructions).
+- **Discover with a swarm, not solo.** For any non-trivial code-location,
+  duplication or cross-domain question: parallel discovery agents, output
+  treated as inventory to confirm, paired with a targeted `rg` for known
+  symbols.
+- **Lead every brief with the destructive-git prohibition stated verbatim AND
+  the sanctioned alternative** — a prohibition alone leaves the agent to invent
+  one under pressure.
+- **Drive autonomously.** Adjudicate, persist decisions in `.vault/`, and do
+  not stall on choices resolvable from the code, the rules, or sensible
+  defaults. Suite runs are rolling checkpoints; never cap work as "final".
+- **Before dispatching a Step:** `git log --grep` and plan status — Steps land
+  in parallel and may already be done. **Before a coder's first edit:**
+  `git diff -- <file>`; abort on non-authored WIP.
+- **Re-read HEAD before recommending or acting on any finding** — a peer fix
+  can land between investigation and report, so recompute the "still-a-gap"
+  conclusion at report time. A backgrounded agent's empty output file is not a
+  death signal; transcripts flush at completion.
+- **Absorb in-scope regressions.** No "pre-existing, not my problem".
+- **Work tracking:** no GitHub project board — issues, live worktrees and the
+  vault pipeline only. An issue is actively worked only when a worktree AND a
+  delegation exist. Balance the AEAT remote-synchronisation and financial-input
+  tracks; bind financial-input work to the Transaction Data Pipeline step it
+  serves; preserve provenance from ingest through handoff; Google Sheets is a
+  one-way export mirror, never an authority.
 
 ## Audit cadence
 
-Run the multi-agent audit swarm on **event triggers**: before a release cut that
-crossed a domain boundary or persisted a new record type; after a structural
-refactor touching more than two domain subpackages; and every six to eight
-commits on a long-running branch when no other trigger has fired.
+Run the multi-agent audit swarm on **event triggers**: before a release cut
+that crossed a domain boundary or persisted a new record type; after a
+structural refactor touching more than two domain subpackages; every six to
+eight commits on a long branch otherwise.
 
-**Eight axes**, one agent each: calculation-engine grounding, persistence-boundary
-identity, cross-domain handoffs, export/import fidelity, workflow and CLI
-surface, selector and binding drift, semantic functionality-cluster overlap, and
-runtime import-graph coupling. **Match the model to the axis** — the reasoning
-tier for the four needing deeper structural analysis (calculation engine,
-cross-domain handoffs, selector/binding drift, semantic overlap), the cheap tier
-for the four breadth-oriented ones.
+**Eight axes, one agent each:** calculation-engine grounding,
+persistence-boundary identity, cross-domain handoffs, export/import fidelity,
+workflow and CLI surface, selector/binding drift, semantic
+functionality-cluster overlap, runtime import-graph coupling. Reasoning tier
+for the four structural axes (calculation engine, cross-domain handoffs,
+selector/binding drift, semantic overlap); cheap tier for the breadth four.
 
-**Axis seven, semantic overlap**, runs as a parallel discovery pass: it finds by
-MEANING every site implementing a functional concept, classifies the set as a
-true duplication cluster or a constraint-shape-divergent one, confirms consumers
-import the canonical implementation, and nominates a canonical home where none
-exists but two or more substitutable sites do. Pair every sweep with a targeted
-`rg` for known canonical symbols.
-
-**Axis eight, runtime coupling**, runs a grimp pass over the *executed* import
-graph, not the import-time graph the layered linter audits. The runtime graph is
-denser because many function-local imports are deferred to break cycles, and a
-cycle "fixed" by deferring an import is hidden rather than removed. Diff grimp's
-cross-layer and cycle edges against the static picture. **There is no sanctioned
-inventory of function-local first-party edges to diff against**, so report such an
-edge on the graph difference alone and state that the finding is
-**unclassified** — never imply an allowlist cleared the rest.
-
-**Apply the substitutability pre-filter before flagging any "X where Y exists"
-violation.** Verify Y's constraint shape is a superset of — more permissive than —
-X's current constraint. If Y carries additional constraints (min_length, pattern,
-max_length, value-format) that X does not, the site is NOT promotable: exclude it
-or document the mismatch. Without this filter the false-positive rate is
-overwhelming.
-
-**Persist every finding** as one `.vault/audit/yyyy-mm-dd-<axis>-swarm-audit.md`,
-findings as third-level headings with a pathway label, `file:line`, what is lost,
-and a concrete remediation. Reports must not modify production code. **Action
-every finding** as a structural fix paired with a roundtrip test, a vault note
-recording the wontfix rationale, or a linked follow-up task.
-
-**Treat swarm output as inventory, not gospel.** Sub-agents miss things and
-occasionally hallucinate `file:line` coordinates. Verify every finding against
-current code before action.
+- **Axis 7, semantic overlap:** find by MEANING every site implementing a
+  concept; classify true-duplication vs constraint-shape-divergent; confirm
+  consumers import the canonical implementation; nominate a canonical home
+  where two or more substitutable sites exist without one. Pair with a
+  targeted `rg` for known canonical symbols.
+- **Axis 8, runtime coupling:** grimp over the *executed* import graph (denser
+  than import-time — deferred function-local imports hide cycles rather than
+  remove them); diff cross-layer and cycle edges against the static picture.
+  There is NO sanctioned inventory of function-local first-party edges to diff
+  against: report such an edge on the graph difference alone, marked
+  **unclassified** — never imply an allowlist cleared the rest.
+- **Substitutability pre-filter** before any "X where Y exists" flag: Y's
+  constraint shape must be a superset of X's. If Y carries constraints
+  (min_length, pattern, max_length, value-format) that X does not, the site is
+  NOT promotable — exclude it or document the mismatch.
+- **Persist every finding** as `.vault/audit/yyyy-mm-dd-<axis>-swarm-audit.md`:
+  third-level headings with pathway label, `file:line`, what is lost, concrete
+  remediation. Reports must not modify production code. **Action every
+  finding:** structural fix + roundtrip test, a wontfix vault note, or a linked
+  follow-up task.
+- **Swarm output is inventory, not gospel** — sub-agents miss things and
+  hallucinate `file:line`. Verify every finding against current code first.
 
 ## Campaign close
 
-Every campaign close MUST trigger a **fresh-context honesty review** against the
-closure summary BEFORE the campaign is declared structurally complete. An agent
-driving execution routinely self-reports "complete" while a substantial fraction
-is still structurally incomplete.
-
-The review may be an independent code-reviewer dispatch given the summary, ADR
-and commit ranges; a persona switch prompted with "review the campaign as if you
-had just inherited it and list what is missing, vague, or
-assumed-but-unverified"; or a curate pass scanning for declarative-versus-action
-gaps — Steps saying "investigate" with no verification gate, ADR claims with no
-matching test, audit recommendations not tracked as Steps.
-
-Persist the output as a vault audit document and track every item as a new Step
-with a verification gate. **The campaign is NOT complete until honest-pass items
-are closed with verification or formally deferred with a follow-up reference.**
-Recurring multi-item discoveries per pass are expected; the gate is whether a
-fresh review ran before closure was declared.
-
-**A campaign cannot narrow its own completion criterion.** Scoping work out is a
-decision the campaign records about itself; it does not move the standing goal,
-and measuring "complete" against the narrowed version is invisible from inside
-precisely because the narrowing is documented and reads as rigour. Write beside
-every scope-narrowing note what the standing goal still asks for that it
-excludes.
-
-**A plan step must not be marked complete without a matching exec record**, or a
-close audit explicitly recording why it is a deferred carry-forward. Three states
-otherwise wear the same checkbox: delivered as specified, delivered narrower, and
-recorded-but-not-implemented.
-
-**An ADR amendment that rules on CODE is not self-executing.** The amending
-Step's deliverable is "the record is correct", which completes honestly while the
-implementation debt it created has no owner and no row — and every later reader
-sees the ruling as in force while HEAD carries the rejected design. Open the
-implementing rows in the **same action** as the amendment, and grep the source
-for prose describing the old state as pending. **"The ADR says X" is not evidence
-that X is true of the tree.**
+- Every close triggers a **fresh-context honesty review** against the closure
+  summary BEFORE declaring structural completeness (an independent reviewer
+  dispatch; a "review as if you just inherited it" persona switch; or a
+  declarative-vs-action curate pass). Persist as a vault audit; track every
+  item as a Step with a verification gate. **Not complete until honest-pass
+  items are closed with verification or formally deferred with a reference.**
+- **A campaign cannot narrow its own completion criterion.** Beside every
+  scope-narrowing note, write what the standing goal still asks for that it
+  excludes.
+- **No plan step marked complete without a matching exec record**, or a close
+  audit recording the deferred carry-forward — otherwise delivered-as-specified,
+  delivered-narrower and recorded-but-not-implemented wear the same checkbox.
+- **An ADR amendment ruling on CODE is not self-executing.** Open the
+  implementing rows in the SAME action as the amendment and grep the source for
+  prose describing the old state as pending. "The ADR says X" is not evidence
+  that X is true of the tree.
 
 ---
 name: aeat-architecture-boundaries
@@ -633,149 +588,107 @@ trigger: always_on
 ## User-facing language
 
 Write user-facing documentation in simplistic, singular, imperative instruction
-steps. This keeps documentation clear, prevents technical detours, and optimizes
-token usage.
-
-- **Good:** "Create taxpayer profile." / "Import bank statement." / "Run
-  calculation."
-- **Bad:** "We will now set up the taxpayer profiles." / "Let's import our
-  transactions." / "Running the calculations."
-
-Do not present every option at once; walk through concrete scenarios step by
-step. Use general terminology (NIF, CIF, DNI, NIE, NII) rather than naming a
-single taxpayer group. Guide the reader from profile setup and transaction import
-through calculation and reconciliation, cross-linking so complex topics arrive
-gradually. Keep descriptions objective — no self-congratulatory phrasing.
+steps — "Create taxpayer profile." / "Import bank statement." — never
+conversational plural narration ("We will now set up…"). Walk concrete
+scenarios step by step instead of presenting every option; use general
+terminology (NIF, CIF, DNI, NIE, NII); guide from profile setup and transaction
+import through calculation and reconciliation, cross-linking so complex topics
+arrive gradually; keep descriptions objective.
 
 ## Workflow
 
 Every documentation change follows the `vaultspec-documentation` lifecycle:
-wireframe, refinement, approval; then context gathering and isolated
-section-by-section drafting; then technical review (cross-referencing the
-codebase and conformance gates) and editorial review; then final approval.
-
-A *researcher* gathers codebase context, help output and CLI structures without
-writing draft files; an *author* writes the pages using only that research; an
+wireframe → refinement → approval; context gathering and isolated
+section-by-section drafting; technical review (against the codebase and
+conformance gates) and editorial review; final approval. A *researcher* gathers
+context without writing drafts; an *author* writes from that research only; an
 *editor* reviews for a newcomer's clarity, tone and link integrity. **Final
-wording and approval stay with the main session** — never delegate final
-documentation prose to a subagent.
+wording and approval stay with the main session** — never delegate final prose
+to a subagent.
 
-Verify with `pytest src/cadrumo/entrypoints/cli/tests/test_documented_command_conformance.py -m integration`
-and the nitpicky Sphinx build gate `pytest dev/docs/tests/test_docs_build.py`.
-Chat responses use absolute `file://` links with forward slashes; user-facing
-docs use relative markdown links.
+Verify with
+`pytest src/cadrumo/entrypoints/cli/tests/test_documented_command_conformance.py -m integration`
+and the nitpicky Sphinx gate `pytest dev/docs/tests/test_docs_build.py`. Chat
+responses use absolute `file://` links with forward slashes; user-facing docs
+use relative markdown links.
 
 ## The generated API reference is CLI-owned
 
-Maintain it with `python -m dev.docs.apidocs scaffold`; never hand-author or
-hand-edit the `docs/api/*.rst` stubs. Run `scaffold` after any change to the
-`src/cadrumo/` module tree — especially a relocation, rename or deletion — and
-land the regenerated stubs in the same commit. Use `scaffold --check` as the
-drift gate and `audit` for a health report.
+Maintain with `python -m dev.docs.apidocs scaffold`; never hand-author or
+hand-edit `docs/api/*.rst`. Run `scaffold` after any `src/cadrumo/` module-tree
+change (relocation, rename, deletion) and land the regenerated stubs in the
+same commit; `scaffold --check` is the drift gate, `audit` the health report. A
+stub left for a deleted module hard-crashes the nitpicky `-n -W` autodoc build;
+a module without a stub silently drops out.
 
-The stubs are generated from the module tree, and the nitpicky `-n -W` build
-imports every stubbed module: a stub left for a deleted module is an *orphan*
-that hard-crashes autodoc, and a module added without a stub silently drops out.
-
-**`scaffold` is tree-wide, not change-scoped.** Peers routinely add modules
-without scaffolding, so one run emits stubs for *their* modules too. Diff each
-modified stub and stage only the ones whose added lines name **your** module;
-leave the rest for their owners and do not revert them. A red docs build after
-`scaffold` is often not yours — grep the log for your own module names first.
+**`scaffold` is tree-wide, not change-scoped:** one run also emits stubs for
+peers' unscaffolded modules. Diff each modified stub and stage only those whose
+added lines name YOUR module; leave the rest for their owners and do not revert
+them. A red docs build after `scaffold` is often not yours — grep the log for
+your own module names first.
 
 ## Docstrings cross-link the core spine
 
-A module that imports a canonical core struct MUST cross-link that struct in at
-least one docstring, using a Sphinx role such as `:class:`ModeloRevision``.
-Docstrings must form a graph steering readers to the canonical spine; a module
-depending on a core struct but never cross-referencing it is a dead end.
-
-The spine is the `CORE_STRUCTS` mapping in
-`src/cadrumo/tests/test_docstring_core_struct_links.py`. Anchors are documented
-public symbols, so a bare `:class:`Name`` resolves through the build's
-missing-reference resolver — do not add a dotted path. **Choose anchors for
-navigability, not import in-degree**: a central data aggregate, a domain
-authority that owns access, or a domain's primary closed-value enum — never
-ubiquitous infrastructure learned once, error subclasses, or low-reach types.
-The link MUST be semantically truthful; do not satisfy the gate with unrelated
-roles.
+A module importing a canonical core struct MUST cross-link it in at least one
+docstring via a Sphinx role (`` :class:`ModeloRevision` ``). The spine is the
+`CORE_STRUCTS` mapping in
+`src/cadrumo/tests/test_docstring_core_struct_links.py`; anchors are bare (no
+dotted path — the build's missing-reference resolver handles them). Choose
+anchors for navigability, not import in-degree: a central data aggregate, a
+domain authority, or a domain's primary closed-value enum — never ubiquitous
+infrastructure, error subclasses, or low-reach types. The link MUST be
+semantically truthful.
 
 ## Terminology: one declaration, preserved by scaffold
 
-Every user-facing domain term is enrolled once in the Terminology Handbook and
-referenced from docs through that entry. Never redeclare an enrolled term's
-definition in prose, and never maintain a parallel hand-authored glossary — four
-unsynchronised terminology stores were the failure mode the Handbook removes.
+Every user-facing domain term is enrolled once in the Terminology Handbook
+(fragments under `src/cadrumo/_data/terminology/concepts/`) and referenced via
+`:term:`; never redeclare an enrolled definition in prose or maintain a
+parallel glossary. Scaffold runs preserve curated fields verbatim, add new
+entries as **empty drafts**, and retire vanished entries as **tombstones** with
+`replaced_by` — never clobber, invent, or delete.
 
-Every scaffold run must preserve curated fields verbatim, scaffold new entries as
-**empty drafts**, and retire vanished entries as **tombstones** with
-`replaced_by`. Generated discovery and human curation share one authoring tree,
-so clobbering curated prose, inventing definitions or deleting vanished records
-breaks reviewability and the immutable-id model.
-
-**Only a taxpayer- or operator-facing AEAT concept may be `approved`** and thus
-render in the generated glossary and shipped search: a tax, modelo, casilla,
-régimen, period, legal concept, or operator workflow noun. A concept naming the
-search, calculation or registry **machinery** MUST NOT be `approved` — it is
-`deprecated` (resolvable for the developer RAG, excluded from the glossary, with
-a `scope_note` marking it internal) and **never deleted**. `deprecated` is right
-rather than `retired` (which asserts a successor a mis-enrolment lacks) or
-deletion (which the scaffold-preserve contract forbids).
+**Only a taxpayer- or operator-facing AEAT concept may be `approved`** (and so
+render in the glossary and shipped search): a tax, modelo, casilla, régimen,
+period, legal concept, or operator workflow noun. A concept naming search,
+calculation or registry **machinery** is `deprecated` with a `scope_note`
+(resolvable for the developer RAG, excluded from the glossary) — never
+`retired` (asserts a successor a mis-enrolment lacks), never deleted.
 
 ## Shipped search artefacts are licence-clean
 
-*(This section is the home of the retired rule slug
-`shipped-search-licence-clean`. There is no file of that name and there should
-not be: the mandate was merged here rather than shipped as its own rule, because
-the always-on corpus loads into every session and each new file taxes all of
-them. The slug is spelled out so a search for it lands here instead of returning
-nothing and reading as an amendment that never took.)*
+*(Home of the retired rule slug `shipped-search-licence-clean` — deliberately
+merged here, not shipped as its own file, so a search for the slug lands here.)*
 
-Documentation search artefacts that ship in the package or the built docs must
-come only from licence-clean sources and contain only laundered identifiers and
-rankings. **Never ship** anything derived from NC, ND or gated sources; raw
-oracle output (raw scores, snippets, sparse maps, sparse term weights); or raw or
-unbounded vectors.
+Ship only licence-clean sources, laundered identifiers and rankings. **Never
+ship** NC/ND/gated derivatives, raw oracle output (scores, snippets, sparse
+maps, term weights), or raw or unbounded vectors. **Sole narrow exception:** a
+bounded term-embedding matrix in the BUILT DOCS only (never the wheel) —
+reviewable plain data, computed on the dev box by a pinned, named MIT or
+Apache-2.0 model over project vocabulary, provenance-stamped (model, revision,
+licence, vocabulary fingerprint, size), no larger than 3 MB. **That exception
+currently has NO consumer** — the matrix, its compiler and its client tier were
+removed. It is a deliberately unlocked, presently unused door: shipping through
+it is a first use that needs a ruling, not sanctioned practice.
 
-**The sole narrow embedding exception:** a bounded term-embedding matrix may ship
-**in the built docs, never in the wheel**, only when it is reviewable plain data
-computed on the dev box by a pinned, named model under the MIT or Apache-2.0
-licence over project-authored or project-bundled vocabulary. Its provenance stamp
-must name the model, exact revision, licence, vocabulary fingerprint and
-serialized size, and it must be no larger than 3 MB.
-
-**That exception currently has NO consumer.** The tree carries no
-term-embedding matrix, no compiler for one, and no client tier that would read
-one — they were removed, and whether that removal stands is an open ruling. The
-permission is kept open rather than re-narrowed because a permission that
-oscillates is worse than one that is documented. So read it as a door that is
-deliberately unlocked and presently unused: shipping a matrix through it is not
-"already sanctioned practice", it is the first use, and it needs the ruling
-first.
-
-**Commit only the LIGHT precompiled data** — the laundered relevance mapping,
-synonym candidates, held-out queries, the Handbook fragments, and any qualifying
-matrix. **Never commit the HEAVY generated search index**, which is gitignored
-and regenerated on every docs build: it is a deterministic build output, not
-source, so committing it bloats every clone and drifts from the corpus.
+**Commit only the LIGHT precompiled data** (laundered relevance mapping,
+synonym candidates, held-out queries, Handbook fragments, a qualifying matrix).
+**Never commit the HEAVY generated search index** — gitignored, regenerated per
+docs build; committing it bloats every clone and drifts from the corpus.
 
 ## How
 
-- **Good:** a relocation commit runs `scaffold` and stages the regenerated deltas
-  for its own modules in the same explicit-path commit.
-- **Good:** a newly-stubbed module module-qualifies stdlib cross-references
-  (`:exc:`~decimal.InvalidOperation``), while bare *project* anchors stay bare.
-- **Good:** add or update a concept fragment under
-  `src/cadrumo/_data/terminology/concepts/`, then use `:term:` references.
-- **Good:** commit a relevance mapping of target ids, URLs, surfaces and
-  normalised weights after ratified review; regenerate the index at build time.
-- **Bad:** hand-creating or editing an API stub; or committing a delete or rename
-  without re-running `scaffold`, leaving an orphan that crashes the next build.
-- **Bad:** defining a term in a how-to paragraph while a Handbook concept also
-  exists; a scaffold run rewriting a curated description; or promoting an
-  internal tooling concept to `approved`.
-- **Bad:** committing an embedding outside the narrow exception, sparse maps, raw
-  score payloads, or the generated index corpus.
+- **Good:** a relocation commit runs `scaffold` and stages only its own
+  modules' regenerated deltas in the same explicit-path commit.
+- **Good:** stdlib cross-references module-qualified
+  (`` :exc:`~decimal.InvalidOperation` ``); bare *project* anchors stay bare.
+- **Good:** add or update a concept fragment, then `:term:` references; commit
+  a ratified relevance mapping and regenerate the index at build time.
+- **Bad:** hand-editing an API stub; landing a delete or rename without
+  re-running `scaffold` (orphan stub crashes the next build); a scaffold run
+  rewriting curated prose; promoting internal tooling to `approved`; committing
+  an embedding outside the exception, sparse maps, raw scores, or the generated
+  index.
 
 Source: ADRs `2026-06-10-docs-terminology-search-adr`,
 `2026-06-15-docs-terminology-search-adr`,
@@ -1610,6 +1523,63 @@ escalated, and that agent's output is reviewed for unrelated destructive side
 effects before any of its work is trusted.
 
 ---
+name: casilla-schema-buildout
+trigger: always_on
+---
+
+# casilla-schema buildout discipline
+
+*(Operator-directed campaign rule, 2026-08-10. This file exists to survive rate
+limits, context rot and attention attenuation during the casilla-schema
+buildout — the failure modes that broke step follow-through before. RETIRE this
+file at campaign close, in the same action as the closing honesty review; it
+does not outlive the campaign.)*
+
+## One plan, entered through its next open step
+
+The campaign is enumerated in `.vault/plan/2026-08-10-casilla-schema-plan.md`
+(W01–W04), governed by the four `casilla-schema` ADRs and grounded in
+`2026-08-10-casilla-schema-research`. Enter every session with
+`vaultspec-core status casilla-schema` and read the NEXT OPEN STEP — never
+re-derive the backlog from memory, chat history, or the artifact. Before
+starting a step, `git log --grep` for it: a peer may have landed it.
+
+## Ordering law: canonical answers before consumers
+
+Shared answers land as importable, facade-exported code BEFORE their first
+consumer. A consumer step whose canonical symbol does not exist yet is BLOCKED —
+do the producing step first, never inline a private copy "for now". The
+canonical homes this campaign establishes: the binding↔casilla joins
+(`bound_casilla_binding_ids` and its reverse dual), the relation-consumption
+index, the official-box classification, the `ModeloWorkReview` producer, and
+the operator action spine with total, import-asserted projections.
+
+## Follow-through protocol, per step
+
+- One Step = one atomic commit; a canonical landing retargets or deletes its
+  duplicates in the SAME commit. Clean `--collect-only` before committing.
+- Close the step through the plan verbs, write its exec record, and run its
+  named verification gate before claiming it. A step without a green gate or a
+  recorded carry-forward stays open.
+- The outliers are the acceptance test: M720, M200 2024, M100 2024/2025 and
+  M349 must render truthfully before any casilla-surface step closes.
+
+## Hard prohibitions for this campaign
+
+- No new binding→casilla mapper, relation join, blocker vocabulary, or box
+  classification outside the canonical homes above.
+- No compatibility alias, bridge, re-export or read-tolerance for anything the
+  dead-surface ADR deletes. Owner mandate (2026-08-10): missing semantics are
+  re-homed case by case, and in every case no legacy surface is maintained and
+  all superseded code is removed.
+- Progress numbers: counts only against the NAMED manifest denominator;
+  UNDEFINED (not zero) where no manifest exists; never a bare percentage; never
+  ratio-token field names. (Owner ruling 2026-08-10 permits counts under
+  exactly these guardrails.)
+- Manifest authoring priority is owner-ruled: IRPF/retención/IVA revisions
+  (including M145) first, informative annual rollups second, remainder last.
+
+---
 name: firmware-reference-parity.builtin
 trigger: always_on
 ---
@@ -1927,9 +1897,12 @@ who DOES file the source, and the undeclared case, stay enforced.
 ## Local-filed observations are non-official evidence
 
 Observations persisted by the local `file` flow MUST carry a non-official
-`source_kind` (`app_filing`) and MUST NEVER be added to
-`_OFFICIAL_SOURCE_KINDS` — the set satisfying the cross-period clean-state gate
-(`aeat_sede_justificante`, `aeat_sede_live_capture`, `aeat_csv_register`).
+`source_kind` (`app_filing`) and MUST NEVER be classified official: the one
+official-evidence authority is `ObservationSourceKind.is_official_aeat`
+(`application/calculations/_observations_repository.py`), which satisfies the
+cross-period clean-state gate for `aeat_sede_justificante`,
+`aeat_sede_live_capture` and `aeat_csv_register` only, and MUST stay `False`
+for `app_filing`.
 
 Automatic cross-period carry may feed calculate and draft from these
 observations, but they must never substitute for external AEAT filing evidence. A
@@ -1955,7 +1928,7 @@ remain blocking.
 - **Good:** a suffered-retencion source marked `taxpayer_files_source = false`
   scopes out as a **visible** not-applicable advisory, never silently.
 - **Good:** the local filing path stamps `source_kind="app_filing"`, and a
-  regression asserts `app_filing not in _OFFICIAL_SOURCE_KINDS`.
+  regression asserts `is_official_aeat` is `False` for the `app_filing` member.
 - **Bad:** shipping a manual base or result casilla with no derivation and no
   guard, so the gate grants completeness on positive input.
 - **Bad:** a blocking rule refusing legitimate positive-result/zero-base filings
@@ -1968,7 +1941,8 @@ remain blocking.
 - **Bad:** scoping out because the source modelo is missing from the
   deadline-engine schedule; or suppressing on an undeclared profile signal, which
   fails open.
-- **Bad:** adding `app_filing` to `_OFFICIAL_SOURCE_KINDS`.
+- **Bad:** making `is_official_aeat` return `True` for `app_filing`, or adding
+  any locally-produced source kind to the official set.
 
 Gate: `test_external_oracle_grounding_enrolled.py`. Source: ADRs
 `2026-06-02-modelo-200-base-determination-adr`,

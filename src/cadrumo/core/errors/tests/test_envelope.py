@@ -118,7 +118,7 @@ def test_error_envelope_carries_resolved_precondition_action_through_json() -> N
     ]
 
 
-def test_error_envelope_has_explicit_no_recovery_without_a_typed_action() -> None:
+def test_error_envelope_does_not_synthesize_action_without_typed_verdict() -> None:
     error = ActiveProfilePointerError(path="broken-pointer.json")
     registered = error.code
 

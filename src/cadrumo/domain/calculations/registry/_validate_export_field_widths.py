@@ -23,7 +23,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from ....core.identity import SPANISH_TAX_ID_WIDTH
-from ._schema import CasillaFieldKind, ExportFieldDefinition
+from ._schema import CasillaFieldKind, ExportDraftAttribute, ExportFieldDefinition
 
 #: Canonical character width of every export ``draft_attribute`` whose value is
 #: supplied by a typed, fixed-width domain source, keyed by the attribute token
@@ -34,7 +34,7 @@ from ._schema import CasillaFieldKind, ExportFieldDefinition
 #: declarable attributes, so adding an attribute without ruling on its width
 #: fails validation rather than passing silently. That totality is what keeps the
 #: check keyed on the property instead of on the fields that happen to exist now.
-DRAFT_ATTRIBUTE_CANONICAL_WIDTHS: Mapping[str, int | None] = {
+DRAFT_ATTRIBUTE_CANONICAL_WIDTHS: Mapping[ExportDraftAttribute, int | None] = {
     # Every value routes through validate_spanish_tax_id, which refuses any
     # identifier that is not exactly this wide, so a slot of a different width
     # cannot be holding the declarant's own identifier. A WIDER AEAT slot at some
@@ -42,7 +42,7 @@ DRAFT_ATTRIBUTE_CANONICAL_WIDTHS: Mapping[str, int | None] = {
     # page 001B position 141 is 15 wide because it holds the foreign tax
     # identification number of a mercantile group's ultimate parent company, and
     # binding the declarant there declares the filer to be its own parent.
-    "profile_tax_id": SPANISH_TAX_ID_WIDTH,
+    ExportDraftAttribute.PROFILE_TAX_ID: SPANISH_TAX_ID_WIDTH,
     # Neither of the two remaining abstentions is a shared "these vary" claim.
     # Recorded per attribute because an abstention that cites the wrong reason is
     # worse than none: it reads as a ruling that the slot widths are legitimately
@@ -50,8 +50,6 @@ DRAFT_ATTRIBUTE_CANONICAL_WIDTHS: Mapping[str, int | None] = {
     #
     # No declaration in the registry binds either of these, so no width is
     # observable to gate against and any value chosen here would be invented.
-    "modelo": None,
-    "period": None,
     # The source is str(period.filing_year), always 4 characters, and the published
     # diseños agree: every envelope-open tag spells the ejercicio de devengo as
     # four digits inside a composite the modelo builds from separate literal and
@@ -62,13 +60,13 @@ DRAFT_ATTRIBUTE_CANONICAL_WIDTHS: Mapping[str, int | None] = {
     # away as blanks; Modelo 200's page-000 record did exactly that, and the gate
     # abstained rather than refuse a build it had no restructured declaration to
     # accept. The composite is declared field-by-field now, so the gate asserts.
-    "filing_year": 4,
+    ExportDraftAttribute.FILING_YEAR: 4,
     # Two characters in every declaration and in the diseños themselves: the
     # Modelo 200 page-000 sheet spells the periodo as "0A" inside its 17-character
     # envelope-open example, which is the same two-character AEAT period token the
     # quarterly and monthly modelos carry. A per-period-kind width difference would
     # have been plausible, and the published examples rule it out.
-    "period_code": 2,
+    ExportDraftAttribute.PERIOD_CODE: 2,
 }
 
 

@@ -603,6 +603,36 @@ def _supersede_prior_current_filing(
     return updated_filing_catalogue, revisions
 
 
+def _prior_domiciliation_payload(
+    election: PriorDomiciliationElectionProjection | None,
+) -> dict[str, str]:
+    """Project the prior-domiciliation election onto its ``MODELO_FILED`` payload keys.
+
+    Every key is emitted in both branches, in one order, so the event payload
+    shape never depends on whether an election was resolved. An absent
+    election and an election with an absent baseline field are both recorded
+    as the empty-string absence marker the payload contract already used.
+    """
+    if election is None:
+        return {
+            "prior_domiciliation_election": "",
+            "prior_domiciliation_baseline_filing_record_id": "",
+            "prior_domiciliation_baseline_evidence_reference_id": "",
+            "prior_domiciliation_baseline_result_disposition": "",
+            "prior_domiciliation_baseline_source_header_locator": "",
+        }
+    baseline_disposition = election.baseline_result_disposition
+    return {
+        "prior_domiciliation_election": election.election.value,
+        "prior_domiciliation_baseline_filing_record_id": election.baseline_filing_record_id or "",
+        "prior_domiciliation_baseline_evidence_reference_id": election.baseline_evidence_reference_id or "",
+        "prior_domiciliation_baseline_result_disposition": (
+            baseline_disposition.value if baseline_disposition is not None else ""
+        ),
+        "prior_domiciliation_baseline_source_header_locator": election.baseline_source_header_locator or "",
+    }
+
+
 def persist_filed_revision(
     *,
     target: CalculationRevision,
@@ -760,33 +790,7 @@ def persist_filed_revision(
                 "filing_year": str(work_unit.filing_year),
                 "period": work_unit.period.registry_token,
                 "supersedes_filing_record_id": prior_current.filing_record_id if prior_current is not None else "",
-                "prior_domiciliation_election": (
-                    prior_domiciliation_election.election.value if prior_domiciliation_election is not None else ""
-                ),
-                "prior_domiciliation_baseline_filing_record_id": (
-                    prior_domiciliation_election.baseline_filing_record_id
-                    if prior_domiciliation_election is not None
-                    and prior_domiciliation_election.baseline_filing_record_id is not None
-                    else ""
-                ),
-                "prior_domiciliation_baseline_evidence_reference_id": (
-                    prior_domiciliation_election.baseline_evidence_reference_id
-                    if prior_domiciliation_election is not None
-                    and prior_domiciliation_election.baseline_evidence_reference_id is not None
-                    else ""
-                ),
-                "prior_domiciliation_baseline_result_disposition": (
-                    prior_domiciliation_election.baseline_result_disposition.value
-                    if prior_domiciliation_election is not None
-                    and prior_domiciliation_election.baseline_result_disposition is not None
-                    else ""
-                ),
-                "prior_domiciliation_baseline_source_header_locator": (
-                    prior_domiciliation_election.baseline_source_header_locator
-                    if prior_domiciliation_election is not None
-                    and prior_domiciliation_election.baseline_source_header_locator is not None
-                    else ""
-                ),
+                **_prior_domiciliation_payload(prior_domiciliation_election),
             },
         ),
     )

@@ -2,10 +2,10 @@
 
 :func:`~cadrumo.application.modelo.export_modelo_revision` accepts a
 :class:`~cadrumo.domain.modelos.CalculationRevision` id, rebuilds and approves a
-:class:`~cadrumo.application.filing.ModeloDraft` from the revision replay inputs,
+:class:`~domain.filing.ModeloDraft` from the revision replay inputs,
 then writes a fichero-BOE-formatted artefact to the operator-supplied output
 path. A ``MODELO_EXPORTED`` event is appended to the
-:class:`~cadrumo.domain.buckets.BucketEventHistoryRepository`.
+:class:`~adapters.persistence.profile.buckets.BucketEventHistoryRepository`.
 
 Export consumes the registry-authored fichero-BOE layouts through the filing
 runtime schema provider; Python code owns orchestration and safety checks, while
@@ -980,7 +980,7 @@ def _approve_export_draft(
     :func:`~cadrumo.application.modelo._revision_replay_inputs.revision_filing_replay_inputs`
     so export uses the same profile-applicability relation inputs as the filing
     workflow gate. Returns the resolved :class:`~cadrumo.core.Period` and approved
-    :class:`~cadrumo.application.filing.ModeloDraft`.
+    :class:`~domain.filing.ModeloDraft`.
     """
     inputs: filing_domain.ModeloInputs = revision_filing_replay_inputs(
         revision=revision,
@@ -1319,7 +1319,7 @@ def export_modelo_revision(
     writing any operator-visible file, the service validates the output path,
     export-layout renderability, profile readiness, ledger evidence, IVA wallet
     decision provenance, and cross-period clean state. It then rebuilds and
-    approves a transient :class:`~cadrumo.application.filing.ModeloDraft`, composes
+    approves a transient :class:`~domain.filing.ModeloDraft`, composes
     the fichero headers, serializes through
     :func:`~cadrumo.application.filing.export_draft`, appends ``MODELO_EXPORTED`` to
     the bucket-event-history catalogue, and finally atomically renames the

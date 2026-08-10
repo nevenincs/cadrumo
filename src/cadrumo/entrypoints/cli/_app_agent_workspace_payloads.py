@@ -28,6 +28,18 @@ class AgentLayout(StrEnum):
     """A one-click Claude plugin: ``.claude-plugin/`` + ``skills/`` + ``agents/``."""
 
 
+_WORKSPACE_LAYOUT_FIELDS = ("rules_written", "personas_written")
+_PLUGIN_LAYOUT_FIELDS = ("plugin_name", "version", "agents_written", "persona_default")
+
+
+def _absent_field_names(result: AgentWorkspaceResult, names: tuple[str, ...]) -> list[str]:
+    return [name for name in names if getattr(result, name) is None]
+
+
+def _present_field_names(result: AgentWorkspaceResult, names: tuple[str, ...]) -> list[str]:
+    return [name for name in names if getattr(result, name) is not None]
+
+
 @register_schema("agent")
 class AgentWorkspaceResult(OutputSchema):
     """JSON result of materialising the operator harness.
@@ -56,19 +68,15 @@ class AgentWorkspaceResult(OutputSchema):
     def _require_layout_fields(self) -> AgentWorkspaceResult:
         """Enforce that the fields the declared layout produces are populated."""
         if self.layout is AgentLayout.WORKSPACE:
-            if self.rules_written is None or self.personas_written is None:
+            if _absent_field_names(self, _WORKSPACE_LAYOUT_FIELDS):
                 raise ValueError("workspace layout requires rules_written and personas_written")
-            unexpected = ("plugin_name", "version", "agents_written", "persona_default")
+            unexpected = _PLUGIN_LAYOUT_FIELDS
         else:
-            missing = [
-                name
-                for name in ("plugin_name", "version", "agents_written", "persona_default")
-                if getattr(self, name) is None
-            ]
+            missing = _absent_field_names(self, _PLUGIN_LAYOUT_FIELDS)
             if missing:
                 raise ValueError(f"plugin layout requires {missing}")
-            unexpected = ("rules_written", "personas_written")
-        contaminated = [name for name in unexpected if getattr(self, name) is not None]
+            unexpected = _WORKSPACE_LAYOUT_FIELDS
+        contaminated = _present_field_names(self, unexpected)
         if contaminated:
             raise ValueError(f"{self.layout.value} layout forbids {contaminated}")
         return self

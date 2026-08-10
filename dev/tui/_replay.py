@@ -93,11 +93,15 @@ async def _apply(pilot: Pilot, session: Session) -> None:
                 await pilot.click(gesture.selector)
         await pilot.pause()
 
-    # Any storage call a gesture kicked off must land before anything is
-    # read, or the reading is about the harness's timing rather than the
-    # surface's behaviour.
-    await pilot.app.workers.wait_for_complete()
-    await pilot.pause()
+    # A pushed modal is itself a settled, operator-visible state. Manager
+    # actions deliberately keep their worker alive while that modal waits for
+    # the next gesture, so waiting for every worker here would deadlock the
+    # replay before the form could be captured or answered. Once the modal is
+    # gone, wait for all work so storage and repaint land before the frame is
+    # read.
+    if len(pilot.app.screen_stack) == 1:
+        await pilot.app.workers.wait_for_complete()
+        await pilot.pause()
 
 
 def _run[T](session: Session, read: Callable[[App, float], Awaitable[T] | T]) -> T:

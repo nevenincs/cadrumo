@@ -3,7 +3,7 @@
 :class:`RetentionFloorError` is the refusal a destructive erase raises when
 one or more filed tax records are still inside their legal retention window
 (Ley 58/2003 art. 66/70; see
-:data:`~core.external_constants.TAX_RECORD_RETENTION_FLOOR_YEARS`).
+:data:`~domain.retention.TAX_RECORD_RETENTION_FLOOR_YEARS`).
 """
 
 from __future__ import annotations

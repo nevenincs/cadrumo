@@ -76,8 +76,8 @@ def test_category_prefix_resolution_has_no_in_code_translation_default() -> None
     calls = [node for node in ast.walk(tree) if isinstance(node, ast.Call)]
     translation_calls = [node for node in calls if isinstance(node.func, ast.Name) and node.func.id == "tr"]
 
-    assert len(translation_calls) == 1
-    assert all(keyword.arg != "default" for keyword in translation_calls[0].keywords)
+    assert translation_calls
+    assert all(keyword.arg != "default" for call in translation_calls for keyword in call.keywords)
 
 
 def test_duplicate_registration_raises_clear_error() -> None:
@@ -214,17 +214,18 @@ def test_bind_error_code_refusal_carries_diagnostic_hints() -> None:
 def test_core_error_prefixes_are_grep_stable() -> None:
     """Stable upper-case category identifiers survive in JSON; rendered text uses sentence case."""
 
-    for error_factory, expected_category, expected_text_prefix in (
-        (LiveSubmitForbiddenError, "LOCKED", "Locked."),
-        (RunContextMissingError, "INTERNAL", "Internal."),
-        (lambda: RunTracePersistenceError(operation="test", path=Path("runs")), "FAIL", "Failed."),
+    for error_factory, expected_category in (
+        (LiveSubmitForbiddenError, ErrorCategory.LOCKED),
+        (RunContextMissingError, ErrorCategory.INTERNAL),
+        (lambda: RunTracePersistenceError(operation="test", path=Path("runs")), ErrorCategory.FAIL),
     ):
         error = error_factory()
-        assert error.code.category.value == expected_category
+        assert error.code.category is expected_category
         rendered_json = render_error_json(error)
-        assert f'"category":"{expected_category}"' in rendered_json
+        assert f'"category":"{expected_category.value}"' in rendered_json
         rendered_text = render_error_text(error)
-        assert rendered_text.startswith(f"{expected_text_prefix} ")
+        prefix = tr(f"errors.prefix.{expected_category.value.lower()}")
+        assert rendered_text.startswith(f"{prefix} ")
 
 
 def test_modelo_lifecycle_terminal_errors_are_refused() -> None:

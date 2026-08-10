@@ -701,28 +701,34 @@ def validate_registered_envelope_document(document: object) -> dict[str, object]
     if not all(isinstance(key, str) for key in raw_document):
         raise OutputSchemaError("operator JSON envelope keys must be strings")
     typed_document: dict[str, object] = {key: value for key, value in raw_document.items() if isinstance(key, str)}
-    status = typed_document.get("status")
-    if status == EnvelopeStatus.ERROR.value:
-        from .errors import ErrorEnvelope
+    if typed_document.get("status") == EnvelopeStatus.ERROR.value:
+        return _validated_error_envelope(typed_document)
+    return _validated_success_envelope(typed_document)
 
-        required_keys = {"schema_version", "command", "active_profile", "status", "error", "notices"}
-        if set(typed_document) != required_keys:
-            raise OutputSchemaError("operator JSON error envelope has an invalid outer shape")
-        if typed_document.get("schema_version") != ENVELOPE_SCHEMA_VERSION:
-            raise OutputSchemaError("operator JSON envelope has an unsupported schema version")
-        command = typed_document.get("command")
-        active_profile = typed_document.get("active_profile")
-        if command is not None and (not isinstance(command, str) or not command):
-            raise OutputSchemaError("operator JSON error envelope has an invalid command")
-        if active_profile is not None and not isinstance(active_profile, str):
-            raise OutputSchemaError("operator JSON error envelope has an invalid active profile")
-        try:
-            ErrorEnvelope.model_validate(typed_document["error"])
-            TypeAdapter(list[Notice]).validate_python(typed_document["notices"])
-        except ValidationError as error:
-            raise OutputSchemaError("operator JSON error envelope failed strict validation") from error
-        return typed_document
 
+def _validated_error_envelope(typed_document: dict[str, object]) -> dict[str, object]:
+    from .errors import ErrorEnvelope
+
+    required_keys = {"schema_version", "command", "active_profile", "status", "error", "notices"}
+    if set(typed_document) != required_keys:
+        raise OutputSchemaError("operator JSON error envelope has an invalid outer shape")
+    if typed_document.get("schema_version") != ENVELOPE_SCHEMA_VERSION:
+        raise OutputSchemaError("operator JSON envelope has an unsupported schema version")
+    command = typed_document.get("command")
+    active_profile = typed_document.get("active_profile")
+    if command is not None and (not isinstance(command, str) or not command):
+        raise OutputSchemaError("operator JSON error envelope has an invalid command")
+    if active_profile is not None and not isinstance(active_profile, str):
+        raise OutputSchemaError("operator JSON error envelope has an invalid active profile")
+    try:
+        ErrorEnvelope.model_validate(typed_document["error"])
+        TypeAdapter(list[Notice]).validate_python(typed_document["notices"])
+    except ValidationError as error:
+        raise OutputSchemaError("operator JSON error envelope failed strict validation") from error
+    return typed_document
+
+
+def _validated_success_envelope(typed_document: dict[str, object]) -> dict[str, object]:
     command = typed_document.get("command")
     if not isinstance(command, str) or not command:
         raise OutputSchemaError("operator JSON envelope has no usable command")

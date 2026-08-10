@@ -912,28 +912,59 @@ def _index_country_names(payload: object, *, source: str) -> dict[str, str]:
 
     resolved: dict[str, str] = {}
     for record in countries:
-        if not _is_str_keyed_mapping(record):
-            raise IvaCatalogueError(f"{target}: country record is not a table: {record!r}")
-        code = str(record.get("code", "")).strip().upper()
-        if len(code) != _ALPHA2_LENGTH or not code.isalpha():
-            raise IvaCatalogueError(f"{target}: country record names no alpha-2 code: {record!r}")
-        names = record.get("names", ())
-        if not _is_object_list(names) or not names:
-            raise IvaCatalogueError(f"{target}: country {code} carries no printed name")
+        code, names = _country_record_code_and_names(record, target=target)
         for name in names:
-            normalised = _normalise_printed_country_name(str(name))
-            if not normalised:
-                raise IvaCatalogueError(f"{target}: country {code} carries a blank printed name")
-            claimed = resolved.get(normalised)
-            if claimed is not None and claimed != code:
-                raise IvaCatalogueError(
-                    f"{target}: the printed name {name!r} normalises to {normalised!r}, which both "
-                    f"{claimed} and {code} claim; a name that cannot name one country cannot establish one",
-                )
-            resolved[normalised] = code
+            _claim_printed_country_name(resolved, name, code=code, target=target)
     if not resolved:
         raise IvaCatalogueError(f"{target}: the country-name vocabulary is empty")
     return resolved
+
+
+def _country_record_code_and_names(record: object, *, target: str) -> tuple[str, list[object]]:
+    """Return one vocabulary record's alpha-2 code and printed names, refusing an unusable record.
+
+    Raises:
+        IvaCatalogueError: When the record is not a table, names no alpha-2
+            code, or carries no printed name.
+    """
+    from ._errors import IvaCatalogueError
+
+    if not _is_str_keyed_mapping(record):
+        raise IvaCatalogueError(f"{target}: country record is not a table: {record!r}")
+    code = str(record.get("code", "")).strip().upper()
+    if len(code) != _ALPHA2_LENGTH or not code.isalpha():
+        raise IvaCatalogueError(f"{target}: country record names no alpha-2 code: {record!r}")
+    names = record.get("names", ())
+    if not _is_object_list(names) or not names:
+        raise IvaCatalogueError(f"{target}: country {code} carries no printed name")
+    return code, names
+
+
+def _claim_printed_country_name(
+    resolved: dict[str, str],
+    name: object,
+    *,
+    code: str,
+    target: str,
+) -> None:
+    """Bind one printed name to its country, refusing a blank name or a cross-country collision.
+
+    Raises:
+        IvaCatalogueError: When the name normalises to nothing, or when two
+            DIFFERENT countries claim one normalised name.
+    """
+    from ._errors import IvaCatalogueError
+
+    normalised = _normalise_printed_country_name(str(name))
+    if not normalised:
+        raise IvaCatalogueError(f"{target}: country {code} carries a blank printed name")
+    claimed = resolved.get(normalised)
+    if claimed is not None and claimed != code:
+        raise IvaCatalogueError(
+            f"{target}: the printed name {name!r} normalises to {normalised!r}, which both "
+            f"{claimed} and {code} claim; a name that cannot name one country cannot establish one",
+        )
+    resolved[normalised] = code
 
 
 @lru_cache(maxsize=1)

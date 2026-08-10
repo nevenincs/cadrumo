@@ -564,7 +564,7 @@ class DeclaredFact[T](BaseModel):
             :class:`~core.ClassifierInputSource` rather than declaring a second
             source vocabulary: the audit envelope already speaks it, so one
             spelling flows from this channel through
-            :class:`~application.ledger.ClassifierInputFact` to the stamp. A
+            :class:`~application.ledger._classifier_inputs.ClassifierInputFact` to the stamp. A
             private enum here would have been a second authority on the one
             question "who says so".
     """
@@ -627,6 +627,169 @@ def _value_of[T](fact: DeclaredFact[T] | None) -> T | None:
     return None if fact is None else fact.value
 
 
+def _scope_or_recorded_gap(
+    missing: list[MissingClassifierInput],
+    country_code: str | None,
+    postal_code: str | None,
+    *,
+    field: str,
+    asserted: IvaTerritorialScope | None,
+) -> IvaTerritorialScope | None:
+    """Resolve one party's scope, recording rather than raising what stopped it.
+
+    Asked of each party independently and accumulated into one list, so an
+    operator missing both parties' evidence learns both at once.
+    """
+    scope, gap = _scope(country_code, postal_code, field=field, asserted=asserted)
+    if gap is not None:
+        missing.append(gap)
+    return scope
+
+
+def _gaps_reportable_before_placement(
+    status: CustomerTaxStatus | None,
+    supply_nature: SupplyNature | None,
+    inputs: ClassifierInputs,
+) -> list[MissingClassifierInput]:
+    """Name the axes an incompletely-placed operation can still be asked about.
+
+    Reported without consulting the table, because the table cannot be asked
+    before the scopes resolve. The wording says so: each gap states that the
+    operation is too incompletely placed to tell whether its treatment turns on
+    the answer, rather than asserting that it does.
+    """
+    gaps: list[MissingClassifierInput] = []
+    if status is None:
+        gaps.append(_customer_tax_status_gap(inputs))
+    if supply_nature is None:
+        gaps.append(
+            MissingClassifierInput(
+                field="kind",
+                reason=(
+                    "no statutory citation on the document established whether it supplies goods "
+                    "or services, and this operation is too incompletely placed to tell whether "
+                    "its treatment turns on the answer"
+                ),
+                settled_by=(
+                    "a printed statutory citation, or an explicit operator assertion of the supply "
+                    "nature; resolving the other gaps may also settle it"
+                ),
+            ),
+        )
+    return gaps
+
+
+def _status_axis_gap(
+    probe: Callable[[CustomerTaxStatus, TransactionKind], IvaCategory],
+    *,
+    status: CustomerTaxStatus | None,
+    kind_candidates: tuple[TransactionKind, ...],
+    inputs: ClassifierInputs,
+) -> MissingClassifierInput | None:
+    """Demand the customer's IVA status only where the table's verdict turns on it."""
+    if status is not None:
+        return None
+    if not _axis_forks_the_law(probe, slices=[(_STATUS_CANDIDATES, (kind,)) for kind in kind_candidates]):
+        return None
+    return _customer_tax_status_gap(inputs)
+
+
+def _supply_nature_axis_gap(
+    probe: Callable[[CustomerTaxStatus, TransactionKind], IvaCategory],
+    *,
+    supply_nature: SupplyNature | None,
+    status_candidates: tuple[CustomerTaxStatus, ...],
+    kind_candidates: tuple[TransactionKind, ...],
+) -> MissingClassifierInput | None:
+    """Demand the supply nature only where the table's verdict turns on it."""
+    if supply_nature is not None:
+        return None
+    if not _axis_forks_the_law(
+        probe,
+        slices=[((candidate,), kind_candidates) for candidate in status_candidates],
+    ):
+        return None
+    return MissingClassifierInput(
+        field="kind",
+        reason=(
+            "no statutory citation on the document established whether it supplies goods "
+            "or services, and this operation's treatment differs between them"
+        ),
+        settled_by="a printed statutory citation, or an explicit operator assertion of the supply nature",
+    )
+
+
+def _identification_axis_gap(
+    consumption_probe: Callable[[CustomerTaxStatus, TransactionKind], frozenset[PartyFact]],
+    *,
+    counterparty_field: str,
+    counterparty_state: EUMemberState | None,
+    status_candidates: tuple[CustomerTaxStatus, ...],
+    kind_candidates: tuple[TransactionKind, ...],
+) -> MissingClassifierInput | None:
+    """Demand the counterparty's NIF-IVA only where a reachable branch consumes it."""
+    if counterparty_state is not None:
+        return None
+    if PartyFact.VAT_IDENTIFICATION_STATE not in _facts_consumed(
+        consumption_probe,
+        status_candidates=status_candidates,
+        kind_candidates=kind_candidates,
+    ):
+        return None
+    return _identification_gap(counterparty_field)
+
+
+def _unresolved_axis_gaps(
+    criteria_for: Callable[[CustomerTaxStatus, TransactionKind], IvaInvoiceClassificationCriteria],
+    *,
+    status: CustomerTaxStatus | None,
+    supply_nature: SupplyNature | None,
+    counterparty_field: str,
+    counterparty_state: EUMemberState | None,
+    inputs: ClassifierInputs,
+) -> list[MissingClassifierInput]:
+    """Ask the rule table which still-undetermined axes could change THIS verdict.
+
+    Each axis is asked lazily, in the order the assembler reports them: an axis
+    the table treats identically across every value it could still take is not a
+    gap, and demanding it would put a question to the operator that no branch
+    this operation can reach would consult.
+    """
+
+    def _probe(status_candidate: CustomerTaxStatus, kind: TransactionKind) -> IvaCategory:
+        return classify_iva(criteria_for(status_candidate, kind)).category
+
+    def _consumption_probe(
+        status_candidate: CustomerTaxStatus,
+        kind: TransactionKind,
+    ) -> frozenset[PartyFact]:
+        return classify_iva(criteria_for(status_candidate, kind)).consumes_party_facts
+
+    # What each axis could still be. An established axis contributes its one
+    # value, so it holds genuinely fixed while the other is judged.
+    status_candidates = (status,) if status is not None else _STATUS_CANDIDATES
+    kind_candidates = (
+        (_NATURE_TO_KIND[supply_nature],) if supply_nature is not None else tuple(_NATURE_TO_KIND.values())
+    )
+    gaps = (
+        _status_axis_gap(_probe, status=status, kind_candidates=kind_candidates, inputs=inputs),
+        _supply_nature_axis_gap(
+            _probe,
+            supply_nature=supply_nature,
+            status_candidates=status_candidates,
+            kind_candidates=kind_candidates,
+        ),
+        _identification_axis_gap(
+            _consumption_probe,
+            counterparty_field=counterparty_field,
+            counterparty_state=counterparty_state,
+            status_candidates=status_candidates,
+            kind_candidates=kind_candidates,
+        ),
+    )
+    return [gap for gap in gaps if gap is not None]
+
+
 def assemble_classification_criteria(
     *,
     transaction_date: date | None,
@@ -677,23 +840,20 @@ def assemble_classification_criteria(
     supply_nature = _value_of(declared.supply_nature)
     status = _value_of(declared.customer_tax_status)
 
-    issuer_scope, issuer_gap = _scope(
+    issuer_scope = _scope_or_recorded_gap(
+        missing,
         issuer_country_code,
         issuer_postal_code,
         field="issuer_residency",
         asserted=_value_of(declared.issuer_scope),
     )
-    if issuer_gap is not None:
-        missing.append(issuer_gap)
-
-    customer_scope, customer_gap = _scope(
+    customer_scope = _scope_or_recorded_gap(
+        missing,
         customer_country_code,
         customer_postal_code,
         field="customer_residency",
         asserted=_value_of(declared.customer_scope),
     )
-    if customer_gap is not None:
-        missing.append(customer_gap)
 
     # Resolved unconditionally and demanded conditionally. Which branches need
     # an identification is the table's to say, and the table cannot be asked
@@ -724,23 +884,7 @@ def assemble_classification_criteria(
         # still REPORTED, because failing toward asking is the rule and because
         # dropping them would cost the accumulate-at-once property: an operator
         # resolving the other gaps would re-run only to meet a new one.
-        if status is None:
-            missing.append(_customer_tax_status_gap(inputs))
-        if supply_nature is None:
-            missing.append(
-                MissingClassifierInput(
-                    field="kind",
-                    reason=(
-                        "no statutory citation on the document established whether it supplies goods "
-                        "or services, and this operation is too incompletely placed to tell whether "
-                        "its treatment turns on the answer"
-                    ),
-                    settled_by=(
-                        "a printed statutory citation, or an explicit operator assertion of the supply "
-                        "nature; resolving the other gaps may also settle it"
-                    ),
-                ),
-            )
+        missing.extend(_gaps_reportable_before_placement(status, supply_nature, inputs))
         # The identification is deliberately NOT reported here, and it is the one
         # place this function does not accumulate. The status and the nature are
         # reported because the table can be asked about them the moment the
@@ -757,92 +901,45 @@ def assemble_classification_criteria(
     assert customer_scope is not None
     assert transaction_date is not None
 
-    def _probe(status_candidate: CustomerTaxStatus, kind: TransactionKind) -> IvaCategory:
-        return classify_iva(
-            IvaInvoiceClassificationCriteria(
-                transaction_date=transaction_date,
-                issuer_residency=issuer_scope,
-                customer_residency=customer_scope,
-                customer_tax_status=status_candidate,
-                kind=kind,
-                direction=direction,
-                issuer_identification_state=issuer_state,
-                customer_identification_state=customer_state,
-                rate_tier=rate_tier,
-            ),
-        ).category
-
-    def _consumption_probe(
+    def _criteria_for(
         status_candidate: CustomerTaxStatus,
         kind: TransactionKind,
-    ) -> frozenset[PartyFact]:
-        return classify_iva(
-            IvaInvoiceClassificationCriteria(
-                transaction_date=transaction_date,
-                issuer_residency=issuer_scope,
-                customer_residency=customer_scope,
-                customer_tax_status=status_candidate,
-                kind=kind,
-                direction=direction,
-                issuer_identification_state=issuer_state,
-                customer_identification_state=customer_state,
-                rate_tier=rate_tier,
-            ),
-        ).consumes_party_facts
-
-    # What each axis could still be. An established axis contributes its one
-    # value, so it holds genuinely fixed while the other is judged.
-    status_candidates = (status,) if status is not None else _STATUS_CANDIDATES
-    kind_candidates = (
-        (_NATURE_TO_KIND[supply_nature],) if supply_nature is not None else tuple(_NATURE_TO_KIND.values())
-    )
-
-    if status is None and _axis_forks_the_law(
-        _probe, slices=[(_STATUS_CANDIDATES, (kind,)) for kind in kind_candidates]
-    ):
-        missing.append(_customer_tax_status_gap(inputs))
-
-    if supply_nature is None and _axis_forks_the_law(
-        _probe,
-        slices=[((candidate,), kind_candidates) for candidate in status_candidates],
-    ):
-        missing.append(
-            MissingClassifierInput(
-                field="kind",
-                reason=(
-                    "no statutory citation on the document established whether it supplies goods "
-                    "or services, and this operation's treatment differs between them"
-                ),
-                settled_by="a printed statutory citation, or an explicit operator assertion of the supply nature",
-            ),
+    ) -> IvaInvoiceClassificationCriteria:
+        return IvaInvoiceClassificationCriteria(
+            transaction_date=transaction_date,
+            issuer_residency=issuer_scope,
+            customer_residency=customer_scope,
+            customer_tax_status=status_candidate,
+            kind=kind,
+            direction=direction,
+            issuer_identification_state=issuer_state,
+            customer_identification_state=customer_state,
+            rate_tier=rate_tier,
         )
 
     counterparty_field = _counterparty_identification_field(direction)
-    if _state_for_field(
-        counterparty_field,
-        issuer=issuer_state,
-        customer=customer_state,
-    ) is None and PartyFact.VAT_IDENTIFICATION_STATE in _facts_consumed(
-        _consumption_probe,
-        status_candidates=status_candidates,
-        kind_candidates=kind_candidates,
-    ):
-        missing.append(_identification_gap(counterparty_field))
+    missing.extend(
+        _unresolved_axis_gaps(
+            _criteria_for,
+            status=status,
+            supply_nature=supply_nature,
+            counterparty_field=counterparty_field,
+            counterparty_state=_state_for_field(
+                counterparty_field,
+                issuer=issuer_state,
+                customer=customer_state,
+            ),
+            inputs=inputs,
+        ),
+    )
 
     if missing:
         return ClassificationAssembly(missing=tuple(missing))
 
     return ClassificationAssembly(
-        criteria=IvaInvoiceClassificationCriteria(
-            transaction_date=transaction_date,
-            issuer_residency=issuer_scope,
-            customer_residency=customer_scope,
-            customer_tax_status=status if status is not None else _UNDETERMINED_STATUS,
-            kind=_NATURE_TO_KIND[supply_nature] if supply_nature is not None else _NATURE_INDIFFERENT_KIND,
-            direction=direction,
-            issuer_identification_state=issuer_state,
-            customer_identification_state=customer_state,
-            rate_tier=rate_tier,
+        criteria=_criteria_for(
+            status if status is not None else _UNDETERMINED_STATUS,
+            _NATURE_TO_KIND[supply_nature] if supply_nature is not None else _NATURE_INDIFFERENT_KIND,
         ),
     )
 

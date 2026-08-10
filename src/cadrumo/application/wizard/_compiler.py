@@ -126,7 +126,7 @@ def ensure_profile_keys_registered() -> None:
     process-global and the domain layer may not pull upward to seed itself:
     a host that never imports this package would otherwise read an
     empty registry and raise
-    :class:`~cadrumo.domain.contribuyente.ProfileKeysRegistrationError`.
+    :class:`~domain.contribuyente._errors.ProfileKeysRegistrationError`.
 
     Repeat calls are no-ops:
     :func:`~cadrumo.domain.contribuyente._keys.register_profile_keys` returns

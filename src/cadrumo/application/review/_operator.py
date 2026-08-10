@@ -253,11 +253,6 @@ def _to_row(item: ReviewItem, *, state: ReviewState, bucket_id: str) -> ReviewQu
             summary=_render_summary(item.summary),
             legal_refs=tuple(legal_refs),
         )
-    raise ReviewError(
-        message=f"unsupported review item type: {type(item).__name__}",
-        translated_message="review.operator.errors.unsupported_item_type",
-        context={"item_type": type(item).__name__},
-    )
 
 
 def _render_summary(value: str) -> str:

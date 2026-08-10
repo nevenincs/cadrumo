@@ -8,7 +8,7 @@ calculation layer. Seed and correction flows write
 flows persist an
 :class:`~cadrumo.domain.iva_compensation._reconciliation.IvaCompensationReconciliationDecision`
 through ``reconcile_modelo_303_iva_compensation``. Every mutation appends a typed
-bucket event via :class:`~cadrumo.domain.buckets.BucketEventHistoryRepository`.
+bucket event via :class:`~adapters.persistence.profile.buckets.BucketEventHistoryRepository`.
 
 The facade is intentionally above the pure writers. It can scan work units and
 calculation revisions before changing an opening carry-forward basis, so

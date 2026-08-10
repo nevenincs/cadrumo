@@ -4,7 +4,7 @@ This is the ledger projection behind the
 ``ledger_renta_income_aggregation`` source for Modelo 130 and Modelo 100. The
 quarterly entry point :func:`aggregate_renta_income_ledger_from_repositories`
 loads a :class:`~domain.transactions.TransactionCatalogue` via
-:class:`~domain.transactions.TransactionCatalogueRepository` from the
+:class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository` from the
 active bucket and delegates to :func:`aggregate_renta_income_ledger` for
 period-scoped aggregation.
 

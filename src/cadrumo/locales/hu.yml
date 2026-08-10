@@ -6860,6 +6860,12 @@ errors:
       fel a zárolást (Touch ID, Windows Hello vagy a hitelesítőkezelő), és próbálja
       újra.
   prefix:
+    auth: Hitelesítés.
+    error: Hiba.
+    fail: Sikertelen.
+    integrity: Sértetlenség.
+    internal: Belső hiba.
+    locked: Zárolva.
     refused: Elutasítva.
   refused:
     auth_configure_no_active_bucket: Hitelesítés nem konfigurálható aktív profil nélkül.
@@ -70352,7 +70358,6 @@ review:
         elem.
       unknown_kind: 'Ismeretlen felülvizsgálati elemtípus. Elfogadott --kind értékek:
         %{accepted_kinds}.'
-      unsupported_item_type: 'Nem támogatott felülvizsgálati elemtípus: %{item_type}.'
   transaction:
     summary: Tranzakció besorolásra vár
 sheets:

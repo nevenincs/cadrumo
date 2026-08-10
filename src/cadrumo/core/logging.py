@@ -39,7 +39,7 @@ import logging.config
 import logging.handlers
 import re
 import sys
-from collections.abc import Mapping
+from collections.abc import Iterable, Iterator, Mapping
 from contextvars import ContextVar
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, overload, override
@@ -276,6 +276,16 @@ def _scrub_value(value: set[object], *, key: str | None = ...) -> set[object]: .
 def _scrub_value(value: object, *, key: str | None = ...) -> object: ...
 
 
+def _scrub_items(values: Iterable[object], key: str | None) -> Iterator[object]:
+    """Yield every element of a logging container, each recursively scrubbed.
+
+    The element walk is shared by the tuple, list and set arms of
+    :func:`_scrub_value`; each arm rebuilds its own concrete container from
+    this stream so a subclass never dictates the reconstructed type.
+    """
+    return (_scrub_value(item, key=key) for item in values)
+
+
 # ANY-RETURN-RATIONALE-SCRUB-OVERLOAD-IMPL:
 # The implementation overload returns Any to subsume all concrete overload
 # return types per mypy overload rules.
@@ -288,11 +298,11 @@ def _scrub_value(value: object, *, key: str | None = None) -> Any:  # ANY-RETURN
     if isinstance(value, Mapping):
         return {item_key: _scrub_value(item_value, key=str(item_key)) for item_key, item_value in value.items()}
     if isinstance(value, tuple):
-        return tuple(_scrub_value(item, key=key) for item in value)
+        return tuple(_scrub_items(value, key))
     if isinstance(value, list):
-        return [_scrub_value(item, key=key) for item in value]
+        return list(_scrub_items(value, key))
     if isinstance(value, set):
-        return {_scrub_value(item, key=key) for item in value}
+        return set(_scrub_items(value, key))
     if _looks_sensitive_key(key):
         return _redacted_value(key, str(value))
     return _scrub_opaque_object(value)

@@ -35,7 +35,7 @@ module testable against real records without owning either dependency.
 See Also:
     :class:`~domain.evidence_consent.EvidenceConsentLedgerEntry`
         One recorded off-host dispatch; the unit this survey enumerates.
-    :func:`~application.ledger.read_cached_transcription`
+    :func:`~application.ledger._extracted_document_cache.read_cached_transcription`
         The stage-1 cache a local re-derivation reads instead of the document.
     :class:`~application.ledger.InvoiceDraft`
         The artefact class re-derivation replaces.

@@ -28,6 +28,8 @@ from textual.screen import Screen
 from textual.widgets import Button, DataTable, Footer, Static
 
 from ....application.flows import (
+    ReviewProjection,
+    ReviewRow,
     assemble_page_copy,
     assemble_section_titles,
     checkpoint_available,
@@ -121,46 +123,7 @@ class ReviewScreen(Screen[None]):
         )
         table = self.query_one("#review-table", DataTable)
         table.clear()
-        section_titles = self._section_titles(app)
-        # A heading row exists to distinguish one section's rows from
-        # another's; with exactly one section there is nothing to
-        # distinguish, and the heading renders whatever copy that section
-        # happens to be titled with -- which, for a flow whose single
-        # section stands in for "every page this run has" rather than a
-        # real named group (both live wizard entrypoints build theirs this
-        # way), is the flow's own multi-sentence help text landing in the
-        # table as if it were a question row. Multi-section flows (the
-        # retired setup wizard's "Identidad" / "Actividad económica" etc.)
-        # are untouched: every one of their headings stays exactly as
-        # rendered today.
-        multi_section = len({row.section_id for row in projection.rows}) > 1
-        current_section: str | None = None
-        for row in projection.rows:
-            if multi_section and row.section_id != current_section:
-                # Group the summary by section: a heading row opens each
-                # section so review reads as a complete-profile summary, not a
-                # flat per-page status list. The heading key is sentinel-scoped
-                # so it never resolves to a jump target.
-                current_section = row.section_id
-                table.add_row(
-                    "",
-                    section_titles.get(row.section_id, tr("flows.review.section_unavailable")),
-                    "",
-                    "",
-                    key=f"{_SECTION_HEADING_PREFIX}{row.section_id}",
-                )
-            prompt = prompts.get(row.key)
-            if prompt is None:
-                prompt = tr("flows.review.question_unavailable")
-            elif not row.jumpable:
-                prompt = f"{prompt} {tr('flows.review.orphan_marker')}".strip()
-            table.add_row(
-                _STATUS_GLYPHS.get(row.status, "?"),
-                prompt,
-                self._answer_cell(app, row.key),
-                self._registered_cell(app, row.key),
-                key=row.key,
-            )
+        self._fill_table(table, app, projection, prompts)
         choice_labels = {
             choice.value: choice.label
             for entry in visible_sequence(app.definition, app.state)
@@ -191,6 +154,62 @@ class ReviewScreen(Screen[None]):
         self.query_one("#review-save-note", Static).update(save_note)
         self.query_one("#btn-submit", Button).disabled = not projection.submit_eligible
         table.focus()
+
+    def _fill_table(
+        self,
+        table: DataTable[str],
+        app: FlowTuiApp,
+        projection: ReviewProjection,
+        prompts: dict[str, str],
+    ) -> None:
+        """Add one row per reviewed page, opened by a section heading where useful.
+
+        A heading row exists to distinguish one section's rows from
+        another's; with exactly one section there is nothing to
+        distinguish, and the heading renders whatever copy that section
+        happens to be titled with -- which, for a flow whose single
+        section stands in for "every page this run has" rather than a
+        real named group (both live wizard entrypoints build theirs this
+        way), is the flow's own multi-sentence help text landing in the
+        table as if it were a question row. Multi-section flows (the
+        retired setup wizard's "Identidad" / "Actividad económica" etc.)
+        are untouched: every one of their headings stays exactly as
+        rendered today.
+        """
+        section_titles = self._section_titles(app)
+        multi_section = len({row.section_id for row in projection.rows}) > 1
+        current_section: str | None = None
+        for row in projection.rows:
+            if multi_section and row.section_id != current_section:
+                # Group the summary by section: a heading row opens each
+                # section so review reads as a complete-profile summary, not a
+                # flat per-page status list. The heading key is sentinel-scoped
+                # so it never resolves to a jump target.
+                current_section = row.section_id
+                table.add_row(
+                    "",
+                    section_titles.get(row.section_id, tr("flows.review.section_unavailable")),
+                    "",
+                    "",
+                    key=f"{_SECTION_HEADING_PREFIX}{row.section_id}",
+                )
+            table.add_row(
+                _STATUS_GLYPHS.get(row.status, "?"),
+                self._prompt_cell(row, prompts),
+                self._answer_cell(app, row.key),
+                self._registered_cell(app, row.key),
+                key=row.key,
+            )
+
+    @staticmethod
+    def _prompt_cell(row: ReviewRow, prompts: dict[str, str]) -> str:
+        """The question-column cell, marked when the row is a stale orphan."""
+        prompt = prompts.get(row.key)
+        if prompt is None:
+            return tr("flows.review.question_unavailable")
+        if not row.jumpable:
+            return f"{prompt} {tr('flows.review.orphan_marker')}".strip()
+        return prompt
 
     @staticmethod
     def _answer_cell(app: FlowTuiApp, page_key: str) -> str:

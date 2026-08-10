@@ -14,5 +14,6 @@ Submodules
    :maxdepth: 4
 
    cadrumo.core.decimal._coerce
+   cadrumo.core.decimal._fixed_width
    cadrumo.core.decimal._format
    cadrumo.core.decimal._grammar

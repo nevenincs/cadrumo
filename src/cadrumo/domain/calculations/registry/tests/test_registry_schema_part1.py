@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import get_args
 
 import pytest
 
@@ -11,7 +10,7 @@ from .....core import CasillaId, validated_casilla_id
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....core.identity import SPANISH_TAX_ID_WIDTH, IdentityError, validate_spanish_tax_id
 from ..._export_field_kind import CasillaFieldKind
-from .. import BboxAnchorSpec, RegistrySnapshot
+from .. import BboxAnchorSpec, ExportDraftAttribute, RegistrySnapshot
 from .._authority import ValidatedRegistryAuthority
 from .._binding_selector_utils import selector_as_dict
 from .._schema import DataBindingDefinition
@@ -751,18 +750,11 @@ def test_draft_attribute_width_ruling_covers_every_declarable_attribute() -> Non
     Asserting the mapping is total here names that obligation at the schema, so the
     refusal is a design prompt rather than a puzzling build failure.
     """
-    # The annotation is Literal[...] | None; NoneType contributes no args, so the
-    # comprehension yields exactly the declarable attribute tokens whatever order
-    # the union carries them in.
-    declarable = {
-        token
-        for member in get_args(ExportFieldDefinition.model_fields["draft_attribute"].annotation)
-        for token in get_args(member)
-    }
+    declarable = set(ExportDraftAttribute)
 
     assert declarable
     assert set(DRAFT_ATTRIBUTE_CANONICAL_WIDTHS) == declarable
-    assert DRAFT_ATTRIBUTE_CANONICAL_WIDTHS["profile_tax_id"] == SPANISH_TAX_ID_WIDTH
+    assert DRAFT_ATTRIBUTE_CANONICAL_WIDTHS[ExportDraftAttribute.PROFILE_TAX_ID] == SPANISH_TAX_ID_WIDTH
 
 
 def test_validator_rejects_declarant_nif_draft_field_bound_to_a_wider_slot() -> None:

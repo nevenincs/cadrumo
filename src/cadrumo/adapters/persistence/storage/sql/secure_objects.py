@@ -299,7 +299,7 @@ class SecureObjectRepository:
         raises :class:`SessionExpiredError` (translated by the CLI
         error decorator into a refusal that names ``aeat config
         unlock`` as the next action). On a fresh session,
-        calls :meth:`~adapters.persistence.storage.BucketSession.touch` to roll the deadline
+        calls :meth:`~adapters.persistence.storage.master_key.BucketSession` to roll the deadline
         forward by the configured idle window — the operator's
         active session remains usable for the next window's
         duration without re-authentication.
@@ -584,7 +584,7 @@ class SecureObjectRepository:
 
         The default listing path is fail-closed: it walks the namespace through
         :meth:`iter_records_with_failures` and raises
-        :class:`~adapters.persistence.storage.SecureObjectUnreadableError` before
+        :class:`~adapters.persistence.storage.errors.SecureObjectUnreadableError` before
         yielding a partial readable subset. Use ``iter_records_with_failures`` for
         explicit mixed readable/unreadable diagnostics.
 
@@ -720,10 +720,10 @@ class SecureObjectRepository:
         """Yield a typed outcome per stored row under ``namespace``.
 
         Each row is represented by either a
-        :class:`~adapters.persistence.storage.SecureObjectRecord` (the
+        :class:`~adapters.persistence.storage.sql.SecureObjectRecord` (the
         row decrypts cleanly and matches the consumer's classification and
         schema-version contract) or a
-        :class:`~adapters.persistence.storage.SecureObjectUnreadable` (the
+        :class:`~adapters.persistence.storage.sql._secure_object_records.SecureObjectUnreadable` (the
         on-wire ciphertext exists but cannot be decrypted under the current
         master key, or its metadata fails the consumer's contract).
 
@@ -737,19 +737,19 @@ class SecureObjectRepository:
                 :class:`~adapters.persistence.storage.SensitivityClass`
                 all rows in this namespace must carry; rows with a differing
                 classification are yielded as
-                :class:`~adapters.persistence.storage.SecureObjectUnreadable`.
+                :class:`~adapters.persistence.storage.sql._secure_object_records.SecureObjectUnreadable`.
             max_supported_version: The consumer's current ``schema_version``
                 ceiling. Rows above it, or below it without a complete
                 registered upgrade chain, are yielded
-                as :class:`~adapters.persistence.storage.SecureObjectUnreadable`.
+                as :class:`~adapters.persistence.storage.sql._secure_object_records.SecureObjectUnreadable`.
             batch_size: SQLAlchemy ``yield_per`` chunk size for the raw row
                 scan. The default keeps memory bounded for large namespaces
                 while preserving deterministic ``(object_key ASC)`` order.
 
         Yields:
             One ``SecureObjectListItem`` per stored row — either a
-            :class:`~adapters.persistence.storage.SecureObjectRecord` or
-            a :class:`~adapters.persistence.storage.SecureObjectUnreadable`.
+            :class:`~adapters.persistence.storage.sql.SecureObjectRecord` or
+            a :class:`~adapters.persistence.storage.sql._secure_object_records.SecureObjectUnreadable`.
 
         Raises:
             StorageValidationError: When ``batch_size`` is less than 1.
@@ -820,7 +820,7 @@ class SecureObjectRepository:
     ) -> SecureObjectRecord | None:
         """Load and decrypt one secure-object row, returning ``None`` when absent.
 
-        Returns a :class:`~adapters.persistence.storage.SecureObjectRecord`
+        Returns a :class:`~adapters.persistence.storage.sql.SecureObjectRecord`
         when the row is present and decrypts under the expected class/version.
 
         Args:

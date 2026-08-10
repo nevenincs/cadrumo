@@ -16,7 +16,7 @@ that percentage only to deducible IVA cuota bindings; bases and output IVA
 cuotas stay unapportioned.
 
 The repository-backed entry point constructs a
-:class:`~domain.transactions.TransactionCatalogueRepository` for the active
+:class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository` for the active
 bucket when none is supplied. Pre-classified callers can use
 :class:`IvaLedgerCandidate` and :func:`aggregate_iva_ledger_candidate_bindings`
 to run the same validation and registry binding path.

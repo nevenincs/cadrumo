@@ -62,9 +62,12 @@ who DOES file the source, and the undeclared case, stay enforced.
 ## Local-filed observations are non-official evidence
 
 Observations persisted by the local `file` flow MUST carry a non-official
-`source_kind` (`app_filing`) and MUST NEVER be added to
-`_OFFICIAL_SOURCE_KINDS` — the set satisfying the cross-period clean-state gate
-(`aeat_sede_justificante`, `aeat_sede_live_capture`, `aeat_csv_register`).
+`source_kind` (`app_filing`) and MUST NEVER be classified official: the one
+official-evidence authority is `ObservationSourceKind.is_official_aeat`
+(`application/calculations/_observations_repository.py`), which satisfies the
+cross-period clean-state gate for `aeat_sede_justificante`,
+`aeat_sede_live_capture` and `aeat_csv_register` only, and MUST stay `False`
+for `app_filing`.
 
 Automatic cross-period carry may feed calculate and draft from these
 observations, but they must never substitute for external AEAT filing evidence. A
@@ -90,7 +93,7 @@ remain blocking.
 - **Good:** a suffered-retencion source marked `taxpayer_files_source = false`
   scopes out as a **visible** not-applicable advisory, never silently.
 - **Good:** the local filing path stamps `source_kind="app_filing"`, and a
-  regression asserts `app_filing not in _OFFICIAL_SOURCE_KINDS`.
+  regression asserts `is_official_aeat` is `False` for the `app_filing` member.
 - **Bad:** shipping a manual base or result casilla with no derivation and no
   guard, so the gate grants completeness on positive input.
 - **Bad:** a blocking rule refusing legitimate positive-result/zero-base filings
@@ -103,7 +106,8 @@ remain blocking.
 - **Bad:** scoping out because the source modelo is missing from the
   deadline-engine schedule; or suppressing on an undeclared profile signal, which
   fails open.
-- **Bad:** adding `app_filing` to `_OFFICIAL_SOURCE_KINDS`.
+- **Bad:** making `is_official_aeat` return `True` for `app_filing`, or adding
+  any locally-produced source kind to the official set.
 
 Gate: `test_external_oracle_grounding_enrolled.py`. Source: ADRs
 `2026-06-02-modelo-200-base-determination-adr`,

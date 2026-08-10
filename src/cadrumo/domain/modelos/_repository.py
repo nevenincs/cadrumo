@@ -1,6 +1,6 @@
 """Encrypted SQL repository for the modelo work-unit catalogue.
 
-:class:`~cadrumo.domain.modelos.WorkUnitCatalogueRepository` persists
+:class:`~adapters.persistence.profile.modelos_work_units.WorkUnitCatalogueRepository` persists
 :class:`WorkUnit` records in a :class:`WorkUnitCatalogue` at
 ``FINANCIAL`` :class:`~cadrumo.adapters.persistence.storage.SensitivityClass`
 through
@@ -24,7 +24,7 @@ class WorkUnitPersistenceError(ModeloError):
     """Raised when the work-unit catalogue cannot be loaded or saved.
 
     This wraps storage-boundary failures from
-    :class:`~cadrumo.domain.modelos.WorkUnitCatalogueRepository` while preserving
+    :class:`~adapters.persistence.profile.modelos_work_units.WorkUnitCatalogueRepository` while preserving
     translated recovery context for callers.
     """
 

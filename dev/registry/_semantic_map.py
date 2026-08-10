@@ -8,20 +8,22 @@ references nor matches a semantic entry to parser output.
 
 from __future__ import annotations
 
-from typing import Literal
-
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from cadrumo.core import CasillaId
 from cadrumo.domain.calculations.registry import (
     BindingId,
-    CasillaFieldKind,
     CasillaFieldKindValue,
+    ExportComputedKeyValue,
+    ExportDraftAttributeValue,
     ExportFieldId,
+    ExportHeaderKeyValue,
+    ExportSemanticPayloadAxis,
     LegalRefs,
     ModeloId,
     RecordId,
     SourceRefs,
+    export_semantic_payload_axis,
 )
 
 __all__ = [
@@ -69,18 +71,9 @@ class SemanticMapEntry(_StrictModel):
     casilla_id: CasillaId | None = None
     binding: BindingId | None = None
     literal: str | None = None
-    header_key: str | None = Field(default=None, min_length=1)
-    draft_attribute: (
-        Literal[
-            "modelo",
-            "period",
-            "profile_tax_id",
-            "filing_year",
-            "period_code",
-        ]
-        | None
-    ) = None
-    computed_key: Literal["envelope_closing_tag"] | None = None
+    header_key: ExportHeaderKeyValue | None = None
+    draft_attribute: ExportDraftAttributeValue | None = None
+    computed_key: ExportComputedKeyValue | None = None
     legal_refs: LegalRefs
     source_refs: SourceRefs
 
@@ -88,37 +81,27 @@ class SemanticMapEntry(_StrictModel):
     def _validate_exact_kind_semantics(self) -> SemanticMapEntry:
         """Require exactly the one semantic payload applicable to ``kind``."""
         payloads = {
-            "casilla_id": self.casilla_id,
-            "binding": self.binding,
-            "literal": self.literal,
-            "header_key": self.header_key,
-            "draft_attribute": self.draft_attribute,
-            "computed_key": self.computed_key,
+            ExportSemanticPayloadAxis.CASILLA_ID: self.casilla_id,
+            ExportSemanticPayloadAxis.BINDING: self.binding,
+            ExportSemanticPayloadAxis.LITERAL: self.literal,
+            ExportSemanticPayloadAxis.HEADER_KEY: self.header_key,
+            ExportSemanticPayloadAxis.DRAFT_ATTRIBUTE: self.draft_attribute,
+            ExportSemanticPayloadAxis.COMPUTED_KEY: self.computed_key,
         }
-        required_by_kind: dict[CasillaFieldKind, str | None] = {
-            CasillaFieldKind.CASILLA: "casilla_id",
-            CasillaFieldKind.BINDING: "binding",
-            CasillaFieldKind.LITERAL: "literal",
-            CasillaFieldKind.HEADER: "header_key",
-            CasillaFieldKind.DRAFT: "draft_attribute",
-            CasillaFieldKind.COMPUTED: "computed_key",
-            CasillaFieldKind.FILLER: None,
-            CasillaFieldKind.CHECKSUM: None,
-        }
-        required = required_by_kind[self.kind]
-        declared = tuple(name for name, value in payloads.items() if value is not None)
+        required = export_semantic_payload_axis(self.kind)
+        declared = tuple(axis for axis, value in payloads.items() if value is not None)
         if required is None:
             if declared:
                 raise ValueError(
                     f"semantic-map {self.kind.value} field {self.export_field_id!r} "
-                    f"must not declare semantic payloads: {', '.join(declared)}",
+                    f"must not declare semantic payloads: {', '.join(axis.value for axis in declared)}",
                 )
             return self
         if declared != (required,):
-            declared_description = ", ".join(declared) if declared else "none"
+            declared_description = ", ".join(axis.value for axis in declared) if declared else "none"
             raise ValueError(
                 f"semantic-map {self.kind.value} field {self.export_field_id!r} must declare "
-                f"only {required}; declared {declared_description}",
+                f"only {required.value}; declared {declared_description}",
             )
         return self
 

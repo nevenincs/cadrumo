@@ -1,0 +1,54 @@
+# Casilla 122, "Operaciones sujetas con inversión del sujeto pasivo": the
+# SUPPLIER's side of a domestic reverse charge, declared as base only.
+#
+# LIVA art. 84.Uno.2.º makes the RECIPIENT the sujeto pasivo, so the supplier
+# makes a sujeta y no exenta supply and repercutes nothing. There is correctly
+# no cuota on this side, and this binding deliberately models none. What the
+# operation IS, is turnover — and AEAT asks for it by name in this box.
+#
+# Before this binding the supplier's base reached nothing at all. The box
+# existed, sat at its correct diseño offset (página 3, byte 63, length 17) and
+# was wired into the export layout; only the binding was missing, so a real
+# reverse-charge sale left volumen de operaciones understated by its full
+# amount with nothing reporting it.
+#
+# THE SELECTOR ADMITS EVERY rate_kind, and that is a decision rather than
+# laziness. The sibling base-only boxes 59 and 60 pin rate_kinds = ["zero"]
+# because those operations are genuinely zero-rated. This one is NOT: it is
+# sujeta y no exenta, and the recipient self-assesses at the ordinary tier.
+#
+# Pinning "zero" here would assert the wrong legal treatment AND silently drop
+# every row whose line recorded its underlying tier instead of an exempt slot.
+# Which of those a row carries depends on how the operator tagged the line, and
+# the producer deliberately reads the slot rather than fabricating a tier, so
+# the selector must accept all of them.
+#
+# The real discriminator is the pair (category, flow_direction): a row that is
+# domestic_reverse_charge AND operacion_con_inversion IS the supplier's side of
+# a domestic reverse charge, which is exactly what this box declares. Rate adds
+# no information to that test, so it is enumerated in full rather than used as
+# a filter. The build validator requires the field to be stated, which is why
+# it is written out rather than omitted.
+#
+# flow_direction is operacion_con_inversion, NEVER repercutido. That member
+# exists precisely to separate the supplier's side from the recipient's; the
+# two were collapsed once and it put the supplier's turnover on the recipient's
+# self-assessment line.
+[[revisions.2024-desde-09-y-3t.bindings]]
+id = "modelo-303-casilla-122-inversion-sujeto-pasivo-base"
+source = "ledger_iva_aggregation"
+legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2024-late", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2024-desde-09-y-3t.bindings.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2024-desde-09-y-3t.bindings.selector]
+categories = ["domestic_reverse_charge"]
+rate_kinds = ["general", "reduced", "super_reduced", "zero", "exempt"]
+flow_direction = "operacion_con_inversion"
+fact = "base_amount_sum"
+
+[revisions.2024-desde-09-y-3t.bindings.aggregation]
+op = "sum"

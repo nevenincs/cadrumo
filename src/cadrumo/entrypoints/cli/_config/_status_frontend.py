@@ -171,7 +171,7 @@ def _build_auth_view(state: WorkflowState | None, *, active_uuid: str | None) ->
     """Project the workflow auth state, degrading to an empty view when absent.
 
     ``idle_deadline`` / ``absolute_deadline`` come from a second, unrelated
-    authority: the process's live :class:`~cadrumo.adapters.persistence.storage.BucketSession`
+    authority: the process's live :class:`~adapters.persistence.storage.master_key.BucketSession`
     for the active bucket — the profile-unlock session ``aeat config
     login`` opened — never the AEAT auth state above. Read only when that
     live session actually serves ``active_uuid``, so a status query run
@@ -211,7 +211,7 @@ def _build_auth_view(state: WorkflowState | None, *, active_uuid: str | None) ->
 def _active_profile_session_deadlines(active_uuid: str | None) -> tuple[datetime | None, datetime | None]:
     """Return the live profile session's idle and absolute deadlines, or ``(None, None)``.
 
-    Reads the in-process :class:`~cadrumo.adapters.persistence.storage.BucketSession`
+    Reads the in-process :class:`~adapters.persistence.storage.master_key.BucketSession`
     directly rather than resolving a session: this is a read-only status
     projection and must never mint, resume, or persist anything. A session
     that does not exist, or belongs to a different bucket, is exactly the

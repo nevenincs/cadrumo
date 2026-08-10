@@ -1,10 +1,10 @@
 """Real-source contract tests for the identifier noun-vocabulary census.
 
-The census exists to prove that the campaign's original suffix-heuristic count
+The census exists to prove that the original suffix-heuristic count
 is a FLOOR, so the load-bearing test is not "it returns records" but "it finds
 the specific field whose invisibility to the suffix sweep is what proved the
 floor". That case is ``Deuda.clave_liquidacion``: an AEAT-issued identifier
-this campaign enrolls by name, carrying no identifier suffix, documented in
+this codebase enrols by name, carrying no identifier suffix, documented in
 prose as an *identifier*.
 
 The negative controls matter as much. An instrument that returns the expected
@@ -27,7 +27,7 @@ from dev.identifier_noun_census import (
     matched_nouns,
 )
 
-pytestmark = [pytest.mark.unit]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 _MOTIVATING_SOURCE = '''
@@ -75,7 +75,7 @@ def test_is_silent_about_fields_with_no_identifier_prose() -> None:
     """Negative control: documented non-identifiers must not be reported.
 
     ``importe_pendiente`` is an amount and ``situacion`` is an adjudicated
-    non-identifier this campaign excludes by name. Both are documented in the
+    non-identifier excluded from the taxonomy by name. Both are documented in the
     same ``Attributes:`` block as the field above, so a census that reported
     them would be matching the block rather than the prose.
     """

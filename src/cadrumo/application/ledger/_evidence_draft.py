@@ -1183,7 +1183,7 @@ def _structured_provenance(
 
     The anchor check runs against the record's own decoded text rather than a
     transcription, because a machine-readable document has none -- see
-    :func:`~application.ledger.ground_structured_value` for why that is a
+    :func:`~application.ledger._grounding_anchor.ground_structured_value` for why that is a
     separate entry point rather than a synthesised transcription.
     """
     # Function-local for the same cycle-break reason the semantic path's
@@ -1789,7 +1789,7 @@ def _agreed_counterparty_tax_id(*, supplied: str | None, extracted: str | None) 
     That matters past tidiness. A received invoice's supplier tax id drives
     deductibility and feeds Modelo 347 per counterparty, so a wrong one reaches
     a filing a human submits. The checksum on
-    :func:`~cadrumo.domain.invoices.validate_spanish_tax_id` is the PRIMARY
+    :func:`~core.identity.validate_spanish_tax_id` is the PRIMARY
     defence and it is a strong one -- a transposed digit breaks the check
     character and is refused outright. What it cannot catch is a misread that
     happens to be a different VALID identifier, which belongs to a different

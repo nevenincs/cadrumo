@@ -281,7 +281,7 @@ def _export_issues(
     # Function-local import keeps ``cadrumo.domain.user_profile`` free of an
     # eager calculation-registry load at package import (the lazy-boundary
     # contract); this validator is the only runtime consumer of the enum.
-    from ..calculations.registry import CasillaFieldKind
+    from ..calculations.registry import CasillaFieldKind, ExportDraftAttribute
 
     issues: list[UserProfileRegistryContractIssue] = []
     for layout in revision.export_layouts:
@@ -289,7 +289,7 @@ def _export_issues(
             for field in record.fields:
                 if (
                     field.kind == CasillaFieldKind.DRAFT
-                    and field.draft_attribute == "profile_tax_id"
+                    and field.draft_attribute is ExportDraftAttribute.PROFILE_TAX_ID
                     and "profile_tax_id" not in index.export_headers
                 ):
                     issues.append(

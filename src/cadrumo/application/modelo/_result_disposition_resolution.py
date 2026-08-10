@@ -115,7 +115,7 @@ def resolve_modelo_result_disposition(
     lawful for the period. Every other disposition is returned unchanged.
 
     ``refund_election`` is the operator's per-filing opt-in (default
-    :attr:`~domain.iva.RefundElection.COMPENSAR`, the non-regressive
+    :attr:`~core.RefundElection`, the non-regressive
     carry-forward). It is orthogonal to the standing REDEME inscription: REDEME
     is treated as the standing policy that resolves eligible
     negative periods to devolución regardless of this flag, while a non-REDEME

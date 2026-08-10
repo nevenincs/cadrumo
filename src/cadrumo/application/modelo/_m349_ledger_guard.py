@@ -5,7 +5,7 @@ transactions do not carry. The supported source paths are business invoices or
 explicit operador detail rows, so raw intra-community ledger classifications must
 fail closed instead of producing a zero-row declaration. The guard reads the
 bucket transaction catalogue through
-:class:`~domain.transactions.TransactionCatalogueRepository` only to detect
+:class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository` only to detect
 that refusal condition; it does not resolve registry binding values itself.
 """
 

@@ -466,7 +466,7 @@ class _CaptureAccumulator:
         """Return the deduped report fields shared by every filed-capture report."""
         return {
             "captured_count": len(self.observation_paths),
-            "reached_count": self.absorbed_count,
+            "reached_count": self.reached_count,
             "observation_paths": tuple(self.observation_paths),
             "artefact_refs": tuple(self.artefact_refs),
             "justificante_metadata_count": len(tuple(dict.fromkeys(self.justificante_csvs))),
@@ -737,14 +737,14 @@ async def capture_filed_data_bulk(
             if declarations is None:
                 continue
             if limit is not None:
-                # absorbed_count, not len(observation_paths): the paths list is
-                # appended only on the write path, so a preview left it empty
+                # The reached tally, not len(observation_paths): the paths list
+                # is appended only on the write path, so a preview left it empty
                 # and this residual never shrank -- every batch took a full
                 # `limit` slice instead of what remained. The accumulator's own
                 # docstring already says the paths cannot serve as the tally for
                 # exactly this reason; the outer break below reads it correctly
                 # and this site did not.
-                remaining = limit - accumulator.absorbed_count
+                remaining = limit - accumulator.reached_count
                 if remaining <= 0:
                     break
                 declarations = declarations[:remaining]
@@ -771,7 +771,7 @@ async def capture_filed_data_bulk(
                     output_root=output_root,
                     dry_run=dry_run,
                 )
-            if limit is not None and accumulator.absorbed_count >= limit:
+            if limit is not None and accumulator.reached_count >= limit:
                 break
 
     # finalize_filed_capture WRITES the calculation observations, so a preview

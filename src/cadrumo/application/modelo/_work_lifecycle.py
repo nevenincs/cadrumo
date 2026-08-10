@@ -2,7 +2,7 @@
 
 This module creates, lists, renames, and discards
 :class:`cadrumo.domain.modelos.WorkUnit` records in the
-:class:`cadrumo.domain.modelos.WorkUnitCatalogueRepository`.
+:class:`adapters.persistence.profile.modelos_work_units.WorkUnitCatalogueRepository`.
 Each mutating action emits a typed event through
 :class:`BucketEventHistoryRepository`, giving
 :func:`cadrumo.application.modelo.assemble_work_unit_history` a complete

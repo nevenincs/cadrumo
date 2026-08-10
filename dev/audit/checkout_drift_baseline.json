@@ -1,19 +1,17 @@
 {
   "_comment": "Shrink-only ceiling for tracked files whose on-disk bytes differ from their committed bytes while git reports them unmodified. Regenerate with `python -m dev.audit.checkout_drift --write-baseline`. The default screen run never fails; `--check` applies this ceiling and is not wired into a blocking lane. 'buckets' are top-level path segments, so growth is attributable to a tree rather than only to the total.",
-  "measured_at_head": "ca3591a22a5a75f2d2c2215590375924bdc8cb86",
-  "scanned": 37096,
-  "total": 1136,
-  "carrying_crlf": 1136,
+  "measured_at_head": "63c7b6741e47cc38acbb8862d614da39fbb290a9",
+  "scanned": 41697,
+  "total": 2551,
+  "carrying_crlf": 2551,
   "buckets": {
-    ".github": 2,
-    ".release-please-manifest.json": 1,
-    ".vault": 196,
-    "LICENSE": 1,
-    "conftest.py": 1,
-    "dev": 78,
-    "docs": 309,
+    ".github": 4,
+    ".importlinter": 1,
+    ".vault": 190,
+    ".vaultspec": 18,
+    "dev": 232,
+    "docs": 18,
     "env": 1,
-    "packaging": 3,
-    "src": 544
+    "src": 2087
   }
 }

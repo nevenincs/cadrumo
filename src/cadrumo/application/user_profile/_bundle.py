@@ -10,7 +10,7 @@ schema and coverage manifest, default-empty until the transport-aware
 phases populate them.
 The ledger category is loaded as a
 :class:`~cadrumo.domain.transactions.TransactionCatalogue` through
-:class:`~cadrumo.domain.transactions.TransactionCatalogueRepository`.
+:class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository`.
 
 Bundles carry typed domain-model payloads, not encrypted blobs, key
 material, or raw secure-storage rows. Export reads domain records from

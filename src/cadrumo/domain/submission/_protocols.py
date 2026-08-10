@@ -11,7 +11,7 @@ richer surfaces of its sibling subpackages.
   :mod:`cadrumo.domain.deadlines` used by preflight.
 - :class:`ModeloFinding` / :class:`ModeloDraftLike` /
   :class:`ModeloDraftLoader` — narrow filing draft surfaces;
-  :class:`cadrumo.application.filing.ModeloDraft` structurally conforms to
+  :class:`domain.filing.ModeloDraft` structurally conforms to
   :class:`ModeloDraftLike`.
 
 Every record is either a strict+frozen pydantic v2 model or a
@@ -64,7 +64,7 @@ class DeadlineWindowChecker(Protocol):
 class ModeloFinding(BaseModel):
     """Minimal finding record consumed by the preflight gate.
 
-    Distinct from :class:`cadrumo.application.filing.ModeloValidationFinding`,
+    Distinct from :class:`domain.filing.ModeloValidationFinding`,
     which carries the validator's full provenance graph; the submission
     engine reads only ``severity`` to decide whether the draft is
     blocked.
@@ -119,7 +119,7 @@ class ModeloDraftStatus(StrEnum):
 class ModeloDraftLike(Protocol):
     """Narrow surface over a filing draft.
 
-    :class:`cadrumo.application.filing.ModeloDraft` structurally conforms to
+    :class:`domain.filing.ModeloDraft` structurally conforms to
     this Protocol so the engine can accept either the real draft or any
     Protocol-conforming hand-rolled class in tests.
 

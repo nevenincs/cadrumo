@@ -2,7 +2,7 @@
 
 :func:`preflight_ledger_tax_readiness` loads a
 :class:`~cadrumo.domain.transactions.TransactionCatalogue` via
-:class:`~cadrumo.domain.transactions.TransactionCatalogueRepository` from the
+:class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository` from the
 active bucket and delegates to :func:`preflight_transaction_catalogue` for pure
 in-memory analysis. The report is consumed by modelo readiness projection and
 ledger read surfaces; it is not a calculation engine and never mutates the
@@ -159,7 +159,7 @@ def preflight_ledger_tax_readiness(
         period: Filing period used to decide whether each transaction belongs in
             the readiness window.
         transaction_repository: Optional
-            :class:`~cadrumo.domain.transactions.TransactionCatalogueRepository`
+            :class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository`
             used to load the bucket-local catalogue; a default repository is
             constructed when ``None``.
         raw_afectacion_ratio: Optional home-office usage ratio from censo data,

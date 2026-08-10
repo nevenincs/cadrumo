@@ -221,6 +221,11 @@ cython_debug/
 .ty_cache/
 .pyrefly_cache/
 
+# `just audit-all` (dev.audit.advisory) persisted run output: the full,
+# uncapped dashboard result (summary.json, summary.md) plus the raw semgrep
+# JSON payload. Regenerated every run; never committed.
+dev/audit/.runs/
+
 # PyPI configuration file
 .pypirc
 

@@ -4,8 +4,8 @@ This is the annual first-slice expense projection behind the
 ``ledger_renta_gastos_estimacion_directa_aggregation`` source. It loads both a
 :class:`~domain.transactions.TransactionCatalogue` and a
 :class:`~domain.invoices.InvoiceCatalogue` from the active bucket through
-:class:`~domain.transactions.TransactionCatalogueRepository` and
-:class:`~domain.invoices.InvoiceCatalogueRepository`, uses
+:class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository` and
+:class:`~adapters.persistence.profile.invoices.InvoiceCatalogueRepository`, uses
 purchase-invoice evidence to validate deductible-expense facts, and returns
 binding-ready :class:`~domain.renta.RentaDeductibleExpenseObservation`
 records.

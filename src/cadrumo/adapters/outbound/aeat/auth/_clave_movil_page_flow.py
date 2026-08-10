@@ -632,7 +632,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
         """Dismiss the visible Pre303 alert modal before submitting own-name access.
 
         Delegates to the canonical, collapsed implementation in
-        :func:`~adapters.outbound.aeat.dismiss_pre303_alert_modal_if_present`
+        :func:`~adapters.outbound.aeat._representation_gate.dismiss_pre303_alert_modal_if_present`
         (operator directive: this and the sede wallet reader's independent
         copy were a critical double declaration; the sede copy is deleted,
         this predicate is canonical). This caller declines silently when the

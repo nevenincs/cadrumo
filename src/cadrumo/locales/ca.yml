@@ -6970,6 +6970,12 @@ errors:
       bloquejat. Desbloqueja'l (Touch ID, Windows Hello o el desbloqueig del gestor
       de credencials) i torna-ho a provar.
   prefix:
+    auth: Autenticació.
+    error: Error.
+    fail: Ha fallat.
+    integrity: Integritat.
+    internal: Intern.
+    locked: Bloquejat.
     refused: Rebutjat.
   refused:
     auth_configure_no_active_bucket: No es pot configurar l'autenticació sense un
@@ -70244,7 +70250,6 @@ review:
         emès.
       unknown_kind: 'Tipus d''element de revisió desconegut. Valors --kind admesos:
         %{accepted_kinds}.'
-      unsupported_item_type: 'Tipus d''element de revisió no ames: %{item_type}.'
   transaction:
     summary: Transacció pendent de classificació
 sheets:

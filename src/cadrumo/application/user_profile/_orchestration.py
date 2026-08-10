@@ -4,7 +4,7 @@ The lifecycle service handles secure-DB persistence via a
 :class:`~cadrumo.application.user_profile.ProfileLifecycleService`, which wraps a
 :class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`
 and emits bucket events to
-:class:`~cadrumo.domain.buckets.BucketEventHistoryRepository` per profile.
+:class:`~adapters.persistence.profile.buckets.BucketEventHistoryRepository` per profile.
 This module threads active-profile selection through
 :class:`~cadrumo.application.workflow.WorkflowState`, the plaintext
 :class:`~cadrumo.core.BucketPointer`, and the workflow-level
@@ -106,7 +106,7 @@ def build_lifecycle_service(
     handed to both the
     :class:`~cadrumo.application.user_profile.UserProfileLifecycleRepository`
     and the
-    :class:`~cadrumo.domain.buckets.BucketEventHistoryRepository`, so the
+    :class:`~adapters.persistence.profile.buckets.BucketEventHistoryRepository`, so the
     audit trail can never split from the records it describes. The
     prior wiring left the event-history repository on the process-global
     engine, which had no URL until an active profile existed - every

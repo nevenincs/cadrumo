@@ -66,6 +66,7 @@ Submodules
    cadrumo.application.modelo._operator_override_advisory
    cadrumo.application.modelo._participation_index_rebuild
    cadrumo.application.modelo._ports
+   cadrumo.application.modelo._preconditions
    cadrumo.application.modelo._prior_domiciliation
    cadrumo.application.modelo._prior_payment_advisory
    cadrumo.application.modelo._profile_binding

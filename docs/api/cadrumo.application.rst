@@ -63,6 +63,7 @@ Submodules
    cadrumo.application._workflow_auth_models
    cadrumo.application._workflow_review_models
    cadrumo.application.auth_credentials
+   cadrumo.application.cli_exception_preconditions
    cadrumo.application.config_reset
    cadrumo.application.diagnostics
    cadrumo.application.diagnostics_run_health

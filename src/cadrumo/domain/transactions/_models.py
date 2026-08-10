@@ -1427,12 +1427,10 @@ class Transaction(BaseModel):
             reconstituted=reconstituted,
             expected=expected,
         )
-        if reconstituted != expected:
-            raise TransactionValidationError(
-                "taxable_base + iva_amount + recargo_amount must equal the gross to the cent: "
-                f"{self.taxable_base} + {self.iva_amount} + {recargo} = {reconstituted} != {expected}.{detail}",
-            )
-        return self
+        raise TransactionValidationError(
+            "taxable_base + iva_amount + recargo_amount must equal the gross to the cent: "
+            f"{self.taxable_base} + {self.iva_amount} + {recargo} = {reconstituted} != {expected}.{detail}",
+        )
 
 
 def _gross_mismatch_detail(

@@ -6,7 +6,7 @@ maintenance. The service composes the existing single-writer primitives
 that own bucket lifecycle operations: label rename, soft tombstone plus
 hard removal, sealed portable-bundle export/import, and namespace-level
 browse. It contributes bucket-maintenance audit events through
-:class:`domain.buckets.BucketEventHistoryRepository` while the
+:class:`adapters.persistence.profile.buckets.BucketEventHistoryRepository` while the
 inner profile primitives keep emitting their lifecycle events.
 
 The service does not re-implement a cross-store write; it
@@ -79,7 +79,7 @@ See Also:
         facade.
     :mod:`domain.buckets`
         Bucket-event records and
-        :class:`domain.buckets.BucketEventHistoryRepository` used for the
+        :class:`adapters.persistence.profile.buckets.BucketEventHistoryRepository` used for the
         maintenance audit trail.
     :mod:`adapters.persistence.storage.bucket`
         Bucket manifest, sealed-archive header, and archive reader/writer

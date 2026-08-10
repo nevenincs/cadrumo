@@ -12,7 +12,7 @@ The exported :class:`RefundElection` closed value set is declared as a
 live in ``core/``, hydrated at boundaries, asserted as members in tests). It is
 the operator-input sibling of :class:`~core.ResultDisposition` (the fichero
 result-disposition codes): the election is what the operator *chooses*, while
-:func:`~application.modelo.resolve_modelo_result_disposition` derives the
+:func:`~application.modelo._result_disposition_resolution.resolve_modelo_result_disposition` derives the
 filed disposition from that choice plus the
 :func:`~domain.iva.refund_disposition_available` eligibility gate.
 

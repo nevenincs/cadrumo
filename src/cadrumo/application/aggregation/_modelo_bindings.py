@@ -16,7 +16,7 @@ resolver reads the dedicated per-perceptor store through
 source-mesh contract for Modelo 369 and Modelo 190 detail counts.
 
 Invoice-backed checks use
-:class:`~domain.invoices.InvoiceCatalogueRepository` only as supporting
+:class:`~adapters.persistence.profile.invoices.InvoiceCatalogueRepository` only as supporting
 evidence: Modelo 303 domestic IVA remains ledger-owned, while Renta expense
 aggregation can attach purchase-invoice evidence to transaction rows before
 producing the shared :class:`~._source_mesh.CalculationSourceResolution`.

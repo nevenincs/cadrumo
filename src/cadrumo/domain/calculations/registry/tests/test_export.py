@@ -15,7 +15,7 @@ calculation tautologies.
 from __future__ import annotations
 
 import tomllib
-from typing import Any, get_args
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
@@ -23,7 +23,7 @@ from pydantic import ValidationError
 from .....core import BindingSourceKind
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....core.resources import bundled_path
-from .. import ExportJustification, ExportPadding
+from .. import ExportDraftAttribute, ExportJustification, ExportPadding
 from .._binding_selector_utils import (
     BindingExportDataType,
     BindingFixedExportSelector,
@@ -396,11 +396,7 @@ def _modelo_200_envelope_discriminante_field() -> ExportFieldDefinition:
 
 def _declarable_draft_attributes() -> set[str]:
     """Return every ``draft_attribute`` token an export field may declare."""
-    return {
-        token
-        for member in get_args(ExportFieldDefinition.model_fields["draft_attribute"].annotation)
-        for token in get_args(member)
-    }
+    return {member.value for member in ExportDraftAttribute}
 
 
 def _declared_binding_source_kinds() -> set[str]:

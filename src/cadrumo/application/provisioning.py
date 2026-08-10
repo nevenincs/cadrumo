@@ -130,6 +130,41 @@ class DependencyStatus(BaseModel):
     remediation: str = ""
 
 
+def _ollama_tag_names(payload: object) -> set[str]:
+    """Read the pulled model names out of an Ollama ``/api/tags`` payload.
+
+    Raises:
+        ValueError: When the payload is not an object carrying model entries
+            with string names. The probe treats that as an unreachable server,
+            because a response this shape cannot answer what is pulled.
+    """
+    if not isinstance(payload, dict):
+        raise ValueError("Ollama tags response must be a JSON object")
+    # CAST-RATIONALE-OLLAMA-TAGS-PAYLOAD: httpx.Response.json() returns
+    # Any; isinstance narrows to dict but not its type parameters.
+    # nosemgrep: no-cast-in-domain-application
+    payload_object = cast(dict[str, object], payload)
+    models = payload_object.get("models")
+    if not isinstance(models, list):
+        raise ValueError("Ollama tags response must contain model objects with string names")
+    # CAST-RATIONALE-OLLAMA-TAGS-MODELS: isinstance narrows to list but
+    # not its element type; entries are validated individually below.
+    # nosemgrep: no-cast-in-domain-application
+    models = cast(list[object], models)
+    names: set[str] = set()
+    for entry in models:
+        if not isinstance(entry, dict):
+            raise ValueError("Ollama tags response must contain model objects with string names")
+        # CAST-RATIONALE-OLLAMA-TAGS-MODEL-ENTRY: isinstance narrows to
+        # dict but not its type parameters.
+        # nosemgrep: no-cast-in-domain-application
+        name = cast(dict[str, object], entry).get("name")
+        if not isinstance(name, str):
+            raise ValueError("Ollama tags response must contain model objects with string names")
+        names.add(name)
+    return names
+
+
 def probe_ollama_vision(settings: Settings | None = None) -> DependencyStatus:
     """Probe Ollama and the configured vision model, returning a :class:`DependencyStatus`.
 
@@ -149,31 +184,7 @@ def probe_ollama_vision(settings: Settings | None = None) -> DependencyStatus:
         with httpx.Client(timeout=_OLLAMA_PROBE_TIMEOUT_S) as client:
             response = client.get(url)
             response.raise_for_status()
-            payload = response.json()
-            if not isinstance(payload, dict):
-                raise ValueError("Ollama tags response must be a JSON object")
-            # CAST-RATIONALE-OLLAMA-TAGS-PAYLOAD: httpx.Response.json() returns
-            # Any; isinstance narrows to dict but not its type parameters.
-            # nosemgrep: no-cast-in-domain-application
-            payload_object = cast(dict[str, object], payload)
-            models = payload_object.get("models")
-            if not isinstance(models, list):
-                raise ValueError("Ollama tags response must contain model objects with string names")
-            # CAST-RATIONALE-OLLAMA-TAGS-MODELS: isinstance narrows to list but
-            # not its element type; entries are validated individually below.
-            # nosemgrep: no-cast-in-domain-application
-            models = cast(list[object], models)
-            names: set[str] = set()
-            for entry in models:
-                if not isinstance(entry, dict):
-                    raise ValueError("Ollama tags response must contain model objects with string names")
-                # CAST-RATIONALE-OLLAMA-TAGS-MODEL-ENTRY: isinstance narrows to
-                # dict but not its type parameters.
-                # nosemgrep: no-cast-in-domain-application
-                name = cast(dict[str, object], entry).get("name")
-                if not isinstance(name, str):
-                    raise ValueError("Ollama tags response must contain model objects with string names")
-                names.add(name)
+            names = _ollama_tag_names(response.json())
     except (httpx.HTTPError, ValueError):
         return DependencyStatus(
             service="ollama-vision",
@@ -1234,6 +1245,116 @@ def _attributed_resident_bytes(
     return total
 
 
+def _resolve_resident_set(
+    residents: tuple[RuntimeResident, ...] | None,
+    *,
+    residents_measured: bool,
+    settings: Settings,
+) -> tuple[tuple[RuntimeResident, ...] | None, bool]:
+    """Return the runtime's resident set and whether it could actually be read.
+
+    Reads the runtime only when the caller supplied nothing and did not already
+    declare the read impossible, so an unreadable set stays distinguishable from
+    a measured-empty one.
+    """
+    if residents is None and residents_measured:
+        read = read_runtime_residents(settings)
+        return read, read is not None
+    return residents, residents_measured and residents is not None
+
+
+def _shortfall_causes(*, resident_bytes: int, peer_bytes: int) -> tuple[ContentionCause, ...]:
+    """Attribute a measured shortfall to the runtime's residents, a peer process, or both."""
+    causes: list[ContentionCause] = []
+    if resident_bytes > 0:
+        causes.append(ContentionCause.RUNTIME_RESIDENT)
+    if peer_bytes > 0:
+        causes.append(ContentionCause.PEER_PROCESS)
+    if not causes:
+        # Nothing is resident and nothing is unexplained only when the shortfall
+        # is zero, which the admitted branch above already returned; reaching
+        # here means the shortfall is entirely outside this runtime.
+        causes.append(ContentionCause.PEER_PROCESS)
+    return tuple(causes)
+
+
+def _shortfall_remediation(
+    *,
+    peer_bytes: int,
+    unloadable: tuple[str, ...],
+    unloadable_bytes: int,
+    resident_bytes: int,
+    resident_names: str,
+) -> str:
+    """Name the remediation that matches the attribution, never one the operator cannot perform."""
+    if peer_bytes > 0 and unloadable_bytes > 0:
+        return (
+            f"unload the Cadrumo-selected resident model(s) {', '.join(unloadable)} to reclaim "
+            f"{_gib(unloadable_bytes)}, and close the other application holding {_gib(peer_bytes)}; "
+            f"Cadrumo does not touch a process it did not start"
+        )
+    if peer_bytes > 0:
+        return (
+            f"close the other application holding {_gib(peer_bytes)} of device memory, then retry; "
+            f"no Cadrumo-selected model is resident, so there is nothing here for Cadrumo to unload"
+        )
+    if unloadable_bytes > 0:
+        return (
+            f"unload the Cadrumo-selected resident model(s) {', '.join(unloadable)} to reclaim "
+            f"{_gib(unloadable_bytes)}, then retry"
+        )
+    return (
+        f"the local runtime holds {_gib(resident_bytes)} in models Cadrumo did not select "
+        f"([{resident_names}]); ask whoever loaded them to release them -- Cadrumo unloads "
+        f"only the models it selected"
+    )
+
+
+def _attributed_shortfall_snapshot(
+    base: _ContentionSnapshotBase,
+    *,
+    model: str,
+    resident_set: tuple[RuntimeResident, ...],
+    on_device: bool,
+    binding_free: int,
+    required: int,
+    shortfall: int,
+    settings: Settings,
+) -> ContentionSnapshot:
+    """Build the refusal for a measured shortfall whose cause the resident set can attribute."""
+    selected = cadrumo_selected_models(settings)
+    resident_bytes = _attributed_resident_bytes(resident_set, on_device=on_device)
+    unloadable = tuple(resident.name for resident in resident_set if _matches_selected(resident.name, selected))
+    unloadable_bytes = _attributed_resident_bytes(
+        resident_set,
+        on_device=on_device,
+        names=frozenset(unloadable),
+    )
+    peer_bytes = max(shortfall - resident_bytes, 0)
+    resident_names = ", ".join(resident.name for resident in resident_set) or "none"
+
+    return ContentionSnapshot(
+        **base,
+        resident_attributed_bytes=resident_bytes,
+        unloadable_models=unloadable,
+        shortfall_bytes=shortfall,
+        admitted=False,
+        causes=_shortfall_causes(resident_bytes=resident_bytes, peer_bytes=peer_bytes),
+        detail=(
+            f"{_gib(binding_free)} free is {_gib(shortfall)} short of the {_gib(required)} needed for "
+            f"{model!r}; the local runtime holds {_gib(resident_bytes)} across residents [{resident_names}] "
+            f"and {_gib(peer_bytes)} of the shortfall is held outside it"
+        ),
+        remediation=_shortfall_remediation(
+            peer_bytes=peer_bytes,
+            unloadable=unloadable,
+            unloadable_bytes=unloadable_bytes,
+            resident_bytes=resident_bytes,
+            resident_names=resident_names,
+        ),
+    )
+
+
 def assess_model_load_contention(
     model: str,
     requirement_bytes: int,
@@ -1280,13 +1401,11 @@ def assess_model_load_contention(
     resolved = settings if settings is not None else load_settings()
     margin = resolved.cadrumo_llm_contention_safety_margin_bytes
     hardware = profile if profile is not None else probe_hardware_profile()
-    if residents is None and residents_measured:
-        read = read_runtime_residents(resolved)
-        resident_set = read
-        residents_known = read is not None
-    else:
-        resident_set = residents
-        residents_known = residents_measured and residents is not None
+    resident_set, residents_known = _resolve_resident_set(
+        residents,
+        residents_measured=residents_measured,
+        settings=resolved,
+    )
 
     kind = hardware.accelerator.kind
     free_vram = hardware.free_vram_bytes
@@ -1361,65 +1480,15 @@ def assess_model_load_contention(
             ),
         )
 
-    selected = cadrumo_selected_models(resolved)
-    resident_bytes = _attributed_resident_bytes(resident_set, on_device=on_device)
-    unloadable = tuple(resident.name for resident in resident_set if _matches_selected(resident.name, selected))
-    unloadable_bytes = _attributed_resident_bytes(
-        resident_set,
+    return _attributed_shortfall_snapshot(
+        base,
+        model=model,
+        resident_set=resident_set,
         on_device=on_device,
-        names=frozenset(unloadable),
-    )
-    peer_bytes = max(shortfall - resident_bytes, 0)
-
-    causes: list[ContentionCause] = []
-    if resident_bytes > 0:
-        causes.append(ContentionCause.RUNTIME_RESIDENT)
-    if peer_bytes > 0:
-        causes.append(ContentionCause.PEER_PROCESS)
-    if not causes:
-        # Nothing is resident and nothing is unexplained only when the shortfall
-        # is zero, which the admitted branch above already returned; reaching
-        # here means the shortfall is entirely outside this runtime.
-        causes.append(ContentionCause.PEER_PROCESS)
-
-    resident_names = ", ".join(resident.name for resident in resident_set) or "none"
-    detail = (
-        f"{_gib(binding_free)} free is {_gib(shortfall)} short of the {_gib(required)} needed for "
-        f"{model!r}; the local runtime holds {_gib(resident_bytes)} across residents [{resident_names}] "
-        f"and {_gib(peer_bytes)} of the shortfall is held outside it"
-    )
-    if peer_bytes > 0 and unloadable_bytes > 0:
-        remediation = (
-            f"unload the Cadrumo-selected resident model(s) {', '.join(unloadable)} to reclaim "
-            f"{_gib(unloadable_bytes)}, and close the other application holding {_gib(peer_bytes)}; "
-            f"Cadrumo does not touch a process it did not start"
-        )
-    elif peer_bytes > 0:
-        remediation = (
-            f"close the other application holding {_gib(peer_bytes)} of device memory, then retry; "
-            f"no Cadrumo-selected model is resident, so there is nothing here for Cadrumo to unload"
-        )
-    elif unloadable_bytes > 0:
-        remediation = (
-            f"unload the Cadrumo-selected resident model(s) {', '.join(unloadable)} to reclaim "
-            f"{_gib(unloadable_bytes)}, then retry"
-        )
-    else:
-        remediation = (
-            f"the local runtime holds {_gib(resident_bytes)} in models Cadrumo did not select "
-            f"([{resident_names}]); ask whoever loaded them to release them -- Cadrumo unloads "
-            f"only the models it selected"
-        )
-
-    return ContentionSnapshot(
-        **base,
-        resident_attributed_bytes=resident_bytes,
-        unloadable_models=unloadable,
-        shortfall_bytes=shortfall,
-        admitted=False,
-        causes=tuple(causes),
-        detail=detail,
-        remediation=remediation,
+        binding_free=binding_free,
+        required=required,
+        shortfall=shortfall,
+        settings=resolved,
     )
 
 

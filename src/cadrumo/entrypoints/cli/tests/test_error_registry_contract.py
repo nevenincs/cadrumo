@@ -17,7 +17,7 @@ from ....adapters.outbound.aeat.browser.session import BrowserError
 from ....application.review import ReviewKindReservedError
 from ....core.access_gate import LiveSubmitForbiddenError
 from ....core.config import override_settings
-from ....core.errors import ErrorCategory, render_error_text
+from ....core.errors import DecimalFormatError, ErrorCategory, render_error_text
 from ....core.i18n import tr
 from ....core.observability import RunContextMissingError
 from ....domain.portals import PortalIntegrityError
@@ -28,6 +28,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 @pytest.mark.parametrize(
     ("error_factory", "category"),
     [
+        (DecimalFormatError, ErrorCategory.ERROR),
         (LiveSubmitForbiddenError, ErrorCategory.LOCKED),
         (lambda: ReviewKindReservedError("queue", "tracked separately"), ErrorCategory.REFUSED),
         (AeatSessionExpiredError, ErrorCategory.AUTH),

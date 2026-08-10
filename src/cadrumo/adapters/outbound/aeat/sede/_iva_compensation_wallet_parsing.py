@@ -557,7 +557,7 @@ def _parse_spanish_decimal(value: str) -> Decimal:
     Unlike :func:`~adapters.inbound.pdf.parse_spanish_decimal` (PDF receipts,
     which explicitly tolerate an English-rendered receipt per
     :mod:`adapters.inbound.justificante._extract`) and
-    :func:`~adapters.inbound.financial.providers.parse_amount_value`
+    :func:`~adapters.inbound.financial.providers._base.parse_amount_value`
     (arbitrary-locale bank exports), the thousands-vs-decimal reading is
     never genuinely ambiguous here: this module reads exactly one
     Spanish-locale-only authenticated AEAT internal sede surface (the own-name

@@ -42,8 +42,11 @@ Submodules
    cadrumo.domain.calculations.registry._errors
    cadrumo.domain.calculations.registry._export
    cadrumo.domain.calculations.registry._export_parse
+   cadrumo.domain.calculations.registry._export_semantics
+   cadrumo.domain.calculations.registry._export_value_policy
    cadrumo.domain.calculations.registry._external_grounding
    cadrumo.domain.calculations.registry._filed_state
+   cadrumo.domain.calculations.registry._fixed_width_codec
    cadrumo.domain.calculations.registry._formula_initial_values
    cadrumo.domain.calculations.registry._formula_operator_contracts
    cadrumo.domain.calculations.registry._formula_runtime

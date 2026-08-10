@@ -269,7 +269,7 @@ class ManifestActionProfile(BaseModel):
     A profile is keyed to one live subject leaf, failed condition, and scenario.
     It preserves the exact condition-to-recovery association by carrying either
     one canonical :class:`~application.operator_actions.ActionReference` or one
-    explicit :class:`~application.operator_actions.NoRecoveryOutcome`.  The
+    explicit :class:`~core.NoRecoveryOutcome`.  The
     application guard remains the authority for deciding whether the condition
     applies; this record contains no predicate, runtime evidence, argument
     value, localized prose, or CLI command string.

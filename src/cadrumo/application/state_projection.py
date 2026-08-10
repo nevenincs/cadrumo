@@ -12,9 +12,9 @@ The producer loads the profile aggregate, the workspace catalogues
 :class:`InvoiceCatalogueRepository`, declaration drafts via
 :class:`~cadrumo.adapters.persistence.profile.filing_drafts.ModeloDraftRepository`,
 modelo work units via
-:class:`~cadrumo.domain.modelos.WorkUnitCatalogueRepository`, and calculation
+:class:`~adapters.persistence.profile.modelos_work_units.WorkUnitCatalogueRepository`, and calculation
 revisions via
-:class:`~cadrumo.domain.modelos.CalculationRevisionCatalogueRepository`), the
+:class:`~adapters.persistence.profile.modelos_calculation.CalculationRevisionCatalogueRepository`), the
 auth state, the active-profile health, and the deadline obligations computed
 from :class:`Schedule`, and computes each readiness value exactly once.
 Modelo readiness resolves a :class:`RegistrySnapshot` only to evaluate

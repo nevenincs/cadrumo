@@ -74,36 +74,54 @@ def _validate_required_role_declarations(
     for modelo in modelos:
         for revision in modelo.revisions.values():
             for casilla in revision.casillas:
-                for pattern, expected_role in _REQUIRED_ROLE_LABEL_PATTERNS:
-                    try:
-                        label = casilla.label
-                    except MissingTranslationError:
-                        # Registry validation can inspect an operator-supplied
-                        # structural root before its shared catalogue is
-                        # enrolled. The bundled corpus coverage gate owns the
-                        # completeness check; this label-derived rule has no
-                        # evidence to evaluate until the catalogue is present.
-                        continue
-                    if not pattern.match(label):
-                        continue
-                    if casilla.semantic_role is None:
-                        failures.append(
-                            f"required-role gate: casilla "
-                            f"{modelo.id}.{revision.id}.{casilla.id} label "
-                            f"{label!r} matches pattern {pattern.pattern!r} "
-                            f"but declares no semantic_role (expected "
-                            f"{expected_role!r})",
-                        )
-                    elif casilla.semantic_role != expected_role:
-                        failures.append(
-                            f"required-role gate: casilla "
-                            f"{modelo.id}.{revision.id}.{casilla.id} label "
-                            f"{label!r} matches pattern {pattern.pattern!r} "
-                            f"but declares semantic_role "
-                            f"{casilla.semantic_role!r} (expected "
-                            f"{expected_role!r})",
-                        )
+                try:
+                    label = casilla.label
+                except MissingTranslationError:
+                    # Registry validation can inspect an operator-supplied
+                    # structural root before its shared catalogue is
+                    # enrolled. The bundled corpus coverage gate owns the
+                    # completeness check; this label-derived rule has no
+                    # evidence to evaluate until the catalogue is present.
+                    continue
+                failures.extend(
+                    _required_role_failures_for_label(
+                        location=f"{modelo.id}.{revision.id}.{casilla.id}",
+                        label=label,
+                        declared_role=casilla.semantic_role,
+                    ),
+                )
     return tuple(failures)
+
+
+def _required_role_failures_for_label(
+    *,
+    location: str,
+    label: str,
+    declared_role: str | None,
+) -> list[str]:
+    """Match one resolved casilla label against every enforced role pattern."""
+    failures: list[str] = []
+    for pattern, expected_role in _REQUIRED_ROLE_LABEL_PATTERNS:
+        if not pattern.match(label):
+            continue
+        if declared_role is None:
+            failures.append(
+                f"required-role gate: casilla "
+                f"{location} label "
+                f"{label!r} matches pattern {pattern.pattern!r} "
+                f"but declares no semantic_role (expected "
+                f"{expected_role!r})",
+            )
+        elif declared_role != expected_role:
+            failures.append(
+                f"required-role gate: casilla "
+                f"{location} label "
+                f"{label!r} matches pattern {pattern.pattern!r} "
+                f"but declares semantic_role "
+                f"{declared_role!r} (expected "
+                f"{expected_role!r})",
+            )
+    return failures
 
 
 def collect_casillas_by_semantic_role(

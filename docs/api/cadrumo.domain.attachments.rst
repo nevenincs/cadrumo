@@ -15,7 +15,6 @@ Submodules
 
    cadrumo.domain.attachments._enums
    cadrumo.domain.attachments._errors
-   cadrumo.domain.attachments._ids
    cadrumo.domain.attachments._models
    cadrumo.domain.attachments._protocols
    cadrumo.domain.attachments._service

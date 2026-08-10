@@ -192,33 +192,43 @@ def execute_request(request: _ExecutableRequest, *, action: str) -> GoogleApiRes
     except OutboundStorageError:
         raise
     except Exception as exc:
-        from googleapiclient.errors import HttpError
-
-        if isinstance(exc, HttpError):
-            status = getattr(exc, "status_code", None) or getattr(getattr(exc, "resp", None), "status", None)
-            quota_marker = _quota_marker(exc)
-            if status == 429 or (status == 403 and quota_marker is not None):
-                raise OutboundStorageQuotaError(
-                    f"Google {action} exhausted quota (HTTP {status}): {exc}",
-                    context={"action": action, "status": status, "quota_marker": quota_marker or "HTTP_429"},
-                    translated_message="errors.refused.refused_outbound_storage_quota",
-                ) from exc
-            if status in (401, 403):
-                raise OutboundStoragePermissionError(
-                    f"Google {action} refused (HTTP {status}): {exc}",
-                    context={"action": action, "status": status},
-                    translated_message="adapters.google.calc_sheets.errors.api_call_refused",
-                ) from exc
-            if status == 404:
-                raise OutboundStorageNotFoundError(
-                    f"Google {action} target not found (HTTP 404): {exc}",
-                    context={"action": action},
-                    translated_message="adapters.google.calc_sheets.errors.api_target_not_found",
-                ) from exc
+        _raise_mapped_google_http_error(exc, action=action)
         raise OutboundStorageNetworkError(
             f"Google {action} failed: {exc}",
             context={"action": action},
             translated_message="adapters.google.calc_sheets.errors.api_call_failed",
+        ) from exc
+
+
+def _raise_mapped_google_http_error(exc: Exception, *, action: str) -> None:
+    """Raise the typed outbound-storage error matching a Google HTTP status, else return.
+
+    Returns without raising when the failure is not an ``HttpError`` or carries no
+    mapped status, leaving the caller to wrap it as a generic network failure.
+    """
+    from googleapiclient.errors import HttpError
+
+    if not isinstance(exc, HttpError):
+        return
+    status = getattr(exc, "status_code", None) or getattr(getattr(exc, "resp", None), "status", None)
+    quota_marker = _quota_marker(exc)
+    if status == 429 or (status == 403 and quota_marker is not None):
+        raise OutboundStorageQuotaError(
+            f"Google {action} exhausted quota (HTTP {status}): {exc}",
+            context={"action": action, "status": status, "quota_marker": quota_marker or "HTTP_429"},
+            translated_message="errors.refused.refused_outbound_storage_quota",
+        ) from exc
+    if status in (401, 403):
+        raise OutboundStoragePermissionError(
+            f"Google {action} refused (HTTP {status}): {exc}",
+            context={"action": action, "status": status},
+            translated_message="adapters.google.calc_sheets.errors.api_call_refused",
+        ) from exc
+    if status == 404:
+        raise OutboundStorageNotFoundError(
+            f"Google {action} target not found (HTTP 404): {exc}",
+            context={"action": action},
+            translated_message="adapters.google.calc_sheets.errors.api_target_not_found",
         ) from exc
 
 
