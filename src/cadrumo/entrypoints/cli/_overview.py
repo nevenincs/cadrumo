@@ -31,6 +31,7 @@ from typing import TYPE_CHECKING
 import typer
 
 from ...application import overview as _overview_application
+from ...application.operator_actions import ActionReference
 from ...application.overview import (
     OverviewCalendar,
     OverviewCalendarEvent,
@@ -57,6 +58,7 @@ from ._common import (
     _state,
     _tx_repo,
     activate_subcommand_output_language,
+    resolve_notice_action,
 )
 from ._overview_evidence import (
     _live_censo_verified_profile_keys,
@@ -491,7 +493,7 @@ def _setup_incomplete_disclosure(
         severity=NoticeSeverity.INFO,
         code="overview.calendar.setup_incomplete",
         message=tr("cli.overview.calendar.setup_incomplete_notice", count=len(setup_incomplete), labels=labels),
-        suggestion="aeat config profile status",
+        action=resolve_notice_action(action=ActionReference(action_id="operator.profile.status")),
         context={"count": str(len(setup_incomplete)), "labels": labels},
     )
     return lines, [notice]

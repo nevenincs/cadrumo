@@ -316,6 +316,10 @@ from ._reconcile_casilla import (
     CasillaDivergenceKind,
     detect_casilla_divergences,
 )
+from ._reconcile_population import (
+    CasillaPopulationScope,
+    resolve_casilla_population_scope,
+)
 from ._reconciliation_records import (
     ModeloReconciliationAdvisory,
     ModeloReconciliationDiff,
@@ -562,6 +566,7 @@ __all__ = [
     "CalculationRevisionStateError",
     "CasillaDivergence",
     "CasillaDivergenceKind",
+    "CasillaPopulationScope",
     "CasillaProvenanceMissingError",
     "ConsumedNonceLedger",
     "ConsumedNonceRecord",
@@ -883,6 +888,7 @@ __all__ = [
     "require_profile_ready_for_modelo_work",
     "require_profile_ready_for_work_unit",
     "resolve_available_bound_inputs_by_casilla_id",
+    "resolve_casilla_population_scope",
     "resolve_exportable_modelo_calculation_revision_address",
     "resolve_fileable_modelo_calculation_revision_address",
     "resolve_maternidad_meses",

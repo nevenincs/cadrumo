@@ -61,7 +61,7 @@ def test_bindings_list_warns_when_period_scope_filters_are_missing() -> None:
     assert (
         "notice\twarning\tmodelo.bindings.list.unscoped_revision\tThe binding list is not scoped by --year, --period;"
     ) in text.output
-    assert "rerun with --modelo MODELO --year YEAR --period PERIOD" in text.output
+    assert "action_target=modelo.bindings.list\taction_bindings=modelo=303" in text.output
 
     json_result = invoke_cached_cli(
         ["--language", "en", "--format", "json", "app", "modelo", "bindings", "list", "--modelo", "303"],
@@ -76,7 +76,20 @@ def test_bindings_list_warns_when_period_scope_filters_are_missing() -> None:
     assert notice["context"]["period_filter"] == ""
     assert notice["context"]["missing_filters"] == "--year, --period"
     assert "work calculate" in notice["message"]
-    assert "--modelo MODELO --year YEAR --period PERIOD" in notice["suggestion"]
+    assert notice["action"]["action"] == {
+        "action_id": "operator.modelo.bindings.list",
+        "target_command_key": "modelo.bindings.list",
+    }
+    assert notice["action"]["argument_bindings"] == [
+        {
+            "argument_name": "modelo",
+            "status": "resolved",
+            "value": "303",
+            "source": "operator_action.verdict_context",
+            "source_key": "modelo",
+            "source_evidence_id": None,
+        },
+    ]
 
 
 def test_bindings_list_warning_names_only_the_missing_scope_filter() -> None:
@@ -106,6 +119,10 @@ def test_bindings_list_warning_names_only_the_missing_scope_filter() -> None:
     assert notice["context"]["year_filter"] == "2026"
     assert notice["context"]["period_filter"] == ""
     assert notice["context"]["missing_filters"] == "--period"
+    assert {binding["argument_name"]: binding["value"] for binding in notice["action"]["argument_bindings"]} == {
+        "modelo": "303",
+        "year": 2026,
+    }
 
 
 def test_bindings_list_omits_scope_warning_when_year_and_period_are_supplied() -> None:

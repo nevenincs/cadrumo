@@ -34,22 +34,48 @@ def build_help_document(surface: HelpSurface | str) -> HelpDocument:
     return _app_help()
 
 
-def build_root_landing_report(active_profile: str | None) -> RootLandingReport:
+def build_root_landing_report(
+    active_profile: str | None,
+    *,
+    profile_selected: bool | None = None,
+    registered_profile_count: int = 0,
+) -> RootLandingReport:
     """Return the :class:`RootLandingReport` for caller-supplied profile state.
 
     The caller owns active-profile discovery and passes the projected display
-    label here.  A present profile points operators at ``aeat app overview
-    status``; a missing profile points at profile creation.  The CLI root
-    callback decides whether this landing report or the full overview status is
-    emitted under ``root.status``.
+    label here, separately from whether the profile-selection pointer exists.
+    A present label points operators at ``aeat app overview status``; a selected
+    profile whose label cannot be resolved points at profile repair; a genuinely
+    absent selection points at profile creation. The CLI root callback decides
+    whether this landing report or the full overview status is emitted under
+    ``root.status``.
     """
-    if active_profile:
+    if registered_profile_count < 0:
+        raise ValueError("registered_profile_count cannot be negative")
+    selected = active_profile is not None if profile_selected is None else profile_selected
+    if active_profile is not None:
         return RootLandingReport(
+            profile_selected=selected,
             active_profile=active_profile,
             command="aeat app overview status",
             message=tr("cli.operator_surface.landing.active_profile_message", profile=active_profile),
         )
+    if selected:
+        return RootLandingReport(
+            profile_selected=True,
+            active_profile=None,
+            command="aeat config repair profile",
+            message=tr("cli.operator_surface.landing.active_profile_unavailable_message"),
+        )
+    if registered_profile_count:
+        return RootLandingReport(
+            profile_selected=False,
+            active_profile=None,
+            command="aeat config login NAME",
+            message=tr("cli.config.errors.no_active_profile_registered"),
+        )
     return RootLandingReport(
+        profile_selected=False,
         active_profile=None,
         command="aeat config profile create NAME",
         message=tr("cli.operator_surface.landing.no_active_profile_message"),
@@ -95,119 +121,150 @@ def _root_help() -> HelpDocument:
         surface=HelpSurface.ROOT,
         heading=tr(
             "cli.operator_surface.help.root.heading",
-            default="cadrumo - local-first Spanish tax workflow",
+            default="CADRUMO - local-first workflow with the Spanish Tax Agency (AEAT)",
         ),
         paragraphs=(
             tr(
-                "cli.operator_surface.help.root.paragraph_two_roots",
-                default="The CLI has exactly two roots: config and app.",
+                "cli.operator_surface.help.root.paragraph_local_first",
+                default="CADRUMO keeps taxpayer data local and exposes exactly two command roots.",
             ),
             tr(
-                "cli.operator_surface.help.root.paragraph_type_help",
-                default="Use config for local state and app for tax work.",
-            ),
-            tr(
-                "cli.operator_surface.help.root.paragraph_storage_isolation",
+                "cli.operator_surface.help.root.paragraph_config_root",
                 default=(
-                    "For an isolated blank state, set CADRUMO_LOCAL_STORAGE_ROOT, "
-                    "CADRUMO_SECRET_STORE_BACKEND=file, CADRUMO_SECRET_STORE_DIR, and "
-                    "CADRUMO_SECRET_PASSPHRASE; logs default under that storage root."
+                    "The config root manages profiles, encrypted local data, recovery keys, "
+                    "profile sessions, AEAT authentication, and repair."
+                ),
+            ),
+            tr(
+                "cli.operator_surface.help.root.paragraph_app_root",
+                default=(
+                    "The app root manages profile overview, ledger, modelo, review, registry, "
+                    "and authenticated AEAT reads."
+                ),
+            ),
+            tr(
+                "cli.operator_surface.help.root.paragraph_profile_terms",
+                default=(
+                    "A profile stores one taxpayer's local facts and settings. The active profile is the selected "
+                    "taxpayer context. A profile session provides resumable access to encrypted profile data."
+                ),
+            ),
+            tr(
+                "cli.operator_surface.help.root.paragraph_tax_terms",
+                default=(
+                    "The ledger contains imported money movements. A modelo is an official AEAT declaration form, "
+                    "distinct from its local work unit or export."
+                ),
+            ),
+            tr(
+                "cli.operator_surface.help.root.paragraph_review_terms",
+                default=(
+                    "The review queue contains findings that need operator action. The registry contains validated, "
+                    "versioned tax-rule data and sources; it holds no taxpayer data and performs no live submission."
+                ),
+            ),
+            tr(
+                "cli.operator_surface.help.root.paragraph_privacy",
+                default=(
+                    "Profile labels stay visible. Tax identities, credentials, storage identifiers, object keys, "
+                    "and sensitive web-address content stay protected."
                 ),
             ),
         ),
         sections=(
             HelpSection(
-                title=tr("cli.operator_surface.help.root.section_setup"),
+                title=tr("cli.operator_surface.help.root.section_start_resume"),
                 entries=(
                     HelpEntry(
                         command="aeat config profile create NAME",
-                        description=tr("cli.operator_surface.help.root.setup_create_profile"),
+                        description=tr("cli.operator_surface.help.root.start_create"),
                     ),
                     HelpEntry(
-                        command="aeat config profile",
-                        description=tr("cli.operator_surface.help.root.setup_inspect_profile"),
+                        command="aeat config profile list",
+                        description=tr("cli.operator_surface.help.root.start_list"),
                     ),
                     HelpEntry(
-                        command="aeat config auth",
-                        description=tr("cli.operator_surface.help.root.setup_configure_auth"),
+                        command="aeat config login NAME",
+                        description=tr("cli.operator_surface.help.root.start_login"),
+                    ),
+                    HelpEntry(
+                        command="aeat config profile status",
+                        description=tr("cli.operator_surface.help.root.start_status"),
+                    ),
+                    HelpEntry(
+                        command="aeat config profile edit [NAME]",
+                        description=tr("cli.operator_surface.help.root.start_edit"),
                     ),
                 ),
             ),
             HelpSection(
-                title=tr("cli.operator_surface.help.root.section_daily_ledger"),
+                title=tr("cli.operator_surface.help.root.section_workflow"),
                 entries=(
                     HelpEntry(
+                        command="aeat config profile status",
+                        description=tr("cli.operator_surface.help.root.workflow_profile_status"),
+                    ),
+                    HelpEntry(
+                        command="aeat app overview status",
+                        description=tr("cli.operator_surface.help.root.workflow_overview"),
+                    ),
+                    HelpEntry(
                         command="aeat app ledger import",
-                        description=tr("cli.operator_surface.help.root.ledger_import"),
-                    ),
-                    HelpEntry(
-                        command="aeat app ledger list",
-                        description=tr("cli.operator_surface.help.root.ledger_list"),
-                    ),
-                    HelpEntry(
-                        command="aeat app ledger view",
-                        description=tr("cli.operator_surface.help.root.ledger_view"),
-                    ),
-                    HelpEntry(
-                        command="aeat app ledger status",
-                        description=tr("cli.operator_surface.help.root.ledger_status"),
+                        description=tr("cli.operator_surface.help.root.workflow_import"),
                     ),
                     HelpEntry(
                         command="aeat app ledger review",
-                        description=tr("cli.operator_surface.help.root.ledger_review"),
+                        description=tr("cli.operator_surface.help.root.workflow_ledger_review"),
                     ),
                     HelpEntry(
-                        command="aeat app ledger update",
-                        description=tr("cli.operator_surface.help.root.ledger_update"),
+                        command="aeat app modelo work --help",
+                        description=tr("cli.operator_surface.help.root.workflow_modelo"),
                     ),
                     HelpEntry(
-                        command="aeat app ledger classify",
-                        description=tr("cli.operator_surface.help.root.ledger_classify"),
+                        command="aeat app modelo verification-report list",
+                        description=tr("cli.operator_surface.help.root.workflow_verification"),
                     ),
                     HelpEntry(
-                        command="aeat app ledger allocate",
-                        description=tr("cli.operator_surface.help.root.ledger_allocate"),
+                        command="aeat app review queue",
+                        description=tr("cli.operator_surface.help.root.workflow_review_queue"),
                     ),
                     HelpEntry(
-                        command="aeat app ledger attach",
-                        description=tr("cli.operator_surface.help.root.ledger_attach"),
-                    ),
-                    HelpEntry(
-                        command="aeat app ledger archive",
-                        description=tr("cli.operator_surface.help.root.ledger_archive"),
-                    ),
-                    HelpEntry(
-                        command="aeat app ledger stash",
-                        description=tr("cli.operator_surface.help.root.ledger_stash"),
-                    ),
-                    HelpEntry(
-                        command="aeat app ledger remove",
-                        description=tr("cli.operator_surface.help.root.ledger_remove"),
-                    ),
-                    HelpEntry(
-                        command="aeat app ledger reset",
-                        description=tr("cli.operator_surface.help.root.ledger_reset"),
-                    ),
-                    HelpEntry(
-                        command="aeat app ledger export",
-                        description=tr("cli.operator_surface.help.root.ledger_export"),
+                        command="aeat app registry inspect",
+                        description=tr("cli.operator_surface.help.root.workflow_registry"),
                     ),
                 ),
             ),
             HelpSection(
-                title=tr("cli.operator_surface.help.root.section_modelo_lifecycle"),
+                title=tr("cli.operator_surface.help.root.section_recovery"),
                 entries=(
                     HelpEntry(
-                        command="aeat app modelo list",
-                        description=tr("cli.operator_surface.help.root.modelo_list"),
+                        command="aeat config login NAME",
+                        description=tr("cli.operator_surface.help.root.recovery_login"),
                     ),
                     HelpEntry(
-                        command="aeat app modelo bindings list",
-                        description=tr("cli.operator_surface.help.root.modelo_bindings_list"),
+                        command="aeat config recover",
+                        description=tr("cli.operator_surface.help.root.recovery_passphrase"),
                     ),
                     HelpEntry(
-                        command="aeat app modelo work",
-                        description=tr("cli.operator_surface.help.root.modelo_work"),
+                        command="aeat config repair",
+                        description=tr("cli.operator_surface.help.root.recovery_repair"),
+                    ),
+                    HelpEntry(
+                        command="aeat config repair profile",
+                        description=tr("cli.operator_surface.help.root.recovery_profile"),
+                    ),
+                ),
+            ),
+            HelpSection(
+                title=tr("cli.operator_surface.help.root.section_command_families"),
+                entries=(
+                    HelpEntry(
+                        command="aeat config",
+                        description=tr("cli.operator_surface.help.root.family_config"),
+                    ),
+                    HelpEntry(
+                        command="aeat app",
+                        description=tr("cli.operator_surface.help.root.family_app"),
                     ),
                 ),
             ),
@@ -215,31 +272,30 @@ def _root_help() -> HelpDocument:
                 title=tr("cli.operator_surface.help.root.section_diagnostics"),
                 entries=(
                     HelpEntry(
-                        command="aeat config repair --help",
-                        description=tr("cli.operator_surface.help.root.diagnostics_repair"),
+                        command="aeat app overview status --verbose",
+                        description=tr("cli.operator_surface.help.root.diagnostics_overview_verbose"),
                     ),
                     HelpEntry(
-                        command="aeat app overview status",
-                        description=tr("cli.operator_surface.help.root.diagnostics_overview"),
+                        command="aeat --format json config repair",
+                        description=tr("cli.operator_surface.help.root.diagnostics_repair_json"),
                     ),
                     HelpEntry(
-                        command="aeat app live filed list",
-                        description=tr("cli.operator_surface.help.root.diagnostics_live_filed"),
+                        command="aeat config repair logs",
+                        description=tr("cli.operator_surface.help.root.diagnostics_logs"),
                     ),
                     HelpEntry(
-                        command="aeat app review queue",
-                        description=tr("cli.operator_surface.help.root.diagnostics_review_queue"),
-                    ),
-                    HelpEntry(
-                        command="aeat app registry inspect",
-                        description=tr("cli.operator_surface.help.root.diagnostics_registry_inspect"),
+                        command="aeat --version --detail",
+                        description=tr("cli.operator_surface.help.root.diagnostics_version"),
                     ),
                 ),
             ),
         ),
         footer=tr(
             "cli.operator_surface.help.root.footer",
-            default="Run aeat config --help or aeat app --help for subtree commands.",
+            default=(
+                "Add --help for details. Remove sensitive log values, then report bugs at "
+                "github.com/nevenincs/cadrumo/issues."
+            ),
         ),
     )
 
@@ -262,7 +318,7 @@ def _config_storage_section() -> HelpSection:
                 description=tr("cli.operator_surface.help.config.storage_list"),
             ),
             HelpEntry(
-                command="aeat config storage show CATEGORY",
+                command="aeat config storage show AREA",
                 description=tr("cli.operator_surface.help.config.storage_show"),
             ),
             HelpEntry(
@@ -274,7 +330,7 @@ def _config_storage_section() -> HelpSection:
                 description=tr("cli.operator_surface.help.config.storage_init"),
             ),
             HelpEntry(
-                command="aeat config storage reclaim CATEGORY --yes",
+                command="aeat config storage reclaim AREA --yes",
                 description=tr("cli.operator_surface.help.config.storage_reclaim"),
             ),
         ),
@@ -350,7 +406,7 @@ def _config_help() -> HelpDocument:
                         description=tr("cli.operator_surface.help.config.first_run_bootstrap"),
                     ),
                     HelpEntry(
-                        command="aeat config profile edit NAME",
+                        command="aeat config profile edit [NAME]",
                         description=tr("cli.operator_surface.help.config.first_run_edit"),
                     ),
                 ),
@@ -396,7 +452,7 @@ def _config_help() -> HelpDocument:
                         description=tr("cli.operator_surface.help.config.profile_status"),
                     ),
                     HelpEntry(
-                        command="aeat config profile history",
+                        command="aeat config profile history [PROFILE]",
                         description=tr("cli.operator_surface.help.config.profile_history"),
                     ),
                     HelpEntry(

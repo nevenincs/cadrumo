@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ....application.operator_actions import next_action
+
 import typer
 
 from .._common import _emit_envelope

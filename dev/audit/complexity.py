@@ -61,6 +61,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final
 
+from .complexity_allowlist import load_allowlist
+
 file_complexity: Callable[[str], Any] | None
 try:
     from complexipy import file_complexity as _imported_file_complexity
@@ -449,9 +451,15 @@ def main() -> int:
         return 0
 
     baseline = load_baseline(args.tests)
-    cc_verdict = _classify_cc(cc, baseline.cyclomatic)
-    mi_verdict = _classify_mi(mi, baseline.maintainability)
-    cog_verdict = _classify_cog(cog, baseline.cognitive)
+    # Reviewed acceptances are merged OVER the generated baseline rather than
+    # replacing it: the baseline records what was grandfathered wholesale, the
+    # allowlist records what a human looked at and accepted, at the score they
+    # accepted it at. Merging this way means an allowlisted row that grows
+    # further is measured against the reviewed value and fails again.
+    allowlist = load_allowlist(args.tests)
+    cc_verdict = _classify_cc(cc, {**baseline.cyclomatic, **allowlist.ceilings("cyclomatic")})
+    mi_verdict = _classify_mi(mi, {**baseline.maintainability, **allowlist.ceilings("maintainability")})
+    cog_verdict = _classify_cog(cog, {**baseline.cognitive, **allowlist.ceilings("cognitive")})
 
     failing = len(cc_verdict.failing) + len(mi_verdict.failing) + len(cog_verdict.failing)
     allowed = len(cc_verdict.allowed) + len(mi_verdict.allowed) + len(cog_verdict.allowed)

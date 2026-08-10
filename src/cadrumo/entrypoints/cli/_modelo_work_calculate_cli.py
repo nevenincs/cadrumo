@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Annotated, Any, Protocol
+from typing import TYPE_CHECKING, Annotated, Any
 
 import typer
 from pydantic import ValidationError
@@ -49,6 +49,7 @@ from ._modelo_rendering import (
     calculation_revision_payload,
     calculation_revision_state_label,
     source_diagnostic_notice,
+    source_diagnostic_notice_text,
     work_unit_deadline_output,
     work_unit_plazo_lines,
 )
@@ -480,7 +481,9 @@ def _run_work_calculate(
             calculation_result,
             work_unit=unit_for_modality,
         )
-        source_advisory_notices, source_advisory_lines = _work_calculate_source_advisory_output(calculation_result)
+        source_advisory_notices, source_advisory_lines = _work_calculate_source_advisory_output(
+            calculation_result.source_diagnostics,
+        )
         deadline_payload, deadline_notices = work_unit_deadline_output(unit_for_modality)
         result = WorkCalculateResult.model_validate(
             {
@@ -588,21 +591,8 @@ def _work_calculate_authorization_output(
     )
 
 
-class _CarriesSourceDiagnostics(Protocol):
-    """The one attribute the projector below actually reads.
-
-    Declared structurally because that is what the function depends on. Naming
-    the whole calculation envelope in the signature claimed a coupling the body
-    does not have, and forced anything exercising this hop to build a persisted
-    result -- which would run the persistence path rather than this projection.
-    """
-
-    @property
-    def source_diagnostics(self) -> tuple[CalculationSourceDiagnostic, ...]: ...
-
-
 def _work_calculate_source_advisory_output(
-    calculation_result: _CarriesSourceDiagnostics,
+    diagnostics: tuple[CalculationSourceDiagnostic, ...],
 ) -> tuple[list[Notice], list[str]]:
     """Project NON-blocking source diagnostics into notices + human lines.
 
@@ -617,31 +607,32 @@ def _work_calculate_source_advisory_output(
     under-declared (no-silent-under-declaration). The diagnostic ``message``
     already carries the observation's category / rate / flow provenance.
 
-    A diagnostic's ``remedy`` rides on :attr:`~core.json_contract.Notice.suggestion`,
-    that channel's documented purpose, rather than being concatenated into the
-    message upstream. Keeping the two apart is what buys the message its length
-    headroom: the remedy is fixed prose, the message is the part that grows with
-    the taxpayer's own data, and fusing them made the former compete for room
-    against the latter.
+    A diagnostic's free-form ``remedy`` is not an executable action and is not
+    projected through the notice channel. The notice retains only its typed
+    diagnostic context; the canonical calculation result remains responsible
+    for any domain-specific guidance.
 
-    The text lines are rebuilt FROM the notices rather than from the diagnostics,
-    so the two surfaces cannot drift: a remedy that reaches the JSON envelope
-    reaches the terminal in the same breath.
+    The text lines are rebuilt from the notices, so their rendered diagnostic
+    content and the JSON envelope cannot drift.
     """
-    diagnostics = calculation_result.source_diagnostics
     if not diagnostics:
         return [], []
-    notices = [
-        source_diagnostic_notice(diagnostic, code="modelo.work.calculate.source_advisory") for diagnostic in diagnostics
-    ]
-    lines = [
-        tr(
-            "cli.app.modelo.work.calculate_source_advisory",
-            message=notice.message if notice.suggestion is None else f"{notice.message} {notice.suggestion}",
-            default="ADVISORY: %{message}",
-        )
-        for notice in notices
-    ]
+    notices: list[Notice] = []
+    seen_notices: set[str] = set()
+    for diagnostic in diagnostics:
+        notice = source_diagnostic_notice(diagnostic, code="modelo.work.calculate.source_advisory")
+        notice_identity = notice.model_dump_json()
+        if notice_identity in seen_notices:
+            continue
+        seen_notices.add(notice_identity)
+        notices.append(notice)
+    lines: list[str] = []
+    seen_lines: set[str] = set()
+    for notice in notices:
+        line = source_diagnostic_notice_text(notice)
+        if line not in seen_lines:
+            lines.append(line)
+            seen_lines.add(line)
     return (notices, lines)
 
 

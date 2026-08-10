@@ -235,6 +235,38 @@ def test_the_gate_reports_no_session_when_no_screen_was_shown(tmp_path) -> None:
         assert _authenticated_at_the_gate(_context(output_format="text"), bucket_id=only_choice.profile_id) is False
 
 
+def test_authenticated_profile_replaces_the_invocations_stale_storage_route(tmp_path) -> None:
+    """A successful gate outcome makes its profile the effective DB route.
+
+    This is the parent-context half of the Textual handover.  The login task
+    authenticates the selected profile in a child ContextVar context; after it
+    returns, the synchronous invocation must replace the profile it pinned
+    before parsing the named edit target.
+    """
+    from .....core.config import classify_storage_route, load_settings
+    from ... import _bind_authenticated_profile_to_invocation
+    from .._manager_frontend import attempt_registration
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        operator_secret = "routing-handover-operator-secret"  # noqa: S105 - synthetic test fixture
+        first = attempt_registration("First routing subject", operator_secret, "en")
+        second = attempt_registration("Second routing subject", operator_secret, "en")
+        assert first.outcome is not None, first.refusal
+        assert second.outcome is not None, second.refusal
+
+        with override_settings(cadrumo_active_profile=first.outcome.bucket_id):
+            ctx = _context(output_format="text")
+            try:
+                _bind_authenticated_profile_to_invocation(ctx, bucket_id=second.outcome.bucket_id)
+                settings = load_settings()
+                route = classify_storage_route(settings)
+
+                assert settings.cadrumo_active_profile == second.outcome.bucket_id
+                assert route.bucket_id == second.outcome.bucket_id
+            finally:
+                ctx.close()
+
+
 def test_an_unnamed_login_preselects_nothing_when_no_profile_is_active(tmp_path) -> None:
     """With no active profile the page opens on its own first row.
 

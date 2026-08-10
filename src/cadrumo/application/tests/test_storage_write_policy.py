@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Literal
 
 import pytest
 
-from ...core import BucketPointer, write_pointer
+from ...core import STORAGE_ROOT_SETTINGS_FIELD, BucketPointer, write_pointer
 from ...core.config import Settings, StorageRouteKind
 from ...core.external_constants import OutputLanguage
 from ..storage_write_policy import (
+    PROFILE_BOUND_WRITE_VERB_PATHS,
     StorageWritePolicyCode,
     inspect_storage_write_policy,
     is_profile_bound_write_verb_path,
@@ -32,55 +34,246 @@ _PROFILE_BOUND_VERB_CASES = (
 )
 
 
-def test_profile_bound_write_refuses_root_fallback_route(tmp_path: Path) -> None:
-    decision = inspect_storage_write_policy(
+def test_profile_bound_write_verb_catalogue_has_unique_entries() -> None:
+    assert len(PROFILE_BOUND_WRITE_VERB_PATHS) == len(set(PROFILE_BOUND_WRITE_VERB_PATHS))
+    assert "config reset" not in PROFILE_BOUND_WRITE_VERB_PATHS
+
+
+_STORAGE_WRITE_POLICY_SCENARIOS = (
+    (
+        "bootstrap_exempt",
+        "config profile create operator",
+        True,
+        "explicit",
+        None,
+        {
+            "allowed": True,
+            "code": "bootstrap_exempt",
+            "profile_bound_write": False,
+            "bootstrap_exempt": True,
+            "route_kind": None,
+            "message_key": "",
+            "detail_message_key": "",
+            "verdict": None,
+        },
+    ),
+    (
+        "no_verb_path",
+        None,
+        False,
+        "root",
+        None,
+        {
+            "allowed": True,
+            "code": "no_verb_path",
+            "profile_bound_write": False,
+            "bootstrap_exempt": False,
+            "route_kind": None,
+            "message_key": "",
+            "detail_message_key": "",
+            "verdict": None,
+        },
+    ),
+    (
+        "non_profile_bound_verb",
+        "config login does-not-exist",
+        False,
+        "root",
+        None,
+        {
+            "allowed": True,
+            "code": "non_profile_bound_verb",
+            "profile_bound_write": False,
+            "bootstrap_exempt": False,
+            "route_kind": None,
+            "message_key": "",
+            "detail_message_key": "",
+            "verdict": None,
+        },
+    ),
+    (
+        "leaf_refusal_delegated",
+        "app modelo work create",
+        False,
+        "root",
+        ("app", "modelo", "work", "create", "--modelo", "151", "--year", "2025", "--period", "ANNUAL"),
+        {
+            "allowed": True,
+            "code": "leaf_refusal_delegated",
+            "profile_bound_write": True,
+            "bootstrap_exempt": False,
+            "route_kind": None,
+            "message_key": "",
+            "detail_message_key": "",
+            "verdict": None,
+        },
+    ),
+    (
+        "allowed_active_bucket",
+        "app modelo work calculate work-1",
+        False,
+        "active",
+        None,
+        {
+            "allowed": True,
+            "code": "allowed_active_bucket",
+            "profile_bound_write": True,
+            "bootstrap_exempt": False,
+            "route_kind": "active_bucket_database",
+            "message_key": "",
+            "detail_message_key": "",
+            "verdict": None,
+        },
+    ),
+    (
+        "refused_root_fallback",
         "app ledger add",
-        bootstrap_exempt=False,
-        settings=Settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language=OutputLanguage.EN),
-    )
-
-    assert decision.allowed is False
-    assert decision.code is StorageWritePolicyCode.REFUSED_ROOT_FALLBACK
-    assert decision.profile_bound_write is True
-    assert decision.route_kind is StorageRouteKind.ROOT_FALLBACK_DATABASE
-    assert "No active profile" in decision.render_refusal_message(locale="en")
-
-
-def test_profile_bound_write_refuses_explicit_database_route(tmp_path: Path) -> None:
-    decision = inspect_storage_write_policy(
+        False,
+        "root",
+        None,
+        {
+            "allowed": False,
+            "code": "refused_root_fallback",
+            "profile_bound_write": True,
+            "bootstrap_exempt": False,
+            "route_kind": "root_fallback_database",
+            "message_key": "cli.config.errors.no_active_profile",
+            "detail_message_key": "",
+            "verdict": {
+                "failed_condition_id": "profile.active",
+                "evidence": [
+                    {
+                        "condition_id": "profile.active",
+                        "evidence_id": "profile.active.storage_route",
+                        "provenance": "runtime_observation",
+                        "values": {
+                            "active_bucket_attached": False,
+                            "active_profile_present": False,
+                            "route_kind": "root_fallback_database",
+                        },
+                    },
+                ],
+                "action": {"action_id": "operator.profile.create"},
+                "argument_bindings": [
+                    {
+                        "argument_name": "profile_name",
+                        "status": "missing",
+                        "value": None,
+                        "source": None,
+                        "source_key": None,
+                        "source_evidence_id": None,
+                    },
+                ],
+                "missing_argument_names": ["profile_name"],
+                "conditionality": "requires_arguments",
+                "no_recovery_outcome": None,
+            },
+        },
+    ),
+    (
+        "refused_explicit_database_url",
         "config google login",
-        bootstrap_exempt=False,
-        settings=Settings(
+        False,
+        "explicit",
+        None,
+        {
+            "allowed": False,
+            "code": "refused_explicit_database_url",
+            "profile_bound_write": True,
+            "bootstrap_exempt": False,
+            "route_kind": "explicit_database_url",
+            "message_key": "errors.storage.runtime.not_ready",
+            "detail_message_key": "errors.storage.runtime.route_not_active_bucket",
+            "verdict": {
+                "failed_condition_id": "storage.route.active_bucket",
+                "evidence": [
+                    {
+                        "condition_id": "storage.route.active_bucket",
+                        "evidence_id": "storage.route.active_bucket.classification",
+                        "provenance": "runtime_observation",
+                        "values": {
+                            "active_bucket_attached": False,
+                            "database_url_explicit": True,
+                            "explicit_route_setting": "CADRUMO_DATABASE_URL",
+                            "route_kind": "explicit_database_url",
+                            "storage_root_setting": "CADRUMO_LOCAL_STORAGE_ROOT",
+                        },
+                    },
+                ],
+                "action": None,
+                "argument_bindings": [],
+                "missing_argument_names": [],
+                "conditionality": "not_applicable",
+                "no_recovery_outcome": "operator_decision",
+            },
+        },
+    ),
+)
+
+
+def test_storage_write_policy_scenario_keys_reconcile_live_classifications() -> None:
+    scenario_keys = tuple(row[0] for row in _STORAGE_WRITE_POLICY_SCENARIOS)
+    duplicate_keys = {key for key in scenario_keys if scenario_keys.count(key) > 1}
+
+    assert not duplicate_keys
+    assert set(scenario_keys) == {code.value for code in StorageWritePolicyCode}
+
+
+@pytest.mark.parametrize(
+    (
+        "scenario_key",
+        "verb_path",
+        "bootstrap_exempt",
+        "route_setup",
+        "argv_tokens",
+        "expected",
+    ),
+    _STORAGE_WRITE_POLICY_SCENARIOS,
+    ids=[row[0] for row in _STORAGE_WRITE_POLICY_SCENARIOS],
+)
+def test_storage_write_policy_exact_scenario_matrix(
+    tmp_path: Path,
+    scenario_key: str,
+    verb_path: str | None,
+    bootstrap_exempt: bool,
+    route_setup: Literal["root", "active", "explicit"],
+    argv_tokens: tuple[str, ...] | None,
+    expected: dict[str, object],
+) -> None:
+    if route_setup == "active":
+        settings = Settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile="operator")
+    elif route_setup == "explicit":
+        settings = Settings(
             cadrumo_local_storage_root=tmp_path,
             cadrumo_database_url=f"sqlite:///{(tmp_path / 'explicit.db').as_posix()}",
-            cadrumo_output_language=OutputLanguage.EN,
-        ),
-    )
+        )
+    else:
+        settings = Settings(cadrumo_local_storage_root=tmp_path)
 
-    assert decision.allowed is False
-    assert decision.code is StorageWritePolicyCode.REFUSED_EXPLICIT_DATABASE_URL
-    assert decision.profile_bound_write is True
-    assert decision.route_kind is StorageRouteKind.EXPLICIT_DATABASE_URL
-    rendered = decision.render_refusal_message(locale="en")
-    assert "Storage runtime is not ready" in rendered
-    assert "database route is not attached to an active profile bucket" in rendered
-    context = decision.refusal_context()
-    assert context is not None
-    assert "CADRUMO_DATABASE_URL" in context["recovery"]
-    assert "CADRUMO_LOCAL_STORAGE_ROOT" in context["recovery"]
-
-
-def test_profile_bound_write_allows_active_bucket_route(tmp_path: Path) -> None:
     decision = inspect_storage_write_policy(
-        "app modelo work calculate work-1",
-        bootstrap_exempt=False,
-        settings=Settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile="operator"),
+        verb_path,
+        bootstrap_exempt=bootstrap_exempt,
+        settings=settings,
+        argv_tokens=argv_tokens,
     )
 
-    assert decision.allowed is True
-    assert decision.code is StorageWritePolicyCode.ALLOWED_ACTIVE_BUCKET
-    assert decision.profile_bound_write is True
-    assert decision.route_kind is StorageRouteKind.ACTIVE_BUCKET_DATABASE
+    assert scenario_key == expected["code"]
+    assert decision.model_dump(mode="json") == expected, scenario_key
+    if decision.verdict is not None:
+        assert (decision.verdict.action is not None) is not (decision.verdict.no_recovery_outcome is not None)
+
+    if decision.code is StorageWritePolicyCode.REFUSED_ROOT_FALLBACK:
+        assert "No active profile" in decision.render_refusal_message(locale="en")
+    elif decision.code is StorageWritePolicyCode.REFUSED_EXPLICIT_DATABASE_URL:
+        rendered = decision.render_refusal_message(locale="en")
+        assert "Storage runtime is not ready" in rendered
+        assert "database route is not attached to an active profile bucket" in rendered
+        assert settings.model_fields_set >= {"cadrumo_database_url", STORAGE_ROOT_SETTINGS_FIELD}
+        assert {"CADRUMO_DATABASE_URL", "CADRUMO_LOCAL_STORAGE_ROOT"} <= Settings.env_var_names()
+        assert decision.verdict is not None
+        evidence = decision.verdict.evidence[0].values
+        assert evidence["explicit_route_setting"] == "CADRUMO_DATABASE_URL"
+        assert evidence["storage_root_setting"] == "CADRUMO_LOCAL_STORAGE_ROOT"
 
 
 def test_profile_bound_write_allows_pointer_route_from_stale_settings(tmp_path: Path) -> None:

@@ -149,7 +149,8 @@ def test_requires_classifies_m130_casillas_against_live_registry_no_active_profi
     assert result["profile_checked"] is False
     assert result["unresolved_profile_bindings"] == []
     notices = unwrap_envelope_notices(invocation.output)
-    assert any(notice["code"] == "modelo.requires.no_active_profile" for notice in notices)
+    no_profile_notice = next(notice for notice in notices if notice["code"] == "modelo.requires.no_active_profile")
+    assert no_profile_notice["action"] is None
 
 
 def test_requires_omits_previous_filing_bound_casillas_from_every_section() -> None:
@@ -258,7 +259,7 @@ def test_requires_warns_about_unresolved_profile_coefficients(_partial_m100_prof
     notices = unwrap_envelope_notices(invocation.output)
     warning = next(notice for notice in notices if notice["code"] == "modelo.requires.missing_profile_coefficient")
     assert warning["severity"] == "warning"
-    assert warning["suggestion"] == "aeat app ledger ratios set"
+    assert warning["action"] is None
     for binding_id in unresolved:
         assert binding_id in warning["context"]["missing_bindings"]
 

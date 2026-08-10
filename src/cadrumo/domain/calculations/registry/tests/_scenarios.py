@@ -13,6 +13,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Literal
 
+from dev.registry._scenario_filing_period import hydrate_scenario_filing_period
 from pydantic import BaseModel, Field, model_validator
 
 from .....core import STRICT_FROZEN_CONFIG, BindingSourceKind, Period
@@ -22,7 +23,6 @@ from .._formula_runtime import RegistryCalculationEntry, RegistryCalculationResu
 from .._ids import BindingId, CasillaId, LegalRefId, RelationId, SourceRefId
 from .._period_selector_match import selector_period_matches_request
 from .._runtime_graph import expression_binding_refs
-from .._scenario_filing_period import hydrate_scenario_filing_period
 from .._schema import ModeloRevision
 from .._schema_input_kind import InputKind
 from .._snapshot_coordinate import registry_snapshot_id_for

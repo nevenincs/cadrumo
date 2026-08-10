@@ -524,10 +524,8 @@ def test_export_resolves_visible_target_to_current_verified_revision(
     assert notice["context"]["modelo"] == "111"
     assert notice["context"]["filing_year"] == "2026"
     assert notice["context"]["period"] == "1T"
-    assert "not official AEAT filing evidence" in notice["message"]
-    assert "consulta de declaraciones presentadas" in notice["message"]
-    assert "CSV cotejo" in notice["message"]
-    assert "aeat app modelo reconcile pull --modelo 111 --year 2026 --period 1T" in notice["suggestion"]
+    assert notice["message"] == "The local export is not official filing evidence."
+    assert notice["action"] is None
     assert out.exists()
 
 

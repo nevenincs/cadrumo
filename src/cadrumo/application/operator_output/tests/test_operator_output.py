@@ -98,7 +98,7 @@ def test_sandbox_notice_present_for_an_active_sandbox_bucket(tmp_path: Path) -> 
     assert notice.severity is NoticeSeverity.INFO
     assert notice.code == _SANDBOX_CODE
     assert "sandbox:bakeoff" in notice.message
-    assert notice.suggestion == "aeat config profile sandbox discard"
+    assert notice.action is None
 
 
 def test_sandbox_banner_line_is_a_tab_delimited_sandbox_prefixed_line(tmp_path: Path) -> None:

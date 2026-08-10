@@ -13,8 +13,8 @@ rather than one. A field the operator has not filled in is a visible empty
 row, because "what is still blank" is the
 question this page exists to answer. Selecting any row edits it in place
 and writes immediately; there is no submit step, no final commit, and no
-ordering. Completeness is shown as a count and a list of what filing will
-eventually need — never as a gate on viewing or editing.
+ordering. Completeness names the schema-required information still missing
+— never arithmetic and never a gate on viewing or editing.
 
 The screen owns no profile logic. The page content is
 :func:`~cadrumo.application.user_profile.build_profile_overview`, and an
@@ -29,9 +29,12 @@ See Also:
 from __future__ import annotations
 
 import threading
+from collections.abc import Callable
+from contextlib import AbstractContextManager, nullcontext
 from contextvars import copy_context
 from dataclasses import dataclass, replace
-from typing import TYPE_CHECKING, ClassVar, override
+from enum import StrEnum
+from typing import TYPE_CHECKING, ClassVar, cast, override
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding
@@ -39,18 +42,38 @@ from textual.containers import Vertical
 from textual.widgets import Button, DataTable, Footer, LoadingIndicator, Static
 from textual.worker import Worker, WorkerState
 
+from ....core import OperatorProgress
 from ....core.i18n import tr
 from ._field_edit_screen import FieldEditScreen
 from ._form_screen import FormScreen, presenting_forms_through
-from ._theme import BASE_CSS, ContentScroll, install_cadrumo_themes, toggle_appearance
+from ._status_bar import PinnedStatusBar
+from ._theme import (
+    BASE_CSS,
+    NOTICE_BAND_CSS,
+    ContentScroll,
+    NoticeBand,
+    install_cadrumo_themes,
+    toggle_appearance,
+)
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Mapping, Sequence
+    from collections.abc import Mapping, Sequence
 
     from textual.widgets.data_table import ColumnKey
 
     from ....application.user_profile import ProfileFieldView, ProfileOverview, ProfileSectionView
     from ._form_screen import FormPage
+
+
+type ManagerProgressSinkBinder = Callable[[Callable[[OperatorProgress], None]], AbstractContextManager[None]]
+
+
+class ManagerActionDisposition(StrEnum):
+    """How a completed action should be presented to the operator."""
+
+    SUCCESS = "success"
+    WARNING = "warning"
+    REFUSED = "refused"
 
 
 @dataclass(frozen=True, slots=True)
@@ -78,6 +101,7 @@ class ManagerActionOutcome:
     message: str
     overview: ProfileOverview | None = None
     close_session: bool = False
+    disposition: ManagerActionDisposition = ManagerActionDisposition.SUCCESS
 
 
 @dataclass(frozen=True, slots=True)
@@ -120,6 +144,8 @@ class ManagerAction:
     action is what knows why its fields are inseparable, and this module
     stays ignorant of what any of them mean.
     """
+    progress_sink: ManagerProgressSinkBinder | None = None
+    """Scope that redirects operation progress into this screen, when present."""
 
 
 _PRESENT_GLYPH = "●"
@@ -162,18 +188,6 @@ read three identical ``NIF`` rows, since the path telling them apart is
 shown only once the row is opened.
 """
 
-_REFUSAL_TONE = "-refusal"
-"""Something the page would not do. The operator's next task."""
-
-_RESULT_TONE = "-result"
-"""What an action did. Information, not a demand."""
-
-_PROGRESS_TONE = "-progress"
-"""Work still under way, which will be replaced by its own outcome."""
-
-_NOTICE_TONES = (_REFUSAL_TONE, _RESULT_TONE, _PROGRESS_TONE)
-"""Every tone the one notice channel can take, so setting one clears the rest."""
-
 _FORM_WAIT_POLL_SECONDS = 0.1
 """How often the action thread re-checks that the application is still up.
 
@@ -206,25 +220,10 @@ class ProfileManagerApp(App[None]):
 
     CSS = (
         BASE_CSS
+        + NOTICE_BAND_CSS
         + """
-    #manager-progress {
-        dock: top;
-        height: 1;
-        width: 100%;
-        padding: 0 2;
-        background: $surface;
-        color: $text-muted;
-    }
-    #manager-notice {
-        dock: top;
-        height: auto;
-        width: 100%;
-        padding: 0 2;
-        color: $text;
-    }
-    #manager-notice.-refusal { color: $error; text-style: bold; }
-    #manager-notice.-result { color: $text; }
-    #manager-notice.-progress { color: $text-muted; }
+    #manager-context { width: 100%; height: auto; }
+    #manager-requirements { width: 100%; height: auto; }
     .manager-section DataTable { height: auto; width: 100%; background: $surface; }
     #manager-actions { height: auto; width: 100%; }
     #manager-actions Button { width: 100%; margin: 0 0 1 0; }
@@ -323,9 +322,9 @@ class ProfileManagerApp(App[None]):
     @override
     def compose(self) -> ComposeResult:
         yield Static(id="manager-banner", classes="cadrumo-banner")
-        yield Static(id="manager-progress")
-        yield Static(id="manager-notice")
+        yield PinnedStatusBar(id="manager-status")
         with ContentScroll(id="manager-body", classes="cadrumo-scroll"), Vertical(classes="cadrumo-column"):
+            yield Vertical(id="manager-context")
             if self._actions:
                 with Vertical(id="manager-actions-panel", classes="cadrumo-panel"):
                     with Vertical(id="manager-actions"):
@@ -344,14 +343,14 @@ class ProfileManagerApp(App[None]):
                 yield Static(id=f"section-{section.key}", classes="manager-section cadrumo-panel")
         yield Footer()
 
-    def on_mount(self) -> None:
+    async def on_mount(self) -> None:
         install_cadrumo_themes(self)
-        self._render()
+        await self._render()
 
     # ── rendering ───────────────────────────────────────────────────────
 
-    def _render(self) -> None:
-        """Rebuild the progress line and every section table from the overview.
+    async def _render(self) -> None:
+        """Rebuild the profile context and every schema section table.
 
         This is the wholesale redraw: it destroys and remounts every table.
         It is what ``on_mount`` needs, and what an action returning a fresh
@@ -362,16 +361,16 @@ class ProfileManagerApp(App[None]):
         """
         self._render_chrome()
         self._clear_notice()
-        self._render_progress()
+        await self._render_profile_context()
         self._field_by_key.clear()
         self._table_by_section.clear()
         self._columns_by_section.clear()
         for section in self.overview.sections:
             panel = self.query_one(f"#section-{section.key}", Static)
             panel.border_title = self._section_title(section)
-            panel.remove_children()
+            await panel.remove_children()
             table: DataTable[str] = DataTable(cursor_type="row", zebra_stripes=True)
-            panel.mount(table)
+            await panel.mount(table)
             self._table_by_section[section.key] = table
             self._columns_by_section[section.key] = [
                 table.add_column(tr("flows.manager.column.state")),
@@ -387,7 +386,7 @@ class ProfileManagerApp(App[None]):
                 # ``_FIELD_COLUMN_WIDTH``.
                 table.add_row(*self._rendered_row(field), key=key, height=None)
 
-    def _apply_overview(self, updated: ProfileOverview) -> None:
+    async def _apply_overview(self, updated: ProfileOverview) -> None:
         """Show ``updated`` by repainting only what differs from the page on screen.
 
         Most edits leave the row SET alone: the overview is projected by
@@ -411,19 +410,19 @@ class ProfileManagerApp(App[None]):
         previous = self.overview
         self.overview = updated
         if self._shape_of(previous) != self._shape_of(updated):
-            self._render()
+            await self._render()
             return
 
         self._render_chrome()
         self._clear_notice()
-        self._render_progress()
+        await self._render_profile_context()
         for was, now in zip(previous.sections, updated.sections, strict=True):
             table = self._table_by_section.get(now.key)
             columns = self._columns_by_section.get(now.key)
             if table is None or columns is None:
                 # The page was never fully rendered, so there are no cells to
                 # address. Build it rather than silently dropping the update.
-                self._render()
+                await self._render()
                 return
             if (was.present_count, was.total_count) != (now.present_count, now.total_count):
                 self.query_one(f"#section-{now.key}", Static).border_title = self._section_title(now)
@@ -441,16 +440,35 @@ class ProfileManagerApp(App[None]):
                         # equivalent for a cell written in place.
                         table.update_cell(after.path, column, new_cell, update_width=True)
 
-    def _render_progress(self) -> None:
-        """Restate the present/total/missing counts under the current overview."""
-        self.query_one("#manager-progress", Static).update(
+    async def _render_profile_context(self) -> None:
+        """Render actionable profile context in the scrollable page body.
+
+        An idle operation bar has nothing to report. Schema gaps and profile
+        advisories describe the profile rather than a running operation, so
+        they live with the profile content and disappear entirely when there
+        is no gap or advisory to show.
+        """
+        missing_fields = self.overview.missing_required_fields
+        resolved_paths = {field.path for field in missing_fields}
+        missing_labels = [field.label for field in missing_fields]
+        missing_labels.extend(path for path in self.overview.missing_required if path not in resolved_paths)
+        requirements = (
             tr(
-                "flows.manager.progress",
-                present=self.overview.present_count,
-                total=self.overview.total_count,
-                missing=len(self.overview.missing_required),
-            ),
+                "cli.diagnostics.summary.profile_missing_fields",
+                count=len(self.overview.missing_required),
+                fields=", ".join(missing_labels),
+            )
+            if self.overview.missing_required
+            else ""
         )
+        context = self.query_one("#manager-context", Vertical)
+        await context.remove_children()
+        if requirements:
+            await context.mount(
+                Static(requirements, id="manager-requirements", classes="cadrumo-note", markup=False),
+            )
+        if self.overview.notices:
+            await context.mount(NoticeBand(self.overview.notices, id="manager-notice-band"))
 
     @staticmethod
     def _section_title(section: ProfileSectionView) -> str:
@@ -676,7 +694,7 @@ class ProfileManagerApp(App[None]):
         write_context = copy_context()
 
         def _write() -> ProfileOverview:
-            written = write_context.run(self._persist_field, path, value)
+            written = cast("ProfileOverview | None", write_context.run(self._persist_field, path, value))
             if written is None:
                 # The door declares it hands back the reloaded page, so this
                 # is a broken contract rather than a refused value. Raised
@@ -697,7 +715,7 @@ class ProfileManagerApp(App[None]):
             thread=True,
         )
 
-    def on_worker_state_changed(self, event: Worker.StateChanged) -> None:
+    async def on_worker_state_changed(self, event: Worker.StateChanged) -> None:
         """Land one finished worker back on Textual's UI task.
 
         Widgets are only safe to touch from this task, so every repaint
@@ -708,13 +726,14 @@ class ProfileManagerApp(App[None]):
         """
         if event.state not in {WorkerState.SUCCESS, WorkerState.ERROR, WorkerState.CANCELLED}:
             return
-        if self._pending_write is not None and event.worker is self._pending_write:
-            self._settle_write(self._pending_write)
+        event_worker = cast("Worker[object]", event.worker)
+        if self._pending_write is not None and event_worker is self._pending_write:
+            await self._settle_write(self._pending_write)
             return
-        if self._pending_action is not None and event.worker is self._pending_action:
-            self._settle_action(self._pending_action)
+        if self._pending_action is not None and event_worker is self._pending_action:
+            await self._settle_action(self._pending_action)
 
-    def _settle_write(self, worker: Worker[ProfileOverview]) -> None:
+    async def _settle_write(self, worker: Worker[ProfileOverview]) -> None:
         """Show what storage made of one finished field write."""
         self._pending_write = None
         written_path = self._pending_write_path
@@ -728,16 +747,16 @@ class ProfileManagerApp(App[None]):
                 # chrome rather than cells. Rebuilding is the only redraw
                 # that reaches all of it.
                 self.overview = worker.result
-                self._render()
+                await self._render()
                 return
-            self._apply_overview(worker.result)
+            await self._apply_overview(worker.result)
             return
         # A refusal reaches the operator as itself. A cancelled or
         # result-less worker would otherwise leave the page looking as
         # though nothing had been asked of it.
         self._refuse_worker(worker.error, message_key="flows.manager.edit.write_failed")
 
-    def _settle_action(self, worker: Worker[ManagerActionOutcome]) -> None:
+    async def _settle_action(self, worker: Worker[ManagerActionOutcome]) -> None:
         """Report one finished action and adopt any profile it handed back.
 
         A failure is reported rather than raised for the reason the old
@@ -759,30 +778,30 @@ class ProfileManagerApp(App[None]):
             # back to their shell, the same coherent landing the quit
             # binding already gives them -- there is nowhere else to route
             # a session that just ended.
-            self.app.exit(None)
+            self.exit(None)
             return
         if outcome.overview is not None:
             # A full redraw, not a cell diff: an action can change the
             # profile's shape, which is exactly what the diff cannot do.
             self.overview = outcome.overview
-            self._render()
+            await self._render()
         # After the redraw, which clears the channel: reporting first would
         # write the outcome and then immediately wipe it.
-        self._report(outcome.message)
+        match outcome.disposition:
+            case ManagerActionDisposition.SUCCESS:
+                self._report(outcome.message)
+            case ManagerActionDisposition.WARNING:
+                self._warn(outcome.message)
+            case ManagerActionDisposition.REFUSED:
+                self._refuse(outcome.message)
 
     def _clear_notice(self) -> None:
-        """Empty the channel and drop its tone.
-
-        The tone goes with the text: leaving it behind would colour the
-        next message as whatever the last one was, and an empty line still
-        carrying the refusal style is a stripe of error colour explaining
-        nothing.
-        """
-        self._announce("", "")
+        """Reset the diagnostic line while preserving its pinned space."""
+        self.query_one("#manager-status", PinnedStatusBar).clear_message()
 
     def _refuse(self, message: str) -> None:
         """Show something the page would not do, and why."""
-        self._announce(message, _REFUSAL_TONE)
+        self.query_one("#manager-status", PinnedStatusBar).show_error(message)
 
     def _refuse_worker(self, error: BaseException | None, *, message_key: str) -> None:
         """Show what a finished worker failed with, never as a blank line.
@@ -798,35 +817,39 @@ class ProfileManagerApp(App[None]):
         rather than on the exception's type, because no type owns that
         emptiness — a door that raises bare renders just as blank.
         """
-        rendered = str(error) if error is not None else ""
+        if error is None:
+            rendered = ""
+        else:
+            from ....core.errors import CadrumoError, resolve_error_message
+
+            rendered = resolve_error_message(error) if isinstance(error, CadrumoError) else str(error)
         self._refuse(rendered or tr(message_key))
 
     def _report(self, message: str) -> None:
         """Show what an action did."""
-        self._announce(message, _RESULT_TONE)
+        self.query_one("#manager-status", PinnedStatusBar).show_success(message)
 
-    def _progress(self, message: str) -> None:
+    def _warn(self, message: str) -> None:
+        """Show a completed action whose partial failures need attention."""
+        self.query_one("#manager-status", PinnedStatusBar).show_warning(message)
+
+    def _progress(self, progress: OperatorProgress) -> None:
         """Show what is happening while it is still happening."""
-        self._announce(message, _PROGRESS_TONE)
+        self.query_one("#manager-status", PinnedStatusBar).show_progress(
+            progress.message,
+            timeout_seconds=progress.timeout_seconds,
+        )
 
-    def _announce(self, message: str, tone: str) -> None:
-        """Put one line in the page's single diagnostic channel.
-
-        There is one channel because the operator has one place to look.
-        Refusals and results were previously split across two widgets of
-        different prominence — a bold docked line for a rejected field, a
-        muted line under the buttons for everything an action had to say —
-        so an action refusing for want of a certificate whispered while a
-        mistyped date shouted, though both are the page answering back.
-
-        What differs between them is emphasis, not location: a refusal is
-        the operator's next task and is coloured as such, a result is
-        information, and progress is neither and recedes.
-        """
-        notice = self.query_one("#manager-notice", Static)
-        notice.update(message)
-        for candidate in _NOTICE_TONES:
-            notice.set_class(candidate == tone, candidate)
+    def _progress_from_worker(self, progress: OperatorProgress) -> None:
+        """Move a worker-thread progress emission onto Textual's UI task."""
+        if not self.is_running:
+            return
+        try:
+            self.call_from_thread(self._progress, progress)
+        except RuntimeError:
+            # A thread-backed action may outlive a closing application. At
+            # that point there is no screen left to update.
+            return
 
     def _set_busy(self, busy: bool) -> None:
         """Show that background work is running, and refuse to start more.
@@ -884,7 +907,10 @@ class ProfileManagerApp(App[None]):
         action_context = copy_context()
 
         def _run() -> ManagerActionOutcome:
-            with presenting_forms_through(self._present_form_here):
+            progress_scope = (
+                action.progress_sink(self._progress_from_worker) if action.progress_sink is not None else nullcontext()
+            )
+            with presenting_forms_through(self._present_form_here), progress_scope:
                 return action.run()
 
         self._pending_action = self.run_worker(
@@ -895,7 +921,7 @@ class ProfileManagerApp(App[None]):
             thread=True,
         )
         self._set_busy(True)
-        self._progress(tr("flows.manager.action.working", action=self._action_label(action)))
+        self._progress(OperatorProgress(message=tr("flows.manager.action.working", action=self._action_label(action))))
 
     def _present_form_here(
         self,
@@ -1037,7 +1063,9 @@ def run_profile_manager_tui(
 __all__ = [
     "FieldEditScreen",
     "ManagerAction",
+    "ManagerActionDisposition",
     "ManagerActionOutcome",
+    "ManagerProgressSinkBinder",
     "ProfileManagerApp",
     "run_profile_manager_tui",
 ]

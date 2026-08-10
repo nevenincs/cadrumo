@@ -30,9 +30,9 @@ def register_bucket_history_commands(profile_app: typer.Typer) -> None:
     def profile_history(
         ctx: typer.Context,
         profile: typing.Annotated[
-            str,
+            str | None,
             typer.Argument(help=tr("cli.config.profile.history_bucket_id_help")),
-        ],
+        ] = None,
         event_type: typing.Annotated[
             list[str] | None,
             typer.Option(
@@ -78,9 +78,20 @@ def register_bucket_history_commands(profile_app: typer.Typer) -> None:
         """Browse the active profile's append-only event history."""
         _activate_subcommand_output_language(ctx, output_language)
         from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+        from ....adapters.persistence.storage import (
+            active_bucket_session_serves,
+            secure_object_repository_for_bucket,
+        )
         from .._config_bucket_history_payloads import BucketHistoryResult
 
         profile_label, bucket_id = _resolve_profile_history_target(profile)
+        if not active_bucket_session_serves(bucket_id):
+            from .. import resume_profile_session_for_target
+
+            resume_profile_session_for_target(ctx, bucket_id=bucket_id)
+        from .. import bind_profile_target_to_invocation
+
+        bind_profile_target_to_invocation(ctx, bucket_id=bucket_id)
         selected = _parse_bucket_event_types(event_type)
         since_dt = _parse_bucket_history_instant(since, flag="--since")
         until_dt = _parse_bucket_history_instant(until, flag="--until")
@@ -89,7 +100,9 @@ def register_bucket_history_commands(profile_app: typer.Typer) -> None:
         object_id_token = object_id.strip() if object_id else None
         actor_token = actor.strip() if actor else None
 
-        catalogue = BucketEventHistoryRepository().load()
+        catalogue = BucketEventHistoryRepository(
+            objects=secure_object_repository_for_bucket(bucket_id),
+        ).load()
         events = tuple(
             event
             for event in catalogue.for_bucket(bucket_id, event_types=selected)
@@ -119,19 +132,22 @@ def register_bucket_history_commands(profile_app: typer.Typer) -> None:
         _emit_envelope(ctx, command="config.bucket.history", result=bucket_result, lines=lines)
 
 
-def _resolve_profile_history_target(profile: str) -> tuple[str, str]:
-    """Resolve an operator profile token to ``(label, bucket_id)`` for history reads."""
-    from ....application.workflow import ProfileLabelAmbiguousError, read_profile_bucket, read_profile_bucket_by_id
+def _resolve_profile_history_target(profile: str | None) -> tuple[str, str]:
+    """Resolve an explicit profile token or the active profile for history reads."""
+    from ....application.workflow import ProfileLabelAmbiguousError, resolve_profile_bucket
+    from ....core import resolve_active_bucket_id
+    from .._common import _no_active_profile_refusal
 
-    token = profile.strip()
+    selected = profile if profile is not None else resolve_active_bucket_id()
+    if selected is None:
+        raise _no_active_profile_refusal()
+    token = selected.strip()
     try:
-        pointer = read_profile_bucket(token)
+        pointer = resolve_profile_bucket(token)
     except ProfileLabelAmbiguousError as exc:
         raise typer.BadParameter(tr("errors.refused.refused_profile_label_ambiguous")) from exc
     except ValueError as exc:
         raise typer.BadParameter(tr("cli.config.profile.unknown_profile", name=token)) from exc
-    if pointer is None:
-        pointer = read_profile_bucket_by_id(token)
     if pointer is None:
         raise typer.BadParameter(tr("cli.config.profile.unknown_profile", name=token))
     return pointer.label, pointer.bucket_id

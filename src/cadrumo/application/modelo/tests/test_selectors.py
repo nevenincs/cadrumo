@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import cast
 
 import pytest
+from pydantic import ValidationError
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -242,6 +243,24 @@ def test_visible_target_resolution_returns_single_active_work_unit(work_repo: Wo
     assert resolution.work_unit == unit
     assert resolution.candidates[0].work_unit_id == unit.work_unit_id
     assert resolution.candidates[0].short_work_unit_id == unit.work_unit_id[-12:]
+
+
+def test_explicit_work_unit_id_accepts_displayed_short_id(work_repo: WorkUnitCatalogueRepository) -> None:
+    unit = _seed_work_unit(work_repo)
+
+    resolution = resolve_modelo_work_unit(
+        ModeloWorkSelectorRequest(work_unit_id=unit.work_unit_id[-12:]),
+        repository=work_repo,
+    )
+
+    assert resolution.state is ModeloWorkSelectorState.RESOLVED
+    assert resolution.work_unit == unit
+
+
+def test_work_unit_id_selector_refuses_abbreviations_shorter_than_the_displayed_id() -> None:
+    """Mutable work may be addressed only by the published 12-char handle or full id."""
+    with pytest.raises(ValidationError, match="work_unit_id"):
+        ModeloWorkSelectorRequest(work_unit_id="a")
 
 
 def test_explicit_work_unit_id_validates_supplied_natural_key_flags(work_repo: WorkUnitCatalogueRepository) -> None:

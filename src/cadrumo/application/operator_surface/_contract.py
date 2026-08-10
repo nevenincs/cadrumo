@@ -369,10 +369,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         commands=(
             "inspect",
             "verify",
-            "audit-oracles",
             "verify-filed-state",
-            "workbooks",
-            "parity",
             "citations",
             "manuals",
             "diff-revisions",

@@ -22,8 +22,9 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from ..operator_actions import ActionCatalogue, ActionCatalogueEntry
 from ._contract import get_operator_surface_contract
-from ._models import OperatorSurfaceContract
+from ._models import ManifestActionProfile, OperatorSurfaceContract
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -237,6 +238,156 @@ class OperatorSurfaceReconciliation(BaseModel):
     leaves: tuple[ReconciledOperatorLeaf, ...]
 
 
+class ResolvedCatalogueAction(BaseModel):
+    """One canonical action joined to a live command and its schemas.
+
+    The canonical catalogue declaration remains the action authority.  This
+    record retains only resolution evidence: the exact live leaf whose stable
+    subject key equals the declaration's target command key.  It introduces no
+    applicability predicate, presentation text, command string, or runtime
+    argument value.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    declaration: ActionCatalogueEntry
+    target_leaf: ReconciledOperatorLeaf
+
+    @model_validator(mode="after")
+    def _require_exact_target_and_sufficient_sources(self) -> ResolvedCatalogueAction:
+        target_key = self.declaration.target_command_key
+        live_key = self.target_leaf.live_leaf.subject_leaf_key
+        if live_key != target_key:
+            raise ValueError(
+                f"action target identity mismatch for {self.declaration.action_id}: "
+                f"catalogue={target_key}, live={live_key}"
+            )
+
+        result_schema = self.target_leaf.result_schema
+        if result_schema is None:
+            raise ValueError(
+                f"action target lacks result schema accounting: {self.declaration.action_id} -> {target_key}"
+            )
+        if result_schema.subject_leaf_key != target_key:
+            raise ValueError(
+                f"action result-schema identity mismatch for {self.declaration.action_id}: "
+                f"target={target_key}, schema={result_schema.subject_leaf_key}"
+            )
+
+        input_schema = self.target_leaf.input_schema
+        if input_schema is None:
+            raise ValueError(
+                f"action target lacks input schema accounting: {self.declaration.action_id} -> {target_key}"
+            )
+        if input_schema.subject_leaf_key != target_key:
+            raise ValueError(
+                f"action input-schema identity mismatch for {self.declaration.action_id}: "
+                f"target={target_key}, schema={input_schema.subject_leaf_key}"
+            )
+
+        declared_inputs = frozenset(
+            specification.argument_name for specification in self.declaration.argument_specifications
+        )
+        missing_inputs = tuple(
+            input_name for input_name in input_schema.required_input_names if input_name not in declared_inputs
+        )
+        if missing_inputs:
+            raise ValueError(
+                f"insufficient action argument specifications for {self.declaration.action_id} -> "
+                f"{target_key}; missing required inputs: {', '.join(missing_inputs)}"
+            )
+        return self
+
+    @property
+    def action_id(self) -> str:
+        """Return the canonical catalogue identity."""
+        return self.declaration.action_id
+
+    @property
+    def target_command_key(self) -> str:
+        """Return the exact resolved command-schema identity."""
+        return self.declaration.target_command_key
+
+
+class ResolvedManifestActionProfile(BaseModel):
+    """One declared condition scenario joined to its live subject and action."""
+
+    model_config = _STRICT_FROZEN
+
+    declaration: ManifestActionProfile
+    subject_leaf: ReconciledOperatorLeaf
+    resolved_action: ResolvedCatalogueAction | None = None
+
+    @model_validator(mode="after")
+    def _require_exact_profile_resolution(self) -> ResolvedManifestActionProfile:
+        subject_key = self.subject_leaf.live_leaf.subject_leaf_key
+        if subject_key != self.declaration.subject_leaf_key:
+            raise ValueError(
+                f"action-profile subject identity mismatch: "
+                f"profile={self.declaration.subject_leaf_key}, live={subject_key}"
+            )
+
+        action_reference = self.declaration.action
+        if action_reference is None:
+            if self.resolved_action is not None:
+                raise ValueError("explicit no-recovery profiles cannot carry a resolved action")
+            if self.declaration.no_recovery_outcome is None:
+                raise ValueError("resolved profiles require an action or explicit no-recovery outcome")
+            return self
+
+        if self.resolved_action is None:
+            raise ValueError(f"action profile has no resolved action: {action_reference.action_id}")
+        if self.resolved_action.action_id != action_reference.action_id:
+            raise ValueError(
+                f"action-profile identity mismatch: profile={action_reference.action_id}, "
+                f"resolved={self.resolved_action.action_id}"
+            )
+        return self
+
+
+class ManifestActionResolution(BaseModel):
+    """Deterministic resolution evidence for catalogue actions and profiles.
+
+    ``catalogue_actions`` is a projection of the supplied canonical catalogue,
+    not a second declaration source.  It includes unreferenced catalogue entries
+    so an incrementally introduced action cannot retain a dead command target.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    catalogue_actions: tuple[ResolvedCatalogueAction, ...]
+    profiles: tuple[ResolvedManifestActionProfile, ...]
+
+    @field_validator("catalogue_actions")
+    @classmethod
+    def _catalogue_action_ids_are_unique(
+        cls,
+        value: tuple[ResolvedCatalogueAction, ...],
+    ) -> tuple[ResolvedCatalogueAction, ...]:
+        action_ids = tuple(action.action_id for action in value)
+        if len(action_ids) != len(set(action_ids)):
+            raise ValueError("resolved catalogue action IDs must be unique")
+        return tuple(sorted(value, key=lambda action: action.action_id))
+
+    @field_validator("profiles")
+    @classmethod
+    def _profile_identities_are_unique(
+        cls,
+        value: tuple[ResolvedManifestActionProfile, ...],
+    ) -> tuple[ResolvedManifestActionProfile, ...]:
+        identities = tuple(profile.declaration.identity for profile in value)
+        if len(identities) != len(set(identities)):
+            raise ValueError("manifest action-profile identities must be unique")
+        return tuple(sorted(value, key=lambda profile: profile.declaration.identity))
+
+    def action_for(self, action_id: str) -> ResolvedCatalogueAction:
+        """Return one resolved canonical action or fail closed."""
+        for action in self.catalogue_actions:
+            if action.action_id == action_id:
+                return action
+        raise KeyError(f"unresolved operator action ID: {action_id!r}")
+
+
 def _index_subject_rows[
     InventoryRow: ResultSchemaInventoryRow
     | InputSchemaInventoryRow
@@ -272,9 +423,7 @@ def _index_live_leaves(rows: tuple[LiveLeafInventoryRow, ...]) -> dict[str, Live
         for path in (row.canonical_cli_path, *row.alias_cli_paths):
             previous = path_owners.get(path)
             if previous is not None:
-                raise ValueError(
-                    f"ambiguous CLI path {' '.join(path)}: {previous} and {row.subject_leaf_key}"
-                )
+                raise ValueError(f"ambiguous CLI path {' '.join(path)}: {previous} and {row.subject_leaf_key}")
             path_owners[path] = row.subject_leaf_key
         indexed[row.subject_leaf_key] = row
     if not indexed:
@@ -377,9 +526,7 @@ def reconcile_operator_surface_inventory(
     )
     for identity, declaration in family_by_identity.items():
         if identity not in reached_family_identities:
-            raise ValueError(
-                f"orphan mounted family declaration {' '.join(identity)} from {declaration.provenance}"
-            )
+            raise ValueError(f"orphan mounted family declaration {' '.join(identity)} from {declaration.provenance}")
 
     reconciled: list[ReconciledOperatorLeaf] = []
     for subject_leaf_key, live_leaf in sorted(live_by_subject.items()):
@@ -415,9 +562,7 @@ def reconcile_operator_surface_inventory(
         mcp_exclusion = exclusions_by_subject_surface.get((subject_leaf_key, ReconciliationSurface.MCP_EXPOSURE))
         if mcp_exposure is None:
             if mcp_exclusion is None:
-                raise ValueError(
-                    f"missing mcp_exposure accounting for {subject_leaf_key}; explicit exclusion required"
-                )
+                raise ValueError(f"missing mcp_exposure accounting for {subject_leaf_key}; explicit exclusion required")
         elif mcp_exposure.exposed:
             if mcp_exclusion is not None:
                 raise ValueError(f"mcp_exposure is both exposed and excluded for {subject_leaf_key}")
@@ -434,9 +579,7 @@ def reconcile_operator_surface_inventory(
 
         leaf_exclusions = tuple(
             exclusion
-            for (key, _), exclusion in sorted(
-                exclusions_by_subject_surface.items(), key=lambda item: item[0][1].value
-            )
+            for (key, _), exclusion in sorted(exclusions_by_subject_surface.items(), key=lambda item: item[0][1].value)
             if key == subject_leaf_key
         )
         reconciled.append(
@@ -451,6 +594,109 @@ def reconcile_operator_surface_inventory(
             )
         )
     return OperatorSurfaceReconciliation(leaves=tuple(reconciled))
+
+
+def _index_reconciled_leaves(
+    reconciliation: OperatorSurfaceReconciliation,
+) -> dict[str, ReconciledOperatorLeaf]:
+    """Index reconciled leaves while rechecking identity and path uniqueness."""
+    indexed: dict[str, ReconciledOperatorLeaf] = {}
+    path_owners: dict[tuple[str, ...], str] = {}
+    for leaf in reconciliation.leaves:
+        key = leaf.live_leaf.subject_leaf_key
+        if key in indexed:
+            raise ValueError(f"duplicate reconciled live leaf identity: {key}")
+        for path in (leaf.live_leaf.canonical_cli_path, *leaf.live_leaf.alias_cli_paths):
+            previous = path_owners.get(path)
+            if previous is not None:
+                raise ValueError(f"ambiguous reconciled CLI path {' '.join(path)}: {previous} and {key}")
+            path_owners[path] = key
+        for surface, schema_key in (
+            ("result_schema", leaf.result_schema.subject_leaf_key if leaf.result_schema is not None else None),
+            ("input_schema", leaf.input_schema.subject_leaf_key if leaf.input_schema is not None else None),
+        ):
+            if schema_key is not None and schema_key != key:
+                raise ValueError(f"reconciled {surface} identity mismatch for {key}: observed {schema_key}")
+        indexed[key] = leaf
+    if not indexed:
+        raise ValueError("operator-surface reconciliation must not be empty")
+    return indexed
+
+
+def resolve_action_catalogue(
+    *,
+    catalogue: ActionCatalogue,
+    reconciliation: OperatorSurfaceReconciliation,
+) -> tuple[ResolvedCatalogueAction, ...]:
+    """Resolve every canonical catalogue target against the live schemas.
+
+    All catalogue entries are checked, including entries not yet referenced by
+    a manifest action profile during incremental migration.  The S06 input row
+    exposes the complete set of required names, so sufficiency means each of
+    those names has one canonical source specification.  Additional
+    specifications are retained: S06 deliberately does not claim an inventory
+    of optional parameter names and this layer cannot soundly reject them.
+    """
+    live_by_key = _index_reconciled_leaves(reconciliation)
+    resolved: list[ResolvedCatalogueAction] = []
+    for declaration in catalogue.entries:
+        target_leaf = live_by_key.get(declaration.target_command_key)
+        if target_leaf is None:
+            raise ValueError(
+                f"orphan action target command identity: {declaration.action_id} -> {declaration.target_command_key}"
+            )
+        resolved.append(
+            ResolvedCatalogueAction(
+                declaration=declaration,
+                target_leaf=target_leaf,
+            )
+        )
+    return tuple(sorted(resolved, key=lambda action: action.action_id))
+
+
+def resolve_manifest_action_profiles(
+    *,
+    profiles: tuple[ManifestActionProfile, ...],
+    catalogue: ActionCatalogue,
+    reconciliation: OperatorSurfaceReconciliation,
+) -> ManifestActionResolution:
+    """Resolve declarative profiles through one catalogue and live schema join."""
+    live_by_key = _index_reconciled_leaves(reconciliation)
+    catalogue_actions = resolve_action_catalogue(
+        catalogue=catalogue,
+        reconciliation=reconciliation,
+    )
+    action_by_id = {action.action_id: action for action in catalogue_actions}
+    seen_profile_identities: set[tuple[str, str, str]] = set()
+    resolved_profiles: list[ResolvedManifestActionProfile] = []
+    for profile in profiles:
+        if profile.identity in seen_profile_identities:
+            raise ValueError(
+                "duplicate manifest action-profile identity: "
+                f"{profile.subject_leaf_key} / {profile.condition_id} / {profile.scenario_id}"
+            )
+        seen_profile_identities.add(profile.identity)
+
+        subject_leaf = live_by_key.get(profile.subject_leaf_key)
+        if subject_leaf is None:
+            raise ValueError(f"orphan manifest action-profile subject identity: {profile.subject_leaf_key}")
+
+        resolved_action: ResolvedCatalogueAction | None = None
+        if profile.action is not None:
+            resolved_action = action_by_id.get(profile.action.action_id)
+            if resolved_action is None:
+                raise ValueError(f"unknown manifest action-profile action identity: {profile.action.action_id}")
+        resolved_profiles.append(
+            ResolvedManifestActionProfile(
+                declaration=profile,
+                subject_leaf=subject_leaf,
+                resolved_action=resolved_action,
+            )
+        )
+    return ManifestActionResolution(
+        catalogue_actions=catalogue_actions,
+        profiles=tuple(resolved_profiles),
+    )
 
 
 class CommandSchemaRef(BaseModel):

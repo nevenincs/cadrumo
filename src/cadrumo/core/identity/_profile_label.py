@@ -23,12 +23,24 @@ See Also:
 from __future__ import annotations
 
 from typing import Annotated
+from uuid import UUID
 
-from pydantic import StringConstraints
+from pydantic import AfterValidator, StringConstraints
+
+
+def _reject_uuid_shaped_label(value: str) -> str:
+    """Keep operator labels unambiguous with machine profile identities."""
+    try:
+        UUID(value)
+    except ValueError:
+        return value
+    raise ValueError("profile label must not be UUID-shaped")
+
 
 ProfileLabel = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=160),
+    AfterValidator(_reject_uuid_shaped_label),
 ]
 """Operator-chosen display name for one profile bucket."""
 

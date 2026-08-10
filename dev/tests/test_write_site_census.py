@@ -154,7 +154,7 @@ def test_the_two_directions_disagree_on_the_same_method_name() -> None:
     ("origin", "local_params", "expected"),
     [
         ("storage_path", set(), "taxonomy"),
-        ("cadrumo_audit_dir", set(), "taxonomy"),
+        ("cadrumo_live_state_dir", set(), "taxonomy"),
         ("destination", {"destination"}, "pass_through"),
         ("self", set(), "pass_through"),
         ("self._root", set(), "pass_through"),

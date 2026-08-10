@@ -1175,6 +1175,99 @@ _CASH_ACCOUNTING_EXCLUDED_CATEGORIES = frozenset(
 )
 
 
+def _substrate_admission_issue(
+    transaction: Transaction,
+    *,
+    resolved_period: Period,
+    operation_date: date,
+    cash_treatment: IvaCashAccountingTreatment,
+) -> IvaLedgerAggregationIssue | None:
+    """Return why the row cannot be an IVA observation at all, or ``None``.
+
+    These three screens run before anything is derived from the row because
+    they are about whether a usable substrate EXISTS -- the operation falls in
+    the period, the currency is settleable, and the tax figures are denominated
+    in the currency the return is filed in. A row failing any of them yields no
+    fact worth classifying, so nothing downstream needs their result beyond the
+    refusal itself.
+    """
+    transaction_id = transaction.transaction_id
+    if cash_treatment is IvaCashAccountingTreatment.NONE and not resolved_period.contains(operation_date):
+        return IvaLedgerAggregationIssue(
+            transaction_id=transaction_id,
+            reason=IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
+            detail=f"transaction date {operation_date.isoformat()} is outside {resolved_period}",
+        )
+    if is_non_eur_without_conversion(transaction):
+        return IvaLedgerAggregationIssue(
+            transaction_id=transaction_id,
+            reason=IvaLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY,
+            detail=f"transaction currency {transaction.raw.currency!r} is not supported for IVA aggregation",
+        )
+    if _has_converted_non_eur_amount(transaction):
+        return IvaLedgerAggregationIssue(
+            transaction_id=transaction_id,
+            reason=IvaLedgerAggregationIssueReason.MISSING_EUR_TAX_SUBSTRATE,
+            detail=(
+                f"transaction currency {transaction.raw.currency!r} has a converted gross value_in_eur "
+                "but taxable_base/iva_amount remain native-currency facts; IVA aggregation requires "
+                "explicit EUR tax substrate"
+            ),
+        )
+    return None
+
+
+def _declared_category_issue(
+    transaction: Transaction,
+    *,
+    transaction_id: str,
+    explicit_category: IvaCategory,
+    invoice_kind: InvoiceKind,
+) -> IvaLedgerAggregationIssue | None:
+    """Return why an OPERATOR-DECLARED category contradicts the row, or ``None``.
+
+    Every screen here is scoped to the declared category deliberately. The
+    derived branch reads its category off the rate, so it cannot contradict the
+    rate; a screen written across both would be vacuous on half its population
+    while reading as though it covered it.
+    """
+    d5_issue = _validate_intracom_export_counterparty(
+        transaction_id=transaction_id,
+        category=explicit_category,
+        counterparty_country=transaction.counterparty_country,
+        eu_member_state=transaction.counterparty_eu_member_state,
+        identification_state=transaction.counterparty_identification_state,
+    )
+    if d5_issue is not None:
+        return d5_issue
+    components = iva_category_components(explicit_category, invoice_kind)
+    if components.applicability is IvaKindApplicability.DOES_NOT_ARISE:
+        # The row's own note names the category that IS this side's
+        # counterpart, so the refusal can say what the operator probably
+        # meant. Told only "this cannot arise", they would guess.
+        return IvaLedgerAggregationIssue(
+            transaction_id=transaction_id,
+            reason=IvaLedgerAggregationIssueReason.NON_ARISING_CATEGORY_FOR_INVOICE_SIDE,
+            detail=(
+                f"row declares iva_category {explicit_category.value!r} on a "
+                f"{invoice_kind.value!r} invoice, a combination that describes no operation. "
+                f"{components.retencion_note}"
+            ),
+        )
+    if category_cuota_is_zero_by_law(explicit_category, invoice_kind) and transaction.iva_rate != Decimal("0"):
+        return IvaLedgerAggregationIssue(
+            transaction_id=transaction_id,
+            reason=IvaLedgerAggregationIssueReason.NON_ZERO_RATE_ON_ZERO_CUOTA_CATEGORY,
+            detail=(
+                f"row declares iva_category {explicit_category.value!r} on a "
+                f"{invoice_kind.value!r} invoice, whose cuota is zero by law, with "
+                f"iva_rate {transaction.iva_rate}; a category that admits no cuota admits "
+                "no tipo either, so one of the two facts is wrong"
+            ),
+        )
+    return None
+
+
 def _classify_iva_transaction(
     transaction: Transaction,
     *,
@@ -1194,34 +1287,14 @@ def _classify_iva_transaction(
     ledger_date = transaction.raw.value_date or transaction.raw.booked_date
     operation_date = transaction.operation_date or ledger_date
     cash_treatment = transaction.cash_accounting_treatment
-    if cash_treatment is IvaCashAccountingTreatment.NONE and not resolved_period.contains(operation_date):
-        return _IvaTransactionOutcome(
-            gate_issue=IvaLedgerAggregationIssue(
-                transaction_id=transaction_id,
-                reason=IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
-                detail=f"transaction date {operation_date.isoformat()} is outside {resolved_period}",
-            ),
-        )
-    if is_non_eur_without_conversion(transaction):
-        return _IvaTransactionOutcome(
-            gate_issue=IvaLedgerAggregationIssue(
-                transaction_id=transaction_id,
-                reason=IvaLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY,
-                detail=f"transaction currency {transaction.raw.currency!r} is not supported for IVA aggregation",
-            ),
-        )
-    if _has_converted_non_eur_amount(transaction):
-        return _IvaTransactionOutcome(
-            gate_issue=IvaLedgerAggregationIssue(
-                transaction_id=transaction_id,
-                reason=IvaLedgerAggregationIssueReason.MISSING_EUR_TAX_SUBSTRATE,
-                detail=(
-                    f"transaction currency {transaction.raw.currency!r} has a converted gross value_in_eur "
-                    "but taxable_base/iva_amount remain native-currency facts; IVA aggregation requires "
-                    "explicit EUR tax substrate"
-                ),
-            ),
-        )
+    substrate_issue = _substrate_admission_issue(
+        transaction,
+        resolved_period=resolved_period,
+        operation_date=operation_date,
+        cash_treatment=cash_treatment,
+    )
+    if substrate_issue is not None:
+        return _IvaTransactionOutcome(gate_issue=substrate_issue)
     flow_direction = _flow_direction_for(transaction.direction)
     if flow_direction is None:
         return _IvaTransactionOutcome(
@@ -1334,48 +1407,14 @@ def _classify_iva_transaction(
     # the rate-kind-derived domestic category.
     explicit_category = transaction.iva_category
     if explicit_category is not None:
-        d5_issue = _validate_intracom_export_counterparty(
+        declared_issue = _declared_category_issue(
+            transaction,
             transaction_id=transaction_id,
-            category=explicit_category,
-            counterparty_country=transaction.counterparty_country,
-            eu_member_state=transaction.counterparty_eu_member_state,
-            identification_state=transaction.counterparty_identification_state,
+            explicit_category=explicit_category,
+            invoice_kind=invoice_kind,
         )
-        if d5_issue is not None:
-            return _IvaTransactionOutcome(gate_issue=d5_issue)
-        components = iva_category_components(explicit_category, invoice_kind)
-        if components.applicability is IvaKindApplicability.DOES_NOT_ARISE:
-            # The row's own note names the category that IS this side's
-            # counterpart, so the refusal can say what the operator probably
-            # meant. Told only "this cannot arise", they would guess.
-            return _IvaTransactionOutcome(
-                gate_issue=IvaLedgerAggregationIssue(
-                    transaction_id=transaction_id,
-                    reason=IvaLedgerAggregationIssueReason.NON_ARISING_CATEGORY_FOR_INVOICE_SIDE,
-                    detail=(
-                        f"row declares iva_category {explicit_category.value!r} on a "
-                        f"{invoice_kind.value!r} invoice, a combination that describes no operation. "
-                        f"{components.retencion_note}"
-                    ),
-                ),
-            )
-        # Scoped to the DECLARED category deliberately. The derived branch below
-        # reads its category off the rate, so it cannot contradict the rate; a
-        # screen written across both would be vacuous on half its population
-        # while reading as though it covered it.
-        if category_cuota_is_zero_by_law(explicit_category, invoice_kind) and transaction.iva_rate != Decimal("0"):
-            return _IvaTransactionOutcome(
-                gate_issue=IvaLedgerAggregationIssue(
-                    transaction_id=transaction_id,
-                    reason=IvaLedgerAggregationIssueReason.NON_ZERO_RATE_ON_ZERO_CUOTA_CATEGORY,
-                    detail=(
-                        f"row declares iva_category {explicit_category.value!r} on a "
-                        f"{invoice_kind.value!r} invoice, whose cuota is zero by law, with "
-                        f"iva_rate {transaction.iva_rate}; a category that admits no cuota admits "
-                        "no tipo either, so one of the two facts is wrong"
-                    ),
-                ),
-            )
+        if declared_issue is not None:
+            return _IvaTransactionOutcome(gate_issue=declared_issue)
         effective_category = explicit_category
     else:
         effective_category = domestic_categories_by_rate_kind()[rate_kind]

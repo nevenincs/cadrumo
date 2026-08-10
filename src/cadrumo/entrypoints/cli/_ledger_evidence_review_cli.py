@@ -31,12 +31,13 @@ from ...application.ledger import (
     party_attribution_advisory,
     review_advisory_kinds,
 )
+from ...application.operator_actions import ActionReference
 from ...core import ConfirmationBlockReason, DraftDiscrepancyKind, FindingResolutionAction, ReviewAdvisoryKind
 from ...core.config import load_settings
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.iva import StatedCountryCodeStatus
-from ._common import _bad, _emit_envelope, _state, _tx_repo
+from ._common import _bad, _emit_envelope, _state, _tx_repo, resolve_notice_action
 from ._ledger_business_payloads import (
     EvidenceReviewBlockerPayload,
     EvidenceReviewFieldPayload,
@@ -394,11 +395,13 @@ def _register_review_list_command() -> None:
                         "cli.app.ledger.evidence.review.advised_pending_message",
                         default=(
                             "Some pending documents carry advisories. These block nothing and will "
-                            "confirm as they are, so nothing else will raise them again. Narrow the "
-                            "queue with `--advisory` and read one with `review show`."
+                            "confirm as they are, so nothing else will raise them again. Use the listed "
+                            "advisory kinds to focus review, then inspect each affected document."
                         ),
                     ),
-                    suggestion="aeat app ledger evidence review list --advisory <kind>",
+                    action=resolve_notice_action(
+                        action=ActionReference(action_id="operator.ledger.evidence.review.list"),
+                    ),
                     context={
                         "advised": str(advised),
                         "kinds": ",".join(
@@ -417,8 +420,11 @@ def _register_review_list_command() -> None:
                         "cli.app.ledger.evidence.review.blocked_pending_message",
                         default=(
                             "Some pending documents carry findings that must each be answered before "
-                            "they can be confirmed. Inspect one with `review show`."
+                            "they can be confirmed. Inspect each affected draft before resolving its findings."
                         ),
+                    ),
+                    action=resolve_notice_action(
+                        action=ActionReference(action_id="operator.ledger.evidence.review.list"),
                     ),
                     context={"blocked": str(blocked)},
                 ),
@@ -522,11 +528,10 @@ def _register_review_show_command() -> None:
                             "individually. Each answer names one finding by its id."
                         ),
                     ),
-                    suggestion=(
-                        f"aeat app ledger evidence confirm --evidence-id {stored.evidence_reference} "
-                        f"--resolve {blockers[0].blocker_id}=attest:<why>"
-                    ),
-                    context={"blocker_ids": ",".join(blocker.blocker_id for blocker in blockers)},
+                    context={
+                        "blocker_ids": ",".join(blocker.blocker_id for blocker in blockers),
+                        "actionability": "per_blocker_operator_resolution_required",
+                    },
                 ),
             )
         _emit_envelope(

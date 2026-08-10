@@ -23,6 +23,7 @@ from ....application.overview import DataPrepStepId, DataPrepStepState
 from .._overview_payloads import OverviewPrepareStepPayload
 from ._modelo_work_ux_support import _create_profile, _invoke
 from ._modelo_work_ux_support import _isolated_cli_backend as _isolated_cli_backend
+from .envelope_helpers import unwrap_envelope_notices as _notices
 from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -56,6 +57,11 @@ def test_prepare_shows_import_step_pending_on_fresh_profile(_isolated_cli_backen
         (steps["start_modelo_work"]["next_command"])
         == "aeat app modelo work create --modelo 130 --year 2026 --period 1T"
     )
+    preparation_notices = [
+        notice for notice in _notices(result.output) if notice["code"].startswith("overview.prepare.next_step.")
+    ]
+    assert preparation_notices
+    assert all(notice["action"] is None for notice in preparation_notices)
 
 
 def test_prepare_advances_import_step_after_manual_ledger_entry(_isolated_cli_backend: Path) -> None:

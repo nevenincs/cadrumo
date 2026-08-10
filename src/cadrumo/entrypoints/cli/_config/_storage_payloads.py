@@ -15,41 +15,24 @@ from __future__ import annotations
 
 from pydantic import Field
 
-from ....application.storage_management import StorageOccupancy, StorageTreeIssueKind
-from ....core import (
-    FingerprintParticipation,
-    StorageCategory,
-    StorageGrouping,
-    StorageLifecycle,
-    StorageNodeKind,
-    StorageOverridePolicy,
-    StorageScope,
+from ....application.storage_management import (
+    StorageAreaDisposition,
+    StorageCheckIssueKind,
+    StorageOccupancy,
 )
+from ....core import StorageArea
 from ....core.json_contract import OutputSchema, register_schema
 
 
-class StorageCategoryPayload(OutputSchema):
-    """One declared location with its resolved path and current occupancy.
+class StorageAreaPayload(OutputSchema):
+    """Aggregate footprint and lifecycle disposition for one public area."""
 
-    ``path`` is null exactly when ``occupancy`` is ``unresolved`` — a
-    bucket-scoped member read with no active profile. ``reclaimable`` mirrors
-    the guard ``reclaim`` applies, so an operator can see which members that
-    verb would accept before invoking it.
-    """
-
-    category: StorageCategory
-    subpath: str = Field(min_length=1)
-    node_kind: StorageNodeKind
-    scope: StorageScope
-    grouping: StorageGrouping
-    lifecycle: StorageLifecycle
-    override_policy: StorageOverridePolicy
-    fingerprint_participation: FingerprintParticipation
-    settings_field: str | None = None
-    path: str | None = None
-    bucket_id: str | None = None
+    area: StorageArea
     occupancy: StorageOccupancy
+    disposition: StorageAreaDisposition
+    resolved_paths: int = Field(ge=0)
     entry_count: int = Field(default=0, ge=0)
+    footprint_bytes: int = Field(default=0, ge=0)
     reclaimable: bool
 
 
@@ -62,25 +45,23 @@ class ConfigStorageListResult(OutputSchema):
     """
 
     storage_root: str = Field(min_length=1)
-    active_profile_bucket: str | None = None
-    categories: list[StorageCategoryPayload] = []
+    areas: list[StorageAreaPayload] = []
 
 
 @register_schema("config.storage.show")
 class ConfigStorageShowResult(OutputSchema):
-    """JSON envelope for ``aeat config storage show CATEGORY``."""
+    """JSON envelope for ``aeat config storage show AREA``."""
 
     storage_root: str = Field(min_length=1)
-    active_profile_bucket: str | None = None
-    category: StorageCategoryPayload
+    area: StorageAreaPayload
 
 
-class StorageTreeIssuePayload(OutputSchema):
+class StorageAreaIssuePayload(OutputSchema):
     """One disagreement between the declared tree and the tree on disk."""
 
-    kind: StorageTreeIssueKind
+    kind: StorageCheckIssueKind
     path: str = Field(min_length=1)
-    category: StorageCategory | None = None
+    area: StorageArea | None = None
     detail: str = ""
 
 
@@ -96,8 +77,8 @@ class ConfigStorageCheckResult(OutputSchema):
     storage_root: str = Field(min_length=1)
     healthy: bool
     root_mode_enforced: bool
-    checked_locations: int = Field(ge=0)
-    issues: list[StorageTreeIssuePayload] = []
+    checked_areas: int = Field(ge=0)
+    issues: list[StorageAreaIssuePayload] = []
 
 
 @register_schema("config.storage.init")
@@ -109,13 +90,13 @@ class ConfigStorageInitResult(OutputSchema):
     """
 
     storage_root: str = Field(min_length=1)
-    created: list[str] = []
+    created_count: int = Field(default=0, ge=0)
     already_present: int = Field(default=0, ge=0)
 
 
 @register_schema("config.storage.reclaim")
 class ConfigStorageReclaimResult(OutputSchema):
-    """JSON envelope for ``aeat config storage reclaim CATEGORY``.
+    """JSON envelope for ``aeat config storage reclaim AREA``.
 
     ``retained_entries`` is non-zero when an entry could not be removed — a file
     held open by another process, say. The shortfall is reported rather than
@@ -123,8 +104,8 @@ class ConfigStorageReclaimResult(OutputSchema):
     needs to know they did not get all of it.
     """
 
-    category: StorageCategory
-    path: str = Field(min_length=1)
+    area: StorageArea
+    target_count: int = Field(ge=0)
     removed_entries: int = Field(ge=0)
     retained_entries: int = Field(default=0, ge=0)
 
@@ -135,6 +116,6 @@ __all__ = [
     "ConfigStorageListResult",
     "ConfigStorageReclaimResult",
     "ConfigStorageShowResult",
-    "StorageCategoryPayload",
-    "StorageTreeIssuePayload",
+    "StorageAreaIssuePayload",
+    "StorageAreaPayload",
 ]

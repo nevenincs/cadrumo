@@ -104,10 +104,13 @@ def build_active_profile_overview(*, label: str | None = None) -> ProfileOvervie
     from ....core import require_active_bucket_id
 
     aggregate = ProfileRepository().load(require_active_bucket_id())
-    return build_profile_overview(
+    overview = build_profile_overview(
         aggregate.record,
         label=label if label is not None else aggregate.label,
     )
+    from ._status_frontend import build_active_profile_notices
+
+    return overview.model_copy(update={"notices": build_active_profile_notices(aggregate.record)})
 
 
 def persist_active_profile_field(path: str, value: str, *, label: str | None = None) -> ProfileOverview:
@@ -294,7 +297,10 @@ def _active_profile_manager_storage(
     resolved_label = label if label is not None else opening.label
 
     def _page(record: UserProfileRecord) -> ProfileOverview:
-        return build_profile_overview(record, label=resolved_label, schema=schema)
+        from ._status_frontend import build_active_profile_notices
+
+        overview = build_profile_overview(record, label=resolved_label, schema=schema)
+        return overview.model_copy(update={"notices": build_active_profile_notices(record)})
 
     def _persist(path: str, value: str) -> ProfileOverview:
         fact = UserProfileFact(path=path, value=value.strip() or None)

@@ -58,29 +58,17 @@ from ...adapters.outbound.aeat.sede import (
     registry_observation_from_filed_declaration as _registry_observation_from_filed_declaration,
 )
 from ...core import BindingSourceKind as _BindingSourceKind
-from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ...core.resources import bundled_path as _bundled_path
 
 # Importing the renta package registers the first-slice routing
 # cross-domain snapshot check required by Modelo 100 snapshots.
-from ...domain.calculations.registry import AeatNifIvaCheckerOracle as _AeatNifIvaCheckerOracle
 from ...domain.calculations.registry import CasillaId as _CasillaId
-from ...domain.calculations.registry import (
-    CrossReferenceApplicabilityDeclaracion as _CrossReferenceApplicabilityDeclaracion,
-)
 from ...domain.calculations.registry import ExportLayoutId as _ExportLayoutId
-from ...domain.calculations.registry import GroiOracle as _GroiOracle
 from ...domain.calculations.registry import (
     InputKind as _InputKind,
 )
 from ...domain.calculations.registry import LegalRefId as _LegalRefId
-from ...domain.calculations.registry import (
-    LiveParityCatalogue as _LiveParityCatalogue,
-)
 from ...domain.calculations.registry import ModeloDefinition as _ModeloDefinition
-from ...domain.calculations.registry import (
-    OracleEnvironment as _OracleEnvironment,
-)
 from ...domain.calculations.registry import (
     RegistryFiledStateComparison as _RegistryFiledStateComparison,
 )
@@ -90,36 +78,12 @@ from ...domain.calculations.registry import SourceRefId as _SourceRefId
 from ...domain.calculations.registry import (
     ValidatedRegistryAuthority as _ValidatedRegistryAuthority,
 )
-from ...domain.calculations.registry import (
-    WorkbookBackendVerificationReport as _WorkbookBackendVerificationReport,
-)
 from ...domain.calculations.registry import WorkbookParityRefId as _WorkbookParityRefId
-from ...domain.calculations.registry import (
-    audit_registry_oracle_bindings as _audit_registry_oracle_bindings,
-)
 from ...domain.calculations.registry import (
     calculate_registry_snapshot as _calculate_registry_snapshot,
 )
 from ...domain.calculations.registry import (
-    collect_applicability_declarations as _collect_applicability_declarations,
-)
-from ...domain.calculations.registry import (
-    collect_orphan_oracle_ids as _collect_orphan_oracle_ids,
-)
-from ...domain.calculations.registry import (
     compare_calculation_to_filed_observation as _compare_calculation_to_filed_observation,
-)
-from ...domain.calculations.registry import (
-    generate_parity_tape_path as _generate_parity_tape_path,
-)
-from ...domain.calculations.registry import (
-    load_parity_scenario as _load_parity_scenario,
-)
-from ...domain.calculations.registry import (
-    load_parity_tape as _load_parity_tape,
-)
-from ...domain.calculations.registry import (
-    replay_parity_tape as _replay_parity_tape,
 )
 from ...domain.calculations.registry import (
     resolve_previous_filing_binding_values as _resolve_previous_filing_binding_values,
@@ -127,18 +91,9 @@ from ...domain.calculations.registry import (
 from ...domain.calculations.registry import (
     resolve_relation_values_from_observations as _resolve_relation_values_from_observations,
 )
-from ...domain.calculations.registry import (
-    run_parity_scenario as _run_parity_scenario,
-)
-from ...domain.calculations.registry import (
-    save_parity_tape as _save_parity_tape,
-)
 from ...domain.calculations.registry import undeclared_casilla_ids as _undeclared_casilla_ids
 from ...domain.calculations.registry import validated_casilla_id as _validated_casilla_id
 from ...domain.calculations.registry import verify_legal_catalogue as _verify_legal_catalogue
-from ...domain.calculations.registry import (
-    verify_workbook_backend as _verify_workbook_backend,
-)
 from ...domain.period import calculation_filing_date as _calculation_filing_date
 from ._conformance import (
     AnnualCasillaPopulationComparison,
@@ -197,9 +152,6 @@ from ._diff import (
 from ._errors import RegistryApplicationError, RegistryApplicationInputError
 
 _import_module("cadrumo.domain.renta")
-
-_ORACLE_ENVIRONMENT_VALUES: tuple[str, ...] = tuple(sorted(member.value for member in _OracleEnvironment))
-
 
 def _verified_required_casilla_ids(
     required_casilla_refs: tuple[object, ...],
@@ -311,19 +263,6 @@ class FiledStateVerificationReport(BaseModel):
     comparison: _RegistryFiledStateComparison
 
 
-class RegistryOracleAuditReport(BaseModel):
-    """Live-parity oracle binding audit report."""
-
-    model_config = ConfigDict(frozen=True)
-
-    environment: str
-    registered_oracle_ids: tuple[str, ...]
-    failure_count: int
-    failures: tuple[str, ...]
-    applicability_declarations: tuple[_CrossReferenceApplicabilityDeclaracion, ...]
-    orphan_oracle_ids: tuple[str, ...]
-
-
 class RegistryRevisionInventory(NamedTuple):
     casilla_count: int
     formula_count: int
@@ -402,61 +341,6 @@ def verify_registry_tree(registry_root: Path, *, source_root: Path) -> RegistryT
         authority=authority,
         verified=True,
         source_root=source_root,
-    )
-
-
-def _typed_oracle_environment(environment: str) -> _OracleEnvironment:
-    """Validate ``environment`` against :data:`_OracleEnvironment` literally.
-
-    Replaces the previous ``cast(_OracleEnvironment, environment)``
-    pattern after an untyped string check. The match statement
-    returns each Literal arm verbatim so pyrefly narrows the return
-    type exactly — no cast, no type-ignore escape. A future
-    expansion of the Literal forces an explicit case here, surfacing
-    the contract change at the validator rather than letting the
-    cast silently widen.
-    """
-    match environment:
-        case "production":
-            return _OracleEnvironment.PRODUCTION
-        case "test_environment":
-            return _OracleEnvironment.TEST_ENVIRONMENT
-        case "both":
-            return _OracleEnvironment.BOTH
-        case _:
-            raise RegistryApplicationInputError(
-                translated_message="application.registry.errors.invalid_oracle_environment",
-                context={
-                    "allowed_values": _ORACLE_ENVIRONMENT_VALUES,
-                    "value": environment,
-                },
-            )
-
-
-def audit_registry_oracles(registry_root: Path, *, environment: str) -> RegistryOracleAuditReport:
-    """Audit registered live-parity oracles against every registry cross-reference.
-
-    Returns a :class:`RegistryOracleAuditReport`.
-    """
-    typed_environment = _typed_oracle_environment(environment)
-    authority = _ValidatedRegistryAuthority.load(registry_root, source_root=_bundled_path())
-    oracle_catalogue = _LiveParityCatalogue()
-    oracle_catalogue.register(_AeatNifIvaCheckerOracle(), environment=_OracleEnvironment.PRODUCTION)
-    oracle_catalogue.register(_GroiOracle(), environment=_OracleEnvironment.PRODUCTION)
-    failures = _audit_registry_oracle_bindings(
-        authority.modelos,
-        oracle_catalogue,
-        environment=typed_environment,
-    )
-    applicability_declarations = _collect_applicability_declarations(authority.modelos)
-    orphan_oracle_ids = _collect_orphan_oracle_ids(authority.modelos, oracle_catalogue)
-    return RegistryOracleAuditReport(
-        environment=environment,
-        registered_oracle_ids=tuple(sorted(oracle_catalogue.ids())),
-        failure_count=len(failures),
-        failures=tuple(failures),
-        applicability_declarations=applicability_declarations,
-        orphan_oracle_ids=tuple(orphan_oracle_ids),
     )
 
 
@@ -540,69 +424,6 @@ def verify_filed_state(
         observation_path=str(observation_path),
         source_observation_paths=tuple(str(path) for path in source_observation_paths),
         comparison=comparison,
-    )
-
-
-def verify_registry_workbooks(
-    *,
-    root: Path,
-    limit: int | None = None,
-    per_file_timeout_seconds: float = 10.0,
-    resume_from: Path | None = None,
-    output: Path | None = None,
-) -> _WorkbookBackendVerificationReport:
-    """Run workbook backend verification and optionally persist the JSON report."""
-    previous_report = None
-    if resume_from is not None:
-        previous_report = _WorkbookBackendVerificationReport.model_validate_json(
-            resume_from.read_text(encoding=_UTF_8_ENCODING),
-        )
-    report = _verify_workbook_backend(
-        root,
-        scan_limit=limit,
-        per_file_timeout_seconds=per_file_timeout_seconds,
-        previous_report=previous_report,
-    )
-    if output is not None:
-        output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(report.model_dump_json(indent=2), encoding=_UTF_8_ENCODING, newline="\n")
-    return report
-
-
-def run_registry_parity(
-    *,
-    scenario_path: Path,
-    registry_root: Path,
-    source_root: Path,
-    store_root: Path,
-    output: Path | None = None,
-):
-    """Run one stored parity scenario and archive the resulting tape."""
-    scenario = _load_parity_scenario(scenario_path)
-    tape = _run_parity_scenario(
-        scenario,
-        registry_root=registry_root,
-        source_root=source_root,
-        scenario_path=scenario_path,
-    )
-    target = output or _generate_parity_tape_path(store_root, scenario.id, tape.created_at)
-    _save_parity_tape(tape, target)
-    return tape, target
-
-
-def replay_registry_parity(
-    *,
-    tape_path: Path,
-    registry_root: Path,
-    source_root: Path,
-):
-    """Replay one archived parity tape against the current registry runtime."""
-    tape = _load_parity_tape(tape_path)
-    return _replay_parity_tape(
-        tape,
-        registry_root=registry_root,
-        source_root=source_root,
-        tape_path=tape_path,
     )
 
 
@@ -707,7 +528,6 @@ __all__ = [
     "RegistryManualVerifyCommand",
     "RegistryManualsListCommand",
     "RegistryManualsListReport",
-    "RegistryOracleAuditReport",
     "RegistryRevisionDiffReport",
     "RegistryTopicProjection",
     "RegistryTreeReport",
@@ -719,7 +539,6 @@ __all__ = [
     "RevisionGovernanceStamp",
     "RevisionModelLawCoverage",
     "audit_bundled_registry_conformance",
-    "audit_registry_oracles",
     "build_registry_conformance_profile",
     "compare_annual_casilla_population",
     "diff_registry_revisions",
@@ -728,13 +547,10 @@ __all__ = [
     "list_registry_manual_rules",
     "list_registry_manuals",
     "registry_manual_id",
-    "replay_registry_parity",
-    "run_registry_parity",
     "show_registry_citation",
     "show_registry_manual",
     "verify_filed_state",
     "verify_registry_citations",
     "verify_registry_manual",
     "verify_registry_tree",
-    "verify_registry_workbooks",
 ]

@@ -13,6 +13,7 @@ view would fail.
 from __future__ import annotations
 
 import asyncio
+import threading
 
 import pytest
 from textual.widget import Widget
@@ -59,7 +60,9 @@ def _notice(app: ProfileManagerApp) -> str:
     really there, and the press writes a progress line synchronously — so
     such a poll is satisfied before the work it is waiting on has run.
     """
-    return str(app.query_one("#manager-notice", Static).content)
+    from .. import PinnedStatusBar
+
+    return app.query_one("#manager-status", PinnedStatusBar).message
 
 
 def _select_row(app: ProfileManagerApp, path: str) -> None:
@@ -109,6 +112,69 @@ async def test_the_page_shows_every_declared_field_including_the_empty_ones(tmp_
             assert overview.total_count > overview.present_count, (
                 "the fixture must have blanks, or this test proves nothing"
             )
+            app.exit(None)
+
+
+@pytest.mark.asyncio
+async def test_profile_context_names_missing_requirements_but_has_no_healthy_placeholder(tmp_path) -> None:
+    """Only an actionable schema gap earns durable space in the profile body."""
+    from textual.css.query import NoMatches
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        overview = _live_overview()
+
+        app = ProfileManagerApp(overview, persist=_persist)
+        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+            await pilot.pause()
+            requirements = str(app.query_one("#manager-requirements", Static).content)
+            assert requirements == tr(
+                "cli.diagnostics.summary.profile_missing_fields",
+                count=len(overview.missing_required),
+                fields=", ".join(field.label for field in overview.missing_required_fields),
+            )
+            assert str(overview.present_count) + " of " + str(overview.total_count) not in requirements
+
+            app.overview = overview.model_copy(update={"missing_required": (), "missing_required_fields": ()})
+            await app._render_profile_context()
+            await pilot.pause()
+            with pytest.raises(NoMatches):
+                app.query_one("#manager-requirements")
+            app.exit(None)
+
+
+@pytest.mark.asyncio
+async def test_profile_body_renders_the_envelopes_typed_advisories(tmp_path) -> None:
+    """The manager consumes Notice in scrollable context, not permanent chrome."""
+    from .....core.json_contract import Notice, NoticeSeverity
+    from .. import PinnedStatusBar
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        overview = _live_overview().model_copy(
+            update={
+                "notices": (
+                    Notice(
+                        severity=NoticeSeverity.WARNING,
+                        code="test.manager.profile_advisory",
+                        message="SCHEMA-ENVELOPE-ADVISORY",
+                    ),
+                ),
+            },
+        )
+
+        app = ProfileManagerApp(overview, persist=_persist)
+        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+            await pilot.pause()
+            rendered = str(app.query_one("#manager-notice-band #notice-0", Static).content)
+            assert "SCHEMA-ENVELOPE-ADVISORY" in rendered
+            await app._render_profile_context()
+            await pilot.pause()
+            assert len(app.query("#manager-notice-band")) == 1, (
+                "repainting profile context must replace the notice band before mounting its successor"
+            )
+            assert app.query_one("#manager-context", Widget).region.y >= app.query_one("#manager-body", Widget).region.y
+            assert not app.query_one("#manager-status", PinnedStatusBar).display
             app.exit(None)
 
 
@@ -170,7 +236,7 @@ async def test_editing_one_field_repaints_that_row_without_rebuilding_the_tables
             before = _rows(app)
             assert before[_EDITED_PATH][2] == "", "the fixture must start blank, or the glyph cannot flip"
             tables = list(app.query(DataTable))
-            progress = str(app.query_one("#manager-progress", Static).content)
+            required_context = str(app.query_one("#manager-requirements", Static).content)
             untouched = {path: cells for path, cells in before.items() if path != _EDITED_PATH}
 
             field = app._field_by_key[_EDITED_PATH]
@@ -192,8 +258,8 @@ async def test_editing_one_field_repaints_that_row_without_rebuilding_the_tables
             assert [id(table) for table in app.query(DataTable)] == [id(table) for table in tables], (
                 "the tables must survive the edit; remounting them is the full rebuild this replaced"
             )
-            assert str(app.query_one("#manager-progress", Static).content) != progress, (
-                "the filled-in count must follow the edit"
+            assert str(app.query_one("#manager-requirements", Static).content) == required_context, (
+                "editing an optional field must not change the schema-required information"
             )
             app.exit(None)
 
@@ -245,9 +311,7 @@ async def test_a_second_edit_is_refused_before_its_dialog_opens(tmp_path) -> Non
             assert len(app.screen_stack) == settled, (
                 "no edit box may open while a write is in flight; opening one is how typed input gets discarded"
             )
-            assert str(app.query_one("#manager-notice", Static).content), (
-                "the operator must be told why the row did not open"
-            )
+            assert _notice(app), "the operator must be told why the row did not open"
 
             release.set()
             await wait_until_settled(app, pilot)
@@ -294,6 +358,145 @@ async def test_a_masked_field_opens_empty_rather_than_prefilled(tmp_path) -> Non
 
 
 # ── actions ─────────────────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_aeat_progress_replaces_the_inherited_stderr_sink_with_the_pinned_header(tmp_path) -> None:
+    """Cl@ve verification progress must be visible before the pull finishes."""
+    from .....adapters.outbound.aeat import OperatorProgress, emit_operator_progress, operator_progress_sink
+    from .. import ManagerAction, ManagerActionOutcome, PinnedStatusBar
+
+    release = threading.Event()
+
+    def _run() -> ManagerActionOutcome:
+        emit_operator_progress(
+            OperatorProgress(
+                message="Cl@ve Movil: verify that code TUI-CODE matches in both places.",
+                timeout_seconds=120,
+            ),
+        )
+        release.wait(timeout=5)
+        return ManagerActionOutcome(message="SYNC-COMPLETE")
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        app = ProfileManagerApp(
+            _live_overview(),
+            persist=_persist,
+            actions=[
+                ManagerAction(
+                    key="sync",
+                    label="Sync",
+                    run=_run,
+                    progress_sink=operator_progress_sink,
+                ),
+            ],
+        )
+        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+            await pilot.pause()
+            status = app.query_one("#manager-status", PinnedStatusBar)
+            assert not status.display, "an idle operation channel must consume no persistent header space"
+
+            await pilot.click("#action-sync")
+            for _ in range(40):
+                await pilot.pause()
+                if "TUI-CODE" in status.message:
+                    break
+
+            assert "TUI-CODE" in status.message, "the actionable AEAT verification code never reached the TUI"
+            assert "Time remaining" in status.message, "the typed countdown was not rendered"
+            assert status.tone == "progress"
+            assert status.display
+
+            release.set()
+            await wait_until_settled(app, pilot)
+            assert status.message == "SYNC-COMPLETE"
+            assert status.tone == "success"
+            app.exit(None)
+
+
+@pytest.mark.asyncio
+async def test_a_returned_refusal_is_not_styled_as_a_success(tmp_path) -> None:
+    """Handled command errors carry an explicit disposition into the header."""
+    from .. import ManagerAction, ManagerActionDisposition, ManagerActionOutcome, PinnedStatusBar
+
+    def _run() -> ManagerActionOutcome:
+        return ManagerActionOutcome(
+            message="AUTHENTICATION-REQUIRED",
+            disposition=ManagerActionDisposition.REFUSED,
+        )
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        app = ProfileManagerApp(
+            _live_overview(),
+            persist=_persist,
+            actions=[ManagerAction(key="refused", label="Refused", run=_run)],
+        )
+        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+            await pilot.pause()
+            await pilot.click("#action-refused")
+            await wait_until_settled(app, pilot)
+            status = app.query_one("#manager-status", PinnedStatusBar)
+            assert status.message == "AUTHENTICATION-REQUIRED"
+            assert status.tone == "error"
+            app.exit(None)
+
+
+@pytest.mark.asyncio
+async def test_censal_sync_projects_a_missing_route_as_actionable_schema_copy(tmp_path) -> None:
+    """The mounted shipped action must never expose a missing profile path as a KeyError."""
+    from .....core import AuthProviderKind
+    from .....core.config import override_settings
+    from .....domain.user_profile import load_user_profile_schema, profile_field_label
+    from .....entrypoints.cli._config._manager_actions import (
+        _AUTH_CLAVE_MOVIL_ROUTE_PATH,
+        _AUTH_DNI_NIE_PATH,
+        _AUTH_FECHA_VALIDEZ_PATH,
+        _AUTH_PROVIDER_PATH,
+        _AUTH_SOPORTE_PATH,
+        _commit_auth_choice,
+        censal_pull_action,
+    )
+    from .. import PinnedStatusBar
+
+    with (
+        isolated_profile_storage_root(tmp_path=tmp_path),
+        override_settings(
+            cadrumo_output_language="en",
+            cadrumo_clave_prefer_non_qr=False,
+            cadrumo_clave_movil_dni_nie=None,
+            cadrumo_clave_movil_nie_soporte=None,
+            cadrumo_clave_movil_dni_fecha=None,
+            cadrumo_clave_permanente_dni_nie=None,
+        ),
+    ):
+        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        _commit_auth_choice(
+            {
+                _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
+                _AUTH_DNI_NIE_PATH: "00000000T",
+                _AUTH_SOPORTE_PATH: "",
+                _AUTH_FECHA_VALIDEZ_PATH: "",
+            },
+        )
+        app = ProfileManagerApp(
+            _live_overview(),
+            persist=_persist,
+            actions=[censal_pull_action()],
+        )
+        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+            await pilot.pause()
+            await pilot.click("#action-censal-pull")
+            await wait_until_settled(app, pilot)
+
+            message = app.query_one("#manager-status", PinnedStatusBar).message
+            schema = load_user_profile_schema()
+            section, _field = _AUTH_CLAVE_MOVIL_ROUTE_PATH.split(".", 1)
+            assert profile_field_label(section, schema.field(_AUTH_CLAVE_MOVIL_ROUTE_PATH)) in message
+            assert "retry sync" in message
+            assert "auth." not in message
+            app.exit(None)
 
 
 @pytest.mark.asyncio
@@ -388,6 +591,34 @@ async def test_a_refusing_action_reports_it_instead_of_taking_the_screen_down(tm
             reported = _notice(app)
             assert app.is_running, "the screen must survive a refusing action"
             assert "NO-CERTIFICATE-REGISTERED" in reported
+            app.exit(None)
+
+
+@pytest.mark.asyncio
+async def test_a_registered_worker_error_is_localised_before_it_reaches_the_header(tmp_path) -> None:
+    """The TUI must not expose a translation key as its error message."""
+    from .....core.errors import NoActiveProfileError
+    from .. import ManagerAction, ManagerActionOutcome, PinnedStatusBar
+
+    def _refuse() -> ManagerActionOutcome:
+        raise NoActiveProfileError(translated_message="flows.manager.action.censal_pull_no_provider")
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        expected = tr("flows.manager.action.censal_pull_no_provider")
+        app = ProfileManagerApp(
+            _live_overview(),
+            persist=_persist,
+            actions=[ManagerAction(key="registered-error", label="Registered error", run=_refuse)],
+        )
+        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+            await pilot.pause()
+            await pilot.click("#action-registered-error")
+            await wait_until_settled(app, pilot)
+            status = app.query_one("#manager-status", PinnedStatusBar)
+            assert status.message == expected
+            assert status.message != "flows.manager.action.censal_pull_no_provider"
+            assert status.tone == "error"
             app.exit(None)
 
 

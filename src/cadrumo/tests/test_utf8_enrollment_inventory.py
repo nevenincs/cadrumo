@@ -111,7 +111,6 @@ _KNOWN_VIOLATING_FILES: frozenset[str] = frozenset(
         "domain/calculations/registry/_export_parse.py",
         "domain/calculations/registry/_legal.py",
         "domain/calculations/registry/_live_parity.py",
-        "domain/calculations/registry/_parity_tapes.py",
         "domain/calculations/registry/_renta_web_open_oracle.py",
         "domain/calculations/registry/_validate_evidence.py",
         "domain/manuals/_fetch.py",

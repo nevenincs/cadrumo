@@ -108,6 +108,13 @@ def test_the_committed_audit_baselines_carry_untranslated_terminators() -> None:
     baselines = [
         audit_dir / "complexity_baseline.json",
         audit_dir / "size_budget_baseline.json",
+        # The reviewed complexity allowlist is hand-maintained rather than
+        # written by a generator, which makes it MORE exposed to terminator
+        # drift than the two above, not less: nothing normalises it on the way
+        # out. Included on this file's own stated principle -- a reader that
+        # covers only the artefacts its writer owns leaves the sibling with no
+        # reader at all.
+        audit_dir / "complexity_allowlist.json",
     ]
 
     translated: list[str] = []

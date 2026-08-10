@@ -84,7 +84,9 @@ _TEXT_PREFIX: dict[ErrorCategory, str] = {
 
 def _category_text_prefix(category: ErrorCategory) -> str:
     """Return the sentence-case stderr prefix for ``category``."""
-    return _TEXT_PREFIX[category]
+    from ..i18n import tr
+
+    return tr(f"errors.prefix.{category.value.lower()}", default=_TEXT_PREFIX[category])
 
 
 class ErrorCode(BaseModel):
@@ -374,8 +376,24 @@ def render_error_text(
     scrubbed_context = scrub_error_context(_merge_error_context(error, context))
     if scrubbed_context:
         for key, value in scrubbed_context.items():
-            lines.append(f"  {key}: {value}")
+            lines.append(f"  {_text_context_label(key)}: {_text_context_value(key, value)}")
     return "\n".join(lines) + "\n"
+
+
+def _text_context_label(key: str) -> str:
+    """Localize common human-facing context labels without changing JSON keys."""
+    from ..i18n import tr
+
+    return tr(f"errors.context_labels.{key}", default=key)
+
+
+def _text_context_value(key: str, value: str) -> str:
+    """Localize stable storage tokens in text mode without changing JSON values."""
+    if key == "area":
+        from ..i18n import tr
+
+        return tr(f"cli.config.storage.values.area.{value}", default=value)
+    return value
 
 
 def render_error_json(

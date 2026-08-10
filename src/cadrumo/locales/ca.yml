@@ -630,6 +630,9 @@ application:
         clave_identity_profile_mismatch: La identitat de Cl@ve Móvil no coincideix
           amb la identitat fiscal del perfil actiu; canvia al perfil que coincideixi
           o actualitza el perfil abans de l'autenticació AEAT en directe.
+        clave_route_missing: L'autenticació en directe amb Cl@ve Mòbil requereix %{route_field}.
+          Obriu Identificació al gestor del perfil, trieu Codi QR o Sol·licitud a
+          l'aplicació, deseu-ho i torneu a provar la sincronització.
         corrupt_session: La sessió d autenticació desada està malmesa i no es pot
           llegir. Executa `aeat config auth logout` i després `aeat config auth test`.
         no_session: No hi ha sessió AEAT activa; executa `aeat config auth test` abans
@@ -1477,8 +1480,6 @@ application:
         sha rebut {manual_id}.
       invalid_manual_rule_kind: El tipus de regla manual ha de ser un de {allowed_rule_kinds};
         s ha rebut {rule_kind}.
-      invalid_oracle_environment: L'entorn dels oracles del registre ha de ser un
-        de {allowed_values}; s'ha rebut {value}.
       invalid_topic_locale: El locale de temes del registre ha de ser un de {allowed_locales};
         sha rebut {locale_code}.
       manual_section_not_found: No sha trobat la secció {section} a {manual_id} {year}
@@ -2579,9 +2580,6 @@ cli:
           temporals opcionals, sense mutar l'estat
         unknown_keys: 'Clau(s) de --binding desconeguda(es) {keys}; vinculacions conegudes
           per a {code}@{revision} ({period}): {suggestion}.'
-        unscoped_revision_suggestion: Abans de copiar ids a work calculate, torna
-          a executar amb --modelo MODELO --year YEAR --period PERIOD per a la unitat
-          de treball de destinació.
         unscoped_revision_warning: La llista de vinculacions no està acotada per %{missing_filters};
           pot incloure ids de vinculacions d una revisió que no coincideix amb la
           unitat de treball usada per work calculate.
@@ -3176,8 +3174,7 @@ cli:
           viu)
         history_help: Mostra tots els esdeveniments del cicle de vida d'una unitat
           de treball
-        history_next_action: Revisa l'estat actual d'aquesta unitat de treball amb
-          `aeat app modelo work status`.
+        history_next_action_summary: Revisa l'estat actual d'aquesta unitat de treball.
         history_work_unit_id_help: Id d'unitat de treball el cicle de vida de la qual
           vols veure
         id_is_work_unit_not_calc_revision_natural: Aquest id és un id d'unitat de
@@ -3186,6 +3183,11 @@ cli:
           --year %{year} --period %{period}' i torna a executar verify/file per al
           mateix model/any/període. Els ids exactes continuen disponibles com a via
           avançada.
+        id_selector_ambiguous: 'L''id de treball mostrat {selector} coincideix amb
+          més d''una unitat de treball activa. Utilitza l''id complet de 64 caràcters
+          de la unitat de treball entre els candidats següents.
+
+          {candidates}'
         include_discarded_help: Incloure les unitats descartades en el llistat (excloses
           per defecte)
         invalid_binding_key: 'La clau --binding no és un BindingId vàlid (alfanumèric
@@ -3200,15 +3202,16 @@ cli:
           un de: {choices}.'
         invalid_work_unit_id: work_unit_id ha de ser una cadena hex en minúscules
           de 64 caràcters (resum SHA-256)
+        invalid_work_unit_lookup_id: work_unit_id ha de ser un identificador SHA-256
+          hexadecimal en minúscules o un prefix inequívoc
         kv_empty_key_error: La clau de {flag} no pot estar buida; s'ha rebut {spec}.
         kv_format_error: '{flag} s''ha d''escriure com {key_label}={value_label}.
           És una entrada clau-valor: posa el nom del camp a l''esquerra d''un únic
           signe igual i el valor a la dreta. S''ha rebut {spec}.'
         list_help: Llistar les unitats de treball registrades, opcionalment filtrades
           per perfil
-        list_next_action: Inspecciona l'estat complet d'una unitat de treball amb
-          `aeat app modelo work status` i després crea o recalcula l'esborrany amb
-          `aeat app modelo work calculate`.
+        list_next_action_summary: Inspecciona l'estat complet d'una unitat de treball
+          abans de crear o recalcular-ne l'esborrany.
         m184_socio_handoff_message: 'Règim d''atribució de rendes: el soci %{nif}
           (%{nombre}) rep una base atribuïda de %{importe} EUR (participació del %{porcentaje}%).
           En el seu propi espai de treball, el soci l''ha de registrar com a fets
@@ -3413,17 +3416,16 @@ cli:
         state_label_presentado_supersedido: Presentació substituïda
         state_label_verificado_completo: Verificat complet
         status_help: Mostrar les metadades d'una unitat de treball
-        status_next_action: Crea o recalcula aquesta unitat amb `aeat app modelo work
-          calculate` i després verifica l'esborrany amb `aeat app modelo work verify`.
+        status_next_action_summary: Crea o recalcula aquesta unitat de treball i després
+          verifica l'esborrany resultant.
         verify_help: Verificar una revisió draft contra el contracte verified-complete
         verify_idempotent_noop: 'Operació idempotent sense efecte: la revisió de càlcul
           %{calculation_revision_id} ja està verificada; s''ha retornat l''informe
           de verificació existent sense canvis.'
-        verify_next_action_granted: La verificació s'ha superat. Exporta l'artefacte
-          de presentació amb `aeat app modelo export`.
-        verify_next_action_incomplete: La verificació ha trobat elements bloquejadors
-          (consulta els avisos anteriors). Resol-los, recalcula amb `aeat app modelo
-          work calculate` i torna a executar `aeat app modelo work verify`.
+        verify_next_action_granted_summary: La verificació ha estat satisfactòria.
+          Exporteu l'artefacte de presentació.
+        verify_next_action_incomplete_summary: La verificació ha trobat elements bloquejadors.
+          Resoleu-los, recalculeu i torneu a executar la verificació.
         verify_selector_help: Selector de revisió esborrany (current, latest-draft
           o explícit).
         wizard_help: Guia pas a pas per les caselles manuals pendents de la unitat
@@ -3927,20 +3929,21 @@ cli:
         non_official_notice: Les dades derivades del certificat són evidència aportada
           per l'operador, mai verificada per l'AEAT; l'alta censal es manté al nivell
           no oficial.
-        pull_cleared_notice: 'L''AEAT continua tenint un valor en {count} camp(s)
-          que vas buidar: {axes}. S''han deixat buits; buidar-los aquí no canvia el
-          registre de l''AEAT.'
-        pull_divergences_notice: 'L''AEAT informa {count} camp(s) de manera diferent
-          del que vas declarar: {axes}. La teva resposta es manté; resol cada discrepància
-          tu mateix.'
+        pull_cleared_notice: 'L''autoritat censal encara conserva un valor per a {count}
+          camp(s) que vas esborrar: {axes}. S''han deixat buits; esborrar-los aquí
+          no canvia el registre de l''autoritat.'
+        pull_divergences_notice: 'L''autoritat censal informa de {count} camp(s) amb
+          valors diferents dels que has declarat: {axes}. La teva resposta es manté;
+          resol cada discrepància tu mateix.'
         pull_help: Llegeix la teva identitat i el teu domicili de les dades censals
           de l'AEAT i previsualitza'ls o inscriu-los al perfil actiu.
         pull_preview_notice: 'Només previsualització: no s''ha escrit res al perfil.
           Torna a executar amb --apply per inscriure aquestes dades.'
-        pull_verified_tier_notice: Aquestes dades s'han llegit directament de l'AEAT,
-          de manera que l'alta censal compta com a verificada.
-        pull_withheld_notice: 'Els valors de {count} camp(s) no es mostren: {axes}.
-          Compara''ls tu mateix amb els de l''AEAT; aquesta eina no els imprimeix.'
+        pull_verified_tier_notice: Aquests fets s'han llegit directament de l'autoritat
+          censal, de manera que la incorporació al cens compta com a verificada.
+        pull_withheld_notice: 'Els valors de {count} camp(s) s''oculten a la sortida:
+          {axes}. Compara''ls tu mateix amb l''autoritat censal; aquesta eina no els
+          mostrarà.'
         refresh_help: Descàrrega d'AEAT l'últim cens i desa un snapshot
         show_help: Mostra l'últim cens informat per AEAT per a aquest perfil
         snapshot_id_help: Id de snapshot concret (s'accepten prefixos)
@@ -4323,9 +4326,22 @@ cli:
       check:
         drifted: L'arbre d'emmagatzematge no coincideix amb la seva declaració.
         help: Verifica l'arbre d'emmagatzematge amb la seva declaració sense reparar-lo
+        issue:
+          missing_path: falta una ruta d'emmagatzematge obligatòria
+          path_type_mismatch: una ruta d'emmagatzematge té un tipus de sistema de
+            fitxers inesperat
+          permissions_drifted: els permisos de l'arrel d'emmagatzematge no compleixen
+            els requisits
         mode_unenforced: Aquesta plataforma no implementa els bits de permisos POSIX,
           així que no s'han comprovat els permisos de l'arrel.
       errors:
+        reason:
+          durable_lifecycle: una destinació seleccionada té un cicle de vida durador
+          durable_state: l'àrea conté estat durador
+          no_reclaimable_targets: la taxonomia no declara destinacions alliberables
+          not_root_scoped: una destinació seleccionada no pertany a l'arrel
+          protected_descendant: una destinació seleccionada conté dades declarades
+            protegides
         reclaim_area_refused: 'Es rebutja alliberar %{area}: %{reason}. Les %{entries}
           entrades romanen intactes.'
         reclaim_area_unconfirmed: Alliberar %{area} elimina %{entries} entrades i
@@ -4335,6 +4351,31 @@ cli:
         already_materialised: Tots els directoris declarats ja existien; no se n'ha
           creat cap.
         help: Crea tots els directoris declarats conservant el que ja hi hagi
+      labels:
+        already_present: Ja presents
+        area: Àrea
+        areas: Àrees
+        checked_areas: Àrees comprovades
+        created: Creats
+        detail: Detall
+        entries: Entrades
+        entry_count: Nombre d'entrades
+        footprint: Mida
+        healthy: Correcte
+        issues: Problemes
+        lifecycle: Cicle de vida
+        'no': 'no'
+        notice_info: Informació
+        notice_warning: Avís
+        occupancy: Ocupació
+        path: Ruta
+        reclaimable: Alliberable
+        removed_entries: Entrades eliminades
+        resolved_paths: Rutes resoltes
+        retained_entries: Entrades conservades
+        storage_root: Arrel d'emmagatzematge
+        targets: Destinacions
+        'yes': sí
       list:
         area_help: Mostra l'ocupació i l'espai agregat de cada àrea d'emmagatzematge
         relocation_is_manual: Per moure l'arbre, atura l'aplicació, copia'l tu mateix
@@ -4349,6 +4390,21 @@ cli:
       show:
         area_argument_help: Àrea d'emmagatzematge que es vol mostrar
         area_help: Mostra una àrea d'emmagatzematge completa
+      values:
+        area:
+          cache: memòria cau
+          exports: exportacions
+          logs: registres
+          state: estat
+        lifecycle:
+          durable: duradora
+          mixed: mixta
+          reclaimable: alliberable
+        occupancy:
+          absent: inexistent
+          empty: buida
+          populated: amb dades
+          unresolved: sense resoldre
     unset:
       help: Eliminar el valor assignat a una clau de configuració
       key_help: Clau a netejar
@@ -4958,6 +5014,7 @@ cli:
       parent_id: id_pare
       pending: Pendents de revisió
       period: Període
+      profile: Perfil
       purchase_invoice_evidence_id: Evidència de factura de compra
       readiness_issues: Incidències de preparació
       ready: Preparat
@@ -5279,9 +5336,8 @@ cli:
         storage_check: Comprova directoris absents o mal ubicats a l'arbre d'emmagatzematge.
         storage_init: Crea qualsevol directori d'emmagatzematge que falti
         storage_list: Consulta on es desa cada tipus de dada local
-        storage_reclaim: Allibera espai eliminant una categoria que l'aplicació pot
-          reconstruir
-        storage_show: Consulta una categoria d'emmagatzematge en detall
+        storage_reclaim: Allibera espai eliminant una àrea que l'aplicació pot reconstruir
+        storage_show: Consulta una àrea d'emmagatzematge en detall
       root:
         diagnostics_logs: Mostra la ruta del registre i les últimes línies.
         diagnostics_overview_verbose: Mostra l'estat general amb més detall.
@@ -5390,9 +5446,9 @@ cli:
     calendar_local_modelo_events_unavailable: L'evidència local d'esdeveniments de
       modelo no està disponible per a aquesta fila del calendari.
     coverage:
-      investigate: 'No s''han pogut determinar amb certesa %{count} obligació(ns)
-        de presentació per a aquest perfil i podrien quedar sense declarar: %{modelos}.
-        Investigueu cadascuna amb ''aeat app overview explain <modelo>''.'
+      investigate: No s'ha pogut determinar amb certesa l'obligació de presentació
+        %{modelo} per a aquest perfil i podria quedar sense declarar. Reviseu la seva
+        explicació de presentació.
     drafts: Esborranys
     explain:
       help: Descompon l'aplicabilitat d'un modelo davant del perfil actiu. Mostra
@@ -5425,8 +5481,8 @@ cli:
         0A (anual), 01-12 (mesos). Combina''l amb --year per triar l''any.'
       year_help: Any de declaració (p. ex. 2026).
     post_filing:
-      pending: '%{count} esdeveniment(s) posteriors a la presentació d''AEAT requereixen
-        atenció: %{kinds}. Revisa''ls amb ''aeat app live notifications list''.'
+      pending_summary: '%{count} esdeveniment(s) de l''AEAT posterior(s) a la presentació
+        requereixen atenció: %{kinds}.'
     prepare:
       help: 'Recorre els passos de preparació de dades per a un model/període en ordre:
         importar transaccions, classificar-les, adjuntar justificants de factures
@@ -5476,6 +5532,8 @@ cli:
       next_modelo_work_command: '  aeat app modelo work create - iniciar una declaració
         de model a partir de les dades del teu llibre.'
       next_review_command: '  aeat app ledger review - revisar files importades.'
+      next_step_available: Hi ha un pas següent recomanat disponible a la sortida
+        del resum.
       next_work_calculate_command: '  aeat app modelo work list - reprendre una unitat
         de treball de model en curs.'
       next_work_create_command: '  aeat app modelo work create - iniciar una unitat
@@ -5650,6 +5708,8 @@ cli:
         files importades.'
       quick_start_setup_done: '  1. `aeat config profile status` - comprova la preparació
         i l''acció següent.'
+      quick_start_setup_login: '  1. `aeat config login NAME` - activa un perfil de
+        contribuent registrat.'
       quick_start_setup_needed: '  1. `aeat config profile create NAME` - crea un
         perfil fiscal local.'
       quick_start_setup_repair: '  1. `aeat config repair profile` - inspecciona i
@@ -5669,11 +5729,6 @@ cli:
       session_unchecked: La sessió i la preparació no s'infereixen del perfil seleccionat.
       tagline: Flux local amb l'Agència Estatal d'Administració Tributària (AEAT)
         per a contribuents i assessors.
-      welcome_no_profile: 'Perfil actiu: cap. Crea''n un abans del treball vinculat
-        al perfil.'
-      welcome_profile: 'Perfil actiu: `%{profile}`.'
-      welcome_profile_unavailable: 'Perfil actiu: no disponible. Repara el perfil
-        seleccionat abans del treball vinculat al perfil.'
     language_help: Idioma de la sortida i del text d'ajuda (en, es, ca, hu).
     profile_help: Nom del perfil actiu.
     quiet_help: Mostra només els errors.
@@ -6247,6 +6302,10 @@ errors:
       suportada; introdueix les dades censals manualment.
     certificado_not_a_pdf: El fitxer proporcionat no és un PDF; s'esperava el Certificado
       de Situación Censal descarregat de la Seu.
+  context_labels:
+    area: àrea
+    entry_count: nombre d'entrades
+    reason: motiu
   error:
     error_access_gate_submission: La política de control d'accés ha rebutjat una operació
       d'enviament.
@@ -6814,6 +6873,8 @@ errors:
     locked_storage_master_key_keychain: L'anell de claus del sistema operatiu està
       bloquejat. Desbloqueja'l (Touch ID, Windows Hello o el desbloqueig del gestor
       de credencials) i torna-ho a provar.
+  prefix:
+    refused: Rebutjat.
   refused:
     auth_configure_no_active_bucket: No es pot configurar l'autenticació sense un
       perfil actiu. Crea un perfil amb `aeat config profile create NOM` i torna-ho
@@ -7160,10 +7221,10 @@ errors:
       activa. Executa `aeat config login NAME` i torna-ho a provar.
     refused_storage_passphrase_too_short: La frase de contrasenya és massa curta.
       Ha de tenir com a mínim 8 caràcters.
-    refused_storage_reclaim: 'Es rebutja alliberar aquesta categoria d''emmagatzematge:
-      el seu cicle de vida declarat conserva el seu contingut.'
-    refused_storage_reclaim_unconfirmed: Alliberar una categoria d'emmagatzematge
-      elimina dades i requereix confirmació explícita.
+    refused_storage_reclaim: 'Es rebutja alliberar aquesta àrea d''emmagatzematge:
+      el seu cicle de vida declarat conserva el contingut.'
+    refused_storage_reclaim_unconfirmed: Alliberar una àrea d'emmagatzematge elimina
+      dades i requereix confirmació.
     refused_storage_secret_already_exists: Ja existeix un secret amb aquesta clau.
       Fes servir l'opció de sobreescriptura si el vols reemplaçar.
     refused_storage_session_expired: La sessió activa ha caducat per inactivitat.
@@ -7327,16 +7388,14 @@ flows:
       add_row_required: És obligatori; la fila no es pot afegir sense aquesta dada.
       add_row_section: A quina secció s'afegeix
       auth_clave_incomplete: A Cl@ve encara li falta %{missing}. No s'ha desat res.
-      auth_contraste_missing: 'Cl@ve Mòbil sense QR necessita el contrast del vostre
-        document: el número de suport si és un NIE, o la data de validesa si és un
-        DNI. No s''ha desat res.'
-      auth_dni_nie: DNI o NIE amb què us identifiqueu
-      auth_fecha_validez: Data de validesa del document, AAAA-MM-DD (per a DNI)
+      auth_clave_movil_route_app_request: Sol·licitud a l'aplicació
+      auth_clave_movil_route_qr: Codi QR
+      auth_contraste_missing: 'La sol·licitud a l''aplicació de Cl@ve Mòbil necessita
+        una dada de contrast del document: %{nie_field} per a un NIE o %{dni_field}
+        per a un DNI. Obriu Identificació, empleneu el camp aplicable i torneu a intentar
+        la sincronització.'
       auth_fecha_validez_invalid: Introduïu la data de validesa com a AAAA-MM-DD,
         per exemple 1990-01-31.
-      auth_numero_soporte: Número de suport del document
-      auth_provider: Forma d'identificació davant l'AEAT
-      auth_tax_id: La vostra identitat fiscal (NIF o NIE)
       auth_tax_id_invalid: Aquest NIF o NIE no és vàlid. Comproveu la lletra final
         i introduïu-lo tal com figura al vostre document, per exemple 12345678Z.
       busy: Encara hi ha una altra operació en curs. Espera que acabi.
@@ -7420,10 +7479,10 @@ flows:
         a provar.
     language:
       unavailable: Aquest perfil no ofereix cap configuració d'idioma.
-    progress: '{present} de {total} camps emplenats, en falten {missing} per presentar'
     recovery_boundary: 'La creació i la rotació del codi de recuperació només es fan
       des del terminal: aeat config recovery create / aeat config recovery rotate.
       Les 24 paraules es mostren una sola vegada i no es poden tornar a mostrar.'
+    required_complete: Hi és tota la informació del perfil requerida per l'esquema.
     section_title: '{title} - {present}/{total}'
     title: 'Perfil: {profile}'
   progress:
@@ -68647,6 +68706,8 @@ profile:
         share_pct:
           label: Percentatge de participació atribuït
       auth:
+        clave_movil_route:
+          label: Ruta de Cl@ve Mòbil
         dni_nie:
           label: DNI o NIE per a Cl@ve
         fecha_validez:

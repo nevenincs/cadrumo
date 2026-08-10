@@ -30,7 +30,6 @@ from .. import (
     RegistryManualsListCommand,
     RegistryManualVerifyCommand,
     RegistryTopicProjection,
-    audit_registry_oracles,
     list_registry_citations,
     list_registry_manual_rules,
     list_registry_manuals,
@@ -53,17 +52,6 @@ def _casilla_id(value: object) -> CasillaId:
 
 _RENTA_2025_BORRADOR_RENTA_FAMILIAR_CASILLA: CasillaId = _casilla_id("0695")
 _UNDECLARED_MANUAL_RULE_CASILLA: CasillaId = _casilla_id("not-real")
-
-
-def test_oracle_audit_rejects_invalid_environment_with_localized_application_error() -> None:
-    with pytest.raises(RegistryApplicationInputError) as exc_info:
-        audit_registry_oracles(Path("unused-registry-root"), environment="staging")
-
-    assert exc_info.value.translated_message == "application.registry.errors.invalid_oracle_environment"
-    assert exc_info.value.context == {
-        "allowed_values": ("both", "production", "test_environment"),
-        "value": "staging",
-    }
 
 
 def _topic_catalogue_for_legal_ref() -> TopicCatalogue:

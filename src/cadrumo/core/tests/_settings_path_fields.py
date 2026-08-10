@@ -1,12 +1,7 @@
 """Discover the path-valued settings fields the storage gates classify.
 
-Selection is by **annotation**, never by name suffix, and the difference is not
-theoretical. Measured against the live model: a suffix-and-``Path`` selector
-finds 35 fields while annotation alone finds 38, and among the delta is
-``cadrumo_libreoffice_executable`` -- classified nowhere for as long as the
-suffix selector was the discovery mechanism, because it ends in none of
-``_dir``, ``_path``, or ``_root``. A field must not be able to hide from a gate
-by being named inconveniently.
+Selection is by **annotation**, never by name suffix, so a field cannot hide
+from a gate merely by being named inconveniently.
 
 The selector reads annotations for the converse reason too.
 ``aeat_sede_expedientes_path`` and ``aeat_status_notificaciones_path`` are

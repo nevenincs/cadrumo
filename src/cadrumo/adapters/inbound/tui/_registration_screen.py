@@ -36,11 +36,11 @@ from __future__ import annotations
 
 from contextlib import ExitStack
 from contextvars import copy_context
-from typing import TYPE_CHECKING, Final, Protocol, override
+from typing import TYPE_CHECKING, Final, Protocol, cast, override
 
 from textual.app import ComposeResult
 from textual.containers import Vertical
-from textual.widgets import Button, Footer, Input, Label, LoadingIndicator, Select, Static
+from textual.widgets import Button, Footer, Input, Label, Select, Static
 
 from ....core import PassphraseStrength
 from ....core.config import override_settings
@@ -52,6 +52,7 @@ from ._credential_screen import (
     CredentialAttempt,
     run_credential_app,
 )
+from ._status_bar import PinnedStatusBar
 from ._theme import BASE_CSS, ContentScroll, install_cadrumo_themes
 
 if TYPE_CHECKING:
@@ -158,8 +159,6 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
     """
     )
 
-    REFUSAL_ID = "#registration-refusal"
-    BUSY_ID = "#registration-busy"
     ATTEMPT_NAME = "profile-registration"
 
     def __init__(
@@ -203,6 +202,7 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
     def compose(self) -> ComposeResult:
         """Yield the banner, the credential form, and the footer."""
         yield Static(id="registration-banner", classes="cadrumo-banner")
+        yield PinnedStatusBar(id="credential-status")
         with (
             ContentScroll(classes="cadrumo-scroll"),
             Vertical(classes="cadrumo-column"),
@@ -240,8 +240,6 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
                 id="field-output-language",
             )
 
-            yield Static(id="registration-refusal", classes="credential-refusal")
-            yield LoadingIndicator(id="registration-busy", classes="credential-busy")
             with Vertical(id="registration-actions", classes="credential-actions"):
                 yield Button(tr("flows.registration.create_button"), id="btn-create", classes="-primary")
         yield Footer()
@@ -335,7 +333,7 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
         afterwards — the echo that causes is what
         :meth:`on_select_changed` guards against.
         """
-        chooser = self.query_one("#field-output-language", Select)
+        chooser = cast("Select[str]", self.query_one("#field-output-language", Select))
         chooser.set_options(_language_options())
         chooser.value = self._active_language
 
@@ -359,7 +357,7 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
 
     def selected_output_language(self) -> str:
         """Return the closed language selection for the profile being created."""
-        selected = self.query_one("#field-output-language", Select).value
+        selected = cast("Select[str]", self.query_one("#field-output-language", Select)).value
         return selected if isinstance(selected, str) else output_language()
 
     # ── intents ─────────────────────────────────────────────────────────
@@ -429,6 +427,10 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
     @override
     def default_refusal(self) -> str:
         return tr("flows.registration.refusal.username_required")
+
+    @override
+    def progress_message(self) -> str:
+        return tr("flows.registration.create_button")
 
     @override
     def leave(self, outcome: ProfileRegistrationOutcome | None) -> None:

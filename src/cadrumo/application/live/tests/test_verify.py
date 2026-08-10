@@ -1,6 +1,6 @@
 """Tests for the bucket-scoped verify audit service.
 
-The ``"live"`` literal in ``cadrumo_audit_dir / "live" / "verify" / ...`` is a
+The ``"live"`` literal in ``cadrumo_live_state_dir / "live" / "verify" / ...`` is a
 ``not (...).exists()`` refusal guard proving a captured tax id never leaks
 into a plaintext audit-trail file alongside the encrypted secure-object
 write. An accessor aimed at the wrong location would leave that assertion
@@ -328,7 +328,7 @@ class TestSecureStorage:
         assert b"DE123456789" in record.payload
         assert b"DE123456789" not in read_db_at_rest_bytes(secure_engine.paths.database_file)
         assert not (
-            secure_engine.settings.cadrumo_audit_dir / "live" / "verify" / f"{secure_engine.bucket_id}.jsonl"
+            secure_engine.settings.cadrumo_live_state_dir / "live" / "verify" / f"{secure_engine.bucket_id}.jsonl"
         ).exists()
 
     def test_object_key_refuses_blank_bucket_with_locale_metadata(self) -> None:

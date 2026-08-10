@@ -21,16 +21,29 @@ from ....adapters.outbound.aeat.browser import (
     SiteHealthStatus,
 )
 from ....adapters.outbound.aeat.browser._site_health import _URL_ADAPTER
-from ....core import Period
+from ....core import Modelo, Period
 from ....tests.aeat_literal_fixtures import aeat_url
+from ...operator_actions import (
+    ActionArgumentBinding,
+    ActionArgumentStatus,
+    ActionConditionality,
+    ActionReference,
+    ConditionEvidence,
+    ConditionEvidenceProvenance,
+    NoRecoveryOutcome,
+    PreconditionVerdict,
+)
 from .. import (
     SiteHealthAlert,
     WorkflowAbortReason,
+    WorkflowDeadlineContextDetails,
     WorkflowResult,
     WorkflowStage,
     WorkflowStep,
+    WorkflowValidationFailedDetails,
     compute_run_id,
 )
+from .._engine_helpers import DeadlineRole
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -77,39 +90,181 @@ class TestComputeRunId:
 class TestWorkflowStepValidation:
     """Strict pydantic validation on workflow step records."""
 
-    def test_details_mapping_coerced_to_typed_record(self) -> None:
-        """A free-form mapping is coerced to the typed WorkflowStepDetails
-        record while keeping mapping-style read access."""
+    def test_deadline_details_are_one_closed_context_shape(self) -> None:
         now = datetime(2026, 4, 12, tzinfo=UTC)
         step = WorkflowStep(
-            stage=WorkflowStage.LOADING_PROFILE,
+            stage=WorkflowStage.COMPUTING_DEADLINES,
             started_at=now,
             ended_at=now,
             success=True,
-            summary="translation",
-            details={"key": "value"},
+            summary_locale_key="application.workflow.steps.deadline_checked",
+            details=WorkflowDeadlineContextDetails(
+                kind="deadline_context",
+                modelo=Modelo.M303,
+                period=_period(),
+                opens_on=datetime(2026, 4, 1, tzinfo=UTC).date(),
+                closes_on=datetime(2026, 4, 20, tzinfo=UTC).date(),
+            ),
         )
         assert step.details is not None
-        assert step.details["key"] == "value"
-        assert "key" in step.details
-        assert step.details.get("missing", "fallback") == "fallback"
+        assert step.details.modelo is Modelo.M303
+        assert step.details.period == _period()
+        assert step.details.kind == "deadline_context"
 
-    def test_details_carries_heterogeneous_values(self) -> None:
-        """WorkflowStepDetails carries diagnostic values heterogeneously
-        (``extra='allow'``); non-string values are stored, not rejected."""
+    @pytest.mark.parametrize("legacy_key", ("next_action", "error_message", "provider_operator_impact", "key"))
+    def test_details_reject_legacy_prose_and_arbitrary_fields(self, legacy_key: str) -> None:
         now = datetime(2026, 4, 12, tzinfo=UTC)
-        step = WorkflowStep.model_validate(
-            {
-                "stage": WorkflowStage.LOADING_PROFILE,
-                "started_at": now,
-                "ended_at": now,
-                "success": True,
-                "summary": "translation",
-                "details": {"error_count": 42},
-            },
+        with pytest.raises(ValidationError, match=legacy_key):
+            WorkflowStep.model_validate(
+                {
+                    "stage": WorkflowStage.LOADING_PROFILE,
+                    "started_at": now,
+                    "ended_at": now,
+                    "success": True,
+                    "summary_locale_key": "application.workflow.steps.profile_loaded",
+                    "details": {
+                        "kind": "workflow_failure",
+                        "error_code": "workflow.failure.unhandled",
+                        legacy_key: "Run: aeat app modelo work.calculate",
+                    },
+                },
+            )
+
+    def test_deadline_details_reject_a_role_without_a_window(self) -> None:
+        now = datetime(2026, 4, 12, tzinfo=UTC)
+        with pytest.raises(ValidationError, match="deadline_role and filing_window"):
+            WorkflowStep.model_validate(
+                {
+                    "stage": WorkflowStage.COMPUTING_DEADLINES,
+                    "started_at": now,
+                    "ended_at": now,
+                    "success": True,
+                    "summary_locale_key": "application.workflow.steps.deadline_checked",
+                    "details": {
+                        "kind": "deadline_context",
+                        "modelo": Modelo.M303,
+                        "period": _period(),
+                        "deadline_role": DeadlineRole.BINDING,
+                    },
+                },
+            )
+
+    def test_summary_requires_an_abstract_locale_key(self) -> None:
+        now = datetime(2026, 4, 12, tzinfo=UTC)
+        with pytest.raises(ValidationError, match="stable dotted locale key"):
+            WorkflowStep(
+                stage=WorkflowStage.LOADING_PROFILE,
+                started_at=now,
+                ended_at=now,
+                success=True,
+                summary_locale_key="Profile loaded successfully",
+            )
+
+    def test_actionable_precondition_verdict_round_trips_without_command_prose(self) -> None:
+        now = datetime(2026, 4, 12, tzinfo=UTC)
+        verdict = PreconditionVerdict(
+            failed_condition_id="workflow.draft.ready",
+            evidence=(
+                ConditionEvidence(
+                    condition_id="workflow.draft.ready",
+                    evidence_id="workflow.draft.status",
+                    provenance=ConditionEvidenceProvenance.PERSISTED_STATE,
+                    values={"draft_id": "draft-303", "draft_status": "BORRADOR"},
+                ),
+            ),
+            action=ActionReference(action_id="operator.modelo.verification_report.list"),
+            argument_bindings=(
+                ActionArgumentBinding(
+                    argument_name="calculation_revision_id",
+                    status=ActionArgumentStatus.MISSING,
+                ),
+            ),
+            missing_argument_names=("calculation_revision_id",),
+            conditionality=ActionConditionality.REQUIRES_ARGUMENTS,
         )
-        assert step.details is not None
-        assert step.details["error_count"] == 42
+        step = WorkflowStep(
+            stage=WorkflowStage.BUILDING_DRAFT,
+            started_at=now,
+            ended_at=now,
+            success=False,
+            summary_locale_key="application.workflow.steps.draft_not_ready",
+            details=WorkflowValidationFailedDetails(
+                kind="validation_failed",
+                error_count=1,
+            ),
+            precondition_verdict=verdict,
+        )
+
+        reconstructed = WorkflowStep.model_validate_json(step.model_dump_json())
+
+        assert reconstructed == step
+        assert reconstructed.precondition_verdict == verdict
+
+    def test_precondition_evidence_rejects_rendered_or_exception_prose(self) -> None:
+        now = datetime(2026, 4, 12, tzinfo=UTC)
+        verdict = PreconditionVerdict(
+            failed_condition_id="workflow.draft.ready",
+            evidence=(
+                ConditionEvidence(
+                    condition_id="workflow.draft.ready",
+                    evidence_id="workflow.draft.failure",
+                    provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+                    values={"failure_detail": "Draft input is not ready"},
+                ),
+            ),
+            conditionality=ActionConditionality.NOT_APPLICABLE,
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+        )
+        with pytest.raises(ValidationError, match="cannot persist rendered or exception prose"):
+            WorkflowStep(
+                stage=WorkflowStage.BUILDING_DRAFT,
+                started_at=now,
+                ended_at=now,
+                success=False,
+                summary_locale_key="application.workflow.steps.draft_not_ready",
+                precondition_verdict=verdict,
+            )
+
+    def test_refusal_details_require_the_typed_precondition_verdict(self) -> None:
+        now = datetime(2026, 4, 12, tzinfo=UTC)
+        with pytest.raises(ValidationError, match="require a typed precondition verdict"):
+            WorkflowStep(
+                stage=WorkflowStage.VALIDATING_DRAFT,
+                started_at=now,
+                ended_at=now,
+                success=False,
+                summary_locale_key="application.workflow.steps.validation_failed",
+                details=WorkflowValidationFailedDetails(
+                    kind="validation_failed",
+                    error_count=1,
+                ),
+            )
+
+    def test_no_recovery_verdict_round_trips_as_a_closed_outcome(self) -> None:
+        now = datetime(2026, 4, 12, tzinfo=UTC)
+        verdict = PreconditionVerdict(
+            failed_condition_id="workflow.submission.safe",
+            evidence=(
+                ConditionEvidence(
+                    condition_id="workflow.submission.safe",
+                    evidence_id="workflow.submission.safety_state",
+                    provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+                    values={"safe": False},
+                ),
+            ),
+            conditionality=ActionConditionality.NOT_APPLICABLE,
+            no_recovery_outcome=NoRecoveryOutcome.SAFETY,
+        )
+        step = WorkflowStep(
+            stage=WorkflowStage.RUNNING_PREFLIGHT,
+            started_at=now,
+            ended_at=now,
+            success=False,
+            summary_locale_key="application.workflow.steps.submission_unsafe",
+            precondition_verdict=verdict,
+        )
+
+        assert WorkflowStep.model_validate_json(step.model_dump_json()) == step
 
 
 class TestSiteHealthAlert:
@@ -157,7 +312,7 @@ class TestSiteHealthAlert:
                 started_at=now,
                 ended_at=earlier,
                 success=True,
-                summary="translation",
+                summary_locale_key="application.workflow.steps.profile_loaded",
             )
 
 
@@ -171,7 +326,7 @@ class TestWorkflowResultTerminal:
             started_at=now,
             ended_at=now,
             success=True,
-            summary="translation",
+            summary_locale_key="application.workflow.steps.profile_loaded",
         )
 
     @pytest.mark.parametrize(
@@ -209,7 +364,7 @@ class TestWorkflowResultTerminal:
             "final_stage": WorkflowStage.DONE,
             "aborted_reason": None,
             "steps": (self._step(),),
-            "summary": "translation",
+            "summary_locale_key": "application.workflow.results.completed",
         }
         values.update(overrides)
 
@@ -229,7 +384,7 @@ class TestWorkflowResultTerminal:
             draft_id="draft-1",
             submission_id=None,
             steps=(self._step(),),
-            summary="translation",
+            summary_locale_key="application.workflow.results.completed",
         )
         blob = original.model_dump_json()
         reconstructed = WorkflowResult.model_validate_json(blob)

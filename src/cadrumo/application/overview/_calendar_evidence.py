@@ -36,6 +36,7 @@ from datetime import UTC, date, datetime
 from types import MappingProxyType
 from typing import TYPE_CHECKING, cast
 
+from ...application.operator_actions import next_action
 from ...core import Period as _Period
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
@@ -118,16 +119,16 @@ def no_aeat_history_notice(calculation_observations: tuple[object, ...]) -> Noti
         if is_official_aeat_observation_source(str(getattr(payload, "source_kind", ""))):
             return None
     return Notice(
+        action=next_action("operator.live.filed.pull_all"),
         severity=NoticeSeverity.INFO,
         code=NO_AEAT_HISTORY_NOTICE_CODE,
         message=tr(
             "overview.no_aeat_history",
             default=(
-                "This profile holds no filing evidence AEAT confirmed. Run "
-                "`aeat app live filed pull-all` to fetch the history AEAT holds for it."
+                "This profile holds no filing evidence AEAT confirmed. Retrieve the filing "
+                "history AEAT holds for it."
             ),
         ),
-        suggestion="aeat app live filed pull-all",
         context={"observation_count": str(len(calculation_observations))},
     )
 

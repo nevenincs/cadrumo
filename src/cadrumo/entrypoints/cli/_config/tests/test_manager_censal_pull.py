@@ -43,13 +43,15 @@ from .....application.user_profile import (
     reconcile_censal_read,
 )
 from .....application.workflow import workflow_state_repository
-from .....core import AuthProviderKind
+from .....core import AuthProviderKind, ClaveMovilRoute
 from .....core.config import override_settings
-from .....domain.user_profile import UserProfileFact
+from .....domain.user_profile import UserProfileFact, load_user_profile_schema, profile_field_label
 from .....tests.secure_sql import isolated_profile_storage_root
 from .....tests.user_profile import register_minimal_profile
 from .._manager_actions import (
+    _AUTH_CLAVE_MOVIL_ROUTE_PATH,
     _AUTH_DNI_NIE_PATH,
+    _AUTH_FECHA_VALIDEZ_PATH,
     _AUTH_PROVIDER_PATH,
     _AUTH_SOPORTE_PATH,
     _censal_pull_summary,
@@ -85,7 +87,11 @@ def _active_profile(tmp_path: Path) -> Iterator[None]:
 
     with isolated_profile_storage_root(tmp_path=tmp_path), profile_create_storage_span(_PROFILE_ID):
         workflow_state_repository().update(
-            lambda state: register_minimal_profile(state, profile_id=_PROFILE_ID),
+            lambda state: register_minimal_profile(
+                state,
+                profile_id=_PROFILE_ID,
+                display_name="Manager Censal Pull Test",
+            ),
         )
         yield
 
@@ -163,11 +169,25 @@ def test_a_profile_with_no_provider_chosen_cannot_pull_yet() -> None:
 
 @pytest.mark.usefixtures("active_profile")
 def test_an_incomplete_clave_setup_cannot_pull_yet() -> None:
-    """The non-QR route needs a contraste, and this profile has neither form."""
-    _record_auth(**{_AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value, _AUTH_DNI_NIE_PATH: "00000000T"})
+    """The refusal names schema fields and a corrective action, never an internal path."""
+    _record_auth(
+        **{
+            _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
+            _AUTH_CLAVE_MOVIL_ROUTE_PATH: ClaveMovilRoute.APP_REQUEST.value,
+            _AUTH_DNI_NIE_PATH: "00000000T",
+        },
+    )
 
     with override_settings(cadrumo_clave_prefer_non_qr=True, **_NO_CLAVE_SETTINGS):
-        assert _censal_pull_unavailable() is not None
+        refusal = _censal_pull_unavailable()
+
+    assert refusal is not None
+    schema = load_user_profile_schema()
+    for path in (_AUTH_SOPORTE_PATH, _AUTH_FECHA_VALIDEZ_PATH):
+        section, _field = path.split(".", 1)
+        assert profile_field_label(section, schema.field(path)) in refusal
+    assert "retry sync" in refusal
+    assert "auth." not in refusal
 
 
 @pytest.mark.usefixtures("active_profile")
@@ -178,7 +198,13 @@ def test_a_qr_operator_carrying_no_contraste_is_ready_to_pull() -> None:
     unconditionally would refuse the default QR flow, which is the same
     defect the authentication page carried one layer up.
     """
-    _record_auth(**{_AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value, _AUTH_DNI_NIE_PATH: "00000000T"})
+    _record_auth(
+        **{
+            _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
+            _AUTH_CLAVE_MOVIL_ROUTE_PATH: ClaveMovilRoute.QR.value,
+            _AUTH_DNI_NIE_PATH: "00000000T",
+        },
+    )
 
     with override_settings(cadrumo_clave_prefer_non_qr=False, **_NO_CLAVE_SETTINGS):
         assert _censal_pull_unavailable() is None
@@ -189,6 +215,7 @@ def test_a_complete_non_qr_operator_is_ready_to_pull() -> None:
     _record_auth(
         **{
             _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
+            _AUTH_CLAVE_MOVIL_ROUTE_PATH: ClaveMovilRoute.APP_REQUEST.value,
             _AUTH_DNI_NIE_PATH: "00000000T",
             _AUTH_SOPORTE_PATH: "ABC123456",
         },

@@ -6,15 +6,22 @@ from typing import Annotated
 
 import typer
 
+from ...application.operator_actions import ActionReference
 from ...application.state_projection import (
     ModeloReadinessRequest,
     build_operator_state_projection,
 )
 from ...core import Period, PeriodError
 from ...core.i18n import tr
-from ...core.json_contract import Notice, NoticeSeverity
+from ...core.json_contract import (
+    ActionArgumentSource,
+    ActionArgumentStatus,
+    Notice,
+    NoticeSeverity,
+    ResolvedActionArgument,
+)
 from ...domain.user_profile import ProfileNotFoundError
-from ._common import MODELO_CODE_CHOICE, _emit_envelope, _no_active_profile_refusal
+from ._common import MODELO_CODE_CHOICE, _emit_envelope, _no_active_profile_refusal, resolve_notice_action
 from ._errors import CliRefusedBoundaryError
 from ._modelo_cli_support import unsupported_local_work_period_refusal
 from ._modelo_payloads import (
@@ -285,7 +292,18 @@ def _readiness_notices(report) -> tuple[Notice, ...]:
                 message=(
                     f"Modelo {report.modelo} cannot produce a local fichero-BOE export: {export_context['reason']}."
                 ),
-                suggestion=f"aeat app modelo describe {report.modelo}",
+                action=resolve_notice_action(
+                    action=ActionReference(action_id="operator.modelo.describe"),
+                    argument_bindings=(
+                        ResolvedActionArgument(
+                            argument_name="modelo",
+                            status=ActionArgumentStatus.RESOLVED,
+                            value=report.modelo,
+                            source=ActionArgumentSource.VERDICT_CONTEXT,
+                            source_key="modelo",
+                        ),
+                    ),
+                ),
                 context=export_context,
             ),
         )

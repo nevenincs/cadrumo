@@ -1,8 +1,8 @@
 """Opt-in live application workflow test for the AEAT IVA wallet capture.
 
-The ``"live"`` / ``"iva-wallet"`` literals joined onto ``cadrumo_audit_dir``
-mirror ``StorageCategory.AUDIT_LIVE_IVA_WALLET``'s declared subpath
-(``audit/live/iva-wallet``). ``AUDIT`` is operator-overridable, so this
+The ``"iva-wallet"`` literal joined onto ``cadrumo_live_state_dir`` mirrors
+``StorageCategory.LIVE_STATE_IVA_WALLET``'s declared subpath
+(``live-state/iva-wallet``). ``LIVE_STATE`` is operator-overridable, so this
 member -- like the ``SECRETS_MASTER_KEY`` family -- carries no
 ``settings_field`` and is not safe to resolve via ``storage_path`` directly;
 production (``application/live/_iva_remote_state.py``) reads the same bare
@@ -34,7 +34,7 @@ from .. import capture_iva_compensation_wallet
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_application]
 
-PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"live", "iva-wallet"})
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"iva-wallet"})
 """Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 
@@ -61,11 +61,11 @@ def test_live_iva_wallet_capture_persists_reconciles_and_feeds_local_guard() -> 
             capture_iva_compensation_wallet(
                 target_year=target_year,
                 target_period=target_filing_period,
-                output_root=settings.cadrumo_audit_dir / "live" / "iva-wallet",
+                output_root=settings.cadrumo_live_state_dir / "iva-wallet",
             ),
         )
         observation = FiledDeclaracionObservationStore(
-            settings.cadrumo_audit_dir / "live" / "iva-wallet",
+            settings.cadrumo_live_state_dir / "iva-wallet",
         ).load_iva_wallet_observation(Path(report.observation_path))
         decision = IvaWalletDecisionRepository().load_decision(taxpayer_nif, target_filing_period)
         history = IvaWalletDecisionRepository().load_decision_history(taxpayer_nif, target_filing_period)

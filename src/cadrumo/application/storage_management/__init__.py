@@ -1,11 +1,9 @@
 """Operator-facing read and reclaim operations over the declared storage tree.
 
-The public facade for the ``aeat config storage`` surface. An operator cannot
-create or destroy a storage category — the member set is fixed by
-:data:`~cadrumo.core.STORAGE_TAXONOMY` — so this package exposes inspection,
-materialisation, and a lifecycle-guarded reclaim, and deliberately exposes no
-relocation. Reporting where the tree is costs nothing and is reversible; moving
-encrypted records away from the key material that opens them is neither.
+The public facade for the ``aeat config storage`` surface. Operators inspect
+four stable areas while the internal taxonomy remains free to evolve. This
+package exposes inspection, materialisation, and lifecycle-guarded reclaim, and
+deliberately exposes no relocation.
 
 See Also:
     :data:`~cadrumo.core.STORAGE_TAXONOMY`
@@ -20,9 +18,11 @@ from ._errors import (
     StorageReclaimUnconfirmedError,
 )
 from ._models import (
+    StorageAreaDisposition,
+    StorageAreaInventoryReport,
+    StorageAreaInventoryRow,
+    StorageCheckIssueKind,
     StorageInitReport,
-    StorageInventoryReport,
-    StorageInventoryRow,
     StorageOccupancy,
     StorageReclaimReport,
     StorageTreeCheckReport,
@@ -31,18 +31,20 @@ from ._models import (
 )
 from ._service import (
     RECLAIMABLE_LIFECYCLES,
-    collect_storage_inventory,
+    collect_storage_area_inventory,
     inspect_storage_tree,
     materialise_storage_tree,
-    reclaim_storage_category,
+    reclaim_storage_area,
     storage_lifecycle_permits_reclaim,
 )
 
 __all__ = [
     "RECLAIMABLE_LIFECYCLES",
+    "StorageAreaDisposition",
+    "StorageAreaInventoryReport",
+    "StorageAreaInventoryRow",
+    "StorageCheckIssueKind",
     "StorageInitReport",
-    "StorageInventoryReport",
-    "StorageInventoryRow",
     "StorageManagementError",
     "StorageOccupancy",
     "StorageReclaimRefusedError",
@@ -51,9 +53,9 @@ __all__ = [
     "StorageTreeCheckReport",
     "StorageTreeIssue",
     "StorageTreeIssueKind",
-    "collect_storage_inventory",
+    "collect_storage_area_inventory",
     "inspect_storage_tree",
     "materialise_storage_tree",
-    "reclaim_storage_category",
+    "reclaim_storage_area",
     "storage_lifecycle_permits_reclaim",
 ]

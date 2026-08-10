@@ -88,6 +88,7 @@ from dev.audit.complexity import (
 from dev.audit.complexity import (
     load_baseline as load_complexity_baseline,
 )
+from dev.audit.complexity_allowlist import load_allowlist as load_complexity_allowlist
 from dev.audit.duplication import DuplicationOutcome, run_duplication_scan
 from dev.import_hygiene_scan import (
     PKG_ROOT,
@@ -337,9 +338,15 @@ def audit_complexity() -> DimensionReport:
     cog = collect_cog(_PRODUCT_SOURCE_ROOT, is_test_run=False, threshold=20)
 
     baseline: ComplexityBaseline = load_complexity_baseline(is_test_run=False, path=_COMPLEXITY_BASELINE_PATH)
-    cc_verdict = _classify_cc(cc, baseline.cyclomatic)
-    mi_verdict = _classify_mi(mi, baseline.maintainability)
-    cog_verdict = _classify_cog(cog, baseline.cognitive)
+    # Reviewed acceptances must be merged HERE too, not only in the complexity
+    # CLI. This dimension is what `just audit-health-report` reports, so an
+    # allowlist consulted by the tool but not by the report would leave the
+    # signal anyone actually watches unchanged -- the acceptance would look
+    # applied while the number it exists to move stayed put.
+    allowlist = load_complexity_allowlist(is_test_run=False)
+    cc_verdict = _classify_cc(cc, {**baseline.cyclomatic, **allowlist.ceilings("cyclomatic")})
+    mi_verdict = _classify_mi(mi, {**baseline.maintainability, **allowlist.ceilings("maintainability")})
+    cog_verdict = _classify_cog(cog, {**baseline.cognitive, **allowlist.ceilings("cognitive")})
 
     failing = [*cc_verdict.failing, *mi_verdict.failing, *cog_verdict.failing]
     allowed = len(cc_verdict.allowed) + len(mi_verdict.allowed) + len(cog_verdict.allowed)

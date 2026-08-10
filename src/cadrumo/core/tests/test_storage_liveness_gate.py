@@ -50,10 +50,9 @@ a mention is not a consumption, and this is where that lesson is encoded.
 A fifth trap, found after the first four: a bare ``ast.Attribute`` load of the
 category member's NAME is not enough, because the name alone is not unique to
 ``StorageCategory``. This gate once accepted 14 references to
-``SensitivityClass.AUDIT`` -- an unrelated encryption-sensitivity enum member
-that happens to share the string ``"AUDIT"`` -- as proof that
-``StorageCategory.AUDIT`` was consumed, for the directory holding regulated
-audit evidence. The category-member shape now requires the attribute's
+an unrelated enum member that happened to share a storage member name as proof
+that the storage category was consumed. The category-member shape now requires
+the attribute's
 receiver to resolve to a name bound to ``StorageCategory`` (see
 :func:`_storage_category_binding_names`); the settings-field shape and the
 string-constant shape carry no such qualification, because they have no same-
@@ -128,27 +127,24 @@ def consumption_evidence(
     synthetic source and prove each shape counts or does not.
 
     The two names are NOT interchangeable evidence. ``category_member`` is a
-    bare enum-member name (``AUDIT``, ``BUCKETS``, ...) shared with other
-    closed-value enums in this codebase -- ``SensitivityClass.AUDIT`` is a
-    real, unrelated member of the encryption-sensitivity enum. An attribute
+    bare enum-member name shared with other closed-value enums in this
+    codebase. An attribute
     load only counts as evidence of ``category_member`` when its receiver
     resolves to a name bound to ``StorageCategory`` (see
     :func:`_storage_category_binding_names`); a bare ``.AUDIT`` on anything
-    else is not evidence. This gate accepted 14 references to
-    ``SensitivityClass.AUDIT`` as proof ``StorageCategory.AUDIT`` was consumed,
-    for the directory holding regulated audit evidence, before this
-    qualification existed.
+    else is not evidence. This gate previously accepted unrelated same-named
+    enum references as storage consumption before this qualification existed.
 
     ``settings_field`` carries no such qualification, deliberately: settings
-    field names (``cadrumo_audit_dir``, ...) are prefix-distinctive on their
+    field names (``cadrumo_live_state_dir``, ...) are prefix-distinctive on their
     own, so requiring the receiver to resolve to a ``Settings`` binding would
     buy nothing and risks a false negative against a legitimate indirect
-    access (``getattr(settings, "cadrumo_audit_dir")``, a root-derivation
+    access (``getattr(settings, "cadrumo_live_state_dir")``, a root-derivation
     table keyed by field name). A settings field is also, unlike a category
     member, real evidence as a bare string constant -- some live consumers
     resolve the field dynamically by name (see the module docstring) -- so
     the string-constant shape is checked only against ``settings_field``. A
-    bare category-member name such as ``"AUDIT"`` as a string is not a
+    bare category-member name as a string is not a
     category reference (nothing in this codebase resolves a
     ``StorageCategory`` member dynamically by name) and is not evidence for
     ``category_member``.
@@ -371,29 +367,26 @@ def test_a_docstring_mention_is_not_a_consumption() -> None:
 
 
 def test_an_unrelated_enum_member_of_the_same_name_is_not_a_consumption() -> None:
-    """The namespace-qualification proof: ``SensitivityClass.AUDIT`` is not ``StorageCategory.AUDIT``.
+    """The namespace-qualification proof: ``Other.INBOX`` is not ``StorageCategory.INBOX``.
 
-    This is the real defect this gate shipped with: 14 references to
-    ``SensitivityClass.AUDIT`` -- an unrelated encryption-sensitivity member
-    that happens to share a name with the storage category -- satisfied a
-    consumer claim for the directory holding regulated audit evidence, for
-    which nothing in the named module ever referenced ``StorageCategory.AUDIT``
-    itself. An attribute name alone is not enough; the receiver has to resolve
+    This is the real defect this gate shipped with: references to an unrelated
+    same-named enum member satisfied a storage consumer claim. An attribute
+    name alone is not enough; the receiver has to resolve
     to a name bound to ``StorageCategory``.
     """
     unrelated = consumption_evidence(
-        ast.parse("def read():\n    return SensitivityClass.AUDIT\n"),
+        ast.parse("def read():\n    return Other.INBOX\n"),
         settings_field=None,
-        category_member="AUDIT",
+        category_member="INBOX",
     )
     assert unrelated == frozenset(), "an unrelated enum's same-named member must not count as evidence"
 
     real = consumption_evidence(
-        ast.parse("def read():\n    return StorageCategory.AUDIT\n"),
+        ast.parse("def read():\n    return StorageCategory.INBOX\n"),
         settings_field=None,
-        category_member="AUDIT",
+        category_member="INBOX",
     )
-    assert real == frozenset({"AUDIT"}), "a genuine StorageCategory.AUDIT reference must still count"
+    assert real == frozenset({"INBOX"}), "a genuine StorageCategory.INBOX reference must still count"
 
 
 @pytest.mark.parametrize(
@@ -419,15 +412,15 @@ def test_a_bare_category_member_string_is_not_a_consumption() -> None:
     The string-constant shape exists for the settings field, which some live
     consumers DO resolve by name (see the module docstring). Nothing resolves
     a ``StorageCategory`` member that way, so a bare ``"AUDIT"`` string is not
-    evidence for the category member -- unlike ``"cadrumo_audit_dir"``, which
+    evidence for the category member -- unlike ``"cadrumo_live_state_dir"``, which
     would be. Proven directly against :func:`consumption_evidence` rather than
     through ``_evidence``, since this member has no settings field to conflate
     the result with.
     """
     evidence = consumption_evidence(
-        ast.parse('def read():\n    return getattr(taxonomy, "AUDIT")\n'),
+        ast.parse('def read():\n    return getattr(taxonomy, "INBOX")\n'),
         settings_field=None,
-        category_member="AUDIT",
+        category_member="INBOX",
     )
     assert evidence == frozenset(), "a bare category-member string must not count as consumption"
 

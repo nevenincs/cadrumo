@@ -143,72 +143,43 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         grouping=StorageGrouping.STATE,
     ),
     _location(
-        StorageCategory.AUDIT,
-        "audit",
-        # The named module must be one that reaches this location, not merely one
-        # containing the token. `_namespace_registry.py` was claimed here and
-        # satisfied the liveness gate on 14 references to `SensitivityClass.AUDIT`
-        # -- an unrelated encryption-sensitivity member that happens to share the
-        # name -- while referencing `StorageCategory.AUDIT` zero times. The real
-        # consumer joins `cadrumo_audit_dir` to reach the live IVA remote state.
+        StorageCategory.LIVE_STATE,
+        "live-state",
         consumer_module="application/live/_iva_remote_state.py",
-        settings_field="cadrumo_audit_dir",
+        settings_field="cadrumo_live_state_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
     ),
+    # ── Fixed layout: live IVA remote-state capture ─────────────────────────
+    # These descendants are joined onto the operator-overridable live-state
+    # root, so they carry no settings field and are not resolved independently.
     _location(
-        StorageCategory.REGISTRY_PARITY_STORE,
-        "audit/registry/parity",
-        consumer_module="entrypoints/cli/registry.py",
-        settings_field="cadrumo_registry_parity_store_dir",
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.STATE,
-    ),
-    # ── Fixed layout: live IVA remote-state capture, nested under audit ──────
-    # ``application/live/_iva_remote_state.py`` joined ``"live"``,
-    # ``"iva-wallet"``, ``"iva-remote-state"``, ``"filed-history"`` and
-    # ``"wallet"`` onto ``cadrumo_audit_dir`` (and onto its own already-resolved
-    # ``store_root``) as untethered literals -- including an intermediate
-    # ``audit/live`` directory that was itself undeclared, which would have
-    # left a governed leaf sitting under an ungoverned parent had it been
-    # skipped. Same override caveat as the secret-store leaves above: ``AUDIT``
-    # is operator-overridable, so these carry no ``settings_field`` and are not
-    # safe to resolve via :func:`storage_path` directly.
-    _location(
-        StorageCategory.AUDIT_LIVE,
-        "audit/live",
+        StorageCategory.LIVE_STATE_IVA_WALLET,
+        "live-state/iva-wallet",
         consumer_module="application/live/_iva_remote_state.py",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
         override_policy=StorageOverridePolicy.FIXED,
     ),
     _location(
-        StorageCategory.AUDIT_LIVE_IVA_WALLET,
-        "audit/live/iva-wallet",
+        StorageCategory.LIVE_STATE_IVA_REMOTE_STATE,
+        "live-state/iva-remote-state",
         consumer_module="application/live/_iva_remote_state.py",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
         override_policy=StorageOverridePolicy.FIXED,
     ),
     _location(
-        StorageCategory.AUDIT_LIVE_IVA_REMOTE_STATE,
-        "audit/live/iva-remote-state",
+        StorageCategory.LIVE_STATE_IVA_REMOTE_STATE_FILED_HISTORY,
+        "live-state/iva-remote-state/filed-history",
         consumer_module="application/live/_iva_remote_state.py",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
         override_policy=StorageOverridePolicy.FIXED,
     ),
     _location(
-        StorageCategory.AUDIT_LIVE_IVA_REMOTE_STATE_FILED_HISTORY,
-        "audit/live/iva-remote-state/filed-history",
-        consumer_module="application/live/_iva_remote_state.py",
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.STATE,
-        override_policy=StorageOverridePolicy.FIXED,
-    ),
-    _location(
-        StorageCategory.AUDIT_LIVE_IVA_REMOTE_STATE_WALLET,
-        "audit/live/iva-remote-state/wallet",
+        StorageCategory.LIVE_STATE_IVA_REMOTE_STATE_WALLET,
+        "live-state/iva-remote-state/wallet",
         consumer_module="application/live/_iva_remote_state.py",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
@@ -596,15 +567,6 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.BUCKET_BLOBS,
         "blobs",
-        consumer_module="adapters/persistence/storage/_storage_path_definitions.py",
-        scope=StorageScope.BUCKET_RELATIVE,
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.STATE,
-        override_policy=StorageOverridePolicy.FIXED,
-    ),
-    _location(
-        StorageCategory.BUCKET_AUDIT,
-        "audit",
         consumer_module="adapters/persistence/storage/_storage_path_definitions.py",
         scope=StorageScope.BUCKET_RELATIVE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,

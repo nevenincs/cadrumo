@@ -275,7 +275,6 @@ def diagnostics_telemetry_flush(
                     "cli.diagnostics.telemetry.flush.dry_run_notice",
                     default="Dry run: this payload was built but nothing was transmitted.",
                 ),
-                suggestion="aeat app diagnostics telemetry flush --no-dry-run --acknowledge-remote-telemetry",
             ),
         )
     elif not preview.gate_permits:

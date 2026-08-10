@@ -67,7 +67,6 @@ def sandbox_notice_for_active_bucket() -> Notice | None:
             ),
             label=label,
         ),
-        suggestion="aeat config profile sandbox discard",
     )
 
 

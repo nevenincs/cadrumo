@@ -20,7 +20,6 @@ import pytest
 
 from .....core import STORAGE_TAXONOMY, StorageCategory, StorageScope, storage_location
 from .._storage_path_definitions import (
-    BUCKET_AUDIT_DIRNAME,
     BUCKET_BLOBS_DIRNAME,
     BUCKET_DATABASE_FILENAME,
     BUCKET_DB_DIRNAME,
@@ -45,7 +44,6 @@ _BOUND_CONSTANTS = (
     (BUCKET_DB_DIRNAME, StorageCategory.BUCKET_DATABASE),
     (BUCKET_DATABASE_FILENAME, StorageCategory.BUCKET_DATABASE_FILE),
     (BUCKET_BLOBS_DIRNAME, StorageCategory.BUCKET_BLOBS),
-    (BUCKET_AUDIT_DIRNAME, StorageCategory.BUCKET_AUDIT),
     (BUCKET_MANIFEST_FILENAME, StorageCategory.BUCKET_MANIFEST),
     (BUCKET_LOCK_FILENAME, StorageCategory.BUCKET_LOCK),
     (BUCKET_OUTPUT_LANGUAGE_HINT_FILENAME, StorageCategory.BUCKET_OUTPUT_LANGUAGE_HINT),

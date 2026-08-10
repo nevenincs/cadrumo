@@ -135,3 +135,19 @@ def test_the_summary_carries_the_runs_own_denominator_note() -> None:
     run = FiledHistoryOnboardingRun(pairs=(), captured_count=0)
 
     assert run.denominator_note in _filed_history_pull_all_summary(run)
+
+
+def test_the_summary_preserves_each_bounded_stage_failure() -> None:
+    """A partial sweep must name the stage failures the service retained."""
+    from .....application.live import FiledHistoryOnboardingRun
+
+    failures = (
+        "iva_wallet: AEAT refused the wallet view",
+        "notificaciones: authentication expired",
+    )
+    run = FiledHistoryOnboardingRun(pairs=(), captured_count=2, stage_failures=failures)
+
+    summary = _filed_history_pull_all_summary(run)
+
+    for failure in failures:
+        assert failure in summary, f"the manager dropped the actionable stage failure {failure!r}"

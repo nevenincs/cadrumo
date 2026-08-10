@@ -46,8 +46,8 @@ from ....domain.iva import (
     IvaTerritorialScope,
     country_code_for_printed_tax_identifier,
     territorial_scope_for_country,
-    territorial_scope_for_printed_tax_identifier,
     territorial_scope_for_spanish_postal_code,
+    vat_identification_state_for_printed_tax_identifier,
 )
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .. import _establishment_ladder as ladder_module
@@ -270,9 +270,14 @@ def test_a_spanish_identifier_contributes_nothing_to_the_identifier_rung(
     identifiers and both establish where the party is REGISTERED. Establishment
     for IVA is the sede de actividad económica, and the validator's own
     non-resident leaders are the counter-population.
+
+    Neither spelling reaches the identification axis either, and for a reason
+    that belongs to that axis rather than to this one: ``ES`` is absent from the
+    printed-prefix vocabulary, so a Spanish identification is declared or read
+    from the Spanish identifier authority, never inferred from a printed number.
     """
-    assert territorial_scope_for_printed_tax_identifier(_SPANISH_CIF) is None
-    assert territorial_scope_for_printed_tax_identifier(f"ES{_SPANISH_CIF}") is None
+    assert vat_identification_state_for_printed_tax_identifier(_SPANISH_CIF) is None
+    assert vat_identification_state_for_printed_tax_identifier(f"ES{_SPANISH_CIF}") is None
 
     resolved = _resolve(repository, tax_identifier=_SPANISH_CIF)
 
@@ -583,7 +588,10 @@ class TestDraftRouting:
 
         Discriminating rather than agreeing: the supplier side of this draft
         carries a German number, so a selection that fell through to it would
-        resolve a territory instead of exhausting.
+        name a Member State instead of exhausting. The identification axis is
+        what the assertion below reads, because it names the FACT the printed
+        number states rather than an inference drawn from it, and a resolution
+        that took the wrong party could not leave it empty.
         """
         draft = InvoiceDraft(
             supplier_tax_id=_GERMAN_VAT,
@@ -598,7 +606,8 @@ class TestDraftRouting:
         )
 
         assert resolved.scope is None
-        assert territorial_scope_for_printed_tax_identifier(draft.supplier_tax_id) is IvaTerritorialScope.EU_MEMBER
+        assert resolved.identification_state is None
+        assert vat_identification_state_for_printed_tax_identifier(draft.supplier_tax_id) is EUMemberState.DE
 
     def test_a_received_document_takes_the_issuing_party(
         self,

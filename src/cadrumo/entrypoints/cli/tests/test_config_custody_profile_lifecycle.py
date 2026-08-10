@@ -152,7 +152,7 @@ def test_profile_create_provisions_file_custody_and_unlock_reopens_it(tmp_path: 
 
     logged_out = _run_cadrumo(tmp_path, ("config", "logout"))
     assert logged_out.returncode == 0, _combined_output(logged_out)
-    assert "logged_out_profile" in logged_out.stdout
+    assert "logged_out_profile\tcustody" in logged_out.stdout
 
     switched = _run_cadrumo(tmp_path, ("config", "login", "custody"))
     assert switched.returncode == 0, _combined_output(switched)
@@ -197,7 +197,7 @@ def test_profile_logout_is_the_only_strong_logout_before_switch(tmp_path: Path) 
 
     logged_out = _run_cadrumo(tmp_path, ("config", "logout"))
     assert logged_out.returncode == 0, _combined_output(logged_out)
-    assert "logged_out_profile\t" in logged_out.stdout
+    assert "logged_out_profile\tcustody" in logged_out.stdout
 
     removed_lock = _run_cadrumo(tmp_path, ("config", "lock"))
     assert removed_lock.returncode != 0

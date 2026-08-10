@@ -26,6 +26,7 @@ from ....application.overview import ModeloReadinessState
 from .._overview_payloads import OverviewPipelineModeloPayload
 from ._modelo_work_ux_support import _create_profile, _invoke
 from ._modelo_work_ux_support import _isolated_cli_backend as _isolated_cli_backend
+from .envelope_helpers import unwrap_envelope_notices as _notices
 from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -184,6 +185,11 @@ def test_pipeline_calculated_but_unverified_unit_is_not_ready(_isolated_cli_back
     assert len(matching) == 1
     assert matching[0]["state"] == "calculated"
     assert payload["ready"] is False
+    readiness_notices = [
+        notice for notice in _notices(result.output) if notice["code"] == "overview.pipeline.modelo.calculated"
+    ]
+    assert readiness_notices
+    assert all(notice["action"] is None for notice in readiness_notices)
 
 
 def test_pipeline_is_read_only_and_safe_to_run_repeatedly(_isolated_cli_backend: Path) -> None:

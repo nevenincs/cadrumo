@@ -27,6 +27,7 @@ from ._identity_gate import (
     SessionIdentityState,
     identity_gate_refusal,
 )
+from ._input_schema import build_verb_input_schemas
 from ._persona_scope import (
     PERSONA_TOOL_SCOPES,
     AgentPersona,
@@ -51,6 +52,7 @@ __all__ = [
     "annotations_for_command",
     "build_server",
     "build_tool_descriptors",
+    "build_verb_input_schemas",
     "command_key_for_tool",
     "confirmation_for_tool",
     "faithfulness_check",

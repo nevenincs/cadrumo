@@ -44,7 +44,9 @@ from ._login_screen import (
 )
 from ._manager_screen import (
     ManagerAction,
+    ManagerActionDisposition,
     ManagerActionOutcome,
+    ManagerProgressSinkBinder,
     ProfileManagerApp,
     run_profile_manager_tui,
 )
@@ -55,6 +57,7 @@ from ._registration_screen import (
     run_registration_tui,
 )
 from ._select import select_flow_frontend
+from ._status_bar import PinnedStatusBar, StatusTone
 from ._status_screen import (
     StatusApp,
     StatusAuthView,
@@ -105,9 +108,12 @@ __all__ = [
     "LoginAttempt",
     "LoginChoice",
     "ManagerAction",
+    "ManagerActionDisposition",
     "ManagerActionOutcome",
+    "ManagerProgressSinkBinder",
     "NoticeBand",
     "PassphraseVerdict",
+    "PinnedStatusBar",
     "ProfileManagerApp",
     "RegistrationApp",
     "RegistrationAttempt",
@@ -117,6 +123,7 @@ __all__ = [
     "StatusPageData",
     "StatusProfileRow",
     "StatusRecoveryView",
+    "StatusTone",
     "TextEditScreen",
     "accepted_shape_hint",
     "active_form_presenter",

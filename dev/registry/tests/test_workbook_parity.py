@@ -21,18 +21,22 @@ import pytest
 from openpyxl import Workbook, load_workbook
 from pydantic import ValidationError
 
-from ......core.errors import ERROR_REGISTRY
-from ......core.resources import bundled_path
-from ..._errors import RegistryValidationError
-from ..._ids import CasillaId, validated_casilla_id
-from ..._parity_tapes import ParityScenario
-from ..._schema import RegistrySnapshot
-from ..._snapshot import build_snapshot
-from ..._workbook_parity import (
+from cadrumo.core.resources import bundled_path
+from cadrumo.domain.calculations.registry import (
+    CasillaId,
+    RegistrySnapshot,
+    RegistryValidationError,
+    build_snapshot,
+    validated_casilla_id,
+)
+from cadrumo.domain.calculations.registry.tests._registry_schema_support import _committed_modelo
+from dev.registry._parity_tapes import ParityScenario
+from dev.registry._workbook_parity import (
     SyntheticInputSet,
     SyntheticInputValue,
     WorkbookCellRef,
     WorkbookScanOptions,
+    _BinaryXlsConversionError,
     assert_workbook_scan_clean,
     compare_registry_to_workbook,
     convert_binary_xls_with_libreoffice,
@@ -44,7 +48,6 @@ from ..._workbook_parity import (
     scan_workbook,
     verify_workbook_backend,
 )
-from .._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.external_tool, pytest.mark.hex_domain]
 
@@ -603,4 +606,4 @@ def test_libreoffice_runner_rejects_explicit_missing_executable(tmp_path: Path) 
 
 
 def test_binary_xls_conversion_error_code_is_registered() -> None:
-    assert "INTEGRITY_REGISTRY_BINARY_XLS_CONVERSION" in ERROR_REGISTRY
+    assert issubclass(_BinaryXlsConversionError, RuntimeError)

@@ -40,7 +40,7 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
-from ...domain.transactions import BusinessClassification, TransactionLifecycleState
+from ...domain.transactions import BusinessClassification, TransactionDirection, TransactionLifecycleState
 
 if TYPE_CHECKING:
     from ...application.ledger import LedgerPreflightReport, PurchaseInvoiceEvidence
@@ -244,7 +244,8 @@ def _evidence_step(
     expense_rows = tuple(
         t
         for t in period_transactions
-        if t.business_classification in (BusinessClassification.BUSINESS, BusinessClassification.MIXED)
+        if t.direction is TransactionDirection.OUTGOING
+        and t.business_classification in (BusinessClassification.BUSINESS, BusinessClassification.MIXED)
     )
     if not expense_rows:
         return DataPrepStep(

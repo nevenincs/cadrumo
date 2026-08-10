@@ -10,7 +10,6 @@ import typer
 from pydantic import BaseModel, ValidationError
 
 from ...application.aggregation import (
-    INVOICE_RETENCION_DEFECT_GUIDANCE,
     CounterpartObservation,
     ForeignAssetIngestObservation,
     InvoiceRetencionProjection,
@@ -214,7 +213,6 @@ def _invoice_retencion_excluded_notice(projection: InvoiceRetencionProjection) -
     invented here, so the CLI renders remediation the routing module already declared.
     """
     reasons = ", ".join(defect.value for defect in projection.defects)
-    guidance = "; ".join(dict.fromkeys(INVOICE_RETENCION_DEFECT_GUIDANCE[defect] for defect in projection.defects))
     return Notice(
         severity=NoticeSeverity.WARNING,
         code="modelo.aggregate.invoice_retencion_excluded",
@@ -223,7 +221,6 @@ def _invoice_retencion_excluded_notice(projection: InvoiceRetencionProjection) -
             invoice_id=projection.invoice_id,
             reasons=reasons,
         ),
-        suggestion=guidance,
         context={"invoice_id": projection.invoice_id, "defects": reasons},
     )
 

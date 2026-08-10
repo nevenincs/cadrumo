@@ -27,14 +27,21 @@ from ...application.modelo import (
     require_profile_ready_for_modelo_work,
     resolve_registry_revision_for_work_target,
 )
+from ...application.operator_actions import ActionReference
 from ...core import Modelo, Period
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
-from ...core.json_contract import Notice
+from ...core.json_contract import (
+    ActionArgumentSource,
+    ActionArgumentStatus,
+    Notice,
+    NoticeSeverity,
+    ResolvedActionArgument,
+)
 from ...domain.calculations.registry import RegistrySnapshotError
 from ...domain.contribuyente import parse_tax_region
 from ...domain.modelos import WorkUnit
-from ._common import _emit_envelope
+from ._common import _emit_envelope, active_profile_label, resolve_notice_action
 from ._modelo_cli_support import resolve_explicit_or_active_bucket_id
 from ._modelo_payloads import (
     WorkCreateResult,
@@ -45,7 +52,7 @@ from ._modelo_payloads import (
 )
 from ._modelo_rendering import (
     advisory_notice,
-    next_action_notice,
+    short_id,
     work_unit_lines,
     work_unit_list_lines,
     work_unit_payload,
@@ -450,18 +457,37 @@ def _register_work_list_command(work_app: typer.Typer, deps: _LifecycleDeps) -> 
                 "work_units": [work_unit_payload(unit) for unit in units],
             },
         )
-        lines = work_unit_list_lines(units, bucket_id=bucket_id, include_discarded=include_discarded)
-        next_action = next_action_notice(
-            "modelo.work.list.next_action",
-            tr(
-                "cli.app.modelo.work.list_next_action",
-                default=(
-                    "Inspect one work unit's full state with `aeat app modelo work status`, "
-                    "then draft or recalculate it with `aeat app modelo work calculate`."
+        lines = [
+            f"active_profile\t{active_profile_label() or ''}",
+            *work_unit_list_lines(units, include_discarded=include_discarded),
+        ]
+        selected_action = None
+        if len(units) == 1:
+            selected_id = short_id(units[0].work_unit_id)
+            assert selected_id is not None
+            selected_action = resolve_notice_action(
+                action=ActionReference(action_id="operator.modelo.work.status"),
+                argument_bindings=(
+                    ResolvedActionArgument(
+                        argument_name="work_unit_id",
+                        status=ActionArgumentStatus.RESOLVED,
+                        value=selected_id,
+                        source=ActionArgumentSource.VERDICT_CONTEXT,
+                        source_key="work_unit_id",
+                    ),
                 ),
+            )
+        follow_up = Notice(
+            severity=NoticeSeverity.INFO,
+            code="modelo.work.list.next_action",
+            message=tr(
+                "cli.app.modelo.work.list_next_action_summary",
+                default=("The list can contain multiple work units. Choose one concrete work unit before continuing."),
             ),
+            action=selected_action,
+            context={"work_unit_count": str(len(units))},
         )
-        _emit_envelope(ctx, command="modelo.work.list", result=result, lines=lines, notices=[next_action])
+        _emit_envelope(ctx, command="modelo.work.list", result=result, lines=lines, notices=[follow_up])
 
 
 def _register_work_status_command(work_app: typer.Typer, deps: _LifecycleDeps) -> None:
@@ -493,19 +519,32 @@ def _register_work_status_command(work_app: typer.Typer, deps: _LifecycleDeps) -
             bucket_id=bucket_id,
         )
         result = WorkStatusResult.model_validate(work_unit_payload(unit).model_dump(mode="python"))
-        lines = ["operation\tmodelo.work.status", *work_unit_lines(unit)]
-        next_action = next_action_notice(
-            "modelo.work.status.next_action",
-            tr(
-                "cli.app.modelo.work.status_next_action",
-                default=(
-                    "Draft or recalculate this unit with `aeat app modelo work calculate`, "
-                    "then verify the draft with `aeat app modelo work verify`."
+        lines = [
+            f"active_profile\t{active_profile_label() or ''}",
+            "operation\tmodelo.work.status",
+            *work_unit_lines(unit, include_bucket_id=False),
+        ]
+        next_step = Notice(
+            severity=NoticeSeverity.INFO,
+            code="modelo.work.status.next_action",
+            message=tr(
+                "cli.app.modelo.work.status_next_action_summary",
+                default=("This work unit can now be recalculated and then verified."),
+            ),
+            action=resolve_notice_action(
+                action=ActionReference(action_id="operator.modelo.work.calculate"),
+                argument_bindings=(
+                    ResolvedActionArgument(
+                        argument_name="work_unit_id",
+                        status=ActionArgumentStatus.RESOLVED,
+                        value=unit.work_unit_id,
+                        source=ActionArgumentSource.VERDICT_CONTEXT,
+                        source_key="work_unit_id",
+                    ),
                 ),
             ),
-            suggestion=f"aeat app modelo work calculate {unit.work_unit_id}",
         )
-        _emit_envelope(ctx, command="modelo.work.status", result=result, lines=lines, notices=[next_action])
+        _emit_envelope(ctx, command="modelo.work.status", result=result, lines=lines, notices=[next_step])
 
 
 def _register_work_rename_command(work_app: typer.Typer, deps: _LifecycleDeps) -> None:

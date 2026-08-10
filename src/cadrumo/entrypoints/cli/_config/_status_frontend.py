@@ -78,13 +78,14 @@ def build_status_page_data() -> StatusPageData:
 
     active_uuid, active_label = _resolve_active_identity()
     state = _load_workflow_state()
+    record = _read_active_record(state)
     return StatusPageData(
         active_profile_label=active_label,
-        facts=_build_fact_rows(_read_active_record(state)),
+        facts=_build_fact_rows(record),
         profiles=_build_profile_rows(active_uuid),
         auth=_build_auth_view(state, active_uuid=active_uuid),
         recovery=_build_recovery_view(),
-        notices=_build_notices(active_uuid),
+        notices=build_active_profile_notices(record) if active_uuid is not None else (),
     )
 
 
@@ -228,19 +229,24 @@ def _build_recovery_view() -> StatusRecoveryView:
     )
 
 
-def _build_notices(active_uuid: str | None) -> tuple[Notice, ...]:
-    """Project application-layer advisories onto the status page's notices zone.
+def build_active_profile_notices(record: UserProfileRecord | None) -> tuple[Notice, ...]:
+    """Project application advisories for every active-profile surface.
 
-    The status page is where an operator checks in on a profile's health,
-    so this is the natural landing spot for the same typed
+    The status page and manager both report the active profile's health,
+    so they consume the same typed
     :class:`~cadrumo.core.json_contract.Notice` values a CLI envelope
     already carries — never a second, TUI-only advisory vocabulary.
     Degrades to no notices for a locked or absent bucket, matching every
     other zone this page builds.
     """
-    if active_uuid is None:
+    if record is None:
         return ()
     notices: list[Notice] = []
+    from ....application.user_profile import censo_divergence_notice
+
+    divergence_notice = censo_divergence_notice(record)
+    if divergence_notice is not None:
+        notices.append(divergence_notice)
     history_notice = _no_aeat_history_notice()
     if history_notice is not None:
         notices.append(history_notice)
@@ -258,13 +264,24 @@ def _no_aeat_history_notice() -> Notice | None:
     profile as a whole, not one filing.
     """
     from ....application.calculations import CalculationObservationRepository
+    from ....application.operator_actions import ActionReference
     from ....application.overview import no_aeat_history_notice
+    from .._common import resolve_notice_action
 
     try:
         observations = tuple(CalculationObservationRepository().iter_records())
     except _guarded_read_errors():
         return None
-    return no_aeat_history_notice(observations)
+    notice = no_aeat_history_notice(observations)
+    if notice is None:
+        return None
+    return notice.model_copy(
+        update={
+            "action": resolve_notice_action(
+                action=ActionReference(action_id="operator.live.filed.pull_all"),
+            ),
+        },
+    )
 
 
 def _build_fact_rows(

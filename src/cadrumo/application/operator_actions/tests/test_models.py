@@ -390,7 +390,6 @@ def test_no_recovery_is_explicit_for_every_closed_outcome(outcome: NoRecoveryOut
     assert verdict.action is None
 
 
-
 def test_verdict_requires_exactly_one_action_or_no_recovery_outcome() -> None:
     with pytest.raises(ValidationError, match="exactly one action or no_recovery_outcome"):
         PreconditionVerdict(

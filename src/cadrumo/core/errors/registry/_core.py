@@ -228,17 +228,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.calculations.registry._workbook_parity._BinaryXlsConversionError",
-        ErrorCode(
-            code="INTEGRITY_REGISTRY_BINARY_XLS_CONVERSION",
-            category=ErrorCategory.INTEGRITY,
-            message_key="errors.integrity.integrity_observability_aeat_corpus_drift",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.core.observability._errors.AeatCorpusDriftError",
         ErrorCode(
             code="INTEGRITY_OBSERVABILITY_AEAT_CORPUS_DRIFT",

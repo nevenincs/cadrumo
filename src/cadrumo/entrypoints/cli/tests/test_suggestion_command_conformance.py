@@ -574,6 +574,162 @@ def _runnable_suggestion_node_ids(tree: ast.AST) -> set[int]:
     return suggestion_ids
 
 
+def _dotted_name(node: ast.expr) -> tuple[str, ...] | None:
+    """Return a dotted reference path when ``node`` is made only of names/attributes."""
+    if isinstance(node, ast.Name):
+        return (node.id,)
+    if isinstance(node, ast.Attribute):
+        parent = _dotted_name(node.value)
+        return (*parent, node.attr) if parent is not None else None
+    return None
+
+
+def _canonical_notice_constructor_references(tree: ast.AST) -> tuple[frozenset[str], frozenset[tuple[str, ...]]]:
+    """Return local and qualified references to the envelope ``Notice`` model.
+
+    The boundary is import-derived rather than based on a class name alone:
+    LLM proposal objects and exception metadata also use ``suggestion``, but
+    neither is the envelope ``Notice`` imported from ``core.json_contract``.
+    """
+    names: set[str] = set()
+    qualified: set[tuple[str, ...]] = set()
+    for node in tree.body:
+        if isinstance(node, ast.ImportFrom) and node.module is not None:
+            if node.module.endswith("core.json_contract"):
+                for imported in node.names:
+                    if imported.name in {"Notice", "*"}:
+                        names.add(imported.asname or "Notice")
+            elif node.module.endswith("core"):
+                for imported in node.names:
+                    if imported.name == "json_contract":
+                        qualified.add((imported.asname or imported.name, "Notice"))
+            continue
+        if not isinstance(node, ast.Import):
+            continue
+        for imported in node.names:
+            if not imported.name.endswith("core.json_contract"):
+                continue
+            if imported.asname is not None:
+                qualified.add((imported.asname, "Notice"))
+            else:
+                qualified.add((*imported.name.split("."), "Notice"))
+
+    # A source-level alias is still the same constructor. Repeating until the
+    # set stabilises also follows a short chain such as ``Notice2 = Notice1``.
+    while True:
+        aliases = {
+            target.id
+            for node in tree.body
+            if isinstance(node, ast.Assign)
+            and (
+                (isinstance(node.value, ast.Name) and node.value.id in names)
+                or _dotted_name(node.value) in qualified
+            )
+            for target in node.targets
+            if isinstance(target, ast.Name)
+        }
+        if aliases <= names:
+            break
+        names.update(aliases)
+    return frozenset(names), frozenset(qualified)
+
+
+def _is_canonical_notice_constructor(
+    call: ast.Call, names: frozenset[str], qualified: frozenset[tuple[str, ...]]
+) -> bool:
+    """Return whether ``call`` constructs the imported envelope ``Notice``."""
+    if isinstance(call.func, ast.Name):
+        return call.func.id in names
+    return _dotted_name(call.func) in qualified
+
+
+def _function_parameter_names(node: ast.FunctionDef | ast.AsyncFunctionDef) -> frozenset[str]:
+    """Return every declared parameter name without inferring values or types."""
+    parameters = (*node.args.posonlyargs, *node.args.args, *node.args.kwonlyargs)
+    if node.args.vararg is not None:
+        parameters = (*parameters, node.args.vararg)
+    if node.args.kwarg is not None:
+        parameters = (*parameters, node.args.kwarg)
+    return frozenset(parameter.arg for parameter in parameters)
+
+
+def _notice_suggestion_transport_failures(module_path: Path) -> list[str]:
+    """Report every remaining legacy transport into or out of ``Notice``.
+
+    The migration removes free-text ``suggestion`` from the typed notice
+    envelope. This is a structural scan of production source, covering three
+    ways that retired transport can survive:
+
+    * a canonical ``Notice(..., suggestion=...)`` producer;
+    * a helper parameter named ``suggestion`` that projects it into such a
+      ``Notice``; and
+    * a direct ``notice.suggestion`` consumer.
+
+    The canonical import check is intentional context: it excludes domain LLM
+    suggestion objects and exception ``suggestion`` metadata without a
+    path/line allowlist or a fragile current-count baseline.
+    """
+    tree = ast.parse(module_path.read_text(encoding="utf-8"))
+    notice_names, qualified_notice_names = _canonical_notice_constructor_references(tree)
+    relative = module_path.relative_to(_PACKAGE_ROOT.parent).as_posix()
+    failures: list[str] = []
+    notice_calls = [
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        and _is_canonical_notice_constructor(node, notice_names, qualified_notice_names)
+    ]
+
+    for call in notice_calls:
+        for keyword in call.keywords:
+            if keyword.arg == "suggestion":
+                failures.append(f"{relative}:{call.lineno}: canonical Notice producer passes suggestion=")
+
+    for function in ast.walk(tree):
+        if not isinstance(function, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        if "suggestion" not in _function_parameter_names(function):
+            continue
+        projects_parameter = any(
+            keyword.arg == "suggestion"
+            and any(isinstance(value, ast.Name) and value.id == "suggestion" for value in ast.walk(keyword.value))
+            for call in ast.walk(function)
+            if isinstance(call, ast.Call)
+            and _is_canonical_notice_constructor(call, notice_names, qualified_notice_names)
+            for keyword in call.keywords
+        )
+        if projects_parameter:
+            failures.append(
+                f"{relative}:{function.lineno}: helper {function.name} accepts suggestion for canonical Notice projection"
+            )
+
+    for node in ast.walk(tree):
+        if (
+            isinstance(node, ast.Attribute)
+            and node.attr == "suggestion"
+            and isinstance(node.value, ast.Name)
+            and node.value.id == "notice"
+        ):
+            failures.append(f"{relative}:{node.lineno}: direct notice.suggestion consumer")
+    return failures
+
+
+def _iter_notice_transport_production_modules() -> Iterator[Path]:
+    """Yield every real package module, excluding only test code."""
+    for module_path in sorted(_PACKAGE_ROOT.rglob("*.py")):
+        if "tests" not in module_path.parts:
+            yield module_path
+
+
+def test_no_legacy_notice_suggestion_transport_survives() -> None:
+    """The typed ``Notice.action`` projection owns all executable recovery data."""
+    failures: list[str] = []
+    for module_path in _iter_notice_transport_production_modules():
+        failures.extend(_notice_suggestion_transport_failures(module_path))
+
+    assert not failures, "legacy Notice suggestion transport remains:\n" + "\n".join(failures)
+
+
 def test_production_string_literals_cite_live_commands() -> None:
     """Every ``aeat app/config`` literal in production modules stays live.
 

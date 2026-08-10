@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import click
 import pytest
@@ -11,17 +10,14 @@ import pytest
 from ....application.registry import (
     RegistryTreeReport,
 )
-from ....core.config import load_settings, override_settings
 from ....core.resources import bundled_path
 from ....tests.cli_runner import cadrumo_click_command
-from .._common import resolve_optional_root
 from ._registry_cli_fixtures import (
     _isolated_registry_cli_backend,
     _isolated_secure_backend,
 )
 from ._registry_cli_support import (
     _REGISTRY_ROOT,
-    _WORKBOOK_ROOT,
     _registry_application_surfaces,
     _registry_modelos,
     invoke_cached_cli,
@@ -232,140 +228,6 @@ def test_registry_verify_cli_fails_fast_on_missing_corpus_source(tmp_path) -> No
 
     assert result.exit_code != 0
     assert "missing corpus file" in result.output
-
-
-def test_registry_workbook_verify_cli_reports_json_from_official_corpus() -> None:
-    result = invoke_cached_cli(
-        [
-            "--format",
-            "json",
-            "app",
-            "registry",
-            "workbooks",
-            "verify",
-            "--root",
-            str(_WORKBOOK_ROOT),
-            "--limit",
-            "1",
-        ],
-    )
-
-    assert result.exit_code == 0
-    envelope = json.loads(result.output)
-    assert envelope["command"] == "registry.workbooks.verify"
-    payload = envelope["result"]
-    assert payload["workbook_count"] >= 1
-    assert payload["scanned_count"] == 1
-    assert payload["failed_count"] == 0
-    assert payload["runner"]["status"] == "available"
-    assert payload["modelo_coverage"][0]["modelo"]
-
-
-def test_registry_workbook_verify_cli_reports_text_from_official_corpus() -> None:
-    result = invoke_cached_cli(
-        [
-            "app",
-            "registry",
-            "workbooks",
-            "verify",
-            "--root",
-            str(_WORKBOOK_ROOT),
-            "--limit",
-            "1",
-        ],
-    )
-
-    assert result.exit_code == 0
-    assert "Backend exists=True" in result.output or "Backend existe=True" in result.output
-    assert any(
-        line == "Failed count=0" or (line.endswith("=0") and "fallid" in line.lower())
-        for line in result.output.splitlines()
-    )
-
-
-def test_registry_workbook_verify_cli_writes_json_report_from_official_corpus(tmp_path) -> None:
-    output = tmp_path / "reports" / "workbooks.json"
-
-    result = invoke_cached_cli(
-        [
-            "--format",
-            "json",
-            "app",
-            "registry",
-            "workbooks",
-            "verify",
-            "--root",
-            str(_WORKBOOK_ROOT),
-            "--limit",
-            "1",
-            "--per-file-timeout",
-            "1",
-            "--output",
-            str(output),
-        ],
-    )
-
-    assert result.exit_code == 0
-    payload = json.loads(output.read_text(encoding="utf-8"))
-    assert payload["workbook_count"] >= 1
-    assert payload["failed_count"] == 0
-
-
-def test_registry_workbook_verify_cli_resumes_from_json_report_from_official_corpus(tmp_path) -> None:
-    output = tmp_path / "reports" / "workbooks.json"
-    first = invoke_cached_cli(
-        [
-            "--format",
-            "json",
-            "app",
-            "registry",
-            "workbooks",
-            "verify",
-            "--root",
-            str(_WORKBOOK_ROOT),
-            "--limit",
-            "1",
-            "--output",
-            str(output),
-        ],
-    )
-    assert first.exit_code == 0
-
-    second = invoke_cached_cli(
-        [
-            "--format",
-            "json",
-            "app",
-            "registry",
-            "workbooks",
-            "verify",
-            "--root",
-            str(_WORKBOOK_ROOT),
-            "--limit",
-            "1",
-            "--resume-from",
-            str(output),
-        ],
-    )
-
-    assert second.exit_code == 0
-    envelope = json.loads(second.output)
-    assert envelope["command"] == "registry.workbooks.verify"
-    payload = envelope["result"]
-    assert payload["workbook_count"] >= 1
-    assert payload["failed_count"] == 0
-
-
-def test_registry_parity_default_store_root_comes_from_settings(tmp_path: Path) -> None:
-    configured_root = tmp_path / "configured-parity"
-    explicit_root = tmp_path / "explicit-parity"
-
-    with override_settings(cadrumo_registry_parity_store_dir=configured_root):
-        assert resolve_optional_root(None, lambda: load_settings().cadrumo_registry_parity_store_dir) == configured_root
-        assert (
-            resolve_optional_root(explicit_root, lambda: load_settings().cadrumo_registry_parity_store_dir)
-            == explicit_root
-        )
 
 
 def test_registry_retained_commands_reject_command_local_json_flag() -> None:

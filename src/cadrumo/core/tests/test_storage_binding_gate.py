@@ -162,18 +162,6 @@ def test_every_member_binding_round_trips_to_its_declaration() -> None:
 # --------------------------------------------------------------------- #
 
 
-def test_the_selector_reaches_an_inconveniently_named_path_field() -> None:
-    """``cadrumo_libreoffice_executable`` is selected, and this is the point.
-
-    It ends in none of ``_dir``, ``_path``, or ``_root``, so the name-suffix
-    selector this gate replaced could not see it and it went unclassified. A
-    future narrowing back to name matching would pass every other assertion in
-    this module while silently dropping the field again; this control is what
-    makes that narrowing fail instead.
-    """
-    assert "cadrumo_libreoffice_executable" in _discovered()
-
-
 @pytest.mark.parametrize(
     "field_name",
     ["aeat_sede_expedientes_path", "aeat_status_notificaciones_path"],

@@ -44,13 +44,14 @@ from textual.widgets import DataTable
 from .....adapters.inbound.tui import FormApp, FormPage, FormScreen, presenting_forms_through
 from .....application.user_profile import ProfileRepository, profile_create_storage_span
 from .....application.workflow import workflow_state_repository
-from .....core import AuthProviderKind, require_active_bucket_id
+from .....core import AuthProviderKind, ClaveMovilRoute, require_active_bucket_id
 from .....core.config import override_settings
 from .....core.i18n import tr
 from .....domain.user_profile import ProfileSchemaValidationError
 from .....tests.secure_sql import isolated_profile_storage_root
 from .....tests.user_profile import register_minimal_profile
 from .._manager_actions import (
+    _AUTH_CLAVE_MOVIL_ROUTE_PATH,
     _AUTH_DNI_NIE_PATH,
     _AUTH_FECHA_VALIDEZ_PATH,
     _AUTH_PAGE_PATHS,
@@ -266,6 +267,7 @@ reason.
 def _answer(**values: str) -> dict[str, str]:
     """Build a committed page answer, defaulting every auth path to blank."""
     answer = dict.fromkeys(_AUTH_PROFILE_PATHS, "")
+    answer[_AUTH_CLAVE_MOVIL_ROUTE_PATH] = ClaveMovilRoute.QR.value
     answer.update(values)
     return answer
 
@@ -321,7 +323,13 @@ def test_every_clave_mode_needs_the_identity_and_the_refusal_names_it(provider: 
 def test_the_non_qr_route_refuses_when_neither_contraste_form_is_present() -> None:
     with override_settings(cadrumo_clave_prefer_non_qr=True, **_NO_CLAVE_SETTINGS):
         refusal = _clave_refusal(
-            _answer(**{_AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value, _AUTH_DNI_NIE_PATH: "00000000T"}),
+            _answer(
+                **{
+                    _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
+                    _AUTH_CLAVE_MOVIL_ROUTE_PATH: ClaveMovilRoute.APP_REQUEST.value,
+                    _AUTH_DNI_NIE_PATH: "00000000T",
+                },
+            ),
         )
     assert refusal is not None
     assert _label_of(_page(), _AUTH_DNI_NIE_PATH) not in refusal, "the identity is present; this is the contraste gap"
@@ -340,6 +348,7 @@ def test_either_contraste_form_satisfies_the_non_qr_route(contraste_path: str) -
                 _answer(
                     **{
                         _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
+                        _AUTH_CLAVE_MOVIL_ROUTE_PATH: ClaveMovilRoute.APP_REQUEST.value,
                         _AUTH_DNI_NIE_PATH: "00000000T",
                         contraste_path: "VALUE",
                     },
@@ -363,7 +372,17 @@ def test_a_credential_supplied_through_settings_is_not_refused_at_the_page() -> 
         cadrumo_clave_movil_dni_fecha=None,
         cadrumo_clave_permanente_dni_nie=None,
     ):
-        assert _clave_refusal(_answer(**{_AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value})) is None
+        assert (
+            _clave_refusal(
+                _answer(
+                    **{
+                        _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
+                        _AUTH_CLAVE_MOVIL_ROUTE_PATH: ClaveMovilRoute.APP_REQUEST.value,
+                    },
+                ),
+            )
+            is None
+        )
 
 
 def test_the_certificate_mode_needs_neither_clave_credential() -> None:
@@ -400,9 +419,16 @@ def test_the_contraste_strings_are_translated_in_every_catalogue(locale: str, ke
     see a key that is untranslated in English too; reading the leaf back
     is what catches it.
     """
-    rendered = tr(key, locale=locale)
+    substitutions = (
+        {"nie_field": "SCHEMA-NIE-FIELD", "dni_field": "SCHEMA-DNI-FIELD"}
+        if key == "flows.manager.action.auth_contraste_missing"
+        else {}
+    )
+    rendered = tr(key, locale=locale, **substitutions)
     assert rendered != key, f"{locale} still holds {key} as its own value"
     assert "%{" not in rendered, f"{locale} left a placeholder uninterpolated: {rendered!r}"
+    for schema_label in substitutions.values():
+        assert schema_label in rendered, f"{locale} drops the schema field label: {rendered!r}"
 
 
 @pytest.fixture(name="active_profile")
@@ -425,7 +451,11 @@ def _active_profile(tmp_path: Path) -> Iterator[None]:
 
     with isolated_profile_storage_root(tmp_path=tmp_path), profile_create_storage_span(_PROFILE_ID):
         workflow_state_repository().update(
-            lambda state: register_minimal_profile(state, profile_id=_PROFILE_ID),
+            lambda state: register_minimal_profile(
+                state,
+                profile_id=_PROFILE_ID,
+                display_name="Manager Auth Test",
+            ),
         )
         yield
 
@@ -459,6 +489,7 @@ def test_committing_writes_the_auth_section_into_the_encrypted_profile() -> None
     """
     answer = {
         _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
+        _AUTH_CLAVE_MOVIL_ROUTE_PATH: ClaveMovilRoute.APP_REQUEST.value,
         _AUTH_DNI_NIE_PATH: "00000000T",
         _AUTH_SOPORTE_PATH: "ABC123456",
         _AUTH_FECHA_VALIDEZ_PATH: "1990-01-01",
@@ -469,6 +500,7 @@ def test_committing_writes_the_auth_section_into_the_encrypted_profile() -> None
     assert configure_result.provider == AuthProviderKind.CLAVE_MOVIL.value
     assert _auth_facts() == {
         _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
+        _AUTH_CLAVE_MOVIL_ROUTE_PATH: ClaveMovilRoute.APP_REQUEST.value,
         _AUTH_DNI_NIE_PATH: "00000000T",
         _AUTH_SOPORTE_PATH: "ABC123456",
         # The schema declares this one a date, so the record holds a typed
@@ -490,6 +522,7 @@ def test_a_stored_date_seeds_the_page_as_text_the_operator_can_resubmit() -> Non
     _commit_auth_choice(
         {
             _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
+            _AUTH_CLAVE_MOVIL_ROUTE_PATH: ClaveMovilRoute.APP_REQUEST.value,
             _AUTH_DNI_NIE_PATH: "00000000T",
             _AUTH_SOPORTE_PATH: "",
             _AUTH_FECHA_VALIDEZ_PATH: "1990-01-01",
@@ -530,6 +563,7 @@ def test_a_blank_credential_clears_its_fact_rather_than_storing_an_empty_string(
     _commit_auth_choice(
         {
             _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
+            _AUTH_CLAVE_MOVIL_ROUTE_PATH: ClaveMovilRoute.APP_REQUEST.value,
             _AUTH_DNI_NIE_PATH: "00000000T",
             _AUTH_SOPORTE_PATH: "ABC123456",
             _AUTH_FECHA_VALIDEZ_PATH: "1990-01-01",
@@ -561,7 +595,12 @@ def test_a_refused_clave_answer_writes_nothing_at_all() -> None:
     """
     with override_settings(cadrumo_clave_prefer_non_qr=True, **_NO_CLAVE_SETTINGS):
         outcome = _certificate_answering(
-            lambda _page, _rebuild=None: _answer(**{_AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value}),
+            lambda _page, _rebuild=None: _answer(
+                **{
+                    _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
+                    _AUTH_CLAVE_MOVIL_ROUTE_PATH: ClaveMovilRoute.APP_REQUEST.value,
+                },
+            ),
         )
 
     assert outcome.overview is None, "a refusal must not redraw the page as though something changed"
@@ -615,6 +654,7 @@ def test_a_value_the_record_rejects_leaves_no_partial_write() -> None:
         _commit_auth_choice(
             {
                 _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
+                _AUTH_CLAVE_MOVIL_ROUTE_PATH: ClaveMovilRoute.APP_REQUEST.value,
                 _AUTH_DNI_NIE_PATH: "00000000T",
                 _AUTH_SOPORTE_PATH: "ABC123456",
                 # The form the document prints, which the schema refuses.
@@ -736,7 +776,7 @@ def test_run_certificate_reports_the_provider_as_done_when_operationally_complet
         lambda _page, _rebuild=None: _answer(
             **{
                 _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
-                _AUTH_DNI_NIE_PATH: "00000000T",
+                _AUTH_DNI_NIE_PATH: _stored_tax_id(),
             },
         ),
     )
@@ -821,6 +861,7 @@ def test_committing_a_fiscal_identity_writes_it_to_the_identity_section() -> Non
     _commit_auth_choice(
         {
             _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
+            _AUTH_CLAVE_MOVIL_ROUTE_PATH: ClaveMovilRoute.QR.value,
             _IDENTITY_TAX_ID_PATH: "00000000T",
             _AUTH_DNI_NIE_PATH: "00000000T",
         },

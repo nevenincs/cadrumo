@@ -637,6 +637,9 @@ application:
         clave_identity_profile_mismatch: La identidad de Cl@ve Móvil no coincide con
           la identidad fiscal del perfil activo; cambia al perfil que coincida o actualiza
           el perfil antes de la autenticación AEAT en directo.
+        clave_route_missing: La autenticación en vivo con Cl@ve Móvil requiere %{route_field}.
+          Abra Identificación en el gestor del perfil, elija Código QR o Solicitud
+          en la aplicación, guarde y reintente la sincronización.
         corrupt_session: La sesión de autenticación guardada está dañada y no se puede
           leer. Ejecuta `aeat config auth logout` y después `aeat config auth test`.
         no_session: No hay sesión AEAT activa; ejecuta `aeat config auth test` antes
@@ -1488,8 +1491,6 @@ application:
         se recibió {manual_id}.
       invalid_manual_rule_kind: El tipo de regla del manual del registro debe ser
         uno de {allowed_rule_kinds}; se recibió {rule_kind}.
-      invalid_oracle_environment: El entorno de oráculos del registro debe ser uno
-        de {allowed_values}; se recibió {value}.
       invalid_topic_locale: El locale de temas del registro debe ser uno de {allowed_locales};
         se recibió {locale_code}.
       manual_section_not_found: No se encontró la sección {section} en {manual_id}
@@ -2604,9 +2605,6 @@ cli:
           temporales opcionales, sin mutar el estado
         unknown_keys: 'Clave(s) de --binding desconocida(s) {keys}; vinculaciones
           conocidas para {code}@{revision} ({period}): {suggestion}.'
-        unscoped_revision_suggestion: Antes de copiar ids en work calculate, vuelve
-          a ejecutar con --modelo MODELO --year YEAR --period PERIOD para la unidad
-          de trabajo destino.
         unscoped_revision_warning: La lista de vinculaciones no está acotada por %{missing_filters};
           puede incluir ids de vinculaciones de una revisión que no coincide con la
           unidad de trabajo usada por work calculate.
@@ -3204,8 +3202,7 @@ cli:
           vivo)
         history_help: Muestra todos los eventos del ciclo de vida de una unidad de
           trabajo
-        history_next_action: Revisa el estado actual de esta unidad de trabajo con
-          `aeat app modelo work status`.
+        history_next_action_summary: Revisa el estado actual de esta unidad de trabajo.
         history_work_unit_id_help: Id de unidad de trabajo cuyo ciclo de vida quieres
           ver
         id_is_work_unit_not_calc_revision_natural: Este id es un id de unidad de trabajo,
@@ -3213,6 +3210,11 @@ cli:
           ejecuta 'aeat app modelo work calculate --modelo %{modelo} --year %{year}
           --period %{period}' y vuelve a ejecutar verify/file para ese mismo modelo/año/periodo.
           Los ids exactos siguen disponibles como vía avanzada.
+        id_selector_ambiguous: 'El id de trabajo mostrado {selector} coincide con
+          más de una unidad de trabajo activa. Usa el id completo de 64 caracteres
+          de la unidad de trabajo entre los candidatos siguientes.
+
+          {candidates}'
         include_discarded_help: Incluir las unidades descartadas en el listado (excluidas
           por defecto)
         invalid_binding_key: 'La clave --binding no es un BindingId válido (alfanumérico
@@ -3227,15 +3229,16 @@ cli:
           uno de {choices}.
         invalid_work_unit_id: work_unit_id debe ser una cadena hex en minúsculas de
           64 caracteres (resumen SHA-256)
+        invalid_work_unit_lookup_id: work_unit_id debe ser un identificador SHA-256
+          hexadecimal en minúsculas o un prefijo inequívoco
         kv_empty_key_error: La clave de {flag} no puede estar vacía; se recibió {spec}.
         kv_format_error: '{flag} debe escribirse como {key_label}={value_label}. Es
           una entrada clave-valor: pon el nombre del campo a la izquierda de un único
           signo igual y el valor a la derecha. Se recibió {spec}.'
         list_help: Listar las unidades de trabajo registradas, opcionalmente filtradas
           por perfil
-        list_next_action: Inspecciona el estado completo de una unidad de trabajo
-          con `aeat app modelo work status` y luego crea o recalcula el borrador con
-          `aeat app modelo work calculate`.
+        list_next_action_summary: Inspecciona el estado completo de una unidad de
+          trabajo antes de crear o recalcular su borrador.
         m184_socio_handoff_message: 'Régimen de atribución de rentas: el socio %{nif}
           (%{nombre}) recibe una base atribuida de %{importe} EUR (participación del
           %{porcentaje}%). En su propio espacio de trabajo, el socio debe registrarla
@@ -3438,17 +3441,16 @@ cli:
         state_label_presentado_supersedido: Presentación sustituida
         state_label_verificado_completo: Verificado completo
         status_help: Mostrar los metadatos de una unidad de trabajo
-        status_next_action: Crea o recalcula esta unidad con `aeat app modelo work
-          calculate` y luego verifica el borrador con `aeat app modelo work verify`.
+        status_next_action_summary: Crea o recalcula esta unidad de trabajo y después
+          verifica el borrador resultante.
         verify_help: Verificar una revisión draft contra el contrato verified-complete
         verify_idempotent_noop: 'Operación idempotente sin efecto: la revisión de
           cálculo %{calculation_revision_id} ya está verificada; se devolvió el informe
           de verificación existente sin cambios.'
-        verify_next_action_granted: La verificación se superó. Exporta el artefacto
-          de presentación con `aeat app modelo export`.
-        verify_next_action_incomplete: La verificación encontró elementos bloqueantes
-          (consulta los avisos anteriores). Resuélvelos, recalcula con `aeat app modelo
-          work calculate` y vuelve a ejecutar `aeat app modelo work verify`.
+        verify_next_action_granted_summary: La verificación se superó. Exporta el
+          artefacto de presentación.
+        verify_next_action_incomplete_summary: La verificación encontró elementos
+          bloqueantes. Resuélvelos, recalcula y vuelve a ejecutar la verificación.
         verify_selector_help: Selector de revisión borrador (current, latest-draft
           o explicit).
         wizard_help: Guía paso a paso por las casillas manuales pendientes de la unidad
@@ -3956,20 +3958,21 @@ cli:
         non_official_notice: Los datos derivados del certificado son evidencia aportada
           por el operador, nunca verificada por la AEAT; el alta censal permanece
           en el nivel no oficial.
-        pull_cleared_notice: 'La AEAT sigue teniendo un valor en {count} campo(s)
-          que vaciaste: {axes}. Se han dejado vacíos; vaciarlos aquí no cambia el
-          registro de la AEAT.'
-        pull_divergences_notice: 'La AEAT informa {count} campo(s) de forma distinta
-          a lo que declaraste: {axes}. Tu respuesta se mantiene; resuelve cada discrepancia
-          tú mismo.'
+        pull_cleared_notice: 'La autoridad censal aún mantiene un valor para {count}
+          campo(s) que borraste: {axes}. Se dejaron vacíos; borrarlos aquí no cambia
+          el registro de la autoridad.'
+        pull_divergences_notice: 'La autoridad censal informa de {count} campo(s)
+          con valores distintos de los declarados: {axes}. Se mantiene tu respuesta;
+          resuelve cada discrepancia tú mismo.'
         pull_help: Lee tu identidad y tu domicilio de los datos censales de la AEAT
           y previsualiza o inscríbelos en el perfil activo.
         pull_preview_notice: 'Solo previsualización: no se ha escrito nada en el perfil.
           Vuelve a ejecutar con --apply para inscribir estos datos.'
-        pull_verified_tier_notice: Estos datos se han leído directamente de la AEAT,
-          por lo que el alta censal cuenta como verificada.
-        pull_withheld_notice: 'Los valores de {count} campo(s) no se muestran: {axes}.
-          Compáralos tú mismo con los de la AEAT; esta herramienta no los imprime.'
+        pull_verified_tier_notice: Estos datos se leyeron directamente de la autoridad
+          censal, por lo que la incorporación al censo cuenta como verificada.
+        pull_withheld_notice: 'Los valores de {count} campo(s) se ocultan en la salida:
+          {axes}. Compáralos tú mismo con la autoridad censal; esta herramienta no
+          los mostrará.'
         refresh_help: Descarga de AEAT el último censo y guarda un snapshot
         show_help: Muestra el último censo informado por AEAT para este perfil
         snapshot_id_help: Id de snapshot concreto (se aceptan prefijos)
@@ -4360,9 +4363,22 @@ cli:
       check:
         drifted: El árbol de almacenamiento no coincide con su declaración.
         help: Verifica el árbol de almacenamiento frente a su declaración sin repararlo
+        issue:
+          missing_path: falta una ruta de almacenamiento obligatoria
+          path_type_mismatch: una ruta de almacenamiento tiene un tipo de sistema
+            de archivos inesperado
+          permissions_drifted: los permisos de la raíz de almacenamiento no cumplen
+            los requisitos
         mode_unenforced: Esta plataforma no implementa los bits de permisos POSIX,
           así que no se han comprobado los permisos de la raíz.
       errors:
+        reason:
+          durable_lifecycle: un destino seleccionado tiene un ciclo de vida duradero
+          durable_state: el área contiene estado duradero
+          no_reclaimable_targets: la taxonomía no declara destinos liberables
+          not_root_scoped: un destino seleccionado no pertenece a la raíz
+          protected_descendant: un destino seleccionado contiene datos declarados
+            protegidos
         reclaim_area_refused: 'Se rechaza liberar %{area}: %{reason}. Las %{entries}
           entradas permanecen intactas.'
         reclaim_area_unconfirmed: Liberar %{area} elimina %{entries} entradas y requiere
@@ -4372,6 +4388,31 @@ cli:
         already_materialised: Todos los directorios declarados ya existían; no se
           ha creado ninguno.
         help: Crea todos los directorios declarados conservando lo que ya exista
+      labels:
+        already_present: Ya presentes
+        area: Área
+        areas: Áreas
+        checked_areas: Áreas comprobadas
+        created: Creados
+        detail: Detalle
+        entries: Entradas
+        entry_count: Número de entradas
+        footprint: Tamaño
+        healthy: Correcto
+        issues: Problemas
+        lifecycle: Ciclo de vida
+        'no': 'no'
+        notice_info: Información
+        notice_warning: Aviso
+        occupancy: Ocupación
+        path: Ruta
+        reclaimable: Liberable
+        removed_entries: Entradas eliminadas
+        resolved_paths: Rutas resueltas
+        retained_entries: Entradas conservadas
+        storage_root: Raíz de almacenamiento
+        targets: Destinos
+        'yes': sí
       list:
         area_help: Muestra la ocupación y el espacio agregado de cada área de almacenamiento
         relocation_is_manual: Para mover el árbol, detén la aplicación, cópialo tú
@@ -4386,6 +4427,21 @@ cli:
       show:
         area_argument_help: Área de almacenamiento que se va a mostrar
         area_help: Muestra un área de almacenamiento completa
+      values:
+        area:
+          cache: caché
+          exports: exportaciones
+          logs: registros
+          state: estado
+        lifecycle:
+          durable: duradera
+          mixed: mixta
+          reclaimable: liberable
+        occupancy:
+          absent: ausente
+          empty: vacía
+          populated: con datos
+          unresolved: sin resolver
     unset:
       help: Eliminar el valor asignado a una clave de configuración
       key_help: Clave a limpiar
@@ -4997,6 +5053,7 @@ cli:
       parent_id: id_padre
       pending: Pendientes de revisión
       period: Periodo
+      profile: Perfil
       purchase_invoice_evidence_id: Evidencia de factura de compra
       readiness_issues: Incidencias de preparación
       ready: Preparado
@@ -5323,9 +5380,9 @@ cli:
           ubicados
         storage_init: Crea cualquier directorio de almacenamiento que falte
         storage_list: Consulta dónde se guarda cada tipo de dato local
-        storage_reclaim: Libera espacio eliminando una categoría que la aplicación
-          puede reconstruir
-        storage_show: Consulta una categoría de almacenamiento en detalle
+        storage_reclaim: Libera espacio eliminando un área que la aplicación puede
+          reconstruir
+        storage_show: Consulta un área de almacenamiento en detalle
       root:
         diagnostics_logs: Muestra la ruta del log y sus últimas líneas.
         diagnostics_overview_verbose: Muestra el estado general con más detalle.
@@ -5436,9 +5493,9 @@ cli:
     calendar_local_modelo_events_unavailable: La evidencia local de eventos de modelo
       no está disponible para esta fila del calendario.
     coverage:
-      investigate: 'No se han podido determinar con certeza %{count} obligación(es)
-        de presentación para este perfil y podrian quedar sin declarar: %{modelos}.
-        Investigue cada una con ''aeat app overview explain <modelo>''.'
+      investigate: No se ha podido determinar con certeza la obligación de presentación
+        %{modelo} para este perfil y podría quedar sin declarar. Revise su explicación
+        de presentación.
     drafts: Borradores
     explain:
       help: Descompone la aplicabilidad de un modelo frente al perfil activo. Muestra
@@ -5473,8 +5530,8 @@ cli:
         0A (anual), 01-12 (meses). Combínalo con --year para elegir el año.'
       year_help: Año de declaración (p. ej. 2026).
     post_filing:
-      pending: '%{count} evento(s) posteriores a la presentación de AEAT requieren
-        atención: %{kinds}. Revísalos con ''aeat app live notifications list''.'
+      pending_summary: '%{count} evento(s) posteriores a la presentación de la AEAT
+        requieren atención: %{kinds}.'
     prepare:
       help: 'Recorre los pasos de preparación de datos para un modelo/periodo en orden:
         importar transacciones, clasificarlas, adjuntar justificantes de facturas
@@ -5524,6 +5581,8 @@ cli:
       next_modelo_work_command: '  aeat app modelo work create - iniciar una declaración
         de modelo a partir de los datos de tu libro.'
       next_review_command: '  aeat app ledger review - revisar filas importadas.'
+      next_step_available: Hay un siguiente paso recomendado disponible en la salida
+        del resumen.
       next_work_calculate_command: '  aeat app modelo work list - retomar una unidad
         de trabajo de modelo en curso.'
       next_work_create_command: '  aeat app modelo work create - iniciar una unidad
@@ -5700,6 +5759,8 @@ cli:
         filas importadas.'
       quick_start_setup_done: '  1. `aeat config profile status` - comprueba la preparación
         y la siguiente acción.'
+      quick_start_setup_login: '  1. `aeat config login NAME` - activa un perfil de
+        contribuyente registrado.'
       quick_start_setup_needed: '  1. `aeat config profile create NAME` - crea un
         perfil fiscal local.'
       quick_start_setup_repair: '  1. `aeat config repair profile` - inspecciona y
@@ -5719,11 +5780,6 @@ cli:
       session_unchecked: La sesión y la preparación no se infieren del perfil seleccionado.
       tagline: Flujo local con la Agencia Estatal de Administración Tributaria (AEAT)
         para contribuyentes y asesores.
-      welcome_no_profile: 'Perfil activo: ninguno. Crea uno antes del trabajo vinculado
-        al perfil.'
-      welcome_profile: 'Perfil activo: `%{profile}`.'
-      welcome_profile_unavailable: 'Perfil activo: no disponible. Repara el perfil
-        seleccionado antes del trabajo vinculado al perfil.'
     language_help: Idioma de la salida y del texto de ayuda (en, es, ca, hu).
     profile_help: Nombre del perfil activo.
     quiet_help: Mostrar solo los errores.
@@ -6300,6 +6356,10 @@ errors:
       soportada; introduce los datos censales manualmente.
     certificado_not_a_pdf: El archivo proporcionado no es un PDF; se esperaba el Certificado
       de Situación Censal descargado de la Sede.
+  context_labels:
+    area: área
+    entry_count: número de entradas
+    reason: motivo
   error:
     error_access_gate_submission: La política de control de acceso rechazó una operación
       de envío.
@@ -6859,6 +6919,8 @@ errors:
     locked_storage_master_key_keychain: El llavero del sistema operativo está bloqueado.
       Desbloquéalo (Touch ID, Windows Hello o el desbloqueo del gestor de credenciales)
       y vuelve a intentarlo.
+  prefix:
+    refused: Rechazado.
   refused:
     auth_configure_no_active_bucket: No se puede configurar la autenticación sin un
       perfil activo. Crea un perfil con `aeat config profile create NOMBRE` y vuelve
@@ -7208,10 +7270,10 @@ errors:
       Ejecuta `aeat config login NAME` y vuelve a intentarlo.
     refused_storage_passphrase_too_short: La frase de contraseña es demasiado corta.
       Debe tener al menos 8 caracteres.
-    refused_storage_reclaim: 'Se rechaza liberar esta categoría de almacenamiento:
-      su ciclo de vida declarado conserva su contenido.'
-    refused_storage_reclaim_unconfirmed: Liberar una categoría de almacenamiento elimina
-      datos y requiere confirmación explícita.
+    refused_storage_reclaim: 'Se rechaza liberar esta área de almacenamiento: su ciclo
+      de vida declarado conserva su contenido.'
+    refused_storage_reclaim_unconfirmed: Liberar un área de almacenamiento elimina
+      datos y requiere confirmación.
     refused_storage_secret_already_exists: Ya existe un secreto con esa clave. Usa
       la opción de sobrescritura si quieres reemplazarlo.
     refused_storage_session_expired: La sesión activa ha caducado por inactividad.
@@ -7375,16 +7437,14 @@ flows:
       add_row_section: A qué sección se añade
       auth_clave_incomplete: A Cl@ve todavía le falta %{missing}. No se ha guardado
         nada.
-      auth_contraste_missing: 'Cl@ve Móvil sin QR necesita el contraste de su documento:
-        el número de soporte si es un NIE, o la fecha de validez si es un DNI. No
-        se ha guardado nada.'
-      auth_dni_nie: DNI o NIE con el que se identifica
-      auth_fecha_validez: Fecha de validez del documento, AAAA-MM-DD (para DNI)
+      auth_clave_movil_route_app_request: Solicitud en la aplicación
+      auth_clave_movil_route_qr: Código QR en un navegador visible
+      auth_contraste_missing: 'La solicitud en la aplicación de Cl@ve Móvil necesita
+        un dato de contraste del documento: %{nie_field} para un NIE o %{dni_field}
+        para un DNI. Abra Identificación, rellene el campo aplicable y vuelva a intentar
+        la sincronización.'
       auth_fecha_validez_invalid: Introduzca la fecha de validez como AAAA-MM-DD,
         por ejemplo 1990-01-31.
-      auth_numero_soporte: Número de soporte del documento
-      auth_provider: Forma de identificación ante la AEAT
-      auth_tax_id: Su identidad fiscal (NIF o NIE)
       auth_tax_id_invalid: Ese NIF o NIE no es válido. Compruebe la letra final e
         introdúzcalo tal y como figura en su documento, por ejemplo 12345678Z.
       busy: Todavía hay otra operación en curso. Espera a que termine.
@@ -7469,10 +7529,11 @@ flows:
         vuelve a intentarlo.
     language:
       unavailable: Este perfil no ofrece un ajuste de idioma.
-    progress: '{present} de {total} campos rellenados, faltan {missing} para presentar'
     recovery_boundary: 'El código de recuperación se crea y se rota solo desde la
       terminal: aeat config recovery create / aeat config recovery rotate. Las 24
       palabras se muestran una sola vez y no se pueden volver a mostrar.'
+    required_complete: Está presente toda la información del perfil requerida por
+      el esquema.
     section_title: '{title} - {present}/{total}'
     title: 'Perfil: {profile}'
   progress:
@@ -70896,6 +70957,8 @@ profile:
         share_pct:
           label: Porcentaje de participación atribuido
       auth:
+        clave_movil_route:
+          label: Ruta de Cl@ve Móvil
         dni_nie:
           label: DNI o NIE para Cl@ve
         fecha_validez:

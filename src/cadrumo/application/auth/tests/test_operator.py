@@ -77,7 +77,7 @@ def test_test_operator_auth_reports_the_active_profile() -> None:
 
     result = run_operator_auth_test("certificate")
 
-    assert result.active_profile == _BUCKET_ID
+    assert result.active_profile == _PROFILE_LABEL
     assert result.active_profile_registered is True
     assert result.active_profile_record_present is True
     assert result.active_profile_status
@@ -139,7 +139,7 @@ def test_auth_status_is_not_blocked_by_unreadable_workspace_drafts() -> None:
     result = inspect_operator_auth("certificate")
 
     assert result.provider == "certificate"
-    assert result.active_profile == _BUCKET_ID
+    assert result.active_profile == _PROFILE_LABEL
     assert result.active_profile_registered is True
 
 
@@ -576,7 +576,7 @@ def test_live_auth_preflight_reports_redacted_clave_profile_alignment() -> None:
     report = build_live_auth_preflight_report("clave_movil", settings=settings)
 
     assert report.provider == "clave_movil"
-    assert report.active_profile == _BUCKET_ID
+    assert report.active_profile == _PROFILE_LABEL
     assert report.profile_tax_id_present is True
     assert report.provider_identity_present is True
     assert report.identity_alignment == "matches"
@@ -722,6 +722,8 @@ def test_configure_clave_movil_mismatch_carries_an_explanatory_detail() -> None:
 
     assert result.identity_alignment == "mismatch"
     assert result.identity_alignment_detail != ""
+    assert result.complete is False
+    assert result.incomplete_reason == result.identity_alignment_detail
     assert "00000000T" in result.identity_alignment_detail
     assert "00000001R" in result.identity_alignment_detail
     assert "auth test" not in result.next_action, (
@@ -746,6 +748,29 @@ def test_configure_clave_movil_match_carries_no_alignment_detail() -> None:
 
     assert result.identity_alignment == "matches"
     assert result.identity_alignment_detail == ""
+    assert result.complete is True
+    assert result.incomplete_reason == ""
+
+
+def test_configure_clave_movil_without_provider_identity_is_incomplete() -> None:
+    """Provider selection alone must not claim Cl@ve Móvil is operational."""
+
+    workflow_state_repository().update(
+        lambda state: register_minimal_profile(
+            state,
+            profile_id=_BUCKET_ID,
+            display_name=_PROFILE_LABEL,
+            overrides={"identity.tax_id": "12345678Z"},
+        ),
+    )
+
+    with override_settings(cadrumo_clave_movil_dni_nie=None):
+        result = configure_operator_auth("clave_movil")
+
+    assert result.identity_alignment == "clave_identity_missing"
+    assert result.complete is False
+    assert result.incomplete_reason == result.identity_alignment_detail
+    assert "--file" not in result.next_action
 
 
 def test_operator_auth_test_reports_profile_scoped_clave_session() -> None:

@@ -3,8 +3,8 @@
 Pydantic v2 strict records, error types, and filesystem primitives that compose
 the multi-bucket on-disk layout. The facade exposes
 :class:`BucketPaths` / :func:`bucket_paths` /
-:func:`provision_bucket_directory` for the ``db/``, ``blobs/``, and
-``audit/`` tree; :class:`BucketManifest`,
+:func:`provision_bucket_directory` for the ``db/`` and ``blobs/`` tree;
+:class:`BucketManifest`,
 :class:`ManifestKdfParams` and :class:`BucketKeySchedule` for the plaintext
 manifest; and
 :func:`read_manifest` / :func:`write_manifest` for strict TOML I/O.

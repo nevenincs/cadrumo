@@ -2,7 +2,7 @@
 
 Exercises the on-disk footprint measurement against a real bucket directory
 tree: the fixture provisions a genuine ``BUCKET_DEK_V1`` bucket (real
-manifest, real ``db``/``blobs``/``audit`` subdirectories) and the tests write
+manifest and real ``db``/``blobs`` subdirectories) and the tests write
 real bytes to the database file and to the blobs directory, then assert the
 service's byte totals track the real filesystem state via plain ``os.stat``
 — never decrypted secure-object content. This is the #422 sandbox
@@ -54,13 +54,13 @@ def runtime(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
         yield profile
 
 
-def test_disk_usage_reports_three_fixed_subdir_rows(runtime: TestRuntimeProfile) -> None:
-    """The report always carries exactly the three fixed-layout subdirectory rows."""
+def test_disk_usage_reports_two_fixed_subdir_rows(runtime: TestRuntimeProfile) -> None:
+    """The report always carries exactly the two fixed-layout subdirectory rows."""
     result = BucketMaintenanceService().disk_usage(DiskUsageBucketCommand(bucket_id=runtime.bucket_id))
 
     assert result.bucket_id == runtime.bucket_id
     names = {row.subdir for row in result.subdirs}
-    assert names == {"db", "blobs", "audit"}
+    assert names == {"db", "blobs"}
 
 
 def test_disk_usage_db_row_reflects_the_real_sqlite_file_and_manifest(runtime: TestRuntimeProfile) -> None:
@@ -101,7 +101,6 @@ def test_disk_usage_blobs_row_grows_after_a_real_file_write(runtime: TestRuntime
 
 def test_disk_usage_total_bytes_equals_the_sum_of_subdir_rows(runtime: TestRuntimeProfile) -> None:
     """The reported grand total is exactly the sum of the per-subdir totals."""
-    (runtime.paths.audit_dir / "trail-01.log").write_bytes(b"audit-line\n" * 10)
     (runtime.paths.blobs_dir / "artefact-01.bin").write_bytes(b"\x00" * 256)
 
     result = BucketMaintenanceService().disk_usage(DiskUsageBucketCommand(bucket_id=runtime.bucket_id))

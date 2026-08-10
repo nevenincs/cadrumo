@@ -14,16 +14,10 @@ See Also:
         Runtime entry point used by integration consumers to read these fields.
     :mod:`~adapters.outbound.storage._factory`
         Outbound storage factory that consumes the Google Drive vault defaults.
-    :mod:`~domain.calculations.registry._workbook_parity`
-        Workbook and registry parity scanners that consume the timeout and
-        artifact-store defaults.
     :mod:`~adapters.inbound.financial.providers._csv`
         CSV financial-ingest provider that reads the default CSV encoding.
     :mod:`~adapters.persistence.storage._rotation`
         Storage-rotation repair path that enumerates the local financial stores.
-    :mod:`~entrypoints.cli.registry`
-        Registry CLI surface that defaults parity artifacts to
-        ``cadrumo_registry_parity_store_dir``.
 """
 
 from __future__ import annotations
@@ -61,26 +55,7 @@ class CadrumoIntegrationSettings(CadrumoRuntimeSettings):
             raise ValueError("the former product Google Drive vault folder is not supported")
         return value
 
-    # ── Workbook parity / Sheets ─────────────────────────────────────────
-    cadrumo_workbook_parity_per_file_timeout_s: float = Field(
-        default=15.0,
-        gt=0,
-        description="Default per-file timeout (seconds) for workbook-parity scans",
-    )
-    cadrumo_workbook_parity_recalc_timeout_s: int = Field(
-        default=60,
-        gt=0,
-        description="Subprocess timeout (seconds) when forcing workbook recalculation",
-    )
-    cadrumo_workbook_parity_libreoffice_timeout_s: int = Field(
-        default=120,
-        gt=0,
-        description="Subprocess timeout (seconds) for the LibreOffice binary XLS conversion fall-back",
-    )
-    cadrumo_registry_parity_store_dir: Path = Field(
-        default=Path("audit") / "registry" / "parity",
-        description="Directory where registry parity tape artifacts are archived by default",
-    )
+    # ── Registry cache / Sheets ──────────────────────────────────────────
     cadrumo_registry_disk_cache_dir: Path | None = Field(
         default=None,
         description=(

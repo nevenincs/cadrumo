@@ -186,7 +186,6 @@ from ._rotation import (
 from ._schema_lineage import inner_envelope_classification_is_expected, inner_envelope_version_is_current
 from ._storage_path_definitions import (
     BLOB_MANIFEST_SCHEMA_VERSION,
-    BUCKET_AUDIT_DIRNAME,
     BUCKET_BLOBS_DIRNAME,
     BUCKET_DATABASE_FILENAME,
     BUCKET_DB_DIRNAME,
@@ -350,7 +349,6 @@ __all__ = [
     "AUTH_APODERADO_CONFIGURATION_NAMESPACE",
     "BLOB_MANIFEST_SCHEMA_VERSION",
     "BUCKETS_DIRNAME",
-    "BUCKET_AUDIT_DIRNAME",
     "BUCKET_BLOBS_DIRNAME",
     "BUCKET_DATABASE_FILENAME",
     "BUCKET_DB_DIRNAME",

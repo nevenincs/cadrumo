@@ -13,7 +13,14 @@ from datetime import date
 
 import pytest
 
-from ....application.overview import OverviewCalendarRange, OverviewStatusReport, build_overview_calendar
+from ....application.overview import (
+    AdvisedObligation,
+    CoverageAdviceReason,
+    ObligationCoverageReport,
+    OverviewCalendarRange,
+    OverviewStatusReport,
+    build_overview_calendar,
+)
 from ....domain.deadlines import (
     EntityType,
     IrpfEstimationRegime,
@@ -21,7 +28,12 @@ from ....domain.deadlines import (
     IVARegime,
     TaxpayerProfile,
 )
-from .._overview_rendering import overview_calendar_output, render_cli_overview_status_lines
+from .._overview_rendering import (
+    overview_calendar_output,
+    overview_coverage_notices,
+    overview_next_step_notices,
+    render_cli_overview_status_lines,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -36,7 +48,6 @@ def _report(
     unsupported_work_create_modelos: tuple[str, ...] = (),
 ) -> OverviewStatusReport:
     return OverviewStatusReport(
-        active_profile="bucket-uuid",
         active_profile_name="Test Persona",
         transactions=transactions,
         invoices=invoices,
@@ -56,6 +67,41 @@ def test_empty_workspace_next_step_is_import() -> None:
     lines = render_cli_overview_status_lines(_report())
     joined = "\n".join(lines)
     assert "ledger import" in joined
+
+
+@pytest.mark.parametrize(
+    "report",
+    (
+        _report(),
+        _report(transactions=1),
+        _report(transactions=1, work_units=1),
+        _report(transactions=1, unsupported_work_create_modelos=("210",)),
+    ),
+)
+def test_next_step_notices_keep_executable_commands_out_of_message(report: OverviewStatusReport) -> None:
+    """Every real overview state can build typed notices without command prose."""
+    notices = overview_next_step_notices(report)
+
+    assert notices
+    assert all("aeat app" not in notice.message.lower() for notice in notices)
+
+
+def test_coverage_notice_uses_typed_explain_action_without_command_prose() -> None:
+    coverage = ObligationCoverageReport(
+        advised=(
+            AdvisedObligation(
+                modelo="130",
+                reason=CoverageAdviceReason.APPLICABILITY_UNDETERMINED,
+            ),
+        ),
+    )
+
+    [notice] = overview_coverage_notices(coverage)
+
+    assert "aeat app" not in notice.message.lower()
+    assert notice.action is not None
+    assert notice.action.action_id == "operator.overview.explain"
+    assert notice.action.target_command_key == "overview.explain"
 
 
 def test_next_step_not_import_once_ledger_has_transactions() -> None:

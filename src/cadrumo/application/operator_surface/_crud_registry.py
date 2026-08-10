@@ -90,15 +90,12 @@ APODERADO = MutatingNounGroupContract(
 
 
 STORAGE = MutatingNounGroupContract(
-    noun="storage_category",
+    noun="storage_area",
     cli_path="aeat config storage",
     # Lifecycle-only exception: the member set is fixed by the core storage
-    # taxonomy, so an operator can neither add a category nor remove one, and
-    # there is no per-field edit — a category's path, node kind, lifecycle, and
-    # override policy are declared facts, not operator-editable values.
-    # ``reclaim`` empties a category back to its declared-but-empty state, which
-    # is the reset transition; ``init`` materialises, and list / show / check
-    # read.
+    # taxonomy, so an operator can neither add nor remove an aggregate area.
+    # There is no per-field edit: ``reclaim`` resets regenerable contents,
+    # ``init`` materialises the tree, and list / show / check read it.
     exception=NounGroupExceptionKind.LIFECYCLE_OPERATIONS_ONLY,
     crud_verbs=frozenset(),
     lifecycle_state_verbs=frozenset({LifecycleStateVerb.RESET}),

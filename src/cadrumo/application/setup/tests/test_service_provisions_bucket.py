@@ -2,7 +2,7 @@
 
 Pins the post-init bucket-provisioning contract: after a successful
 workspace init, the per-bucket directory tree (`<cadrumo-root>/buckets/<id>/`
-with `db/`, `blobs/`, `audit/` subdirectories) AND the
+with `db/` and `blobs/` subdirectories) AND the
 `<bucket-dir>/manifest.toml` must exist on disk. The bucket directory
 is named by the immutable UUID profile identity; the manifest carries
 that UUID as `bucket_id` and the operator-chosen name as a decoupled
@@ -68,7 +68,6 @@ def test_initialize_workspace_provisions_bucket_directory_and_manifest(
     assert paths.bucket_dir.is_dir()
     assert paths.db_dir.is_dir()
     assert paths.blobs_dir.is_dir()
-    assert paths.audit_dir.is_dir()
     assert manifest_path(paths).is_file()
 
 

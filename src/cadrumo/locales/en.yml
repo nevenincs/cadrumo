@@ -568,6 +568,9 @@ application:
         clave_identity_profile_mismatch: Cl@ve Móvil identity does not match the active
           profile tax identity; switch to the matching profile or update the profile
           before live AEAT auth.
+        clave_route_missing: Cl@ve Móvil live authentication requires %{route_field}.
+          Open Identification in the profile manager, choose QR code or Request in
+          app, save it, and retry sync.
         corrupt_session: Your saved authentication session is damaged and cannot be
           read. Run `aeat config auth logout` and then `aeat config auth test`.
         no_session: No active AEAT session; run `aeat config auth test` before reading
@@ -1350,8 +1353,6 @@ application:
         {manual_id}.
       invalid_manual_rule_kind: Registry manual rule kind must be one of {allowed_rule_kinds};
         got {rule_kind}.
-      invalid_oracle_environment: Registry oracle environment must be one of {allowed_values};
-        got {value}.
       invalid_topic_locale: Registry topic locale must be one of {allowed_locales};
         got {locale_code}.
       manual_section_not_found: Manual section {section} was not found in {manual_id}
@@ -2400,8 +2401,6 @@ cli:
           overrides, without mutating state
         unknown_keys: 'Unknown --binding key(s) {keys}; known bindings for {code}@{revision}
           ({period}): {suggestion}.'
-        unscoped_revision_suggestion: Before copying ids into work calculate, rerun
-          with --modelo MODELO --year YEAR --period PERIOD for the target work unit.
         unscoped_revision_warning: The binding list is not scoped by %{missing_filters};
           it may include binding ids from a revision that does not match the work
           unit used by work calculate.
@@ -2953,14 +2952,18 @@ cli:
           Must carry imported external evidence (justificante / CSV register / live
           capture)
         history_help: Show every lifecycle event for one work unit
-        history_next_action: Review this work unit's current state with `aeat app
-          modelo work status`.
+        history_next_action_summary: Review this work unit's current state.
         history_work_unit_id_help: Work unit id whose lifecycle you want to view
         id_is_work_unit_not_calc_revision_natural: This id is a work-unit-id, but
           verify/file need a calculation-revision-id. For the common path, run 'aeat
           app modelo work calculate --modelo %{modelo} --year %{year} --period %{period}'
           and then rerun verify/file for that same modelo/year/period. Exact ids remain
           available as an advanced escape hatch.
+        id_selector_ambiguous: 'The displayed work id {selector} matches more than
+          one active work unit. Use the full 64-character work-unit id from the candidates
+          below.
+
+          {candidates}'
         include_discarded_help: Include discarded work units in the listing (excluded
           by default)
         invalid_binding_key: '--binding key is not a valid BindingId (lowercase alphanumeric
@@ -2975,13 +2978,15 @@ cli:
           {choices}.
         invalid_work_unit_id: work_unit_id must be a 64-character lowercase hex string
           (SHA-256 digest)
+        invalid_work_unit_lookup_id: work_unit_id must be a lowercase hexadecimal
+          SHA-256 id or unambiguous prefix
         kv_empty_key_error: '{flag} key must not be empty; got {spec}.'
         kv_format_error: '{flag} must be written as {key_label}={value_label}. This
           is a key-value entry: put the field name on the left of one equals sign
           and the value on the right. Received {spec}.'
         list_help: List registered work units, optionally filtered by profile
-        list_next_action: Inspect one work unit's full state with `aeat app modelo
-          work status`, then draft or recalculate it with `aeat app modelo work calculate`.
+        list_next_action_summary: Inspect one work unit's full state before drafting
+          or recalculating it.
         m184_socio_handoff_message: 'Régimen de atribución de rentas: socio %{nif}
           (%{nombre}) receives an attributed base of %{importe} EUR (%{porcentaje}%
           share). On the socio''s own workspace, record it as attribution_received
@@ -3176,17 +3181,16 @@ cli:
         state_label_presentado_supersedido: superseded filing
         state_label_verificado_completo: verified complete
         status_help: Show the metadata of one work unit
-        status_next_action: Draft or recalculate this unit with `aeat app modelo work
-          calculate`, then verify the draft with `aeat app modelo work verify`.
+        status_next_action_summary: Draft or recalculate this work unit, then verify
+          the resulting draft.
         verify_help: Verify a draft calculation revision against the verified-complete
           contract
         verify_idempotent_noop: 'Idempotent no-op: calculation revision %{calculation_revision_id}
           is already verified; returned the existing verification report without changes.'
-        verify_next_action_granted: Verification passed. Export the filing artefact
-          with `aeat app modelo export`.
-        verify_next_action_incomplete: Verification found blocking items (see the
-          notices above). Resolve them, recalculate with `aeat app modelo work calculate`,
-          then re-run `aeat app modelo work verify`.
+        verify_next_action_granted_summary: Verification passed. Export the filing
+          artefact.
+        verify_next_action_incomplete_summary: Verification found blocking items.
+          Resolve them, recalculate, then run verification again.
         verify_selector_help: Draft revision selector (current, latest-draft, or explicit).
         wizard_help: Walk the work unit's outstanding manual inputs one at a time,
           in plain language, then calculate
@@ -3650,19 +3654,21 @@ cli:
         help: Censal artefact ingestion for the active profile.
         non_official_notice: Certificate-derived facts are operator-supplied evidence,
           never AEAT-verified; the censo enrolment stays at the non-official tier.
-        pull_cleared_notice: 'AEAT still holds a value for {count} field(s) you cleared:
-          {axes}. They were left empty; clearing them here does not change AEAT''s
-          record.'
-        pull_divergences_notice: 'AEAT reports {count} field(s) differently from your
-          declared answer: {axes}. Your answer stands; resolve each one yourself.'
+        pull_cleared_notice: 'The census authority still holds a value for {count}
+          field(s) you cleared: {axes}. They were left empty; clearing them here does
+          not change the authority''s record.'
+        pull_divergences_notice: 'The census authority reports {count} field(s) differently
+          from your declared answer: {axes}. Your answer stands; resolve each one
+          yourself.'
         pull_help: Read your identity and address from AEAT's censal record and preview
           or enroll them onto the active profile.
         pull_preview_notice: 'Preview only: nothing was written to the profile. Re-run
           with --apply to enroll these facts.'
-        pull_verified_tier_notice: These facts were read from AEAT itself, so the
-          censo enrolment counts as verified.
+        pull_verified_tier_notice: These facts were read from the census authority
+          itself, so the censo enrolment counts as verified.
         pull_withheld_notice: 'The values for {count} field(s) are withheld from output:
-          {axes}. Compare them yourself against AEAT; this tool will not print them.'
+          {axes}. Compare them yourself against the census authority; this tool will
+          not print them.'
         refresh_help: Download the latest censo from AEAT and save a snapshot
         show_help: Show the latest censo AEAT reported for this profile
         snapshot_id_help: Specific snapshot id (prefixes accepted)
@@ -4028,9 +4034,19 @@ cli:
       check:
         drifted: The storage tree does not match its declaration.
         help: Verify the storage tree against its declaration without repairing it
+        issue:
+          missing_path: a required storage path is missing
+          path_type_mismatch: a storage path has an unexpected filesystem type
+          permissions_drifted: storage root permissions do not match requirements
         mode_unenforced: This platform does not implement POSIX permission bits, so
           root permissions were not checked.
       errors:
+        reason:
+          durable_lifecycle: a selected target has a durable lifecycle
+          durable_state: the area contains durable state
+          no_reclaimable_targets: the taxonomy declares no reclaimable targets
+          not_root_scoped: a selected target is not root-scoped
+          protected_descendant: a selected target contains protected declared data
         reclaim_area_refused: 'Refusing to reclaim %{area}: %{reason}. %{entries}
           entries remain untouched.'
         reclaim_area_unconfirmed: Reclaiming %{area} deletes %{entries} entries and
@@ -4040,6 +4056,31 @@ cli:
         already_materialised: Every declared directory already existed; nothing was
           created.
         help: Create every declared directory, preserving everything already there
+      labels:
+        already_present: Already present
+        area: Area
+        areas: Areas
+        checked_areas: Checked areas
+        created: Created
+        detail: Detail
+        entries: Entries
+        entry_count: Entry count
+        footprint: Footprint
+        healthy: Healthy
+        issues: Issues
+        lifecycle: Lifecycle
+        'no': 'no'
+        notice_info: Info
+        notice_warning: Warning
+        occupancy: Occupancy
+        path: Path
+        reclaimable: Reclaimable
+        removed_entries: Removed entries
+        resolved_paths: Resolved paths
+        retained_entries: Retained entries
+        storage_root: Storage root
+        targets: Targets
+        'yes': 'yes'
       list:
         area_help: Show aggregate occupancy and footprint for every storage area
         relocation_is_manual: To move the tree, stop the application, copy it yourself,
@@ -4054,6 +4095,21 @@ cli:
       show:
         area_argument_help: Storage area to show
         area_help: Show one storage area in full
+      values:
+        area:
+          cache: cache
+          exports: exports
+          logs: logs
+          state: state
+        lifecycle:
+          durable: durable
+          mixed: mixed
+          reclaimable: reclaimable
+        occupancy:
+          absent: absent
+          empty: empty
+          populated: populated
+          unresolved: unresolved
     unset:
       help: Clear the value of one configuration key
       key_help: Key to clear
@@ -4616,6 +4672,7 @@ cli:
       parent_id: Parent transaction id
       pending: Pending review
       period: Period
+      profile: Profile
       purchase_invoice_evidence_id: Purchase invoice evidence
       readiness_issues: Readiness issues
       ready: Ready
@@ -4926,8 +4983,8 @@ cli:
         storage_check: Check the storage tree for missing or misplaced directories
         storage_init: Create any storage directory that is missing
         storage_list: See where every kind of local data is kept
-        storage_reclaim: Free space by deleting a category the app can rebuild
-        storage_show: Look at one storage category in detail
+        storage_reclaim: Free space by deleting a storage area the app can rebuild
+        storage_show: Look at one storage area in detail
       root:
         diagnostics_logs: Show the log path and latest lines.
         diagnostics_overview_verbose: Show general state with additional detail.
@@ -5033,9 +5090,8 @@ cli:
     calendar_local_modelo_events_unavailable: Local modelo event evidence is unavailable
       for this calendar row.
     coverage:
-      investigate: '%{count} filing obligation(s) could not be positively scoped for
-        this profile and may be under-reported: %{modelos}. Investigate each with
-        ''aeat app overview explain <modelo>''.'
+      investigate: The filing obligation %{modelo} could not be positively scoped
+        for this profile and may be under-reported. Review its filing explanation.
     drafts: Drafts
     explain:
       help: Decompose a modelo's applicability against the active profile. Surfaces
@@ -5067,8 +5123,7 @@ cli:
         01-12 (months). Combine with --year to choose the year.'
       year_help: Filing year (e.g. 2026).
     post_filing:
-      pending: '%{count} AEAT post-filing event(s) require attention: %{kinds}. Review
-        them with ''aeat app live notifications list''.'
+      pending_summary: '%{count} AEAT post-filing event(s) require attention: %{kinds}.'
     prepare:
       help: 'Walk through the data-preparation steps for one modelo/period in order:
         import transactions, classify them, attach purchase-invoice evidence, register
@@ -5115,6 +5170,7 @@ cli:
       next_modelo_work_command: '  aeat app modelo work create - start a modelo declaration
         from your ledger data.'
       next_review_command: '  aeat app ledger review - review imported rows.'
+      next_step_available: A recommended next step is available in the overview output.
       next_work_calculate_command: '  aeat app modelo work list - resume an in-progress
         modelo work unit.'
       next_work_create_command: '  aeat app modelo work create - start a work unit
@@ -5286,6 +5342,8 @@ cli:
         rows.'
       quick_start_setup_done: '  1. `aeat config profile status` - check readiness
         and the authoritative next action.'
+      quick_start_setup_login: '  1. `aeat config login NAME` - activate a registered
+        taxpayer profile.'
       quick_start_setup_needed: '  1. `aeat config profile create NAME` - create a
         local taxpayer profile.'
       quick_start_setup_repair: '  1. `aeat config repair profile` - inspect and repair
@@ -5306,11 +5364,6 @@ cli:
         profile.
       tagline: Local-first workflow with the Spanish Tax Agency (AEAT) for taxpayers
         and advisers.
-      welcome_no_profile: 'Active profile: none. Create one before profile-scoped
-        work.'
-      welcome_profile: 'Active profile: `%{profile}`.'
-      welcome_profile_unavailable: 'Active profile: unavailable. Repair the selected
-        profile before profile-scoped work.'
     language_help: Language for output and help text (en, es, ca, hu).
     profile_help: Name of the active profile.
     quiet_help: Show errors only.
@@ -5865,6 +5918,10 @@ errors:
       yet supported; enter the censal facts manually instead.
     certificado_not_a_pdf: The supplied file is not a PDF; expected the Certificado
       de Situación Censal downloaded from Sede.
+  context_labels:
+    area: area
+    entry_count: entry count
+    reason: reason
   error:
     error_access_gate_submission: The access-gate policy rejected a submission operation.
     error_access_gate_submission_preflight: Access-gate preflight rejected a write
@@ -6378,6 +6435,8 @@ errors:
       within the timeout. Another process holds it; wait and try again.
     locked_storage_master_key_keychain: The operating-system keychain is locked. Unlock
       it (Touch ID, Windows Hello or your credential-manager unlock) and try again.
+  prefix:
+    refused: Refused.
   refused:
     auth_configure_no_active_bucket: Authentication cannot be configured without an
       active profile. Create a profile with `aeat config profile create NAME` and
@@ -6703,10 +6762,10 @@ errors:
       Run `aeat config login NAME` and try again.
     refused_storage_passphrase_too_short: The passphrase is too short. It must be
       at least 8 characters long.
-    refused_storage_reclaim: 'Reclaiming this storage category is refused: its declared
+    refused_storage_reclaim: 'Reclaiming this storage area is refused: its declared
       lifecycle keeps its contents.'
-    refused_storage_reclaim_unconfirmed: Reclaiming a storage category deletes data
-      and needs explicit confirmation.
+    refused_storage_reclaim_unconfirmed: Reclaiming a storage area deletes data and
+      requires confirmation.
     refused_storage_secret_already_exists: A secret with that key already exists.
       Use the overwrite option to replace it.
     refused_storage_session_expired: The active session expired due to inactivity.
@@ -6864,16 +6923,13 @@ flows:
       add_row_required: This is required; the row cannot be added without it.
       add_row_section: Which section to add to
       auth_clave_incomplete: Cl@ve still needs %{missing}. Nothing was saved.
-      auth_contraste_missing: 'Cl@ve Móvil without QR needs the contraste from your
-        document: the support number for a NIE, or the validity date for a DNI. Nothing
-        was saved.'
-      auth_dni_nie: DNI or NIE you identify with
-      auth_fecha_validez: Validity date on the document, YYYY-MM-DD (DNI holders)
+      auth_clave_movil_route_app_request: Request in app
+      auth_clave_movil_route_qr: QR code
+      auth_contraste_missing: 'Cl@ve Móvil Request in app needs one document contrast:
+        %{nie_field} for a NIE, or %{dni_field} for a DNI. Open Identification, fill
+        the applicable field, and retry sync.'
       auth_fecha_validez_invalid: Enter the validity date as YYYY-MM-DD, for example
         1990-01-31.
-      auth_numero_soporte: Support number printed on the document
-      auth_provider: How you identify to AEAT
-      auth_tax_id: Your tax identity (NIF or NIE)
       auth_tax_id_invalid: That is not a valid NIF or NIE. Check the letter at the
         end and enter it as it appears on your document, for example 12345678Z.
       busy: Another operation is still running. Wait for it to finish.
@@ -6956,10 +7012,10 @@ flows:
         again.
     language:
       unavailable: This profile does not offer a language setting.
-    progress: '{present} of {total} fields filled in, {missing} still needed for filing'
     recovery_boundary: 'Recovery-code creation and rotation are terminal-only: aeat
       config recovery create / aeat config recovery rotate. The 24 words are shown
       once and cannot be shown again.'
+    required_complete: All schema-required profile information is present.
     section_title: '{title} - {present}/{total}'
     title: 'Profile: {profile}'
   progress:
@@ -68175,6 +68231,8 @@ profile:
         share_pct:
           label: Attributed participation percentage
       auth:
+        clave_movil_route:
+          label: Cl@ve Móvil route
         dni_nie:
           label: DNI or NIE for Cl@ve
         fecha_validez:

@@ -94,7 +94,7 @@ from ._amendment_kind_regime import (
     permitted_amendment_kind_values,
     resolve_amendment_kind_regime,
 )
-from ._auth_provider import AuthProviderDescription, AuthProviderKind
+from ._auth_provider import AuthProviderDescription, AuthProviderKind, ClaveMovilRoute
 from ._capabilities import ServiceCapability
 from ._casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from ._casilla_value_kind import CasillaValueKind
@@ -194,6 +194,7 @@ from ._notificacion_estado_servicio import (
 )
 from ._objeto_tributario import ObjetoTributario
 from ._observed_header_fact import ObservedHeaderFact
+from ._operator_progress import OperatorProgress
 from ._optional_extras import (
     ANTHROPIC_EXTRA,
     BROWSER_EXTRA,
@@ -269,6 +270,7 @@ from ._storage_taxonomy import (
     ExternalPathDeclaration,
     ExternalPathRole,
     FingerprintParticipation,
+    StorageArea,
     StorageCategory,
     StorageGrouping,
     StorageLifecycle,
@@ -429,6 +431,7 @@ __all__: list[str] = [
     "CasillaId",
     "CasillaValueKind",
     "ClassifierInputSource",
+    "ClaveMovilRoute",
     "CompatibilityRegime",
     "ConceptLifecycle",
     "ConceptoIngreso",
@@ -485,6 +488,7 @@ __all__: list[str] = [
     "ObjetoTributario",
     "ObservedHeaderFact",
     "OfficialTipoRentaCode",
+    "OperatorProgress",
     "OptionalExtra",
     "PassphraseStrength",
     "PaymentElection",
@@ -511,6 +515,7 @@ __all__: list[str] = [
     "ServiceCapability",
     "StandardPeriodCode",
     "StateRootInputs",
+    "StorageArea",
     "StorageCategory",
     "StorageGrouping",
     "StorageLifecycle",

@@ -31,7 +31,7 @@ def test_the_notice_fires_when_no_observation_exists_at_all() -> None:
     assert notice is not None
     assert notice.severity is NoticeSeverity.INFO
     assert notice.code == NO_AEAT_HISTORY_NOTICE_CODE
-    assert notice.suggestion == "aeat app live filed pull-all"
+    assert notice.action is None
 
 
 def test_the_notice_is_absent_once_one_official_observation_exists() -> None:

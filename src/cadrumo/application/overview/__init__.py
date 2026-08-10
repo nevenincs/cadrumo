@@ -250,7 +250,6 @@ def overview_status_report_from_projection(
         An :class:`OverviewStatusReport` derived from the projection.
     """
     return OverviewStatusReport(
-        active_profile=projection.active_profile.profile_id,
         active_profile_name=projection.active_profile.label,
         transactions=projection.workspace.transactions,
         invoices=projection.workspace.invoices,

@@ -30,6 +30,7 @@ def _context(format_name: str) -> typer.Context:
 
 def _payload() -> dict[str, object]:
     return RootLandingReport(
+        profile_selected=True,
         active_profile=_PROFILE_ID,
         command="aeat config profile create NAME",
         message="Create a profile before starting tax work.",
@@ -72,6 +73,7 @@ def test_emit_json_redacts_command_output_canary_matrix(capsys: pytest.CaptureFi
 
     assert _PROFILE_ID not in output
     assert payload == {
+        "profile_selected": True,
         "active_profile": CLI_PROFILE_ID_PLACEHOLDER,
         "command": "aeat config profile create NAME",
         "message": "Create a profile before starting tax work.",

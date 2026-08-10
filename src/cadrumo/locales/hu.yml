@@ -594,6 +594,9 @@ application:
         clave_identity_profile_mismatch: A Cl@ve Móvil azonossága nem egyezik az aktív
           profil adóazonosítójával; váltson az egyező profilra, vagy frissítse a profil
           adóazonosítóját.
+        clave_route_missing: 'A Cl@ve Móvil élő hitelesítéséhez szükséges: %{route_field}.
+          Nyissa meg a profilkezelő Azonosítás részét, válassza a QR-kód vagy a Kérés
+          az alkalmazásban lehetőséget, mentse, majd próbálja újra a szinkronizálást.'
         corrupt_session: A mentett hitelesítési munkamenet sérült és nem olvasható.
           Futtassa az `aeat config auth logout`, majd az `aeat config auth test` parancsot.
         no_session: Nincs aktív AEAT munkamenet; futtassa a `aeat config auth test`
@@ -1414,8 +1417,6 @@ application:
         {allowed_manual_ids}; kapott érték: {manual_id}.'
       invalid_manual_rule_kind: 'A kézikönyvi szabály típusának ezek egyikének kell
         lennie: {allowed_rule_kinds}; kapott érték: {rule_kind}.'
-      invalid_oracle_environment: 'A nyilvántartási oracle környezetnek ezek egyikének
-        kell lennie: {allowed_values}; kapott érték: {value}.'
       invalid_topic_locale: 'A nyilvántartási téma nyelvének ezek egyikének kell lennie:
         {allowed_locales}; kapott érték: {locale_code}.'
       manual_section_not_found: 'A(z) {section} kézikönyvszakasz nem található itt:
@@ -2524,9 +2525,6 @@ cli:
           ideiglenes felülbírálással, az állapot megváltoztatása nélkül
         unknown_keys: 'Ismeretlen --binding kulcs(ok): {keys}; ismert kötések a(z)
           {code}@{revision} ({period}) számára: {suggestion}.'
-        unscoped_revision_suggestion: Mielőtt az ids értékeket work calculate parancsba
-          másolod, futtasd újra --modelo MODELO --year YEAR --period PERIOD kapcsolókkal
-          a cél munkaegységhez.
         unscoped_revision_warning: A kötéslista nincs %{missing_filters} szerint szűkítve;
           olyan revízió kötésazonosítóit is tartalmazhatja, amely nem egyezik a work
           calculate által használt munkaegységgel.
@@ -3112,8 +3110,8 @@ cli:
           Importált külső bizonyítékot (justificante / CSV-nyilvántartás / élő rögzítés)
           kell tartalmaznia.
         history_help: Egy munkaegység minden életciklus-eseményének megjelenítése.
-        history_next_action: Tekintse át ennek a munkaegységnek a jelenlegi állapotát
-          a `aeat app modelo work status` paranccsal.
+        history_next_action_summary: Tekintse át ennek a munkaegységnek a jelenlegi
+          állapotát.
         history_work_unit_id_help: Annak a munkaegységnek az azonosítója, amelynek
           életciklusát meg szeretné tekinteni.
         id_is_work_unit_not_calc_revision_natural: 'Ez az azonosító munkaegység-azonosító,
@@ -3122,6 +3120,11 @@ cli:
           --year %{year} --period %{period}'', majd futtasd újra a verify/file műveletet
           ugyanarra a modellre/évre/időszakra. A pontos azonosítók továbbra is elérhetők
           haladó menekülőútként.'
+        id_selector_ambiguous: 'A megjelenített {selector} munkaazonosító egynél több
+          aktív munkaegységre illeszkedik. Használja az alábbi jelöltek egyikének
+          teljes, 64 karakteres munkaegység-azonosítóját.
+
+          {candidates}'
         include_discarded_help: Eldobott munkaegységek bevonása a listába (alapértelmezés
           szerint kizárva).
         invalid_binding_key: 'A --binding kulcsa nem érvényes BindingId (kisbetűs
@@ -3136,6 +3139,8 @@ cli:
           ezek közül: {choices}.'
         invalid_work_unit_id: A work_unit_id értékének 64 karakteres kisbetűs hex-karakterláncnak
           kell lennie (SHA-256 kivonat).
+        invalid_work_unit_lookup_id: A work_unit_id értékének kisbetűs hexadecimális
+          SHA-256-azonosítónak vagy egyértelmű előtagnak kell lennie
         kv_empty_key_error: 'A(z) {flag} kulcsa nem lehet üres; kapott: {spec}.'
         kv_format_error: 'A(z) {flag} értéket {key_label}={value_label} alakban kell
           megadni. Ez egy kulcs-érték bejegyzés: A kulcs a bal oldalon áll, utána
@@ -3143,9 +3148,8 @@ cli:
           érték: {spec}.'
         list_help: Regisztrált munkaegységek listázása, opcionálisan profil szerint
           szűrve.
-        list_next_action: Egy munkaegység teljes állapotát a `aeat app modelo work
-          status` paranccsal tekintheti meg, majd a `aeat app modelo work calculate`
-          paranccsal készíthet vagy számolhat újra vázlatot.
+        list_next_action_summary: Tekintse meg egy munkaegység teljes állapotát a
+          vázlat elkészítése vagy újraszámítása előtt.
         m184_socio_handoff_message: 'Jövedelem-hozzárendelési rendszer (régimen de
           atribución de rentas): a(z) %{nif} tag (%{nombre}) %{importe} EUR hozzárendelt
           adóalapot kap (%{porcentaje}% részesedés). A tagnak a saját munkaterületén
@@ -3353,20 +3357,17 @@ cli:
         state_label_presentado_supersedido: Felülírt beadás
         state_label_verificado_completo: Teljesen ellenőrizve
         status_help: Egy munkaegység metaadatainak megjelenítése.
-        status_next_action: Készítse el vagy számolja újra ezt az egységet a `aeat
-          app modelo work calculate` paranccsal, majd ellenőrizze a vázlatot a `aeat
-          app modelo work verify` paranccsal.
+        status_next_action_summary: Készítse el vagy számolja újra ezt a munkaegységet,
+          majd ellenőrizze az eredményül kapott vázlatot.
         verify_help: Tervezet számítási revízió hitelesítése a hitelesített-teljes
           szerződéssel szemben.
         verify_idempotent_noop: 'Idempotens nincs-művelet: a(z) %{calculation_revision_id}
           számítási revízió már ellenőrzött; a meglévő ellenőrzési jelentés változatlanul
           lett visszaadva.'
-        verify_next_action_granted: Az ellenőrzés sikeres. Exportálja a benyújtási
-          dokumentumot a `aeat app modelo export` paranccsal.
-        verify_next_action_incomplete: Az ellenőrzés blokkoló tételeket talált (lásd
-          a fenti értesítéseket). Oldja meg őket, számolja újra a `aeat app modelo
-          work calculate` paranccsal, majd futtassa újra a `aeat app modelo work verify`
-          parancsot.
+        verify_next_action_granted_summary: Az ellenőrzés sikeres. Exportálja a benyújtási
+          dokumentumot.
+        verify_next_action_incomplete_summary: Az ellenőrzés blokkoló tételeket talált.
+          Oldja meg őket, számolja újra, majd futtassa újra az ellenőrzést.
         verify_selector_help: Piszkozat-revízió választó (current, latest-draft vagy
           explicit).
         wizard_help: Végigvezet a munkaegység hiányzó kézi mezőin, majd kiszámítja
@@ -3869,20 +3870,21 @@ cli:
         non_official_notice: A tanúsítványból származó adatok az operátor által szolgáltatott
           bizonyítékok, sosem AEAT által ellenőrzöttek; a censal nyilvántartás nem
           hivatalos szinten marad.
-        pull_cleared_notice: 'Az AEAT még mindig tárol értéket {count} olyan mezőnél,
-          amelyet kiürítettél: {axes}. Ezek üresen maradtak; az itteni törlés nem
-          módosítja az AEAT nyilvántartását.'
-        pull_divergences_notice: 'Az AEAT {count} mezőt a bevallott válaszodtól eltérően
-          közöl: {axes}. A te válaszod marad érvényben; mindegyik eltérést neked kell
-          rendezned.'
+        pull_cleared_notice: 'A népesség-nyilvántartó hatóság továbbra is tartalmaz
+          értéket {count} általad törölt mezőhöz: {axes}. Üresen maradtak; az itt
+          végzett törlés nem módosítja a hatóság nyilvántartását.'
+        pull_divergences_notice: 'A népesség-nyilvántartó hatóság {count} mezőnél
+          eltérő értéket jelez a megadott válaszodhoz képest: {axes}. A válaszod változatlan
+          marad; minden eltérést neked kell rendezni.'
         pull_help: Beolvassa a személyazonosságodat és a lakcímedet az AEAT nyilvántartási
           adataiból, majd előnézetet ad vagy rögzíti azokat az aktív profilban.
         pull_preview_notice: 'Csak előnézet: a profilba semmi nem került. Az adatok
           rögzítéséhez futtasd újra a --apply kapcsolóval.'
-        pull_verified_tier_notice: Ezek az adatok közvetlenül az AEAT-tól származnak,
-          ezért a nyilvántartásba vétel igazoltnak számít.
-        pull_withheld_notice: '{count} mező értékét nem jelenítjük meg: {axes}. Hasonlítsd
-          össze magad az AEAT adataival; ez az eszköz nem írja ki őket.'
+        pull_verified_tier_notice: Ezeket a tényeket közvetlenül a népesség-nyilvántartó
+          hatóságtól olvastuk, ezért a censo felvétele ellenőrzöttnek számít.
+        pull_withheld_notice: 'A(z) {count} mező értéke ki van takarva a kimenetben:
+          {axes}. Hasonlítsd össze őket a népesség-nyilvántartó hatóság adataival;
+          ez az eszköz nem írja ki őket.'
         refresh_help: A legfrissebb nyilvántartás letöltése az AEAT-ból és pillanatkép
           mentése.
         show_help: Az AEAT által legutóbb jelentett nyilvántartás megjelenítése erre
@@ -4271,9 +4273,20 @@ cli:
       check:
         drifted: A tárolófa nem egyezik a deklarációjával.
         help: Ellenőrzi a tárolófát a deklarációjához képest, javítás nélkül
+        issue:
+          missing_path: egy kötelező tárolási útvonal hiányzik
+          path_type_mismatch: egy tárolási útvonal fájlrendszertípusa váratlan
+          permissions_drifted: a tárolási gyökér jogosultságai nem felelnek meg a
+            követelményeknek
         mode_unenforced: Ez a platform nem valósítja meg a POSIX jogosultsági biteket,
           ezért a gyökér jogosultságait nem ellenőriztük.
       errors:
+        reason:
+          durable_lifecycle: egy kijelölt cél életciklusa tartós
+          durable_state: a terület tartós állapotot tartalmaz
+          no_reclaimable_targets: a taxonómia nem jelöl felszabadítható célokat
+          not_root_scoped: egy kijelölt cél nem gyökérhatókörű
+          protected_descendant: egy kijelölt cél védett deklarált adatot tartalmaz
         reclaim_area_refused: 'A(z) %{area} felszabadítása elutasítva: %{reason}.
           %{entries} bejegyzés érintetlen maradt.'
         reclaim_area_unconfirmed: A(z) %{area} felszabadítása %{entries} bejegyzést
@@ -4283,6 +4296,31 @@ cli:
         already_materialised: Minden deklarált könyvtár már létezett; egyet sem hoztunk
           létre.
         help: Létrehozza az összes deklarált könyvtárat, megőrizve a meglévő tartalmat
+      labels:
+        already_present: Már jelen van
+        area: Terület
+        areas: Területek
+        checked_areas: Ellenőrzött területek
+        created: Létrehozva
+        detail: Részlet
+        entries: Bejegyzések
+        entry_count: Bejegyzések száma
+        footprint: Méret
+        healthy: Megfelelő
+        issues: Problémák
+        lifecycle: Életciklus
+        'no': nem
+        notice_info: Információ
+        notice_warning: Figyelmeztetés
+        occupancy: Foglaltság
+        path: Útvonal
+        reclaimable: Felszabadítható
+        removed_entries: Eltávolított bejegyzések
+        resolved_paths: Feloldott útvonalak
+        retained_entries: Megőrzött bejegyzések
+        storage_root: Tárolási gyökér
+        targets: Célok
+        'yes': igen
       list:
         area_help: Megjeleníti minden tárolóterület összesített foglaltságát és méretét
         relocation_is_manual: A fa áthelyezéséhez állítsd le az alkalmazást, másold
@@ -4298,6 +4336,21 @@ cli:
       show:
         area_argument_help: A megjelenítendő tárolóterület
         area_help: Egy tárolóterület teljes megjelenítése
+      values:
+        area:
+          cache: gyorsítótár
+          exports: exportok
+          logs: naplók
+          state: állapot
+        lifecycle:
+          durable: tartós
+          mixed: vegyes
+          reclaimable: felszabadítható
+        occupancy:
+          absent: hiányzik
+          empty: üres
+          populated: adatokat tartalmaz
+          unresolved: feloldatlan
     unset:
       help: Egy konfigurációs kulcs értékének törlése.
       key_help: A törlendő kulcs.
@@ -4895,6 +4948,7 @@ cli:
       parent_id: Szülő tranzakcióazonosító
       pending: Felülvizsgálatra vár
       period: Időszak
+      profile: Profil
       purchase_invoice_evidence_id: Beszerzési számla bizonylat
       readiness_issues: Készültségi problémák
       ready: Kész
@@ -5232,8 +5286,8 @@ cli:
         storage_check: 'Ellenőrzi a tárolófát: hiányzó vagy rossz helyen lévő könyvtárak'
         storage_init: Létrehozza a hiányzó tárolókönyvtárakat
         storage_list: Megnézheted, hol tárolódik minden helyi adattípus
-        storage_reclaim: Helyet szabadít fel egy újraépíthető kategória törlésével
-        storage_show: Egy tárolókategória részletes megtekintése
+        storage_reclaim: Hely felszabadítása egy újraépíthető tárolóterület törlésével
+        storage_show: Egy tárolóterület részletes megtekintése
       root:
         diagnostics_logs: A napló útvonalának és legutóbbi sorainak megjelenítése.
         diagnostics_overview_verbose: Az általános állapot részletes megjelenítése.
@@ -5339,9 +5393,9 @@ cli:
     calendar_local_modelo_events_unavailable: Ehhez a naptársorhoz nem érhető el helyi
       modell eseménybizonyíték.
     coverage:
-      investigate: '%{count} bevallási kötelezettséget nem sikerült egyértelműen megállapítani
-        ehhez a profilhoz, és bevallatlan maradhat: %{modelos}. Vizsgálja meg mindegyiket
-        a ''aeat app overview explain <modelo>'' paranccsal.'
+      investigate: A(z) %{modelo} bevallási kötelezettséget nem sikerült egyértelműen
+        megállapítani ehhez a profilhoz, és bevallatlan maradhat. Tekintse át a bevallási
+        magyarázatát.
     drafts: Tervezetek
     explain:
       help: Egy nyomtatvány alkalmazhatóságának elemzése az aktív profillal szemben.
@@ -5376,8 +5430,7 @@ cli:
         01-12 (hónapok). Az évhez kombináld a --year kapcsolóval.'
       year_help: Bevallási év (pl. 2026).
     post_filing:
-      pending: '%{count} AEAT bevallás utáni esemény igényel figyelmet: %{kinds}.
-        Tekintsd át őket a ''aeat app live notifications list'' paranccsal.'
+      pending_summary: '%{count} AEAT benyújtás utáni esemény figyelmet igényel: %{kinds}.'
     prepare:
       help: 'Végigvezet az adatelőkészítés lépésein egy modellhez/időszakhoz sorban:
         tranzakciók importálása, besorolásuk, beszerzési számla igazolások csatolása,
@@ -5428,6 +5481,8 @@ cli:
       next_modelo_work_command: '  aeat app modelo work create - nyomtatvány-bevallás
         indítása a főkönyvi adatokból.'
       next_review_command: '  aeat app ledger review - importált sorok ellenőrzése.'
+      next_step_available: Az áttekintés kimenetében elérhető egy ajánlott következő
+        lépés.
       next_work_calculate_command: '  aeat app modelo work list - folyamatban lévő
         modellómunka-egység folytatása.'
       next_work_create_command: '  aeat app modelo work create - új munkaegység indítása
@@ -5599,6 +5654,8 @@ cli:
         és besorolása.'
       quick_start_setup_done: '  1. `aeat config profile status` - készültség és hiteles
         következő lépés ellenőrzése.'
+      quick_start_setup_login: '  1. `aeat config login NAME` - aktiváljon egy regisztrált
+        adózói profilt.'
       quick_start_setup_needed: '  1. `aeat config profile create NAME` - helyi adózói
         profil létrehozása.'
       quick_start_setup_repair: '  1. `aeat config repair profile` - vizsgáld meg
@@ -5618,11 +5675,6 @@ cli:
       session_unchecked: A munkamenet és készültség nem következik a kiválasztott
         profilból.
       tagline: Helyi munkafolyamat a spanyol adóhatósággal (AEAT) adózóknak és tanácsadóknak.
-      welcome_no_profile: 'Aktív profil: nincs. A profilhoz kötött munka előtt hozz
-        létre egyet.'
-      welcome_profile: 'Aktív profil: `%{profile}`.'
-      welcome_profile_unavailable: 'Aktív profil: nem érhető el. Javítsd a kijelölt
-        profilt a profilhoz kötött munka előtt.'
     language_help: A kimenet és a súgószöveg nyelve (en, es, ca, hu).
     profile_help: Az aktív profil neve.
     quiet_help: Csak a hibák megjelenítése.
@@ -6196,6 +6248,10 @@ errors:
       add meg a censal adatokat kézzel.
     certificado_not_a_pdf: A megadott fájl nem PDF; a Sede-ről letöltött Certificado
       de Situación Censal szükséges.
+  context_labels:
+    area: terület
+    entry_count: bejegyzések száma
+    reason: ok
   error:
     error_access_gate_submission: A hozzáférési kapu szabályzata elutasított egy benyújtási
       műveletet.
@@ -6713,6 +6769,8 @@ errors:
     locked_storage_master_key_keychain: Az operációs rendszer kulcstára zárolt. Oldja
       fel a zárolást (Touch ID, Windows Hello vagy a hitelesítőkezelő), és próbálja
       újra.
+  prefix:
+    refused: Elutasítva.
   refused:
     auth_configure_no_active_bucket: Hitelesítés nem konfigurálható aktív profil nélkül.
       Hozzon létre profilt az  paranccsal, és próbálja újra.
@@ -7042,10 +7100,10 @@ errors:
       szükséges. Futtassa az `aeat config login NÉV` parancsot, majd próbálja újra.
     refused_storage_passphrase_too_short: A jelmondat túl rövid. Legalább 8 karakterből
       kell állnia.
-    refused_storage_reclaim: 'A tárolókategória felszabadítása elutasítva: a deklarált
+    refused_storage_reclaim: 'A tárolóterület felszabadítása elutasítva: a deklarált
       életciklusa megőrzi a tartalmát.'
-    refused_storage_reclaim_unconfirmed: Egy tárolókategória felszabadítása adatokat
-      töröl, és kifejezett megerősítést igényel.
+    refused_storage_reclaim_unconfirmed: Egy tárolóterület felszabadítása adatokat
+      töröl, ezért megerősítés szükséges.
     refused_storage_secret_already_exists: Ilyen kulcsú titkos adat már létezik. Használja
       a felülírás lehetőséget a csere érdekében.
     refused_storage_session_expired: Az aktív munkamenet inaktivitás miatt lejárt.
@@ -7207,16 +7265,13 @@ flows:
       add_row_section: Melyik szakaszhoz
       auth_clave_incomplete: 'A Cl@ve még ezt igényli: %{missing}. Semmi sem lett
         elmentve.'
-      auth_contraste_missing: 'A QR nélküli Cl@ve Móvil útvonalhoz a dokumentum ellenőrző
-        adata szükséges: NIE esetén a támogatási szám, DNI esetén az érvényességi
-        dátum. Semmi sem lett elmentve.'
-      auth_dni_nie: DNI vagy NIE, amellyel azonosítja magát
-      auth_fecha_validez: A dokumentum érvényességi dátuma, ÉÉÉÉ-HH-NN (DNI esetén)
+      auth_clave_movil_route_app_request: Kérés az alkalmazásban
+      auth_clave_movil_route_qr: QR-kód
+      auth_contraste_missing: 'A Cl@ve Móvil alkalmazáskéréséhez egy okmány-ellenőrző
+        adat szükséges: NIE esetén %{nie_field}, DNI esetén %{dni_field}. Nyissa meg
+        az Azonosítás részt, töltse ki a megfelelő mezőt, majd próbálja újra a szinkronizálást.'
       auth_fecha_validez_invalid: Az érvényességi dátumot ÉÉÉÉ-HH-NN alakban adja
         meg, például 1990-01-31.
-      auth_numero_soporte: A dokumentumon szereplő támogatási szám
-      auth_provider: Azonosítás módja az AEAT felé
-      auth_tax_id: Az Ön adóazonosítója (NIF vagy NIE)
       auth_tax_id_invalid: Ez a NIF vagy NIE nem érvényes. Ellenőrizze a záró betűt,
         és úgy adja meg, ahogy az okmányán szerepel, például 12345678Z.
       busy: Egy másik művelet még mindig fut. Várja meg, amíg befejeződik.
@@ -7300,10 +7355,10 @@ flows:
         majd próbáld újra.
     language:
       unavailable: Ez a profil nem kínál nyelvi beállítást.
-    progress: '{present} / {total} mező kitöltve, {missing} hiányzik a benyújtáshoz'
     recovery_boundary: 'A helyreállítási kód létrehozása és megújítása kizárólag a
       terminálról történik: aeat config recovery create / aeat config recovery rotate.
       A 24 szó egyszer jelenik meg, és nem jeleníthető meg újra.'
+    required_complete: A séma által megkövetelt összes profiladat rendelkezésre áll.
     section_title: '{title} - {present}/{total}'
     title: 'Profil: {profile}'
   progress:
@@ -68770,6 +68825,8 @@ profile:
         share_pct:
           label: Hozzárendelt részesedés aránya
       auth:
+        clave_movil_route:
+          label: Cl@ve Móvil útvonal
         dni_nie:
           label: DNI vagy NIE a Cl@ve-hoz
         fecha_validez:

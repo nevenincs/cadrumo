@@ -87,7 +87,7 @@ class TestLifecycleOnlyEntries:
         # emptied but never added, removed, or edited field-by-field.
         assert STORAGE.exception is NounGroupExceptionKind.LIFECYCLE_OPERATIONS_ONLY
         assert STORAGE.crud_verbs == frozenset()
-        assert STORAGE.noun == "storage_category"
+        assert STORAGE.noun == "storage_area"
 
 
 class TestCatalogueUniquePaths:

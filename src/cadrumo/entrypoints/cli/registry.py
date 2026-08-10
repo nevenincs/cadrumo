@@ -10,30 +10,20 @@ import typer
 from ...application.registry import (
     RegistryRevisionDiffReport,
     RegistryTreeReport,
-    audit_registry_oracles,
     diff_registry_revisions,
     inspect_registry_tree,
-    replay_registry_parity,
-    run_registry_parity,
     verify_filed_state,
     verify_registry_tree,
-    verify_registry_workbooks,
 )
-from ...core.config import load_settings
 from ...core.i18n import tr
 from ...core.json_contract import strict_round_trip
 from ...core.resources import bundled_path
-from ...domain.calculations.registry import OracleEnvironment as _OracleEnvironment
 from ._common import MODELO_CODE_CHOICE, _emit_envelope, resolve_optional_root
 from ._registry_corpus import citations_app, manuals_app
 from ._registry_diff_payloads import RegistryDiffRevisionsResult
 from ._registry_payloads import (
-    RegistryAuditOraclesResult,
     RegistryInspectResult,
-    RegistryParityReplayResult,
-    RegistryParityRunResult,
     RegistryVerifyFiledStateResult,
-    RegistryWorkbooksVerifyResult,
 )
 
 app = typer.Typer(
@@ -42,20 +32,6 @@ app = typer.Typer(
     no_args_is_help=True,
     add_completion=False,
 )
-workbooks_app = typer.Typer(
-    name="workbooks",
-    help=tr("cli.registry.workbooks_app_help"),
-    no_args_is_help=True,
-    add_completion=False,
-)
-parity_app = typer.Typer(
-    name="parity",
-    help=tr("cli.registry.parity_app_help"),
-    no_args_is_help=True,
-    add_completion=False,
-)
-app.add_typer(workbooks_app, name="workbooks")
-app.add_typer(parity_app, name="parity")
 app.add_typer(citations_app, name="citations")
 app.add_typer(manuals_app, name="manuals")
 
@@ -150,62 +126,6 @@ def verify_registry_cmd(
             *_registry_tree_metric_lines(report),
         ),
     )
-
-
-@app.command("audit-oracles", help=tr("cli.registry.audit_oracles_help"))
-def audit_oracles_cmd(
-    ctx: typer.Context,
-    registry_root: _RegistryRootOpt = None,
-    environment: Annotated[
-        _OracleEnvironment,
-        typer.Option(
-            "--environment",
-            help=tr("cli.registry.audit_oracles_environment_help"),
-        ),
-    ] = _OracleEnvironment.PRODUCTION,
-) -> None:
-    """Audit registered live-parity oracles against every modelo's cross-reference bindings.
-
-    Loads the registry, registers every committed oracle adapter into a
-    fresh catalogue, then runs ``audit_registry_oracle_bindings``. Each
-    failure names the modelo, revision, cross-reference, oracle id, and
-    underlying catalogue error. Exit code is non-zero when failures
-    exist so CI / pre-deploy pipelines can gate on a clean audit.
-    """
-    registry_root = resolve_optional_root(registry_root, lambda: bundled_path("registry", "aeat"))
-    report = audit_registry_oracles(registry_root, environment=environment)
-    lines = [
-        _metric_line("environment", report.environment),
-        _metric_line("registered_oracle_ids", ",".join(report.registered_oracle_ids)),
-        _metric_line("failure_count", report.failure_count),
-        _metric_line("applicability_declaration_count", len(report.applicability_declarations)),
-        _metric_line("orphan_oracle_ids", ",".join(report.orphan_oracle_ids)),
-    ]
-    lines.extend(_metric_line(f"failure[{index}]", failure) for index, failure in enumerate(report.failures))
-    lines.extend(
-        _metric_line(
-            f"applicability[{index}]",
-            f"{declaration.modelo_id}:{declaration.cross_reference_id} "
-            f"mode={declaration.applicability_condition_mode} "
-            f"fields={','.join(declaration.predicate_fields)}",
-        )
-        for index, declaration in enumerate(report.applicability_declarations)
-    )
-    _emit_envelope(
-        ctx,
-        command="registry.audit_oracles",
-        result=RegistryAuditOraclesResult(
-            environment=report.environment,
-            registered_oracle_ids=list(report.registered_oracle_ids),
-            failure_count=report.failure_count,
-            failures=list(report.failures),
-            applicability_declarations=list(report.applicability_declarations),
-            orphan_oracle_ids=list(report.orphan_oracle_ids),
-        ),
-        lines=lines,
-    )
-    if report.failures:
-        raise typer.Exit(code=1)
 
 
 @app.command("verify-filed-state", help=tr("cli.registry.verify_filed_state_help"))
@@ -363,207 +283,9 @@ def _diff_revisions_lines(report: RegistryRevisionDiffReport) -> list[str]:
     return lines
 
 
-@workbooks_app.command("verify", help=tr("cli.registry.workbooks_verify_help"))
-def verify_workbooks_cmd(
-    ctx: typer.Context,
-    root: Annotated[
-        Path | None,
-        typer.Option(
-            "--root",
-            file_okay=False,
-            dir_okay=True,
-            readable=True,
-            help=tr("cli.registry.workbooks_root_help"),
-        ),
-    ] = None,
-    limit: Annotated[
-        int | None,
-        typer.Option("--limit", min=1, help=tr("cli.registry.workbooks_limit_help")),
-    ] = None,
-    per_file_timeout_seconds: Annotated[
-        float,
-        typer.Option("--per-file-timeout", min=0.1, help=tr("cli.registry.workbooks_timeout_help")),
-    ] = 10.0,
-    output: Annotated[
-        Path | None,
-        typer.Option(
-            "--output",
-            file_okay=True,
-            dir_okay=False,
-            writable=True,
-            help=tr("cli.registry.workbooks_output_help"),
-        ),
-    ] = None,
-    resume_from: Annotated[
-        Path | None,
-        typer.Option(
-            "--resume-from",
-            exists=True,
-            file_okay=True,
-            dir_okay=False,
-            readable=True,
-            help=tr("cli.registry.workbooks_resume_help"),
-        ),
-    ] = None,
-) -> None:
-    """Run the read-only workbook parity backend verification."""
-    report = verify_registry_workbooks(
-        root=resolve_optional_root(root, lambda: bundled_path("corpus", "aeat_official", "disenos_registro")),
-        limit=limit,
-        per_file_timeout_seconds=per_file_timeout_seconds,
-        resume_from=resume_from,
-        output=output,
-    )
-    _emit_envelope(
-        ctx,
-        command="registry.workbooks.verify",
-        result=RegistryWorkbooksVerifyResult(
-            root=report.root,
-            workbook_count=report.workbook_count,
-            scanned_count=report.scanned_count,
-            formula_workbook_count=report.formula_workbook_count,
-            unsupported_xls_count=report.unsupported_xls_count,
-            failed_count=report.failed_count,
-            runner=report.runner,
-            reports=list(report.reports),
-            modelo_coverage=list(report.modelo_coverage),
-        ),
-        lines=(
-            _metric_line("backend_exists", report.backend_exists),
-            _metric_line("passed", report.passed),
-            _metric_line("workbook_count", report.workbook_count),
-            _metric_line("scanned_count", report.scanned_count),
-            _metric_line("formula_workbook_count", report.formula_workbook_count),
-            _metric_line("unsupported_xls_count", report.unsupported_xls_count),
-            _metric_line("failed_count", report.failed_count),
-            _metric_line("runner_status", report.runner.status),
-            _metric_line("runner_detail", report.runner.detail),
-        ),
-    )
-
-
-@parity_app.command("run", help=tr("cli.registry.parity_run_help"))
-def run_parity_cmd(
-    ctx: typer.Context,
-    scenario_path: Annotated[
-        Path,
-        typer.Option(
-            "--scenario",
-            exists=True,
-            file_okay=True,
-            dir_okay=False,
-            readable=True,
-            help=tr("cli.registry.parity_scenario_help"),
-        ),
-    ],
-    registry_root: _RegistryRootOpt = None,
-    source_root: _SourceRootOpt = None,
-    store_root: Annotated[
-        Path | None,
-        typer.Option(
-            "--store-root",
-            file_okay=False,
-            dir_okay=True,
-            writable=True,
-            help=tr("cli.registry.parity_store_root_help"),
-        ),
-    ] = None,
-    output: Annotated[
-        Path | None,
-        typer.Option(
-            "--output",
-            file_okay=True,
-            dir_okay=False,
-            writable=True,
-            help=tr("cli.registry.parity_output_help"),
-        ),
-    ] = None,
-) -> None:
-    """Run one stored parity scenario and archive the resulting tape."""
-    resolved_registry_root = resolve_optional_root(registry_root, lambda: bundled_path("registry", "aeat"))
-    resolved_source_root = resolve_optional_root(source_root, bundled_path)
-    tape, target = run_registry_parity(
-        scenario_path=scenario_path,
-        registry_root=resolved_registry_root,
-        source_root=resolved_source_root,
-        store_root=resolve_optional_root(store_root, lambda: load_settings().cadrumo_registry_parity_store_dir),
-        output=output,
-    )
-    _emit_envelope(
-        ctx,
-        command="registry.parity.run",
-        result=RegistryParityRunResult(
-            created_at=tape.created_at,
-            scenario_path=tape.scenario_path,
-            scenario=tape.scenario,
-            workbook=tape.workbook,
-            runner=tape.runner,
-            report=tape.report,
-            path=tape.path,
-        ),
-        lines=(
-            _metric_line("scenario_id", tape.scenario.id),
-            _metric_line("status", tape.report.status),
-            _metric_line("tape_path", target.as_posix()),
-            _metric_line("workbook_path", tape.scenario.workbook_path.as_posix()),
-            _metric_line("comparison_count", len(tape.report.comparisons)),
-        ),
-    )
-
-
-@parity_app.command("replay", help=tr("cli.registry.parity_replay_help"))
-def replay_parity_cmd(
-    ctx: typer.Context,
-    tape_path: Annotated[
-        Path,
-        typer.Option(
-            "--tape",
-            exists=True,
-            file_okay=True,
-            dir_okay=False,
-            readable=True,
-            help=tr("cli.registry.parity_tape_help"),
-        ),
-    ],
-    registry_root: _RegistryRootOpt = None,
-    source_root: _SourceRootOpt = None,
-) -> None:
-    """Replay one archived parity tape against the current registry runtime."""
-    resolved_registry_root = resolve_optional_root(registry_root, lambda: bundled_path("registry", "aeat"))
-    resolved_source_root = resolve_optional_root(source_root, bundled_path)
-    report = replay_registry_parity(
-        tape_path=tape_path,
-        registry_root=resolved_registry_root,
-        source_root=resolved_source_root,
-    )
-    _emit_envelope(
-        ctx,
-        command="registry.parity.replay",
-        result=RegistryParityReplayResult(
-            tape_path=report.tape_path,
-            scenario_id=report.scenario_id,
-            status=report.status,
-            differences=list(report.differences),
-            stored=report.stored,
-            current=report.current,
-        ),
-        lines=(
-            _metric_line("scenario_id", report.scenario_id),
-            _metric_line("status", report.status),
-            _metric_line("difference_count", len(report.differences)),
-            _metric_line("differences", ",".join(report.differences)),
-        ),
-    )
-
-
 __all__ = [
     "app",
     "inspect_registry_cmd",
-    "parity_app",
-    "replay_parity_cmd",
-    "run_parity_cmd",
     "verify_filed_state_cmd",
     "verify_registry_cmd",
-    "verify_workbooks_cmd",
-    "workbooks_app",
 ]

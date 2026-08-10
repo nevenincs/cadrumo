@@ -100,6 +100,14 @@ def test_create_profile_name_is_optional_for_registration_dispatch() -> None:
     assert parameter.default is None
 
 
+def test_edit_profile_name_is_optional_for_active_profile_dispatch() -> None:
+    """Typer must reach the manager before demanding an optional subject."""
+    command = build_wizard_command(get_setup_flow(), mode="edit")
+    parameter = inspect.signature(command).parameters["profile_name"]
+
+    assert parameter.default is None
+
+
 def test_manager_dispatch_callback_exposes_typer_context() -> None:
     """The manager branch must receive the context it uses for its envelope."""
     command = with_manager_frontend(build_wizard_command(get_setup_flow(), mode="create"), mode="create")

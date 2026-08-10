@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry import RegistryValidationError, extract_record_design
+
 from ._record_design_support import (
     _RECORD_DESIGN_ROOT,
     _committed_registry_tree,
@@ -22,6 +24,310 @@ from ._record_design_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def test_modelo_200_workbook_recovers_source_declared_totals_and_variable_envelope() -> None:
+    """The pinned binary, rather than terminal inference, owns totals and composition."""
+    _modelo, catalogues = _committed_registry_tree()
+    source = catalogues.sources["aeat-dr-200-2025"]
+    workbook_path = bundled_path() / source.corpus_path
+    declared_totals, formula_anchors = _official_total_rows(workbook_path)
+
+    assert declared_totals
+    assert formula_anchors["DP200001"] == ("A119", "C119", "=SUM(C6:C118)", 627)
+    assert formula_anchors["DP200DID"] == ("A49", "C49", "=SUM(C6:C48)", 774)
+
+    parsed = {sheet.name: sheet for sheet in extract_record_design(workbook_path)}
+    assert set(declared_totals) == {name for name, sheet in parsed.items() if sheet.total_positions is not None}
+    for name, declared_total in declared_totals.items():
+        sheet = parsed[name]
+        terminal_extent = max(field.offset + field.length - 1 for field in sheet.fields)
+        assert sheet.total_positions == declared_total == terminal_extent
+
+    envelope_sheet = parsed["DP200000"]
+    envelope = envelope_sheet.variable_envelope
+    assert envelope_sheet.total_positions is None
+    assert envelope is not None
+    assert envelope.prefix_extent == 328
+    assert max(field.offset + field.length - 1 for field in envelope.prefix_fields) == 328
+    assert (envelope.body.row, envelope.body.offset, envelope.body.length) == (14, 329, "Variable")
+    assert (
+        envelope.closing_suffix.row,
+        envelope.closing_suffix.offset,
+        envelope.closing_suffix.length,
+    ) == (15, "***", 18)
+    assert (
+        envelope.variable_total.row,
+        envelope.variable_total.label,
+        envelope.variable_total.length,
+    ) == (16, "total", "Variable")
+
+
+def test_workbook_declared_total_must_equal_terminal_parsed_extent(tmp_path: Path) -> None:
+    """A cached official total that disagrees with parsed geometry refuses the sheet."""
+    from openpyxl import Workbook
+
+    path = tmp_path / "mismatched-total.xlsx"
+    workbook = Workbook()
+    worksheet = workbook.active
+    worksheet.title = "Fixed"
+    worksheet.append(("Nº", "Posic.", "Lon", "Tipo", "Descripción"))
+    worksheet.append((1, 1, 2, "An", "First"))
+    worksheet.append(("Total:", None, 3, None, None))
+    workbook.save(path)
+    workbook.close()
+
+    with pytest.raises(RegistryValidationError, match="declares 3 total positions but parsed fields fill 2"):
+        extract_record_design(path)
+
+
+def test_workbook_total_recovery_accepts_only_official_labels_and_positive_integers(tmp_path: Path) -> None:
+    """Punctuation variants and non-positive values do not become declared totals."""
+    from openpyxl import Workbook
+
+    path = tmp_path / "total-labels.xlsx"
+    workbook = Workbook()
+    labels = (
+        ("Total", " Total ", 2),
+        ("TotalColon", "Total:", 2),
+        ("SpacedColon", "Total :", 2),
+        ("NonPositive", "Total:", 0),
+    )
+    for index, (sheet_name, label, declared) in enumerate(labels):
+        worksheet = workbook.active if index == 0 else workbook.create_sheet()
+        worksheet.title = sheet_name
+        worksheet.append(("Nº", "Posic.", "Lon", "Tipo", "Descripción"))
+        worksheet.append((1, 1, 2, "An", "First"))
+        worksheet.append((label, None, declared, None, None))
+    workbook.save(path)
+    workbook.close()
+
+    parsed = {sheet.name: sheet.total_positions for sheet in extract_record_design(path)}
+    assert parsed == {
+        "Total": 2,
+        "TotalColon": 2,
+        "SpacedColon": None,
+        "NonPositive": None,
+    }
+
+
+@pytest.mark.parametrize(
+    ("rows", "message"),
+    (
+        (
+            (
+                (1, 1, 328, "An", "Fixed prefix", None, None),
+                (2, 329, "Variable", "An", "Variable body", None, None),
+                (3, 330, "Variable", "An", "Second body", None, None),
+                (4, "***", 18, "An", "Closing suffix", None, '"</T200>"'),
+                ("Total", None, "Variable", None, None, None, None),
+            ),
+            "duplicate variable-body markers",
+        ),
+        (
+            (
+                (1, 1, 328, "An", "Fixed prefix", None, None),
+                (2, 329, "Variable", "An", "Variable body", None, None),
+                (3, "***", 18, "An", "Closing suffix", None, '"</T200>"'),
+                (4, "***", 2, "An", "Second suffix", None, "CRLF"),
+                ("Total", None, "Variable", None, None, None, None),
+            ),
+            "duplicate relative closing suffixes",
+        ),
+        (
+            (
+                (1, 1, 328, "An", "Fixed prefix", None, None),
+                (2, 329, "Variable", "An", "Variable body", None, None),
+                (3, "***", 18, "An", "Closing suffix", None, '"</T200>"'),
+                ("Total", None, "Variable", None, None, None, None),
+                ("Total", None, "Variable", None, None, None, None),
+            ),
+            "duplicate variable totals",
+        ),
+        (
+            (
+                (1, 1, 328, "An", "Fixed prefix", None, None),
+                ("Total", None, 328, None, None, None, None),
+                ("Total", None, 328, None, None, None, None),
+            ),
+            "duplicate fixed totals",
+        ),
+        (
+            (
+                (1, 1, 328, "An", "Fixed prefix", None, None),
+                (2, 329, "Variable", "An", "Variable body", None, None),
+                (3, "***", 18, "An", "Closing suffix", None, '"</T200>"'),
+                ("Total", 328, "Variable", None, None, None, None),
+            ),
+            "mixes fixed and variable totals",
+        ),
+        (
+            (
+                (1, 1, 328, "An", "Fixed prefix", None, None),
+                (2, 329, "Variable", "An", "Variable body", None, None),
+                (3, "***", 18, "An", "Closing suffix", None, '"</T200>"'),
+                ("Total", None, 328, None, None, None, None),
+                ("Total", None, "Variable", None, None, None, None),
+            ),
+            "mixes fixed-total and variable-envelope geometry",
+        ),
+        (
+            (
+                (1, 1, 328, "An", "Fixed prefix", None, None),
+                (2, 329, "Variable", "An", "Variable body", None, None),
+                ("Total", None, "Variable", None, None, None, None),
+            ),
+            "incomplete variable-envelope composition",
+        ),
+        (
+            (
+                (1, 1, 328, "An", "Fixed prefix", None, None),
+                (2, 330, "Variable", "An", "Variable body", None, None),
+                (3, "***", 18, "An", "Closing suffix", None, '"</T200>"'),
+                ("Total", None, "Variable", None, None, None, None),
+            ),
+            "variable body starts at 330 after fixed prefix extent 328",
+        ),
+        (
+            (
+                (1, 1, 328, "An", "Fixed prefix", None, None),
+                (3, "***", 18, "An", "Closing suffix", None, '"</T200>"'),
+                (2, 329, "Variable", "An", "Variable body", None, None),
+                ("Total", None, "Variable", None, None, None, None),
+            ),
+            "misordered variable-envelope composition markers",
+        ),
+    ),
+)
+def test_variable_envelope_rejects_malformed_composition(
+    tmp_path: Path,
+    rows: tuple[tuple[object, ...], ...],
+    message: str,
+) -> None:
+    """Malformed composition markers refuse through the production workbook parser."""
+    from openpyxl import Workbook
+
+    path = tmp_path / "malformed-envelope.xlsx"
+    workbook = Workbook()
+    worksheet = workbook.active
+    worksheet.title = "DP200000"
+    worksheet.append(("Nº", "Posic.", "Lon", "Tipo", "Descripción", "Validación", "Contenido"))
+    for row in rows:
+        worksheet.append(row)
+    workbook.save(path)
+    workbook.close()
+
+    with pytest.raises(RegistryValidationError, match=message):
+        extract_record_design(path)
+
+
+@pytest.mark.parametrize(
+    ("sheet_name", "rows", "message"),
+    (
+        (
+            "FixedStartsLate",
+            ((1, 2, 2, "An", "First"), ("Total", None, 3, None, None)),
+            "has a gap before field at row 2: expected offset 1, got 2",
+        ),
+        (
+            "FixedGap",
+            ((1, 1, 2, "An", "First"), (2, 4, 2, "An", "Second"), ("Total", None, 5, None, None)),
+            "has a gap before field at row 3: expected offset 3, got 4",
+        ),
+        (
+            "FixedOverlap",
+            ((1, 1, 3, "An", "First"), (2, 3, 2, "An", "Second"), ("Total", None, 4, None, None)),
+            "has an overlap before field at row 3: expected offset 4, got 3",
+        ),
+        (
+            "DP200000",
+            (
+                (1, 1, 200, "An", "Prefix one"),
+                (2, 200, 129, "An", "Overlapping prefix"),
+                (3, 329, "Variable", "An", "Variable body"),
+                (4, "***", 18, "An", "Closing suffix"),
+                ("Total", None, "Variable", None, None),
+            ),
+            "has an overlap before field at row 3: expected offset 201, got 200",
+        ),
+        (
+            "DP200000",
+            (
+                (1, 1, 199, "An", "Prefix one"),
+                (2, 201, 128, "An", "Discontinuous prefix"),
+                (3, 329, "Variable", "An", "Variable body"),
+                (4, "***", 18, "An", "Closing suffix"),
+                ("Total", None, "Variable", None, None),
+            ),
+            "has a gap before field at row 3: expected offset 200, got 201",
+        ),
+    ),
+)
+def test_workbook_refuses_noncontiguous_fixed_and_variable_prefix_geometry(
+    tmp_path: Path,
+    sheet_name: str,
+    rows: tuple[tuple[object, ...], ...],
+    message: str,
+) -> None:
+    """Fixed sheets and envelope prefixes require exact source-order geometry."""
+    from openpyxl import Workbook
+
+    path = tmp_path / f"{sheet_name}.xlsx"
+    workbook = Workbook()
+    worksheet = workbook.active
+    worksheet.title = sheet_name
+    worksheet.append(("Nº", "Posic.", "Lon", "Tipo", "Descripción"))
+    for row in rows:
+        worksheet.append(row)
+    workbook.save(path)
+    workbook.close()
+
+    with pytest.raises(RegistryValidationError, match=message):
+        extract_record_design(path)
+
+
+def _official_total_rows(
+    workbook_path: Path,
+) -> tuple[dict[str, int], dict[str, tuple[str, str, str, int]]]:
+    """Read formula and cached views to retain the binary's exact total-row evidence."""
+    from openpyxl import load_workbook
+
+    formula_book = load_workbook(workbook_path, read_only=True, data_only=False)
+    cached_book = load_workbook(workbook_path, read_only=True, data_only=True)
+    try:
+        totals: dict[str, int] = {}
+        anchors: dict[str, tuple[str, str, str, int]] = {}
+        for formula_sheet in formula_book.worksheets:
+            cached_sheet = cached_book[formula_sheet.title]
+            for row_number, (formula_row, cached_row) in enumerate(
+                zip(formula_sheet.iter_rows(values_only=True), cached_sheet.iter_rows(values_only=True), strict=True),
+                start=1,
+            ):
+                if formula_row[0] != "Total:":
+                    continue
+                cached_index, cached_total = next(
+                    (index, value)
+                    for index, value in enumerate(cached_row[1:], start=1)
+                    if isinstance(value, int) and not isinstance(value, bool) and value > 0
+                )
+                formula_value = formula_row[cached_index]
+                assert isinstance(formula_value, str) and formula_value.startswith("=")
+                totals[formula_sheet.title.strip()] = cached_total
+                anchors[formula_sheet.title.strip()] = (
+                    f"A{row_number}",
+                    f"{formula_sheet.cell(row=row_number, column=cached_index + 1).column_letter}{row_number}",
+                    formula_value,
+                    cached_total,
+                )
+
+        variable_formula = formula_book["DP200000"]
+        variable_cached = cached_book["DP200000"]
+        assert variable_formula["A16"].value == "Total"
+        assert variable_cached["C16"].value == "Variable"
+        return totals, anchors
+    finally:
+        formula_book.close()
+        cached_book.close()
 
 
 def test_modelo_840_record_design_pdf_reuses_record_design_sheet_model() -> None:

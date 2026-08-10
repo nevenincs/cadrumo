@@ -223,14 +223,14 @@ def _simplificada_tax_id_notices(invoice: Invoice) -> list[Notice]:
                 "This factura simplificada names no counterparty NIF. For a domestic "
                 "operation issued by a taxpayer established in the TAI, RD 1619/2012 "
                 "art. 6.1.d case 3.o expects the destinatario's NIF. The invoice was "
-                "recorded; add the NIF with `aeat app ledger invoice update` if the "
-                "customer identified themselves."
+                "recorded; if the customer identified themselves, their NIF must be "
+                "checked against the invoice before the record can be corrected."
             ),
-            suggestion=f"aeat app ledger invoice update {invoice.invoice_id} --counterparty-nif <NIF>",
             context={
                 "invoice_id": invoice.invoice_id,
                 "invoice_class": invoice.invoice_class.value,
                 "legal_ref": "rd-1619-2012:art-6.1.d",
+                "actionability": "counterparty_tax_id_requires_operator_verification",
             },
         ),
     ]

@@ -19,13 +19,14 @@ drives, so this tier keeps rendering and never reaches up.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, ClassVar, Final
+from typing import TYPE_CHECKING, ClassVar, Final, cast
 
 from textual.app import App
 from textual.binding import Binding
-from textual.widgets import LoadingIndicator, Static
 from textual.worker import Worker, WorkerState
 
+from ....core.i18n import tr
+from ._status_bar import PinnedStatusBar
 from ._theme import toggle_appearance
 
 if TYPE_CHECKING:
@@ -35,9 +36,6 @@ if TYPE_CHECKING:
 CREDENTIAL_PANEL_CSS: Final[str] = """
 .field-label { text-style: bold; margin: 1 0 0 0; }
 .field-hint { color: $text-muted; margin: 0 0 1 0; }
-.credential-refusal { color: $error; margin: 0 0 1 0; }
-.credential-busy { display: none; height: 1; margin: 0 0 1 0; }
-.credential-busy.busy { display: block; }
 .credential-actions { height: auto; align-horizontal: right; margin: 1 0 0 0; }
 """
 """Layout the two credential panels share.
@@ -76,11 +74,8 @@ class CredentialApp[OutcomeT](App[OutcomeT | None]):
         Binding("escape", "abandon", "", show=False),
     ]
 
-    REFUSAL_ID: ClassVar[str]
-    """Selector of the zone refusals are written into."""
-
-    BUSY_ID: ClassVar[str]
-    """Selector of the progress line shown while storage is working."""
+    STATUS_ID: ClassVar[str] = "#credential-status"
+    """Selector of the pinned progress and diagnostic channel."""
 
     ATTEMPT_NAME: ClassVar[str]
     """Worker name, and the subject named in an unexpected-failure message."""
@@ -92,7 +87,7 @@ class CredentialApp[OutcomeT](App[OutcomeT | None]):
         without achieving it. The caller distinguishes the two by this and
         never by an exception, because leaving is an ordinary choice."""
         self.error: BaseException | None = None
-        """Unexpected failure, re-raised by the synchronous runner."""
+        """Last unexpected failure, retained for diagnostics but never re-raised."""
         self._attempt: Worker[CredentialAttempt[OutcomeT]] | None = None
         """The one in-flight storage call; duplicate submissions are refused."""
 
@@ -112,6 +107,7 @@ class CredentialApp[OutcomeT](App[OutcomeT | None]):
         """
         if self._attempt is not None:
             return
+        self.error = None
         self.set_busy(busy=True)
         self._attempt = self.run_worker(
             work,
@@ -125,17 +121,20 @@ class CredentialApp[OutcomeT](App[OutcomeT | None]):
     def on_worker_state_changed(self, event: Worker.StateChanged) -> None:
         """Settle the one attempt back on Textual's UI task."""
         worker = self._attempt
-        if worker is None or event.worker is not worker or event.state not in {WorkerState.SUCCESS, WorkerState.ERROR}:
+        event_worker = cast("Worker[CredentialAttempt[OutcomeT]]", event.worker)
+        if worker is None or event_worker is not worker or event.state not in {WorkerState.SUCCESS, WorkerState.ERROR}:
             return
         self._attempt = None
         if event.state is WorkerState.ERROR:
             self.error = worker.error or RuntimeError(f"{self.ATTEMPT_NAME} worker failed")
-            self.leave(None)
+            self.set_busy(busy=False)
+            self.refuse(self._resolved_worker_failure(self.error))
             return
         attempt = worker.result
         if attempt is None:
             self.error = RuntimeError(f"{self.ATTEMPT_NAME} worker returned no result")
-            self.leave(None)
+            self.set_busy(busy=False)
+            self.refuse(self._resolved_worker_failure(self.error))
             return
         if attempt.outcome is None:
             self.set_busy(busy=False)
@@ -143,6 +142,27 @@ class CredentialApp[OutcomeT](App[OutcomeT | None]):
             return
         self.outcome = attempt.outcome
         self.leave(attempt.outcome)
+
+    @staticmethod
+    def _resolved_worker_failure(error: BaseException) -> str:
+        """Render one unexpected failure with a durable next step.
+
+        Domain errors have registered, translated messages. A low-level
+        failure such as ``OSError(EBADF)`` does not, so resolving it through
+        the registry would itself raise and erase the original diagnostic.
+        The fallback keeps that concrete OS message, then the shared internal
+        error guidance tells the operator where to look next.
+        """
+        try:
+            from ....core.errors import resolve_error_message
+
+            detail = resolve_error_message(error).strip()
+        except (LookupError, TypeError, ValueError):
+            detail = str(error).strip()
+        if not detail:
+            detail = type(error).__name__
+        guidance = tr("errors.internal.internal_cli_unexpected_boundary")
+        return f"{detail} {guidance}"
 
     def default_refusal(self) -> str:
         """Text shown when a refusal arrived carrying no message of its own.
@@ -157,7 +177,7 @@ class CredentialApp[OutcomeT](App[OutcomeT | None]):
 
     def refuse(self, message: str) -> None:
         """Show one refusal without leaving, so the operator can retry in place."""
-        self.query_one(self.REFUSAL_ID, Static).update(message)
+        self.query_one(self.STATUS_ID, PinnedStatusBar).show_error(message)
 
     def set_busy(self, *, busy: bool) -> None:
         """Show progress and clear the previous refusal.
@@ -165,8 +185,15 @@ class CredentialApp[OutcomeT](App[OutcomeT | None]):
         Subclasses extend this to freeze their own inputs; they call up
         so the progress line and the refusal reset stay decided once.
         """
-        self.query_one(self.REFUSAL_ID, Static).update("")
-        self.query_one(self.BUSY_ID, LoadingIndicator).set_class(busy, "busy")
+        status = self.query_one(self.STATUS_ID, PinnedStatusBar)
+        if busy:
+            status.show_progress(self.progress_message())
+        else:
+            status.clear_message()
+
+    def progress_message(self) -> str:
+        """Operator-facing description of the subclass's in-flight attempt."""
+        raise NotImplementedError
 
     def leave(self, outcome: OutcomeT | None) -> None:
         """Close the screen, handing ``outcome`` back to the runner.
@@ -208,13 +235,11 @@ def run_credential_app[OutcomeT](app: CredentialApp[OutcomeT]) -> OutcomeT | Non
 
     ``None`` means the operator left without completing — an ordinary
     outcome, so the caller decides what to do rather than catching an
-    exception to find out. An *unexpected* failure is re-raised here
-    instead, because the screen has already closed and there is no
-    surface left to show it on.
+    exception to find out. An unexpected worker failure is rendered in the
+    pinned channel and leaves this app running for retry; it never reaches
+    this boundary as an exception.
     """
     app.run()
-    if app.error is not None:
-        raise app.error
     return app.outcome
 
 

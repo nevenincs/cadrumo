@@ -20,6 +20,7 @@ from pydantic import BaseModel, Field
 from ...core import (
     STRICT_FROZEN_CONFIG,
     FingerprintParticipation,
+    StorageArea,
     StorageCategory,
     StorageGrouping,
     StorageLifecycle,
@@ -27,6 +28,22 @@ from ...core import (
     StorageOverridePolicy,
     StorageScope,
 )
+
+
+class StorageAreaDisposition(StrEnum):
+    """Aggregate lifecycle character of an operator-facing storage area."""
+
+    DURABLE = "durable"
+    RECLAIMABLE = "reclaimable"
+    MIXED = "mixed"
+
+
+class StorageCheckIssueKind(StrEnum):
+    """Public, topology-neutral storage check issue kinds."""
+
+    MISSING_PATH = "missing_path"
+    PATH_TYPE_MISMATCH = "path_type_mismatch"
+    PERMISSIONS_DRIFTED = "permissions_drifted"
 
 
 class _StorageReport(BaseModel):
@@ -84,6 +101,25 @@ class StorageInventoryReport(_StorageReport):
     rows: tuple[StorageInventoryRow, ...]
 
 
+class StorageAreaInventoryRow(_StorageReport):
+    """Aggregate disk use and lifecycle disposition for one public area."""
+
+    area: StorageArea
+    occupancy: StorageOccupancy
+    disposition: StorageAreaDisposition
+    reclaimable: bool
+    resolved_paths: int = Field(ge=0)
+    entry_count: int = Field(ge=0)
+    footprint_bytes: int = Field(ge=0)
+
+
+class StorageAreaInventoryReport(_StorageReport):
+    """One aggregate row for each stable operator-facing storage area."""
+
+    storage_root: Path
+    rows: tuple[StorageAreaInventoryRow, ...]
+
+
 class StorageTreeIssueKind(StrEnum):
     """The ways the materialised tree can disagree with its declaration."""
 
@@ -98,7 +134,7 @@ class StorageTreeIssue(_StorageReport):
 
     kind: StorageTreeIssueKind
     path: Path
-    category: StorageCategory | None = None
+    area: StorageArea | None = None
     detail: str = ""
 
 
@@ -131,15 +167,10 @@ class StorageInitReport(_StorageReport):
 
 
 class StorageReclaimReport(_StorageReport):
-    """Outcome of reclaiming one category's regenerable contents.
+    """Outcome of reclaiming every regenerable target in one public area."""
 
-    The category directory itself survives: it is a declared member of the tree,
-    and removing it would make the next ``check`` report a gap that ``reclaim``
-    had just created.
-    """
-
-    category: StorageCategory
-    path: Path
+    area: StorageArea
+    target_count: int = Field(ge=0)
     removed_entries: int = Field(ge=0)
     retained_entries: int = Field(default=0, ge=0)
 
@@ -155,6 +186,10 @@ class StorageReclaimReport(_StorageReport):
 
 
 __all__ = [
+    "StorageAreaDisposition",
+    "StorageAreaInventoryReport",
+    "StorageAreaInventoryRow",
+    "StorageCheckIssueKind",
     "StorageInitReport",
     "StorageInventoryReport",
     "StorageInventoryRow",

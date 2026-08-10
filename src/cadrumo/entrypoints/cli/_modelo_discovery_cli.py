@@ -30,9 +30,16 @@ from ...application.modelo import (
     registry_modelo_codes,
     registry_support_matrix,
 )
+from ...application.operator_actions import ActionReference
 from ...core import Period, TaxDomain, resolve_active_bucket_id
 from ...core.i18n import tr
-from ...core.json_contract import Notice, NoticeSeverity
+from ...core.json_contract import (
+    ActionArgumentSource,
+    ActionArgumentStatus,
+    Notice,
+    NoticeSeverity,
+    ResolvedActionArgument,
+)
 from ...domain.calculations.registry import (
     InputKind,
     ModeloEntry,
@@ -41,7 +48,7 @@ from ...domain.calculations.registry import (
     RegistryValidationError,
 )
 from ...domain.user_profile import ProfileNotFoundError
-from ._common import MODELO_CODE_CHOICE, _emit_envelope, _parse_iso_date
+from ._common import MODELO_CODE_CHOICE, _emit_envelope, _parse_iso_date, resolve_notice_action
 from ._modelo_payloads import (
     BindingListRowPayload,
     BindingPreviewRowPayload,
@@ -572,7 +579,6 @@ def _requires_notices(checklist) -> tuple[Notice, ...]:
                         "(e.g. home-office usage ratio) could not be checked for gaps."
                     ),
                 ),
-                suggestion="aeat config profile create",
                 context={"modelo": str(checklist.modelo)},
             ),
         )
@@ -590,7 +596,6 @@ def _requires_notices(checklist) -> tuple[Notice, ...]:
                     ),
                     missing=missing,
                 ),
-                suggestion="aeat app ledger ratios set",
                 # The binding ids stay on the notice context: they are the
                 # registry-side identifiers a support channel needs, while the
                 # message carries the profile facts the operator must supply.
@@ -875,13 +880,29 @@ def _bindings_list_scope_notices(*, modelo: str | None, year: int | None, period
         return ()
     missing = ", ".join(missing_filters)
     message = tr("cli.app.modelo.bindings.unscoped_revision_warning", missing_filters=missing)
-    suggestion = tr("cli.app.modelo.bindings.unscoped_revision_suggestion")
     return (
         Notice(
             severity=NoticeSeverity.WARNING,
             code="modelo.bindings.list.unscoped_revision",
             message=message,
-            suggestion=suggestion,
+            action=resolve_notice_action(
+                action=ActionReference(action_id="operator.modelo.bindings.list"),
+                argument_bindings=tuple(
+                    ResolvedActionArgument(
+                        argument_name=argument_name,
+                        status=ActionArgumentStatus.RESOLVED,
+                        value=value,
+                        source=ActionArgumentSource.VERDICT_CONTEXT,
+                        source_key=argument_name,
+                    )
+                    for argument_name, value in (
+                        ("modelo", modelo),
+                        ("year", year),
+                        ("period", period),
+                    )
+                    if value is not None and (not isinstance(value, str) or value.strip())
+                ),
+            ),
             context={
                 "modelo_filter": modelo or "",
                 "year_filter": "" if year is None else str(year),
@@ -893,10 +914,19 @@ def _bindings_list_scope_notices(*, modelo: str | None, year: int | None, period
 
 
 def _notice_text_lines(notices: tuple[Notice, ...]) -> list[str]:
-    return [
-        f"notice\t{notice.severity.value}\t{notice.code}\t{notice.message}\t{notice.suggestion or '-'}"
-        for notice in notices
-    ]
+    lines: list[str] = []
+    for notice in notices:
+        target = notice.action.action.target_command_key if notice.action is not None else "-"
+        bindings = (
+            ",".join(f"{binding.argument_name}={binding.value}" for binding in notice.action.argument_bindings)
+            if notice.action is not None
+            else "-"
+        )
+        lines.append(
+            f"notice\t{notice.severity.value}\t{notice.code}\t{notice.message}\t"
+            f"action_target={target}\taction_bindings={bindings or '-'}",
+        )
+    return lines
 
 
 def _require_binding_scope(*, modelo: str | None, year: int | None, period: str | None) -> None:

@@ -11,8 +11,11 @@ repositories validate only the outer secure-object envelope, nothing between
 construction and re-read ever compared the claim against the schema that was
 actually loaded.
 
-The version is bounded above rather than pinned, and the last test here pins
-that choice: pinning would refuse the defaulted records this codebase writes.
+The version is pinned to exactly the loaded schema's, so both directions
+refuse: a FUTURE version was written by something newer than this code, and a
+PRE-CURRENT one under a contract this code no longer implements. The tests
+below exercise both directions against the record and the snapshot, and pin
+the default a freshly constructed record carries to the canonical version.
 """
 
 from __future__ import annotations
@@ -36,6 +39,11 @@ _PROFILE_ID = "a4f1c2e0-1111-4222-8333-444455556666"
 # on the field name keeps the assertion about the schema refusal rather than
 # about any other way these models can refuse a payload.
 _SCHEMA_REFUSAL = "schema_id|schema_version"
+# A version refusal is matched on the message the schema guard raises rather
+# than on the field name: the field also carries a ``ge=1`` bound whose
+# pydantic error names ``schema_version`` too, so a field-name match would let
+# a boundary case pass for the wrong reason.
+_VERSION_REFUSAL = "is not the canonical profile schema version"
 
 
 def _facts() -> tuple[UserProfileFact, ...]:
@@ -53,6 +61,18 @@ def _record(**overrides: object) -> UserProfileRecord:
     )
 
 
+def _pre_current_version(canonical_version: int) -> int:
+    """Return a version older than the canonical one, refusing a vacuous fixture.
+
+    A pre-current version only exists once the schema has advanced past its
+    first revision. Failing loudly here keeps the refusal tests from passing
+    against ``0``, which the field's ``ge=1`` bound rejects for an unrelated
+    reason and which would prove nothing about the schema guard.
+    """
+    assert canonical_version > 1, "the profile schema is at version 1; there is no pre-current version to refuse"
+    return canonical_version - 1
+
+
 def test_record_refuses_an_unknown_schema_id() -> None:
     with pytest.raises(ValidationError, match=_SCHEMA_REFUSAL):
         _record(schema_id="bogus.profile")
@@ -61,8 +81,15 @@ def test_record_refuses_an_unknown_schema_id() -> None:
 def test_record_refuses_a_future_schema_version() -> None:
     canonical = load_user_profile_schema()
 
-    with pytest.raises(ValidationError, match=_SCHEMA_REFUSAL):
+    with pytest.raises(ValidationError, match=_VERSION_REFUSAL):
         _record(schema_version=canonical.version + 1)
+
+
+def test_record_refuses_a_pre_current_schema_version() -> None:
+    canonical = load_user_profile_schema()
+
+    with pytest.raises(ValidationError, match=_VERSION_REFUSAL):
+        _record(schema_version=_pre_current_version(canonical.version))
 
 
 def _snapshot_payload(**overrides: object) -> dict[str, object]:
@@ -96,8 +123,17 @@ def test_snapshot_refuses_an_unknown_schema_id() -> None:
 def test_snapshot_refuses_a_future_schema_version() -> None:
     canonical = load_user_profile_schema()
 
-    with pytest.raises(ValidationError, match=_SCHEMA_REFUSAL):
+    with pytest.raises(ValidationError, match=_VERSION_REFUSAL):
         UserProfileSnapshot.model_validate(_snapshot_payload(schema_version=canonical.version + 1))
+
+
+def test_snapshot_refuses_a_pre_current_schema_version() -> None:
+    canonical = load_user_profile_schema()
+
+    with pytest.raises(ValidationError, match=_VERSION_REFUSAL):
+        UserProfileSnapshot.model_validate(
+            _snapshot_payload(schema_version=_pre_current_version(canonical.version)),
+        )
 
 
 def test_the_canonical_identity_is_accepted() -> None:
@@ -109,10 +145,22 @@ def test_the_canonical_identity_is_accepted() -> None:
     assert record.schema_version == canonical.version
 
 
-def test_the_version_is_bounded_above_not_pinned() -> None:
-    """Pinning would refuse the defaulted records this codebase actually writes."""
+def test_the_current_schema_hydrates_through_the_snapshot() -> None:
+    """A canonical payload survives the record and the snapshot untouched."""
     canonical = load_user_profile_schema()
+
+    snapshot = UserProfileSnapshot.model_validate(_snapshot_payload())
+
+    assert snapshot.schema_id == canonical.id
+    assert snapshot.schema_version == canonical.version
+    assert snapshot.facts == _facts()
+
+
+def test_a_defaulted_record_carries_the_canonical_version() -> None:
+    """The default this codebase writes is the current schema, not a stale one."""
+    canonical = load_user_profile_schema()
+
     defaulted = _record()
 
-    assert defaulted.schema_version < canonical.version
+    assert defaulted.schema_version == canonical.version
     assert defaulted.schema_id == canonical.id

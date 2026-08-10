@@ -23,22 +23,27 @@ as ``aeat --version``.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable, Iterable, Mapping, Sequence
+from contextvars import ContextVar
 from datetime import date as _date
 from decimal import Decimal
 from enum import StrEnum
+from functools import cache, partial
 from pathlib import Path
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Protocol, cast
 
 import click
 import typer
 import typer._click.types as typer_click_types
+from pydantic import BaseModel, Field, field_validator
 
-from ...core import NON_REGISTRY_MODELOS, Modelo
+from ...core import NON_REGISTRY_MODELOS, STRICT_FROZEN_CONFIG, Modelo
 from ...core.cli_metadata import is_metadata_invocation
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
+from ...core.json_contract import ResolvedPreconditionAction
 from ...core.output_rendering import OutputFormat, render_command_output
 from ._command_suggestions import INVOCATION_REMAINDER_META_KEY
 
@@ -124,20 +129,257 @@ if TYPE_CHECKING:
     from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ...application.auth import AuthProviderListing
+    from ...application.operator_actions import ActionReference, PreconditionVerdict
+    from ...application.operator_surface import OperatorSurfaceReconciliation
     from ...application.workflow import WorkflowState
     from ...core import Period
-    from ...core.json_contract import Notice
+    from ...core.json_contract import Notice, ResolvedActionArgument, ResolvedActionReference, ResolvedNoticeAction
     from ...domain.deadlines import TaxpayerProfile
     from ...domain.filing import ModeloDraft
     from ...domain.invoices import InvoiceCatalogue
     from ...domain.transactions import TransactionCatalogue
     from ...domain.user_profile import UserProfileRecord
+    from ..mcp._input_schema import VerbInputSchema
 
 __all__ = [
+    "active_profile_label",
     "emit_help_text",
     "parse_decimal_amount",
     "parse_optional_decimal_amount",
+    "resolve_notice_action",
 ]
+
+
+REQUESTED_CLI_LEAF_META_KEY = "cadrumo.requested_cli_leaf"
+"""Context key holding the terminal leaf selected before root guards run."""
+
+_CLI_POLICY_REFUSAL_PROJECTION_ATTRIBUTE = "_cadrumo_cli_policy_refusal_projection"
+
+
+class RequestedCliLeaf(BaseModel):
+    """Immutable identity of the real terminal command the operator requested."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    subject_leaf_key: str = Field(min_length=1)
+    canonical_cli_path: tuple[str, ...] = Field(min_length=1)
+
+    @field_validator("canonical_cli_path")
+    @classmethod
+    def _path_tokens_are_canonical(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if any(not token or token != token.strip() or token.startswith("-") for token in value):
+            raise ValueError("requested CLI leaf path requires canonical command tokens")
+        return value
+
+
+_REQUESTED_CLI_LEAF_CONTEXT: ContextVar[RequestedCliLeaf | None] = ContextVar(
+    "cadrumo_requested_cli_leaf",
+    default=None,
+)
+
+
+class CliPolicyRefusalProjection(BaseModel):
+    """Typed policy handoff awaiting generic boundary transport in S18."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    requested_leaf: RequestedCliLeaf | None
+    precondition_action: ResolvedPreconditionAction
+
+
+class _CommandGroup(Protocol):
+    def get_command(self, ctx: object, cmd_name: str) -> object | None:
+        """Resolve one real child command."""
+
+
+def attach_cli_policy_refusal_projection[ExceptionT: Exception](
+    error: ExceptionT,
+    *,
+    projection: CliPolicyRefusalProjection,
+) -> ExceptionT:
+    """Attach the strict S17 handoff without changing generic S18 transport."""
+    setattr(error, _CLI_POLICY_REFUSAL_PROJECTION_ATTRIBUTE, projection)
+    return error
+
+
+def cli_policy_refusal_projection(error: BaseException) -> CliPolicyRefusalProjection | None:
+    """Read the typed policy handoff that S18 will teach the boundary to emit."""
+    value = getattr(error, _CLI_POLICY_REFUSAL_PROJECTION_ATTRIBUTE, None)
+    if value is None:
+        return None
+    if not isinstance(value, CliPolicyRefusalProjection):
+        raise TypeError("CLI policy refusal contains an invalid typed projection")
+    return value
+
+
+def cli_policy_refusal_context(projection: CliPolicyRefusalProjection) -> dict[str, object] | None:
+    """Render configuration identities from typed evidence, never recovery prose."""
+    context: dict[str, object] = {}
+    for evidence in projection.precondition_action.evidence:
+        for key, value in evidence.values.items():
+            if key.endswith("_setting"):
+                context[key] = value
+    return context or None
+
+
+def preserve_requested_cli_leaf(ctx: typer.Context) -> RequestedCliLeaf | None:
+    """Resolve and retain the terminal live leaf before root policy guards."""
+    existing = ctx.meta.get(REQUESTED_CLI_LEAF_META_KEY)
+    if existing is not None:
+        if not isinstance(existing, RequestedCliLeaf):
+            raise TypeError("requested CLI leaf context contains an invalid value")
+        return existing
+
+    raw_tokens = tuple(str(token) for token in ctx.meta.get(INVOCATION_REMAINDER_META_KEY, ()))
+    command: object = ctx.command
+    canonical_path: list[str] = []
+    for token in raw_tokens:
+        if token.startswith("-") or not hasattr(command, "get_command"):
+            break
+        child = cast(_CommandGroup, command).get_command(ctx, token)
+        if child is None:
+            return None
+        command_name = getattr(child, "name", None)
+        canonical_path.append(command_name if isinstance(command_name, str) and command_name else token)
+        command = child
+        if not hasattr(command, "get_command"):
+            from ..schema_surface import normalise_cli_path_to_schema_key
+
+            requested = RequestedCliLeaf(
+                subject_leaf_key=normalise_cli_path_to_schema_key(tuple(canonical_path)),
+                canonical_cli_path=tuple(canonical_path),
+            )
+            ctx.meta[REQUESTED_CLI_LEAF_META_KEY] = requested
+            token = _REQUESTED_CLI_LEAF_CONTEXT.set(requested)
+            ctx.call_on_close(partial(_REQUESTED_CLI_LEAF_CONTEXT.reset, token))
+            return requested
+    return None
+
+
+def requested_cli_leaf(ctx: typer.Context) -> RequestedCliLeaf | None:
+    """Return the already-preserved requested terminal identity, if any."""
+    value = ctx.meta.get(REQUESTED_CLI_LEAF_META_KEY)
+    if value is None:
+        return None
+    if not isinstance(value, RequestedCliLeaf):
+        raise TypeError("requested CLI leaf context contains an invalid value")
+    return value
+
+
+def current_requested_cli_leaf() -> RequestedCliLeaf | None:
+    """Return the preserved leaf from the current Click context, if one exists."""
+    bound = _REQUESTED_CLI_LEAF_CONTEXT.get()
+    if bound is not None:
+        return bound
+    ctx = click.get_current_context(silent=True)
+    if ctx is None:
+        return None
+    return requested_cli_leaf(cast(typer.Context, ctx))
+
+
+def project_cli_policy_refusal(
+    *,
+    requested_leaf: RequestedCliLeaf | None,
+    verdict: PreconditionVerdict,
+) -> CliPolicyRefusalProjection:
+    """Project one application verdict without teaching the CLI applicability."""
+    from ...application.operator_actions import ActionArgumentStatus, lookup_action
+    from ...core.json_contract import (
+        ActionArgumentSource as WireArgumentSource,
+    )
+    from ...core.json_contract import (
+        ActionArgumentStatus as WireArgumentStatus,
+    )
+    from ...core.json_contract import (
+        ActionConditionality as WireConditionality,
+    )
+    from ...core.json_contract import (
+        ActionConditionEvidence,
+        ActionEvidenceProvenance,
+        ResolvedActionArgument,
+        ResolvedActionReference,
+    )
+    from ...core.json_contract import (
+        NoRecoveryOutcome as WireNoRecoveryOutcome,
+    )
+
+    resolved_action: ResolvedActionReference | None = None
+    if verdict.action is not None:
+        declaration = lookup_action(verdict.action.action_id)
+        declared_arguments = {item.argument_name: item for item in declaration.argument_specifications}
+        observed_arguments = {item.argument_name: item for item in verdict.argument_bindings}
+        if set(observed_arguments) != set(declared_arguments):
+            raise ValueError(
+                f"CLI policy action arguments do not match catalogue declaration: {verdict.action.action_id}"
+            )
+        for name, argument in observed_arguments.items():
+            if argument.status is ActionArgumentStatus.MISSING:
+                continue
+            specification = declared_arguments[name]
+            if (
+                argument.source is not specification.source
+                or argument.source_key != specification.source_key
+                or argument.source_evidence_id != specification.source_evidence_id
+            ):
+                raise ValueError(f"CLI policy action argument source contradicts catalogue: {name}")
+        resolved_action = ResolvedActionReference(
+            action_id=declaration.action_id,
+            target_command_key=declaration.target_command_key,
+        )
+
+    projected = ResolvedPreconditionAction(
+        failed_condition_id=verdict.failed_condition_id,
+        evidence=tuple(
+            ActionConditionEvidence(
+                condition_id=item.condition_id,
+                evidence_id=item.evidence_id,
+                provenance=ActionEvidenceProvenance(item.provenance.value),
+                values=item.values,
+            )
+            for item in verdict.evidence
+        ),
+        action=resolved_action,
+        argument_bindings=tuple(
+            ResolvedActionArgument(
+                argument_name=item.argument_name,
+                status=WireArgumentStatus(item.status.value),
+                value=item.value,
+                source=WireArgumentSource(item.source.value) if item.source is not None else None,
+                source_key=item.source_key,
+                source_evidence_id=item.source_evidence_id,
+            )
+            for item in verdict.argument_bindings
+        ),
+        missing_argument_names=verdict.missing_argument_names,
+        conditionality=WireConditionality(verdict.conditionality.value),
+        no_recovery_outcome=(
+            WireNoRecoveryOutcome(verdict.no_recovery_outcome.value)
+            if verdict.no_recovery_outcome is not None
+            else None
+        ),
+    )
+    return CliPolicyRefusalProjection(
+        requested_leaf=requested_leaf,
+        precondition_action=projected,
+    )
+
+
+def attach_cli_policy_verdict[ExceptionT: Exception](
+    error: ExceptionT,
+    *,
+    verdict: PreconditionVerdict,
+    requested_leaf: RequestedCliLeaf | None = None,
+) -> ExceptionT:
+    """Project and attach an application verdict at the shared CLI boundary."""
+    leaf = requested_leaf if requested_leaf is not None else current_requested_cli_leaf()
+    return attach_cli_policy_refusal_projection(
+        error,
+        projection=project_cli_policy_refusal(
+            requested_leaf=leaf,
+            verdict=verdict,
+        ),
+    )
+
 
 # ---------------------------------------------------------------------
 # Transport helpers
@@ -151,7 +393,7 @@ def _is_metadata_invocation(ctx: typer.Context) -> bool:
 
 
 def _format_of(ctx: typer.Context) -> OutputFormat:
-    state = ctx.ensure_object(dict)
+    state = cast(dict[str, object], ctx.ensure_object(dict))
     format_value = state.get("format", OutputFormat.TEXT)
     if isinstance(format_value, OutputFormat):
         return format_value
@@ -161,6 +403,91 @@ def _format_of(ctx: typer.Context) -> OutputFormat:
 def emit_help_text(ctx: typer.Context) -> None:
     """Emit Click/Typer help text through the shared CLI output boundary."""
     typer.echo(ctx.get_help())
+
+
+@cache
+def _live_action_input_schema(command_key: str) -> VerbInputSchema:
+    """Resolve one action target through the live Click input-schema authority."""
+    from ..mcp._input_schema import build_verb_input_schemas
+
+    return build_verb_input_schemas((command_key,))[command_key]
+
+
+def _resolve_notice_actions(notices: Sequence[Notice] | None) -> tuple[Notice, ...]:
+    """Join success-notice actions to their live CLI paths before presentation."""
+    from ...application.operator_actions import lookup_action
+    from ...core.json_contract import ResolvedNoticeAction
+
+    resolved: list[Notice] = []
+    for notice in notices or ():
+        notice_action = notice.action
+        if not isinstance(notice_action, ResolvedNoticeAction):
+            resolved.append(notice)
+            continue
+        action = notice_action.action
+        declaration = lookup_action(action.action_id)
+        if declaration.target_command_key != action.target_command_key:
+            raise ValueError(
+                f"notice action target contradicts catalogue: {action.action_id} -> {action.target_command_key}",
+            )
+        schema = _live_action_input_schema(action.target_command_key)
+        parameter_names = {parameter.name for parameter in schema.parameters}
+        argument_names = {binding.argument_name for binding in notice_action.argument_bindings}
+        if not argument_names <= parameter_names:
+            raise ValueError(
+                f"notice action arguments do not exist on live target {action.target_command_key}: "
+                f"{tuple(sorted(argument_names - parameter_names))}",
+            )
+        resolved.append(
+            notice.model_copy(
+                update={
+                    "action": notice_action.model_copy(
+                        update={"action": action.model_copy(update={"cli_path": schema.cli_path})},
+                    ),
+                },
+            ),
+        )
+    return tuple(resolved)
+
+
+_SAFE_ACTION_TOKEN = re.compile(r"^[A-Za-z0-9._:/=@+-]+$")
+
+
+def _powershell_action_token(token: str) -> str:
+    """Render one argv token as a PowerShell literal without enabling expansion.
+
+    PowerShell expands ``$()``, ``$env:...`` and backticks inside double-quoted
+    strings, so JSON string quoting is not a safe copy/paste representation on
+    the supported Windows shell. Single-quoted strings are literal there; an
+    embedded apostrophe is represented by two apostrophes.
+    """
+    if _SAFE_ACTION_TOKEN.fullmatch(token):
+        return token
+    return "'" + token.replace("'", "''") + "'"
+
+
+def _action_text_lines(notices: Sequence[Notice]) -> tuple[str, ...]:
+    """Derive executable text commands from the same resolved action DTOs as JSON."""
+    from ...core.json_contract import ResolvedNoticeAction
+    from ...core.product_identity import PRODUCT_IDENTITY
+    from ..mcp._input_schema import cli_argv_for
+
+    lines: list[str] = []
+    for notice in notices:
+        notice_action = notice.action
+        if not isinstance(notice_action, ResolvedNoticeAction):
+            continue
+        action = notice_action.action
+        if action.cli_path is None:
+            continue
+        schema = _live_action_input_schema(action.target_command_key)
+        arguments: dict[str, object] = {
+            binding.argument_name: binding.value for binding in notice_action.argument_bindings
+        }
+        argv = cli_argv_for(schema, arguments)[2:]
+        rendered = " ".join(_powershell_action_token(token) for token in argv)
+        lines.append(f"next_action\t{PRODUCT_IDENTITY.cli_executable} {rendered}")
+    return tuple(lines)
 
 
 def _emit_envelope(
@@ -214,6 +541,7 @@ def _emit_envelope(
     """
     metadata_invocation = _is_metadata_invocation(ctx)
     output_format = _format_of(ctx)
+    resolved_notices = _resolve_notice_actions(notices)
     if output_format is OutputFormat.JSON:
         if metadata_invocation:
             # The ``--help`` / ``--version`` fast path stays off the
@@ -225,36 +553,198 @@ def _emit_envelope(
             # in test_json_schema_conformance.py.
             from ...core.json_contract import emit_json_success
 
-            emit_json_success(command, result, notices=notices or (), active_profile=None)
+            emit_json_success(command, result, notices=resolved_notices, active_profile=None)
             return
         from ...application.operator_output import emit_operator_json_success
 
-        active_profile = _active_profile_label()
-        emit_operator_json_success(command, result, notices=notices or (), active_profile=active_profile)
+        active_profile = active_profile_label()
+        emit_operator_json_success(command, result, notices=resolved_notices, active_profile=active_profile)
         return
     # Route non-JSON paths through render_command_output so unsupported
     # ``--format`` values (e.g. ``xml``) raise the shared refusal contract.
     # ``render_command_output``
     # ignores ``payload`` outside JSON mode and emits the line iterator.
-    rendered_lines = lines
+    rendered_lines = (*lines, *_action_text_lines(resolved_notices))
     if not metadata_invocation:
         from ...application.operator_output import sandbox_banner_line, sandbox_notice_for_active_bucket
 
         sandbox_notice = sandbox_notice_for_active_bucket()
         if sandbox_notice is not None:
-            rendered_lines = (sandbox_banner_line(sandbox_notice), *lines)
+            rendered_lines = (sandbox_banner_line(sandbox_notice), *rendered_lines)
     rendered = render_command_output(format_name=output_format.value, payload=result, lines=rendered_lines)
     if rendered.text:
         typer.echo(rendered.text)
 
 
-def _active_profile_label() -> str | None:
+def resolve_notice_action(
+    *,
+    action: ActionReference,
+    argument_bindings: tuple[ResolvedActionArgument, ...] = (),
+) -> ResolvedNoticeAction:
+    """Resolve a fully materialised successful notice action against the live CLI.
+
+    This is the sole entrypoint bridge for successful ``Notice.action`` values.
+    It derives the current result-schema, Click/S05 input, mounted-family,
+    profile-policy, and MCP projections, then delegates all action validation
+    to the application-owned resolver.  Producers therefore supply only their
+    stable action identity and provenance-bearing concrete values; they cannot
+    hand-assemble a wire action or silently omit a live required input.
+    """
+    from ...application.operator_actions import OPERATOR_ACTION_CATALOGUE
+    from ...application.operator_surface import resolve_notice_action as resolve_application_notice_action
+
+    resolved = resolve_application_notice_action(
+        action=action,
+        argument_bindings=argument_bindings,
+        catalogue=OPERATOR_ACTION_CATALOGUE,
+        reconciliation=_current_operator_surface_reconciliation(),
+    )
+    schema = _live_action_input_schema(resolved.action.target_command_key)
+    return resolved.model_copy(
+        update={"action": resolved.action.model_copy(update={"cli_path": schema.cli_path})},
+    )
+
+
+def _current_operator_surface_reconciliation() -> OperatorSurfaceReconciliation:
+    """Build the complete current CLI surface reconciliation without inference."""
+    from ...application.operator_surface import (
+        ExplicitExclusionInventoryRow,
+        InputSchemaInventoryRow,
+        LiveLeafInventoryRow,
+        McpExposureInventoryRow,
+        MountedFamilyInventoryRow,
+        ProfilePolicyInventoryRow,
+        ReconciliationSurface,
+        ResultSchemaInventoryRow,
+        get_operator_surface_contract,
+        reconcile_operator_surface_inventory,
+    )
+    from ...application.storage_write_policy import is_profile_bound_write_verb_path
+    from ...entrypoints.mcp._input_schema import build_verb_input_schemas
+    from ...entrypoints.mcp._tools import build_tool_descriptors
+    from ...entrypoints.schema_surface import CALLBACK_RESULT_REUSE_BY_CLI_PATH, ROOT_LANDING_SCHEMA_KEYS
+    from ._app_contract import command_schema_refs
+
+    schema_references = command_schema_refs()
+    command_keys = tuple(reference.command for reference in schema_references)
+    if len(set(command_keys)) != len(command_keys):
+        raise ValueError("current result-schema registry has duplicate command identities")
+    input_schemas = build_verb_input_schemas(tuple(sorted(command_keys)))
+    if set(input_schemas) != set(command_keys):
+        raise ValueError("current input-schema projection does not exactly match the result-schema registry")
+
+    callback_aliases_by_key: dict[str, set[tuple[str, ...]]] = {}
+    for callback_path, command_key in CALLBACK_RESULT_REUSE_BY_CLI_PATH.items():
+        callback_aliases_by_key.setdefault(command_key, set()).add(callback_path)
+
+    primary_paths: dict[str, tuple[str, ...]] = {}
+    for command_key, schema in input_schemas.items():
+        resolved_leaf = schema.resolved_leaf
+        if resolved_leaf.subject_leaf_key != command_key:
+            raise ValueError(
+                f"input-schema projection changed command identity: {command_key} -> {resolved_leaf.subject_leaf_key}",
+            )
+        primary_paths[command_key] = resolved_leaf.cli_path
+
+    descriptors = build_tool_descriptors()
+    descriptor_by_key = {descriptor.command_key: descriptor for descriptor in descriptors}
+    if len(descriptor_by_key) != len(descriptors):
+        raise ValueError("current MCP projection has duplicate command identities")
+    if not set(descriptor_by_key).issubset(command_keys):
+        raise ValueError("current MCP projection contains a command absent from the result-schema registry")
+
+    live_leaves = tuple(
+        LiveLeafInventoryRow(
+            subject_leaf_key=command_key,
+            canonical_cli_path=primary_paths[command_key],
+            alias_cli_paths=tuple(sorted(callback_aliases_by_key.get(command_key, set()))),
+            provenance="S05 live Click input-schema resolution with declared callback reuse",
+        )
+        for command_key in sorted(command_keys)
+    )
+    result_schemas = tuple(
+        ResultSchemaInventoryRow(
+            subject_leaf_key=reference.command,
+            schema_name=reference.schema_name,
+            provenance="SCHEMA_REGISTRY through command_schema_refs",
+        )
+        for reference in schema_references
+    )
+    input_rows = tuple(
+        InputSchemaInventoryRow(
+            subject_leaf_key=command_key,
+            required_input_names=tuple(parameter.name for parameter in schema.required_inputs),
+            provenance="S05 VerbInputSchema.required_inputs",
+        )
+        for command_key, schema in sorted(input_schemas.items())
+    )
+    mounted_families = tuple(
+        MountedFamilyInventoryRow(
+            root=family.root.value,
+            child=family.child,
+            provenance="OperatorSurfaceContract.command_families",
+        )
+        for family in get_operator_surface_contract().command_families
+    )
+    profile_policies = tuple(
+        ProfilePolicyInventoryRow(
+            subject_leaf_key=command_key,
+            classification=(
+                "profile_bound_write"
+                if is_profile_bound_write_verb_path(" ".join(primary_paths[command_key]))
+                else "non_profile_bound"
+            ),
+            should_expose_via_mcp=command_key not in ROOT_LANDING_SCHEMA_KEYS,
+            provenance="application storage policy plus root landing exposure contract",
+        )
+        for command_key in sorted(command_keys)
+    )
+    mcp_exposures = tuple(
+        McpExposureInventoryRow(
+            subject_leaf_key=command_key,
+            exposed=command_key in descriptor_by_key,
+            provenance="build_tool_descriptors",
+        )
+        for command_key in sorted(command_keys)
+    )
+    exclusions = tuple(
+        exclusion
+        for command_key in sorted(ROOT_LANDING_SCHEMA_KEYS)
+        for exclusion in (
+            ExplicitExclusionInventoryRow(
+                subject_leaf_key=command_key,
+                surface=ReconciliationSurface.MOUNTED_FAMILY,
+                reason="root landing callback has no mounted command family",
+                authority="ROOT_LANDING_SCHEMA_KEYS",
+                provenance="entrypoints.schema_surface",
+            ),
+            ExplicitExclusionInventoryRow(
+                subject_leaf_key=command_key,
+                surface=ReconciliationSurface.MCP_EXPOSURE,
+                reason="root landing callback is excluded from MCP tools",
+                authority="ROOT_LANDING_SCHEMA_KEYS",
+                provenance="entrypoints.schema_surface",
+            ),
+        )
+    )
+    return reconcile_operator_surface_inventory(
+        live_leaves=live_leaves,
+        result_schemas=result_schemas,
+        input_schemas=input_rows,
+        mounted_families=mounted_families,
+        profile_policies=profile_policies,
+        mcp_exposures=mcp_exposures,
+        exclusions=exclusions,
+    )
+
+
+def active_profile_label() -> str | None:
     """Return the active taxpayer profile's display label, or ``None``.
 
     Resolves the active bucket id through the same core precedence chain
     every command uses (:func:`~cadrumo.core.resolve_active_bucket_id`), then
-    reads its plaintext manifest label
-    (:func:`~cadrumo.application.workflow.read_profile_bucket_by_id`) — the
+    resolves its live plaintext manifest label
+    (:func:`~cadrumo.application.workflow.resolve_profile_bucket`) — the
     same non-secret display name
     :func:`~cadrumo.application.operator_output.sandbox_notice_for_active_bucket`
     reads,
@@ -269,14 +759,14 @@ def _active_profile_label() -> str | None:
     profile manifests.
     """
     from ...adapters.persistence.storage import StorageValidationError
-    from ...application.workflow import read_profile_bucket_by_id
+    from ...application.workflow import resolve_profile_bucket
     from ...core import FormerProductStateError, resolve_active_bucket_id
 
     try:
         bucket_id = resolve_active_bucket_id()
         if bucket_id is None:
             return None
-        pointer = read_profile_bucket_by_id(bucket_id)
+        pointer = resolve_profile_bucket(bucket_id)
     except (FormerProductStateError, StorageValidationError):
         return None
     return pointer.label if pointer is not None else None
@@ -303,16 +793,26 @@ def _no_active_profile_refusal() -> Exception:
     second one. ``list_profile_buckets`` reads only manifest files and
     never unlocks a bucket, so this check is cheap.
     """
+    from ...application.profile_preconditions import inspect_active_profile_precondition
     from ...application.workflow import list_profile_buckets
     from ._errors import CliRefusedBoundaryError
 
+    registered_profile_count = len(list_profile_buckets())
+    verdict = inspect_active_profile_precondition(
+        active_profile_present=False,
+        registered_profile_count=registered_profile_count,
+    )
+    if verdict is None:
+        raise RuntimeError("no-active-profile refusal did not produce a failed verdict")
     # Each branch calls tr() with a literal key so the locale scaffold's
     # static discovery can find both keys; a single tr(variable) call would
     # be invisible to that AST-literal scan and the second key would never
     # get scaffolded across the four catalogues.
-    if list_profile_buckets():
-        return CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile_registered"))
-    return CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
+    if registered_profile_count:
+        error = CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile_registered"))
+    else:
+        error = CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
+    return attach_cli_policy_verdict(error, verdict=verdict)
 
 
 def _state() -> WorkflowState:
@@ -690,9 +1190,6 @@ def _declared_tax_id(record: UserProfileRecord | None) -> str:
     return (fact_value(record, "identity.tax_id") or "").strip()
 
 
-#: ``identity.tax_id``'s declared ``model_selectors`` token, as
-#: :func:`format_profile_selector_requirements` expects it - a selector token,
-#: not the ``section.field`` path.
 _TAX_ID_SELECTOR = "tax.id"
 
 
@@ -713,24 +1210,32 @@ def _filing_taxpayer_or_refuse(state: WorkflowState) -> TaxpayerProfile:
     writes or packages a declaration routes through here, so absence refuses
     once rather than at each call site.
     """
+    from ...application.profile_preconditions import inspect_filing_taxpayer_identity_precondition
     from ...application.user_profile import format_profile_selector_requirements
     from ...core.resources import resources
     from ...domain.calculations.registry import build_profile_grounding_index
     from ._errors import CliRefusedBoundaryError
 
-    if not _declared_tax_id(state.active_profile_record()):
-        raise CliRefusedBoundaryError(
-            translated_message="cli.common.errors.filing_requires_declared_tax_id",
-            context={
-                "requirements": ", ".join(
-                    format_profile_selector_requirements(
-                        [_TAX_ID_SELECTOR],
-                        schema=resources().user_profile_schema.singleton,
-                        grounding_index=build_profile_grounding_index(resources().modelos.authority),
+    record = state.active_profile_record()
+    verdict = inspect_filing_taxpayer_identity_precondition(
+        declared_tax_id=_declared_tax_id(record),
+        profile_name=record.profile_id if record is not None else None,
+    )
+    if verdict is not None:
+        raise attach_cli_policy_verdict(
+            CliRefusedBoundaryError(
+                translated_message="cli.common.errors.filing_requires_declared_tax_id",
+                context={
+                    "requirements": ", ".join(
+                        format_profile_selector_requirements(
+                            [_TAX_ID_SELECTOR],
+                            schema=resources().user_profile_schema.singleton,
+                            grounding_index=build_profile_grounding_index(resources().modelos.authority),
+                        ),
                     ),
-                ),
-            },
-            suggestion="aeat config profile edit",
+                },
+            ),
+            verdict=verdict,
         )
     return _profile_to_taxpayer(state)
 

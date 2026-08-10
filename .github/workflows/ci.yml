@@ -134,8 +134,8 @@ jobs:
         # Fails the workflow if any cross-reference declares an
         # oracle_id that doesn't match the registered oracle's
         # surface_kind. To fix locally, run:
-        #   uv run --no-sync aeat app registry audit-oracles
-        run: uv run --no-sync aeat app registry audit-oracles
+        #   uv run --no-sync python -m dev.registry.maintenance_cli audit-oracles
+        run: uv run --no-sync python -m dev.registry.maintenance_cli audit-oracles
 
       - name: Tooling and workflow conformance gates
         # The dev-tree unit AND integration gates (workflow structural pins,

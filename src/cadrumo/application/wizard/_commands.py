@@ -877,13 +877,13 @@ def _python_parameter(
 def _mode_parameters(flow: WizardFlow, *, mode: WizardPersistMode) -> tuple[inspect.Parameter, ...]:
     """Build the callback context, profile-name, and fixed mode-flag parameters.
 
-    Create keeps the name optional at parse time so the interactive
-    registration screen can collect it. The programmatic path still applies
+    The name is optional at parse time for both verbs. The interactive create
+    screen can collect it, while an unnamed edit addresses the authenticated
+    active profile. The programmatic create path still applies
     ``_require_profile_name`` after dispatch, so headless create retains its
     typed missing-name refusal. The injected ``ctx`` is part of the callback
     contract rather than a profile field: the CLI frontend seam needs it to
-    emit the manager's closing envelope after the screen returns. Edit keeps
-    its existing required-name CLI contract.
+    emit the manager's closing envelope after the screen returns.
     """
     del flow
     ctx = inspect.Parameter(
@@ -891,16 +891,12 @@ def _mode_parameters(flow: WizardFlow, *, mode: WizardPersistMode) -> tuple[insp
         kind=inspect.Parameter.POSITIONAL_OR_KEYWORD,
         annotation=typer.Context,
     )
-    profile_name_is_optional = mode == "create"
-    profile_name_default: object = None if profile_name_is_optional else ...
+    profile_name_default: object = None
     profile_name_argument = typer.Argument(
         ...,
         help=tr("cli.config.setup.profile_name_help"),
     )
-    if profile_name_is_optional:
-        profile_name_annotation = Annotated[str | None, profile_name_argument]
-    else:
-        profile_name_annotation = Annotated[str, profile_name_argument]
+    profile_name_annotation = Annotated[str | None, profile_name_argument]
     profile_name = inspect.Parameter(
         name="profile_name",
         kind=inspect.Parameter.KEYWORD_ONLY,
@@ -1200,6 +1196,32 @@ def _resolve_profile_id_for_mode(flow: WizardFlow, mode: WizardPersistMode, prof
         translated_message="application.wizard.errors.profile_flag_required",
         context={"flow_id": flow.id, "missing": ("profile_name",)},
     )
+
+
+def _resolve_profile_target_for_mode(
+    flow: WizardFlow,
+    mode: WizardPersistMode,
+    raw_profile_name: object,
+) -> tuple[str, str]:
+    """Resolve the display label and immutable id addressed by a wizard verb.
+
+    An explicit name keeps the existing create/edit resolver contract. An
+    omitted edit addresses the active profile, matching the profile manager and
+    the root authentication gate that precedes this command. Create has no
+    existing subject to inherit and therefore retains its missing-name refusal.
+    """
+    if isinstance(raw_profile_name, str) and raw_profile_name.strip():
+        profile_name = raw_profile_name.strip()
+        return profile_name, _resolve_profile_id_for_mode(flow, mode, profile_name)
+    if mode == "create":
+        profile_name = _require_profile_name(flow, raw_profile_name)
+        return profile_name, _resolve_profile_id_for_mode(flow, mode, profile_name)
+
+    from ...core import require_active_bucket_id
+    from ..user_profile import resolve_login_target
+
+    target = resolve_login_target(require_active_bucket_id())
+    return target.label, target.bucket_id
 
 
 def _seed_output_language_from_environment(canonical: dict[str, str]) -> None:
@@ -1716,8 +1738,11 @@ def _execute_wizard_command(
     kwargs: dict[str, object],
 ) -> None:
     """Run the wizard command body after Typer has parsed dynamic flags."""
-    profile_name = _require_profile_name(flow, kwargs.pop("profile_name"))
-    profile_id = _resolve_profile_id_for_mode(flow, mode, profile_name)
+    profile_name, profile_id = _resolve_profile_target_for_mode(
+        flow,
+        mode,
+        kwargs.pop("profile_name"),
+    )
     quiet = bool(kwargs.pop("quiet", False))
     accept_defaults = bool(kwargs.pop("accept_defaults", False))
     canonical = _collect_flag_values(flow, kwargs)

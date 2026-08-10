@@ -18,7 +18,7 @@
     "src/cadrumo/domain/calculations/registry/_formula_runtime.py": "The IRNR/M210 formula-op evaluator family was extracted to _formula_runtime_irnr.py and the shared error types plus numeric accessor to _formula_runtime_ops.py (aeat-architecture-boundaries). Split direction: further formula-op families remain extractable the same way.",
     "src/cadrumo/domain/calculations/registry/_loader.py": "Load-bearing registry compiler; the locale-translation load/merge/inject pipeline was already extracted to _loader_locales.py. Split direction: owner pass rather than a same-pass extraction.",
     "src/cadrumo/domain/calculations/registry/_record_design.py": "Not acquired complexity: the ruff 0.15.22 -> 0.16.0 formatter reflow joined comprehensions and call chains the old formatter split. A split would be the wrong remedy here.",
-    "src/cadrumo/domain/calculations/registry/_workbook_parity.py": "Carries a sys.platform guard so ty resolves winreg only on win32.",
+    "dev/registry/_workbook_parity.py": "Carries a sys.platform guard so ty resolves winreg only on win32.",
     "src/cadrumo/entrypoints/cli/_ledger.py::ledger_classify": "A wide Typer signature (manual + LLM + saturate + evidence + auto-split routes). The LLM-routing bodies live in _ledger_llm_cli.py; what remains is the option surface and the route dispatch.",
     "src/cadrumo/entrypoints/cli/_modelo_payloads.py": "The bindings list/resolve payload family was extracted to _modelo_bindings_payloads.py, following the split pattern of _modelo_aux_payloads.py and _modelo_revision_payload_parts.py.",
     "src/cadrumo/entrypoints/mcp/_server.py::build_server": "MCP SDK handler-registration factory: every @server.list_tools() / @server.call_tool() handler closes over server, window, and the persona/telemetry gates built earlier in the function, so the handlers cannot be hoisted to module level without threading that state through every handler signature. Split direction: extract the per-capability handler-builder closures (tools/prompts/resources) into factory helpers taking the shared state as arguments."
@@ -56,7 +56,7 @@
     "src/cadrumo/domain/calculations/registry/_loader.py": 1494,
     "src/cadrumo/domain/calculations/registry/_record_design.py": 1338,
     "src/cadrumo/domain/calculations/registry/_schema.py": 1603,
-    "src/cadrumo/domain/calculations/registry/_workbook_parity.py": 1487,
+    "dev/registry/_workbook_parity.py": 1487,
     "src/cadrumo/domain/calculations/registry/tests/test_modelo_100_registry_roles.py": 1390,
     "src/cadrumo/domain/calculations/registry/tests/test_revision_span_matches_published_designs.py": 1570,
     "src/cadrumo/domain/contribuyente/family.py": 2413,

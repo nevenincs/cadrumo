@@ -74,6 +74,7 @@ def validate_semantic_map(
     _validate_scope(semantic_map, intermediate, snapshot)
     _validate_source_authority(intermediate, snapshot)
     _validate_anomaly_exceptions(anomaly_exceptions, intermediate)
+    _validate_variable_envelope_boundary(intermediate)
     _validate_exact_bijection(semantic_map, intermediate)
     _validate_exact_record_bijection(semantic_map, intermediate)
     _validate_entry_references(semantic_map, snapshot)
@@ -142,6 +143,26 @@ def _validate_anomaly_exceptions(
                 f"semantic-map anomaly exception for source {exception.source_ref!r} is not pinned to the "
                 "parser intermediate SHA-256",
             )
+
+
+def _validate_variable_envelope_boundary(intermediate: RecordDesignIntermediate) -> None:
+    """Retain envelopes as distinct, unjoined composition authorities."""
+    fixed_keys = {(sheet.sheet, sheet.record_identity) for sheet in intermediate.sheets}
+    envelope_keys = tuple(
+        (envelope.sheet, envelope.record_identity) for envelope in intermediate.variable_envelopes
+    )
+    duplicate_envelopes = _duplicate_record_keys(envelope_keys)
+    if duplicate_envelopes:
+        raise RegistryValidationError(
+            "parser intermediate contains duplicate variable-envelope identities: "
+            f"{_format_record_keys(duplicate_envelopes)}",
+        )
+    collisions = tuple(sorted(fixed_keys.intersection(envelope_keys)))
+    if collisions:
+        raise RegistryValidationError(
+            "parser intermediate cannot classify one identity as both fixed record and variable envelope: "
+            f"{_format_record_keys(collisions)}",
+        )
 
 
 def _validate_exact_bijection(

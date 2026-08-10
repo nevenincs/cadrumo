@@ -24,10 +24,13 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ...core import BindingSourceKind
 from ...core.logging import LogExtra
+from ..operator_actions import ActionReference, NoRecoveryOutcome
+
+_NAMESPACED_ID_PATTERN = r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$"
 
 
 class RootSurfaceName(StrEnum):
@@ -155,15 +158,24 @@ class RootLandingReport(BaseModel):
     """Bare-root landing report built from caller-projected profile state.
 
     :func:`~application.operator_surface.build_root_landing_report` creates
-    this record from an already-resolved profile display label. The model carries
-    the message and next command only; it does not perform profile discovery.
+    this record from active-selection state and an already-resolved profile
+    display label. The two fields remain distinct so an unavailable manifest
+    cannot be presented as no selection. The model does not perform discovery.
     """
 
     model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
+    profile_selected: bool = False
     active_profile: str | None = None
     command: str = Field(min_length=1, max_length=120)
     message: str = Field(min_length=1, max_length=160)
+
+    @model_validator(mode="after")
+    def _selected_profile_owns_display_identity(self) -> RootLandingReport:
+        """Reject a display label that has no corresponding selected profile."""
+        if self.active_profile is not None and not self.profile_selected:
+            raise ValueError("active profile label requires a selected profile")
+        return self
 
 
 class LifecycleContract(BaseModel):
@@ -249,6 +261,40 @@ class MountedCommandFamily(BaseModel):
         if any(not command.strip() for command in value):
             raise ValueError("mounted command names must not be blank")
         return value
+
+
+class ManifestActionProfile(BaseModel):
+    """One declarative precondition outcome exposed by the operator manifest.
+
+    A profile is keyed to one live subject leaf, failed condition, and scenario.
+    It preserves the exact condition-to-recovery association by carrying either
+    one canonical :class:`~application.operator_actions.ActionReference` or one
+    explicit :class:`~application.operator_actions.NoRecoveryOutcome`.  The
+    application guard remains the authority for deciding whether the condition
+    applies; this record contains no predicate, runtime evidence, argument
+    value, localized prose, or CLI command string.
+    """
+
+    model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+
+    subject_leaf_key: str = Field(pattern=_NAMESPACED_ID_PATTERN, min_length=3, max_length=160)
+    condition_id: str = Field(pattern=_NAMESPACED_ID_PATTERN, min_length=3, max_length=160)
+    scenario_id: str = Field(pattern=_NAMESPACED_ID_PATTERN, min_length=3, max_length=160)
+    action: ActionReference | None = None
+    no_recovery_outcome: NoRecoveryOutcome | None = None
+
+    @property
+    def identity(self) -> tuple[str, str, str]:
+        """Return the canonical live-coverage key for this declared outcome."""
+        return (self.subject_leaf_key, self.condition_id, self.scenario_id)
+
+    @model_validator(mode="after")
+    def _require_action_or_explicit_no_recovery(self) -> ManifestActionProfile:
+        if (self.action is None) == (self.no_recovery_outcome is None):
+            raise ValueError(
+                "manifest action profiles require exactly one action reference or explicit no-recovery outcome"
+            )
+        return self
 
 
 class ServiceOwner(BaseModel):

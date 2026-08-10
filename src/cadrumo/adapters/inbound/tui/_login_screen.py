@@ -32,11 +32,11 @@ from __future__ import annotations
 
 from contextvars import copy_context
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, cast, override
 
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
-from textual.widgets import Button, Footer, Input, Label, LoadingIndicator, Select, Static
+from textual.widgets import Button, Footer, Input, Label, Select, Static
 
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.i18n import tr
@@ -46,6 +46,7 @@ from ._credential_screen import (
     CredentialAttempt,
     run_credential_app,
 )
+from ._status_bar import PinnedStatusBar
 from ._theme import BASE_CSS, ContentScroll, install_cadrumo_themes
 
 if TYPE_CHECKING:
@@ -89,8 +90,6 @@ class LoginApp(CredentialApp["ProfileLoginOutcome"]):
     """
     )
 
-    REFUSAL_ID = "#login-refusal"
-    BUSY_ID = "#login-busy"
     ATTEMPT_NAME = "profile-login"
 
     def __init__(
@@ -125,6 +124,7 @@ class LoginApp(CredentialApp["ProfileLoginOutcome"]):
     def compose(self) -> ComposeResult:
         """Yield the banner, the two credential fields, and the footer."""
         yield Static(id="login-banner", classes="cadrumo-banner")
+        yield PinnedStatusBar(id="credential-status")
         with (
             ContentScroll(classes="cadrumo-scroll"),
             Vertical(classes="cadrumo-column"),
@@ -144,8 +144,6 @@ class LoginApp(CredentialApp["ProfileLoginOutcome"]):
             yield Static(id="hint-passphrase", classes="field-hint")
             yield Input(id="field-passphrase", password=True)
 
-            yield Static(id="login-refusal", classes="credential-refusal")
-            yield LoadingIndicator(id="login-busy", classes="credential-busy")
             with Horizontal(id="login-actions", classes="credential-actions"):
                 yield Button(tr("flows.login.cancel_button"), id="btn-cancel")
                 yield Button(tr("flows.login.unlock_button"), id="btn-unlock", classes="-primary")
@@ -190,7 +188,7 @@ class LoginApp(CredentialApp["ProfileLoginOutcome"]):
 
     def selected_profile_id(self) -> str:
         """The profile the chooser is currently on."""
-        selected = self.query_one("#field-profile", Select).value
+        selected = cast("Select[str]", self.query_one("#field-profile", Select)).value
         return selected if isinstance(selected, str) else self._preselected
 
     def action_unlock(self) -> None:
@@ -233,6 +231,10 @@ class LoginApp(CredentialApp["ProfileLoginOutcome"]):
     @override
     def default_refusal(self) -> str:
         return tr("flows.login.refusal.unlock_failed")
+
+    @override
+    def progress_message(self) -> str:
+        return tr("flows.login.unlock_button")
 
     @override
     def refuse(self, message: str) -> None:

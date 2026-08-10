@@ -270,6 +270,16 @@ def _paused_row(name: str) -> BatchItemResult:
     )
 
 
+def _pending_review_row(name: str) -> BatchItemResult:
+    return BatchItemResult(
+        content_address=_ADDRESS,
+        identity=batch_item_identity(content_address=_ADDRESS, direction=InvoiceKind.RECEIVED),
+        direction=InvoiceKind.RECEIVED,
+        source_name=name,
+        status="pending_review",
+    )
+
+
 def _refused_row(name: str) -> BatchItemResult:
     address = "b" * 64
     return BatchItemResult(
@@ -308,10 +318,11 @@ def test_a_deferred_run_reports_distinctly_from_a_failed_one() -> None:
     codes = {notice.code for notice in _run_notices(deferred)}
     assert codes == {"ledger.evidence.batch.work_deferred"}
     deferred_notice = _run_notices(deferred)[0]
-    assert deferred_notice.suggestion == _PAUSE.remediation
+    assert deferred_notice.action is None
     deferred_context = deferred_notice.context
     assert deferred_context is not None, "the deferral notice carries no structured cause"
     assert deferred_context["causes"] == "runtime_unreachable"
+    assert deferred_context["actionability"] == "runtime_remediation_requires_operator_assessment"
 
     failed = BatchRunResult(items=(_refused_row("broken.pdf"),))
     assert {notice.code for notice in _run_notices(failed)} == {"ledger.evidence.batch.items_refused"}
@@ -324,6 +335,17 @@ def test_a_deferred_run_reports_distinctly_from_a_failed_one() -> None:
         "ledger.evidence.batch.items_refused",
         "ledger.evidence.batch.work_deferred",
     }
+
+
+def test_pending_review_resolves_the_review_queue_action() -> None:
+    notices = _run_notices(BatchRunResult(items=(_pending_review_row("review.pdf"),)))
+
+    (notice,) = notices
+    assert notice.code == "ledger.evidence.batch.pending_review"
+    assert notice.action is not None
+    assert notice.action.action.action_id == "operator.ledger.evidence.review.list"
+    assert notice.action.action.target_command_key == "ledger.evidence.review.list"
+    assert notice.action.argument_bindings == ()
 
 
 def test_an_unreadable_source_counts_as_a_failure_without_becoming_an_item() -> None:

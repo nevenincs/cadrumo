@@ -204,7 +204,6 @@ _EXPECTED_RENDERED_GRAMMARS: Final[dict[str, str]] = {
     "bucket_db": "<root>/buckets/<bucket_id>/db/",
     "bucket_database_file": "<root>/buckets/<bucket_id>/db/cadrumo.db",
     "bucket_blobs": "<root>/buckets/<bucket_id>/blobs/",
-    "bucket_audit": "<root>/buckets/<bucket_id>/audit/",
     "bucket_manifest": "<root>/buckets/<bucket_id>/manifest.toml",
     "bucket_lock": "<root>/buckets/<bucket_id>/.lock",
     "bucket_output_language_hint": "<root>/buckets/<bucket_id>/output-language.hint",

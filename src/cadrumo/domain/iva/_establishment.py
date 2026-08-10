@@ -106,7 +106,6 @@ __all__ = [
     "stated_country_code_status",
     "territorial_scope_for_country",
     "territorial_scope_for_printed_country_name",
-    "territorial_scope_for_printed_tax_identifier",
     "territorial_scope_for_spanish_postal_code",
 ]
 
@@ -719,27 +718,6 @@ def country_code_for_printed_tax_identifier(printed_identifier: str | None) -> s
     if spec is None or not spec.pattern.match(normalised):
         return None
     return iso_country_for_nif_iva_prefix(prefix)
-
-
-def territorial_scope_for_printed_tax_identifier(printed_identifier: str | None) -> IvaTerritorialScope | None:
-    """Return the territorial scope a printed tax IDENTIFIER establishes.
-
-    The identifier rung expressed against the same target every other rung
-    resolves into, and deliberately a composition rather than a second rule set:
-    :func:`country_code_for_printed_tax_identifier` answers "which country did
-    the number name" and :func:`territorial_scope_for_country` stays the single
-    authority on "what does that country establish".
-
-    Args:
-        printed_identifier: The identifier as transcribed, or ``None``.
-
-    Returns:
-        The scope the named country establishes, or ``None`` when no VAT number
-        was recognised. Spain cannot arise here -- the prefix vocabulary excludes
-        it -- so this rung never opens the Spanish territory question and never
-        answers it.
-    """
-    return territorial_scope_for_country(country_code_for_printed_tax_identifier(printed_identifier))
 
 
 _POSTAL_PREFIX_LENGTH: Final[int] = 2

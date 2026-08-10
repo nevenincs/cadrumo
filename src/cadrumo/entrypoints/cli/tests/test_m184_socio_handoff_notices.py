@@ -73,17 +73,17 @@ def test_handoff_emits_one_info_notice_per_socio() -> None:
     assert first.context["nif"] == "12345678A"
     assert first.context["nombre"] == "Ana Socia"
     assert first.context["base_imponible_attributed"] == "58100.00"
-    # The message carries nif/nombre/importe; the suggestion carries the exact
-    # socio-side fold-in command onto the relation-canonical casilla 1577, as
-    # decision (a): the cross-bucket value enters via a manual --binding override).
+    # The message carries nif/nombre/importe. A socio handoff has no executable
+    # action because it crosses profiles and still requires the operator's own
+    # target selection and manual binding decision.
     assert "58100.00" in first.message
     assert "Ana Socia" in first.message
     assert "attribution_received" in first.message
-    assert first.suggestion == "aeat app modelo work calculate --binding 1577=58100.00"
+    assert first.action is None
     assert first.context["target_casilla"] == "1577"
     assert second.context["nif"] == "87654321B"
     assert second.context["base_imponible_attributed"] == "38700.00"
-    assert second.suggestion == "aeat app modelo work calculate --binding 1577=38700.00"
+    assert second.action is None
 
 
 def test_handoff_silent_without_member_rows() -> None:

@@ -93,10 +93,9 @@ def m184_socio_handoff_notices(revision: CalculationRevision) -> list[Notice]:
     When a Modelo 184 revision carries typed :class:`Modelo184MemberRow` detail
     rows, the entity operator who files the M184 is handed, per socio, the exact
     attributed base plus the ``attribution_received`` fact keys the socio records
-    on their OWN profile, and the exact ``aeat app modelo work calculate
-    --binding`` command that folds the base into the socio's Modelo 100 (the
-    cross-bucket value is carried by hand onto the relation-canonical casilla
-    1577, not auto-flowed across profiles). Grounded in LIRPF arts. 86-89.
+    on their OWN profile. The cross-bucket value is carried by hand onto the
+    relation-canonical casilla 1577, not auto-flowed across profiles. Grounded
+    in LIRPF arts. 86-89.
     Returns an empty list for any revision without member rows (non-M184, or an
     M184 with no socios), so the handoff stays silent unless there is a real
     per-socio value to relay.
@@ -116,13 +115,6 @@ def m184_socio_handoff_notices(revision: CalculationRevision) -> list[Notice]:
                     importe=row.importe,
                     porcentaje=row.porcentaje,
                     casilla=_M184_ATRIBUCION_ACT_ECO_CASILLA,
-                ),
-                # The suggestion is a pure machine command: the exact `--binding
-                # 1577=<importe>` fold-in token stays stable across every output
-                # language per the machine-identifier convention, so it is built
-                # in code rather than routed through tr().
-                suggestion=(
-                    f"aeat app modelo work calculate --binding {_M184_ATRIBUCION_ACT_ECO_CASILLA}={row.importe}"
                 ),
                 context={
                     "nif": row.nif,
@@ -175,7 +167,6 @@ def advisory_notice(
     code: str,
     message: str,
     *,
-    suggestion: str | None = None,
     context: dict[str, str] | None = None,
 ) -> Notice:
     """Project a non-blocking modelo advisory message onto the envelope notices channel.
@@ -193,7 +184,6 @@ def advisory_notice(
         severity=NoticeSeverity.WARNING,
         code=code,
         message=message,
-        suggestion=suggestion,
         context=context,
     )
 
@@ -227,9 +217,25 @@ def source_diagnostic_notice(diagnostic: CalculationSourceDiagnostic, *, code: s
         "relation_id": diagnostic.relation_id,
         "casilla_id": diagnostic.casilla_id,
         "source_ref": diagnostic.source_ref,
+        # Non-command remediation stays distinct from the diagnosis so machine
+        # consumers need not recover it from prose. Executable command identity
+        # remains reserved for Notice.action by the Notice validator.
+        "remedy": diagnostic.remedy,
     }
     context.update({key: value for key, value in optional.items() if value})
-    return advisory_notice(code, diagnostic.message, suggestion=diagnostic.remedy, context=context)
+    return advisory_notice(code, diagnostic.message, context=context)
+
+
+def source_diagnostic_notice_text(notice: Notice) -> str:
+    """Render one source diagnosis together with its non-command remedy."""
+    context = notice.context or {}
+    remedy = context.get("remedy")
+    message = notice.message if remedy is None else f"{notice.message} {remedy}"
+    return tr(
+        "cli.app.modelo.work.calculate_source_advisory",
+        message=message,
+        default="ADVISORY: %{message}",
+    )
 
 
 def next_action_notice(
@@ -256,7 +262,6 @@ def next_action_notice(
         severity=NoticeSeverity.INFO,
         code=code,
         message=message,
-        suggestion=suggestion,
         context=context,
     )
 
@@ -346,11 +351,10 @@ def work_unit_payload(unit) -> WorkUnitPayload:
     )
 
 
-def work_unit_lines(unit) -> list[str]:
+def work_unit_lines(unit, *, include_bucket_id: bool = True) -> list[str]:
     lines = [
         f"work_unit_id\t{unit.work_unit_id}",
         f"short_work_unit_id\t{short_id(unit.work_unit_id) or ''}",
-        f"bucket_id\t{unit.bucket_id}",
         f"modelo\t{unit.modelo}",
         f"filing_year\t{unit.filing_year}",
         f"period\t{unit.period.registry_token}",
@@ -365,6 +369,8 @@ def work_unit_lines(unit) -> list[str]:
         f"created_at\t{unit.created_at.isoformat()}",
         f"updated_at\t{unit.updated_at.isoformat()}",
     ]
+    if include_bucket_id:
+        lines.insert(2, f"bucket_id\t{unit.bucket_id}")
     if unit.discarded_at is not None:
         lines.append(f"discarded_at\t{unit.discarded_at.isoformat()}")
     if unit.discarded_by is not None:
@@ -377,20 +383,18 @@ def work_unit_lines(unit) -> list[str]:
     return lines
 
 
-def work_unit_list_lines(units, *, bucket_id: str | None, include_discarded: bool) -> list[str]:
+def work_unit_list_lines(units, *, include_discarded: bool) -> list[str]:
     lines = [
         "operation\tmodelo.work.list",
-        f"bucket_id_filter\t{bucket_id or ''}",
         f"include_discarded\t{include_discarded}",
         f"work_unit_count\t{len(units)}",
-        "short_work_unit_id\twork_unit_id\tbucket_id\tmodelo\tyear\tperiod\trevision_id\tstate\tcurrent_revision\tfiled_revision\tname",
+        "short_work_unit_id\twork_unit_id\tmodelo\tyear\tperiod\trevision_id\tstate\tcurrent_revision\tfiled_revision\tname",
     ]
     lines.extend(
         "\t".join(
             (
                 short_id(unit.work_unit_id) or "",
                 unit.work_unit_id,
-                unit.bucket_id,
                 str(unit.modelo),
                 str(unit.filing_year),
                 unit.period.registry_token,
@@ -897,15 +901,15 @@ def verification_report_notices(report) -> list[Notice]:
     :attr:`Notice.context` so a machine consumer can still distinguish a
     blocking finding from an advisory one. ``legal_refs`` / ``source_refs``
     ride on the context too, mirroring the regulatory grounding the
-    text-mode ``finding_legal_refs`` lines render. The finding's
-    ``next_action`` becomes the notice ``suggestion``.
+    text-mode ``finding_legal_refs`` lines render. The full finding message and
+    free-form ``next_action`` remain in the canonical finding result contract;
+    neither is inferred into an executable notice action.
 
     A granted (clean) verify carries no findings, so this returns an empty
     list and the envelope stays :attr:`EnvelopeStatus.SUCCESS`.
     """
     notices: list[Notice] = []
     for finding in report.findings:
-        message, next_action = _render_verification_finding_text(finding)
         context: dict[str, str] = {
             "severity": finding.severity.value,
             "kind": finding.kind.value,
@@ -922,8 +926,10 @@ def verification_report_notices(report) -> list[Notice]:
             Notice(
                 severity=NoticeSeverity.WARNING,
                 code=f"modelo.work.verify.finding.{finding.kind.value}",
-                message=message,
-                suggestion=next_action,
+                message=(
+                    f"Verification reported a {finding.kind.value} finding. "
+                    "See the structured finding result for details."
+                ),
                 context=context,
             ),
         )

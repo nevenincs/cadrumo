@@ -85,7 +85,6 @@ _EDIT_DIALOG_CSS = """
     height: auto;
 }
 #edit-label { text-style: bold; }
-#edit-path { color: $text-muted; margin: 0 0 1 0; }
 #edit-hint { color: $text-muted; }
 #edit-refusal { color: $error; text-style: bold; }
 #edit-masked-note { color: $text-muted; }
@@ -220,7 +219,6 @@ class FieldEditScreen(ModalScreen[str | None]):
         """
         with Vertical(id="edit-dialog"):
             yield Label(self._prompt, id="edit-label")
-            yield Static(tr("flows.manager.edit.path", path=self._field.path), id="edit-path")
             if self._field.choices:
                 yield OptionList(
                     *[self._label_for(choice.value) for choice in self._field.choices],

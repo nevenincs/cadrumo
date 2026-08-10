@@ -53,6 +53,16 @@ _RevisionId = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
 ]
+_WorkUnitLookupId = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        to_lower=True,
+        pattern=r"^(?:[0-9a-f]{12}|[0-9a-f]{64})$",
+        min_length=12,
+        max_length=64,
+    ),
+]
 
 
 class ModeloWorkSelectorState(StrEnum):
@@ -114,11 +124,14 @@ class ModeloWorkSelectorContradictionError(ModeloWorkSelectorError, ValueError):
 class ModeloWorkVisibleTargetAmbiguousError(ModeloWorkSelectorError):
     """Raised when a visible target matches multiple active work units."""
 
-    def __init__(self, candidates: tuple[ModeloWorkUnitCandidate, ...]) -> None:
+    def __init__(self, candidates: tuple[ModeloWorkUnitCandidate, ...], *, selector: str | None = None) -> None:
         self.candidates = candidates
-        super().__init__(
-            "modelo work target is ambiguous; choose a registry revision or explicit work_unit_id",
-        )
+        self.selector = selector
+        if selector is None:
+            message = "modelo work target is ambiguous; choose a registry revision or exact work_unit_id"
+        else:
+            message = f"modelo work id selector {selector!r} is ambiguous; use the full 64-character work_unit_id"
+        super().__init__(message)
 
 
 class ModeloWorkRevisionConflictError(ModeloWorkSelectorError):
@@ -161,7 +174,8 @@ class ModeloWorkSelectorRequest(BaseModel):
     """Operator-facing modelo work selector.
 
     ``bucket_id`` is optional so callers can address the active profile
-    bucket by default. ``work_unit_id`` is the exact-addressing escape hatch;
+    bucket by default. ``work_unit_id`` accepts the full content-addressed id,
+    an unambiguous prefix, or the displayed 12-character short-id suffix;
     when present, any natural-key flags supplied alongside it are validated
     against the loaded work unit.
     """
@@ -173,7 +187,7 @@ class ModeloWorkSelectorRequest(BaseModel):
     period: Period | None = None
     revision_id: _RevisionId | None = None
     bucket_id: _BucketId | None = None
-    work_unit_id: WorkUnitId | None = None
+    work_unit_id: _WorkUnitLookupId | None = None
 
     @field_validator("modelo", mode="before")
     @classmethod
@@ -354,9 +368,28 @@ def resolve_modelo_work_unit(
     catalogue = repo.load()
 
     if request.work_unit_id is not None:
-        work_unit = catalogue.get(request.work_unit_id)
-        if work_unit is None:
+        matches = tuple(
+            sorted(
+                (
+                    unit
+                    for unit in catalogue.values()
+                    if unit.bucket_id == bucket_id
+                    and (
+                        unit.work_unit_id.startswith(request.work_unit_id)
+                        or unit.work_unit_id.endswith(request.work_unit_id)
+                    )
+                ),
+                key=lambda unit: unit.work_unit_id,
+            ),
+        )
+        if not matches:
             raise ModeloWorkUnitNotFoundError(f"no modelo work unit found with id={request.work_unit_id}")
+        if len(matches) > 1:
+            raise ModeloWorkVisibleTargetAmbiguousError(
+                tuple(ModeloWorkUnitCandidate.from_work_unit(unit) for unit in matches),
+                selector=request.work_unit_id,
+            )
+        work_unit = next(iter(matches))
         _validate_explicit_work_unit_matches_request(work_unit, request, resolved_bucket_id=bucket_id)
         return ModeloWorkResolution(
             state=ModeloWorkSelectorState.RESOLVED,

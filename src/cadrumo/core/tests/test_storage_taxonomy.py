@@ -54,17 +54,18 @@ PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset(
         "session.v1.json",
         "bucket.dek.json",
         "login-throttle.json",
-        "audit",
         "blobs",
+        "live-state",
         "active-profile",
     },
 )
 """Taxonomy-vocabulary literals this module deliberately pins.
 
-``"audit"`` and ``"blobs"`` are the shared on-disk names
-``test_the_duplicated_names_resolve_to_distinct_members`` asserts both the
+``"blobs"`` is the shared on-disk name
+``test_the_duplicated_name_resolves_to_distinct_members`` asserts both the
 root and bucket-relative members resolve to, independent of the accessor
-under test. ``"active-profile"`` is the fixed-layout member's leaf name in
+under test. ``"live-state"`` pins the renamed runtime state root, and
+``"active-profile"`` is the fixed-layout member's leaf name in
 ``test_storage_path_falls_back_to_the_root_for_a_fieldless_member``.
 
 This module is the taxonomy's own accessor test: ``storage_path``,
@@ -141,24 +142,17 @@ def test_the_taxonomy_is_total_over_the_category_enum() -> None:
         assert location.category is category, "a declaration must sit under its own key"
 
 
-def test_the_duplicated_names_resolve_to_distinct_members() -> None:
-    """``blobs`` and ``audit`` each name a top-level category AND a bucket subdirectory.
-
-    Both are correct, at different depths. A name-keyed authority would conflate
-    them, which is why scope is part of a member's identity rather than a
-    decoration on it.
-    """
-    for root_member, bucket_member, shared_name in (
-        (StorageCategory.BLOBS, StorageCategory.BUCKET_BLOBS, "blobs"),
-        (StorageCategory.AUDIT, StorageCategory.BUCKET_AUDIT, "audit"),
-    ):
-        assert root_member is not bucket_member
-        root = storage_location(root_member)
-        nested = storage_location(bucket_member)
-        assert root.subpath == shared_name
-        assert nested.subpath == shared_name
-        assert root.scope is StorageScope.ROOT
-        assert nested.scope is StorageScope.BUCKET_RELATIVE
+def test_the_duplicated_name_resolves_to_distinct_members() -> None:
+    """``blobs`` names both a top-level category and a bucket subdirectory."""
+    root_member = StorageCategory.BLOBS
+    bucket_member = StorageCategory.BUCKET_BLOBS
+    assert root_member is not bucket_member
+    root = storage_location(root_member)
+    nested = storage_location(bucket_member)
+    assert root.subpath == "blobs"
+    assert nested.subpath == "blobs"
+    assert root.scope is StorageScope.ROOT
+    assert nested.scope is StorageScope.BUCKET_RELATIVE
 
 
 def test_a_declaration_forbids_extra_fields_and_refuses_mutation() -> None:
@@ -209,7 +203,7 @@ def test_fixed_override_policy_forbids_a_settings_field() -> None:
         StorageLocation(
             **base_kwargs,
             override_policy=StorageOverridePolicy.FIXED,
-            settings_field="cadrumo_registry_parity_store_dir",
+            settings_field="cadrumo_live_state_dir",
         )
 
     # Positive control: the identical settings_field is unproblematic on an
@@ -218,9 +212,9 @@ def test_fixed_override_policy_forbids_a_settings_field() -> None:
     overridable = StorageLocation(
         **base_kwargs,
         override_policy=StorageOverridePolicy.OPERATOR_OVERRIDABLE,
-        settings_field="cadrumo_registry_parity_store_dir",
+        settings_field="cadrumo_live_state_dir",
     )
-    assert overridable.settings_field == "cadrumo_registry_parity_store_dir"
+    assert overridable.settings_field == "cadrumo_live_state_dir"
 
     # The restoration: removing the settings_field alone (not the policy)
     # is again a legal FIXED declaration -- proves the guard is triggered by

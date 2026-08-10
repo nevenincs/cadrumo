@@ -92,7 +92,7 @@ jobs:
         run: uv run --no-sync aeat app registry verify
 
       - name: Audit oracle bindings
-        run: uv run --no-sync aeat app registry audit-oracles
+        run: uv run --no-sync python -m dev.registry.maintenance_cli audit-oracles
 
       - name: Test (unit)
         # No junit artifact (zero Actions-artifact posture); the durations

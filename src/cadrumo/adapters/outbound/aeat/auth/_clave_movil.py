@@ -596,6 +596,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
 
     @override
     def _attempt_context(self) -> dict[str, object]:
+        fresh_login_settings = self._fresh_login_settings()
         identity = unwrap_optional_secret(self._settings.cadrumo_clave_movil_dni_nie).strip()
         try:
             identity_kind = _classify_identity(identity)
@@ -618,7 +619,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
             ),
             "nie_soporte_fingerprint": _diagnostic_fingerprint(self._settings.cadrumo_clave_movil_nie_soporte),
             "prefer_non_qr": self._settings.cadrumo_clave_prefer_non_qr,
-            "headless": self._settings.cadrumo_browser_headless,
+            "headless": fresh_login_settings.cadrumo_browser_headless,
             "timeout_ms": self._settings.cadrumo_clave_movil_timeout_ms,
         }
         context.update(self._active_profile_diagnostic_context(identity))
@@ -707,14 +708,27 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
 
     # ── Lifecycle helpers ───────────────────────────────────────────────────
 
-    async def _resolve_browser_session(self) -> BrowserSessionLike:
+    def _fresh_login_settings(self) -> Settings:
+        """Return browser settings suitable for operator-mediated authentication.
+
+        The shared browser default is headless because most AEAT reads consume
+        persisted session state.  A fresh Cl@ve Movil login is different: its
+        QR branch requires the operator to see and scan the browser page.  Keep
+        that interaction contract local to the provider instead of making every
+        unrelated browser-backed read headed.
+        """
+        if not self._settings.cadrumo_browser_headless:
+            return self._settings
+        return self._settings.model_copy(update={"cadrumo_browser_headless": False})
+
+    async def _resolve_browser_session(self, *, settings: Settings | None = None) -> BrowserSessionLike:
         if self._browser_session_factory is None:
             raise AeatLoginAssertionError(
                 "ClaveMovilAuthProvider was constructed without a browser "
                 "session factory; pass one via select_provider(..., "
                 "browser_session_factory=...).",
             )
-        return await self._browser_session_factory(self._settings)
+        return await self._browser_session_factory(settings or self._settings)
 
     async def _drop_context(self) -> bool:
         context = self._context
@@ -824,7 +838,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         selector_url = self._selector_url(target_path)
         attempt_context = self._attempt_context()
 
-        session_like = await self._resolve_browser_session()
+        session_like = await self._resolve_browser_session(settings=self._fresh_login_settings())
         self._browser_session = session_like
         context, storage_state, landing_url, verification_code = await self._capture_fresh_login_state(
             session_like,

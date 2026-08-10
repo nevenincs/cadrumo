@@ -138,7 +138,6 @@ def auth_configure(
         f"provider\t{configure_result.provider}",
         f"file\t{configure_result.file}",
         f"status\t{'configured' if configure_result.complete else 'incomplete'}",
-        f"active_profile\t{configure_result.active_profile}",
     ]
     if not configure_result.complete:
         lines.append(f"incomplete_reason\t{configure_result.incomplete_reason}")

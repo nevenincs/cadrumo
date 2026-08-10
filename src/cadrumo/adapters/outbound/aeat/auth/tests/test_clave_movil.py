@@ -121,6 +121,7 @@ def test_attempt_context_uses_profile_storage_and_redacts_identity_values() -> N
             lambda state: register_minimal_profile(
                 state,
                 profile_id=bucket_id,
+                display_name="Clave Movil Test",
                 overrides={"identity.tax_id": "X1234567L"},
                 secure_objects=secure_object_repository_for_active_bucket(),
                 enforce_unique_tax_id=False,
@@ -141,6 +142,23 @@ def test_attempt_context_uses_profile_storage_and_redacts_identity_values() -> N
     assert context["profile_tax_id_present"] is True
     assert "X1234567L" not in serialized
     assert "support-marker" not in serialized
+
+
+def test_fresh_login_overrides_the_shared_headless_browser_default(tmp_path: Path) -> None:
+    """The QR page must be visible even though routine browser reads are headless."""
+    configured = Settings(
+        cadrumo_token_dir=tmp_path,
+        cadrumo_local_storage_root=tmp_path / "storage",
+        cadrumo_clave_movil_dni_nie=SecretStr("12345678Z"),
+        cadrumo_browser_headless=True,
+    )
+    provider = ClaveMovilAuthProvider(configured)
+
+    fresh = provider._fresh_login_settings()
+
+    assert configured.cadrumo_browser_headless is True
+    assert fresh.cadrumo_browser_headless is False
+    assert provider._attempt_context()["headless"] is False
 
 
 @pytest.mark.parametrize(
@@ -190,13 +208,17 @@ def test_probe_without_persisted_session_refuses_without_fresh_login(tmp_path: P
 
 
 def test_render_progress_banner_routes_only_to_armed_operator_sink() -> None:
-    captured: list[str] = []
+    from ......core import OperatorProgress
+
+    captured: list[OperatorProgress] = []
     _render_progress_banner(verification_code="YLL", timeout_seconds=120, used_non_qr_fallback=True)
     assert captured == []
     with operator_progress_sink(captured.append):
         _render_progress_banner(verification_code="YLL", timeout_seconds=120, used_non_qr_fallback=True)
     assert len(captured) == 1
-    assert "YLL" in captured[0]
+    assert "YLL" in captured[0].message
+    assert captured[0].timeout_seconds == 120
+    assert "Time remaining 2:00" in captured[0].render()
 
 
 def test_render_progress_banner_uses_structured_log_not_stdio(

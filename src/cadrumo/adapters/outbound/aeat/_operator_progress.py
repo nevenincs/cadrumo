@@ -1,17 +1,20 @@
-"""Lightweight operator-progress channel shared by AEAT auth and the CLI.
+"""Lightweight operator-progress channel shared by AEAT operations and frontends.
 
 Keeping this ContextVar outside the heavy auth facade lets CLI metadata and
 local configuration commands start without importing browser-auth settings.
-Live authentication still installs the same per-invocation sink.
+The CLI installs a stderr sink for headless operation; a full-screen frontend
+may replace it within its worker context so progress stays inside the TUI.
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
 
-_OPERATOR_PROGRESS_SINK: ContextVar[Callable[[str], None] | None] = ContextVar(
+from ....core import OperatorProgress
+
+_OPERATOR_PROGRESS_SINK: ContextVar[Callable[[OperatorProgress], None] | None] = ContextVar(
     "_aeat_auth_operator_progress_sink",
     default=None,
 )
@@ -19,8 +22,8 @@ _OPERATOR_PROGRESS_SINK: ContextVar[Callable[[str], None] | None] = ContextVar(
 
 
 @contextmanager
-def operator_progress_sink(sink: Callable[[str], None]) -> Iterator[None]:
-    """Route a live-auth progress banner to ``sink`` within this context."""
+def operator_progress_sink(sink: Callable[[OperatorProgress], None]) -> Generator[None]:
+    """Route operator progress to ``sink`` within this context."""
     token = _OPERATOR_PROGRESS_SINK.set(sink)
     try:
         yield
@@ -28,11 +31,11 @@ def operator_progress_sink(sink: Callable[[str], None]) -> Iterator[None]:
         _OPERATOR_PROGRESS_SINK.reset(token)
 
 
-def emit_operator_progress(banner: str) -> None:
-    """Send an already-redacted operator progress banner when a sink is armed."""
+def emit_operator_progress(progress: OperatorProgress) -> None:
+    """Send an already-redacted operator progress update when a sink is armed."""
     sink = _OPERATOR_PROGRESS_SINK.get()
     if sink is not None:
-        sink(banner)
+        sink(progress)
 
 
-__all__ = ["emit_operator_progress", "operator_progress_sink"]
+__all__ = ["OperatorProgress", "emit_operator_progress", "operator_progress_sink"]

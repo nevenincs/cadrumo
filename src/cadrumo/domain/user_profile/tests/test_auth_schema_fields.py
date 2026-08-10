@@ -38,7 +38,9 @@ from .. import ProfileSchemaDefinition, load_user_profile_schema
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-AUTH_FIELD_KEYS: frozenset[str] = frozenset({"provider", "dni_nie", "numero_soporte", "fecha_validez"})
+AUTH_FIELD_KEYS: frozenset[str] = frozenset(
+    {"provider", "clave_movil_route", "dni_nie", "numero_soporte", "fecha_validez"},
+)
 CONTRASTE_FIELD_KEYS: frozenset[str] = frozenset({"numero_soporte", "fecha_validez"})
 
 

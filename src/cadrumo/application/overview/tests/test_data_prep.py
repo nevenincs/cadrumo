@@ -83,6 +83,7 @@ def _transaction(
     iva_rate: Decimal | None = None,
     iva_amount: Decimal | None = None,
     purchase_invoice_evidence_id: str | None = None,
+    direction: TransactionDirection = TransactionDirection.OUTGOING,
 ) -> Transaction:
     # The gross ``raw.amount`` must equal ``taxable_base + iva_amount`` to the
     # cent when both are populated; derive it rather than hardcoding a value
@@ -91,7 +92,7 @@ def _transaction(
     return Transaction.model_validate(
         {
             "raw": _raw(provider_id, booked_date=booked_date, amount=gross or Decimal("100.00")),
-            "direction": TransactionDirection.OUTGOING,
+            "direction": direction,
             "group_label": None,
             "business_classification": business_classification,
             "source_jurisdiction": "ES",
@@ -299,6 +300,24 @@ def test_evidence_step_flags_business_expense_with_no_attached_evidence(
     assert evidence_step.state is DataPrepStepState.PENDING
     assert "1 of 1" in evidence_step.summary
     assert "aeat app ledger evidence add" in evidence_step.next_command
+
+
+def test_evidence_step_does_not_count_incoming_business_income_as_expense(
+    _tx_repository: TransactionCatalogueRepository,
+) -> None:
+    """An incoming BUSINESS row belongs to income, not purchase evidence."""
+    income = _transaction(
+        "row-income",
+        business_classification=BusinessClassification.BUSINESS,
+        direction=TransactionDirection.INCOMING,
+    )
+    _tx_repository.save(TransactionCatalogue.from_transactions((income,)))
+
+    walkthrough = _walkthrough(_tx_repository)
+    evidence_step = next(s for s in walkthrough.steps if s.step_id is DataPrepStepId.ATTACH_EVIDENCE)
+
+    assert evidence_step.state is DataPrepStepState.DONE
+    assert "no classified business/mixed expenses require evidence" in evidence_step.summary
 
 
 def test_invoices_step_reflects_period_scoped_invoice_catalogue(
