@@ -48,7 +48,6 @@ See Also:
 
 from __future__ import annotations
 
-from ...core import RefundElection
 from ._catalogue import load_iva_catalogues, resolve_catalogue
 from ._classification import (
     CustomerTaxStatus,
@@ -305,7 +304,6 @@ __all__ = [
     "ProrrataSector",
     "ProrrataSectorError",
     "RecargoRateRecord",
-    "RefundElection",
     "RefundEligibilityReason",
     "RegimeLegend",
     "RegimePeriodicity",
