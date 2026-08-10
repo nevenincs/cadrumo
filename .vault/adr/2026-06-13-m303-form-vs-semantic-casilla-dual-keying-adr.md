@@ -16,7 +16,7 @@ related:
   - '[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-reference]]'
   - '[[2026-07-07-prorrata-sectores-diferenciados-adr]]'
 modified: '2026-08-10'
-body_hash: 'sha256:12031d79eb34f4db70e03f2914127316976ddaa6e49f1a97d0b28ed0b4f2ec7b'
+body_hash: 'sha256:abd70876d46531335d0e39f1c3c74d0b05b989cfd66517c56fb08b4672842687'
 ---
 # `m303-form-vs-semantic-casilla-dual-keying` adr: `M303 semantic homes and exact fixed-slot official projection` | (**status:** `accepted`)
 
@@ -83,6 +83,27 @@ The architecture has three stages:
 3. The filing renderer projects the value to its numbered casilla, nonnumbered fixed slot, or repeated row only after applicability and whole-export completeness have passed.
 
 The projection stage contains no business fallback. Missing producer authority, row identity, election, secure account, or applicability evidence refuses before target creation or byte emission.
+
+### Projection-only numbered endpoints
+
+An official numbered casilla whose value is owned exclusively by a typed repeated-row
+projection uses the closed registry input kind `projection_only`. This is an input-kind
+classification, not a free boolean over `manual`, and not a sibling descriptor outside
+the canonical casilla graph.
+
+Projection-only casillas remain visible in the selected registry snapshot so their
+official identity, legal and source grounding, applicability, and exact export anchor
+remain reviewable. They are excluded from initial-value discovery, manual and bound
+input maps, and zero seeding. A caller that supplies one directly is rejected explicitly;
+the value is never ignored or accepted as a scalar override.
+
+A projection-only casilla cannot declare a formula, binding, alternate binding, or
+independent producer. Its producer classification is the distinct `projection_only`
+path. For M303 casillas 500 through 524, values arrive only by deterministic slot
+projection from the five typed activity-row children of the encrypted
+`ProrrataRegister`. Missing, duplicate, over-capacity, or invalid applicable rows refuse
+before target creation or byte emission. This refinement does not reactivate a withdrawn
+M303 layout and creates no alias, fallback, legacy spelling, or parallel store.
 
 ### Producer vocabulary and resolution
 
