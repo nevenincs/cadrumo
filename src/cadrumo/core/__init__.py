@@ -203,6 +203,11 @@ from ._operator_action_enums import (
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
 )
+from ._precondition_action_invariants import (
+    PreconditionActionIdentity,
+    PreconditionEvidence,
+    PreconditionOutcomeInvariant,
+)
 from ._operator_progress import OperatorProgress
 from ._optional_extras import (
     ANTHROPIC_EXTRA,
@@ -531,6 +536,9 @@ __all__: list[str] = [
     "PostFilingEventKind",
     "PriorDomiciliationElection",
     "ProductIdentity",
+    "PreconditionActionIdentity",
+    "PreconditionEvidence",
+    "PreconditionOutcomeInvariant",
     "ProfileSessionRefusalReason",
     "ProrrataProvisionalProvenance",
     "ProrrataRegisterRegime",

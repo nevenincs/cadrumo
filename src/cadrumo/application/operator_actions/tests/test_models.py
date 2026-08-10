@@ -15,10 +15,14 @@ from ....core import (
     ActionConditionality,
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
+    PreconditionActionIdentity,
+    PreconditionEvidence,
+    PreconditionOutcomeInvariant,
 )
 from ....core.json_contract import (
     ActionConditionEvidence,
     ResolvedActionArgument,
+    ResolvedActionReference,
     ResolvedPreconditionAction,
 )
 from .. import (
@@ -107,6 +111,58 @@ def test_application_and_wire_action_argument_models_share_one_core_resolution_i
     assert "_validate_resolution" in ActionArgumentResolution.__dict__
     assert "_validate_resolution" not in ActionArgumentBinding.__dict__
     assert "_validate_resolution" not in ResolvedActionArgument.__dict__
+
+
+def test_application_and_wire_precondition_models_have_one_core_invariant_owner() -> None:
+    """Both projections inherit the only factual-evidence and outcome invariant."""
+    assert ConditionEvidence.__bases__ == (PreconditionEvidence,)
+    assert ActionConditionEvidence.__bases__ == (PreconditionEvidence,)
+    assert ActionReference.__bases__ == (PreconditionActionIdentity,)
+    assert ResolvedActionReference.__bases__ == (PreconditionActionIdentity,)
+    assert PreconditionOutcomeInvariant in PreconditionVerdict.__mro__
+    assert PreconditionOutcomeInvariant in ResolvedPreconditionAction.__mro__
+
+    canonical_validators = {
+        "_freeze_values",
+        "_serialize_values",
+        "_canonicalize_evidence",
+        "_canonicalize_arguments",
+        "_canonicalize_missing_names",
+        "_validate_outcome",
+        "_reject_arguments_their_evidence_does_not_support",
+        "_reject_conditionality_the_outcome_contradicts",
+    }
+    assert canonical_validators <= set(PreconditionEvidence.__dict__) | set(PreconditionOutcomeInvariant.__dict__)
+    assert not canonical_validators & set(ConditionEvidence.__dict__)
+    assert not canonical_validators & set(ActionConditionEvidence.__dict__)
+    assert not canonical_validators & set(PreconditionVerdict.__dict__)
+    assert not canonical_validators & set(ResolvedPreconditionAction.__dict__)
+
+
+def test_application_and_wire_precondition_models_both_refuse_evidence_from_another_condition() -> None:
+    """The shared outcome invariant rejects the same factual join defect in both projections."""
+    with pytest.raises(ValidationError, match="condition evidence must identify the failed condition"):
+        PreconditionVerdict(
+            failed_condition_id="profile.other",
+            evidence=(_evidence(),),
+            conditionality=ActionConditionality.NOT_APPLICABLE,
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+        )
+
+    with pytest.raises(ValidationError, match="condition evidence must identify the failed condition"):
+        ResolvedPreconditionAction(
+            failed_condition_id="profile.other",
+            evidence=(
+                ActionConditionEvidence(
+                    condition_id="profile.active",
+                    evidence_id="profile.active.selection",
+                    provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                    values={"profile_key": "operator"},
+                ),
+            ),
+            conditionality=ActionConditionality.NOT_APPLICABLE,
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+        )
 
 
 def test_immediate_verdict_is_immutable_and_serializes_evidence_deterministically() -> None:
