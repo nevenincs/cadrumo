@@ -431,6 +431,21 @@ def emit_help_text(ctx: typer.Context) -> None:
     typer.echo(ctx.get_help())
 
 
+def _render_and_echo(*, format_name: str, payload: object, lines: tuple[str, ...]) -> None:
+    """Render through the output boundary and emit whatever text it returns.
+
+    The single place operator-facing success text crosses from rendering into
+    standard output. Both the closing envelope and the streamed progress
+    channel funnel through here, so the redaction pass and the
+    reveal-identifiers resolver are applied once, in one place, rather than
+    once per emitter. A second copy of these three lines is how the streamed
+    channel came to bypass redaction in the first place.
+    """
+    rendered = render_command_output(format_name=format_name, payload=payload, lines=lines)
+    if rendered.text:
+        typer.echo(rendered.text)
+
+
 def emit_progress_line(line: str) -> None:
     """Emit one streamed text-mode progress line through the success-output funnel.
 
@@ -449,9 +464,7 @@ def emit_progress_line(line: str) -> None:
     notices, and no sandbox banner. Callers gate the stream to text mode
     themselves, because in JSON the closing envelope already carries every row.
     """
-    rendered = render_command_output(format_name=OutputFormat.TEXT.value, payload=None, lines=(line,))
-    if rendered.text:
-        typer.echo(rendered.text)
+    _render_and_echo(format_name=OutputFormat.TEXT.value, payload=None, lines=(line,))
 
 
 @cache
@@ -620,9 +633,7 @@ def _emit_envelope(
         sandbox_notice = sandbox_notice_for_active_bucket()
         if sandbox_notice is not None:
             rendered_lines = (sandbox_banner_line(sandbox_notice), *rendered_lines)
-    rendered = render_command_output(format_name=output_format.value, payload=result, lines=rendered_lines)
-    if rendered.text:
-        typer.echo(rendered.text)
+    _render_and_echo(format_name=output_format.value, payload=result, lines=rendered_lines)
 
 
 def resolve_notice_action(
