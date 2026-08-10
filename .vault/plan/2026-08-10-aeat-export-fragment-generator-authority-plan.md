@@ -4,7 +4,7 @@ tags:
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
 modified: '2026-08-10'
-body_hash: 'sha256:7538d138a2070b6c75b16968d94b255ae1ab918ed781ac129a9b8a49e91247e9'
+body_hash: 'sha256:8bbaff87b3700a5f835cb32d803ab424664fe1733addaae2a9fac784f06a1c86'
 tier: L3
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
@@ -87,6 +87,7 @@ Cover every authority boundary with positive and negative real-behavior tests.
 
 Verify generated layouts as loadable complete structures and as real emitted filing bytes.
 
+
 ## Wave `W04` - regenerate and release relayout waves
 
 Use the proven authority to replace unverified trees, close the blocked split spans, and restore architecture-consistent model bindings.
@@ -99,7 +100,7 @@ Regenerate the highest-priority calculation-model revisions and discharge the he
 - [x] `W04.P07.S36` - Replace the spanning Modelo 303 revision with five explicit revision/source bindings: `2023`, `2024-hasta-08-y-2t`, `2024-desde-09-y-3t`, `2025`, and `2026-y-siguientes`. Prove production period-token selection at every early, late, annual, and future boundary, negative cross-token refusal, year-only 2024 ambiguity refusal, and exactly one matching record-design source reference per selected revision without a date-only selector, source-period duplication, alias, bridge, or legacy fallback; `src/cadrumo/_data/registry/aeat/modelos/303/revisions/; src/cadrumo/domain/calculations/registry/tests/`.
 - [x] `W04.P07.S39` - Remove every executable and test dependency on the deleted Modelo 303 `2023-y-siguientes` revision across domain, application, adapter, CLI, and fixture surfaces. Route production callers through the law-determined period selector and use an explicit surviving revision only where the test subject requires a concrete identity. Delete compatibility aliases, bridges, fallback literals, and copied selector logic, and add a structural gate that fails if the retired id or an equivalent redeclared selector reappears outside the single intentional negative-refusal assertion; `src/cadrumo/`.
 - [x] `W04.P07.S42` - Define one strict canonical persisted semantic-map fragment format and public loader/facade with deterministic filename-ordered compilation, exact schema validation, duplicate and collision refusal, and real reviewability tests, without consulting legacy export trees or adding aliases; `dev/registry/; dev/registry/tests/`.
-- [ ] `W04.P07.S43` - Generalize parser-owned variable-envelope recognition from the exact official body, closing-marker, and Variable-total shape, remove the DP200000 name selector, and prove real Modelo 200 plus all five Modelo 303 binaries while retaining malformed and ambiguous refusal with no extent inference; `src/cadrumo/domain/calculations/registry/; dev/registry/`.
+- [x] `W04.P07.S43` - Generalize parser-owned variable-envelope recognition from the exact official body, closing-marker, and Variable-total shape, remove the DP200000 name selector, and prove real Modelo 200 plus all five Modelo 303 binaries while retaining malformed and ambiguous refusal with no extent inference; `src/cadrumo/domain/calculations/registry/; dev/registry/`.
 - [ ] `W04.P07.S44` - Adjudicate and approve the one M303 semantic-home and fixed-slot row-projection architecture for annual-summary, per-activity prorrata, differentiated-deduction, simplified-activity/module, taxpayer/profile, filing-election, presenter, payment, and secure-account fields. Reconcile `2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr`, `2026-07-01-modelo-303-regimen-simplificado-adr`, `2026-08-07-official-form-coverage-audit`, and the accepted casilla-schema canonical-derivations ADR without creating a competing dual-key or official-box authority; `.vault/adr/`.
 - [ ] `W04.P07.S45` - Centralize the export semantic payload axes and producer vocabulary in the public registry/export schema, retarget the development semantic-map schema and renderer to those canonical types, and delete redeclared draft-attribute, computed-key, header-key, and equivalent selector lists. Prove every admitted semantic token has exactly one production producer and that deleted tokens fail strict load; `src/cadrumo/domain/calculations/registry/; src/cadrumo/application/filing/; dev/registry/`.
 - [ ] `W04.P07.S46` - Land the missing typed canonical producers for M303 stable taxpayer/profile facts, filing-instance elections and amendment evidence, presenter identity, and disposition-selected secure refund/charge account values. Retarget export header composition to those owners and delete duplicate profile/header derivations, aliases, fallback values, and plaintext financial-data paths; `src/cadrumo/domain/deadlines/; src/cadrumo/application/user_profile/; src/cadrumo/application/modelo/; src/cadrumo/application/filing/`.
