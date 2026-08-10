@@ -1,0 +1,134 @@
+"""Validation tests for the development-only record-design semantic map."""
+
+from __future__ import annotations
+
+import pytest
+from pydantic import ValidationError
+
+from cadrumo.domain.calculations.registry import CasillaFieldKind
+
+from .._semantic_map import SemanticMap, SemanticMapEntry
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def _anchor() -> dict[str, object]:
+    return {
+        "sheet": "Registro tipo 1",
+        "source_row": 14,
+        "source_cell": "A14",
+        "ordinal": 3,
+        "record_identity": "registro-tipo-1",
+    }
+
+
+def _entry_payload(kind: str, **semantic_payload: object) -> dict[str, object]:
+    return {
+        "anchor": _anchor(),
+        "export_field_id": "registro-tipo-1.declarante-nif",
+        "kind": kind,
+        "legal_refs": ("liva-art-164",),
+        "source_refs": ("aeat-dr-303-2026",),
+        **semantic_payload,
+    }
+
+
+@pytest.mark.parametrize(
+    ("kind", "semantic_payload", "expected_name", "expected_value"),
+    [
+        ("casilla", {"casilla_id": "casilla.03"}, "casilla_id", "casilla.03"),
+        ("binding", {"binding": "declarante.nif"}, "binding", "declarante.nif"),
+        ("literal", {"literal": "T"}, "literal", "T"),
+        ("header", {"header_key": "record_type"}, "header_key", "record_type"),
+        ("draft", {"draft_attribute": "filing_year"}, "draft_attribute", "filing_year"),
+        ("computed", {"computed_key": "envelope_closing_tag"}, "computed_key", "envelope_closing_tag"),
+        ("filler", {}, None, None),
+        ("checksum", {}, None, None),
+    ],
+)
+def test_semantic_entry_accepts_only_the_registry_meaning_for_each_field_kind(
+    kind: str,
+    semantic_payload: dict[str, object],
+    expected_name: str | None,
+    expected_value: str | None,
+) -> None:
+    """Every production export kind maps to its one permitted semantic payload."""
+    entry = SemanticMapEntry.model_validate(_entry_payload(kind, **semantic_payload))
+
+    assert entry.kind is CasillaFieldKind(kind)
+    if expected_name is not None:
+        assert getattr(entry, expected_name) == expected_value
+    else:
+        assert entry.casilla_id is None
+        assert entry.binding is None
+        assert entry.literal is None
+        assert entry.header_key is None
+        assert entry.draft_attribute is None
+        assert entry.computed_key is None
+
+
+def test_semantic_map_retains_a_complete_workbook_anchor_and_canonical_grounding() -> None:
+    """A per-design map retains semantic identity without importing coordinates."""
+    semantic_map = SemanticMap.model_validate(
+        {
+            "modelo": "303",
+            "design_epoch": "2026",
+            "entries": (_entry_payload("casilla", casilla_id="casilla.03"),),
+        },
+    )
+
+    entry = semantic_map.entries[0]
+    assert semantic_map.modelo == "303"
+    assert semantic_map.design_epoch == "2026"
+    assert entry.anchor.sheet == "Registro tipo 1"
+    assert entry.anchor.source_row == 14
+    assert entry.anchor.source_cell == "A14"
+    assert entry.anchor.ordinal == 3
+    assert entry.anchor.record_identity == "registro-tipo-1"
+    assert entry.export_field_id == "registro-tipo-1.declarante-nif"
+    assert entry.legal_refs == ("liva-art-164",)
+    assert entry.source_refs == ("aeat-dr-303-2026",)
+
+
+def test_semantic_map_supports_exact_pdf_anchors_without_a_workbook_cell() -> None:
+    """PDF parser output remains exactly addressable without inventing a cell."""
+    payload = _entry_payload("filler")
+    payload["anchor"] = {**_anchor(), "source_cell": None}
+
+    entry = SemanticMapEntry.model_validate(payload)
+
+    assert entry.anchor.source_row == 14
+    assert entry.anchor.source_cell is None
+    assert entry.anchor.ordinal == 3
+    assert entry.anchor.record_identity == "registro-tipo-1"
+
+
+@pytest.mark.parametrize(
+    ("kind", "semantic_payload", "message"),
+    [
+        ("casilla", {}, "only casilla_id; declared none"),
+        ("binding", {"binding": "declarante.nif", "casilla_id": "casilla.03"}, "only binding"),
+        ("filler", {"literal": " "}, "must not declare semantic payloads"),
+        ("checksum", {"computed_key": "envelope_closing_tag"}, "must not declare semantic payloads"),
+    ],
+)
+def test_semantic_map_rejects_missing_or_conflicting_kind_semantics(
+    kind: str,
+    semantic_payload: dict[str, object],
+    message: str,
+) -> None:
+    """A map cannot silently mix registry meanings for one official slot."""
+    with pytest.raises(ValidationError, match=message):
+        SemanticMapEntry.model_validate(_entry_payload(kind, **semantic_payload))
+
+
+def test_semantic_map_rejects_parser_coordinates_and_renderer_shape() -> None:
+    """Coordinates and export formatting remain parser-owned, never semantic-map data."""
+    with pytest.raises(ValidationError, match="offset"):
+        SemanticMapEntry.model_validate(
+            _entry_payload(
+                "casilla",
+                casilla_id="casilla.03",
+                offset=17,
+            ),
+        )
