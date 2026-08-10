@@ -361,29 +361,31 @@ def test_prior_domiciliation_export_and_filing_events_keep_the_safe_baseline_u_p
     filing_repository.save(upsert_filing_record(filing_repository.load(), baseline))
 
     source_header_locator = "modelo-303-fichero-boe:modelo-303-page-01:declaration-type:13:1"
-    CalculationObservationRepository().save(CalculationObservationRepository().prepare_observation_envelope(
-        RegistryModeloObservation(
-            modelo="303",
-            filing_year=work_unit.filing_year,
-            period=work_unit.period.registry_token,
-        ),
-        source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
-        captured_at=datetime(2026, 5, 21, 11, 59, tzinfo=UTC),
-        source_metadata={"aeat_justificante_csv": baseline_evidence_reference},
-        source_headers=(
-            ObservedHeaderFact(
-                header_key="declaration_type",
-                value=ResultDisposition.DOMICILIACION.value,
-                source_artefact_kind="submitted_file",
-                source_locator=source_header_locator,
+    CalculationObservationRepository().save(
+        CalculationObservationRepository().prepare_observation_envelope(
+            RegistryModeloObservation(
+                modelo="303",
+                filing_year=work_unit.filing_year,
+                period=work_unit.period.registry_token,
             ),
-        ),
-        result_disposition=ResultDispositionProjection(
-            disposition=ResultDisposition.DOMICILIACION,
-            provenance_kind="source_header",
-            provenance_locator=source_header_locator,
-        ),
-    ))
+            source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
+            captured_at=datetime(2026, 5, 21, 11, 59, tzinfo=UTC),
+            source_metadata={"aeat_justificante_csv": baseline_evidence_reference},
+            source_headers=(
+                ObservedHeaderFact(
+                    header_key="declaration_type",
+                    value=ResultDisposition.DOMICILIACION.value,
+                    source_artefact_kind="submitted_file",
+                    source_locator=source_header_locator,
+                ),
+            ),
+            result_disposition=ResultDispositionProjection(
+                disposition=ResultDisposition.DOMICILIACION,
+                provenance_kind="source_header",
+                provenance_locator=source_header_locator,
+            ),
+        )
+    )
     rectificativa = verified.model_copy(
         update={
             "amendment_kind": CalculationRevisionAmendmentKind.RECTIFICATIVA,

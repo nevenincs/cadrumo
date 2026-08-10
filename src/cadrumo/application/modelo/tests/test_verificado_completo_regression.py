@@ -228,30 +228,32 @@ def _seed_clean_cross_period_sources_for_m130(
             expected_tax_id="X1234567L",
             clock=_T0,
         )
-        observation_repository.save(observation_repository.prepare_observation_envelope(
-            RegistryModeloObservation(
-                modelo=requirement.source_modelo,
-                filing_year=requirement.filing_year,
-                period=requirement.period.registry_token,
-                observations=registry_grounded_observations(
+        observation_repository.save(
+            observation_repository.prepare_observation_envelope(
+                RegistryModeloObservation(
                     modelo=requirement.source_modelo,
                     filing_year=requirement.filing_year,
                     period=requirement.period.registry_token,
-                    casilla_values=values,
+                    observations=registry_grounded_observations(
+                        modelo=requirement.source_modelo,
+                        filing_year=requirement.filing_year,
+                        period=requirement.period.registry_token,
+                        casilla_values=values,
+                    ),
                 ),
-            ),
-            source_kind="aeat_sede_justificante",
-            captured_at=_T0,
-            stamped_revision_id=source_snapshot.revision.id,
-            source_metadata={
-                "aeat_register_status": "ALTA",
-                "aeat_expediente_id": (
-                    f"EXP-{requirement.source_modelo}-{requirement.filing_year}-{requirement.period.registry_token}"
-                ),
-                "aeat_justificante_csv": evidence_reference_id,
-                "authenticated_identity": "X1234567L",
-            },
-        ))
+                source_kind="aeat_sede_justificante",
+                captured_at=_T0,
+                stamped_revision_id=source_snapshot.revision.id,
+                source_metadata={
+                    "aeat_register_status": "ALTA",
+                    "aeat_expediente_id": (
+                        f"EXP-{requirement.source_modelo}-{requirement.filing_year}-{requirement.period.registry_token}"
+                    ),
+                    "aeat_justificante_csv": evidence_reference_id,
+                    "authenticated_identity": "X1234567L",
+                },
+            )
+        )
     return observation_repository
 
 

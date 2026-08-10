@@ -124,8 +124,7 @@ def validate_fixed_width_shape(field: _ExportField) -> None:
     }[field.padding]
     if field.justification is not expected:
         raise RegistryValidationError(
-            f"export field {field.id!r} padding {field.padding.value!r} requires "
-            f"justification {expected.value!r}",
+            f"export field {field.id!r} padding {field.padding.value!r} requires justification {expected.value!r}",
         )
     if field.signed:
         _validate_signed_shape(field)

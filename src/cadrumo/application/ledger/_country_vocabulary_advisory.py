@@ -260,9 +260,7 @@ def country_vocabulary_advisory(draft: InvoiceDraft) -> CountryVocabularyAdvisor
                 field=party.stated_country_code_field,
                 stated_code=code,
                 status=status,
-                detail=(
-                    f"the {party.operator_role} party's country code {code!r} {_DETAIL_BY_STATUS[status]}"
-                ),
+                detail=(f"the {party.operator_role} party's country code {code!r} {_DETAIL_BY_STATUS[status]}"),
             ),
         )
     if not warnings:

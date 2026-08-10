@@ -229,8 +229,7 @@ def _deduccion_requires_adquisicion_before_predicate_failures(
             )
     if not _is_iso_date_literal(parsed.cutoff):
         failures.append(
-            f"{prefix}: {owner} {operator.value} cutoff {parsed.cutoff!r} must be an ISO date literal "
-            "(YYYY-MM-DD)",
+            f"{prefix}: {owner} {operator.value} cutoff {parsed.cutoff!r} must be an ISO date literal (YYYY-MM-DD)",
         )
     return failures
 

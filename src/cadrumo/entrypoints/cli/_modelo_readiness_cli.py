@@ -261,8 +261,7 @@ def _readiness_detail_lines(report) -> list[str]:
         for binding in report.missing_bindings
     )
     lines.extend(
-        f"ledger_issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}"
-        for issue in report.ledger_issues
+        f"ledger_issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}" for issue in report.ledger_issues
     )
     return lines
 

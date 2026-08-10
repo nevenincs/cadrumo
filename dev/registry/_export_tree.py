@@ -70,9 +70,7 @@ _DECIMAL_CONTENT_RE: Final[re.Pattern[str]] = re.compile(
 )
 _INTEGER_CONTENT_RE: Final[re.Pattern[str]] = re.compile(r"^(?P<whole>\d+)\s*enteros?$", re.IGNORECASE)
 _DATE_CONTENT: Final[str] = "aaaammdd"
-_SINGLETON_POLICY_SHAPES: Final[
-    Mapping[ExportValuePolicy, Literal["integer", "decimal", "date", "digit_identity"]]
-] = {
+_SINGLETON_POLICY_SHAPES: Final[Mapping[ExportValuePolicy, Literal["integer", "decimal", "date", "digit_identity"]]] = {
     ExportValuePolicy.SELECTED_1_UNSELECTED_0: "integer",
     ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS: "integer",
     ExportValuePolicy.UNSIGNED_INTEGER: "integer",
@@ -555,11 +553,7 @@ def _profile_singleton_derivation(
         justification = ExportJustification.RIGHT
     else:
         raise RegistryValidationError(f"unsupported singleton export policy shape {policy_shape!r}")
-    allowed_values = (
-        rule.allowed_values or None
-        if rule.value_policy is ExportValuePolicy.ENUMERATED_DIGITS
-        else None
-    )
+    allowed_values = rule.allowed_values or None if rule.value_policy is ExportValuePolicy.ENUMERATED_DIGITS else None
     return _schema_field(
         joined_field,
         data_type=data_type,

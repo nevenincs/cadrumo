@@ -386,9 +386,7 @@ def test_loader_semantic_digest_detects_allowed_values_change() -> None:
     base_layout = _one_field_layout()
     constrained_layout = base_layout.model_copy(
         update={
-            "records": (
-                base_layout.records[0].model_copy(update={"fields": (constrained,)}),
-            ),
+            "records": (base_layout.records[0].model_copy(update={"fields": (constrained,)}),),
         },
     )
     reordered_layout = base_layout.model_copy(

@@ -227,11 +227,13 @@ def test_q2_2024_carry_forward_resolves_from_q1_2024_saldo(tmp_path: Path) -> No
             casilla_inputs=_Q1_2024_INPUTS,
             carry_binding=_Q1_2024_CARRY_BINDING,
         )
-        obs_repo.save(obs_repo.prepare_observation_envelope(
-            _131_observation(filing_year=_YEAR_N, period="1T", result=q1),
-            source_kind="app_filing",
-            captured_at=_CLOCK,
-        ))
+        obs_repo.save(
+            obs_repo.prepare_observation_envelope(
+                _131_observation(filing_year=_YEAR_N, period="1T", result=q1),
+                source_kind="app_filing",
+                captured_at=_CLOCK,
+            )
+        )
         q2_snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=_YEAR_N, period="2T")
         report = resolve_bindings_from_local_store(q2_snapshot, repository=obs_repo)
 

@@ -98,7 +98,6 @@ def _exported_fichero(tmp_path: Path, *, declaration_type: str) -> bytes:
     from ......core import Period
     from ......domain.submission import ModeloDraftStatus
 
-
     provider = build_runtime_schema_provider(modelos=("303",))
     draft = build_draft(
         modelo="303",

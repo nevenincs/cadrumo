@@ -676,21 +676,23 @@ def _persist_unreadable_prior_303(period_code: str = "4T", filing_year: int = 20
     with no carry normalisation, so it carries neither a result disposition nor the
     normalized available/generated pair the carry consumer requires.
     """
-    CalculationObservationRepository().save(CalculationObservationRepository().prepare_observation_envelope(
-        RegistryModeloObservation(
-            modelo="303",
-            filing_year=filing_year,
-            period=period_code,
-            observations=registry_grounded_observations(
+    CalculationObservationRepository().save(
+        CalculationObservationRepository().prepare_observation_envelope(
+            RegistryModeloObservation(
                 modelo="303",
                 filing_year=filing_year,
                 period=period_code,
-                casilla_values={_M303_COMPENSACION_DISPONIBLE_CASILLA: Decimal("850.00")},
+                observations=registry_grounded_observations(
+                    modelo="303",
+                    filing_year=filing_year,
+                    period=period_code,
+                    casilla_values={_M303_COMPENSACION_DISPONIBLE_CASILLA: Decimal("850.00")},
+                ),
             ),
-        ),
-        source_kind="operator_manual",
-        captured_at=_T1,
-    ))
+            source_kind="operator_manual",
+            captured_at=_T1,
+        )
+    )
 
 
 def test_unreadable_prior_303_observation_cannot_prove_a_first_period_zero(repos: _Repos) -> None:
@@ -744,21 +746,23 @@ def _persist_prior_303(repository: CalculationObservationRepository) -> None:
     offset -1) discovers it and the raw resolver emits the
     ``modelo-303-compensacion-pendiente-anteriores`` binding the D3 exclusion strips.
     """
-    repository.save(repository.prepare_observation_envelope(
-        RegistryModeloObservation(
-            modelo="303",
-            filing_year=2026,
-            period="1T",
-            observations=registry_grounded_observations(
+    repository.save(
+        repository.prepare_observation_envelope(
+            RegistryModeloObservation(
                 modelo="303",
                 filing_year=2026,
                 period="1T",
-                casilla_values={_M303_COMPENSACION_DISPONIBLE_CASILLA: Decimal("1200.00")},
+                observations=registry_grounded_observations(
+                    modelo="303",
+                    filing_year=2026,
+                    period="1T",
+                    casilla_values={_M303_COMPENSACION_DISPONIBLE_CASILLA: Decimal("1200.00")},
+                ),
             ),
-        ),
-        source_kind=APP_FILING_SOURCE_KIND,
-        captured_at=_T1,
-    ))
+            source_kind=APP_FILING_SOURCE_KIND,
+            captured_at=_T1,
+        )
+    )
 
 
 def test_first_filer_same_year_chain_is_fully_reachable(repos: _Repos) -> None:

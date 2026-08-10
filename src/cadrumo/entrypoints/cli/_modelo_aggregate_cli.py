@@ -155,9 +155,7 @@ def _route_invoice_retenciones_into_command(
             ),
         )
     catalogue = _load_invoices()
-    entries = tuple(
-        (resolve_catalogue_invoice(catalogue, request.invoice_id), request.scheme) for request in requests
-    )
+    entries = tuple((resolve_catalogue_invoice(catalogue, request.invoice_id), request.scheme) for request in requests)
     routing = route_invoice_retenciones(entries)
     # merge_manual_and_routed_retencion_observations refuses a collision, so an
     # invoice both hand-typed via --retencion-observation and auto-routed here

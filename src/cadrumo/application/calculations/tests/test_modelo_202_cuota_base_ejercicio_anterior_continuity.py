@@ -127,21 +127,23 @@ _CLOCK = datetime(2028, 1, 20, 9, 0, 0, tzinfo=UTC)
 
 def _seed_m200_cuota_liquida(*, source_year: int, cuota: Decimal, obs_repo: CalculationObservationRepository) -> None:
     """Record a prior-year M200 cuota líquida as a filed observation."""
-    obs_repo.save(obs_repo.prepare_observation_envelope(
-        RegistryModeloObservation(
-            modelo=_MODELO_200,
-            filing_year=source_year,
-            period="0A",
-            observations=registry_grounded_observations(
+    obs_repo.save(
+        obs_repo.prepare_observation_envelope(
+            RegistryModeloObservation(
                 modelo=_MODELO_200,
                 filing_year=source_year,
                 period="0A",
-                casilla_values={_M200_CUOTA_LIQUIDA_CASILLA: cuota},
+                observations=registry_grounded_observations(
+                    modelo=_MODELO_200,
+                    filing_year=source_year,
+                    period="0A",
+                    casilla_values={_M200_CUOTA_LIQUIDA_CASILLA: cuota},
+                ),
             ),
-        ),
-        source_kind="app_filing",
-        captured_at=_CLOCK,
-    ))
+            source_kind="app_filing",
+            captured_at=_CLOCK,
+        )
+    )
 
 
 def _seed_m202_1p(
@@ -162,19 +164,21 @@ def _seed_m202_1p(
     observation; the live 1P auto-bind from target year minus two is covered
     separately.
     """
-    obs_repo.save(obs_repo.prepare_observation_envelope(
-        registry_grounded_modelo_observation(
-            modelo=_MODELO_202,
-            filing_year=filing_year,
-            period="1P",
-            casilla_values={
-                _M202_BASE_CASILLA: base,
-                _M202_1P_PAGO_CASILLA: pago,
-            },
-        ),
-        source_kind="app_filing",
-        captured_at=_CLOCK,
-    ))
+    obs_repo.save(
+        obs_repo.prepare_observation_envelope(
+            registry_grounded_modelo_observation(
+                modelo=_MODELO_202,
+                filing_year=filing_year,
+                period="1P",
+                casilla_values={
+                    _M202_BASE_CASILLA: base,
+                    _M202_1P_PAGO_CASILLA: pago,
+                },
+            ),
+            source_kind="app_filing",
+            captured_at=_CLOCK,
+        )
+    )
 
 
 def _calculate_202_2p(

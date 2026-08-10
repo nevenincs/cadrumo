@@ -163,21 +163,23 @@ def _seed_quarterly_filing(
     path the local-file carry flow uses — stamped with the non-official
     ``app_filing`` source_kind.
     """
-    obs_repo.save(obs_repo.prepare_observation_envelope(
-        RegistryModeloObservation(
-            modelo=source_modelo,
-            filing_year=_YEAR,
-            period=period,
-            observations=registry_grounded_observations(
+    obs_repo.save(
+        obs_repo.prepare_observation_envelope(
+            RegistryModeloObservation(
                 modelo=source_modelo,
                 filing_year=_YEAR,
                 period=period,
-                casilla_values={casilla_id: value},
+                observations=registry_grounded_observations(
+                    modelo=source_modelo,
+                    filing_year=_YEAR,
+                    period=period,
+                    casilla_values={casilla_id: value},
+                ),
             ),
-        ),
-        source_kind=APP_FILING_SOURCE_KIND,
-        captured_at=_T0,
-    ))
+            source_kind=APP_FILING_SOURCE_KIND,
+            captured_at=_T0,
+        )
+    )
 
 
 def _seed_pagos_quarters(*, obs_repo: CalculationObservationRepository) -> None:
@@ -206,21 +208,23 @@ def _seed_pagos_quarters(*, obs_repo: CalculationObservationRepository) -> None:
 
 
 def _seed_prior_year_m100_zero_carry(secure_objects: SecureObjectRepository) -> None:
-    CalculationObservationRepository(objects=secure_objects).save(CalculationObservationRepository(objects=secure_objects).prepare_observation_envelope(
-        RegistryModeloObservation(
-            modelo="100",
-            filing_year=_YEAR - 1,
-            period=_ANNUAL_PERIOD,
-            observations=registry_grounded_observations(
+    CalculationObservationRepository(objects=secure_objects).save(
+        CalculationObservationRepository(objects=secure_objects).prepare_observation_envelope(
+            RegistryModeloObservation(
                 modelo="100",
                 filing_year=_YEAR - 1,
                 period=_ANNUAL_PERIOD,
-                casilla_values={_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0")},
+                observations=registry_grounded_observations(
+                    modelo="100",
+                    filing_year=_YEAR - 1,
+                    period=_ANNUAL_PERIOD,
+                    casilla_values={_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0")},
+                ),
             ),
-        ),
-        source_kind=APP_FILING_SOURCE_KIND,
-        captured_at=_T0,
-    ))
+            source_kind=APP_FILING_SOURCE_KIND,
+            captured_at=_T0,
+        )
+    )
 
 
 def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:

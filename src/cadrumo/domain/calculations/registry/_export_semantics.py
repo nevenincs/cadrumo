@@ -106,8 +106,7 @@ def _coerce_export_token[ExportToken: StrEnum](
             return enum_type(value)
         except ValueError:
             raise RegistryValidationError(
-                f"{subject} {value!r} is not recognised; expected one of "
-                f"{[member.value for member in enum_type]}",
+                f"{subject} {value!r} is not recognised; expected one of {[member.value for member in enum_type]}",
             ) from None
     raise RegistryValidationError(f"{subject} must be a string, got {type(value).__name__!r}")
 

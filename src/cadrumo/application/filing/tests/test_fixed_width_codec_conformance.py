@@ -103,7 +103,15 @@ def _record(*fields: ExportFieldDefinition) -> ExportRecordDefinition:
 def _canonical_record(*, signed_money: bool = True) -> ExportRecordDefinition:
     return _record(
         _field("literal", offset=1, length=1, literal="A", padding="none", justification="none"),
-        _field("integer", offset=2, length=4, data_type="integer", casilla_id="01", padding="left_zero", justification="right"),
+        _field(
+            "integer",
+            offset=2,
+            length=4,
+            data_type="integer",
+            casilla_id="01",
+            padding="left_zero",
+            justification="right",
+        ),
         _field(
             "money",
             offset=6,

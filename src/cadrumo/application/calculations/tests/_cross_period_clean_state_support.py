@@ -117,17 +117,19 @@ def _save_source_observation(
     source_kind: str = "aeat_sede_justificante",
     source_metadata: dict[str, str] | None = None,
 ) -> None:
-    repository.save(repository.prepare_observation_envelope(
-        registry_grounded_modelo_observation(
-            modelo="303",
-            filing_year=_M390_YEAR,
-            period=period,
-            casilla_values=source_values,
-        ),
-        source_kind=source_kind,
-        captured_at=_CLOCK,
-        source_metadata=source_metadata,
-    ))
+    repository.save(
+        repository.prepare_observation_envelope(
+            registry_grounded_modelo_observation(
+                modelo="303",
+                filing_year=_M390_YEAR,
+                period=period,
+                casilla_values=source_values,
+            ),
+            source_kind=source_kind,
+            captured_at=_CLOCK,
+            source_metadata=source_metadata,
+        )
+    )
 
 
 @cache
@@ -160,18 +162,20 @@ def _save_member_322_observation(
     source_casilla_ids: tuple[CasillaId, ...],
     source_metadata: dict[str, str] | None = None,
 ) -> None:
-    repository.save(repository.prepare_observation_envelope(
-        registry_grounded_modelo_observation(
-            modelo="322",
-            filing_year=_M353_YEAR,
-            period=_M353_PERIOD,
-            casilla_values=_member_source_values(member_nif, source_casilla_ids),
-        ),
-        source_kind="aeat_sede_justificante",
-        captured_at=_CLOCK,
-        member_nif=member_nif,
-        source_metadata=source_metadata,
-    ))
+    repository.save(
+        repository.prepare_observation_envelope(
+            registry_grounded_modelo_observation(
+                modelo="322",
+                filing_year=_M353_YEAR,
+                period=_M353_PERIOD,
+                casilla_values=_member_source_values(member_nif, source_casilla_ids),
+            ),
+            source_kind="aeat_sede_justificante",
+            captured_at=_CLOCK,
+            member_nif=member_nif,
+            source_metadata=source_metadata,
+        )
+    )
 
 
 def _seed_member_322_filing(
@@ -377,11 +381,13 @@ def _seed_official_303_source_filings(
             modelo="303",
             filing_year=_M390_YEAR,
             period=Period.from_year_and_code(_M390_YEAR, period),
-            revision_id=resources().modelos.authority.snapshot(
+            revision_id=resources()
+            .modelos.authority.snapshot(
                 "303",
                 filing_year=_M390_YEAR,
                 period=period,
-            ).revision.id,
+            )
+            .revision.id,
             clock=_CLOCK,
         )
         values = _source_values(period, tuple(sorted(source_casilla_ids)))

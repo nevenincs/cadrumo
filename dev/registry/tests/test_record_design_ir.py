@@ -349,9 +349,7 @@ def test_intermediate_preserves_each_modelo_220_composite_relative_closing(
         design_epoch=design_epoch,
     )
     parser_envelope = next(
-        sheet.variable_envelope
-        for sheet in extract_record_design(resolved.path)
-        if sheet.variable_envelope is not None
+        sheet.variable_envelope for sheet in extract_record_design(resolved.path) if sheet.variable_envelope is not None
     )
     intermediate = load_record_design_intermediate(
         source_root,

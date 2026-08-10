@@ -136,14 +136,11 @@ def geometry_band(app: App, width: int) -> list[str]:
     vertical_owners = [
         host
         for host in app.screen.walk_children()
-        if isinstance(host, ScrollableContainer)
-        and host.display
-        and host.show_vertical_scrollbar
+        if isinstance(host, ScrollableContainer) and host.display and host.show_vertical_scrollbar
     ]
     if len(vertical_owners) > 1:
         findings.append(
-            "multiple visible vertical scroll owners: "
-            + ", ".join(_widget_label(host) for host in vertical_owners),
+            "multiple visible vertical scroll owners: " + ", ".join(_widget_label(host) for host in vertical_owners),
         )
 
     if app.screen.show_vertical_scrollbar:

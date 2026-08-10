@@ -131,44 +131,48 @@ def _seed_taxpayer_profile(objects: SecureObjectRepository, *, estimation_regime
 
 
 def _seed_prior_year_m100_zero_carry(objects: SecureObjectRepository) -> None:
-    CalculationObservationRepository(objects=objects).save(CalculationObservationRepository(objects=objects).prepare_observation_envelope(
-        RegistryModeloObservation(
-            modelo="100",
-            filing_year=_YEAR - 1,
-            period=_M100_ANNUAL_PERIOD,
-            observations=registry_grounded_observations(
+    CalculationObservationRepository(objects=objects).save(
+        CalculationObservationRepository(objects=objects).prepare_observation_envelope(
+            RegistryModeloObservation(
                 modelo="100",
                 filing_year=_YEAR - 1,
                 period=_M100_ANNUAL_PERIOD,
-                casilla_values={_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0")},
+                observations=registry_grounded_observations(
+                    modelo="100",
+                    filing_year=_YEAR - 1,
+                    period=_M100_ANNUAL_PERIOD,
+                    casilla_values={_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0")},
+                ),
             ),
-        ),
-        source_kind=APP_FILING_SOURCE_KIND,
-        captured_at=_T0,
-    ))
+            source_kind=APP_FILING_SOURCE_KIND,
+            captured_at=_T0,
+        )
+    )
 
 
 def _seed_m131_quarters(objects: SecureObjectRepository) -> None:
     obs_repo = CalculationObservationRepository(objects=objects)
     for period, rendimiento in _M131_RENDIMIENTO_BY_PERIOD.items():
-        obs_repo.save(obs_repo.prepare_observation_envelope(
-            RegistryModeloObservation(
-                modelo="131",
-                filing_year=_YEAR,
-                period=period,
-                observations=registry_grounded_observations(
+        obs_repo.save(
+            obs_repo.prepare_observation_envelope(
+                RegistryModeloObservation(
                     modelo="131",
                     filing_year=_YEAR,
                     period=period,
-                    casilla_values={
-                        _M131_RENDIMIENTO_CASILLA: rendimiento,
-                        _M131_RESULTADO_CASILLA: _M131_PAGO_BY_PERIOD[period],
-                    },
+                    observations=registry_grounded_observations(
+                        modelo="131",
+                        filing_year=_YEAR,
+                        period=period,
+                        casilla_values={
+                            _M131_RENDIMIENTO_CASILLA: rendimiento,
+                            _M131_RESULTADO_CASILLA: _M131_PAGO_BY_PERIOD[period],
+                        },
+                    ),
                 ),
-            ),
-            source_kind=APP_FILING_SOURCE_KIND,
-            captured_at=_T0,
-        ))
+                source_kind=APP_FILING_SOURCE_KIND,
+                captured_at=_T0,
+            )
+        )
 
 
 def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:

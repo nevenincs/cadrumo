@@ -855,8 +855,7 @@ class ExportFieldDefinition(RegistryModel):
         invalid = tuple(value for value in self.allowed_values if not _is_canonical_digit_run(value, length))
         if invalid:
             raise RegistryValidationError(
-                f"export field {self.id!r} allowed_values contains noncanonical or out-of-width entries: "
-                f"{invalid!r}",
+                f"export field {self.id!r} allowed_values contains noncanonical or out-of-width entries: {invalid!r}",
             )
 
     def _validate_value_policy(self) -> None:

@@ -811,6 +811,7 @@ class ProfileSelector(BaseModel):
             )
         return self
 
+
 _MANUAL_INPUT_RECORD_SHAPE_KEYS: frozenset[str] = frozenset(("record", "field", "offset", "length"))
 """Canonical record-field shape keys on the manual_input selector.
 

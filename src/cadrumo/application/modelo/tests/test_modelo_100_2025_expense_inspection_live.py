@@ -204,21 +204,23 @@ def _seed_sofia_ledger(objects: SecureObjectRepository) -> tuple[Transaction, ..
 
 
 def _seed_prior_year_m100_zero_carry(objects: SecureObjectRepository) -> None:
-    CalculationObservationRepository(objects=objects).save(CalculationObservationRepository(objects=objects).prepare_observation_envelope(
-        RegistryModeloObservation(
-            modelo="100",
-            filing_year=2024,
-            period=_ANNUAL_PERIOD,
-            observations=registry_grounded_observations(
+    CalculationObservationRepository(objects=objects).save(
+        CalculationObservationRepository(objects=objects).prepare_observation_envelope(
+            RegistryModeloObservation(
                 modelo="100",
                 filing_year=2024,
                 period=_ANNUAL_PERIOD,
-                casilla_values={_M100_2024_NEGATIVE_GENERAL_BASE_CARRY_CASILLA: Decimal("0")},
+                observations=registry_grounded_observations(
+                    modelo="100",
+                    filing_year=2024,
+                    period=_ANNUAL_PERIOD,
+                    casilla_values={_M100_2024_NEGATIVE_GENERAL_BASE_CARRY_CASILLA: Decimal("0")},
+                ),
             ),
-        ),
-        source_kind=APP_FILING_SOURCE_KIND,
-        captured_at=_T0,
-    ))
+            source_kind=APP_FILING_SOURCE_KIND,
+            captured_at=_T0,
+        )
+    )
 
 
 def _m100_caller_zero_bindings() -> dict[BindingId, Decimal]:
