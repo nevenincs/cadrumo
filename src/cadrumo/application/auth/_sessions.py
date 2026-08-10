@@ -33,7 +33,12 @@ from pydantic import BaseModel, ConfigDict, Field, SecretStr, SkipValidation, Ty
 from ...core import STRICT_FROZEN_CONFIG, AuthProviderKind, ClaveMovilRoute
 from ...core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from ...core.errors import CadrumoError
-from ...core.identity import IdentityError, validate_spanish_tax_id
+from ...core.identity import (
+    IdentityError,
+    same_tax_identifier,
+    tax_id_identity_token,
+    validate_spanish_tax_id,
+)
 from ...core.logging import get_logger
 from ...core.time import now, validate_utc_aware
 from ...domain.user_profile import UserProfileStatus
@@ -613,9 +618,23 @@ def _resolve_provider_kind(settings: Settings, kind: AuthProviderKind | None) ->
 
 
 def _normalise_tax_identity(value: object) -> str:
+    """Coerce an untyped or secret-wrapped value to the canonical keying token.
+
+    This helper owns only what the canonical function deliberately does not
+    accept: an ``object`` rather than a ``str``, and a :class:`SecretStr`
+    wrapper. The normal form itself is
+    :func:`~core.identity.tax_id_identity_token`.
+
+    Its result is a keying and presence value, never a comparison key. Two
+    identifiers are compared with :func:`~core.identity.same_tax_identifier`,
+    which strips separators so a printed ``B-1234567-4`` matches a stored
+    ``B12345674``; this form deliberately does not, because it keys stored
+    objects and must never merge two characters-differ identifiers into one
+    row.
+    """
     if isinstance(value, SecretStr):
         value = value.get_secret_value()
-    return str(value or "").strip().upper()
+    return tax_id_identity_token(str(value or ""))
 
 
 def _normalise_credential(value: object) -> str:
@@ -1052,7 +1071,11 @@ def _assert_session_identity_matches_expected(session: object, expected_identity
     if not expected_identity:
         return
     session_identity = _normalise_tax_identity(getattr(session, "identity_nif", ""))
-    if session_identity and session_identity != expected_identity:
+    # A blank session identity means there is nothing to check, and that stays
+    # a skip rather than a refusal. The comparison itself moves onto the
+    # separator-tolerant predicate: a session identity and a profile identity
+    # can be the same bearer written two ways.
+    if session_identity and not same_tax_identifier(session_identity, expected_identity):
         raise AuthProfileIdentityMismatchError(
             translated_message="application.auth.sessions.errors.session_identity_profile_mismatch",
         )
