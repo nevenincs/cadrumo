@@ -6,7 +6,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:308c56fdb468068d05f4f8c98441c83ba5970c78ac10a1ba6a817ec050414726'
+body_hash: 'sha256:e3b91798d564f0198f8ee9c47934cd4a310da39ce7b09a88472b22263b5229b5'
 related:
   - '[[2026-08-05-ci-lane-deconflation-P01-S02]]'
   - '[[2026-08-05-ci-lane-deconflation-P01-S03]]'
@@ -51,6 +51,7 @@ related:
   - '[[2026-08-06-ci-lane-deconflation-close-honesty-review-audit]]'
   - '[[2026-08-06-ci-lane-deconflation-integration-lane-external-dependency-audit]]'
   - '[[2026-08-07-ci-lane-deconflation-docs-lane-golden-staleness-audit]]'
+  - '[[2026-08-10-ci-lane-deconflation-integration-lane-live-service-dependency-adr]]'
 ---
 
 # `ci-lane-deconflation` feature index
@@ -65,6 +66,7 @@ Auto-generated index of all documents tagged with `#ci-lane-deconflation`.
 - `2026-08-05-ci-lane-deconflation-exec-verification-evidence-adr` - `ci-lane-deconflation` adr: `quote the instrument, do not summarise it` | (**status:** `accepted`)
 - `2026-08-05-ci-lane-deconflation-overview-calendar-payload-adr` - `ci-lane-deconflation` adr: `the breach is a conjunction and the payload is over its real allowance` | (**status:** `accepted`)
 - `2026-08-05-ci-lane-deconflation-schema-size-instrument-adr` - `ci-lane-deconflation` adr: `the gate measures a real target and names the wrong one` | (**status:** `accepted`)
+- `2026-08-10-ci-lane-deconflation-integration-lane-live-service-dependency-adr` - `ci-lane-deconflation` adr: `the integration parallel lane's non-blocking flag and its live external-service dependency` | (**status:** `{proposed|accepted|rejected|superseded|deprecated}`)
 
 ### audit
 
