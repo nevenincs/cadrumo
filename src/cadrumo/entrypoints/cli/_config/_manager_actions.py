@@ -1462,11 +1462,7 @@ def _export_active_profile_to_google_sheets(*, modelo: str, period: str, year: i
     from ....adapters.outbound.storage import OutboundStorageError
     from ....application.storage.calc_sheets import OperatorInputs, RelationValues, build_export_plan
     from ._google_errors import _google_refusal
-    from ._google_sync_calc import (
-        _filing_period_or_refusal,  # pyright: ignore[reportPrivateUsage] - sanctioned intra-package reuse
-        _load_snapshot,  # pyright: ignore[reportPrivateUsage] - sanctioned intra-package reuse
-        _resolve_credentials_and_root,  # pyright: ignore[reportPrivateUsage] - sanctioned intra-package reuse
-    )
+    from ._google_sync_calc import _filing_period_or_refusal, _load_snapshot, _resolve_credentials_and_root
 
     try:
         active = resolve_active_profile()

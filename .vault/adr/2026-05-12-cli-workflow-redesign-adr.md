@@ -66,8 +66,8 @@ related:
   - "[[2026-04-18-unified-review-queue-adr]]"
 supersedes:
   - '2026-05-02-aeat-cli-redesign-adr'
-modified: '2026-07-17'
-body_hash: 'sha256:d642cba05d4da2b965f69124b947af4d28a1ae222ada9a95854862574eb34542'
+modified: '2026-08-10'
+body_hash: 'sha256:054ff8224c2cec45b822cb489be0d4ba6a54c7495655ead37c7c3c35bfeb8ff2'
 ---
 > **Updated 2026-05-19**: Module-path mentions of domain/iva/_classification.py and domain/iva/_oss.py in the backend exit-cap inventory, plus the domain/iva legal prorrata substrate reference in the functional gap inventory, follow the Spanish-stem terminology authority: domain/iva migrates into domain/iva. The CLI verb tree, root-command contract, phantom-family adjudication, and backend exit-cap inventory shape are unaffected.
 > See `2026-05-19-spanish-stem-terminology-authority-adr` for the canonical

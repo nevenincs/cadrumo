@@ -145,10 +145,11 @@ def test_attempt_context_uses_profile_storage_and_redacts_identity_values() -> N
 
 def test_fresh_login_overrides_the_shared_headless_browser_default(tmp_path: Path) -> None:
     """The QR page must be visible even though routine browser reads are headless."""
-    configured = _settings_for(
-        tmp_path,
-        CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z",
-        CADRUMO_BROWSER_HEADLESS="true",
+    configured = Settings(
+        cadrumo_token_dir=tmp_path,
+        cadrumo_local_storage_root=tmp_path / "storage",
+        cadrumo_clave_movil_dni_nie=SecretStr("12345678Z"),
+        cadrumo_browser_headless=True,
     )
     provider = ClaveMovilAuthProvider(configured)
 
