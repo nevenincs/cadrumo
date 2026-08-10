@@ -15,71 +15,90 @@ related:
   - '[[2026-07-05-cross-period-prorrata-adr]]'
   - '[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-reference]]'
   - '[[2026-07-07-prorrata-sectores-diferenciados-adr]]'
-supersedes:
-  - '2026-07-01-modelo-303-regimen-simplificado-adr'
 modified: '2026-08-10'
-body_hash: 'sha256:9915aa048a672b0140a49d666ce9430f049f743ee450df9eee82f608aaa2d624'
+body_hash: 'sha256:d78eb7886ee405349eb57731172f75fcd847ca8003f31c283eb9f938e586e057'
 ---
 # `m303-form-vs-semantic-casilla-dual-keying` adr: `M303 semantic homes and exact fixed-slot official projection` | (**status:** `accepted`)
 
 ## Problem Statement
 
-Modelo 303 has one official fixed record but several legitimate semantic grains. Treating every official field as a casilla, header string, or parser-owned value would create parallel authorities; treating every repeated block as copies of existing global scalars would fabricate detail. This amendment decides one producer and one projection rule for every S44 field family while retaining the accepted dual-key rule.
+Modelo 303 has one business fact graph but several official representations: numbered casillas, nonnumbered fixed-width fields, repeated rows, headers, source literals, reserves, and transport checks. Treating those representations as independent value authorities creates duplicate calculation, persistence, election, account, and export paths.
+
+This amendment completes the accepted dual-key decision. Every M303 fact has exactly one semantic home. Official fields are filing endpoints unless an official-only numbered casilla has no upstream semantic twin, in which case that casilla is itself the canonical endpoint rather than a projection from a shadow identifier.
 
 ## Considerations
 
-- The missing annual, activity-prorrata, and differentiated-sector blocks and their row shapes are grounded by `2026-08-07-official-form-coverage-audit` and `2026-06-04-m303-form-vs-semantic-casilla-dual-keying-research`.
-- Existing profile, filing, prorrata, sector, and simplified-formula owners are inventoried in `2026-06-04-m303-form-vs-semantic-casilla-dual-keying-research`.
-- `2026-08-10-casilla-schema-canonical-derivations-adr` owns official-box classification only; this record must not duplicate it.
+- The accepted dual-key decision already requires semantic values to project to official numbered casillas without a second aggregation path.
+- The official-form coverage audit and the dual-keying research ground the missing annual-summary, per-activity prorrata, differentiated-sector, and simplified-regime fixed shapes; they provide evidence rather than architectural ownership.
+- The accepted cross-period prorrata decision owns the sole encrypted `ProrrataRegister`, global prorrata calculation, carry, apportionment, settlement, and its activity and sector extension axes.
+- The accepted refund, payment, prior-domiciliation, carry, and secure-account decisions continue to own disposition, elections, wallet carry, and account security.
+- The casilla-schema canonical-derivations decision owns official-slot declaration only. Producer ownership, applicability, value arrival, and export completeness remain outside that classifier.
+- The proposed simplified-regime ADR remains a separate, non-governing calculation-completeness record. It is neither accepted nor superseded by this projection decision.
 
 ## Considered options
 
-- **One untyped export-header or parser-field authority** -- rejected: it collapses persistence, calculation, security, applicability, and transport into one mutable string surface.
-- **Official casilla or scalar per fixed source slot** -- rejected for repeated blocks: it redeclares row identity and invites a second calculation path.
-- **One typed canonical owner per semantic grain, followed by exact fixed-slot projection** -- chosen: it preserves established calculation owners while making every source anchor classifiable exactly once.
-- **A sibling M303 projection ADR** -- rejected: the accepted dual-key ADR already governs this decision and is amended in place.
+- **Make each official slot an independent producer** -- rejected because it duplicates semantic facts across casillas, profiles, elections, repeated rows, and export fields.
+- **Use one untyped export payload as the semantic home** -- rejected because it erases provenance, applicability, row identity, sensitivity, and existing domain ownership.
+- **Create export-specific activity and sector stores** -- rejected because they would compete with the accepted `ProrrataRegister` and its existing activity and sector axes.
+- **Keep one canonical typed owner per fact and project exact official endpoints from it** -- chosen because it preserves established calculation and persistence authority while making every official anchor deterministic and auditable.
+- **Create a sibling projection ADR** -- rejected because this accepted dual-key ADR already owns the decision and must remain its single home.
 
 ## Constraints
 
-- Semantic `casilla.id` remains the calculation key. Official numbered casillas are downstream projection endpoints and never an independent aggregation surface.
-- The reviewed semantic map joins one exact parser anchor to one canonical producer. It may classify constants and reserves literally but may not invent a producer, infer by number or label, fall back to a header default, or consult a legacy layout.
-- `classify_official_boxes` is the sole official-box classifier. It answers addressability, not producer ownership, semantic identity, completeness, or value arrival.
-- Applicability is typed and fail-closed. Blank is legal only when the canonical applicability decision is not-applicable. An applicable incomplete block or missing value refuses the complete export.
-- No compatibility aliases, scalar bridges, duplicate selectors, direct header fallbacks, plaintext account paths, or legacy read tolerance survive consumer retargeting.
+- One fact has one semantic owner and one production path. An official endpoint never binds, aggregates, derives, or persists the same fact independently.
+- Semantic casilla identifiers remain calculation keys. Official numbered casillas are downstream endpoints except where an official-only value has no upstream twin; no shadow semantic identifier is created for such a value.
+- The reviewed semantic map joins one exact parser anchor to one canonical producer, official-only endpoint, or exact source literal/transport policy. It may not infer by number, label, position, width, neighbouring fields, or legacy layout.
+- Repeated official blocks preserve typed row identity and deterministic ordinal projection. They are never flattened into per-slot scalars, parallel selector lists, or export-specific stores.
+- Applicability is typed and fail-closed. Blank output is permitted only when the canonical applicability decision says the field is not applicable; an applicable missing or conflicting value refuses the complete export before bytes.
+- `classify_official_boxes` is the sole declaration classifier. It answers whether an official box is addressed, represented through a binding, or undefined; it does not decide producer ownership, value arrival, applicability, or completeness.
+- Source-declared literals, reserves, and transport checks remain source/codec facts and never become taxpayer or calculation semantics.
+- No compatibility alias, alternate resolver, export recomputation, header default, plaintext account path, unsupported-as-filler classification, or legacy read tolerance is permitted.
 
 ## Implementation
 
-### Existing exact numbered-box projections remain binding
+### Projection architecture
 
-The already-ratified boxes `03`, `06`, `09`, `11`, `13`, `27`, `29`, `33`, `37`, and `45` remain computed single-leaf projections from their exact semantic casilla sources recorded in `2026-06-13-m303-form-vs-semantic-casilla-dual-keying-reference`. They carry the official box grounding and equality consistency gate. They never gain a ledger binding, relation, previous-filing carry, or second calculation. This amendment broadens the ownership contract; it does not reopen or weaken those mappings.
+The architecture has three stages:
+
+1. A canonical typed domain or application owner produces each fact.
+2. The reviewed semantic map classifies each exact official source anchor against that producer, an official-only canonical endpoint, or an exact source literal/transport policy.
+3. The filing renderer projects the value to its numbered casilla, nonnumbered fixed slot, or repeated row only after applicability and whole-export completeness have passed.
+
+The projection stage contains no business fallback. Missing producer authority, row identity, election, secure account, or applicability evidence refuses before target creation or byte emission.
 
 ### Canonical ownership matrix
 
 | Official field family | Canonical semantic home | Fixed-record projection rule |
 | --- | --- | --- |
-| Calculated and operator-entered tax amounts | The selected revision's semantic casilla graph: binding, formula, or explicitly manual casilla according to its declared input kind | Project through the official numbered casilla endpoint when one exists; otherwise map the exact source anchor directly to the same semantic casilla. Never aggregate again for export. |
-| Annual-summary block for the exonerated-390 population | Official annual-summary numbered casillas in the selected M303 revision, populated by the existing semantic calculation/binding owners they summarize; the exoneration election is a stable typed profile fact | Project every required endpoint only when the profile says the block applies. The flag and every required endpoint form one completeness unit; partial emission refuses. |
-| Five per-activity prorrata rows, official boxes 500-524 | One typed M303 filing-row collection keyed by stable activity identity and explicit slot, carrying CNAE, operation volume, deduction-right volume, prorrata regime/type, percentage, legal refs, and source refs | Exact slot 1-5 and column projection. Do not copy the global prorrata scalar into five rows. Existing whole-entity prorrata computation remains authoritative for the global result; a row may reference it only when identity and grain match, and reconciliation is a gate rather than another computation. Applicable collections must be complete and have unique slots. |
-| Two differentiated-deduction sector rows, official boxes 700-735 | Existing sector identity, `ProrrataSector` inputs, sectoral prorrata result, and sector-aware ledger aggregation, exposed through one typed M303 sector-row projection carrying identity, totals, legal refs, and source refs | Exact slot 1-2 and column projection from the canonical sector calculation. No export-specific deduction sum, parallel sector selector, or copied scalar path. Applicable sector filings require both law-required rows and totals. |
-| Simplified-regime activities and modules | One typed collection of activity rows keyed by IAE activity identity, each carrying typed module-quantity entries and the filing-year annual-Orden/IAE parameter identity | Exact official activity/module slot projection from the collection. The existing registry formula mechanism remains the sole calculation owner and consumes the collection; no second resolver or per-slot scalar authority. Official box 48 remains manual with blocking/advisory protection until complete accepted coverage permits a later explicit promotion. |
-| Stable taxpayer and IVA-profile facts | Persisted typed `TaxpayerProfile` / `ModeloIVAProfile` fields | Direct typed projection; no export-header-owned defaults or string-key redeclarations. |
-| Refund, payment, amendment, and prior-domiciliation elections | Typed immutable filing-instance state after workflow validation | Project the resolved election/evidence; no profile default or result-shape inference may replace an absent required election. |
-| Presenter identity | A dedicated typed filing-instance presenter value, distinct from taxpayer identity | Project the presenter value. Never default presenter NIF/name to taxpayer NIF/name. |
-| Charge and refund account fields | Typed charge/refund account records in secure profile storage, selected by the resolved disposition | Read only at the secure application boundary and project only the selected account fields. Never persist plaintext in registry, casilla, semantic-map, execution, or audit artifacts. Missing required account data refuses. |
-| Constants, record markers, and reserved bytes | Hash-verified parser IR and source-bound render profile | Emit the exact source-declared literal or reserve policy. They have no application producer and cannot be reclassified as filler for an unsupported semantic field. |
+| Calculated and operator-entered tax amounts | The selected revision's semantic casilla graph: binding, formula, or explicitly manual casilla according to its declared input kind | Project through the official numbered endpoint when one exists; otherwise map the exact source anchor directly to the same semantic casilla. Never aggregate again in export. |
+| Annual-summary block for the exonerated-390 population | Existing typed upstream facts where they exist; otherwise the official numbered annual-summary casilla itself is the canonical endpoint | Populate the complete applicable block from exact owners. Do not invent shadow semantic identifiers for official-only values. The exoneration flag and every required endpoint form one completeness unit. |
+| Five per-activity prorrata rows, official boxes 500-524 | Typed activity-row children of the sole encrypted `ProrrataRegister`, keyed by stable activity identity and carrying the reviewed row facts and evidence | Project exact slots 1-5 from those register children. No second store, projection carrier, per-slot scalar family, or copy of the global prorrata value is allowed. Global provisional/definitive percentage, carry, apportionment, and settlement remain owned by the accepted prorrata decision. |
+| Two differentiated-sector rows, official boxes 700-735 | The existing `ProrrataRegister` sector definitions and entries, including their canonical sector identity and calculated values | Project exact slots 1-2 directly from those existing sector entries. No export row store, duplicate sector collection, parallel selector, or recomputed deduction total is allowed. |
+| Simplified-regime activities and modules | The existing registry-formula mechanism and shared annual Orden/IAE activity substrate, subject to the separate proposed calculation-completeness record | Project nonnumbered activity/module slots from the canonical typed rows. Casilla 48 remains manual and guarded until a separate accepted decision establishes complete calculation authority. |
+| Stable taxpayer and IVA-profile facts | Persisted typed taxpayer and Modelo IVA profile producers | Project typed values directly; header dictionaries and semantic-map defaults are not authorities. |
+| Refund, payment, amendment, and prior-domiciliation facts | Typed filing-instance evidence and elections, resolved by their accepted owners | Project only the resolved filing facts. Result shape or profile defaults cannot replace missing required elections. |
+| Presenter identity | One typed filing-instance presenter producer, distinct from taxpayer identity | Project the presenter value with no taxpayer fallback. |
+| Charge and refund accounts | Distinct encrypted secure-profile account producers selected by the resolved disposition | Read only at the secure application boundary and project only the applicable account. Missing required authority refuses; plaintext never enters registry, casilla, semantic-map, execution, or audit artifacts. |
+| Constants, record markers, reserves, and checksum | Hash-verified parser IR, source-bound render profile, and the sole transport checksum producer | Emit the exact declared literal/reserve or transport result. These facts have no application producer and cannot mask unsupported semantics. |
 
-The public registry/export schema owns the closed producer vocabulary used by semantic maps. Application producers return typed values keyed by that vocabulary; the renderer formats but does not derive them. Consumer migrations delete every replaced key list, selector, scalar row surrogate, and fallback in the same landing.
+### Delivery ownership
+
+S45 owns the closed typed producer vocabulary and removes aliases or competing producer taxonomies. S46 owns the missing typed profile, filing-instance, presenter, disposition, and secure-account producers. S47-S50 own the annual-summary, prorrata-activity, differentiated-sector, and simplified-regime projection implementations. S51 owns applicability and whole-export refusal. S52 owns the five-epoch exact-anchor and exactly-once proof, importing `classify_official_boxes` for declaration instead of reproducing it.
+
+These delivery steps own implementation, producer availability, value arrival, and acceptance evidence. This ADR decides semantic homes and projection boundaries; it does not claim those later steps are already complete.
 
 ## Rationale
 
-This option is the only one that gives each official anchor exactly one producer without merging unlike lifetimes or duplicating calculations. It extends the accepted dual-key direction rather than replacing it: semantic values remain authoritative, official positions remain projections, and repeated official structures gain typed row identity instead of scalar copies. It also composes cleanly with the separate casilla-schema classifier.
+One semantic owner followed by exact official projection is the only option consistent with the accepted dual-key, aggregation, prorrata, refund, payment, carry, secure-storage, and official-box decisions. It preserves official structure without converting that structure into a second domain model. Typed children and existing sector entries express genuine repeated facts while keeping the encrypted `ProrrataRegister` as the sole persistence and calculation substrate.
 
-The proposed simplified-regime ADR's durable one-formula and shared annual-Orden direction is absorbed here. Its scalar support shape is replaced by the typed activity/module collection, so the proposed record is superseded by this amended governing record rather than accepted alongside it.
+Keeping the proposed simplified-regime record separate avoids converting an unaccepted completeness proposal into governing architecture. Allowing an official-only casilla to be canonical avoids equally artificial shadow identifiers. Exact anchors and fail-closed applicability prevent unsupported facts from appearing as plausible blanks, zeroes, fillers, or defaults.
 
 ## Consequences
 
-- Every M303 source anchor can be censused against one canonical producer or a parser-owned literal, with duplicate and unsupported classifications refused.
-- Annual, activity, sector, simplified, profile, election, presenter, payment, and account completeness become explicit applicability gates.
-- Repeated blocks require new typed projection models, but they do not create new IVA calculations.
-- Existing global prorrata, sector deduction, and simplified formula authorities remain load-bearing; export-specific copies are deleted.
-- Presenter identity and secure accounts can no longer ride on convenient taxpayer/header fallbacks, so callers must supply the correct typed filing facts.
+- Every M303 source anchor must resolve exactly once to a canonical producer, an official-only canonical endpoint, or an exact source/transport fact.
+- Numbered casillas remain official endpoints; official-only annual-summary values need no duplicate upstream identifier.
+- Five activity rows extend the sole encrypted `ProrrataRegister`, and two differentiated rows reuse its existing sector definitions and entries; no second store or projection carrier is introduced.
+- Missing applicable authority becomes a whole-export refusal rather than silent blank or zero output.
+- The semantic map remains meaning-only, the casilla classifier remains declaration-only, and export completeness remains the value-arrival authority.
+- The proposed simplified-regime ADR remains non-governing and separate; casilla 48 remains manual until a later accepted completeness decision.
+- S45-S52 remain required implementation and proof work and may not be short-circuited by this architectural decision.

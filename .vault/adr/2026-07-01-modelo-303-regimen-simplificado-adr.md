@@ -7,11 +7,10 @@ related:
   - "[[2026-05-27-khalid-cli-testimonial-audit]]"
   - "[[2026-04-12-modelo-303-390-adr]]"
   - "[[2026-07-10-modelo-303-regimen-simplificado-research]]"
-superseded_by: '2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr'
 modified: '2026-08-10'
-body_hash: 'sha256:367f8d69d68ae5f1d6461e39b2da5eec40c005d56dcc305b553358f2e0a4aa19'
+body_hash: 'sha256:405e2af0fb498453cfbc7f75ea7753fd0da65775b8c6a11b843709f8b6f70397'
 ---
-# `modelo-303-regimen-simplificado` adr: `modulos-based IVA cuota binding set` | (**status:** `superseded`)
+# `modelo-303-regimen-simplificado` adr: `modulos-based IVA cuota binding set` | (**status:** `proposed`)
 
 ## Problem Statement
 
@@ -113,12 +112,14 @@ last-mile authority without creating a second calculation path.
   `modulos_iva_aggregation` source resolver is prohibited unless an approved ADR explicitly
   replaces and removes the formula path in the same change.
 
-- **Per-year revision granularity.** M131 is already authored per-year (`2024`, `2025`, `2026`)
-  because modulos change annually; the M303 simplificado engine inherits the same per-year dataset
-  cadence, so the resolver must resolve the Orden dataset by filing year. Note M303 uses two coarse
-  revisions (`2009-y-siguientes` inline, `2023-y-siguientes` fragmented); both must be read per
-  `registry-revision-content-inline-or-fragmented`. The per-year modulo dataset is a separate
-  authority the resolver keys into, not a new M303 revision per year.
+- **Per-year parameter authority is distinct from law-selected M303 design epochs.** M131 is
+  already authored per-year (`2024`, `2025`, `2026`) because modulos change annually; the M303
+  simplificado engine inherits the same parameter cadence, so the resolver must select the Orden
+  dataset by filing year. M303 independently selects one of the five explicit modern design
+  bindings (`2023`, `2024-hasta-08-y-2t`, `2024-desde-09-y-3t`, `2025`, or
+  `2026-y-siguientes`) from the legal filing year and period. The retired spanning revision is not
+  a fallback. The per-year modulo dataset remains a separate authority and does not create another
+  M303 design revision.
 
 - **Grounding must be the annual Orden against bundled corpus.** Each importe/cuota-minima figure is
   a regulatory value and must cite the specific Orden article per

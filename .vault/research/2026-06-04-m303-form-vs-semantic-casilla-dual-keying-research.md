@@ -4,7 +4,7 @@ tags:
   - '#m303-form-vs-semantic-casilla-dual-keying'
 date: '2026-06-04'
 modified: '2026-08-10'
-body_hash: 'sha256:a83fa9130bdefc9e0978efa15b9154aa94e0418ccd21d1123e92a84f93a8c01f'
+body_hash: 'sha256:180d4b62ff44232cd633510d87aa3ebb9435b79baf2b38ac86a28dfb4542dafa'
 related:
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]"
   - '[[2026-08-07-official-form-coverage-audit]]'
@@ -31,9 +31,9 @@ The viable shape is a typed filing-row substrate for official activity identity 
 
 ### Simplified-regime activity and module data need one collection, not numbered scalar slots
 
-The live simplified-regime formula path consumes one IAE epigraph and three module-quantity casilla ids, and explicitly treats its table as partial advisory support (`src/cadrumo/domain/calculations/registry/_formula_runtime.py:1112-1235`). The proposed simplificado ADR correctly rejects a second resolver and retains manual box 48 until annual-Orden coverage is complete, but it leaves that decision in a sibling proposed record and describes the inputs as scalar support casillas. The official source contains repeated activity/module fields, so completing it by adding more numbered scalars would redeclare one capability per slot.
+The live simplified-regime formula path consumes one IAE epigraph and three module-quantity casilla ids, and explicitly treats its table as partial advisory support (`src/cadrumo/domain/calculations/registry/_formula_runtime.py:1112-1235`). The proposed simplificado ADR correctly rejects a second resolver and retains manual box 48 until annual-Orden coverage is complete, but its calculation-completeness question is not an accepted projection authority. The official source contains repeated activity/module fields, so completing the projection by adding more numbered scalars would redeclare one capability per slot.
 
-The evidence favors absorbing the one-formula/shared-Orden constraint into the governing dual-key ADR and replacing the scalar input shape with typed activity rows containing typed module quantities. The formula runtime remains the calculation owner; fixed source slots are transport projections of the collection. The existing proposed ADR can then be superseded without losing its one-mechanism constraint.
+The evidence favors retaining the one-formula/shared-Orden calculation constraint with the existing formula owner while the governing dual-key ADR assigns typed activity rows and fixed-slot projection. The proposed ADR remains separate and non-governing until its calculation-completeness threshold is decided; it is neither a competing projection authority nor superseded by the projection decision.
 
 ### Profile, elections, presenter, and accounts have different lifetimes and security boundaries
 
