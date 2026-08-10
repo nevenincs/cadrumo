@@ -12,18 +12,35 @@ from types import MappingProxyType
 
 from ..core.product_identity import PRODUCT_IDENTITY
 
-GROUP_CALLBACK_SCHEMA_KEYS: frozenset[str] = frozenset(
+CALLBACK_SCHEMA_KEY_BY_CLI_PATH = MappingProxyType(
     {
-        "root.status",
-        "root.app",
-        "root.config",
-        "config.repair",
-        "ledger.participation",
-        "contract",
-        "agent",
-        "quickfile",
+        (): "root.status",
+        ("app",): "root.app",
+        ("config",): "root.config",
+        ("config", "repair"): "config.repair",
+        ("app", "ledger", "participation"): "ledger.participation",
+        ("app", "contract"): "contract",
+        ("app", "agent"): "agent",
+        ("app", "quickfile"): "quickfile",
     },
 )
+"""Callback paths that emit a result under their own registered schema key."""
+
+CALLBACK_RESULT_REUSE_BY_CLI_PATH = MappingProxyType(
+    {
+        ("config", "profile", "descendiente"): "config.profile.descendiente.list",
+    },
+)
+"""Callback paths that intentionally emit an already-registered leaf result."""
+
+CALLBACK_EXCLUSION_REASON_BY_CLI_PATH = MappingProxyType(
+    {
+        ("app", "diagnostics"): "no_args_is_help group emits help rather than a JSON envelope",
+    },
+)
+"""Live callback paths deliberately outside the JSON result-schema surface."""
+
+GROUP_CALLBACK_SCHEMA_KEYS: frozenset[str] = frozenset(CALLBACK_SCHEMA_KEY_BY_CLI_PATH.values())
 
 ROOT_LANDING_SCHEMA_KEYS: frozenset[str] = frozenset(
     key for key in GROUP_CALLBACK_SCHEMA_KEYS if key.startswith("root.")
@@ -87,6 +104,9 @@ def normalise_cli_path_to_schema_key(path: tuple[str, ...]) -> str:
 __all__ = [
     "APP_NAMESPACE_FLATTEN",
     "APP_NAMESPACE_PASSTHROUGH",
+    "CALLBACK_EXCLUSION_REASON_BY_CLI_PATH",
+    "CALLBACK_RESULT_REUSE_BY_CLI_PATH",
+    "CALLBACK_SCHEMA_KEY_BY_CLI_PATH",
     "CLI_PATH_BY_SCHEMA_KEY",
     "GROUP_CALLBACK_SCHEMA_KEYS",
     "ROOT_LANDING_SCHEMA_KEYS",

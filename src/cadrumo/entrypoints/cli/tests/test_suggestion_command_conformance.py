@@ -60,13 +60,23 @@ from __future__ import annotations
 
 import ast
 import re
+from collections import Counter
 from collections.abc import Iterator
+from dataclasses import replace
 from functools import cache
 from pathlib import Path
 from typing import cast
 
 import click
 import pytest
+from dev.cli_action_census import census
+from dev.cli_action_census_dispositions import (
+    DEFAULT_DISPOSITIONS_PATH,
+    DispositionRole,
+    DispositionValidationError,
+    checked_in_dispositions,
+    validate_dispositions,
+)
 from dev.locales import LocaleManager, LocaleNode
 
 from ....application.operator_surface import HelpSurface, build_help_document
@@ -324,6 +334,177 @@ def _iter_production_modules() -> Iterator[Path]:
             if "tests" in module_path.parts:
                 continue
             yield module_path
+
+
+def test_checked_in_action_dispositions_reconcile_bidirectionally_with_the_real_census(tmp_path: Path) -> None:
+    """The ledger covers every current site and rejects every coverage escape.
+
+    This is deliberately a real-HEAD reconciliation, not a hand-built list of
+    expected rows: the census defines the production denominator, while the
+    checked-in TOML supplies the independent adjudication.  The mutation probes
+    make each rejection arm bite against that actual pair without reimplementing
+    either scanner or validator in test code.
+    """
+    candidates = census("HEAD")
+    rows = checked_in_dispositions("HEAD")
+    assert candidates, "the production action census is unexpectedly empty"
+    assert rows, "the checked-in action-disposition ledger is unexpectedly empty"
+    assert validate_dispositions(candidates, rows) == rows
+
+    current = rows[0]
+    missing = tuple(row for row in rows if row.key != current.key)
+    with pytest.raises(DispositionValidationError, match="missing disposition for current census candidate"):
+        validate_dispositions(candidates, missing)
+
+    with pytest.raises(DispositionValidationError, match="duplicate current disposition"):
+        validate_dispositions(candidates, (*rows, current))
+
+    stale = replace(current, key=replace(current.key, action_identity=f"{current.key.action_identity}<stale>"))
+    replaced_with_stale = tuple(stale if row.key == current.key else row for row in rows)
+    with pytest.raises(DispositionValidationError, match="stale disposition has no current census candidate"):
+        validate_dispositions(candidates, replaced_with_stale)
+
+    excluded = next(row for row in rows if row.role is DispositionRole.EXCLUDED)
+    ungrounded = replace(excluded, exclusion=None)
+    replaced_with_ungrounded = tuple(ungrounded if row.key == excluded.key else row for row in rows)
+    with pytest.raises(DispositionValidationError, match="requires symbol and enclosing_function grounding"):
+        validate_dispositions(candidates, replaced_with_ungrounded)
+
+    malformed = tmp_path / DEFAULT_DISPOSITIONS_PATH.name
+    malformed.write_text(
+        DEFAULT_DISPOSITIONS_PATH.read_text(encoding="utf-8").replace(
+            "[[disposition]]",
+            "[[disposition]]\nunrecognized_row = true",
+            1,
+        ),
+        encoding="utf-8",
+    )
+    with pytest.raises(DispositionValidationError, match="unrecognized field\\(s\\): unrecognized_row"):
+        checked_in_dispositions("HEAD", path=malformed)
+
+
+def test_action_ledger_marks_known_return_and_provenance_clusters_as_producers() -> None:
+    """Known action-chain helpers must not regress to syntactic exclusions.
+
+    These are deliberately real census rows rather than stand-in records.  Each
+    tuple exercises a distinct transport from a literal to the operator or
+    durable action chain: workflow recovery, wizard readiness, auth guidance,
+    modelo binding recovery, profile repair, and application/CLI ledger
+    ``source_command`` provenance.
+    """
+    rows = checked_in_dispositions("HEAD")
+    by_identity = {(row.key.path, row.key.enclosing_symbol, row.key.action_identity): row for row in rows}
+    expected = {
+        (
+            "src/cadrumo/application/workflow/_profile_health.py",
+            "_no_active_profile_next_action",
+            "aeat config login NAME",
+        ),
+        (
+            "src/cadrumo/application/wizard/_status.py",
+            "_next_wizard_action",
+            "aeat config profile create NAME",
+        ),
+        (
+            "src/cadrumo/application/auth/_operator.py",
+            "_auth_configure_next_action",
+            "aeat config auth configure --provider ",
+        ),
+        (
+            "src/cadrumo/entrypoints/cli/_modelo.py",
+            "_bindings_discovery_command",
+            "aeat app modelo bindings list --missing",
+        ),
+        (
+            "src/cadrumo/entrypoints/cli/_config/_repair_profile.py",
+            "_profile_record_repair_next_action",
+            "aeat config repair profile --clear-active --yes",
+        ),
+        (
+            "src/cadrumo/application/ledger/_actions_lifecycle.py",
+            "archive_manual_transaction",
+            "aeat app ledger archive",
+        ),
+        (
+            "src/cadrumo/entrypoints/cli/_ledger_lifecycle_cli.py",
+            "ledger_archive",
+            "aeat app ledger archive",
+        ),
+    }
+
+    missing = expected - by_identity.keys()
+    assert not missing, f"the real census lost action-chain rows: {sorted(missing)}"
+    misclassified = {
+        identity: by_identity[identity].role.value
+        for identity in expected
+        if by_identity[identity].role is not DispositionRole.PRODUCER
+    }
+    assert not misclassified, f"action-chain command literals were not adjudicated as producers: {misclassified}"
+
+
+def test_action_ledger_exclusions_have_specific_non_action_contexts() -> None:
+    """An exclusion needs a non-action role, not absence of a scanner sink.
+
+    The remaining exclusions are static CRUD contract identifiers, MCP resource
+    names, or the schema-derived CLI rendering prefix.  They each carry a
+    source-specific reason; this rejects the former generic syntactic rationale
+    without introducing a fragile numerical baseline.
+    """
+    rows = checked_in_dispositions("HEAD")
+    exclusions = [row for row in rows if row.role is DispositionRole.EXCLUDED]
+    assert exclusions, "the non-action static-contract rows were unexpectedly lost"
+    reasons = [row.reason for row in exclusions]
+    stale_generic = (
+        "without an action alias",
+        "source reference/example",
+        "action-bearing assignment",
+        "renderer sink",
+    )
+    assert not [reason for reason in reasons if any(marker in reason for marker in stale_generic)]
+    assert len(reasons) == len(set(reasons)), "each exclusion needs its own source-context reason"
+
+    category_templates: Counter[tuple[str, str]] = Counter()
+    for row in exclusions:
+        path = row.key.path
+        reason = row.reason
+        if path == "src/cadrumo/application/operator_surface/_crud_registry.py":
+            assert "static cli_path on MutatingNounGroupContract" in reason
+            category = "static-crud-contract"
+        elif path == "src/cadrumo/entrypoints/mcp/_resources.py":
+            assert "_DESCRIPTIONS resource label" in reason
+            category = "mcp-resource-name"
+        elif path == "src/cadrumo/entrypoints/mcp/_tools.py":
+            assert row.key.action_identity == "aeat "
+            assert "fixed textual prefix used by _cli_form" in reason
+            category = "cli-render-prefix"
+        else:
+            pytest.fail(f"exclusion has no approved non-action source context: {row.key.render()}")
+
+        # The source coordinate and quoted identity distinguish individual rows,
+        # but neither proves the explanation is semantic.  Strip those volatile
+        # values while retaining the exclusion category, then cap one repeated
+        # generic template at six: the current CRUD and resource catalogues each
+        # have six explicit members.  A seventh needs its own behavior detail,
+        # not another copy of a mechanically generated rationale.
+        normalized = re.sub(r"^src/[^:]+:\d+ [^:]+: ", "<source>: ", reason)
+        normalized = re.sub(r"'[^']*'", "<quoted-identity>", normalized)
+        category_templates[(category, normalized)] += 1
+
+    def repeated_template_overflow(
+        templates: Counter[tuple[str, str]],
+    ) -> dict[tuple[str, str], int]:
+        return {(category, template): count for (category, template), count in templates.items() if count > 6}
+
+    over_repeated = repeated_template_overflow(category_templates)
+    assert not over_repeated, f"generic exclusion reason template repeated too broadly: {over_repeated}"
+
+    # Prove the normalized-template ratchet is active against a real current
+    # exclusion reason, rather than merely observing that today's six-member
+    # categories happen to sit below the threshold.
+    category, template = next(iter(category_templates))
+    repeated = category_templates.copy()
+    repeated[(category, template)] = 7
+    assert repeated_template_overflow(repeated) == {(category, template): 7}
 
 
 def test_error_registry_suggestions_cite_live_commands() -> None:

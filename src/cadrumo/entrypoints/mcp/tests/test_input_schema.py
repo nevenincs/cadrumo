@@ -178,6 +178,31 @@ def test_group_callback_is_classified_without_losing_its_live_inputs() -> None:
     assert schema.resolved_leaf.cli_path == ("config", "repair")
 
 
+def test_root_status_callback_has_an_empty_canonical_cli_path() -> None:
+    schema = build_verb_input_schemas(("root.status",))["root.status"]
+
+    assert schema.resolved_leaf.kind is VerbLeafKind.CALLBACK
+    assert schema.resolved_leaf.subject_leaf_key == "root.status"
+    assert schema.resolved_leaf.cli_path == ()
+    assert schema.cli_path == ()
+
+
+def test_root_app_callback_has_its_real_cli_path() -> None:
+    schema = build_verb_input_schemas(("root.app",))["root.app"]
+
+    assert schema.resolved_leaf.kind is VerbLeafKind.CALLBACK
+    assert schema.resolved_leaf.subject_leaf_key == "root.app"
+    assert schema.resolved_leaf.cli_path == ("app",)
+
+
+def test_root_config_callback_has_its_real_cli_path() -> None:
+    schema = build_verb_input_schemas(("root.config",))["root.config"]
+
+    assert schema.resolved_leaf.kind is VerbLeafKind.CALLBACK
+    assert schema.resolved_leaf.subject_leaf_key == "root.config"
+    assert schema.resolved_leaf.cli_path == ("config",)
+
+
 def test_unresolved_leaf_retains_key_and_click_path_evidence() -> None:
     with pytest.raises(SchemaResolutionError) as excinfo:
         build_verb_input_schemas(("app.not-a-real-command",))

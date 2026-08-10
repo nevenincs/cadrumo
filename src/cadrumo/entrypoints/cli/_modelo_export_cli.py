@@ -23,6 +23,7 @@ from ...application.modelo import (
     ModeloIvaWalletReconciliationBlocked,
     ModeloPaymentElectionCapabilityRefusedError,
     ModeloPaymentElectionIncompatibleError,
+    ModeloPriorDomiciliationElectionRefusedError,
     ModeloRefundElectionNotEligibleError,
     ModeloWorkAddressNotFoundError,
     ModeloWorkPeriodTokenError,
@@ -31,10 +32,10 @@ from ...application.modelo import (
     resolve_modelo_revision_for_operator_target,
 )
 from ...application.workflow import workflow_state_repository
-from ...core import PaymentElection, Period, RefundElection
+from ...core import PaymentElection, Period, PriorDomiciliationElection, RefundElection
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ._common import _emit_envelope, _profile_to_taxpayer
+from ._common import _emit_envelope, _filing_taxpayer_or_refuse
 from ._modelo_cli_support import (
     parse_revision_selector,
     validate_calculation_revision_id,
@@ -191,10 +192,17 @@ def register_export_commands(
                 help=tr("cli.app.modelo.work.payment_election_help"),
             ),
         ] = PaymentElection.INGRESO,
+        prior_domiciliation_election: Annotated[
+            PriorDomiciliationElection,
+            typer.Option(
+                "--prior-domiciliation-election",
+                help=tr("cli.app.modelo.work.prior_domiciliation_election_help"),
+            ),
+        ] = PriorDomiciliationElection.KEEP,
     ) -> None:
         """Export a verified-complete or filed modelo revision to disk."""
         workflow_state = workflow_state_repository().load()
-        workflow_profile = _profile_to_taxpayer(workflow_state)
+        workflow_profile = _filing_taxpayer_or_refuse(workflow_state)
         if output is None or not str(output).strip() or str(output).strip() == ".":
             raise typer.BadParameter(
                 tr(
@@ -238,6 +246,7 @@ def register_export_commands(
                     actor=actor or resolve_default_actor(),
                     refund_election=refund_election,
                     payment_election=payment_election,
+                    prior_domiciliation_election=prior_domiciliation_election,
                 ),
                 workflow_profile=workflow_profile,
             )
@@ -251,6 +260,7 @@ def register_export_commands(
             ModeloIvaWalletReconciliationBlocked,
             ModeloPaymentElectionCapabilityRefusedError,
             ModeloPaymentElectionIncompatibleError,
+            ModeloPriorDomiciliationElectionRefusedError,
             ModeloRefundElectionNotEligibleError,
         ) as exc:
             raise bad_parameter_from_error(exc) from exc

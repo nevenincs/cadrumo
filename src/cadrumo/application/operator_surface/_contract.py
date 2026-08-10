@@ -52,6 +52,7 @@ ACCEPTED_ROOTS: tuple[RootSurface, ...] = (
             "auth",
             "repair",
             "check",
+            "provision",
             "storage",
             "google",
             "reset",
@@ -205,6 +206,17 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         service_owner="cadrumo.application.provisioning",
         commands=("check",),
         mutability=OperatorMutability.READ_ONLY,
+    ),
+    MountedCommandFamily(
+        domain=MountedCommandDomain.PROVISIONING,
+        root=RootSurfaceName.CONFIG,
+        child="provision",
+        operator_question=(
+            "report local model provisioning readiness and explicitly pull or verify a local inference model"
+        ),
+        service_owner="cadrumo.application.provisioning",
+        commands=("report", "pull", "verify"),
+        mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
     MountedCommandFamily(
         domain=MountedCommandDomain.STORAGE,
