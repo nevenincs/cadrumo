@@ -80,13 +80,6 @@ adapters:
           vacío.
         workbook_snapshot_mismatch: Los metadatos de la hoja de Google no coinciden
           con la instantánea de cálculo.
-      suggestions:
-        reexport_then_pull: Vuelve a exportar el libro con `aeat config google sync
-          calc export` y después vuelve a importarlo.
-        reexport_workbook: Vuelve a exportar el libro con `aeat config google sync
-          calc export` para renovar los metadatos gestionados por la aplicación.
-        verify_exported_workbook: Comprueba que la hoja se creó originalmente con
-          `aeat config google sync calc export` para este perfil.
     oauth_flow:
       errors:
         browser_launcher_refused: El sistema operativo rechazó abrir la URL de consentimiento
@@ -114,23 +107,9 @@ adapters:
         unsecured_mode_refused: Google OAuth se rechazó porque el almacén de secretos
           está en modo inseguro y el perfil activo lleva un identificador fiscal español
           real.
-      suggestions:
-        close_loopback_port: Cierra la aplicación que esté ocupando un puerto loopback
-          huérfano y vuelve a intentarlo.
-        open_consent_url_manually: Abre manualmente en tu navegador la URL de consentimiento
-          impresa.
-        repair_profile_state: Ejecuta `aeat config profile status` y repara o cambia
-          el perfil activo antes de reintentar el comando de Google.
-        run_from_interactive_terminal: Ejecuta 'aeat config google login' desde un
-          terminal interactivo con un navegador web disponible.
-        use_keyring_or_synthetic: Configura cadrumo_secret_store_backend=keyring o
-          cambia el perfil activo a un identificador fiscal sintético de prueba.
     profile_binding:
       errors:
         no_active_profile: No hay ningún perfil AEAT activo enlazado para Google OAuth.
-      suggestions:
-        create_profile: Ejecuta `aeat config profile create NAME --tax-id <NIF/CIF/DNI/NIE>`
-          y vuelve a intentar el comando de Google.
   inbound:
     declaracion:
       errors:
@@ -1048,7 +1027,14 @@ application:
         el cálculo del modelo no puede continuar.
       calculation_registry_snapshot_unresolved: No se pudo resolver el snapshot de
         registro para el modelo {modelo}, ejercicio {filing_year}, periodo {period}.
+      calculation_revision_id_is_discarded_work_unit: El id de revisión de cálculo
+        proporcionado %{calculation_revision_id} identifica la unidad de trabajo descartada
+        %{work_unit_id}. No puede calcularse.
+      calculation_revision_id_is_work_unit: El id de revisión de cálculo proporcionado
+        %{calculation_revision_id} identifica la unidad de trabajo %{work_unit_id}.
       calculation_revision_not_found: No existe ninguna revisión de cálculo con id=%{calculation_revision_id}.
+      calculation_revision_parent_work_unit_discarded: La revisión de cálculo {calculation_revision_id}
+        pertenece a la unidad de trabajo descartada {work_unit_id}.
       caller_casilla_source_binding_conflict: 'Las entradas de casilla del operador
         no pueden sobrescribir casillas vinculadas a una fuente derivada del bucket
         (casillas vinculadas a fuente): %{casillas}.'
@@ -1218,11 +1204,11 @@ application:
         a crearlo devuelve la misma unidad de trabajo descartada, por lo que no se
         puede reanudar.
       work_unit_discarded_cannot_calculate: La unidad de trabajo %{work_unit_id} está
-        descartada y no puede calcularse. Crea una nueva unidad de trabajo sobre el
-        mismo modelo, ejercicio y periodo para continuar.
+        en el estado %{work_unit_state} y no puede calcularse.
       work_unit_discarded_cannot_import: La unidad de trabajo %{work_unit_id} está
-        descartada y no puede importarse. Crea una nueva unidad de trabajo sobre el
-        mismo modelo, ejercicio y periodo para continuar.
+        en el estado %{work_unit_state} y no puede importarse.
+      work_unit_filing_year_period_mismatch: El ejercicio %{filing_year} no coincide
+        con el ejercicio %{period_year} del periodo %{period}.
       work_unit_mutation_refused: La unidad de trabajo esta descartada, y volver a
         crear el mismo objetivo de declaracion se rechaza en lugar de devolver una
         unidad nueva.
@@ -1282,22 +1268,26 @@ application:
         la renta del régimen de atribución quede declarada.
       cross_casilla_invariant_next_action: Asegúrate de que todas las casillas requeridas
         por el predicado %{predicate_id} sean distintas de cero antes de verificar.
-      cross_casilla_invariant_violated: 'invariante entre casillas %{predicate_id}
-        incumplida: %{expression}'
+      cross_casilla_invariant_violated: invariante entre casillas %{predicate_id}
+        incumplida
+      cross_period_activity_start_missing: Falta la fecha de inicio de actividad necesaria
+        para determinar las obligaciones de períodos anteriores del modelo %{target_modelo},
+        ejercicio %{target_filing_year}, período %{target_period}.
       cross_period_dependency_unclean: 'la dependencia entre períodos no está limpia:
-        modelo=%{modelo} ejercicio=%{year} período=%{period} origen=%{origin} ids_origen=%{origin_ids}
-        bloqueos=%{blockers}'
+        modelo=%{source_modelo} ejercicio=%{source_filing_year} período=%{source_period}
+        origen=%{origin_code} ids_origen=%{origin_ids} bloqueos=%{blocker_codes}'
       cross_period_dependency_unclean_evidence_next_action: Capture o importe evidencia
         de la AEAT para la dependencia de origen. Ejecute `%{target_capture}`, `%{source_justificante_capture}`,
         `%{import_official_record}` o `%{reconcile_file}`; vuelva a ejecutar la verificación.
+      cross_period_first_year_fractional_suppression: La dependencia del modelo %{source_modelo},
+        ejercicio %{source_filing_year}, período %{source_period} queda fuera de la
+        actividad iniciada el %{activity_start_date}.
+      cross_period_m111_no_retenciones: La dependencia del modelo %{source_modelo},
+        ejercicio %{source_filing_year}, período %{source_period} queda satisfecha
+        por el dato declarado sin retenciones %{profile_fact_id}.
       cross_period_modelo_not_applicable:
         message: 'Las dependencias entre periodos de modelos origen que el contribuyente
-          no presenta se excluyeron como no aplicables: {modelos}. Para retenciones
-          soportadas, introduce el importe del certificado de ingresos con --binding
-          CLAVE=VALOR, no con --casilla. CLAVE=VALOR significa que el id del binding
-          va a la izquierda de un único signo igual y el valor a la derecha. Para
-          pagos fraccionados mutuamente excluyentes, confirma el régimen de estimación
-          de actividad en el perfil.'
+          no presenta se excluyeron como no aplicables: %{source_modelos}.'
         next_action: 'Usa `aeat app modelo bindings list --missing` para identificar
           el binding de retenciones. Aporta el importe del certificado con --binding
           CLAVE=VALOR cuando corresponda: pon el id del binding a la izquierda de
@@ -1307,10 +1297,10 @@ application:
       cross_period_non_official_local_chain:
         message: 'el arrastre entre periodos usó un periodo anterior presentado localmente
           en el mismo ejercicio sin evidencia externa de la AEAT: modelo=%{source_modelo}
-          ejercicio=%{filing_year} periodo=%{period} origen=%{origin}. La cadena dentro
-          del mismo ejercicio se admite para la exportación local, pero el valor arrastrado
-          esta evidenciado localmente (app_filing), no por la AEAT; presente cada
-          periodo ante la AEAT de forma externa.'
+          ejercicio=%{source_filing_year} periodo=%{source_period} origen=%{origin_code}.
+          La cadena dentro del mismo ejercicio se admite para la exportación local,
+          pero el valor arrastrado esta evidenciado localmente (app_filing), no por
+          la AEAT; presente cada periodo ante la AEAT de forma externa.'
         next_action: Exporte y presente cada periodo ante la AEAT de forma externa,
           después actualice la cadena local con evidencia oficial; use `aeat app live
           justificante pull` cuando haya acceso en vivo, o `aeat app modelo filing-record
@@ -1318,13 +1308,19 @@ application:
           CSV --set CASILLA=VALUE` / `aeat app modelo reconcile file WORK_UNIT_ID
           --file PATH` para evidencia que ya tenga.
       cross_period_operator_declared_suppression: 'dependencia entre períodos excluida
-        por no existir obligación previa (antes del inicio de actividad): modelo=%{modelo}
-        ejercicio=%{year} período=%{period} origen=%{origin}. El período es estrictamente
-        anterior a la fecha de inicio de actividad declarada por el operador, %{activity_start_date},
-        que todavía no se ha contrastado con una instantánea del censo de la AEAT.'
+        por no existir obligación previa (antes del inicio de actividad): modelo=%{source_modelo}
+        ejercicio=%{source_filing_year} período=%{source_period} origen=%{origin_code}.
+        El período es estrictamente anterior a la fecha de inicio de actividad declarada
+        por el operador, %{activity_start_date}, que todavía no se ha contrastado
+        con una instantánea del censo de la AEAT.'
       cross_period_operator_declared_suppression_next_action: Confirme que la fecha
         de inicio de actividad registrada es correcta. Cuando esté disponible la lectura
         en vivo del censo de la AEAT, la fecha se contrastará y este aviso se eliminará.
+      cross_period_zero_value_previous_filing: La declaración anterior con valor cero
+        del modelo %{source_modelo}, ejercicio %{source_filing_year}, período %{source_period}
+        satisface la dependencia del modelo %{target_modelo}, período %{target_period}.
+      cuota_less_ledger_row_base_missing: La operación del libro %{transaction_id}
+        usa la categoría de IVA %{iva_category_code}, pero no tiene base imponible.
       dt12a_reduccion_antiquity_next_action: Confirme que han transcurrido más de
         dos años desde la primera aportación al plan de pensiones, salvo que la prestación
         sea por invalidez (ley-35-2006:dt-12).
@@ -1342,15 +1338,26 @@ application:
         = %{ingreso_value} pero casilla %{reduccion_id} (reducción trabajo) es cero.
         Si este ingreso incluye un rescate en capital de plan de pensiones con aportaciones
         anteriores al 31-dic-2006, puede aplicar la reducción del 40%% DT 12a LIRPF.'
+      foreign_asset_redeclaration: La posición %{position_key} del grupo %{group_code}
+        en el modelo %{modelo_code} aumentó de %{prior_value_eur} EUR a %{current_value_eur}
+        EUR y supera el umbral de incremento para volver a declarar, %{redeclaration_increase_threshold_eur}
+        EUR.
       iva_wallet_next_action: Revise la decisión de conciliación del saldo IVA antes
         de verificar o exportar este Modelo 303.
+      iva_wallet_precondition_failed: La condición de la cartera de IVA %{condition_id}
+        no se cumple en el escenario %{scenario_id}.
+      ledger_snapshot_drift: 'El snapshot del libro del modelo %{modelo}, ejercicio
+        %{filing_year}, período %{period} cambió después del cálculo: %{changed_count}
+        filas modificadas y %{removed_count} eliminadas de %{anchored} filas ancladas.'
+      m210_agrupacion_renta_invalid: La agrupación de rentas del modelo %{modelo_id}
+        no es válida para el período %{period_code} (%{error_type}).
       m210_baseline_tipo_deferred:
         next_action: El corpus incluido no publica ningún tipo base para tipo_renta=%{tipo_renta}.
           Indica %{requirements} para aplicar el tipo del Convenio correspondiente,
           o espera a que el corpus base incorpore esta fila.
       m210_convenio_lob_advisory: 'M210_CONVENIO_LOB_ADVISORY: se ha aplicado el tipo
-        de Convenio España-%{cc} (%{document_id}) para tipo_renta=%{tipo_renta}. El
-        beneficio del convenio solo está disponible para el beneficiario efectivo
+        de Convenio España-%{country_code} (%{document_id}) para tipo_renta=%{tipo_renta_code}.
+        El beneficio del convenio solo está disponible para el beneficiario efectivo
         residente en ese Estado que cumpla las condiciones de limitación de beneficios
         del convenio; confirme la elegibilidad antes de aplicar este tipo.'
       m210_convenio_lob_advisory_next_action: Confirme que el contribuyente cumple
@@ -1362,6 +1369,11 @@ application:
         next_action: Autorice una fila de Convenio España-{cc} para tipo_renta={tipo_renta}
           en registry/aeat/treaties/, o borre {requirements} para volver al baseline
           del art. 25 del TRLIRNR.
+      m210_rate_unavailable: No se pudo resolver el tipo de gravamen del Modelo 210
+        (%{reason_code}).
+      m303_m349_intracom_reconciliation_mismatch: 'Los totales intracomunitarios del
+        ejercicio %{filing_year}, período %{period_code} no concilian: Modelo 303=%{m303_total},
+        Modelo 349=%{m349_total}, diferencia=%{gap}.'
       madrid_nacimiento_adopcion_eligibility_advisory: 'MADRID_NACIMIENTO_ADOPCION_ELIGIBILITY_ADVISORY:
         la casilla %{casilla_id} es cero pero el contribuyente tiene un descendiente
         elegible (recuento %{weighted_count}) para la deducción de Madrid. El disparo
@@ -1416,6 +1428,8 @@ application:
       modelo_202_base_imponible_previa_determinada_cuando_resultado_positivo: El resultado
         contable es positivo pero la base imponible previa es cero; revise la determinación
         de la base imponible.
+      modelo_202_modality_incomplete: La modalidad del Modelo 202 está incompleta;
+        debe resolverse el dato de perfil %{profile_fact_id}.
       modelo_210_2025_inmobiliaria_implica_base_imponible: El tipo de renta es inmobiliaria
         pero la base imponible es cero; revise la determinación de la base imponible
         de la renta inmobiliaria imputada (valor catastral, coeficiente, días de imputación).
@@ -1442,6 +1456,19 @@ application:
       modelo_714_cuota_integra_implica_total_cuota_integra: La cuota íntegra es positiva
         pero la cuota íntegra total es cero; revise la transcripción de la cuota íntegra
         total.
+      objective_estimation_exclusion_threshold_exceeded: 'Modelo %{modelo_id}, ejercicio
+        %{filing_year}: el valor declarado %{declared} del dato de perfil %{profile_field_id}
+        supera el umbral %{threshold} del parámetro %{parameter_id}.'
+      oss_evidence_missing: Se ha declarado una fuente OSS del Modelo 369, pero no
+        existe evidencia OSS persistida.
+      oss_source_unrouted: 'Hay observaciones OSS fuera de los enlaces de cálculo:
+        %{source_ref_count} fuentes identificadas y %{unidentified_source_count} fuentes
+        sin identificar.'
+      pulled_filing_casilla_mismatch: 'La casilla presentada %{casilla_number} difiere
+        del valor calculado para el ejercicio %{filing_year}, período %{period_code}:
+        calculado=%{computed_value}, presentado=%{filed_value}, tipo=%{mismatch_kind}.'
+      registry_advisory_predicate_fired: El predicado informativo del registro %{predicate_id}
+        se aplica a esta verificación.
       registry_snapshot_unresolved: no se pudo resolver el snapshot de registro para
         el modelo=%{modelo} ejercicio=%{filing_year} periodo=%{period}
       representante_fiscal_required:
@@ -1449,6 +1476,10 @@ application:
           mediante el comando `aeat config profile edit`. El TRLIRNR art. 10 exige
           que los declarantes IRNR no residentes en el EEE designen un representante
           para las comunicaciones con la AEAT.
+      transaction_evidence_missing_deductible: Una fuente de IVA deducible carece
+        de la evidencia de operación exigida (fuente=%{source_kind_code}, motivo=%{diagnostic_reason_code}).
+      transaction_evidence_missing_output: Una fuente de IVA repercutido no tiene
+        evidencia de operación adjunta (fuente=%{source_kind_code}, motivo=%{diagnostic_reason_code}).
     iva_wallet:
       correct_no_record: No existe ningún registro de compensación sembrado para %{filing_year}/%{period}.
         Ejecuta primero 'aeat app modelo iva-wallet seed'; la corrección sobrescribe
@@ -3077,7 +3108,7 @@ cli:
         amend_wizard_kind_help: complementaria añade a la cuota previamente declarada;
           sustitutiva reemplaza por completo la declaración anterior; rectificativa
           es el mecanismo unificado de corrección para los modelos cuya orden lo implementa
-          (p. ej. Modelo 303 desde 2023-y-siguientes).
+          (p. ej. Modelo 303 desde el ejercicio 2023).
         amend_wizard_kind_prompt: Tipo de rectificación (%{choices})
         amend_wizard_no_corrections: No se corrigió ninguna casilla; el asistente
           de rectificación necesita al menos un valor modificado.
@@ -3159,8 +3190,7 @@ cli:
         create_quiet_help: Omitir la salida de confirmación legible; el envoltorio
           --format json, los avisos y el código de salida no se ven afectados.
         create_reused: Se devolvió la unidad de trabajo existente (idempotente sobre
-          modelo/ejercicio/periodo/revisión); no se creó nada nuevo. Renómbrala con
-          `aeat app modelo work rename`.
+          modelo/ejercicio/periodo/revisión); no se creó nada nuevo.
         create_reused_name_match: Se devolvió la unidad de trabajo existente (idempotente
           sobre modelo/ejercicio/periodo/revisión); no se creó nada nuevo. El --name
           indicado coincide con el nombre guardado.
@@ -3203,6 +3233,7 @@ cli:
           Presenta la declaración en la Sede de la AEAT cuando exista obligación legal.'
         dependencies_help: Muestra dependencias de historial de presentaciones entre
           modelos y los bloqueos clean-state actuales para una presentación objetivo
+        dependencies_period_requires_modelo: La opción --period requiere --modelo.
         discard_help: Marcar una unidad de trabajo como descartada (transición de
           estado auditable)
         discard_requires_yes: El descarte es una transición de estado auditable. Vuelva
@@ -3213,6 +3244,8 @@ cli:
         file_idempotent_noop: 'Operación idempotente sin efecto: la revisión de cálculo
           %{calculation_revision_id} ya está presentada; se devolvió el registro de
           presentación existente sin cambios.'
+        file_internal_disambiguation: Esta presentación es solo interna y no se envía
+          a la AEAT.
         formula_operation_calculation: cálculo
         formula_operation_clamp: límite
         formula_operation_conditional: condicional
@@ -3235,30 +3268,24 @@ cli:
         history_next_action_summary: Revisa el estado actual de esta unidad de trabajo.
         history_work_unit_id_help: Id de unidad de trabajo cuyo ciclo de vida quieres
           ver
-        id_is_work_unit_not_calc_revision_natural: Este id es un id de unidad de trabajo,
-          pero verify/file necesitan un id de revisión de cálculo. Para la ruta habitual,
-          ejecuta 'aeat app modelo work calculate --modelo %{modelo} --year %{year}
-          --period %{period}' y vuelve a ejecutar verify/file para ese mismo modelo/año/periodo.
-          Los ids exactos siguen disponibles como vía avanzada.
         id_selector_ambiguous: 'El id de trabajo mostrado {selector} coincide con
-          más de una unidad de trabajo activa. Usa el id completo de 64 caracteres
-          de la unidad de trabajo entre los candidatos siguientes.
+          más de una unidad de trabajo activa.
 
           {candidates}'
         include_discarded_help: Incluir las unidades descartadas en el listado (excluidas
           por defecto)
         invalid_binding_key: 'La clave --binding no es un BindingId válido (alfanumérico
           en minúsculas más separadores . _ : -, máx. 128 caracteres)'
-        invalid_calculation_revision_id: calculation_revision_id debe ser una cadena
-          hex en minúsculas de 64 caracteres (resumen SHA-256)
+        invalid_calculation_revision_id: calculation_revision_id debe ser un resumen
+          SHA-256 hexadecimal en minúsculas de 64 caracteres; se recibió {value}.
         invalid_casilla_key: 'La clave --casilla no es un CasillaId válido (alfanumérico
           más separadores . _ : -, máx. 64 caracteres)'
         invalid_relation_key: La clave --relation no es un RelationId válido. Usa
           un id de relation en minúsculas con guiones o puntos.
-        invalid_revision_selector: Selector de revisión desconocido {value}; elija
-          uno de {choices}.
-        invalid_work_unit_id: work_unit_id debe ser una cadena hex en minúsculas de
-          64 caracteres (resumen SHA-256)
+        invalid_revision_selector: 'El selector de revisión {value} no es válido.
+          Valores permitidos: {choices}.'
+        invalid_work_unit_id: work_unit_id debe ser un resumen SHA-256 hexadecimal
+          en minúsculas de 64 caracteres; se recibió {value}.
         invalid_work_unit_lookup_id: work_unit_id debe ser un identificador SHA-256
           hexadecimal en minúsculas o un prefijo inequívoco
         kv_empty_key_error: La clave de {flag} no puede estar vacía; se recibió {spec}.
@@ -3267,8 +3294,11 @@ cli:
           signo igual y el valor a la derecha. Se recibió {spec}.'
         list_help: Listar las unidades de trabajo registradas, opcionalmente filtradas
           por perfil
-        list_next_action_summary: Inspecciona el estado completo de una unidad de
-          trabajo antes de crear o recalcular su borrador.
+        list_no_active_work_summary: No hay ninguna unidad de trabajo activa disponible
+          para continuar.
+        list_selection_required_summary: Seleccione una unidad de trabajo antes de
+          continuar.
+        list_single_status_summary: Hay una unidad de trabajo disponible para inspeccionar.
         m184_socio_handoff_message: 'Régimen de atribución de rentas: el socio %{nif}
           (%{nombre}) recibe una base atribuida de %{importe} EUR (participación del
           %{porcentaje}%). En su propio espacio de trabajo, el socio debe registrarla
@@ -3404,8 +3434,10 @@ cli:
           de unidad de trabajo de 64 caracteres. Prefiere --modelo --year --period.
         revision_help: Identificador estable de la revisión registrada del modelo;
           ejecuta `aeat app modelo describe MODELO` para ver los ids de revisión disponibles.
-        revision_selector_ambiguous: Mas de una revisión de cálculo coincide con este
-          selector. Elija una explícitamente. {candidates}
+        revision_selector_ambiguous: 'Más de una revisión de cálculo coincide con
+          este selector.
+
+          {candidates}'
         revision_selector_help: Selector de revisión.
         revision_show_help: Mostrar los valores de casilla guardados de una revisión
           de cálculo concreta (sin recalcular)
@@ -3453,15 +3485,15 @@ cli:
         sal_reserva_not_decimal: 'Los valores --sal-* deben ser importes decimales;
           se recibió: {value}. Use el punto como separador decimal y sin separador
           de miles, p. ej. 1234.56.'
-        selector_ambiguous: Mas de una unidad de trabajo activa coincide con este
-          modelo/año/periodo. Elija una revisión del registro o pase un id de unidad
-          de trabajo explícito. {candidates}
+        selector_ambiguous: 'Más de una unidad de trabajo activa coincide con este
+          modelo, año y periodo.
+
+          {candidates}'
         selector_not_found: Ninguna unidad de trabajo activa coincide con este modelo,
-          año y periodo. Ejecute primero aeat app modelo work create.
+          año y periodo.
         selector_revision_conflict: Ya existe una unidad de trabajo activa para este
-          modelo/año/periodo con revisión de registro {existing_revision}; se solicitó
-          {requested_revision}. Reanude la unidad existente, descartela explícitamente
-          o pase un id exacto.
+          modelo, año y periodo con revisión de registro {existing_revision}; se solicitó
+          {requested_revision}.
         set_not_decimal: El valor de --set debe ser un decimal; se recibió {value}.
         set_override_help: Valor de casilla corregido con sintaxis CASILLA_ID=DECIMAL
           (repetible; al menos uno requerido)
@@ -3470,9 +3502,10 @@ cli:
         state_label_presentado: Presentado
         state_label_presentado_supersedido: Presentación sustituida
         state_label_verificado_completo: Verificado completo
+        status_calculate_summary: Esta unidad de trabajo activa se puede calcular.
+        status_discarded_summary: Esta unidad de trabajo está descartada, por lo que
+          el cálculo no está disponible.
         status_help: Mostrar los metadatos de una unidad de trabajo
-        status_next_action_summary: Crea o recalcula esta unidad de trabajo y después
-          verifica el borrador resultante.
         verify_help: Verificar una revisión draft contra el contrato verified-complete
         verify_idempotent_noop: 'Operación idempotente sin efecto: la revisión de
           cálculo %{calculation_revision_id} ya está verificada; se devolvió el informe
@@ -7736,10 +7769,6 @@ llm:
         para esta invocación.'
       mint_refused: 'Rechazado: la lectura externa de documentos del contribuyente
         no está permitida para esta invocación.'
-      refused: Lea el documento en este equipo dirigiéndolo al proveedor LOCAL o,
-        si desea una lectura externa, establezca CADRUMO_EVIDENCE_CLOUD_UPLOAD_PERMITTED=true
-        y autorice esta lectura concreta. Una instalación de gestoría (CADRUMO_EVIDENCE_GESTOR_MODE=true)
-        no admite ninguna autorización.
 mcp:
   call:
     timeout: '''{command}'' superó el límite de tiempo del nivel {tier} ({seconds}s)
@@ -68013,6 +68042,10 @@ modelo:
           iva-resultado-regimen-general:
             help: null
             label: Resultado del regimen general (cuota devengada - cuota deducible)
+      construct:
+        modelo-303-iva-autoliquidacion:
+          field:
+            title: Modelo 303 IVA autoliquidacion
       field:
         official_name: Modelo 303. Impuesto sobre el Valor Añadido. Autoliquidación.
         title: IVA. Autoliquidación (trimestral)
@@ -68401,311 +68434,290 @@ modelo:
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: null
               label: Cuota IVA soportado en operaciones interiores corrientes
-          construct:
-            modelo-303-iva-autoliquidacion:
-              field:
-                title: Modelo 303 IVA quarterly autoliquidacion
           field:
             label: Modelo 303 ejercicios 2009 y siguientes (Orden EHA/3786/2008, modificada
               por sucesivas ordenes anuales)
-        2023-y-siguientes:
+        '2023':
           casilla:
             '01':
               help: null
-              label: IVA devengado RG tipo super-reducido 4pct - Base imponible
+              label: null
             '02':
               help: null
-              label: IVA devengado RG tipo super-reducido 4pct - Tipo porcentaje
+              label: null
             '03':
               help: null
-              label: IVA devengado RG tipo super-reducido 4pct - Cuota
+              label: null
             '04':
               help: null
-              label: IVA devengado RG tipo reducido 10pct - Base imponible
+              label: null
             '05':
               help: null
-              label: IVA devengado RG tipo reducido 10pct - Tipo porcentaje
+              label: null
             '06':
               help: null
-              label: IVA devengado RG tipo reducido 10pct - Cuota
+              label: null
             '07':
               help: null
-              label: IVA devengado RG tipo general 21pct - Base imponible
+              label: null
             08:
               help: null
-              label: IVA devengado RG tipo general 21pct - Tipo porcentaje
+              label: null
             09:
               help: null
-              label: IVA devengado RG tipo general 21pct - Cuota
+              label: null
             '10':
               help: null
-              label: IVA devengado adquisiciones intracomunitarias bienes y servicios
-                - Base
+              label: null
             '108':
               help: null
-              label: Rectificativa - Otros ajustes determinados supuestos por discrepancia
-                criterio administrativo
+              label: null
             '109':
               help: null
-              label: Resultado - Devoluciones acordadas AEAT anteriores autoliquidaciones
-                del ejercicio y periodo
+              label: null
             '11':
               help: null
-              label: IVA devengado adquisiciones intracomunitarias bienes y servicios
-                - Cuota
+              label: null
             '111':
               help: null
-              label: Rectificativa - Importe de la rectificacion
+              label: null
             '12':
               help: null
-              label: IVA devengado otras ops inversion sujeto pasivo excl intracom
-                - Base
+              label: null
             '120':
               help: null
-              label: Informacion adicional - Ops no sujetas reglas localizacion (excl
-                casilla 123)
+              label: null
             '122':
               help: null
-              label: Informacion adicional - Ops sujetas inversion sujeto pasivo
+              label: null
             '123':
               help: null
-              label: Informacion adicional - Ops no sujetas localizacion regimenes
-                especiales ventanilla unica
+              label: null
             '124':
               help: null
-              label: Informacion adicional - Ops sujetas regimenes especiales ventanilla
-                unica
+              label: null
             '13':
               help: null
-              label: IVA devengado otras ops inversion sujeto pasivo excl intracom
-                - Cuota
+              label: null
             '14':
               help: null
-              label: Modificacion bases y cuotas IVA devengado - Base imponible
+              label: null
             '15':
               help: null
-              label: Modificacion bases y cuotas IVA devengado - Cuota
+              label: null
             '150':
               help: null
-              label: IVA devengado regimen general nuevo tipo tier 1 - Base imponible
+              label: null
             '151':
               help: null
-              label: IVA devengado regimen general nuevo tipo tier 1 - Tipo porcentaje
+              label: null
             '152':
               help: null
-              label: IVA devengado regimen general nuevo tipo tier 1 - Cuota
+              label: null
             '153':
               help: null
-              label: IVA devengado regimen general nuevo tipo tier 2 - Base imponible
+              label: null
             '154':
               help: null
-              label: IVA devengado regimen general nuevo tipo tier 2 - Tipo porcentaje
+              label: null
             '155':
               help: null
-              label: IVA devengado regimen general nuevo tipo tier 2 - Cuota
+              label: null
             '156':
               help: null
-              label: Recargo equivalencia tipo 0.5pct - Base imponible
+              label: null
             '157':
               help: null
-              label: Recargo equivalencia tipo 0.5pct - Tipo porcentaje
+              label: null
             '158':
               help: null
-              label: Recargo equivalencia tipo 0.5pct - Cuota
+              label: null
             '16':
               help: null
-              label: Recargo equivalencia tipo 1.0pct - Base imponible
+              label: null
             '165':
               help: null
-              label: IVA devengado regimen general tipo 2pct desde 2024 - Base imponible
+              label: null
             '166':
               help: null
-              label: IVA devengado regimen general tipo 2pct desde 2024 - Tipo porcentaje
+              label: null
             '167':
               help: null
-              label: IVA devengado regimen general tipo 2pct desde 2024 - Cuota
+              label: null
             '168':
               help: null
-              label: Recargo equivalencia nuevo tipo desde 2024 - Base imponible
+              label: null
             '169':
               help: null
-              label: Recargo equivalencia nuevo tipo desde 2024 - Tipo porcentaje
+              label: null
             '17':
               help: null
-              label: Recargo equivalencia tipo 1.0pct - Tipo porcentaje
+              label: null
             '170':
               help: null
-              label: Recargo equivalencia nuevo tipo desde 2024 - Cuota
+              label: null
             '18':
               help: null
-              label: Recargo equivalencia tipo 1.0pct - Cuota
+              label: null
             '19':
               help: null
-              label: Recargo equivalencia tipo 1.4pct - Base imponible
+              label: null
             '20':
               help: null
-              label: Recargo equivalencia tipo 1.4pct - Tipo porcentaje
+              label: null
             '21':
               help: null
-              label: Recargo equivalencia tipo 1.4pct - Cuota
+              label: null
             '22':
               help: null
-              label: Recargo equivalencia tipo 5.2pct - Base imponible
+              label: null
             '23':
               help: null
-              label: Recargo equivalencia tipo 5.2pct - Tipo porcentaje
+              label: null
             '24':
               help: null
-              label: Recargo equivalencia tipo 5.2pct - Cuota
+              label: null
             '25':
               help: null
-              label: Modificacion bases y cuotas recargo equivalencia - Base imponible
+              label: null
             '26':
               help: null
-              label: Modificacion bases y cuotas recargo equivalencia - Cuota
+              label: null
             '27':
               help: null
-              label: Total cuota devengada
+              label: null
             '28':
               help: null
-              label: IVA deducible ops interiores corrientes - Base
+              label: null
             '29':
               help: null
-              label: IVA deducible ops interiores corrientes - Cuota
+              label: null
             '30':
               help: null
-              label: IVA deducible ops interiores bienes inversion - Base
+              label: null
             '31':
               help: null
-              label: IVA deducible ops interiores bienes inversion - Cuota
+              label: null
             '32':
               help: null
-              label: IVA deducible importaciones bienes corrientes - Base
+              label: null
             '33':
               help: null
-              label: IVA deducible importaciones bienes corrientes - Cuota
+              label: null
             '34':
               help: null
-              label: IVA deducible importaciones bienes inversion - Base
+              label: null
             '35':
               help: null
-              label: IVA deducible importaciones bienes inversion - Cuota
+              label: null
             '36':
               help: null
-              label: IVA deducible adquisiciones intracomunitarias corrientes - Base
+              label: null
             '37':
               help: null
-              label: IVA deducible adquisiciones intracomunitarias corrientes - Cuota
+              label: null
             '38':
               help: null
-              label: IVA deducible adquisiciones intracomunitarias bienes inversion
-                - Base
+              label: null
             '39':
               help: null
-              label: IVA deducible adquisiciones intracomunitarias bienes inversion
-                - Cuota
+              label: null
             '40':
               help: null
-              label: Rectificacion deducciones - Base
+              label: null
             '41':
               help: null
-              label: Rectificacion deducciones - Cuota
+              label: null
             '42':
               help: null
-              label: Compensaciones regimen especial agricultura ganaderia y pesca
-                - Cuota
+              label: null
             '43':
               help: null
-              label: Regularizacion bienes de inversion - Cuota
+              label: null
             '44':
               help: null
-              label: Regularizacion prorrata por porcentaje definitivo - Cuota
+              label: null
             '45':
               help: null
-              label: Total a deducir - Cuota
+              label: null
             '47':
               help: null
-              label: RS - 1T-2T-3T - Suma ingresos a cuenta conjunto actividades
+              label: null
             '48':
               help: null
-              label: RS - 4T - Suma cuotas derivadas regimen simplificado conjunto
-                actividades
+              label: null
             '49':
               help: null
-              label: RS - 4T - Suma ingresos a cuenta realizados en el ejercicio
+              label: null
             '50':
               help: null
-              label: RS - 4T - Resultado ([48]-[49])
+              label: null
             '51':
               help: null
-              label: RS - Cuotas devengadas adquisiciones intracomunitarias bienes
+              label: null
             '52':
               help: null
-              label: RS - Cuotas devengadas entregas activos fijos
+              label: null
             '53':
               help: null
-              label: RS - Cuotas devengadas IVA devengado inversion sujeto pasivo
+              label: null
             '54':
               help: null
-              label: RS - Total cuota resultante
+              label: null
             '55':
               help: null
-              label: RS - IVA deducible adquisicion o importacion activos fijos
+              label: null
             '56':
               help: null
-              label: RS - IVA deducible regularizacion bienes inversion
+              label: null
             '57':
               help: null
-              label: RS - Total IVA deducible regimen simplificado ([55]+[56])
+              label: null
             '58':
               help: null
-              label: RS - Resultado regimen simplificado ([54]-[57])
+              label: null
             '59':
               help: null
-              label: Informacion adicional - Entregas intracomunitarias bienes y servicios
+              label: null
             '60':
               help: null
-              label: Informacion adicional - Exportaciones y operaciones asimiladas
+              label: null
             '62':
               help: null
-              label: Informacion adicional - Entregas criterio caja devengado art
-                75 LIVA - Base imponible
+              label: null
             '63':
               help: null
-              label: Informacion adicional - Entregas criterio caja devengado art
-                75 LIVA - Cuota
+              label: null
             '64':
               help: null
               label: Resultado - Suma de resultados ([46]+[58]+[76])
             '65':
               help: null
-              label: Resultado - Porcentaje atribuible Administracion del Estado
+              label: null
             '66':
               help: null
               label: Resultado - Importe atribuible Administracion del Estado ([64]×[65]/100)
             '68':
               help: null
-              label: Resultado - Tributacion conjunta resultado regularizacion anual
+              label: null
             '70':
               help: null
-              label: Resultado - Resultados a ingresar de anteriores autoliquidaciones
-                del ejercicio y periodo
+              label: null
             '71':
               help: null
               label: Resultado final ([69]-[70]+[109])
             '74':
               help: null
-              label: Informacion adicional - Adquisiciones criterio caja - Base imponible
+              label: null
             '75':
               help: null
-              label: Informacion adicional - Adquisiciones criterio caja - Cuota
+              label: null
             '76':
               help: null
-              label: Resultado - Regularizacion cuotas art 80 cinco 5a LIVA
+              label: null
             '77':
               help: null
-              label: Resultado - IVA a la importacion liquidado por la Aduana pendiente
-                de ingreso
+              label: null
             modulos-iva-1-unidades:
               help: null
               label: 'Módulo 1 (Personal empleado): número de unidades'
@@ -68730,10 +68742,10 @@ modelo:
               label: Epígrafe IAE de la actividad en régimen simplificado de IVA (módulos)
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: Ejercicio al que se refiere la autoliquidacion
+              label: null
             x-chim6r1ee1in4qbfchng:
               help: null
-              label: Periodo trimestral (1T / 2T / 3T / 4T)
+              label: null
             x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushec9gn6p8:
               help: null
               label: Base imponible del autoconsumo del promotor inmobiliario (coste
@@ -68744,104 +68756,1275 @@ modelo:
                 base imponible, Art. 9.1.c + Art. 90 LISIVA)
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
               help: null
-              label: Cuota IVA deducible autorepercutida en operaciones interiores
-                con inversion del sujeto pasivo (LIVA art 84.Uno.2 + art 92; oficial
-                casilla 37)
+              label: null
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
               help: null
-              label: Cuota IVA autorepercutida en operaciones interiores con inversion
-                del sujeto pasivo (LIVA art 84.Uno.2; oficial casilla 13)
+              label: null
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
               help: null
-              label: Cuota IVA autorepercutida en adquisiciones intracomunitarias
-                (LIVA art 84.Uno.2)
+              label: null
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
               help: null
-              label: Cuota IVA deducible autorepercutida en adquisiciones intracomunitarias
-                (LIVA art 13 + art 15 + art 84.Uno.2 + art 92; oficial casillas 36/37)
+              label: null
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
               help: null
-              label: Cuota IVA autorepercutida devengada en adquisiciones intracomunitarias
-                (LIVA art 13 + art 15 + art 84.Uno.2; oficial casillas 10/11)
+              label: null
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
-              help: Suma la base imponible autorrepercutida devengada en adquisiciones
-                intracomunitarias.
-              label: Base imponible autorepercutida devengada en adquisiciones intracomunitarias
-                (LIVA art 13 + art 15 + art 84.Uno.2; oficial casillas 10/11)
+              help: null
+              label: null
             x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
               help: null
-              label: Cuotas a compensar de periodos anteriores aplicadas en este periodo
+              label: null
             x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
               help: null
-              label: Saldo de compensacion disponible para periodos posteriores
+              label: null
             x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
               help: null
-              label: Saldo a compensar generado en este periodo
+              label: null
             x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
               help: null
-              label: Cuotas a compensar pendientes de periodos anteriores
+              label: null
             x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
               help: null
-              label: Cuotas a compensar de periodos previos pendientes para periodos
-                posteriores
+              label: null
             x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
               help: null
-              label: Total cuota IVA deducible (soportado en operaciones interiores
-                + autorepercutido deducible)
+              label: null
             x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
               help: null
-              label: Total cuota IVA devengada (repercutido a los tres tipos + autorepercutido
-                en adquisiciones intracomunitarias)
+              label: null
             x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
               help: null
-              label: Prorrata general - porcentaje (volumen con derecho / volumen
-                total × 100)
+              label: null
             x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
               help: null
-              label: Volumen anual de operaciones que originan derecho a deducción
+              label: null
             x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
               help: null
-              label: Volumen anual total de operaciones
+              label: null
             x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
               help: null
-              label: Regularización por bienes de inversión (LIVA arts. 107-110)
+              label: null
             x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
               help: null
-              label: Cuota IVA repercutido al tipo general (21%)
+              label: null
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
               help: null
-              label: Cuota IVA repercutido al tipo reducido (10%)
+              label: null
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
-              help: Casilla transitoria del RD-ley 4/2024 para el tipo reducido, que
-                convive con el tipo reducido ordinario del 10%.
-              label: Cuota IVA repercutido al tipo reducido transitorio (5%/7,5%)
+              help: null
+              label: null
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
               help: null
-              label: Cuota IVA repercutido al tipo super-reducido (4%)
+              label: null
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
-              help: Casilla transitoria del RD-ley 4/2024 para el tipo super-reducido,
-                que convive con el tipo super-reducido ordinario del 4%.
-              label: Cuota IVA repercutido al tipo super-reducido transitorio (2%)
+              help: null
+              label: null
             x-d5r62bjiclpnar3kc5i6u:
               help: null
               label: Resultado de la autoliquidacion ([66]+[77]+[68]-[78])
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
               help: null
-              label: Resultado del regimen general (cuota devengada - cuota deducible)
+              label: null
             x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
               help: null
-              label: Cuota IVA soportado deducible en importaciones de bienes corrientes
-                (LIVA art 17 + art 92; oficial casilla 33)
+              label: null
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: null
-              label: Cuota IVA soportado en operaciones interiores corrientes
-          construct:
-            modelo-303-iva-autoliquidacion:
-              field:
-                title: Modelo 303 IVA autoliquidacion
+              label: null
           field:
-            label: Modelo 303 ejercicios 2023 y siguientes (Orden EHA/3786/2008, modificada
-              por sucesivas ordenes anuales)
+            label: Modelo 303, ejercicio 2023
+        2024-desde-09-y-3t:
+          casilla:
+            '01':
+              help: null
+              label: null
+            '02':
+              help: null
+              label: null
+            '03':
+              help: null
+              label: null
+            '04':
+              help: null
+              label: null
+            '05':
+              help: null
+              label: null
+            '06':
+              help: null
+              label: null
+            '07':
+              help: null
+              label: null
+            08:
+              help: null
+              label: null
+            09:
+              help: null
+              label: null
+            '10':
+              help: null
+              label: null
+            '108':
+              help: null
+              label: null
+            '109':
+              help: null
+              label: null
+            '11':
+              help: null
+              label: null
+            '111':
+              help: null
+              label: null
+            '12':
+              help: null
+              label: null
+            '120':
+              help: null
+              label: null
+            '122':
+              help: null
+              label: null
+            '123':
+              help: null
+              label: null
+            '124':
+              help: null
+              label: null
+            '13':
+              help: null
+              label: null
+            '14':
+              help: null
+              label: null
+            '15':
+              help: null
+              label: null
+            '150':
+              help: null
+              label: null
+            '151':
+              help: null
+              label: null
+            '152':
+              help: null
+              label: null
+            '153':
+              help: null
+              label: null
+            '154':
+              help: null
+              label: null
+            '155':
+              help: null
+              label: null
+            '156':
+              help: null
+              label: null
+            '157':
+              help: null
+              label: null
+            '158':
+              help: null
+              label: null
+            '16':
+              help: null
+              label: null
+            '165':
+              help: null
+              label: null
+            '166':
+              help: null
+              label: null
+            '167':
+              help: null
+              label: null
+            '168':
+              help: null
+              label: null
+            '169':
+              help: null
+              label: null
+            '17':
+              help: null
+              label: null
+            '170':
+              help: null
+              label: null
+            '18':
+              help: null
+              label: null
+            '19':
+              help: null
+              label: null
+            '20':
+              help: null
+              label: null
+            '21':
+              help: null
+              label: null
+            '22':
+              help: null
+              label: null
+            '23':
+              help: null
+              label: null
+            '24':
+              help: null
+              label: null
+            '25':
+              help: null
+              label: null
+            '26':
+              help: null
+              label: null
+            '27':
+              help: null
+              label: null
+            '28':
+              help: null
+              label: null
+            '29':
+              help: null
+              label: null
+            '30':
+              help: null
+              label: null
+            '31':
+              help: null
+              label: null
+            '32':
+              help: null
+              label: null
+            '33':
+              help: null
+              label: null
+            '34':
+              help: null
+              label: null
+            '35':
+              help: null
+              label: null
+            '36':
+              help: null
+              label: null
+            '37':
+              help: null
+              label: null
+            '38':
+              help: null
+              label: null
+            '39':
+              help: null
+              label: null
+            '40':
+              help: null
+              label: null
+            '41':
+              help: null
+              label: null
+            '42':
+              help: null
+              label: null
+            '43':
+              help: null
+              label: null
+            '44':
+              help: null
+              label: null
+            '45':
+              help: null
+              label: null
+            '47':
+              help: null
+              label: null
+            '48':
+              help: null
+              label: null
+            '49':
+              help: null
+              label: null
+            '50':
+              help: null
+              label: null
+            '51':
+              help: null
+              label: null
+            '52':
+              help: null
+              label: null
+            '53':
+              help: null
+              label: null
+            '54':
+              help: null
+              label: null
+            '55':
+              help: null
+              label: null
+            '56':
+              help: null
+              label: null
+            '57':
+              help: null
+              label: null
+            '58':
+              help: null
+              label: null
+            '59':
+              help: null
+              label: null
+            '60':
+              help: null
+              label: null
+            '62':
+              help: null
+              label: null
+            '63':
+              help: null
+              label: null
+            '64':
+              help: null
+              label: Resultado - Suma de resultados ([46]+[58]+[76])
+            '65':
+              help: null
+              label: null
+            '66':
+              help: null
+              label: Resultado - Importe atribuible Administracion del Estado ([64]×[65]/100)
+            '68':
+              help: null
+              label: null
+            '70':
+              help: null
+              label: null
+            '71':
+              help: null
+              label: Resultado final ([69]-[70]+[109])
+            '74':
+              help: null
+              label: null
+            '75':
+              help: null
+              label: null
+            '76':
+              help: null
+              label: null
+            '77':
+              help: null
+              label: null
+            modulos-iva-1-unidades:
+              help: null
+              label: 'Módulo 1 (Personal empleado): número de unidades'
+            modulos-iva-2-unidades:
+              help: null
+              label: 'Módulo 2 (unidad actividad-específica: distancia recorrida,
+                carga vehículos o superficie del local): número de unidades'
+            modulos-iva-3-unidades:
+              help: null
+              label: 'Módulo 3 (unidad actividad-específica: consumo de energía eléctrica
+                u otra): número de unidades'
+            modulos-iva-cuota-derivada:
+              help: null
+              label: Cuota derivada del régimen simplificado (mayor de cuota devengada
+                neta de deducibles/forfait, o cuota mínima)
+            modulos-iva-cuota-devengada:
+              help: null
+              label: Cuota devengada por operaciones corrientes (Σ unidades módulo
+                × cuota devengada anual por unidad)
+            modulos-iva-epigrafe:
+              help: null
+              label: Epígrafe IAE de la actividad en régimen simplificado de IVA (módulos)
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: null
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: null
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushec9gn6p8:
+              help: null
+              label: Base imponible del autoconsumo del promotor inmobiliario (coste
+                de construccion, Art. 9.1.c + Art. 79.4 LISIVA)
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushecdqmut31:
+              help: null
+              label: Cuota IVA del autoconsumo del promotor inmobiliario (21% sobre
+                base imponible, Art. 9.1.c + Art. 90 LISIVA)
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
+              help: null
+              label: null
+            x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6u:
+              help: null
+              label: Resultado de la autoliquidacion ([66]+[77]+[68]-[78])
+            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
+              help: null
+              label: null
+          field:
+            label: Modelo 303, ejercicio 2024, a partir de períodos 09 y 3T y siguientes
+        2024-hasta-08-y-2t:
+          casilla:
+            '01':
+              help: null
+              label: null
+            '02':
+              help: null
+              label: null
+            '03':
+              help: null
+              label: null
+            '04':
+              help: null
+              label: null
+            '05':
+              help: null
+              label: null
+            '06':
+              help: null
+              label: null
+            '07':
+              help: null
+              label: null
+            08:
+              help: null
+              label: null
+            09:
+              help: null
+              label: null
+            '10':
+              help: null
+              label: null
+            '108':
+              help: null
+              label: null
+            '109':
+              help: null
+              label: null
+            '11':
+              help: null
+              label: null
+            '111':
+              help: null
+              label: null
+            '12':
+              help: null
+              label: null
+            '120':
+              help: null
+              label: null
+            '122':
+              help: null
+              label: null
+            '123':
+              help: null
+              label: null
+            '124':
+              help: null
+              label: null
+            '13':
+              help: null
+              label: null
+            '14':
+              help: null
+              label: null
+            '15':
+              help: null
+              label: null
+            '150':
+              help: null
+              label: null
+            '151':
+              help: null
+              label: null
+            '152':
+              help: null
+              label: null
+            '153':
+              help: null
+              label: null
+            '154':
+              help: null
+              label: null
+            '155':
+              help: null
+              label: null
+            '156':
+              help: null
+              label: null
+            '157':
+              help: null
+              label: null
+            '158':
+              help: null
+              label: null
+            '16':
+              help: null
+              label: null
+            '165':
+              help: null
+              label: null
+            '166':
+              help: null
+              label: null
+            '167':
+              help: null
+              label: null
+            '168':
+              help: null
+              label: null
+            '169':
+              help: null
+              label: null
+            '17':
+              help: null
+              label: null
+            '170':
+              help: null
+              label: null
+            '18':
+              help: null
+              label: null
+            '19':
+              help: null
+              label: null
+            '20':
+              help: null
+              label: null
+            '21':
+              help: null
+              label: null
+            '22':
+              help: null
+              label: null
+            '23':
+              help: null
+              label: null
+            '24':
+              help: null
+              label: null
+            '25':
+              help: null
+              label: null
+            '26':
+              help: null
+              label: null
+            '27':
+              help: null
+              label: null
+            '28':
+              help: null
+              label: null
+            '29':
+              help: null
+              label: null
+            '30':
+              help: null
+              label: null
+            '31':
+              help: null
+              label: null
+            '32':
+              help: null
+              label: null
+            '33':
+              help: null
+              label: null
+            '34':
+              help: null
+              label: null
+            '35':
+              help: null
+              label: null
+            '36':
+              help: null
+              label: null
+            '37':
+              help: null
+              label: null
+            '38':
+              help: null
+              label: null
+            '39':
+              help: null
+              label: null
+            '40':
+              help: null
+              label: null
+            '41':
+              help: null
+              label: null
+            '42':
+              help: null
+              label: null
+            '43':
+              help: null
+              label: null
+            '44':
+              help: null
+              label: null
+            '45':
+              help: null
+              label: null
+            '47':
+              help: null
+              label: null
+            '48':
+              help: null
+              label: null
+            '49':
+              help: null
+              label: null
+            '50':
+              help: null
+              label: null
+            '51':
+              help: null
+              label: null
+            '52':
+              help: null
+              label: null
+            '53':
+              help: null
+              label: null
+            '54':
+              help: null
+              label: null
+            '55':
+              help: null
+              label: null
+            '56':
+              help: null
+              label: null
+            '57':
+              help: null
+              label: null
+            '58':
+              help: null
+              label: null
+            '59':
+              help: null
+              label: null
+            '60':
+              help: null
+              label: null
+            '62':
+              help: null
+              label: null
+            '63':
+              help: null
+              label: null
+            '64':
+              help: null
+              label: Resultado - Suma de resultados ([46]+[58]+[76])
+            '65':
+              help: null
+              label: null
+            '66':
+              help: null
+              label: Resultado - Importe atribuible Administracion del Estado ([64]×[65]/100)
+            '68':
+              help: null
+              label: null
+            '70':
+              help: null
+              label: null
+            '71':
+              help: null
+              label: Resultado final ([69]-[70]+[109])
+            '74':
+              help: null
+              label: null
+            '75':
+              help: null
+              label: null
+            '76':
+              help: null
+              label: null
+            '77':
+              help: null
+              label: null
+            modulos-iva-1-unidades:
+              help: null
+              label: 'Módulo 1 (Personal empleado): número de unidades'
+            modulos-iva-2-unidades:
+              help: null
+              label: 'Módulo 2 (unidad actividad-específica: distancia recorrida,
+                carga vehículos o superficie del local): número de unidades'
+            modulos-iva-3-unidades:
+              help: null
+              label: 'Módulo 3 (unidad actividad-específica: consumo de energía eléctrica
+                u otra): número de unidades'
+            modulos-iva-cuota-derivada:
+              help: null
+              label: Cuota derivada del régimen simplificado (mayor de cuota devengada
+                neta de deducibles/forfait, o cuota mínima)
+            modulos-iva-cuota-devengada:
+              help: null
+              label: Cuota devengada por operaciones corrientes (Σ unidades módulo
+                × cuota devengada anual por unidad)
+            modulos-iva-epigrafe:
+              help: null
+              label: Epígrafe IAE de la actividad en régimen simplificado de IVA (módulos)
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: null
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: null
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushec9gn6p8:
+              help: null
+              label: Base imponible del autoconsumo del promotor inmobiliario (coste
+                de construccion, Art. 9.1.c + Art. 79.4 LISIVA)
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushecdqmut31:
+              help: null
+              label: Cuota IVA del autoconsumo del promotor inmobiliario (21% sobre
+                base imponible, Art. 9.1.c + Art. 90 LISIVA)
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
+              help: null
+              label: null
+            x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6u:
+              help: null
+              label: Resultado de la autoliquidacion ([66]+[77]+[68]-[78])
+            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
+              help: null
+              label: null
+          field:
+            label: Modelo 303, ejercicio 2024, hasta períodos 08 y 2T
+        '2025':
+          casilla:
+            '01':
+              help: null
+              label: null
+            '02':
+              help: null
+              label: null
+            '03':
+              help: null
+              label: null
+            '04':
+              help: null
+              label: null
+            '05':
+              help: null
+              label: null
+            '06':
+              help: null
+              label: null
+            '07':
+              help: null
+              label: null
+            08:
+              help: null
+              label: null
+            09:
+              help: null
+              label: null
+            '10':
+              help: null
+              label: null
+            '108':
+              help: null
+              label: null
+            '109':
+              help: null
+              label: null
+            '11':
+              help: null
+              label: null
+            '111':
+              help: null
+              label: null
+            '12':
+              help: null
+              label: null
+            '120':
+              help: null
+              label: null
+            '122':
+              help: null
+              label: null
+            '123':
+              help: null
+              label: null
+            '124':
+              help: null
+              label: null
+            '13':
+              help: null
+              label: null
+            '14':
+              help: null
+              label: null
+            '15':
+              help: null
+              label: null
+            '150':
+              help: null
+              label: null
+            '151':
+              help: null
+              label: null
+            '152':
+              help: null
+              label: null
+            '153':
+              help: null
+              label: null
+            '154':
+              help: null
+              label: null
+            '155':
+              help: null
+              label: null
+            '156':
+              help: null
+              label: null
+            '157':
+              help: null
+              label: null
+            '158':
+              help: null
+              label: null
+            '16':
+              help: null
+              label: null
+            '165':
+              help: null
+              label: null
+            '166':
+              help: null
+              label: null
+            '167':
+              help: null
+              label: null
+            '168':
+              help: null
+              label: null
+            '169':
+              help: null
+              label: null
+            '17':
+              help: null
+              label: null
+            '170':
+              help: null
+              label: null
+            '18':
+              help: null
+              label: null
+            '19':
+              help: null
+              label: null
+            '20':
+              help: null
+              label: null
+            '21':
+              help: null
+              label: null
+            '22':
+              help: null
+              label: null
+            '23':
+              help: null
+              label: null
+            '24':
+              help: null
+              label: null
+            '25':
+              help: null
+              label: null
+            '26':
+              help: null
+              label: null
+            '27':
+              help: null
+              label: null
+            '28':
+              help: null
+              label: null
+            '29':
+              help: null
+              label: null
+            '30':
+              help: null
+              label: null
+            '31':
+              help: null
+              label: null
+            '32':
+              help: null
+              label: null
+            '33':
+              help: null
+              label: null
+            '34':
+              help: null
+              label: null
+            '35':
+              help: null
+              label: null
+            '36':
+              help: null
+              label: null
+            '37':
+              help: null
+              label: null
+            '38':
+              help: null
+              label: null
+            '39':
+              help: null
+              label: null
+            '40':
+              help: null
+              label: null
+            '41':
+              help: null
+              label: null
+            '42':
+              help: null
+              label: null
+            '43':
+              help: null
+              label: null
+            '44':
+              help: null
+              label: null
+            '45':
+              help: null
+              label: null
+            '47':
+              help: null
+              label: null
+            '48':
+              help: null
+              label: null
+            '49':
+              help: null
+              label: null
+            '50':
+              help: null
+              label: null
+            '51':
+              help: null
+              label: null
+            '52':
+              help: null
+              label: null
+            '53':
+              help: null
+              label: null
+            '54':
+              help: null
+              label: null
+            '55':
+              help: null
+              label: null
+            '56':
+              help: null
+              label: null
+            '57':
+              help: null
+              label: null
+            '58':
+              help: null
+              label: null
+            '59':
+              help: null
+              label: null
+            '60':
+              help: null
+              label: null
+            '62':
+              help: null
+              label: null
+            '63':
+              help: null
+              label: null
+            '64':
+              help: null
+              label: Resultado - Suma de resultados ([46]+[58]+[76])
+            '65':
+              help: null
+              label: null
+            '66':
+              help: null
+              label: Resultado - Importe atribuible Administracion del Estado ([64]×[65]/100)
+            '68':
+              help: null
+              label: null
+            '70':
+              help: null
+              label: null
+            '71':
+              help: null
+              label: Resultado final ([69]-[70]+[109])
+            '74':
+              help: null
+              label: null
+            '75':
+              help: null
+              label: null
+            '76':
+              help: null
+              label: null
+            '77':
+              help: null
+              label: null
+            modulos-iva-1-unidades:
+              help: null
+              label: 'Módulo 1 (Personal empleado): número de unidades'
+            modulos-iva-2-unidades:
+              help: null
+              label: 'Módulo 2 (unidad actividad-específica: distancia recorrida,
+                carga vehículos o superficie del local): número de unidades'
+            modulos-iva-3-unidades:
+              help: null
+              label: 'Módulo 3 (unidad actividad-específica: consumo de energía eléctrica
+                u otra): número de unidades'
+            modulos-iva-cuota-derivada:
+              help: null
+              label: Cuota derivada del régimen simplificado (mayor de cuota devengada
+                neta de deducibles/forfait, o cuota mínima)
+            modulos-iva-cuota-devengada:
+              help: null
+              label: Cuota devengada por operaciones corrientes (Σ unidades módulo
+                × cuota devengada anual por unidad)
+            modulos-iva-epigrafe:
+              help: null
+              label: Epígrafe IAE de la actividad en régimen simplificado de IVA (módulos)
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: null
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: null
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushec9gn6p8:
+              help: null
+              label: Base imponible del autoconsumo del promotor inmobiliario (coste
+                de construccion, Art. 9.1.c + Art. 79.4 LISIVA)
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushecdqmut31:
+              help: null
+              label: Cuota IVA del autoconsumo del promotor inmobiliario (21% sobre
+                base imponible, Art. 9.1.c + Art. 90 LISIVA)
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
+              help: null
+              label: null
+            x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6u:
+              help: null
+              label: Resultado de la autoliquidacion ([66]+[77]+[68]-[78])
+            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
+              help: null
+              label: null
+          field:
+            label: Modelo 303, ejercicio 2025
         2026-y-siguientes:
           casilla:
             '01':
@@ -69112,8 +70295,7 @@ modelo:
               label: Informacion adicional - Entregas criterio caja devengado art
                 75 LIVA - Cuota
             '64':
-              help: 'Casilla 64: suma de resultados, calculada como casilla 46 más
-                casilla 58 más casilla 76.'
+              help: null
               label: Resultado - Suma de resultados ([46]+[58]+[76])
             '65':
               help: null
@@ -69273,12 +70455,8 @@ modelo:
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: null
               label: Cuota IVA soportado en operaciones interiores corrientes
-          construct:
-            modelo-303-iva-autoliquidacion:
-              field:
-                title: null
           field:
-            label: null
+            label: Modelo 303, ejercicio 2026 y siguientes
     '308':
       field:
         official_name: 'Modelo 308. Impuesto sobre el Valor Añadido. Solicitud de

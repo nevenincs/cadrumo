@@ -6,7 +6,7 @@ rather than collapsing into the generic ``INTERNAL`` unexpected-boundary path
 (the same mis-classification the exit-6 hint fix addressed). These tests lock
 that: each class binds a registered code, the envelope carries the right
 category, and the raise-site ergonomics (free-form message, dict context,
-a raise-site suggestion) survive the promotion.
+without a local suggestion channel) survive the promotion.
 """
 
 from __future__ import annotations
@@ -37,16 +37,16 @@ def test_input_error_renders_as_refused_not_internal() -> None:
     assert "INTERNAL" not in envelope.category
 
 
-def test_raise_site_suggestion_overrides_the_registered_default() -> None:
+def test_input_error_has_context_but_no_local_suggestion_channel() -> None:
     error = CorpusSearchInputError(
         "unknown citation id",
         context={"citation_id": "ley-58-2003:art-999"},
-        suggestion="aeat app registry citations list",
     )
     envelope = build_error_envelope(error)
     assert envelope.category == ErrorCategory.REFUSED.value
-    # The raise-site suggestion overrides the registered default and survives.
-    assert envelope.suggestion == "aeat app registry citations list"
+    assert error.context == {"citation_id": "ley-58-2003:art-999"}
+    assert not hasattr(error, "suggestion")
+    assert "suggestion" not in envelope.model_dump()
 
 
 def test_context_stays_a_dict_even_when_unset() -> None:

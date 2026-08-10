@@ -10,12 +10,12 @@ rounding = "money-2"
 # years 2009-2022), so a supplier that charges recargo to a recargo-de-
 # equivalencia customer had its recargo cuota silently excluded from "Total
 # cuota devengada" (casilla 27) and therefore from the resultado chain —
-# mirroring the identical defect fixed on the 2023-y-siguientes revision (see
+# mirroring the identical defect fixed on the later explicit record-design revisions (see
 # the comment on modelo-303-iva-cuota-devengada-total in that revision's
 # formulas/0000-formulas.toml). Casillas 25/26 (modificacion bases y cuotas
 # recargo) and casilla 158 (recargo super-reducido 0.5pct) have no ledger
 # binding wired into this aggregate on either revision and remain out of scope
-# of this fix, matching the 2023-y-siguientes template exactly.
+# of this fix, matching the later explicit record-design templates exactly.
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
@@ -117,7 +117,7 @@ casilla_id = "iva.cuota-deducible-total"
 # half-up and would have returned 55, understating the deduction for every
 # ratio whose fractional part is at or below one half. The sentence has stood
 # unamended since BOE-A-1992-28740, so it binds this revision exactly as it
-# binds 2023-y-siguientes.
+# binds the later explicit record-design revisions.
 #
 # LIVA art. 94 ("Operaciones cuya realizacion origina el derecho a la
 # deduccion") is declared here, not only on the enclosing construct, because
@@ -133,7 +133,7 @@ casilla_id = "iva.cuota-deducible-total"
 # which rewrites only apartado Uno numero 1o letra c, the exempt-operations
 # enumeration. The chapeau and the sujetas-y-no-exentas rule this formula rests
 # on are untouched, so the grounding does not vary within the window and is
-# identical to the one 2023-y-siguientes declares.
+# identical to the one the later explicit record-design revisions declare.
 [[revisions.2009-y-siguientes.formulas]]
 id = "modelo-303-iva-prorrata-porcentaje"
 target_casilla_id = "iva.prorrata-porcentaje"
@@ -196,11 +196,11 @@ casilla_id = "iva.prorrata-volumen-total"
 # who declared no fact supporting it.
 #
 # This revision governs filing years 2009-2022 and the applicable law is
-# identical to 2023-y-siguientes across both windows: art. 102 was last amended
+# identical to the later explicit record-design revisions across both windows: art. 102 was last amended
 # by Ley 3/2006 (in force 01/01/2006, before this window opens), and art. 104's
 # only later amendment, Ley 22/2013 (in force 01/01/2014), touches apartado
 # Tres.1º and leaves apartado Uno, the fraction and the rounding paragraph
-# untouched. The divergence with 2023-y-siguientes was therefore a defect in
+# untouched. The later divergence was therefore a defect in
 # this revision, not a reflection of different law.
 [[revisions.2009-y-siguientes.formulas.expression.args]]
 literal = "100"

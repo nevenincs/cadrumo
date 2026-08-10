@@ -64,7 +64,7 @@ def test_import_refuses_printed_number_metadata_token(repos: _Repos) -> None:
         modelo="303",
         filing_year=2025,
         period=Period.from_year_and_code(2025, "1T"),
-        revision_id="2023-y-siguientes",
+        revision_id="2025",
         repository=wu_repo,
         clock=_T0,
     )

@@ -27,7 +27,7 @@ confirming refusal.
 Grounded authority:
     Orden EHA/3786/2008 art. 1 (box 27 = total cuota devengada,
     box 45 = total a deducir, box 46 = box 27 - box 45).
-    2023-y-siguientes ``modelo-303-iva-cuota-devengada-total`` formula:
+    post-2022 Modelo 303 ``modelo-303-iva-cuota-devengada-total`` formula:
     add(iva.repercutido.general, iva.repercutido.reducido,
     iva.repercutido.super-reducido, iva.autorepercutido.intracomunitaria,
     iva.autoconsumo.promotor.cuota).

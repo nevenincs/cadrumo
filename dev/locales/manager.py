@@ -8,7 +8,7 @@ shared by the manager and parity tests.
 
 import json
 import re
-from collections.abc import Hashable
+from collections.abc import Hashable, Iterable
 from dataclasses import dataclass
 from enum import Enum, auto
 from pathlib import Path
@@ -553,6 +553,33 @@ class LocaleManager:
             parent = _resolve_leaf_parent(data, parts, dotted_key=dotted_key)
             del parent[parts[-1]]
             _prune_empty_namespaces(data, parts[:-1])
+            _rewrite_locale_mapping(guard, locale_path, data)
+        return locale_path
+
+    def remove_locale_values(self, locale: str, dotted_keys: Iterable[str]) -> Path:
+        """Atomically remove validated locale leaves from one catalogue."""
+        locale_path = self._locale_path(locale)
+        keys = tuple(sorted(set(dotted_keys)))
+        if not keys:
+            raise LocaleError("At least one locale key is required for batch removal")
+
+        with catalogue_write_guard(self.locales_dir) as guard:
+            data = _parse_locale(guard.read_text(locale_path))
+            for dotted_key in keys:
+                parts = dotted_key.split(".")
+                if not dotted_key or any(not part for part in parts):
+                    raise LocaleError(f"Invalid locale key: {dotted_key!r}")
+                cursor: LocaleNode = data
+                for part in parts:
+                    if not isinstance(cursor, dict) or part not in cursor:
+                        raise LocaleError(f"Locale key not found: {dotted_key!r}")
+                    cursor = cursor[part]
+                if isinstance(cursor, dict):
+                    raise LocaleError(f"Cannot remove {dotted_key!r}: it resolves to a namespace")
+
+                parent = _resolve_leaf_parent(data, parts, dotted_key=dotted_key)
+                del parent[parts[-1]]
+                _prune_empty_namespaces(data, parts[:-1])
             _rewrite_locale_mapping(guard, locale_path, data)
         return locale_path
 

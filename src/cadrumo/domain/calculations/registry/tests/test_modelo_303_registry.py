@@ -153,7 +153,6 @@ def test_modelo_303_revision_period_selectors_cover_2009_to_present() -> None:
     assert rev_old.period_selector.year_to == 2022
     assert rev_old.period_selector.periods == ("1T", "2T", "3T", "4T")
 
-    assert "2023-y-siguientes" not in modelo.revisions
     expected_selectors = {
         "2023": (2023, ("1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12")),
         "2024-hasta-08-y-2t": (2024, ("1T", "2T", "01", "02", "03", "04", "05", "06", "07", "08")),

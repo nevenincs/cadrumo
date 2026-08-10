@@ -15,6 +15,7 @@ from ....application.calculations import (
     ResultDispositionProjection,
 )
 from ....core import ObservedHeaderFact, Period, PriorDomiciliationElection, ResultDisposition
+from ....core.resources import resources
 from ....domain.calculations.registry import RegistryModeloObservation
 from ....domain.modelos import (
     CalculationRevision,
@@ -69,7 +70,11 @@ def _source_header_disposition(
 
 def _work_unit(*, modelo: str = "303") -> WorkUnit:
     period = Period.from_year_and_code(2025, "1T")
-    revision_id = "2023-y-siguientes" if modelo == "303" else "2019-y-siguientes"
+    revision_id = resources().modelos.authority.snapshot(
+        modelo,
+        filing_year=period.filing_year,
+        period=period.registry_token,
+    ).revision.id
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_BUCKET_ID,

@@ -3,7 +3,7 @@ id = "modelo-303-iva-autoliquidacion"
 legal_refs = [
     "orden-eha-3786-2008:art-1",
     "orden-eha-3786-2008:art-7",
-    "orden-hac-819-2024:art-1",
+    "orden-hac-819-2024:art-unico",
     "ley-37-1992:art-9",
     "ley-37-1992:art-13",
     "ley-37-1992:art-15",
@@ -175,7 +175,7 @@ bindings = [
 ]
 relations = ["modelo-303-rel-self-compensacion-anteriores"]
 dependency_classifications = ["modelo-303-dep-self-prior-quarter"]
-workbook_parity_refs = ["modelo-303-dr-2025"]
+workbook_parity_refs = ["modelo-303-dr-2026"]
 extraction_profiles = ["modelo-303-declaracion-pdf"]
 live_cross_references = ["modelo-303-static-documentation", "modelo-303-filed-declarations-read"]
 application_links = ["modelo-303-portal", "modelo-303-filing", "modelo-303-extractor", "modelo-303-verification", "modelo-303-review", "modelo-303-approval", "modelo-303-reconciliation", "modelo-303-workflow", "modelo-303-deadline", "modelo-303-calculation"]

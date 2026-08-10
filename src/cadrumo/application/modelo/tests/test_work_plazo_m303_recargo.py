@@ -35,6 +35,7 @@ from datetime import UTC, date, datetime, timedelta
 import pytest
 
 from ....core import Period
+from ....core.resources import resources
 from ....domain.deadlines import build_recovery_for_overdue, resolve_filing_closes_on
 from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
 from .._work_plazo import modelo_work_deadline_posture
@@ -42,7 +43,6 @@ from .._work_plazo import modelo_work_deadline_posture
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "c" * 64
-_REVISION_ID = "303-2023-y-siguientes"
 
 # The Modelo 303 registry carries quarterly windows for these filing years; each
 # is a distinct member of the R9 quarterly-IVA deadline cluster.
@@ -58,12 +58,15 @@ def _quarter_year_cases():
 
 def _work_unit_for(quarter: str, filing_year: int) -> WorkUnit:
     period = Period.from_year_and_code(filing_year, quarter)
+    revision_id = resources().modelos.authority.snapshot(
+        "303", filing_year=filing_year, period=period.registry_token
+    ).revision.id
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET_ID,
         modelo="303",
         filing_year=filing_year,
         period=period,
-        revision_id=_REVISION_ID,
+        revision_id=revision_id,
     )
     now = datetime(filing_year, 1, 1, tzinfo=UTC)
     return WorkUnit(
@@ -72,7 +75,7 @@ def _work_unit_for(quarter: str, filing_year: int) -> WorkUnit:
         modelo=ModeloCode("303"),
         filing_year=filing_year,
         period=period,
-        revision_id=_REVISION_ID,
+        revision_id=revision_id,
         name=f"303-{filing_year}-{quarter}",
         created_at=now,
         updated_at=now,
