@@ -4,7 +4,7 @@ tags:
   - '#current-schema-only-purge'
 date: '2026-08-10'
 modified: '2026-08-10'
-body_hash: 'sha256:42f0c4ad895389e783c5a178628ba88431e83ac453bdb80274c1bdc9d3732f7e'
+body_hash: 'sha256:bc5a89803f98c17d0d2a2a754315d88a072311becbd08862734d527dcd248b22'
 tier: L3
 related:
   - '[[2026-07-09-compatibility-lifecycle-adr]]'
@@ -55,24 +55,24 @@ encrypted storage boundaries.
 Make live profile records and immutable snapshots accept exactly the canonical version
 4 schema.
 
-- [ ] `W01.P01.S01` - Require exact schema id and schema version 4 for UserProfileRecord and UserProfileSnapshot; `src/cadrumo/domain/user_profile/_values.py`.
-- [ ] `W01.P01.S02` - Stamp newly created profile records explicitly with the canonical schema version; `src/cadrumo/application/user_profile/_lifecycle.py`.
-- [ ] `W01.P01.S03` - Prove current profile schema hydration and non-current marker refusal; `src/cadrumo/domain/user_profile/tests/test_payload_schema_identity.py`.
+- [x] `W01.P01.S01` - Require exact schema id and schema version 4 for UserProfileRecord and UserProfileSnapshot; `src/cadrumo/domain/user_profile/_values.py`.
+- [x] `W01.P01.S02` - Stamp newly created profile records explicitly with the canonical schema version; `src/cadrumo/application/user_profile/_lifecycle.py`.
+- [x] `W01.P01.S03` - Prove current profile schema hydration and non-current marker refusal; `src/cadrumo/domain/user_profile/tests/test_payload_schema_identity.py`.
 - [ ] `W01.P01.S24` - Make UserProfileRecord schema_version required with no default so a persisted payload omitting the marker refuses instead of hydrating as canonical, sweeping the construction sites that then break; `src/cadrumo/domain/user_profile/_values.py and the 231 UserProfileRecord construction sites across roughly 150 files, of which all but two are tests and dev harnesses owned by peer campaigns`.
 
 ### Phase `W01.P03` - Pin the active bucket pointer format
 
 Require the exact current active-profile pointer marker at the TOML boundary.
 
-- [ ] `W01.P03.S04` - Define and require the exact current BucketPointer schema marker; `src/cadrumo/core/_bucket_pointer.py`.
-- [ ] `W01.P03.S05` - Prove current BucketPointer round trips and non-current marker refusal; `src/cadrumo/core/tests/test_bucket_pointer.py`.
+- [x] `W01.P03.S04` - Define and require the exact current BucketPointer schema marker; `src/cadrumo/core/_bucket_pointer.py`.
+- [x] `W01.P03.S05` - Prove current BucketPointer round trips and non-current marker refusal; `src/cadrumo/core/tests/test_bucket_pointer.py`.
 
 ### Phase `W01.P04` - Remove InvoiceCatalogue bare-payload coercion
 
 Require the canonical invoices wrapper while preserving the explicit construction API.
 
-- [ ] `W01.P04.S06` - Delete mapping-without-invoices coercion from InvoiceCatalogue validation; `src/cadrumo/domain/invoices/_models.py`.
-- [ ] `W01.P04.S07` - Prove serialized catalogues require the canonical invoices wrapper; `src/cadrumo/domain/invoices/tests/test_catalogue.py`.
+- [x] `W01.P04.S06` - Delete mapping-without-invoices coercion from InvoiceCatalogue validation; `src/cadrumo/domain/invoices/_models.py`.
+- [x] `W01.P04.S07` - Prove serialized catalogues require the canonical invoices wrapper; `src/cadrumo/domain/invoices/tests/test_catalogue.py`.
 
 ## Wave `W02` - Require cryptographic and persistence markers
 
