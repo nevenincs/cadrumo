@@ -142,6 +142,7 @@ from ._m210_convenio_lob_advisory import _m210_convenio_lob_advisory_finding
 from ._m303_m349_reconcile import m303_m349_intracom_reconcile_findings
 from ._m720_redeclaration_gate import modelo_720_redeclaration_findings
 from ._objective_estimation_advisory import _objective_estimation_exclusion_advisory_findings
+from ._pulled_filing_reconcile import pulled_filing_divergence_findings
 from ._registry_helpers import assert_revision_content_integrity as _assert_revision_content_integrity
 from ._registry_resources import authority_via_resources as _authority_via_resources
 from ._required_binding_gate import (
@@ -650,6 +651,13 @@ def _append_model_specific_findings(
             target=target,
             work_unit_repository=work_unit_repository,
             calculation_repository=calculation_repository,
+        ),
+    )
+    findings.extend(
+        pulled_filing_divergence_findings(
+            work_unit=work_unit,
+            target=target,
+            observation_repository=observation_repository,
         ),
     )
     findings.extend(m210_agrupacion_renta_verification_findings(work_unit=work_unit, revision=target))
