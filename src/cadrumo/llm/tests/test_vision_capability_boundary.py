@@ -17,16 +17,12 @@ from __future__ import annotations
 
 import asyncio
 import base64
-import json
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from http import HTTPStatus
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from io import BytesIO
 from pathlib import Path
 from queue import Queue
-from threading import Thread
-from typing import override
 
 import pytest
 from PIL import Image
@@ -35,6 +31,13 @@ from pydantic import SecretStr, ValidationError
 from ...core import ImageMediaType
 from ...core.config import LLMProvider, override_settings
 from ...tests.fixtures.settings import EnvFileFreeSettings
+from ...tests.loopback_llm import (
+    SilentLoopbackHandler,
+    openai_chat_reply,
+    read_json_body,
+    serving_loopback,
+    write_json_response,
+)
 from .. import LLMClient, LLMConfigError, LLMRequest, MultimodalImageInput
 from .._providers import GeminiAdapter, LocalAdapter, OpenAIAdapter, ProviderRequest
 from .._providers.anthropic import build_user_content
@@ -93,37 +96,13 @@ def _serve_openai() -> Iterator[tuple[str, Queue[dict[str, object]]]]:
     """Run a loopback endpoint speaking the OpenAI Chat Completions shape."""
     events: Queue[dict[str, object]] = Queue()
 
-    class _Endpoint(BaseHTTPRequestHandler):
+    class _Endpoint(SilentLoopbackHandler):
         def do_POST(self) -> None:
-            body = self.rfile.read(int(self.headers.get("content-length", "0")))
-            events.put({"body": json.loads(body.decode("utf-8"))})
-            payload = json.dumps(
-                {
-                    "id": "chatcmpl-loopback",
-                    "model": "gpt-4.1",
-                    "choices": [{"message": {"content": " text-only completion "}}],
-                    "usage": {"prompt_tokens": 9, "completion_tokens": 3},
-                },
-            ).encode("utf-8")
-            self.send_response(HTTPStatus.OK)
-            self.send_header("content-type", "application/json")
-            self.send_header("content-length", str(len(payload)))
-            self.end_headers()
-            self.wfile.write(payload)
+            events.put({"body": read_json_body(self)})
+            write_json_response(self, openai_chat_reply(" text-only completion "), status=HTTPStatus.OK)
 
-        @override
-        def log_message(self, format: str, *args: object) -> None:
-            """Silence stdlib request logging during tests."""
-
-    server = ThreadingHTTPServer(("127.0.0.1", 0), _Endpoint)
-    thread = Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    try:
-        yield f"http://127.0.0.1:{server.server_port}/v1/chat/completions", events
-    finally:
-        server.shutdown()
-        server.server_close()
-        thread.join(timeout=3)
+    with serving_loopback(_Endpoint, path="/v1/chat/completions") as endpoint:
+        yield endpoint, events
 
 
 class TestTextOnlyProviderRefusesImages:

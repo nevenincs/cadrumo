@@ -17,19 +17,24 @@ from __future__ import annotations
 import asyncio
 import json
 import threading
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from http import HTTPStatus
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import override
 
 import pytest
 
 from ...adapters.outbound.llm import LLMCache, LLMRunTelemetryRecorder, UsageRecorder
 from ...core.config import LLMProvider, override_settings
 from ...tests.fixtures.settings import EnvFileFreeSettings
+from ...tests.loopback_llm import (
+    SilentLoopbackHandler,
+    ollama_chat_reply,
+    read_json_body,
+    serving_loopback,
+    write_raw_response,
+)
 from .. import (
     LLMBusyError,
     LLMCacheError,
@@ -49,12 +54,7 @@ from .._client import reset_on_host_inference_arena
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_OK_BODY: dict[str, object] = {
-    "model": "gpt-oss",
-    "message": {"content": " local completion "},
-    "prompt_eval_count": 12,
-    "eval_count": 4,
-}
+_OK_BODY: Mapping[str, object] = ollama_chat_reply(" local completion ")
 
 # Short enough to keep the suite quick, long enough that a wait is observable.
 _FAST_POLICY = LLMRetryPolicy(max_attempts=3, initial_backoff_s=0.02, max_backoff_s=0.1, budget_s=5.0)
@@ -98,38 +98,29 @@ def _serve_scripted(script: _Script) -> Iterator[str]:
     """Serve ``/api/chat`` on loopback following ``script``."""
     lock = threading.Lock()
 
-    class _Endpoint(BaseHTTPRequestHandler):
+    class _Endpoint(SilentLoopbackHandler):
         def do_POST(self) -> None:
-            body = json.loads(self.rfile.read(int(self.headers.get("content-length", "0"))).decode("utf-8"))
+            body = read_json_body(self)
             with lock:
                 index = len(script.bodies)
-                script.bodies.append(body)
+                script.bodies.append(dict(body))
             if index in script.drop_connection:
                 self.close_connection = True
                 return
             status, payload = script.responses[min(index, len(script.responses) - 1)]
+            # The schema-violating case sends a body that is NOT valid JSON, so
+            # it goes out verbatim rather than through the serialising writer.
             encoded = payload.encode("utf-8") if isinstance(payload, str) else json.dumps(payload).encode("utf-8")
-            self.send_response(status)
-            if status is HTTPStatus.TOO_MANY_REQUESTS and script.retry_after is not None:
-                self.send_header("retry-after", script.retry_after)
-            self.send_header("content-type", "application/json")
-            self.send_header("content-length", str(len(encoded)))
-            self.end_headers()
-            self.wfile.write(encoded)
+            retry_after = script.retry_after if status is HTTPStatus.TOO_MANY_REQUESTS else None
+            write_raw_response(
+                self,
+                encoded,
+                status=status,
+                extra_headers={"retry-after": retry_after} if retry_after is not None else None,
+            )
 
-        @override
-        def log_message(self, format: str, *args: object) -> None:
-            """Silence stdlib request logging during tests."""
-
-    server = ThreadingHTTPServer(("127.0.0.1", 0), _Endpoint)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    try:
-        yield f"http://127.0.0.1:{server.server_port}/api/chat"
-    finally:
-        server.shutdown()
-        server.server_close()
-        thread.join(timeout=3)
+    with serving_loopback(_Endpoint, path="/api/chat") as endpoint:
+        yield endpoint
 
 
 def _client(tmp_path: Path, *, policy: LLMRetryPolicy | None = None) -> LLMClient:

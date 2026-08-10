@@ -13,21 +13,24 @@ which is the one a per-request policy cannot pace.
 from __future__ import annotations
 
 import asyncio
-import json
-import threading
 import time
 from collections.abc import Iterator
 from contextlib import contextmanager
 from http import HTTPStatus
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import override
 
 import pytest
 
 from ...adapters.outbound.llm import LLMCache, LLMRunTelemetryRecorder, UsageRecorder
 from ...core.config import LLMProvider, override_settings
 from ...tests.fixtures.settings import EnvFileFreeSettings
+from ...tests.loopback_llm import (
+    SilentLoopbackHandler,
+    ollama_chat_reply,
+    read_json_body,
+    serving_loopback,
+    write_json_response,
+)
 from .. import (
     LLMClient,
     LLMRateLimitError,
@@ -63,44 +66,20 @@ def _serve(*, rate_limited: bool) -> Iterator[tuple[str, list[float]]]:
     """Serve a loopback runtime, recording the arrival time of every request."""
     arrivals: list[float] = []
 
-    class _Endpoint(BaseHTTPRequestHandler):
+    class _Endpoint(SilentLoopbackHandler):
         def do_POST(self) -> None:
-            self.rfile.read(int(self.headers.get("content-length", "0")))
+            read_json_body(self)
             arrivals.append(time.monotonic())
             limited = rate_limited and len(arrivals) == 1
-            status = HTTPStatus.TOO_MANY_REQUESTS if limited else HTTPStatus.OK
-            payload = (
-                {"error": "rate limited"}
-                if limited
-                else {
-                    "model": "gpt-oss",
-                    "message": {"content": " local completion "},
-                    "prompt_eval_count": 12,
-                    "eval_count": 4,
-                }
+            write_json_response(
+                self,
+                {"error": "rate limited"} if limited else ollama_chat_reply(" local completion "),
+                status=HTTPStatus.TOO_MANY_REQUESTS if limited else HTTPStatus.OK,
+                extra_headers={"retry-after": str(_RETRY_AFTER_S)} if limited else None,
             )
-            body = json.dumps(payload).encode("utf-8")
-            self.send_response(status)
-            if limited:
-                self.send_header("retry-after", str(_RETRY_AFTER_S))
-            self.send_header("content-type", "application/json")
-            self.send_header("content-length", str(len(body)))
-            self.end_headers()
-            self.wfile.write(body)
 
-        @override
-        def log_message(self, format: str, *args: object) -> None:
-            """Silence stdlib request logging during tests."""
-
-    server = ThreadingHTTPServer(("127.0.0.1", 0), _Endpoint)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    try:
-        yield f"http://127.0.0.1:{server.server_port}/api/chat", arrivals
-    finally:
-        server.shutdown()
-        server.server_close()
-        thread.join(timeout=3)
+    with serving_loopback(_Endpoint, path="/api/chat") as endpoint:
+        yield endpoint, arrivals
 
 
 def _client(tmp_path: Path, *, attempts: int = 1) -> LLMClient:

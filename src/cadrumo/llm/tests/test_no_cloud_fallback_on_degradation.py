@@ -17,15 +17,11 @@ from __future__ import annotations
 
 import ast
 import asyncio
-import json
 import socket
-import threading
 from collections.abc import Iterator
 from contextlib import closing, contextmanager
 from http import HTTPStatus
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import override
 
 import pytest
 from pydantic import SecretStr
@@ -34,6 +30,13 @@ from ...adapters.outbound.llm import LLMCache, LLMRunTelemetryRecorder, UsageRec
 from ...core.config import LLMProvider, override_settings
 from ...core.errors import build_error_envelope
 from ...tests.fixtures.settings import EnvFileFreeSettings
+from ...tests.loopback_llm import (
+    SilentLoopbackHandler,
+    openai_chat_reply,
+    read_json_body,
+    serving_loopback,
+    write_json_response,
+)
 from .. import LLMClient, LLMConsentError, LLMError, LLMRequest, LLMRetryPolicy
 from .._client import reset_on_host_inference_arena
 
@@ -60,41 +63,27 @@ def _cloud_recorder() -> Iterator[tuple[str, list[str]]]:
     """
     arrivals: list[str] = []
 
-    class _Endpoint(BaseHTTPRequestHandler):
+    class _Endpoint(SilentLoopbackHandler):
         def do_POST(self) -> None:
-            self.rfile.read(int(self.headers.get("content-length", "0")))
+            read_json_body(self)
             arrivals.append(self.path)
             # A well-formed vendor answer, so a request that legitimately
             # reaches here COMPLETES. The recorder has to be able to serve a
             # real dispatch, or every case asserting it stayed empty would be
             # satisfied by a recorder nothing could ever reach.
-            body = json.dumps(
-                {
-                    "id": "probe-response",
-                    "model": "gpt-4.1",
-                    "choices": [{"message": {"content": "cloud completion"}}],
-                    "usage": {"prompt_tokens": 3, "completion_tokens": 2},
-                }
-            ).encode("utf-8")
-            self.send_response(HTTPStatus.OK)
-            self.send_header("content-type", "application/json")
-            self.send_header("content-length", str(len(body)))
-            self.end_headers()
-            self.wfile.write(body)
+            write_json_response(
+                self,
+                openai_chat_reply(
+                    "cloud completion",
+                    prompt_tokens=3,
+                    completion_tokens=2,
+                    response_id="probe-response",
+                ),
+                status=HTTPStatus.OK,
+            )
 
-        @override
-        def log_message(self, format: str, *args: object) -> None:
-            """Silence stdlib request logging during tests."""
-
-    server = ThreadingHTTPServer(("127.0.0.1", 0), _Endpoint)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    try:
-        yield f"http://127.0.0.1:{server.server_port}/v1/chat/completions", arrivals
-    finally:
-        server.shutdown()
-        server.server_close()
-        thread.join(timeout=3)
+    with serving_loopback(_Endpoint, path="/v1/chat/completions") as endpoint:
+        yield endpoint, arrivals
 
 
 def _dead_local_endpoint() -> str:
