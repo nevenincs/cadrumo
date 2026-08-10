@@ -4,7 +4,7 @@ tags:
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
 modified: '2026-08-10'
-body_hash: 'sha256:30b2a65793fc85105a675ba2c9559a3351f58f679bca02da35ce074ef47b1907'
+body_hash: 'sha256:d8105a431a7267bb1e911692421bb19f4cc5ebeae14b3c1b6941012488f44ba2'
 tier: L3
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
@@ -54,7 +54,7 @@ Implement complete revision generation only after the authority contracts are fi
 Join exact parser anchors to reviewed semantics and render a complete target revision.
 
 - [x] `W02.P03.S07` - Implement fail-closed parser-to-semantic-map joining without fuzzy or positional matching; `dev/registry/`.
-- [ ] `W02.P03.S08` - Render the complete target export tree with stable partitioning and canonical TOML serialization; `dev/registry/`.
+- [x] `W02.P03.S08` - Render the complete target export tree with stable partitioning and canonical TOML serialization; `dev/registry/`.
 - [x] `W02.P03.S09` - Emit source, map, schema, semantic, and file digests in the provenance manifest; `dev/registry/`.
 - [ ] `W02.P03.S32` - Resolve only absent exact-anchor wire facts through the validated render profile, refuse official-content conflicts and uncovered or hash-drifting profiles, keep variable envelopes outside fixed-width output, and add the canonical profile digest and schema version to provenance; `dev/registry/`.
 
@@ -120,3 +120,4 @@ Waves are ordered. Within Wave 1, parser-source modelling and semantic-map schem
 ## Verification
 
 Completion requires every Step closed; deterministic double generation and repository `--check`; complete parser, bijection, applicability, provenance, extent, overlap, load and emitted-byte gates; formal code review with no unresolved high or medium findings; the relayout span gate green for regenerated revisions; focused static analysis and tests green; and exact-scope commit and push evidence.
+
