@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:b7863870b62525d94918df7c43f903d0c780f322231fce34179297ce727585c6'
+body_hash: 'sha256:39f93de954a11c6453608ee5e77cfb9c772e75c0be5d4f89ccd5ba24605ff8c0'
 related:
   - "[[2026-08-07-justificante-identity-matching-adr]]"
 ---
@@ -81,6 +81,50 @@ alias, standing in the same module tree (`domain/modelos/`) whose own facade
 already imports `core/identity/` concepts elsewhere. This is a decision
 point for the ADR: fix (alias from `Hex64Str`, five one-line changes, no
 persisted-shape change) or explicitly grandfather with a stated reason.
+
+**Correction (2026-08-10): the count in this section's own heading is an
+undercount. There are SIX, not two.**
+
+Stated as a correction rather than a silent replacement, because a reader who
+sees only "six" cannot tell whether the surface grew or the original
+measurement was wrong, and those imply different things about how much weight
+this document can carry. The surface did not grow. The measurement was wrong
+when it was written, and the two it names are the two that happened to sit in
+the modules the survey was reading.
+
+Measured against the finished tree after every relocation this reference's
+plan specified had landed:
+
+| site | status |
+| --- | --- |
+| `domain/modelos/_ids.py` | closed, named here originally |
+| `domain/invoices/_ids.py` | closed, named here originally |
+| `domain/modelos/_verification_report.py` | closed, NOT named here -- found while editing the file during its own relocation |
+| `application/evidence/_ids.py` | OPEN |
+| `domain/attachments/_ids.py` | OPEN |
+| `application/modelo/_m145_communication_records.py` | OPEN |
+
+Each of the six declares its own `_HEX_64_PATTERN = r"^[0-9a-f]{64}$"` -- the
+exact literal `core/_hex.py`'s docstring names as the thing every hex-64
+identity concept must alias rather than re-declare. So a future author reading
+that discipline and then reading the tree finds live counterexamples, which
+teaches that the rule is aspirational.
+
+**Why this matters beyond the count.** The plan's opening Wave is premised on
+this section: it exists to collapse "the two hand-rolled hex-64 declarations"
+so the taxonomy grows from a clean shared base. Closing that Wave against its
+original rows would have satisfied every row while leaving the Wave's own
+stated goal unmet -- the delivered-narrower failure arriving at the moment of
+closure, when everything is green and the instinct is to close. The three
+remaining sites are now rowed rather than absorbed, so the gap is findable.
+
+**How the undercount was found, since the method transfers.** Not by a gate.
+By re-running this document's own measurement against the finished state
+instead of trusting the commits that closed its rows. Closing on rows tells
+you the rows are done. Re-running the measurement the work was premised on
+tells you whether the goal is met, and those are different questions that look
+identical from a green board.
+
 
 ## The AEAT-issued taxonomy: four identifiers, three typed today, one absent
 
