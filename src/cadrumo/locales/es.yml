@@ -2605,9 +2605,6 @@ cli:
           temporales opcionales, sin mutar el estado
         unknown_keys: 'Clave(s) de --binding desconocida(s) {keys}; vinculaciones
           conocidas para {code}@{revision} ({period}): {suggestion}.'
-        unscoped_revision_suggestion: Antes de copiar ids en work calculate, vuelve
-          a ejecutar con --modelo MODELO --year YEAR --period PERIOD para la unidad
-          de trabajo destino.
         unscoped_revision_warning: La lista de vinculaciones no está acotada por %{missing_filters};
           puede incluir ids de vinculaciones de una revisión que no coincide con la
           unidad de trabajo usada por work calculate.
@@ -3205,8 +3202,8 @@ cli:
           vivo)
         history_help: Muestra todos los eventos del ciclo de vida de una unidad de
           trabajo
-        history_next_action: Revisa el estado actual de esta unidad de trabajo con
-          `aeat app modelo work status`.
+        history_next_action: Revisa el estado actual de esta unidad de trabajo antes
+          de elegir su siguiente operación.
         history_work_unit_id_help: Id de unidad de trabajo cuyo ciclo de vida quieres
           ver
         id_is_work_unit_not_calc_revision_natural: Este id es un id de unidad de trabajo,
@@ -3235,8 +3232,7 @@ cli:
         list_help: Listar las unidades de trabajo registradas, opcionalmente filtradas
           por perfil
         list_next_action: Inspecciona el estado completo de una unidad de trabajo
-          con `aeat app modelo work status` y luego crea o recalcula el borrador con
-          `aeat app modelo work calculate`.
+          antes de elegir si prepararla, recalcularla o verificarla.
         m184_socio_handoff_message: 'Régimen de atribución de rentas: el socio %{nif}
           (%{nombre}) recibe una base atribuida de %{importe} EUR (participación del
           %{porcentaje}%). En su propio espacio de trabajo, el socio debe registrarla
@@ -3439,17 +3435,18 @@ cli:
         state_label_presentado_supersedido: Presentación sustituida
         state_label_verificado_completo: Verificado completo
         status_help: Mostrar los metadatos de una unidad de trabajo
-        status_next_action: Crea o recalcula esta unidad con `aeat app modelo work
-          calculate` y luego verifica el borrador con `aeat app modelo work verify`.
+        status_next_action: Elige si esta unidad debe prepararse, recalcularse o verificarse
+          a continuación.
         verify_help: Verificar una revisión draft contra el contrato verified-complete
         verify_idempotent_noop: 'Operación idempotente sin efecto: la revisión de
           cálculo %{calculation_revision_id} ya está verificada; se devolvió el informe
           de verificación existente sin cambios.'
-        verify_next_action_granted: La verificación se superó. Exporta el artefacto
-          de presentación con `aeat app modelo export`.
+        verify_next_action_granted: La verificación se ha superado. Elija el destino
+          de exportación y las selecciones materiales requeridas antes de exportar
+          el artefacto de presentación.
         verify_next_action_incomplete: La verificación encontró elementos bloqueantes
-          (consulta los avisos anteriores). Resuélvelos, recalcula con `aeat app modelo
-          work calculate` y vuelve a ejecutar `aeat app modelo work verify`.
+          (consulte los avisos anteriores). Resuélvalos y recalcule esta unidad de
+          trabajo antes de verificarla de nuevo.
         verify_selector_help: Selector de revisión borrador (current, latest-draft
           o explicit).
         wizard_help: Guía paso a paso por las casillas manuales pendientes de la unidad
@@ -3959,20 +3956,21 @@ cli:
         non_official_notice: Los datos derivados del certificado son evidencia aportada
           por el operador, nunca verificada por la AEAT; el alta censal permanece
           en el nivel no oficial.
-        pull_cleared_notice: 'La AEAT sigue teniendo un valor en {count} campo(s)
-          que vaciaste: {axes}. Se han dejado vacíos; vaciarlos aquí no cambia el
-          registro de la AEAT.'
-        pull_divergences_notice: 'La AEAT informa {count} campo(s) de forma distinta
-          a lo que declaraste: {axes}. Tu respuesta se mantiene; resuelve cada discrepancia
-          tú mismo.'
+        pull_cleared_notice: 'La autoridad censal aún mantiene un valor para {count}
+          campo(s) que borraste: {axes}. Se dejaron vacíos; borrarlos aquí no cambia
+          el registro de la autoridad.'
+        pull_divergences_notice: 'La autoridad censal informa de {count} campo(s)
+          con valores distintos de los declarados: {axes}. Se mantiene tu respuesta;
+          resuelve cada discrepancia tú mismo.'
         pull_help: Lee tu identidad y tu domicilio de los datos censales de la AEAT
           y previsualiza o inscríbelos en el perfil activo.
         pull_preview_notice: 'Solo previsualización: no se ha escrito nada en el perfil.
           Vuelve a ejecutar con --apply para inscribir estos datos.'
-        pull_verified_tier_notice: Estos datos se han leído directamente de la AEAT,
-          por lo que el alta censal cuenta como verificada.
-        pull_withheld_notice: 'Los valores de {count} campo(s) no se muestran: {axes}.
-          Compáralos tú mismo con los de la AEAT; esta herramienta no los imprime.'
+        pull_verified_tier_notice: Estos datos se leyeron directamente de la autoridad
+          censal, por lo que la incorporación al censo cuenta como verificada.
+        pull_withheld_notice: 'Los valores de {count} campo(s) se ocultan en la salida:
+          {axes}. Compáralos tú mismo con la autoridad censal; esta herramienta no
+          los mostrará.'
         refresh_help: Descarga de AEAT el último censo y guarda un snapshot
         show_help: Muestra el último censo informado por AEAT para este perfil
         snapshot_id_help: Id de snapshot concreto (se aceptan prefijos)
@@ -4048,7 +4046,7 @@ cli:
         movimientos completo, las revisiones de cálculo y los registros de presentación.
         Se escribió en {out}. Úsalo solo para gestión local/SAR; no lo envíes por
         correo, no lo sincronices ni lo transfieras. Bórralo cuando termine esa gestión
-        local/SAR. Usa ''aeat config profile export --encrypt'' para un paquete estructurado
+        local/SAR. Selecciona la exportación cifrada para un paquete estructurado
         de transferencia cifrado AEAD.'
       export_transport_conflict: Elige --encrypt o --cleartext-local, no ambos.
       help: Gestionar valores de configuración del perfil activo
@@ -5153,7 +5151,7 @@ cli:
       child_description_help: Descripción de una transacción hija; se puede repetir
       classification_dropped: La clasificación del padre %{classification} no se copió
         a los hijos de la división; cada hijo queda como NOT_YET_PROCESSED y necesita
-        reclasificarse con 'aeat app ledger classify'.
+        una clasificación independiente.
       errors:
         child_args_mismatch: Cada importe hijo debe tener una descripción hija correspondiente
         min_two_children: Debes indicar al menos dos transacciones hijas
@@ -5431,9 +5429,9 @@ cli:
     calendar_local_modelo_events_unavailable: La evidencia local de eventos de modelo
       no está disponible para esta fila del calendario.
     coverage:
-      investigate: 'No se han podido determinar con certeza %{count} obligación(es)
-        de presentación para este perfil y podrian quedar sin declarar: %{modelos}.
-        Investigue cada una con ''aeat app overview explain <modelo>''.'
+      investigate: No se ha podido determinar con certeza la obligación de presentación
+        %{modelo} para este perfil y podría quedar sin declarar. Revise su explicación
+        de presentación.
     drafts: Borradores
     explain:
       help: Descompone la aplicabilidad de un modelo frente al perfil activo. Muestra
@@ -5469,7 +5467,7 @@ cli:
       year_help: Año de declaración (p. ej. 2026).
     post_filing:
       pending: '%{count} evento(s) posteriores a la presentación de AEAT requieren
-        atención: %{kinds}. Revísalos con ''aeat app live notifications list''.'
+        atención: %{kinds}. Revise las notificaciones afectadas.'
     prepare:
       help: 'Recorre los pasos de preparación de datos para un modelo/periodo en orden:
         importar transacciones, clasificarlas, adjuntar justificantes de facturas
@@ -70814,8 +70812,8 @@ modelo:
           field:
             label: Modelo 848 (orden-hac-85-2003), ejercicios 2003 y siguientes
 overview:
-  no_aeat_history: Este perfil no tiene ninguna presentación confirmada por la AEAT.
-    Ejecute `aeat app live filed pull-all` para obtener el historial que la AEAT conserva.
+  no_aeat_history: Este perfil no contiene pruebas de declaraciones confirmadas por
+    la AEAT. Recupere el historial de declaraciones que conserva la AEAT.
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: Se ha aplicado prorrata 50 % (Art. 61 LIRPF)

@@ -247,7 +247,7 @@ NOTICE_BAND_CSS: Final[str] = """
     .cadrumo-notice { margin: 0 0 1 0; }
     .cadrumo-notice-info { color: $text; }
     .cadrumo-notice-warning { color: $warning; text-style: bold; }
-    .cadrumo-notice-suggestion { color: $text-muted; margin: 0 0 1 2; }
+    .cadrumo-notice-action { color: $text-muted; margin: 0 0 1 2; }
 """
 """Styling for :class:`NoticeBand`. Severity drives both the glyph the band
 prints and this colour, so meaning never rests on colour alone — the same
@@ -257,6 +257,18 @@ _NOTICE_GLYPH: Final[dict[NoticeSeverity, str]] = {
     NoticeSeverity.INFO: "ⓘ",
     NoticeSeverity.WARNING: "⚠",
 }
+
+
+def _notice_action_target(notice: Notice) -> str | None:
+    """Return the already-resolved action target the read-only TUI may show.
+
+    Notice producers resolve executable actions against the live operator
+    surface before emission.  This adapter therefore projects only that typed
+    target and never recreates a shell command; notices intentionally carrying
+    no action remain a single message line.
+    """
+    action = notice.action
+    return None if action is None else action.action.target_command_key
 
 
 class NoticeBand(Vertical, can_focus=False):
@@ -289,11 +301,12 @@ class NoticeBand(Vertical, can_focus=False):
                 id=f"notice-{index}",
                 markup=False,
             )
-            if notice.suggestion:
+            action_target = _notice_action_target(notice)
+            if action_target is not None:
                 yield Static(
-                    notice.suggestion,
-                    classes="cadrumo-notice-suggestion",
-                    id=f"notice-{index}-suggestion",
+                    action_target,
+                    classes="cadrumo-notice-action",
+                    id=f"notice-{index}-action",
                     markup=False,
                 )
 

@@ -2580,9 +2580,6 @@ cli:
           temporals opcionals, sense mutar l'estat
         unknown_keys: 'Clau(s) de --binding desconeguda(es) {keys}; vinculacions conegudes
           per a {code}@{revision} ({period}): {suggestion}.'
-        unscoped_revision_suggestion: Abans de copiar ids a work calculate, torna
-          a executar amb --modelo MODELO --year YEAR --period PERIOD per a la unitat
-          de treball de destinació.
         unscoped_revision_warning: La llista de vinculacions no està acotada per %{missing_filters};
           pot incloure ids de vinculacions d una revisió que no coincideix amb la
           unitat de treball usada per work calculate.
@@ -3177,8 +3174,8 @@ cli:
           viu)
         history_help: Mostra tots els esdeveniments del cicle de vida d'una unitat
           de treball
-        history_next_action: Revisa l'estat actual d'aquesta unitat de treball amb
-          `aeat app modelo work status`.
+        history_next_action: Revisa l'estat actual d'aquesta unitat de treball abans
+          de triar la seva operació següent.
         history_work_unit_id_help: Id d'unitat de treball el cicle de vida de la qual
           vols veure
         id_is_work_unit_not_calc_revision_natural: Aquest id és un id d'unitat de
@@ -3207,9 +3204,8 @@ cli:
           signe igual i el valor a la dreta. S''ha rebut {spec}.'
         list_help: Llistar les unitats de treball registrades, opcionalment filtrades
           per perfil
-        list_next_action: Inspecciona l'estat complet d'una unitat de treball amb
-          `aeat app modelo work status` i després crea o recalcula l'esborrany amb
-          `aeat app modelo work calculate`.
+        list_next_action: Inspecciona l'estat complet d'una unitat de treball abans
+          de triar si preparar-la, recalcular-la o verificar-la.
         m184_socio_handoff_message: 'Règim d''atribució de rendes: el soci %{nif}
           (%{nombre}) rep una base atribuïda de %{importe} EUR (participació del %{porcentaje}%).
           En el seu propi espai de treball, el soci l''ha de registrar com a fets
@@ -3414,17 +3410,18 @@ cli:
         state_label_presentado_supersedido: Presentació substituïda
         state_label_verificado_completo: Verificat complet
         status_help: Mostrar les metadades d'una unitat de treball
-        status_next_action: Crea o recalcula aquesta unitat amb `aeat app modelo work
-          calculate` i després verifica l'esborrany amb `aeat app modelo work verify`.
+        status_next_action: Tria si aquesta unitat s'ha de preparar, recalcular o
+          verificar a continuació.
         verify_help: Verificar una revisió draft contra el contracte verified-complete
         verify_idempotent_noop: 'Operació idempotent sense efecte: la revisió de càlcul
           %{calculation_revision_id} ja està verificada; s''ha retornat l''informe
           de verificació existent sense canvis.'
-        verify_next_action_granted: La verificació s'ha superat. Exporta l'artefacte
-          de presentació amb `aeat app modelo export`.
-        verify_next_action_incomplete: La verificació ha trobat elements bloquejadors
-          (consulta els avisos anteriors). Resol-los, recalcula amb `aeat app modelo
-          work calculate` i torna a executar `aeat app modelo work verify`.
+        verify_next_action_granted: La verificació s'ha superat. Trieu la destinació
+          d'exportació i les seleccions materials requerides abans d'exportar l'artefacte
+          de presentació.
+        verify_next_action_incomplete: La verificació ha trobat elements bloquejants
+          (vegeu els avisos anteriors). Resoleu-los i recalculeu aquesta unitat de
+          treball abans de verificar-la de nou.
         verify_selector_help: Selector de revisió esborrany (current, latest-draft
           o explícit).
         wizard_help: Guia pas a pas per les caselles manuals pendents de la unitat
@@ -3930,20 +3927,21 @@ cli:
         non_official_notice: Les dades derivades del certificat són evidència aportada
           per l'operador, mai verificada per l'AEAT; l'alta censal es manté al nivell
           no oficial.
-        pull_cleared_notice: 'L''AEAT continua tenint un valor en {count} camp(s)
-          que vas buidar: {axes}. S''han deixat buits; buidar-los aquí no canvia el
-          registre de l''AEAT.'
-        pull_divergences_notice: 'L''AEAT informa {count} camp(s) de manera diferent
-          del que vas declarar: {axes}. La teva resposta es manté; resol cada discrepància
-          tu mateix.'
+        pull_cleared_notice: 'L''autoritat censal encara conserva un valor per a {count}
+          camp(s) que vas esborrar: {axes}. S''han deixat buits; esborrar-los aquí
+          no canvia el registre de l''autoritat.'
+        pull_divergences_notice: 'L''autoritat censal informa de {count} camp(s) amb
+          valors diferents dels que has declarat: {axes}. La teva resposta es manté;
+          resol cada discrepància tu mateix.'
         pull_help: Llegeix la teva identitat i el teu domicili de les dades censals
           de l'AEAT i previsualitza'ls o inscriu-los al perfil actiu.
         pull_preview_notice: 'Només previsualització: no s''ha escrit res al perfil.
           Torna a executar amb --apply per inscriure aquestes dades.'
-        pull_verified_tier_notice: Aquestes dades s'han llegit directament de l'AEAT,
-          de manera que l'alta censal compta com a verificada.
-        pull_withheld_notice: 'Els valors de {count} camp(s) no es mostren: {axes}.
-          Compara''ls tu mateix amb els de l''AEAT; aquesta eina no els imprimeix.'
+        pull_verified_tier_notice: Aquests fets s'han llegit directament de l'autoritat
+          censal, de manera que la incorporació al cens compta com a verificada.
+        pull_withheld_notice: 'Els valors de {count} camp(s) s''oculten a la sortida:
+          {axes}. Compara''ls tu mateix amb l''autoritat censal; aquesta eina no els
+          mostrarà.'
         refresh_help: Descàrrega d'AEAT l'últim cens i desa un snapshot
         show_help: Mostra l'últim cens informat per AEAT per a aquest perfil
         snapshot_id_help: Id de snapshot concret (s'accepten prefixos)
@@ -4016,8 +4014,8 @@ cli:
         complet, les revisions de càlcul i els registres de presentació. S''ha escrit
         a {out}. Usa''l només per a gestió local/SAR; no l''enviïs per correu, no
         el sincronitzis ni el transfereixis. Esborra''l quan acabi aquesta gestió
-        local/SAR. Usa ''aeat config profile export --encrypt'' per a un paquet estructurat
-        de transferència xifrat AEAD.'
+        local/SAR. Selecciona l''exportació xifrada per a un paquet estructurat de
+        transferència xifrat AEAD.'
       export_transport_conflict: Tria --encrypt o --cleartext-local, no tots dos.
       help: Gestionar valors de configuració del perfil actiu
       history:
@@ -5114,7 +5112,7 @@ cli:
       child_description_help: Descripció d'una transacció filla; es pot repetir
       classification_dropped: La classificació del pare %{classification} no s'ha
         copiat als fills de la divisió; cada fill queda com a NOT_YET_PROCESSED i
-        necessita reclassificar-se amb 'aeat app ledger classify'.
+        necessita una classificació independent.
       errors:
         child_args_mismatch: Cada import fill ha de tenir una descripció filla corresponent
         min_two_children: Has d'indicar almenys dues transaccions filles
@@ -5388,9 +5386,9 @@ cli:
     calendar_local_modelo_events_unavailable: L'evidència local d'esdeveniments de
       modelo no està disponible per a aquesta fila del calendari.
     coverage:
-      investigate: 'No s''han pogut determinar amb certesa %{count} obligació(ns)
-        de presentació per a aquest perfil i podrien quedar sense declarar: %{modelos}.
-        Investigueu cadascuna amb ''aeat app overview explain <modelo>''.'
+      investigate: No s'ha pogut determinar amb certesa l'obligació de presentació
+        %{modelo} per a aquest perfil i podria quedar sense declarar. Reviseu la seva
+        explicació de presentació.
     drafts: Esborranys
     explain:
       help: Descompon l'aplicabilitat d'un modelo davant del perfil actiu. Mostra
@@ -5424,7 +5422,7 @@ cli:
       year_help: Any de declaració (p. ex. 2026).
     post_filing:
       pending: '%{count} esdeveniment(s) posteriors a la presentació d''AEAT requereixen
-        atenció: %{kinds}. Revisa''ls amb ''aeat app live notifications list''.'
+        atenció: %{kinds}. Reviseu les notificacions afectades.'
     prepare:
       help: 'Recorre els passos de preparació de dades per a un model/període en ordre:
         importar transaccions, classificar-les, adjuntar justificants de factures
@@ -68478,8 +68476,8 @@ modelo:
           field:
             label: null
 overview:
-  no_aeat_history: Aquest perfil no té cap presentació confirmada per l'AEAT. Executeu
-    `aeat app live filed pull-all` per obtenir l'historial que l'AEAT conserva.
+  no_aeat_history: Aquest perfil no conté proves de declaracions confirmades per l'AEAT.
+    Recupereu l'historial de declaracions que conserva l'AEAT.
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: S'ha aplicat prorrata 50 %% (Art. 61 LIRPF)

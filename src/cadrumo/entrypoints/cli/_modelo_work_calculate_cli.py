@@ -617,16 +617,13 @@ def _work_calculate_source_advisory_output(
     under-declared (no-silent-under-declaration). The diagnostic ``message``
     already carries the observation's category / rate / flow provenance.
 
-    A diagnostic's ``remedy`` rides on :attr:`~core.json_contract.Notice.suggestion`,
-    that channel's documented purpose, rather than being concatenated into the
-    message upstream. Keeping the two apart is what buys the message its length
-    headroom: the remedy is fixed prose, the message is the part that grows with
-    the taxpayer's own data, and fusing them made the former compete for room
-    against the latter.
+    A diagnostic's free-form ``remedy`` is not an executable action and is not
+    projected through the notice channel. The notice retains only its typed
+    diagnostic context; the canonical calculation result remains responsible
+    for any domain-specific guidance.
 
-    The text lines are rebuilt FROM the notices rather than from the diagnostics,
-    so the two surfaces cannot drift: a remedy that reaches the JSON envelope
-    reaches the terminal in the same breath.
+    The text lines are rebuilt from the notices, so their rendered diagnostic
+    content and the JSON envelope cannot drift.
     """
     diagnostics = calculation_result.source_diagnostics
     if not diagnostics:
@@ -637,7 +634,7 @@ def _work_calculate_source_advisory_output(
     lines = [
         tr(
             "cli.app.modelo.work.calculate_source_advisory",
-            message=notice.message if notice.suggestion is None else f"{notice.message} {notice.suggestion}",
+            message=notice.message,
             default="ADVISORY: %{message}",
         )
         for notice in notices

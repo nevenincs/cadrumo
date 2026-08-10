@@ -108,7 +108,8 @@ def test_extract_by_evidence_id_recovers_every_grounded_field(tmp_path: Path) ->
         ["--format", "json", "app", "ledger", "evidence", "extract", "--evidence-id", evidence_id],
     )
     assert extracted.exit_code == 0, extracted.output
-    result = json.loads(extracted.output)["result"]
+    envelope = json.loads(extracted.output)
+    result = envelope["result"]
 
     assert result["evidence_id"] == evidence_id
     assert result["supplier_tax_id"] == _redacted(_SUPPLIER_CIF)
@@ -119,6 +120,10 @@ def test_extract_by_evidence_id_recovers_every_grounded_field(tmp_path: Path) ->
     assert result["iva_amount"] == "21.00"
     assert result["grand_total"] == "121.00"
     assert result["raw_text_length"] > 0
+    review_notice = next(notice for notice in envelope["notices"] if notice["code"] == "ledger.evidence.extract.review_hint")
+    assert review_notice["action"] is None
+    assert review_notice["context"]["actionability"] == "review_and_required_invoice_fields_need_operator_input"
+    assert "suggestion" not in review_notice
 
 
 def test_a_structured_xml_invoice_survives_add_then_extract_through_the_cli(tmp_path: Path) -> None:

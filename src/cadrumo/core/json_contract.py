@@ -79,7 +79,7 @@ _PRESENTATION_KEY_TOKENS: Final[frozenset[str]] = frozenset(
     }
 )
 _RAW_AEAT_COMMAND_PATTERN: Final[re.Pattern[str]] = re.compile(
-    r"(?i)(?:^|[\s`'\";|&()])aeat(?=$|[\s`'\";|&()])"
+    r"(?i)(?:^|[\s`'\";|&()])aeat\s+(?:app|config)(?=$|[\s`'\";|&()])"
 )
 _RESERVED_ACTION_CONTEXT_KEYS: Final[frozenset[str]] = frozenset(
     {
@@ -389,6 +389,37 @@ class ResolvedPreconditionAction(BaseModel):
         return self
 
 
+class ResolvedNoticeAction(BaseModel):
+    """A fully materialised next action carried by a successful notice.
+
+    This transport record is deliberately distinct from
+    :class:`ResolvedPreconditionAction`: success notices do not report a
+    failed condition, conditional recovery state, or a terminal outcome.  The
+    operator-surface resolver must establish the catalogue target and every
+    required input before constructing this record; this DTO in turn refuses
+    any unresolved argument so a consumer never receives a partial action.
+    """
+
+    model_config = _STRICT_FROZEN_CONFIG
+
+    action: ResolvedActionReference
+    argument_bindings: tuple[ResolvedActionArgument, ...] = Field(default_factory=tuple)
+
+    @field_validator("argument_bindings")
+    @classmethod
+    def _canonicalize_resolved_arguments(
+        cls,
+        value: tuple[ResolvedActionArgument, ...],
+    ) -> tuple[ResolvedActionArgument, ...]:
+        """Require one concrete value for each supplied success-action argument."""
+        names = tuple(item.argument_name for item in value)
+        if len(set(names)) != len(names):
+            raise ValueError("notice action argument names must be unique")
+        if any(item.status is not ActionArgumentStatus.RESOLVED for item in value):
+            raise ValueError("success notice actions require fully resolved argument bindings")
+        return tuple(sorted(value, key=lambda item: item.argument_name))
+
+
 class Notice(BaseModel):
     """One typed, non-blocking diagnostic on the envelope ``notices`` channel.
 
@@ -407,8 +438,8 @@ class Notice(BaseModel):
             ``"modelo.calculate.unconsumed_iva"``).
         message: Localized operator-facing presentation text. It cannot carry
             an executable command identity.
-        action: Optional schema-resolved precondition-action projection. It is
-            the only notice field that may identify a recovery action.
+        action: Optional schema-resolved, fully materialised next action. It
+            is the only notice field that may identify an executable action.
         context: Optional deterministic non-action diagnostic metadata (e.g.
             source-resolution ``reason`` / ``source_kind``). Reserved action
             keys and executable command prose are rejected here.
@@ -425,7 +456,7 @@ class Notice(BaseModel):
     severity: NoticeSeverity
     code: str = Field(min_length=1)
     message: str = Field(min_length=1)
-    action: ResolvedPreconditionAction | None = None
+    action: ResolvedNoticeAction | None = None
     context: Mapping[str, str] | None = None
 
     @field_validator("message")
@@ -919,6 +950,7 @@ __all__ = [
     "OutputSchemaError",
     "ResolvedActionArgument",
     "ResolvedActionReference",
+    "ResolvedNoticeAction",
     "ResolvedPreconditionAction",
     "SchemaEnvelope",
     "derive_status",

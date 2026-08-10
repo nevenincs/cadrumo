@@ -123,11 +123,10 @@ def no_aeat_history_notice(calculation_observations: tuple[object, ...]) -> Noti
         message=tr(
             "overview.no_aeat_history",
             default=(
-                "This profile holds no filing evidence AEAT confirmed. Run "
-                "`aeat app live filed pull-all` to fetch the history AEAT holds for it."
+                "This profile holds no filing evidence AEAT confirmed. Retrieve the filing "
+                "history AEAT holds for it."
             ),
         ),
-        suggestion="aeat app live filed pull-all",
         context={"observation_count": str(len(calculation_observations))},
     )
 

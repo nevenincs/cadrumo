@@ -8,6 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....application.overview import (
+    NO_AEAT_HISTORY_NOTICE_CODE,
     AdvisedObligation,
     CoverageAdviceReason,
     ObligationCoverageReport,
@@ -16,6 +17,7 @@ from ....application.overview import (
 )
 from ....application.overview._agenda import OverviewAgenda
 from ....application.overview._backlog import OverviewBacklog
+from ....core.json_contract import Notice, NoticeSeverity
 from .._overview_payloads import (
     OverviewAgendaResult,
     OverviewBacklogResult,
@@ -28,6 +30,7 @@ from .._overview_rendering import (
     overview_backlog_output,
     overview_calendar_output,
     overview_calendar_profile_output,
+    overview_coverage_notices,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -110,7 +113,54 @@ def test_calendar_rendering_round_trips_the_canonical_coverage_partition() -> No
     assert rendered.coverage is not None
     assert rendered.coverage.model_dump(mode="json") == coverage.model_dump(mode="json")
     assert any(line.startswith("coverage_advised\t1\t") for line in lines)
-    assert notices[0].context == {"190": "applicable_window_missing"}
+    assert notices[0].context == {"modelo": "190", "reason": "applicable_window_missing"}
+    assert notices[0].action is not None
+    assert notices[0].action.action.action_id == "operator.overview.explain"
+    assert notices[0].action.action.target_command_key == "overview.explain"
+    assert notices[0].action.argument_bindings[0].value == "190"
+
+
+def test_coverage_notices_bind_one_modelo_per_explanation_action() -> None:
+    """Every coverage notice carries only the modelo its action can execute."""
+    coverage = ObligationCoverageReport(
+        advised=(
+            AdvisedObligation(modelo="130", reason=CoverageAdviceReason.APPLICABILITY_UNDETERMINED),
+            AdvisedObligation(modelo="190", reason=CoverageAdviceReason.APPLICABLE_WINDOW_MISSING),
+        ),
+    )
+
+    notices = overview_coverage_notices(coverage)
+
+    by_modelo = {notice.context["modelo"]: notice for notice in notices if notice.context is not None}
+    assert set(by_modelo) == set(coverage.advised_modelos)
+    for modelo, notice in by_modelo.items():
+        assert notice.action is not None
+        assert notice.action.action.action_id == "operator.overview.explain"
+        assert notice.action.argument_bindings[0].value == modelo
+
+
+def test_calendar_projection_resolves_the_history_pull_action() -> None:
+    """The application history finding becomes executable only at the CLI boundary."""
+    calendar_range = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 3, 31))
+    calendar = OverviewCalendar(
+        range=calendar_range,
+        entries=(),
+        generated_at=datetime(2026, 1, 1, tzinfo=UTC),
+    )
+    application_notice = Notice(
+        severity=NoticeSeverity.INFO,
+        code=NO_AEAT_HISTORY_NOTICE_CODE,
+        message="No official filing history is available for this profile.",
+        context={"observation_count": "0"},
+    )
+
+    _, _, notices = overview_calendar_output(calendar, calendar_range, evidence_notices=(application_notice,))
+
+    assert len(notices) == 1
+    assert notices[0].action is not None
+    assert notices[0].action.action.action_id == "operator.live.filed.pull_all"
+    assert notices[0].action.action.target_command_key == "app.live.filed.pull_all"
+    assert notices[0].action.argument_bindings == ()
 
 
 def test_every_calendar_derived_renderer_retains_coverage() -> None:
@@ -159,6 +209,6 @@ def test_every_calendar_derived_renderer_retains_coverage() -> None:
     summary = OverviewCalendarProfilePayload.model_validate(profile)
     assert summary.profile_id == "bucket-1"
     advised_contexts = [notice.context or {} for notice in profile_notices]
-    assert any(item.modelo in context for item in coverage.advised for context in advised_contexts), (
+    assert any(context.get("modelo") == item.modelo for item in coverage.advised for context in advised_contexts), (
         f"the profile path must still surface every advised modelo; notices carried {advised_contexts}"
     )

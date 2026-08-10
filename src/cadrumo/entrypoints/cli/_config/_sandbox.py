@@ -46,10 +46,11 @@ from __future__ import annotations
 import typer
 
 from ....application.bucket_maintenance import SandboxMergeScope
+from ....application.operator_actions import ActionReference
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
-from ....core.json_contract import Notice, NoticeSeverity
-from .._common import _emit_envelope
+from ....core.json_contract import ActionArgumentSource, ActionArgumentStatus, Notice, NoticeSeverity, ResolvedActionArgument
+from .._common import _emit_envelope, resolve_notice_action
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 
@@ -133,6 +134,9 @@ def _register_sandbox_create_command(app: typer.Typer) -> None:
             label=outcome.label,
             seeded_from=outcome.seeded_from,
         )
+        # Discarding data is confirmation-bound and destructive. The active
+        # state remains visible, but this success notice deliberately has no
+        # action that could make deletion appear safe to automate.
         activation_notice = Notice(
             severity=NoticeSeverity.INFO,
             code="config.profile.sandbox.create.active",
@@ -143,7 +147,6 @@ def _register_sandbox_create_command(app: typer.Typer) -> None:
                     "it until you switch away or discard it."
                 ),
             ),
-            suggestion="aeat config profile sandbox discard",
         )
         _emit_envelope(
             ctx,
@@ -437,6 +440,8 @@ def _register_sandbox_prune_command(app: typer.Typer) -> None:
         ]
         notices: tuple[Notice, ...] = ()
         if skipped_active:
+            # The next profile is an operator choice; pruning also needs a
+            # fresh destructive confirmation. Keep the warning actionless.
             skipped_notice = Notice(
                 severity=NoticeSeverity.WARNING,
                 code="config.profile.sandbox.prune.skipped_active",
@@ -444,11 +449,10 @@ def _register_sandbox_prune_command(app: typer.Typer) -> None:
                     "cli.config.profile.sandbox.prune_skipped_active_info",
                     default=(
                         "Skipped the active sandbox %{names}; switch to another profile and re-run "
-                        "'aeat config profile sandbox prune --yes' to discard it."
+                        "pruning only after you decide it should be discarded."
                     ),
                     names=", ".join(skipped_active),
                 ),
-                suggestion="aeat config login",
             )
             notices = (skipped_notice,)
             lines.append(f"INFO\t{skipped_notice.message}")
@@ -556,11 +560,22 @@ def _register_sandbox_archive_command(app: typer.Typer) -> None:
             message=tr(
                 "cli.config.profile.sandbox.archive_restorable_info",
                 default=(
-                    "The sandbox is now dormant; run 'aeat config profile sandbox restore %{name}' to bring it back."
+                    "The sandbox is now dormant; the available recovery action can bring %{name} back."
                 ),
                 name=name,
             ),
-            suggestion=f"aeat config profile sandbox restore {name}",
+            action=resolve_notice_action(
+                action=ActionReference(action_id="operator.profile.sandbox.restore"),
+                argument_bindings=(
+                    ResolvedActionArgument(
+                        argument_name="name",
+                        status=ActionArgumentStatus.RESOLVED,
+                        value=name,
+                        source=ActionArgumentSource.VERDICT_CONTEXT,
+                        source_key="name",
+                    ),
+                ),
+            ),
         )
         _emit_envelope(
             ctx,

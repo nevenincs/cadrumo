@@ -258,13 +258,24 @@ def _no_aeat_history_notice() -> Notice | None:
     profile as a whole, not one filing.
     """
     from ....application.calculations import CalculationObservationRepository
+    from ....application.operator_actions import ActionReference
     from ....application.overview import no_aeat_history_notice
+    from .._common import resolve_notice_action
 
     try:
         observations = tuple(CalculationObservationRepository().iter_records())
     except _guarded_read_errors():
         return None
-    return no_aeat_history_notice(observations)
+    notice = no_aeat_history_notice(observations)
+    if notice is None:
+        return None
+    return notice.model_copy(
+        update={
+            "action": resolve_notice_action(
+                action=ActionReference(action_id="operator.live.filed.pull_all"),
+            ),
+        },
+    )
 
 
 def _build_fact_rows(

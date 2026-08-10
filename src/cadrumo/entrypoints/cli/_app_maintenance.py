@@ -28,6 +28,7 @@ from typing import TYPE_CHECKING
 
 import typer
 
+from ...application.operator_actions import ActionReference
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
@@ -36,7 +37,7 @@ from ._app_maintenance_payloads import (
     ReconciledProfileExportPayload,
     UnreconciledProfileExportPayload,
 )
-from ._common import _emit_envelope
+from ._common import _emit_envelope, resolve_notice_action
 from ._common import activate_subcommand_output_language as _activate_subcommand_output_language
 
 if TYPE_CHECKING:
@@ -181,7 +182,7 @@ def _reconcile_notices(outcome: ProfileBundleExportReconciliation) -> tuple[Noti
                     ),
                     count=str(len(outcome.failures)),
                 ),
-                suggestion="aeat app maintenance reconcile",
+                action=resolve_notice_action(action=ActionReference(action_id="operator.app.maintenance.reconcile")),
                 context={
                     "failed_count": str(len(outcome.failures)),
                     "journal_ids": ",".join(failure.journal_id for failure in outcome.failures),

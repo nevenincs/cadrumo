@@ -2402,8 +2402,6 @@ cli:
           overrides, without mutating state
         unknown_keys: 'Unknown --binding key(s) {keys}; known bindings for {code}@{revision}
           ({period}): {suggestion}.'
-        unscoped_revision_suggestion: Before copying ids into work calculate, rerun
-          with --modelo MODELO --year YEAR --period PERIOD for the target work unit.
         unscoped_revision_warning: The binding list is not scoped by %{missing_filters};
           it may include binding ids from a revision that does not match the work
           unit used by work calculate.
@@ -2955,8 +2953,8 @@ cli:
           Must carry imported external evidence (justificante / CSV register / live
           capture)
         history_help: Show every lifecycle event for one work unit
-        history_next_action: Review this work unit's current state with `aeat app
-          modelo work status`.
+        history_next_action: Review this work unit's current state before choosing
+          its next operation.
         history_work_unit_id_help: Work unit id whose lifecycle you want to view
         id_is_work_unit_not_calc_revision_natural: This id is a work-unit-id, but
           verify/file need a calculation-revision-id. For the common path, run 'aeat
@@ -2982,8 +2980,8 @@ cli:
           is a key-value entry: put the field name on the left of one equals sign
           and the value on the right. Received {spec}.'
         list_help: List registered work units, optionally filtered by profile
-        list_next_action: Inspect one work unit's full state with `aeat app modelo
-          work status`, then draft or recalculate it with `aeat app modelo work calculate`.
+        list_next_action: Inspect one work unit's full state before choosing whether
+          to draft, recalculate, or verify it.
         m184_socio_handoff_message: 'Régimen de atribución de rentas: socio %{nif}
           (%{nombre}) receives an attributed base of %{importe} EUR (%{porcentaje}%
           share). On the socio''s own workspace, record it as attribution_received
@@ -3178,17 +3176,17 @@ cli:
         state_label_presentado_supersedido: superseded filing
         state_label_verificado_completo: verified complete
         status_help: Show the metadata of one work unit
-        status_next_action: Draft or recalculate this unit with `aeat app modelo work
-          calculate`, then verify the draft with `aeat app modelo work verify`.
+        status_next_action: Choose whether this unit should be drafted, recalculated,
+          or verified next.
         verify_help: Verify a draft calculation revision against the verified-complete
           contract
         verify_idempotent_noop: 'Idempotent no-op: calculation revision %{calculation_revision_id}
           is already verified; returned the existing verification report without changes.'
-        verify_next_action_granted: Verification passed. Export the filing artefact
-          with `aeat app modelo export`.
+        verify_next_action_granted: Verification passed. Choose the required export
+          destination and material selections before exporting the filing artefact.
         verify_next_action_incomplete: Verification found blocking items (see the
-          notices above). Resolve them, recalculate with `aeat app modelo work calculate`,
-          then re-run `aeat app modelo work verify`.
+          notices above). Resolve them and recalculate this work unit before verifying
+          it again.
         verify_selector_help: Draft revision selector (current, latest-draft, or explicit).
         wizard_help: Walk the work unit's outstanding manual inputs one at a time,
           in plain language, then calculate
@@ -3654,19 +3652,21 @@ cli:
         help: Censal artefact ingestion for the active profile.
         non_official_notice: Certificate-derived facts are operator-supplied evidence,
           never AEAT-verified; the censo enrolment stays at the non-official tier.
-        pull_cleared_notice: 'AEAT still holds a value for {count} field(s) you cleared:
-          {axes}. They were left empty; clearing them here does not change AEAT''s
-          record.'
-        pull_divergences_notice: 'AEAT reports {count} field(s) differently from your
-          declared answer: {axes}. Your answer stands; resolve each one yourself.'
+        pull_cleared_notice: 'The census authority still holds a value for {count}
+          field(s) you cleared: {axes}. They were left empty; clearing them here does
+          not change the authority''s record.'
+        pull_divergences_notice: 'The census authority reports {count} field(s) differently
+          from your declared answer: {axes}. Your answer stands; resolve each one
+          yourself.'
         pull_help: Read your identity and address from AEAT's censal record and preview
           or enroll them onto the active profile.
         pull_preview_notice: 'Preview only: nothing was written to the profile. Re-run
           with --apply to enroll these facts.'
-        pull_verified_tier_notice: These facts were read from AEAT itself, so the
-          censo enrolment counts as verified.
+        pull_verified_tier_notice: These facts were read from the census authority
+          itself, so the censo enrolment counts as verified.
         pull_withheld_notice: 'The values for {count} field(s) are withheld from output:
-          {axes}. Compare them yourself against AEAT; this tool will not print them.'
+          {axes}. Compare them yourself against the census authority; this tool will
+          not print them.'
         refresh_help: Download the latest censo from AEAT and save a snapshot
         show_help: Show the latest censo AEAT reported for this profile
         snapshot_id_help: Specific snapshot id (prefixes accepted)
@@ -3739,10 +3739,10 @@ cli:
         financial data: the raw tax id (not redacted), names/surnames, the full ledger,
         calculation revisions, and filing records. It was written to {out}. Use it
         only for local/SAR handling; do not email, sync, or transfer it. Delete it
-        after that local/SAR handling is complete. Use ''aeat config profile export
-        --encrypt'' for an AEAD-encrypted structured transfer bundle. It is NOT a
-        full backup: attachment evidence bytes, AEAT captures, and the audit trail
-        are excluded. Use the encrypted recovery archive for a complete backup.'
+        after that local/SAR handling is complete. Select encrypted export for an
+        AEAD-encrypted structured transfer bundle. It is NOT a full backup: attachment
+        evidence bytes, authority captures, and the audit trail are excluded. Use
+        the encrypted recovery archive for a complete backup.'
       export_transport_conflict: Choose either --encrypt or --cleartext-local, not
         both.
       help: Manage active profile configuration values
@@ -4770,8 +4770,8 @@ cli:
       child_description_help: One child narrative. Repeat once per child; the count
         must match --child-amount.
       classification_dropped: Parent classification %{classification} was not copied
-        to the split children; each child is NOT_YET_PROCESSED and needs re-classification
-        with 'aeat app ledger classify'.
+        to the split children; each child is NOT_YET_PROCESSED and needs separate
+        classification.
       errors:
         child_args_mismatch: ledger split requires the same number of --child-amount
           and --child-description arguments
@@ -5026,9 +5026,8 @@ cli:
     calendar_local_modelo_events_unavailable: Local modelo event evidence is unavailable
       for this calendar row.
     coverage:
-      investigate: '%{count} filing obligation(s) could not be positively scoped for
-        this profile and may be under-reported: %{modelos}. Investigate each with
-        ''aeat app overview explain <modelo>''.'
+      investigate: The filing obligation %{modelo} could not be positively scoped
+        for this profile and may be under-reported. Review its filing explanation.
     drafts: Drafts
     explain:
       help: Decompose a modelo's applicability against the active profile. Surfaces
@@ -5061,7 +5060,7 @@ cli:
       year_help: Filing year (e.g. 2026).
     post_filing:
       pending: '%{count} AEAT post-filing event(s) require attention: %{kinds}. Review
-        them with ''aeat app live notifications list''.'
+        the affected notifications.'
     prepare:
       help: 'Walk through the data-preparation steps for one modelo/period in order:
         import transactions, classify them, attach purchase-invoice evidence, register
@@ -68013,8 +68012,8 @@ modelo:
           field:
             label: null
 overview:
-  no_aeat_history: This profile holds no filing evidence AEAT confirmed. Run `aeat
-    app live filed pull-all` to fetch the history AEAT holds for it.
+  no_aeat_history: This profile holds no filing evidence AEAT confirmed. Retrieve
+    the filing history AEAT holds for it.
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: 50 % prorrata (Art. 61 LIRPF) applied for

@@ -100,6 +100,21 @@ def test_modelo_111_calculate_verify_export_without_copied_ids(tmp_path: Path) -
     work_unit_id = _payload(created.output)["work_unit_id"]
     _seed_m111_retencion_observation()
 
+    status = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "status",
+            "--modelo", "111", "--year", "2025", "--period", "1T",
+        ],
+    )  # fmt: skip
+    assert status.exit_code == 0, status.output
+    status_notice = next(notice for notice in _notices(status.output) if notice["code"] == "modelo.work.status.next_action")
+    assert status_notice["action"]["action"] == {
+        "action_id": "operator.modelo.work.calculate",
+        "target_command_key": "modelo.work.calculate",
+    }
+    assert status_notice["action"]["argument_bindings"][0]["value"] == work_unit_id
+
     calculated = _invoke(
         [
             "--format", "json",
@@ -127,6 +142,7 @@ def test_modelo_111_calculate_verify_export_without_copied_ids(tmp_path: Path) -
     granted_notices = _notices(verified.output)
     assert [n["code"] for n in granted_notices] == ["modelo.work.verify.next_action_granted"], verified.output
     assert granted_notices[0]["severity"] == "info", verified.output
+    assert granted_notices[0]["action"] is None, verified.output
 
     out = tmp_path / "modelo-111.txt"
     exported = _invoke(
@@ -291,12 +307,20 @@ def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_sta
     blocking = next(
         notice for notice in notices if notice["code"] == "modelo.work.verify.finding.cross_period_dependency_unclean"
     )
-    # The finding's true severity and its next-step action survive onto the
-    # notice; the blocking-vs-advisory distinction lives on the context.
+    # The finding's true severity survives onto a non-action notice; the
+    # blocking-vs-advisory distinction lives on the context while the domain
+    # result retains its free-form next_action guidance.
     assert blocking["severity"] == "warning"
     assert blocking["context"]["severity"] == "blocking"
     assert blocking["context"]["kind"] == "cross_period_dependency_unclean"
-    assert blocking["suggestion"] == payload["findings"][0]["next_action"]
+    assert blocking["action"] is None
+    recalculate = next(notice for notice in notices if notice["code"] == "modelo.work.verify.next_action_incomplete")
+    assert recalculate["action"]["action"] == {
+        "action_id": "operator.modelo.work.calculate",
+        "target_command_key": "modelo.work.calculate",
+    }
+    assert recalculate["action"]["argument_bindings"][0]["argument_name"] == "work_unit_id"
+    assert recalculate["action"]["argument_bindings"][0]["value"] == work_unit_id
 
 
 def test_autonoma_m130_2024_1t_calculate_by_natural_key_from_blank_ledger_state() -> None:
@@ -494,6 +518,12 @@ def test_adjacent_work_commands_resolve_visible_targets() -> None:
     assert history.exit_code == 0, history.output
     assert _payload(history.output)["work_unit_id"] == work_unit_id
     assert _payload(history.output)["event_count"] >= 2
+    history_notice = next(notice for notice in _notices(history.output) if notice["code"] == "modelo.work.history.next_action")
+    assert history_notice["action"]["action"] == {
+        "action_id": "operator.modelo.work.status",
+        "target_command_key": "modelo.work.status",
+    }
+    assert history_notice["action"]["argument_bindings"][0]["value"] == work_unit_id
 
     discarded = _invoke(
         [

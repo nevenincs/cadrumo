@@ -46,6 +46,11 @@ See Also:
 
 from __future__ import annotations
 
+from ._action_resolution import (
+    ResolvedCatalogueAction,
+    resolve_catalogue_action,
+    resolve_notice_action,
+)
 from ._classification import (
     CommandClassification,
     classification_is_coherent,
@@ -83,8 +88,18 @@ from ._help import (
 )
 from ._manifest import (
     CommandSchemaRef,
+    ExplicitExclusionInventoryRow,
+    InputSchemaInventoryRow,
+    LiveLeafInventoryRow,
+    McpExposureInventoryRow,
+    MountedFamilyInventoryRow,
     OperatorSurfaceManifest,
+    OperatorSurfaceReconciliation,
+    ProfilePolicyInventoryRow,
+    ReconciliationSurface,
+    ResultSchemaInventoryRow,
     build_operator_surface_manifest,
+    reconcile_operator_surface_inventory,
 )
 from ._models import (
     FilingStatus,
@@ -120,17 +135,22 @@ __all__ = [
     "CommandSchemaRef",
     "CrudContractCatalogue",
     "CrudVerb",
+    "ExplicitExclusionInventoryRow",
     "FilingStatus",
     "HelpDocument",
     "HelpEntry",
     "HelpSection",
     "HelpSurface",
+    "InputSchemaInventoryRow",
     "KeyValueVerb",
     "LifecycleContract",
     "LifecycleStateVerb",
+    "LiveLeafInventoryRow",
+    "McpExposureInventoryRow",
     "ModeloLifecycleStep",
     "MountedCommandDomain",
     "MountedCommandFamily",
+    "MountedFamilyInventoryRow",
     "MutatingNounGroupContract",
     "NounGroupExceptionKind",
     "OperatorMutability",
@@ -138,7 +158,12 @@ __all__ = [
     "OperatorSurfaceContractError",
     "OperatorSurfaceLogFields",
     "OperatorSurfaceManifest",
+    "OperatorSurfaceReconciliation",
     "OrthogonalAxis",
+    "ProfilePolicyInventoryRow",
+    "ReconciliationSurface",
+    "ResolvedCatalogueAction",
+    "ResultSchemaInventoryRow",
     "RootLandingReport",
     "RootSurface",
     "RootSurfaceName",
@@ -155,8 +180,11 @@ __all__ = [
     "event_suffix_for",
     "get_builtin_catalogue",
     "get_operator_surface_contract",
+    "reconcile_operator_surface_inventory",
     "render_help_text",
     "render_root_landing_text",
     "require_accepted_root",
+    "resolve_catalogue_action",
+    "resolve_notice_action",
     "resolve_source_kind_alias",
 ]

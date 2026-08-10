@@ -29,13 +29,14 @@ from typing import TYPE_CHECKING, TypedDict
 import typer
 from pydantic import BaseModel, ConfigDict, SecretStr
 
+from ....application.operator_actions import ActionReference
 from ....core import NIST_PASSPHRASE_MIN_LENGTH
 from ....core.errors import CadrumoError as _CadrumoError
 from ....core.errors import resolve_error_message as _resolve_error_message
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
-from ....core.json_contract import Notice, NoticeSeverity
-from .._common import _emit_envelope, _no_active_profile_refusal
+from ....core.json_contract import ActionArgumentSource, ActionArgumentStatus, Notice, NoticeSeverity, ResolvedActionArgument
+from .._common import _emit_envelope, _no_active_profile_refusal, resolve_notice_action
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from ._secure_input import prompt_secret_no_echo, read_secrets_stdin
@@ -288,12 +289,12 @@ def _reconcile_failure_notices(
                 default=(
                     "{count} interrupted profile-bundle export(s) from an earlier run "
                     "could not be cleared. An unencrypted staged file may remain on "
-                    "disk for each. Run 'aeat app maintenance reconcile' "
-                    "once the cause is resolved."
+                    "disk for each. Once the cause is resolved, use the available "
+                    "reconciliation action."
                 ),
                 count=str(len(failures)),
             ),
-            suggestion="aeat app maintenance reconcile",
+            action=resolve_notice_action(action=ActionReference(action_id="operator.app.maintenance.reconcile")),
             context={
                 "failed_count": str(len(failures)),
                 "journal_ids": ",".join(failure.journal_id for failure in failures),
@@ -548,7 +549,9 @@ def _build_export_sensitivity_notice(out: Path) -> Notice:
     transfer. Routed through the typed :class:`Notice` channel per
     ``aeat-cli-contract``; the ``sensitive-financial
     -data-secure-storage-only`` rule's portability carve-out is what makes the
-    cleartext write permissible, and this warning is its floor.
+    cleartext write permissible, and this warning is its floor. It deliberately
+    carries no typed action: choosing a new destination and supplying a fresh
+    encryption secret are operator decisions this completed export cannot bind.
     """
     return Notice(
         severity=NoticeSeverity.WARNING,
@@ -561,9 +564,9 @@ def _build_export_sensitivity_notice(out: Path) -> Notice:
                 "calculation revisions, and filing records. It was written to {out}. "
                 "Use it only for local/SAR handling; do not email, sync, or transfer it. "
                 "Delete it after that local/SAR handling is complete. "
-                "Use 'aeat config profile export --encrypt' for an AEAD-encrypted "
+                "Select encrypted export for an AEAD-encrypted "
                 "structured transfer bundle. It is NOT a full backup: "
-                "attachment evidence bytes, AEAT captures, and the audit trail are "
+                "attachment evidence bytes, authority captures, and the audit trail are "
                 "excluded. Use the encrypted recovery archive for a complete backup."
             ),
             out=str(out),
@@ -581,14 +584,25 @@ def _build_encrypted_export_notice(out: Path) -> Notice:
             "cli.config.profile.export_encrypted_info",
             default=(
                 "This profile bundle was written to {out} with AEAD passphrase encryption. "
-                "Import it with 'aeat config profile import PATH'; the passphrase is "
-                "prompted (hidden) or read via --secrets-stdin. "
+                "The available import action carries its path; the passphrase is prompted "
+                "(hidden) or read via --secrets-stdin. "
                 "It carries the structured profile bundle only; use the encrypted recovery "
                 "archive for a complete backup with attachment evidence bytes and audit trail."
             ),
             out=str(out),
         ),
-        suggestion="aeat config profile import PATH",
+        action=resolve_notice_action(
+            action=ActionReference(action_id="operator.profile.import"),
+            argument_bindings=(
+                ResolvedActionArgument(
+                    argument_name="path",
+                    status=ActionArgumentStatus.RESOLVED,
+                    value=str(out),
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="out",
+                ),
+            ),
+        ),
         context={"out": str(out), "transport": "passphrase-encrypted"},
     )
 
@@ -839,12 +853,23 @@ def _build_import_active_switch_notice(target_label: str) -> Notice:
             "cli.config.profile.import_active_switch_info",
             default=(
                 "The imported profile {name} is now the ACTIVE profile; subsequent "
-                "commands operate on it. Run 'aeat config login <name>' to change "
+                "commands operate on it. The available profile-login action changes "
                 "the active profile."
             ),
             name=target_label,
         ),
-        suggestion=f"aeat config login {target_label}",
+        action=resolve_notice_action(
+            action=ActionReference(action_id="operator.profile.login"),
+            argument_bindings=(
+                ResolvedActionArgument(
+                    argument_name="name",
+                    status=ActionArgumentStatus.RESOLVED,
+                    value=target_label,
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="name",
+                ),
+            ),
+        ),
         context={"active_profile": target_label},
     )
 

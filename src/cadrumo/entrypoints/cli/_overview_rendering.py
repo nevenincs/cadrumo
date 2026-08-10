@@ -12,7 +12,9 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
+from ...application.operator_actions import ActionReference
 from ...application.overview import (
+    NO_AEAT_HISTORY_NOTICE_CODE,
     CoverageAdviceReason,
     ModeloReadinessState,
     ObligationCoverageReport,
@@ -28,7 +30,15 @@ from ...application.overview import (
 )
 from ...core import Modelo
 from ...core.i18n import tr
-from ...core.json_contract import Notice, NoticeSeverity, strict_round_trip
+from ...core.json_contract import (
+    ActionArgumentSource,
+    ActionArgumentStatus,
+    Notice,
+    NoticeSeverity,
+    ResolvedActionArgument,
+    strict_round_trip,
+)
+from ._common import resolve_notice_action
 from ._overview_payloads import (
     OverviewAgendaResult,
     OverviewBacklogResult,
@@ -63,41 +73,46 @@ _COVERAGE_NOTICE_CODE = "overview.coverage.incomplete"
 def overview_coverage_notices(coverage: ObligationCoverageReport) -> list[Notice]:
     """Project the obligation-coverage advisory onto the envelope notice channel.
 
-    Returns a single default-visible :class:`Notice`
-    naming every registry modelo the surface could not positively scope — the
-    ``advised`` bucket of the reconciliation — so an operator (or the autonomous
-    agent the CLI targets) is never allowed to trust ``overview`` and silently
-    under-file. Severity is ``warning`` when at least one advised obligation is
-    positively known to apply but has no deadline window (the Modelo-190 shape —
-    an unambiguous under-filing risk); otherwise ``info`` for the merely
-    applicability-undetermined set. The advised modelo→reason map rides on
-    :attr:`Notice.context` so machine consumers keep the
-    structured list. Empty ``advised`` yields no notice.
+    Returns one :class:`Notice` for every registry modelo the surface could not
+    positively scope — the ``advised`` bucket of the reconciliation — so every
+    executable explanation action has one concrete ``modelo`` argument.
+    Severity is ``warning`` when at least one advised obligation is positively
+    known to apply but has no deadline window (the Modelo-190 shape — an
+    unambiguous under-filing risk); otherwise ``info`` for the merely
+    applicability-undetermined set. Empty ``advised`` yields no notice.
     """
     if not coverage.has_advisories:
         return []
     advised = coverage.advised
-    modelos = ", ".join(item.modelo for item in advised)
     window_missing = any(item.reason is CoverageAdviceReason.APPLICABLE_WINDOW_MISSING for item in advised)
     severity = NoticeSeverity.WARNING if window_missing else NoticeSeverity.INFO
-    message = tr(
-        "cli.overview.coverage.investigate",
-        default=(
-            "%{count} filing obligation(s) could not be positively scoped for "
-            "this profile and may be under-reported: %{modelos}. Investigate "
-            "each with 'aeat app overview explain <modelo>'."
-        ),
-        count=len(advised),
-        modelos=modelos,
-    )
     return [
         Notice(
             severity=severity,
             code=_COVERAGE_NOTICE_CODE,
-            message=message,
-            suggestion=f"aeat app overview explain {advised[0].modelo}",
-            context={item.modelo: item.reason.value for item in advised},
-        ),
+            message=tr(
+                "cli.overview.coverage.investigate",
+                default=(
+                    "The filing obligation %{modelo} could not be positively scoped for this "
+                    "profile and may be under-reported. Review its filing explanation."
+                ),
+                modelo=item.modelo,
+            ),
+            action=resolve_notice_action(
+                action=ActionReference(action_id="operator.overview.explain"),
+                argument_bindings=(
+                    ResolvedActionArgument(
+                        argument_name="modelo",
+                        status=ActionArgumentStatus.RESOLVED,
+                        value=item.modelo,
+                        source=ActionArgumentSource.VERDICT_CONTEXT,
+                        source_key="modelo",
+                    ),
+                ),
+            ),
+            context={"modelo": item.modelo, "reason": item.reason.value},
+        )
+        for item in advised
     ]
 
 
@@ -126,7 +141,7 @@ def overview_post_filing_event_notices(events: Sequence[OverviewCalendarEvent]) 
         "cli.overview.post_filing.pending",
         default=(
             "%{count} AEAT post-filing event(s) require attention: %{kinds}. "
-            "Review them with 'aeat app live notifications list'."
+            "Review the affected notifications."
         ),
         count=len(actionable),
         kinds=", ".join(kinds),
@@ -136,7 +151,7 @@ def overview_post_filing_event_notices(events: Sequence[OverviewCalendarEvent]) 
             severity=NoticeSeverity.WARNING,
             code=_POST_FILING_NOTICE_CODE,
             message=message,
-            suggestion="aeat app live notifications list",
+            action=resolve_notice_action(action=ActionReference(action_id="operator.live.notifications.list")),
             context={
                 event.reference_id: event.post_filing_kind.value
                 for event in actionable
@@ -144,6 +159,19 @@ def overview_post_filing_event_notices(events: Sequence[OverviewCalendarEvent]) 
             },
         ),
     ]
+
+
+def _calendar_evidence_notice_with_action(notice: Notice) -> Notice:
+    """Attach the concrete history-pull action at the CLI presentation boundary."""
+    if notice.code != NO_AEAT_HISTORY_NOTICE_CODE:
+        return notice
+    return notice.model_copy(
+        update={
+            "action": resolve_notice_action(
+                action=ActionReference(action_id="operator.live.filed.pull_all"),
+            ),
+        },
+    )
 
 
 def overview_calendar_output(
@@ -193,7 +221,8 @@ def overview_calendar_output(
     for notice in post_filing_notices:
         lines.append(f"post_filing_pending\t{len(notice.context or {})}\t{notice.message}")
     calendar_notices = [*coverage_notices, *post_filing_notices]
-    for notice in evidence_notices:
+    for evidence_notice in evidence_notices:
+        notice = _calendar_evidence_notice_with_action(evidence_notice)
         lines.append(f"{notice.code}\t{notice.message}")
         calendar_notices.append(notice)
     return typed_cal, lines, calendar_notices
@@ -389,7 +418,6 @@ def overview_prepare_output(walkthrough) -> tuple[OverviewPrepareResult, list[st
                     severity=NoticeSeverity.INFO,
                     code=f"overview.prepare.next_step.{step.step_id.value}",
                     message=step.summary,
-                    suggestion=step.next_command,
                     context={"state": step.state.value},
                 ),
             )
@@ -448,7 +476,6 @@ def overview_pipeline_output(report, *, ledger) -> tuple[OverviewPipelineResult,
                     severity=severity,
                     code=f"overview.pipeline.modelo.{row.state.value}",
                     message=row.summary,
-                    suggestion=row.next_command,
                     context={"modelo": row.modelo, "state": row.state.value},
                 ),
             )

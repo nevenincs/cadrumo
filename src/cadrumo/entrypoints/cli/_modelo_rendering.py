@@ -93,10 +93,9 @@ def m184_socio_handoff_notices(revision: CalculationRevision) -> list[Notice]:
     When a Modelo 184 revision carries typed :class:`Modelo184MemberRow` detail
     rows, the entity operator who files the M184 is handed, per socio, the exact
     attributed base plus the ``attribution_received`` fact keys the socio records
-    on their OWN profile, and the exact ``aeat app modelo work calculate
-    --binding`` command that folds the base into the socio's Modelo 100 (the
-    cross-bucket value is carried by hand onto the relation-canonical casilla
-    1577, not auto-flowed across profiles). Grounded in LIRPF arts. 86-89.
+    on their OWN profile. The cross-bucket value is carried by hand onto the
+    relation-canonical casilla 1577, not auto-flowed across profiles. Grounded
+    in LIRPF arts. 86-89.
     Returns an empty list for any revision without member rows (non-M184, or an
     M184 with no socios), so the handoff stays silent unless there is a real
     per-socio value to relay.
@@ -116,13 +115,6 @@ def m184_socio_handoff_notices(revision: CalculationRevision) -> list[Notice]:
                     importe=row.importe,
                     porcentaje=row.porcentaje,
                     casilla=_M184_ATRIBUCION_ACT_ECO_CASILLA,
-                ),
-                # The suggestion is a pure machine command: the exact `--binding
-                # 1577=<importe>` fold-in token stays stable across every output
-                # language per the machine-identifier convention, so it is built
-                # in code rather than routed through tr().
-                suggestion=(
-                    f"aeat app modelo work calculate --binding {_M184_ATRIBUCION_ACT_ECO_CASILLA}={row.importe}"
                 ),
                 context={
                     "nif": row.nif,
@@ -175,7 +167,6 @@ def advisory_notice(
     code: str,
     message: str,
     *,
-    suggestion: str | None = None,
     context: dict[str, str] | None = None,
 ) -> Notice:
     """Project a non-blocking modelo advisory message onto the envelope notices channel.
@@ -193,7 +184,6 @@ def advisory_notice(
         severity=NoticeSeverity.WARNING,
         code=code,
         message=message,
-        suggestion=suggestion,
         context=context,
     )
 
@@ -229,36 +219,7 @@ def source_diagnostic_notice(diagnostic: CalculationSourceDiagnostic, *, code: s
         "source_ref": diagnostic.source_ref,
     }
     context.update({key: value for key, value in optional.items() if value})
-    return advisory_notice(code, diagnostic.message, suggestion=diagnostic.remedy, context=context)
-
-
-def next_action_notice(
-    code: str,
-    message: str,
-    *,
-    suggestion: str | None = None,
-    context: dict[str, str] | None = None,
-) -> Notice:
-    """Project a post-action next-step hint onto the envelope notices channel.
-
-    The :attr:`NoticeSeverity.INFO` sibling of :func:`advisory_notice`: it turns
-    the "what should the operator run next" guidance emitted after a work-unit
-    read or a verification into an info-severity
-    :class:`~cadrumo.core.json_contract.Notice` whose ``suggestion`` is the
-    follow-on ``aeat ...`` command. The lifecycle read verbs (``work list`` /
-    ``work status`` / ``work history``) and ``work verify`` call this instead of
-    a bespoke ``next`` / ``suggestion`` payload field, so every next-step hint
-    rides the one uniform notices surface per the
-    ``aeat-cli-contract`` rule. Being ``info`` severity
-    it never flips the envelope ``status`` away from ``success``.
-    """
-    return Notice(
-        severity=NoticeSeverity.INFO,
-        code=code,
-        message=message,
-        suggestion=suggestion,
-        context=context,
-    )
+    return advisory_notice(code, diagnostic.message, context=context)
 
 
 def short_id(value: str | None) -> str | None:
@@ -897,15 +858,15 @@ def verification_report_notices(report) -> list[Notice]:
     :attr:`Notice.context` so a machine consumer can still distinguish a
     blocking finding from an advisory one. ``legal_refs`` / ``source_refs``
     ride on the context too, mirroring the regulatory grounding the
-    text-mode ``finding_legal_refs`` lines render. The finding's
-    ``next_action`` becomes the notice ``suggestion``.
+    text-mode ``finding_legal_refs`` lines render. The full finding message and
+    free-form ``next_action`` remain in the canonical finding result contract;
+    neither is inferred into an executable notice action.
 
     A granted (clean) verify carries no findings, so this returns an empty
     list and the envelope stays :attr:`EnvelopeStatus.SUCCESS`.
     """
     notices: list[Notice] = []
     for finding in report.findings:
-        message, next_action = _render_verification_finding_text(finding)
         context: dict[str, str] = {
             "severity": finding.severity.value,
             "kind": finding.kind.value,
@@ -922,8 +883,10 @@ def verification_report_notices(report) -> list[Notice]:
             Notice(
                 severity=NoticeSeverity.WARNING,
                 code=f"modelo.work.verify.finding.{finding.kind.value}",
-                message=message,
-                suggestion=next_action,
+                message=(
+                    f"Verification reported a {finding.kind.value} finding. "
+                    "See the structured finding result for details."
+                ),
                 context=context,
             ),
         )

@@ -867,7 +867,15 @@ def work_history(
         bucket_id=bucket_id,
     )
     history = assemble_work_unit_history(unit.work_unit_id)
-    from ._common import _emit_envelope
+    from ...application.operator_actions import ActionReference
+    from ...core.json_contract import (
+        ActionArgumentSource,
+        ActionArgumentStatus,
+        Notice,
+        NoticeSeverity,
+        ResolvedActionArgument,
+    )
+    from ._common import _emit_envelope, resolve_notice_action
     from ._modelo_payloads import WorkHistoryResult, WorkUnitHistoryEventPayload
 
     result = WorkHistoryResult(
@@ -906,15 +914,25 @@ def work_history(
         )
         for event in history.events
     )
-    from ._modelo_rendering import next_action_notice
-
-    next_action = next_action_notice(
-        "modelo.work.history.next_action",
-        tr(
+    next_action = Notice(
+        severity=NoticeSeverity.INFO,
+        code="modelo.work.history.next_action",
+        message=tr(
             "cli.app.modelo.work.history_next_action",
-            default="Review this work unit's current state with `aeat app modelo work status`.",
+            default="Review this work unit's current state before choosing its next operation.",
         ),
-        suggestion=f"aeat app modelo work status {history.work_unit_id}",
+        action=resolve_notice_action(
+            action=ActionReference(action_id="operator.modelo.work.status"),
+            argument_bindings=(
+                ResolvedActionArgument(
+                    argument_name="work_unit_id",
+                    status=ActionArgumentStatus.RESOLVED,
+                    value=history.work_unit_id,
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="work_unit_id",
+                ),
+            ),
+        ),
     )
     _emit_envelope(ctx, command="modelo.work.history", result=result, lines=lines, notices=[next_action])
 

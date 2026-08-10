@@ -39,6 +39,7 @@ from ..json_contract import (
     OutputSchema,
     ResolvedActionArgument,
     ResolvedActionReference,
+    ResolvedNoticeAction,
     ResolvedPreconditionAction,
     SchemaEnvelope,
     emit_json_document,
@@ -297,31 +298,16 @@ def test_schema_envelope_rejects_unknown_outer_keys() -> None:
         )
 
 
-def test_notice_projects_resolved_precondition_action_canonically() -> None:
-    """A success notice carries only the already-resolved action projection."""
+def test_notice_projects_fully_materialised_success_action_canonically() -> None:
+    """A success notice carries a concrete next action, not a failed-precondition record."""
     notice = Notice(
         severity=NoticeSeverity.WARNING,
-        code="profile.active.required",
-        message="An active profile is required.",
-        context={"source_kind": "profile_store", "reason": "no_active_profile"},
-        action=ResolvedPreconditionAction(
-            failed_condition_id="profile.active.required",
-            evidence=(
-                ActionConditionEvidence(
-                    condition_id="profile.active.required",
-                    evidence_id="profile.request",
-                    provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-                    values={"profile_name": "Ada"},
-                ),
-                ActionConditionEvidence(
-                    condition_id="profile.active.required",
-                    evidence_id="profile.state",
-                    provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-                    values={"profile_status": "absent", "profile_name": "Ada"},
-                ),
-            ),
+        code="profile.setup.complete",
+        message="The profile setup is complete.",
+        context={"source_kind": "profile_store", "reason": "setup_complete"},
+        action=ResolvedNoticeAction(
             action=ResolvedActionReference(
-                action_id="profile.create",
+                action_id="operator.profile.create",
                 target_command_key="config.profile.create",
             ),
             argument_bindings=(
@@ -331,35 +317,23 @@ def test_notice_projects_resolved_precondition_action_canonically() -> None:
                     value="Ada",
                     source=ActionArgumentSource.CONDITION_EVIDENCE,
                     source_key="profile_name",
-                    source_evidence_id="profile.state",
-                ),
-                ResolvedActionArgument(
-                    argument_name="display_name",
-                    status=ActionArgumentStatus.RESOLVED,
-                    value="Ada",
-                    source=ActionArgumentSource.REQUEST_CONTEXT,
-                    source_key="profile_name",
+                    source_evidence_id="profile.setup.state",
                 ),
             ),
-            conditionality=ActionConditionality.IMMEDIATE,
         ),
     )
 
     rendered = notice.model_dump(mode="json")
 
-    assert [item["evidence_id"] for item in rendered["action"]["evidence"]] == [
-        "profile.request",
-        "profile.state",
-    ]
     assert [item["argument_name"] for item in rendered["action"]["argument_bindings"]] == [
-        "display_name",
         "profile_name",
     ]
-    assert rendered["context"] == {"reason": "no_active_profile", "source_kind": "profile_store"}
+    assert rendered["context"] == {"reason": "setup_complete", "source_kind": "profile_store"}
     assert rendered["action"]["action"] == {
-        "action_id": "profile.create",
+        "action_id": "operator.profile.create",
         "target_command_key": "config.profile.create",
     }
+    assert "failed_condition_id" not in rendered["action"]
     assert "suggestion" not in rendered
 
 
@@ -391,8 +365,19 @@ def test_notice_rejects_hidden_free_form_action_authority() -> None:
         )
 
 
-def test_precondition_projection_rejects_presentation_evidence_and_models_no_recovery() -> None:
-    """Evidence remains factual and terminal outcomes explicitly close recovery."""
+def test_notice_allows_aeat_authority_name_without_a_command_path() -> None:
+    """Ordinary references to the tax authority are not executable guidance."""
+    notice = Notice(
+        severity=NoticeSeverity.INFO,
+        code="overview.no_aeat_history",
+        message="This profile has no filing history that AEAT holds for it.",
+    )
+
+    assert notice.message.endswith("AEAT holds for it.")
+
+
+def test_precondition_projection_remains_available_only_for_failure_envelopes() -> None:
+    """Failure records retain their own typed closure semantics outside Notice.action."""
     from pydantic import ValidationError as PydanticValidationError
 
     with pytest.raises(PydanticValidationError):
@@ -403,29 +388,24 @@ def test_precondition_projection_rejects_presentation_evidence_and_models_no_rec
             values={"action.message": "create a profile"},
         )
 
-    notice = Notice(
-        severity=NoticeSeverity.WARNING,
-        code="submission.period.closed",
-        message="The submission period is closed.",
-        action=ResolvedPreconditionAction(
-            failed_condition_id="submission.period.closed",
-            evidence=(
-                ActionConditionEvidence(
-                    condition_id="submission.period.closed",
-                    evidence_id="submission.period",
-                    provenance=ActionEvidenceProvenance.REGISTRY_RECORD,
-                    values={"period_status": "closed"},
-                ),
+    failure_action = ResolvedPreconditionAction(
+        failed_condition_id="submission.period.closed",
+        evidence=(
+            ActionConditionEvidence(
+                condition_id="submission.period.closed",
+                evidence_id="submission.period",
+                provenance=ActionEvidenceProvenance.REGISTRY_RECORD,
+                values={"period_status": "closed"},
             ),
-            conditionality=ActionConditionality.NOT_APPLICABLE,
-            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
         ),
+        conditionality=ActionConditionality.NOT_APPLICABLE,
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
     )
 
-    rendered = notice.model_dump(mode="json")
-    assert rendered["action"]["action"] is None
-    assert rendered["action"]["no_recovery_outcome"] == NoRecoveryOutcome.TERMINAL.value
-    assert rendered["action"]["conditionality"] == ActionConditionality.NOT_APPLICABLE.value
+    rendered = failure_action.model_dump(mode="json")
+    assert rendered["action"] is None
+    assert rendered["no_recovery_outcome"] == NoRecoveryOutcome.TERMINAL.value
+    assert rendered["conditionality"] == ActionConditionality.NOT_APPLICABLE.value
 
 
 def _profile_state_evidence(*, condition_id: str = "profile.active.required") -> ActionConditionEvidence:
@@ -671,7 +651,13 @@ def test_action_bearing_envelope_json_round_trip_preserves_resolved_target_and_b
                 severity=NoticeSeverity.WARNING,
                 code="profile.active.required",
                 message="An active profile is required.",
-                action=_profile_create_action(),
+                action=ResolvedNoticeAction(
+                    action=ResolvedActionReference(
+                        action_id="operator.profile.create",
+                        target_command_key="config.profile.create",
+                    ),
+                    argument_bindings=(_profile_name_binding(),),
+                ),
             ),
         ],
     )
@@ -686,38 +672,18 @@ def test_action_bearing_envelope_json_round_trip_preserves_resolved_target_and_b
     assert action.argument_bindings[0].argument_name == "profile_name"
 
 
-def test_no_recovery_envelope_json_round_trip_preserves_closed_outcome() -> None:
-    """A terminal refusal remains explicit after a full JSON-text envelope round trip."""
-    original = SchemaEnvelope[_ProvenancePayload](
-        command="app modelo file",
-        status=EnvelopeStatus.WARNING,
-        result=_ProvenancePayload(casilla_id=_SIMPLE_CASILLA, value="0"),
-        notices=[
-            Notice(
-                severity=NoticeSeverity.WARNING,
-                code="submission.period.closed",
-                message="The submission period is closed.",
-                action=ResolvedPreconditionAction(
-                    failed_condition_id="submission.period.closed",
-                    evidence=(
-                        ActionConditionEvidence(
-                            condition_id="submission.period.closed",
-                            evidence_id="submission.period",
-                            provenance=ActionEvidenceProvenance.REGISTRY_RECORD,
-                            values={"period_status": "closed"},
-                        ),
-                    ),
-                    conditionality=ActionConditionality.NOT_APPLICABLE,
-                    no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+def test_success_notice_action_rejects_unresolved_argument() -> None:
+    """A successful notice can never serialise a partial next action."""
+    with pytest.raises(ValidationError, match="fully resolved"):
+        ResolvedNoticeAction(
+            action=ResolvedActionReference(
+                action_id="operator.profile.create",
+                target_command_key="config.profile.create",
+            ),
+            argument_bindings=(
+                ResolvedActionArgument(
+                    argument_name="profile_name",
+                    status=ActionArgumentStatus.MISSING,
                 ),
             ),
-        ],
-    )
-
-    round_tripped = SchemaEnvelope[_ProvenancePayload].model_validate_json(original.model_dump_json())
-
-    assert round_tripped == original
-    action = round_tripped.notices[0].action
-    assert action is not None
-    assert action.action is None
-    assert action.no_recovery_outcome is NoRecoveryOutcome.TERMINAL
+        )
