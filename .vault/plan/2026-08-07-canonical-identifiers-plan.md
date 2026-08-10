@@ -4,7 +4,7 @@ tags:
   - '#canonical-identifiers'
 date: '2026-08-07'
 modified: '2026-08-10'
-body_hash: 'sha256:1d863757a99140664171efcce388e0d8b114a7e7cae4b6a8517e1a27d5954655'
+body_hash: 'sha256:440faf66141c9f9c81903df61ad14af1e3c2baa97a6ec5e1e643cfda8166fa84'
 tier: L3
 related:
   - '[[2026-08-07-canonical-identifiers-adr]]'
@@ -238,7 +238,7 @@ primitive already built for them.
 
 - [ ] `W05.P07.S35` - adjudicate each of the twelve bare `revision_id` sites against its actual producer (registry `ModeloRevision.id` versus the hex-64 `CalculationRevisionId`), recording the per-site decision in the Step record before retyping any of them; `src/cadrumo/domain/calculations/registry/_snapshot_coordinate.py`.
 - [ ] `W05.P07.S36` - retype every site adjudicated in `W05.P07.S35` onto `CalculationRevisionId` or the new `RegistryRevisionId` alias per its recorded disposition; `src/cadrumo/domain/calculations/registry/`.
-- [ ] `W05.P07.S37` - retype `short_work_unit_id` and `short_calculation_revision_id` onto the existing `core.Hex16Str` primitive rather than the full-length aliases; `src/cadrumo/domain/modelos/`.
+- [ ] `W05.P07.S37` - retype `short_work_unit_id` and `short_calculation_revision_id` onto the existing `core.Hex16Str` primitive rather than the full-length aliases; `src/cadrumo/application/workflow/_resume.py, src/cadrumo/application/modelo/_selectors.py`.
 
 ### Phase `W05.P08` - new AEAT-issued and app-derived namespace members
 
@@ -250,7 +250,7 @@ existing type at all.
 - [ ] `W05.P08.S40` - retype the three `registry_snapshot_id` sites and the `registry_revision_id` sites onto the two new aliases; `src/cadrumo/domain/calculations/registry/`.
 - [ ] `W05.P08.S41` - declare `AeatCertificadoId` as a new `IdentifierNamespace.AEAT_CERTIFICADO_ID` member and alias at the 13-digit-or-longer bound its docstring already states, and retype `RemoteNotification.certificado_id` onto it; `src/cadrumo/adapters/outbound/aeat/sede/_notifications.py`.
 - [ ] `W05.P08.S42` - declare `AeatBoxNumber` as a new `IdentifierNamespace.AEAT_BOX_NUMBER` member and alias, distinct from the registry's own `CasillaId`, and retype `display_number`, `form_number`, `from_number`, and `to_number` onto it; `src/cadrumo/adapters/outbound/aeat/sede/_notifications.py`.
-- [ ] `W05.P08.S43` - check whether M210's `official_tipo_renta_code` catalogue is already enumerated in registry TOML; `if so, declare a `StrEnum` sourced from that catalogue rather than re-declaring the values, and retype the five sites onto it, explicitly NOT as an `IdentifierNamespace` member; `src/cadrumo/domain/modelos/_calculation_revision.py`.
+- [ ] `W05.P08.S43` - check whether M210's `official_tipo_renta_code` catalogue is already enumerated in registry TOML; `src/cadrumo/domain/transactions/_m210_income_classification.py`.
 - [ ] `W05.P08.S44` - declare `M720OperationKindCode` and `M720AssetClassCode` as `StrEnum`s in `core/` sourced from registry TOML if enumerated there, and retype `operation_kind_code` / `asset_class_code` onto them, explicitly NOT as `IdentifierNamespace` members; `src/cadrumo/domain/modelos/`.
 
 ## Wave `W06` - Tax-identity split
