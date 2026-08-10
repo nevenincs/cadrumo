@@ -32,7 +32,7 @@ from pydantic import SecretStr
 
 from ...adapters.outbound.llm import LLMCache, LLMRunTelemetryRecorder, UsageRecorder
 from ...core.config import LLMProvider, override_settings
-from ...core.errors import get_error_suggestion
+from ...core.errors import build_error_envelope
 from ...tests.fixtures.settings import EnvFileFreeSettings
 from .. import LLMClient, LLMConsentError, LLMError, LLMRequest, LLMRetryPolicy
 from .._client import reset_on_host_inference_arena
@@ -239,15 +239,28 @@ def test_a_local_degradation_names_the_provision_verb(tmp_path: Path) -> None:
     ):
         asyncio.run(_client(tmp_path).complete(LLMRequest(prompt="read this")))
 
-    suggestion = get_error_suggestion(raised.value)
-    assert suggestion is not None
-    assert "aeat config provision verify --model gpt-oss" in suggestion
-    lowered = suggestion.lower()
+    # The remediation TEXT is still produced at the raise site; what the retirement of
+    # default suggestions changed is that it no longer reaches the operator. So the
+    # safety property is asserted against the live text rather than deferred: this is
+    # the exact string the registry conversion will carry into a catalogue action, and a
+    # cloud provider name allowed to settle here now would migrate into the delivered
+    # action later, when it is far harder to notice.
+    remediation = raised.value.suggestion
+    assert remediation is not None, "the local-degradation refusal produces no remediation text at all"
+    assert "aeat config provision verify --model gpt-oss" in remediation
+    lowered = remediation.lower()
     for forbidden in ("openai", "anthropic", "gemini", "cloud", "off-host"):
         assert forbidden not in lowered, (
             f"the local-degradation remediation names {forbidden!r}; an agent-operator follows "
             "the next step it is given, and this one must never be an off-host read"
         )
+
+    # Delivery ground truth, stated so this test cannot be read as proving the operator
+    # is told any of the above. Default suggestions were retired as the authority and
+    # ``ERROR_LLM`` has not yet been converted to a catalogue action identity, so the
+    # envelope carries no next step today. Its conversion is the adapters part-two step,
+    # behind the registry migration contract.
+    assert build_error_envelope(raised.value).action is None
 
 
 def _llm_package_modules() -> list[Path]:

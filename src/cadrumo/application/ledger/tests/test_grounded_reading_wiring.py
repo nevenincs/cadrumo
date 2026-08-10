@@ -462,13 +462,25 @@ def test_the_refusals_provision_verb_survives_to_the_error_envelope() -> None:
     no draft at all, so there is no provenance for a notice to describe; the
     non-blocking notice channel is for a draft that exists but degraded.
     """
-    from ....core.errors import get_error_suggestion
+    from ....core.errors import build_error_envelope
     from .._evidence_draft import _refuse_a_text_read_with_no_reader
 
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
         _refuse_a_text_read_with_no_reader(LLMProviderError("Ollama is not reachable"))
 
-    assert get_error_suggestion(raised.value) == "aeat config provision pull"
+    # The distinction this test exists to draw is still checkable, because the raise site
+    # still produces the remediation text -- only its delivery was retired. A missing
+    # reader must be answered by PROVISIONING one; "list the evidence" is the
+    # plausible-looking wrong answer on this path, and the two differ by one verb.
+    assert raised.value.suggestion == "aeat config provision pull"
+
+    # Delivery ground truth, so this cannot be read as proving the operator is told it.
+    # The resolver that preferred a raised suggestion over the registered default was
+    # retired with default suggestions as the authority, and
+    # ``REFUSED_LEDGER_EVIDENCE_INPUT`` is not yet converted to a catalogue action
+    # identity, so the envelope carries no next step today. Its conversion is the domain
+    # part-one step, behind the registry migration contract.
+    assert build_error_envelope(raised.value).action is None
 
 
 class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:

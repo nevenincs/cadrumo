@@ -12,6 +12,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from enum import StrEnum
 from pathlib import Path
+from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -26,6 +27,7 @@ from cadrumo.domain.calculations.registry import (
 )
 
 __all__ = [
+    "RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION",
     "RecordDesignIntermediate",
     "RecordDesignIntermediateField",
     "RecordDesignIntermediateSheet",
@@ -33,6 +35,15 @@ __all__ = [
     "RecordDesignWorkbookFormat",
     "load_record_design_intermediate",
 ]
+
+
+RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION: Final[int] = 1
+"""Schema version for the parser-owned intermediate representation.
+
+The provenance contract records this value beside every generated revision. A
+shape change must deliberately advance the value rather than making an older
+manifest appear to attest to a different parser projection.
+"""
 
 
 class _StrictModel(BaseModel):

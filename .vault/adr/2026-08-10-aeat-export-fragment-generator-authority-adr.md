@@ -11,7 +11,7 @@ supersedes:
   - '2026-08-08-aeat-design-relayout-boundary-export-fragment-generator-adr'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:d26d3f35c8ad9f93697ae1e878f3904e7d965db3aa00c27e18d1fbecb005cfdb'
+body_hash: 'sha256:d262ba1dcb18aaf679879470e9ff95b7c768f69da3fe0b88c3fc03d74d3b8e42'
 ---
 # `aeat-export-fragment-generator-authority` adr: `official-binary coordinates and explicit semantic maps generate export fragments` | (**status:** `accepted`)
 
@@ -39,6 +39,7 @@ The accepted re-coordination decision cannot establish AEAT correctness because 
 - The shipped typed record-design parser output is consumed directly; derived extraction files are never inputs.
 - A separate per-modelo, per-design semantic map supplies only registry meaning and is keyed by exact source anchors. The join is bijective and refuses the entire design on missing, duplicate, fuzzy, or ambiguous matches.
 - Neighbouring fragment trees are neither inputs nor correctness oracles. Legacy trees are explicitly unverified bootstrap evidence.
+- Generated replacements are a hard cutover: superseded manual fragment trees, single-file/direct-revision compatibility loaders, derivative record-design fallbacks, and print-only unmeasured paths are deleted. No legacy fallback, migration support, or silent green result remains.
 - Typed, hash-pinned exceptions may describe parser or source anomalies but may never supply coordinates or bypass mapping bijection.
 - Generated TOML and provenance are CLI-owned and never hand-edited.
 - One invocation targets one authored revision/design pair; revision splitting, renames, and migration remain explicit outside the generator.
@@ -64,3 +65,4 @@ This split follows the decisive evidence in `2026-08-10-aeat-export-fragment-gen
 - Every semantic-map change is reviewable independently from parser and coordinate changes.
 - Source/parser corrections can produce large generated diffs, but provenance and deterministic checks make that drift explicit.
 - The campaign gains a correctness proof against official designs, not merely regression agreement with current behavior.
+- Tests fail if generator validation or generation reads legacy layout membership, if a required official design is unparseable or unmeasured, or if deleted compatibility surfaces reappear.

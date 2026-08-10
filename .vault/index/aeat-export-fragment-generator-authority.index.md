@@ -6,16 +6,24 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:a43be5830eb9ade977c955afe834d610d57949b8f3e9f7589e17c1402e5cdd15'
+body_hash: 'sha256:796591797945a4165d77422810ca092f027c4fbeefa606f1236122704cdf4274'
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P01-S01]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P01-S02]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P01-S03]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P02-S04]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P02-S05]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P02-S06]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-W02-P03-S07]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-s01-source-catalogue-audit]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-s02-record-design-ir-audit]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-s03-parser-authority-proof-audit]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-s04-semantic-map-schema-audit]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-s05-semantic-map-validation-audit]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-s06-provenance-contract-audit]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-s07-exact-join-audit]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-source-authority-research]]'
 ---
 
@@ -34,12 +42,20 @@ Auto-generated index of all documents tagged with `#aeat-export-fragment-generat
 - `2026-08-10-aeat-export-fragment-generator-authority-s01-source-catalogue-audit` - `aeat-export-fragment-generator-authority` audit: `S01 source-catalogue selection review`
 - `2026-08-10-aeat-export-fragment-generator-authority-s02-record-design-ir-audit` - `aeat-export-fragment-generator-authority` audit: `S02 typed record-design intermediate representation`
 - `2026-08-10-aeat-export-fragment-generator-authority-s03-parser-authority-proof-audit` - `aeat-export-fragment-generator-authority` audit: `S03 parser authority proof`
+- `2026-08-10-aeat-export-fragment-generator-authority-s04-semantic-map-schema-audit` - `aeat-export-fragment-generator-authority` audit: `S04 semantic-map schema`
+- `2026-08-10-aeat-export-fragment-generator-authority-s05-semantic-map-validation-audit` - `aeat-export-fragment-generator-authority` audit: `S05 semantic-map validation review`
+- `2026-08-10-aeat-export-fragment-generator-authority-s06-provenance-contract-audit` - `aeat-export-fragment-generator-authority` audit: `s06 provenance contract`
+- `2026-08-10-aeat-export-fragment-generator-authority-s07-exact-join-audit` - `aeat-export-fragment-generator-authority` audit: `s07 exact join`
 
 ### exec
 
 - `2026-08-10-aeat-export-fragment-generator-authority-W01-P01-S01` - Extend the existing validated source catalogue with hash-pinned binary selection and reject inapplicable or drifting sources
 - `2026-08-10-aeat-export-fragment-generator-authority-W01-P01-S02` - Define the typed intermediate representation with complete source anchors, coordinates, validation metadata, and declared totals
 - `2026-08-10-aeat-export-fragment-generator-authority-W01-P01-S03` - Prove the intermediate representation consumes shipped parser output and never extracted derivatives
+- `2026-08-10-aeat-export-fragment-generator-authority-W01-P02-S04` - Define the per-modelo per-design semantic-map schema keyed by exact parser anchors
+- `2026-08-10-aeat-export-fragment-generator-authority-W01-P02-S05` - Validate mapping bijection and require canonical identifiers, legal references, and source references to resolve through existing registry catalogues while constraining typed anomaly exceptions
+- `2026-08-10-aeat-export-fragment-generator-authority-W01-P02-S06` - Define the adjacent non-loader provenance manifest and normalized loader-semantic digest
+- `2026-08-10-aeat-export-fragment-generator-authority-W02-P03-S07` - Implement fail-closed parser-to-semantic-map joining without fuzzy or positional matching
 
 ### plan
 
