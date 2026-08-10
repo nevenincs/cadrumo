@@ -35,26 +35,113 @@ def _entry(action_id: str, *, argument_name: str = "profile_name") -> ActionCata
 
 
 def test_initial_actions_are_deterministic_and_lookup_by_stable_identity() -> None:
-    action_ids = tuple(entry.action_id for entry in OPERATOR_ACTION_CATALOGUE.entries)
+    action_by_id = {entry.action_id: entry for entry in OPERATOR_ACTION_CATALOGUE.entries}
 
-    assert action_ids == (
-        "operator.modelo.verification_report.list",
-        "operator.modelo.work.calculate",
-        "operator.overview.status",
-        "operator.profile.create",
-        "operator.profile.edit",
-        "operator.profile.login",
-        "operator.profile.repair_clear_active",
-    )
-    assert lookup_action("operator.profile.create").target_command_key == "config.profile.create"
-    assert lookup_action("operator.modelo.work.calculate").argument_specifications == (
-        ActionArgumentBindingSpecification(
-            argument_name="work_unit_id",
-            source=ActionArgumentSource.CONDITION_EVIDENCE,
-            source_key="work_unit_id",
-            source_evidence_id="workflow.work_unit.addressing",
+    assert {
+        action_id: (entry.target_command_key, entry.argument_specifications)
+        for action_id, entry in action_by_id.items()
+    } == {
+        "operator.ledger.evidence.review.list": ("ledger.evidence.review.list", ()),
+        "operator.live.notifications.list": ("app.live.notifications.list", ()),
+        "operator.modelo.export": ("modelo.export", ()),
+        "operator.modelo.verification_report.list": (
+            "modelo.verification_report.list",
+            (
+                ActionArgumentBindingSpecification(
+                    argument_name="calculation_revision_id",
+                    source=ActionArgumentSource.CONDITION_EVIDENCE,
+                    source_key="calculation_revision_id",
+                    source_evidence_id="workflow.calculation_revision.addressing",
+                ),
+            ),
         ),
-    )
+        "operator.modelo.work.calculate": (
+            "modelo.work.calculate",
+            (
+                ActionArgumentBindingSpecification(
+                    argument_name="work_unit_id",
+                    source=ActionArgumentSource.CONDITION_EVIDENCE,
+                    source_key="work_unit_id",
+                    source_evidence_id="workflow.work_unit.addressing",
+                ),
+            ),
+        ),
+        "operator.modelo.work.status": ("modelo.work.status", ()),
+        "operator.overview.explain": (
+            "overview.explain",
+            (
+                ActionArgumentBindingSpecification(
+                    argument_name="modelo",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="modelo",
+                ),
+            ),
+        ),
+        "operator.overview.status": ("overview.status", ()),
+        "operator.profile.create": (
+            "config.profile.create",
+            (
+                ActionArgumentBindingSpecification(
+                    argument_name="profile_name",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="profile_name",
+                ),
+            ),
+        ),
+        "operator.profile.edit": (
+            "config.profile.edit",
+            (
+                ActionArgumentBindingSpecification(
+                    argument_name="profile_name",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="profile_name",
+                ),
+            ),
+        ),
+        "operator.profile.login": (
+            "config.login",
+            (
+                ActionArgumentBindingSpecification(
+                    argument_name="name",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="name",
+                ),
+            ),
+        ),
+        "operator.profile.list": ("config.profile.list", ()),
+        "operator.profile.repair_clear_active": (
+            "config.repair.profile",
+            (
+                ActionArgumentBindingSpecification(
+                    argument_name="clear_active",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="clear_active",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="profile",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="profile",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="yes",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="yes",
+                ),
+            ),
+        ),
+        "operator.profile.status": ("config.profile.status", ()),
+        "operator.ledger.link": ("ledger.link", ()),
+        "operator.ledger.attach": ("ledger.attach", ()),
+        "operator.ledger.classify": ("ledger.classify", ()),
+        "operator.maintenance.reconcile": ("app.maintenance.reconcile", ()),
+        "operator.live.filed.pull_all": ("app.live.filed.pull_all", ()),
+        "operator.profile.import": ("config.profile.import", ()),
+        "operator.profile.export": ("config.profile.export", ()),
+        "operator.profile.archive.import": ("config.profile.archive.import", ()),
+        "operator.profile.sandbox.restore": ("config.profile.sandbox.restore", ()),
+        "operator.profile.sandbox.prune": ("config.profile.sandbox.prune", ()),
+    }
+    assert lookup_action("operator.profile.create") is action_by_id["operator.profile.create"]
 
     reversed_catalogue = build_action_catalogue(reversed(OPERATOR_ACTION_CATALOGUE.entries))
     assert reversed_catalogue.model_dump(mode="json") == OPERATOR_ACTION_CATALOGUE.model_dump(mode="json")

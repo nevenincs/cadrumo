@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#canonical-storage-management'
 date: '2026-08-03'
-modified: '2026-08-03'
+modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:9b5e822876626b8bcfef077b70038d4846a5107504cbb1eb37a025716b9aa997'
+body_hash: 'sha256:c7b448b0e1b088b1035e2d6bf1ae6e1a3cf6d2b920b789c3ef46f7e13bc7ebbe'
 related: []
 ---
 
@@ -726,6 +726,88 @@ read, and it gates drift between the generated environment reference and the
 settings fields, so a field rename would trip it. Whether the `blobs` and
 `audit` name collision across depths has ever caused a real defect was not
 investigated; both work correctly today.
+
+### F24 — The operator surface exposes an internal 59-node filesystem graph
+
+The live `StorageCategory` enumeration has 59 members. It includes operator-
+meaningful roots, implementation-only leaves, fixed secret-store files, bucket
+and keystore internals, and nested live-state nodes. `config storage list`
+returns one row per member, while `show` and `reclaim` accept `StorageCategory`
+directly. The CLI therefore turns every internal topology change into an
+operator-contract change.
+
+The code already carries the right smaller conceptual axis:
+`StorageGrouping` has exactly `state`, `logs`, `cache`, and `exports`, and its
+own docstring says it exists for operator-facing presentation and reclaim
+grouping. The missing boundary is not another filesystem taxonomy; it is a
+stable operator vocabulary mapped onto the internal taxonomy.
+
+### F25 — Repository infrastructure and the installed product already have a hard delivery boundary
+
+The build is deny-by-default. The sdist explicitly includes `src/cadrumo` and
+the files required to build it; the wheel packages only `src/cadrumo`.
+`.vault/`, `.vaultspec/`, and `dev/` are absent from both. The dev-path
+isolation gate additionally refuses any shipped module importing `dev.*` or
+constructing a runtime path into `dev/`.
+
+`2026-08-07-dev-harness-bleed-adr` establishes the applicable relocation
+shape: maintainer code moves to `dev/`, runtime data stays only when an
+installed consumer reads it, test-tree imports from `dev/` remain permitted,
+and no dispatch or re-export shim stays in the shipped package. The PDF
+sanitiser record reaches the same chosen boundary for contributor tooling, but
+its checked-in status remains `proposed`.
+
+### F26 — Registry oracle, workbook, and parity commands are maintainer capabilities
+
+Four installed command leaves are maintainer surfaces:
+`registry audit-oracles`, `registry workbooks verify`,
+`registry parity run`, and `registry parity replay`.
+The oracle command describes itself as a CI/pre-deploy gate; workbook
+verification scans source artefacts and external calculation backends; parity
+run/replay executes manually curated scenarios and archives tapes.
+
+The corresponding application functions have no non-test production caller
+other than `entrypoints/cli/registry.py`. The parity store's declared consumer
+is that CLI module, and `cadrumo_registry_parity_store_dir` exists only to
+provide its default. Once those commands move, the parity store has no product
+writer and no place in product Settings or `STORAGE_TAXONOMY`.
+
+This finding does not classify every registry or workbook-shaped type as
+maintainer tooling. Registry schema, source-reference metadata, and calculation
+primitives that the installed calculation engine consumes remain product code.
+The relocation boundary is executable maintainer capability and its exclusive
+transport/configuration, not a name-based sweep.
+
+### F27 — The top-level `audit` location stores live state, not a general audit sink
+
+Outside tests and declarations, the only consumer of
+`StorageCategory.AUDIT` / `cadrumo_audit_dir` is
+`application/live/_iva_remote_state.py`. Its children are live IVA wallet and
+remote-state captures. The parity store is the only other declared subtree and
+leaves the product under F26.
+
+General product audit trails do not write this directory; they live in the
+encrypted bucket/database event stores. `audit` is therefore a false runtime
+name. The actual semantic concept is live state.
+
+### F28 — `bucket.audit` is materialised and measured but never written
+
+`StorageCategory.BUCKET_AUDIT` feeds `BUCKET_AUDIT_DIRNAME`,
+`BucketPaths.audit_dir`, bucket creation, profile deletion, and disk-usage
+reporting. No production writer places a record beneath it. Tests manufacture
+files there, but production only creates, counts, and removes the directory.
+
+This is the same declare-without-writer failure that the canonical-storage
+liveness work was intended to make loud. The correct disposition is deletion,
+not inventing a writer to justify the declaration.
+
+### F29 — PRE_RELEASE makes removal direct
+
+`COMPATIBILITY_REGIME` remains `PRE_RELEASE`, and
+`no-legacy-compatibility` requires deletion rather than aliases, deprecated
+commands, environment-variable fallbacks, path migration, or read tolerance.
+The operator decisions in F24-F28 are therefore implemented as one canonical
+surface, not a new surface plus bridges to the old one.
 
 ## Sources
 

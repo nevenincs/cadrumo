@@ -126,7 +126,7 @@ per-modelo section, and shrink the list of open questions.
   taxonomy.
 - The bucket-event-history ADR mandates append-only event history for every
   material state transition, requires app status/list views to surface event
-  context, and places history browsing at `aeat config profile history PROFILE`.
+  context, and places history browsing at `aeat config profile history [PROFILE]`.
 - Five accepted ADRs outside the redesign series are required pre-conditions
   for the redesign to land:
   - `config-cli-profile-surface` (2026-05-07) defines `aeat config profile`
@@ -424,9 +424,13 @@ Bucket semantics, identity, and the relationship between bucket and active
 profile are restated in §2. Future operator exposure must use profile-named
 vocabulary and consume the application service.
 
-#### 3.5 `aeat config profile history PROFILE` (locked)
+#### 3.5 `aeat config profile history [PROFILE]` (locked)
 
-Append-only event history view per bucket-event-history ADR. Verbs:
+Append-only event history view per bucket-event-history ADR. When PROFILE is
+omitted, the command selects the authenticated active profile; an explicit
+profile label or UUID remains supported. The command is not bootstrap-exempt:
+interactive invocations with an absent or expired session use the canonical
+in-place login gate before reading encrypted history. Verbs:
 
 - `list` (with filters: by event type, object kind, period, actor).
 - `show <event_id>` (full payload, deep-link to affected object).
@@ -551,7 +555,7 @@ Migration mapping:
 
 Overview commands are read-only and emit no bucket events for normal reads.
 They summarize recent material events using the bucket-event-history fields,
-while full event browsing stays at `aeat config profile history PROFILE`.
+while full event browsing stays at `aeat config profile history [PROFILE]`.
 `overview status` and `overview backlog` may summarize review counts and point
 to `aeat app review queue`, but they do not own review queue rows or review
 mutations.
@@ -1013,7 +1017,7 @@ explicitly adopted or retired.
   `app overview status`; the daily-status view becomes `app overview agenda`;
   `backlog show/scaffold` becomes read-only `app overview backlog`;
   `history` is satisfied by `app modelo history` plus
-  `config profile history PROFILE`; `resume` becomes
+  `config profile history [PROFILE]`; `resume` becomes
   `app modelo work resume <workflow_run_id>` per the workflow-resumption-semantics ADR.
 - **`compare` family** (`compare show / explain / fix / verify`,
   `ComparisonCase`) — **retired**. Reconciliation (the underlying
@@ -1892,9 +1896,11 @@ bucket-search ADR and no longer blocks W77.
 The 2026-06-10 operator-surface ADR supersedes the older `aeat config
 bucket` operator mount. The command group is retired and must not be
 reintroduced by W77 closeout work. The accepted operator-facing history
-surface is `aeat config profile history PROFILE`; it resolves the supplied
-profile through the workflow/profile registry and uses the immutable bucket id
-only inside the application/domain event-history read. The stable JSON envelope
+surface is `aeat config profile history [PROFILE]`; omission resolves the
+authenticated active profile, while an explicit label or UUID resolves through
+the workflow/profile registry. The immutable bucket id is used only inside the
+application/domain event-history read, and the read remains behind the canonical
+profile-session gate. The stable JSON envelope
 token remains `config.bucket.history` as a machine-API carve-out, not as an
 operator-facing spelling.
 

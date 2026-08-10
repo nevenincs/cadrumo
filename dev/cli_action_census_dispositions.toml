@@ -5478,15 +5478,6 @@ reason = "src/cadrumo/application/wizard/_commands.py:1677 _emit_save_exit_notic
 
 [[disposition]]
 path = "src/cadrumo/application/wizard/_commands.py"
-enclosing_symbol = "_emit_save_exit_notice"
-candidate_role = "producer"
-alias = "suggestion"
-action_identity = "resume_command"
-role = "producer"
-reason = "src/cadrumo/application/wizard/_commands.py:1680 _emit_save_exit_notice: Notice supplies 'suggestion' as the current action or no-recovery value (resume_command) for its consumer."
-
-[[disposition]]
-path = "src/cadrumo/application/wizard/_commands.py"
 enclosing_symbol = "_emit_wizard_success"
 candidate_role = "producer"
 alias = "next_command"
@@ -5511,24 +5502,6 @@ alias = "suggestion"
 action_identity = "_FORAL_REFUSAL_SUGGESTION"
 role = "producer"
 reason = "src/cadrumo/application/wizard/_commands.py:1231 _refuse_foral_ccaa: the 'suggestion' assignment constructs the current free-form action value (_FORAL_REFUSAL_SUGGESTION) at this producer boundary."
-
-[[disposition]]
-path = "src/cadrumo/application/wizard/_commands.py"
-enclosing_symbol = "_wizard_success_notices"
-candidate_role = "producer"
-alias = "suggestion"
-action_identity = "_DESCENDIENTE_DOOR_COMMAND"
-role = "producer"
-reason = "src/cadrumo/application/wizard/_commands.py:1634 _wizard_success_notices: Notice supplies 'suggestion' as the current action or no-recovery value (_DESCENDIENTE_DOOR_COMMAND) for its consumer."
-
-[[disposition]]
-path = "src/cadrumo/application/wizard/_commands.py"
-enclosing_symbol = "_wizard_success_notices"
-candidate_role = "producer"
-alias = "suggestion"
-action_identity = "next_command"
-role = "renderer"
-reason = "src/cadrumo/application/wizard/_commands.py:1617 _wizard_success_notices: Notice renders the already-owned 'suggestion' value (next_command); this site does not select the recovery action."
 
 [[disposition]]
 path = "src/cadrumo/application/wizard/_status.py"
@@ -5826,51 +5799,6 @@ alias = "default_suggestion"
 action_identity = "<declaration>"
 role = "transformer"
 reason = "src/cadrumo/core/errors/_registry.py:103 ErrorCode: the legacy 'default_suggestion' field declaration defines a free-form transport slot; it neither evaluates a precondition nor resolves a canonical action."
-
-[[disposition]]
-path = "src/cadrumo/core/errors/_registry.py"
-enclosing_symbol = "ErrorEnvelope"
-candidate_role = "definition"
-alias = "suggestion"
-action_identity = "<declaration>"
-role = "transformer"
-reason = "src/cadrumo/core/errors/_registry.py:128 ErrorEnvelope: the legacy 'suggestion' field declaration defines a free-form transport slot; it neither evaluates a precondition nor resolves a canonical action."
-
-[[disposition]]
-path = "src/cadrumo/core/errors/_registry.py"
-enclosing_symbol = "build_error_envelope"
-candidate_role = "producer"
-alias = "suggestion"
-action_identity = "get_error_suggestion(error, code)"
-role = "producer"
-reason = "src/cadrumo/core/errors/_registry.py:338 build_error_envelope: ErrorEnvelope supplies 'suggestion' as the current action or no-recovery value (get_error_suggestion(error, code)) for its consumer."
-
-[[disposition]]
-path = "src/cadrumo/core/errors/_registry.py"
-enclosing_symbol = "get_error_suggestion"
-candidate_role = "assignment"
-alias = "suggestion"
-action_identity = "getattr(error, 'suggestion', None)"
-role = "producer"
-reason = "src/cadrumo/core/errors/_registry.py:496 get_error_suggestion: the 'suggestion' assignment constructs the current free-form action value (getattr(error, 'suggestion', None)) at this producer boundary."
-
-[[disposition]]
-path = "src/cadrumo/core/errors/_registry.py"
-enclosing_symbol = "get_error_suggestion"
-candidate_role = "transformer"
-alias = "default_suggestion"
-action_identity = "resolved_code.default_suggestion"
-role = "transformer"
-reason = "src/cadrumo/core/errors/_registry.py:499 get_error_suggestion: the existing 'default_suggestion' attribute (resolved_code.default_suggestion) is forwarded or re-shaped by expression; this site does not originate the action."
-
-[[disposition]]
-path = "src/cadrumo/core/errors/_registry.py"
-enclosing_symbol = "render_error_text"
-candidate_role = "assignment"
-alias = "suggestion"
-action_identity = "get_error_suggestion(error, code)"
-role = "producer"
-reason = "src/cadrumo/core/errors/_registry.py:360 render_error_text: the 'suggestion' assignment constructs the current free-form action value (get_error_suggestion(error, code)) at this producer boundary."
 
 [[disposition]]
 path = "src/cadrumo/core/errors/registry/_adapters_part1.py"
@@ -8627,15 +8555,6 @@ role = "producer"
 reason = "src/cadrumo/core/external_constants.py:365 AeatSection.pre303: CoreValidationError supplies 'suggestion' as the current action or no-recovery value (aeat config repair --help) for its consumer."
 
 [[disposition]]
-path = "src/cadrumo/core/json_contract.py"
-enclosing_symbol = "Notice"
-candidate_role = "definition"
-alias = "suggestion"
-action_identity = "<none>"
-role = "transformer"
-reason = "src/cadrumo/core/json_contract.py:138 Notice: the legacy 'suggestion' field declaration defines a free-form transport slot; it neither evaluates a precondition nor resolves a canonical action."
-
-[[disposition]]
 path = "src/cadrumo/domain/auth/apoderamientos/_catalogue.py"
 enclosing_symbol = "_resolve_scope_token"
 candidate_role = "command_literal"
@@ -10454,24 +10373,6 @@ role = "transformer"
 reason = "src/cadrumo/entrypoints/cli/_modelo_aux_payloads.py:161 WorkflowRunPayload: the legacy 'next_action' field declaration defines a free-form transport slot; it neither evaluates a precondition nor resolves a canonical action."
 
 [[disposition]]
-path = "src/cadrumo/entrypoints/cli/_modelo_cli_support.py"
-enclosing_symbol = "bad_parameter_from_error"
-candidate_role = "assignment"
-alias = "suggestion"
-action_identity = "build_error_envelope(exc).suggestion"
-role = "transformer"
-reason = "src/cadrumo/entrypoints/cli/_modelo_cli_support.py:614 bad_parameter_from_error: the 'suggestion' assignment forwards existing action data (build_error_envelope(exc).suggestion) rather than choosing a recovery target."
-
-[[disposition]]
-path = "src/cadrumo/entrypoints/cli/_modelo_cli_support.py"
-enclosing_symbol = "bad_parameter_from_error"
-candidate_role = "transformer"
-alias = "suggestion"
-action_identity = "build_error_envelope(exc).suggestion"
-role = "transformer"
-reason = "src/cadrumo/entrypoints/cli/_modelo_cli_support.py:614 bad_parameter_from_error: the existing 'suggestion' attribute (build_error_envelope(exc).suggestion) is forwarded or re-shaped by expression; this site does not originate the action."
-
-[[disposition]]
 path = "src/cadrumo/entrypoints/cli/_modelo_discovery_cli.py"
 enclosing_symbol = "_bindings_list_scope_notices"
 candidate_role = "assignment"
@@ -11188,33 +11089,6 @@ role = "producer"
 reason = "src/cadrumo/entrypoints/mcp/_tools.py:180 _output_schema_for: dictionary supplies 'suggestion' as the current action or no-recovery value ({'anyOf': [{'type': 'string'}, {'type': 'null'}]}) for its consumer."
 
 [[disposition]]
-path = "src/cadrumo/entrypoints/mcp/_transport.py"
-enclosing_symbol = "_inprocess_timeout_notice"
-candidate_role = "producer"
-alias = "suggestion"
-action_identity = "<none>"
-role = "producer"
-reason = "src/cadrumo/entrypoints/mcp/_transport.py:325 _inprocess_timeout_notice: Notice supplies 'suggestion' as the current action or no-recovery value (<none>) for its consumer."
-
-[[disposition]]
-path = "src/cadrumo/entrypoints/mcp/_transport.py"
-enclosing_symbol = "_transport_error_envelope"
-candidate_role = "producer"
-alias = "suggestion"
-action_identity = "<none>"
-role = "producer"
-reason = "src/cadrumo/entrypoints/mcp/_transport.py:120 _transport_error_envelope: ErrorEnvelope supplies 'suggestion' as the current action or no-recovery value (<none>) for its consumer."
-
-[[disposition]]
-path = "src/cadrumo/entrypoints/mcp/_transport.py"
-enclosing_symbol = "_warm_degradation_notice"
-candidate_role = "producer"
-alias = "suggestion"
-action_identity = "<none>"
-role = "producer"
-reason = "src/cadrumo/entrypoints/mcp/_transport.py:355 _warm_degradation_notice: Notice supplies 'suggestion' as the current action or no-recovery value (<none>) for its consumer."
-
-[[disposition]]
 path = "src/cadrumo/llm/_client.py"
 enclosing_symbol = "LLMClient._attach_local_degradation_remediation"
 candidate_role = "assignment"
@@ -11411,3 +11285,30 @@ alias = "suggestion"
 action_identity = "exc.install_hint"
 role = "producer"
 reason = "src/cadrumo/llm/_providers/anthropic.py:62 _load_anthropic_sdk: LLMConfigError supplies 'suggestion' as the current action or no-recovery value (exc.install_hint) for its consumer."
+
+[[disposition]]
+path = "src/cadrumo/core/errors/registry/_domain_part2.py"
+enclosing_symbol = "<module>"
+candidate_role = "producer"
+alias = "default_suggestion"
+action_identity = "choose --prior-domiciliation-election keep or import the accepted U baseline"
+role = "producer"
+reason = "src/cadrumo/core/errors/registry/_domain_part2.py:368 <module>: ErrorCode supplies 'default_suggestion' as the current recovery value; migrate it under the domain-part2 typed-action Step."
+
+[[disposition]]
+path = "src/cadrumo/entrypoints/cli/_common.py"
+enclosing_symbol = "_filing_taxpayer_or_refuse"
+candidate_role = "command_literal"
+alias = "<command-literal>"
+action_identity = "aeat config profile edit"
+role = "producer"
+reason = "src/cadrumo/entrypoints/cli/_common.py:965 _filing_taxpayer_or_refuse: the concrete command is the current suggestion payload supplied to the taxpayer-policy refusal."
+
+[[disposition]]
+path = "src/cadrumo/entrypoints/cli/_common.py"
+enclosing_symbol = "_filing_taxpayer_or_refuse"
+candidate_role = "producer"
+alias = "suggestion"
+action_identity = "aeat config profile edit"
+role = "producer"
+reason = "src/cadrumo/entrypoints/cli/_common.py:965 _filing_taxpayer_or_refuse: FilingIdentityRequiredError supplies the current free-form profile-edit recovery action pending its typed-verdict migration."

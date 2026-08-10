@@ -126,12 +126,14 @@ def censal_pull_action() -> ManagerAction:
     should not retype what the authority already has.
     """
     from ....adapters.inbound.tui import ManagerAction
+    from ....adapters.outbound.aeat import operator_progress_sink
 
     return ManagerAction(
         key="censal-pull",
         label=tr("flows.manager.action.censal_pull"),
         label_key="flows.manager.action.censal_pull",
         run=_run_censal_pull,
+        progress_sink=operator_progress_sink,
     )
 
 
@@ -161,7 +163,7 @@ def _run_censal_pull() -> ManagerActionOutcome:
     """
     import asyncio
 
-    from ....adapters.inbound.tui import ManagerActionOutcome
+    from ....adapters.inbound.tui import ManagerActionDisposition, ManagerActionOutcome
     from ....application.live import pull_censal_datos
     from ....application.user_profile import (
         apply_censal_read,
@@ -178,7 +180,7 @@ def _run_censal_pull() -> ManagerActionOutcome:
         # a Cl@ve prompt to the operator's phone, and spending their
         # second factor on a pull that cannot authenticate is worse than
         # telling them what is missing.
-        return ManagerActionOutcome(message=unavailable)
+        return ManagerActionOutcome(message=unavailable, disposition=ManagerActionDisposition.REFUSED)
 
     repository = workflow_state_repository()
     state = repository.load()
@@ -357,12 +359,14 @@ def filed_history_pull_all_action() -> ManagerAction:
     cannot authenticate is worse than saying so first.
     """
     from ....adapters.inbound.tui import ManagerAction
+    from ....adapters.outbound.aeat import operator_progress_sink
 
     return ManagerAction(
         key="filed-history-pull-all",
         label=tr("flows.manager.action.filed_history_pull_all"),
         label_key="flows.manager.action.filed_history_pull_all",
         run=_run_filed_history_pull_all,
+        progress_sink=operator_progress_sink,
     )
 
 
@@ -378,7 +382,7 @@ def _run_filed_history_pull_all() -> ManagerActionOutcome:
     """
     import asyncio
 
-    from ....adapters.inbound.tui import ManagerActionOutcome
+    from ....adapters.inbound.tui import ManagerActionDisposition, ManagerActionOutcome
     from ....application.live import pull_filed_history
     from ....application.wizard import load_active_taxpayer_profile
     from ....application.workflow import workflow_state_repository
@@ -387,7 +391,7 @@ def _run_filed_history_pull_all() -> ManagerActionOutcome:
 
     unavailable = _censal_pull_unavailable()
     if unavailable is not None:
-        return ManagerActionOutcome(message=unavailable)
+        return ManagerActionOutcome(message=unavailable, disposition=ManagerActionDisposition.REFUSED)
 
     try:
         profile = load_active_taxpayer_profile(workflow_state_repository().load())
@@ -396,7 +400,8 @@ def _run_filed_history_pull_all() -> ManagerActionOutcome:
 
     output_root = load_settings().cadrumo_filed_declarations_dir
     run = asyncio.run(pull_filed_history(output_root=output_root, profile=profile))
-    return ManagerActionOutcome(message=_filed_history_pull_all_summary(run))
+    disposition = ManagerActionDisposition.WARNING if run.stage_failures else ManagerActionDisposition.SUCCESS
+    return ManagerActionOutcome(message=_filed_history_pull_all_summary(run), disposition=disposition)
 
 
 def _filed_history_pull_all_summary(run: FiledHistoryOnboardingRun) -> str:
@@ -427,6 +432,7 @@ def _filed_history_pull_all_summary(run: FiledHistoryOnboardingRun) -> str:
                 pairs=", ".join(f"{pair.modelo}/{pair.ejercicio}" for pair in run.refused_pairs),
             ),
         )
+    parts.extend(run.stage_failures)
     parts.append(run.denominator_note)
     return " ".join(parts)
 
@@ -543,7 +549,7 @@ def _run_passphrase_change() -> ManagerActionOutcome:
     master key under the typed value before it does anything else, so a
     mismatch there is the operator's own typo, not a torn write.
     """
-    from ....adapters.inbound.tui import FormField, FormPage, ManagerActionOutcome
+    from ....adapters.inbound.tui import FormField, FormPage, ManagerActionDisposition, ManagerActionOutcome
     from ....adapters.persistence.storage import (
         MasterKeyMaterialMissingError,
         MasterKeyPassphraseMismatchError,
@@ -582,7 +588,10 @@ def _run_passphrase_change() -> ManagerActionOutcome:
 
     new_value = collected[_PASSPHRASE_NEW_KEY]
     if new_value != collected[_PASSPHRASE_CONFIRM_KEY]:
-        return ManagerActionOutcome(message=tr("flows.manager.action.passphrase_mismatch"))
+        return ManagerActionOutcome(
+            message=tr("flows.manager.action.passphrase_mismatch"),
+            disposition=ManagerActionDisposition.REFUSED,
+        )
 
     try:
         change_passphrase(
@@ -590,9 +599,12 @@ def _run_passphrase_change() -> ManagerActionOutcome:
             new_passphrase=new_value,
         )
     except MasterKeyPassphraseMismatchError:
-        return ManagerActionOutcome(message=tr("flows.manager.action.passphrase_wrong_current"))
+        return ManagerActionOutcome(
+            message=tr("flows.manager.action.passphrase_wrong_current"),
+            disposition=ManagerActionDisposition.REFUSED,
+        )
     except (MasterKeyMaterialMissingError, SecretStoreError) as exc:
-        return ManagerActionOutcome(message=str(exc))
+        return ManagerActionOutcome(message=str(exc), disposition=ManagerActionDisposition.REFUSED)
 
     return ManagerActionOutcome(message=tr("flows.manager.action.passphrase_done"))
 
@@ -656,7 +668,7 @@ def _run_certificate() -> ManagerActionOutcome:
     does so without this action carrying a door of its own for someone to
     aim elsewhere.
     """
-    from ....adapters.inbound.tui import ManagerActionOutcome
+    from ....adapters.inbound.tui import ManagerActionDisposition, ManagerActionOutcome
     from ....application.auth import list_operator_certificate_sources
     from ._manager_frontend import build_active_profile_overview, present_form
 
@@ -678,7 +690,7 @@ def _run_certificate() -> ManagerActionOutcome:
     if refusal is not None:
         # Refuse here, naming what is absent, rather than let the
         # operator discover it at the first pull.
-        return ManagerActionOutcome(message=refusal)
+        return ManagerActionOutcome(message=refusal, disposition=ManagerActionDisposition.REFUSED)
 
     chosen_certificate, configure_result = _commit_auth_choice(collected)
     if not configure_result.complete:
@@ -693,6 +705,9 @@ def _run_certificate() -> ManagerActionOutcome:
     return ManagerActionOutcome(
         message=message,
         overview=build_active_profile_overview(),
+        disposition=(
+            ManagerActionDisposition.SUCCESS if configure_result.complete else ManagerActionDisposition.WARNING
+        ),
     )
 
 
@@ -1127,7 +1142,7 @@ def _run_add_row() -> ManagerActionOutcome:
     refused by the door, and it is reported rather than raised at a screen
     that cannot act on it.
     """
-    from ....adapters.inbound.tui import ManagerActionOutcome
+    from ....adapters.inbound.tui import ManagerActionDisposition, ManagerActionOutcome
     from ....application.user_profile import (
         next_section_row_index,
         section_row_facts,
@@ -1140,7 +1155,10 @@ def _run_add_row() -> ManagerActionOutcome:
     schema = load_user_profile_schema()
     sections = tuple(section for section in schema.sections if section.repeatable)
     if not sections:
-        return ManagerActionOutcome(message=tr("flows.manager.action.add_row_none"))
+        return ManagerActionOutcome(
+            message=tr("flows.manager.action.add_row_none"),
+            disposition=ManagerActionDisposition.REFUSED,
+        )
 
     def _page(values: Mapping[str, str]) -> FormPage:
         return _row_page(sections, values)
@@ -1158,12 +1176,18 @@ def _run_add_row() -> ManagerActionOutcome:
     row_index = next_section_row_index(section.key, present)
     facts = section_row_facts(section, row_index=row_index, values=collected)
     if not facts:
-        return ManagerActionOutcome(message=tr("flows.manager.action.add_row_empty"))
+        return ManagerActionOutcome(
+            message=tr("flows.manager.action.add_row_empty"),
+            disposition=ManagerActionDisposition.REFUSED,
+        )
 
     try:
         workflow_state_repository().update(lambda state: set_active_fields(state, facts))
     except ProfileSchemaValidationError:
-        return ManagerActionOutcome(message=tr("flows.manager.action.add_row_incomplete"))
+        return ManagerActionOutcome(
+            message=tr("flows.manager.action.add_row_incomplete"),
+            disposition=ManagerActionDisposition.REFUSED,
+        )
 
     return ManagerActionOutcome(
         message=tr(
@@ -1344,11 +1368,14 @@ def _run_google_export() -> ManagerActionOutcome:
         # differently-worded opinion about capability posture is exactly
         # what this module exists not to grow. The button stays visible and
         # reachable either way -- a hidden button is not a legible refusal.
-        from ....adapters.inbound.tui import ManagerActionOutcome
+        from ....adapters.inbound.tui import ManagerActionDisposition, ManagerActionOutcome
 
-        return ManagerActionOutcome(message=tr("cli.config.google.sync.calc.export.capability_disabled"))
+        return ManagerActionOutcome(
+            message=tr("cli.config.google.sync.calc.export.capability_disabled"),
+            disposition=ManagerActionDisposition.REFUSED,
+        )
 
-    from ....adapters.inbound.tui import FormField, FormPage, ManagerActionOutcome
+    from ....adapters.inbound.tui import FormField, FormPage, ManagerActionDisposition, ManagerActionOutcome
     from ....core.errors import CadrumoError, resolve_error_message
     from ._manager_frontend import present_form
 
@@ -1387,7 +1414,10 @@ def _run_google_export() -> ManagerActionOutcome:
             year=int(collected[_GOOGLE_EXPORT_YEAR_KEY].strip()),
         )
     except CadrumoError as exc:
-        return ManagerActionOutcome(message=resolve_error_message(exc))
+        return ManagerActionOutcome(
+            message=resolve_error_message(exc),
+            disposition=ManagerActionDisposition.REFUSED,
+        )
 
     return ManagerActionOutcome(
         message=tr("flows.manager.action.google_export_done", modelo=modelo, spreadsheet_url=spreadsheet_url),
@@ -1432,7 +1462,11 @@ def _export_active_profile_to_google_sheets(*, modelo: str, period: str, year: i
     from ....adapters.outbound.storage import OutboundStorageError
     from ....application.storage.calc_sheets import OperatorInputs, RelationValues, build_export_plan
     from ._google_errors import _google_refusal
-    from ._google_sync_calc import _filing_period_or_refusal, _load_snapshot, _resolve_credentials_and_root
+    from ._google_sync_calc import (
+        _filing_period_or_refusal,  # pyright: ignore[reportPrivateUsage] - sanctioned intra-package reuse
+        _load_snapshot,  # pyright: ignore[reportPrivateUsage] - sanctioned intra-package reuse
+        _resolve_credentials_and_root,  # pyright: ignore[reportPrivateUsage] - sanctioned intra-package reuse
+    )
 
     try:
         active = resolve_active_profile()

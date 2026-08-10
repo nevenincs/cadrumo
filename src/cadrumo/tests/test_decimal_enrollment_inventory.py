@@ -180,13 +180,6 @@ _STRING_PARSE_EXEMPTIONS: Mapping[tuple[str, str], str] = {
         "guard more permissive, the same shape as the declarante-selector "
         "exemption above."
     ),
-    ("domain/calculations/registry/_workbook_parity.py", "_comparison_status"): (
-        "Compares AEAT workbook oracle figures against registry output; both sides are machine-produced text."
-    ),
-    ("domain/calculations/registry/_workbook_parity.py", "_registry_decimal_value"): (
-        "Typed dispatch over an already-validated synthetic parity input; the "
-        "boolean and int arms raise or convert before any text is parsed."
-    ),
     # --- surfaced when the isinstance-str narrowing reached rule 3. Every one
     # is a pydantic mode="before" validator re-hydrating a Decimal THIS
     # application serialised, so the text is its own canonical dot-decimal

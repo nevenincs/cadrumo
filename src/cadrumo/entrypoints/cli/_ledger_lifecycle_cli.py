@@ -26,6 +26,7 @@ from ...application.ledger import (
     split_transaction,
     stash_manual_transaction,
 )
+from ...application.operator_actions import next_action
 from ...core import resolve_active_bucket_id
 from ...core.external_constants import PDF_MIME_TYPE
 from ...core.i18n import tr
@@ -499,6 +500,7 @@ def ledger_pull_folder(
     if refused_count:
         notices.append(
             Notice(
+                action=next_action("operator.ledger.attach"),
                 severity=NoticeSeverity.WARNING,
                 code="ledger.pull_folder.files_refused",
                 message=tr(
@@ -894,13 +896,13 @@ def _split_classification_dropped_notices(
         return []
     return [
         Notice(
+            action=next_action("operator.ledger.classify"),
             severity=NoticeSeverity.INFO,
             code="ledger.split.classification_dropped",
             message=tr(
                 "cli.ledger.split.classification_dropped",
                 classification=parent_classification.value,
             ),
-            suggestion="aeat app ledger classify",
             context={"parent_classification": parent_classification.value},
         ),
     ]

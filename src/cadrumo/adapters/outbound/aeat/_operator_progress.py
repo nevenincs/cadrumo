@@ -1,13 +1,14 @@
-"""Lightweight operator-progress channel shared by AEAT auth and the CLI.
+"""Lightweight operator-progress channel shared by AEAT operations and frontends.
 
 Keeping this ContextVar outside the heavy auth facade lets CLI metadata and
 local configuration commands start without importing browser-auth settings.
-Live authentication still installs the same per-invocation sink.
+The CLI installs a stderr sink for headless operation; a full-screen frontend
+may replace it within its worker context so progress stays inside the TUI.
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
 
@@ -19,8 +20,8 @@ _OPERATOR_PROGRESS_SINK: ContextVar[Callable[[str], None] | None] = ContextVar(
 
 
 @contextmanager
-def operator_progress_sink(sink: Callable[[str], None]) -> Iterator[None]:
-    """Route a live-auth progress banner to ``sink`` within this context."""
+def operator_progress_sink(sink: Callable[[str], None]) -> Generator[None]:
+    """Route operator progress to ``sink`` within this context."""
     token = _OPERATOR_PROGRESS_SINK.set(sink)
     try:
         yield

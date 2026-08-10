@@ -7,12 +7,19 @@ from typing import Literal, override
 
 from pydantic import BaseModel, Field, model_validator
 
-from ....core import STRICT_FROZEN_CONFIG
-from ....core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
-from ....core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
-from ._errors import RegistryValidationError
-from ._ids import BindingId, CasillaId, LegalRefId, SourceRefId, WorkbookOutputId
-from ._schema import EvidenceTier
+from cadrumo.core import STRICT_FROZEN_CONFIG
+from cadrumo.core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
+from cadrumo.core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
+from cadrumo.domain.calculations.registry import (
+    BindingId,
+    CasillaId,
+    EvidenceTier,
+    LegalRefId,
+    RegistryValidationError,
+    SourceRefId,
+    WorkbookOutputId,
+)
+
 from ._workbook_parity_types import (
     ParityStatus,
     WorkbookConversionStatus,

@@ -1477,8 +1477,6 @@ application:
         sha rebut {manual_id}.
       invalid_manual_rule_kind: El tipus de regla manual ha de ser un de {allowed_rule_kinds};
         s ha rebut {rule_kind}.
-      invalid_oracle_environment: L'entorn dels oracles del registre ha de ser un
-        de {allowed_values}; s'ha rebut {value}.
       invalid_topic_locale: El locale de temes del registre ha de ser un de {allowed_locales};
         sha rebut {locale_code}.
       manual_section_not_found: No sha trobat la secció {section} a {manual_id} {year}
@@ -4323,6 +4321,12 @@ cli:
       check:
         drifted: L'arbre d'emmagatzematge no coincideix amb la seva declaració.
         help: Verifica l'arbre d'emmagatzematge amb la seva declaració sense reparar-lo
+        issue:
+          missing_path: falta una ruta d'emmagatzematge obligatòria
+          path_type_mismatch: una ruta d'emmagatzematge té un tipus de sistema de
+            fitxers inesperat
+          permissions_drifted: els permisos de l'arrel d'emmagatzematge no compleixen
+            els requisits
         mode_unenforced: Aquesta plataforma no implementa els bits de permisos POSIX,
           així que no s'han comprovat els permisos de l'arrel.
       errors:
@@ -4335,6 +4339,31 @@ cli:
         already_materialised: Tots els directoris declarats ja existien; no se n'ha
           creat cap.
         help: Crea tots els directoris declarats conservant el que ja hi hagi
+      labels:
+        already_present: Ja presents
+        area: Àrea
+        areas: Àrees
+        checked_areas: Àrees comprovades
+        created: Creats
+        detail: Detall
+        entries: Entrades
+        entry_count: Nombre d'entrades
+        footprint: Mida
+        healthy: Correcte
+        issues: Problemes
+        lifecycle: Cicle de vida
+        'no': 'no'
+        notice_info: Informació
+        notice_warning: Avís
+        occupancy: Ocupació
+        path: Ruta
+        reclaimable: Alliberable
+        removed_entries: Entrades eliminades
+        resolved_paths: Rutes resoltes
+        retained_entries: Entrades conservades
+        storage_root: Arrel d'emmagatzematge
+        targets: Destinacions
+        'yes': sí
       list:
         area_help: Mostra l'ocupació i l'espai agregat de cada àrea d'emmagatzematge
         relocation_is_manual: Per moure l'arbre, atura l'aplicació, copia'l tu mateix
@@ -4349,6 +4378,16 @@ cli:
       show:
         area_argument_help: Àrea d'emmagatzematge que es vol mostrar
         area_help: Mostra una àrea d'emmagatzematge completa
+      values:
+        lifecycle:
+          durable: duradora
+          mixed: mixta
+          reclaimable: alliberable
+        occupancy:
+          absent: absent
+          empty: buida
+          populated: amb dades
+          unresolved: sense resoldre
     unset:
       help: Eliminar el valor assignat a una clau de configuració
       key_help: Clau a netejar
@@ -5279,9 +5318,8 @@ cli:
         storage_check: Comprova directoris absents o mal ubicats a l'arbre d'emmagatzematge.
         storage_init: Crea qualsevol directori d'emmagatzematge que falti
         storage_list: Consulta on es desa cada tipus de dada local
-        storage_reclaim: Allibera espai eliminant una categoria que l'aplicació pot
-          reconstruir
-        storage_show: Consulta una categoria d'emmagatzematge en detall
+        storage_reclaim: Allibera espai eliminant una àrea que l'aplicació pot reconstruir
+        storage_show: Consulta una àrea d'emmagatzematge en detall
       root:
         diagnostics_logs: Mostra la ruta del registre i les últimes línies.
         diagnostics_overview_verbose: Mostra l'estat general amb més detall.
@@ -5650,6 +5688,8 @@ cli:
         files importades.'
       quick_start_setup_done: '  1. `aeat config profile status` - comprova la preparació
         i l''acció següent.'
+      quick_start_setup_login: '  1. `aeat config login NAME` - activa un perfil de
+        contribuent registrat.'
       quick_start_setup_needed: '  1. `aeat config profile create NAME` - crea un
         perfil fiscal local.'
       quick_start_setup_repair: '  1. `aeat config repair profile` - inspecciona i
@@ -7160,10 +7200,10 @@ errors:
       activa. Executa `aeat config login NAME` i torna-ho a provar.
     refused_storage_passphrase_too_short: La frase de contrasenya és massa curta.
       Ha de tenir com a mínim 8 caràcters.
-    refused_storage_reclaim: 'Es rebutja alliberar aquesta categoria d''emmagatzematge:
-      el seu cicle de vida declarat conserva el seu contingut.'
-    refused_storage_reclaim_unconfirmed: Alliberar una categoria d'emmagatzematge
-      elimina dades i requereix confirmació explícita.
+    refused_storage_reclaim: 'Es rebutja alliberar aquesta àrea d''emmagatzematge:
+      el seu cicle de vida declarat conserva el contingut.'
+    refused_storage_reclaim_unconfirmed: Alliberar una àrea d'emmagatzematge elimina
+      dades i requereix confirmació.
     refused_storage_secret_already_exists: Ja existeix un secret amb aquesta clau.
       Fes servir l'opció de sobreescriptura si el vols reemplaçar.
     refused_storage_session_expired: La sessió activa ha caducat per inactivitat.
@@ -7421,6 +7461,7 @@ flows:
     language:
       unavailable: Aquest perfil no ofereix cap configuració d'idioma.
     progress: '{present} de {total} camps emplenats, en falten {missing} per presentar'
+    required_complete: Hi és tota la informació del perfil requerida per l'esquema.
     recovery_boundary: 'La creació i la rotació del codi de recuperació només es fan
       des del terminal: aeat config recovery create / aeat config recovery rotate.
       Les 24 paraules es mostren una sola vegada i no es poden tornar a mostrar.'

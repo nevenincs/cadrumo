@@ -1,11 +1,10 @@
 """Filesystem provisioning and path resolution for per-bucket directories.
 
 The per-bucket on-disk model lives at ``<cadrumo-root>/buckets/<bucket-id>/``
-and carries exactly three subdirectories:
+and carries exactly two subdirectories:
 
 - ``db/``    relational state (SQLite database files).
 - ``blobs/`` opaque artefact storage (sealed ciphertext blobs).
-- ``audit/`` append-only audit-trail log files.
 
 Provisioning is fail-closed: a re-attempt against an already-provisioned
 bucket id raises rather than silently masking a configuration error. The
@@ -43,7 +42,6 @@ class BucketPaths(BaseModel):
     bucket_dir: Path
     db_dir: Path
     blobs_dir: Path
-    audit_dir: Path
     database_file: Path
     """The bucket's database file.
 
@@ -86,7 +84,6 @@ def bucket_paths(root: Path, bucket_id: str) -> BucketPaths:
         bucket_dir=bucket_dir,
         db_dir=bucket_dir / storage_location(StorageCategory.BUCKET_DATABASE).relative_path(),
         blobs_dir=bucket_dir / storage_location(StorageCategory.BUCKET_BLOBS).relative_path(),
-        audit_dir=bucket_dir / storage_location(StorageCategory.BUCKET_AUDIT).relative_path(),
         # Anchored on bucket_dir, not db_dir: this member's subpath already
         # carries its own db/ segment. See the field's docstring.
         database_file=bucket_dir / storage_location(StorageCategory.BUCKET_DATABASE_FILE).relative_path(),
@@ -94,7 +91,7 @@ def bucket_paths(root: Path, bucket_id: str) -> BucketPaths:
 
 
 def provision_bucket_directory(root: Path, bucket_id: str) -> BucketPaths:
-    """Materialise the ``<root>/buckets/<bucket_id>/{db,blobs,audit}/`` tree.
+    """Materialise the ``<root>/buckets/<bucket_id>/{db,blobs}/`` tree.
 
     Provisioning is fail-closed: if the bucket directory already exists,
     the function raises rather than reusing the partial state. The parent
@@ -113,7 +110,6 @@ def provision_bucket_directory(root: Path, bucket_id: str) -> BucketPaths:
         paths.bucket_dir.mkdir(parents=False, exist_ok=False)
         paths.db_dir.mkdir(parents=False, exist_ok=False)
         paths.blobs_dir.mkdir(parents=False, exist_ok=False)
-        paths.audit_dir.mkdir(parents=False, exist_ok=False)
     except FileExistsError as exc:
         raise BucketAlreadyPresentError(bucket_id=bucket_id) from exc
     except OSError as exc:

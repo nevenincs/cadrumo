@@ -46,6 +46,7 @@ from __future__ import annotations
 import typer
 
 from ....application.bucket_maintenance import SandboxMergeScope
+from ....application.operator_actions import next_action
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
@@ -143,7 +144,6 @@ def _register_sandbox_create_command(app: typer.Typer) -> None:
                     "it until you switch away or discard it."
                 ),
             ),
-            suggestion="aeat config profile sandbox discard",
         )
         _emit_envelope(
             ctx,
@@ -438,6 +438,7 @@ def _register_sandbox_prune_command(app: typer.Typer) -> None:
         notices: tuple[Notice, ...] = ()
         if skipped_active:
             skipped_notice = Notice(
+                action=next_action("operator.profile.sandbox.prune"),
                 severity=NoticeSeverity.WARNING,
                 code="config.profile.sandbox.prune.skipped_active",
                 message=tr(
@@ -448,7 +449,6 @@ def _register_sandbox_prune_command(app: typer.Typer) -> None:
                     ),
                     names=", ".join(skipped_active),
                 ),
-                suggestion="aeat config login",
             )
             notices = (skipped_notice,)
             lines.append(f"INFO\t{skipped_notice.message}")
@@ -551,6 +551,7 @@ def _register_sandbox_archive_command(app: typer.Typer) -> None:
             occurred_at=outcome.occurred_at,
         )
         restore_notice = Notice(
+            action=next_action("operator.profile.sandbox.restore"),
             severity=NoticeSeverity.INFO,
             code="config.profile.sandbox.archive.restorable",
             message=tr(
@@ -560,7 +561,6 @@ def _register_sandbox_archive_command(app: typer.Typer) -> None:
                 ),
                 name=name,
             ),
-            suggestion=f"aeat config profile sandbox restore {name}",
         )
         _emit_envelope(
             ctx,

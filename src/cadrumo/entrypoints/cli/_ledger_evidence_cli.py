@@ -16,6 +16,7 @@ from ...application.ledger import (
     confirm_invoice_draft_from_evidence,
     extract_invoice_draft_from_evidence,
 )
+from ...application.operator_actions import next_action
 from ...application.user_profile import cloud_evidence_upload_eligible_for_active_profile
 from ...core import IntracomOperationType
 from ...core.config import load_settings
@@ -591,10 +592,6 @@ def _register_evidence_extract_command() -> None:
                     "cli.app.ledger.evidence.extract_review_hint_message",
                     default=("This is a best-effort draft; confirm every field before minting an invoice."),
                 ),
-                suggestion=extract_review_suggestion(
-                    evidence_id=evidence_id,
-                    reference=reviewed_reference,
-                ),
                 context={"reference": reviewed_reference},
             ),
         ]
@@ -906,13 +903,13 @@ def _run_evidence_confirm(
     else:
         notices.append(
             Notice(
+                action=next_action("operator.ledger.link"),
                 severity=NoticeSeverity.INFO,
                 code="ledger.evidence.confirm.linked_transaction_hint",
                 message=tr(
                     "cli.app.ledger.evidence.confirm_link_hint_message",
                     default="Link this invoice to a ledger transaction with `aeat app ledger link`.",
                 ),
-                suggestion=f"aeat app ledger link <transaction-id> --invoice-id {invoice.invoice_id}",
                 context={"invoice_id": invoice.invoice_id},
             ),
         )

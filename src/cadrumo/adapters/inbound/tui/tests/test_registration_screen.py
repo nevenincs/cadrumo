@@ -26,6 +26,7 @@ from .....domain.user_profile import UserProfileStatus
 from .....entrypoints.cli._config._manager_frontend import attempt_registration
 from .....tests.secure_sql import isolated_profile_storage_root
 from .. import RegistrationApp
+from .._status_bar import PinnedStatusBar
 
 pytestmark = [
     pytest.mark.integration,
@@ -97,7 +98,9 @@ async def test_mismatched_confirmation_refuses_and_creates_nothing(tmp_path) -> 
             assert app.outcome is None, "a mismatch must not create a profile"
             # Emptiness, not wording: that the refusal zone was populated is
             # the screen's decision; which words fill it is locale data.
-            assert str(app.query_one("#registration-refusal", Static).content), "the refusal must be shown"
+            status = app.query_one("#credential-status", PinnedStatusBar)
+            assert status.tone == "error"
+            assert status.message, "the refusal must be shown in the pinned channel"
             app.exit(None)
 
         assert not list(storage_root.glob("*/manifest.json"))

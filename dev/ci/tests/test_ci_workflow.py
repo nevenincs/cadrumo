@@ -63,7 +63,7 @@ def test_ci_workflow_runs_canonical_cadrumo_commands_and_paths() -> None:
     static = document["jobs"]["cadrumo-static"]
     static_commands = "\n".join(str(step.get("run", "")) for step in static["steps"])
     assert "uv run --no-sync aeat app registry verify" in static_commands
-    assert "uv run --no-sync aeat app registry audit-oracles" in static_commands
+    assert "uv run --no-sync python -m dev.registry.maintenance_cli audit-oracles" in static_commands
     assert "semgrep --config .semgrep/rules/ --error src/cadrumo/" in static_commands
     # The dev-tree workflow/tooling conformance gates run per-push here, via the
     # `test-dev-ci` recipe. The workflow names the recipe and the recipe owns the
@@ -127,7 +127,7 @@ def test_the_test_unit_recipe_carries_the_substance_the_workflow_delegates() -> 
     )
     assert body is not None, "no justfile line carries the test-unit body; the delegated lane has no home"
     assert "-m 'unit and not external_tool and not os_keychain'" in body
-    assert "--ignore=src/cadrumo/domain/calculations/registry/tests/workbook_parity" in body
+    assert "--ignore=dev/registry/tests/test_workbook_parity.py" in body
     assert "--durations=" in body, "the durations override the CI step passes must reach the underlying pytest call"
 
 
@@ -239,8 +239,8 @@ def test_ci_workflow_product_surface_has_no_former_identity() -> None:
 
     assert registry_commands == {
         "uv run --no-sync aeat app registry verify",
-        "uv run --no-sync aeat app registry audit-oracles",
     }
+    assert "uv run --no-sync python -m dev.registry.maintenance_cli audit-oracles" in commands
     assert not any(re.match(r"^(?:uv run(?: --no-sync)? )?cadrumo(?:\s|$)", command) for command in commands)
 
     assert _prohibited_aeat_product_forms(product_surface) == ()

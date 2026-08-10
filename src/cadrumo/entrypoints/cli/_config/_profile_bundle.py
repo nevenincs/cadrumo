@@ -29,6 +29,7 @@ from typing import TYPE_CHECKING, TypedDict
 import typer
 from pydantic import BaseModel, ConfigDict, SecretStr
 
+from ....application.operator_actions import next_action
 from ....core import NIST_PASSPHRASE_MIN_LENGTH
 from ....core.errors import CadrumoError as _CadrumoError
 from ....core.errors import resolve_error_message as _resolve_error_message
@@ -281,6 +282,7 @@ def _reconcile_failure_notices(
         return ()
     return (
         Notice(
+            action=next_action("operator.maintenance.reconcile"),
             severity=NoticeSeverity.WARNING,
             code="config.profile.export.reconcile_incomplete",
             message=tr(
@@ -293,7 +295,6 @@ def _reconcile_failure_notices(
                 ),
                 count=str(len(failures)),
             ),
-            suggestion="aeat app maintenance reconcile",
             context={
                 "failed_count": str(len(failures)),
                 "journal_ids": ",".join(failure.journal_id for failure in failures),
@@ -551,6 +552,7 @@ def _build_export_sensitivity_notice(out: Path) -> Notice:
     cleartext write permissible, and this warning is its floor.
     """
     return Notice(
+        action=next_action("operator.profile.export"),
         severity=NoticeSeverity.WARNING,
         code="config.profile.export.cleartext_sensitive_bundle",
         message=tr(
@@ -575,6 +577,7 @@ def _build_export_sensitivity_notice(out: Path) -> Notice:
 def _build_encrypted_export_notice(out: Path) -> Notice:
     """Build the info notice for the passphrase-encrypted bundle transport."""
     return Notice(
+        action=next_action("operator.profile.import"),
         severity=NoticeSeverity.INFO,
         code="config.profile.export.encrypted_bundle",
         message=tr(
@@ -588,7 +591,6 @@ def _build_encrypted_export_notice(out: Path) -> Notice:
             ),
             out=str(out),
         ),
-        suggestion="aeat config profile import PATH",
         context={"out": str(out), "transport": "passphrase-encrypted"},
     )
 
@@ -835,16 +837,12 @@ def _build_import_active_switch_notice(target_label: str) -> Notice:
     return Notice(
         severity=NoticeSeverity.INFO,
         code="config.profile.import.active_profile_switched",
+        action=next_action("operator.profile.login"),
         message=tr(
             "cli.config.profile.import_active_switch_info",
-            default=(
-                "The imported profile {name} is now the ACTIVE profile; subsequent "
-                "commands operate on it. Run 'aeat config login <name>' to change "
-                "the active profile."
-            ),
+            default=("The imported profile {name} is now the ACTIVE profile; subsequent commands operate on it."),
             name=target_label,
         ),
-        suggestion=f"aeat config login {target_label}",
         context={"active_profile": target_label},
     )
 

@@ -1350,8 +1350,6 @@ application:
         {manual_id}.
       invalid_manual_rule_kind: Registry manual rule kind must be one of {allowed_rule_kinds};
         got {rule_kind}.
-      invalid_oracle_environment: Registry oracle environment must be one of {allowed_values};
-        got {value}.
       invalid_topic_locale: Registry topic locale must be one of {allowed_locales};
         got {locale_code}.
       manual_section_not_found: Manual section {section} was not found in {manual_id}
@@ -4028,6 +4026,10 @@ cli:
       check:
         drifted: The storage tree does not match its declaration.
         help: Verify the storage tree against its declaration without repairing it
+        issue:
+          missing_path: a required storage path is missing
+          path_type_mismatch: a storage path has an unexpected filesystem type
+          permissions_drifted: storage root permissions do not match requirements
         mode_unenforced: This platform does not implement POSIX permission bits, so
           root permissions were not checked.
       errors:
@@ -4040,6 +4042,31 @@ cli:
         already_materialised: Every declared directory already existed; nothing was
           created.
         help: Create every declared directory, preserving everything already there
+      labels:
+        already_present: Already present
+        area: Area
+        areas: Areas
+        checked_areas: Checked areas
+        created: Created
+        detail: Detail
+        entries: Entries
+        entry_count: Entry count
+        footprint: Footprint
+        healthy: Healthy
+        issues: Issues
+        lifecycle: Lifecycle
+        'no': 'no'
+        notice_info: Info
+        notice_warning: Warning
+        occupancy: Occupancy
+        path: Path
+        reclaimable: Reclaimable
+        removed_entries: Removed entries
+        resolved_paths: Resolved paths
+        retained_entries: Retained entries
+        storage_root: Storage root
+        targets: Targets
+        'yes': 'yes'
       list:
         area_help: Show aggregate occupancy and footprint for every storage area
         relocation_is_manual: To move the tree, stop the application, copy it yourself,
@@ -4054,6 +4081,16 @@ cli:
       show:
         area_argument_help: Storage area to show
         area_help: Show one storage area in full
+      values:
+        lifecycle:
+          durable: durable
+          mixed: mixed
+          reclaimable: reclaimable
+        occupancy:
+          absent: absent
+          empty: empty
+          populated: populated
+          unresolved: unresolved
     unset:
       help: Clear the value of one configuration key
       key_help: Key to clear
@@ -4926,8 +4963,8 @@ cli:
         storage_check: Check the storage tree for missing or misplaced directories
         storage_init: Create any storage directory that is missing
         storage_list: See where every kind of local data is kept
-        storage_reclaim: Free space by deleting a category the app can rebuild
-        storage_show: Look at one storage category in detail
+        storage_reclaim: Free space by deleting a storage area the app can rebuild
+        storage_show: Look at one storage area in detail
       root:
         diagnostics_logs: Show the log path and latest lines.
         diagnostics_overview_verbose: Show general state with additional detail.
@@ -5286,6 +5323,8 @@ cli:
         rows.'
       quick_start_setup_done: '  1. `aeat config profile status` - check readiness
         and the authoritative next action.'
+      quick_start_setup_login: '  1. `aeat config login NAME` - activate a registered
+        taxpayer profile.'
       quick_start_setup_needed: '  1. `aeat config profile create NAME` - create a
         local taxpayer profile.'
       quick_start_setup_repair: '  1. `aeat config repair profile` - inspect and repair
@@ -6703,10 +6742,10 @@ errors:
       Run `aeat config login NAME` and try again.
     refused_storage_passphrase_too_short: The passphrase is too short. It must be
       at least 8 characters long.
-    refused_storage_reclaim: 'Reclaiming this storage category is refused: its declared
+    refused_storage_reclaim: 'Reclaiming this storage area is refused: its declared
       lifecycle keeps its contents.'
-    refused_storage_reclaim_unconfirmed: Reclaiming a storage category deletes data
-      and needs explicit confirmation.
+    refused_storage_reclaim_unconfirmed: Reclaiming a storage area deletes data and
+      requires confirmation.
     refused_storage_secret_already_exists: A secret with that key already exists.
       Use the overwrite option to replace it.
     refused_storage_session_expired: The active session expired due to inactivity.
@@ -6957,6 +6996,7 @@ flows:
     language:
       unavailable: This profile does not offer a language setting.
     progress: '{present} of {total} fields filled in, {missing} still needed for filing'
+    required_complete: All schema-required profile information is present.
     recovery_boundary: 'Recovery-code creation and rotation are terminal-only: aeat
       config recovery create / aeat config recovery rotate. The 24 words are shown
       once and cannot be shown again.'

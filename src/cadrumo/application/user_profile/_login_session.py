@@ -628,11 +628,19 @@ def _record_activation(*, profile_id: str) -> None:
     Only a genuine authentication reaches here: the idempotent no-op
     returns before this point, so a retry re-stamps no activation.
     """
+    from ...core.config import override_settings
     from ..workflow import workflow_state_repository
     from ._orchestration import append_profile_activated_event, select_profile
 
-    workflow_state_repository().update(lambda current: select_profile(current, profile_id=profile_id))
-    append_profile_activated_event(profile_id=profile_id, active_profile=resolve_active_bucket_id())
+    # A CLI invocation may have resolved and pinned the previously active
+    # profile before an interactive login selects this one.  The pointer and
+    # bucket session already name ``profile_id`` here, so let that authenticated
+    # identity own the storage route for the activation write too.  Otherwise
+    # the inherited settings override can route the database to the previous
+    # bucket and manufacture a route/session mismatch after valid credentials.
+    with override_settings(cadrumo_active_profile=profile_id):
+        workflow_state_repository().update(lambda current: select_profile(current, profile_id=profile_id))
+        append_profile_activated_event(profile_id=profile_id, active_profile=resolve_active_bucket_id())
 
 
 def _mint_or_warn(

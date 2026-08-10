@@ -5,29 +5,10 @@ tags:
 date: '2026-08-09'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:09f6e40ad103a6e44c6fd9d47a0078d2a3e719e572dac3703cd7de17c7d57d5c'
+body_hash: 'sha256:755588f9e15631c98c285a11a42ea41d64ec4f6962845046b21740d6be889aee'
 related:
   - "[[2026-08-09-cli-action-envelope-hardening-adr]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace cli-action-envelope-hardening with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `cli-action-envelope-hardening` audit: `S07 live operator identity proof review`
 

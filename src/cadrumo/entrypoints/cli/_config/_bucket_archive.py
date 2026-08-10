@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING
 
 import typer
 
+from ....application.operator_actions import next_action
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
@@ -182,6 +183,7 @@ def _build_export_completeness_notice() -> Notice:
     sides rather than only as an absence on one.
     """
     return Notice(
+        action=next_action("operator.profile.archive.import"),
         severity=NoticeSeverity.INFO,
         code="config.profile.archive.export.full_backup",
         message=tr(
@@ -296,6 +298,7 @@ def _build_archive_import_active_switch_notice(label: str) -> Notice:
     bucket UUID or a literal unfilled placeholder.
     """
     return Notice(
+        action=next_action("operator.profile.login"),
         severity=NoticeSeverity.INFO,
         code="config.profile.archive.import.active_profile_switched",
         message=tr(
@@ -307,7 +310,6 @@ def _build_archive_import_active_switch_notice(label: str) -> Notice:
             ),
             name=label,
         ),
-        suggestion=f"aeat config login {label}",
         context={"active_profile": label},
     )
 

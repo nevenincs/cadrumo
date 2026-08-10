@@ -33,19 +33,27 @@ if TYPE_CHECKING:
     from openpyxl.cell.cell import Cell, MergedCell
     from openpyxl.worksheet.worksheet import Worksheet
 
-from ....core.config import Settings as _Settings
-from ....core.decimal import coerce_decimal
-from ....core.errors import CoreError
-from ....core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
-from ....core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
-from ....core.hashing import hash_file as _hash_file
-from ....core.logging import get_logger
-from ._casilla_membership import declared_casilla_ids
-from ._errors import RegistryValidationError
-from ._formula_runtime import calculate_registry_snapshot
-from ._ids import BindingId, CasillaId, LegalRefId, RelationId, SourceRefId, WorkbookOutputId, is_registry_id
-from ._schema import EvidenceTier, RegistrySnapshot
-from ._snapshot_coordinate import registry_snapshot_id_for
+from cadrumo.core.decimal import coerce_decimal
+from cadrumo.core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
+from cadrumo.core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
+from cadrumo.core.hashing import hash_file as _hash_file
+from cadrumo.core.logging import get_logger
+from cadrumo.domain.calculations.registry import (
+    BindingId,
+    CasillaId,
+    EvidenceTier,
+    LegalRefId,
+    RegistrySnapshot,
+    RegistryValidationError,
+    RelationId,
+    SourceRefId,
+    WorkbookOutputId,
+    calculate_registry_snapshot,
+    declared_casilla_ids,
+    is_registry_id,
+    registry_snapshot_id_for,
+)
+
 from ._workbook_parity_models import (
     SyntheticInputSet,
     SyntheticInputValue,
@@ -70,21 +78,6 @@ from ._workbook_parity_types import (
 )
 
 _log = get_logger(__name__)
-
-
-def _parity_settings() -> _Settings:
-    """Load parity-timeout settings at call time, never at import time.
-
-    A module-scope ``Settings()`` resolves the storage root while this module
-    imports, so any refusal that resolution raises (for example the
-    former-product-state refusal) would kill every entrypoint that merely
-    imports the registry package - including the MCP server before it can
-    speak the protocol. Deferring to call time keeps the refusal on the
-    command that actually needs storage, where it surfaces instructively.
-    """
-    from ....core.config import load_settings
-
-    return load_settings()
 
 
 __all__ = [
@@ -130,11 +123,10 @@ _WORKBOOK_SUFFIXES = {_XLSX_EXTENSION, _XLS_EXTENSION}
 _MODELO_PATTERN = re.compile(r"(?:^|[\\/])modelo[_-](?P<modelo>\d{3})(?:[\\/]|$)", re.IGNORECASE)
 _CELL_REF_PATTERN = re.compile(r"(?<![A-Z0-9_])(?:'[^']+'!)?\$?[A-Z]{1,3}\$?\d+(?![A-Z0-9_])")
 _CELL_REF_VALUE_PATTERN = re.compile(r"^(?:(?P<sheet>'[^']+'|[^!]+)!)?(?P<coordinate>\$?[A-Z]{1,3}\$?\d+)$")
-_LIBREOFFICE_EXECUTABLE_ENV = "CADRUMO_LIBREOFFICE_EXECUTABLE"
 _BINARY_XLS_CONVERSION_BYTES_CACHE: dict[tuple[str, int, str], bytes] = {}
 
 
-class _BinaryXlsConversionError(CoreError):
+class _BinaryXlsConversionError(RuntimeError):
     """Failure raised after a valid LibreOffice runner starts XLS conversion."""
 
 
@@ -220,7 +212,7 @@ class WorkbookScanOptions:
     """Controls for bounded workbook discovery."""
 
     per_file_timeout_seconds: float = field(
-        default_factory=lambda: _parity_settings().cadrumo_workbook_parity_per_file_timeout_s,
+        default=15.0,
     )
     max_formula_refs: int = 500
 
@@ -439,17 +431,6 @@ def detect_workbook_runner() -> WorkbookRunnerAvailability:
     Returns:
         A :class:`WorkbookRunnerAvailability` describing the detected runner.
     """
-    from ....core.config import load_settings
-
-    settings_configured = load_settings().cadrumo_libreoffice_executable
-    if settings_configured is not None:
-        runner = _resolve_libreoffice_runner(str(settings_configured))
-        return WorkbookRunnerAvailability(
-            status="available",
-            engine=_ENGINE_LIBREOFFICE,
-            executable=str(runner),
-            detail=f"LibreOffice executable configured by {_LIBREOFFICE_EXECUTABLE_ENV}",
-        )
     for executable in ("soffice", "libreoffice"):
         found = shutil.which(executable)
         if found:
@@ -469,7 +450,7 @@ def detect_workbook_runner() -> WorkbookRunnerAvailability:
         )
     raise RegistryValidationError(
         "No LibreOffice/soffice executable or Excel COM automation found on this host. "
-        f"Install LibreOffice or set {_LIBREOFFICE_EXECUTABLE_ENV} to a valid soffice executable.",
+        "Install LibreOffice and make soffice or libreoffice available on PATH.",
     )
 
 
@@ -538,7 +519,7 @@ def run_workbook_with_libreoffice(
                 check=True,
                 capture_output=True,
                 text=True,
-                timeout=_parity_settings().cadrumo_workbook_parity_recalc_timeout_s,
+                timeout=60,
             )
         except subprocess.TimeoutExpired as exc:
             raise RegistryValidationError("LibreOffice workbook recalculation timed out") from exc
@@ -694,7 +675,7 @@ def _converted_binary_xls_path(
                 check=True,
                 capture_output=True,
                 text=True,
-                timeout=_parity_settings().cadrumo_workbook_parity_libreoffice_timeout_s,
+                timeout=120,
             )
         except subprocess.TimeoutExpired as exc:
             raise _BinaryXlsConversionError("LibreOffice binary XLS conversion timed out") from exc
@@ -843,14 +824,11 @@ def parse_workbook_cell_ref(value: str, *, default_sheet: str | None = None) -> 
 def _resolve_libreoffice_runner(executable: str | None) -> Path:
     """Locate a LibreOffice executable, raising explicitly when none is available."""
     if executable is None:
-        from ....core.config import load_settings
-
-        configured = load_settings().cadrumo_libreoffice_executable
-        found = str(configured) if configured is not None else (shutil.which("soffice") or shutil.which("libreoffice"))
+        found = shutil.which("soffice") or shutil.which("libreoffice")
         if not found:
             raise RegistryValidationError(
                 "LibreOffice or soffice executable is not available on PATH. "
-                f"Install LibreOffice or set {_LIBREOFFICE_EXECUTABLE_ENV}.",
+                "Install LibreOffice and expose its executable on PATH.",
             )
         return Path(found).resolve()
     candidate = Path(executable).resolve()

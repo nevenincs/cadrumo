@@ -28,6 +28,7 @@ from typing import TYPE_CHECKING
 
 import typer
 
+from ...application.operator_actions import next_action
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
@@ -169,6 +170,7 @@ def _reconcile_notices(outcome: ProfileBundleExportReconciliation) -> tuple[Noti
     if outcome.failures:
         notices.append(
             Notice(
+                action=next_action("operator.maintenance.reconcile"),
                 severity=NoticeSeverity.WARNING,
                 code="app.maintenance.reconcile.failures",
                 message=tr(
@@ -181,7 +183,6 @@ def _reconcile_notices(outcome: ProfileBundleExportReconciliation) -> tuple[Noti
                     ),
                     count=str(len(outcome.failures)),
                 ),
-                suggestion="aeat app maintenance reconcile",
                 context={
                     "failed_count": str(len(outcome.failures)),
                     "journal_ids": ",".join(failure.journal_id for failure in outcome.failures),

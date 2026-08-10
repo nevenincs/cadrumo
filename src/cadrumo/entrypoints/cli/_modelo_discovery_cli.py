@@ -572,7 +572,6 @@ def _requires_notices(checklist) -> tuple[Notice, ...]:
                         "(e.g. home-office usage ratio) could not be checked for gaps."
                     ),
                 ),
-                suggestion="aeat config profile create",
                 context={"modelo": str(checklist.modelo)},
             ),
         )
@@ -590,7 +589,6 @@ def _requires_notices(checklist) -> tuple[Notice, ...]:
                     ),
                     missing=missing,
                 ),
-                suggestion="aeat app ledger ratios set",
                 # The binding ids stay on the notice context: they are the
                 # registry-side identifiers a support channel needs, while the
                 # message carries the profile facts the operator must supply.
@@ -875,13 +873,11 @@ def _bindings_list_scope_notices(*, modelo: str | None, year: int | None, period
         return ()
     missing = ", ".join(missing_filters)
     message = tr("cli.app.modelo.bindings.unscoped_revision_warning", missing_filters=missing)
-    suggestion = tr("cli.app.modelo.bindings.unscoped_revision_suggestion")
     return (
         Notice(
             severity=NoticeSeverity.WARNING,
             code="modelo.bindings.list.unscoped_revision",
             message=message,
-            suggestion=suggestion,
             context={
                 "modelo_filter": modelo or "",
                 "year_filter": "" if year is None else str(year),
@@ -894,7 +890,8 @@ def _bindings_list_scope_notices(*, modelo: str | None, year: int | None, period
 
 def _notice_text_lines(notices: tuple[Notice, ...]) -> list[str]:
     return [
-        f"notice\t{notice.severity.value}\t{notice.code}\t{notice.message}\t{notice.suggestion or '-'}"
+        f"notice\t{notice.severity.value}\t{notice.code}\t{notice.message}\t"
+        f"{notice.action.target_command_key if notice.action is not None else '-'}"
         for notice in notices
     ]
 

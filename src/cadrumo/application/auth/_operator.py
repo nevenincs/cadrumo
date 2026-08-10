@@ -27,6 +27,8 @@ See Also:
 
 from __future__ import annotations
 
+from ...application.operator_actions import next_action
+
 import hashlib
 from datetime import datetime
 from pathlib import Path
@@ -277,7 +279,7 @@ def _auth_status_from_projection(projection: OperatorStateProjection) -> AuthSta
         configured=auth.configured,
         authenticated=auth.authenticated,
         available=auth.available,
-        active_profile=active.profile_id or "",
+        active_profile=active.label or active.profile_id or "",
         active_profile_status=active.health_status,
         active_profile_registered=active.registered_bucket,
         active_profile_record_present=active.record_present,
@@ -299,7 +301,6 @@ def _auth_configure_result(
     """Build a redacted configuration result that exposes identity readiness."""
     from ..user_profile import record_to_path_values
 
-    active_profile = state.active_profile_bucket_id() or ""
     record = state.active_profile_record()
     values = record_to_path_values(record)
     profile_tax_id = (values.get("identity.tax_id") or "").strip().upper()
@@ -324,13 +325,15 @@ def _auth_configure_result(
             provider_identity=provider_identity,
         )
     complete, incomplete_reason = _certificate_completeness(provider, certificate_path)
+    if provider == AuthProviderKind.CLAVE_MOVIL.value and alignment != "matches":
+        complete = False
+        incomplete_reason = alignment_detail
     next_action = _auth_configure_next_action(provider=provider, complete=complete, alignment=alignment)
     return AuthConfigureResult(
         provider=provider,
         file=str(certificate_path) if certificate_path is not None else "",
         complete=complete,
         incomplete_reason=incomplete_reason,
-        active_profile=active_profile,
         profile_tax_id_present=bool(profile_tax_id),
         provider_identity_present=bool(provider_identity) if provider == AuthProviderKind.CLAVE_MOVIL.value else True,
         identity_alignment=alignment,
@@ -347,8 +350,6 @@ def _auth_configure_next_action(*, provider: str, complete: bool, alignment: str
     auth; ``auth test`` would only re-report the same mismatch, so route the
     operator to the actual fix instead. Otherwise route to ``auth test``.
     """
-    if not complete:
-        return f"aeat config auth configure --provider {provider} --file PATH"
     if provider == AuthProviderKind.CLAVE_MOVIL.value and alignment in {
         "mismatch",
         "clave_identity_missing",
@@ -356,6 +357,8 @@ def _auth_configure_next_action(*, provider: str, complete: bool, alignment: str
         "profile_tax_id_missing_and_clave_identity_missing",
     }:
         return _identity_alignment_next_action(alignment)
+    if not complete:
+        return f"aeat config auth configure --provider {provider} --file PATH"
     if provider == AuthProviderKind.CLAVE_MOVIL.value:
         return "aeat config auth test --provider clave_movil"
     return f"aeat config auth test --provider {provider}"

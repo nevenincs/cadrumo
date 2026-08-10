@@ -114,20 +114,17 @@ from ._session import active_verified_session as _active_verified_session
 # distinguishable from every real pseudonymised one.
 _ABSENT_TAXPAYER_REF = "absent"
 
-# Bare directory names, read off the taxonomy rather than untethered string
-# literals. Still joined onto ``cadrumo_audit_dir`` / an already-resolved
-# ``store_root`` exactly as before -- the members carry no ``settings_field``
-# and are not safe to resolve directly, because ``AUDIT`` is
-# operator-overridable (see the members' declarations in
-# ``core._storage_taxonomy``).
-_AUDIT_LIVE_DIRNAME = Path(_storage_location(StorageCategory.AUDIT_LIVE).subpath).name
-_AUDIT_LIVE_IVA_WALLET_DIRNAME = Path(_storage_location(StorageCategory.AUDIT_LIVE_IVA_WALLET).subpath).name
-_AUDIT_LIVE_IVA_REMOTE_STATE_DIRNAME = Path(_storage_location(StorageCategory.AUDIT_LIVE_IVA_REMOTE_STATE).subpath).name
+# Bare directory names are read from the taxonomy and joined onto the
+# operator-overridable live-state root.
+_LIVE_STATE_IVA_WALLET_DIRNAME = Path(_storage_location(StorageCategory.LIVE_STATE_IVA_WALLET).subpath).name
+_LIVE_STATE_IVA_REMOTE_STATE_DIRNAME = Path(
+    _storage_location(StorageCategory.LIVE_STATE_IVA_REMOTE_STATE).subpath,
+).name
 _IVA_REMOTE_STATE_FILED_HISTORY_DIRNAME = Path(
-    _storage_location(StorageCategory.AUDIT_LIVE_IVA_REMOTE_STATE_FILED_HISTORY).subpath,
+    _storage_location(StorageCategory.LIVE_STATE_IVA_REMOTE_STATE_FILED_HISTORY).subpath,
 ).name
 _IVA_REMOTE_STATE_WALLET_DIRNAME = Path(
-    _storage_location(StorageCategory.AUDIT_LIVE_IVA_REMOTE_STATE_WALLET).subpath,
+    _storage_location(StorageCategory.LIVE_STATE_IVA_REMOTE_STATE_WALLET).subpath,
 ).name
 
 
@@ -699,7 +696,7 @@ async def _capture_iva_compensation_wallet_with_session(
     store_root = (
         output_root
         if output_root is not None
-        else settings.cadrumo_audit_dir / _AUDIT_LIVE_DIRNAME / _AUDIT_LIVE_IVA_WALLET_DIRNAME
+        else settings.cadrumo_live_state_dir / _LIVE_STATE_IVA_WALLET_DIRNAME
     )
     return persist_and_reconcile_iva_compensation_wallet(observation, output_root=store_root)
 
@@ -761,7 +758,7 @@ async def _capture_iva_remote_state_for_active_storage(
         store_root = (
             output_root
             if output_root is not None
-            else settings.cadrumo_audit_dir / _AUDIT_LIVE_DIRNAME / _AUDIT_LIVE_IVA_REMOTE_STATE_DIRNAME
+            else settings.cadrumo_live_state_dir / _LIVE_STATE_IVA_REMOTE_STATE_DIRNAME
         )
         filed_history: IvaCompensationHistoryCaptureReport | None = None
         wallet: IvaWalletCaptureReport | None = None

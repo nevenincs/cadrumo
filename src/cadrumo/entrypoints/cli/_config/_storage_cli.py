@@ -1,9 +1,7 @@
 """``aeat config storage`` — inspect and maintain the local storage tree.
 
-A lifecycle-operations-only noun-group: the member set is fixed by the core
-storage taxonomy, so an operator can read the tree, materialise it, and reclaim
-what a member's declared lifecycle says is regenerable, but cannot create or
-destroy a category.
+A lifecycle-operations-only noun-group: the internal member set is fixed by the
+core taxonomy, while operators see four stable aggregate areas.
 
 There is deliberately no verb that moves data or relocates the root. Asked where
 the tree is, ``list`` answers and names the environment variable that points at
@@ -20,11 +18,14 @@ its follow-up suggestion rather than a re-worded copy made here.
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Sequence
+from textwrap import TextWrapper
 from typing import TYPE_CHECKING, Final
 
 import typer
 
-from ....core import StorageCategory
+from ....application.storage_management import StorageCheckIssueKind, StorageTreeIssueKind
+from ....core import StorageArea
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
 from .._common import _emit_envelope
@@ -37,12 +38,12 @@ from ._storage_payloads import (
     ConfigStorageListResult,
     ConfigStorageReclaimResult,
     ConfigStorageShowResult,
-    StorageCategoryPayload,
-    StorageTreeIssuePayload,
+    StorageAreaIssuePayload,
+    StorageAreaPayload,
 )
 
 if TYPE_CHECKING:
-    from ....application.storage_management import StorageInventoryReport, StorageInventoryRow
+    from ....application.storage_management import StorageAreaInventoryReport, StorageAreaInventoryRow
 
 from ....core.external_constants import OutputLanguage as _OutputLanguage
 
@@ -65,7 +66,13 @@ def register_storage_commands(config_app: typer.Typer) -> None:
     config_app.add_typer(storage_app, name="storage")
 
 
-@storage_app.command("list", help=tr("cli.config.storage.list.help"))
+@storage_app.command(
+    "list",
+    help=tr(
+        "cli.config.storage.list.area_help",
+        default="Show aggregate occupancy and footprint for every storage area",
+    ),
+)
 def config_storage_list(
     ctx: typer.Context,
     output_language: _OutputLanguage | None = typer.Option(
@@ -77,31 +84,35 @@ def config_storage_list(
 ) -> None:
     """Report every declared location, its resolved path, and what it holds."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.storage_management import collect_storage_inventory
+    from ....application.storage_management import collect_storage_area_inventory
 
-    report = collect_storage_inventory()
+    report = collect_storage_area_inventory()
     result = ConfigStorageListResult(
         storage_root=str(report.storage_root),
-        active_profile_bucket=report.active_bucket_id,
-        categories=[_category_payload(row) for row in report.rows],
+        areas=[_area_payload(row) for row in report.rows],
     )
-    lines = [f"storage_root\t{report.storage_root}"]
-    if report.active_bucket_id:
-        lines.append(f"active_profile_bucket\t{report.active_bucket_id}")
-    lines.extend(_row_line(row) for row in report.rows)
+    notices = (_relocation_notice(str(report.storage_root)),)
+    lines = _inventory_lines(report)
+    lines.extend(_notice_lines(notices))
     _emit_envelope(
         ctx,
         command="config.storage.list",
         result=result,
         lines=tuple(lines),
-        notices=(_relocation_notice(str(report.storage_root)),),
+        notices=notices,
     )
 
 
-@storage_app.command("show", help=tr("cli.config.storage.show.help"))
+@storage_app.command(
+    "show",
+    help=tr("cli.config.storage.show.area_help", default="Show one storage area in full"),
+)
 def config_storage_show(
     ctx: typer.Context,
-    category: StorageCategory = typer.Argument(..., help=tr("cli.config.storage.show.category_help")),
+    area: StorageArea = typer.Argument(
+        ...,
+        help=tr("cli.config.storage.show.area_argument_help", default="Storage area to show"),
+    ),
     output_language: _OutputLanguage | None = typer.Option(
         None,
         "--output-language",
@@ -111,30 +122,25 @@ def config_storage_show(
 ) -> None:
     """Report one declared location in full."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.storage_management import collect_storage_inventory
+    from ....application.storage_management import collect_storage_area_inventory
 
-    report = collect_storage_inventory()
-    row = _row_for(report, category)
+    report = collect_storage_area_inventory()
+    row = _row_for(report, area)
     result = ConfigStorageShowResult(
         storage_root=str(report.storage_root),
-        active_profile_bucket=report.active_bucket_id,
-        category=_category_payload(row),
+        area=_area_payload(row),
     )
-    lines = [
-        f"category\t{row.category.value}",
-        f"path\t{row.path if row.path is not None else '-'}",
-        f"subpath\t{row.subpath}",
-        f"node_kind\t{row.node_kind.value}",
-        f"scope\t{row.scope.value}",
-        f"grouping\t{row.grouping.value}",
-        f"lifecycle\t{row.lifecycle.value}",
-        f"override_policy\t{row.override_policy.value}",
-        f"fingerprint\t{row.fingerprint_participation.value}",
-        f"settings_field\t{row.settings_field or '-'}",
-        f"occupancy\t{row.occupancy.value}",
-        f"entry_count\t{row.entry_count}",
-        f"reclaimable\t{'yes' if row.reclaimable else 'no'}",
-    ]
+    lines = _field_lines(
+        (
+            (_label("area", "Area"), row.area.value),
+            (_label("occupancy", "Occupancy"), _value_label("occupancy", row.occupancy.value)),
+            (_label("lifecycle", "Lifecycle"), _value_label("lifecycle", row.disposition.value)),
+            (_label("resolved_paths", "Resolved paths"), str(row.resolved_paths)),
+            (_label("entry_count", "Entry count"), str(row.entry_count)),
+            (_label("footprint", "Footprint"), _format_bytes(row.footprint_bytes)),
+            (_label("reclaimable", "Reclaimable"), _boolean_label(row.reclaimable)),
+        ),
+    )
     _emit_envelope(ctx, command="config.storage.show", result=result, lines=tuple(lines))
 
 
@@ -157,26 +163,35 @@ def config_storage_check(
         storage_root=str(report.storage_root),
         healthy=report.healthy,
         root_mode_enforced=report.root_mode_enforced,
-        checked_locations=report.checked_locations,
+        checked_areas=len(StorageArea),
         issues=[
-            StorageTreeIssuePayload(
-                kind=issue.kind,
-                path=str(issue.path),
-                category=issue.category,
-                detail=issue.detail,
+            StorageAreaIssuePayload(
+                kind=_public_issue_kind(issue.kind),
+                path=str(report.storage_root),
+                area=issue.area,
+                detail=_public_issue_detail(issue.kind),
             )
             for issue in report.issues
         ],
     )
-    lines = [
-        f"storage_root\t{report.storage_root}",
-        f"checked_locations\t{report.checked_locations}",
-        f"healthy\t{'yes' if report.healthy else 'no'}",
-    ]
-    lines.extend(
-        f"issue\t{issue.kind.value}\t{issue.category.value if issue.category else '-'}\t{issue.path}\t{issue.detail}"
-        for issue in report.issues
+    lines = _field_lines(
+        (
+            (_label("storage_root", "Storage root"), str(report.storage_root)),
+            (_label("checked_areas", "Checked areas"), str(len(StorageArea))),
+            (_label("healthy", "Healthy"), _boolean_label(report.healthy)),
+        ),
     )
+    if report.issues:
+        lines.extend(("", f"{_label('issues', 'Issues')} ({len(report.issues)}):"))
+        for issue in report.issues:
+            lines.extend(
+                (
+                    f"  - {_public_issue_kind(issue.kind).value}",
+                    f"    {_label('area', 'Area')}: {issue.area.value if issue.area else '-'}",
+                    f"    {_label('path', 'Path')}: {report.storage_root}",
+                    f"    {_label('detail', 'Detail')}: {_public_issue_detail(issue.kind)}",
+                ),
+            )
 
     notices: list[Notice] = []
     if not report.root_mode_enforced:
@@ -204,10 +219,10 @@ def config_storage_check(
                     "cli.config.storage.check.drifted",
                     default="The storage tree does not match its declaration.",
                 ),
-                suggestion="aeat config storage init",
                 context={"issue_count": str(len(report.issues))},
             ),
         )
+    lines.extend(_notice_lines(notices))
     _emit_envelope(ctx, command="config.storage.check", result=result, lines=tuple(lines), notices=tuple(notices))
     if not report.healthy:
         raise typer.Exit(code=2)
@@ -230,14 +245,16 @@ def config_storage_init(
     report = materialise_storage_tree()
     result = ConfigStorageInitResult(
         storage_root=str(report.storage_root),
-        created=[str(path) for path in report.created],
+        created_count=len(report.created),
         already_present=report.already_present,
     )
-    lines = [
-        f"storage_root\t{report.storage_root}",
-        f"already_present\t{report.already_present}",
-    ]
-    lines.extend(f"created\t{path}" for path in report.created)
+    lines = _field_lines(
+        (
+            (_label("storage_root", "Storage root"), str(report.storage_root)),
+            (_label("already_present", "Already present"), str(report.already_present)),
+            (_label("created", "Created"), str(len(report.created))),
+        ),
+    )
     notices: tuple[Notice, ...] = ()
     if not report.created:
         notices = (
@@ -251,13 +268,23 @@ def config_storage_init(
                 context={"storage_root": str(report.storage_root)},
             ),
         )
+    lines.extend(_notice_lines(notices))
     _emit_envelope(ctx, command="config.storage.init", result=result, lines=tuple(lines), notices=notices)
 
 
-@storage_app.command("reclaim", help=tr("cli.config.storage.reclaim.help"))
+@storage_app.command(
+    "reclaim",
+    help=tr(
+        "cli.config.storage.reclaim.area_help",
+        default="Delete regenerable contents from a storage area",
+    ),
+)
 def config_storage_reclaim(
     ctx: typer.Context,
-    category: StorageCategory = typer.Argument(..., help=tr("cli.config.storage.reclaim.category_help")),
+    area: StorageArea = typer.Argument(
+        ...,
+        help=tr("cli.config.storage.reclaim.area_argument_help", default="Storage area to reclaim"),
+    ),
     confirmed: bool = typer.Option(False, "--yes", help=tr("cli.config.storage.reclaim.yes_help")),
     output_language: _OutputLanguage | None = typer.Option(
         None,
@@ -266,7 +293,7 @@ def config_storage_reclaim(
         help=tr("cli.config.auth.output_language_help"),
     ),
 ) -> None:
-    """Delete a category's regenerable contents, refusing where its lifecycle forbids it.
+    """Delete an area's regenerable contents after the derived preflight.
 
     The service owns both refusals — the lifecycle guard and the confirmation —
     and both are registered errors, so they surface through the shared command
@@ -274,21 +301,23 @@ def config_storage_reclaim(
     declared lifecycle that forbade the delete.
     """
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.storage_management import reclaim_storage_category
+    from ....application.storage_management import reclaim_storage_area
 
-    report = reclaim_storage_category(category, confirmed=confirmed)
+    report = reclaim_storage_area(area, confirmed=confirmed)
     result = ConfigStorageReclaimResult(
-        category=report.category,
-        path=str(report.path),
+        area=report.area,
+        target_count=report.target_count,
         removed_entries=report.removed_entries,
         retained_entries=report.retained_entries,
     )
-    lines = [
-        f"category\t{report.category.value}",
-        f"path\t{report.path}",
-        f"removed_entries\t{report.removed_entries}",
-        f"retained_entries\t{report.retained_entries}",
-    ]
+    lines = _field_lines(
+        (
+            (_label("area", "Area"), report.area.value),
+            (_label("targets", "Targets"), str(report.target_count)),
+            (_label("removed_entries", "Removed entries"), str(report.removed_entries)),
+            (_label("retained_entries", "Retained entries"), str(report.retained_entries)),
+        ),
+    )
     notices: tuple[Notice, ...] = ()
     if report.retained_entries:
         notices = (
@@ -300,11 +329,12 @@ def config_storage_reclaim(
                     default="Some entries could not be removed and are still on disk.",
                 ),
                 context={
-                    "category": report.category.value,
+                    "area": report.area.value,
                     "retained_entries": str(report.retained_entries),
                 },
             ),
         )
+    lines.extend(_notice_lines(notices))
     _emit_envelope(ctx, command="config.storage.reclaim", result=result, lines=tuple(lines), notices=notices)
 
 
@@ -331,55 +361,128 @@ def _relocation_notice(storage_root: str) -> Notice:
     )
 
 
-def _row_for(report: StorageInventoryReport, category: StorageCategory) -> StorageInventoryRow:
-    """Return the single inventory row for ``category``.
-
-    The taxonomy is total over the enum, so a member always has exactly one row;
-    a lookup that found none would mean the declaration had gone partial, which
-    is worth failing on rather than reporting as an absent category.
-    """
+def _row_for(report: StorageAreaInventoryReport, area: StorageArea) -> StorageAreaInventoryRow:
+    """Return the single aggregate row for ``area``."""
     for row in report.rows:
-        if row.category is category:
+        if row.area is area:
             return row
-    raise KeyError(f"storage category {category.value!r} has no declaration")
+    raise KeyError(f"storage area {area.value!r} has no aggregate")
 
 
-def _category_payload(row: StorageInventoryRow) -> StorageCategoryPayload:
-    """Project one inventory row onto its wire shape."""
-    return StorageCategoryPayload(
-        category=row.category,
-        subpath=row.subpath,
-        node_kind=row.node_kind,
-        scope=row.scope,
-        grouping=row.grouping,
-        lifecycle=row.lifecycle,
-        override_policy=row.override_policy,
-        fingerprint_participation=row.fingerprint_participation,
-        settings_field=row.settings_field,
-        path=str(row.path) if row.path is not None else None,
-        bucket_id=row.bucket_id,
+def _area_payload(row: StorageAreaInventoryRow) -> StorageAreaPayload:
+    """Project one aggregate row onto its topology-neutral wire shape."""
+    return StorageAreaPayload(
+        area=row.area,
         occupancy=row.occupancy,
+        disposition=row.disposition,
+        resolved_paths=row.resolved_paths,
         entry_count=row.entry_count,
+        footprint_bytes=row.footprint_bytes,
         reclaimable=row.reclaimable,
     )
 
 
-def _row_line(row: StorageInventoryRow) -> str:
-    """Render one inventory row as a tab-separated text line."""
-    return "\t".join(
-        (
-            "category",
-            row.category.value,
-            str(row.path) if row.path is not None else "-",
-            row.node_kind.value,
-            row.grouping.value,
-            row.lifecycle.value,
-            row.scope.value,
-            row.settings_field or "-",
-            row.occupancy.value,
-            str(row.entry_count),
-        ),
+def _inventory_lines(report: StorageAreaInventoryReport) -> list[str]:
+    """Render the inventory as a compact table with paths on readable lines."""
+    lines = _field_lines(
+        ((_label("storage_root", "Storage root"), str(report.storage_root)),),
     )
+    lines.extend(("", f"{_label('areas', 'Areas')} ({len(report.rows)}):"))
+    rows = [
+        (
+            row.area.value,
+            _value_label("lifecycle", row.disposition.value),
+            _value_label("occupancy", row.occupancy.value),
+            str(row.entry_count),
+            _format_bytes(row.footprint_bytes),
+        )
+        for row in report.rows
+    ]
+    table = _table_lines(
+        (
+            _label("area", "Area"),
+            _label("lifecycle", "Lifecycle"),
+            _label("occupancy", "Occupancy"),
+            _label("entries", "Entries"),
+            _label("footprint", "Footprint"),
+        ),
+        rows,
+    )
+    lines.extend(table)
+    return lines
+
+
+def _public_issue_kind(kind: StorageTreeIssueKind) -> StorageCheckIssueKind:
+    """Collapse internal node diagnoses into a topology-neutral public kind."""
+    if kind is StorageTreeIssueKind.MISSING_DIRECTORY:
+        return StorageCheckIssueKind.MISSING_PATH
+    if kind is StorageTreeIssueKind.ROOT_PERMISSIONS_DRIFTED:
+        return StorageCheckIssueKind.PERMISSIONS_DRIFTED
+    return StorageCheckIssueKind.PATH_TYPE_MISMATCH
+
+
+def _public_issue_detail(kind: StorageTreeIssueKind) -> str:
+    """Describe a check failure without revealing internal node topology."""
+    public = _public_issue_kind(kind)
+    if public is StorageCheckIssueKind.MISSING_PATH:
+        return tr("cli.config.storage.check.issue.missing_path")
+    if public is StorageCheckIssueKind.PERMISSIONS_DRIFTED:
+        return tr("cli.config.storage.check.issue.permissions_drifted")
+    return tr("cli.config.storage.check.issue.path_type_mismatch")
+
+
+def _label(name: str, default: str) -> str:
+    """Return one localized text-mode label."""
+    return tr(f"cli.config.storage.labels.{name}", default=default)
+
+
+def _boolean_label(value: bool) -> str:
+    """Render a boolean in the selected output language."""
+    return _label("yes", "yes") if value else _label("no", "no")
+
+
+def _value_label(axis: str, value: str) -> str:
+    """Render a closed report value in the selected output language."""
+    return tr(f"cli.config.storage.values.{axis}.{value}", default=value)
+
+
+def _format_bytes(value: int) -> str:
+    """Render an exact byte footprint without hiding the unit."""
+    return f"{value} B"
+
+
+def _field_lines(fields: Sequence[tuple[str, str]]) -> list[str]:
+    """Render labelled values with one stable, human-readable alignment."""
+    width = max(len(label) for label, _ in fields)
+    return [f"{label:<{width}}  {value}" for label, value in fields]
+
+
+def _table_lines(headers: tuple[str, ...], rows: Iterable[tuple[str, ...]]) -> list[str]:
+    """Render a plain table that remains legible in redirected output."""
+    materialised = list(rows)
+    widths = [max(len(header), *(len(row[index]) for row in materialised)) for index, header in enumerate(headers)]
+
+    def render(row: tuple[str, ...]) -> str:
+        return "  ".join(value.ljust(widths[index]) for index, value in enumerate(row)).rstrip()
+
+    return [render(headers), render(tuple("-" * width for width in widths)), *(render(row) for row in materialised)]
+
+
+def _notice_lines(notices: Sequence[Notice]) -> list[str]:
+    """Render typed notices visibly in text mode as well as JSON mode."""
+    lines: list[str] = []
+    for notice in notices:
+        prefix = f"{_label(f'notice_{notice.severity.value}', notice.severity.value.title())}: "
+        lines.extend(
+            TextWrapper(
+                width=96,
+                initial_indent=prefix,
+                subsequent_indent=" " * len(prefix),
+                break_long_words=False,
+                break_on_hyphens=False,
+            ).wrap(notice.message),
+        )
+    return ["", *lines] if lines else []
 
 
 __all__ = ["register_storage_commands", "storage_app"]

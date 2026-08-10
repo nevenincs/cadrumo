@@ -41,20 +41,19 @@ from .._layout import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"buckets", "db", "blobs", "audit"})
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"buckets", "db", "blobs"})
 """Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 _LAYOUT_MODULE = Path(__file__).resolve().parent.parent / "_layout.py"
 
 
-def test_provision_creates_three_subdirectories(tmp_path: Path) -> None:
+def test_provision_creates_two_subdirectories(tmp_path: Path) -> None:
     paths = provision_bucket_directory(tmp_path, "alpha")
 
     assert paths.bucket_dir == tmp_path / "buckets" / "alpha"
     for subdir, dirname in (
         (paths.db_dir, "db"),
         (paths.blobs_dir, "blobs"),
-        (paths.audit_dir, "audit"),
     ):
         assert subdir == paths.bucket_dir / dirname
         assert subdir.is_dir()
@@ -113,7 +112,7 @@ def test_provision_rejects_path_separator_in_bucket_id(tmp_path: Path) -> None:
 def test_bucket_paths_is_pure_no_filesystem_side_effects(tmp_path: Path) -> None:
     paths = bucket_paths(tmp_path, "alpha")
 
-    for path in (paths.bucket_dir, paths.db_dir, paths.blobs_dir, paths.audit_dir):
+    for path in (paths.bucket_dir, paths.db_dir, paths.blobs_dir):
         assert not path.exists()
     assert isinstance(paths, BucketPaths)
 
@@ -193,7 +192,7 @@ def _string_literals(module: Path) -> set[str]:
 
 
 def test_no_bare_directory_name_literal_survives_in_the_layout_module() -> None:
-    """The bucket/db/blobs/audit directory names are read from the taxonomy, never re-typed.
+    """The bucket/db/blobs directory names are read from the taxonomy, never re-typed.
 
     An AST walk rather than a text scan, matching the shape of the core
     name-unification gate (``test_storage_taxonomy_name_unification.py``): a
@@ -207,7 +206,6 @@ def test_no_bare_directory_name_literal_survives_in_the_layout_module() -> None:
         storage_location(StorageCategory.BUCKETS).subpath,
         storage_location(StorageCategory.BUCKET_DATABASE).subpath,
         storage_location(StorageCategory.BUCKET_BLOBS).subpath,
-        storage_location(StorageCategory.BUCKET_AUDIT).subpath,
     )
     for name in governed:
         assert name not in literals, f"_layout.py re-types the governed layout name {name!r}; read the taxonomy instead"

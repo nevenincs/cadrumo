@@ -73,8 +73,18 @@ from ._command_suggestions import (
 from ._command_suggestions import (
     register_lazy_subcommand as _register_lazy_subcommand,
 )
-from ._common import _emit_envelope
+from ._common import (
+    _active_profile_label,
+    _emit_envelope,
+    attach_cli_policy_refusal_projection,
+    attach_cli_policy_verdict,
+    cli_policy_refusal_context,
+    preserve_requested_cli_leaf,
+    project_cli_policy_refusal,
+    requested_cli_leaf,
+)
 from ._errors import CliCommandGroupUnavailableError as _CliCommandGroupUnavailableError
+from ._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from ._errors import decorate_typer_app as _decorate_typer_app
 from ._framework_localisation import (
     localise_help_section_headers as _localise_help_section_headers,
@@ -172,6 +182,7 @@ def _root(
         _emit_root_help_and_exit(ctx)
     if ctx.invoked_subcommand is not None and _is_introspection_only_invocation(ctx):
         return
+    preserve_requested_cli_leaf(ctx)
     # Defer profile override and bucket-session activation to after the
     # version/help fast-paths (already exited above). Bare invocation
     # (ctx.invoked_subcommand is None) defers the full application-layer
@@ -271,17 +282,24 @@ def _normalize_root_active_profile(ctx: typer.Context) -> None:
     from ._bootstrap_exempt import is_bootstrap_exempt
 
     verb_path = _resolve_invocation_verb_path(ctx)
-    explicit_profile_show = _is_explicit_profile_show_invocation(ctx, verb_path)
-    if not is_bootstrap_exempt(verb_path) and not explicit_profile_show:
+    explicit_profile_target = _is_explicit_profile_target_invocation(ctx, verb_path)
+    if not is_bootstrap_exempt(verb_path) and not explicit_profile_target:
+        from ...application.profile_preconditions import (
+            FormerProductDetectionScope,
+            former_product_state_verdict,
+        )
         from ...core import FormerProductStateError
         from ._errors import CliRefusedBoundaryError
 
         try:
             _normalize_active_profile_label_to_uuid(ctx)
         except FormerProductStateError as exc:
-            raise CliRefusedBoundaryError(
-                str(exc),
-                suggestion="aeat config repair --help",
+            raise attach_cli_policy_verdict(
+                CliRefusedBoundaryError(str(exc)),
+                verdict=former_product_state_verdict(
+                    FormerProductDetectionScope.ROOT_PROFILE_NORMALISATION,
+                ),
+                requested_leaf=requested_cli_leaf(ctx),
             ) from exc
 
 
@@ -296,11 +314,16 @@ def _emit_bare_invocation_and_exit(ctx: typer.Context) -> None:
     """
     from ...adapters.persistence.storage import active_bucket_session_serves
     from ...application.operator_surface import build_root_landing_report
+    from ...application.workflow import list_profile_buckets
     from ...core import resolve_active_bucket_id
     from ._root_landing import render_cli_root_landing_lines
 
     active = resolve_active_bucket_id()
-    landing = build_root_landing_report(active)
+    landing = build_root_landing_report(
+        _active_profile_label(),
+        profile_selected=active is not None,
+        registered_profile_count=len(list_profile_buckets()) if active is None else 0,
+    )
     if active is None or not active_bucket_session_serves(active):
         # Bare invocation with no active profile OR no open
         # session: render the landing card and exit. Bare
@@ -339,15 +362,23 @@ def _activate_profile_override(ctx: typer.Context, profile: str) -> None:
     ``--profile`` value may be either the operator display label or the UUID
     bucket id, then pins the override to the resolved UUID.
     """
+    from ...application.profile_preconditions import ProfileSelectionFailure, profile_selection_failure_verdict
     from ...application.workflow import ProfileLabelAmbiguousError, resolve_profile_bucket
     from ...core.config import override_settings
     from ._errors import CliRefusedBoundaryError
 
     requested = profile.strip()
     if not requested:
-        raise CliRefusedBoundaryError(
-            translated_message="cli.config.profile.unknown_profile",
-            context={"name": profile},
+        raise attach_cli_policy_verdict(
+            CliRefusedBoundaryError(
+                translated_message="cli.config.profile.unknown_profile",
+                context={"name": profile},
+            ),
+            verdict=profile_selection_failure_verdict(
+                ProfileSelectionFailure.BLANK,
+                requested_profile=profile,
+            ),
+            requested_leaf=requested_cli_leaf(ctx),
         )
     # The label fallback raises ProfileLabelAmbiguousError (a WorkflowError, NOT
     # a ValueError) when two live profiles share the name; refuse clearly rather
@@ -359,13 +390,27 @@ def _activate_profile_override(ctx: typer.Context, profile: str) -> None:
         # carries it. Render the dedicated ambiguity refusal (which carries no
         # placeholder) rather than the generic unknown-profile message, matching
         # the _config-site precedent in commit c3509a5ee.
-        raise CliRefusedBoundaryError(
-            translated_message="errors.refused.refused_profile_label_ambiguous",
+        raise attach_cli_policy_verdict(
+            CliRefusedBoundaryError(
+                translated_message="errors.refused.refused_profile_label_ambiguous",
+            ),
+            verdict=profile_selection_failure_verdict(
+                ProfileSelectionFailure.AMBIGUOUS,
+                requested_profile=requested,
+            ),
+            requested_leaf=requested_cli_leaf(ctx),
         ) from exc
     if pointer is None:
-        raise CliRefusedBoundaryError(
-            translated_message="cli.config.profile.unknown_profile",
-            context={"name": requested},
+        raise attach_cli_policy_verdict(
+            CliRefusedBoundaryError(
+                translated_message="cli.config.profile.unknown_profile",
+                context={"name": requested},
+            ),
+            verdict=profile_selection_failure_verdict(
+                ProfileSelectionFailure.UNKNOWN,
+                requested_profile=requested,
+            ),
+            requested_leaf=requested_cli_leaf(ctx),
         )
     ctx.with_resource(override_settings(cadrumo_active_profile=pointer.bucket_id))
 
@@ -391,6 +436,7 @@ def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
     ambiguous label (more than one live match) raises a clear refusal rather than
     an arbitrary pick.
     """
+    from ...application.profile_preconditions import ProfileSelectionFailure, profile_selection_failure_verdict
     from ...application.workflow import (
         ProfileLabelAmbiguousError,
         read_profile_bucket_by_id,
@@ -414,8 +460,15 @@ def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
         # dedicated ambiguity refusal (no placeholder) rather than the generic
         # unknown-profile message, matching the _config-site precedent in
         # commit c3509a5ee.
-        raise CliRefusedBoundaryError(
-            translated_message="errors.refused.refused_profile_label_ambiguous",
+        raise attach_cli_policy_verdict(
+            CliRefusedBoundaryError(
+                translated_message="errors.refused.refused_profile_label_ambiguous",
+            ),
+            verdict=profile_selection_failure_verdict(
+                ProfileSelectionFailure.AMBIGUOUS,
+                requested_profile=active,
+            ),
+            requested_leaf=requested_cli_leaf(ctx),
         ) from exc
     except CadrumoError:
         return
@@ -425,9 +478,17 @@ def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
         except CadrumoError:
             return
         if inactive_bucket is not None:
-            raise CliRefusedBoundaryError(
-                translated_message="cli.config.profile.unknown_profile",
-                context={"name": active},
+            raise attach_cli_policy_verdict(
+                CliRefusedBoundaryError(
+                    translated_message="cli.config.profile.unknown_profile",
+                    context={"name": active},
+                ),
+                verdict=profile_selection_failure_verdict(
+                    ProfileSelectionFailure.INACTIVE,
+                    requested_profile=active,
+                    lifecycle_status=inactive_bucket.status.value,
+                ),
+                requested_leaf=requested_cli_leaf(ctx),
             )
         # Not a live label either; leave resolution to the per-command active
         # profile guard, which emits the canonical no-active-profile refusal.
@@ -479,19 +540,28 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     from ...core import resolve_active_bucket_id
     from ._bootstrap_exempt import is_bootstrap_exempt
     from ._command_suggestions import INVOCATION_REMAINDER_META_KEY
-    from ._errors import CliRefusedBoundaryError
 
     verb_path = _resolve_invocation_verb_path(ctx)
     exempt = is_bootstrap_exempt(verb_path)
-    explicit_profile_show = _is_explicit_profile_show_invocation(ctx, verb_path)
+    explicit_profile_target = _is_explicit_profile_target_invocation(ctx, verb_path)
     argv_tokens = _full_invocation_tokens() or tuple(
         str(token) for token in ctx.meta.get(INVOCATION_REMAINDER_META_KEY, ())
     )
     write_policy = inspect_storage_write_policy(verb_path, bootstrap_exempt=exempt, argv_tokens=argv_tokens)
     if not write_policy.allowed:
-        raise CliRefusedBoundaryError(
-            write_policy.render_refusal_message(),
-            context=write_policy.refusal_context(),
+        leaf = requested_cli_leaf(ctx)
+        if leaf is None or write_policy.verdict is None:
+            raise RuntimeError("root write-policy refusal is missing its requested leaf or verdict")
+        projection = project_cli_policy_refusal(
+            requested_leaf=leaf,
+            verdict=write_policy.verdict,
+        )
+        raise attach_cli_policy_refusal_projection(
+            _CliRefusedBoundaryError(
+                write_policy.render_refusal_message(),
+                context=cli_policy_refusal_context(projection),
+            ),
+            projection=projection,
         )
     active_bucket_id = resolve_active_bucket_id()
     if active_bucket_id is None:
@@ -509,7 +579,7 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     # while the selected bucket is deliberately locked.
     if exempt:
         return
-    if explicit_profile_show:
+    if explicit_profile_target:
         return
     if _is_unregistered_profile_status_probe(verb_path, active_bucket_id):
         return
@@ -573,6 +643,7 @@ def _resume_profile_session_or_refuse(ctx: typer.Context, bucket_id: str) -> Non
     through to the refusals below unchanged.
     """
     from ...adapters.persistence.storage import get_master_key_provider
+    from ...application.profile_preconditions import profile_session_failure_verdict
     from ...application.user_profile import resume_active_profile_session
     from ._errors import CliRefusedBoundaryError
 
@@ -584,16 +655,21 @@ def _resume_profile_session_or_refuse(ctx: typer.Context, bucket_id: str) -> Non
         return
     if _authenticated_at_the_gate(ctx, bucket_id=bucket_id):
         return
+    verdict = profile_session_failure_verdict(refusal, profile_name=bucket_id)
     if refusal in _LOGGED_OUT_REFUSALS:
-        raise CliRefusedBoundaryError(
+        error = CliRefusedBoundaryError(
             translated_message="cli.config.errors.profile_session_absent",
             context={"reason": refusal.value},
-            suggestion="aeat config login",
         )
-    raise CliRefusedBoundaryError(
-        translated_message="cli.config.errors.profile_session_expired",
-        context={"reason": refusal.value},
-        suggestion="aeat config login",
+    else:
+        error = CliRefusedBoundaryError(
+            translated_message="cli.config.errors.profile_session_expired",
+            context={"reason": refusal.value},
+        )
+    raise attach_cli_policy_verdict(
+        error,
+        verdict=verdict,
+        requested_leaf=requested_cli_leaf(ctx),
     )
 
 
@@ -627,15 +703,38 @@ def _authenticated_at_the_gate(ctx: typer.Context, *, bucket_id: str) -> bool:
     always name the same profile.
     """
     from ...application.user_profile import resume_active_profile_session
-    from ...core.config import override_settings
     from ._config import offer_login_to_a_gated_verb
 
     outcome = offer_login_to_a_gated_verb(ctx, bucket_id=bucket_id)
     if outcome is None:
         return False
-    if outcome.bucket_id != bucket_id:
-        ctx.with_resource(override_settings(cadrumo_active_profile=outcome.bucket_id))
+    _bind_authenticated_profile_to_invocation(ctx, bucket_id=outcome.bucket_id)
     return resume_active_profile_session(bucket_id=outcome.bucket_id) is None
+
+
+def _bind_authenticated_profile_to_invocation(ctx: typer.Context, *, bucket_id: str) -> None:
+    """Make the authenticated profile the current invocation's storage route.
+
+    The requested gate target is not the previous effective settings profile:
+    ``profile edit B`` can request and authenticate B while the root callback
+    still carries an override for A.  Binding only when the outcome differs
+    from the requested target therefore leaves the exact stale route this
+    helper exists to retire.  Authentication is the selection authority, so
+    every successful outcome replaces the invocation override unconditionally.
+    """
+    from ...core.config import override_settings
+
+    ctx.with_resource(override_settings(cadrumo_active_profile=bucket_id))
+
+
+def resume_profile_session_for_target(ctx: typer.Context, *, bucket_id: str) -> None:
+    """Authenticate a command-selected profile through the canonical CLI gate."""
+    _resume_profile_session_or_refuse(ctx, bucket_id)
+
+
+def bind_profile_target_to_invocation(ctx: typer.Context, *, bucket_id: str) -> None:
+    """Bind an authenticated command-selected profile to this invocation."""
+    _bind_authenticated_profile_to_invocation(ctx, bucket_id=bucket_id)
 
 
 def _headless_secret_channel_active() -> bool:
@@ -662,13 +761,13 @@ def _is_unregistered_profile_status_probe(verb_path: str | None, active_bucket_i
     return read_profile_bucket_by_id(active_bucket_id) is None
 
 
-def _is_explicit_profile_show_invocation(ctx: typer.Context, verb_path: str | None) -> bool:
-    """Return whether the operator targeted ``config profile show <name>``.
+def _is_explicit_profile_target_invocation(ctx: typer.Context, verb_path: str | None) -> bool:
+    """Return whether a self-scoped profile read has an explicit target.
 
-    Explicit profile inspection resolves its own label/UUID target and must stay
-    reachable when the unrelated active-profile pointer is stale. The no-arg
-    ``config profile show`` form still depends on the active profile and remains
-    active-profile guarded.
+    Explicit ``show``, ``validate``, and ``history`` reads resolve and unlock
+    their own label/UUID target, so an unrelated active-profile pointer must not
+    gate them first. Their no-argument forms still depend on the active profile
+    and remain active-profile guarded.
     """
     from ._command_suggestions import INVOCATION_REMAINDER_META_KEY
 
@@ -676,28 +775,47 @@ def _is_explicit_profile_show_invocation(ctx: typer.Context, verb_path: str | No
         str(token) for token in ctx.meta.get(INVOCATION_REMAINDER_META_KEY, ())
     )
     if raw_tokens:
-        command_start = _profile_show_command_start(raw_tokens)
+        command_start = _explicit_profile_read_command_start(raw_tokens)
         if command_start is None:
             return False
-        return _has_explicit_profile_show_target(raw_tokens[command_start + 3 :])
+        return _has_explicit_profile_read_target(raw_tokens[command_start + 3 :])
 
     if verb_path is None:
         return False
     verb_tokens = tuple(verb_path.split())
-    if verb_tokens[:3] != ("config", "profile", "show"):
+    if verb_tokens[:2] != ("config", "profile") or verb_tokens[2:3] not in (
+        ("show",),
+        ("validate",),
+        ("history",),
+    ):
         return False
-    return _has_explicit_profile_show_target(verb_tokens[3:])
+    return _has_explicit_profile_read_target(verb_tokens[3:])
 
 
-def _profile_show_command_start(tokens: tuple[str, ...]) -> int | None:
+def _explicit_profile_read_command_start(tokens: tuple[str, ...]) -> int | None:
     for index in range(0, max(len(tokens) - 2, 0)):
-        if tokens[index : index + 3] == ("config", "profile", "show"):
+        if tokens[index : index + 2] == ("config", "profile") and tokens[index + 2] in {
+            "show",
+            "validate",
+            "history",
+        }:
             return index
     return None
 
 
-def _has_explicit_profile_show_target(tokens: tuple[str, ...]) -> bool:
-    value_options = {"--format", "--language", "--lang", "--output-language", "--profile"}
+def _has_explicit_profile_read_target(tokens: tuple[str, ...]) -> bool:
+    value_options = {
+        "--actor",
+        "--event-type",
+        "--format",
+        "--language",
+        "--lang",
+        "--object-id",
+        "--output-language",
+        "--profile",
+        "--since",
+        "--until",
+    }
     skip_next = False
     for token in tokens:
         if skip_next:
@@ -841,6 +959,9 @@ def _resolve_invocation_verb_path(ctx: typer.Context) -> str | None:
     source. When both describe one invocation, prefer the longer path; when
     they conflict, argv is the operator's literal command and wins.
     """
+    preserved_leaf = requested_cli_leaf(ctx)
+    if preserved_leaf is not None:
+        return " ".join(preserved_leaf.canonical_cli_path)
     return _prefer_complete_verb_path(
         context_path=_verb_path_from_context(ctx),
         argv_path=_full_invocation_verb_path(),
@@ -1162,6 +1283,10 @@ def main() -> None:
 
 def _refuse_former_product_state_at_startup() -> None:
     """Route a refused retired ``aeat`` state root through the typed CLI error boundary."""
+    from ...application.profile_preconditions import (
+        FormerProductDetectionScope,
+        former_product_state_verdict,
+    )
     from ...core import FormerProductStateError
     from ...core.config import Settings
     from ._errors import CliRefusedBoundaryError, _emit_error_and_exit
@@ -1170,9 +1295,11 @@ def _refuse_former_product_state_at_startup() -> None:
         Settings()
     except FormerProductStateError as error:
         _emit_error_and_exit(
-            CliRefusedBoundaryError(
-                str(error),
-                suggestion="aeat config repair --help",
+            attach_cli_policy_verdict(
+                CliRefusedBoundaryError(str(error)),
+                verdict=former_product_state_verdict(
+                    FormerProductDetectionScope.STARTUP,
+                ),
             )
         )
 

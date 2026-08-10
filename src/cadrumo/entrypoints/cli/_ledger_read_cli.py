@@ -47,6 +47,7 @@ from ...domain.categories import (
 from ...domain.invoices import LinkInconsistency
 from ...domain.transactions import Transaction, ledger_irpf_category_catalogue
 from ._common import (
+    _active_profile_label,
     _bad,
     _canonical_period,
     _emit_envelope,
@@ -249,7 +250,6 @@ def _register_ledger_llm_diagnostics_command(app: typer.Typer) -> None:
                             "Run an LLM-assisted classification to populate them."
                         ),
                     ),
-                    suggestion="aeat app ledger classify <transaction-id> --llm <provider> --apply",
                 ),
             )
             lines.append(
@@ -384,7 +384,6 @@ def _link_inconsistency_notices(rows: tuple[LinkInconsistency, ...]) -> list[Not
                     f"catalogues; the affected invoice association cannot be trusted."
                 ),
             ),
-            suggestion="aeat app ledger link",
             context={"link_inconsistency_count": str(len(rows))},
         ),
     ]
@@ -632,7 +631,6 @@ def _register_ledger_preflight_command(app: typer.Typer) -> None:
                     severity=NoticeSeverity.WARNING,
                     code="ledger.preflight.empty_period",
                     message=message,
-                    suggestion=suggestion,
                     context={"period": canonical.registry_token, "year": str(canonical.filing_year)},
                 ),
             )
@@ -935,7 +933,7 @@ def _register_ledger_status_command(app: typer.Typer) -> None:
         )
         transactions = transaction_repository.load()
         lines = [
-            f"{tr('cli.ledger.labels.bucket')}\t{report.bucket_id}",
+            f"{tr('cli.ledger.labels.profile', default='Profile')}\t{_active_profile_label() or '<none>'}",
             f"business_income_total\t{report.business_income_total}",
             f"business_expense_total\t{report.business_expense_total}",
             f"business_net_total\t{report.business_net_total}",
@@ -1180,7 +1178,6 @@ def _latest_llm_rejection_notice(
                 "The most recent LLM suggestion for this transaction was rejected; classify it manually when ready."
             ),
         ),
-        suggestion=f"aeat app ledger classify {resolved_id} --classification BUSINESS --category-id <id>",
         context=context,
     )
 

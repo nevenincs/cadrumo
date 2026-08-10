@@ -41,7 +41,7 @@ from textual.theme import Theme
 from textual.widgets import Static
 
 from ....core.config import TuiAppearance, load_settings
-from ....core.json_contract import Notice, NoticeSeverity
+from ....core.json_contract import Notice, NoticeSeverity, ResolvedActionReference, ResolvedPreconditionAction
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -247,7 +247,7 @@ NOTICE_BAND_CSS: Final[str] = """
     .cadrumo-notice { margin: 0 0 1 0; }
     .cadrumo-notice-info { color: $text; }
     .cadrumo-notice-warning { color: $warning; text-style: bold; }
-    .cadrumo-notice-suggestion { color: $text-muted; margin: 0 0 1 2; }
+    .cadrumo-notice-action { color: $text-muted; margin: 0 0 1 2; }
 """
 """Styling for :class:`NoticeBand`. Severity drives both the glyph the band
 prints and this colour, so meaning never rests on colour alone — the same
@@ -257,6 +257,22 @@ _NOTICE_GLYPH: Final[dict[NoticeSeverity, str]] = {
     NoticeSeverity.INFO: "ⓘ",
     NoticeSeverity.WARNING: "⚠",
 }
+
+
+def _notice_action_target(notice: Notice) -> str | None:
+    """Return the resolved action target that this read-only surface may show.
+
+    The TUI receives an already-resolved wire projection. It must not look up
+    an action again or reconstruct a shell command: the dotted target identity
+    is the contract's displayable action reference. A terminal precondition has
+    no recovery target and therefore produces no action line.
+    """
+    action = notice.action
+    if isinstance(action, ResolvedActionReference):
+        return action.target_command_key
+    if isinstance(action, ResolvedPreconditionAction) and action.action is not None:
+        return action.action.target_command_key
+    return None
 
 
 class NoticeBand(Vertical, can_focus=False):
@@ -289,11 +305,12 @@ class NoticeBand(Vertical, can_focus=False):
                 id=f"notice-{index}",
                 markup=False,
             )
-            if notice.suggestion:
+            action_target = _notice_action_target(notice)
+            if action_target is not None:
                 yield Static(
-                    notice.suggestion,
-                    classes="cadrumo-notice-suggestion",
-                    id=f"notice-{index}-suggestion",
+                    action_target,
+                    classes="cadrumo-notice-action",
+                    id=f"notice-{index}-action",
                     markup=False,
                 )
 

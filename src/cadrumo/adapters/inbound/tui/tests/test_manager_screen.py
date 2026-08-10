@@ -13,6 +13,7 @@ view would fail.
 from __future__ import annotations
 
 import asyncio
+import threading
 
 import pytest
 from textual.widget import Widget
@@ -59,7 +60,9 @@ def _notice(app: ProfileManagerApp) -> str:
     really there, and the press writes a progress line synchronously — so
     such a poll is satisfied before the work it is waiting on has run.
     """
-    return str(app.query_one("#manager-notice", Static).content)
+    from .. import PinnedStatusBar
+
+    return app.query_one("#manager-status", PinnedStatusBar).message
 
 
 def _select_row(app: ProfileManagerApp, path: str) -> None:
@@ -170,7 +173,9 @@ async def test_editing_one_field_repaints_that_row_without_rebuilding_the_tables
             before = _rows(app)
             assert before[_EDITED_PATH][2] == "", "the fixture must start blank, or the glyph cannot flip"
             tables = list(app.query(DataTable))
-            progress = str(app.query_one("#manager-progress", Static).content)
+            from .. import PinnedStatusBar
+
+            progress = app.query_one("#manager-status", PinnedStatusBar).summary
             untouched = {path: cells for path, cells in before.items() if path != _EDITED_PATH}
 
             field = app._field_by_key[_EDITED_PATH]
@@ -192,7 +197,7 @@ async def test_editing_one_field_repaints_that_row_without_rebuilding_the_tables
             assert [id(table) for table in app.query(DataTable)] == [id(table) for table in tables], (
                 "the tables must survive the edit; remounting them is the full rebuild this replaced"
             )
-            assert str(app.query_one("#manager-progress", Static).content) != progress, (
+            assert app.query_one("#manager-status", PinnedStatusBar).summary != progress, (
                 "the filled-in count must follow the edit"
             )
             app.exit(None)
@@ -245,9 +250,7 @@ async def test_a_second_edit_is_refused_before_its_dialog_opens(tmp_path) -> Non
             assert len(app.screen_stack) == settled, (
                 "no edit box may open while a write is in flight; opening one is how typed input gets discarded"
             )
-            assert str(app.query_one("#manager-notice", Static).content), (
-                "the operator must be told why the row did not open"
-            )
+            assert _notice(app), "the operator must be told why the row did not open"
 
             release.set()
             await wait_until_settled(app, pilot)
@@ -294,6 +297,87 @@ async def test_a_masked_field_opens_empty_rather_than_prefilled(tmp_path) -> Non
 
 
 # ── actions ─────────────────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_aeat_progress_replaces_the_inherited_stderr_sink_with_the_pinned_header(tmp_path) -> None:
+    """Cl@ve verification progress must be visible before the pull finishes."""
+    from .....adapters.outbound.aeat import emit_operator_progress, operator_progress_sink
+    from .. import ManagerAction, ManagerActionOutcome, PinnedStatusBar
+
+    release = threading.Event()
+
+    def _run() -> ManagerActionOutcome:
+        emit_operator_progress(
+            "AEAT Cl@ve Movil login\n"
+            "AEAT page verification code: TUI-CODE\n"
+            "Waiting up to 2m 00s for AEAT to complete auth...",
+        )
+        release.wait(timeout=5)
+        return ManagerActionOutcome(message="SYNC-COMPLETE")
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        app = ProfileManagerApp(
+            _live_overview(),
+            persist=_persist,
+            actions=[
+                ManagerAction(
+                    key="sync",
+                    label="Sync",
+                    run=_run,
+                    progress_sink=operator_progress_sink,
+                ),
+            ],
+        )
+        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+            await pilot.pause()
+            status = app.query_one("#manager-status", PinnedStatusBar)
+            assert status.region.height >= 3, "the idle header must reserve permanent visible space"
+
+            await pilot.click("#action-sync")
+            for _ in range(40):
+                await pilot.pause()
+                if "TUI-CODE" in status.message:
+                    break
+
+            assert "TUI-CODE" in status.message, "the actionable AEAT verification code never reached the TUI"
+            assert "Waiting up to" in status.message, "the multi-line progress banner was truncated"
+            assert status.tone == "progress"
+
+            release.set()
+            await wait_until_settled(app, pilot)
+            assert status.message == "SYNC-COMPLETE"
+            assert status.tone == "success"
+            app.exit(None)
+
+
+@pytest.mark.asyncio
+async def test_a_returned_refusal_is_not_styled_as_a_success(tmp_path) -> None:
+    """Handled command errors carry an explicit disposition into the header."""
+    from .. import ManagerAction, ManagerActionDisposition, ManagerActionOutcome, PinnedStatusBar
+
+    def _run() -> ManagerActionOutcome:
+        return ManagerActionOutcome(
+            message="AUTHENTICATION-REQUIRED",
+            disposition=ManagerActionDisposition.REFUSED,
+        )
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        app = ProfileManagerApp(
+            _live_overview(),
+            persist=_persist,
+            actions=[ManagerAction(key="refused", label="Refused", run=_run)],
+        )
+        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+            await pilot.pause()
+            await pilot.click("#action-refused")
+            await wait_until_settled(app, pilot)
+            status = app.query_one("#manager-status", PinnedStatusBar)
+            assert status.message == "AUTHENTICATION-REQUIRED"
+            assert status.tone == "error"
+            app.exit(None)
 
 
 @pytest.mark.asyncio
@@ -388,6 +472,34 @@ async def test_a_refusing_action_reports_it_instead_of_taking_the_screen_down(tm
             reported = _notice(app)
             assert app.is_running, "the screen must survive a refusing action"
             assert "NO-CERTIFICATE-REGISTERED" in reported
+            app.exit(None)
+
+
+@pytest.mark.asyncio
+async def test_a_registered_worker_error_is_localised_before_it_reaches_the_header(tmp_path) -> None:
+    """The TUI must not expose a translation key as its error message."""
+    from .....core.errors import NoActiveProfileError
+    from .. import ManagerAction, ManagerActionOutcome, PinnedStatusBar
+
+    def _refuse() -> ManagerActionOutcome:
+        raise NoActiveProfileError(translated_message="flows.manager.action.censal_pull_no_provider")
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        expected = tr("flows.manager.action.censal_pull_no_provider")
+        app = ProfileManagerApp(
+            _live_overview(),
+            persist=_persist,
+            actions=[ManagerAction(key="registered-error", label="Registered error", run=_refuse)],
+        )
+        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+            await pilot.pause()
+            await pilot.click("#action-registered-error")
+            await wait_until_settled(app, pilot)
+            status = app.query_one("#manager-status", PinnedStatusBar)
+            assert status.message == expected
+            assert status.message != "flows.manager.action.censal_pull_no_provider"
+            assert status.tone == "error"
             app.exit(None)
 
 

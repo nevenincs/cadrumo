@@ -15,6 +15,7 @@ from collections.abc import Iterable
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.json_contract import ResolvedActionReference
 from ._models import ActionArgumentSource
 
 _NAMESPACED_ID_PATTERN = r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$"
@@ -164,8 +165,35 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
+            action_id="operator.profile.list",
+            target_command_key="config.profile.list",
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.profile.status",
+            target_command_key="config.profile.status",
+        ),
+        ActionCatalogueEntry(
             action_id="operator.overview.status",
             target_command_key="overview.status",
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.overview.explain",
+            target_command_key="overview.explain",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="modelo",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="modelo",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.live.notifications.list",
+            target_command_key="app.live.notifications.list",
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.ledger.evidence.review.list",
+            target_command_key="ledger.evidence.review.list",
         ),
         ActionCatalogueEntry(
             action_id="operator.modelo.work.calculate",
@@ -180,6 +208,14 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
+            action_id="operator.modelo.work.status",
+            target_command_key="modelo.work.status",
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.modelo.export",
+            target_command_key="modelo.export",
+        ),
+        ActionCatalogueEntry(
             action_id="operator.modelo.verification_report.list",
             target_command_key="modelo.verification_report.list",
             argument_specifications=(
@@ -190,6 +226,46 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
                     source_evidence_id="workflow.calculation_revision.addressing",
                 ),
             ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.ledger.link",
+            target_command_key="ledger.link",
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.ledger.attach",
+            target_command_key="ledger.attach",
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.ledger.classify",
+            target_command_key="ledger.classify",
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.maintenance.reconcile",
+            target_command_key="app.maintenance.reconcile",
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.live.filed.pull_all",
+            target_command_key="app.live.filed.pull_all",
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.profile.import",
+            target_command_key="config.profile.import",
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.profile.export",
+            target_command_key="config.profile.export",
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.profile.archive.import",
+            target_command_key="config.profile.archive.import",
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.profile.sandbox.restore",
+            target_command_key="config.profile.sandbox.restore",
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.profile.sandbox.prune",
+            target_command_key="config.profile.sandbox.prune",
         ),
     ),
 )
@@ -204,6 +280,39 @@ does not make external-environment remediation appear executable.
 def lookup_action(action_id: str) -> ActionCatalogueEntry:
     """Look up one declared operator action in the canonical catalogue."""
     return OPERATOR_ACTION_CATALOGUE.lookup(action_id)
+
+
+def next_action(action_id: str) -> ResolvedActionReference:
+    """Resolve a declared operator action into a :class:`Notice`-attachable reference.
+
+    Forward guidance on a SUCCESS path used to be a literal ``aeat ...`` string
+    inside a locale message. That is untestable and rots silently: renaming a
+    verb sweeps the registrations and leaves four translated catalogues naming a
+    command that no longer exists, handing the operator - frequently an
+    autonomous agent - an instruction it cannot recover from.
+
+    Resolution runs through :func:`lookup_action`, which fails closed on an
+    unknown id, so the command key comes from the catalogue rather than from
+    prose and a renamed action raises here instead of shipping.
+
+    This lives beside the catalogue rather than in the CLI transport because the
+    application layer also emits such notices; a CLI-owned helper would force an
+    application module to import ``entrypoints``, against the layer direction.
+
+    Args:
+        action_id: A namespaced id declared in the operator action catalogue.
+
+    Returns:
+        The reference to attach as ``Notice(action=...)``.
+
+    Raises:
+        KeyError: ``action_id`` is not declared in the catalogue.
+    """
+    entry = lookup_action(action_id)
+    return ResolvedActionReference(
+        action_id=entry.action_id,
+        target_command_key=entry.target_command_key,
+    )
 
 
 __all__ = [

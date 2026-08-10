@@ -13,6 +13,14 @@ from cadrumo.domain.calculations.registry._loader import load_modelo_directory
 
 from .. import _export_tree
 from .._export_tree import ExportRenderProfile, render_complete_export_tree
+from .._provenance_manifest import (
+    EXPORT_FRAGMENT_PROVENANCE_FILENAME,
+    ExportFragmentTarget,
+    emit_export_fragment_provenance_manifest,
+    export_fragment_provenance_manifest_json_bytes,
+    load_export_fragment_provenance_manifest,
+    verify_export_fragment_provenance_manifest,
+)
 from .._record_design_ir import RecordDesignIntermediate, RecordDesignWorkbookFormat
 from .._semantic_map import SemanticMap
 from .._semantic_map_join import join_record_design_semantics
@@ -234,6 +242,7 @@ def test_renderer_writes_stable_complete_tree_that_real_directory_loader_merges(
         revision_dir / "export",
         revision_id="2025",
         joined=_joined(_m200_snapshot),
+        semantic_map=_semantic_map(),
         profile=_profile(),
     )
     duplicate_revision_dir = _write_modelo_shell(tmp_path / "comparison" / "modelos" / "200")
@@ -241,6 +250,7 @@ def test_renderer_writes_stable_complete_tree_that_real_directory_loader_merges(
         duplicate_revision_dir / "export",
         revision_id="2025",
         joined=_joined(_m200_snapshot),
+        semantic_map=_semantic_map(),
         profile=_profile(),
     )
 
@@ -261,6 +271,18 @@ def test_renderer_writes_stable_complete_tree_that_real_directory_loader_merges(
 
     loaded = load_modelo_directory(tmp_path / "modelos" / "200")
     layout = loaded.revisions["2025"].export_layouts[0]
+    manifest_path = revision_dir / EXPORT_FRAGMENT_PROVENANCE_FILENAME
+    assert manifest_path.is_file()
+    assert manifest_path.name not in first.output_files
+    assert load_export_fragment_provenance_manifest(manifest_path.read_bytes()) == first.provenance_manifest
+    assert verify_export_fragment_provenance_manifest(
+        export_root=revision_dir / "export",
+        joined=_joined(_m200_snapshot),
+        semantic_map=_semantic_map(),
+        target=ExportFragmentTarget(modelo="200", revision_id="2025", design_epoch="2025"),
+        loaded_layout=layout,
+        field_derivations=first.field_derivations,
+    ) == first.provenance_manifest
     assert tuple(record.id for record in layout.records) == (
         "generated-registro-tipo-1",
         "generated-registro-tipo-2",
@@ -273,6 +295,139 @@ def test_renderer_writes_stable_complete_tree_that_real_directory_loader_merges(
     )
 
 
+def test_renderer_manifest_refuses_file_tampering_derivation_drift_and_partial_field_evidence(
+    _m200_snapshot,
+    tmp_path,
+) -> None:
+    """Only the fresh full renderer result can attest its real generated tree."""
+    revision_dir = _write_modelo_shell(tmp_path / "modelos" / "200")
+    rendered = render_complete_export_tree(
+        revision_dir / "export",
+        revision_id="2025",
+        joined=_joined(_m200_snapshot),
+        semantic_map=_semantic_map(),
+        profile=_profile(),
+    )
+    layout = load_modelo_directory(tmp_path / "modelos" / "200").revisions["2025"].export_layouts[0]
+    export_root = revision_dir / "export"
+    manifest_path = revision_dir / EXPORT_FRAGMENT_PROVENANCE_FILENAME
+    original_fragment = export_root / "0001-record-generated-registro-tipo-1.toml"
+    original_bytes = original_fragment.read_bytes()
+
+    original_fragment.write_bytes(original_bytes + b"# tampered\n")
+    with pytest.raises(RegistryValidationError, match="output-file digests"):
+        verify_export_fragment_provenance_manifest(
+            export_root=export_root,
+            joined=_joined(_m200_snapshot),
+            semantic_map=_semantic_map(),
+            target=ExportFragmentTarget(modelo="200", revision_id="2025", design_epoch="2025"),
+            loaded_layout=layout,
+            field_derivations=rendered.field_derivations,
+        )
+    original_fragment.write_bytes(original_bytes)
+
+    manifest = load_export_fragment_provenance_manifest(manifest_path.read_bytes())
+    authority_tampered_manifest = manifest.model_copy(update={"source_sha256": "b" * 64})
+    manifest_path.write_bytes(export_fragment_provenance_manifest_json_bytes(authority_tampered_manifest))
+    with pytest.raises(RegistryValidationError, match="current generation authorities"):
+        verify_export_fragment_provenance_manifest(
+            export_root=export_root,
+            joined=_joined(_m200_snapshot),
+            semantic_map=_semantic_map(),
+            target=ExportFragmentTarget(modelo="200", revision_id="2025", design_epoch="2025"),
+            loaded_layout=layout,
+            field_derivations=rendered.field_derivations,
+        )
+
+    drifted_derivation = manifest.field_derivations[0].model_copy(update={"derivation_code": "filler-v1"})
+    drifted_manifest = manifest.model_copy(
+        update={"field_derivations": (drifted_derivation, *manifest.field_derivations[1:])},
+    )
+    manifest_path.write_bytes(export_fragment_provenance_manifest_json_bytes(drifted_manifest))
+    with pytest.raises(RegistryValidationError, match="field derivations do not match"):
+        verify_export_fragment_provenance_manifest(
+            export_root=export_root,
+            joined=_joined(_m200_snapshot),
+            semantic_map=_semantic_map(),
+            target=ExportFragmentTarget(modelo="200", revision_id="2025", design_epoch="2025"),
+            loaded_layout=layout,
+            field_derivations=rendered.field_derivations,
+        )
+
+    partial_manifest = manifest.model_copy(update={"field_derivations": manifest.field_derivations[:-1]})
+    manifest_path.write_bytes(export_fragment_provenance_manifest_json_bytes(partial_manifest))
+    with pytest.raises(RegistryValidationError, match="do not cover exactly"):
+        verify_export_fragment_provenance_manifest(
+            export_root=export_root,
+            joined=_joined(_m200_snapshot),
+            semantic_map=_semantic_map(),
+            target=ExportFragmentTarget(modelo="200", revision_id="2025", design_epoch="2025"),
+            loaded_layout=layout,
+            field_derivations=rendered.field_derivations,
+        )
+
+
+def test_direct_manifest_emission_and_real_loader_verification(_m200_snapshot, tmp_path) -> None:
+    """The public S09 emitter and verifier operate on a real fresh tree only."""
+    revision_dir = _write_modelo_shell(tmp_path / "modelos" / "200")
+    semantic_map = _semantic_map()
+    joined = _joined(_m200_snapshot)
+    rendered = render_complete_export_tree(
+        revision_dir / "export",
+        revision_id="2025",
+        joined=joined,
+        semantic_map=semantic_map,
+        profile=_profile(),
+    )
+    layout = load_modelo_directory(tmp_path / "modelos" / "200").revisions["2025"].export_layouts[0]
+    manifest_path = revision_dir / EXPORT_FRAGMENT_PROVENANCE_FILENAME
+    manifest_path.unlink()
+
+    emitted = emit_export_fragment_provenance_manifest(
+        joined=joined,
+        semantic_map=semantic_map,
+        target=ExportFragmentTarget(modelo="200", revision_id="2025", design_epoch="2025"),
+        loaded_layout=layout,
+        export_root=revision_dir / "export",
+        field_derivations=rendered.field_derivations,
+    )
+
+    assert load_export_fragment_provenance_manifest(manifest_path.read_bytes()) == emitted
+    assert verify_export_fragment_provenance_manifest(
+        export_root=revision_dir / "export",
+        joined=joined,
+        semantic_map=semantic_map,
+        target=ExportFragmentTarget(modelo="200", revision_id="2025", design_epoch="2025"),
+        loaded_layout=layout,
+        field_derivations=rendered.field_derivations,
+    ) == emitted
+
+
+def test_renderer_refuses_mismatched_map_without_emitting_a_manifest(_m200_snapshot, tmp_path) -> None:
+    """S09 never leaves a partial sibling attestation when map authority drifts."""
+    revision_dir = _write_modelo_shell(tmp_path / "modelos" / "200")
+    semantic_map = _semantic_map()
+    mismatched_map = semantic_map.model_copy(
+        update={
+            "entries": (
+                semantic_map.entries[0].model_copy(update={"literal": "XX"}),
+                *semantic_map.entries[1:],
+            ),
+        },
+    )
+
+    with pytest.raises(RegistryValidationError, match="joined fields do not attest"):
+        render_complete_export_tree(
+            revision_dir / "export",
+            revision_id="2025",
+            joined=_joined(_m200_snapshot),
+            semantic_map=mismatched_map,
+            profile=_profile(),
+        )
+
+    assert not (revision_dir / EXPORT_FRAGMENT_PROVENANCE_FILENAME).exists()
+
+
 def test_renderer_refuses_unmeasured_numeric_form_without_emitting_a_partial_fragment(_m200_snapshot, tmp_path) -> None:
     """A numeric type without its official form is insufficient to select wire semantics."""
     target = tmp_path / "export"
@@ -282,6 +437,7 @@ def test_renderer_refuses_unmeasured_numeric_form_without_emitting_a_partial_fra
             target,
             revision_id="2025",
             joined=_joined(_m200_snapshot, numeric_content=None),
+            semantic_map=_semantic_map(),
             profile=_profile(),
         )
 
@@ -318,6 +474,7 @@ def test_renderer_refuses_missing_or_noncontiguous_official_record_geometry(
             target,
             revision_id="2025",
             joined=joined,
+            semantic_map=_semantic_map(),
             profile=_profile(),
         )
 
@@ -333,6 +490,7 @@ def test_renderer_refuses_profile_hash_drift_literal_extent_and_nonempty_target(
             tmp_path / "export",
             revision_id="2025",
             joined=joined,
+            semantic_map=_semantic_map(),
             profile=_profile().model_copy(update={"source_sha256": "b" * 64}),
         )
 
@@ -349,6 +507,7 @@ def test_renderer_refuses_profile_hash_drift_literal_extent_and_nonempty_target(
             tmp_path / "second" / "export",
             revision_id="2025",
             joined=join_record_design_semantics(literal_map, _intermediate(), _m200_snapshot),
+            semantic_map=literal_map,
             profile=_profile(),
         )
 
@@ -360,6 +519,7 @@ def test_renderer_refuses_profile_hash_drift_literal_extent_and_nonempty_target(
             occupied,
             revision_id="2025",
             joined=joined,
+            semantic_map=_semantic_map(),
             profile=_profile(),
         )
 

@@ -26,8 +26,10 @@ import pytest
 from click.testing import Result
 
 from ....core.config import load_settings
-from ....tests.cli_runner import invoke_cached_cli
+from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from .._common import cli_policy_refusal_projection
+from .._errors import CliRefusedBoundaryError, error_boundary_under_test
 from ._profile_lifecycle_support import create_profile_via_cli, seed
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -568,6 +570,23 @@ def test_active_profile_env_and_pointer_refuse_tombstoned_uuid(
 
     with override_settings(cadrumo_active_profile=tombstoned_uuid):
         by_env = _invoke(("--language", "en", "app", "ledger", "list"))
+
+    with (
+        override_settings(cadrumo_active_profile=tombstoned_uuid),
+        error_boundary_under_test(),
+        pytest.raises(CliRefusedBoundaryError) as raised,
+    ):
+        cadrumo_click_command().main(
+            args=["app", "ledger", "list"],
+            prog_name="aeat",
+            standalone_mode=False,
+        )
+    projection = cli_policy_refusal_projection(raised.value)
+    assert projection is not None
+    assert projection.precondition_action.failed_condition_id == "profile.selection.live"
+    assert projection.precondition_action.action is not None
+    assert projection.precondition_action.action.action_id == "operator.profile.repair_clear_active"
+    assert projection.precondition_action.missing_argument_names == ("yes",)
 
     write_pointer(
         load_settings().cadrumo_local_storage_root,

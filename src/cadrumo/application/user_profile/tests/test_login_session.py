@@ -25,7 +25,7 @@ from ....adapters.persistence.storage.master_key import (
     record_login_failure,
 )
 from ....core import BucketPointer, ProfileSessionRefusalReason, read_pointer, resolve_active_bucket_id
-from ....core.config import load_settings
+from ....core.config import load_settings, override_settings
 from ....core.resources import resources
 from ....core.time import now as _now
 from ....domain.user_profile import ProfileNotFoundError, ProfileSchemaDefinition, UserProfileFact
@@ -284,6 +284,38 @@ class TestCrossProfileHandover:
         pointer = read_pointer(_storage_root)
         assert pointer is not None
         assert pointer.bucket_id == _PROFILE_B
+
+    def test_handover_activation_uses_the_authenticated_profile_despite_a_stale_route(
+        self,
+        schema: ProfileSchemaDefinition,
+    ) -> None:
+        """Authentication atomically selects B even when the caller pinned A.
+
+        The CLI resolves its ambient profile before dispatch.  An interactive
+        ``profile edit B`` therefore reaches login with A still present in the
+        settings ContextVar.  The pointer and live session moving to B are not
+        enough: the activation write must also route to B or valid credentials
+        end in a database-route/session mismatch.
+        """
+        from ...workflow import workflow_state_repository
+
+        _create_profile(schema, profile_id=_PROFILE_A, label="First operator")
+        _create_profile(schema, profile_id=_PROFILE_B, label="Second operator")
+
+        with override_settings(cadrumo_active_profile=_PROFILE_A):
+            login_profile(name="First operator")
+            outcome = login_profile(name="Second operator")
+
+            assert outcome.bucket_id == _PROFILE_B
+            live = current_active_bucket_session()
+            assert live is not None
+            assert live.bucket_id == _PROFILE_B
+            pointer = read_pointer(load_settings().cadrumo_local_storage_root)
+            assert pointer is not None
+            assert pointer.bucket_id == _PROFILE_B
+
+            with override_settings(cadrumo_active_profile=_PROFILE_B):
+                assert workflow_state_repository().load().active_profile_bucket_id() == _PROFILE_B
 
 
 class TestThrottleAndAuthenticationFailure:

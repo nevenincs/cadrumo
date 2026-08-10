@@ -1,4 +1,4 @@
-"""Focused unit tests for _parity_tapes._diff_paths.
+"""Focused dev-tool tests for _parity_tapes._diff_paths.
 
 The recursive diff walker is the correctness gate for parity-tape
 replay verification: `replay_parity_tape` compares the stored
@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import pytest
 
-from .._parity_tapes import _diff_paths
+from dev.registry._parity_tapes import _diff_paths
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

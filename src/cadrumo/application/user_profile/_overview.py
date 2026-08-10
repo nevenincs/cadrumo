@@ -44,6 +44,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.classification import SensitivityClass
 from ...core.i18n import tr
+from ...core.json_contract import Notice
 
 # ``UserProfileStatus`` is a pydantic FIELD type below, so it must resolve at
 # runtime; deferring it to TYPE_CHECKING leaves the model undefined and every
@@ -278,6 +279,8 @@ class ProfileOverview(BaseModel):
     status: UserProfileStatus
     sections: tuple[ProfileSectionView, ...]
     missing_required: tuple[str, ...] = Field(default=())
+    notices: tuple[Notice, ...] = Field(default=())
+    """Typed envelope advisories that apply to this profile projection."""
 
     @property
     def present_count(self) -> int:
@@ -295,6 +298,12 @@ class ProfileOverview(BaseModel):
         finished profile, not an unfinished one.
         """
         return not self.missing_required
+
+    @property
+    def missing_required_fields(self) -> tuple[ProfileFieldView, ...]:
+        """Schema-labelled field views for every currently missing requirement."""
+        missing = frozenset(self.missing_required)
+        return tuple(field for section in self.sections for field in section.fields if field.path in missing)
 
 
 def mask_profile_field(*, path: str, label: str, sensitivity: SensitivityClass | None) -> bool:
@@ -632,12 +641,16 @@ def build_profile_overview(
             ),
         )
 
+    from ._cotejo_apply import censo_divergence_notice
+
+    divergence_notice = censo_divergence_notice(record)
     return ProfileOverview(
         profile_id=record.profile_id,
         label=label if label is not None else record.display_name,
         status=record.status,
         sections=tuple(sections),
         missing_required=tuple(missing_required),
+        notices=() if divergence_notice is None else (divergence_notice,),
     )
 
 

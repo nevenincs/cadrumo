@@ -29,6 +29,15 @@ from cadrumo.domain.calculations.registry import (
 )
 from cadrumo.domain.calculations.registry._record_spec import ENCODING_ALIAS_MAP
 
+from ._provenance_manifest import (
+    EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION,
+    ExportFieldDerivation,
+    ExportFieldDerivationCode,
+    ExportFragmentProvenanceManifest,
+    ExportFragmentTarget,
+    emit_export_fragment_provenance_manifest,
+)
+from ._semantic_map import SemanticMap
 from ._semantic_map_join import JoinedRecordDesign, JoinedRecordDesignField, JoinedRecordDesignRecord
 
 __all__ = [
@@ -39,9 +48,6 @@ __all__ = [
     "render_complete_export_tree",
 ]
 
-
-EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION: Final[int] = 1
-"""Version of the pure parser-IR-to-schema field normalization policy."""
 
 _SERIALIZER_CONVENTION: Final[str] = "rtoml-pretty-v1"
 _SAFE_IDENTIFIER_RE: Final[re.Pattern[str]] = re.compile(r"^[^/\\\x00-\x1f]+$")
@@ -83,19 +89,13 @@ class ExportRenderProfile(_StrictModel):
         return self
 
 
-class ExportFieldDerivation(_StrictModel):
-    """One emitted schema field and the policy code that established its wire form."""
-
-    field: ExportFieldDefinition
-    derivation_code: str = Field(min_length=1)
-
-
 class RenderedExportTree(_StrictModel):
     """The complete in-memory layout and materialised output members."""
 
     layout: ExportLayoutDefinition
     field_derivations: tuple[ExportFieldDerivation, ...] = Field(min_length=1)
     output_files: tuple[str, ...] = Field(min_length=2)
+    provenance_manifest: ExportFragmentProvenanceManifest
 
 
 def render_complete_export_tree(
@@ -103,6 +103,7 @@ def render_complete_export_tree(
     *,
     revision_id: RevisionId,
     joined: JoinedRecordDesign,
+    semantic_map: SemanticMap,
     profile: ExportRenderProfile,
 ) -> RenderedExportTree:
     """Render one whole generated ``export/`` tree from its three authorities.
@@ -130,10 +131,23 @@ def render_complete_export_tree(
         "0000-export-layout.toml",
         *tuple(_record_relative_path(index, record.id) for index, record in enumerate(layout.records, start=1)),
     )
+    provenance_manifest = emit_export_fragment_provenance_manifest(
+        joined=joined,
+        semantic_map=semantic_map,
+        target=ExportFragmentTarget(
+            modelo=joined.modelo,
+            revision_id=revision_id,
+            design_epoch=joined.source.design_epoch,
+        ),
+        loaded_layout=layout,
+        export_root=target_export_dir,
+        field_derivations=tuple(derivations),
+    )
     return RenderedExportTree(
         layout=layout,
         field_derivations=tuple(derivations),
         output_files=output_files,
+        provenance_manifest=provenance_manifest,
     )
 
 
@@ -188,7 +202,9 @@ def _render_records(
             raise RegistryValidationError(f"generated export tree has duplicate record id {record_id!r}")
         record_ids.add(record_id)
         _require_exact_record_geometry(joined_record)
-        record_derivations = tuple(_normalise_field(field, profile) for field in joined_record.fields)
+        record_derivations = tuple(
+            _normalise_field(field, profile, export_record_id=record_id) for field in joined_record.fields
+        )
         derivations.extend(record_derivations)
         records.append(
             ExportRecordDefinition.model_validate(
@@ -240,12 +256,17 @@ def _require_exact_record_geometry(joined_record: JoinedRecordDesignRecord) -> N
         )
 
 
-def _normalise_field(joined_field: JoinedRecordDesignField, profile: ExportRenderProfile) -> ExportFieldDerivation:
+def _normalise_field(
+    joined_field: JoinedRecordDesignField,
+    profile: ExportRenderProfile,
+    *,
+    export_record_id: str,
+) -> ExportFieldDerivation:
     parser_field = joined_field.parser_field
     semantic_entry = joined_field.semantic_entry
     _require_safe_identifier(str(semantic_entry.export_field_id), subject="export field id")
     if semantic_entry.kind is CasillaFieldKind.LITERAL:
-        return _literal_derivation(joined_field, profile)
+        return _literal_derivation(joined_field, profile, export_record_id=export_record_id)
     if semantic_entry.kind is CasillaFieldKind.FILLER:
         return _schema_field(
             joined_field,
@@ -254,6 +275,7 @@ def _normalise_field(joined_field: JoinedRecordDesignField, profile: ExportRende
             padding="right_space",
             justification="left",
             signed=False,
+            export_record_id=export_record_id,
             derivation_code="filler-v1",
         )
     if semantic_entry.kind is CasillaFieldKind.CHECKSUM:
@@ -262,6 +284,7 @@ def _normalise_field(joined_field: JoinedRecordDesignField, profile: ExportRende
         )
     type_code = parser_field.aeat_type.strip().casefold()
     if type_code in _TEXT_TYPES:
+        derivation_code: ExportFieldDerivationCode = "text-a-v1" if type_code == "a" else "text-an-v1"
         return _schema_field(
             joined_field,
             data_type="text",
@@ -269,16 +292,22 @@ def _normalise_field(joined_field: JoinedRecordDesignField, profile: ExportRende
             padding="right_space",
             justification="left",
             signed=False,
-            derivation_code=f"text-{type_code}-v1",
+            export_record_id=export_record_id,
+            derivation_code=derivation_code,
         )
     if type_code in _NUMERIC_TYPES:
-        return _numeric_derivation(joined_field)
+        return _numeric_derivation(joined_field, export_record_id=export_record_id)
     raise RegistryValidationError(
         f"official field {semantic_entry.export_field_id!r} declares unsupported AEAT type {parser_field.aeat_type!r}",
     )
 
 
-def _literal_derivation(joined_field: JoinedRecordDesignField, profile: ExportRenderProfile) -> ExportFieldDerivation:
+def _literal_derivation(
+    joined_field: JoinedRecordDesignField,
+    profile: ExportRenderProfile,
+    *,
+    export_record_id: str,
+) -> ExportFieldDerivation:
     parser_field = joined_field.parser_field
     literal = joined_field.semantic_entry.literal
     if literal is None:
@@ -301,11 +330,16 @@ def _literal_derivation(joined_field: JoinedRecordDesignField, profile: ExportRe
         padding="none",
         justification="none",
         signed=False,
+        export_record_id=export_record_id,
         derivation_code="literal-exact-v1",
     )
 
 
-def _numeric_derivation(joined_field: JoinedRecordDesignField) -> ExportFieldDerivation:
+def _numeric_derivation(
+    joined_field: JoinedRecordDesignField,
+    *,
+    export_record_id: str,
+) -> ExportFieldDerivation:
     parser_field = joined_field.parser_field
     content = parser_field.content
     if content is None:
@@ -326,6 +360,7 @@ def _numeric_derivation(joined_field: JoinedRecordDesignField) -> ExportFieldDer
             padding="none",
             justification="none",
             signed=False,
+            export_record_id=export_record_id,
             date_format=_DATE_CONTENT,
             derivation_code="numeric-date-aaaammdd-v1",
         )
@@ -341,6 +376,7 @@ def _numeric_derivation(joined_field: JoinedRecordDesignField) -> ExportFieldDer
             padding="left_zero",
             justification="right",
             signed=False,
+            export_record_id=export_record_id,
             decimals=decimals,
             derivation_code="numeric-decimal-v1",
         )
@@ -354,6 +390,7 @@ def _numeric_derivation(joined_field: JoinedRecordDesignField) -> ExportFieldDer
             padding="left_zero",
             justification="right",
             signed=False,
+            export_record_id=export_record_id,
             derivation_code="numeric-integer-v1",
         )
     raise RegistryValidationError(
@@ -378,13 +415,17 @@ def _schema_field(
     padding: Literal["left_zero", "left_space", "right_space", "none"],
     justification: Literal["left", "right", "none"],
     signed: bool,
-    derivation_code: str,
+    export_record_id: str,
+    derivation_code: ExportFieldDerivationCode,
     date_format: str | None = None,
     decimals: int | None = None,
 ) -> ExportFieldDerivation:
     parser_field = joined_field.parser_field
     semantic_entry = joined_field.semantic_entry
     return ExportFieldDerivation(
+        export_record_id=export_record_id,
+        parser_field=parser_field,
+        semantic_entry=semantic_entry,
         field=ExportFieldDefinition.model_validate(
             {
                 "id": semantic_entry.export_field_id,
@@ -408,6 +449,7 @@ def _schema_field(
                 "source_refs": semantic_entry.source_refs,
             },
         ),
+        normalization_schema_version=EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION,
         derivation_code=derivation_code,
     )
 

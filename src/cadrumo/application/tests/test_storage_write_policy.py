@@ -9,8 +9,17 @@ import pytest
 from ...core import BucketPointer, write_pointer
 from ...core.config import Settings, StorageRouteKind
 from ...core.external_constants import OutputLanguage
+from ..operator_actions import (
+    ActionArgumentStatus,
+    ActionConditionality,
+    ConditionEvidenceProvenance,
+    NoRecoveryOutcome,
+)
 from ..storage_write_policy import (
+    PROFILE_BOUND_WRITE_VERB_PATHS,
     StorageWritePolicyCode,
+    StorageWritePolicyCondition,
+    StorageWritePolicyEvidence,
     inspect_storage_write_policy,
     is_profile_bound_write_verb_path,
 )
@@ -32,6 +41,11 @@ _PROFILE_BOUND_VERB_CASES = (
 )
 
 
+def test_profile_bound_write_verb_catalogue_has_unique_entries() -> None:
+    assert len(PROFILE_BOUND_WRITE_VERB_PATHS) == len(set(PROFILE_BOUND_WRITE_VERB_PATHS))
+    assert "config reset" not in PROFILE_BOUND_WRITE_VERB_PATHS
+
+
 def test_profile_bound_write_refuses_root_fallback_route(tmp_path: Path) -> None:
     decision = inspect_storage_write_policy(
         "app ledger add",
@@ -44,6 +58,24 @@ def test_profile_bound_write_refuses_root_fallback_route(tmp_path: Path) -> None
     assert decision.profile_bound_write is True
     assert decision.route_kind is StorageRouteKind.ROOT_FALLBACK_DATABASE
     assert "No active profile" in decision.render_refusal_message(locale="en")
+    verdict = decision.verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == StorageWritePolicyCondition.PROFILE_ACTIVE
+    assert verdict.evidence[0].condition_id == StorageWritePolicyCondition.PROFILE_ACTIVE
+    assert verdict.evidence[0].evidence_id == StorageWritePolicyEvidence.PROFILE_STORAGE_ROUTE
+    assert verdict.evidence[0].provenance is ConditionEvidenceProvenance.RUNTIME_OBSERVATION
+    assert verdict.evidence[0].values == {
+        "active_bucket_attached": False,
+        "active_profile_present": False,
+        "route_kind": StorageRouteKind.ROOT_FALLBACK_DATABASE.value,
+    }
+    assert verdict.action is not None
+    assert verdict.action.action_id == "operator.profile.create"
+    assert verdict.argument_bindings[0].argument_name == "profile_name"
+    assert verdict.argument_bindings[0].status is ActionArgumentStatus.MISSING
+    assert verdict.missing_argument_names == ("profile_name",)
+    assert verdict.conditionality is ActionConditionality.REQUIRES_ARGUMENTS
+    assert verdict.no_recovery_outcome is None
 
 
 def test_profile_bound_write_refuses_explicit_database_route(tmp_path: Path) -> None:
@@ -64,10 +96,26 @@ def test_profile_bound_write_refuses_explicit_database_route(tmp_path: Path) -> 
     rendered = decision.render_refusal_message(locale="en")
     assert "Storage runtime is not ready" in rendered
     assert "database route is not attached to an active profile bucket" in rendered
-    context = decision.refusal_context()
-    assert context is not None
-    assert "CADRUMO_DATABASE_URL" in context["recovery"]
-    assert "CADRUMO_LOCAL_STORAGE_ROOT" in context["recovery"]
+    verdict = decision.verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == StorageWritePolicyCondition.ACTIVE_BUCKET_ROUTE
+    assert verdict.evidence[0].condition_id == StorageWritePolicyCondition.ACTIVE_BUCKET_ROUTE
+    assert verdict.evidence[0].evidence_id == StorageWritePolicyEvidence.ACTIVE_BUCKET_ROUTE_CLASSIFICATION
+    assert verdict.evidence[0].provenance is ConditionEvidenceProvenance.RUNTIME_OBSERVATION
+    assert verdict.evidence[0].values == {
+        "active_bucket_attached": False,
+        "database_url_explicit": True,
+        "explicit_route_setting": "CADRUMO_DATABASE_URL",
+        "route_kind": StorageRouteKind.EXPLICIT_DATABASE_URL.value,
+        "storage_root_setting": "CADRUMO_LOCAL_STORAGE_ROOT",
+    }
+    assert verdict.evidence[0].values["explicit_route_setting"] in Settings.env_var_names()
+    assert verdict.evidence[0].values["storage_root_setting"] in Settings.env_var_names()
+    assert verdict.action is None
+    assert verdict.argument_bindings == ()
+    assert verdict.missing_argument_names == ()
+    assert verdict.conditionality is ActionConditionality.NOT_APPLICABLE
+    assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
 
 
 def test_profile_bound_write_allows_active_bucket_route(tmp_path: Path) -> None:
@@ -81,6 +129,7 @@ def test_profile_bound_write_allows_active_bucket_route(tmp_path: Path) -> None:
     assert decision.code is StorageWritePolicyCode.ALLOWED_ACTIVE_BUCKET
     assert decision.profile_bound_write is True
     assert decision.route_kind is StorageRouteKind.ACTIVE_BUCKET_DATABASE
+    assert decision.verdict is None
 
 
 def test_profile_bound_write_allows_pointer_route_from_stale_settings(tmp_path: Path) -> None:

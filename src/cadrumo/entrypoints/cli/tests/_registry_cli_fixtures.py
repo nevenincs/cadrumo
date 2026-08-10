@@ -46,7 +46,7 @@ def _isolated_registry_cli_backend(tmp_path_factory: pytest.TempPathFactory) -> 
                 "CADRUMO_SECRET_STORE_BACKEND": "file",
                 "CADRUMO_SECRET_STORE_DIR": str(tmp_path / "secrets"),
                 "CADRUMO_BLOB_STORE_DIR": str(tmp_path / "probe-blobs"),
-                "CADRUMO_AUDIT_DIR": str(tmp_path / "probe-audit"),
+                "CADRUMO_LIVE_STATE_DIR": str(tmp_path / "probe-live-state"),
                 "CADRUMO_SECRET_PASSPHRASE": dev_test_database_password(runtime.settings),
                 "CADRUMO_OUTPUT_LANGUAGE": "en",
             },

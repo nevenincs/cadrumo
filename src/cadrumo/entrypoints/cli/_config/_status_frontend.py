@@ -78,13 +78,14 @@ def build_status_page_data() -> StatusPageData:
 
     active_uuid, active_label = _resolve_active_identity()
     state = _load_workflow_state()
+    record = _read_active_record(state)
     return StatusPageData(
         active_profile_label=active_label,
-        facts=_build_fact_rows(_read_active_record(state)),
+        facts=_build_fact_rows(record),
         profiles=_build_profile_rows(active_uuid),
         auth=_build_auth_view(state, active_uuid=active_uuid),
         recovery=_build_recovery_view(),
-        notices=_build_notices(active_uuid),
+        notices=_build_notices(active_uuid, record=record),
     )
 
 
@@ -228,7 +229,7 @@ def _build_recovery_view() -> StatusRecoveryView:
     )
 
 
-def _build_notices(active_uuid: str | None) -> tuple[Notice, ...]:
+def _build_notices(active_uuid: str | None, *, record: UserProfileRecord | None) -> tuple[Notice, ...]:
     """Project application-layer advisories onto the status page's notices zone.
 
     The status page is where an operator checks in on a profile's health,
@@ -241,6 +242,11 @@ def _build_notices(active_uuid: str | None) -> tuple[Notice, ...]:
     if active_uuid is None:
         return ()
     notices: list[Notice] = []
+    from ....application.user_profile import censo_divergence_notice
+
+    divergence_notice = censo_divergence_notice(record)
+    if divergence_notice is not None:
+        notices.append(divergence_notice)
     history_notice = _no_aeat_history_notice()
     if history_notice is not None:
         notices.append(history_notice)

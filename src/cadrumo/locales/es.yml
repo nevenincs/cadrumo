@@ -1488,8 +1488,6 @@ application:
         se recibió {manual_id}.
       invalid_manual_rule_kind: El tipo de regla del manual del registro debe ser
         uno de {allowed_rule_kinds}; se recibió {rule_kind}.
-      invalid_oracle_environment: El entorno de oráculos del registro debe ser uno
-        de {allowed_values}; se recibió {value}.
       invalid_topic_locale: El locale de temas del registro debe ser uno de {allowed_locales};
         se recibió {locale_code}.
       manual_section_not_found: No se encontró la sección {section} en {manual_id}
@@ -4360,6 +4358,12 @@ cli:
       check:
         drifted: El árbol de almacenamiento no coincide con su declaración.
         help: Verifica el árbol de almacenamiento frente a su declaración sin repararlo
+        issue:
+          missing_path: falta una ruta de almacenamiento obligatoria
+          path_type_mismatch: una ruta de almacenamiento tiene un tipo de sistema
+            de archivos inesperado
+          permissions_drifted: los permisos de la raíz de almacenamiento no cumplen
+            los requisitos
         mode_unenforced: Esta plataforma no implementa los bits de permisos POSIX,
           así que no se han comprobado los permisos de la raíz.
       errors:
@@ -4372,6 +4376,31 @@ cli:
         already_materialised: Todos los directorios declarados ya existían; no se
           ha creado ninguno.
         help: Crea todos los directorios declarados conservando lo que ya exista
+      labels:
+        already_present: Ya presentes
+        area: Área
+        areas: Áreas
+        checked_areas: Áreas comprobadas
+        created: Creados
+        detail: Detalle
+        entries: Entradas
+        entry_count: Número de entradas
+        footprint: Tamaño
+        healthy: Correcto
+        issues: Problemas
+        lifecycle: Ciclo de vida
+        'no': 'no'
+        notice_info: Información
+        notice_warning: Aviso
+        occupancy: Ocupación
+        path: Ruta
+        reclaimable: Liberable
+        removed_entries: Entradas eliminadas
+        resolved_paths: Rutas resueltas
+        retained_entries: Entradas conservadas
+        storage_root: Raíz de almacenamiento
+        targets: Destinos
+        'yes': sí
       list:
         area_help: Muestra la ocupación y el espacio agregado de cada área de almacenamiento
         relocation_is_manual: Para mover el árbol, detén la aplicación, cópialo tú
@@ -4386,6 +4415,16 @@ cli:
       show:
         area_argument_help: Área de almacenamiento que se va a mostrar
         area_help: Muestra un área de almacenamiento completa
+      values:
+        lifecycle:
+          durable: duradera
+          mixed: mixta
+          reclaimable: liberable
+        occupancy:
+          absent: ausente
+          empty: vacía
+          populated: con datos
+          unresolved: sin resolver
     unset:
       help: Eliminar el valor asignado a una clave de configuración
       key_help: Clave a limpiar
@@ -5323,9 +5362,9 @@ cli:
           ubicados
         storage_init: Crea cualquier directorio de almacenamiento que falte
         storage_list: Consulta dónde se guarda cada tipo de dato local
-        storage_reclaim: Libera espacio eliminando una categoría que la aplicación
-          puede reconstruir
-        storage_show: Consulta una categoría de almacenamiento en detalle
+        storage_reclaim: Libera espacio eliminando un área que la aplicación puede
+          reconstruir
+        storage_show: Consulta un área de almacenamiento en detalle
       root:
         diagnostics_logs: Muestra la ruta del log y sus últimas líneas.
         diagnostics_overview_verbose: Muestra el estado general con más detalle.
@@ -5700,6 +5739,8 @@ cli:
         filas importadas.'
       quick_start_setup_done: '  1. `aeat config profile status` - comprueba la preparación
         y la siguiente acción.'
+      quick_start_setup_login: '  1. `aeat config login NAME` - activa un perfil de
+        contribuyente registrado.'
       quick_start_setup_needed: '  1. `aeat config profile create NAME` - crea un
         perfil fiscal local.'
       quick_start_setup_repair: '  1. `aeat config repair profile` - inspecciona y
@@ -7208,10 +7249,10 @@ errors:
       Ejecuta `aeat config login NAME` y vuelve a intentarlo.
     refused_storage_passphrase_too_short: La frase de contraseña es demasiado corta.
       Debe tener al menos 8 caracteres.
-    refused_storage_reclaim: 'Se rechaza liberar esta categoría de almacenamiento:
-      su ciclo de vida declarado conserva su contenido.'
-    refused_storage_reclaim_unconfirmed: Liberar una categoría de almacenamiento elimina
-      datos y requiere confirmación explícita.
+    refused_storage_reclaim: 'Se rechaza liberar esta área de almacenamiento: su ciclo
+      de vida declarado conserva su contenido.'
+    refused_storage_reclaim_unconfirmed: Liberar un área de almacenamiento elimina
+      datos y requiere confirmación.
     refused_storage_secret_already_exists: Ya existe un secreto con esa clave. Usa
       la opción de sobrescritura si quieres reemplazarlo.
     refused_storage_session_expired: La sesión activa ha caducado por inactividad.
@@ -7470,6 +7511,7 @@ flows:
     language:
       unavailable: Este perfil no ofrece un ajuste de idioma.
     progress: '{present} de {total} campos rellenados, faltan {missing} para presentar'
+    required_complete: Está presente toda la información del perfil requerida por el esquema.
     recovery_boundary: 'El código de recuperación se crea y se rota solo desde la
       terminal: aeat config recovery create / aeat config recovery rotate. Las 24
       palabras se muestran una sola vez y no se pueden volver a mostrar.'

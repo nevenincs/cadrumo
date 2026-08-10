@@ -12,7 +12,7 @@ from ....adapters.persistence.storage import SecretStoreError
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
-from .._common import _emit_envelope
+from .._common import _active_profile_label, _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from ._custody_secret import register_secret_custody_commands
 
@@ -300,12 +300,14 @@ def _register_logout_command(app: typer.Typer) -> None:
         _activate_subcommand_output_language(ctx, output_language)
         from ....application.user_profile import logout_active_profile
 
+        signed_out_label = _active_profile_label()
         signed_out = logout_active_profile()
+        logged_out_profile = signed_out_label or signed_out
 
         from .._config_payloads import ConfigLogoutResult
 
         result = ConfigLogoutResult(
-            logged_out_profile=signed_out,
+            logged_out_profile=logged_out_profile,
             already_logged_out=signed_out is None,
         )
         notices: tuple[Notice, ...] = ()
@@ -322,7 +324,7 @@ def _register_logout_command(app: typer.Typer) -> None:
             command="config.logout",
             result=result,
             lines=(
-                f"logged_out_profile\t{signed_out or '<none>'}",
+                f"logged_out_profile\t{logged_out_profile or '<none>'}",
                 *(notice.message for notice in notices),
             ),
             notices=notices,

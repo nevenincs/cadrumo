@@ -15,7 +15,7 @@ different halves and neither is redundant.
 from __future__ import annotations
 
 import pytest
-from textual.widgets import Input, Static
+from textual.widgets import Input
 
 from .....application.user_profile import (
     ProfileRepository,
@@ -60,7 +60,9 @@ def _stored() -> dict[str, object | None]:
 
 
 def _notice(app: ProfileManagerApp) -> str:
-    return str(app.query_one("#manager-notice", Static).content)
+    from .. import PinnedStatusBar
+
+    return app.query_one("#manager-status", PinnedStatusBar).message
 
 
 async def _submit(app, pilot, path: str, value: str) -> None:

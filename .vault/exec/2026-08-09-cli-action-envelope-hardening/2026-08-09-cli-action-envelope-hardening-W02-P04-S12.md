@@ -5,7 +5,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:77a8a83546391dd8ffce5213cad17281b0f1548f477a734fd308c65a8319cf51'
+body_hash: 'sha256:5453d7c839c63b75de8206c47491b3a4a0368133be6a5f6caca8d941d2514ca5'
 step_id: 'S12'
 related:
   - "[[2026-08-09-cli-action-envelope-hardening-plan]]"
@@ -70,7 +70,7 @@ parts owned by S50-S57.
 
 `uv run --no-sync pytest src/cadrumo/core/errors/tests -q -n 0`
 
-`1 failed, 51 passed in 33.17s`
+`1 failed, 52 passed`
 
 The single broader failure is
 `test_the_reachable_refusals_needing_a_decision_are_the_reviewed_set`:

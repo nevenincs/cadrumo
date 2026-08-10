@@ -226,7 +226,6 @@ def _simplificada_tax_id_notices(invoice: Invoice) -> list[Notice]:
                 "recorded; add the NIF with `aeat app ledger invoice update` if the "
                 "customer identified themselves."
             ),
-            suggestion=f"aeat app ledger invoice update {invoice.invoice_id} --counterparty-nif <NIF>",
             context={
                 "invoice_id": invoice.invoice_id,
                 "invoice_class": invoice.invoice_class.value,

@@ -10,35 +10,24 @@ Field sets match the production payload dicts constructed in ``registry.py``
 at their emit sites. All sequence fields use ``list`` rather than ``tuple``
 because ``model_dump(mode='json')`` serialises pydantic tuples as JSON arrays.
 
-The application layer remains authoritative for registry validation, oracle
-audits, workbook verification, filed-state comparison, and parity tape
-execution. These schemas document the CLI transport shape that enters
+The application layer remains authoritative for registry validation and
+filed-state comparison. These schemas document the CLI transport shape that enters
 :class:`SchemaEnvelope` through
 :func:`_emit_envelope`.
 """
 
 from __future__ import annotations
 
-from datetime import datetime
-
 from pydantic import Field
 
 from ...core.json_contract import OutputSchema, register_schema
 from ...domain.calculations.registry import (
-    CrossReferenceApplicabilityDeclaracion,
     ExportLayoutId,
     LegalRefId,
-    ParityScenario,
-    ParityTape,
-    ParityTapeStatus,
     RegistryFiledStateComparison,
     RelationId,
     SourceRefId,
-    WorkbookArtefactReport,
-    WorkbookModeloCoverage,
     WorkbookParityRefId,
-    WorkbookParityRunReport,
-    WorkbookRunnerAvailability,
 )
 
 
@@ -118,26 +107,6 @@ class RegistryInspectResult(OutputSchema):
     verified: bool
 
 
-@register_schema("registry.audit_oracles")
-class RegistryAuditOraclesResult(OutputSchema):
-    """JSON envelope for ``aeat app registry audit-oracles``.
-
-    Mirrors :class:`RegistryOracleAuditReport` from
-    :func:`audit_registry_oracles`. The report
-    aggregates
-    :func:`audit_registry_oracle_bindings`
-    failures, applicability declarations, and orphan oracle ids for one
-    :class:`OracleEnvironment`.
-    """
-
-    environment: str
-    registered_oracle_ids: list[str] = []
-    failure_count: int = Field(ge=0)
-    failures: list[str] = []
-    applicability_declarations: list[CrossReferenceApplicabilityDeclaracion] = []
-    orphan_oracle_ids: list[str] = []
-
-
 @register_schema("registry.verify_filed_state")
 class RegistryVerifyFiledStateResult(OutputSchema):
     """JSON envelope for ``aeat app registry verify-filed-state``.
@@ -153,65 +122,3 @@ class RegistryVerifyFiledStateResult(OutputSchema):
     observation_path: str
     source_observation_paths: list[str] = []
     comparison: RegistryFiledStateComparison
-
-
-@register_schema("registry.workbooks.verify")
-class RegistryWorkbooksVerifyResult(OutputSchema):
-    """JSON envelope for ``aeat app registry workbooks verify``.
-
-    Mirrors
-    :class:`WorkbookBackendVerificationReport`
-    returned by :func:`verify_registry_workbooks`.
-    ``runner`` reports workbook backend availability, ``reports`` carries
-    per-workbook artefact scans, and ``modelo_coverage`` summarizes
-    per-modelo workbook support.
-    """
-
-    root: str
-    workbook_count: int
-    scanned_count: int
-    formula_workbook_count: int
-    unsupported_xls_count: int
-    failed_count: int
-    runner: WorkbookRunnerAvailability
-    reports: list[WorkbookArtefactReport] = []
-    modelo_coverage: list[WorkbookModeloCoverage] = []
-
-
-@register_schema("registry.parity.run")
-class RegistryParityRunResult(OutputSchema):
-    """JSON envelope for ``aeat app registry parity run``.
-
-    Mirrors :class:`ParityTape` returned by
-    :func:`run_registry_parity`. The payload includes
-    the :class:`ParityScenario`, scanned
-    workbook artefact, runner availability, and the registry workbook parity
-    run report; ``path`` is added by the CLI as the archive destination.
-    """
-
-    created_at: datetime
-    scenario_path: str | None = None
-    scenario: ParityScenario
-    workbook: WorkbookArtefactReport
-    runner: WorkbookRunnerAvailability
-    report: WorkbookParityRunReport
-    path: str | None = None
-
-
-@register_schema("registry.parity.replay")
-class RegistryParityReplayResult(OutputSchema):
-    """JSON envelope for ``aeat app registry parity replay``.
-
-    Mirrors :class:`ParityTapeReplayReport`
-    returned by :func:`replay_registry_parity`.
-    ``stored`` is the archived :class:`ParityTape`;
-    ``current`` is the fresh replay tape, and ``differences`` lists the stable
-    JSON paths that diverged.
-    """
-
-    tape_path: str
-    scenario_id: str
-    status: ParityTapeStatus
-    differences: list[str] = []
-    stored: ParityTape
-    current: ParityTape

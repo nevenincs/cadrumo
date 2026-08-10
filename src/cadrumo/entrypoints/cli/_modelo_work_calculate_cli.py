@@ -617,27 +617,26 @@ def _work_calculate_source_advisory_output(
     under-declared (no-silent-under-declaration). The diagnostic ``message``
     already carries the observation's category / rate / flow provenance.
 
-    A diagnostic's ``remedy`` rides on :attr:`~core.json_contract.Notice.suggestion`,
-    that channel's documented purpose, rather than being concatenated into the
-    message upstream. Keeping the two apart is what buys the message its length
-    headroom: the remedy is fixed prose, the message is the part that grows with
-    the taxpayer's own data, and fusing them made the former compete for room
-    against the latter.
-
-    The text lines are rebuilt FROM the notices rather than from the diagnostics,
-    so the two surfaces cannot drift: a remedy that reaches the JSON envelope
-    reaches the terminal in the same breath.
+    The text lines are rebuilt from the notices rather than from the diagnostics,
+    so the two surfaces cannot drift. Executable remediation belongs to the
+    typed ``Notice.action`` projection; this renderer never reads the removed
+    legacy ``suggestion`` field.
     """
     diagnostics = calculation_result.source_diagnostics
     if not diagnostics:
         return [], []
-    notices = [
-        source_diagnostic_notice(diagnostic, code="modelo.work.calculate.source_advisory") for diagnostic in diagnostics
-    ]
+    notices: list[Notice] = []
+    seen_messages: set[str] = set()
+    for diagnostic in diagnostics:
+        notice = source_diagnostic_notice(diagnostic, code="modelo.work.calculate.source_advisory")
+        if notice.message in seen_messages:
+            continue
+        seen_messages.add(notice.message)
+        notices.append(notice)
     lines = [
         tr(
             "cli.app.modelo.work.calculate_source_advisory",
-            message=notice.message if notice.suggestion is None else f"{notice.message} {notice.suggestion}",
+            message=notice.message,
             default="ADVISORY: %{message}",
         )
         for notice in notices

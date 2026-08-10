@@ -25,8 +25,10 @@ import pytest
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....core.config import override_settings
-from ....tests.cli_runner import invoke_cached_cli
+from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from .._common import cli_policy_refusal_projection
+from .._errors import CliRefusedBoundaryError, error_boundary_under_test
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -211,6 +213,22 @@ def test_env_override_ambiguous_label_refuses_cleanly_not_traceback() -> None:
     # ambiguous, not unknown (RED before the key swap).
     assert _GENERIC_UNKNOWN_FRAGMENT not in combined, combined
 
+    with (
+        override_settings(cadrumo_active_profile=_LABEL),
+        error_boundary_under_test(),
+        pytest.raises(CliRefusedBoundaryError) as raised,
+    ):
+        cadrumo_click_command().main(
+            args=["app", "ledger", "list"],
+            prog_name="aeat",
+            standalone_mode=False,
+        )
+    projection = cli_policy_refusal_projection(raised.value)
+    assert projection is not None
+    assert projection.precondition_action.failed_condition_id == "profile.selection.unambiguous"
+    assert projection.precondition_action.action is not None
+    assert projection.precondition_action.action.action_id == "operator.profile.list"
+
 
 def test_profile_flag_ambiguous_label_refuses_with_dedicated_key() -> None:
     """``--profile <ambiguous-label>`` refuses with the DEDICATED ambiguity key.
@@ -231,6 +249,18 @@ def test_profile_flag_ambiguous_label_refuses_with_dedicated_key() -> None:
     assert "ProfileLabelAmbiguousError" not in combined, combined
     assert _DEDICATED_AMBIGUITY_FRAGMENT in combined, combined
     assert _GENERIC_UNKNOWN_FRAGMENT not in combined, combined
+
+    with error_boundary_under_test(), pytest.raises(CliRefusedBoundaryError) as raised:
+        cadrumo_click_command().main(
+            args=["--profile", _LABEL, "app", "ledger", "list"],
+            prog_name="aeat",
+            standalone_mode=False,
+        )
+    projection = cli_policy_refusal_projection(raised.value)
+    assert projection is not None
+    assert projection.precondition_action.failed_condition_id == "profile.selection.unambiguous"
+    assert projection.precondition_action.action is not None
+    assert projection.precondition_action.action.action_id == "operator.profile.list"
 
 
 def test_env_override_unknown_label_does_not_resolve() -> None:

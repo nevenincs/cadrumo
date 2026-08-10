@@ -416,7 +416,10 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
             )
             profile_health = assess_active_profile_health(state)
             checks.append(_active_profile_storage_check(profile_health))
-            setup_report = _repair_safe_wizard_status(build_wizard_status(state))
+            setup_report = _repair_safe_wizard_status(
+                build_wizard_status(state),
+                active_profile_label=profile_health.active_profile_label,
+            )
             checks.append(_profile_check(setup_report, profile_health=profile_health, state=state))
             checks.append(_auth_check(setup_report))
         except Exception as exc:  # pragma: no cover - concrete failure mode depends on local secure backend.
@@ -587,11 +590,17 @@ def render_config_repair_text(report: ConfigRepairReport) -> str:
     return "\n".join(lines) + "\n"
 
 
-def _repair_safe_wizard_status(report: WizardStatusReport) -> WizardStatusReport:
-    """Return a repair-surface :class:`WizardStatusReport` copy with no bucket UUID."""
+def _repair_safe_wizard_status(
+    report: WizardStatusReport,
+    *,
+    active_profile_label: str | None,
+) -> WizardStatusReport:
+    """Return a repair status with a label, never an internal bucket UUID."""
     if report.active_profile is None:
         return report
-    return report.model_copy(update={"active_profile": CLI_PROFILE_ID_PLACEHOLDER})
+    return report.model_copy(
+        update={"active_profile": active_profile_label or CLI_PROFILE_ID_PLACEHOLDER},
+    )
 
 
 def _finding_tag(finding: DiagnosticFinding) -> str:
@@ -790,7 +799,9 @@ def build_registry_integrity_report(registry_root: Path | None = None) -> Regist
 
 def _active_profile_storage_check(health: ActiveProfileHealth) -> DiagnosticCheck:
     """Render :class:`ActiveProfileHealth` storage status before semantic readiness."""
-    active_profile = CLI_PROFILE_ID_PLACEHOLDER if health.active_profile is not None else "-"
+    active_profile = health.active_profile_label or (
+        CLI_PROFILE_ID_PLACEHOLDER if health.active_profile is not None else "-"
+    )
     summary = tr(
         "cli.diagnostics.summary.profile_storage",
         active_profile=active_profile,

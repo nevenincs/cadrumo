@@ -43,6 +43,7 @@ from ...application.modelo import (
     require_profile_ready_for_work_unit,
     verify_modelo_revision,
 )
+from ...application.operator_actions import next_action
 from ...application.workflow import workflow_state_repository
 from ...core import PaymentElection, PriorDomiciliationElection, RefundElection
 from ...core.external_constants import OutputLanguage
@@ -66,7 +67,6 @@ from ._modelo_rendering import (
     filing_record_lines,
     filing_record_payload,
     m184_socio_handoff_notices,
-    next_action_notice,
     verification_report_lines,
     verification_report_notices,
     verification_report_payload,
@@ -222,28 +222,29 @@ def _register_work_verify_command(work_app: typer.Typer, *, deps: _VerificationD
             lines.append(noop_message)
         if report.granted_verificado_completo:
             notices.append(
-                next_action_notice(
-                    "modelo.work.verify.next_action_granted",
-                    tr(
-                        "cli.app.modelo.work.verify_next_action_granted",
-                        default=("Verification passed. Export the filing artefact with `aeat app modelo export`."),
+                Notice(
+                    severity=NoticeSeverity.INFO,
+                    code="modelo.work.verify.next_action_granted",
+                    message=tr(
+                        "cli.app.modelo.work.verify_next_action_granted_summary",
+                        default="Verification passed. Export the filing artefact.",
                     ),
-                    suggestion="aeat app modelo export",
+                    action=next_action("operator.modelo.export"),
                 ),
             )
         else:
             notices.append(
-                next_action_notice(
-                    "modelo.work.verify.next_action_incomplete",
-                    tr(
-                        "cli.app.modelo.work.verify_next_action_incomplete",
+                Notice(
+                    severity=NoticeSeverity.INFO,
+                    code="modelo.work.verify.next_action_incomplete",
+                    message=tr(
+                        "cli.app.modelo.work.verify_next_action_incomplete_summary",
                         default=(
-                            "Verification found blocking items (see the notices above). "
-                            "Resolve them, recalculate with `aeat app modelo work calculate`, "
-                            "then re-run `aeat app modelo work verify`."
+                            "Verification found blocking items. Resolve them, recalculate, "
+                            "then run verification again."
                         ),
                     ),
-                    suggestion=f"aeat app modelo work calculate {selected_revision.work_unit_id}",
+                    action=next_action("operator.modelo.work.calculate"),
                 ),
             )
         notices.extend(

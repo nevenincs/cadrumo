@@ -491,7 +491,6 @@ def _setup_incomplete_disclosure(
         severity=NoticeSeverity.INFO,
         code="overview.calendar.setup_incomplete",
         message=tr("cli.overview.calendar.setup_incomplete_notice", count=len(setup_incomplete), labels=labels),
-        suggestion="aeat config profile status",
         context={"count": str(len(setup_incomplete)), "labels": labels},
     )
     return lines, [notice]

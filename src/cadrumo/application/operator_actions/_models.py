@@ -38,9 +38,7 @@ _PRESENTATION_KEY_TOKENS: Final[frozenset[str]] = frozenset(
         "title",
     }
 )
-_RAW_AEAT_COMMAND_PATTERN: Final[re.Pattern[str]] = re.compile(
-    r"(?i)(?:^|[\s`'\";|&()])aeat(?:\s+|$)"
-)
+_RAW_AEAT_COMMAND_PATTERN: Final[re.Pattern[str]] = re.compile(r"(?i)(?:^|[\s`'\";|&()])aeat(?:\s+|$)")
 
 
 def _is_presentation_key(key: str) -> bool:
@@ -114,10 +112,7 @@ class ConditionEvidence(BaseModel):
             raise ValueError("condition evidence value keys must be stable fact identifiers")
         if any(_is_presentation_key(key) for key in value):
             raise ValueError("condition evidence value keys cannot carry presentation or action prose")
-        if any(
-            isinstance(item, str) and _RAW_AEAT_COMMAND_PATTERN.search(item)
-            for item in value.values()
-        ):
+        if any(isinstance(item, str) and _RAW_AEAT_COMMAND_PATTERN.search(item) for item in value.values()):
             raise ValueError("condition evidence values cannot carry raw aeat command prose")
         return MappingProxyType(dict(sorted(value.items())))
 

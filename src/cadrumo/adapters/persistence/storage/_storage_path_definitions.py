@@ -45,7 +45,6 @@ BUCKET_DB_DIRNAME = storage_location(StorageCategory.BUCKET_DATABASE).subpath
 #: sibling constant above is the directory that holds it.
 BUCKET_DATABASE_FILENAME = storage_location(StorageCategory.BUCKET_DATABASE_FILE).subpath
 BUCKET_BLOBS_DIRNAME = storage_location(StorageCategory.BUCKET_BLOBS).subpath
-BUCKET_AUDIT_DIRNAME = storage_location(StorageCategory.BUCKET_AUDIT).subpath
 BUCKET_MANIFEST_FILENAME = storage_location(StorageCategory.BUCKET_MANIFEST).subpath
 BUCKET_LOCK_FILENAME = storage_location(StorageCategory.BUCKET_LOCK).subpath
 BUCKET_OUTPUT_LANGUAGE_HINT_FILENAME = storage_location(StorageCategory.BUCKET_OUTPUT_LANGUAGE_HINT).subpath
@@ -192,14 +191,6 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         owner="cadrumo.adapters.persistence.storage.bucket",
         anchor=StoragePathAnchor.STORAGE_ROOT,
         segment=BUCKET_BLOBS_DIRNAME,
-    ),
-    StoragePathDefinition(
-        key="bucket_audit",
-        kind=StoragePathKind.DIRECTORY,
-        grammar=f"<root>/{BUCKETS_DIRNAME}/<bucket_id>/{BUCKET_AUDIT_DIRNAME}/",
-        owner="cadrumo.adapters.persistence.storage.bucket",
-        anchor=StoragePathAnchor.STORAGE_ROOT,
-        segment=BUCKET_AUDIT_DIRNAME,
     ),
     StoragePathDefinition(
         key="bucket_manifest",

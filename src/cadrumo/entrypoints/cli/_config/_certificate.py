@@ -349,7 +349,6 @@ def certificate_check(
             severity=NoticeSeverity.WARNING,
             code=f"config.auth.certificate.check.{entry.result}",
             message=f"{entry.name}: {entry.summary}",
-            suggestion=f"aeat config auth certificate select --name {entry.name}",
             context={"name": entry.name, "result": entry.result},
         )
         for entry in report.entries

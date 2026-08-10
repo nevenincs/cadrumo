@@ -34,6 +34,7 @@ from typing import TYPE_CHECKING
 
 import typer
 
+from ...application.operator_actions import next_action
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.output_rendering import OutputFormat
@@ -45,11 +46,6 @@ if TYPE_CHECKING:
     from ...application.ledger import BatchItemResult, BatchRunResult
 
 __all__ = ["register_evidence_batch_command"]
-
-#: The verb an operator runs next on a document the batch held for review. Named
-#: once so the notice and any later surface cannot drift apart.
-_REVIEW_QUEUE_COMMAND = "aeat app ledger evidence review list"
-
 
 def register_evidence_batch_command(evidence_app: typer.Typer) -> None:
     """Mount ``aeat app ledger evidence batch`` on the evidence sub-app."""
@@ -240,7 +236,6 @@ def _run_notices(run: BatchRunResult) -> list[Notice]:
                 # Straight from the probe that measured the condition, never a
                 # fixed verb: telling an operator to download a model they may
                 # already have is a wrong instruction, not merely a vague one.
-                suggestion=pause.remediation,
                 context={
                     "paused": str(run.count_of("paused")),
                     "reason": pause.reason,
@@ -262,7 +257,7 @@ def _run_notices(run: BatchRunResult) -> list[Notice]:
                         "They are held, not failed."
                     ),
                 ),
-                suggestion=_REVIEW_QUEUE_COMMAND,
+                action=next_action("operator.ledger.evidence.review.list"),
                 context={"pending_review": str(held)},
             ),
         )
@@ -271,9 +266,10 @@ def _run_notices(run: BatchRunResult) -> list[Notice]:
 
 def _notice_line(notice: Notice) -> str:
     # MACHINE-FORMAT-RATIONALE-LEDGER-EVIDENCE-BATCH-NOTICE: tab-separated machine
-    # record (severity, code, message, suggestion), matching the notice line shape
+    # record (severity, code, message, action), matching the notice line shape
     # the modelo discovery surface already emits.
-    return f"notice\t{notice.severity.value}\t{notice.code}\t{notice.message}\t{notice.suggestion or '-'}"
+    action = notice.action.target_command_key if notice.action is not None else "-"
+    return f"notice\t{notice.severity.value}\t{notice.code}\t{notice.message}\t{action}"
 
 
 def _batch_text_lines(run: BatchRunResult, *, bucket_id: str, direction: InvoiceKind) -> list[str]:

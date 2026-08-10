@@ -324,7 +324,6 @@ def _divergence_notice(
         severity=NoticeSeverity.WARNING,
         code=code,
         message=tr(locale_key, default=default, count=len(rows), axes=axes),
-        suggestion=suggestion,
         context={"count": str(len(rows)), "axes": axes},
     )
 
@@ -422,7 +421,6 @@ def _tier_notices(*, applied: bool, adopted: tuple[CensoPullFactPayload, ...]) -
                         "Preview only: nothing was written to the profile. Re-run with --apply to enroll these facts."
                     ),
                 ),
-                suggestion="aeat config profile censo pull --apply",
             ),
         )
     return notices

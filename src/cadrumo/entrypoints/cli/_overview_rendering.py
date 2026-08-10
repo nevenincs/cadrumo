@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
+from ...application.operator_actions import next_action
 from ...application.overview import (
     CoverageAdviceReason,
     ModeloReadinessState,
@@ -51,10 +52,32 @@ def overview_next_step_notices(report: OverviewStatusReport) -> list[Notice]:
     ``success``.
     """
     return [
-        Notice(severity=NoticeSeverity.INFO, code="overview.status.next_step", message=line.strip())
+        Notice(
+            severity=NoticeSeverity.INFO,
+            code="overview.status.next_step",
+            message=_next_step_notice_message(line),
+        )
         for line in _next_step_lines(report)
         if line.strip()
     ]
+
+
+def _next_step_notice_message(line: str) -> str:
+    """Keep executable guidance in text rendering, not in notice prose.
+
+    The overview text rows intentionally start with the concrete command and
+    then a human explanation separated by ``" - "``.  The command remains in
+    the text surface, while the envelope notice carries only that localized
+    explanation; executable identity belongs to ``Notice.action`` as catalogue
+    coverage expands, never to ``Notice.message``.
+    """
+    _command, separator, explanation = line.strip().partition(" - ")
+    if separator and explanation:
+        return explanation
+    return tr(
+        "cli.overview.status.next_step_available",
+        default="A recommended next step is available in the overview output.",
+    )
 
 
 _COVERAGE_NOTICE_CODE = "overview.coverage.incomplete"
@@ -81,11 +104,10 @@ def overview_coverage_notices(coverage: ObligationCoverageReport) -> list[Notice
     window_missing = any(item.reason is CoverageAdviceReason.APPLICABLE_WINDOW_MISSING for item in advised)
     severity = NoticeSeverity.WARNING if window_missing else NoticeSeverity.INFO
     message = tr(
-        "cli.overview.coverage.investigate",
+        "cli.overview.coverage.incomplete_summary",
         default=(
             "%{count} filing obligation(s) could not be positively scoped for "
-            "this profile and may be under-reported: %{modelos}. Investigate "
-            "each with 'aeat app overview explain <modelo>'."
+            "this profile and may be under-reported: %{modelos}."
         ),
         count=len(advised),
         modelos=modelos,
@@ -95,7 +117,7 @@ def overview_coverage_notices(coverage: ObligationCoverageReport) -> list[Notice
             severity=severity,
             code=_COVERAGE_NOTICE_CODE,
             message=message,
-            suggestion=f"aeat app overview explain {advised[0].modelo}",
+            action=next_action("operator.overview.explain"),
             context={item.modelo: item.reason.value for item in advised},
         ),
     ]
@@ -123,10 +145,9 @@ def overview_post_filing_event_notices(events: Sequence[OverviewCalendarEvent]) 
         return []
     kinds = sorted({event.post_filing_kind.value for event in actionable if event.post_filing_kind is not None})
     message = tr(
-        "cli.overview.post_filing.pending",
+        "cli.overview.post_filing.pending_summary",
         default=(
-            "%{count} AEAT post-filing event(s) require attention: %{kinds}. "
-            "Review them with 'aeat app live notifications list'."
+            "%{count} AEAT post-filing event(s) require attention: %{kinds}."
         ),
         count=len(actionable),
         kinds=", ".join(kinds),
@@ -136,7 +157,7 @@ def overview_post_filing_event_notices(events: Sequence[OverviewCalendarEvent]) 
             severity=NoticeSeverity.WARNING,
             code=_POST_FILING_NOTICE_CODE,
             message=message,
-            suggestion="aeat app live notifications list",
+            action=next_action("operator.live.notifications.list"),
             context={
                 event.reference_id: event.post_filing_kind.value
                 for event in actionable
@@ -389,7 +410,6 @@ def overview_prepare_output(walkthrough) -> tuple[OverviewPrepareResult, list[st
                     severity=NoticeSeverity.INFO,
                     code=f"overview.prepare.next_step.{step.step_id.value}",
                     message=step.summary,
-                    suggestion=step.next_command,
                     context={"state": step.state.value},
                 ),
             )
@@ -448,7 +468,6 @@ def overview_pipeline_output(report, *, ledger) -> tuple[OverviewPipelineResult,
                     severity=severity,
                     code=f"overview.pipeline.modelo.{row.state.value}",
                     message=row.summary,
-                    suggestion=row.next_command,
                     context={"modelo": row.modelo, "state": row.state.value},
                 ),
             )
@@ -576,16 +595,9 @@ def _work_units_line(report: OverviewStatusReport) -> str:
 
 
 def _profile_line(report: OverviewStatusReport) -> str:
-    if report.active_profile is None:
+    if report.active_profile_name is None:
         return tr("cli.overview.status.profile_missing")
-    # The prose line names the operator-chosen display name only; the
-    # immutable bucket UUID is structured-payload noise in prose and is
-    # carried solely on the JSON / secondary `profile_id` field. Fall
-    # back to the UUID alone when the manifest carried no display name.
-    name = report.active_profile_name
-    if name:
-        return tr("cli.overview.status.profile_active", profile=name)
-    return tr("cli.overview.status.profile_active", profile=report.active_profile)
+    return tr("cli.overview.status.profile_active", profile=report.active_profile_name)
 
 
 def _transactions_line(report: OverviewStatusReport) -> str:

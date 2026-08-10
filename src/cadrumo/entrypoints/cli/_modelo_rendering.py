@@ -117,13 +117,6 @@ def m184_socio_handoff_notices(revision: CalculationRevision) -> list[Notice]:
                     porcentaje=row.porcentaje,
                     casilla=_M184_ATRIBUCION_ACT_ECO_CASILLA,
                 ),
-                # The suggestion is a pure machine command: the exact `--binding
-                # 1577=<importe>` fold-in token stays stable across every output
-                # language per the machine-identifier convention, so it is built
-                # in code rather than routed through tr().
-                suggestion=(
-                    f"aeat app modelo work calculate --binding {_M184_ATRIBUCION_ACT_ECO_CASILLA}={row.importe}"
-                ),
                 context={
                     "nif": row.nif,
                     "nombre": row.nombre,
@@ -193,7 +186,6 @@ def advisory_notice(
         severity=NoticeSeverity.WARNING,
         code=code,
         message=message,
-        suggestion=suggestion,
         context=context,
     )
 
@@ -256,7 +248,6 @@ def next_action_notice(
         severity=NoticeSeverity.INFO,
         code=code,
         message=message,
-        suggestion=suggestion,
         context=context,
     )
 
@@ -923,7 +914,6 @@ def verification_report_notices(report) -> list[Notice]:
                 severity=NoticeSeverity.WARNING,
                 code=f"modelo.work.verify.finding.{finding.kind.value}",
                 message=message,
-                suggestion=next_action,
                 context=context,
             ),
         )

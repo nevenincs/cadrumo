@@ -1029,13 +1029,13 @@ class ProfileRepository:
         profile" guard upstream has already confirmed there is no
         manifest, so a directory present here is bare staging: this
         helper provisions afresh when nothing exists, and otherwise
-        idempotently completes the ``db/ blobs/ audit/`` subtree.
+        idempotently completes the ``db/ blobs/`` subtree.
         """
         paths = bucket_paths(self._root, profile_id)
         if not paths.bucket_dir.exists():
             provision_bucket_directory(self._root, profile_id)
             return
-        for subdir in (paths.db_dir, paths.blobs_dir, paths.audit_dir):
+        for subdir in (paths.db_dir, paths.blobs_dir):
             subdir.mkdir(parents=True, exist_ok=True)
 
     def _remove_bucket_directory(self, profile_id: str) -> None:

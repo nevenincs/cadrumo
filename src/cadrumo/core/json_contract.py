@@ -78,8 +78,16 @@ _PRESENTATION_KEY_TOKENS: Final[frozenset[str]] = frozenset(
         "title",
     }
 )
+#: Case-SENSITIVE by mandate, not by oversight. The product-naming rule makes the
+#: casing carry the meaning: the sole human CLI executable is the exact lowercase
+#: token ``aeat``, while ``AEAT`` names the Spanish tax authority and is retained
+#: wherever the referent is that authority, its official evidence, or its external
+#: protocol. A case-insensitive match therefore cannot distinguish an executable
+#: command from the authority's own name, and refuses legitimate prose such as
+#: "No persisted AEAT session found on disk." What this reserves for the typed
+#: action projection is command identity, which only the lowercase token carries.
 _RAW_AEAT_COMMAND_PATTERN: Final[re.Pattern[str]] = re.compile(
-    r"(?i)(?:^|[\s`'\";|&()])aeat(?=$|[\s`'\";|&()])"
+    r"(?:^|[\s`'\";|&()])aeat(?=$|[\s`'\";|&()])"
 )
 _RESERVED_ACTION_CONTEXT_KEYS: Final[frozenset[str]] = frozenset(
     {
@@ -407,8 +415,21 @@ class Notice(BaseModel):
             ``"modelo.calculate.unconsumed_iva"``).
         message: Localized operator-facing presentation text. It cannot carry
             an executable command identity.
-        action: Optional schema-resolved precondition-action projection. It is
-            the only notice field that may identify a recovery action.
+        action: Optional schema-resolved action projection, and still the ONLY
+            notice field that may identify an executable action. It carries one
+            of two shapes, distinguished by ``failed_condition_id``:
+            a :class:`ResolvedPreconditionAction` when the notice reports a
+            failed precondition and its recovery, or a bare
+            :class:`ResolvedActionReference` when the operation SUCCEEDED and
+            the notice merely points at a reasonable next verb.
+
+            The success shape exists so forward guidance stops being hardcoded
+            command prose. A literal ``aeat ...`` string in a locale catalogue
+            is untestable and rots silently when a verb is renamed - the rename
+            sweeps the registrations and leaves the prose behind. An
+            ``action_id`` resolved against the action catalogue and the live
+            command surface cannot: a renamed verb fails resolution loudly
+            instead of shipping a dead instruction to the operator.
         context: Optional deterministic non-action diagnostic metadata (e.g.
             source-resolution ``reason`` / ``source_kind``). Reserved action
             keys and executable command prose are rejected here.
@@ -425,7 +446,7 @@ class Notice(BaseModel):
     severity: NoticeSeverity
     code: str = Field(min_length=1)
     message: str = Field(min_length=1)
-    action: ResolvedPreconditionAction | None = None
+    action: ResolvedPreconditionAction | ResolvedActionReference | None = None
     context: Mapping[str, str] | None = None
 
     @field_validator("message")

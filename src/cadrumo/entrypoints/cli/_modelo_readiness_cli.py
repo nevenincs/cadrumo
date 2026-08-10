@@ -285,7 +285,6 @@ def _readiness_notices(report) -> tuple[Notice, ...]:
                 message=(
                     f"Modelo {report.modelo} cannot produce a local fichero-BOE export: {export_context['reason']}."
                 ),
-                suggestion=f"aeat app modelo describe {report.modelo}",
                 context=export_context,
             ),
         )

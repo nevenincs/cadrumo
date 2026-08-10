@@ -398,7 +398,6 @@ def _register_review_list_command() -> None:
                             "queue with `--advisory` and read one with `review show`."
                         ),
                     ),
-                    suggestion="aeat app ledger evidence review list --advisory <kind>",
                     context={
                         "advised": str(advised),
                         "kinds": ",".join(
@@ -521,10 +520,6 @@ def _register_review_show_command() -> None:
                             "This document cannot be confirmed until every finding below is answered "
                             "individually. Each answer names one finding by its id."
                         ),
-                    ),
-                    suggestion=(
-                        f"aeat app ledger evidence confirm --evidence-id {stored.evidence_reference} "
-                        f"--resolve {blockers[0].blocker_id}=attest:<why>"
                     ),
                     context={"blocker_ids": ",".join(blocker.blocker_id for blocker in blockers)},
                 ),

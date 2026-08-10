@@ -45,12 +45,14 @@ from ...application.modelo import (
     resolve_modelo_revision_for_operator_target,
     resolve_modelo_work_unit_for_operator_target,
 )
+from ...application.operator_actions import next_action
 from ...core import Modelo, Period, PeriodError
 from ...core.aggregation import LEDGER_BINDING_SOURCE_KINDS
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors import CadrumoError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
+from ...core.json_contract import Notice, NoticeSeverity
 from ...core.logging import get_logger
 from ...domain.calculations.registry import CasillaId, RegistryValidationError, validated_casilla_id
 from ...domain.modelos import CalculationRevision, CalculationRevisionAmendmentKind, WorkUnit
@@ -158,6 +160,7 @@ from ._modelo_work_verification_cli import register_work_verification_commands
 from ._modelo_work_wizard_cli import register_work_wizard_commands
 
 _log = get_logger(__name__)
+_HEX_DIGITS = frozenset("0123456789abcdef")
 
 
 app = typer.Typer(
@@ -165,6 +168,19 @@ app = typer.Typer(
     help=tr("cli.app.modelo.app_help"),
     no_args_is_help=True,
 )
+
+
+def _validate_work_unit_lookup_id(value: str) -> str:
+    """Validate one full work-unit id or lowercase-hex prefix."""
+    normalized = value.strip().lower()
+    if not normalized or len(normalized) > 64 or not _HEX_DIGITS.issuperset(normalized):
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.invalid_work_unit_lookup_id",
+                default="work_unit_id must be a lowercase hexadecimal SHA-256 id or unambiguous prefix",
+            ),
+        )
+    return normalized
 
 
 def _work_address_for_cli(
@@ -176,7 +192,7 @@ def _work_address_for_cli(
     revision: str | None,
     bucket_id: str | None = None,
 ) -> object:
-    exact_id = _validate_work_unit_id(work_unit_id) if work_unit_id is not None else None
+    exact_id = _validate_work_unit_lookup_id(work_unit_id) if work_unit_id is not None else None
     typed_period = _resolve_optional_cli_period(year=year, period=period, modelo=modelo)
     try:
         return modelo_work_address_from_operator_target(
@@ -200,7 +216,7 @@ def _resolve_work_unit_for_cli(
     revision: str | None = None,
     bucket_id: str | None = None,
 ) -> WorkUnit:
-    exact_id = _validate_work_unit_id(work_unit_id) if work_unit_id is not None else None
+    exact_id = _validate_work_unit_lookup_id(work_unit_id) if work_unit_id is not None else None
     typed_period = _resolve_optional_cli_period(year=year, period=period, modelo=modelo)
     try:
         return resolve_modelo_work_unit_for_operator_target(
@@ -238,7 +254,7 @@ def _resolve_revision_for_cli(
     validated_revision_id = (
         _validate_calculation_revision_id(calculation_revision_id) if calculation_revision_id is not None else None
     )
-    exact_work_id = _validate_work_unit_id(work_unit_id) if work_unit_id is not None else None
+    exact_work_id = _validate_work_unit_lookup_id(work_unit_id) if work_unit_id is not None else None
     typed_period = _resolve_optional_cli_period(year=year, period=period, modelo=modelo)
     try:
         return resolve_modelo_revision_for_operator_target(
@@ -906,17 +922,16 @@ def work_history(
         )
         for event in history.events
     )
-    from ._modelo_rendering import next_action_notice
-
-    next_action = next_action_notice(
-        "modelo.work.history.next_action",
-        tr(
-            "cli.app.modelo.work.history_next_action",
-            default="Review this work unit's current state with `aeat app modelo work status`.",
+    next_step = Notice(
+        severity=NoticeSeverity.INFO,
+        code="modelo.work.history.next_action",
+        message=tr(
+            "cli.app.modelo.work.history_next_action_summary",
+            default="Review this work unit's current state.",
         ),
-        suggestion=f"aeat app modelo work status {history.work_unit_id}",
+        action=next_action("operator.modelo.work.status"),
     )
-    _emit_envelope(ctx, command="modelo.work.history", result=result, lines=lines, notices=[next_action])
+    _emit_envelope(ctx, command="modelo.work.history", result=result, lines=lines, notices=[next_step])
 
 
 def _calculation_revision_not_found_bad_parameter_wide(

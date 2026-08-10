@@ -1414,8 +1414,6 @@ application:
         {allowed_manual_ids}; kapott érték: {manual_id}.'
       invalid_manual_rule_kind: 'A kézikönyvi szabály típusának ezek egyikének kell
         lennie: {allowed_rule_kinds}; kapott érték: {rule_kind}.'
-      invalid_oracle_environment: 'A nyilvántartási oracle környezetnek ezek egyikének
-        kell lennie: {allowed_values}; kapott érték: {value}.'
       invalid_topic_locale: 'A nyilvántartási téma nyelvének ezek egyikének kell lennie:
         {allowed_locales}; kapott érték: {locale_code}.'
       manual_section_not_found: 'A(z) {section} kézikönyvszakasz nem található itt:
@@ -4271,6 +4269,11 @@ cli:
       check:
         drifted: A tárolófa nem egyezik a deklarációjával.
         help: Ellenőrzi a tárolófát a deklarációjához képest, javítás nélkül
+        issue:
+          missing_path: egy kötelező tárolási útvonal hiányzik
+          path_type_mismatch: egy tárolási útvonal fájlrendszertípusa váratlan
+          permissions_drifted: a tárolási gyökér jogosultságai nem felelnek meg a
+            követelményeknek
         mode_unenforced: Ez a platform nem valósítja meg a POSIX jogosultsági biteket,
           ezért a gyökér jogosultságait nem ellenőriztük.
       errors:
@@ -4283,6 +4286,31 @@ cli:
         already_materialised: Minden deklarált könyvtár már létezett; egyet sem hoztunk
           létre.
         help: Létrehozza az összes deklarált könyvtárat, megőrizve a meglévő tartalmat
+      labels:
+        already_present: Már jelen van
+        area: Terület
+        areas: Területek
+        checked_areas: Ellenőrzött területek
+        created: Létrehozva
+        detail: Részlet
+        entries: Bejegyzések
+        entry_count: Bejegyzések száma
+        footprint: Méret
+        healthy: Megfelelő
+        issues: Problémák
+        lifecycle: Életciklus
+        'no': nem
+        notice_info: Információ
+        notice_warning: Figyelmeztetés
+        occupancy: Foglaltság
+        path: Útvonal
+        reclaimable: Felszabadítható
+        removed_entries: Eltávolított bejegyzések
+        resolved_paths: Feloldott útvonalak
+        retained_entries: Megőrzött bejegyzések
+        storage_root: Tárolási gyökér
+        targets: Célok
+        'yes': igen
       list:
         area_help: Megjeleníti minden tárolóterület összesített foglaltságát és méretét
         relocation_is_manual: A fa áthelyezéséhez állítsd le az alkalmazást, másold
@@ -4298,6 +4326,16 @@ cli:
       show:
         area_argument_help: A megjelenítendő tárolóterület
         area_help: Egy tárolóterület teljes megjelenítése
+      values:
+        lifecycle:
+          durable: tartós
+          mixed: vegyes
+          reclaimable: felszabadítható
+        occupancy:
+          absent: hiányzik
+          empty: üres
+          populated: adatokat tartalmaz
+          unresolved: feloldatlan
     unset:
       help: Egy konfigurációs kulcs értékének törlése.
       key_help: A törlendő kulcs.
@@ -5232,8 +5270,8 @@ cli:
         storage_check: 'Ellenőrzi a tárolófát: hiányzó vagy rossz helyen lévő könyvtárak'
         storage_init: Létrehozza a hiányzó tárolókönyvtárakat
         storage_list: Megnézheted, hol tárolódik minden helyi adattípus
-        storage_reclaim: Helyet szabadít fel egy újraépíthető kategória törlésével
-        storage_show: Egy tárolókategória részletes megtekintése
+        storage_reclaim: Hely felszabadítása egy újraépíthető tárolóterület törlésével
+        storage_show: Egy tárolóterület részletes megtekintése
       root:
         diagnostics_logs: A napló útvonalának és legutóbbi sorainak megjelenítése.
         diagnostics_overview_verbose: Az általános állapot részletes megjelenítése.
@@ -5599,6 +5637,8 @@ cli:
         és besorolása.'
       quick_start_setup_done: '  1. `aeat config profile status` - készültség és hiteles
         következő lépés ellenőrzése.'
+      quick_start_setup_login: '  1. `aeat config login NAME` - aktiváljon egy regisztrált
+        adózói profilt.'
       quick_start_setup_needed: '  1. `aeat config profile create NAME` - helyi adózói
         profil létrehozása.'
       quick_start_setup_repair: '  1. `aeat config repair profile` - vizsgáld meg
@@ -7042,10 +7082,10 @@ errors:
       szükséges. Futtassa az `aeat config login NÉV` parancsot, majd próbálja újra.
     refused_storage_passphrase_too_short: A jelmondat túl rövid. Legalább 8 karakterből
       kell állnia.
-    refused_storage_reclaim: 'A tárolókategória felszabadítása elutasítva: a deklarált
+    refused_storage_reclaim: 'A tárolóterület felszabadítása elutasítva: a deklarált
       életciklusa megőrzi a tartalmát.'
-    refused_storage_reclaim_unconfirmed: Egy tárolókategória felszabadítása adatokat
-      töröl, és kifejezett megerősítést igényel.
+    refused_storage_reclaim_unconfirmed: Egy tárolóterület felszabadítása adatokat
+      töröl, ezért megerősítés szükséges.
     refused_storage_secret_already_exists: Ilyen kulcsú titkos adat már létezik. Használja
       a felülírás lehetőséget a csere érdekében.
     refused_storage_session_expired: Az aktív munkamenet inaktivitás miatt lejárt.
@@ -7301,6 +7341,7 @@ flows:
     language:
       unavailable: Ez a profil nem kínál nyelvi beállítást.
     progress: '{present} / {total} mező kitöltve, {missing} hiányzik a benyújtáshoz'
+    required_complete: A séma által megkövetelt összes profiladat rendelkezésre áll.
     recovery_boundary: 'A helyreállítási kód létrehozása és megújítása kizárólag a
       terminálról történik: aeat config recovery create / aeat config recovery rotate.
       A 24 szó egyszer jelenik meg, és nem jeleníthető meg újra.'

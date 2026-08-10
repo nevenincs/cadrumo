@@ -87,21 +87,26 @@ def _write_row_with_wrong_bucket_key(
 
 
 def test_config_repair_cli_redacts_active_profile_identifier() -> None:
-    """The public repair command should be safe to paste into audit notes."""
+    """Repair identifies the profile by label without exposing its bucket UUID."""
 
     _create_operator_profile()
+    active_bucket_id = resolve_active_bucket_id()
+    assert active_bucket_id is not None
 
     text, payload_result = _invoke_text_and_json(("config", "repair"))
 
     assert text.exit_code == 0, text.output
     assert payload_result.exit_code == 0, payload_result.output
-    _assert_no_sensitive_output(text.output)
+    _assert_no_sensitive_output(text.output, active_bucket_id)
+    assert "Profile\toperator" in text.output
+    assert "profile.storage\tactive_profile=operator" in text.output
 
     payload = json.loads(payload_result.output)
     result = payload["result"]
-    assert result["setup"]["active_profile"] == "<profile-id>"
+    assert result["setup"]["active_profile"] == "operator"
     summaries = "\n".join(str(row.get("summary", "")) for row in result["checks"])
-    _assert_no_sensitive_output(summaries)
+    _assert_no_sensitive_output(summaries, active_bucket_id)
+    assert "active_profile=operator" in summaries
 
 
 def test_config_repair_profile_cli_redacts_profile_identifiers() -> None:
@@ -124,6 +129,12 @@ def test_config_repair_profile_cli_redacts_profile_identifiers() -> None:
         assert payload_result.exit_code in {0, 2}, payload_result.output
         _assert_no_sensitive_output(text.output, active_bucket_id)
         _assert_no_sensitive_output(payload_result.output, active_bucket_id)
+
+    pointer_text, pointer_payload_result = results[("config", "repair", "profile")]
+    assert pointer_text.exit_code == 0, pointer_text.output
+    assert "active_profile\toperator" in pointer_text.output
+    pointer_payload = json.loads(pointer_payload_result.output)
+    assert pointer_payload["result"]["before"]["active_profile"] == "operator"
 
     named_text, named_payload_result = results[("config", "repair", "profile", "--profile", "operator")]
     assert named_text.exit_code == 0, named_text.output

@@ -6,10 +6,8 @@ The rate-box coverage advisory is the case under test because its remedy is the
 whole basis of the two-gate split -- the export refusal on the same condition is
 fair only if the operator was told, in time, what to repair.
 
-Three parts of the diagnostic must survive the hop, and each is dropped by a
-different plausible edit: the ``reason`` (the machine-queryable kind, on
-``context``), the ``remedy`` (the repair instruction, on ``suggestion``), and
-the ``message`` itself, which must reach the terminal line as well as the JSON.
+The machine-queryable reason and the message must survive the hop. Executable
+remediation no longer rides a free-form ``suggestion`` field.
 """
 
 from __future__ import annotations
@@ -54,7 +52,7 @@ def _rate_box_diagnostic() -> CalculationSourceDiagnostic:
     )
 
 
-def test_the_advisory_becomes_a_notice_carrying_reason_remedy_and_message() -> None:
+def test_the_advisory_becomes_a_notice_carrying_reason_and_message() -> None:
     notices, lines = _work_calculate_source_advisory_output(_DiagnosticsOnly((_rate_box_diagnostic(),)))
 
     assert len(notices) == 1
@@ -62,13 +60,24 @@ def test_the_advisory_becomes_a_notice_carrying_reason_remedy_and_message() -> N
     assert context is not None, "the advisory reached the operator with no structured provenance"
     assert context["reason"] == _REASON
     assert context["source_kind"] == "ledger_iva_aggregation"
-    assert notices[0].suggestion == _REMEDY
     assert notices[0].message == _MESSAGE
     assert len(lines) == 1
     assert _MESSAGE in lines[0]
-    assert _REMEDY in lines[0]
 
 
 def test_a_calculation_with_no_advisory_emits_no_notice() -> None:
     """The negative control: a projector that always emitted one would pass above."""
     assert _work_calculate_source_advisory_output(_DiagnosticsOnly(())) == ([], [])
+
+
+def test_same_message_is_deduplicated_across_contexts_but_distinct_messages_remain() -> None:
+    first = _rate_box_diagnostic()
+    same_message = first.model_copy(update={"source_kind": "ledger_renta_gastos_aggregation"})
+    distinct = first.model_copy(update={"message": f"{_MESSAGE} for a different source row"})
+
+    notices, lines = _work_calculate_source_advisory_output(_DiagnosticsOnly((first, same_message, distinct)))
+
+    assert [notice.message for notice in notices] == [_MESSAGE, distinct.message]
+    assert notices[0].context is not None
+    assert notices[0].context["source_kind"] == first.source_kind
+    assert len(lines) == 2

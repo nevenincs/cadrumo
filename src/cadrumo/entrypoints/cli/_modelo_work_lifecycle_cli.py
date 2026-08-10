@@ -27,10 +27,11 @@ from ...application.modelo import (
     require_profile_ready_for_modelo_work,
     resolve_registry_revision_for_work_target,
 )
+from ...application.operator_actions import next_action
 from ...core import Modelo, Period
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
-from ...core.json_contract import Notice
+from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.calculations.registry import RegistrySnapshotError
 from ...domain.contribuyente import parse_tax_region
 from ...domain.modelos import WorkUnit
@@ -45,7 +46,6 @@ from ._modelo_payloads import (
 )
 from ._modelo_rendering import (
     advisory_notice,
-    next_action_notice,
     work_unit_lines,
     work_unit_list_lines,
     work_unit_payload,
@@ -451,17 +451,16 @@ def _register_work_list_command(work_app: typer.Typer, deps: _LifecycleDeps) -> 
             },
         )
         lines = work_unit_list_lines(units, bucket_id=bucket_id, include_discarded=include_discarded)
-        next_action = next_action_notice(
-            "modelo.work.list.next_action",
-            tr(
-                "cli.app.modelo.work.list_next_action",
-                default=(
-                    "Inspect one work unit's full state with `aeat app modelo work status`, "
-                    "then draft or recalculate it with `aeat app modelo work calculate`."
-                ),
+        next_step = Notice(
+            severity=NoticeSeverity.INFO,
+            code="modelo.work.list.next_action",
+            message=tr(
+                "cli.app.modelo.work.list_next_action_summary",
+                default="Inspect one work unit's full state before drafting or recalculating it.",
             ),
+            action=next_action("operator.modelo.work.status"),
         )
-        _emit_envelope(ctx, command="modelo.work.list", result=result, lines=lines, notices=[next_action])
+        _emit_envelope(ctx, command="modelo.work.list", result=result, lines=lines, notices=[next_step])
 
 
 def _register_work_status_command(work_app: typer.Typer, deps: _LifecycleDeps) -> None:
@@ -494,18 +493,16 @@ def _register_work_status_command(work_app: typer.Typer, deps: _LifecycleDeps) -
         )
         result = WorkStatusResult.model_validate(work_unit_payload(unit).model_dump(mode="python"))
         lines = ["operation\tmodelo.work.status", *work_unit_lines(unit)]
-        next_action = next_action_notice(
-            "modelo.work.status.next_action",
-            tr(
-                "cli.app.modelo.work.status_next_action",
-                default=(
-                    "Draft or recalculate this unit with `aeat app modelo work calculate`, "
-                    "then verify the draft with `aeat app modelo work verify`."
-                ),
+        next_step = Notice(
+            severity=NoticeSeverity.INFO,
+            code="modelo.work.status.next_action",
+            message=tr(
+                "cli.app.modelo.work.status_next_action_summary",
+                default="Draft or recalculate this work unit, then verify the resulting draft.",
             ),
-            suggestion=f"aeat app modelo work calculate {unit.work_unit_id}",
+            action=next_action("operator.modelo.work.calculate"),
         )
-        _emit_envelope(ctx, command="modelo.work.status", result=result, lines=lines, notices=[next_action])
+        _emit_envelope(ctx, command="modelo.work.status", result=result, lines=lines, notices=[next_step])
 
 
 def _register_work_rename_command(work_app: typer.Typer, deps: _LifecycleDeps) -> None:

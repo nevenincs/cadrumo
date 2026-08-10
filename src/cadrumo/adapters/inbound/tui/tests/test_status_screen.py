@@ -24,7 +24,19 @@ import yaml
 from textual.widgets import DataTable, Static
 
 from .....core.i18n import SUPPORTED_OUTPUT_LANGUAGES
-from .....core.json_contract import Notice, NoticeSeverity
+from .....core.json_contract import (
+    ActionArgumentSource,
+    ActionArgumentStatus,
+    ActionConditionality,
+    ActionConditionEvidence,
+    ActionEvidenceProvenance,
+    NoRecoveryOutcome,
+    Notice,
+    NoticeSeverity,
+    ResolvedActionArgument,
+    ResolvedActionReference,
+    ResolvedPreconditionAction,
+)
 from .....tests.locales_root_fixture import locales_root_scope
 from .. import (
     StatusApp,
@@ -242,14 +254,20 @@ async def test_recovery_panel_shows_enrollment_and_copyable_commands() -> None:
 
 
 @pytest.mark.asyncio
-async def test_a_notice_paints_its_severity_glyph_message_and_suggestion() -> None:
+async def test_a_notice_paints_its_severity_glyph_message_and_resolved_action() -> None:
     """The band renders exactly what the typed Notice carries, glyph and all.
 
     Severity drives the glyph and the CSS class rather than only the
     colour, per the surface's own "colour is never the sole carrier of
-    meaning" convention; the suggestion, when present, renders as its own
-    line beneath the message.
+    meaning" convention. An action, when present, renders its resolved
+    target identity as its own line beneath the message.
     """
+    evidence = ActionConditionEvidence(
+        condition_id="profile.active.required",
+        evidence_id="profile.active.state",
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        values={"profile_name": "example"},
+    )
     data = StatusPageData(
         notices=(
             Notice(severity=NoticeSeverity.INFO, code="test.info", message="INFO-MESSAGE"),
@@ -257,7 +275,45 @@ async def test_a_notice_paints_its_severity_glyph_message_and_suggestion() -> No
                 severity=NoticeSeverity.WARNING,
                 code="test.warning",
                 message="WARNING-MESSAGE",
-                suggestion="aeat config example",
+                action=ResolvedActionReference(
+                    action_id="operator.overview.status",
+                    target_command_key="overview.status",
+                ),
+            ),
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code="test.recovery",
+                message="RECOVERY-MESSAGE",
+                action=ResolvedPreconditionAction(
+                    failed_condition_id="profile.active.required",
+                    evidence=(evidence,),
+                    action=ResolvedActionReference(
+                        action_id="operator.profile.create",
+                        target_command_key="config.profile.create",
+                    ),
+                    argument_bindings=(
+                        ResolvedActionArgument(
+                            argument_name="profile_name",
+                            status=ActionArgumentStatus.RESOLVED,
+                            value="example",
+                            source=ActionArgumentSource.CONDITION_EVIDENCE,
+                            source_key="profile_name",
+                            source_evidence_id="profile.active.state",
+                        ),
+                    ),
+                    conditionality=ActionConditionality.IMMEDIATE,
+                ),
+            ),
+            Notice(
+                severity=NoticeSeverity.INFO,
+                code="test.terminal",
+                message="TERMINAL-MESSAGE",
+                action=ResolvedPreconditionAction(
+                    failed_condition_id="profile.active.required",
+                    evidence=(evidence,),
+                    conditionality=ActionConditionality.NOT_APPLICABLE,
+                    no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                ),
             ),
         ),
     )
@@ -269,13 +325,17 @@ async def test_a_notice_paints_its_severity_glyph_message_and_suggestion() -> No
         info_line = app.query_one("#notice-0", Static)
         assert "INFO-MESSAGE" in str(info_line.content)
         assert "info" in str(info_line.classes)
-        assert not app.query("#notice-0-suggestion")
+        assert not app.query("#notice-0-action")
 
         warning_line = app.query_one("#notice-1", Static)
         assert "WARNING-MESSAGE" in str(warning_line.content)
         assert "warning" in str(warning_line.classes)
-        suggestion_line = app.query_one("#notice-1-suggestion", Static)
-        assert "aeat config example" in str(suggestion_line.content)
+        reference_action_line = app.query_one("#notice-1-action", Static)
+        assert "overview.status" in str(reference_action_line.content)
+
+        recovery_action_line = app.query_one("#notice-2-action", Static)
+        assert "config.profile.create" in str(recovery_action_line.content)
+        assert not app.query("#notice-3-action")
 
         # The class name alone is not the claim: the CSS the class selects
         # must actually resolve to two DIFFERENT colours, or "severity

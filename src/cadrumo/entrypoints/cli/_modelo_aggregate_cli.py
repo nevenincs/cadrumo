@@ -223,7 +223,6 @@ def _invoice_retencion_excluded_notice(projection: InvoiceRetencionProjection) -
             invoice_id=projection.invoice_id,
             reasons=reasons,
         ),
-        suggestion=guidance,
         context={"invoice_id": projection.invoice_id, "defects": reasons},
     )
 
