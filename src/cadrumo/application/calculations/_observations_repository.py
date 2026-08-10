@@ -61,6 +61,7 @@ from ...core import (
 )
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
+from ...core.identity import FilingRecordId
 from ...core.resources import resources
 from ...core.time import UtcInstant, now
 from ...domain.calculations.registry import RegistryModeloObservation, RegistrySnapshotError, undeclared_casilla_ids
@@ -139,7 +140,7 @@ class PriorDomiciliationElectionProjection(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     election: PriorDomiciliationElection
-    baseline_filing_record_id: str | None = Field(default=None, min_length=64, max_length=64)
+    baseline_filing_record_id: FilingRecordId | None = None
     baseline_evidence_reference_id: str | None = Field(default=None, min_length=1, max_length=128)
     baseline_result_disposition: ResultDisposition | None = None
     baseline_source_header_locator: str | None = Field(default=None, min_length=1, max_length=512)

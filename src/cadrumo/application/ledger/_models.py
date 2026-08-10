@@ -594,7 +594,7 @@ class LedgerReviewQuery(BaseModel):
     classification: str | None = None
     text: str | None = None
     direction: str | None = None
-    transaction_id: str | None = Field(default=None, min_length=64, max_length=64)
+    transaction_id: TransactionId | None = None
 
     @field_validator(
         "bucket_id",

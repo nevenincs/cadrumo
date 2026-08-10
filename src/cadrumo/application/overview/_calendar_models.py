@@ -28,6 +28,7 @@ from ...core import ElidedProse
 from ...core import NotificacionEstadoServicio as _NotificacionEstadoServicio
 from ...core import Period as _Period
 from ...core import PostFilingEventKind as _PostFilingEventKind
+from ...core.identity import WorkUnitId
 from ...core.time import validate_inclusive_date_range as _validate_inclusive_date_range
 from ...domain.calculations.registry import ApplicabilityVerdict
 from ...domain.deadlines import HolidayJurisdiction as _HolidayJurisdiction
@@ -227,7 +228,7 @@ class OverviewCalendarEntry(BaseModel):
     censo_enrolment_state: OverviewCensoEnrolmentState = OverviewCensoEnrolmentState.NOT_CHECKED
     filing_evidence: OverviewCalendarFilingEvidence = Field(default_factory=lambda: OverviewCalendarFilingEvidence())
     source: OverviewCalendarEntrySource = OverviewCalendarEntrySource.REGISTRY_DEADLINE
-    local_work_unit_id: str | None = Field(default=None, min_length=64, max_length=64)
+    local_work_unit_id: WorkUnitId | None = None
     local_work_unit_name: str | None = Field(default=None, min_length=1, max_length=200)
     local_work_unit_revision_id: str | None = Field(default=None, min_length=1, max_length=128)
 
