@@ -4,7 +4,7 @@ tags:
   - '#current-schema-only-purge'
 date: '2026-08-10'
 modified: '2026-08-10'
-body_hash: 'sha256:97b1e421bad5b97caaf82e55b27ed81bbe950b8d671455a0398f08f8c826dd47'
+body_hash: 'sha256:42f0c4ad895389e783c5a178628ba88431e83ac453bdb80274c1bdc9d3732f7e'
 tier: L3
 related:
   - '[[2026-07-09-compatibility-lifecycle-adr]]'
@@ -58,6 +58,7 @@ Make live profile records and immutable snapshots accept exactly the canonical v
 - [ ] `W01.P01.S01` - Require exact schema id and schema version 4 for UserProfileRecord and UserProfileSnapshot; `src/cadrumo/domain/user_profile/_values.py`.
 - [ ] `W01.P01.S02` - Stamp newly created profile records explicitly with the canonical schema version; `src/cadrumo/application/user_profile/_lifecycle.py`.
 - [ ] `W01.P01.S03` - Prove current profile schema hydration and non-current marker refusal; `src/cadrumo/domain/user_profile/tests/test_payload_schema_identity.py`.
+- [ ] `W01.P01.S24` - Make UserProfileRecord schema_version required with no default so a persisted payload omitting the marker refuses instead of hydrating as canonical, sweeping the construction sites that then break; `src/cadrumo/domain/user_profile/_values.py and the 231 UserProfileRecord construction sites across roughly 150 files, of which all but two are tests and dev harnesses owned by peer campaigns`.
 
 ### Phase `W01.P03` - Pin the active bucket pointer format
 
