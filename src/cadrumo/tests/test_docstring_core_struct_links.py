@@ -223,9 +223,7 @@ _DOTTED_ROLE = re.compile(r":(?:class|func|meth|attr|data|exc|obj|mod):`~?([A-Za
 # Shrink-only debt ceiling, NOT a target. It is lowered as the debt burns down
 # and must never be raised. The remaining entries are prose reaching past a
 # facade into ``_module`` internals -- the class the architecture boundaries rule
-# already governs -- concentrated enough to be tractable: of the 110 remaining, 63 name a symbol a
-# PUBLIC module or package does export, so they are repoints; the other 47 name
-# something only private modules define and each needs its own judgement.
+# already governs.
 #
 # It landed at 204 and the first 60 of that drop was THIS DETECTOR, not work.
 # ``core/__init__.py`` declares ``__all__: list[str] = [...]``, an ``ast.AnnAssign``
@@ -242,6 +240,21 @@ _DOTTED_ROLE = re.compile(r":(?:class|func|meth|attr|data|exc|obj|mod):`~?([A-Za
 # exactly like debt. Both times the tell was the DENOMINATOR: an ``__all__`` of
 # size zero, and one symbol holding 38 of 61. Print the denominator, or find the
 # implausible concentration.
+#
+# THE TWO DROPS SO FAR ARE NOT THE SAME KIND OF THING, and a ceiling that falls
+# without saying which is which records a lie about progress:
+#
+#   204 -> 144   this detector correcting itself. No docstring changed.
+#   144 -> 110   thirty-four real repoints. ``CasillaId`` is exported by ``core``
+#                and genuinely absent from the registry facade, so the roles
+#                naming ``domain.calculations.registry.CasillaId`` were pointed
+#                at a package that never owned it.
+#
+# Of the 110 remaining, 63 name a symbol some PUBLIC module or package does
+# export -- mechanical repoints, though spread thin enough that no single
+# substitution covers them. The other 47 name something only private modules
+# define, across 40 symbols, and each is a judgement about whether the prose is
+# entitled to reach past a facade at all.
 _UNRESOLVED_DOTTED_REFERENCE_CEILING = 110
 
 # A derived scan selecting nothing satisfies the ceiling assertion perfectly.
