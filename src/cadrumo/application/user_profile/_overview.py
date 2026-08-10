@@ -89,7 +89,9 @@ _MASK_KEYWORDS: Final[frozenset[str]] = ALWAYS_REDACT_KEY_TERMS | frozenset(
         "key",
     },
 )
-"""Substrings that mark a sensitive fact the schema has NOT classified. Defence in depth for exactly that case: a fact reaching a
+"""Substrings that mark a sensitive fact the schema has NOT classified.
+
+Defence in depth for exactly that case: a fact reaching a
 surface under a path no schema field declares still masks if it is named
 like a credential.
 
