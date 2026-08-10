@@ -13,6 +13,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
+import pytest
+
 from ....core import BindingSourceKind
 from ....domain.calculations.registry import (
     BindingId,
@@ -27,6 +29,8 @@ from .. import (
     detect_casilla_divergences,
     resolve_casilla_population_scope,
 )
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _REVISION_ID = "a" * 64
 _WORK_UNIT_ID = "b" * 64
