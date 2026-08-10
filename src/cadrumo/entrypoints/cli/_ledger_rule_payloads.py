@@ -147,7 +147,7 @@ class RuleApplyResult(OutputSchema):
 class LlmUsageProviderPayload(OutputSchema):
     """Per-provider LLM usage/cost row.
 
-    Mirrors :class:`LlmUsageProviderMetrics`, aggregated
+    Mirrors :class:`LlmUsageCostProviderMetrics`, aggregated
     from the encrypted usage log. ``calls`` counts every recorded call
     (cache hits included); ``cost_estimate_usd`` is the summed estimate.
     """
@@ -159,7 +159,7 @@ class LlmUsageProviderPayload(OutputSchema):
     input_tokens: int = Field(ge=0)
     output_tokens: int = Field(ge=0)
     total_tokens: int = Field(ge=0)
-    # The canonical LlmUsageProviderMetrics declares this a plain Decimal with
+    # The canonical LlmUsageCostProviderMetrics declares this a plain Decimal with
     # no bound, so the transport asserts the decimal grammar only.
     cost_estimate_usd: DecimalWireText | None
 
@@ -193,7 +193,7 @@ class LedgerLlmDiagnosticsResult(OutputSchema):
 
     Presents the two existing LLM metric stores in one read-only report: the
     usage/cost log aggregated per provider
-    (:class:`LlmUsageProviderMetrics`) and the
+    (:class:`LlmUsageCostProviderMetrics`) and the
     classification-confidence distribution over LLM-classified ledger
     transactions (:class:`LlmConfidenceProviderMetrics`),
     both sourced from

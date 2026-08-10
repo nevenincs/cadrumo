@@ -50,7 +50,7 @@ __all__ = [
     "DEFAULT_LOW_CONFIDENCE_THRESHOLD",
     "LlmConfidenceProviderMetrics",
     "LlmDiagnosticsReport",
-    "LlmUsageProviderMetrics",
+    "LlmUsageCostProviderMetrics",
     "build_llm_diagnostics_report",
 ]
 
@@ -71,7 +71,7 @@ _LLM_PROVENANCE_PREFIX = "llm:"
 _MEAN_QUANTUM = Decimal("0.0001")
 
 
-class LlmUsageProviderMetrics(BaseModel):
+class LlmUsageCostProviderMetrics(BaseModel):
     """Per-provider aggregate of the LLM usage/cost log.
 
     Aggregated from :class:`~adapters.outbound.llm.UsageRecord` rows for a
@@ -130,7 +130,7 @@ class LlmDiagnosticsReport(BaseModel):
     since: date | None = None
     until: date | None = None
     low_confidence_threshold: Decimal
-    usage_providers: tuple[LlmUsageProviderMetrics, ...] = ()
+    usage_providers: tuple[LlmUsageCostProviderMetrics, ...] = ()
     total_calls: int = Field(default=0, ge=0)
     total_cache_hits: int = Field(default=0, ge=0)
     total_input_tokens: int = Field(default=0, ge=0)
@@ -212,7 +212,7 @@ def _load_bucket_transactions(bucket_id: str | None) -> tuple[Transaction, ...]:
     return tuple(catalogue.values())
 
 
-def _aggregate_usage(records: Sequence[UsageRecord]) -> tuple[LlmUsageProviderMetrics, ...]:
+def _aggregate_usage(records: Sequence[UsageRecord]) -> tuple[LlmUsageCostProviderMetrics, ...]:
     """Fold usage records into one metric row per provider, provider-sorted."""
     calls: dict[str, int] = {}
     cache_hits: dict[str, int] = {}
@@ -234,7 +234,7 @@ def _aggregate_usage(records: Sequence[UsageRecord]) -> tuple[LlmUsageProviderMe
         else:
             cost[provider] = cost.get(provider, Decimal("0")) + record.cost_estimate_usd
     return tuple(
-        LlmUsageProviderMetrics(
+        LlmUsageCostProviderMetrics(
             provider=provider,
             calls=calls[provider],
             cache_hits=cache_hits[provider],

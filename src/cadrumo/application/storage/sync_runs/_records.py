@@ -1,0 +1,189 @@
+"""Local typed record of one completed synchronisation run, and its store.
+
+The provenance authority for "when was this last synchronised". Before this
+store, no such authority existed anywhere in the source tree -- a searched
+absence, not an assumed one: there is no ``last_sync``, ``synced_at`` or
+``last_synced`` field in production code, so the only signal an operator had was
+whatever the remote surface happened to stamp on itself. A remote stamp answers
+"when did the far side last change", which is a different question and is
+unavailable at all when the run fails partway.
+
+Why a second run-record store rather than an existing one
+---------------------------------------------------------
+:class:`~adapters.outbound.llm.LLMRunRecord` is a shipped local encrypted
+run-record store, and it is deliberately not extended here. Its fields are
+provider-call accounting -- caller, provider, model, duration, succeeded,
+error kind -- and not one of them carries a SUBJECT. It cannot express what was
+synchronised, and a sync run has no provider or model to record. That store is a
+latency-and-failure shape; this one is a coverage shape, and substitutability
+fails in both directions. Its package documents that it admits no parallel
+capture path, which is an invariant about its own projections rather than a
+prohibition on any second run record in the tree.
+
+What a record claims, and what it does not
+------------------------------------------
+A record is written on completion of a run over ONE surface, on partial failure
+as well as on success. That is deliberate and it is the half most easily
+dropped: a record written only on success makes every truncated sweep invisible,
+which is precisely the state a reader would otherwise mistake for complete
+coverage. Partial failure means a run that TRIED to write and got partway --
+a different event from a run that declined to write by design.
+
+A DRY RUN WRITES NO RECORD, and the absence is declared rather than accidental.
+A preview reads the remote surface and persists nothing, so it has no last-sync
+provenance: nothing was synced. A provenance record is itself a persist, so
+writing one from the preview branch would defeat the guard whose entire purpose
+is that a preview leaves no trace. A reader finding no record after a dry run
+is seeing the contract, not a gap.
+
+``unit_count`` and ``divergence_count`` describe what the run actually reached,
+never what it intended to reach. A run that swept three of ten periods records
+three, and its ``resolved_scope`` says which three. The pair is what lets a
+later reader distinguish a clean full sweep from a clean partial one -- two runs
+that are identical in every other field and mean entirely different things.
+"""
+
+from __future__ import annotations
+
+from datetime import datetime
+from typing import ClassVar, override
+
+from pydantic import BaseModel, Field, field_validator
+
+from ....adapters.persistence.storage import (
+    SYNC_RUN_RECORDS_NAMESPACE,
+    SecureBoundRepository,
+    SensitivityClass,
+)
+from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core import SyncSurface
+from ....core.identity import BucketId
+from ....core.time import validate_utc_aware
+from ....domain.buckets import BucketEventId
+
+__all__ = [
+    "SyncRunRecord",
+    "SyncRunRecordRepository",
+    "sync_run_record_key",
+]
+
+
+class SyncRunRecord(BaseModel):
+    """One completed synchronisation run over one surface, in full.
+
+    Carries the surface, the scope the run actually resolved, the instant it
+    finished, how many units it reached and how many of those diverged, plus the
+    id of the bucket event it is co-written with. Read
+    :class:`~core.SyncSurface` for why the surface axis is a closed set and why
+    it has exactly two members.
+
+    ``succeeded`` is not redundant against ``divergence_count``. A run can
+    finish cleanly having found divergences -- that is the normal outcome the
+    store exists to record -- and a run can fail partway having found none,
+    because it never got far enough to look. Reading failure off the divergence
+    count would invert both cases.
+
+    Attributes:
+        bucket_event_id: Id of the co-written sync-run bucket event. Also the
+            trailing segment of this record's storage key, so record and event
+            are joined by identity rather than by a field that could drift.
+        bucket_id: Profile bucket the run belongs to.
+        surface: Which external surface this run covered.
+        resolved_scope: What the run actually resolved its scope to, as the
+            operator-facing description of the covered set. Empty only when the
+            run failed before a scope could be resolved at all.
+        succeeded: Whether the run completed without a refusal. False for a
+            partial run, which is still recorded rather than dropped.
+        unit_count: How many units the run REACHED. Never the intended total --
+            a sweep that covered three of ten periods records three.
+        divergence_count: How many of those reached units diverged. Bounded by
+            ``unit_count``, because a unit that was never reached cannot have
+            been found to diverge.
+        completed_at: UTC instant the run finished, successfully or not.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    bucket_event_id: BucketEventId
+    bucket_id: BucketId
+    surface: SyncSurface
+    resolved_scope: str = Field(default="", max_length=256)
+    succeeded: bool
+    unit_count: int = Field(default=0, ge=0)
+    divergence_count: int = Field(default=0, ge=0)
+    completed_at: datetime
+
+    @field_validator("completed_at")
+    @classmethod
+    def _completed_at_is_utc(cls, value: datetime) -> datetime:
+        """Hold the persisted instant to the canonical UTC-aware contract.
+
+        A bare ``datetime`` accepts a naive or ``+01:00`` value, which would
+        make two runs over the same surface unorderable against each other and
+        would read a Madrid-local instant back as if it were UTC -- in a store
+        whose entire purpose is answering "when did this last happen".
+        """
+        return validate_utc_aware(value)
+
+    @field_validator("divergence_count")
+    @classmethod
+    def _divergences_are_bounded_by_units(cls, value: int, info: object) -> int:
+        """Refuse more divergences than units reached.
+
+        A unit the run never reached cannot have been found to diverge, so a
+        record claiming otherwise is describing a run that did not happen. The
+        check runs at construction rather than at read, because the invalid
+        state is only ever produced by a caller counting one of the two
+        against the wrong population.
+        """
+        data = getattr(info, "data", {})
+        unit_count = data.get("unit_count")
+        if unit_count is not None and value > unit_count:
+            raise ValueError(
+                f"divergence_count {value} exceeds unit_count {unit_count}: "
+                "a unit that was never reached cannot have diverged",
+            )
+        return value
+
+
+def sync_run_record_key(*, surface: SyncSurface, bucket_event_id: str) -> str:
+    """Return the storage key for one run over one surface.
+
+    Keyed ``sync-run:{surface}:{bucket_event_id}``, matching the namespace's
+    declared grammar. N records per surface rather than one: the store is the
+    last-sync provenance authority, and a key scoped to the surface alone would
+    make the last sync the only sync.
+
+    The scope is deliberately absent from the key. A run's resolved scope
+    describes what it covered, not which run it was, so a truncated sweep and a
+    full sweep over the same surface stay distinct records -- the pair a reader
+    needs in order to tell partial coverage from complete.
+    """
+    return f"sync-run:{surface.value}:{bucket_event_id}"
+
+
+class SyncRunRecordRepository(SecureBoundRepository[SyncRunRecord]):
+    """Repository over encrypted SQL-backed sync-run records.
+
+    An ``AUDIT``-class, profile-local, structured-custody namespace holding N
+    rows per surface. The :class:`SensitivityClass` is taken from the namespace
+    declaration rather than restated, so the class a row is written under and
+    the class the namespace advertises cannot diverge.
+
+    Co-writing is not done through a wrapper method. The canonical single writer
+    is the secure-object repository's batch save, and a caller binds this
+    repository and the catalogue repository to the SAME repository instance so
+    both writes share one session scope and roll back together.
+    """
+
+    namespace: ClassVar[str] = SYNC_RUN_RECORDS_NAMESPACE.namespace
+    sensitivity: ClassVar[SensitivityClass] = SYNC_RUN_RECORDS_NAMESPACE.sensitivity
+    schema_version: ClassVar[int] = SYNC_RUN_RECORDS_NAMESPACE.schema_version
+    payload_type: ClassVar[type[BaseModel]] = SyncRunRecord
+
+    @override
+    def extract_identifier(self, payload: SyncRunRecord) -> str:
+        return sync_run_record_key(
+            surface=payload.surface,
+            bucket_event_id=payload.bucket_event_id,
+        )

@@ -36,6 +36,7 @@ from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings
 from .....core.errors import SiteHealthError
 from .....core.i18n import tr
+from .....core.identity import normalise_nif_iva
 from .....core.logging import get_logger
 from .....domain.calculations.registry import (
     AeatNifIvaObservation,
@@ -638,7 +639,15 @@ async def _click_expected(locator: Locator, *, stage: str, description: str, tim
 
 
 def _split_vies_nif(nif: str) -> tuple[str, str]:
-    normalized_nif = nif.strip().upper().replace(" ", "").replace("-", "")
+    """Split a NIF-IVA into its country prefix and number, on the canonical normal form.
+
+    Normalisation is :func:`~core.identity.normalise_nif_iva`, which is named
+    for exactly this concept. A local restatement here once stripped spaces and
+    hyphens but NOT dots -- and a dotted VAT number is the canonical function's
+    own motivating example, because operators routinely paste one. That gap sent
+    ``0123.456.789`` to VIES with the dots intact.
+    """
+    normalized_nif = normalise_nif_iva(nif)
     if len(normalized_nif) < 3 or not normalized_nif[:2].isalpha():
         raise RegistryValidationError(f"NIF-IVA value {nif!r} must start with a two-letter EU country code")
     iva_number = normalized_nif[2:]

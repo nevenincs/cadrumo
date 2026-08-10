@@ -331,7 +331,7 @@ if TYPE_CHECKING:
         DEFAULT_LOW_CONFIDENCE_THRESHOLD,
         LlmConfidenceProviderMetrics,
         LlmDiagnosticsReport,
-        LlmUsageProviderMetrics,
+        LlmUsageCostProviderMetrics,
         build_llm_diagnostics_report,
     )
     from ._llm_review_workflow import (
@@ -607,7 +607,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "LlmReviewInvocationOrigin": "._llm_review_workflow",
     "LlmReviewRequest": "._llm_review_workflow",
     "LlmReviewResult": "._llm_review_workflow",
-    "LlmUsageProviderMetrics": "._llm_diagnostics",
+    "LlmUsageCostProviderMetrics": "._llm_diagnostics",
     "MINIMUM_DISPLAY_ID_WIDTH": "._id_resolution",
     "ManualLedgerTransactionCommand": "._models",
     "ManualLedgerTransactionPatch": "._models",
@@ -832,7 +832,7 @@ __all__ = [
     "LlmReviewInvocationOrigin",
     "LlmReviewRequest",
     "LlmReviewResult",
-    "LlmUsageProviderMetrics",
+    "LlmUsageCostProviderMetrics",
     "LocalRederivation",
     "ManualLedgerTransactionCommand",
     "ManualLedgerTransactionPatch",

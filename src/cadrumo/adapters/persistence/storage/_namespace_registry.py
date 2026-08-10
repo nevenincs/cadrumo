@@ -476,6 +476,29 @@ MODELO_RECONCILIATION_RECORDS_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
+SYNC_RUN_RECORDS_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="sync_run_records",
+    namespace="cadrumo.storage.sync_run.records",
+    owner="cadrumo.application.storage",
+    sensitivity=SensitivityClass.AUDIT,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    # N records per surface, never one that overwrites. The phase this store
+    # serves is last-sync PROVENANCE, and a key scoped to the surface alone
+    # would make "last sync" the only sync -- destroying the history the record
+    # exists to carry, exactly as a collapsing key would for reconciliation.
+    #
+    # The trailing segment is the content-addressed id of the sync-run bucket
+    # event this record is co-written with, which already folds the completion
+    # instant and the outcome, so it distinguishes every run and binds record to
+    # event by identity rather than by a cross-reference field that could drift.
+    #
+    # No scope participates in the key. A run's resolved scope is a property of
+    # what it covered, not of which run it was, and a truncated sweep and a full
+    # one over the same surface are different runs that must both be storable.
+    object_key_grammar="sync-run:{surface}:{bucket_event_id}",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
+)
 IVA_COMPENSATION_HISTORY_NAMESPACE = SecureObjectNamespaceDefinition(
     key="iva_compensation_history",
     namespace="cadrumo.calculations.iva_compensation.history",
@@ -1125,6 +1148,7 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE,
         IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE,
         MODELO_RECONCILIATION_RECORDS_NAMESPACE,
+        SYNC_RUN_RECORDS_NAMESPACE,
         IVA_COMPENSATION_HISTORY_NAMESPACE,
         LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE,
         APPLICATION_EVIDENCE_BUNDLE_NAMESPACE,

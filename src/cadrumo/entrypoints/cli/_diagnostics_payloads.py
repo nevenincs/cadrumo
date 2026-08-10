@@ -281,7 +281,7 @@ class LlmUsageModelPayload(OutputSchema):
 class LlmUsageProviderPayload(OutputSchema):
     """One provider's aggregated run-usage metrics, plus its per-model breakdown.
 
-    Mirrors :class:`~application.diagnostics_run_health.LlmUsageProviderMetrics`.
+    Mirrors :class:`~application.diagnostics_run_health.LlmRunHealthProviderMetrics`.
     """
 
     provider: str = Field(min_length=1)

@@ -242,7 +242,7 @@ def test_llm_diagnostics_rejects_out_of_range_threshold(_isolated_backend: None)
 def test_llm_diagnostics_payloads_mirror_their_canonical_bounds() -> None:
     """The transport must refuse what the canonical diagnostics models refuse.
 
-    ``LlmUsageProviderMetrics`` and ``LlmConfidenceProviderMetrics`` require a
+    ``LlmUsageCostProviderMetrics`` and ``LlmConfidenceProviderMetrics`` require a
     non-empty provider and non-negative counters, and ``LlmDiagnosticsReport``
     requires non-negative totals plus a real decimal threshold. The CLI rows
     redeclared all of them as bare strings and ints, so an empty provider, a

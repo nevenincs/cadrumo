@@ -144,6 +144,7 @@ if TYPE_CHECKING:
 __all__ = [
     "active_profile_label",
     "emit_help_text",
+    "emit_progress_line",
     "parse_decimal_amount",
     "parse_optional_decimal_amount",
     "resolve_notice_action",
@@ -445,6 +446,29 @@ def _format_of(ctx: typer.Context) -> OutputFormat:
 def emit_help_text(ctx: typer.Context) -> None:
     """Emit Click/Typer help text through the shared CLI output boundary."""
     typer.echo(ctx.get_help())
+
+
+def emit_progress_line(line: str) -> None:
+    """Emit one streamed text-mode progress line through the success-output funnel.
+
+    A long-running command reports per-item progress while the run is still
+    working, so those lines reach stdout before the closing envelope exists.
+    They are operator-facing success output all the same, and they are rendered
+    here by :func:`~cadrumo.core.output_rendering.render_command_output` — the
+    very renderer :func:`_emit_envelope` uses for its text arm. The streamed
+    channel therefore applies the same line-oriented CLI redaction and consults
+    the same
+    :func:`~cadrumo.core.output_rendering.reveal_cli_identifiers_opt_in`
+    resolver, so an operator cannot be shown a raw value on the progress stream
+    that the envelope would have masked, nor a masked one they opted to reveal.
+
+    This is deliberately not a second envelope: it carries no schema spine, no
+    notices, and no sandbox banner. Callers gate the stream to text mode
+    themselves, because in JSON the closing envelope already carries every row.
+    """
+    rendered = render_command_output(format_name=OutputFormat.TEXT.value, payload=None, lines=(line,))
+    if rendered.text:
+        typer.echo(rendered.text)
 
 
 @cache
