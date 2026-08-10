@@ -122,22 +122,20 @@ def parse_scope_tokens(
 def _validate_scope_token_shape(token: str) -> None:
     """Reject comma-separated and lowercase tokens before catalogue lookup.
 
-    Both diagnostics carry an operator-facing remediation
-    suggestion: comma-separated values must be passed as repeated
-    ``--scope`` flags; lowercase tokens must be re-typed in upper
-    case. The catalogue-lookup step is the only side-effecting check
-    that needs the catalogue handle, so keeping these shape checks
-    separate lets the resolver run on already-clean input.
+    The diagnostic preserves the rejected token and validation rule as factual
+    context. The catalogue-lookup step is the only side-effecting check that
+    needs the catalogue handle, so keeping these shape checks separate lets the
+    resolver run on already-clean input.
     """
     if "," in token:
         raise UnknownScopeError(
             f"scope token {token!r} contains a comma; pass --scope repeatedly instead",
-            suggestion="aeat config auth apoderado configure --scope SCOPE1 --scope SCOPE2",
+            context={"scope_token": token, "validation_rule": "no_comma_separated_values"},
         )
     if token != token.upper():
         raise UnknownScopeError(
             f"scope token {token!r} must be uppercase",
-            suggestion="aeat config auth apoderado configure",
+            context={"scope_token": token, "validation_rule": "uppercase"},
         )
 
 
@@ -160,7 +158,11 @@ def _resolve_scope_token(
     if token not in known:
         raise UnknownScopeError(
             f"scope code {token!r} is not in catalogue version {catalogue.catalogue_version!r}",
-            suggestion="aeat config auth apoderado configure --scope ALL",
+            context={
+                "catalogue_version": catalogue.catalogue_version,
+                "scope_token": token,
+                "validation_rule": "declared_catalogue_code",
+            },
         )
     return (token,)
 
