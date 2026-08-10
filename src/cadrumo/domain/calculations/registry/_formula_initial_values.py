@@ -24,7 +24,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from ....core import OBSERVATION_BACKED_BINDING_SOURCE_KINDS, BindingSourceKind
+from ....core import BindingSourceKind
+from ....core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS
 from ._binding_selector_utils import selector_as_dict as _binding_selector_as_dict
 from ._bindings import CasillaObservation, bound_casilla_binding_ids, resolve_bound_casilla_binding_value
 from ._bindings_previous_filing import PreviousModeloSelector

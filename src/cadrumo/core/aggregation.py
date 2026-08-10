@@ -157,25 +157,6 @@ class RelationAggregation(BaseModel):
         return value
 
 
-class PeriodKind(StrEnum):
-    """Authoritative period cadences shared across aggregation and deadline layers.
-
-    Placed in :mod:`core` (cross-layer home) so the deadline domain and
-    application aggregation layer can both import without violating the
-    hexagonal direction (domain → core is always legal; domain → application
-    is forbidden).
-
-    This lightweight cadence enum is an aggregation/deadline taxonomy, not the
-    public :class:`~core.Period` classifier. Concrete filing-period values
-    should use :class:`~core.Period` and its exported ``PeriodKind``, which
-    also distinguishes instalment and extended registry tokens.
-    """
-
-    MONTHLY = "monthly"
-    QUARTERLY = "quarterly"
-    ANNUAL = "annual"
-
-
 class RowSetGroupingKind(StrEnum):
     """Canonical row-set source-kind discriminators for detail-record assembly.
 
