@@ -60,9 +60,16 @@ class RegimeLegend(BaseModel):
 
     Attributes:
         phrase: The mention exactly as RD 1619/2012 art. 6.1 fixes it, quoted
-            from the bundled consolidated text. Lower-cased there and here; a
-            document printing it in capitals or title case still matches, because
-            matching is case-folded rather than by adding spelling variants.
+            from the bundled consolidated text. Lower-cased there and here, and
+            carrying its accents. A document printing it in capitals, wrapped
+            across a line, or with its accents lost by the text layer still
+            matches: the match folds case, collapses whitespace runs and folds
+            combining accents away, rather than carrying spelling variants as
+            extra rows. Nothing beyond those three is normalised, and the whole
+            multi-word phrase is what matches -- never a token of it. Two
+            mentions that differ only by an accent would become one form under
+            that fold, so the vocabulary is refused whole rather than indexed if
+            any pair collides.
         provision: The art. 6.1 letter that mandates this mention, so a value
             derived from it can cite the provision that put it on the page.
         declares: The category the mention declares, or ``None`` when the mention
