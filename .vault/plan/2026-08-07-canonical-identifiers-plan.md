@@ -4,7 +4,7 @@ tags:
   - '#canonical-identifiers'
 date: '2026-08-07'
 modified: '2026-08-10'
-body_hash: 'sha256:1ad12241535e0868aa68891d18b9fe0a17443e2c2d3ae4f385591e1e0e582be4'
+body_hash: 'sha256:08112d67d62e3fff142db0028b2772c672d6ff4f7404d7287e0fade99535ccb3'
 tier: L3
 related:
   - '[[2026-08-07-canonical-identifiers-adr]]'
@@ -122,10 +122,11 @@ onto the shared alias, tightening the one under-constrained divergence.
 - [x] `W02.P02.S06` - declare `AeatExpedienteId` at the sede-schema bound (12-32 chars, AEAT shape pattern) and `AeatClaveLiquidacion` and `AeatPresentationId` at their current field bounds; `src/cadrumo/core/identity/__init__.py`.
 - [x] `W02.P02.S07` - Retype every expediente_id model field onto AeatExpedienteId, removing the per-field repeated bound and the duplicated shape validator. DELIVERED WIDER THAN THIS ROW ORIGINALLY NAMED, recorded here so the widening is visible rather than silent. The concept is 4 model fields across 2 modules -- Expediente, JustificanteRef and FiledDeclaracionObservation in the sede schema, plus Declaracion in the declarations schema -- not the single file this row first named, and the module-local compiled expediente pattern plus both hand-written shape validators are deleted with them. A FIFTH divergence the plan never names is folded in: IvaCompensationAnnualSummary.expediente_id declared min_length=1 while its SOLE producer is FiledDeclaracionObservation.expediente_id, so the tight bound is provably satisfiable there and leaving it loose would have kept a real divergence open under a closed checkbox; `src/cadrumo/adapters/outbound/aeat/sede/_schema.py, src/cadrumo/adapters/outbound/aeat/sede/_declarations_schema.py, src/cadrumo/application/calculations/_iva_compensation_history.py`.
 - [ ] `W02.P02.S08` - Retype Deuda.clave_liquidacion onto AeatClaveLiquidacion, and retype the second bare-str clave_liquidacion on the operator-facing wire payload in the same change. The Deuda model moved out of the sede schema module before this plan was written, so re-verify both sites against HEAD rather than trusting this row's earlier file reference; `src/cadrumo/adapters/outbound/aeat/sede/_deudas.py, src/cadrumo/entrypoints/cli/_app_live_payloads.py`.
-- [ ] `W02.P02.S09` - retype `PeriodComplianceState.expediente_id` onto `AeatExpedienteId`, closing the min-length-1 divergence, with a strict roundtrip proving every already-persisted observed value still validates; `src/cadrumo/domain/iva_compensation/_carry_forward.py`.
-- [ ] `W02.P02.S10` - add an anti-tautology proof for the tightened expediente-id bound: corrupt a persisted fixture value below the new bound and assert refusal; `src/cadrumo/domain/iva_compensation/tests/`.
+- [ ] `W02.P02.S09` - Land the discriminated expediente pair ruled by the 2026-08-10 expediente-provenance ADR, superseding this row's prior instruction to retype the field onto AeatExpedienteId, which was attempted and reverted because four of the five supplying paths mint non-AEAT markers. Note the row also named PeriodComplianceState, which is a stale locator. The model is IvaCompensationPeriodState. One commit, because a required field with no default cannot land separately from its construction sites. Declare a closed five-member StrEnum in core naming the supplying paths with no catch-all member, add it to the model as a required field with no default, narrow expediente_id to AeatExpedienteId or None, and add a model validator constraining the two against each other so an AEAT-capture row must carry an expediente and a row of any other provenance must not. Take the provenance as a required parameter on both conduit functions, because their two callers are indistinguishable by the time the model is constructed. Update the three direct construction sites and both conduit callers, dropping the four local markers, each of which is a lossier duplicate of the source_observation_key written beside it; `src/cadrumo/domain/iva_compensation/_carry_forward.py, src/cadrumo/core/, src/cadrumo/application/calculations/_iva_compensation_history.py, src/cadrumo/application/calculations/_iva_compensation_annual_partition.py, src/cadrumo/application/modelo/_filed_revision_observation.py, src/cadrumo/application/live/_filed_observation_persistence.py`.
+- [ ] `W02.P02.S10` - Add the strict roundtrip and anti-tautology proof for the discriminated pair. Populate every defaultable field on IvaCompensationPeriodState non-default, push it through the real encrypted repository and assert strict model equality on load. For the anti-tautology proof delete the persisted provenance field from the on-disk payload, reload through the real production read path, and assert refusal rather than a silent re-default. Add a companion case proving the cross-field validator refuses both impossible pairs, an operator-seeded row carrying an expediente and an AEAT-capture row carrying none; `src/cadrumo/domain/iva_compensation/tests/`.
 - [ ] `W02.P02.S11` - retype `ExpedienteDeclarationPayload.expediente_id` from unconstrained bare `str` onto `AeatExpedienteId`, closing the fourth (loosest) divergence sighted on the operator-facing wire contract; `src/cadrumo/entrypoints/cli/_app_live_payloads.py`.
 - [ ] `W02.P02.S12` - add a golden-schema pinning test capturing `ExpedienteDeclarationPayload`'s advertised `model_json_schema()` before and after `W02.P02.S11`, so the CLI/MCP contract change is a visible reviewed diff rather than a silent constraint shift; `src/cadrumo/entrypoints/cli/tests/`.
+- [ ] `W02.P02.S65` - Measure the legitimate population before closing the discriminated-pair rows, and treat this row rather than the new refusal as their close condition. The refusal firing on manual-seed proves only that the constraint exists. Load and construct through the wallet-balance projection, the binding-prefill resolver and the M303 carry-ingress path and confirm every legitimate row still constructs and still loads. The disconfirming observation: if any of those three paths carries a row whose provenance is not one of the five enum members, the enum is incomplete and S09 must be reopened rather than the row forced into an approximate member. Record the count of rows exercised per path, because a control that exercises zero rows reads identically to one that passes; `src/cadrumo/application/calculations/tests/`.
 
 ### Phase `W02.P03` - CSV canonical shape decision and enrollment
 
@@ -402,14 +403,28 @@ The plan is complete when every Step above is closed (`- [x]`) and:
 - The ratchet gate (`W09.P14.S58`) is green against the fully-enrolled
   baseline and its bite proof (`W09.P14.S59`) is recorded in that Step's
   execution record.
-- `matches_filing_target` (`W03.P04.S26`) type-checks under the project's
-  static type gate with the narrowed parameter type.
+- `matches_filing_target` still has NO `presentation_id` parameter, and the
+  existing refusal test that raises `TypeError` on one continues to pass. The
+  original criterion here required that parameter to type-check under a
+  narrowed type. It was retired with `W03.P04.S26` by the 2026-08-10 amendment
+  to the governing ADR: the sibling record removed the parameter outright and
+  rejected the typed marker as superseded, so the absence is the guard and
+  reintroducing the parameter in order to type it would roll back an accepted,
+  landed fix.
 - The CSV shape-conformance regression (`W02.P03.S22`) passes at both
-  boundaries of the adopted bound, and the parser-anchor fixture parse
-  regression still passes. The original criterion here named two
-  real-captured M303 justificante fixtures. No such fixture exists, none is
-  obtainable, and the criterion was therefore unmeetable rather than
-  demanding.
+  boundaries of the adopted bound, AND the corpus sidecar roundtrip regression
+  stays green across all 60 parser-anchor fixtures. That second condition is
+  the control, not background: it is the measurement that the tightened bound
+  still admits the legitimate population. The criterion previously recorded
+  here said no real-captured fixture exists, none is obtainable, and the
+  original demand was therefore unmeetable. That is withdrawn as falsified:
+  the fixtures carry 34 distinct CSV tokens, the roundtrip regression already
+  asserts uppercase-alphanumeric and a length between 8 and 24 on every parsed
+  fixture in the default lane, and three real captured values are recorded in
+  this vault's research and audit records.
+- The discriminated expediente pair (`W02.P02.S09`, `S10`) closes only when its
+  population control (`W02.P02.S65`) passes, with the count of rows exercised
+  per path recorded. The new refusal firing is not the close condition.
 - Every golden-schema pinning test from `W08.P13.S56` passes, and the
   `test_json_schema_conformance.py` structural gate still passes.
 - Every Step whose action names a per-namespace batch (`W04.P06`,
@@ -426,8 +441,11 @@ per `W09.P14.S60`): NRC capture and persistence (no existing field to
 retype); fixed-width fichero-BOE tax-id width (owned by the separate
 Modelo 200 misattribution ADR, must not be touched here); registry TOML
 id-shaped values (architecturally clean per the wire census, but no
-measured denominator equivalent to the Python count); and any second-pass
+measured denominator equivalent to the Python count); any second-pass
 sweep finding (`W07.P11.S49`) not triaged to a disposition by
-`W07.P11.S50`. A future plan referencing this one's ADR is the sanctioned
-next step for any of these, not a silent assumption that this plan's
-closure covers them.
+`W07.P11.S50`; and the enrollment of `resolve_identifier_namespace`, which
+is held behind `W03.P04.S64` pending a first real consumer and may resolve
+to dropping the resolver and its enum rather than landing them. A future
+plan referencing this one's ADR is the sanctioned next step for any of
+these, not a silent assumption that this plan's closure covers them.
+
