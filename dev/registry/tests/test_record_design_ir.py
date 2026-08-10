@@ -24,6 +24,14 @@ from .._record_design_ir import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+_MODELO_303_DESIGNS = (
+    ("aeat-dr-303-2023", 2023, "2023"),
+    ("aeat-dr-303-2024-early", 2024, "2024-early"),
+    ("aeat-dr-303-2024-late", 2024, "2024-late"),
+    ("aeat-dr-303-2025", 2025, "2025"),
+    ("aeat-dr-303-2026", 2026, "2026"),
+)
+
 
 def test_intermediate_is_a_complete_total_preserving_projection_of_the_verified_workbook() -> None:
     """Every parsed record and official total reaches the generator IR unchanged."""
@@ -251,6 +259,67 @@ def test_intermediate_recovers_every_official_total_colon_without_fixing_the_var
     assert envelope.body_offset == 329
     assert envelope.body_length == "Variable"
     assert envelope.total_length == "Variable"
+
+
+@pytest.mark.parametrize(("source_ref", "filing_year", "design_epoch"), _MODELO_303_DESIGNS)
+def test_intermediate_preserves_each_modelo_303_variable_envelope(
+    source_ref: str,
+    filing_year: int,
+    design_epoch: str,
+) -> None:
+    """Every real M303 parser envelope reaches the typed IR without becoming fixed."""
+    source_root = bundled_path()
+    catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "iva.toml"))
+    resolved = resolve_record_design_binary(
+        source_root,
+        catalogues.sources,
+        source_ref=source_ref,
+        filing_year=filing_year,
+        design_epoch=design_epoch,
+    )
+    parsed = extract_record_design(resolved.path)
+
+    intermediate = load_record_design_intermediate(
+        source_root,
+        catalogues.sources,
+        source_ref=source_ref,
+        filing_year=filing_year,
+        design_epoch=design_epoch,
+    )
+
+    parser_envelopes = tuple(
+        sheet.variable_envelope for sheet in parsed if sheet.variable_envelope is not None
+    )
+    assert len(intermediate.sheets) == 6
+    assert all(sheet.record_identity != "DP30300" for sheet in intermediate.sheets)
+    assert len(parser_envelopes) == len(intermediate.variable_envelopes) == 1
+    parser_envelope = parser_envelopes[0]
+    assert parser_envelope is not None
+    envelope = intermediate.variable_envelopes[0]
+    assert envelope.sheet == envelope.record_identity == parser_envelope.name == "DP30300"
+    assert envelope.prefix_extent == parser_envelope.prefix_extent == 328
+    assert (envelope.body_source_row, envelope.body_ordinal, envelope.body_offset, envelope.body_length) == (
+        parser_envelope.body.row,
+        parser_envelope.body.ordinal,
+        parser_envelope.body.offset,
+        parser_envelope.body.length,
+    )
+    assert (
+        envelope.closing_source_row,
+        envelope.closing_ordinal,
+        envelope.closing_offset,
+        envelope.closing_length,
+    ) == (
+        parser_envelope.closing_suffix.row,
+        parser_envelope.closing_suffix.ordinal,
+        parser_envelope.closing_suffix.offset,
+        parser_envelope.closing_suffix.length,
+    )
+    assert (envelope.total_source_row, envelope.total_label, envelope.total_length) == (
+        parser_envelope.variable_total.row,
+        parser_envelope.variable_total.label,
+        parser_envelope.variable_total.length,
+    )
 
 
 @pytest.mark.parametrize(
