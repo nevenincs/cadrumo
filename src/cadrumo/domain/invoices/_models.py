@@ -1102,13 +1102,28 @@ class InvoiceCatalogue(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def _coerce_catalogue_input(cls, data: object) -> object:
+        """Accept a catalogue, its canonical payload, or an iterable of invoices.
+
+        A mapping arrives here as one of two things: the canonical serialized
+        payload, which carries its entries under ``invoices``, or the field
+        kwargs of a direct construction, which for a catalogue with no entries
+        is empty. A NON-EMPTY mapping with no ``invoices`` key is neither. It
+        is a catalogue serialized without its wrapper -- a shape nothing in
+        this codebase writes -- and it is refused rather than wrapped: wrapping
+        promotes an arbitrary mapping into a catalogue whose keys no writer
+        ever established to be invoice ids, and the resulting record is
+        indistinguishable afterwards from one that was written correctly.
+        """
         if isinstance(data, cls):
             return data
         if isinstance(data, Mapping):
             payload = _STRING_OBJECT_MAPPING.validate_python(data)
-            if "invoices" in payload:
-                return payload
-            return {"invoices": payload}
+            if payload and "invoices" not in payload:
+                raise InvoiceValidationError(
+                    "invoice catalogue payload must carry its entries under the 'invoices' key; "
+                    f"got a bare mapping of {len(payload)} top-level entries",
+                )
+            return payload
         if isinstance(data, Iterable) and not isinstance(data, str | bytes):
             invoices: dict[str, Invoice] = {}
             for item in _OBJECT_SEQUENCE.validate_python(data):
