@@ -92,6 +92,15 @@ family) do not consume this alias; they are referential identities outside
 the content-addressed-hex family.
 """
 
+VerificationReportId = _Hex64Str
+"""Hex-64 identity of one verification report bound to a calculation revision.
+
+Declared here rather than in the modelo domain because the identity is consumed
+across package boundaries — the CLI payload surface holds one — and because it
+adds no constraint beyond :data:`Hex64Str`, which is the discipline every
+hex-64 identity concept in this codebase follows.
+"""
+
 InvoiceId = _Hex64Str
 """Hex-64 content-addressed invoice identity.
 
@@ -168,6 +177,7 @@ __all__ = [
     "SubjectTaxId",
     "TaxIdIdentityToken",
     "TransactionId",
+    "VerificationReportId",
     "iso_country_for_nif_iva_prefix",
     "nif_check_letter",
     "nif_iva_format_for_country",

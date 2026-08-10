@@ -32,7 +32,7 @@ from ...application.aggregation import (
 from ...application.calculations import ObservationSourceKind, PriorDomiciliationElectionProjection
 from ...application.modelo import validate_modelo_work_deadline_posture
 from ...core import BindingSourceKind, PaymentElection, Period, RefundElection, ResultDisposition
-from ...core.identity import BucketId
+from ...core.identity import BucketId, VerificationReportId
 from ...core.json_contract import OutputSchema, register_schema
 from ...domain.buckets import (
     BucketActorLabel,
@@ -60,7 +60,6 @@ from ...domain.modelos import (
     ModeloRecordStatus,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
-    VerificationReportId,
     WorkUnitId,
 )
 from ._decimal_wire import DecimalWireText

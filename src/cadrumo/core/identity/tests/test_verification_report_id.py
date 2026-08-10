@@ -1,4 +1,10 @@
-"""Real-behavior tests for the :data:`VerificationReportId` alias."""
+"""Real-behavior tests for the :data:`~core.identity.VerificationReportId` alias.
+
+Moved here with the symbol itself. ``VerificationReportId`` was declared in the
+modelo domain until it was relocated onto the shared hex-64 primitive, and a
+test for a :mod:`core` symbol left behind in ``domain/`` would be the same
+stranding the relocation exists to end.
+"""
 
 from __future__ import annotations
 
@@ -8,9 +14,9 @@ import pytest
 from pydantic import ValidationError
 
 from ....tests.fixtures.identity_holder import single_field_holder
-from .._ids import VerificationReportId
+from .. import VerificationReportId
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _Holder = single_field_holder("verification_report_id", VerificationReportId)
 

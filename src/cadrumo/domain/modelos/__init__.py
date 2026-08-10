@@ -113,7 +113,7 @@ from ._iae_exemption import (
     Modelo840IaeExemptionStatus,
     assess_modelo_840_iae_cifra_negocios_exemption,
 )
-from ._ids import CalculationRevisionId, FilingRecordId, VerificationReportId, WorkUnitId
+from ._ids import CalculationRevisionId, FilingRecordId, WorkUnitId
 from ._ledger_filing_snapshot import (
     LedgerEvidenceRow,
     LedgerFilingEvidence,
@@ -232,7 +232,6 @@ __all__ = (
     "VerificationReport",
     "VerificationReportCatalogue",
     "VerificationReportCatalogueRepositoryProtocol",
-    "VerificationReportId",
     "VerificationReportPersistenceError",
     "WorkUnit",
     "WorkUnitCatalogue",

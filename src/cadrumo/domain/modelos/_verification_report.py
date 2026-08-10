@@ -29,18 +29,12 @@ from pydantic import BaseModel, Field, StringConstraints, field_validator, model
 
 from ...core import STRICT_FROZEN_CONFIG, ElidedProse
 from ...core.hashing import content_hash_hex
+from ...core.identity import VerificationReportId
 from ...core.time import validate_utc_aware
 from ..calculations.registry import CasillaId, LegalRefId, SourceRefId, VerificationExpectationId
 from ._errors import ModeloValidationError
-from ._ids import VerificationReportId
+from ._ids import CalculationRevisionId
 
-_HEX_64_PATTERN = r"^[0-9a-f]{64}$"
-
-_ReportId = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=64, max_length=64, pattern=_HEX_64_PATTERN),
-]
-_CalculationRevisionId = _ReportId
 ModeloActorLabel = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=64),
@@ -180,7 +174,7 @@ class VerificationReport(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     verification_report_id: VerificationReportId
-    calculation_revision_id: _CalculationRevisionId
+    calculation_revision_id: CalculationRevisionId
     completeness_status: VerificationCompletenessStatus
     findings: tuple[ModeloVerificationFinding, ...] = Field(default_factory=tuple)
     resolved_casilla_ids: tuple[CasillaId, ...] = Field(default_factory=tuple)
