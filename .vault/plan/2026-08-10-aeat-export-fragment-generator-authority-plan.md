@@ -4,7 +4,7 @@ tags:
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
 modified: '2026-08-10'
-body_hash: 'sha256:d8105a431a7267bb1e911692421bb19f4cc5ebeae14b3c1b6941012488f44ba2'
+body_hash: 'sha256:225869b09389505f8ab1942651801b54ee31da46ca6a80a91e54452df24f8a6c'
 tier: L3
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
@@ -56,6 +56,7 @@ Join exact parser anchors to reviewed semantics and render a complete target rev
 - [x] `W02.P03.S07` - Implement fail-closed parser-to-semantic-map joining without fuzzy or positional matching; `dev/registry/`.
 - [x] `W02.P03.S08` - Render the complete target export tree with stable partitioning and canonical TOML serialization; `dev/registry/`.
 - [x] `W02.P03.S09` - Emit source, map, schema, semantic, and file digests in the provenance manifest; `dev/registry/`.
+- [ ] `W02.P03.S37` - Add explicit reviewed value-policy semantics for selected-1-unselected-0 numeric checkboxes and four-digit-year-final-two-digits fields to the export schema, filing writer, parser, verifier, and registry record renderer, with strict invalid-value refusal and real emitted-byte tests; `src/cadrumo/domain/calculations/registry/; src/cadrumo/application/filing/; src/cadrumo/adapters/outbound/aeat/export/`.
 - [ ] `W02.P03.S32` - Resolve only absent exact-anchor wire facts through the validated render profile, refuse official-content conflicts and uncovered or hash-drifting profiles, keep variable envelopes outside fixed-width output, and add the canonical profile digest and schema version to provenance; `dev/registry/`.
 
 ### Phase `W02.P04` - publication and check mode
@@ -82,6 +83,7 @@ Cover every authority boundary with positive and negative real-behavior tests.
 ### Phase `W03.P06` - repository and byte gates
 
 Verify generated layouts as loadable complete structures and as real emitted filing bytes.
+
 
 ## Wave `W04` - regenerate and release relayout waves
 
@@ -120,4 +122,3 @@ Waves are ordered. Within Wave 1, parser-source modelling and semantic-map schem
 ## Verification
 
 Completion requires every Step closed; deterministic double generation and repository `--check`; complete parser, bijection, applicability, provenance, extent, overlap, load and emitted-byte gates; formal code review with no unresolved high or medium findings; the relayout span gate green for regenerated revisions; focused static analysis and tests green; and exact-scope commit and push evidence.
-
