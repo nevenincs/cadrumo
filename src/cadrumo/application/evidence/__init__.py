@@ -49,7 +49,6 @@ See Also:
 
 from __future__ import annotations
 
-from ._ids import BundleId
 from ._models import (
     BundleVerificationState,
     EvidenceBundle,
@@ -67,7 +66,6 @@ from ._service import (
 )
 
 __all__ = [
-    "BundleId",
     "BundleVerificationState",
     "EvidenceBundle",
     "EvidenceBundleCheckResult",
