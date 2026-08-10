@@ -187,13 +187,29 @@ def auth_status(
             translated_message="cli.config.auth.unknown_provider",
             context={"provider": provider or ""},
         ) from exc
-    payload = result.model_dump(mode="json")
-    envelope_result = AuthStatusPayload.model_validate_json(result.model_dump_json())
+    precondition_action = (
+        resolve_cli_precondition_action(result.active_profile_precondition_verdict)
+        if result.active_profile_precondition_verdict is not None
+        else None
+    )
+    envelope_result = AuthStatusPayload.from_result(
+        result,
+        active_profile_precondition_action=precondition_action,
+    )
+    payload = envelope_result.model_dump(mode="json")
     _emit_envelope(
         ctx,
         command="config.auth.status",
         result=envelope_result,
-        lines=(_auth_status_summary_line(payload), *(f"{key}\t{value}" for key, value in payload.items())),
+        lines=(
+            _auth_status_summary_line(payload),
+            *(
+                f"{key}\t{value}"
+                for key, value in payload.items()
+                if key != "active_profile_precondition_action"
+            ),
+            *precondition_action_lines(precondition_action),
+        ),
     )
 
 
@@ -251,13 +267,28 @@ def auth_test(
             translated_message="cli.config.auth.reserved_provider",
             context={"provider": provider or ""},
         ) from exc
-    payload = result.model_dump(mode="json")
-    envelope_result = AuthTestPayload.model_validate_json(result.model_dump_json())
+    precondition_action = (
+        resolve_cli_precondition_action(result.active_profile_precondition_verdict)
+        if result.active_profile_precondition_verdict is not None
+        else None
+    )
+    envelope_result = AuthTestPayload.from_test_result(
+        result,
+        active_profile_precondition_action=precondition_action,
+    )
+    payload = envelope_result.model_dump(mode="json")
     _emit_envelope(
         ctx,
         command="config.auth.test",
         result=envelope_result,
-        lines=tuple(f"{key}\t{value}" for key, value in payload.items()),
+        lines=(
+            *(
+                f"{key}\t{value}"
+                for key, value in payload.items()
+                if key != "active_profile_precondition_action"
+            ),
+            *precondition_action_lines(precondition_action),
+        ),
     )
 
 

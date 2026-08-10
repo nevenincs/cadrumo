@@ -23,6 +23,7 @@ from ...application.auth import (
     AuthProviderListing,
     AuthStatusResult,
     AuthTestResult,
+    ProviderProbeResult,
 )
 from ...application.config_reset import (
     ConfigResetOperationStatus,
@@ -884,23 +885,107 @@ class AuthConfigurePayload(OutputSchema):
 
 
 @register_schema("config.auth.status")
-class AuthStatusPayload(OutputSchema, AuthStatusResult):
+class AuthStatusPayload(OutputSchema):
     """JSON envelope for ``aeat config auth status``.
 
-    Reuses the application-owned :class:`AuthStatusResult` field set and strict
-    validation directly. The payload is a local readiness projection and never
-    performs live AEAT contact.
+    The application result's precondition verdict is resolved into the canonical
+    wire action at this CLI boundary. The payload is a local readiness projection
+    and never performs live AEAT contact.
     """
+
+    provider: str = ""
+    configured: bool = False
+    authenticated: bool = False
+    available: bool = False
+    active_profile: str = ""
+    active_profile_status: str = ""
+    active_profile_registered: bool = False
+    active_profile_record_present: bool = False
+    active_profile_precondition_action: ResolvedPreconditionAction | None = None
+    backend_configured: bool = False
+    backend_available: bool = False
+    certificate_path: str = ""
+    health_severity: str = ""
+    health_summary: str = ""
+
+    @classmethod
+    def from_result(
+        cls,
+        result: AuthStatusResult,
+        *,
+        active_profile_precondition_action: ResolvedPreconditionAction | None,
+    ) -> AuthStatusPayload:
+        """Project the application readiness result onto the CLI wire contract."""
+        if (result.active_profile_precondition_verdict is None) is not (
+            active_profile_precondition_action is None
+        ):
+            raise ValueError("auth status precondition action must match the application verdict")
+        return cls(
+            provider=result.provider,
+            configured=result.configured,
+            authenticated=result.authenticated,
+            available=result.available,
+            active_profile=result.active_profile,
+            active_profile_status=result.active_profile_status,
+            active_profile_registered=result.active_profile_registered,
+            active_profile_record_present=result.active_profile_record_present,
+            active_profile_precondition_action=active_profile_precondition_action,
+            backend_configured=result.backend_configured,
+            backend_available=result.backend_available,
+            certificate_path=result.certificate_path,
+            health_severity=result.health_severity,
+            health_summary=result.health_summary,
+        )
 
 
 @register_schema("config.auth.test")
-class AuthTestPayload(OutputSchema, AuthTestResult):
+class AuthTestPayload(AuthStatusPayload):
     """JSON envelope for ``aeat config auth test``.
 
-    Reuses the application-owned :class:`AuthTestResult` field set and strict
-    validation directly. The command tests local readiness and persisted-session
-    metadata; it does not submit to AEAT.
+    The command tests local readiness and persisted-session metadata; it does not
+    submit to AEAT. Its inherited action field is the same resolved wire DTO as
+    ``config.auth.status``.
     """
+
+    persisted_session_present: bool = False
+    persisted_session_expired: bool | None = None
+    persisted_session_state: str = ""
+    probe_summary: str = ""
+    probe_result: ProviderProbeResult | None = None
+
+    @classmethod
+    def from_test_result(
+        cls,
+        result: AuthTestResult,
+        *,
+        active_profile_precondition_action: ResolvedPreconditionAction | None,
+    ) -> AuthTestPayload:
+        """Project the deeper application probe onto the CLI wire contract."""
+        if (result.active_profile_precondition_verdict is None) is not (
+            active_profile_precondition_action is None
+        ):
+            raise ValueError("auth test precondition action must match the application verdict")
+        return cls(
+            provider=result.provider,
+            configured=result.configured,
+            authenticated=result.authenticated,
+            available=result.available,
+            active_profile=result.active_profile,
+            active_profile_status=result.active_profile_status,
+            active_profile_registered=result.active_profile_registered,
+            active_profile_record_present=result.active_profile_record_present,
+            active_profile_precondition_action=active_profile_precondition_action,
+            backend_configured=result.backend_configured,
+            backend_available=result.backend_available,
+            certificate_path=result.certificate_path,
+            health_severity=result.health_severity,
+            health_summary=result.health_summary,
+            persisted_session_present=result.persisted_session_present,
+            persisted_session_expired=result.persisted_session_expired,
+            persisted_session_state=result.persisted_session_state,
+            probe_summary=result.probe_summary,
+            probe_result=result.probe_result,
+        )
 
 
 @register_schema("config.auth.login")
