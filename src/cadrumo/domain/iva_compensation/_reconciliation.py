@@ -124,6 +124,14 @@ class IvaCompensationReconciliationDecision(BaseModel):
     blocked: bool
     stale_wallet: bool
     reason: str = Field(min_length=1, max_length=2048)
+    #: Whether the caller found a prior local record and could not read it as
+    #: prior-compensation evidence. Both that situation and a genuinely absent
+    #: record leave every other field on this model identical -- same
+    #: divergence, same absent amounts, same blocked -- so without this the
+    #: difference exists only inside ``reason``'s free text and no consumer can
+    #: key on it. A refusal that wants to tell an operator which one happened
+    #: has nothing else to read.
+    local_evidence_found_but_unusable: bool = False
     wallet_captured_at: datetime | None = None
     authority_sources: tuple[IvaCompensationAuthoritySource, ...] = ()
     decided_at: datetime
@@ -292,6 +300,7 @@ def _decision(
     stale_wallet: bool,
     reason: str,
     wallet_captured_at: datetime | None,
+    local_evidence_found_but_unusable: bool = False,
 ) -> IvaCompensationReconciliationDecision:
     return IvaCompensationReconciliationDecision(
         taxpayer_nif=ctx.taxpayer_nif,
@@ -306,6 +315,7 @@ def _decision(
         blocked=blocked,
         stale_wallet=stale_wallet,
         reason=reason,
+        local_evidence_found_but_unusable=local_evidence_found_but_unusable,
         wallet_captured_at=wallet_captured_at,
         authority_sources=ctx.authority_sources,
         decided_at=ctx.when,
@@ -396,6 +406,7 @@ def _missing_wallet_decision(
                 if local_evidence_found_but_unusable
                 else "No AEAT wallet observation or local recurrence is available for Modelo 303 prior compensation."
             ),
+            local_evidence_found_but_unusable=local_evidence_found_but_unusable,
             wallet_captured_at=None,
         )
     if _is_filed_history_source(local_recurrence_source):

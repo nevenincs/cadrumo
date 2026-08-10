@@ -480,6 +480,13 @@ def test_iva_wallet_reconciliation_decision_survives_encrypted_storage_roundtrip
             blocked=False,
             stale_wallet=False,
             reason="Using latest valid AEAT wallet observation for Modelo 303 prior compensation.",
+            # Populated NON-default on purpose: it defaults to False, so a
+            # save-drops-field / load-re-defaults-field regression would be
+            # invisible if the fixture left it alone. It is the only field
+            # distinguishing a prior record that could not be read from one that
+            # was never stored, so losing it silently returns the operator to
+            # being told nothing exists.
+            local_evidence_found_but_unusable=True,
             wallet_captured_at=decided_at,
             decided_at=decided_at,
         )
@@ -522,6 +529,64 @@ def test_iva_wallet_reconciliation_decision_survives_encrypted_storage_roundtrip
         database_bytes = read_db_at_rest_bytes(profile.paths.database_file)
         assert b"12345678Z" not in database_bytes
         assert b"12345678Z:2026:2T" not in database_bytes
+
+
+def test_a_decision_payload_missing_the_unreadable_evidence_flag_reloads_unequal(
+    tmp_path: Path,
+) -> None:
+    """Anti-tautology: prove the roundtrip above would notice this field being dropped.
+
+    The flag carries a default, so a payload that omits it does NOT raise -- it
+    silently re-defaults to False, which is the save-drops-field regression in
+    its quietest form and would return the operator to being told no prior
+    record exists. The sanctioned proof for a defaultable field is therefore
+    strict INEQUALITY rather than a refusal, and this asserts it.
+
+    Limit, stated rather than implied: this drops the key from the validated
+    payload, so it proves the value cannot be reconstructed from a payload that
+    omits it. It does not tamper with ciphertext at rest, so it does not prove
+    the encrypted envelope would surface the same difference.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repo = IvaWalletDecisionRepository()
+        decided_at = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
+        original = IvaCompensationReconciliationDecision(
+            taxpayer_nif="12345678Z",
+            target_year=2026,
+            target_period=Period.from_year_and_code(2026, "2T"),
+            selected_authority="missing",
+            selected_amount=None,
+            divergence="missing",
+            blocked=True,
+            stale_wallet=False,
+            reason=(
+                "A prior Modelo 303 record exists for the source period but could not be read as "
+                "prior-compensation evidence, and no AEAT wallet observation is available."
+            ),
+            local_evidence_found_but_unusable=True,
+            decided_at=decided_at,
+        )
+        repo.save_decision(original)
+        assert repo.load_decision("12345678Z", Period.from_year_and_code(2026, "2T")) == original
+
+        payload = original.model_dump(mode="json")
+        # Assert the field was THERE before dropping it. Without this, a model
+        # that never serialised it at all would satisfy every assertion below
+        # while proving the opposite defect: the drop would be a no-op and the
+        # inequality would never be tested.
+        assert "local_evidence_found_but_unusable" in payload, (
+            "the serialized decision does not carry the field at all, so this proof would pass "
+            "vacuously and the roundtrip above asserts nothing about it"
+        )
+        del payload["local_evidence_found_but_unusable"]
+        reloaded = IvaCompensationReconciliationDecision.model_validate(payload)
+
+        assert reloaded.local_evidence_found_but_unusable is False
+        assert reloaded != original, (
+            "a payload that dropped the unreadable-evidence flag reloaded EQUAL to the original, so "
+            "the roundtrip above cannot detect this field being lost and every assertion about it is "
+            "tautological"
+        )
 
 
 def test_iva_wallet_reconciliation_decisions_keep_immutable_history(

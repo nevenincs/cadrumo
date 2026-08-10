@@ -52,9 +52,9 @@ from ._calendar_models import (
 
 if TYPE_CHECKING:
     from ...adapters.outbound.aeat.sede import FiledDeclaracionObservation
-    from ..calculations import ObservationEnvelopePayload
     from ...domain.justificante import Justificante
     from ...domain.modelos import ModeloRecord
+    from ..calculations import ObservationEnvelopePayload
     from ..live import JustificanteCaptureSnapshot
 
 _AEAT_SUBMISSION_RANK: MappingProxyType[OverviewAeatSubmissionState, int] = MappingProxyType(
