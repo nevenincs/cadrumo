@@ -39,7 +39,11 @@ from ...storage.sync_runs import SyncRunCoverage
 from .._filed_capture_finalizer import FiledCaptureFailurePolicy, finalize_filed_capture
 from .._filed_data_capture import recapture_divergence_notices
 from .._filed_observation_persistence import persist_filed_calculation_observation
-from ._filed_capture_history_support import _prior_303_observation, _secure_backend
+from ._filed_capture_history_support import (
+    _M303_DECLARATION_TYPE_C,
+    _prior_303_observation,
+    _secure_backend,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -48,19 +52,44 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 #: changing between captures is ordinary rather than exceptional -- which is
 #: exactly why the advisory exists and why the count it feeds has to be right.
 #:
-#: BOTH ARE NEGATIVE, and that is a constraint rather than a preference. The
-#: seed observation carries declaration type "N", a negative disposition, and
-#: the M303 carry ingress screens disposition against the sign of the filed
-#: resultado: a negative disposition demands a negative resultado. A positive
-#: pair is refused at persist time, so the divergence read this file exists to
-#: exercise is never reached and every assertion below dies before running.
+#: BOTH ARE NEGATIVE, and the declaration-type header below is chosen to match.
+#: The M303 carry ingress screens the declared disposition against the SIGN of
+#: the filed resultado and refuses a contradiction at persist time -- before the
+#: divergence read this file exists to exercise. So a mismatched pair does not
+#: fail an assertion, it kills the test upstream of every assertion it has.
+#:
+#: The mapping is resolved rather than inferred from the letter, because the
+#: letter is not the disposition and guessing it wrong is how this fixture was
+#: broken twice. Measured against the screen's own frozensets:
+#:
+#:     N -> NEGATIVA        accepted ONLY with resultado == 0
+#:     C -> COMPENSACION    negative        D -> DEVOLUCION      negative
+#:     V -> CUENTA_CORRIENTE_DEVOLUCION     negative
+#:     X -> DEVOLUCION_TRANSFERENCIA_EXTRANJERO  negative
+#:     I -> INGRESO         positive        U -> DOMICILIACION   positive
+#:     G -> CUENTA_CORRIENTE_INGRESO        positive
+#:
+#: The support fixture defaults to "N", which admits a ZERO resultado only --
+#: neither the negative nor the positive class. A non-zero seed of either sign
+#: is refused under it, which is why inverting the sign alone did not help.
 _ORIGINAL_RESULT = Decimal("-50.00")
 _CORRECTED_RESULT = Decimal("-999.00")
 
 
 def _observation(*, result: Decimal):
-    """One M303 filed observation for a fixed period, carrying a given result."""
-    return _prior_303_observation(pending_compensation=Decimal("0.00"), result=result)
+    """One M303 filed observation for a fixed period, carrying a given result.
+
+    The declaration-type header is passed explicitly rather than defaulted. The
+    support fixture defaults to "N", which the carry screen accepts only with a
+    zero resultado, and these observations carry a non-zero one so the recapture
+    comparison has a value to disagree about. "C" is COMPENSACION, a negative
+    disposition, which is what the negative results above require.
+    """
+    return _prior_303_observation(
+        pending_compensation=Decimal("0.00"),
+        result=result,
+        headers=(_M303_DECLARATION_TYPE_C,),
+    )
 
 
 def test_a_recapture_divergence_is_producible_without_contacting_aeat(tmp_path: Path) -> None:
