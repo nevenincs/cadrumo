@@ -4,7 +4,7 @@ tags:
   - '#current-schema-only-purge'
 date: '2026-08-10'
 modified: '2026-08-10'
-body_hash: 'sha256:ab4d06c584f64d22dccffd53a8e7927f40f3390f0a75d81bf3c1dc8c7b6643aa'
+body_hash: 'sha256:528f1c3c16b262d23ca957a20f02af5398813b3f2e28dde9f9e11c5bfa361990'
 tier: L3
 related:
   - '[[2026-07-09-compatibility-lifecycle-adr]]'
@@ -119,7 +119,7 @@ Fail official Modelo 303 observation writes before repository mutation when
 `result_disposition` is absent.
 
 - [ ] `W03.P07.S21` - REOPENED AFTER REVERT. Refuse an official Modelo 303 observation persisted with no resolved result disposition, at a boundary where the legitimate and under-declaring populations can actually be told apart. Two attempts at the envelope boundary both over-refused, because the carry-casilla condition collapses to is-an-M303-observation and the legitimate population carries no declaration-type header either. The discriminating fact is not present in the payload, so the screen belongs where the disposition resolves or downstream of it, and this row must first establish which boundary that is; `boundary to be determined, NOT src/cadrumo/application/calculations/_observations_repository.py prepare_observation_envelope which has been tried twice and reverted`.
-- [x] `W03.P07.S22` - Require Modelo 303 result_disposition before any filing persistence write; `src/cadrumo/application/modelo/_revision_persistence.py`.
+- [x] `W03.P07.S22` - CHECKED WITH TWO UNATTRIBUTED FAILURES STANDING AGAINST IT, CAUSE UNDER INVESTIGATION. Require Modelo 303 result_disposition before any filing persistence write. The guard was extracted and hoisted above the first repository write, which is what the row asked for. Two failures carry this guard's message and it is not yet established whether they assert on state that only existed because the old late refusal let a filing land before refusing it, in which case they encode the defect, or whether the hoist broke something legitimate, in which case this row is over-scoped like its sibling and comes off; `src/cadrumo/application/modelo/_revision_persistence.py and the extracted guard in _filed_revision_observation.py`.
 - [ ] `W03.P07.S23` - Prove under-declared Modelo 303 observations are refused and current dispositions round trip; `src/cadrumo/application/calculations/tests/test_m303_carry_ingress.py`.
 
 ## Parallelization
