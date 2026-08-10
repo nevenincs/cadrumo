@@ -1,19 +1,19 @@
 """Strict Pydantic models for the LLM package.
 
 The public :mod:`adapters.outbound.llm` facade re-exports these records.
-:class:`~adapters.outbound.llm.LLMRequest`,
-:class:`~adapters.outbound.llm.LLMResponse`, and
-:class:`~adapters.outbound.llm.LLMProvider` form the
-:class:`~adapters.outbound.llm.LLMClient` boundary.
-:class:`~adapters.outbound.llm.CachedEntry`,
-:class:`~adapters.outbound.llm.CacheKey`, and
-:class:`~adapters.outbound.llm.CacheStats` support
+:class:`~llm.LLMRequest`,
+:class:`~llm.LLMResponse`, and
+:class:`~llm.LLMProvider` form the
+:class:`~llm.LLMClient` boundary.
+:class:`~llm.CachedEntry`,
+:class:`~llm.CacheKey`, and
+:class:`~llm.CacheStats` support
 :class:`~adapters.outbound.llm.LLMCache`, while
-:class:`~adapters.outbound.llm.UsageRecord` and
-:class:`~adapters.outbound.llm.UsageSummary` support
+:class:`~llm.UsageRecord` and
+:class:`~llm.UsageSummary` support
 :class:`~adapters.outbound.llm.UsageRecorder`. Prompt definitions are
-managed through :class:`~adapters.outbound.llm.PromptRegistry`; validation
-helpers raise :exc:`~adapters.outbound.llm.LLMValidationError`.
+managed through :class:`~llm.PromptRegistry`; validation
+helpers raise :exc:`~llm.LLMValidationError`.
 """
 
 from __future__ import annotations
@@ -41,7 +41,7 @@ class MultimodalImageInput(BaseModel):
     provider adapter forwards to a vision model and the content address
     (an attachment-store SHA-256) that
     :class:`~adapters.outbound.llm.LLMCache` folds into
-    :class:`~adapters.outbound.llm.CacheKey`. The base64 payload is never
+    :class:`~llm.CacheKey`. The base64 payload is never
     persisted -- only its content address enters the cache key
     (``sensitive-financial-data-secure-storage-only``).
 
@@ -94,12 +94,12 @@ class MultimodalImageInput(BaseModel):
 
 
 class LLMRequest(BaseModel):
-    """User-facing completion request accepted by :class:`~adapters.outbound.llm.LLMClient`.
+    """User-facing completion request accepted by :class:`~llm.LLMClient`.
 
     Provider and model override fields select
-    :class:`~adapters.outbound.llm.LLMProvider` values for one call, and
+    :class:`~llm.LLMProvider` values for one call, and
     ``images`` carries transient
-    :class:`~adapters.outbound.llm.MultimodalImageInput` payloads for
+    :class:`~llm.MultimodalImageInput` payloads for
     local vision flows.
 
     ``evidence_derived`` defaults to ``False`` because most requests carry no
@@ -145,7 +145,7 @@ class LLMRequest(BaseModel):
         """Ensure prompts are not empty or whitespace-only.
 
         Raises:
-            :exc:`~adapters.outbound.llm.LLMValidationError`: When the
+            :exc:`~llm.LLMValidationError`: When the
             prompt is blank after trimming.
         """
         normalized = value.strip()
@@ -173,11 +173,11 @@ class LLMRequest(BaseModel):
 
 
 class LLMResponse(BaseModel):
-    """Completion response returned by :meth:`~adapters.outbound.llm.LLMClient.complete`.
+    """Completion response returned by :meth:`~llm.LLMClient.complete`.
 
     Responses are persisted inside
-    :class:`~adapters.outbound.llm.CachedEntry` records and converted into
-    :class:`~adapters.outbound.llm.UsageRecord` values for cost tracking.
+    :class:`~llm.CachedEntry` records and converted into
+    :class:`~llm.UsageRecord` values for cost tracking.
     """
 
     model_config = ConfigDict(strict=True, frozen=True)
@@ -200,7 +200,7 @@ class LLMResponse(BaseModel):
 
 
 class PromptDefinition(BaseModel):
-    """Prompt metadata stored by :class:`~adapters.outbound.llm.PromptRegistry`."""
+    """Prompt metadata stored by :class:`~llm.PromptRegistry`."""
 
     model_config = ConfigDict(strict=True, frozen=True, arbitrary_types_allowed=True)
 
@@ -224,7 +224,7 @@ class PromptDefinition(BaseModel):
 
 
 class PromptRegistry(BaseModel):
-    """Registry of versioned :class:`~adapters.outbound.llm.PromptDefinition` values."""
+    """Registry of versioned :class:`~llm.PromptDefinition` values."""
 
     model_config = ConfigDict(strict=True)
 
@@ -238,7 +238,7 @@ class PromptRegistry(BaseModel):
         self.definitions[self._composite_key(definition.id, definition.version)] = definition
 
     def get(self, prompt_id: str, version: int | None = None) -> PromptDefinition:
-        """Return a :class:`~adapters.outbound.llm.PromptDefinition` by id and optional version."""
+        """Return a :class:`~llm.PromptDefinition` by id and optional version."""
         if version is not None:
             return self.definitions[self._composite_key(prompt_id, version)]
         candidates = [item for item in self.definitions.values() if item.id == prompt_id]
@@ -252,7 +252,7 @@ class PromptRegistry(BaseModel):
 
     @classmethod
     def seeded(cls) -> PromptRegistry:
-        """Return a default :class:`~adapters.outbound.llm.PromptRegistry`."""
+        """Return a default :class:`~llm.PromptRegistry`."""
         registry = cls()
         registry.register(
             PromptDefinition(
@@ -328,7 +328,7 @@ class UsageRecord(BaseModel):
 
 
 class Translation(BaseModel):
-    """Translation response built on top of :class:`~adapters.outbound.llm.LLMResponse`."""
+    """Translation response built on top of :class:`~llm.LLMResponse`."""
 
     model_config = ConfigDict(strict=True, frozen=True)
 

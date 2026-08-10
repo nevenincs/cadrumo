@@ -1,9 +1,9 @@
 """Unit tests for the public pydantic models exported by the LLM subpackage.
 
 Verifies JSON round-trip fidelity for
-:class:`cadrumo.adapters.outbound.llm.LLMRequest`,
-:class:`cadrumo.adapters.outbound.llm.LLMResponse`, and
-:class:`cadrumo.adapters.outbound.llm.Translation`.
+:class:`cadrumo.llm.LLMRequest`,
+:class:`cadrumo.llm.LLMResponse`, and
+:class:`cadrumo.llm.Translation`.
 """
 
 from __future__ import annotations

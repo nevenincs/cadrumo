@@ -163,7 +163,7 @@ class TextInvoiceFieldExtractor:
         provider: Which provider carries the read. Defaults to LOCAL so a
             taxpayer's document does not leave the host by default; naming a
             cloud provider is a deliberate call-site act.
-        client: Injected :class:`~adapters.outbound.llm.LLMClient` (dependency
+        client: Injected :class:`~llm.LLMClient` (dependency
             injection for tests); default-constructed against the resolved
             settings otherwise.
         settings: Injected settings; defaults to ``load_settings()``.
@@ -314,7 +314,7 @@ class TextInvoiceFieldExtractor:
         the document's text off-host by configuration alone, with nothing at the
         call site saying so.
 
-        The default is now :attr:`~adapters.outbound.llm.LLMProvider.LOCAL` and
+        The default is now :attr:`~llm.LLMProvider.LOCAL` and
         it is stated here rather than inherited, because the confidentiality
         guarantee is that sensitive financial data stays on the host. Running
         this reader against a hosted model remains possible, but only by naming

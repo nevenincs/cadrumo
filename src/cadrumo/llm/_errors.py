@@ -1,12 +1,12 @@
 """Error hierarchy for the LLM subpackage.
 
 All public LLM exceptions inherit from
-:class:`~adapters.outbound.llm.LLMError`, which extends
+:class:`~llm.LLMError`, which extends
 :class:`~core.errors.CadrumoError`. Provider adapters surface
-:exc:`~adapters.outbound.llm.LLMProviderError` and
-:exc:`~adapters.outbound.llm.LLMRateLimitError`, cache and usage storage
-surface :exc:`~adapters.outbound.llm.LLMCacheError`, and strict model
-validators surface :exc:`~adapters.outbound.llm.LLMValidationError`.
+:exc:`~llm.LLMProviderError` and
+:exc:`~llm.LLMRateLimitError`, cache and usage storage
+surface :exc:`~llm.LLMCacheError`, and strict model
+validators surface :exc:`~llm.LLMValidationError`.
 """
 
 from __future__ import annotations
@@ -29,7 +29,7 @@ class LLMTransientTransportError(LLMProviderError):
     the runtime, a read timeout on a model still coming up: the request never
     produced an answer, and the same request sent again may well produce one.
 
-    Split out of :exc:`~adapters.outbound.llm.LLMProviderError` because that
+    Split out of :exc:`~llm.LLMProviderError` because that
     class covers both directions and the retry decision needs them apart. A 4xx
     and a malformed 2xx body are deterministic -- the identical request fails
     identically forever -- so retrying them burns the budget and delays the real
@@ -44,7 +44,7 @@ class LLMTransientTransportError(LLMProviderError):
 
 
 class LLMPdfRasterisationError(LLMError):
-    """Raised when :func:`~adapters.outbound.llm.rasterise_pdf_pages_to_base64_png` fails."""
+    """Raised when :func:`~llm.rasterise_pdf_pages_to_base64_png` fails."""
 
 
 class LLMCacheError(LLMError):
@@ -54,7 +54,7 @@ class LLMCacheError(LLMError):
 class LLMRateLimitError(LLMProviderError):
     """Raised when a provider rejects a request because of rate limits.
 
-    Inherits from :exc:`~adapters.outbound.llm.LLMProviderError` so
+    Inherits from :exc:`~llm.LLMProviderError` so
     callers can catch all provider-boundary failures together.
 
     Args:
@@ -68,7 +68,7 @@ class LLMRateLimitError(LLMProviderError):
 
 
 class LLMConfigError(LLMError):
-    """Raised when :class:`~adapters.outbound.llm.LLMClient` configuration is invalid."""
+    """Raised when :class:`~llm.LLMClient` configuration is invalid."""
 
 
 class LLMContentionError(LLMError):
@@ -93,7 +93,7 @@ class LLMBusyError(LLMError):
     """Raised when an on-host inference slot is not free and the request is refused.
 
     The admission half of the local-resource boundary, and deliberately NOT a
-    subclass of :exc:`~adapters.outbound.llm.LLMProviderError`: nothing failed,
+    subclass of :exc:`~llm.LLMProviderError`: nothing failed,
     and no request reached a runtime. The machine is already running as much
     inference as it was configured to run at once, and a second concurrent load
     on consumer hardware is an out-of-memory kill that takes the FIRST read down
@@ -110,7 +110,7 @@ class LLMConsentError(LLMError):
     """Raised when an off-host read of taxpayer evidence is refused.
 
     Deliberately NOT a subclass of
-    :exc:`~adapters.outbound.llm.LLMConfigError`. A configuration fault says
+    :exc:`~llm.LLMConfigError`. A configuration fault says
     "you routed this wrongly"; this says "you may not send this document off
     this host", and a caller catching configuration faults to retry at another
     provider must not silently swallow a confidentiality refusal
@@ -121,9 +121,9 @@ class LLMConsentError(LLMError):
 class LLMValidationError(LLMError, ValueError):
     """Raised when an LLM-related object fails validation.
 
-    Inherits from both :class:`~adapters.outbound.llm.LLMError` and
+    Inherits from both :class:`~llm.LLMError` and
     :class:`ValueError` to remain compatible with Pydantic's validator-failure
     contract while allowing catch-all
-    :class:`~adapters.outbound.llm.LLMError` handlers to detect integrity
+    :class:`~llm.LLMError` handlers to detect integrity
     failures.
     """

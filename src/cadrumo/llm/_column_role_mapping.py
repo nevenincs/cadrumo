@@ -422,7 +422,7 @@ def parse_column_role_mapping_response(text: str, headers: Sequence[str]) -> Col
 class SemanticColumnRoleMapper:
     """Establish one table's column roles with a language model, once per file.
 
-    Binds to :class:`~adapters.outbound.llm.LLMClient` and nothing lower, so
+    Binds to :class:`~llm.LLMClient` and nothing lower, so
     which engine answers -- an on-host runtime or a gated hosted one -- is
     configuration rather than a fact this class holds.
 

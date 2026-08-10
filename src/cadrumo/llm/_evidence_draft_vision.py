@@ -128,7 +128,7 @@ def vision_transcription_prompt_registry() -> PromptRegistry:
     version travel with the artefact the way the extraction template's do.
 
     Returns:
-        :class:`~adapters.outbound.llm.PromptRegistry`: A registry carrying the
+        :class:`~llm.PromptRegistry`: A registry carrying the
         transcription prompt at :data:`VISION_TRANSCRIPTION_PROMPT_VERSION`.
     """
     registry = PromptRegistry()
@@ -158,7 +158,7 @@ class LocalVisionDocumentTranscriber:
             only default that exists names a local model no vendor serves.
         provider: Which provider carries the read. Defaults to LOCAL so a
             taxpayer's document does not leave the host by default.
-        client: Injected :class:`~adapters.outbound.llm.LLMClient` (dependency
+        client: Injected :class:`~llm.LLMClient` (dependency
             injection for tests); default-constructed against the resolved
             settings otherwise.
         settings: Injected settings; defaults to ``load_settings()``.
@@ -260,7 +260,7 @@ class LocalVisionDocumentTranscriber:
         Args:
             evidence_images: In-memory page/image renders of the evidence, each
                 carrying its declared media type (built by the caller from
-                :func:`~adapters.outbound.llm.rasterise_pdf_pages_to_base64_png`
+                :func:`~llm.rasterise_pdf_pages_to_base64_png`
                 for a scan-only PDF, or from the raw bytes of an image
                 attachment).
             source_content_sha256: Content address of the SOURCE bytes. Supplied
@@ -324,7 +324,7 @@ def transcribe_document_images(
         source_content_sha256: Content address of the source bytes.
         model: Optional vision model override.
         provider: Transport serving the read. Defaults to
-            :attr:`~adapters.outbound.llm.LLMProvider.LOCAL`, so the production
+            :attr:`~llm.LLMProvider.LOCAL`, so the production
             route stays on-host; naming another provider is the caller's
             explicit, per-invocation decision to read off-host.
         settings: Optional resolved settings override.

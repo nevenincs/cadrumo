@@ -4,7 +4,7 @@ Reading a taxpayer's invoice at a hosted model removes that document from the
 host, which `sensitive-financial-data-secure-storage-only` permits only behind
 an explicit, per-invocation, default-off, gestor-barred acknowledgement. This
 module holds the decision function and the carrier that proves the decision was
-taken; :meth:`~adapters.outbound.llm.LLMClient.complete` applies it at the
+taken; :meth:`~llm.LLMClient.complete` applies it at the
 single dispatch point so no caller can construct a request that reaches around
 it.
 
