@@ -1,6 +1,6 @@
 [revisions."2024-y-siguientes"]
 valid_from = 2025-01-01
-period_selector = { year_from = 2025, periods = ["0A"] }
+period_selector = { year_from = 2024, periods = ["0A"] }
 legal_refs = [
     "ley-27-2014:art-40",
     "ley-27-2014:art-41",
