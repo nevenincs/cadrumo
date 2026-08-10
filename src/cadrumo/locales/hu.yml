@@ -3112,6 +3112,8 @@ cli:
         history_help: Egy munkaegység minden életciklus-eseményének megjelenítése.
         history_next_action: Tekintse át ennek a munkaegységnek a jelenlegi állapotát
           a `aeat app modelo work status` paranccsal.
+        history_next_action_summary: Tekintse át ennek a munkaegységnek a jelenlegi
+          állapotát.
         history_work_unit_id_help: Annak a munkaegységnek az azonosítója, amelynek
           életciklusát meg szeretné tekinteni.
         id_is_work_unit_not_calc_revision_natural: 'Ez az azonosító munkaegység-azonosító,
@@ -3134,6 +3136,8 @@ cli:
           ezek közül: {choices}.'
         invalid_work_unit_id: A work_unit_id értékének 64 karakteres kisbetűs hex-karakterláncnak
           kell lennie (SHA-256 kivonat).
+        invalid_work_unit_lookup_id: A work_unit_id értékének kisbetűs hexadecimális
+          SHA-256-azonosítónak vagy egyértelmű előtagnak kell lennie
         kv_empty_key_error: 'A(z) {flag} kulcsa nem lehet üres; kapott: {spec}.'
         kv_format_error: 'A(z) {flag} értéket {key_label}={value_label} alakban kell
           megadni. Ez egy kulcs-érték bejegyzés: A kulcs a bal oldalon áll, utána
@@ -3144,6 +3148,8 @@ cli:
         list_next_action: Egy munkaegység teljes állapotát a `aeat app modelo work
           status` paranccsal tekintheti meg, majd a `aeat app modelo work calculate`
           paranccsal készíthet vagy számolhat újra vázlatot.
+        list_next_action_summary: Tekintse meg egy munkaegység teljes állapotát a
+          vázlat elkészítése vagy újraszámítása előtt.
         m184_socio_handoff_message: 'Jövedelem-hozzárendelési rendszer (régimen de
           atribución de rentas): a(z) %{nif} tag (%{nombre}) %{importe} EUR hozzárendelt
           adóalapot kap (%{porcentaje}% részesedés). A tagnak a saját munkaterületén
@@ -3354,6 +3360,8 @@ cli:
         status_next_action: Készítse el vagy számolja újra ezt az egységet a `aeat
           app modelo work calculate` paranccsal, majd ellenőrizze a vázlatot a `aeat
           app modelo work verify` paranccsal.
+        status_next_action_summary: Készítse el vagy számolja újra ezt a munkaegységet,
+          majd ellenőrizze az eredményül kapott vázlatot.
         verify_help: Tervezet számítási revízió hitelesítése a hitelesített-teljes
           szerződéssel szemben.
         verify_idempotent_noop: 'Idempotens nincs-művelet: a(z) %{calculation_revision_id}
@@ -3361,10 +3369,14 @@ cli:
           lett visszaadva.'
         verify_next_action_granted: Az ellenőrzés sikeres. Exportálja a benyújtási
           dokumentumot a `aeat app modelo export` paranccsal.
+        verify_next_action_granted_summary: Az ellenőrzés sikeres. Exportálja a benyújtási
+          dokumentumot.
         verify_next_action_incomplete: Az ellenőrzés blokkoló tételeket talált (lásd
           a fenti értesítéseket). Oldja meg őket, számolja újra a `aeat app modelo
           work calculate` paranccsal, majd futtassa újra a `aeat app modelo work verify`
           parancsot.
+        verify_next_action_incomplete_summary: Az ellenőrzés blokkoló tételeket talált.
+          Oldja meg őket, számolja újra, majd futtassa újra az ellenőrzést.
         verify_selector_help: Piszkozat-revízió választó (current, latest-draft vagy
           explicit).
         wizard_help: Végigvezet a munkaegység hiányzó kézi mezőin, majd kiszámítja
@@ -4944,6 +4956,7 @@ cli:
       parent_id: Szülő tranzakcióazonosító
       pending: Felülvizsgálatra vár
       period: Időszak
+      profile: Profil
       purchase_invoice_evidence_id: Beszerzési számla bizonylat
       readiness_issues: Készültségi problémák
       ready: Kész
@@ -5388,6 +5401,8 @@ cli:
     calendar_local_modelo_events_unavailable: Ehhez a naptársorhoz nem érhető el helyi
       modell eseménybizonyíték.
     coverage:
+      incomplete_summary: '%{count} benyújtási kötelezettséget nem sikerült egyértelműen
+        a profilhoz rendelni, ezért kimaradhatnak a jelentésből: %{modelos}.'
       investigate: '%{count} bevallási kötelezettséget nem sikerült egyértelműen megállapítani
         ehhez a profilhoz, és bevallatlan maradhat: %{modelos}. Vizsgálja meg mindegyiket
         a ''aeat app overview explain <modelo>'' paranccsal.'
@@ -5427,6 +5442,7 @@ cli:
     post_filing:
       pending: '%{count} AEAT bevallás utáni esemény igényel figyelmet: %{kinds}.
         Tekintsd át őket a ''aeat app live notifications list'' paranccsal.'
+      pending_summary: '%{count} AEAT benyújtás utáni esemény figyelmet igényel: %{kinds}.'
     prepare:
       help: 'Végigvezet az adatelőkészítés lépésein egy modellhez/időszakhoz sorban:
         tranzakciók importálása, besorolásuk, beszerzési számla igazolások csatolása,
@@ -5477,6 +5493,8 @@ cli:
       next_modelo_work_command: '  aeat app modelo work create - nyomtatvány-bevallás
         indítása a főkönyvi adatokból.'
       next_review_command: '  aeat app ledger review - importált sorok ellenőrzése.'
+      next_step_available: Az áttekintés kimenetében elérhető egy ajánlott következő
+        lépés.
       next_work_calculate_command: '  aeat app modelo work list - folyamatban lévő
         modellómunka-egység folytatása.'
       next_work_create_command: '  aeat app modelo work create - új munkaegység indítása

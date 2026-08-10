@@ -24,6 +24,13 @@ class AuthProviderKind(StrEnum):
     CLAVE_PERMANENTE = "clave_permanente"
 
 
+class ClaveMovilRoute(StrEnum):
+    """Operator-selectable Cl@ve Movil interaction route."""
+
+    QR = "qr"
+    APP_REQUEST = "app_request"
+
+
 class AuthProviderDescription(BaseModel):
     """Safe operator-facing readiness description for one auth provider."""
 
@@ -41,4 +48,4 @@ class AuthProviderDescription(BaseModel):
     health_summary: str | None = None
 
 
-__all__ = ["AuthProviderDescription", "AuthProviderKind"]
+__all__ = ["AuthProviderDescription", "AuthProviderKind", "ClaveMovilRoute"]

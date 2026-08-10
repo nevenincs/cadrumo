@@ -11,8 +11,26 @@ from __future__ import annotations
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
+from dataclasses import dataclass
 
-_OPERATOR_PROGRESS_SINK: ContextVar[Callable[[str], None] | None] = ContextVar(
+
+@dataclass(frozen=True, slots=True)
+class OperatorProgress:
+    """Actionable progress text plus an optional live countdown duration."""
+
+    message: str
+    timeout_seconds: int | None = None
+
+    def render(self, *, remaining_seconds: int | None = None) -> str:
+        """Render the update for a frontend that cannot animate a timer."""
+        seconds = self.timeout_seconds if remaining_seconds is None else remaining_seconds
+        if seconds is None:
+            return self.message
+        minutes, remainder = divmod(max(0, seconds), 60)
+        return f"{self.message} Time remaining {minutes}:{remainder:02d}."
+
+
+_OPERATOR_PROGRESS_SINK: ContextVar[Callable[[OperatorProgress], None] | None] = ContextVar(
     "_aeat_auth_operator_progress_sink",
     default=None,
 )
@@ -20,7 +38,7 @@ _OPERATOR_PROGRESS_SINK: ContextVar[Callable[[str], None] | None] = ContextVar(
 
 
 @contextmanager
-def operator_progress_sink(sink: Callable[[str], None]) -> Generator[None]:
+def operator_progress_sink(sink: Callable[[OperatorProgress], None]) -> Generator[None]:
     """Route operator progress to ``sink`` within this context."""
     token = _OPERATOR_PROGRESS_SINK.set(sink)
     try:
@@ -29,11 +47,11 @@ def operator_progress_sink(sink: Callable[[str], None]) -> Generator[None]:
         _OPERATOR_PROGRESS_SINK.reset(token)
 
 
-def emit_operator_progress(banner: str) -> None:
-    """Send an already-redacted operator progress banner when a sink is armed."""
+def emit_operator_progress(progress: OperatorProgress) -> None:
+    """Send an already-redacted operator progress update when a sink is armed."""
     sink = _OPERATOR_PROGRESS_SINK.get()
     if sink is not None:
-        sink(banner)
+        sink(progress)
 
 
-__all__ = ["emit_operator_progress", "operator_progress_sink"]
+__all__ = ["OperatorProgress", "emit_operator_progress", "operator_progress_sink"]

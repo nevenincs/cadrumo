@@ -61,10 +61,11 @@ if TYPE_CHECKING:
     from textual.widgets.data_table import ColumnKey
 
     from ....application.user_profile import ProfileFieldView, ProfileOverview, ProfileSectionView
+    from ....adapters.outbound.aeat import OperatorProgress
     from ._form_screen import FormPage
 
 
-type ManagerProgressSinkBinder = Callable[[Callable[[str], None]], AbstractContextManager[None]]
+type ManagerProgressSinkBinder = Callable[[Callable[[OperatorProgress], None]], AbstractContextManager[None]]
 
 
 class ManagerActionDisposition(StrEnum):
@@ -826,16 +827,19 @@ class ProfileManagerApp(App[None]):
         """Show a completed action whose partial failures need attention."""
         self.query_one("#manager-status", PinnedStatusBar).show_warning(message)
 
-    def _progress(self, message: str) -> None:
+    def _progress(self, progress: OperatorProgress) -> None:
         """Show what is happening while it is still happening."""
-        self.query_one("#manager-status", PinnedStatusBar).show_progress(message)
+        self.query_one("#manager-status", PinnedStatusBar).show_progress(
+            progress.message,
+            timeout_seconds=progress.timeout_seconds,
+        )
 
-    def _progress_from_worker(self, message: str) -> None:
+    def _progress_from_worker(self, progress: OperatorProgress) -> None:
         """Move a worker-thread progress emission onto Textual's UI task."""
         if not self.is_running:
             return
         try:
-            self.call_from_thread(self._progress, message)
+            self.call_from_thread(self._progress, progress)
         except RuntimeError:
             # A thread-backed action may outlive a closing application. At
             # that point there is no screen left to update.
