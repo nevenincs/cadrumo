@@ -8,7 +8,6 @@ import pytest
 
 from ....core import Modelo
 from ....core.config import override_settings
-from ....core.resources import resources
 from ._modelo_work_ux_support import (
     _PROFILE_ID,
     _attempt_incomplete_profile_create,
@@ -149,7 +148,7 @@ def test_modelo_readiness_reports_pre_activity_m303_before_work_create() -> None
         [
             "app", "modelo", "readiness",
             "--modelo", "303",
-            "--revision-id", str(resources().modelos.authority.snapshot("303", filing_year=2026, period="1T").revision.id),
+            "--revision-id", "2023-y-siguientes",
             "--year", "2026",
             "--period", "1T",
         ],

@@ -86,11 +86,6 @@ def _revision(modelo: str, revision_id: str) -> ModeloRevision:
     return modelo_definition.revisions[revision_id]
 
 
-@cache
-def _m303_revision() -> ModeloRevision:
-    return resources().modelos.authority.snapshot("303", filing_year=2025, period="1T").revision
-
-
 def _raw_transaction(
     provider_id: str,
     *,
@@ -385,7 +380,7 @@ def test_iva_source_mesh_resolver_carries_prorrata_apportionment_provenance(
 def test_iva_source_mesh_resolver_refuses_m303_invoice_domestic_iva_without_transaction_ledger(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    revision = _m303_revision()
+    revision = _revision("303", "2023-y-siguientes")
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice = _domestic_iva_invoice(
@@ -434,7 +429,7 @@ def test_iva_source_mesh_resolver_attributes_a_q1_operation_invoiced_in_q2_to_q1
     because a change that moved every invoice one quarter earlier would satisfy
     the Q1 half alone.
     """
-    revision = _m303_revision()
+    revision = _revision("303", "2023-y-siguientes")
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice = _domestic_iva_invoice(
@@ -479,7 +474,7 @@ def test_iva_source_mesh_resolver_attributes_a_q1_operation_invoiced_in_q2_to_q1
 def test_iva_source_mesh_resolver_accepts_m303_invoice_domestic_iva_when_transaction_ledger_matches(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    revision = _m303_revision()
+    revision = _revision("303", "2023-y-siguientes")
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     transaction = _iva_transaction(
@@ -533,7 +528,7 @@ def test_iva_source_mesh_resolver_raises_no_devengo_advisory_when_the_operation_
     correctly, so the declared-date case is asserted silent as explicitly as
     the proxy case is asserted noisy.
     """
-    revision = _m303_revision()
+    revision = _revision("303", "2023-y-siguientes")
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     transaction = _iva_transaction(
@@ -1043,7 +1038,7 @@ def test_the_screen_now_catches_a_non_es_invoice_carrying_spanish_cuota(
     country differs. Before this, changing that one field was enough to walk
     the invoice past the guard.
     """
-    revision = _m303_revision()
+    revision = _revision("303", "2023-y-siguientes")
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice = _domestic_iva_invoice(
@@ -1091,7 +1086,7 @@ def test_an_exempt_intracommunity_invoice_does_not_trip_the_widened_screen(
     the country proxy widens WHICH invoices are considered without widening
     what is actually compared.
     """
-    revision = _m303_revision()
+    revision = _revision("303", "2023-y-siguientes")
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     exempt = _exempt_intracommunity_invoice(
@@ -1168,7 +1163,7 @@ def test_the_screen_now_catches_a_recargo_absent_from_the_ledger(
     first, through the same canonical bridge the ledger path uses rather than a
     second construction site.
     """
-    revision = _m303_revision()
+    revision = _revision("303", "2023-y-siguientes")
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo.save(

@@ -206,7 +206,7 @@ _DECLARACION_FIXTURE_TAX_ID = "Y0000001S"
 profile's ``identity.tax_id`` for the reconcile's header identity compare to
 pass."""
 
-_M303_2024_1T_REVISION_ID = "2024-hasta-08-y-2t"
+_M303_2024_1T_REVISION_ID = "2023-y-siguientes"
 """Law-determined registry revision for M303 filing_year=2024, period=1T
 (confirmed via ``authority.snapshot("303", filing_year=2024, period="1T").revision.id``);
 required by ``aeat-registry-authority-flow`` so the seeded work unit's

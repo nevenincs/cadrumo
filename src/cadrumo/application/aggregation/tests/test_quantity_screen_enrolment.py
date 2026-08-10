@@ -83,7 +83,7 @@ def _provenance(provider_id: str) -> RawProvenance:
 
 @cache
 def _m303_revision() -> ModeloRevision:
-    return resources().modelos.authority.snapshot("303", filing_year=2025, period="1T").revision
+    return resources().modelos.get("303").revisions["2023-y-siguientes"]
 
 
 @cache

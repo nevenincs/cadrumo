@@ -28,16 +28,11 @@ from pathlib import Path
 
 import pytest
 
-from ....core.resources import resources
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-
-def _m100_revision_id(*, filing_year: int, period: str) -> str:
-    return str(resources().modelos.authority.snapshot("100", filing_year=filing_year, period=period).revision.id)
 
 
 def _create_natural_person() -> None:
@@ -139,7 +134,7 @@ def test_work_create_refuses_modelo_100_for_a_legal_entity(
         [
             "app", "modelo", "work", "create",
             "--modelo", "100", "--year", "2025", "--period", "0A",
-            "--revision", _m100_revision_id(filing_year=2025, period="0A"),
+            "--revision", "2023-y-siguientes",
         ],
     )  # fmt: skip
 
@@ -179,7 +174,7 @@ def test_work_create_refuses_modelo_100_for_non_resident_irnr(
         [
             "app", "modelo", "work", "create",
             "--modelo", "100", "--year", "2025", "--period", "0A",
-            "--revision", _m100_revision_id(filing_year=2025, period="0A"),
+            "--revision", "2023-y-siguientes",
         ],
     )  # fmt: skip
 

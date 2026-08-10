@@ -61,17 +61,22 @@ _NOW = datetime(2025, 2, 10, 12, 0, tzinfo=UTC)
 _Q1_2025 = Period.from_year_and_code(2025, "1T")
 _BUCKET_ID = "28282828-2828-4828-8828-282828282828"
 
+#: The Modelo 303 revision that governs the period above. It declares all three
+#: IVA facts, which is what makes it the right control: an advisory here would
+#: be a false fire on the quarterly return every taxpayer files.
+_M303_REVISION_ID = "2023-y-siguientes"
+
+
 @cache
 def _m303_revision() -> ModeloRevision:
-    return resources().modelos.authority.snapshot("303", filing_year=_Q1_2025.filing_year, period="1T").revision
+    return resources().modelos.get("303").revisions[_M303_REVISION_ID]
 
 
 @cache
 def _revision(modelo_id: str) -> ModeloRevision:
     """The committed revision governing each modelo's IVA ledger bindings."""
-    if modelo_id == "303":
-        return _m303_revision()
-    return resources().modelos.get(modelo_id).revisions["2010-y-siguientes"]
+    revisions = resources().modelos.get(modelo_id).revisions
+    return revisions[_M303_REVISION_ID if modelo_id == "303" else "2010-y-siguientes"]
 
 
 def _row(category: IvaCategory) -> IvaLedgerObservation:

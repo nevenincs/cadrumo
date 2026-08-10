@@ -111,7 +111,7 @@ def _active_registry_revision_id(*, modelo: str, filing_year: int, period: str) 
     fact and never an input. Resolving it here keeps these fixtures on the
     same authority the production paths use, instead of pinning a literal
     that goes stale the moment AEAT publishes a new design — which is what
-    happened when the former M303 post-2022 selector was capped at 2025
+    happened when the M303 ``2023-y-siguientes`` selector was capped at 2025
     and every 2026 target silently moved to ``2026-y-siguientes``.
     """
     return resolve_registry_revision_for_work_target(

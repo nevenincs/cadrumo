@@ -86,7 +86,7 @@ class TestS01CreationGate:
 
         M303 has three revisions:
         - ``2009-y-siguientes`` covers 2009-2022
-           - 2023, two 2024 epochs, and 2025 have distinct filing windows
+        - ``2023-y-siguientes`` covers 2023-2025 (``valid_to = 2025-12-31``)
         - ``2026-y-siguientes`` covers 2026-onwards
 
         For year 2026, period 1T the law-determined revision is ``2026-y-siguientes``.

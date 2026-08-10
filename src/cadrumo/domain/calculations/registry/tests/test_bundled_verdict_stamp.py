@@ -31,7 +31,7 @@ def _build_tiny_registry(root: Path) -> None:
     (aeat / "legal" / "is.toml").write_text('[legal."ley-27-2014:art-29"]\n', encoding="utf-8")
     modelos = aeat / "modelos"
     modelos.mkdir()
-    (modelos / "303.toml").write_text('[[revisions]]\nid = "2023"\n', encoding="utf-8")
+    (modelos / "303.toml").write_text('[[revisions]]\nid = "2023-y-siguientes"\n', encoding="utf-8")
     treaties = aeat / "treaties"
     treaties.mkdir()
     (treaties / "es-de.toml").write_text('[treaty]\nname = "es-de"\n', encoding="utf-8")

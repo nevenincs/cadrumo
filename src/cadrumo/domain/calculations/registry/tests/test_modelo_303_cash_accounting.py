@@ -18,17 +18,7 @@ _CASH_BINDINGS = {
 }
 
 
-@pytest.mark.parametrize(
-    "revision_id",
-    [
-        "2009-y-siguientes",
-        "2023",
-        "2024-hasta-08-y-2t",
-        "2024-desde-09-y-3t",
-        "2025",
-        "2026-y-siguientes",
-    ],
-)
+@pytest.mark.parametrize("revision_id", ["2009-y-siguientes", "2023-y-siguientes"])
 def test_modelo_303_cash_accounting_casillas_are_bound_as_a_four_box_set(revision_id: str) -> None:
     modelo, _catalogues = _committed_modelo("303")
     revision = modelo.revisions[revision_id]

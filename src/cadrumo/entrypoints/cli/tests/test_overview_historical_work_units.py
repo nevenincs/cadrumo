@@ -9,7 +9,6 @@ import pytest
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....application.user_profile import profile_storage_session
 from ....core import Period, resolve_active_bucket_id
-from ....core.resources import resources
 from ....core.time import now
 from ....domain.modelos import (
     ModeloCode,
@@ -27,8 +26,12 @@ _FILED_CALCULATION_REVISION_ID = "a" * 64
 _CURRENT_FILING_RECORD_ID = "b" * 64
 
 
-def _revision_for_target(*, modelo: str, year: int, period: str) -> str:
-    return str(resources().modelos.authority.snapshot(modelo, filing_year=year, period=period).revision.id)
+def _revision_for_target(*, modelo: str, year: int) -> str:
+    if modelo == "130":
+        return "2019-y-siguientes"
+    if modelo == "303" and year <= 2022:
+        return "2009-y-siguientes"
+    return "2023-y-siguientes"
 
 
 def _create_historical_work_unit(
@@ -41,7 +44,7 @@ def _create_historical_work_unit(
     current_filing_record_id: str | None = None,
 ) -> str:
     work_period = Period.from_year_and_code(year, period)
-    revision_id = _revision_for_target(modelo=modelo, year=year, period=period)
+    revision_id = _revision_for_target(modelo=modelo, year=year)
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo=modelo,

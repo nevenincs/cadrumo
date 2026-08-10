@@ -106,6 +106,7 @@ _T0 = datetime(2025, 1, 10, 10, 0, tzinfo=UTC)
 _FILE_AT = datetime(2025, 4, 10, 12, 0, tzinfo=UTC)
 _IRENE_FILE_AT = datetime(2026, 7, 1, 12, 0, tzinfo=UTC)
 
+_M303_REVISION = "2023-y-siguientes"
 _QUARTER_ORDER = ("1T", "2T", "3T", "4T")
 _IVA_RATE = Decimal("0.21")
 type StoredIvaAxis = Literal["devengada", "deducible", "casilla_59", "resultado"]
@@ -488,7 +489,7 @@ def _calculate_m303_quarter_revision(
         modelo="303",
         filing_year=filing_year,
         period=Period.from_year_and_code(filing_year, period),
-        revision_id=resources().modelos.authority.snapshot("303", filing_year=filing_year, period=period).revision.id,
+        revision_id=_M303_REVISION,
         repository=wu_repo,
         clock=_T0,
     )

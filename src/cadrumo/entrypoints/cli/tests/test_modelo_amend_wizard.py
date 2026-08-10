@@ -42,7 +42,6 @@ from ....application.modelo import get_filing_record
 from ....application.user_profile import profile_storage_session
 from ....core import Period, resolve_active_bucket_id
 from ....core.flows import FlowMode
-from ....core.resources import resources
 from ....domain.justificante import Justificante
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.cli_runner import invoke_cached_cli
@@ -75,7 +74,7 @@ _BASELINE_INGRESOS = Decimal("1000.00")
 _BASELINE_GASTOS = Decimal("250.00")
 _CORRECTED_INGRESOS = Decimal("1100.00")
 
-# M303 casilla 07 is the régimen-general 21% base imponible; the authority-selected
+# M303 casilla 07 is the régimen-general 21% base imponible; the 2023-y-siguientes
 # revision declares no required-manual casillas, so a baseline carrying 07 alone is
 # a legitimate amendable AEAT-attested filing. The correction LOWERS the declared
 # base: under the pre-rectificativa dual regime that direction is a solicitud de
@@ -83,11 +82,6 @@ _CORRECTED_INGRESOS = Decimal("1100.00")
 # only the unified rectificativa mechanism can file it.
 _M303_BASELINE_BASE_GENERAL = Decimal("10000.00")
 _M303_CORRECTED_BASE_GENERAL = Decimal("9000.00")
-
-
-def _m303_revision_id(*, filing_year: int, period: str) -> str:
-    return str(resources().modelos.authority.snapshot("303", filing_year=filing_year, period=period).revision.id)
-
 
 # The fields whose values must be identical for the same amendment expressed
 # through either surface (the wizard-derived inputs and a hand-built ``work
@@ -486,7 +480,7 @@ def test_amend_wizard_scripted_inputs_match_hand_built_work_amend() -> None:
         modelo="303",
         filing_year=2025,
         period="2T",
-        revision=_m303_revision_id(filing_year=2025, period="2T"),
+        revision="2023-y-siguientes",
     )
     hand_baseline_filing_id = _import_external_m303_baseline(
         hand_unit_id,

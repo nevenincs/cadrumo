@@ -11,7 +11,6 @@ import pytest
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Modelo, Period
-from ....core.resources import resources
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
@@ -45,6 +44,7 @@ _NOW = datetime(2026, 6, 27, 12, 0, 0, tzinfo=UTC)
 _M100_REVISION = "2025"
 _M130_REVISION = "2019-y-siguientes"
 _M200_REVISION = "2024-y-siguientes"
+_M303_REVISION = "2023-y-siguientes"
 _OPERATOR_PROFILE_ID = "30300000-0000-4000-8000-000000000001"
 _NONRESIDENT_PROFILE_ID = "20000000-0000-4000-8000-000000000002"
 
@@ -178,26 +178,23 @@ def _store_work_unit(
     modelo: Modelo = Modelo.M303,
     filing_year: int = 2025,
     period_code: str = "1T",
-    revision_id: str | None = None,
+    revision_id: str = _M303_REVISION,
 ) -> WorkUnit:
     period = Period.from_year_and_code(filing_year, period_code)
     modelo_code = modelo.value
-    registry_revision_id = revision_id or resources().modelos.authority.snapshot(
-        modelo_code, filing_year=filing_year, period=period.registry_token
-    ).revision.id
     work_unit = WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=bucket_id,
             modelo=modelo_code,
             filing_year=filing_year,
             period=period,
-            revision_id=registry_revision_id,
+            revision_id=revision_id,
         ),
         bucket_id=bucket_id,
         modelo=ModeloCode(modelo_code),
         filing_year=filing_year,
         period=period,
-        revision_id=registry_revision_id,
+        revision_id=revision_id,
         name=f"{modelo_code}-{filing_year}-{period.registry_token}",
         created_at=_NOW,
         updated_at=_NOW,
@@ -234,7 +231,7 @@ def test_create_work_unit_service_refuses_incomplete_profile(tmp_path: Path) -> 
                 modelo=Modelo.M303.value,
                 filing_year=2025,
                 period=Period.from_year_and_code(2025, "1T"),
-                revision_id=resources().modelos.authority.snapshot("303", filing_year=2025, period="1T").revision.id,
+                revision_id=_M303_REVISION,
                 clock=_NOW,
             )
 
@@ -310,7 +307,7 @@ def test_create_work_unit_service_refuses_period_year_mismatch_with_typed_error(
                 modelo=Modelo.M303.value,
                 filing_year=2025,
                 period=Period.from_year_and_code(2026, "1T"),
-                revision_id=resources().modelos.authority.snapshot("303", filing_year=2025, period="1T").revision.id,
+                revision_id=_M303_REVISION,
                 repository=repository,
                 clock=_NOW,
             )
@@ -321,7 +318,7 @@ def test_create_work_unit_service_refuses_period_year_mismatch_with_typed_error(
             "filing_year": 2025,
             "period_year": 2026,
             "period": "1T",
-            "revision_id": resources().modelos.authority.snapshot("303", filing_year=2025, period="1T").revision.id,
+            "revision_id": _M303_REVISION,
         }
         assert len(repository.load()) == 0
 
@@ -602,7 +599,7 @@ def test_create_work_unit_service_refuses_pre_activity_m303_and_persists_no_work
                 modelo=Modelo.M303.value,
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "1T"),
-                revision_id=resources().modelos.authority.snapshot("303", filing_year=2026, period="1T").revision.id,
+                revision_id=_M303_REVISION,
                 repository=repository,
                 clock=_NOW,
             )
@@ -733,7 +730,7 @@ def test_first_active_m303_period_allows_create_and_calculate(tmp_path: Path) ->
             modelo=Modelo.M303.value,
             filing_year=2026,
             period=period,
-            revision_id=resources().modelos.authority.snapshot("303", filing_year=2026, period="2T").revision.id,
+            revision_id=_M303_REVISION,
             repository=work_repository,
             clock=_NOW,
         )
@@ -762,7 +759,7 @@ def test_visible_target_ensure_refuses_reused_pre_activity_m303_before_rename(tm
             bucket_id=_OPERATOR_PROFILE_ID,
             filing_year=2026,
             period_code="1T",
-            revision_id=resources().modelos.authority.snapshot("303", filing_year=2026, period="1T").revision.id,
+            revision_id=_M303_REVISION,
         )
 
         with pytest.raises(ModeloProfileReadinessError) as excinfo:
@@ -771,7 +768,7 @@ def test_visible_target_ensure_refuses_reused_pre_activity_m303_before_rename(tm
                 modelo=Modelo.M303.value,
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "1T"),
-                registry_revision_id=resources().modelos.authority.snapshot("303", filing_year=2026, period="1T").revision.id,
+                registry_revision_id=_M303_REVISION,
                 name="renamed stale work",
                 actor="operator",
             )
@@ -802,7 +799,7 @@ def test_create_work_unit_service_refuses_a_setup_incomplete_profile(tmp_path: P
                 modelo=Modelo.M303.value,
                 filing_year=2025,
                 period=Period.from_year_and_code(2025, "1T"),
-                revision_id=resources().modelos.authority.snapshot("303", filing_year=2025, period="1T").revision.id,
+                revision_id=_M303_REVISION,
                 clock=_NOW,
             )
         assert excinfo.value.translated_message == "application.modelo.errors.profile_readiness_setup_incomplete"
@@ -847,7 +844,7 @@ def test_calculate_service_names_missing_fields_for_a_setup_incomplete_profile(t
             modelo=Modelo.M303,
             filing_year=2025,
             period_code="1T",
-            revision_id=resources().modelos.authority.snapshot("303", filing_year=2025, period="1T").revision.id,
+            revision_id=_M303_REVISION,
         )
         profile_repository = UserProfileLifecycleRepository(bucket_id=_OPERATOR_PROFILE_ID)
         record = profile_repository.load(_OPERATOR_PROFILE_ID)

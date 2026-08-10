@@ -288,8 +288,8 @@ def test_preflight_refuses_ambiguous_natural_key_with_candidates() -> None:
     _seed_active_profile()
     authority = resources().modelos.authority
     definition = authority.modelo("303")
-    base_revision = authority.snapshot("303", filing_year=2026, period="1T").revision
-    twin = base_revision.model_copy(update={"id": f"{base_revision.id}-twin"})
+    base_revision = definition.revisions["2023-y-siguientes"]
+    twin = base_revision.model_copy(update={"id": "2023-y-siguientes-twin"})
     ambiguous = definition.model_copy(update={"revisions": {**definition.revisions, twin.id: twin}})
     original = authority._modelos_by_id["303"]
     authority._modelos_by_id["303"] = ambiguous
@@ -302,8 +302,8 @@ def test_preflight_refuses_ambiguous_natural_key_with_candidates() -> None:
 
     assert result.exit_code != 0
     # Both candidate revision ids must be named so the operator can pick one.
-    assert str(base_revision.id) in result.output
-    assert str(twin.id) in result.output
+    assert "2023-y-siguientes" in result.output
+    assert "2023-y-siguientes-twin" in result.output
     assert "--revision-id" in result.output
 
 
@@ -325,8 +325,8 @@ def test_ambiguous_resolution_carries_candidates_on_typed_field_not_message() ->
 
     authority = resources().modelos.authority
     definition = authority.modelo("303")
-    base_revision = authority.snapshot("303", filing_year=2026, period="1T").revision
-    twin = base_revision.model_copy(update={"id": f"{base_revision.id}-twin"})
+    base_revision = definition.revisions["2023-y-siguientes"]
+    twin = base_revision.model_copy(update={"id": "2023-y-siguientes-twin"})
     ambiguous = definition.model_copy(update={"revisions": {**definition.revisions, twin.id: twin}})
     original = authority._modelos_by_id["303"]
     authority._modelos_by_id["303"] = ambiguous
@@ -345,11 +345,11 @@ def test_ambiguous_resolution_carries_candidates_on_typed_field_not_message() ->
     cause = refusal.__cause__
     assert isinstance(cause, AmbiguousRevisionSelectionError)
     # ...and the candidate ids rode on the typed field, sorted.
-    assert cause.candidate_ids == tuple(sorted((str(base_revision.id), str(twin.id))))
+    assert cause.candidate_ids == ("2023-y-siguientes", "2023-y-siguientes-twin")
     # The refusal context lists both ids so the operator surface stays intact
     # even though no message substring was parsed.
     assert refusal.context is not None
     candidates = refusal.context["candidates"]
     assert isinstance(candidates, str)
-    assert str(base_revision.id) in candidates
-    assert str(twin.id) in candidates
+    assert "2023-y-siguientes" in candidates
+    assert "2023-y-siguientes-twin" in candidates

@@ -14,9 +14,6 @@ ModeloLocalizationField = Literal["label", "help", "title", "official_name"]
 _PLAIN_SEGMENT: Final = re.compile(r"^[A-Za-z0-9_-]+$")
 _ENCODED_PREFIX: Final[str] = "x-"
 _SOURCE_LOCALE: Final[str] = "es"
-_MODEL_SCOPED_CONSTRUCTS: Final[frozenset[tuple[str, str]]] = frozenset(
-    {("303", "modelo-303-iva-autoliquidacion")}
-)
 
 
 def encode_modelo_locale_segment(value: str) -> str:
@@ -46,12 +43,7 @@ def construct_locale_key(
     construct_id: str,
     field: Literal["title"] = "title",
 ) -> str:
-    """Derive the presentation key for one construct at its declared ownership scope."""
-    if (modelo_id, construct_id) in _MODEL_SCOPED_CONSTRUCTS:
-        return (
-            f"modelo.schema.{encode_modelo_locale_segment(modelo_id)}.construct."
-            f"{encode_modelo_locale_segment(construct_id)}.field.{field}"
-        )
+    """Derive the presentation key for one revision construct."""
     return (
         f"modelo.schema.{encode_modelo_locale_segment(modelo_id)}.revision."
         f"{encode_modelo_locale_segment(revision_id)}.construct."
