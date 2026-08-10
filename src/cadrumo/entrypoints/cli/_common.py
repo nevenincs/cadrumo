@@ -593,11 +593,15 @@ def resolve_notice_action(
     from ...application.operator_actions import OPERATOR_ACTION_CATALOGUE
     from ...application.operator_surface import resolve_notice_action as resolve_application_notice_action
 
-    return resolve_application_notice_action(
+    resolved = resolve_application_notice_action(
         action=action,
         argument_bindings=argument_bindings,
         catalogue=OPERATOR_ACTION_CATALOGUE,
         reconciliation=_current_operator_surface_reconciliation(),
+    )
+    schema = _live_action_input_schema(resolved.action.target_command_key)
+    return resolved.model_copy(
+        update={"action": resolved.action.model_copy(update={"cli_path": schema.cli_path})},
     )
 
 

@@ -86,14 +86,12 @@ def _page(
     suggested_tax_id: str = "",
     certificate_names: tuple[str, ...] = (),
     active_certificate: str = "",
-    suggested_route: ClaveMovilRoute = ClaveMovilRoute.QR,
 ) -> FormPage:
     return _auth_form_page(
         on_record=on_record or {},
         suggested_tax_id=suggested_tax_id,
         certificate_names=certificate_names,
         active_certificate=active_certificate,
-        suggested_route=suggested_route,
     )
 
 

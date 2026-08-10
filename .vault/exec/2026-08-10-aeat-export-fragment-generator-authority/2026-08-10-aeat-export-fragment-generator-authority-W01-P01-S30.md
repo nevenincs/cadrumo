@@ -5,7 +5,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:d222ada24799337d1e4065404df26bf6fce0dbce8bd298ecd640ffc1236547d7'
+body_hash: 'sha256:e49b07e9ae08424580bfe4c0d4460a670059fbfb123454c815e23be43fd6aa6e'
 step_id: 'S30'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
@@ -33,7 +33,7 @@ The source-derived total mapping remains nonempty and measures 76 fixed sheets. 
 
 The reopened review findings are remediated. Workbook fixed sheets and the variable prefix now require first offset 1 and exact contiguity. The semantic validator rejects duplicate envelope identities and fixed/envelope identity collisions. The join retains the exact parser-owned envelope tuple. Fixed-width rendering refuses before profile validation or output-directory creation. A focused real-source test parses the hash-pinned Modelo 200/2025 workbook, retains its real `DP200000` envelope through the production IR and semantic join, and proves rendering produces no output.
 
-Focused parser, IR, semantic validation/join, provenance, and variable-envelope generation-gate verification passed with 50 tests and two upstream `openpyxl` warnings. The existing renderer compatibility suite passed with 18 tests without modifying its peer-owned test file. Scoped Ruff passed. Scoped BasedPyright passed with zero errors, warnings, or notes.
+Focused parser, IR, semantic validation/join, provenance, and variable-envelope generation-gate verification passed with 51 tests and two upstream `openpyxl` warnings. The existing renderer compatibility suite passed with 18 tests without modifying its peer-owned test file. Scoped Ruff passed. Scoped BasedPyright passed with zero errors, warnings, or notes.
 
 ## Notes
 

@@ -41,7 +41,7 @@ from textual.theme import Theme
 from textual.widgets import Static
 
 from ....core.config import TuiAppearance, load_settings
-from ....core.json_contract import Notice, NoticeSeverity
+from ....core.json_contract import Notice, NoticeSeverity, ResolvedNoticeAction
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -269,7 +269,7 @@ def _notice_action_target(notice: Notice) -> str | None:
     line rather than exposing an internal command key to an operator.
     """
     action = notice.action
-    if action is None or action.action.cli_path is None or action.argument_bindings:
+    if not isinstance(action, ResolvedNoticeAction) or action.action.cli_path is None or action.argument_bindings:
         return None
     return "aeat " + " ".join(action.action.cli_path)
 

@@ -4,7 +4,7 @@ tags:
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
 modified: '2026-08-10'
-body_hash: 'sha256:181f444f85afcabcb6978fdffa8f00bf0140126874ab09b5e5083c99ad509d46'
+body_hash: 'sha256:34deb74a1bfb229de54e31cb4518a6348f26ad8bfb029deac7a648bb4875c95c'
 tier: L3
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
@@ -34,7 +34,7 @@ Make the exact binary and typed parser output the complete coordinate authority.
 - [x] `W01.P01.S01` - Extend the existing validated source catalogue with hash-pinned binary selection and reject inapplicable or drifting sources; `src/cadrumo/_data/registry/aeat/legal/is.toml`.
 - [x] `W01.P01.S02` - Define the typed intermediate representation with complete source anchors, coordinates, validation metadata, and declared totals; `dev/registry/`.
 - [x] `W01.P01.S03` - Prove the intermediate representation consumes shipped parser output and never extracted derivatives; `src/cadrumo/domain/calculations/registry/tests/`.
-- [ ] `W01.P01.S30` - Recover official cached positive integers from Total and Total: rows without extent inference, and model DP200000 as a typed variable envelope/composition wrapper outside fixed-width generation with a separately proven composition contract; `src/cadrumo/domain/calculations/registry/; dev/registry/`.
+- [x] `W01.P01.S30` - Recover official cached positive integers from Total and Total: rows without extent inference, and model DP200000 as a typed variable envelope/composition wrapper outside fixed-width generation with a separately proven composition contract; `src/cadrumo/domain/calculations/registry/; dev/registry/`.
 
 ### Phase `W01.P02` - semantic map and provenance contracts
 
@@ -63,7 +63,7 @@ Join exact parser anchors to reviewed semantics and render a complete target rev
 Prevent partial publication and turn every generated artifact into a reproducible repository contract.
 
 - [x] `W02.P04.S10` - Validate generated trees through the real registry loader before publication; `dev/registry/`.
-- [ ] `W02.P04.S11` - Publish complete generated trees and provenance atomically from an isolated temporary target; `dev/registry/`.
+- [x] `W02.P04.S11` - Publish complete generated trees and provenance atomically from an isolated temporary target; `dev/registry/`.
 - [ ] `W02.P04.S12` - Implement check mode that independently regenerates and rejects semantic, provenance, or byte drift; `dev/registry/`.
 
 ## Wave `W03` - adversarial correctness proof

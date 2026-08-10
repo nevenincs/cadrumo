@@ -681,8 +681,6 @@ def _run_certificate() -> ManagerActionOutcome:
     """
     from ....adapters.inbound.tui import ManagerActionDisposition, ManagerActionOutcome
     from ....application.auth import list_operator_certificate_sources
-    from ....core import ClaveMovilRoute
-    from ....core.config import load_settings
     from ._manager_frontend import build_active_profile_overview, present_form
 
     listing = list_operator_certificate_sources()
@@ -693,11 +691,6 @@ def _run_certificate() -> ManagerActionOutcome:
             suggested_tax_id=_suggested_tax_id(on_record),
             certificate_names=tuple(source.name for source in listing.sources),
             active_certificate=listing.active_source,
-            suggested_route=(
-                ClaveMovilRoute.APP_REQUEST
-                if load_settings().cadrumo_clave_prefer_non_qr
-                else ClaveMovilRoute.QR
-            ),
         ),
     )
     if collected is None:
@@ -735,7 +728,6 @@ def _auth_form_page(
     suggested_tax_id: str,
     certificate_names: Sequence[str],
     active_certificate: str,
-    suggested_route: ClaveMovilRoute,
 ) -> FormPage:
     """Build the page the authentication action shows.
 
@@ -774,9 +766,6 @@ def _auth_form_page(
         certificate_names: Names of the registered certificate sources.
         active_certificate: The currently selected certificate name, or
             ``""`` when none is selected.
-        suggested_route: The current environment fallback when the profile
-            has not yet recorded its own Cl@ve Movil route.
-
     Returns:
         The :class:`~cadrumo.adapters.inbound.tui.FormPage` to present.
     """
@@ -805,7 +794,7 @@ def _auth_form_page(
         FormField(
             key=_AUTH_CLAVE_MOVIL_ROUTE_PATH,
             label=_auth_field_label(_AUTH_CLAVE_MOVIL_ROUTE_PATH),
-            value=on_record.get(_AUTH_CLAVE_MOVIL_ROUTE_PATH, suggested_route.value),
+            value=on_record.get(_AUTH_CLAVE_MOVIL_ROUTE_PATH, ClaveMovilRoute.QR.value),
             kind=FormFieldKind.SINGLE_CHOICE,
             choices=form_choices(
                 [

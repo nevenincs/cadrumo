@@ -9,6 +9,7 @@ from ....core.resources import resources
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ... import wizard as _wizard  # noqa: F401 - registers compiled profile keys
 from .. import ProfilePreflightService, ProfileValidationService
+from .._completeness import conditional_profile_missing_required
 from .._keys_validation import validate_profile_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -18,6 +19,18 @@ _BASE_VALUES: dict[str, str] = {
     "identity.tax_id": "X1234567L",
     "iva.regime": "GENERAL",
 }
+
+
+def test_clave_movil_route_is_conditionally_required_without_affecting_other_providers() -> None:
+    missing_route = conditional_profile_missing_required({"auth.provider": "clave_movil"})
+    configured_qr = conditional_profile_missing_required(
+        {"auth.provider": "clave_movil", "auth.clave_movil_route": "qr"},
+    )
+    certificate = conditional_profile_missing_required({"auth.provider": "certificate"})
+
+    assert missing_route == ("auth.clave_movil_route",)
+    assert configured_qr == ()
+    assert certificate == ()
 
 
 def test_profile_key_validation_applies_irnr_conditional_requirements() -> None:
