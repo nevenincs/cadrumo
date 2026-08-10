@@ -7388,9 +7388,10 @@ flows:
       auth_clave_movil_route: Ruta de Cl@ve Mòbil
       auth_clave_movil_route_app_request: Sol·licitud a l'aplicació
       auth_clave_movil_route_qr: Codi QR
-      auth_contraste_missing: 'Cl@ve Mòbil sense QR necessita el contrast del vostre
-        document: el número de suport si és un NIE, o la data de validesa si és un
-        DNI. No s''ha desat res.'
+      auth_contraste_missing: 'La sol·licitud a l''aplicació de Cl@ve Mòbil necessita
+        una dada de contrast del document: %{nie_field} per a un NIE o %{dni_field}
+        per a un DNI. Obriu Identificació, empleneu el camp aplicable i torneu a intentar
+        la sincronització.'
       auth_dni_nie: DNI o NIE amb què us identifiqueu
       auth_fecha_validez: Data de validesa del document, AAAA-MM-DD (per a DNI)
       auth_fecha_validez_invalid: Introduïu la data de validesa com a AAAA-MM-DD,

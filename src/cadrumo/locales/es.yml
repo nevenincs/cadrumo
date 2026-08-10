@@ -7437,9 +7437,10 @@ flows:
       auth_clave_movil_route: Ruta de Cl@ve Móvil
       auth_clave_movil_route_app_request: Solicitud en la aplicación
       auth_clave_movil_route_qr: Código QR en un navegador visible
-      auth_contraste_missing: 'Cl@ve Móvil sin QR necesita el contraste de su documento:
-        el número de soporte si es un NIE, o la fecha de validez si es un DNI. No
-        se ha guardado nada.'
+      auth_contraste_missing: 'La solicitud en la aplicación de Cl@ve Móvil necesita
+        un dato de contraste del documento: %{nie_field} para un NIE o %{dni_field}
+        para un DNI. Abra Identificación, rellene el campo aplicable y vuelva a intentar
+        la sincronización.'
       auth_dni_nie: DNI o NIE con el que se identifica
       auth_fecha_validez: Fecha de validez del documento, AAAA-MM-DD (para DNI)
       auth_fecha_validez_invalid: Introduzca la fecha de validez como AAAA-MM-DD,

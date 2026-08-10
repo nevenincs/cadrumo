@@ -81,6 +81,36 @@ def test_workbook_declared_total_must_equal_terminal_parsed_extent(tmp_path: Pat
         extract_record_design(path)
 
 
+def test_workbook_total_recovery_accepts_only_official_labels_and_positive_integers(tmp_path: Path) -> None:
+    """Punctuation variants and non-positive values do not become declared totals."""
+    from openpyxl import Workbook
+
+    path = tmp_path / "total-labels.xlsx"
+    workbook = Workbook()
+    labels = (
+        ("Total", " Total ", 2),
+        ("TotalColon", "Total:", 2),
+        ("SpacedColon", "Total :", 2),
+        ("NonPositive", "Total:", 0),
+    )
+    for index, (sheet_name, label, declared) in enumerate(labels):
+        worksheet = workbook.active if index == 0 else workbook.create_sheet()
+        worksheet.title = sheet_name
+        worksheet.append(("Nº", "Posic.", "Lon", "Tipo", "Descripción"))
+        worksheet.append((1, 1, 2, "An", "First"))
+        worksheet.append((label, None, declared, None, None))
+    workbook.save(path)
+    workbook.close()
+
+    parsed = {sheet.name: sheet.total_positions for sheet in extract_record_design(path)}
+    assert parsed == {
+        "Total": 2,
+        "TotalColon": 2,
+        "SpacedColon": None,
+        "NonPositive": None,
+    }
+
+
 def _official_total_rows(
     workbook_path: Path,
 ) -> tuple[dict[str, int], dict[str, tuple[str, str, str, int]]]:

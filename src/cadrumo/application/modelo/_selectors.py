@@ -389,7 +389,7 @@ def resolve_modelo_work_unit(
                 tuple(ModeloWorkUnitCandidate.from_work_unit(unit) for unit in matches),
                 selector=request.work_unit_id,
             )
-        work_unit = matches[0]
+        work_unit = next(iter(matches))
         _validate_explicit_work_unit_matches_request(work_unit, request, resolved_bucket_id=bucket_id)
         return ModeloWorkResolution(
             state=ModeloWorkSelectorState.RESOLVED,
