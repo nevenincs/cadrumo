@@ -307,6 +307,7 @@ from ._tipos_actividad import (
     TipoActividad,
 )
 from ._toml import freeze_toml, freeze_toml_value, parse_toml_text, read_toml, to_str_keyed_dict
+from ._type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from .compatibility_lifecycle import (
     COMPATIBILITY_REGIME,
     PERSISTED_FORMATS,
@@ -424,6 +425,7 @@ __all__: list[str] = [
     "NIST_PASSPHRASE_MIN_LENGTH",
     "NON_IAE_SUBJECT_TIPOS_ACTIVIDAD",
     "NON_REGISTRY_MODELOS",
+    "OBJECT_TUPLE_ADAPTER",
     "OBSERVATION_BACKED_BINDING_SOURCE_KINDS",
     "OFFICIAL_M210_TIPO_RENTA_CODES",
     "OFX_EXTRA",
@@ -442,6 +444,7 @@ __all__: list[str] = [
     "STORAGE_TAXONOMY",
     "STRICT_FROZEN_CONFIG",
     "STRUCTURED_DOCUMENT_SHAPES",
+    "STR_KEYED_MAPPING_ADAPTER",
     "UNMODELED_OBLIGATIONS",
     "AcceleratorKind",
     "ActionArgumentResolution",
