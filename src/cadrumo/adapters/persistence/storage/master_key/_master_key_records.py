@@ -96,11 +96,25 @@ class _KdfParameters(BaseModel):
 
 
 class _KdfVersionEnvelope(BaseModel):
-    """Minimal version-gate model for the master.kdf preflight check."""
+    """Minimal version-gate model for the master.kdf preflight check.
+
+    ``version`` is required. The model exists solely to establish what format
+    the file claims to be BEFORE strict parsing, and while the field defaulted
+    to ``None`` a file carrying no version at all satisfied the preview and
+    reached the comparison with an absent marker standing in for a real claim
+    -- a preflight that could not fail on the one document it exists to catch.
+
+    The annotation stays deliberately loose on TYPE while being strict on
+    PRESENCE. A file declaring a non-integer version is a version this build
+    does not accept, and routing it through the typed, runbook-pointing version
+    error that names the offending value is more useful to an operator than a
+    raw validation failure. Absence is the case with nothing to name, so it is
+    the case the model itself refuses.
+    """
 
     model_config = ConfigDict(extra="allow")
 
-    version: int | str | None = None
+    version: int | str
 
 
 #: Current on-disk schema version of a wrapped bucket-DEK document.
