@@ -99,6 +99,9 @@ _M303_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_REVISION = {
         }
     ),
 }
+_M303_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_REVISION["2026-y-siguientes"] = (
+    _M303_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_REVISION["2023-y-siguientes"]
+)
 
 
 def _load_modelo_303() -> tuple[ModeloDefinition, RegistryCatalogues]:
@@ -140,12 +143,22 @@ def test_modelo_303_revision_period_selectors_cover_2009_to_present() -> None:
     rev_new = modelo.revisions["2023-y-siguientes"]
     assert rev_new.valid_from == date(2023, 1, 1)
     assert rev_new.period_selector.year_from == 2023
-    assert rev_new.period_selector.year_to is None
-    # contract: 2023+ revision accepts both quarterly (standard) and monthly (SII-enrolled)
+    assert rev_new.valid_to == date(2025, 12, 31)
+    assert rev_new.period_selector.year_to == 2025
+    # Contract: the bounded 2023-2025 revision accepts quarterly and monthly periods.
     assert "1T" in rev_new.period_selector.periods
     assert "4T" in rev_new.period_selector.periods
     assert "01" in rev_new.period_selector.periods
     assert "12" in rev_new.period_selector.periods
+
+    rev_current = modelo.revisions["2026-y-siguientes"]
+    assert rev_current.valid_from == date(2026, 1, 1)
+    assert rev_current.period_selector.year_from == 2026
+    assert rev_current.period_selector.year_to is None
+    assert "1T" in rev_current.period_selector.periods
+    assert "4T" in rev_current.period_selector.periods
+    assert "01" in rev_current.period_selector.periods
+    assert "12" in rev_current.period_selector.periods
 
 
 def test_modelo_303_snapshot_builds_for_each_quarter() -> None:
@@ -160,6 +173,16 @@ def test_modelo_303_snapshot_builds_for_each_quarter() -> None:
             period=period,
         )
         assert snapshot.revision.id == "2023-y-siguientes"
+
+    for period in ("1T", "2T", "3T", "4T"):
+        snapshot = build_snapshot(
+            modelo,
+            catalogues,
+            source_root=bundled_path(),
+            filing_year=2026,
+            period=period,
+        )
+        assert snapshot.revision.id == "2026-y-siguientes"
 
     for period in ("1T", "2T", "3T", "4T"):
         snapshot = build_snapshot(
@@ -205,29 +228,33 @@ def test_modelo_303_extraction_profile_legal_refs_match_target_casillas() -> Non
 def test_modelo_303_quarterly_deadlines_match_orden_eha_3786_2008_art_7() -> None:
     """1T-3T close on day 20; 4T closes on day 30 of January following."""
     modelo, _ = _load_modelo_303()
-    revision = modelo.revisions["2023-y-siguientes"]
-    windows = {w.id: w for w in revision.deadline_windows}
-
-    expected = {
+    prior_windows = {w.id: w for w in modelo.revisions["2023-y-siguientes"].deadline_windows}
+    prior_expected = {
         "modelo-303-2025-1t": (date(2025, 4, 1), date(2025, 4, 21)),
         "modelo-303-2025-2t": (date(2025, 7, 1), date(2025, 7, 21)),
         "modelo-303-2025-3t": (date(2025, 10, 1), date(2025, 10, 20)),
         "modelo-303-2025-4t": (date(2026, 1, 1), date(2026, 1, 30)),
+    }
+    current_windows = {w.id: w for w in modelo.revisions["2026-y-siguientes"].deadline_windows}
+    current_expected = {
         "modelo-303-2026-1t": (date(2026, 4, 1), date(2026, 4, 20)),
         "modelo-303-2026-2t": (date(2026, 7, 1), date(2026, 7, 20)),
         "modelo-303-2026-3t": (date(2026, 10, 1), date(2026, 10, 20)),
         "modelo-303-2026-4t": (date(2027, 1, 1), date(2027, 1, 30)),
     }
 
-    for window_id, (opens, closes) in expected.items():
-        assert windows[window_id].opens_on == opens
-        assert windows[window_id].closes_on == closes
+    for window_id, (opens, closes) in prior_expected.items():
+        assert prior_windows[window_id].opens_on == opens
+        assert prior_windows[window_id].closes_on == closes
+    for window_id, (opens, closes) in current_expected.items():
+        assert current_windows[window_id].opens_on == opens
+        assert current_windows[window_id].closes_on == closes
 
 
 def test_modelo_303_sii_2026_monthly_deadlines_use_aeat_2026_calendar() -> None:
     """Monthly IVA windows for 2026 periods 01-11 match the AEAT 2026 calendar."""
     modelo, _ = _load_modelo_303()
-    revision = modelo.revisions["2023-y-siguientes"]
+    revision = modelo.revisions["2026-y-siguientes"]
     windows = {w.id: w for w in revision.deadline_windows}
     expected = {
         "modelo-303-2026-01-mensual": (date(2026, 2, 1), date(2026, 3, 2), date(2026, 2, 25)),

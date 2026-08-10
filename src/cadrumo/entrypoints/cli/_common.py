@@ -690,6 +690,51 @@ def _declared_tax_id(record: UserProfileRecord | None) -> str:
     return (fact_value(record, "identity.tax_id") or "").strip()
 
 
+#: ``identity.tax_id``'s declared ``model_selectors`` token, as
+#: :func:`format_profile_selector_requirements` expects it - a selector token,
+#: not the ``section.field`` path.
+_TAX_ID_SELECTOR = "tax.id"
+
+
+def _filing_taxpayer_or_refuse(state: WorkflowState) -> TaxpayerProfile:
+    """Return the taxpayer projection for a FILING-grade command, or refuse.
+
+    :func:`_profile_to_taxpayer` substitutes a synthetic placeholder NIF when the
+    operator has declared none, and that placeholder is checksum-valid, so it is
+    indistinguishable downstream from a real declared identity. On a read-only
+    surface that substitution is deliberate and load-bearing - the calendar must
+    not drop a taxpayer's filed evidence merely because their NIF is undeclared.
+    On a filing surface it is the opposite of what is wanted: the value is written
+    into the exported bytes as the declarant, so an operator who never entered
+    their NIF would receive a file identifying them as somebody else.
+
+    This is the filing boundary the two populations were missing. Read-only
+    callers keep using :func:`_profile_to_taxpayer` directly; every command that
+    writes or packages a declaration routes through here, so absence refuses
+    once rather than at each call site.
+    """
+    from ...application.user_profile import format_profile_selector_requirements
+    from ...core.resources import resources
+    from ...domain.calculations.registry import build_profile_grounding_index
+    from ._errors import CliRefusedBoundaryError
+
+    if not _declared_tax_id(state.active_profile_record()):
+        raise CliRefusedBoundaryError(
+            translated_message="cli.common.errors.filing_requires_declared_tax_id",
+            context={
+                "requirements": ", ".join(
+                    format_profile_selector_requirements(
+                        [_TAX_ID_SELECTOR],
+                        schema=resources().user_profile_schema.singleton,
+                        grounding_index=build_profile_grounding_index(resources().modelos.authority),
+                    ),
+                ),
+            },
+            suggestion="aeat config profile edit",
+        )
+    return _profile_to_taxpayer(state)
+
+
 # ---------------------------------------------------------------------
 # Repositories
 # ---------------------------------------------------------------------

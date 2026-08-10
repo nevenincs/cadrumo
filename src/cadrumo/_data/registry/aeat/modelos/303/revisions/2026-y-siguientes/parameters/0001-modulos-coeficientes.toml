@@ -1,0 +1,161 @@
+# M303 régimen simplificado de IVA módulos coefficient tables (cuota
+# devengada por operaciones corrientes + cuota mínima). Keyed-bracket-table
+# parameters mapping "<epígrafe IAE>:<módulo>" to the "cuota devengada anual
+# por unidad" (Orden HAC/1347/2024 Anexo I) and "<epígrafe IAE>" to the cuota
+# mínima percentage (Orden HAC/1347/2024 Anexo II). Lookup is exact-match on
+# the composite/single key; there is no interval-overlap semantics because
+# the domain is a discrete (epígrafe, módulo) catalogue, not a
+# numeric-continuous base.
+#
+# Only activities GROUNDED and cross-checked against the bundled corpus are
+# tabled here; the ~80+-activity Orden Anexo I remains an incremental
+# authoring backlog. An epígrafe absent from this table is NOT computed by
+# the engine; casilla 48 stays reachable as a manual operator input and the
+# "modelo-303-2023-modulos-iva-computed-diverges-de-c48" advisory fires
+# instead of a silent zero.
+#
+# Currently tabled: transporte por autotaxis (721.2), transporte de
+# mercancías por carretera, excepto residuos (722), peluquería (972.1) —
+# highest-prevalence activities, cross-checked available for IVA in the same
+# Orden.
+#
+# Cross-checked against the bundled consolidated Orden HAC/1347/2024 (IVA
+# Anexo I module tables, corpus/normatives/html/orden-hac-1347-2024.html) —
+# the "Cuota devengada anual por unidad" figures for 721.2/722/972.1 are
+# distinct euro amounts from the IRPF "Rendimiento anual por unidad" figures
+# for the SAME epígrafes (a different Orden annex; the IVA módulo set for
+# 721.2 and 722 carries only 2 signos — personal empleado + the
+# activity-specific unit — omitting the IRPF "personal no asalariado" slot,
+# which the IVA cuota computation does not use per the Orden's own IVA
+# Anexo I module rows).
+[[revisions."2026-y-siguientes".parameters]]
+id = "m303-modulos-iva-coeficientes-2025"
+data_type = "keyed_bracket_table"
+unit = "euro_per_unit"
+legal_refs = ["orden-hac-1425-2025:art-4"]
+source_refs = ["boe-orden-hac-1425-2025-iva-authority"]
+
+[[revisions."2026-y-siguientes".parameters.source_citations]]
+source_ref = "boe-orden-hac-1425-2025-iva-authority"
+required_text = [
+    "La cuota devengada por operaciones corrientes será la suma de las cuantías correspondientes a los módulos previstos para la actividad",
+]
+
+# Epígrafe IAE 721.2 — Transporte por autotaxis (IVA).
+# Módulo 1 Personal empleado (persona): 903,46
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "721.2:1"
+value = "903.46"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Distancia recorrida (1.000 kilómetros): 8,78
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "721.2:2"
+value = "8.78"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 722 — Transporte de mercancías por carretera, excepto residuos (IVA).
+# Módulo 1 Personal empleado (persona): 4.149,99
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "722:1"
+value = "4149.99"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Carga vehículos (tonelada): 388,55
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "722:2"
+value = "388.55"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Epígrafe IAE 972.1 — Servicios de peluquería de señora y caballero (IVA).
+# Módulo 1 Personal empleado (persona): 2.562,75
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "972.1:1"
+value = "2562.75"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 2 Superficie del local (metro cuadrado): 41,33
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "972.1:2"
+value = "41.33"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Módulo 3 Consumo de energía eléctrica (100 kWh): 17,48
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "972.1:3"
+value = "17.48"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# Cuota mínima por operaciones corrientes, percentage keyed by IAE epígrafe
+# (Orden HAC/1347/2024 Anexo II; applied over the cuota devengada por
+# operaciones corrientes per Orden Anexo I apartado 2.3).
+[[revisions."2026-y-siguientes".parameters]]
+id = "m303-modulos-iva-cuota-minima-pct-2025"
+data_type = "keyed_bracket_table"
+unit = "percent"
+legal_refs = ["orden-hac-1425-2025:art-4"]
+source_refs = ["boe-orden-hac-1425-2025-iva-authority"]
+
+[[revisions."2026-y-siguientes".parameters.source_citations]]
+source_ref = "boe-orden-hac-1425-2025-iva-authority"
+required_text = [
+    "La cuota derivada del régimen simplificado será la mayor de las dos cantidades siguientes",
+]
+
+# 721.2 Transporte por autotaxis: cuota mínima 10 %.
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "721.2"
+value = "10"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# 722 Transporte de mercancías por carretera, excepto residuos: cuota mínima 10 %.
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "722"
+value = "10"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# 972.1 Servicios de peluquería de señora y caballero: cuota mínima 13 %.
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "972.1"
+value = "13"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+# 1 por ciento de cuotas soportadas de dificil justificacion, deducible con
+# caracter universal de la cuota devengada por operaciones corrientes (LIVA
+# art. 123, Orden Anexo I apartado 2.2). Unconditional — unlike real cuotas
+# soportadas por adquisiciones concretas (which depend on operator-declared
+# purchase facts not yet captured), this forfait applies to every taxpayer
+# under the régimen simplificado regardless of activity. The 1 por ciento
+# figure is a stable LIVA art. 123 forfait republished verbatim by every
+# annual Orden de módulos (2024, 2025, 2026 Anexo I apartado 2.2 all carry
+# "será deducible el 1 por ciento"), not a per-year-varying coefficient like
+# the módulo import tables above, so the dated value spans the full
+# 2026-y-siguientes revision validity window (open-ended) rather than being
+# pinned to the 2025 filing year the first-slice module coefficients cover.
+[[revisions."2026-y-siguientes".parameters]]
+id = "m303-modulos-iva-dificil-justificacion-forfait"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-37-1992:art-123", "orden-hac-1425-2025:art-4"]
+source_refs = ["boe-orden-hac-1425-2025-iva-authority"]
+
+[[revisions."2026-y-siguientes".parameters.values]]
+value = "1"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+
+[[revisions."2026-y-siguientes".parameters.source_citations]]
+source_ref = "boe-orden-hac-1425-2025-iva-authority"
+required_text = [
+    "será deducible el 1 por ciento del importe de la cuota devengada por operaciones corrientes, en concepto de cuotas soportadas de difícil justificación",
+]

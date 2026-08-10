@@ -23,10 +23,10 @@ SDK-independent pydantic records, so it is unit-tested directly.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Sequence
 from enum import StrEnum
 from pathlib import Path
-from typing import Any, ClassVar
+from typing import Any, ClassVar, cast
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -40,7 +40,7 @@ from typer._click.core import Context as ClickContext
 from typer._click.core import Parameter as ClickParameter
 from typer.main import get_command as _typer_get_command
 
-from ..schema_surface import CLI_PATH_BY_SCHEMA_KEY, GROUP_CALLBACK_SCHEMA_KEYS
+from ..schema_surface import CLI_PATH_BY_SCHEMA_KEY, GROUP_CALLBACK_SCHEMA_KEYS, ROOT_LANDING_SCHEMA_KEYS
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -107,7 +107,9 @@ class VerbParameter(BaseModel):
 
     def property_schema(self) -> dict[str, Any]:
         """Return the JSON-schema fragment for this parameter's property."""
-        schema = {"type": "array", "items": self._scalar_schema()} if self.multiple else self._scalar_schema()
+        schema: dict[str, Any] = (
+            {"type": "array", "items": self._scalar_schema()} if self.multiple else self._scalar_schema()
+        )
         if self.default is not None:
             # The default is already JSON-safe (see ``_json_safe_default``); surface
             # it so a client renders the real default rather than a blank field.
@@ -128,7 +130,7 @@ class ResolvedVerbLeaf(BaseModel):
     model_config = _STRICT_FROZEN
 
     subject_leaf_key: str = Field(min_length=1)
-    cli_path: tuple[str, ...] = Field(min_length=1)
+    cli_path: tuple[str, ...]
     alias_paths: tuple[tuple[str, ...], ...] = ()
     kind: VerbLeafKind
 
@@ -145,7 +147,7 @@ class VerbLeafResolutionFailure(BaseModel):
     model_config = _STRICT_FROZEN
 
     subject_leaf_key: str = Field(min_length=1)
-    attempted_cli_path: tuple[str, ...] = Field(min_length=1)
+    attempted_cli_path: tuple[str, ...]
     resolved_cli_path: tuple[str, ...] = ()
     reason: str = Field(min_length=1)
 
@@ -162,7 +164,7 @@ class VerbInputSchema(BaseModel):
     model_config = _STRICT_FROZEN
 
     command_key: str = Field(min_length=1)
-    cli_path: tuple[str, ...] = Field(min_length=1)
+    cli_path: tuple[str, ...]
     parameters: tuple[VerbParameter, ...] = ()
     #: The command's own one-line help (its click ``short_help`` / first help
     #: line), so the MCP tool description can be verb-specific rather than the
@@ -264,7 +266,7 @@ def _json_safe_default(value: object) -> bool | int | float | str | list[Any] | 
     if isinstance(value, Path):
         return str(value)
     if isinstance(value, tuple | list):
-        return [_json_safe_default(item) for item in value]
+        return [_json_safe_default(item) for item in cast(Sequence[object], value)]
     return None
 
 
@@ -305,13 +307,15 @@ def _parameter_from_click(parameter: ClickParameter) -> VerbParameter | None:
         is_flag=is_flag,
         multiple=bool(getattr(parameter, "multiple", False)),
         choices=choices,
-        default=None if is_argument else _json_safe_default(parameter.default),
+        default=None if is_argument else _json_safe_default(cast(object, parameter.default)),
         help=str(getattr(parameter, "help", "") or ""),
     )
 
 
 def _symbolic_cli_path(command_key: str) -> tuple[str, ...]:
     """Project a schema key into its unrelocated symbolic CLI path."""
+    if command_key in ROOT_LANDING_SCHEMA_KEYS:
+        return () if command_key == "root.status" else (command_key.removeprefix("root."),)
     tokens = command_key.split(".")
     if tokens[0] in {"config", "app"}:
         return tuple(tokens)
@@ -420,32 +424,17 @@ class SchemaResolutionError(RuntimeError):
         )
 
 
-def assert_schema_coverage(
-    resolution_errors: Mapping[str, str] | tuple[VerbLeafResolutionFailure, ...],
-) -> None:
+def assert_schema_coverage(resolution_errors: tuple[VerbLeafResolutionFailure, ...]) -> None:
     """Fail the build when any command key's subtree failed to materialise.
 
-    ``resolution_errors`` is normally the typed evidence from the tree walk. A
-    mapping remains accepted for direct callers that can report only a reason;
-    it is converted into the same typed record with its schema-key path. An
-    empty collection is the healthy state. Any entry names a missing or
-    unmaterialisable verb that would otherwise silently ship an argument-free
-    schema and raises :class:`SchemaResolutionError`.
+    ``resolution_errors`` is the typed evidence from the tree walk. An empty
+    tuple is the healthy state. Any entry names a missing or unmaterialisable
+    verb that would otherwise silently ship an argument-free schema and raises
+    :class:`SchemaResolutionError`.
     """
     if not resolution_errors:
         return
-    if isinstance(resolution_errors, Mapping):
-        failures = tuple(
-            VerbLeafResolutionFailure(
-                subject_leaf_key=key,
-                attempted_cli_path=_naive_cli_path(key),
-                reason=reason,
-            )
-            for key, reason in sorted(resolution_errors.items())
-        )
-    else:
-        failures = resolution_errors
-    raise SchemaResolutionError(failures)
+    raise SchemaResolutionError(resolution_errors)
 
 
 def _schema_from_resolution(
@@ -533,7 +522,7 @@ def cli_argv_for(schema: VerbInputSchema, arguments: dict[str, object]) -> list[
         value = arguments[parameter.name]
         if parameter.kind is VerbParamKind.ARGUMENT:
             if parameter.multiple and isinstance(value, list | tuple):
-                positional.extend(str(item) for item in value)
+                positional.extend(str(item) for item in cast(Sequence[object], value))
             else:
                 positional.append(str(value))
             continue
@@ -543,7 +532,7 @@ def cli_argv_for(schema: VerbInputSchema, arguments: dict[str, object]) -> list[
             elif parameter.off_flag:
                 options.append(parameter.off_flag)
         elif parameter.multiple and isinstance(value, list | tuple):
-            for item in value:
+            for item in cast(Sequence[object], value):
                 options.extend((parameter.cli_flag, str(item)))
         else:
             options.extend((parameter.cli_flag, str(value)))

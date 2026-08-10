@@ -109,7 +109,7 @@ def _modelo_303_case() -> _RoundtripCase:
     return _RoundtripCase(
         modelo="303",
         period=Period.from_year_and_code(2025, "1T"),
-        provider_factory=lambda: _schema_provider(modelos=("303",)),
+        provider_factory=lambda: _schema_provider(filing_year=2025, period="1T", modelos=("303",)),
         inputs={
             _cid("07"): Decimal("10000.00"),
             "iva.repercutido.general": Decimal("2100.00"),

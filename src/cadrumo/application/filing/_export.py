@@ -57,6 +57,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import (
     ExportLayoutFormat,
     Period,
+    PriorDomiciliationElection,
 )
 from ...core.atomic_write import atomic_write_bytes
 from ...core.decimal import coerce_decimal
@@ -299,6 +300,7 @@ def export_draft(
     output_path: Path,
     headers: dict[str, str],
     dictionary_values: Mapping[str, object] | None = None,
+    prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP,
     schema_provider: RegistrySchemaAccessor | None = None,
 ) -> DeclaracionExportResult:
     """Write an approved draft to a local fichero-BOE file and return a receipt.
@@ -318,6 +320,8 @@ def export_draft(
             Read only by the ``xml_dictionary`` renderer, which is the only
             format addressing fields that way; the fixed-width renderer resolves
             its fields from ``headers`` and the layout's record definitions.
+        prior_domiciliation_election: Typed M303 page-three election used by
+            the shared Nota-3 DID page predicate.
         schema_provider: Optional registry schema provider override.
 
     Returns:
@@ -349,6 +353,7 @@ def export_draft(
         draft=draft,
         headers=headers,
         dictionary_values=dictionary_values,
+        prior_domiciliation_election=prior_domiciliation_election,
         schema_provider=provider,
     )
     if not payload:
@@ -368,6 +373,7 @@ def export_draft(
             layout,
             draft=draft,
             headers=headers,
+            prior_domiciliation_election=prior_domiciliation_election,
             schema_provider=provider,
             manifest=subview.completeness_manifest,
             casilla_metadata=subview.casilla_record_metadata,
@@ -608,6 +614,7 @@ def _render_export_layout(
     draft: ModeloDraft,
     headers: dict[str, str],
     dictionary_values: Mapping[str, object] | None,
+    prior_domiciliation_election: PriorDomiciliationElection,
     schema_provider: RegistrySchemaAccessor,
 ) -> bytes:
     if layout.format is ExportLayoutFormat.XML_DICTIONARY:
@@ -618,10 +625,21 @@ def _render_export_layout(
             dictionary_values=dictionary_values,
             schema_provider=schema_provider,
         )
-    return _render_layout(layout, draft=draft, headers=headers)
+    return _render_layout(
+        layout,
+        draft=draft,
+        headers=headers,
+        prior_domiciliation_election=prior_domiciliation_election,
+    )
 
 
-def _render_layout(layout: ExportLayoutDefinition, *, draft: ModeloDraft, headers: dict[str, str]) -> bytes:
+def _render_layout(
+    layout: ExportLayoutDefinition,
+    *,
+    draft: ModeloDraft,
+    headers: dict[str, str],
+    prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP,
+) -> bytes:
     chunks: list[bytes] = []
     normalized_headers = {key.lower(): value for key, value in headers.items()}
     casilla_values: dict[CasillaId, object] = {value.casilla_id: value.value for value in draft.values}
@@ -629,7 +647,12 @@ def _render_layout(layout: ExportLayoutDefinition, *, draft: ModeloDraft, header
         (value.binding_id, value.row_index): value.value for value in draft.binding_values
     }
     for record in sorted(layout.records, key=lambda item: item.order):
-        if did_page_suppressed(record, headers=normalized_headers):
+        if did_page_suppressed(
+            record,
+            draft=draft,
+            headers=normalized_headers,
+            prior_domiciliation_election=prior_domiciliation_election,
+        ):
             continue
         for row in _record_render_rows(record, binding_values):
             _guard_record_export(record, casilla_values=casilla_values)

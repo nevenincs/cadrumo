@@ -110,18 +110,20 @@ from ..filing import (
     export_layout_renderability_reason,
     filing_profile_from_taxpayer,
 )
+from ..filing._export_parity import did_page_required
 from ..filing.runtime import RegistrySchemaAccessor
 from ._action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     ModeloChargeAccountMissingError,
+    ModeloPriorDomiciliationElectionRefusedError,
     ModeloRefundAccountMissingError,
     WorkUnitNotFoundError,
 )
 from ._iva_wallet_gate import require_persisted_iva_compensation_decision_matches_revision
 from ._ledger_evidence_gate import raise_if_deductible_vat_evidence_missing
-from ._profile_export_binding import compose_legal_full_name, resolve_profile_export_values
 from ._prior_domiciliation import resolve_prior_domiciliation_election
+from ._profile_export_binding import compose_legal_full_name, resolve_profile_export_values
 from ._required_binding_gate import (
     require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
 )
@@ -316,10 +318,14 @@ class ModeloExportResult(BaseModel):
     exported_at: datetime
     actor: str = Field(min_length=1, max_length=128)
     bucket_event_id: str = Field(min_length=1, max_length=128)
-    resolved_result_disposition: ResultDisposition
+    resolved_result_disposition: ResultDisposition = ResultDisposition.INGRESO
     payment_election: PaymentElection | None = None
     refund_election: RefundElection | None = None
-    prior_domiciliation_election: PriorDomiciliationElectionProjection
+    prior_domiciliation_election: PriorDomiciliationElectionProjection = Field(
+        default_factory=lambda: PriorDomiciliationElectionProjection(
+            election=PriorDomiciliationElection.KEEP,
+        ),
+    )
     casilla_provenance: tuple[filing_domain.ModeloCasillaProvenance, ...] = Field(default_factory=tuple)
     iva_wallet_decision_provenance: ModeloIvaWalletDecisionProvenance | None = None
     local_evidence_status: str = Field(default=_LOCAL_EXPORT_EVIDENCE_STATUS, min_length=1)
@@ -650,6 +656,35 @@ def _compose_refund_account_block(refund_account: RefundAccount | None) -> dict[
     return block
 
 
+def _apply_nota_three_refund_account_block(
+    *,
+    draft: ModeloDraft,
+    headers: dict[str, str],
+    workflow_profile: TaxpayerProfile,
+    prior_domiciliation_election: PriorDomiciliationElection,
+) -> None:
+    """Add the refund destination for a Nota-3-only M303 DID page.
+
+    The shared DID predicate decides whether the page exists. Current refund
+    dispositions and ``U`` have already selected their own account type in the
+    regular header composer, so this fills only the additional Nota-3 path.
+    """
+    try:
+        disposition = ResultDisposition(headers["declaration_type"])
+    except (KeyError, ValueError):
+        disposition = None
+    if disposition is ResultDisposition.DOMICILIACION or (
+        disposition is not None and result_disposition_is_refund(disposition)
+    ):
+        return
+    if did_page_required(
+        draft=draft,
+        headers=headers,
+        prior_domiciliation_election=prior_domiciliation_election,
+    ):
+        headers.update(_compose_refund_account_block(workflow_profile.iva.refund_account))
+
+
 def _compose_export_headers(
     *,
     work_unit: WorkUnit,
@@ -898,6 +933,34 @@ def _raise_if_export_layout_unsupported(*, work_unit: WorkUnit, schema_provider:
     )
 
 
+def _require_prior_domiciliation_marker_layout(
+    *,
+    work_unit: WorkUnit,
+    prior_domiciliation_election: PriorDomiciliationElectionProjection,
+    schema_provider: RegistrySchemaAccessor,
+) -> None:
+    """Require the selected registry revision to own the rectificativa ``X`` field."""
+    if prior_domiciliation_election.election is PriorDomiciliationElection.KEEP:
+        return
+    marker_header_key = "prior_domiciliation_action"
+    layouts = schema_provider.get_subview(str(work_unit.modelo)).export_layouts
+    if any(
+        field.header_key == marker_header_key
+        for layout in layouts
+        for record in layout.records
+        for field in record.fields
+    ):
+        return
+    raise ModeloPriorDomiciliationElectionRefusedError(
+        "the active registry revision cannot render the prior domiciliation action marker",
+        context={
+            "modelo": str(work_unit.modelo),
+            "revision_id": work_unit.revision_id,
+            "header_key": marker_header_key,
+        },
+    )
+
+
 def _approve_export_draft(
     *,
     work_unit: WorkUnit,
@@ -976,6 +1039,12 @@ def _persist_exported_draft(
         resolved_result_disposition=resolved_result_disposition,
         prior_domiciliation_election=prior_domiciliation_election,
     )
+    _apply_nota_three_refund_account_block(
+        draft=approved,
+        headers=headers,
+        workflow_profile=workflow_profile,
+        prior_domiciliation_election=prior_domiciliation_election.election,
+    )
     receipt = _write_export_tmp(
         command=command,
         approved=approved,
@@ -986,6 +1055,7 @@ def _persist_exported_draft(
             bucket_id=work_unit.bucket_id,
             profile_export_bindings=schema_provider.get_subview(str(work_unit.modelo)).profile_export_bindings,
         ),
+        prior_domiciliation_election=prior_domiciliation_election.election,
         schema_provider=schema_provider,
     )
     event = _emit_export_event(
@@ -1089,6 +1159,7 @@ def _write_export_tmp(
     approved: ModeloDraft,
     headers: dict[str, str],
     dictionary_values: Mapping[str, object],
+    prior_domiciliation_election: PriorDomiciliationElection,
     schema_provider: RegistrySchemaAccessor,
 ) -> DeclaracionExportResult:
     # Atomic-rename: write the fichero-BOE artefact to a sibling .tmp
@@ -1103,6 +1174,7 @@ def _write_export_tmp(
             output_path=tmp_output,
             headers=headers,
             dictionary_values=dictionary_values,
+            prior_domiciliation_election=prior_domiciliation_election,
             schema_provider=schema_provider,
         )
     except filing_domain.FilingExportError as exc:
@@ -1176,6 +1248,14 @@ def _emit_export_event(
         )
         event_payload["prior_domiciliation_baseline_evidence_reference_id"] = (
             prior_domiciliation_election.baseline_evidence_reference_id or ""
+        )
+        event_payload["prior_domiciliation_baseline_result_disposition"] = (
+            prior_domiciliation_election.baseline_result_disposition.value
+            if prior_domiciliation_election.baseline_result_disposition is not None
+            else ""
+        )
+        event_payload["prior_domiciliation_baseline_source_header_locator"] = (
+            prior_domiciliation_election.baseline_source_header_locator or ""
         )
     if iva_wallet_provenance is not None:
         event_payload.update(
@@ -1354,6 +1434,11 @@ def export_modelo_revision(
         revision=revision,
         filing_repository=fr_repo,
         observation_repository=obs_repo,
+    )
+    _require_prior_domiciliation_marker_layout(
+        work_unit=work_unit,
+        prior_domiciliation_election=prior_domiciliation_provenance,
+        schema_provider=schema_provider,
     )
 
     now = clock or _utc_now()

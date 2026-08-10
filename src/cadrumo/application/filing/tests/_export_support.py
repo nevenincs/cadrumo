@@ -11,7 +11,7 @@ from tempfile import TemporaryDirectory
 
 import pytest
 
-from ....core import Period
+from ....core import Period, PriorDomiciliationElection
 from ....domain.calculations.registry import (
     CasillaId,
     ExportLayoutDefinition,
@@ -237,6 +237,7 @@ def _required_set_partition(
     modelo: str,
     provider: RegistrySchemaAccessor,
     layout: ExportLayoutDefinition,
+    draft: ModeloDraft,
     headers: dict[str, str],
 ) -> _RequiredSetPartition:
     """Classify a revision's manifest-and-representable casillas from the registry.
@@ -255,7 +256,13 @@ def _required_set_partition(
     subview = provider.get_subview(modelo)
     manifest = subview.completeness_manifest
     assert manifest is not None, f"modelo {modelo} must declare a completeness manifest to ground the required-set pin"
-    representable = boe_representable_casilla_ids(layout, headers=headers, schema_provider=provider)
+    representable = boe_representable_casilla_ids(
+        layout,
+        draft=draft,
+        headers=headers,
+        prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+        schema_provider=provider,
+    )
     collection = provider.get_collection(modelo)
 
     calculation_results: set[CasillaId] = set()

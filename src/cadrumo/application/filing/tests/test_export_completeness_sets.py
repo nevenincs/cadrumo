@@ -10,9 +10,14 @@ casilla, so these sets must be derived from the real layout, not approximated.
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
 
+from ....core import Period, PriorDomiciliationElection
 from ....domain.calculations.registry import CasillaFieldKind, CasillaId
+from ....domain.submission import ModeloDraftStatus
+from .. import ModeloOperatorProfile, build_draft
 from .._export_parity import _did_page_suppressed, boe_representable_casilla_ids, rendered_casilla_ids
 from ._export_support import (
     _approved_registry_draft,
@@ -30,17 +35,42 @@ def _modelo_130_layout():
     return provider, provider.get_subview("130").export_layouts[0]
 
 
+def _approved_modelo_303_registry_draft():
+    period = Period.from_year_and_code(2025, "1T")
+    provider = _schema_provider(modelos=("303",), filing_year=2025, period="1T")
+    draft = build_draft(
+        modelo="303",
+        period=period,
+        profile=ModeloOperatorProfile(tax_id="12345678Z", display_name="Representability test"),
+        inputs={"modelo-303-compensacion-pendiente-anteriores": Decimal("0")},
+        schema_provider=provider,
+    )
+    return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
+
+
 def test_representable_set_covers_fixed_width_casilla_fields() -> None:
     provider, layout = _modelo_130_layout()
+    draft = _approved_registry_draft()
     headers = _modelo_130_export_headers()
 
-    representable = boe_representable_casilla_ids(layout, headers=headers, schema_provider=provider)
+    representable = boe_representable_casilla_ids(
+        layout,
+        draft=draft,
+        headers=headers,
+        prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+        schema_provider=provider,
+    )
 
     normalized_headers = {key.lower(): value for key, value in headers.items()}
     casilla_field_ids = {
         field.casilla_id
         for record in layout.records
-        if not _did_page_suppressed(record, headers=normalized_headers)
+        if not _did_page_suppressed(
+            record,
+            draft=draft,
+            headers=normalized_headers,
+            prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+        )
         for field in record.fields
         if field.kind == CasillaFieldKind.CASILLA and field.casilla_id is not None
     }
@@ -55,8 +85,20 @@ def test_rendered_set_is_representable_intersect_draft_values() -> None:
     draft = _approved_registry_draft()
     headers = _modelo_130_export_headers()
 
-    representable = boe_representable_casilla_ids(layout, headers=headers, schema_provider=provider)
-    rendered = rendered_casilla_ids(layout, draft=draft, headers=headers, schema_provider=provider)
+    representable = boe_representable_casilla_ids(
+        layout,
+        draft=draft,
+        headers=headers,
+        prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+        schema_provider=provider,
+    )
+    rendered = rendered_casilla_ids(
+        layout,
+        draft=draft,
+        headers=headers,
+        prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+        schema_provider=provider,
+    )
     draft_casillas = {value.casilla_id for value in draft.values}
 
     assert rendered == representable & draft_casillas
@@ -71,14 +113,26 @@ def test_dropping_a_required_casilla_removes_it_from_the_rendered_set() -> None:
     draft = _approved_registry_draft()
     headers = _modelo_130_export_headers()
 
-    rendered_full = rendered_casilla_ids(layout, draft=draft, headers=headers, schema_provider=provider)
+    rendered_full = rendered_casilla_ids(
+        layout,
+        draft=draft,
+        headers=headers,
+        prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+        schema_provider=provider,
+    )
     assert rendered_full
 
     dropped = sorted(rendered_full)[0]
     thin_draft = draft.model_copy(
         update={"values": tuple(value for value in draft.values if value.casilla_id != dropped)}
     )
-    rendered_thin = rendered_casilla_ids(layout, draft=thin_draft, headers=headers, schema_provider=provider)
+    rendered_thin = rendered_casilla_ids(
+        layout,
+        draft=thin_draft,
+        headers=headers,
+        prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+        schema_provider=provider,
+    )
 
     assert dropped not in rendered_thin
     assert rendered_thin == rendered_full - {dropped}
@@ -89,6 +143,7 @@ def test_representable_set_excludes_disposition_suppressed_did_page() -> None:
     # a non-refund filing suppresses it, so its casillas are not representable.
     provider = _schema_provider(modelos=("303",), filing_year=2025, period="1T")
     layout = provider.get_subview("303").export_layouts[0]
+    draft = _approved_modelo_303_registry_draft()
 
     did_casillas: set[CasillaId] = set()
     for record in layout.records:
@@ -103,8 +158,20 @@ def test_representable_set_excludes_disposition_suppressed_did_page() -> None:
 
     refund_headers = {"declaration_type": "D"}
     nonrefund_headers = {"declaration_type": "I"}
-    representable_refund = boe_representable_casilla_ids(layout, headers=refund_headers, schema_provider=provider)
-    representable_nonrefund = boe_representable_casilla_ids(layout, headers=nonrefund_headers, schema_provider=provider)
+    representable_refund = boe_representable_casilla_ids(
+        layout,
+        draft=draft,
+        headers=refund_headers,
+        prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+        schema_provider=provider,
+    )
+    representable_nonrefund = boe_representable_casilla_ids(
+        layout,
+        draft=draft,
+        headers=nonrefund_headers,
+        prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+        schema_provider=provider,
+    )
 
     # Suppression only ever removes casillas, never adds.
     assert representable_nonrefund.issubset(representable_refund)

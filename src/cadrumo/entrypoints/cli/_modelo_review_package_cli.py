@@ -80,6 +80,7 @@ from ...application.modelo import (
     ModeloIvaWalletReconciliationBlocked,
     ModeloPaymentElectionCapabilityRefusedError,
     ModeloPaymentElectionIncompatibleError,
+    ModeloPriorDomiciliationElectionRefusedError,
     ModeloRefundElectionNotEligibleError,
     ModeloWorkAddressNotFoundError,
     ModeloWorkPeriodTokenError,
@@ -117,10 +118,10 @@ from ...application.modelo import (
     verify_review_package_signature,
 )
 from ...application.workflow import workflow_state_repository
-from ...core import PaymentElection, Period, RefundElection
+from ...core import PaymentElection, Period, PriorDomiciliationElection, RefundElection
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n import tr
-from ._common import _emit_envelope, _profile_to_taxpayer
+from ._common import _emit_envelope, _filing_taxpayer_or_refuse
 from ._modelo_cli_support import (
     load_work_unit,
     parse_revision_selector,
@@ -246,6 +247,13 @@ def review_package_build(
             help=tr("cli.app.modelo.work.payment_election_help"),
         ),
     ] = PaymentElection.INGRESO,
+    prior_domiciliation_election: Annotated[
+        PriorDomiciliationElection,
+        typer.Option(
+            "--prior-domiciliation-election",
+            help=tr("cli.app.modelo.work.prior_domiciliation_election_help"),
+        ),
+    ] = PriorDomiciliationElection.KEEP,
     notes: Annotated[
         str,
         typer.Option(
@@ -261,7 +269,7 @@ def review_package_build(
     from ._modelo_cli_support import bad_parameter_from_error, selector_bad_parameter
 
     workflow_state = workflow_state_repository().load()
-    workflow_profile = _profile_to_taxpayer(workflow_state)
+    workflow_profile = _filing_taxpayer_or_refuse(workflow_state)
     if output is None or not str(output).strip() or str(output).strip() == ".":
         raise typer.BadParameter(
             tr(
@@ -317,6 +325,7 @@ def review_package_build(
                     actor=resolved_actor,
                     refund_election=refund_election,
                     payment_election=payment_election,
+                    prior_domiciliation_election=prior_domiciliation_election,
                 ),
                 workflow_profile=workflow_profile,
             )
@@ -330,6 +339,7 @@ def review_package_build(
             ModeloIvaWalletReconciliationBlocked,
             ModeloPaymentElectionCapabilityRefusedError,
             ModeloPaymentElectionIncompatibleError,
+            ModeloPriorDomiciliationElectionRefusedError,
             ModeloRefundElectionNotEligibleError,
         ) as exc:
             raise bad_parameter_from_error(exc) from exc

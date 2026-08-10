@@ -33,14 +33,17 @@ from typing import TYPE_CHECKING, Annotated, Any
 import typer
 
 from ...application.live import (
+    BulkFiledDataCaptureReport,
     FiledCasillaSkipRow,
     FiledDataCaptureFailureRow,
+    FiledDataCaptureReport,
     FiledDataListingRow,
     FiledHistoryDiscoveryReport,
     FiledHistoryOnboardingRun,
     IvaCompensationHistoryReport,
     IvaRemoteStateAcquisitionReport,
     IvaWalletCaptureReport,
+    SourceFiledDataCaptureReport,
     capture_filed_data,
     capture_filed_data_bulk,
     capture_source_filed_data,
@@ -1220,12 +1223,13 @@ def filed_pull_all_cmd(
     _emit_live_auth_preflight()
     run = asyncio.run(pull_filed_history(output_root=resolved_root, profile=profile, limit=limit))
     result, lines = _filed_pull_all_result_and_lines(run)
+    notices = _filed_pull_all_notices(run)
     _emit_envelope(
         ctx,
         command="app.live.filed.pull_all",
         result=result,
-        lines=lines,
-        notices=_filed_pull_all_notices(run),
+        lines=(*lines, *_notice_lines(notices)),
+        notices=notices,
     )
 
 
@@ -1347,6 +1351,18 @@ def _filed_pull_all_notices(run: FiledHistoryOnboardingRun) -> list[Notice]:
     return notices
 
 
+def _notice_lines(notices: Sequence[Notice]) -> tuple[str, ...]:
+    """Render supplied envelope notices into the matching text-only lines."""
+    return tuple(f"notice\t{notice.code}\t{notice.message}" for notice in notices)
+
+
+def _filed_capture_notices(
+    report: FiledDataCaptureReport | BulkFiledDataCaptureReport | SourceFiledDataCaptureReport,
+) -> tuple[Notice, ...]:
+    """Return capture-owned advisories for the envelope without touching result payloads."""
+    return report.evidence_notices
+
+
 @filed_app.command("pull", help=tr("cli.app.live.filed.pull_help"))
 def filed_pull_cmd(
     ctx: typer.Context,
@@ -1428,7 +1444,14 @@ def filed_pull_cmd(
             calculation_observation_count=report.calculation_observation_count,
             calculation_observation_keys=list(report.calculation_observation_keys),
         )
-        _emit_envelope(ctx, command="app.live.filed.pull", result=result, lines=lines)
+        notices = _filed_capture_notices(report)
+        _emit_envelope(
+            ctx,
+            command="app.live.filed.pull",
+            result=result,
+            lines=(*lines, *_notice_lines(notices)),
+            notices=notices,
+        )
         return
 
     if period is not None or expediente_id is not None:
@@ -1483,16 +1506,19 @@ def filed_pull_cmd(
         ],
     )
     skipped = _skipped_casilla_notice(report.skipped_casillas)
+    capture_notices = _filed_capture_notices(report)
+    notices = [*capture_notices]
     # Rebuilt from the notice rather than written twice, so the text line and the
     # JSON notice cannot drift apart.
     if skipped is not None:
         lines = (*lines, skipped.message)
+        notices.append(skipped)
     _emit_envelope(
         ctx,
         command="app.live.filed.pull",
         result=result,
-        lines=lines,
-        notices=[skipped] if skipped is not None else None,
+        lines=(*lines, *_notice_lines(capture_notices)),
+        notices=notices,
     )
 
 
@@ -1618,7 +1644,14 @@ def filed_pull_sources_cmd(
         calculation_observation_count=report.calculation_observation_count,
         calculation_observation_keys=list(report.calculation_observation_keys),
     )
-    _emit_envelope(ctx, command="app.live.filed.pull_sources", result=result, lines=lines)
+    notices = _filed_capture_notices(report)
+    _emit_envelope(
+        ctx,
+        command="app.live.filed.pull_sources",
+        result=result,
+        lines=(*lines, *_notice_lines(notices)),
+        notices=notices,
+    )
 
 
 register_notifications_commands(

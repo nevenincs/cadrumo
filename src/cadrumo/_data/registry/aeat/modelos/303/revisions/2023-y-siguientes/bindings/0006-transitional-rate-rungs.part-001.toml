@@ -58,7 +58,7 @@
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-303-iva-repercutido-reducido-transitorio-base"
 source = "ledger_iva_aggregation"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2023-y-siguientes.bindings.source_citations]]
@@ -78,7 +78,7 @@ op = "sum"
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-303-iva-repercutido-reducido-transitorio-cuota"
 source = "ledger_iva_aggregation"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2023-y-siguientes.bindings.source_citations]]
@@ -98,7 +98,7 @@ op = "sum"
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-303-iva-repercutido-super-reducido-transitorio-base"
 source = "ledger_iva_aggregation"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2023-y-siguientes.bindings.source_citations]]
@@ -118,7 +118,7 @@ op = "sum"
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-303-iva-repercutido-super-reducido-transitorio-cuota"
 source = "ledger_iva_aggregation"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2023-y-siguientes.bindings.source_citations]]

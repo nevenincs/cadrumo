@@ -16,17 +16,24 @@ zero, indistinguishable from a period with no receipt to enrol.
 
 from __future__ import annotations
 
+import io
+import json
+
 import pytest
 
 from ....application.live import (
     FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE,
+    BulkFiledDataCaptureReport,
+    FiledDataCaptureReport,
     FiledHistoryOnboardingRun,
     FiledHistoryPairOutcome,
     FiledJustificanteUnreachedReason,
+    SourceFiledDataCaptureReport,
 )
-from ....core import FiledHistoryDiscoverySignal
-from ....core.json_contract import Notice, NoticeSeverity
-from .._app_live import _filed_pull_all_notices
+from ....core import FiledHistoryDiscoverySignal, Period
+from ....core.json_contract import Notice, NoticeSeverity, emit_json_success
+from .._app_live import _filed_capture_notices, _filed_pull_all_notices, _filed_pull_all_result_and_lines
+from .._app_live_payloads import FiledCaptureResult, FiledCaptureSourcesResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -136,3 +143,117 @@ def test_a_run_that_reached_all_its_evidence_forwards_no_unreached_notice() -> N
     codes = [notice.code for notice in _filed_pull_all_notices(_run())]
 
     assert FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE not in codes
+
+
+def _submitted_file_notice() -> Notice:
+    """One already-typed application advisory, as a CLI relay receives it."""
+    return Notice(
+        severity=NoticeSeverity.WARNING,
+        code="live.filed.pull.submitted_file_extraction_failed",
+        message=(
+            "Modelo 303 filing 1T 2025 (expediente 2025303000000001) could not be read through its "
+            "submitted-file layout. Parser reason: modelo-303-layout record ended early"
+        ),
+        context={
+            "modelo": "303",
+            "filing_year": "2025",
+            "period": "1T",
+            "expediente_id": "2025303000000001",
+            "reason": "modelo-303-layout record ended early",
+        },
+    )
+
+
+def _capture_report_fields(notice: Notice) -> dict[str, object]:
+    return {
+        "captured_count": 1,
+        "observation_paths": ("303/2025/1T/manifest.json",),
+        "artefact_refs": ("sha256:submitted-file",),
+        "casilla_count": 0,
+        "calculation_observation_count": 0,
+        "calculation_observation_keys": (),
+        "evidence_notices": (notice,),
+    }
+
+
+def _emitted_notice_codes(*, command: str, result: object, notices: tuple[Notice, ...]) -> set[str]:
+    stream = io.StringIO()
+    emit_json_success(command, result, notices=notices, active_profile=None, stream=stream)
+    envelope = json.loads(stream.getvalue())
+    return {item["code"] for item in envelope["notices"]}
+
+
+def test_the_submitted_file_advisory_reaches_every_filed_pull_envelope() -> None:
+    """Direct and all-history pull modes forward the public report/run notice lane."""
+    notice = _submitted_file_notice()
+    single_report = FiledDataCaptureReport(
+        output_root="var/filed",
+        modelo="303",
+        year=2025,
+        **_capture_report_fields(notice),
+    )
+    source_report = SourceFiledDataCaptureReport(
+        output_root="var/filed",
+        target_modelo="303",
+        target_year=2025,
+        target_period=Period.from_year_and_code(2025, "1T"),
+        **_capture_report_fields(notice),
+    )
+    bulk_report = BulkFiledDataCaptureReport(
+        output_root="var/filed",
+        modelos=("303",),
+        year_from=2025,
+        year_to=2025,
+        failed_count=0,
+        **_capture_report_fields(notice),
+    )
+
+    assert _filed_capture_notices(single_report) == (notice,)
+    assert _filed_capture_notices(source_report) == (notice,)
+    assert _filed_capture_notices(bulk_report) == (notice,)
+
+    single_payload = FiledCaptureResult(
+        output_root=single_report.output_root,
+        modelo=single_report.modelo,
+        year=single_report.year,
+        captured_count=single_report.captured_count,
+        observation_paths=list(single_report.observation_paths),
+        artefact_refs=list(single_report.artefact_refs),
+        casilla_count=single_report.casilla_count,
+        calculation_observation_count=single_report.calculation_observation_count,
+        calculation_observation_keys=list(single_report.calculation_observation_keys),
+    )
+    source_payload = FiledCaptureSourcesResult(
+        output_root=source_report.output_root,
+        target_modelo=source_report.target_modelo,
+        target_year=source_report.target_year,
+        target_period=source_report.target_period,
+        captured_count=source_report.captured_count,
+        observation_paths=list(source_report.observation_paths),
+        artefact_refs=list(source_report.artefact_refs),
+        casilla_count=source_report.casilla_count,
+        calculation_observation_count=source_report.calculation_observation_count,
+        calculation_observation_keys=list(source_report.calculation_observation_keys),
+    )
+    run = _run(notice)
+    all_payload, _lines = _filed_pull_all_result_and_lines(run)
+
+    assert notice.code in _emitted_notice_codes(
+        command="app.live.filed.pull",
+        result=single_payload,
+        notices=_filed_capture_notices(single_report),
+    )
+    assert notice.code in _emitted_notice_codes(
+        command="app.live.filed.pull_sources",
+        result=source_payload,
+        notices=_filed_capture_notices(source_report),
+    )
+    assert notice.code in _emitted_notice_codes(
+        command="app.live.filed.pull_all",
+        result=all_payload,
+        notices=tuple(_filed_pull_all_notices(run)),
+    )
+    assert "evidence_notices" not in FiledCaptureResult.model_fields
+    assert "evidence_notices" not in FiledCaptureSourcesResult.model_fields
+    assert "submitted_file_extraction_error" not in FiledCaptureResult.model_fields
+    assert "submitted_file_extraction_error" not in FiledCaptureSourcesResult.model_fields

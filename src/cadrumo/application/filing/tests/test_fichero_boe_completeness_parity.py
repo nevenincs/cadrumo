@@ -22,7 +22,7 @@ from typing import Any
 
 import pytest
 
-from ....core import ExportLayoutFormat
+from ....core import ExportLayoutFormat, PriorDomiciliationElection
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaFieldKind, CasillaId, validated_casilla_id
 from ....domain.filing import FilingExportError
@@ -107,8 +107,20 @@ def test_complete_draft_reaches_disk_for_every_required_casilla() -> None:
         manifest = subview.completeness_manifest
         assert manifest is not None, f"modelo {modelo} must declare a completeness manifest to ground the parity gate"
 
-        representable = boe_representable_casilla_ids(layout, headers=headers, schema_provider=provider)
-        rendered = rendered_casilla_ids(layout, draft=draft, headers=headers, schema_provider=provider)
+        representable = boe_representable_casilla_ids(
+            layout,
+            draft=draft,
+            headers=headers,
+            prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+            schema_provider=provider,
+        )
+        rendered = rendered_casilla_ids(
+            layout,
+            draft=draft,
+            headers=headers,
+            prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+            schema_provider=provider,
+        )
         required_applicable = required_applicable_casilla_ids(
             manifest,
             collection=provider.get_collection(modelo),
@@ -150,16 +162,29 @@ def test_required_applicable_set_mirrors_the_registry_predicate() -> None:
     # either clause of the predicate is caught here. Each clause is asserted
     # separately before the exhaustive equality so a relaxation names the class it
     # dropped rather than failing on an opaque set difference.
-    for modelo, _build_draft_fn, headers_fn, filing_year, period in _COVERED:
+    for modelo, build_draft_fn, headers_fn, filing_year, period in _COVERED:
         provider = _schema_provider(filing_year=filing_year, period=period, modelos=(modelo,))
         subview = provider.get_subview(modelo)
         layout = subview.export_layouts[0]
         manifest = subview.completeness_manifest
         assert manifest is not None, modelo
+        draft = build_draft_fn()
         headers = headers_fn()
-        representable = boe_representable_casilla_ids(layout, headers=headers, schema_provider=provider)
+        representable = boe_representable_casilla_ids(
+            layout,
+            draft=draft,
+            headers=headers,
+            prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+            schema_provider=provider,
+        )
 
-        oracle = _required_set_partition(modelo=modelo, provider=provider, layout=layout, headers=headers)
+        oracle = _required_set_partition(
+            modelo=modelo,
+            provider=provider,
+            layout=layout,
+            draft=draft,
+            headers=headers,
+        )
         subject = required_applicable_casilla_ids(
             manifest,
             collection=provider.get_collection(modelo),
@@ -210,14 +235,21 @@ def test_required_applicable_set_pins_both_predicate_clauses_at_named_anchors() 
     # is justified from the registry before membership is asserted -- the id is the
     # anchor, the registry declaration is the reason.
     for modelo, result_id, required_id in _PREDICATE_CLAUSE_ANCHORS:
-        _modelo, _build_draft_fn, headers_fn, filing_year, period = _covered_case(modelo)
+        _modelo, build_draft_fn, headers_fn, filing_year, period = _covered_case(modelo)
         provider = _schema_provider(filing_year=filing_year, period=period, modelos=(modelo,))
         subview = provider.get_subview(modelo)
         layout = subview.export_layouts[0]
         manifest = subview.completeness_manifest
         assert manifest is not None, modelo
+        draft = build_draft_fn()
         headers = headers_fn()
-        representable = boe_representable_casilla_ids(layout, headers=headers, schema_provider=provider)
+        representable = boe_representable_casilla_ids(
+            layout,
+            draft=draft,
+            headers=headers,
+            prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+            schema_provider=provider,
+        )
         collection = provider.get_collection(modelo)
         manifest_ids = {entry.casilla_id for entry in manifest.casillas}
         subject = required_applicable_casilla_ids(manifest, collection=collection, representable=representable)
@@ -314,16 +346,29 @@ def test_structural_fidelity_holds_for_every_covered_modelo() -> None:
     # order. Both must hold for the real shipped structure of every covered
     # modelo (including the multi-segment M200 and the annual M390), so the
     # fidelity gate is grounded rather than false-firing on legitimate layouts.
-    for modelo, _build_draft_fn, headers_fn, filing_year, period in _COVERED:
+    for modelo, build_draft_fn, headers_fn, filing_year, period in _COVERED:
         provider = _schema_provider(filing_year=filing_year, period=period, modelos=(modelo,))
         subview = provider.get_subview(modelo)
         layout = subview.export_layouts[0]
         manifest = subview.completeness_manifest
         assert manifest is not None, modelo
+        draft = build_draft_fn()
         headers = headers_fn()
-        representable = boe_representable_casilla_ids(layout, headers=headers, schema_provider=provider)
+        representable = boe_representable_casilla_ids(
+            layout,
+            draft=draft,
+            headers=headers,
+            prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+            schema_provider=provider,
+        )
 
-        _assert_record_order_fidelity(modelo=modelo, layout=layout, headers=headers)
+        _assert_record_order_fidelity(
+            modelo=modelo,
+            layout=layout,
+            draft=draft,
+            headers=headers,
+            prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+        )
         _assert_casilla_metadata_fidelity(
             modelo=modelo,
             manifest=manifest,
@@ -346,8 +391,15 @@ def test_rendered_casilla_number_drift_panics() -> None:
     layout = subview.export_layouts[0]
     manifest = subview.completeness_manifest
     assert manifest is not None
+    draft = _approved_registry_draft()
     headers = _modelo_130_export_headers()
-    representable = boe_representable_casilla_ids(layout, headers=headers, schema_provider=provider)
+    representable = boe_representable_casilla_ids(
+        layout,
+        draft=draft,
+        headers=headers,
+        prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+        schema_provider=provider,
+    )
     target = next(casilla.casilla_id for casilla in manifest.casillas if casilla.casilla_id in representable)
 
     drifted_metadata = tuple(
@@ -377,8 +429,15 @@ def test_rendered_casilla_segmento_drift_panics() -> None:
     layout = subview.export_layouts[0]
     manifest = subview.completeness_manifest
     assert manifest is not None
+    draft = _approved_registry_draft()
     headers = _modelo_130_export_headers()
-    representable = boe_representable_casilla_ids(layout, headers=headers, schema_provider=provider)
+    representable = boe_representable_casilla_ids(
+        layout,
+        draft=draft,
+        headers=headers,
+        prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+        schema_provider=provider,
+    )
     target = next(casilla.casilla_id for casilla in manifest.casillas if casilla.casilla_id in representable)
 
     drifted_metadata = tuple(
@@ -406,6 +465,7 @@ def test_rendered_record_order_permutation_panics() -> None:
     # assertion must panic, enumerating the drifted position.
     provider = _schema_provider(modelos=("130",))
     layout = provider.get_subview("130").export_layouts[0]
+    draft = _approved_registry_draft()
     headers = _modelo_130_export_headers()
     reversed_orders = list(reversed([record.order for record in layout.records]))
     permuted = layout.model_copy(
@@ -418,7 +478,13 @@ def test_rendered_record_order_permutation_panics() -> None:
     )
 
     with pytest.raises(FilingExportError) as exc_info:
-        _assert_record_order_fidelity(modelo="130", layout=permuted, headers=headers)
+        _assert_record_order_fidelity(
+            modelo="130",
+            layout=permuted,
+            draft=draft,
+            headers=headers,
+            prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+        )
 
     assert "record order" in str(exc_info.value)
     assert "structural-fidelity" in str(exc_info.value)
@@ -430,12 +496,19 @@ def test_ambiguous_duplicate_record_order_panics() -> None:
     # panic rather than emit a non-deterministic record sequence.
     provider = _schema_provider(modelos=("130",))
     layout = provider.get_subview("130").export_layouts[0]
+    draft = _approved_registry_draft()
     headers = _modelo_130_export_headers()
     collided = layout.model_copy(
         update={"records": tuple(record.model_copy(update={"order": 0}) for record in layout.records)}
     )
 
     with pytest.raises(FilingExportError) as exc_info:
-        _assert_record_order_fidelity(modelo="130", layout=collided, headers=headers)
+        _assert_record_order_fidelity(
+            modelo="130",
+            layout=collided,
+            draft=draft,
+            headers=headers,
+            prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+        )
 
     assert "ambiguous" in str(exc_info.value)

@@ -35,6 +35,7 @@ from ...application.modelo import (
     ModeloCalculationRevisionSelector,
     ModeloPaymentElectionCapabilityRefusedError,
     ModeloPaymentElectionIncompatibleError,
+    ModeloPriorDomiciliationElectionRefusedError,
     ModeloRefundElectionNotEligibleError,
     ModeloVerifySelector,
     WorkUnitNotFoundError,
@@ -43,14 +44,14 @@ from ...application.modelo import (
     verify_modelo_revision,
 )
 from ...application.workflow import workflow_state_repository
-from ...core import PaymentElection, RefundElection
+from ...core import PaymentElection, PriorDomiciliationElection, RefundElection
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.resources import resources
 from ...domain.calculations.registry import RegistrySnapshotError, derive_taxpayer_files_economic_activity
 from ...domain.modelos import CalculationRevisionState
-from ._common import _emit_envelope, _profile_to_taxpayer
+from ._common import _emit_envelope, _filing_taxpayer_or_refuse
 from ._modelo_cli_support import load_calculation_revision, load_work_unit
 from ._modelo_payloads import (
     CrossPeriodCleanStatePayload,
@@ -178,7 +179,7 @@ def _register_work_verify_command(work_app: typer.Typer, *, deps: _VerificationD
                 default_for="verify",
             )
             require_profile_ready_for_work_unit(load_work_unit(selected_revision.work_unit_id))
-            workflow_profile = _profile_to_taxpayer(workflow_state_repository().load())
+            workflow_profile = _filing_taxpayer_or_refuse(workflow_state_repository().load())
             # A revision already out of BORRADOR is the current verified answer, so
             # the verify call is a guarded-idempotent no-op that returns the
             # existing granting report unchanged (no re-run, no duplicate lifecycle
@@ -285,7 +286,7 @@ def _register_work_dependencies_command(
 
         try:
             state = workflow_state_repository().load()
-            workflow_profile = _profile_to_taxpayer(state)
+            workflow_profile = _filing_taxpayer_or_refuse(state)
             inventory = cross_period_dependency_inventory(
                 resources().modelos.authority,
                 filing_year=year,
@@ -482,6 +483,13 @@ def _register_work_file_command(work_app: typer.Typer, *, deps: _VerificationDep
                 help=tr("cli.app.modelo.work.payment_election_help"),
             ),
         ] = PaymentElection.INGRESO,
+        prior_domiciliation_election: Annotated[
+            PriorDomiciliationElection,
+            typer.Option(
+                "--prior-domiciliation-election",
+                help=tr("cli.app.modelo.work.prior_domiciliation_election_help"),
+            ),
+        ] = PriorDomiciliationElection.KEEP,
         output_language: OutputLanguage | None = typer.Option(
             None,
             "--output-language",
@@ -505,7 +513,7 @@ def _register_work_file_command(work_app: typer.Typer, *, deps: _VerificationDep
                 default_for="file",
             )
             require_profile_ready_for_work_unit(load_work_unit(selected_revision.work_unit_id))
-            workflow_profile = _profile_to_taxpayer(workflow_state_repository().load())
+            workflow_profile = _filing_taxpayer_or_refuse(workflow_state_repository().load())
             # A revision already in PRESENTADO is the current filed answer, so the
             # file call is a guarded-idempotent no-op that returns the existing
             # record unchanged (no duplicate filing record or lifecycle event).
@@ -518,6 +526,7 @@ def _register_work_file_command(work_app: typer.Typer, *, deps: _VerificationDep
                 notes=notes,
                 refund_election=refund_election,
                 payment_election=payment_election,
+                prior_domiciliation_election=prior_domiciliation_election,
             )
         except CalculationRevisionNotFoundError as exc:
             if calculation_revision_id is not None:
@@ -527,6 +536,7 @@ def _register_work_file_command(work_app: typer.Typer, *, deps: _VerificationDep
             CalculationRevisionStateError,
             ModeloPaymentElectionCapabilityRefusedError,
             ModeloPaymentElectionIncompatibleError,
+            ModeloPriorDomiciliationElectionRefusedError,
             ModeloRefundElectionNotEligibleError,
             WorkUnitNotFoundError,
         ) as exc:

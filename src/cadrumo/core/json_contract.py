@@ -32,12 +32,25 @@ by :mod:`core.output_rendering`.
 from __future__ import annotations
 
 import json
+import re
 import sys
 from collections.abc import Callable, Mapping, Sequence
+from decimal import Decimal
 from enum import StrEnum
-from typing import IO, Any, Protocol, cast, runtime_checkable
+from types import MappingProxyType
+from typing import IO, Any, Final, Protocol, cast, runtime_checkable
 
-from pydantic import BaseModel, ConfigDict, Field, RootModel, TypeAdapter, ValidationError
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    RootModel,
+    TypeAdapter,
+    ValidationError,
+    field_serializer,
+    field_validator,
+    model_validator,
+)
 
 from .errors import CadrumoError, ErrorEnvelope
 from .logging import get_logger
@@ -45,6 +58,42 @@ from .output_rendering import jsonable_output_payload
 from .redaction import redact_structured_for_cli_output
 
 _log = get_logger(__name__)
+
+_NAMESPACED_ID_PATTERN: Final[str] = r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$"
+_FIELD_KEY_PATTERN: Final[str] = r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)*$"
+_PRESENTATION_KEY_TOKENS: Final[frozenset[str]] = frozenset(
+    {
+        "action",
+        "command",
+        "help",
+        "hint",
+        "instruction",
+        "label",
+        "message",
+        "next",
+        "prose",
+        "remediation",
+        "suggestion",
+        "text",
+        "title",
+    }
+)
+_RAW_AEAT_COMMAND_PATTERN: Final[re.Pattern[str]] = re.compile(
+    r"(?i)(?:^|[\s`'\";|&()])aeat(?=$|[\s`'\";|&()])"
+)
+_RESERVED_ACTION_CONTEXT_KEYS: Final[frozenset[str]] = frozenset(
+    {
+        "action",
+        "command",
+        "fix_command",
+        "next_action",
+        "next_command",
+        "recovery",
+        "recovery_hint",
+        "remediation",
+        "suggestion",
+    }
+)
 
 _STRICT_FROZEN_CONFIG = ConfigDict(
     extra="forbid",
@@ -57,6 +106,11 @@ _STRICT_ROOT_CONFIG = ConfigDict(
     strict=True,
     validate_assignment=True,
 )
+
+
+def _is_presentation_key(key: str) -> bool:
+    """Return whether a fact key carries presentation or action guidance."""
+    return any(token in _PRESENTATION_KEY_TOKENS for token in re.split(r"[._]", key))
 
 #: Envelope contract version shared by the success :class:`SchemaEnvelope`
 #: and the stderr error envelope. Both documents carry the same outer
@@ -99,6 +153,242 @@ class NoticeSeverity(StrEnum):
     WARNING = "warning"
 
 
+class ActionEvidenceProvenance(StrEnum):
+    """Authority that observed one failed-condition fact for wire projection.
+
+    This is a transport vocabulary, not an application policy model. The
+    application gate supplies evaluated evidence; this contract only carries
+    that evidence across the CLI/MCP envelope boundary.
+    """
+
+    APPLICATION_STATE = "application_state"
+    DOMAIN_EVALUATION = "domain_evaluation"
+    PERSISTED_STATE = "persisted_state"
+    REGISTRY_RECORD = "registry_record"
+    RUNTIME_OBSERVATION = "runtime_observation"
+
+
+class ActionArgumentSource(StrEnum):
+    """Provenance of a projected recovery-action argument value."""
+
+    VERDICT_CONTEXT = "operator_action.verdict_context"
+    CONDITION_EVIDENCE = "operator_action.condition_evidence"
+    REQUEST_CONTEXT = "operator_action.request_context"
+
+
+class ActionArgumentStatus(StrEnum):
+    """Whether a recovery-action argument has a concrete projected value."""
+
+    RESOLVED = "resolved"
+    MISSING = "missing"
+
+
+class ActionConditionality(StrEnum):
+    """Whether a projected recovery action is currently materialisable."""
+
+    IMMEDIATE = "immediate"
+    REQUIRES_ARGUMENTS = "requires_arguments"
+    NOT_APPLICABLE = "not_applicable"
+
+
+class NoRecoveryOutcome(StrEnum):
+    """Closed reasons a refusal deliberately has no recovery action."""
+
+    TERMINAL = "terminal"
+    SAFETY = "safety"
+    OPERATOR_DECISION = "operator_decision"
+
+
+class ActionConditionEvidence(BaseModel):
+    """One evaluated failed-condition fact projected onto the wire.
+
+    The model deliberately contains observed facts only. It does not select a
+    condition, decide applicability, or resolve an action catalogue.
+    """
+
+    model_config = _STRICT_FROZEN_CONFIG
+
+    condition_id: str = Field(pattern=_NAMESPACED_ID_PATTERN, min_length=3, max_length=160)
+    evidence_id: str = Field(pattern=_NAMESPACED_ID_PATTERN, min_length=3, max_length=160)
+    provenance: ActionEvidenceProvenance
+    values: Mapping[str, str | int | bool | Decimal] = Field(min_length=1)
+
+    @field_validator("values")
+    @classmethod
+    def _freeze_values(
+        cls,
+        value: Mapping[str, str | int | bool | Decimal],
+    ) -> Mapping[str, str | int | bool | Decimal]:
+        """Freeze lexically ordered factual values and reject command prose."""
+        if any(not re.fullmatch(_FIELD_KEY_PATTERN, key) for key in value):
+            raise ValueError("action evidence value keys must be stable fact identifiers")
+        if any(_is_presentation_key(key) for key in value):
+            raise ValueError("action evidence value keys cannot carry presentation or action prose")
+        if any(
+            isinstance(item, str) and _RAW_AEAT_COMMAND_PATTERN.search(item)
+            for item in value.values()
+        ):
+            raise ValueError("action evidence values cannot carry raw aeat command prose")
+        return MappingProxyType(dict(sorted(value.items())))
+
+    @field_serializer("values")
+    def _serialize_values(
+        self,
+        value: Mapping[str, str | int | bool | Decimal],
+    ) -> dict[str, str | int | bool | Decimal]:
+        """Emit the immutable facts as one deterministic ordinary mapping."""
+        return dict(value)
+
+
+class ResolvedActionReference(BaseModel):
+    """One catalogue action after an outer resolver supplied its canonical target.
+
+    The resolver is outside :mod:`cadrumo.core`; this record neither looks up
+    the action ID nor discovers the live command surface.
+    """
+
+    model_config = _STRICT_FROZEN_CONFIG
+
+    action_id: str = Field(pattern=_NAMESPACED_ID_PATTERN, min_length=3, max_length=160)
+    target_command_key: str = Field(pattern=_FIELD_KEY_PATTERN, min_length=1, max_length=160)
+
+
+class ResolvedActionArgument(BaseModel):
+    """One resolved or missing target argument in the action wire projection."""
+
+    model_config = _STRICT_FROZEN_CONFIG
+
+    argument_name: str = Field(pattern=_FIELD_KEY_PATTERN, min_length=1, max_length=120)
+    status: ActionArgumentStatus
+    value: str | int | bool | Decimal | None = None
+    source: ActionArgumentSource | None = None
+    source_key: str | None = Field(default=None, pattern=_FIELD_KEY_PATTERN, min_length=1, max_length=160)
+    source_evidence_id: str | None = Field(
+        default=None,
+        pattern=_NAMESPACED_ID_PATTERN,
+        min_length=3,
+        max_length=160,
+    )
+
+    @model_validator(mode="after")
+    def _validate_resolution(self) -> ResolvedActionArgument:
+        """Keep resolved and missing argument states mutually exclusive."""
+        if self.status is ActionArgumentStatus.RESOLVED:
+            if self.value is None or self.source is None or self.source_key is None:
+                raise ValueError("resolved action arguments require value, source, and source_key")
+            if self.source is ActionArgumentSource.CONDITION_EVIDENCE and self.source_evidence_id is None:
+                raise ValueError("condition-evidence action arguments require source_evidence_id")
+            if self.source is not ActionArgumentSource.CONDITION_EVIDENCE and self.source_evidence_id is not None:
+                raise ValueError("only condition-evidence action arguments can carry source_evidence_id")
+        elif (
+            self.value is not None
+            or self.source is not None
+            or self.source_key is not None
+            or self.source_evidence_id is not None
+        ):
+            raise ValueError("missing action arguments cannot carry value or source")
+        return self
+
+
+class ResolvedPreconditionAction(BaseModel):
+    """A resolved precondition verdict projected for a machine consumer.
+
+    This is intentionally a wire DTO. Application/domain guards own the
+    rejected-condition policy and evidence; the operator surface owns the
+    catalogue and live-schema resolution. The DTO only proves that the action
+    target and each argument were resolved before presentation.
+    """
+
+    model_config = _STRICT_FROZEN_CONFIG
+
+    failed_condition_id: str = Field(pattern=_NAMESPACED_ID_PATTERN, min_length=3, max_length=160)
+    evidence: tuple[ActionConditionEvidence, ...] = Field(min_length=1)
+    action: ResolvedActionReference | None = None
+    argument_bindings: tuple[ResolvedActionArgument, ...] = Field(default_factory=tuple)
+    missing_argument_names: tuple[str, ...] = Field(default_factory=tuple)
+    conditionality: ActionConditionality
+    no_recovery_outcome: NoRecoveryOutcome | None = None
+
+    @field_validator("evidence")
+    @classmethod
+    def _canonicalize_evidence(
+        cls,
+        value: tuple[ActionConditionEvidence, ...],
+    ) -> tuple[ActionConditionEvidence, ...]:
+        """Reject duplicate evidence identities and make the wire deterministic."""
+        evidence_ids = tuple(item.evidence_id for item in value)
+        if len(set(evidence_ids)) != len(evidence_ids):
+            raise ValueError("action evidence identities must be unique")
+        return tuple(sorted(value, key=lambda item: item.evidence_id))
+
+    @field_validator("argument_bindings")
+    @classmethod
+    def _canonicalize_arguments(
+        cls,
+        value: tuple[ResolvedActionArgument, ...],
+    ) -> tuple[ResolvedActionArgument, ...]:
+        """Reject competing target-argument materialisations."""
+        names = tuple(item.argument_name for item in value)
+        if len(set(names)) != len(names):
+            raise ValueError("action argument names must be unique")
+        return tuple(sorted(value, key=lambda item: item.argument_name))
+
+    @field_validator("missing_argument_names")
+    @classmethod
+    def _canonicalize_missing_names(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        """Keep the missing-input list stable and exactly match argument rows."""
+        if any(not re.fullmatch(_FIELD_KEY_PATTERN, name) for name in value):
+            raise ValueError("missing action argument names must be stable identifiers")
+        if len(set(value)) != len(value):
+            raise ValueError("missing action argument names must be unique")
+        return tuple(sorted(value))
+
+    @model_validator(mode="after")
+    def _validate_projection(self) -> ResolvedPreconditionAction:
+        """Validate wire consistency without evaluating policy or resolving catalogues."""
+        if any(item.condition_id != self.failed_condition_id for item in self.evidence):
+            raise ValueError("action evidence must identify the failed condition")
+
+        has_action = self.action is not None
+        has_no_recovery = self.no_recovery_outcome is not None
+        if has_action == has_no_recovery:
+            raise ValueError("a precondition action requires exactly one action or no_recovery_outcome")
+
+        evidence_by_id = {item.evidence_id: item for item in self.evidence}
+        for argument in self.argument_bindings:
+            if argument.source is not ActionArgumentSource.CONDITION_EVIDENCE:
+                continue
+            assert argument.source_evidence_id is not None
+            evidence = evidence_by_id.get(argument.source_evidence_id)
+            if evidence is None:
+                raise ValueError("condition-evidence action arguments must reference declared evidence")
+            assert argument.source_key is not None
+            evidence_value = evidence.values.get(argument.source_key)
+            if evidence_value is None and argument.source_key not in evidence.values:
+                raise ValueError("condition-evidence action arguments must reference a declared evidence fact")
+            if type(argument.value) is not type(evidence_value) or argument.value != evidence_value:
+                raise ValueError("condition-evidence action argument value must exactly match its evidence fact")
+
+        missing_from_bindings = tuple(
+            item.argument_name for item in self.argument_bindings if item.status is ActionArgumentStatus.MISSING
+        )
+        if self.missing_argument_names != missing_from_bindings:
+            raise ValueError("missing_argument_names must exactly match missing action arguments")
+
+        if has_no_recovery:
+            if self.argument_bindings or self.missing_argument_names:
+                raise ValueError("no-recovery outcomes cannot carry action arguments")
+            if self.conditionality is not ActionConditionality.NOT_APPLICABLE:
+                raise ValueError("no-recovery outcomes require not_applicable conditionality")
+        elif self.conditionality is ActionConditionality.NOT_APPLICABLE:
+            raise ValueError("recovery actions cannot use not_applicable conditionality")
+        elif missing_from_bindings and self.conditionality is not ActionConditionality.REQUIRES_ARGUMENTS:
+            raise ValueError("missing action arguments require requires_arguments conditionality")
+        elif not missing_from_bindings and self.conditionality is not ActionConditionality.IMMEDIATE:
+            raise ValueError("fully resolved recovery actions require immediate conditionality")
+        return self
+
+
 class Notice(BaseModel):
     """One typed, non-blocking diagnostic on the envelope ``notices`` channel.
 
@@ -115,13 +405,13 @@ class Notice(BaseModel):
         severity: ``info`` or ``warning``; drives the envelope ``status``.
         code: Stable machine-readable notice identifier (e.g.
             ``"modelo.calculate.unconsumed_iva"``).
-        message: Operator-facing rendered text for the notice.
-        suggestion: Optional copy-paste command or next-step action,
-            mirroring the error envelope's ``suggestion`` field.
-        context: Optional structured provenance for the notice (e.g. the
-            source-resolution ``reason`` / ``source_kind``), mirroring the
-            error envelope's ``context`` so a migrated advisory keeps its
-            machine-queryable sub-fields without a bespoke payload model.
+        message: Localized operator-facing presentation text. It cannot carry
+            an executable command identity.
+        action: Optional schema-resolved precondition-action projection. It is
+            the only notice field that may identify a recovery action.
+        context: Optional deterministic non-action diagnostic metadata (e.g.
+            source-resolution ``reason`` / ``source_kind``). Reserved action
+            keys and executable command prose are rejected here.
 
     Blocking failures are not notices; they raise an
     :class:`~core.errors.CadrumoError` and emit on stderr. Command payload
@@ -135,8 +425,33 @@ class Notice(BaseModel):
     severity: NoticeSeverity
     code: str = Field(min_length=1)
     message: str = Field(min_length=1)
-    suggestion: str | None = None
-    context: dict[str, str] | None = None
+    action: ResolvedPreconditionAction | None = None
+    context: Mapping[str, str] | None = None
+
+    @field_validator("message")
+    @classmethod
+    def _message_cannot_carry_command_identity(cls, value: str) -> str:
+        """Reserve executable command identity for the typed action projection."""
+        if _RAW_AEAT_COMMAND_PATTERN.search(value):
+            raise ValueError("notice message cannot carry raw aeat command prose")
+        return value
+
+    @field_validator("context")
+    @classmethod
+    def _freeze_non_action_context(cls, value: Mapping[str, str] | None) -> Mapping[str, str] | None:
+        """Preserve generic diagnostics while refusing a hidden action channel."""
+        if value is None:
+            return None
+        if any(key in _RESERVED_ACTION_CONTEXT_KEYS for key in value):
+            raise ValueError("notice context cannot carry action-guidance keys")
+        if any(_RAW_AEAT_COMMAND_PATTERN.search(item) for item in value.values()):
+            raise ValueError("notice context cannot carry raw aeat command prose")
+        return MappingProxyType(dict(sorted(value.items())))
+
+    @field_serializer("context")
+    def _serialize_context(self, value: Mapping[str, str] | None) -> dict[str, str] | None:
+        """Emit deterministic non-action context as a JSON object."""
+        return None if value is None else dict(value)
 
 
 def derive_status(notices: Sequence[Notice]) -> EnvelopeStatus:
@@ -583,12 +898,21 @@ def validate_registered_envelope_document(document: object) -> dict[str, object]
 __all__ = [
     "ENVELOPE_SCHEMA_VERSION",
     "SCHEMA_REGISTRY",
+    "ActionArgumentSource",
+    "ActionArgumentStatus",
+    "ActionConditionEvidence",
+    "ActionConditionality",
+    "ActionEvidenceProvenance",
     "EnvelopeStatus",
+    "NoRecoveryOutcome",
     "Notice",
     "NoticeSeverity",
     "OutputRootSchema",
     "OutputSchema",
     "OutputSchemaError",
+    "ResolvedActionArgument",
+    "ResolvedActionReference",
+    "ResolvedPreconditionAction",
     "SchemaEnvelope",
     "derive_status",
     "emit_json_document",

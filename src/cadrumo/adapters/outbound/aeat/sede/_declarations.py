@@ -1119,6 +1119,19 @@ async def capture_filed_declaration_observation(
         )
 
 
+def _record_submitted_file_extraction_error(
+    metadata: dict[str, str],
+    error: RegistryValidationError | SedeParseError,
+) -> None:
+    """Persist the adapter's own submitted-file parser refusal verbatim.
+
+    The declaration-PDF fallback is evaluated by the caller after this record is
+    kept, so its diagnostic must remain metadata rather than being converted to
+    a partial extraction result here.
+    """
+    metadata["submitted_file_extraction_error"] = str(error)
+
+
 async def _capture_filed_declaration_observation_from_row(
     session: AeatSession,
     declaration: Declaracion,
@@ -1254,7 +1267,7 @@ async def _capture_filed_declaration_observation_from_row(
                     body=submitted_body,
                 )
             except (RegistryValidationError, SedeParseError) as exc:
-                metadata["submitted_file_extraction_error"] = str(exc)
+                _record_submitted_file_extraction_error(metadata, exc)
 
     if not casillas and declaration_pdf_body is not None:
         casillas = _observed_casillas_from_declaration_pdf(

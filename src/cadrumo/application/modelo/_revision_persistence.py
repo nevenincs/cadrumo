@@ -759,6 +759,18 @@ def persist_filed_revision(
                     and prior_domiciliation_election.baseline_evidence_reference_id is not None
                     else ""
                 ),
+                "prior_domiciliation_baseline_result_disposition": (
+                    prior_domiciliation_election.baseline_result_disposition.value
+                    if prior_domiciliation_election is not None
+                    and prior_domiciliation_election.baseline_result_disposition is not None
+                    else ""
+                ),
+                "prior_domiciliation_baseline_source_header_locator": (
+                    prior_domiciliation_election.baseline_source_header_locator
+                    if prior_domiciliation_election is not None
+                    and prior_domiciliation_election.baseline_source_header_locator is not None
+                    else ""
+                ),
             },
         ),
     )

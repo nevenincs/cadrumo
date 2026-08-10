@@ -1806,6 +1806,19 @@ applies_to = 2025-12-31
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
 review_status = "reviewed"
 
+[sources."boe-orden-hac-1425-2025-iva-authority"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/orden-hac-1425-2025.html"
+sha256 = "95d03306df28554c50a96b84b68aeac91c6be14a106d533af1860c8e35f9c368"
+bytes = 467505
+retrieved_at = 2026-08-10
+applies_from = 2026-01-01
+applies_to = 2026-12-31
+source_url = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-25272"
+review_status = "reviewed"
+
 [legal."ley-37-1992:art-75"]
 evidence_tier = "legal_authority"
 authority = "boe"

@@ -24,14 +24,14 @@ import typer
 
 from ...application.modelo import QuickfileCommand, run_modelo_quickfile
 from ...application.workflow import workflow_state_repository
-from ...core import PaymentElection, Period, PeriodError, RefundElection
+from ...core import PaymentElection, Period, PeriodError, PriorDomiciliationElection, RefundElection
 from ...core.i18n import tr
 from ...core.json_contract import Notice
 from ._app_quickfile_payloads import QuickfileResultPayload
 from ._common import (
     _emit_envelope,
+    _filing_taxpayer_or_refuse,
     _no_active_profile_refusal,
-    _profile_to_taxpayer,
     activate_subcommand_output_language,
 )
 from ._modelo_cli_support import (
@@ -106,6 +106,13 @@ def quickfile(
         PaymentElection,
         typer.Option("--payment-election", help=tr("cli.app.modelo.work.payment_election_help")),
     ] = PaymentElection.INGRESO,
+    prior_domiciliation_election: Annotated[
+        PriorDomiciliationElection,
+        typer.Option(
+            "--prior-domiciliation-election",
+            help=tr("cli.app.modelo.work.prior_domiciliation_election_help"),
+        ),
+    ] = PriorDomiciliationElection.KEEP,
     output_language: OutputLanguageOpt = None,
 ) -> None:
     """Run readiness -> create -> calculate -> verify -> export for one modelo target."""
@@ -128,7 +135,7 @@ def quickfile(
     resolved_period = _resolve_period(modelo=modelo, year=year, period=period)
     resolved_year = resolved_period.filing_year
     resolved_actor = actor or "operator"
-    workflow_profile = _profile_to_taxpayer(workflow_state_repository().load())
+    workflow_profile = _filing_taxpayer_or_refuse(workflow_state_repository().load())
 
     def _build_inputs(work_unit_id: str):
         return work_calculate_input_bundle_from_cli(
@@ -159,6 +166,7 @@ def quickfile(
             actor=resolved_actor,
             refund_election=refund_election,
             payment_election=payment_election,
+            prior_domiciliation_election=prior_domiciliation_election,
         ),
         workflow_profile=workflow_profile,
         build_calculation_inputs=_build_inputs,

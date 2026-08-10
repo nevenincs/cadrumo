@@ -4,18 +4,42 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from datetime import UTC, datetime
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
-from ....core import PaymentElection, Period, ResultDisposition
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ....application.calculations import (
+    CalculationObservationRepository,
+    ObservationSourceKind,
+    ResultDispositionProjection,
+)
+from ....core import ObservedHeaderFact, PaymentElection, Period, PriorDomiciliationElection, ResultDisposition
 from ....domain.buckets import BucketEventType
-from ....domain.deadlines import IVARegime, TaxpayerProfile
+from ....domain.calculations.registry import RegistryModeloObservation
+from ....domain.deadlines import ChargeAccount, IVARegime, ModeloIVAProfile, RefundAccount, TaxpayerProfile
+from ....domain.modelos import (
+    CalculationRevisionAmendmentKind,
+    ExternalEvidence,
+    ExternalEvidenceKind,
+    ModeloRecord,
+    ModeloRecordStatus,
+    derive_filing_record_id,
+    upsert_calculation_revision,
+    upsert_filing_record,
+)
 from ....domain.user_profile import UserProfileFact
 from ...user_profile import projection_for_taxpayer, set_active_fields
 from ...workflow import workflow_state_repository
-from .._action_errors import ModeloChargeAccountMissingError, ModeloPaymentElectionCapabilityRefusedError
+from .._action_errors import (
+    ModeloChargeAccountMissingError,
+    ModeloPaymentElectionCapabilityRefusedError,
+    ModeloPaymentElectionIncompatibleError,
+    ModeloRefundAccountMissingError,
+)
 from .._export import ModeloExportCommand, ModeloExportOutputPathError, export_modelo_revision
+from .._revision_persistence import persist_filed_revision
 from ._export_modelo_303_support import _build_verified_modelo_303_revision
 from ._export_test_support import isolated_backend_context
 
@@ -164,6 +188,262 @@ def test_public_domiciliacion_export_projects_persisted_charge_iban_to_did_only(
     assert charge_iban not in event_json
     assert "ES9121000418450200051332" not in result_json
     assert "ES9121000418450200051332" not in event_json
+
+
+def _rectificativa_with_nota_three(verified):
+    return verified.model_copy(
+        update={
+            "amendment_kind": CalculationRevisionAmendmentKind.RECTIFICATIVA,
+            "amends_filing_record_id": "a" * 64,
+            "amendment_reason": "correct bank-transfer credit declared in casilla 111",
+        }
+    )
+
+
+def _nota_three_profile(*, taxpayer_nif: str, refund_account: RefundAccount | None) -> TaxpayerProfile:
+    return TaxpayerProfile(
+        tax_id=taxpayer_nif,
+        iva_regime=IVARegime.GENERAL,
+        iva=ModeloIVAProfile(
+            refund_account=refund_account,
+            charge_account=ChargeAccount(iban="ES7921000813610123456789"),
+        ),
+    )
+
+
+def test_public_rectificativa_nota_three_keep_exports_full_refund_account_not_charge_account(
+    isolated_backend: None,
+    tmp_path: Path,
+) -> None:
+    """A C rectificativa with stated c111 writes a refund destination under Nota 3."""
+    taxpayer_nif, _bucket_id, verified, work_repo, calc_repo, event_repo = _build_verified_modelo_303_revision(
+        negative_result=True,
+        casilla_111=Decimal("0"),
+    )
+    assert verified.casilla_values["111"] == Decimal("0")
+    rectificativa = _rectificativa_with_nota_three(verified)
+    calc_repo.save(upsert_calculation_revision(calc_repo.load(), rectificativa))
+    refund_account = RefundAccount(
+        swift_bic="CHASUS33XXX",
+        bank_name="Nota Three Refund Bank",
+        bank_address="1 Refund Plaza",
+        bank_city="New York",
+        bank_country_code="US",
+    )
+    output_path = tmp_path / "modelo-303-n3-keep.txt"
+
+    result = export_modelo_revision(
+        ModeloExportCommand(
+            calculation_revision_id=rectificativa.calculation_revision_id,
+            output_path=output_path,
+            actor="operator",
+        ),
+        workflow_profile=_nota_three_profile(taxpayer_nif=taxpayer_nif, refund_account=refund_account),
+        work_unit_repository=work_repo,
+        calculation_repository=calc_repo,
+        bucket_event_repository=event_repo,
+        clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
+    )
+
+    exported = output_path.read_text(encoding="latin-1")
+    did_start = exported.index("<T303DID00>")
+    did = exported[did_start : did_start + 823]
+    assert did[11:22].rstrip() == refund_account.swift_bic
+    assert did[22:56].strip() == ""
+    assert did[56:126].rstrip() == refund_account.bank_name
+    assert did[126:161].rstrip() == refund_account.bank_address
+    assert did[161:191].rstrip() == refund_account.bank_city
+    assert did[191:193].rstrip() == refund_account.bank_country_code
+    assert did[193:194] == "3"
+    assert "ES7921000813610123456789" not in exported
+    assert result.resolved_result_disposition is ResultDisposition.COMPENSACION
+    assert result.prior_domiciliation_election.election is PriorDomiciliationElection.KEEP
+
+
+def test_public_rectificativa_nota_three_keep_refuses_without_refund_account_before_bytes_or_event(
+    isolated_backend: None,
+    tmp_path: Path,
+) -> None:
+    """Nota 3 cannot emit an empty DID account block on a C rectificativa."""
+    taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = _build_verified_modelo_303_revision(
+        negative_result=True,
+        casilla_111=Decimal("0"),
+    )
+    rectificativa = _rectificativa_with_nota_three(verified)
+    calc_repo.save(upsert_calculation_revision(calc_repo.load(), rectificativa))
+    output_path = tmp_path / "modelo-303-n3-missing-refund.txt"
+
+    with pytest.raises(ModeloRefundAccountMissingError):
+        export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=rectificativa.calculation_revision_id,
+                output_path=output_path,
+                actor="operator",
+            ),
+            workflow_profile=_nota_three_profile(taxpayer_nif=taxpayer_nif, refund_account=None),
+            work_unit_repository=work_repo,
+            calculation_repository=calc_repo,
+            bucket_event_repository=event_repo,
+            clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
+        )
+
+    assert not output_path.exists()
+    assert not event_repo.load().for_bucket(bucket_id, event_types=(BucketEventType.MODELO_EXPORTED,))
+
+
+def test_public_rectificativa_nota_three_remains_incompatible_with_current_domiciliacion(
+    isolated_backend: None,
+    tmp_path: Path,
+) -> None:
+    """The pre-existing result-sign gate refuses c111 plus a current U election."""
+    taxpayer_nif, _bucket_id, verified, work_repo, calc_repo, event_repo = _build_verified_modelo_303_revision(
+        negative_result=True,
+        casilla_111=Decimal("0"),
+    )
+    rectificativa = _rectificativa_with_nota_three(verified)
+    calc_repo.save(upsert_calculation_revision(calc_repo.load(), rectificativa))
+    output_path = tmp_path / "modelo-303-n3-current-u.txt"
+
+    with pytest.raises(ModeloPaymentElectionIncompatibleError):
+        export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=rectificativa.calculation_revision_id,
+                output_path=output_path,
+                actor="operator",
+                payment_election=PaymentElection.DOMICILIACION,
+            ),
+            workflow_profile=_nota_three_profile(taxpayer_nif=taxpayer_nif, refund_account=None),
+            work_unit_repository=work_repo,
+            calculation_repository=calc_repo,
+            bucket_event_repository=event_repo,
+            clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
+        )
+
+    assert not output_path.exists()
+
+
+def test_prior_domiciliation_export_and_filing_events_keep_the_safe_baseline_u_proof(
+    isolated_backend: None,
+    tmp_path: Path,
+) -> None:
+    """Actual export and filing event ledgers retain proof coordinates, never accounts."""
+    taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = _build_verified_modelo_303_revision(
+        negative_result=True,
+        casilla_111=Decimal("0"),
+    )
+    work_unit = work_repo.load().get(verified.work_unit_id)
+    assert work_unit is not None
+    filing_repository = ModeloRecordCatalogueRepository()
+    baseline_evidence_reference = "CSV-303-2026-2T-S21"
+    baseline_filing_record_id = derive_filing_record_id(
+        work_unit_id=work_unit.work_unit_id,
+        calculation_revision_id="a" * 64,
+        filed_by="aeat-import",
+    )
+    baseline = ModeloRecord(
+        filing_record_id=baseline_filing_record_id,
+        work_unit_id=work_unit.work_unit_id,
+        calculation_revision_id="a" * 64,
+        bucket_id=work_unit.bucket_id,
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        filed_at=datetime(2026, 5, 21, 11, 58, tzinfo=UTC),
+        filed_by="aeat-import",
+        aeat_accepted=True,
+        status=ModeloRecordStatus.VIGENTE,
+        external_evidence=ExternalEvidence(
+            kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
+            reference_id=baseline_evidence_reference,
+            imported_at=datetime(2026, 5, 21, 11, 58, tzinfo=UTC),
+        ),
+    )
+    filing_repository.save(upsert_filing_record(filing_repository.load(), baseline))
+
+    source_header_locator = "modelo-303-fichero-boe:modelo-303-page-01:declaration-type:13:1"
+    CalculationObservationRepository().save_observation(
+        RegistryModeloObservation(
+            modelo="303",
+            filing_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        ),
+        source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
+        captured_at=datetime(2026, 5, 21, 11, 59, tzinfo=UTC),
+        source_metadata={"aeat_justificante_csv": baseline_evidence_reference},
+        source_headers=(
+            ObservedHeaderFact(
+                header_key="declaration_type",
+                value=ResultDisposition.DOMICILIACION.value,
+                source_artefact_kind="submitted_file",
+                source_locator=source_header_locator,
+            ),
+        ),
+        result_disposition=ResultDispositionProjection(
+            disposition=ResultDisposition.DOMICILIACION,
+            provenance_kind="source_header",
+            provenance_locator=source_header_locator,
+        ),
+    )
+    rectificativa = verified.model_copy(
+        update={
+            "amendment_kind": CalculationRevisionAmendmentKind.RECTIFICATIVA,
+            "amends_filing_record_id": baseline.filing_record_id,
+            "amendment_reason": "correct prior direct-debit election",
+        },
+    )
+    calc_repo.save(upsert_calculation_revision(calc_repo.load(), rectificativa))
+
+    output_path = tmp_path / "modelo-303-prior-domiciliation.txt"
+    result = export_modelo_revision(
+        ModeloExportCommand(
+            calculation_revision_id=rectificativa.calculation_revision_id,
+            output_path=output_path,
+            actor="operator",
+            prior_domiciliation_election=PriorDomiciliationElection.CANCEL_OR_MODIFY,
+        ),
+        workflow_profile=TaxpayerProfile(tax_id=taxpayer_nif, iva_regime=IVARegime.GENERAL),
+        work_unit_repository=work_repo,
+        calculation_repository=calc_repo,
+        filing_repository=filing_repository,
+        bucket_event_repository=event_repo,
+        clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
+    )
+    export_event = event_repo.load().for_bucket(bucket_id, event_types=(BucketEventType.MODELO_EXPORTED,))[-1]
+    expected_event_proof = {
+        "prior_domiciliation_election": PriorDomiciliationElection.CANCEL_OR_MODIFY.value,
+        "prior_domiciliation_baseline_filing_record_id": baseline.filing_record_id,
+        "prior_domiciliation_baseline_evidence_reference_id": baseline_evidence_reference,
+        "prior_domiciliation_baseline_result_disposition": ResultDisposition.DOMICILIACION.value,
+        "prior_domiciliation_baseline_source_header_locator": source_header_locator,
+    }
+    assert {key: export_event.payload[key] for key in expected_event_proof} == expected_event_proof
+    assert result.prior_domiciliation_election.baseline_source_header_locator == source_header_locator
+    assert "<T303DID00>" not in output_path.read_text(encoding="latin-1")
+    assert "iban" not in export_event.model_dump_json().casefold()
+
+    filing = persist_filed_revision(
+        target=rectificativa,
+        work_unit=work_unit,
+        work_units=work_repo.load(),
+        notes=None,
+        actor="operator",
+        now=datetime(2026, 5, 21, 12, 4, tzinfo=UTC),
+        calculation_repository=calc_repo,
+        filing_repository=filing_repository,
+        work_unit_repository=work_repo,
+        bucket_event_repository=event_repo,
+        result_disposition=result.resolved_result_disposition,
+        prior_domiciliation_election=result.prior_domiciliation_election,
+        taxpayer_nif=taxpayer_nif,
+    )
+    filed_event = event_repo.load().for_bucket(
+        bucket_id,
+        event_types=(BucketEventType.MODELO_FILED,),
+    )[-1]
+    assert filed_event.event_type is BucketEventType.MODELO_FILED
+    assert filed_event.object_id == filing.filing_record_id
+    assert {key: filed_event.payload[key] for key in expected_event_proof} == expected_event_proof
+    assert "iban" not in filed_event.model_dump_json().casefold()
 
 
 def test_public_domiciliacion_without_persisted_charge_account_refuses(

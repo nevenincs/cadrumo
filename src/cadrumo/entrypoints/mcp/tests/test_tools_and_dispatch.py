@@ -16,6 +16,7 @@ from .._input_schema import (
     JsonType,
     SchemaResolutionError,
     VerbInputSchema,
+    VerbLeafResolutionFailure,
     VerbParameter,
     VerbParamKind,
     _json_safe_default,
@@ -325,11 +326,18 @@ def test_real_boolean_pair_option_carries_off_token_and_can_be_disabled() -> Non
 
 
 def test_schema_coverage_gate_raises_on_a_resolution_failure() -> None:
+    failure = VerbLeafResolutionFailure(
+        subject_leaf_key="app.hostile.command",
+        attempted_cli_path=("app", "hostile", "command"),
+        resolved_cli_path=("app",),
+        reason="Type not yet supported: <hostile parameter>",
+    )
     with pytest.raises(SchemaResolutionError) as excinfo:
-        assert_schema_coverage({"app.hostile.command": "Type not yet supported: <hostile parameter>"})
+        assert_schema_coverage((failure,))
     assert "app.hostile.command" in str(excinfo.value)
-    # An empty error map is a healthy no-op.
-    assert_schema_coverage({})
+    assert excinfo.value.failures == (failure,)
+    # An empty typed failure tuple is a healthy no-op.
+    assert_schema_coverage(())
 
 
 def test_schema_coverage_gate_passes_on_the_real_command_set() -> None:

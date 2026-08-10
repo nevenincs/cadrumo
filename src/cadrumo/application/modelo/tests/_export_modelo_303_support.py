@@ -233,6 +233,8 @@ def _wallet_decision_repository_at(sidecar_root: Path) -> tuple[IvaWalletDecisio
 def _build_verified_modelo_303_revision(
     *,
     positive_result: bool = False,
+    negative_result: bool = False,
+    casilla_111: Decimal | None = None,
 ) -> tuple[
     str,
     str,
@@ -269,15 +271,21 @@ def _build_verified_modelo_303_revision(
         # This deliberately exceeds that carry so public payment-election
         # paths exercise a genuinely positive M303 result.
         binding_values["modelo-303-iva-repercutido-general-cuota"] = Decimal("2400.00")
+    if negative_result:
+        binding_values["modelo-303-iva-soportado-interiores-cuota"] = Decimal("2000.00")
+
+    casilla_inputs = {
+        "iva.prorrata-volumen-con-derecho": Decimal("100.00"),
+        "iva.prorrata-volumen-total": Decimal("100.00"),
+        **_MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS,
+    }
+    if casilla_111 is not None:
+        casilla_inputs["111"] = casilla_111
 
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
         actor="operator",
-        casilla_inputs={
-            "iva.prorrata-volumen-con-derecho": Decimal("100.00"),
-            "iva.prorrata-volumen-total": Decimal("100.00"),
-            **_MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS,
-        },
+        casilla_inputs=casilla_inputs,
         binding_values=binding_values,
         iva_compensation_decision=decision,
         filing_period_date=date(2026, 6, 30),
