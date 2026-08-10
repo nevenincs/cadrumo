@@ -27,7 +27,7 @@ from .._provenance_manifest import (
     export_fragment_provenance_manifest_json_bytes,
     load_export_fragment_provenance_manifest,
 )
-from .test_export_tree import _write_isolated_generated_authority_tree
+from .test_export_tree import _wire_evidence, _wire_profile, _write_isolated_generated_authority_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -90,6 +90,34 @@ def _rollback_siblings(target_export_root: Path) -> tuple[Path, ...]:
     return tuple(target_root.glob(".generated-export-backup-200-2025-*"))
 
 
+def _stage_interrupted_verified_candidate(
+    context: GeneratedExportTreePublicationContext,
+    candidate_export_root: Path,
+) -> Path:
+    backup_export_root = _generated_tree_publication._rollback_sibling(
+        target_root=context.target_root.resolve(),
+        modelo="200",
+        revision_id="2025",
+    )
+    journal = _generated_tree_publication._PublicationJournal(
+        schema_version=1,
+        state="backup_staged",
+        modelo="200",
+        revision_id="2025",
+        candidate_export=str(candidate_export_root),
+        backup_export=str(backup_export_root),
+        candidate_manifest_sha256=_generated_tree_publication._sha256(
+            candidate_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME,
+        ),
+    )
+    os.replace(context.target_export_root, backup_export_root)
+    _generated_tree_publication._write_journal(
+        _generated_tree_publication._journal_path(context),
+        journal,
+    )
+    return backup_export_root
+
+
 def test_publication_replaces_only_export_and_removes_opaque_backup(m200_snapshot, tmp_path) -> None:
     """Revision authority survives byte-identically while export+manifest cut over together."""
     context, joined, semantic_map, rendered, candidate_export_root = _publication_inputs(
@@ -107,6 +135,8 @@ def test_publication_replaces_only_export_and_removes_opaque_backup(m200_snapsho
         joined=joined,
         semantic_map=semantic_map,
         rendered=rendered,
+        render_profile=_wire_profile(),
+        render_profile_source_evidence=_wire_evidence(),
     )
 
     assert published.export_root == context.target_export_root
@@ -135,6 +165,8 @@ def test_publication_creates_missing_export_without_touching_revision_authority(
         joined=joined,
         semantic_map=semantic_map,
         rendered=rendered,
+        render_profile=_wire_profile(),
+        render_profile_source_evidence=_wire_evidence(),
     )
 
     assert _tree_bytes(context.target_export_root) == expected_export
@@ -167,6 +199,8 @@ def test_publication_refuses_invalid_candidate_without_changing_live_export(
             joined=joined,
             semantic_map=semantic_map,
             rendered=rendered,
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
         )
 
     assert _tree_bytes(context.target_export_root) == before
@@ -254,6 +288,8 @@ def test_publication_refuses_coordinate_authority_and_output_mutations_before_cu
             joined=joined,
             semantic_map=semantic_map,
             rendered=rendered,
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
         )
 
     assert _tree_bytes(context.target_export_root) == before_export
@@ -279,6 +315,8 @@ def test_publication_restores_live_export_after_real_windows_locked_candidate_fa
             joined=joined,
             semantic_map=semantic_map,
             rendered=rendered,
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
         )
 
     assert _tree_bytes(context.target_export_root) == before
@@ -299,36 +337,20 @@ def test_publication_completes_a_real_interrupted_verified_candidate(m200_snapsh
         joined=joined,
         semantic_map=semantic_map,
         rendered=rendered,
+        render_profile=_wire_profile(),
+        render_profile_source_evidence=_wire_evidence(),
     )
     expected_export = _tree_bytes(candidate_export_root)
     before_authority = _non_export_authority_bytes(context.target_export_root.parent)
-    backup_export_root = _generated_tree_publication._rollback_sibling(
-        target_root=context.target_root.resolve(),
-        modelo="200",
-        revision_id="2025",
-    )
-    journal = _generated_tree_publication._PublicationJournal(
-        schema_version=1,
-        state="backup_staged",
-        modelo="200",
-        revision_id="2025",
-        candidate_export=str(candidate_export_root),
-        backup_export=str(backup_export_root),
-        candidate_manifest_sha256=_generated_tree_publication._sha256(
-            candidate_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME,
-        ),
-    )
-    os.replace(context.target_export_root, backup_export_root)
-    _generated_tree_publication._write_journal(
-        _generated_tree_publication._journal_path(context),
-        journal,
-    )
+    backup_export_root = _stage_interrupted_verified_candidate(context, candidate_export_root)
 
     recovered = publish_validated_generated_export_tree(
         context=context,
         joined=joined,
         semantic_map=semantic_map,
         rendered=rendered,
+        render_profile=_wire_profile(),
+        render_profile_source_evidence=_wire_evidence(),
     )
 
     assert recovered.validated is None
@@ -336,6 +358,55 @@ def test_publication_completes_a_real_interrupted_verified_candidate(m200_snapsh
     assert _non_export_authority_bytes(context.target_export_root.parent) == before_authority
     assert not backup_export_root.exists()
     assert not _generated_tree_publication._journal_path(context).exists()
+
+
+@pytest.mark.parametrize("drift", ("profile", "evidence"))
+def test_interrupted_recovery_refuses_current_profile_or_evidence_drift_without_mutation(
+    m200_snapshot,
+    tmp_path,
+    drift: str,
+) -> None:
+    context, joined, semantic_map, rendered, candidate_export_root = _publication_inputs(
+        tmp_path,
+        m200_snapshot,
+        existing_export=True,
+    )
+    backup_export_root = _stage_interrupted_verified_candidate(context, candidate_export_root)
+    os.replace(candidate_export_root, context.target_export_root)
+    journal_path = _generated_tree_publication._journal_path(context)
+    journal = _generated_tree_publication._load_journal(journal_path)
+    _generated_tree_publication._write_journal(
+        journal_path,
+        journal.model_copy(update={"state": "candidate_live"}),
+    )
+    profile = _wire_profile()
+    evidence = _wire_evidence()
+    if drift == "profile":
+        profile = profile.model_copy(update={"fragment_ids": ("current-profile-drift",)})
+    else:
+        evidence = evidence.model_copy(
+            update={
+                "design_identity": evidence.design_identity.model_copy(update={"source_sha256": "b" * 64}),
+            },
+        )
+    target_before = _tree_bytes(context.target_export_root)
+    backup_before = _tree_bytes(backup_export_root)
+    journal_before = journal_path.read_bytes()
+
+    with pytest.raises(RegistryValidationError):
+        publish_validated_generated_export_tree(
+            context=context,
+            joined=joined,
+            semantic_map=semantic_map,
+            rendered=rendered,
+            render_profile=profile,
+            render_profile_source_evidence=evidence,
+        )
+
+    assert not candidate_export_root.exists()
+    assert _tree_bytes(context.target_export_root) == target_before
+    assert _tree_bytes(backup_export_root) == backup_before
+    assert journal_path.read_bytes() == journal_before
 
 
 def test_internal_json_provenance_is_required_but_ignored_by_toml_loader(m200_snapshot, tmp_path) -> None:
@@ -355,6 +426,8 @@ def test_internal_json_provenance_is_required_but_ignored_by_toml_loader(m200_sn
             joined=joined,
             semantic_map=semantic_map,
             rendered=rendered,
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
         )
 
 
@@ -374,6 +447,8 @@ def test_publication_refuses_stale_sibling_provenance_before_cutover(m200_snapsh
             joined=joined,
             semantic_map=semantic_map,
             rendered=rendered,
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
         )
 
 

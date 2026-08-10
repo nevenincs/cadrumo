@@ -8,13 +8,15 @@ import pytest
 
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import (
+    ExportEncoding,
     RegistryValidationError,
     bundled_authority,
     load_catalogue_file,
 )
 
-from .._export_tree import ExportRenderProfile, render_complete_export_tree
+from .._export_tree import ExportTreeTransportProfile, render_complete_export_tree
 from .._record_design_ir import load_record_design_intermediate
+from .._render_profile import RenderProfile, RenderProfileDesignIdentity, RenderProfileSourceEvidence
 from .._semantic_map import SemanticMap
 from .._semantic_map_join import join_record_design_semantics
 
@@ -83,16 +85,37 @@ def test_real_m200_variable_envelope_survives_join_and_refuses_fixed_generation(
             revision_id="2025-y-siguientes",
             joined=joined,
             semantic_map=semantic_map,
-            profile=ExportRenderProfile(
+            transport_profile=ExportTreeTransportProfile(
                 modelo="200",
                 design_epoch="2025",
                 source_ref="aeat-dr-200-2025",
                 source_sha256=parsed.source.source_sha256,
                 layout_id="m200-envelope-gate",
                 format="fixed_width",
-                encoding="latin-1",
+                encoding=ExportEncoding.LATIN_1,
                 line_ending="crlf",
                 serializer_convention="rtoml-pretty-v1",
+            ),
+            render_profile=RenderProfile(
+                schema_version=1,
+                design_identity=RenderProfileDesignIdentity(
+                    modelo="200",
+                    design_epoch="2025",
+                    source_ref="aeat-dr-200-2025",
+                    source_sha256="b" * 64,
+                ),
+                fragment_ids=(),
+                width_17_rules=(),
+                singleton_rules=(),
+            ),
+            render_profile_source_evidence=RenderProfileSourceEvidence(
+                design_identity=RenderProfileDesignIdentity(
+                    modelo="200",
+                    design_epoch="2025",
+                    source_ref="aeat-dr-200-2025",
+                    source_sha256="b" * 64,
+                ),
+                entries=(),
             ),
         )
 

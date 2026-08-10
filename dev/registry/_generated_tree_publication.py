@@ -34,7 +34,9 @@ from ._provenance_manifest import (
     collect_export_fragment_output_digests,
     load_export_fragment_provenance_manifest,
     loader_semantic_digest,
+    verify_export_fragment_provenance_manifest,
 )
+from ._render_profile import RenderProfile, RenderProfileSourceEvidence
 from ._semantic_map import SemanticMap
 from ._semantic_map_join import JoinedRecordDesign
 
@@ -91,6 +93,8 @@ def publish_validated_generated_export_tree(
     joined: JoinedRecordDesign,
     semantic_map: SemanticMap,
     rendered: RenderedExportTree,
+    render_profile: RenderProfile,
+    render_profile_source_evidence: RenderProfileSourceEvidence,
 ) -> PublishedGeneratedExportTree:
     """Validate, journal, swap, verify, and finalize one generated export tree.
 
@@ -110,6 +114,11 @@ def publish_validated_generated_export_tree(
             candidate_export_root=candidate_export_root,
             target_export_root=target_export_root,
             journal_path=journal_path,
+            joined=joined,
+            semantic_map=semantic_map,
+            rendered=rendered,
+            render_profile=render_profile,
+            render_profile_source_evidence=render_profile_source_evidence,
         )
         if recovery_completed:
             return PublishedGeneratedExportTree(
@@ -127,6 +136,8 @@ def publish_validated_generated_export_tree(
             joined=joined,
             semantic_map=semantic_map,
             rendered=rendered,
+            render_profile=render_profile,
+            render_profile_source_evidence=render_profile_source_evidence,
         )
         candidate_manifest = _verify_generated_export_package(candidate_export_root)
         candidate_manifest_sha256 = _sha256(candidate_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME)
@@ -349,6 +360,11 @@ def _recover_interrupted_publication(
     candidate_export_root: Path,
     target_export_root: Path,
     journal_path: Path,
+    joined: JoinedRecordDesign,
+    semantic_map: SemanticMap,
+    rendered: RenderedExportTree,
+    render_profile: RenderProfile,
+    render_profile_source_evidence: RenderProfileSourceEvidence,
 ) -> bool:
     if not journal_path.exists():
         return False
@@ -370,7 +386,15 @@ def _recover_interrupted_publication(
     target_is_verified = target_export_root.exists() and _matches_journal_candidate(target_export_root, journal)
 
     if target_is_verified:
-        target_manifest = _verify_generated_export_package(target_export_root)
+        target_manifest = _verify_recovery_package_against_current_authorities(
+            target_export_root,
+            context=context,
+            joined=joined,
+            semantic_map=semantic_map,
+            rendered=rendered,
+            render_profile=render_profile,
+            render_profile_source_evidence=render_profile_source_evidence,
+        )
         _verify_post_cutover_target(
             target_export_root,
             expected_manifest_sha256=journal.candidate_manifest_sha256,
@@ -381,6 +405,15 @@ def _recover_interrupted_publication(
         return True
     if backup_export_root.exists():
         if candidate_is_verified:
+            candidate_manifest = _verify_recovery_package_against_current_authorities(
+                candidate_export_root,
+                context=context,
+                joined=joined,
+                semantic_map=semantic_map,
+                rendered=rendered,
+                render_profile=render_profile,
+                render_profile_source_evidence=render_profile_source_evidence,
+            )
             if target_export_root.exists():
                 _move_failed_candidate_aside(target_export_root)
             os.replace(candidate_export_root, target_export_root)
@@ -388,7 +421,7 @@ def _recover_interrupted_publication(
             _verify_post_cutover_target(
                 target_export_root,
                 expected_manifest_sha256=journal.candidate_manifest_sha256,
-                expected_manifest=_verify_generated_export_package(target_export_root),
+                expected_manifest=candidate_manifest,
             )
             _delete_opaque_rollback_tree(backup_export_root)
             _delete_journal(journal_path)
@@ -400,12 +433,21 @@ def _recover_interrupted_publication(
         _delete_journal(journal_path)
         return False
     if candidate_is_verified and not target_export_root.exists():
+        candidate_manifest = _verify_recovery_package_against_current_authorities(
+            candidate_export_root,
+            context=context,
+            joined=joined,
+            semantic_map=semantic_map,
+            rendered=rendered,
+            render_profile=render_profile,
+            render_profile_source_evidence=render_profile_source_evidence,
+        )
         os.replace(candidate_export_root, target_export_root)
         fsync_parent_dir(target_export_root)
         _verify_post_cutover_target(
             target_export_root,
             expected_manifest_sha256=journal.candidate_manifest_sha256,
-            expected_manifest=_verify_generated_export_package(target_export_root),
+            expected_manifest=candidate_manifest,
         )
         _delete_journal(journal_path)
         return True
@@ -413,6 +455,43 @@ def _recover_interrupted_publication(
         _delete_journal(journal_path)
         return False
     raise RegistryValidationError(f"generated publication journal cannot recover a live export: {journal_path}")
+
+
+def _verify_recovery_package_against_current_authorities(
+    export_root: Path,
+    *,
+    context: GeneratedExportTreePublicationContext,
+    joined: JoinedRecordDesign,
+    semantic_map: SemanticMap,
+    rendered: RenderedExportTree,
+    render_profile: RenderProfile,
+    render_profile_source_evidence: RenderProfileSourceEvidence,
+) -> ExportFragmentProvenanceManifest:
+    package_manifest = _verify_generated_export_package(export_root)
+    modelo_root = export_root.parent.parent.parent
+    loaded = load_modelo_directory(modelo_root)
+    revision_id = str(context.validation.target.revision_id)
+    revision = loaded.revisions.get(revision_id)
+    if revision is None or len(revision.export_layouts) != 1:
+        raise RegistryValidationError(
+            f"recovered export is not exactly selectable from current revision {revision_id!r}",
+        )
+    loaded_layout = revision.export_layouts[0]
+    if loaded_layout != rendered.layout:
+        raise RegistryValidationError("recovered export loader semantics do not equal the current rendered layout")
+    verified = verify_export_fragment_provenance_manifest(
+        export_root=export_root,
+        joined=joined,
+        semantic_map=semantic_map,
+        target=context.validation.target,
+        loaded_layout=loaded_layout,
+        field_derivations=rendered.field_derivations,
+        render_profile=render_profile,
+        render_profile_source_evidence=render_profile_source_evidence,
+    )
+    if verified != package_manifest:
+        raise RegistryValidationError("recovered export package does not match current provenance authority")
+    return verified
 
 
 def _matches_journal_candidate(export_root: Path, journal: _PublicationJournal) -> bool:

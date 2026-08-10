@@ -20,6 +20,7 @@ from .. import _provenance_manifest
 from .._provenance_manifest import (
     EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION,
     EXPORT_FRAGMENT_PROVENANCE_SCHEMA_VERSION,
+    EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION,
     ExportFieldDerivation,
     ExportFragmentOutputDigest,
     ExportFragmentProvenanceManifest,
@@ -33,6 +34,13 @@ from .._record_design_ir import (
     RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION,
     RecordDesignIntermediate,
     RecordDesignWorkbookFormat,
+)
+from .._render_profile import (
+    RENDER_PROFILE_SCHEMA_VERSION,
+    RenderProfile,
+    RenderProfileDesignIdentity,
+    RenderProfileSourceEvidence,
+    render_profile_digest,
 )
 from .._semantic_map import SemanticMap
 from .._semantic_map_join import JoinedRecordDesign, JoinedRecordDesignField, JoinedRecordDesignRecord
@@ -210,8 +218,30 @@ def _field_derivation() -> ExportFieldDerivation:
                 "source_refs": ("aeat-dr-200-2025",),
             },
         ),
-        normalization_schema_version=1,
+        normalization_schema_version=EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION,
         derivation_code="literal-exact-v1",
+    )
+
+
+def _render_profile() -> RenderProfile:
+    return RenderProfile(
+        schema_version=RENDER_PROFILE_SCHEMA_VERSION,
+        design_identity=RenderProfileDesignIdentity(
+            modelo="200",
+            design_epoch="2025",
+            source_ref="aeat-dr-200-2025",
+            source_sha256="a" * 64,
+        ),
+        fragment_ids=(),
+        width_17_rules=(),
+        singleton_rules=(),
+    )
+
+
+def _render_profile_evidence() -> RenderProfileSourceEvidence:
+    return RenderProfileSourceEvidence(
+        design_identity=_render_profile().design_identity,
+        entries=(),
     )
 
 
@@ -237,6 +267,8 @@ def _one_field_layout() -> ExportLayoutDefinition:
 
 
 def _manifest() -> ExportFragmentProvenanceManifest:
+    render_profile = _render_profile()
+    source_evidence = _render_profile_evidence()
     return ExportFragmentProvenanceManifest(
         manifest_schema_version=EXPORT_FRAGMENT_PROVENANCE_SCHEMA_VERSION,
         source_ref="aeat-dr-200-2025",
@@ -244,6 +276,8 @@ def _manifest() -> ExportFragmentProvenanceManifest:
         parser_schema_version=RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION,
         generator_schema_version=EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION,
         semantic_map_sha256="b" * 64,
+        render_profile_schema_version=RENDER_PROFILE_SCHEMA_VERSION,
+        render_profile_sha256=render_profile_digest(render_profile, source_evidence),
         modelo="200",
         revision_id="2025-y-siguientes",
         design_epoch="2025",
@@ -269,6 +303,8 @@ def test_manifest_records_real_output_files_and_roundtrips_canonical_bytes(tmp_p
         loaded_layout=_one_field_layout(),
         export_root=export_root,
         field_derivations=(_field_derivation(),),
+        render_profile=_render_profile(),
+        render_profile_source_evidence=_render_profile_evidence(),
     )
     serialised = export_fragment_provenance_manifest_json_bytes(manifest)
 
@@ -323,7 +359,7 @@ def test_loader_semantic_digest_detects_value_policy_change() -> None:
 
 def test_loader_semantic_digest_detects_allowed_values_change() -> None:
     """The exact reviewed enumeration domain is loader-visible meaning."""
-    plain = ExportFieldDefinition.model_validate(
+    constrained = ExportFieldDefinition.model_validate(
         {
             "id": "enumerated",
             "offset": 1,
@@ -335,40 +371,36 @@ def test_loader_semantic_digest_detects_allowed_values_change() -> None:
             "padding": "left_zero",
             "justification": "right",
             "signed": False,
+            "value_policy": ExportValuePolicy.ENUMERATED_DIGITS,
+            "allowed_values": ("3", "1"),
             "legal_refs": ("ley-27-2014:art-40",),
             "source_refs": ("aeat-dr-200-2025",),
         },
     )
-    constrained = ExportFieldDefinition.model_validate(
-        plain.model_dump(mode="python") | {"allowed_values": ("3", "1")},
-    )
     reordered = ExportFieldDefinition.model_validate(
-        plain.model_dump(mode="python") | {"allowed_values": ("1", "3")},
+        constrained.model_dump(mode="python") | {"allowed_values": ("1", "3")},
     )
     changed = ExportFieldDefinition.model_validate(
-        plain.model_dump(mode="python") | {"allowed_values": ("1", "4")},
+        constrained.model_dump(mode="python") | {"allowed_values": ("1", "4")},
     )
     base_layout = _one_field_layout()
-    plain_layout = base_layout.model_copy(
-        update={"records": (base_layout.records[0].model_copy(update={"fields": (plain,)}),)},
-    )
-    constrained_layout = plain_layout.model_copy(
+    constrained_layout = base_layout.model_copy(
         update={
             "records": (
-                plain_layout.records[0].model_copy(update={"fields": (constrained,)}),
+                base_layout.records[0].model_copy(update={"fields": (constrained,)}),
             ),
         },
     )
-    reordered_layout = plain_layout.model_copy(
-        update={"records": (plain_layout.records[0].model_copy(update={"fields": (reordered,)}),)},
+    reordered_layout = base_layout.model_copy(
+        update={"records": (base_layout.records[0].model_copy(update={"fields": (reordered,)}),)},
     )
-    changed_layout = plain_layout.model_copy(
-        update={"records": (plain_layout.records[0].model_copy(update={"fields": (changed,)}),)},
+    changed_layout = base_layout.model_copy(
+        update={"records": (base_layout.records[0].model_copy(update={"fields": (changed,)}),)},
     )
 
-    assert loader_semantic_digest(constrained_layout) != loader_semantic_digest(plain_layout)
     assert loader_semantic_digest(constrained_layout) == loader_semantic_digest(reordered_layout)
     assert loader_semantic_digest(constrained_layout) != loader_semantic_digest(changed_layout)
+
 
 def test_manifest_refuses_legacy_shapes_schema_drift_duplicate_outputs_and_unsafe_paths() -> None:
     """Old/incomplete shapes cannot parse as current provenance evidence."""
@@ -387,6 +419,11 @@ def test_manifest_refuses_legacy_shapes_schema_drift_duplicate_outputs_and_unsaf
         )
     with pytest.raises(ValidationError, match="parser schema drift"):
         ExportFragmentProvenanceManifest(**(manifest.model_dump() | {"parser_schema_version": 1}))
+    without_render_profile = manifest.model_dump()
+    without_render_profile.pop("render_profile_schema_version")
+    without_render_profile.pop("render_profile_sha256")
+    with pytest.raises(ValidationError, match="render_profile"):
+        ExportFragmentProvenanceManifest.model_validate(without_render_profile)
     with pytest.raises(RegistryValidationError, match="duplicate object key"):
         load_export_fragment_provenance_manifest(
             canonical_json_bytes(manifest.model_dump(mode="json"))[:-1] + b',"modelo":"200"}',

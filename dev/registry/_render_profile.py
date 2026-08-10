@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterable
-from hashlib import sha256
 from pathlib import Path
 from typing import Annotated, Final, Literal
 
@@ -18,6 +17,7 @@ import rtoml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from cadrumo.core import is_link_like
+from cadrumo.core.hashing import content_hash_hex, sha256_file
 from cadrumo.domain.calculations.registry import (
     ExportValuePolicy,
     ModeloId,
@@ -47,6 +47,7 @@ __all__ = [
     "load_render_profile",
     "load_render_profile_source_evidence",
     "project_render_profile_eligibility",
+    "render_profile_digest",
     "validate_render_profile",
     "validate_render_profile_authority",
 ]
@@ -136,7 +137,7 @@ class RenderProfileSourceEvidence(_StrictModel):
     """Independent exact-cell evidence extracted from one verified official design."""
 
     design_identity: RenderProfileDesignIdentity
-    entries: tuple[RenderProfileSourceEvidenceEntry, ...] = Field(min_length=1)
+    entries: tuple[RenderProfileSourceEvidenceEntry, ...]
 
     @model_validator(mode="after")
     def _require_unique_locators(self) -> RenderProfileSourceEvidence:
@@ -292,7 +293,7 @@ class RenderProfile(_StrictModel):
 
     schema_version: Literal[1]
     design_identity: RenderProfileDesignIdentity
-    fragment_ids: tuple[str, ...] = Field(min_length=1)
+    fragment_ids: tuple[str, ...]
     width_17_rules: tuple[Width17MembershipRule, ...]
     singleton_rules: tuple[SingletonNumericRule, ...]
 
@@ -352,9 +353,9 @@ def load_render_profile_source_evidence(
     profile: RenderProfile,
 ) -> RenderProfileSourceEvidence:
     """Read every claimed official cell from the hash-verified binary itself."""
-    if not source_path.is_file() or source_path.is_symlink():
+    if not source_path.is_file() or source_path.is_symlink() or source_path.is_junction():
         raise RegistryValidationError(f"render profile source must be a regular file: {source_path}")
-    actual_sha256 = _file_sha256(source_path)
+    actual_sha256 = sha256_file(source_path)
     if actual_sha256 != profile.design_identity.source_sha256:
         raise RegistryValidationError(
             "render profile source binary SHA-256 does not match the exact design identity",
@@ -491,6 +492,55 @@ def validate_render_profile_authority(
             )
 
 
+def render_profile_digest(
+    profile: RenderProfile,
+    source_evidence: RenderProfileSourceEvidence,
+) -> str:
+    """Digest every reviewed profile fact and resolved source-evidence fact.
+
+    Authored fragment, rule, membership, allowed-value, and evidence ordering is
+    deliberately irrelevant. Exact anchors and every policy/evidence payload
+    remain part of the digest.
+    """
+    if source_evidence.design_identity != profile.design_identity:
+        raise RegistryValidationError(
+            "render profile source evidence does not match the profile design identity",
+        )
+    width_rules: list[dict[str, object]] = [
+        {
+            **rule.model_dump(mode="json", exclude={"anchors"}),
+            "anchors": [
+                anchor.model_dump(mode="json") for anchor in sorted(rule.anchors, key=_anchor_key)
+            ],
+        }
+        for rule in sorted(profile.width_17_rules, key=lambda item: item.aeat_type)
+    ]
+    singleton_rules: list[dict[str, object]] = [
+        {
+            **rule.model_dump(mode="json", exclude={"allowed_values"}),
+            "allowed_values": sorted(rule.allowed_values),
+        }
+        for rule in sorted(profile.singleton_rules, key=lambda item: _anchor_key(item.anchor))
+    ]
+    evidence_entries = [
+        entry.model_dump(mode="json")
+        for entry in sorted(source_evidence.entries, key=lambda item: (item.sheet, item.cell))
+    ]
+    return content_hash_hex(
+        {
+            "schema_version": profile.schema_version,
+            "design_identity": profile.design_identity.model_dump(mode="json"),
+            "fragment_ids": sorted(profile.fragment_ids),
+            "width_17_rules": width_rules,
+            "singleton_rules": singleton_rules,
+            "source_evidence": {
+                "design_identity": source_evidence.design_identity.model_dump(mode="json"),
+                "entries": evidence_entries,
+            },
+        },
+    )
+
+
 def project_render_profile_eligibility(
     fixed_fields: Iterable[RecordDesignIntermediateField],
 ) -> RenderProfileEligibility:
@@ -614,14 +664,6 @@ def _anchor_key(anchor: RenderProfileAnchor) -> tuple[str, int, int, str, str]:
         anchor.source_cell or "",
         anchor.record_identity,
     )
-
-
-def _file_sha256(path: Path) -> str:
-    digest = sha256()
-    with path.open("rb") as source:
-        for chunk in iter(lambda: source.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def _normalize_source_statement(value: object) -> str:

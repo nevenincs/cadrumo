@@ -19,10 +19,14 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from cadrumo.core import is_link_like
 from cadrumo.domain.calculations.registry import (
     ENCODING_ALIAS_MAP,
+    ExportEncoding,
     CasillaFieldKind,
+    ExportJustification,
     ExportFieldDefinition,
     ExportLayoutDefinition,
+    ExportPadding,
     ExportLayoutId,
+    ExportValuePolicy,
     ExportRecordDefinition,
     ModeloId,
     RegistryValidationError,
@@ -37,6 +41,14 @@ from ._provenance_manifest import (
     ExportFragmentProvenanceManifest,
     ExportFragmentTarget,
     emit_export_fragment_provenance_manifest,
+from ._render_profile import (
+    RenderProfile,
+    RenderProfileAnchor,
+    RenderProfileSourceEvidence,
+    SingletonNumericRule,
+    Width17MembershipRule,
+    validate_render_profile,
+)
 )
 from ._semantic_map import SemanticMap
 from ._semantic_map_join import JoinedRecordDesign, JoinedRecordDesignField, JoinedRecordDesignRecord
@@ -44,7 +56,7 @@ from ._semantic_map_join import JoinedRecordDesign, JoinedRecordDesignField, Joi
 __all__ = [
     "EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION",
     "ExportFieldDerivation",
-    "ExportRenderProfile",
+    "ExportTreeTransportProfile",
     "RenderedExportTree",
     "render_complete_export_tree",
 ]
@@ -58,6 +70,21 @@ _DECIMAL_CONTENT_RE: Final[re.Pattern[str]] = re.compile(
     re.IGNORECASE,
 )
 _INTEGER_CONTENT_RE: Final[re.Pattern[str]] = re.compile(r"^(?P<whole>\d+)\s*enteros?$", re.IGNORECASE)
+_SINGLETON_POLICY_SHAPES: Final[
+    Mapping[ExportValuePolicy, Literal["integer", "decimal", "date", "digit_identity"]]
+] = {
+    ExportValuePolicy.SELECTED_1_UNSELECTED_0: "integer",
+    ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS: "integer",
+    ExportValuePolicy.UNSIGNED_INTEGER: "integer",
+    ExportValuePolicy.IMPLIED_DECIMAL: "decimal",
+    ExportValuePolicy.YYYYMMDD: "date",
+    ExportValuePolicy.ENUMERATED_DIGITS: "integer",
+    ExportValuePolicy.DIGIT_STRING: "digit_identity",
+    ExportValuePolicy.IDENTIFIER_DIGITS: "digit_identity",
+    ExportValuePolicy.FOUR_DIGIT_YEAR: "integer",
+    ExportValuePolicy.TWO_DIGIT_MONTH: "integer",
+    ExportValuePolicy.TWO_DIGIT_DAY: "integer",
+}
 _DATE_CONTENT: Final[str] = "aaaammdd"
 _TEXT_TYPES: Final[frozenset[str]] = frozenset({"a", "an"})
 _NUMERIC_TYPES: Final[frozenset[str]] = frozenset({"n", "num"})
@@ -75,8 +102,8 @@ class _StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
 
 
-class ExportRenderProfile(_StrictModel):
-    """Reviewed irreducible transport facts for one exact official design."""
+class ExportTreeTransportProfile(_StrictModel):
+    """Transport-only settings for one generated export tree."""
 
     modelo: ModeloId
     design_epoch: str = Field(min_length=1)
@@ -84,14 +111,14 @@ class ExportRenderProfile(_StrictModel):
     source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     layout_id: ExportLayoutId
     format: Literal["fixed_width"]
-    encoding: str = Field(min_length=1)
+    encoding: ExportEncoding
     line_ending: Literal["crlf", "lf", "none"]
     serializer_convention: Literal["rtoml-pretty-v1"]
 
     @model_validator(mode="after")
-    def _require_supported_encoding_and_safe_ids(self) -> ExportRenderProfile:
+    def _require_supported_encoding_and_safe_ids(self) -> ExportTreeTransportProfile:
         if self.encoding.casefold() not in ENCODING_ALIAS_MAP:
-            raise ValueError(f"export render profile declares unsupported encoding {self.encoding!r}")
+            raise ValueError(f"export tree transport profile declares unsupported encoding {self.encoding!r}")
         _require_safe_identifier(str(self.layout_id), subject="export layout id")
         return self
 
@@ -111,13 +138,16 @@ def render_complete_export_tree(
     revision_id: RevisionId,
     joined: JoinedRecordDesign,
     semantic_map: SemanticMap,
-    profile: ExportRenderProfile,
+    transport_profile: ExportTreeTransportProfile,
+    render_profile: RenderProfile,
+    render_profile_source_evidence: RenderProfileSourceEvidence,
 ) -> RenderedExportTree:
     """Render one whole generated ``export/`` tree from its three authorities.
 
     The caller selects a fresh target owned by the generation transaction.  This
     function does not validate or publish a surrounding revision; those
     responsibilities deliberately remain later generator steps.
+    _validate_transport_profile(joined, transport_profile)
     """
     if joined.variable_envelopes:
         identities = ", ".join(repr(envelope.record_identity) for envelope in joined.variable_envelopes)
@@ -125,14 +155,17 @@ def render_complete_export_tree(
             "fixed-width export generation refuses variable envelopes without a separately typed and proven "
             f"composition contract: {identities}",
         )
-    _validate_profile(joined, profile)
-    records, derivations = _render_records(joined.records, profile)
+    validate_render_profile(render_profile, joined, render_profile_source_evidence)
+    records, derivations = _render_records(joined.records, transport_profile, render_profile)
     layout = ExportLayoutDefinition.model_validate(
         {
-            "id": profile.layout_id,
-            "format": profile.format,
+            "id": transport_profile.layout_id,
+            "format": transport_profile.format,
             "source_refs": _sorted_refs(
-                (profile.source_ref, *(source for field in derivations for source in field.field.source_refs)),
+                (
+                    transport_profile.source_ref,
+                    *(source for field in derivations for source in field.field.source_refs),
+                ),
             ),
             "legal_refs": _sorted_refs(legal for field in derivations for legal in field.field.legal_refs),
             "records": tuple(record.model_dump(mode="python", exclude_none=True) for record in records),
@@ -154,6 +187,8 @@ def render_complete_export_tree(
         ),
         loaded_layout=layout,
         export_root=target_export_dir,
+        render_profile=render_profile,
+        render_profile_source_evidence=render_profile_source_evidence,
         field_derivations=tuple(derivations),
     )
     return RenderedExportTree(
@@ -164,26 +199,26 @@ def render_complete_export_tree(
     )
 
 
-def _validate_profile(joined: JoinedRecordDesign, profile: ExportRenderProfile) -> None:
+def _validate_transport_profile(joined: JoinedRecordDesign, profile: ExportTreeTransportProfile) -> None:
     if profile.modelo != joined.modelo:
         raise RegistryValidationError(
-            f"export render profile modelo {profile.modelo!r} does not match joined modelo {joined.modelo!r}",
+            f"export tree transport profile modelo {profile.modelo!r} does not match joined modelo {joined.modelo!r}",
         )
     if profile.design_epoch != joined.source.design_epoch:
         raise RegistryValidationError(
-            f"export render profile design epoch {profile.design_epoch!r} does not match "
+            f"export tree transport profile design epoch {profile.design_epoch!r} does not match "
             f"joined design epoch {joined.source.design_epoch!r}",
         )
     if profile.source_ref != joined.source.source_ref:
         raise RegistryValidationError(
-            f"export render profile source {profile.source_ref!r} does not match joined source "
+            f"export tree transport profile source {profile.source_ref!r} does not match joined source "
             f"{joined.source.source_ref!r}",
         )
     if profile.source_sha256 != joined.source.source_sha256:
-        raise RegistryValidationError("export render profile SHA-256 does not match joined official source")
+        raise RegistryValidationError("export tree transport profile SHA-256 does not match joined official source")
     if profile.serializer_convention != _SERIALIZER_CONVENTION:
         raise RegistryValidationError(
-            f"export render profile serializer {profile.serializer_convention!r} is not supported",
+            f"export tree transport profile serializer {profile.serializer_convention!r} is not supported",
         )
 
 
@@ -203,7 +238,8 @@ def _prepare_target(target_export_dir: Path) -> None:
 
 def _render_records(
     joined_records: tuple[JoinedRecordDesignRecord, ...],
-    profile: ExportRenderProfile,
+    transport_profile: ExportTreeTransportProfile,
+    render_profile: RenderProfile,
 ) -> tuple[tuple[ExportRecordDefinition, ...], tuple[ExportFieldDerivation, ...]]:
     records: list[ExportRecordDefinition] = []
     derivations: list[ExportFieldDerivation] = []
@@ -216,7 +252,13 @@ def _render_records(
         record_ids.add(record_id)
         _require_exact_record_geometry(joined_record)
         record_derivations = tuple(
-            _normalise_field(field, profile, export_record_id=record_id) for field in joined_record.fields
+            _normalise_field(
+                field,
+                transport_profile,
+                render_profile,
+                export_record_id=record_id,
+            )
+            for field in joined_record.fields
         )
         derivations.extend(record_derivations)
         records.append(
@@ -225,8 +267,8 @@ def _render_records(
                     "id": record_id,
                     "record_type": joined_record.semantic_record.record_type,
                     "order": order,
-                    "encoding": profile.encoding,
-                    "line_ending": profile.line_ending,
+                    "encoding": transport_profile.encoding,
+                    "line_ending": transport_profile.line_ending,
                     "fields": tuple(
                         item.field.model_dump(mode="python", exclude_none=True) for item in record_derivations
                     ),
@@ -271,7 +313,8 @@ def _require_exact_record_geometry(joined_record: JoinedRecordDesignRecord) -> N
 
 def _normalise_field(
     joined_field: JoinedRecordDesignField,
-    profile: ExportRenderProfile,
+    transport_profile: ExportTreeTransportProfile,
+    render_profile: RenderProfile,
     *,
     export_record_id: str,
 ) -> ExportFieldDerivation:
@@ -279,14 +322,14 @@ def _normalise_field(
     semantic_entry = joined_field.semantic_entry
     _require_safe_identifier(str(semantic_entry.export_field_id), subject="export field id")
     if semantic_entry.kind is CasillaFieldKind.LITERAL:
-        return _literal_derivation(joined_field, profile, export_record_id=export_record_id)
+        return _literal_derivation(joined_field, transport_profile, export_record_id=export_record_id)
     if semantic_entry.kind is CasillaFieldKind.FILLER:
         return _schema_field(
             joined_field,
             data_type="text",
             required=False,
-            padding="right_space",
-            justification="left",
+            padding=ExportPadding.RIGHT_SPACE,
+            justification=ExportJustification.LEFT,
             signed=False,
             export_record_id=export_record_id,
             derivation_code="filler-v1",
@@ -302,12 +345,18 @@ def _normalise_field(
             joined_field,
             data_type="text",
             required=_is_required(parser_field.validation),
-            padding="right_space",
-            justification="left",
+            padding=ExportPadding.RIGHT_SPACE,
+            justification=ExportJustification.LEFT,
             signed=False,
             export_record_id=export_record_id,
             derivation_code=derivation_code,
         )
+        if parser_field.content is None or not parser_field.content.strip():
+            return _render_profile_numeric_derivation(
+                joined_field,
+                render_profile,
+                export_record_id=export_record_id,
+            )
     if type_code in _NUMERIC_TYPES:
         return _numeric_derivation(joined_field, export_record_id=export_record_id)
     raise RegistryValidationError(
@@ -317,7 +366,7 @@ def _normalise_field(
 
 def _literal_derivation(
     joined_field: JoinedRecordDesignField,
-    profile: ExportRenderProfile,
+    profile: ExportTreeTransportProfile,
     *,
     export_record_id: str,
 ) -> ExportFieldDerivation:
@@ -359,8 +408,8 @@ def _literal_derivation(
         joined_field,
         data_type="text",
         required=True,
-        padding="none",
-        justification="none",
+        padding=ExportPadding.NONE,
+        justification=ExportJustification.NONE,
         signed=False,
         export_record_id=export_record_id,
         derivation_code="literal-exact-v1",
@@ -389,8 +438,8 @@ def _numeric_derivation(
             joined_field,
             data_type="date",
             required=_is_required(parser_field.validation),
-            padding="none",
-            justification="none",
+            padding=ExportPadding.NONE,
+            justification=ExportJustification.NONE,
             signed=False,
             export_record_id=export_record_id,
             date_format=_DATE_CONTENT,
@@ -405,8 +454,8 @@ def _numeric_derivation(
             joined_field,
             data_type="decimal",
             required=_is_required(parser_field.validation),
-            padding="left_zero",
-            justification="right",
+            padding=ExportPadding.LEFT_ZERO,
+            justification=ExportJustification.RIGHT,
             signed=False,
             export_record_id=export_record_id,
             decimals=decimals,
@@ -419,8 +468,8 @@ def _numeric_derivation(
             joined_field,
             data_type="integer",
             required=_is_required(parser_field.validation),
-            padding="left_zero",
-            justification="right",
+            padding=ExportPadding.LEFT_ZERO,
+            justification=ExportJustification.RIGHT,
             signed=False,
             export_record_id=export_record_id,
             derivation_code="numeric-integer-v1",
@@ -428,6 +477,115 @@ def _numeric_derivation(
     raise RegistryValidationError(
         f"official numeric field {joined_field.semantic_entry.export_field_id!r} has ambiguous content {content!r}",
     )
+
+def _render_profile_numeric_derivation(
+    joined_field: JoinedRecordDesignField,
+    profile: RenderProfile,
+    *,
+    export_record_id: str,
+) -> ExportFieldDerivation:
+    anchor = _render_profile_anchor(joined_field)
+    width_rule = next((rule for rule in profile.width_17_rules if anchor in rule.anchors), None)
+    if width_rule is not None:
+        return _profile_width_17_derivation(
+            joined_field,
+            width_rule,
+            export_record_id=export_record_id,
+        )
+    singleton = next((rule for rule in profile.singleton_rules if rule.anchor == anchor), None)
+    if singleton is None:
+        raise RegistryValidationError(
+            f"validated render profile has no exact rule for blank numeric anchor {anchor!r}",
+        )
+    return _profile_singleton_derivation(
+        joined_field,
+        singleton,
+        export_record_id=export_record_id,
+    )
+
+
+def _profile_width_17_derivation(
+    joined_field: JoinedRecordDesignField,
+    rule: Width17MembershipRule,
+    *,
+    export_record_id: str,
+) -> ExportFieldDerivation:
+    return _schema_field(
+        joined_field,
+        data_type="money" if rule.sign_policy == "n-prefix-negative-blank-nonnegative" else "decimal",
+        required=_is_required(joined_field.parser_field.validation),
+        padding=ExportPadding.LEFT_ZERO,
+        justification=ExportJustification.RIGHT,
+        signed=rule.sign_policy == "n-prefix-negative-blank-nonnegative",
+        export_record_id=export_record_id,
+        decimals=rule.decimal_digits,
+        derivation_code="render-profile-width-17-v1",
+    )
+
+
+def _profile_singleton_derivation(
+    joined_field: JoinedRecordDesignField,
+    rule: SingletonNumericRule,
+    *,
+    export_record_id: str,
+) -> ExportFieldDerivation:
+    data_type: Literal["text", "integer", "decimal", "money", "date", "boolean"]
+    date_format: str | None = None
+    decimals: int | None = None
+    policy_shape = _SINGLETON_POLICY_SHAPES.get(rule.value_policy)
+    if policy_shape is None:
+        raise RegistryValidationError(f"unsupported singleton export value policy {rule.value_policy!r}")
+    if policy_shape == "date":
+        data_type = "date"
+        date_format = _DATE_CONTENT
+        padding = ExportPadding.NONE
+        justification = ExportJustification.NONE
+    elif policy_shape == "decimal":
+        data_type = "decimal"
+        decimals = rule.decimal_digits
+        padding = ExportPadding.LEFT_ZERO
+        justification = ExportJustification.RIGHT
+    elif policy_shape == "digit_identity":
+        data_type = "text"
+        padding = ExportPadding.NONE
+        justification = ExportJustification.NONE
+    elif policy_shape == "integer":
+        data_type = "integer"
+        padding = ExportPadding.LEFT_ZERO
+        justification = ExportJustification.RIGHT
+    else:
+        raise RegistryValidationError(f"unsupported singleton export policy shape {policy_shape!r}")
+    allowed_values = (
+        rule.allowed_values or None
+        if rule.value_policy is ExportValuePolicy.ENUMERATED_DIGITS
+        else None
+    )
+    return _schema_field(
+        joined_field,
+        data_type=data_type,
+        required=_is_required(joined_field.parser_field.validation),
+        padding=padding,
+        justification=justification,
+        signed=False,
+        export_record_id=export_record_id,
+        derivation_code="render-profile-singleton-v1",
+        date_format=date_format,
+        decimals=decimals,
+        value_policy=rule.value_policy,
+        allowed_values=allowed_values,
+    )
+
+
+def _render_profile_anchor(joined_field: JoinedRecordDesignField) -> RenderProfileAnchor:
+    field = joined_field.parser_field
+    return RenderProfileAnchor(
+        sheet=field.sheet,
+        source_row=field.source_row,
+        source_cell=field.source_cell,
+        ordinal=field.ordinal,
+        record_identity=field.record_identity,
+    )
+
 
 
 def _require_numeric_extent(joined_field: JoinedRecordDesignField, *, expected_length: int) -> None:
@@ -444,12 +602,14 @@ def _schema_field(
     *,
     data_type: Literal["text", "integer", "decimal", "money", "date", "boolean"],
     required: bool,
-    padding: Literal["left_zero", "left_space", "right_space", "none"],
-    justification: Literal["left", "right", "none"],
+    padding: ExportPadding,
+    justification: ExportJustification,
     signed: bool,
     export_record_id: str,
     derivation_code: ExportFieldDerivationCode,
     date_format: str | None = None,
+    value_policy: ExportValuePolicy | None = None,
+    allowed_values: tuple[str, ...] | None = None,
     decimals: int | None = None,
 ) -> ExportFieldDerivation:
     parser_field = joined_field.parser_field
@@ -476,6 +636,8 @@ def _schema_field(
                 "justification": justification,
                 "date_format": date_format,
                 "decimals": decimals,
+                "value_policy": value_policy,
+                "allowed_values": allowed_values,
                 "signed": signed,
                 "legal_refs": semantic_entry.legal_refs,
                 "source_refs": semantic_entry.source_refs,

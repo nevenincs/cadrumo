@@ -28,6 +28,7 @@ from ._provenance_manifest import (
     ExportFragmentProvenanceManifest,
     ExportFragmentTarget,
     verify_export_fragment_provenance_manifest,
+from ._render_profile import RenderProfile, RenderProfileSourceEvidence
 )
 from ._semantic_map import SemanticMap
 from ._semantic_map_join import JoinedRecordDesign
@@ -70,6 +71,8 @@ def validate_generated_export_tree(
     context: GeneratedExportTreeValidationContext,
     joined: JoinedRecordDesign,
     semantic_map: SemanticMap,
+    render_profile: RenderProfile,
+    render_profile_source_evidence: RenderProfileSourceEvidence,
     rendered: RenderedExportTree,
 ) -> ValidatedGeneratedExportTree:
     """Prove that one complete, isolated generated tree is filing-selectable.
@@ -115,6 +118,8 @@ def validate_generated_export_tree(
         semantic_map=semantic_map,
         target=context.target,
         loaded_layout=loaded_layout,
+        render_profile=render_profile,
+        render_profile_source_evidence=render_profile_source_evidence,
         field_derivations=rendered.field_derivations,
     )
 

@@ -12,13 +12,14 @@ from pydantic import ValidationError
 
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import (
+    CasillaFieldKind,
     ExportValuePolicy,
     RegistryValidationError,
     load_catalogue_file,
     resolve_record_design_binary,
 )
 
-from .. import _render_profile
+from .. import _export_tree, _render_profile
 from .._record_design_ir import (
     RecordDesignIntermediate,
     RecordDesignWorkbookFormat,
@@ -39,6 +40,7 @@ from .._render_profile import (
     load_render_profile,
     load_render_profile_source_evidence,
     project_render_profile_eligibility,
+    render_profile_digest,
     validate_render_profile,
     validate_render_profile_authority,
 )
@@ -71,7 +73,7 @@ def _design_identity(*, sha256: str = "a" * 64) -> RenderProfileDesignIdentity:
     )
 
 
-def _intermediate(*, smaller_content: str | None = None) -> RecordDesignIntermediate:
+def _intermediate(*, smaller_content: str | None = None, smaller_length: int = 2) -> RecordDesignIntermediate:
     return RecordDesignIntermediate.model_validate(
         {
             "source": {
@@ -84,12 +86,12 @@ def _intermediate(*, smaller_content: str | None = None) -> RecordDesignIntermed
                 {
                     "sheet": "DP200001",
                     "record_identity": "DP200001",
-                    "declared_total": 40,
+                    "declared_total": 38 + smaller_length,
                     "fields": (
                         _field(10, offset=1, length=17, aeat_type="Num"),
                         _field(11, offset=18, length=17, aeat_type="N"),
-                        _field(12, offset=35, length=2, aeat_type="Num", content=smaller_content),
-                        _field(13, offset=37, length=4, aeat_type="An", content=None),
+                        _field(12, offset=35, length=smaller_length, aeat_type="Num", content=smaller_content),
+                        _field(13, offset=35 + smaller_length, length=4, aeat_type="An", content=None),
                     ),
                 },
             ),
@@ -269,6 +271,81 @@ def test_complete_profile_covers_only_blank_fixed_numeric_fields_and_preserves_n
     evidence = profile.singleton_rules[0].evidence
     assert isinstance(evidence, OfficialSourceEvidence)
     assert evidence.source_cell == profile.singleton_rules[0].anchor.source_cell
+
+
+def test_singleton_rules_consume_the_public_closed_value_policy_axis() -> None:
+    profile = _profile()
+
+    assert all(isinstance(rule.value_policy, ExportValuePolicy) for rule in profile.singleton_rules)
+    source = Path("dev/registry/_render_profile.py").read_text(encoding="utf-8")
+    assert "SingletonValuePolicy" not in source
+    assert "BeforeValidator(coerce_export_value_policy)" not in source
+
+
+def test_render_profile_digest_is_order_independent_and_evidence_sensitive() -> None:
+    profile = _profile()
+    source_evidence = _source_evidence()
+    reordered = profile.model_copy(
+        update={
+            "fragment_ids": tuple(reversed(profile.fragment_ids)),
+            "width_17_rules": tuple(reversed(profile.width_17_rules)),
+            "singleton_rules": tuple(reversed(profile.singleton_rules)),
+        },
+    )
+    reordered_evidence = source_evidence.model_copy(
+        update={"entries": tuple(reversed(source_evidence.entries))},
+    )
+    changed_evidence = source_evidence.model_copy(
+        update={
+            "entries": (
+                source_evidence.entries[0].model_copy(
+                    update={"normalized_statement": "A distinct reviewed source statement."},
+                ),
+                *source_evidence.entries[1:],
+            ),
+        },
+    )
+
+    baseline = render_profile_digest(profile, source_evidence)
+
+    assert render_profile_digest(reordered, reordered_evidence) == baseline
+    assert render_profile_digest(profile, changed_evidence) != baseline
+    assert render_profile_digest(profile.model_copy(update={"fragment_ids": ("changed",)}), source_evidence) != baseline
+
+
+def test_wire_authority_profiles_have_one_unambiguous_class_home() -> None:
+    production_paths = tuple((Path(__file__).parents[1]).glob("*.py"))
+    class_homes: dict[str, list[str]] = {"RenderProfile": [], "ExportTreeTransportProfile": []}
+    for path in production_paths:
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in tree.body:
+            if isinstance(node, ast.ClassDef) and node.name in class_homes:
+                class_homes[node.name].append(path.name)
+        assert "ExportRenderProfile" not in path.read_text(encoding="utf-8")
+
+    assert class_homes == {
+        "RenderProfile": ["_render_profile.py"],
+        "ExportTreeTransportProfile": ["_export_tree.py"],
+    }
+
+
+def test_fragment_toml_refuses_a_missing_required_value_policy(tmp_path: Path) -> None:
+    fragment = RenderProfileFragment(
+        schema_version=1,
+        fragment_id="missing-policy",
+        design_identity=_design_identity(),
+        width_17_rules=(),
+        singleton_rules=(_singleton(_anchor(12)),),
+    )
+    source = _fragment_toml(fragment)
+    assert 'value_policy = "digit-string"\n' in source
+    (tmp_path / "0001.toml").write_text(
+        source.replace('value_policy = "digit-string"\n', "", 1),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(RegistryValidationError, match="value_policy"):
+        load_render_profile(tmp_path)
 
 
 @pytest.mark.parametrize(
@@ -827,6 +904,27 @@ def test_real_source_loader_refuses_nonexistent_cell_statement_and_sha_mutations
         load_render_profile_source_evidence(resolved.path, drifted)
 
 
+def test_real_source_loader_refuses_a_linked_official_binary_before_hashing(tmp_path: Path) -> None:
+    """A link never becomes a substitute source for profile evidence."""
+    source_root = bundled_path()
+    catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "is.toml"))
+    resolved = resolve_record_design_binary(
+        source_root,
+        catalogues.sources,
+        source_ref="aeat-dr-200-2025",
+        filing_year=2025,
+        design_epoch="2025",
+    )
+    profile = load_render_profile(
+        Path(__file__).parents[1] / "render_profiles" / "modelo_200" / "2025",
+    )
+    linked_source = tmp_path / resolved.path.name
+    linked_source.symlink_to(resolved.path)
+
+    with pytest.raises(RegistryValidationError, match="regular file"):
+        load_render_profile_source_evidence(linked_source, profile)
+
+
 def test_profile_authority_has_no_legacy_tree_or_layout_oracle() -> None:
     """The authority depends only on parser IR and exact joined source fields."""
     module = ast.parse(inspect.getsource(_render_profile))
@@ -836,6 +934,20 @@ def test_profile_authority_has_no_legacy_tree_or_layout_oracle() -> None:
         if isinstance(node, ast.ImportFrom) and node.level and node.module is not None
     }
     assert local_imports == {"_record_design_ir", "_semantic_map_join"}
+    source_loader = next(
+        node
+        for node in module.body
+        if isinstance(node, ast.FunctionDef) and node.name == "load_render_profile_source_evidence"
+    )
+    source_calls = {
+        node.func.attr
+        for node in ast.walk(source_loader)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and isinstance(node.func.value, ast.Name)
+        and node.func.value.id == "source_path"
+    }
+    assert {"is_symlink", "is_junction"} <= source_calls
 
 
 def test_real_profile_fragments_stay_below_the_reviewability_line_cap() -> None:
