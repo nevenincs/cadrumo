@@ -4,7 +4,7 @@ tags:
   - '#current-schema-only-purge'
 date: '2026-08-10'
 modified: '2026-08-10'
-body_hash: 'sha256:3840857daf514e37d719aae7bad4cd82d1213fe3422312d30308fa9520a8948b'
+body_hash: 'sha256:e96348fd9454f54a1f0e6f21e995aee544f4c61a90494d8f95d1e9c642319fae'
 tier: L3
 related:
   - '[[2026-07-09-compatibility-lifecycle-adr]]'
@@ -61,7 +61,7 @@ Make live profile records and immutable snapshots accept exactly the canonical v
 - [x] `W01.P01.S01` - Require exact schema id and schema version 4 for UserProfileRecord and UserProfileSnapshot; `src/cadrumo/domain/user_profile/_values.py`.
 - [x] `W01.P01.S02` - Stamp newly created profile records explicitly with the canonical schema version; `src/cadrumo/application/user_profile/_lifecycle.py`.
 - [x] `W01.P01.S03` - Prove current profile schema hydration and non-current marker refusal; `src/cadrumo/domain/user_profile/tests/test_payload_schema_identity.py`.
-- [ ] `W01.P01.S24` - Make UserProfileRecord schema_version required with no default so a persisted payload omitting the marker refuses instead of hydrating as canonical, sweeping the construction sites that then break; `src/cadrumo/domain/user_profile/_values.py and the 231 UserProfileRecord construction sites across roughly 150 files, of which all but two are tests and dev harnesses owned by peer campaigns`.
+- [ ] `W01.P01.S24` - Refuse a persisted profile payload that omits schema_version at both profile read boundaries, rather than making the field required. Required-ness was NOT taken because 229 of the 231 construction sites are in-memory test and harness constructions that are not the defect, while the defect is bytes hydrating as current. What required-ness would still buy, and what this row therefore does not deliver, is making the unstamped state unconstructable in memory as well as unreadable from disk; `src/cadrumo/application/user_profile/_repository.py at both the record load and the snapshot load, never in the shared SecureBoundRepository whose generic path serves other namespaces`.
 
 ### Phase `W01.P03` - Pin the active bucket pointer format
 
