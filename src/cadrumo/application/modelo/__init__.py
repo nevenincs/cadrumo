@@ -316,6 +316,7 @@ from ._reconcile_casilla import (
     CasillaDivergenceKind,
     detect_casilla_divergences,
 )
+from ._pulled_filing_reconcile import pulled_filing_divergence_findings
 from ._reconcile_population import (
     CasillaPopulationScope,
     resolve_casilla_population_scope,
@@ -858,6 +859,7 @@ __all__ = [
     "project_modelo_work_target",
     "project_modelo_work_unit",
     "public_key_hex_from_raw_bytes",
+    "pulled_filing_divergence_findings",
     "read_m036_declaration",
     "read_m145_communication_record",
     "rebuild_participation_index",

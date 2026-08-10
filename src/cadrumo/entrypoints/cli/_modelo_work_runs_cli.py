@@ -24,7 +24,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from typing import Annotated
 
 import typer
@@ -60,53 +60,21 @@ from ._modelo_work_options import (
     _YearOpt,
 )
 
-_DRAFT_RECALCULATE_COMMAND = "aeat app modelo work calculate"
-_VERIFICATION_REPORT_LIST_COMMAND = (
-    "aeat app modelo verification-report list --calculation-revision-id <calculation_revision_id>"
-)
-_CANONICAL_DRAFT_BUILD_REFUSED_NEXT_ACTION = f"Repair the cited draft input and rerun {_DRAFT_RECALCULATE_COMMAND}."
-_CANONICAL_VERIFICATION_REPORT_NEXT_ACTION = f"Run: {_VERIFICATION_REPORT_LIST_COMMAND}"
-
 
 def _render_workflow_step_summary(
-    summary: str,
-    details: WorkflowStepDetails | Mapping[str, object] | None,
+    summary_locale_key: str,
+    details: WorkflowStepDetails | None,
 ) -> str:
-    """Localize a structured persisted builder refusal for CLI projection only."""
-    if details is None or details.get("error_type") != "ModeloBuilderError":
-        return summary
-    error_message = details.get("error_message")
-    if not isinstance(error_message, str) or not error_message:
-        return summary
-    return tr(
-        "cli.app.modelo.work.workflow_draft_build_refused_summary",
-        error_message=error_message,
-    )
-
-
-def _render_workflow_next_action(next_action: str | None) -> str | None:
-    """Localize recognized canonical recovery prose without changing its command token."""
-    if next_action == _CANONICAL_DRAFT_BUILD_REFUSED_NEXT_ACTION:
-        return tr(
-            "cli.app.modelo.work.workflow_draft_build_refused_next_action",
-            command=_DRAFT_RECALCULATE_COMMAND,
-        )
-    if next_action == _CANONICAL_VERIFICATION_REPORT_NEXT_ACTION:
-        return tr(
-            "cli.app.modelo.work.workflow_review_verification_report_next_action",
-            command=_VERIFICATION_REPORT_LIST_COMMAND,
-        )
-    return next_action
+    """Render an abstract workflow summary from its closed locale-neutral facts."""
+    interpolation = {} if details is None else details.model_dump(mode="json", exclude_none=True)
+    return tr(summary_locale_key, **interpolation)
 
 
 def _workflow_run_payload(run: WorkflowResult) -> WorkflowRunPayload:
     """Project one persisted workflow run into localized CLI-only presentation fields."""
     final_step = run.steps[-1] if run.steps else None
-    next_action: str | None = None
-    if final_step is not None and final_step.details is not None:
-        value = final_step.details.get("next_action")
-        if isinstance(value, str):
-            next_action = value
+    summary_locale_key = final_step.summary_locale_key if final_step is not None else run.summary_locale_key
+    summary_details = final_step.details if final_step is not None else run.summary_details
     return WorkflowRunPayload(
         run_id=run.run_id,
         modelo=run.obligation.modelo if run.obligation is not None else None,
@@ -115,10 +83,9 @@ def _workflow_run_payload(run: WorkflowResult) -> WorkflowRunPayload:
         aborted_reason=run.aborted_reason.value if run.aborted_reason is not None else None,
         started_at=run.started_at.isoformat(),
         summary=_render_workflow_step_summary(
-            final_step.summary if final_step is not None else run.summary,
-            final_step.details if final_step is not None else None,
+            summary_locale_key,
+            summary_details,
         ),
-        next_action=_render_workflow_next_action(next_action),
     )
 
 
@@ -133,7 +100,6 @@ def _workflow_run_tab_line(run: WorkflowRunPayload) -> str:
             run.aborted_reason or "-",
             run.started_at,
             run.summary,
-            run.next_action or "",
         ),
     )
 
@@ -176,7 +142,7 @@ def register_work_run_commands(
         lines = [
             "operation\tmodelo.work.runs",
             f"run_count\t{len(runs)}",
-            "run_id\tmodelo\tperiod\tfinal_stage\taborted_reason\tstarted_at\tsummary\tnext_action",
+            "run_id\tmodelo\tperiod\tfinal_stage\taborted_reason\tstarted_at\tsummary",
         ]
         lines.extend(_workflow_run_tab_line(run) for run in run_payloads)
         _emit_envelope(ctx, command="modelo.work.runs", result=result, lines=lines)

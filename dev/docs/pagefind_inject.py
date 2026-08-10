@@ -312,10 +312,11 @@ def _meta_for(
 ) -> dict[str, str]:
     """Build the typed Pagefind meta map for the palette term card."""
     meta: dict[str, str] = {
-        # The Rung-2 bridge hydrates this opaque id from its authoritative
-        # manifest. Keep it explicit in Pagefind metadata so semantic results
-        # and lexical results deduplicate on the same identity; neither the
-        # browser nor this seam derives a URL from it.
+        # An opaque record identity, kept explicit in Pagefind metadata so that
+        # results deduplicate on the same identity whichever pass surfaced
+        # them; neither the browser nor this seam derives a URL from it. A
+        # semantic tier would hydrate the id from its own authoritative
+        # manifest, but no such tier exists in this tree today.
         "record_id": record.id,
         "kind": record.kind.value,
         "tier": record.tier.value,

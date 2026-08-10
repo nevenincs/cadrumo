@@ -11,6 +11,7 @@ over a real bundled registry revision rather than a hand-built one.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
@@ -35,6 +36,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _REVISION_ID = "a" * 64
 _WORK_UNIT_ID = "b" * 64
 
+#: Distinct and fixed rather than "now". The model documents updated_at as equal
+#: to created_at on a fresh draft, so a differing pair is the non-default state a
+#: save-drops-field / load-re-defaults regression would collapse; and a frozen
+#: instant keeps the fixture deterministic.
+_CREATED_AT = datetime(2026, 3, 4, 9, 15, 30, tzinfo=UTC)
+_UPDATED_AT = datetime(2026, 5, 6, 17, 45, 5, tzinfo=UTC)
+
 
 def _m130_revision() -> ModeloRevision:
     """Return the real bundled Modelo 130 revision used as the subject."""
@@ -54,6 +62,8 @@ def _calculation(
         state=CalculationRevisionState.BORRADOR,
         input_values_by_casilla_id=dict(inputs or {}),
         binding_overrides=dict(binding_overrides or {}),
+        created_at=_CREATED_AT,
+        updated_at=_UPDATED_AT,
     )
 
 

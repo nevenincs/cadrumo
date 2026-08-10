@@ -11,9 +11,18 @@ import pytest
 from click.testing import Result
 
 from ....application.modelo import create_work_unit, workflow_period_for_work_unit
+from ....application.operator_actions import (
+    ActionConditionality,
+    ConditionEvidence,
+    ConditionEvidenceProvenance,
+    NoRecoveryOutcome,
+    PreconditionVerdict,
+)
 from ....application.user_profile import UserProfileLifecycleRepository, profile_create_storage_span
 from ....application.workflow import (
     WorkflowAbortReason,
+    WorkflowFailureDetails,
+    WorkflowObligationFacts,
     WorkflowResult,
     WorkflowStage,
     WorkflowStep,
@@ -22,8 +31,8 @@ from ....application.workflow import (
     save_run,
     workflow_state_repository,
 )
-from ....core import Period, resolve_active_bucket_id
-from ....domain.deadlines import ModeloDeadline, ObligationStatus
+from ....core import Modelo, Period, resolve_active_bucket_id
+from ....domain.deadlines import ObligationStatus
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -37,6 +46,8 @@ def _invoke_work(args: Sequence[str]) -> Result:
 
 
 _T = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)
+_PROFILE_ID = "11111111-1111-4111-8111-111111111111"
+_PROFILE_LABEL = "resume-test"
 _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
     UserProfileFact(path="identity.tax_id", value="00000000T"),
     UserProfileFact(path="identity.name", value="Operator"),
@@ -56,7 +67,7 @@ def _seed_ready_profile_record(bucket_id: str) -> None:
     UserProfileLifecycleRepository(bucket_id=bucket_id).save(
         UserProfileRecord(
             profile_id=bucket_id,
-            display_name=bucket_id,
+            display_name=_PROFILE_LABEL,
             facts=_READY_PROFILE_FACTS,
             created_at=_T,
             updated_at=_T,
@@ -68,24 +79,27 @@ def _seed_ready_profile_record(bucket_id: str) -> None:
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        profile_create_storage_span("11111111-1111-4111-8111-111111111111"),
+        profile_create_storage_span(_PROFILE_ID),
     ):
         workflow_state_repository().update(
-            lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111")
+            lambda state: register_minimal_profile(
+                state,
+                profile_id=_PROFILE_ID,
+                display_name=_PROFILE_LABEL,
+            )
         )
-        _seed_ready_profile_record("11111111-1111-4111-8111-111111111111")
+        _seed_ready_profile_record(_PROFILE_ID)
         yield
 
 
-def _obligation(modelo: str = "130", period: Period | None = None) -> ModeloDeadline:
+def _obligation(modelo: str = "130", period: Period | None = None) -> WorkflowObligationFacts:
     target_period = period or Period.from_year_and_code(2026, "1T")
-    return ModeloDeadline(
-        modelo=modelo,
+    return WorkflowObligationFacts(
+        modelo=Modelo(modelo),
         period=target_period,
         opens_on=date(2026, 4, 1),
         closes_on=date(2026, 4, 20),
         status=ObligationStatus.UPCOMING,
-        applies_because="economic activity",
     )
 
 
@@ -95,7 +109,24 @@ def _aborted_run(run_id: str, *, reason: WorkflowAbortReason) -> WorkflowResult:
         started_at=_T,
         ended_at=_T,
         success=False,
-        summary="aborted",
+        summary_locale_key="application.workflow.steps.site_unavailable",
+        details=WorkflowFailureDetails(
+            kind="workflow_failure",
+            error_code="workflow.site.unavailable",
+        ),
+        precondition_verdict=PreconditionVerdict(
+            failed_condition_id="workflow.site.available",
+            evidence=(
+                ConditionEvidence(
+                    condition_id="workflow.site.available",
+                    evidence_id="workflow.site.health",
+                    provenance=ConditionEvidenceProvenance.RUNTIME_OBSERVATION,
+                    values={"site_available": False},
+                ),
+            ),
+            conditionality=ActionConditionality.NOT_APPLICABLE,
+            no_recovery_outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+        ),
     )
     return WorkflowResult(
         run_id=run_id,
@@ -105,7 +136,8 @@ def _aborted_run(run_id: str, *, reason: WorkflowAbortReason) -> WorkflowResult:
         aborted_reason=reason,
         obligation=_obligation(),
         steps=(step,),
-        summary="aborted",
+        summary_locale_key="application.workflow.results.aborted",
+        summary_details=step.details,
     )
 
 
@@ -115,7 +147,7 @@ def _done_run(run_id: str) -> WorkflowResult:
         started_at=_T,
         ended_at=_T,
         success=True,
-        summary="ok",
+        summary_locale_key="application.workflow.steps.profile_loaded",
     )
     return WorkflowResult(
         run_id=run_id,
@@ -125,14 +157,36 @@ def _done_run(run_id: str) -> WorkflowResult:
         aborted_reason=None,
         obligation=_obligation(),
         steps=(step,),
-        summary="ok",
+        summary_locale_key="application.workflow.results.completed",
     )
 
 
 def _builder_refused_run(run_id: str) -> WorkflowResult:
-    """Build one canonical aborted run with the real builder-refusal diagnostics."""
-    summary = "Draft build refused: unresolved registry input. Repair the cited draft input and recalculate."
-    next_action = "Repair the cited draft input and rerun aeat app modelo work calculate."
+    """Build one persisted builder refusal without recovering a command from prose."""
+    step = WorkflowStep(
+        stage=WorkflowStage.BUILDING_DRAFT,
+        started_at=_T,
+        ended_at=_T,
+        success=False,
+        summary_locale_key="application.workflow.steps.draft_build_failed",
+        details=WorkflowFailureDetails(
+            kind="workflow_failure",
+            error_code="workflow.draft.build_failure",
+        ),
+        precondition_verdict=PreconditionVerdict(
+            failed_condition_id="workflow.draft.buildable",
+            evidence=(
+                ConditionEvidence(
+                    condition_id="workflow.draft.buildable",
+                    evidence_id="workflow.draft.build_failure",
+                    provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+                    values={"buildable": False},
+                ),
+            ),
+            conditionality=ActionConditionality.NOT_APPLICABLE,
+            no_recovery_outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+        ),
+    )
     return WorkflowResult(
         run_id=run_id,
         started_at=_T,
@@ -140,21 +194,9 @@ def _builder_refused_run(run_id: str) -> WorkflowResult:
         final_stage=WorkflowStage.ABORTED,
         aborted_reason=WorkflowAbortReason.DRAFT_HAS_ERRORS,
         obligation=_obligation(),
-        steps=(
-            WorkflowStep(
-                stage=WorkflowStage.BUILDING_DRAFT,
-                started_at=_T,
-                ended_at=_T,
-                success=False,
-                summary=summary,
-                details={
-                    "error_type": "ModeloBuilderError",
-                    "error_message": "unresolved registry input",
-                    "next_action": next_action,
-                },
-            ),
-        ),
-        summary=summary,
+        steps=(step,),
+        summary_locale_key="application.workflow.results.aborted",
+        summary_details=step.details,
     )
 
 
@@ -230,49 +272,41 @@ def test_runs_lists_persisted_run_ids() -> None:
     assert "130\t2026 1T" in result.output
 
 
-def test_work_runs_localizes_one_persisted_builder_refusal_without_rewriting_it() -> None:
-    """Catalan and Hungarian are CLI projections over the same encrypted canonical run."""
+def test_work_runs_projects_a_typed_builder_refusal_without_reconstructing_a_command() -> None:
+    """The real CLI renders persisted facts and no longer carries a string recovery channel."""
     run = _builder_refused_run("f" * 16)
     save_run(run)
 
     stored_before = load_run(run.run_id)
     assert stored_before == run
-    assert stored_before.steps[-1].summary.startswith("Draft build refused:")
-    assert stored_before.steps[-1].details is not None
-    assert stored_before.steps[-1].details["next_action"] == (
-        "Repair the cited draft input and rerun aeat app modelo work calculate."
+    terminal = stored_before.steps[-1]
+    assert terminal.summary_locale_key == "application.workflow.steps.draft_build_failed"
+    assert terminal.details == WorkflowFailureDetails(
+        kind="workflow_failure",
+        error_code="workflow.draft.build_failure",
     )
+    assert terminal.precondition_verdict is not None
+    assert terminal.precondition_verdict.action is None
+    assert terminal.precondition_verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
 
-    for language, summary_prefix, action_prefix in (
-        ("ca", "S'ha rebutjat la generació de l'esborrany:", "Repareu l'entrada de l'esborrany indicada"),
-        ("hu", "A piszkozat összeállítása sikertelen:", "Javítsa ki a hivatkozott piszkozatbemenetet"),
-    ):
-        text_result = invoke_cached_cli(["--language", language, "app", "modelo", "work", "runs"])
-        assert text_result.exit_code == 0, text_result.output
-        assert (
-            "run_id\tmodelo\tperiod\tfinal_stage\taborted_reason\tstarted_at\tsummary\tnext_action"
-            in text_result.output
-        )
-        assert summary_prefix in text_result.output
-        assert action_prefix in text_result.output
-        assert "Draft build refused:" not in text_result.output
-        assert "Repair the cited draft input" not in text_result.output
-        assert "aeat app modelo work calculate" in text_result.output
+    text_result = _invoke_work(["runs"])
+    assert text_result.exit_code == 0, text_result.output
+    assert "run_id\tmodelo\tperiod\tfinal_stage\taborted_reason\tstarted_at\tsummary" in text_result.output
+    assert "next_action" not in text_result.output
+    assert "aeat app modelo work calculate" not in text_result.output
+    assert "application.workflow.steps.draft_build_failed" not in text_result.output
 
-        json_result = invoke_cached_cli(
-            ["--language", language, "--format", "json", "app", "modelo", "work", "runs"],
-        )
-        assert json_result.exit_code == 0, json_result.output
-        payload = json.loads(json_result.output)["result"]
-        rendered = next(row for row in payload["runs"] if row["run_id"] == run.run_id)
-        assert rendered["final_stage"] == WorkflowStage.ABORTED.value
-        assert rendered["aborted_reason"] == WorkflowAbortReason.DRAFT_HAS_ERRORS.value
-        assert rendered["summary"].startswith(summary_prefix)
-        assert rendered["next_action"].startswith(action_prefix)
-        assert "aeat app modelo work calculate" in rendered["next_action"]
+    json_result = invoke_cached_cli(["--format", "json", "app", "modelo", "work", "runs"])
+    assert json_result.exit_code == 0, json_result.output
+    payload = json.loads(json_result.output)["result"]
+    rendered = next(row for row in payload["runs"] if row["run_id"] == run.run_id)
+    assert rendered["final_stage"] == WorkflowStage.ABORTED.value
+    assert rendered["aborted_reason"] == WorkflowAbortReason.DRAFT_HAS_ERRORS.value
+    assert rendered["summary"]
+    assert "next_action" not in rendered
 
-        assert load_run(run.run_id) == stored_before
-        assert [candidate.run_id for candidate in list_runs()] == [run.run_id]
+    assert load_run(run.run_id) == stored_before
+    assert [candidate.run_id for candidate in list_runs()] == [run.run_id]
 
 
 def test_resume_rejects_a_malformed_target() -> None:
