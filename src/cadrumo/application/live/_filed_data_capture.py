@@ -60,13 +60,16 @@ from ...core import (
     FiledHistoryDiscoverySignal,
     Period,
     RegisterScopingSignal,
+    SyncSurface,
     require_active_bucket_id,
 )
 from ...core.config import load_settings
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.resources import bundled_path, resources
+from ...core.time import now
 from ...domain.calculations.registry import RegistryModeloObservation, ValidatedRegistryAuthority
+from ..storage.sync_runs import bounded_scope_description, record_sync_run
 from ._errors import LiveApplicationInputError, LiveIvaSurfaceTimeoutError
 from ._filed_capture_finalizer import FiledCaptureFailurePolicy, finalize_filed_capture
 from ._filed_data import (
@@ -773,6 +776,24 @@ async def capture_filed_data_bulk(
     )
     calculation_observation_keys = finalization.calculation_observation_keys
     failures.extend(finalization.failures)
+    # Last-sync provenance for the real path only. The preview branch above
+    # returns before reaching this, deliberately: a dry run persists nothing, so
+    # it has no provenance to record, and a record is itself a persist.
+    #
+    # Written on partial failure as well as success -- a run that reached three
+    # of ten pairs and failed the rest still happened, and a record written only
+    # on success would leave that sweep looking like it never ran rather than
+    # like it covered three. `unit_count` is what the run REACHED for the same
+    # reason.
+    record_sync_run(
+        bucket_id=bucket_id,
+        surface=SyncSurface.FILED_DECLARATIONS,
+        resolved_scope=bounded_scope_description(tuple(resolved_modelos), suffix=f"{year_from}-{year_to}"),
+        succeeded=not failures,
+        unit_count=len(calculation_observation_keys),
+        divergence_count=len(accumulator.recapture_divergences),
+        completed_at=now(),
+    )
     return BulkFiledDataCaptureReport(
         output_root=str(output_root),
         modelos=tuple(resolved_modelos),

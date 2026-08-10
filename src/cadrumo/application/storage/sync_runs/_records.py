@@ -64,8 +64,15 @@ from ....domain.buckets import BucketEventId
 __all__ = [
     "SyncRunRecord",
     "SyncRunRecordRepository",
+    "bounded_scope_description",
     "sync_run_record_key",
 ]
+
+#: Bound on the persisted scope description. Not a formality: a filed sweep with
+#: no explicit modelo list resolves to EVERY bundled modelo, which enumerates
+#: past a kilobyte, so an unbounded field would refuse the default sweep at the
+#: end of the run -- after every unit had already been fetched and written.
+_RESOLVED_SCOPE_MAX_LENGTH = 256
 
 
 class SyncRunRecord(BaseModel):
@@ -107,7 +114,16 @@ class SyncRunRecord(BaseModel):
     bucket_event_id: BucketEventId
     bucket_id: BucketId
     surface: SyncSurface
-    resolved_scope: str = Field(default="", max_length=256)
+    resolved_scope: str = Field(default="", max_length=_RESOLVED_SCOPE_MAX_LENGTH)
+    """What the run resolved its scope to, bounded so a wide sweep can persist.
+
+    The bound is a real constraint rather than a formality: a filed sweep with
+    no explicit modelo list resolves to EVERY bundled modelo, which enumerates
+    past a kilobyte. A caller with a scope that would overflow must summarise it
+    through :func:`bounded_scope_description` rather than truncate it, because a
+    truncated enumeration reads as a complete list of a smaller set -- which is
+    the same class of lie as a partial sweep reading as a full one.
+    """
     succeeded: bool
     unit_count: int = Field(default=0, ge=0)
     divergence_count: int = Field(default=0, ge=0)
@@ -144,6 +160,28 @@ class SyncRunRecord(BaseModel):
                 "a unit that was never reached cannot have diverged",
             )
         return value
+
+
+def bounded_scope_description(items: tuple[str, ...], *, suffix: str = "") -> str:
+    """Describe a scope within the record's bound, summarising rather than truncating.
+
+    A truncated enumeration is worse than a summary: it reads as a COMPLETE list
+    of a smaller set, which is the same lie a partial sweep tells when it reads
+    as a full one, and this store exists to stop exactly that. So an oversized
+    scope collapses to a count and a range rather than to a prefix.
+
+    Args:
+        items: The scope members, in the order the caller resolved them.
+        suffix: Trailing qualifier appended to either form, e.g. a year range.
+
+    Returns:
+        Either the full enumeration or a summary, always inside the field bound.
+    """
+    tail = f" {suffix}" if suffix else ""
+    enumerated = f"{','.join(items)}{tail}"
+    if len(enumerated) <= _RESOLVED_SCOPE_MAX_LENGTH:
+        return enumerated
+    return f"{len(items)} modelos ({items[0]}..{items[-1]}){tail}"
 
 
 def sync_run_record_key(*, surface: SyncSurface, bucket_event_id: str) -> str:
