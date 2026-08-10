@@ -58,7 +58,7 @@ The amended accepted ADR contains no unresolved operator questions, conditional 
 
 ## Recommendations
 
-- S46 is complete; proceed to S45. S45-S52 must remain open until their named implementation and proof gates pass; this S44 PASS is not evidence that those surfaces already exist.
+- Proceed to S45. S45-S52 must remain open until their named implementation and proof gates pass; this S44 PASS is not evidence that those surfaces already exist.
 - At S52, import `classify_official_boxes` for declaration and keep value-arrival and applicability assertions in their owning gates.
 - Re-run curation after S52 to confirm the planned migrations removed every header fallback, scalar-row surrogate, duplicate selector, and unsupported-as-filler path.
 
