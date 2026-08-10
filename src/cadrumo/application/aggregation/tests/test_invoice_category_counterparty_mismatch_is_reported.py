@@ -94,7 +94,7 @@ def _persist_contradicted_supply(secure_objects: SecureObjectRepository) -> str:
         # category alone cannot separate E from the exempt-importation claves.
         operation_type=IntracomOperationType.E,
     )
-    catalogue = InvoiceCatalogue.model_validate({invoice.invoice_id: invoice})
+    catalogue = InvoiceCatalogue.from_invoices((invoice,))
     InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(catalogue)
     return invoice.invoice_id
 
@@ -187,7 +187,7 @@ def test_a_supportable_supply_produces_no_advisory(secure_objects: SecureObjectR
         operation_type=IntracomOperationType.E,
     )
     InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
-        InvoiceCatalogue.model_validate({invoice.invoice_id: invoice}),
+        InvoiceCatalogue.from_invoices((invoice,)),
     )
 
     mismatches = _screen(secure_objects).category_counterparty_mismatches

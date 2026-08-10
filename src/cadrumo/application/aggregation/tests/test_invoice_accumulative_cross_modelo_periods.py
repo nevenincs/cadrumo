@@ -283,7 +283,7 @@ def _persist_invoice_life(secure_objects: SecureObjectRepository) -> None:
             currency="EUR",
             iva_category=IvaCategory.DOMESTIC_GENERAL,
         )
-        invoices = InvoiceCatalogue.model_validate({**invoices.invoices, invoice.invoice_id: invoice})
+        invoices = InvoiceCatalogue.model_validate({"invoices": {**invoices.invoices, invoice.invoice_id: invoice}})
         transaction = _income_transaction(period)
         transactions = TransactionCatalogue.model_validate(
             {**{t.transaction_id: t for t in transactions.values()}, transaction.transaction_id: transaction},
