@@ -51,6 +51,12 @@ IVA_WALLET_OWNED_RELATION_TARGETS: frozenset[IvaWalletRelationTarget] = frozense
             "modelo-303-rel-self-compensacion-anteriores",
             MODELO_303_IVA_COMPENSATION_BINDING_ID,
         ),
+        (
+            Modelo.M303.value,
+            "2026-y-siguientes",
+            "modelo-303-rel-self-compensacion-anteriores",
+            MODELO_303_IVA_COMPENSATION_BINDING_ID,
+        ),
     },
 )
 

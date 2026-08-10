@@ -59,7 +59,6 @@ busy with work outside this repository for longer than the threshold". On this
 fleet the second cannot happen, but the message says what was observed -- a lane
 that did not start and no evidence of that label set being served -- rather than
 asserting the stronger claim the evidence does not support.
-
 It deliberately does NOT try to separate "this lane can never be scheduled" (a
 label no runner carries, like the Scoop lane's) from "the fleet is temporarily
 degraded" (a host asleep). Two reasons. It structurally cannot: the only

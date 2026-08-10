@@ -8,7 +8,10 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from datetime import datetime
-from typing import ClassVar, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, ClassVar, Protocol, runtime_checkable
+
+if TYPE_CHECKING:
+    from ._registry import ErrorEnvelope
 
 
 @runtime_checkable
@@ -296,12 +299,10 @@ from ._registry import (
     ERROR_REGISTRY,
     ErrorCategory,
     ErrorCode,
-    ErrorEnvelope,
     bind_error_code,
     build_error_envelope,
     declared_error_codes,
     get_error_exit_code,
-    get_error_suggestion,
     get_registered_error_code,
     register,
     render_error_json,
@@ -311,6 +312,21 @@ from ._registry import (
     scrub_error_context,
 )
 from ._severity import BaseSeverity
+
+
+def __getattr__(name: str) -> object:
+    """Complete the error-envelope action type on first public access."""
+    if name == "ErrorEnvelope":
+        from ..json_contract import ResolvedPreconditionAction
+        from ._registry import ErrorEnvelope
+
+        ErrorEnvelope.model_rebuild(
+            _types_namespace={"ResolvedPreconditionAction": ResolvedPreconditionAction},
+        )
+        globals()[name] = ErrorEnvelope
+        return ErrorEnvelope
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 __all__ = [
     "ERROR_REGISTRY",
@@ -337,7 +353,6 @@ __all__ = [
     "build_error_envelope",
     "declared_error_codes",
     "get_error_exit_code",
-    "get_error_suggestion",
     "get_registered_error_code",
     "register",
     "render_error_json",

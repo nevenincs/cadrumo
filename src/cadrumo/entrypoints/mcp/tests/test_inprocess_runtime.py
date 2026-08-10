@@ -79,7 +79,7 @@ def test_parse_cli_envelope_reads_error_document_from_stderr() -> None:
         stderr=(
             '{"schema_version":"2","command":"modelo.export","active_profile":null,'
             '"status":"error","error":{"code":"REFUSED_TEST","category":"refused",'
-            '"message":"refused","suggestion":null,"retryable":false,"runbook_id":null,'
+            '"message":"refused","action":null,"retryable":false,"runbook_id":null,'
             '"context":null,"trace_id":null},"notices":[]}'
         ),
         returncode=2,

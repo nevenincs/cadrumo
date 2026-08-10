@@ -1613,14 +1613,16 @@ def _wizard_success_notices(
     from ...domain.contribuyente import CCAA
 
     verb_key = "create" if mode == "create" else "edit"
-    notices = [
-        Notice(
-            severity=NoticeSeverity.INFO,
-            code=f"config.profile.{verb_key}.next_step",
-            message=tr("application.wizard.output_labels.next"),
-            suggestion=next_command,
-        ),
-    ]
+    # The next-step hint is text-surface only. ``Notice`` reserves executable
+    # command identity for its typed action projection, which models a
+    # PRECONDITION-FAILURE recovery - a failed condition, its evidence, its
+    # conditionality - and has no member that means "this succeeded, here is a
+    # reasonable next verb". Carrying the bare label without its command would
+    # emit a notice reading "Next:" and nothing else, which is worse than
+    # emitting none, so the JSON channel omits it entirely rather than shipping
+    # an empty gesture. ``next_command`` still renders on the text surface.
+    _ = next_command
+    notices: list[Notice] = []
     if modify_no_resume:
         notices.append(
             Notice(
@@ -1635,7 +1637,6 @@ def _wizard_success_notices(
                 severity=NoticeSeverity.INFO,
                 code=_MODIFY_DESCENDANTS_DOOR_CODE,
                 message=modify_descendants_message,
-                suggestion=_DESCENDIENTE_DOOR_COMMAND,
             ),
         )
     if ccaa_defaulted:
@@ -1681,7 +1682,6 @@ def _emit_save_exit_notice(profile_name: str, *, message: str | None = None) -> 
         severity=NoticeSeverity.INFO,
         code=_SAVE_EXIT_RESUME_CODE,
         message=message,
-        suggestion=resume_command,
     )
     if json_output_requested():
         # A save-and-exit leaves the profile SETUP_INCOMPLETE (never

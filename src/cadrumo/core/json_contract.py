@@ -52,7 +52,7 @@ from pydantic import (
     model_validator,
 )
 
-from .errors import CadrumoError, ErrorEnvelope
+from .errors import CadrumoError
 from .logging import get_logger
 from .output_rendering import jsonable_output_payload
 from .redaction import redact_structured_for_cli_output
@@ -800,7 +800,7 @@ def register_schema[RegisteredSchemaT: OutputSchema | OutputRootSchema[Any]](
     if not normalized_path:
         raise OutputSchemaError("command_path must not be blank")
 
-    def _decorator(schema: type[RegisteredSchemaT]) -> type[RegisteredSchemaT]:
+    def _decorator(schema: type[object]) -> type[RegisteredSchemaT]:
         try:
             is_output_schema = issubclass(schema, (OutputSchema, OutputRootSchema))
         except TypeError as error:
@@ -817,7 +817,9 @@ def register_schema[RegisteredSchemaT: OutputSchema | OutputRootSchema[Any]](
                 f"duplicate schema registration for {normalized_path!r}: {existing.__module__}.{existing.__name__}",
             )
         SCHEMA_REGISTRY[normalized_path] = schema
-        return schema
+        # CAST-RATIONALE-REGISTERED-SCHEMA: the runtime issubclass check above
+        # proves the generic bound before returning this decorator result.
+        return cast("type[RegisteredSchemaT]", schema)
 
     return _decorator
 
@@ -846,11 +848,16 @@ def validate_registered_envelope_document(document: object) -> dict[str, object]
     """Strictly validate one emitted CLI success or error JSON document."""
     if not isinstance(document, dict):
         raise OutputSchemaError("operator JSON envelope must be an object")
-    if not all(isinstance(key, str) for key in document):
+    raw_document = cast("dict[object, object]", document)
+    if not all(isinstance(key, str) for key in raw_document):
         raise OutputSchemaError("operator JSON envelope keys must be strings")
-    typed_document: dict[str, object] = {key: value for key, value in document.items() if isinstance(key, str)}
+    typed_document: dict[str, object] = {
+        key: value for key, value in raw_document.items() if isinstance(key, str)
+    }
     status = typed_document.get("status")
     if status == EnvelopeStatus.ERROR.value:
+        from .errors import ErrorEnvelope
+
         required_keys = {"schema_version", "command", "active_profile", "status", "error", "notices"}
         if set(typed_document) != required_keys:
             raise OutputSchemaError("operator JSON error envelope has an invalid outer shape")

@@ -23,6 +23,7 @@ import traceback
 from dataclasses import dataclass, replace
 from enum import StrEnum
 from pathlib import Path
+from typing import cast
 
 from ...adapters.persistence.storage import close_active_bucket_session
 from ...core import PRODUCT_IDENTITY
@@ -112,7 +113,7 @@ def _transport_error_envelope(
     this docstring is no longer true, and the fix then is redaction, not a wider
     allowlist.
     """
-    document = {
+    document: dict[str, object] = {
         "schema_version": ENVELOPE_SCHEMA_VERSION,
         "command": command_key,
         "active_profile": None,
@@ -121,7 +122,7 @@ def _transport_error_envelope(
             code=code,
             category="refused",
             message=message,
-            suggestion=None,
+            action=None,
             retryable=retryable,
             runbook_id=None,
             context=context,
@@ -293,7 +294,7 @@ def _worker_stack_summary(worker: threading.Thread) -> str:
     ident = worker.ident
     if ident is None:
         return ""
-    frame = sys._current_frames().get(ident)
+    frame = sys._current_frames().get(ident)  # pyright: ignore[reportPrivateUsage]
     if frame is None:
         return ""
     frames = traceback.extract_stack(frame)[-8:]
@@ -326,7 +327,6 @@ def _inprocess_timeout_notice(*, command_key: str, worker_stack: str = "") -> No
         severity=NoticeSeverity.WARNING,
         code="mcp.call.timeout_may_complete",
         message=message,
-        suggestion=None,
         context=context,
     )
 
@@ -356,7 +356,6 @@ def _warm_degradation_notice(*, command_key: str, wedged: bool) -> Notice:
         severity=NoticeSeverity.WARNING,
         code="mcp.serving.warm_transport_degraded",
         message=message,
-        suggestion=None,
         context={"command": command_key, "transport": "subprocess", "reason": reason},
     )
 
@@ -371,7 +370,7 @@ def _envelope_with_notice(envelope: dict[str, object], notice: Notice) -> dict[s
     """
     result = dict(envelope)
     existing = result.get("notices")
-    notices = list(existing) if isinstance(existing, list) else []
+    notices: list[object] = list(cast("list[object]", existing)) if isinstance(existing, list) else []
     notices.append(notice.model_dump(mode="json"))
     result["notices"] = notices
     if result.get("status") == "success":
@@ -486,7 +485,10 @@ def _degraded_subprocess_outcome(
     return replace(outcome, envelope=envelope, transport=McpTransport.SUBPROCESS_FALLBACK)
 
 
-def _run_tool(descriptor: McpToolDescriptor, arguments: dict[str, object]) -> SubprocessToolOutcome:
+def _run_tool(  # pyright: ignore[reportUnusedFunction]
+    descriptor: McpToolDescriptor,
+    arguments: dict[str, object],
+) -> SubprocessToolOutcome:
     """Dispatch one tool through the transport its call tier selects.
 
     Local ``READ`` and ``MUTATE`` verbs run warm in-process (interpreter start,
