@@ -177,9 +177,7 @@ class BucketEventHistoryRepository:
                 context={
                     "namespace": _NAMESPACE,
                     "object_key": _OBJECT_KEY,
-                    "recovery": "aeat config repair --help",
                 },
-                suggestion="aeat config repair --help",
                 translated_message="errors.storage.stored_data_validation_boundary",
             ) from exc
         if not inner_envelope_classification_is_expected(envelope.classification, _CATALOGUE_SENSITIVITY):
