@@ -66,12 +66,12 @@ def _exported_draft_and_payload(*, filing_year: int, declaration_type: str):
     parametrisation would otherwise rebuild the same fichero repeatedly.
     """
     from ......application.filing import (
-        ModeloDraftStatus,
         ModeloOperatorProfile,
         build_draft,
         build_runtime_schema_provider,
         export_draft,
     )
+    from ......domain.submission import ModeloDraftStatus
 
     period = Period.from_year_and_code(filing_year, "1T")
     provider = build_runtime_schema_provider(filing_year=filing_year, period=period, modelos=("303",))

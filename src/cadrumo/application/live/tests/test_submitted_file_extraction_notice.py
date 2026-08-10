@@ -28,7 +28,6 @@ from ....adapters.outbound.aeat.sede import (
     observed_casillas_from_submitted_file,
 )
 from ....application.filing import (
-    ModeloDraftStatus,
     ModeloOperatorProfile,
     build_draft,
     build_runtime_schema_provider,
@@ -36,6 +35,7 @@ from ....application.filing import (
 )
 from ....core import Modelo, Period, validated_casilla_id
 from ....domain.calculations.registry import bundled_authority
+from ....domain.submission import ModeloDraftStatus
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import FiledDataCaptureReport
 from .._filed_data_capture import _CaptureAccumulator

@@ -16,8 +16,17 @@ from ....core.config import Settings
 from ....core.errors import BaseSeverity
 from ....core.i18n import Translatable as tr
 from ....domain.calculations.registry import RegistrySnapshotRef
+from ....domain.filing import (
+    ModeloDraft,
+    ModeloValidationFinding,
+    ModeloValue,
+    ModeloValueKind,
+    compute_modelo_draft_id,
+    registry_schema_version,
+)
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import InvoiceKind
+from ....domain.submission import ModeloDraftStatus
 from ....domain.transactions import (
     RawProvenance,
     RawTransaction,
@@ -27,15 +36,6 @@ from ....domain.transactions import (
     TransactionDirection,
 )
 from ....tests.user_profile import register_minimal_profile
-from ...filing import (
-    ModeloDraft,
-    ModeloDraftStatus,
-    ModeloValidationFinding,
-    ModeloValue,
-    ModeloValueKind,
-    compute_modelo_draft_id,
-    registry_schema_version,
-)
 from ...user_profile import profile_create_storage_span, profile_storage_session
 from ...workflow import workflow_state_repository
 from .. import (

@@ -18,8 +18,9 @@ from datetime import UTC, datetime
 
 import pytest
 
-from ....application.filing import ModeloDraft, build_runtime_schema_provider
+from ....application.filing import build_runtime_schema_provider
 from ....core import Period
+from ....domain.filing import ModeloDraft
 from ....domain.submission import ModeloDraftStatus
 from .._export import _compose_export_dictionary_values
 from ._export_test_support import _snapshot_ref
