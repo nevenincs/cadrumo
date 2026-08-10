@@ -19,14 +19,10 @@ and would pass against a client that never consulted the authority at all.
 from __future__ import annotations
 
 import asyncio
-import json
-import threading
 from collections.abc import Iterator
 from contextlib import contextmanager
 from http import HTTPStatus
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import override
 
 import pytest
 
@@ -45,6 +41,13 @@ from ...application.provisioning import (
 from ...core import AcceleratorKind, ContentionCause, model_candidate
 from ...core.config import LLMProvider, override_settings
 from ...tests.fixtures.settings import EnvFileFreeSettings
+from ...tests.loopback_llm import (
+    SilentLoopbackHandler,
+    ollama_chat_reply,
+    read_json_body,
+    serving_loopback,
+    write_json_response,
+)
 from .. import LLMClient, LLMContentionError, LLMRequest, LLMRetryPolicy, transport_retry_permitted
 from .._client import reset_on_host_inference_arena
 
@@ -117,37 +120,18 @@ def _serve_ollama() -> Iterator[tuple[str, list[str]]]:
     """Serve a loopback runtime that answers, recording what reached it."""
     arrivals: list[str] = []
 
-    class _Endpoint(BaseHTTPRequestHandler):
+    class _Endpoint(SilentLoopbackHandler):
         def do_POST(self) -> None:
-            self.rfile.read(int(self.headers.get("content-length", "0")))
+            read_json_body(self)
             arrivals.append(self.path)
-            payload = json.dumps(
-                {
-                    "model": _CATALOGUED_MODEL,
-                    "message": {"content": " local completion "},
-                    "prompt_eval_count": 12,
-                    "eval_count": 4,
-                }
-            ).encode("utf-8")
-            self.send_response(HTTPStatus.OK)
-            self.send_header("content-type", "application/json")
-            self.send_header("content-length", str(len(payload)))
-            self.end_headers()
-            self.wfile.write(payload)
+            write_json_response(
+                self,
+                ollama_chat_reply(" local completion ", model=_CATALOGUED_MODEL),
+                status=HTTPStatus.OK,
+            )
 
-        @override
-        def log_message(self, format: str, *args: object) -> None:
-            """Silence stdlib request logging during tests."""
-
-    server = ThreadingHTTPServer(("127.0.0.1", 0), _Endpoint)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    try:
-        yield f"http://127.0.0.1:{server.server_port}/api/chat", arrivals
-    finally:
-        server.shutdown()
-        server.server_close()
-        thread.join(timeout=3)
+    with serving_loopback(_Endpoint, path="/api/chat") as endpoint:
+        yield endpoint, arrivals
 
 
 def _client(

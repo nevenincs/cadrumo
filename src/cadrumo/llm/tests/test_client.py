@@ -8,15 +8,11 @@ service. This keeps the provider boundary real while remaining fully on-host.
 from __future__ import annotations
 
 import asyncio
-import json
-import threading
 from collections.abc import Iterator
 from contextlib import contextmanager
 from http import HTTPStatus
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from queue import Queue
-from typing import override
 
 import pytest
 from pydantic import SecretStr
@@ -24,6 +20,13 @@ from pydantic import SecretStr
 from ...adapters.outbound.llm import LLMCache, LLMRunTelemetryRecorder, UsageRecorder
 from ...core.config import LLMProvider, override_settings
 from ...tests.fixtures.settings import EnvFileFreeSettings
+from ...tests.loopback_llm import (
+    SilentLoopbackHandler,
+    ollama_chat_reply,
+    read_json_body,
+    serving_loopback,
+    write_json_response,
+)
 from .. import LLMClient, LLMProviderError, LLMRateLimitError, LLMRequest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -53,42 +56,19 @@ def _client(tmp_path: Path, *, run_recorder: LLMRunTelemetryRecorder | None = No
 def _serve_ollama(status: HTTPStatus = HTTPStatus.OK) -> Iterator[tuple[str, Queue[dict[str, object]]]]:
     events: Queue[dict[str, object]] = Queue()
 
-    class _OllamaEndpoint(BaseHTTPRequestHandler):
+    class _OllamaEndpoint(SilentLoopbackHandler):
         def do_POST(self) -> None:
-            body = self.rfile.read(int(self.headers.get("content-length", "0")))
-            events.put({"path": self.path, "body": json.loads(body.decode("utf-8"))})
-            if status is HTTPStatus.OK:
-                payload = {
-                    "model": "gpt-oss",
-                    "message": {"content": " local completion "},
-                    "prompt_eval_count": 12,
-                    "eval_count": 4,
-                }
-            else:
-                payload = {"error": status.phrase}
-            encoded = json.dumps(payload).encode("utf-8")
-            self.send_response(status)
-            if status is HTTPStatus.TOO_MANY_REQUESTS:
-                self.send_header("retry-after", "0.01")
-            self.send_header("content-type", "application/json")
-            self.send_header("content-length", str(len(encoded)))
-            self.end_headers()
-            self.wfile.write(encoded)
+            events.put({"path": self.path, "body": read_json_body(self)})
+            payload = ollama_chat_reply(" local completion ") if status is HTTPStatus.OK else {"error": status.phrase}
+            write_json_response(
+                self,
+                payload,
+                status=status,
+                extra_headers={"retry-after": "0.01"} if status is HTTPStatus.TOO_MANY_REQUESTS else None,
+            )
 
-        @override
-        def log_message(self, format: str, *args: object) -> None:
-            """Silence stdlib request logging during tests."""
-
-    server = ThreadingHTTPServer(("127.0.0.1", 0), _OllamaEndpoint)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    endpoint = f"http://127.0.0.1:{server.server_port}/api/chat"
-    try:
+    with serving_loopback(_OllamaEndpoint, path="/api/chat") as endpoint:
         yield endpoint, events
-    finally:
-        server.shutdown()
-        server.server_close()
-        thread.join(timeout=3)
 
 
 def test_provider_package_facade_does_not_reexport_private_adapters() -> None:

@@ -12,19 +12,23 @@ from __future__ import annotations
 import asyncio
 import base64
 import io
-import json
-import threading
 from collections.abc import Mapping
 from http import HTTPStatus
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from queue import Queue
-from typing import ClassVar, override
+from typing import ClassVar
 
 import pytest
 from PIL import Image
 
 from ...core import ImageMediaType
 from ...core.config import override_settings
+from ...tests.loopback_llm import (
+    SilentLoopbackHandler,
+    ollama_chat_reply,
+    read_json_body,
+    serving_loopback,
+    write_json_response,
+)
 from .._models import MultimodalImageInput
 from .._providers.base import ProviderRequest
 from .._providers.local import LocalAdapter, rasterise_pdf_pages_to_base64_png
@@ -49,30 +53,18 @@ def test_rasterise_pdf_pages_to_base64_png_returns_in_memory_png() -> None:
     assert decoded[:8] == b"\x89PNG\r\n\x1a\n"
 
 
-class _ObservedOllamaRequest(BaseHTTPRequestHandler):
+class _ObservedOllamaRequest(SilentLoopbackHandler):
     """Local Ollama-shaped endpoint that captures the posted chat body."""
 
     events: ClassVar[Queue[dict[str, object]]]
 
     def do_POST(self) -> None:
-        body = self.rfile.read(int(self.headers.get("content-length", "0")))
-        self.events.put({"body": json.loads(body.decode("utf-8"))})
-        payload = {
-            "model": "gpt-oss",
-            "message": {"content": " vision read "},
-            "prompt_eval_count": 11,
-            "eval_count": 4,
-        }
-        encoded = json.dumps(payload).encode("utf-8")
-        self.send_response(HTTPStatus.OK)
-        self.send_header("content-type", "application/json")
-        self.send_header("content-length", str(len(encoded)))
-        self.end_headers()
-        self.wfile.write(encoded)
-
-    @override
-    def log_message(self, format: str, *args: object) -> None:
-        """Silence stdlib request logging during tests."""
+        self.events.put({"body": read_json_body(self)})
+        write_json_response(
+            self,
+            ollama_chat_reply(" vision read ", prompt_eval_count=11),
+            status=HTTPStatus.OK,
+        )
 
 
 def test_local_adapter_forwards_rasterised_images_to_loopback() -> None:
@@ -83,11 +75,6 @@ def test_local_adapter_forwards_rasterised_images_to_loopback() -> None:
     )
     events: Queue[dict[str, object]] = Queue()
     _ObservedOllamaRequest.events = events
-    server = ThreadingHTTPServer(("127.0.0.1", 0), _ObservedOllamaRequest)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    endpoint = f"http://127.0.0.1:{server.server_port}/api/chat"
-
     request = ProviderRequest(
         request_id="req",
         model="gpt-oss",
@@ -98,13 +85,11 @@ def test_local_adapter_forwards_rasterised_images_to_loopback() -> None:
         timeout_s=3,
         images=images,
     )
-    try:
-        with override_settings(cadrumo_llm_ollama_chat_url=endpoint):
-            completion = asyncio.run(LocalAdapter(timeout_s=3).complete(request))
-    finally:
-        server.shutdown()
-        server.server_close()
-        thread.join(timeout=3)
+    with (
+        serving_loopback(_ObservedOllamaRequest, path="/api/chat") as endpoint,
+        override_settings(cadrumo_llm_ollama_chat_url=endpoint),
+    ):
+        completion = asyncio.run(LocalAdapter(timeout_s=3).complete(request))
 
     observed = events.get_nowait()
     body = observed["body"]

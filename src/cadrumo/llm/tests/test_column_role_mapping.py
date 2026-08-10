@@ -17,14 +17,11 @@ from __future__ import annotations
 
 import csv
 import json
-import threading
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from http import HTTPStatus
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from queue import Queue
-from typing import override
 
 import pytest
 
@@ -32,6 +29,13 @@ from ...application.provisioning import select_model_for_role
 from ...core import FieldRole, ModelRole
 from ...core.config import LLMProvider, override_settings
 from ...tests.fixtures.settings import EnvFileFreeSettings
+from ...tests.loopback_llm import (
+    SilentLoopbackHandler,
+    ollama_chat_reply,
+    read_json_body,
+    serving_loopback,
+    write_json_response,
+)
 from .. import (
     LLMClient,
     LLMValidationError,
@@ -314,36 +318,17 @@ def _serve_ollama(reply_text: str) -> Iterator[tuple[str, Queue[dict[str, object
     """Serve one Ollama-shaped loopback endpoint returning ``reply_text``."""
     events: Queue[dict[str, object]] = Queue()
 
-    class _OllamaEndpoint(BaseHTTPRequestHandler):
+    class _OllamaEndpoint(SilentLoopbackHandler):
         def do_POST(self) -> None:
-            body = self.rfile.read(int(self.headers.get("content-length", "0")))
-            events.put({"body": json.loads(body.decode("utf-8"))})
-            payload = {
-                "model": "gpt-oss",
-                "message": {"content": reply_text},
-                "prompt_eval_count": 40,
-                "eval_count": 30,
-            }
-            encoded = json.dumps(payload).encode("utf-8")
-            self.send_response(HTTPStatus.OK)
-            self.send_header("content-type", "application/json")
-            self.send_header("content-length", str(len(encoded)))
-            self.end_headers()
-            self.wfile.write(encoded)
+            events.put({"body": read_json_body(self)})
+            write_json_response(
+                self,
+                ollama_chat_reply(reply_text, prompt_eval_count=40, eval_count=30),
+                status=HTTPStatus.OK,
+            )
 
-        @override
-        def log_message(self, format: str, *args: object) -> None:
-            """Silence stdlib request logging during tests."""
-
-    server = ThreadingHTTPServer(("127.0.0.1", 0), _OllamaEndpoint)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    try:
-        yield f"http://127.0.0.1:{server.server_port}/api/chat", events
-    finally:
-        server.shutdown()
-        server.server_close()
-        thread.join(timeout=3)
+    with serving_loopback(_OllamaEndpoint, path="/api/chat") as endpoint:
+        yield endpoint, events
 
 
 @contextmanager
