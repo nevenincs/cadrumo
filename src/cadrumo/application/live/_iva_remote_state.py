@@ -107,6 +107,7 @@ from ._remote_state_models import (
     StoredIvaWalletObservationRow,
 )
 from ._remote_state_outcomes import auth_outcome as _auth_outcome
+from ._remote_state_outcomes import evidence_ref as _evidence_ref
 from ._remote_state_outcomes import surface_outcome as _surface_outcome
 from ._session import active_verified_session as _active_verified_session
 
@@ -524,11 +525,6 @@ def _taxpayer_ref(taxpayer_nif: str | None) -> str:
     if taxpayer_nif is None:
         return _ABSENT_TAXPAYER_REF
     digest = _sha256_hex(taxpayer_nif.strip().upper().encode("utf-8"))
-    return f"sha256:{digest[:12]}"
-
-
-def _evidence_ref(value: str) -> str:
-    digest = _sha256_hex(value.strip().encode("utf-8"))
     return f"sha256:{digest[:12]}"
 
 
