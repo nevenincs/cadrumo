@@ -3,14 +3,15 @@ tags:
   - '#adr'
   - '#ci-discipline'
 date: '2026-07-21'
-modified: '2026-08-05'
-body_hash: 'sha256:a78209afee0ff8d0d4d8f9fe7e8d320270088c2442222dd5135fb24e8b3ea0db'
+modified: '2026-08-10'
+body_hash: 'sha256:025951c574cb517fa42423795bf2f47f588cd3ef9683dbc7dca48e3edf41e9e6'
 related:
   - '[[2026-07-21-ci-discipline-reference]]'
   - '[[2026-07-20-ci-speed-redesign-adr]]'
   - '[[2026-07-20-release-asset-transport-adr]]'
   - '[[2026-07-04-release-readiness-gate-adr]]'
   - '[[2026-07-19-post-release-distribution-adr]]'
+  - '[[2026-08-10-ci-lane-deconflation-integration-lane-live-service-dependency-adr]]'
 ---
 
 # `ci-discipline` adr: `tiered push/PR discipline by change class` | (**status:** `accepted`)
@@ -193,3 +194,9 @@ of integration work left no headroom.
 outside this ADR, not a ruling of this record. `continue-on-error` on the two steps above
 MUST flip to blocking once triage completes — that is a commitment this amendment makes, not
 a decision it defers indefinitely.
+
+**Amendment pending, recorded 2026-08-11 — the flip commitment above is contested by a proposed record and MUST NOT be read as still standing unqualified.** The triage condition it names has been met: the backlog closed on 2026-08-06, resolving to one genuine defect fixed in `963dd72f08`. The conclusion has not followed, because closing the backlog surfaced an obstacle D6.6 did not know about and could not have: the integration parallel lane transitively reaches a live external endpoint through a multi-currency fixture, established by `2026-08-06-ci-lane-deconflation-integration-lane-external-dependency-audit`. `2026-08-10-ci-lane-deconflation-integration-lane-live-service-dependency-adr` (status `proposed`) is where that question now lives and is the record that would override this commitment for the integration parallel step.
+
+**Nothing here is amended yet, deliberately.** That record is proposed, not accepted, and its own constraints hold that the permanence question requires an operator and that the remaining measurement is blocked on an offline self-hosted Linux runner. Until it is accepted this commitment stands as written. When it is accepted, this section is amended in the same action — an acceptance that leaves this paragraph unchanged produces two accepted records ruling opposite ways on one flag.
+
+**Scope, stated because the successor is narrower than this commitment.** The proposed record examines the `src/cadrumo` integration parallel step only. This commitment covers that step *and* `just test-dev-tooling`, and no record has yet examined the second. The dev-tooling half of this commitment is untouched and still binding.

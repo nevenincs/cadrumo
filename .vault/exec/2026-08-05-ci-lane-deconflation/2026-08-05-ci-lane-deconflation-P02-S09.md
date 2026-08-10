@@ -3,12 +3,13 @@ tags:
   - '#exec'
   - '#ci-lane-deconflation'
 date: '2026-08-06'
-modified: '2026-08-07'
+modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:eb4647b98b6225bbac949f52ce4ede28b3499c6b0d7d7ede986e33b18cca83d6'
+body_hash: 'sha256:87d8dc78b9ab66f2393a573b39d454e144165a1013e02195064a366c0febfd06'
 step_id: 'S09'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
+  - '[[2026-08-10-ci-lane-deconflation-integration-lane-live-service-dependency-adr]]'
 ---
 
 # Flip continue-on-error off the integration parallel step once its backlog closes, the step is deterministic so it can go blocking independently of the serial pass
@@ -98,3 +99,7 @@ between them. A count's unit must match the unit of the question it answers.
 The operator decision is recorded here rather than in a decision record because it
 settles this step only. If the lane is ever required to block, the question reopens and
 deserves a proper decision record with research, not a ruling taken in passing.
+
+**Update, 2026-08-11: the decision record this note asks for now exists.** `2026-08-10-ci-lane-deconflation-integration-lane-live-service-dependency-adr` was authored in commit `56670107d7` and carries the question. The paragraph above is left standing rather than rewritten, because it is the reasoning that produced the record and deleting it would hide why the record was owed — but read as a present-tense statement it is now stale, and a reader who stops at it will conclude no decision record exists.
+
+Two qualifications, so this update is not itself read as closure. The record's status is `proposed`, not accepted, so the ruling recorded in this step's Outcome remains the only settled disposition. And the record does **not** ratify permanence: it rejects declaring the flag permanent as its recorded outcome, recommends removing the live dependency instead, and holds that the permanence question requires an operator. This step's Outcome and that record therefore describe different things — what was ruled while closing this step, and what a decision record would have to establish before permanence could be claimed.

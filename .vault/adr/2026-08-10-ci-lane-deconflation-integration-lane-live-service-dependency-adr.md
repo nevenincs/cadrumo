@@ -5,12 +5,13 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:63d04c7f3639a7095440153241e0c9bd52e5efe19bc96c907ba31dfd4c66d07e'
+body_hash: 'sha256:e0d288b8745bfd07ea6b72a71787845c4f3a564349197284682d5ae05ac3919a'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
   - "[[2026-08-05-ci-lane-deconflation-adr]]"
   - '[[2026-08-06-ci-lane-deconflation-integration-lane-external-dependency-audit]]'
   - '[[2026-08-05-ci-lane-deconflation-P02-S09]]'
+  - '[[2026-07-21-ci-discipline-adr]]'
 ---
 
 # `ci-lane-deconflation` adr: `the integration parallel lane's non-blocking flag and its live external-service dependency` | (**status:** `proposed`)
@@ -39,6 +40,14 @@ flag as an open decision; this record is the decision it points at.
 
 The narrow question is whether one CI step blocks. The real question is whether a campaign
 gate may be made permanently non-blocking, and on whose authority.
+
+**The commitment this record would override is an accepted ADR, not only a workflow comment, and until 2026-08-11 no document said so.** `2026-07-21-ci-discipline-adr` D6.6 — *"Newly-enrolled lanes are non-blocking, and this is explicitly open, not resolved"* — is the record that enrolled this step non-blocking, and it closed with a commitment in terms: *"`continue-on-error` on the two steps above MUST flip to blocking once triage completes — that is a commitment this amendment makes, not a decision it defers indefinitely."* "The two steps above" are the `src/cadrumo` integration suite and the `just test-dev-tooling` gates, so the commitment binds precisely the step this record is about. This is not an inference from adjacency: it is the same pair the corrected workflow comment scopes itself to.
+
+**What changed is a fact, not an opinion, and that is why D6.6 is being overridden rather than corrected.** D6.6 conditioned its interim posture on exactly one obstacle — an untriaged backlog of 19 measured failures plus 58 never-measured serial tests — and on nothing else. That obstacle is discharged. The obstacle that replaced it, a transitive live external-service dependency reached through a multi-currency fixture, was not a known fact on 2026-07-21 and appears nowhere in D6.6; it was established on 2026-08-06 by the grounding audit. D6.6 ruled correctly on the evidence it had. Its condition ("once triage completes") has been met without its conclusion ("flip to blocking") becoming safe, which is a state its author had no way to anticipate and no reason to write for.
+
+**Consequence for whoever accepts this record.** D6.6 is accepted and its commitment stands until amended. Accepting this record without amending D6.6 leaves two accepted ADRs ruling opposite ways on the same flag, reachable from each other only by a reader who opens both. The amendment is therefore a condition of acceptance rather than a follow-up; it is stated as the fourth constraint below.
+
+**A narrowing this record does not close, named here so it is not lost.** D6.6's commitment covers two steps; this record examines one. The `just test-dev-tooling` step carries the same flag under the same D6.6 commitment, and this record makes no ruling on it. What the standing D6.6 goal still asks for that this record excludes: whether the dev-tooling gate's flag may also stay on, and on what evidence — a question with no live-service dependency behind it, so its answer will not be this one.
 
 ## Considerations
 
@@ -118,6 +127,12 @@ of agent work substitutes for it.
 **A third constraint binds whoever accepts this record: the permanence question requires an
 operator.** An agent may rule on lane selection and marker hygiene. An agent may not rule
 that a campaign gate never blocks.
+
+**A fourth constraint, binding on the ACT of accepting rather than on the decision: accepting this record amends `2026-07-21-ci-discipline-adr` D6.6, and the two land in one action.** D6.6 is accepted and commits in terms that this step's flag MUST flip to blocking once triage completes. Triage completed on 2026-08-06. Whoever accepts this record therefore also writes the D6.6 amendment recording that the condition was met and the conclusion superseded by a fact D6.6 did not have — in the same action, not as a follow-up.
+
+The reason it is a constraint and not a courtesy is that an amendment ruling on a standing commitment is not self-executing. "This record supersedes D6.6" is a claim about the corpus, not a change to it: until D6.6's own text says so, a reader who arrives via the accepted 2026-07-21 record gets the flip commitment with nothing beside it. As of 2026-08-11 both records carry a `related:` edge to the other and D6.6 carries a pending-amendment paragraph naming this one — so the two are now mutually reachable, and what acceptance still has to do is convert that paragraph from *pending* to *amended*. An acceptance that leaves it saying "nothing here is amended yet" produces two accepted ADRs ruling opposite ways on one flag, which is the exact failure this record was written against, reproduced one layer up.
+
+**And the amendment is narrower than the commitment, which must be said in it rather than discovered later.** D6.6 binds two steps; this record examines one. The `just test-dev-tooling` half stays bound by D6.6 as written, and an amendment that silently retires the whole commitment would grant this record authority over a step it never looked at.
 
 ## Implementation
 
