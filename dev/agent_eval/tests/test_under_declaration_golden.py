@@ -43,7 +43,12 @@ from typing import Any
 import pytest
 
 from cadrumo.application.user_profile import UserProfileLifecycleRepository
-from cadrumo.domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
+from cadrumo.domain.user_profile import (
+    UserProfileFact,
+    UserProfileRecord,
+    UserProfileStatus,
+    load_user_profile_schema,
+)
 from cadrumo.tests.cli_envelope import require_schema_envelope
 from cadrumo.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.modelo_cli import create_modelo_work_unit_via_cli
@@ -85,9 +90,16 @@ def _seed_legal_entity_profile(runtime_profile: TestRuntimeProfile) -> None:
     does not fire - this scenario reproduces the free-standing-manual-input
     under-declaration, not the ledger-aggregation one.
     """
+    # Both identity fields come from the loaded schema rather than from
+    # literals. The record pins each to exactly what the schema declares, so a
+    # literal is a copy of the authority that goes stale the moment the schema
+    # moves -- and reading them from one loaded object also keeps the pair
+    # self-consistent, since two literals can drift into naming different
+    # schemas.
+    schema = load_user_profile_schema()
     record = UserProfileRecord(
-        schema_id="cadrumo.user_profile",
-        schema_version=1,
+        schema_id=schema.id,
+        schema_version=schema.version,
         profile_id=_PROFILE_ID,
         display_name="Under-declaration golden-eval test profile",
         status=UserProfileStatus.ACTIVE,
