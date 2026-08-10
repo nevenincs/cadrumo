@@ -754,17 +754,14 @@ def _maternidad_casilla_id(work_unit_id: str) -> CasillaId | None:
     modelo that does not is left untouched — including its profile read, which
     would otherwise run on every calculation of every modelo.
     """
-    from ._semantic_role_resolution import casilla_id_for_unique_revision_semantic_role
+    from ._semantic_role_resolution import casilla_id_for_unambiguous_revision_semantic_role
     from ._work_lifecycle import get_work_unit
 
-    try:
-        return casilla_id_for_unique_revision_semantic_role(
-            _revision_for_work_unit(work_unit_id),
-            _DEDUCCION_MATERNIDAD_SEMANTIC_ROLE,
-            modelo_id=str(get_work_unit(work_unit_id).modelo),
-        )
-    except AmbiguousSemanticRoleCasillaError:
-        return None
+    return casilla_id_for_unambiguous_revision_semantic_role(
+        _revision_for_work_unit(work_unit_id),
+        _DEDUCCION_MATERNIDAD_SEMANTIC_ROLE,
+        modelo_id=str(get_work_unit(work_unit_id).modelo),
+    )
 
 
 def _maternidad_ceilings_unresolved_advisory(
