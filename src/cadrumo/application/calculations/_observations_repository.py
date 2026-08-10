@@ -581,6 +581,16 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
         The occupancy read uses :meth:`extract_identifier`, the same derivation
         the write uses, so the slot inspected is the slot that would be written
         rather than a re-derived approximation of it.
+
+        WHICH STORE THIS COVERS, stated here because the guard's name does not
+        say it and a reader will otherwise assume every observation write is
+        protected. It covers THIS repository only -- the ``(modelo, filing_year,
+        period[, member])`` slot. Two sibling repositories persist observations
+        at a finer key with their own save and their own set-replace path:
+        ``application/aggregation/_retencion_observations_repository.py`` keyed
+        by NIF and scheme, and ``_percepciones_observations_repository.py`` keyed
+        by NIF, clave and subclave. They are a different store, not writers that
+        slipped past this check, and nothing here refuses on their behalf.
         """
         if payload.source_kind.is_official_aeat:
             return
