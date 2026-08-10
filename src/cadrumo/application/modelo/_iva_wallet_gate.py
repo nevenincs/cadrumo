@@ -798,6 +798,11 @@ def lazily_reconcile_local_iva_compensation_for_work_unit(
         treat_absent_recurrence_as_first_period=(
             not evidence.prior_period_observation_found and _activity_start_proves_first_iva_period(work_unit, snapshot)
         ),
+        # The caller is the only party that can tell having found nothing from
+        # having found a record it could not read. Without this the no-authority
+        # outcome states that nothing is available while the taxpayer's own
+        # prior record sits in the store.
+        local_evidence_found_but_unusable=(evidence.prior_period_observation_found and evidence.recurrence is None),
         persist=persist,
     )
     return report.decision

@@ -218,8 +218,17 @@ def reconcile_iva_compensation_wallet(
     decided_at: datetime | None = None,
     max_wallet_age_days: int = DEFAULT_MAX_WALLET_AGE_DAYS,
     is_first_iva_period: bool = False,
+    local_evidence_found_but_unusable: bool = False,
 ) -> IvaCompensationReconciliationDecision:
-    """Return the :class:`IvaCompensationReconciliationDecision` for casilla ``110``."""
+    """Return the :class:`IvaCompensationReconciliationDecision` for casilla ``110``.
+
+    ``local_evidence_found_but_unusable`` is a caller-asserted fact, in the same
+    shape as ``is_first_iva_period``: the caller knows whether it FOUND a prior
+    record and failed to interpret it, and this function cannot derive that from
+    an absent amount. Without it the no-authority outcome states that nothing is
+    available, which is false for that caller and sends an operator looking for
+    evidence they already hold.
+    """
     if wallet is not None:
         validate_wallet_matches_snapshot(
             wallet,
@@ -258,7 +267,11 @@ def reconcile_iva_compensation_wallet(
             return first_period_decision
 
     if ctx.wallet_amount is None:
-        return _missing_wallet_decision(ctx, local_recurrence_source=local_recurrence_source)
+        return _missing_wallet_decision(
+            ctx,
+            local_recurrence_source=local_recurrence_source,
+            local_evidence_found_but_unusable=local_evidence_found_but_unusable,
+        )
 
     if ctx.stale_wallet:
         return _stale_wallet_decision(ctx)
@@ -361,6 +374,7 @@ def _missing_wallet_decision(
     ctx: _ReconciliationContext,
     *,
     local_recurrence_source: IvaCompensationAuthoritySource | None,
+    local_evidence_found_but_unusable: bool = False,
 ) -> IvaCompensationReconciliationDecision:
     if ctx.local_recurrence_amount is None:
         return _decision(
@@ -373,7 +387,15 @@ def _missing_wallet_decision(
             divergence="missing",
             blocked=True,
             stale_wallet=False,
-            reason="No AEAT wallet observation or local recurrence is available for Modelo 303 prior compensation.",
+            # Both outcomes are "no usable authority" and they are not the same
+            # situation. Saying nothing is available to a taxpayer whose prior
+            # record exists sends them looking for evidence they already hold.
+            reason=(
+                "A prior Modelo 303 record exists for the source period but could not be read as "
+                "prior-compensation evidence, and no AEAT wallet observation is available."
+                if local_evidence_found_but_unusable
+                else "No AEAT wallet observation or local recurrence is available for Modelo 303 prior compensation."
+            ),
             wallet_captured_at=None,
         )
     if _is_filed_history_source(local_recurrence_source):

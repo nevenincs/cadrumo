@@ -140,6 +140,7 @@ def reconcile_modelo_303_iva_compensation(
     decided_at: datetime | None = None,
     max_wallet_age_days: int = DEFAULT_MAX_WALLET_AGE_DAYS,
     treat_absent_recurrence_as_first_period: bool = False,
+    local_evidence_found_but_unusable: bool = False,
     local_recurrence: LocalIvaCompensationRecurrence | None = None,
     use_repository_local_recurrence: bool = True,
     persist: bool = True,
@@ -182,6 +183,13 @@ def reconcile_modelo_303_iva_compensation(
             caller asserts first-period status (e.g. the calculate path verifies
             no prior 303 compensation history exists). It NEVER fabricates a
             non-zero balance: a present recurrence still flows through normally.
+        local_evidence_found_but_unusable: Whether the caller FOUND a prior
+            local record and could not interpret it as prior-compensation
+            evidence. Only the caller knows this: an absent amount looks the
+            same here whether nothing was stored or something was and could not
+            be read. It changes no outcome, only what the no-authority decision
+            says, so an operator is not told nothing exists while their own
+            prior record sits in the store.
         local_recurrence: Optional local recurrence evidence supplied by the
             caller. Callers that own a stricter evidence boundary can pass its
             already-validated projection here.
@@ -285,6 +293,7 @@ def reconcile_modelo_303_iva_compensation(
         decided_at=decided_at,
         max_wallet_age_days=max_wallet_age_days,
         is_first_iva_period=is_first_iva_period,
+        local_evidence_found_but_unusable=local_evidence_found_but_unusable,
     )
     if persist:
         decision_repo.save_decision(decision)
