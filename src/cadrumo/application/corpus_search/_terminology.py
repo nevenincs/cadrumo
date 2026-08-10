@@ -35,9 +35,8 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints
 
-from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
+from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER, ConceptLifecycle, fold_diacritics
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import ConceptLifecycle, fold_diacritics
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.resources import bundled_path
 from ._errors import CorpusSearchInputError

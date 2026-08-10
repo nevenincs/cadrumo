@@ -28,9 +28,16 @@ from typing import Annotated, Final, Literal, NamedTuple, Protocol, Self, runtim
 
 from pydantic import BaseModel, Field, TypeAdapter, field_serializer, field_validator, model_validator
 
-from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
+from ...core import (
+    OBJECT_TUPLE_ADAPTER,
+    STR_KEYED_MAPPING_ADAPTER,
+    BindingSourceKind,
+    CasillaId,
+    ElidedProse,
+    M210GrossIncomeSourceMode,
+    Period,
+)
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import BindingSourceKind, CasillaId, ElidedProse, M210GrossIncomeSourceMode, Period
 from ...core.decimal import coerce_decimal
 from ...core.errors import CoreValidationError
 from ...core.i18n import tr
