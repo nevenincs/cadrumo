@@ -6,7 +6,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:053f38c43d61e35cc472bf8495ca95e7da52754e4f2d5e2f9e6836e339b85b25'
+body_hash: 'sha256:3f23190c5bc151aa6411c94ae6b30ab8baf9de9a7738ab6af714d2673752d3af'
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S01]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S02]]'
@@ -35,6 +35,8 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-W04-P06-S22]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W04-P06-S23]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W04-P06-summary]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W04-P07-S24]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W04-P07-S25]]'
   - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
   - '[[2026-08-09-cli-action-envelope-hardening-plan]]'
   - '[[2026-08-09-cli-action-envelope-hardening-reference]]'
@@ -63,6 +65,8 @@ related:
   - '[[2026-08-10-cli-action-envelope-hardening-s21-workflow-persistence-audit]]'
   - '[[2026-08-10-cli-action-envelope-hardening-s22-workflow-action-verdicts-audit]]'
   - '[[2026-08-10-cli-action-envelope-hardening-s23-workflow-run-localization-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s24-modelo-preconditions-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s25-lifecycle-envelope-independent-review-audit]]'
   - '[[2026-08-10-cli-action-envelope-hardening-workflow-producers-renderer-audit]]'
 ---
 
@@ -102,6 +106,8 @@ Auto-generated index of all documents tagged with `#cli-action-envelope-hardenin
 - `2026-08-10-cli-action-envelope-hardening-s21-workflow-persistence-audit` - `cli-action-envelope-hardening` audit: `S21 typed workflow persistence and locale neutrality`
 - `2026-08-10-cli-action-envelope-hardening-s22-workflow-action-verdicts-audit` - `cli-action-envelope-hardening` audit: `s22 workflow action verdicts`
 - `2026-08-10-cli-action-envelope-hardening-s23-workflow-run-localization-audit` - `cli-action-envelope-hardening` audit: `s23 workflow run localization`
+- `2026-08-10-cli-action-envelope-hardening-s24-modelo-preconditions-audit` - `cli-action-envelope-hardening` audit: `s24 modelo preconditions`
+- `2026-08-10-cli-action-envelope-hardening-s25-lifecycle-envelope-independent-review-audit` - `cli-action-envelope-hardening` audit: `S25 lifecycle envelope independent review`
 - `2026-08-10-cli-action-envelope-hardening-workflow-producers-renderer-audit` - `cli-action-envelope-hardening` audit: `S22-S23 typed workflow producer and renderer review`
 
 ### exec
@@ -133,6 +139,8 @@ Auto-generated index of all documents tagged with `#cli-action-envelope-hardenin
 - `2026-08-09-cli-action-envelope-hardening-W04-P06-S22` - Emit typed verdicts from workflow refusal branches
 - `2026-08-09-cli-action-envelope-hardening-W04-P06-S23` - Remove English string-equality recovery matching from work-run rendering
 - `2026-08-09-cli-action-envelope-hardening-W04-P06-summary` - `cli-action-envelope-hardening` `W04.P06` summary
+- `2026-08-09-cli-action-envelope-hardening-W04-P07-S24` - Migrate adjudicated modelo work and verification predicates to typed verdicts
+- `2026-08-09-cli-action-envelope-hardening-W04-P07-S25` - Replace lifecycle suggestion construction with resolved typed action notices
 
 ### plan
 
