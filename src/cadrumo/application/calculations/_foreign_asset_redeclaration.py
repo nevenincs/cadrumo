@@ -166,10 +166,6 @@ def _redeclaration_advisory_findings(
                     f"({prior.value_eur} -> {current.value_eur}) and is absent from "
                     "the current declaration."
                 ),
-                next_action=(
-                    "Declare the grown foreign-asset position in the current filing "
-                    "or record non-declarability evidence before filing."
-                ),
                 legal_refs=threshold.legal_refs,
                 source_refs=threshold.source_refs,
             )
