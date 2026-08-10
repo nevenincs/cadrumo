@@ -1,0 +1,120 @@
+"""Real-binary proof that the generator IR has no derivative input boundary."""
+
+from __future__ import annotations
+
+from pathlib import Path
+from shutil import copyfile
+
+import pytest
+from dev.registry._record_design_ir import RecordDesignIntermediate, load_record_design_intermediate
+
+from .....core.resources import bundled_path
+from .._corpus_catalogue import resolve_record_design_binary
+from .._loader import load_catalogue_file
+from .._record_design import extract_record_design
+from .._record_design_schema import RecordDesignSheet
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_SOURCE_REF = "aeat-dr-200-2025"
+_FILING_YEAR = 2025
+_DESIGN_EPOCH = "2025"
+
+
+def test_intermediate_consumes_the_hash_pinned_binary_not_adjacent_derivatives(tmp_path: Path) -> None:
+    """Contradictory review sidecars cannot alter a complete parser-derived IR."""
+    source_root = bundled_path()
+    catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "is.toml"))
+    bundled = resolve_record_design_binary(
+        source_root,
+        catalogues.sources,
+        source_ref=_SOURCE_REF,
+        filing_year=_FILING_YEAR,
+        design_epoch=_DESIGN_EPOCH,
+    )
+
+    first_root = tmp_path / "first"
+    second_root = tmp_path / "second"
+    _copy_verified_binary_with_derivatives(first_root, bundled.path, bundled.source.corpus_path, marker="FIRST")
+    _copy_verified_binary_with_derivatives(second_root, bundled.path, bundled.source.corpus_path, marker="SECOND")
+
+    first_resolved = resolve_record_design_binary(
+        first_root,
+        catalogues.sources,
+        source_ref=_SOURCE_REF,
+        filing_year=_FILING_YEAR,
+        design_epoch=_DESIGN_EPOCH,
+    )
+    second_resolved = resolve_record_design_binary(
+        second_root,
+        catalogues.sources,
+        source_ref=_SOURCE_REF,
+        filing_year=_FILING_YEAR,
+        design_epoch=_DESIGN_EPOCH,
+    )
+    first_intermediate = load_record_design_intermediate(
+        first_root,
+        catalogues.sources,
+        source_ref=_SOURCE_REF,
+        filing_year=_FILING_YEAR,
+        design_epoch=_DESIGN_EPOCH,
+    )
+    second_intermediate = load_record_design_intermediate(
+        second_root,
+        catalogues.sources,
+        source_ref=_SOURCE_REF,
+        filing_year=_FILING_YEAR,
+        design_epoch=_DESIGN_EPOCH,
+    )
+
+    assert first_resolved.source.sha256 == bundled.source.sha256
+    assert second_resolved.source.sha256 == bundled.source.sha256
+    assert first_intermediate == second_intermediate
+    assert "S03-IR-DERIVATIVE-FIRST" not in first_intermediate.model_dump_json()
+    assert "S03-IR-DERIVATIVE-SECOND" not in second_intermediate.model_dump_json()
+    _assert_complete_parser_projection(first_intermediate, extract_record_design(first_resolved.path))
+
+
+def _copy_verified_binary_with_derivatives(
+    root: Path,
+    source_binary: Path,
+    corpus_path: str,
+    *,
+    marker: str,
+) -> None:
+    destination = root / corpus_path
+    destination.parent.mkdir(parents=True)
+    copyfile(source_binary, destination)
+    destination.with_name(f"{destination.name}.extracted.md").write_text(
+        f"S03-IR-DERIVATIVE-{marker}: position 999999 must never be read.\n",
+        encoding="utf-8",
+    )
+    destination.with_name(f"{destination.name}.extracted.json").write_text(
+        f'{{"units": [{{"anchor": "S03-IR-DERIVATIVE-{marker}", "text": "position 999999"}}]}}\n',
+        encoding="utf-8",
+    )
+
+
+def _assert_complete_parser_projection(
+    intermediate: RecordDesignIntermediate,
+    parsed_sheets: tuple[RecordDesignSheet, ...],
+) -> None:
+    """Compare every parser coordinate to the IR without re-parsing any source."""
+    assert len(intermediate.sheets) == len(parsed_sheets)
+    for intermediate_sheet, parsed_sheet in zip(intermediate.sheets, parsed_sheets, strict=True):
+        assert intermediate_sheet.sheet == parsed_sheet.name
+        assert intermediate_sheet.record_identity == parsed_sheet.name
+        assert intermediate_sheet.declared_total == parsed_sheet.total_positions
+        assert len(intermediate_sheet.fields) == len(parsed_sheet.fields)
+        for intermediate_field, parsed_field in zip(intermediate_sheet.fields, parsed_sheet.fields, strict=True):
+            assert intermediate_field.sheet == parsed_field.sheet
+            assert intermediate_field.record_identity == parsed_sheet.name
+            assert intermediate_field.source_row == parsed_field.row
+            assert intermediate_field.source_cell == f"A{parsed_field.row}"
+            assert intermediate_field.ordinal == parsed_field.ordinal
+            assert intermediate_field.offset == parsed_field.offset
+            assert intermediate_field.length == parsed_field.length
+            assert intermediate_field.aeat_type == parsed_field.type_code
+            assert intermediate_field.normalized_description == parsed_field.description
+            assert intermediate_field.validation == parsed_field.validation
+            assert intermediate_field.content == parsed_field.content

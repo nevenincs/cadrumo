@@ -1272,7 +1272,7 @@ def setup(app):
         """
         from dev.docs.casilla_reference import generate_casilla_reference
 
-        generate_casilla_reference(Path(__file__).resolve().parent)
+        generate_casilla_reference(Path(__file__).resolve().parent, repo_root=_PROJECT_ROOT)
 
     def _generate_legal_reference(app):
         """Render the per-document legal reference pages fresh from the catalogue.

@@ -373,7 +373,7 @@ def test_modelo_reconcile_malformed_evidence_refusal_is_clean_and_instructive(
     Regression for audit reconcile m11 / docs-hardening m16: before the fix the
     refusal echoed the raw parser message verbatim.
     """
-    from ....core.errors import get_error_suggestion, resolve_error_message
+    from ....core.errors import build_error_envelope, resolve_error_message
 
     work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
     not_a_justificante = tmp_path / "garbage.pdf"
@@ -395,6 +395,12 @@ def test_modelo_reconcile_malformed_evidence_refusal_is_clean_and_instructive(
     # The documented "wrong document" guidance is surfaced (es locale default).
     assert "justificante" in message.lower()
     assert "documento" in message.lower()
-    assert get_error_suggestion(error) is not None
+    # Ground truth, asserted rather than assumed: default suggestions were retired as
+    # the remediation authority and ``REFUSED_RECONCILIATION_EVIDENCE_INVALID`` has not
+    # yet been migrated to a catalogue action identity, so no recovery step is offered
+    # today. The message-quality assertions above are unaffected -- they are what keeps
+    # the parser internals off the operator surface. This code's conversion is the
+    # application part-one step, behind the registry migration contract.
+    assert build_error_envelope(error).action is None
     # The raw cause is preserved for diagnostics off the operator surface.
     assert error.__cause__ is not None

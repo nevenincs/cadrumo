@@ -33,7 +33,7 @@ from tempfile import TemporaryDirectory
 import pytest
 
 from ......core import Modelo, Period
-from ......core.errors import get_error_suggestion
+from ......core.errors import build_error_envelope
 from ......domain.calculations.registry import bundled_authority, resolve_export_layout, validated_casilla_id
 from .._declarations import _record_submitted_file_extraction_error
 from .._declarations_observations import _observed_casillas_from_submitted_file
@@ -265,9 +265,20 @@ def test_the_refusal_carries_an_actionable_next_step(
     with pytest.raises(SedeParseError) as caught:
         _project(payload[: len(payload) // 2], filing_year=filing_year)
 
-    suggestion = get_error_suggestion(caught.value)
-    assert suggestion, "the refusal resolves to no next step at all"
-    assert "optional" in suggestion, f"the suggestion does not point at the fix: {suggestion!r}"
+    # The remediation TEXT is still produced at the raise site; only its delivery was
+    # retired, so the claim stays checkable against the live value rather than being
+    # deferred. This module's whole subject is that an operator-reachable refusal must
+    # say what to do: declaring the omitted record OPTIONAL is the fix, as against
+    # reading the payload by byte offset, which is the degradation this file keeps out.
+    remediation = caught.value.suggestion
+    assert remediation, "the refusal produces no remediation text at all"
+    assert "optional" in remediation, f"the remediation does not point at the fix: {remediation!r}"
+
+    # Delivery ground truth, so this cannot be read as proving the operator receives it.
+    # Default suggestions were retired as the authority and ``FAIL_SEDE_PARSE`` is not
+    # yet converted to a catalogue action identity, so the envelope carries no next step
+    # today. Its conversion is the adapters part-one step, behind the migration contract.
+    assert build_error_envelope(caught.value).action is None
 
 
 def test_the_projection_holds_no_modelo_303_positional_reader() -> None:

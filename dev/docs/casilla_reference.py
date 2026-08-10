@@ -1175,7 +1175,7 @@ def render_casilla_reference(
     )
 
 
-def generate_casilla_reference(docs_root: Path) -> CasillaReferenceResult:
+def generate_casilla_reference(docs_root: Path, *, repo_root: Path | None = None) -> CasillaReferenceResult:
     """Materialise the generated casilla reference pages under ``docs_root/_generated/``.
 
     Mirrors :func:`~dev.docs.glossary_reference.generate_glossary_reference`: it
@@ -1183,13 +1183,20 @@ def generate_casilla_reference(docs_root: Path) -> CasillaReferenceResult:
     generated (gitignored, uncommitted) location, returning a summary. Wired at
     the ``builder-inited`` seam so the pages exist before Sphinx reads the tree.
 
+    ``docs_root`` may be an isolated copy used by a sandboxed build, so the
+    source repository (needed for the legal-catalogue read) must be
+    independently selectable, mirroring
+    :func:`~dev.docs.legal_reference.generate_legal_reference`.
+
     Args:
         docs_root: The documentation root (the directory holding ``index.md``).
+        repo_root: Repository root for the legal-catalogue read. Defaults to
+            this dev-side module's own checkout.
 
     Returns:
         A :class:`CasillaReferenceResult` summarising the render.
     """
-    repo_root = docs_root.resolve().parent
+    repo_root = (repo_root if repo_root is not None else _repo_root()).resolve()
     records = project_casilla_search_records()[0]
     language = _display_language()
     schema = compile_schema(records, language)

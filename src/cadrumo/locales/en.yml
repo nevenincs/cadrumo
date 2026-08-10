@@ -1914,8 +1914,7 @@ cli:
         confirm_invoice_number_help: Override the extracted invoice number.
         confirm_iva_rate_help: Override the extracted IVA rate (omit to keep the extracted
           value).
-        confirm_link_hint_message: Link this invoice to a ledger transaction with
-          `aeat app ledger link`.
+        confirm_link_hint_message: This invoice is not yet linked to a ledger transaction.
         confirm_operation_type_help: 'Modelo 349 clave for an entrega intracomunitaria.
           Required when the document states an intra-community supply: the category
           cannot say whether it followed an exempt importation.'
@@ -2327,8 +2326,7 @@ cli:
         been written to disk received its missing audit record.
       reconcile_failures_warning: '{count} interrupted profile-bundle export(s) could
         not be cleared and were kept for a later attempt. An unencrypted staged file
-        may remain on disk for each. Run ''aeat app maintenance reconcile'' again
-        once the cause is resolved.'
+        may remain on disk for each.'
       reconcile_help: Clear profile-bundle exports left unfinished by a crash, removing
         any leftover cleartext staged file and recording owed audit events.
       reconcile_none_info: No interrupted profile-bundle export was found. Nothing
@@ -3588,8 +3586,7 @@ cli:
           at rest and carries attachment evidence bytes, the audit trail, and the
           cross-period calculation inputs, in addition to the profile, ledger, calculation,
           and filing history. When exported with --recovery-wrap-passphrase it is
-          the encrypted cross-host transfer path for profile bundles. Store it somewhere
-          safe; restore with ''aeat config profile archive import''.'
+          the encrypted cross-host transfer path for profile bundles.'
         export_help: Write a sealed, AEAD-encrypted full-backup archive to PATH; add
           --recovery-wrap-passphrase before email or cross-host transfer.
         export_name_help: Profile to back up; defaults to active.
@@ -3600,8 +3597,7 @@ cli:
         help: Back up and restore a profile as a sealed, AEAD-encrypted archive (the
           full-custody recovery transport).
         import_active_switch_info: The restored profile {name} is now the ACTIVE profile;
-          subsequent commands operate on it. Run 'aeat config login <name>' to change
-          the active profile.
+          subsequent commands operate on it.
         import_force_help: Overwrite an existing profile that shares the archive's
           bucket id.
         import_help: Restore a profile from a sealed, encrypted archive at PATH.
@@ -3670,8 +3666,10 @@ cli:
         refresh_help: Download the latest censo from AEAT and save a snapshot
         show_help: Show the latest censo AEAT reported for this profile
         snapshot_id_help: Specific snapshot id (prefixes accepted)
-      create_epilog: 'Minimal freelancer profile: --entity-type natural_person --tax-id
-        <DNI/NIE/NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
+      create_epilog: 'Minimal freelancer profile: aeat config profile create PROFILE
+        --entity-type natural_person --tax-id <DNI/NIE/NIF> --name <NAME> --surnames
+        <SURNAMES> --activity <ACTIVITY> --irpf-income-categories actividad_economica
+        --quiet --accept-defaults'
       create_help: Initialize a new active profile.
       delete_active_cleared: The deleted profile was the active one; the active-profile
         pointer has been cleared. Run aeat config login NAME or aeat config profile
@@ -3714,10 +3712,9 @@ cli:
       export_encrypt_help: AEAD-encrypt the bundle for transfer; the passphrase is
         prompted (hidden) or read via --secrets-stdin, never argv.
       export_encrypted_info: This profile bundle was written to {out} with AEAD passphrase
-        encryption. Import it with 'aeat config profile import PATH'; the passphrase
-        is prompted (hidden) or read via --secrets-stdin. It carries the structured
-        profile bundle only; use the encrypted recovery archive for a complete backup
-        with attachment evidence bytes and audit trail.
+        encryption. It carries the structured profile bundle only; use the encrypted
+        recovery archive for a complete backup with attachment evidence bytes and
+        audit trail.
       export_help: Write a passphrase-encrypted portable profile bundle to PATH; cleartext
         JSON requires --cleartext-local for local/SAR use only.
       export_name_help: Profile to export; defaults to the active profile
@@ -3729,8 +3726,7 @@ cli:
         8 characters.
       export_reconcile_incomplete_warning: '{count} interrupted profile-bundle export(s)
         from an earlier run could not be cleared. An unencrypted staged file may remain
-        on disk for each. Run ''aeat app maintenance reconcile'' once the cause is
-        resolved.'
+        on disk for each.'
       export_requires_destination: Provide --to PATH for the bundle destination, or
         run in an interactive terminal to be prompted.
       export_requires_transport: Use --encrypt for an encrypted transfer bundle, or
@@ -3739,10 +3735,9 @@ cli:
         financial data: the raw tax id (not redacted), names/surnames, the full ledger,
         calculation revisions, and filing records. It was written to {out}. Use it
         only for local/SAR handling; do not email, sync, or transfer it. Delete it
-        after that local/SAR handling is complete. Use ''aeat config profile export
-        --encrypt'' for an AEAD-encrypted structured transfer bundle. It is NOT a
-        full backup: attachment evidence bytes, AEAT captures, and the audit trail
-        are excluded. Use the encrypted recovery archive for a complete backup.'
+        after that local/SAR handling is complete. It is NOT a full backup: attachment
+        evidence bytes, AEAT captures, and the audit trail are excluded. Use the encrypted
+        recovery archive for a complete backup.'
       export_transport_conflict: Choose either --encrypt or --cleartext-local, not
         both.
       help: Manage active profile configuration values
@@ -3763,8 +3758,7 @@ cli:
       history_until_help: Filter the history to events at or before this ISO-8601
         timestamp (e.g. 2026-04-30T23:59:59+00:00)
       import_active_switch_info: The imported profile {name} is now the ACTIVE profile;
-        subsequent commands operate on it. Run 'aeat config login <name>' to change
-        the active profile.
+        subsequent commands operate on it.
       import_encrypted_bundle_invalid: The encrypted profile bundle could not be decrypted
         or validated. Check the passphrase and file.
       import_help: Register a portable profile bundle from a file
@@ -3835,8 +3829,7 @@ cli:
         archive_name_help: Sandbox name (without the prefix).
         archive_requires_yes: Archiving a sandbox is a state transition. Re-run 'aeat
           config profile sandbox archive %{name} --yes' to confirm.
-        archive_restorable_info: The sandbox is now dormant; run 'aeat config profile
-          sandbox restore %{name}' to bring it back.
+        archive_restorable_info: The sandbox %{name} is now dormant and can be restored.
         archive_yes_help: Confirm the archive.
         create_active_info: The sandbox is now the ACTIVE profile; every command runs
           against it until you switch away or discard it.
@@ -3871,8 +3864,7 @@ cli:
         prune_requires_yes: Pruning every sandbox is destructive. Re-run 'aeat config
           profile sandbox prune --yes' to confirm.
         prune_skipped_active_info: Skipped the active sandbox %{names}; switch to
-          another profile and re-run 'aeat config profile sandbox prune --yes' to
-          discard it.
+          another profile first to discard it.
         prune_yes_help: Confirm discarding every sandbox.
         restore_help: Bring an archived sandbox back to active status.
         restore_name_help: Sandbox name (without the prefix).
@@ -4039,29 +4031,29 @@ cli:
         mode_unenforced: This platform does not implement POSIX permission bits, so
           root permissions were not checked.
       errors:
-        reclaim_refused: 'refusing to reclaim %{category}: %{reason}. %{path} holds
-          %{entries} entries and none were removed.'
-        reclaim_unconfirmed: reclaiming %{category} deletes %{entries} entries under
-          %{path} and needs explicit confirmation.
+        reclaim_area_refused: 'Refusing to reclaim %{area}: %{reason}. %{entries}
+          entries remain untouched.'
+        reclaim_area_unconfirmed: Reclaiming %{area} deletes %{entries} entries and
+          needs explicit confirmation.
       help: Inspect and maintain the local storage tree
       init:
         already_materialised: Every declared directory already existed; nothing was
           created.
         help: Create every declared directory, preserving everything already there
       list:
-        help: Show every storage category, its path, and whether it holds anything
+        area_help: Show aggregate occupancy and footprint for every storage area
         relocation_is_manual: To move the tree, stop the application, copy it yourself,
           then point %{variable} at the new location. No command moves it, because
           a copy that completes for the records but not for the key material leaves
           neither usable.
       reclaim:
-        category_help: Storage category to reclaim
-        help: Delete a storage category's regenerable contents
+        area_argument_help: Storage area to reclaim
+        area_help: Delete regenerable contents from a storage area
         incomplete: Some entries could not be removed and are still on disk.
         yes_help: Confirm the deletion; without it the command refuses
       show:
-        category_help: Storage category to show
-        help: Show one storage category in full
+        area_argument_help: Storage area to show
+        area_help: Show one storage area in full
     unset:
       help: Clear the value of one configuration key
       key_help: Key to clear
@@ -4732,8 +4724,7 @@ cli:
       note_help: Optional note recorded on every fetched attachment.
       notices:
         files_refused: '%{refused_count} file(s) in this folder could not be fetched
-          under the drive.file scope; download them manually and attach with ''aeat
-          app ledger attach --attachment-id ...''.'
+          under the drive.file scope; download them manually and attach them.'
     remove:
       actor_help: Operator name recorded on the bucket event
       dry_run_help: Report removal effects without deleting the ledger transaction
@@ -4770,8 +4761,7 @@ cli:
       child_description_help: One child narrative. Repeat once per child; the count
         must match --child-amount.
       classification_dropped: Parent classification %{classification} was not copied
-        to the split children; each child is NOT_YET_PROCESSED and needs re-classification
-        with 'aeat app ledger classify'.
+        to the split children; each child is NOT_YET_PROCESSED and needs re-classification.
       errors:
         child_args_mismatch: ledger split requires the same number of --child-amount
           and --child-description arguments
@@ -4939,44 +4929,61 @@ cli:
         storage_reclaim: Free space by deleting a category the app can rebuild
         storage_show: Look at one storage category in detail
       root:
-        diagnostics_live_filed: List captured filed-return observations.
-        diagnostics_overview: Summarize active workspace readiness.
-        diagnostics_registry_inspect: Inspect registry metadata.
-        diagnostics_repair: Diagnose local configuration and storage health.
-        diagnostics_review_queue: List pending review work.
-        footer: Run aeat config --help or aeat app --help for subtree commands.
-        heading: CADRUMO - local-first workflow for Spanish tax work with AEAT
-        ledger_allocate: Assign business-use or tax allocation metadata.
-        ledger_archive: Archive a ledger transaction without deleting history.
-        ledger_attach: Attach evidence to a ledger transaction.
-        ledger_classify: Classify imported rows.
-        ledger_export: Export ledger data.
-        ledger_import: Import bank or accounting transactions.
-        ledger_list: List imported transactions.
-        ledger_remove: Remove a transaction with confirmation.
-        ledger_reset: Clear ledger data with confirmation.
-        ledger_review: Review imported rows.
-        ledger_stash: Move a row out of active review.
-        ledger_status: Show ledger health and counts.
-        ledger_update: Update a ledger transaction.
-        ledger_view: Inspect one transaction.
-        modelo_bindings_list: List registry binding coverage.
-        modelo_list: List supported modelos.
-        modelo_work: Create and operate modelo work units.
-        paragraph_storage_isolation: For an isolated blank state, set CADRUMO_LOCAL_STORAGE_ROOT,
-          CADRUMO_SECRET_STORE_BACKEND=file, CADRUMO_SECRET_STORE_DIR, and CADRUMO_SECRET_PASSPHRASE;
-          logs default under that storage root.
-        paragraph_two_roots: 'The CLI has exactly two roots: config and app.'
-        paragraph_type_help: Use config for local state and app for tax work.
-        section_daily_ledger: Daily ledger work
+        diagnostics_logs: Show the log path and latest lines.
+        diagnostics_overview_verbose: Show general state with additional detail.
+        diagnostics_repair_json: Return the complete local health report as JSON.
+        diagnostics_version: Show the package and registry fingerprint.
+        family_app: Open profile-scoped tax-work commands.
+        family_config: Open profile, session, custody, storage, and repair commands.
+        footer: Add --help for details. Remove sensitive log values, then report bugs
+          at github.com/nevenincs/cadrumo/issues.
+        heading: CADRUMO - local-first workflow with the Spanish Tax Agency (AEAT)
+        paragraph_app_root: The app root manages profile overview, ledger, modelo,
+          review, registry, and authenticated AEAT reads.
+        paragraph_config_root: The config root manages profiles, encrypted local data,
+          recovery keys, profile sessions, AEAT authentication, and repair.
+        paragraph_local_first: CADRUMO keeps taxpayer data local and exposes exactly
+          two command roots.
+        paragraph_privacy: Profile labels stay visible. Tax identities, credentials,
+          storage identifiers, object keys, and sensitive web-address content stay
+          protected.
+        paragraph_profile_terms: A profile stores one taxpayer's local facts and settings.
+          The active profile is the selected taxpayer context. A profile session provides
+          resumable access to encrypted profile data.
+        paragraph_review_terms: The review queue contains findings that need operator
+          action. The registry contains validated, versioned tax-rule data and sources;
+          it holds no taxpayer data and performs no live submission.
+        paragraph_tax_terms: The ledger contains imported money movements. A modelo
+          is an official AEAT declaration form, distinct from its local work unit
+          or export.
+        recovery_login: Start or renew an absent, closed, or expired profile session.
+        recovery_passphrase: Recover the file secret store with its enrolled recovery
+          code.
+        recovery_profile: Inspect a reported active-profile pointer problem.
+        recovery_repair: Before changing configuration or stored data, run this read-only
+          health report.
+        section_command_families: Command families
         section_diagnostics: Diagnostics
-        section_modelo_lifecycle: Modelo lifecycle
-        section_setup: Setup
-        setup_configure_auth: Configure AEAT authentication.
-        setup_create_profile: Create a profile.
-        setup_inspect_profile: Inspect profile commands.
+        section_recovery: Resume or recover
+        section_start_resume: Start or resume
+        section_workflow: Core workflow
+        start_create: Create the first local taxpayer profile.
+        start_edit: Complete or correct an incomplete profile.
+        start_list: List registered profiles and identify the active one.
+        start_login: Select a profile and start or renew its session.
+        start_status: Check profile readiness and its authoritative next action.
+        workflow_import: Import bank or accounting transactions.
+        workflow_ledger_review: Review imported rows that need attention.
+        workflow_modelo: Create or operate modelo work units.
+        workflow_overview: Summarize profile and work state.
+        workflow_profile_status: Show profile readiness.
+        workflow_registry: Inspect validated registry metadata and sources.
+        workflow_review_queue: Show profile-wide items awaiting operator review.
+        workflow_verification: List saved filing verification reports.
     landing:
       active_profile_message: Active profile is %{profile}.
+      active_profile_unavailable_message: An active profile is selected, but its display
+        label is unavailable.
       no_active_profile_message: No active profile is configured.
       text_template: '%{message}
 
@@ -5141,9 +5148,6 @@ cli:
     year_help: Filing year for --period (e.g. 2024).
   registry:
     app_help: Tax models registry management
-    audit_oracles_environment_help: Live parity catalogue environment to audit against
-      (production, test_environment, or both)
-    audit_oracles_help: Surface live-parity oracle binding mismatches at startup
     casilla_help: Casilla id to compare; repeat to override the default computed casillas
     citations:
       app_help: Inspect the legal-norm corpus (Ley 37/1992, Ley 35/2006, ...)
@@ -5183,26 +5187,17 @@ cli:
       view_help: Show a manual structure and, optionally, one section
       year_help: Tax year of the manual (e.g. 2024)
     metrics:
-      applicability_declaration_count: Applicability declaration count
       application_link_count: Application link count
       application_link_surfaces: Application link surfaces
       artefact_refs: Artefact references
-      backend_exists: Backend exists
       captured_count: Captured count
       casilla_count: Casilla count
       compared_casillas: Compared casillas
-      comparison_count: Comparison count
       cross_reference_count: Cross reference count
-      difference_count: Difference count
-      differences: Differences
       drift_count: Drift count
-      environment: Environment
       extraction_profile_count: Extraction profile count
-      failed_count: Failed count
       failed_declaration_count: Failed declaration count
-      failure_count: Failure count
       formula_count: Formula count
-      formula_workbook_count: Formula workbook count
       legal_reference_count: Legal reference count
       missing_filed_casillas: Missing filed casillas
       missing_local_casillas: Missing local casillas
@@ -5210,48 +5205,21 @@ cli:
       modelo_count: Modelo count
       modelos: Modelos
       observation_paths: Observation paths
-      orphan_oracle_ids: Orphan oracle ids
-      passed: Passed
-      registered_oracle_ids: Registered oracle ids
       revision: Revision
       revision_count: Revision count
       row_count: Row count
-      runner_detail: Runner detail
-      runner_status: Runner status
-      scanned_count: Scanned count
-      scenario_id: Scenario id
       source_reference_count: Source reference count
       status: Status
-      tape_path: Tape path
-      unsupported_xls_count: Unsupported XLS count
       verification_expectation_count: Verification expectation count
       verified: Verified
-      workbook_count: Workbook count
       workbook_parity_ref_count: Workbook parity ref count
-      workbook_path: Workbook path
     observation_help: Encrypted filed-declaration observation manifest to verify
-    parity_app_help: Scenario and tape parity runner for manual calculation checks
-    parity_output_help: Destination JSON file for the generated parity tape
-    parity_replay_help: Replay an archived parity tape against the current registry
-      runtime
-    parity_run_help: Run a stored parity scenario and archive the resulting parity
-      tape
-    parity_scenario_help: Path to a parity scenario JSON file
-    parity_store_root_help: Root directory used to store generated parity tapes
-    parity_tape_help: Path to a stored parity tape JSON file
     source_observation_help: Encrypted source observation manifest required by previous-filing
       bindings or relations
     verify_filed_state_help: Compare local registry calculation output against captured
       filed AEAT state
     verify_help: Verify the integrity of the local registry
     verify_source_root_help: Path to the source directory to verify
-    workbooks_app_help: Registry workbooks management
-    workbooks_limit_help: Limit of workbooks to compile
-    workbooks_output_help: Output directory for the compiled workbooks
-    workbooks_resume_help: Resume workbooks compilation from the last point
-    workbooks_root_help: Root directory containing the workbooks definitions
-    workbooks_timeout_help: Maximum timeout (in seconds) for the compilation
-    workbooks_verify_help: Verify the integrity of the generated workbooks
   review:
     app_help: 'Operator review queue: triage ledger transactions, purchase evidence,
       and modelo findings'
@@ -5295,24 +5263,35 @@ cli:
     format_help: 'Output format: text, json.'
     help_help: Show help.
     landing:
+      context_heading: Current context
       headline: CADRUMO Tax Assistant
       help_line: 'More help: run `aeat --help`, `aeat config --help`, or `aeat app
-        --help`. Global flags (`--format json`, `--language en`, `--profile NAME`,
-        `--quiet`, `--verbose`, `--debug`) must be placed BEFORE the subcommand, e.g.
-        `aeat --format json app ledger list` (not `aeat app ledger list --format json`).'
+        --help`. Global flags include `--format json`, `--language en`, `--profile
+        NAME`, `--quiet`, `--verbose`, and `--debug`. Place them before the subcommand.
+        For example, run `aeat --format json app ledger list`, not `aeat app ledger
+        list --format json`.'
+      privacy_line: 'Privacy: profile labels stay visible; taxpayer data and storage
+        identifiers stay protected.'
+      profile_repair_command: 'Repair profile state: `aeat config repair profile`.'
       quick_start_heading: Quick start
-      quick_start_import: '  3. `aeat app ledger import <bank-statement.csv> --provider
-        csv` - add your bank transactions.'
-      quick_start_repair: '  5. `aeat config repair` - diagnose configuration, storage,
+      quick_start_import: '  3. `aeat app ledger import --file bank-statement.csv
+        --provider csv` - import transactions.'
+      quick_start_modelo: '  5. `aeat app modelo work --help` - list work-unit actions
+        for creation, calculation, verification, and export.'
+      quick_start_queue: '  6. `aeat app review queue` - find profile-wide items needing
+        attention.'
+      quick_start_repair: '  7. `aeat config repair` - inspect configuration, storage,
         and local health.'
-      quick_start_review: '  4. `aeat app ledger review` - check and classify imported
+      quick_start_review: '  4. `aeat app ledger review` - review and classify imported
         rows.'
-      quick_start_setup_done: '  1. `aeat config profile status` - check the active
-        profile before operational work.'
-      quick_start_setup_needed: '  1. `aeat config profile create NAME` - create your
-        local tax profile first.'
-      quick_start_status: '  2. `aeat app overview status` - read current workspace
-        status and diagnostics.'
+      quick_start_setup_done: '  1. `aeat config profile status` - check readiness
+        and the authoritative next action.'
+      quick_start_setup_needed: '  1. `aeat config profile create NAME` - create a
+        local taxpayer profile.'
+      quick_start_setup_repair: '  1. `aeat config repair profile` - inspect and repair
+        the selected profile.'
+      quick_start_status: '  2. `aeat app overview status` - summarize current profile
+        and work state.'
       section_config: '  config - profile setup, authentication, diagnostics'
       section_ledger: '  app ledger - bank imports and transaction review'
       section_modelo: '  app modelo - tax form catalogue and work units'
@@ -5320,10 +5299,18 @@ cli:
       section_registry: '  app registry - local AEAT registry data'
       section_review: '  app review - items that need operator attention'
       sections_heading: Main sections
-      tagline: Local-first Spanish tax workflow for autonomos.
-      welcome_no_profile: Welcome. No active profile is configured yet, so start with
-        setup.
-      welcome_profile: Welcome back. Active profile is `%{profile}`.
+      session_login_command: 'Start or renew a profile session: `aeat config login
+        [NAME]`.'
+      session_status_command: 'Check readiness: `aeat config profile status`.'
+      session_unchecked: Session and readiness are not inferred from the selected
+        profile.
+      tagline: Local-first workflow with the Spanish Tax Agency (AEAT) for taxpayers
+        and advisers.
+      welcome_no_profile: 'Active profile: none. Create one before profile-scoped
+        work.'
+      welcome_profile: 'Active profile: `%{profile}`.'
+      welcome_profile_unavailable: 'Active profile: unavailable. Repair the selected
+        profile before profile-scoped work.'
     language_help: Language for output and help text (en, es, ca, hu).
     profile_help: Name of the active profile.
     quiet_help: Show errors only.
@@ -7105,6 +7092,11 @@ live:
       filing year.
     year_range_invalid: From-year must be less than or equal to to-year.
   filed:
+    pull:
+      submitted_file_extraction_failed: 'Modelo {modelo} filing {period} {ejercicio}
+        (expediente {expediente_id}) could not be read through its submitted-file
+        layout. The declaration-PDF fallback, if AEAT provided it, remains the only
+        extraction path. Parser reason: {reason}'
     pull_all:
       denominator_note_profile: Measured against {expected} pair(s) the taxpayer's
         own declared facts expect. A further {offered_only} pair(s) came only from
@@ -66053,395 +66045,508 @@ modelo:
         2026-y-siguientes:
           casilla:
             '01':
-              help: null
-              label: null
+              help: 'Box 01: taxable base for accrued VAT under the general regime
+                super-reduced 4% rate.'
+              label: Accrued VAT, general regime super-reduced 4% rate - taxable base
             '02':
-              help: null
-              label: null
+              help: 'Box 02: rate percentage for accrued VAT under the general regime
+                super-reduced 4% rate.'
+              label: Accrued VAT, general regime super-reduced 4% rate - rate percentage
             '03':
-              help: null
-              label: null
+              help: 'Box 03: VAT amount for accrued VAT under the general regime super-reduced
+                4% rate.'
+              label: Accrued VAT, general regime super-reduced 4% rate - VAT amount
             '04':
-              help: null
-              label: null
+              help: 'Box 04: taxable base for accrued VAT under the general regime
+                reduced 10% rate.'
+              label: Accrued VAT, general regime reduced 10% rate - taxable base
             '05':
-              help: null
-              label: null
+              help: 'Box 05: rate percentage for accrued VAT under the general regime
+                reduced 10% rate.'
+              label: Accrued VAT, general regime reduced 10% rate - rate percentage
             '06':
-              help: null
-              label: null
+              help: 'Box 06: VAT amount for accrued VAT under the general regime reduced
+                10% rate.'
+              label: Accrued VAT, general regime reduced 10% rate - VAT amount
             '07':
-              help: null
-              label: null
+              help: 'Box 07: taxable base for accrued VAT under the general regime
+                standard 21% rate.'
+              label: Accrued VAT, general regime standard 21% rate - taxable base
             08:
-              help: null
-              label: null
+              help: 'Box 08: rate percentage for accrued VAT under the general regime
+                standard 21% rate.'
+              label: Accrued VAT, general regime standard 21% rate - rate percentage
             09:
-              help: null
-              label: null
+              help: 'Box 09: VAT amount for accrued VAT under the general regime standard
+                21% rate.'
+              label: Accrued VAT, general regime standard 21% rate - VAT amount
             '10':
-              help: null
-              label: null
+              help: 'Box 10: base for accrued VAT on intra-Community acquisitions
+                of goods and services.'
+              label: Accrued VAT on intra-Community acquisitions of goods and services
+                - base
             '108':
-              help: null
-              label: null
+              help: 'Box 108: other adjustments in a corrective return for cases determined
+                by discrepancy with administrative criterion.'
+              label: Corrective return - other adjustments in cases determined by
+                discrepancy with administrative criterion
             '109':
-              help: null
-              label: null
+              help: 'Box 109: refunds agreed by AEAT for previous self-assessments
+                for the same year and period.'
+              label: Result - refunds agreed by AEAT for previous self-assessments
+                for the same year and period
             '11':
-              help: null
-              label: null
+              help: 'Box 11: VAT amount for accrued VAT on intra-Community acquisitions
+                of goods and services.'
+              label: Accrued VAT on intra-Community acquisitions of goods and services
+                - VAT amount
             '111':
-              help: null
-              label: null
+              help: 'Box 111: correction amount reported in a corrective return.'
+              label: Corrective return - correction amount
             '112':
               help: null
               label: null
             '12':
-              help: null
-              label: null
+              help: 'Box 12: base for accrued VAT on other reverse-charge transactions
+                excluding intra-Community acquisitions.'
+              label: Accrued VAT on other reverse-charge transactions excluding intra-Community
+                acquisitions - base
             '120':
-              help: null
-              label: null
+              help: 'Box 120: additional information on transactions not subject to
+                VAT due to place-of-supply rules, excluding box 123.'
+              label: Additional information - transactions not subject due to place-of-supply
+                rules, excluding box 123
             '122':
-              help: null
-              label: null
+              help: 'Box 122: additional information on transactions subject to reverse
+                charge.'
+              label: Additional information - transactions subject to reverse charge
             '123':
-              help: null
-              label: null
+              help: 'Box 123: additional information on transactions not subject under
+                place-of-supply rules for one-stop shop special schemes.'
+              label: Additional information - transactions not subject under one-stop
+                shop special schemes place-of-supply rules
             '124':
-              help: null
-              label: null
+              help: 'Box 124: additional information on transactions subject under
+                one-stop shop special schemes.'
+              label: Additional information - transactions subject under one-stop
+                shop special schemes
             '13':
-              help: null
-              label: null
+              help: 'Box 13: VAT amount for accrued VAT on other reverse-charge transactions
+                excluding intra-Community acquisitions.'
+              label: Accrued VAT on other reverse-charge transactions excluding intra-Community
+                acquisitions - VAT amount
             '14':
-              help: null
-              label: null
+              help: 'Box 14: taxable base for changes to accrued VAT taxable bases
+                and amounts.'
+              label: Changes to accrued VAT taxable bases and amounts - taxable base
             '15':
-              help: null
-              label: null
+              help: 'Box 15: VAT amount for changes to accrued VAT taxable bases and
+                amounts.'
+              label: Changes to accrued VAT taxable bases and amounts - VAT amount
             '150':
-              help: null
-              label: null
+              help: 'Box 150: taxable base for accrued VAT under the general regime
+                new rate tier 1.'
+              label: Accrued VAT, general regime new rate tier 1 - taxable base
             '151':
-              help: null
-              label: null
+              help: 'Box 151: rate percentage for accrued VAT under the general regime
+                new rate tier 1.'
+              label: Accrued VAT, general regime new rate tier 1 - rate percentage
             '152':
-              help: null
-              label: null
+              help: 'Box 152: VAT amount for accrued VAT under the general regime
+                new rate tier 1.'
+              label: Accrued VAT, general regime new rate tier 1 - VAT amount
             '153':
-              help: null
-              label: null
+              help: 'Box 153: taxable base for accrued VAT under the general regime
+                new rate tier 2.'
+              label: Accrued VAT, general regime new rate tier 2 - taxable base
             '154':
-              help: null
-              label: null
+              help: 'Box 154: rate percentage for accrued VAT under the general regime
+                new rate tier 2.'
+              label: Accrued VAT, general regime new rate tier 2 - rate percentage
             '155':
-              help: null
-              label: null
+              help: 'Box 155: VAT amount for accrued VAT under the general regime
+                new rate tier 2.'
+              label: Accrued VAT, general regime new rate tier 2 - VAT amount
             '156':
-              help: null
-              label: null
+              help: 'Box 156: taxable base for the 0.5% equivalence surcharge.'
+              label: Equivalence surcharge at 0.5% - taxable base
             '157':
-              help: null
-              label: null
+              help: 'Box 157: rate percentage for the 0.5% equivalence surcharge.'
+              label: Equivalence surcharge at 0.5% - rate percentage
             '158':
-              help: null
-              label: null
+              help: 'Box 158: surcharge amount for the 0.5% equivalence surcharge.'
+              label: Equivalence surcharge at 0.5% - surcharge amount
             '16':
-              help: null
-              label: null
+              help: 'Box 16: taxable base for the 1.0% equivalence surcharge.'
+              label: Equivalence surcharge at 1.0% - taxable base
             '165':
-              help: null
-              label: null
+              help: 'Box 165: taxable base for accrued VAT under the general regime
+                2% rate from 2024.'
+              label: Accrued VAT, general regime 2% rate from 2024 - taxable base
             '166':
-              help: null
-              label: null
+              help: 'Box 166: rate percentage for accrued VAT under the general regime
+                2% rate from 2024.'
+              label: Accrued VAT, general regime 2% rate from 2024 - rate percentage
             '167':
-              help: null
-              label: null
+              help: 'Box 167: VAT amount for accrued VAT under the general regime
+                2% rate from 2024.'
+              label: Accrued VAT, general regime 2% rate from 2024 - VAT amount
             '168':
-              help: null
-              label: null
+              help: 'Box 168: taxable base for the new equivalence surcharge rate
+                from 2024.'
+              label: New equivalence surcharge rate from 2024 - taxable base
             '169':
-              help: null
-              label: null
+              help: 'Box 169: rate percentage for the new equivalence surcharge rate
+                from 2024.'
+              label: New equivalence surcharge rate from 2024 - rate percentage
             '17':
-              help: null
-              label: null
+              help: 'Box 17: rate percentage for the 1.0% equivalence surcharge.'
+              label: Equivalence surcharge at 1.0% - rate percentage
             '170':
-              help: null
-              label: null
+              help: 'Box 170: surcharge amount for the new equivalence surcharge rate
+                from 2024.'
+              label: New equivalence surcharge rate from 2024 - surcharge amount
             '18':
-              help: null
-              label: null
+              help: 'Box 18: surcharge amount for the 1.0% equivalence surcharge.'
+              label: Equivalence surcharge at 1.0% - surcharge amount
             '19':
-              help: null
-              label: null
+              help: 'Box 19: taxable base for the 1.4% equivalence surcharge.'
+              label: Equivalence surcharge at 1.4% - taxable base
             '20':
-              help: null
-              label: null
+              help: 'Box 20: rate percentage for the 1.4% equivalence surcharge.'
+              label: Equivalence surcharge at 1.4% - rate percentage
             '21':
-              help: null
-              label: null
+              help: 'Box 21: surcharge amount for the 1.4% equivalence surcharge.'
+              label: Equivalence surcharge at 1.4% - surcharge amount
             '22':
-              help: null
-              label: null
+              help: 'Box 22: taxable base for the 5.2% equivalence surcharge.'
+              label: Equivalence surcharge at 5.2% - taxable base
             '23':
-              help: null
-              label: null
+              help: 'Box 23: rate percentage for the 5.2% equivalence surcharge.'
+              label: Equivalence surcharge at 5.2% - rate percentage
             '24':
-              help: null
-              label: null
+              help: 'Box 24: surcharge amount for the 5.2% equivalence surcharge.'
+              label: Equivalence surcharge at 5.2% - surcharge amount
             '25':
-              help: null
-              label: null
+              help: 'Box 25: taxable base for changes to equivalence surcharge bases
+                and amounts.'
+              label: Changes to equivalence surcharge bases and amounts - taxable
+                base
             '26':
-              help: null
-              label: null
+              help: 'Box 26: surcharge amount for changes to equivalence surcharge
+                bases and amounts.'
+              label: Changes to equivalence surcharge bases and amounts - surcharge
+                amount
             '27':
-              help: null
-              label: null
+              help: 'Box 27: total accrued VAT amount.'
+              label: Total accrued VAT amount
             '28':
-              help: null
-              label: null
+              help: 'Box 28: base for deductible VAT on domestic current transactions.'
+              label: Deductible VAT on domestic current transactions - base
             '29':
-              help: null
-              label: null
+              help: 'Box 29: VAT amount for deductible VAT on domestic current transactions.'
+              label: Deductible VAT on domestic current transactions - VAT amount
             '30':
-              help: null
-              label: null
+              help: 'Box 30: base for deductible VAT on domestic capital goods.'
+              label: Deductible VAT on domestic capital goods - base
             '31':
-              help: null
-              label: null
+              help: 'Box 31: VAT amount for deductible VAT on domestic capital goods.'
+              label: Deductible VAT on domestic capital goods - VAT amount
             '32':
-              help: null
-              label: null
+              help: 'Box 32: base for deductible VAT on imports of current goods.'
+              label: Deductible VAT on imports of current goods - base
             '33':
-              help: null
-              label: null
+              help: 'Box 33: VAT amount for deductible VAT on imports of current goods.'
+              label: Deductible VAT on imports of current goods - VAT amount
             '34':
-              help: null
-              label: null
+              help: 'Box 34: base for deductible VAT on imports of capital goods.'
+              label: Deductible VAT on imports of capital goods - base
             '35':
-              help: null
-              label: null
+              help: 'Box 35: VAT amount for deductible VAT on imports of capital goods.'
+              label: Deductible VAT on imports of capital goods - VAT amount
             '36':
-              help: null
-              label: null
+              help: 'Box 36: base for deductible VAT on intra-Community acquisitions
+                of current goods.'
+              label: Deductible VAT on intra-Community acquisitions of current goods
+                - base
             '37':
-              help: null
-              label: null
+              help: 'Box 37: VAT amount for deductible VAT on intra-Community acquisitions
+                of current goods.'
+              label: Deductible VAT on intra-Community acquisitions of current goods
+                - VAT amount
             '38':
-              help: null
-              label: null
+              help: 'Box 38: base for deductible VAT on intra-Community acquisitions
+                of capital goods.'
+              label: Deductible VAT on intra-Community acquisitions of capital goods
+                - base
             '39':
-              help: null
-              label: null
+              help: 'Box 39: VAT amount for deductible VAT on intra-Community acquisitions
+                of capital goods.'
+              label: Deductible VAT on intra-Community acquisitions of capital goods
+                - VAT amount
             '40':
-              help: null
-              label: null
+              help: 'Box 40: base for deduction corrections.'
+              label: Deduction corrections - base
             '41':
-              help: null
-              label: null
+              help: 'Box 41: VAT amount for deduction corrections.'
+              label: Deduction corrections - VAT amount
             '42':
-              help: null
-              label: null
+              help: 'Box 42: compensation amount under the special agriculture, livestock
+                and fisheries scheme.'
+              label: Special agriculture, livestock and fisheries scheme compensations
+                - amount
             '43':
-              help: null
-              label: null
+              help: 'Box 43: VAT amount for capital goods regularization.'
+              label: Capital goods regularization - amount
             '44':
-              help: null
-              label: null
+              help: 'Box 44: VAT amount for pro rata regularization using the final
+                percentage.'
+              label: Pro rata regularization using final percentage - amount
             '45':
-              help: null
-              label: null
+              help: 'Box 45: total deductible VAT amount.'
+              label: Total deductible amount
             '47':
-              help: null
-              label: null
+              help: 'Box 47: sum of payments on account for all activities under the
+                simplified regime in Q1, Q2, or Q3.'
+              label: Simplified regime, Q1-Q3 - sum of payments on account for all
+                activities
             '48':
-              help: null
-              label: null
+              help: 'Box 48: sum of amounts derived from all simplified-regime activities
+                in Q4.'
+              label: Simplified regime, Q4 - sum of derived amounts for all activities
             '49':
-              help: null
-              label: null
+              help: 'Box 49: sum of payments on account made during the year under
+                the simplified regime in Q4.'
+              label: Simplified regime, Q4 - sum of payments on account made in the
+                year
             '50':
-              help: null
-              label: null
+              help: 'Box 50: simplified-regime Q4 result calculated as box 48 minus
+                box 49.'
+              label: Simplified regime, Q4 - result ([48] - [49])
             '51':
-              help: null
-              label: null
+              help: 'Box 51: accrued VAT on intra-Community acquisitions of goods
+                under the simplified regime.'
+              label: Simplified regime - accrued VAT on intra-Community acquisitions
+                of goods
             '52':
-              help: null
-              label: null
+              help: 'Box 52: accrued VAT on supplies of fixed assets under the simplified
+                regime.'
+              label: Simplified regime - accrued VAT on supplies of fixed assets
             '53':
-              help: null
-              label: null
+              help: 'Box 53: accrued VAT under the simplified regime from transactions
+                subject to reverse charge.'
+              label: Simplified regime - accrued VAT from reverse-charge transactions
             '54':
-              help: null
-              label: null
+              help: 'Box 54: total resulting VAT amount under the simplified regime.'
+              label: Simplified regime - total resulting amount
             '55':
-              help: null
-              label: null
+              help: 'Box 55: deductible VAT on acquisition or import of fixed assets
+                under the simplified regime.'
+              label: Simplified regime - deductible VAT on acquisition or import of
+                fixed assets
             '56':
-              help: null
-              label: null
+              help: 'Box 56: deductible VAT from capital goods regularization under
+                the simplified regime.'
+              label: Simplified regime - deductible VAT from capital goods regularization
             '57':
-              help: null
-              label: null
+              help: 'Box 57: total deductible VAT under the simplified regime, calculated
+                as box 55 plus box 56.'
+              label: Simplified regime - total deductible VAT ([55] + [56])
             '58':
-              help: null
-              label: null
+              help: 'Box 58: simplified-regime result calculated as box 54 minus box
+                57.'
+              label: Simplified regime result ([54] - [57])
             '59':
-              help: null
-              label: null
+              help: 'Box 59: additional information on intra-Community supplies of
+                goods and services.'
+              label: Additional information - intra-Community supplies of goods and
+                services
             '60':
-              help: null
-              label: null
+              help: 'Box 60: additional information on exports and assimilated transactions.'
+              label: Additional information - exports and assimilated transactions
             '62':
-              help: null
-              label: null
+              help: 'Box 62: taxable base for cash accounting supplies accrued under
+                Article 75 LIVA.'
+              label: Additional information - cash accounting supplies accrued under
+                Article 75 LIVA - taxable base
             '63':
-              help: null
-              label: null
+              help: 'Box 63: VAT amount for cash accounting supplies accrued under
+                Article 75 LIVA.'
+              label: Additional information - cash accounting supplies accrued under
+                Article 75 LIVA - VAT amount
             '64':
-              help: null
-              label: null
+              help: 'Box 64: sum of results, calculated as box 46 plus box 58 plus
+                box 76.'
+              label: Result - sum of results ([46] + [58] + [76])
             '65':
-              help: null
-              label: null
+              help: 'Box 65: percentage of the result attributable to the State Tax
+                Administration.'
+              label: Result - percentage attributable to the State Tax Administration
             '66':
-              help: null
-              label: null
+              help: 'Box 66: amount attributable to the State Tax Administration,
+                calculated as box 64 times box 65 divided by 100.'
+              label: Result - amount attributable to the State Tax Administration
+                ([64] x [65] / 100)
             '68':
-              help: null
-              label: null
+              help: 'Box 68: annual regularization result for joint taxation.'
+              label: Result - joint taxation annual regularization result
             '70':
-              help: null
-              label: null
+              help: 'Box 70: amounts payable from previous self-assessments for the
+                same year and period.'
+              label: Result - amounts payable from previous self-assessments for the
+                same year and period
             '71':
-              help: null
-              label: null
+              help: 'Box 71: final result calculated as box 69 minus box 70 plus box
+                109.'
+              label: Final result ([69] - [70] + [109])
             '74':
-              help: null
-              label: null
+              help: 'Box 74: taxable base for acquisitions under the cash accounting
+                scheme.'
+              label: Additional information - cash accounting acquisitions - taxable
+                base
             '75':
-              help: null
-              label: null
+              help: 'Box 75: VAT amount for acquisitions under the cash accounting
+                scheme.'
+              label: Additional information - cash accounting acquisitions - VAT amount
             '76':
-              help: null
-              label: null
+              help: 'Box 76: result adjustment for regularization under Article 80.Five.5
+                LIVA.'
+              label: Result - regularization under Article 80.Five.5 LIVA
             '77':
-              help: null
-              label: null
+              help: 'Box 77: import VAT assessed by Customs that is pending payment.'
+              label: Result - import VAT assessed by Customs pending payment
             modulos-iva-1-unidades:
               help: null
-              label: null
+              label: 'Módulo 1 (Employed staff): number of units'
             modulos-iva-2-unidades:
               help: null
-              label: null
+              label: 'Módulo 2 (activity-specific unit: distance travelled, vehicle
+                load or premises floor area): number of units'
             modulos-iva-3-unidades:
               help: null
-              label: null
+              label: 'Módulo 3 (activity-specific unit: electricity or other energy
+                consumption): number of units'
             modulos-iva-cuota-derivada:
               help: null
-              label: null
+              label: Tax liability under the simplified regime (the greater of net
+                tax due after deductibles/flat-rate reduction, or the minimum tax
+                liability)
             modulos-iva-cuota-devengada:
               help: null
-              label: null
+              label: Tax due on ordinary transactions (Σ módulo units × annual tax
+                due per unit)
             modulos-iva-epigrafe:
               help: null
-              label: null
+              label: IAE heading of the activity under the simplified VAT regime (módulos)
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
-              label: null
+              help: Tax year to which the self-assessment refers.
+              label: Self-assessment tax year
             x-chim6r1ee1in4qbfchng:
-              help: null
-              label: null
+              help: 'Quarterly period for the self-assessment: 1Q, 2Q, 3Q, or 4Q.'
+              label: Quarterly period
             x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushec9gn6p8:
-              help: null
-              label: null
+              help: Taxable base for self-supply by a property developer, based on
+                construction cost.
+              label: Taxable base for property developer self-supply
             x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushecdqmut31:
-              help: null
-              label: null
+              help: VAT amount for property developer self-supply, calculated at 21%
+                of the taxable base.
+              label: VAT amount for property developer self-supply
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
-              help: null
-              label: null
+              help: Deductible self-assessed VAT on domestic transactions subject
+                to reverse charge.
+              label: Deductible reverse-charge VAT on domestic transactions
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
-              help: null
-              label: null
+              help: Accrued self-assessed VAT on domestic transactions subject to
+                reverse charge.
+              label: Accrued reverse-charge VAT on domestic transactions
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
-              help: null
-              label: null
+              help: Self-assessed VAT amount on intra-Community acquisitions under
+                the reverse-charge rules.
+              label: Reverse-charge VAT amount on intra-Community acquisitions
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
-              help: null
-              label: null
+              help: Deductible self-assessed VAT on intra-Community acquisitions of
+                goods and services.
+              label: Deductible reverse-charge VAT on intra-Community acquisitions
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
-              help: null
-              label: null
+              help: Accrued self-assessed VAT on intra-Community acquisitions of goods
+                and services.
+              label: Accrued reverse-charge VAT on intra-Community acquisitions
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
-              help: null
-              label: null
+              help: Add up the self-charged taxable base accrued on intra-Community
+                acquisitions.
+              label: Taxable base of accrued reverse-charge VAT on intra-Community
+                acquisitions
             x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
-              help: null
-              label: null
+              help: VAT amounts pending from prior periods that are applied in this
+                period.
+              label: Prior-period offsets applied in this period
             x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
-              help: null
-              label: null
+              help: VAT offset balance available to carry forward after this period.
+              label: Offset balance available at period end
             x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
-              help: null
-              label: null
+              help: VAT offset balance generated by this period's self-assessment.
+              label: Offset balance generated in this period
             x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
-              help: null
-              label: null
+              help: VAT amounts to offset that remain pending from prior periods.
+              label: Amounts to offset pending from prior periods
             x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
-              help: null
-              label: null
+              help: Prior-period VAT offsets that remain pending for later periods.
+              label: Prior-period offsets pending for later periods
             x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
-              help: null
-              label: null
+              help: Total deductible VAT amount, including domestic input VAT and
+                deductible reverse-charge VAT.
+              label: Total deductible VAT amount
             x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
-              help: null
-              label: null
+              help: Total accrued VAT amount, including output VAT and applicable
+                reverse-charge VAT.
+              label: Total accrued VAT amount
             x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
-              help: null
-              label: null
+              help: General pro rata percentage calculated from deductible-right turnover
+                over total turnover.
+              label: General pro rata percentage
             x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
-              help: null
-              label: null
+              help: Annual transaction volume that gives the right to deduct VAT.
+              label: Annual turnover giving deduction rights
             x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
-              help: null
-              label: null
+              help: Total annual transaction volume used for the general pro rata
+                calculation.
+              label: Total annual turnover
             x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
-              help: null
-              label: null
+              help: VAT adjustment for capital goods under the investment-goods regularization
+                rules.
+              label: Capital goods adjustment
             x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
-              help: null
-              label: null
+              help: Total output VAT calculated at the standard 21% rate.
+              label: Output VAT amount at the standard rate (21%)
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
-              help: null
-              label: null
+              help: Total output VAT calculated at the reduced 10% rate.
+              label: Output VAT amount at the reduced rate (10%)
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
-              help: null
-              label: null
+              help: Transitional box under RD-ley 4/2024 for the reduced rate, coexisting
+                with the ordinary 10% reduced rate.
+              label: Output VAT amount at the transitional reduced rate (5%/7.5%)
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
-              help: null
-              label: null
+              help: Total output VAT calculated at the super-reduced 4% rate.
+              label: Output VAT amount at the super-reduced rate (4%)
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
-              help: null
-              label: null
+              help: Transitional box under RD-ley 4/2024 for the super-reduced rate,
+                coexisting with the ordinary 4% super-reduced rate.
+              label: Output VAT amount at the transitional super-reduced rate (2%)
             x-d5r62bjiclpnar3kc5i6u:
-              help: null
-              label: null
+              help: Result of the self-assessment after the Modelo 303 adjustment
+                formula.
+              label: Self-assessment result
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
-              help: null
-              label: null
+              help: General regime result calculated as accrued VAT minus deductible
+                VAT.
+              label: General regime result
             x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
-              help: null
-              label: null
+              help: Deductible input VAT borne on imports of current goods.
+              label: Deductible input VAT on imports of current goods
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
-              help: null
-              label: null
+              help: Deductible input VAT borne on domestic current transactions.
+              label: Deductible input VAT on domestic current transactions
           construct:
             modelo-303-iva-autoliquidacion:
               field:
@@ -68013,8 +68118,7 @@ modelo:
           field:
             label: null
 overview:
-  no_aeat_history: This profile holds no filing evidence AEAT confirmed. Run `aeat
-    app live filed pull-all` to fetch the history AEAT holds for it.
+  no_aeat_history: This profile holds no filing evidence AEAT confirmed.
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: 50 % prorrata (Art. 61 LIRPF) applied for
