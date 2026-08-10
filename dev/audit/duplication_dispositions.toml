@@ -53,9 +53,9 @@
 
 [meta]
 generated_from = "just audit-duplication (jscpd@4.2.0)"
-observed_groups = 17
-duplicated_pct = "0.07"
-files_analyzed = 1311
+observed_groups = 3
+duplicated_pct = "0.01"
+files_analyzed = 1486
 source_root = "src/cadrumo"
 count_is_advisory = true
 
@@ -87,20 +87,10 @@ count_is_advisory = true
 # section) and is therefore outside that inventory -- the summary total is
 # `observed_groups` plus that one extra, tracked group.
 [summary]
-cluster_owned = 1
-intentional = 8
-advisory_residue = 8
+cluster_owned = 0
+intentional = 1
+advisory_residue = 2
 actionable = 1
-
-# ---------------------------------------------------------------------------
-# cluster-owned: tracked by a named actionable consolidation cluster
-# ---------------------------------------------------------------------------
-
-[[group]]
-classification = "cluster-owned"
-owner = "LLM review workflow consolidation"
-where = ["entrypoints/cli/_ledger_llm_cli.py [762-790]", "entrypoints/cli/_ledger_llm_cli.py [694-720]"]
-rationale = "Distributed LLM-review routing block; the other three instances this cluster previously carried have consolidated, leaving this last one pending the shared typed workflow."
 
 # ---------------------------------------------------------------------------
 # intentional: recorded intentional non-consolidation / constraint-divergent
@@ -108,43 +98,8 @@ rationale = "Distributed LLM-review routing block; the other three instances thi
 
 [[group]]
 classification = "intentional"
-where = ["domain/calculations/registry/_aeat_nif_iva_oracle.py [22-50]", "domain/calculations/registry/_groi_oracle.py [41-69]"]
-rationale = "The matched block is the shared import preamble. The behaviour these two oracles share is already consolidated behind _checker_oracle_flow and BaseCheckerOracle; what remains diverges by identifier rule (foreign-EU VIES proxy vs Spanish ROI), so the import list is the whole residue."
-
-[[group]]
-classification = "intentional"
-where = ["application/modelo/_review_package_recipient_registry.py [53-68]", "application/modelo/_review_package_recipient_replay_guard.py [48-64]"]
-rationale = "ADR intentional non-consolidation: recipient registry manages authorized recipients while the replay guard prevents repeated processing; distinct authorities."
-
-[[group]]
-classification = "intentional"
-where = ["application/aggregation/_renta_gasto_ledger.py [34-49]", "application/aggregation/_renta_income_ledger.py [34-49]"]
-rationale = "The matched block is the shared import preamble, not logic. What these modules genuinely shared has already been lifted out (_shared_issue_reasons, _business_proportion, _currency_predicates, and the fold in _grouping); the residue is the import list itself, which cannot be deduplicated without a re-export shim the architecture rules forbid."
-
-[[group]]
-classification = "intentional"
-where = ["application/aggregation/_impatriado_income_ledger.py [40-70]", "application/aggregation/_renta_income_ledger.py [34-64]"]
-rationale = "Import preamble again, plus the issue-reason enum heads. The reason MEMBERS already route through _shared_issue_reasons; each enum stays separate because a projection's reason set is closed over its own legal scope (the impatriado carries BECKHAM_FOREIGN_SOURCE_SEGREGATED, art. 93.2, which must never be constructible for a resident-IRPF projection). Merging them would widen each site's accepted value set."
-
-[[group]]
-classification = "intentional"
-where = ["entrypoints/cli/_modelo_work_revision_payloads.py [49-66]", "entrypoints/cli/_modelo_work_wizard_payloads.py [57-74]"]
-rationale = "Sibling payload models sharing field structure across distinct typed payloads; Typer/schema presentation structure, not one authority."
-
-[[group]]
-classification = "intentional"
-where = ["adapters/outbound/aeat/sede/_censal_datos.py [49-76]", "adapters/outbound/aeat/sede/_notifications.py [36-63]"]
-rationale = "Import preamble, the same residue two entries above already record for the oracle and ledger-projection pairs. Both are sede readers, so both import the same navigation substrate (browser session factory, storage state, wait constants, the three sede error types, the remote-state guard). What follows the preamble does not match: the censal reader is pinned to the consulta view and fails closed on a filing-tool or procedure-launcher landing, while the notifications reader pins a numbered host. A preamble cannot be deduplicated without the re-export shim the architecture rules forbid."
-
-[[group]]
-classification = "intentional"
-where = ["adapters/inbound/tui/_form_screen.py [119-129]", "adapters/inbound/tui/_manager_screen.py [103-113]"]
-rationale = "Constraint-divergent, excluded by the substitutability pre-filter. The matched block is the input row plus the actions row of a modal edit dialog, but the two dialogs disagree on both halves of what an edit MEANS: the manager variant starts a masked field EMPTY rather than pre-filled (pre-filling would submit the placeholder dots back as the literal new value) and dismisses with the raw input, while the form variant pre-fills and routes save through _submit() so a refusal can render in its #edit-refusal slot, which the manager dialog does not carry. Consolidating either direction would add masking where it is unwanted or drop validation where it is load-bearing."
-
-[[group]]
-classification = "intentional"
-where = ["domain/attachments/_service.py [24-40]", "domain/attachments/_service.py [64-88]"]
-rationale = "A delegation boundary, and specifically the ARTEFACT of a dedup rather than a failure of one. 673938a11f extracted _persist_attachment as the shared write core of add_attachment and add_attachment_bytes; it takes fifteen keyword parameters, forwards every one to _build_attachment_manifest, and then commits through the single write_manifest path. The matched tokens ARE that parameter list, which extracting a helper necessarily writes twice in a typed signature. The only consolidation available is **kwargs, which would erase the typed signature the extraction exists to preserve, so the alternative is strictly worse. Read the pair before re-classifying: a mechanical token matcher flags every extract-helper refactor this way, so a clone report here is expected output rather than a finding."
+where = ["llm/_invoice_field_grounding.py [95-117]", "llm/_invoice_field_grounding.py [134-156]"]
+rationale = "ExtractedFieldAnchors is deliberately a mirror of ExtractedInvoiceFields, by its own docstring: the two carry different KINDS of claim -- a field holds the value in its declared form, an anchor holds the form the document actually printed -- and the whole anti-fabrication argument rests on being able to compare them field-by-field. Folding them into one model with an attribute-naming convention would erase that structural distinction."
 
 # ---------------------------------------------------------------------------
 # advisory-residue: low-value duplication left as visible debt (not a mandate)
@@ -152,43 +107,13 @@ rationale = "A delegation boundary, and specifically the ARTEFACT of a dedup rat
 
 [[group]]
 classification = "advisory-residue"
-where = ["domain/attachments/_service.py [172-213]", "domain/attachments/_service.py [104-147]"]
-rationale = "Repeated attachment put/read shaping within one service; low-value residue."
-
-[[group]]
-classification = "advisory-residue"
-where = ["application/overview/_calendar_models.py [309-321]", "application/overview/_calendar_models.py [168-180]"]
-rationale = "Sibling calendar-model field blocks share structure; low-value residue."
-
-[[group]]
-classification = "advisory-residue"
-where = ["application/modelo/_calculation_source_staging.py [254-267]", "application/modelo/_calculation_source_staging.py [180-193]"]
+where = ["application/modelo/_calculation_source_staging.py [180-193]", "application/modelo/_calculation_source_staging.py [258-271]"]
 rationale = "Repeated source-staging block within one module; low-value residue."
 
 [[group]]
 classification = "advisory-residue"
-where = ["application/ledger/_models.py [240-251]", "application/ledger/_models.py [92-103]"]
-rationale = "Sibling ledger-model field blocks share structure; low-value residue."
-
-[[group]]
-classification = "advisory-residue"
-where = ["application/diagnostics_run_health.py [663-670]", "application/diagnostics_run_health.py [571-577]"]
+where = ["application/diagnostics_run_health.py [620-626]", "application/diagnostics_run_health.py [712-719]"]
 rationale = "Repeated health-metric shaping block within one module; low-value residue."
-
-[[group]]
-classification = "advisory-residue"
-where = ["adapters/inbound/tui/_form_screen.py [187-199]", "adapters/inbound/tui/_form_screen.py [106-118]"]
-rationale = "TextEditScreen and OneChoiceEditScreen share a modal chrome: BINDINGS, the field-holding __init__, and the compose head (Vertical#edit-dialog, Label#edit-label, the optional Static#edit-path hint) and tail (Horizontal#edit-actions with cancel and save). Unlike the cross-file TUI pair above, this residue IS substitutable -- roughly six lines of chrome plus __init__ could move to a shared base. Recorded as visible debt rather than consolidated here for two reasons: this is another campaign's live surface, and Textual compose bodies are declarative widget trees where hiding the head and tail behind helper generators trades a readable tree for a smaller line count. Named rather than classified as intentional so the owning campaign can take the extraction on its own terms; do not read this entry as a verdict that it should not happen."
-
-[[group]]
-classification = "advisory-residue"
-where = ["entrypoints/cli/_registry_payloads.py [91-113]", "entrypoints/cli/_registry_payloads.py [123-145]"]
-rationale = "RegistryInspectResult and RegistryVerifyResult declare the same leading field block (registry_root, source_root, and the modelo/revision/legal-reference/source-reference counts). The match is a CONTRACT shape, not shared logic: every one of the nine payloads in this module subclasses OutputSchema directly, with no intermediate bases anywhere, and each is separately registered and extra=\"forbid\", so the JSON-schema conformance gate treats each as its own operator-facing contract. A shared base would couple two contracts that are permitted to diverge -- inspect reports what the tree holds, verify reports what validation found -- and the coupling would only surface when one of them needed a field the other must not carry. Left visible rather than consolidated."
-
-[[group]]
-classification = "advisory-residue"
-where = ["entrypoints/cli/_config/_profile_bundle.py [179-197]", "entrypoints/cli/_config/_profile_bundle.py [330-348]"]
-rationale = "The same shape as the _registry_payloads entry above, and recorded for the same reason rather than by resemblance: ConfigProfileSubjectAccessRequestResult and ConfigProfileExportResult are each constructed from one export object, so the matched tokens are the projection of a canonical model onto two result envelopes -- the field NAMES agreeing is the point of the canonical model, not duplicated behaviour. The two envelopes are distinct operator contracts (a subject-access request and an export differ in purpose and in what an operator may do with the artefact), so they are allowed to diverge and a shared base would prevent it."
 
 # ---------------------------------------------------------------------------
 # actionable: resolved in this commit (below jscpd's min-lines/min-tokens
