@@ -337,6 +337,20 @@ class UnadmittedActivityIncome(BaseModel):
     row_count: int = Field(default=0, ge=0)
     income_total: Decimal = Field(default=Decimal("0"), ge=Decimal("0"))
     any_activity_declared: bool = False
+    """Whether ANY excluded row named an activity, without saying which.
+
+    A predicate rather than the activity type itself, deliberately: the
+    single-home gate refuses a class-body annotation naming that type, because
+    the accepted design puts the value on a per-activity profile row and has the
+    transaction carry a reference. A bool cannot become a second home for the
+    fact.
+
+    It is also NARROWER than the enum it stands in for, and this is the site
+    that will be wrong first if that ever matters. It can answer "was anything
+    declared" and never "was something else declared", so a future advisory
+    needing to distinguish a third activity kind here cannot be built on it and
+    should not widen it -- by then the profile row is the right source.
+    """
 
 
 class RentaIncomeLedgerAggregation(
