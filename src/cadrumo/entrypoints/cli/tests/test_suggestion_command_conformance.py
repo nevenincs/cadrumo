@@ -1,9 +1,9 @@
 """Suggestion-string command-citation conformance gate.
 
 The CLI's instructive surface is wider than ``--help`` and the how-to docs:
-error-registry ``default_suggestion`` fields, the curated operator help
-documents, ``next_action`` builder strings, the runtime write-policy, and the
-four locale catalogues all cite ``aeat app ...`` / ``aeat config ...``
+the curated operator help documents, ``next_action`` builder strings, the
+runtime write-policy, and the four locale catalogues all cite ``aeat app ...`` /
+``aeat config ...``
 invocations that an operator is told to run next. The pull/--file standard
 rule (``cadrumo-pull-and-file-standard``) records that NONE of these strings
 were covered by a conformance gate: ``test_documented_command_conformance``
@@ -18,7 +18,6 @@ This gate converts that hand-sweep obligation into CI enforcement. It walks
 the REAL Click tree (``typer.main.get_command`` over the live Cadrumo app —
 no mocks, no fixture trees) and resolves every cited command path from:
 
-- every registered :class:`ErrorCode` ``default_suggestion``;
 - the curated operator help documents (root / config / app surfaces);
 - every string literal in production modules under ``cadrumo.adapters``,
   ``cadrumo.application``, ``cadrumo.core.errors``, and ``cadrumo.entrypoints``
@@ -80,7 +79,6 @@ from dev.cli_action_census_dispositions import (
 from dev.locales import LocaleManager, LocaleNode
 
 from ....application.operator_surface import HelpSurface, build_help_document
-from ....core.errors import ERROR_REGISTRY
 from ....tests.cli_runner import cadrumo_click_command
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -268,8 +266,8 @@ def _dead_citations_in(text: str, *, origin: str, require_runnable_leaf: bool = 
     A citation is dead when one of its tokens does not resolve in the live tree
     — always a failure.
 
-    When ``require_runnable_leaf`` is set (the operator-suggestion surfaces:
-    error-registry ``default_suggestion`` and curated help ``command`` fields,
+    When ``require_runnable_leaf`` is set (the operator-suggestion surface:
+    curated help ``command`` fields,
     where the cited string IS the command the operator is told to run), a
     citation that resolves cleanly to a command GROUP with no trailing
     ``--help`` is ALSO a failure: a group is not executable verbatim
@@ -507,24 +505,6 @@ def test_action_ledger_exclusions_have_specific_non_action_contexts() -> None:
     assert repeated_template_overflow(repeated) == {(category, template): 7}
 
 
-def test_error_registry_suggestions_cite_live_commands() -> None:
-    """Every registered ``default_suggestion`` names commands the tree mounts."""
-    failures: list[str] = []
-    citation_count = 0
-    assert ERROR_REGISTRY, "error registry is empty — registration imports regressed"
-    for code, entry in ERROR_REGISTRY.items():
-        suggestion = entry.default_suggestion
-        if not suggestion:
-            continue
-        citation_count += _count_citations(suggestion)
-        failures.extend(_dead_citations_in(suggestion, origin=f"error code {code}", require_runnable_leaf=True))
-    assert not failures, "\n".join(failures)
-    assert citation_count >= 150, (
-        f"only {citation_count} command citations found across error-registry suggestions; "
-        "the extractor appears blind — the registry carried 175+ when this gate landed"
-    )
-
-
 def test_operator_help_documents_cite_live_commands() -> None:
     """Every curated help row's ``command`` resolves in the live tree."""
     failures: list[str] = []
@@ -547,7 +527,7 @@ def test_operator_help_documents_cite_live_commands() -> None:
 # path-root declarations, help-document heading/paragraph prose) name a command
 # *family* in reference and legitimately terminate on a group; they stay under
 # the dead-token check only.
-_RUNNABLE_SUGGESTION_KEYS = frozenset({"suggestion", "recovery", "default_suggestion", "next_action"})
+_RUNNABLE_SUGGESTION_KEYS = frozenset({"suggestion", "recovery", "next_action"})
 
 
 def _runnable_suggestion_node_ids(tree: ast.AST) -> set[int]:
@@ -621,10 +601,7 @@ def _canonical_notice_constructor_references(tree: ast.AST) -> tuple[frozenset[s
             target.id
             for node in tree.body
             if isinstance(node, ast.Assign)
-            and (
-                (isinstance(node.value, ast.Name) and node.value.id in names)
-                or _dotted_name(node.value) in qualified
-            )
+            and ((isinstance(node.value, ast.Name) and node.value.id in names) or _dotted_name(node.value) in qualified)
             for target in node.targets
             if isinstance(target, ast.Name)
         }
@@ -676,8 +653,7 @@ def _notice_suggestion_transport_failures(module_path: Path) -> list[str]:
     notice_calls = [
         node
         for node in ast.walk(tree)
-        if isinstance(node, ast.Call)
-        and _is_canonical_notice_constructor(node, notice_names, qualified_notice_names)
+        if isinstance(node, ast.Call) and _is_canonical_notice_constructor(node, notice_names, qualified_notice_names)
     ]
 
     for call in notice_calls:
@@ -740,7 +716,7 @@ def test_production_string_literals_cite_live_commands() -> None:
 
     Two checks per literal: every citation's tokens must resolve (dead-token
     check, all literals), and a literal assigned to a runnable-suggestion field
-    (``suggestion=`` / ``recovery`` / ``default_suggestion`` / ``next_action``)
+    (``suggestion=`` / ``recovery`` / ``next_action``)
     must additionally resolve to a runnable LEAF — a bare command group with no
     trailing ``--help`` is not executable verbatim and fails. Reference prose
     (docstrings, ``cli_path=`` path roots, help headings) names a command

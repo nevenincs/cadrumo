@@ -158,9 +158,14 @@ class TestExportExemptCasillasAreOutOfPdfScope:
 
     @staticmethod
     def _m303_revision() -> ModeloRevision:
+        # Resolved from (modelo, filing year, period) rather than indexed by a
+        # literal revision id. AEAT re-cuts revision layouts -- this modelo's
+        # "2023-y-siguientes" was decomposed into four narrower revisions -- and
+        # a literal key dies the moment that happens, on a test whose subject is
+        # unrelated to the re-cut.
         from ....domain.calculations.registry import bundled_authority
 
-        return next(m for m in bundled_authority().modelos if m.id == "303").revisions["2023-y-siguientes"]
+        return bundled_authority().snapshot("303", filing_year=2025, period="1T").revision
 
     def test_no_enrolled_casilla_is_both_exempt_and_extractable(self) -> None:
         """The predicate never excludes something the extractor can actually supply.

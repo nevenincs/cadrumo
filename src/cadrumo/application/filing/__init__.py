@@ -77,6 +77,7 @@ from decimal import Decimal, InvalidOperation
 from pydantic import TypeAdapter
 
 from ...core import BindingSourceKind as _BindingSourceKind
+from ...core import CasillaId as _CasillaId
 from ...core import Period as _Period
 from ...core.errors import BaseSeverity as _BaseSeverity
 from ...core.parsing import parse_bool as _parse_bool
@@ -86,9 +87,7 @@ from ...core.time import now as _utc_now
 from ...domain.calculations.registry import (
     BindingId as _BindingId,
 )
-from ...domain.calculations.registry import (
-    CasillaId as _CasillaId,
-)
+
 from ...domain.calculations.registry import (
     InputKind as _InputKind,
 )
@@ -186,7 +185,7 @@ from ._export import (
     render_layout,
     verify_export,
 )
-from ._export_parity import required_applicable_casilla_ids
+from ._export_parity import did_page_required, required_applicable_casilla_ids
 from ._history_models import ModeloHistory, ModeloHistoryEntry
 from ._history_repository import ModeloHistoryRepository
 from ._import import JustificanteImportResult, import_filing_from_justificante
@@ -963,6 +962,7 @@ __all__ = [
     "compute_review_checksum",
     "derive_validation_status",
     "describe_stale_reason",
+    "did_page_required",
     "empty_prior_filing_observations_fingerprint",
     "empty_profile_activity_fingerprint",
     "export_draft",

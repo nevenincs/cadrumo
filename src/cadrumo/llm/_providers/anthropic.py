@@ -1,9 +1,9 @@
 """Anthropic Messages API adapter for the LLM outbound port.
 
 Implements the
-:class:`~adapters.outbound.llm._providers.base._ProviderAdapter` contract
+:class:`~llm._providers.base._ProviderAdapter` contract
 by translating a normalized
-:class:`~adapters.outbound.llm._providers.base.ProviderRequest` into an
+:class:`~llm._providers.base.ProviderRequest` into an
 :class:`anthropic.AsyncAnthropic` ``messages.create`` call and converting the
 response (or any provider error) into the substrate's typed completion / error
 envelope. Network I/O is async; all SDK exceptions are mapped to

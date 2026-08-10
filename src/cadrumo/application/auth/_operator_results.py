@@ -50,7 +50,6 @@ class AuthConfigureDanglingActiveProfileError(CadrumoError, ValueError):
         *,
         precondition_verdict: PreconditionVerdict | None,
         context: Mapping[str, object] | None = None,
-        suggestion: str | None = None,
         translated_message: str | None = None,
     ) -> None:
         """Retain the application-owned refusal for generic CLI projection."""
@@ -59,7 +58,6 @@ class AuthConfigureDanglingActiveProfileError(CadrumoError, ValueError):
         super().__init__(
             message,
             context=context,
-            suggestion=suggestion,
             translated_message=translated_message,
         )
         self._precondition_verdict = precondition_verdict

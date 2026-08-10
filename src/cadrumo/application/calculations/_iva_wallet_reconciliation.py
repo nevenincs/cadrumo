@@ -189,6 +189,9 @@ def reconcile_modelo_303_iva_compensation(
             repository/history reconstruction as the local recurrence source.
             A caller that supplies a stricter recurrence may disable this so a
             legacy generic observation cannot regain authority by fallback.
+            When disabled the generic reconstruction is not performed at all,
+            so the returned ``prefill_report`` is empty: a switched-off producer
+            contributes neither a value nor a report.
         persist: Whether to store the resulting decision for later calculation replay.
 
     The local side is not recomputed here. It is read through the same
@@ -215,7 +218,7 @@ def reconcile_modelo_303_iva_compensation(
             target_period=snapshot_period,
         )
 
-    from ._binding_prefill import extract_modelo_303_local_iva_compensation_recurrence
+    from ._binding_prefill import BindingPrefillReport, extract_modelo_303_local_iva_compensation_recurrence
     from ._observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
 
     repo = repository if repository is not None else CalculationObservationRepository()
@@ -233,12 +236,24 @@ def reconcile_modelo_303_iva_compensation(
             "IVA wallet decision repository must use the same encrypted storage backend "
             "as the calculation observation repository",
         )
-    repository_recurrence, prefill_report = extract_modelo_303_local_iva_compensation_recurrence(
-        snapshot,
-        repository=repo,
-        captured_at=decided_at,
-    )
-    recurrence = repository_recurrence if use_repository_local_recurrence else local_recurrence
+    # The selection happens BEFORE the work, not after it. The two producers of
+    # this recurrence are not substitutable: the generic reconstruction below
+    # accepts envelopes the caller-supplied strict path deliberately refuses, so
+    # they cannot be collapsed into one. Running the generic one regardless and
+    # discarding its recurrence still let its prefill report ride out on the
+    # returned report, which meant a producer the caller had switched off went on
+    # shaping the artefact the caller received -- the switch turned off the value
+    # and not the influence. It also spent a repository read and a full history
+    # reconstruction on the path that had just declared it must have no authority.
+    if use_repository_local_recurrence:
+        recurrence, prefill_report = extract_modelo_303_local_iva_compensation_recurrence(
+            snapshot,
+            repository=repo,
+            captured_at=decided_at,
+        )
+    else:
+        recurrence = local_recurrence
+        prefill_report = BindingPrefillReport(prefilled=(), binding_values={})
     local_recurrence_amount = recurrence.amount if recurrence is not None else None
     # First-period treatment: with no live wallet and no prior recurrence, the
     # caller-asserted first IVA period has a legally-certain zero

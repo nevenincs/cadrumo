@@ -25,10 +25,18 @@ See Also:
 
 from __future__ import annotations
 
-from ._records import SyncRunRecord, SyncRunRecordRepository, sync_run_record_key
+from ._persist import record_sync_run
+from ._records import (
+    SyncRunRecord,
+    SyncRunRecordRepository,
+    bounded_scope_description,
+    sync_run_record_key,
+)
 
 __all__ = [
     "SyncRunRecord",
     "SyncRunRecordRepository",
+    "bounded_scope_description",
+    "record_sync_run",
     "sync_run_record_key",
 ]

@@ -42,14 +42,12 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
-from typing import Final, NamedTuple, Protocol
+from typing import Final, NamedTuple, Never
 
-from ...core import Modelo
+from ...core import ActionEvidenceProvenance, CasillaId, Modelo
 from ...core import Period as _Period
-from ...core.i18n import tr
 from ...domain.calculations.registry import (
     BindingId,
-    CasillaId,
     ModeloRevision,
     RegistrySnapshot,
     RegistrySnapshotError,
@@ -67,23 +65,12 @@ from ..calculations import (
     CalculationObservationRepository,
     IvaWalletDecisionRepository,
     LocalIvaCompensationRecurrence,
-)
-from ..calculations._m303_carry_ingress import (
     M303CarryIngressError,
+    revision_carry_outcome,
     validate_normalized_m303_carry_observation_envelope,
 )
-from ..calculations._revision_carry_gate import revision_carry_outcome
-
-
-class _IvaWalletBlockedDecision(Protocol):
-    """Protocol for decision-like values that can render a wallet-blocked message."""
-
-    @property
-    def divergence(self) -> object: ...
-
-    @property
-    def reason(self) -> object: ...
-
+from ._action_errors import ModeloPreconditionErrorMixin
+from ._preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure
 
 _M303_PRIOR_COMPENSATION_BINDING_ID: BindingId = "modelo-303-compensacion-pendiente-anteriores"
 _M303_PRIOR_COMPENSATION_ORIGIN_IDS: Final[frozenset[str]] = frozenset(
@@ -98,11 +85,58 @@ _M303_PRIOR_COMPENSATION_CASILLA_ID: Final[CasillaId] = M303_COMPENSACION_PENDIE
 _M303_AVAILABLE_COMPENSATION_CASILLA_ID: Final[CasillaId] = M303_DISPONIBLE_CASILLA
 
 
-class ModeloIvaWalletReconciliationBlockedError(ModeloError):
+class ModeloIvaWalletReconciliationBlockedError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised when Modelo 303 calculation is blocked by IVA wallet reconciliation."""
+
+    def __init__(
+        self,
+        *,
+        translated_message: str,
+        precondition_failure: ModeloPreconditionFailure,
+        context: Mapping[str, object] | None = None,
+    ) -> None:
+        super().__init__(
+            context=context,
+            translated_message=translated_message,
+            precondition_failure=precondition_failure,
+        )
+
+    @property
+    def precondition_failure(self) -> ModeloPreconditionFailure:
+        """Return the required application-owned IVA-wallet refusal verdict."""
+        failure = super().precondition_failure
+        assert failure is not None
+        return failure
 
 
 ModeloIvaWalletReconciliationBlocked = ModeloIvaWalletReconciliationBlockedError
+
+
+def _raise_iva_wallet_precondition(
+    *,
+    subject_leaf_key: str,
+    reason_code: str,
+    translated_message: str,
+    evidence_values: Mapping[str, str | int | bool | Decimal],
+    context: Mapping[str, object] | None = None,
+    cause: BaseException | None = None,
+) -> Never:
+    """Raise one locale-neutral IVA-wallet readiness refusal."""
+    error = ModeloIvaWalletReconciliationBlocked(
+        translated_message=translated_message,
+        context=context,
+        precondition_failure=build_modelo_precondition_failure(
+            subject_leaf_key=subject_leaf_key,
+            condition_id=f"{subject_leaf_key}.iva_wallet.ready",
+            scenario_id=f"{subject_leaf_key}.iva_wallet.{reason_code}",
+            evidence_id=f"{subject_leaf_key}.iva_wallet",
+            evidence_values=evidence_values,
+            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        ),
+    )
+    if cause is not None:
+        raise error from cause
+    raise error
 
 
 def resolve_iva_compensation_decision_for_calculation(
@@ -138,7 +172,12 @@ def resolve_iva_compensation_decision_for_calculation(
                 decision=persisted,
                 repository=repository,
             )
-            return _require_first_period_zero_decision_grounded(work_unit, snapshot, persisted)
+            return _require_first_period_zero_decision_grounded(
+                work_unit,
+                snapshot,
+                persisted,
+                subject_leaf_key="modelo.work.calculate",
+            )
         if caller_supplied_prior_compensation_value(
             binding_values=binding_values,
             backend_binding_values=backend_binding_values,
@@ -160,12 +199,23 @@ def resolve_iva_compensation_decision_for_calculation(
             if decision is not None and not _decision_is_missing_local_authority(decision):
                 if _decision_has_concrete_zero_authority(decision):
                     if any(amount != Decimal("0") for amount in supplied_amounts):
-                        raise ModeloIvaWalletReconciliationBlocked(
+                        _raise_iva_wallet_precondition(
+                            subject_leaf_key="modelo.work.calculate",
+                            reason_code="caller_binding_conflict",
                             translated_message="application.modelo.errors.iva_wallet_caller_binding_conflict",
+                            evidence_values={
+                                "binding_id": _M303_PRIOR_COMPENSATION_BINDING_ID,
+                                "nonzero_amount_count": sum(amount != Decimal("0") for amount in supplied_amounts),
+                            },
                         )
                     decision = _non_blocking_concrete_zero_authority_decision(decision)
                 if not decision.blocked:
-                    decision = _require_first_period_zero_decision_grounded(work_unit, snapshot, decision)
+                    decision = _require_first_period_zero_decision_grounded(
+                        work_unit,
+                        snapshot,
+                        decision,
+                        subject_leaf_key="modelo.work.calculate",
+                    )
                 _save_iva_compensation_decision(decision, repository=repository)
                 return decision
             return None
@@ -222,20 +272,45 @@ def apply_iva_compensation_decision_binding(
             or caller_casilla_value is not None
             or backend_casilla_value is not None
         ):
-            raise ModeloIvaWalletReconciliationBlocked(
+            _raise_iva_wallet_precondition(
+                subject_leaf_key="modelo.work.calculate",
+                reason_code="not_seeded",
                 translated_message="application.modelo.errors.iva_wallet_not_seeded",
-                suggestion="aeat app modelo iva-wallet seed --filing-year YEAR --period PERIOD --amount 0 --confirm",
+                evidence_values={
+                    "binding_id": binding_id,
+                    "casilla_id": bound_casilla_id,
+                    "supplied_value_count": sum(
+                        value is not None
+                        for value in (
+                            caller_value,
+                            backend_value,
+                            caller_casilla_value,
+                            backend_casilla_value,
+                        )
+                    ),
+                },
             )
         return
 
     if not isinstance(decision, IvaCompensationReconciliationDecision):
-        raise ModeloIvaWalletReconciliationBlocked(
+        _raise_iva_wallet_precondition(
+            subject_leaf_key="modelo.work.calculate",
+            reason_code="unsupported_decision_type",
             translated_message="application.modelo.errors.iva_wallet_unsupported_decision_type",
+            evidence_values={"decision_type": type(decision).__name__},
             context={"decision_type": type(decision).__name__},
         )
     if decision.target_period != period:
-        raise ModeloIvaWalletReconciliationBlocked(
+        _raise_iva_wallet_precondition(
+            subject_leaf_key="modelo.work.calculate",
+            reason_code="target_mismatch",
             translated_message="application.modelo.errors.iva_wallet_target_mismatch",
+            evidence_values={
+                "target_year": decision.target_year,
+                "target_period": decision.target_period.registry_token,
+                "filing_year": filing_year,
+                "period": period.registry_token,
+            },
             context={
                 "target_year": decision.target_year,
                 "target_period": decision.target_period.registry_token,
@@ -244,39 +319,71 @@ def apply_iva_compensation_decision_binding(
             },
         )
     if taxpayer_nif is None:
-        raise ModeloIvaWalletReconciliationBlocked(
+        _raise_iva_wallet_precondition(
+            subject_leaf_key="modelo.work.calculate",
+            reason_code="taxpayer_identity_missing",
             translated_message="application.modelo.errors.iva_wallet_taxpayer_identity_missing",
+            evidence_values={"taxpayer_identity_present": False},
         )
     if decision.taxpayer_nif.strip().upper() != taxpayer_nif.strip().upper():
-        raise ModeloIvaWalletReconciliationBlocked(
+        _raise_iva_wallet_precondition(
+            subject_leaf_key="modelo.work.calculate",
+            reason_code="taxpayer_mismatch",
             translated_message="application.modelo.errors.iva_wallet_taxpayer_mismatch",
+            evidence_values={"taxpayer_identity_match": False},
         )
     if decision.blocked:
-        raise ModeloIvaWalletReconciliationBlocked(
-            "IVA wallet reconciliation blocks automatic Modelo 303 calculation: "
-            f"{decision.divergence}: {decision.reason}",
+        _raise_iva_wallet_precondition(
+            subject_leaf_key="modelo.work.calculate",
+            reason_code="blocked",
             translated_message="application.modelo.errors.iva_wallet_blocked",
-            context={"divergence": str(decision.divergence), "reason": str(decision.reason)},
-            suggestion=iva_wallet_override_suggestion(decision),
+            evidence_values={
+                "divergence_code": str(decision.divergence),
+                "wallet_blocked": True,
+            },
+            context={"divergence": str(decision.divergence), "reason": "blocked"},
         )
     if decision.selected_amount is None:
-        raise ModeloIvaWalletReconciliationBlocked(
+        _raise_iva_wallet_precondition(
+            subject_leaf_key="modelo.work.calculate",
+            reason_code="selected_amount_missing",
             translated_message="application.modelo.errors.iva_wallet_selected_amount_missing",
+            evidence_values={"selected_amount_present": False},
         )
     selected = Decimal(decision.selected_amount)
     caller_value = caller_binding_values.get(binding_id)
     if caller_value is not None and Decimal(caller_value) != selected:
-        raise ModeloIvaWalletReconciliationBlocked(
+        _raise_iva_wallet_precondition(
+            subject_leaf_key="modelo.work.calculate",
+            reason_code="caller_binding_conflict",
             translated_message="application.modelo.errors.iva_wallet_caller_binding_conflict",
+            evidence_values={
+                "binding_id": binding_id,
+                "decision_amount": selected,
+                "supplied_amount": Decimal(caller_value),
+            },
         )
     if caller_casilla_value is not None and Decimal(caller_casilla_value) != selected:
-        raise ModeloIvaWalletReconciliationBlocked(
-            "caller casilla input for Modelo 303 prior compensation conflicts with IVA wallet reconciliation decision",
+        _raise_iva_wallet_precondition(
+            subject_leaf_key="modelo.work.calculate",
+            reason_code="caller_casilla_conflict",
             translated_message="application.modelo.errors.iva_wallet_caller_casilla_conflict",
+            evidence_values={
+                "casilla_id": bound_casilla_id,
+                "decision_amount": selected,
+                "supplied_amount": Decimal(caller_casilla_value),
+            },
         )
     if backend_casilla_value is not None and Decimal(backend_casilla_value) != selected:
-        raise ModeloIvaWalletReconciliationBlocked(
+        _raise_iva_wallet_precondition(
+            subject_leaf_key="modelo.work.calculate",
+            reason_code="backend_casilla_conflict",
             translated_message="application.modelo.errors.iva_wallet_backend_casilla_conflict",
+            evidence_values={
+                "casilla_id": bound_casilla_id,
+                "decision_amount": selected,
+                "supplied_amount": Decimal(backend_casilla_value),
+            },
         )
     from ..aggregation import CalculationSourceContext
     from ..calculations import IvaWalletDecisionSourceResolver
@@ -314,19 +421,29 @@ def require_persisted_iva_compensation_decision_for_work_unit(
         return supplied_decision
     persisted = load_persisted_iva_compensation_decision_for_work_unit(work_unit, repository=repository)
     if persisted is None:
-        raise ModeloIvaWalletReconciliationBlocked(
+        _raise_iva_wallet_precondition(
+            subject_leaf_key="modelo.work.calculate",
+            reason_code="not_seeded",
             translated_message="application.modelo.errors.iva_wallet_not_seeded",
-            suggestion="aeat app modelo iva-wallet seed --filing-year YEAR --period PERIOD --amount 0 --confirm",
+            evidence_values={"persisted_decision_present": False},
         )
     if persisted != supplied_decision:
-        raise ModeloIvaWalletReconciliationBlocked(
+        _raise_iva_wallet_precondition(
+            subject_leaf_key="modelo.work.calculate",
+            reason_code="supplied_decision_mismatch",
             translated_message="application.modelo.errors.iva_wallet_supplied_decision_mismatch",
+            evidence_values={"persisted_decision_match": False},
         )
     if _decision_is_first_period_zero(persisted):
         return _require_first_period_zero_decision_grounded(
             work_unit,
-            snapshot or _registry_snapshot_for_work_unit(work_unit),
+            snapshot
+            or _registry_snapshot_for_work_unit(
+                work_unit,
+                subject_leaf_key="modelo.work.calculate",
+            ),
             persisted,
+            subject_leaf_key="modelo.work.calculate",
         )
     return persisted
 
@@ -427,7 +544,11 @@ def _activity_start_date_for_modelo_profile(bucket_id: str) -> date | None:
         return None
 
 
-def _registry_snapshot_for_work_unit(work_unit: WorkUnit) -> RegistrySnapshot:
+def _registry_snapshot_for_work_unit(
+    work_unit: WorkUnit,
+    *,
+    subject_leaf_key: str,
+) -> RegistrySnapshot:
     """Resolve the registry snapshot attached to ``work_unit``."""
     from ...core.resources import resources
 
@@ -438,13 +559,22 @@ def _registry_snapshot_for_work_unit(work_unit: WorkUnit) -> RegistrySnapshot:
             period=work_unit.period.registry_token,
         )
     except (FileNotFoundError, RegistrySnapshotError) as exc:
-        raise ModeloIvaWalletReconciliationBlocked(
+        _raise_iva_wallet_precondition(
+            subject_leaf_key=subject_leaf_key,
+            reason_code="registry_snapshot_unavailable",
             translated_message="application.modelo.errors.iva_wallet_blocked",
+            evidence_values={
+                "modelo_id": str(work_unit.modelo),
+                "filing_year": work_unit.filing_year,
+                "period": work_unit.period.registry_token,
+                "registry_snapshot_available": False,
+            },
             context={
                 "divergence": "first_period_zero_unproven",
-                "reason": "registry snapshot could not be resolved to ground first-period-zero IVA decision",
+                "reason": "registry_snapshot_unavailable",
             },
-        ) from exc
+            cause=exc,
+        )
 
 
 def _decision_is_first_period_zero(decision: object) -> bool:
@@ -549,10 +679,7 @@ def _non_blocking_concrete_zero_authority_decision(
             "divergence": "match",
             "blocked": False,
             "stale_wallet": False,
-            "reason": (
-                "Caller-supplied zero matches concrete local IVA compensation history; "
-                "no prior compensation balance is available to apply."
-            ),
+            "reason": "caller_zero_matches_local_authority",
         },
     )
 
@@ -570,6 +697,8 @@ def _require_first_period_zero_decision_grounded(
     work_unit: WorkUnit,
     snapshot: RegistrySnapshot,
     decision: IvaCompensationReconciliationDecision,
+    *,
+    subject_leaf_key: str,
 ) -> IvaCompensationReconciliationDecision:
     """Fail closed unless a first-period-zero decision is profile/registry-grounded."""
     if not _decision_is_first_period_zero(decision):
@@ -578,14 +707,18 @@ def _require_first_period_zero_decision_grounded(
         return decision
     if _activity_start_proves_first_iva_period(work_unit, snapshot):
         return decision
-    raise ModeloIvaWalletReconciliationBlocked(
+    _raise_iva_wallet_precondition(
+        subject_leaf_key=subject_leaf_key,
+        reason_code="first_period_zero_ungrounded",
         translated_message="application.modelo.errors.iva_wallet_blocked",
+        evidence_values={
+            "divergence_code": "first_period_zero",
+            "concrete_zero_authority": False,
+            "activity_start_proof": False,
+        },
         context={
             "divergence": "first_period_zero_unproven",
-            "reason": (
-                "first-period-zero IVA compensation requires profile activity-start proof that every "
-                "Modelo 303 prior-compensation dependency is pre-activity"
-            ),
+            "reason": "first_period_zero_ungrounded",
         },
     )
 
@@ -776,6 +909,7 @@ def require_persisted_iva_compensation_decision_matches_revision(
     revision: CalculationRevision,
     *,
     repository: IvaWalletDecisionRepository | None = None,
+    subject_leaf_key: str = "modelo.export",
 ) -> IvaCompensationReconciliationDecision | None:
     """Return the IVA compensation decision when it matches the revision.
 
@@ -795,54 +929,88 @@ def require_persisted_iva_compensation_decision_matches_revision(
         return None
     decision = load_persisted_iva_compensation_decision_for_work_unit(work_unit, repository=repository)
     if decision is None:
-        raise ModeloIvaWalletReconciliationBlocked(
+        _raise_iva_wallet_precondition(
+            subject_leaf_key=subject_leaf_key,
+            reason_code="not_seeded",
             translated_message="application.modelo.errors.iva_wallet_not_seeded",
-            suggestion="aeat app modelo iva-wallet seed --filing-year YEAR --period PERIOD --amount 0 --confirm",
+            evidence_values={"persisted_decision_present": False},
         )
     if decision.blocked:
-        raise ModeloIvaWalletReconciliationBlocked(
-            iva_wallet_blocked_message(decision),
+        _raise_iva_wallet_precondition(
+            subject_leaf_key=subject_leaf_key,
+            reason_code="blocked",
             translated_message="application.modelo.errors.iva_wallet_blocked",
-            context={"divergence": str(decision.divergence), "reason": str(decision.reason)},
-            suggestion=iva_wallet_override_suggestion(decision),
+            evidence_values={
+                "divergence_code": str(decision.divergence),
+                "wallet_blocked": True,
+            },
+            context={"divergence": str(decision.divergence), "reason": "blocked"},
         )
     if decision.target_period != work_unit.period:
-        raise ModeloIvaWalletReconciliationBlocked(
+        _raise_iva_wallet_precondition(
+            subject_leaf_key=subject_leaf_key,
+            reason_code="target_mismatch",
             translated_message="application.modelo.errors.iva_wallet_blocked",
+            evidence_values={
+                "decision_target_year": decision.target_year,
+                "decision_target_period": decision.target_period.registry_token,
+                "work_unit_filing_year": work_unit.filing_year,
+                "work_unit_period": work_unit.period.registry_token,
+            },
             context={
                 "divergence": "authority_target_mismatch",
-                "reason": "persisted IVA wallet decision target does not match the Modelo 303 work unit",
+                "reason": "target_mismatch",
             },
         )
     if _decision_is_first_period_zero(decision):
         _require_first_period_zero_decision_grounded(
             work_unit,
-            _registry_snapshot_for_work_unit(work_unit),
+            _registry_snapshot_for_work_unit(
+                work_unit,
+                subject_leaf_key=subject_leaf_key,
+            ),
             decision,
+            subject_leaf_key=subject_leaf_key,
         )
     if decision.selected_amount is None:
-        raise ModeloIvaWalletReconciliationBlocked(
+        _raise_iva_wallet_precondition(
+            subject_leaf_key=subject_leaf_key,
+            reason_code="selected_amount_missing",
             translated_message="application.modelo.errors.iva_wallet_blocked",
+            evidence_values={"selected_amount_present": False},
             context={
                 "divergence": "authority_missing_amount",
-                "reason": "persisted IVA wallet decision has no selected amount",
+                "reason": "selected_amount_missing",
             },
         )
     revision_amount = revision_iva_compensation_amount(revision)
     if revision_amount is None:
-        raise ModeloIvaWalletReconciliationBlocked(
+        _raise_iva_wallet_precondition(
+            subject_leaf_key=subject_leaf_key,
+            reason_code="revision_amount_missing",
             translated_message="application.modelo.errors.iva_wallet_blocked",
+            evidence_values={
+                "binding_id": _M303_PRIOR_COMPENSATION_BINDING_ID,
+                "casilla_id": _M303_PRIOR_COMPENSATION_CASILLA_ID,
+                "revision_amount_present": False,
+            },
             context={
                 "divergence": "authority_revision_missing_amount",
-                "reason": "calculation revision does not carry the Modelo 303 prior-compensation amount",
+                "reason": "revision_amount_missing",
             },
         )
     if Decimal(decision.selected_amount) != revision_amount:
-        raise ModeloIvaWalletReconciliationBlocked(
+        _raise_iva_wallet_precondition(
+            subject_leaf_key=subject_leaf_key,
+            reason_code="amount_mismatch",
             translated_message="application.modelo.errors.iva_wallet_blocked",
+            evidence_values={
+                "decision_amount": Decimal(decision.selected_amount),
+                "revision_amount": revision_amount,
+            },
             context={
                 "divergence": "authority_amount_mismatch",
-                "reason": "persisted IVA wallet decision does not match the calculation revision",
+                "reason": "amount_mismatch",
             },
         )
     return decision
@@ -863,26 +1031,6 @@ def revision_iva_compensation_amount(revision: CalculationRevision) -> Decimal |
     return None
 
 
-def iva_wallet_blocked_message(decision: _IvaWalletBlockedDecision) -> str:
-    """Render a localized IVA wallet blocked message from a decision-like object."""
-    divergence = str(decision.divergence)
-    reason = str(decision.reason)
-    return tr("application.modelo.errors.iva_wallet_blocked", divergence=divergence, reason=reason)
-
-
-def iva_wallet_override_suggestion(decision: object) -> str:
-    """Return the explicit taxpayer-override command for a blocked wallet decision."""
-    target_period = getattr(decision, "target_period", None)
-    filing_year = getattr(decision, "target_year", "YEAR")
-    period = getattr(target_period, "registry_token", "PERIOD")
-    amount = "0" if _decision_is_missing_local_authority(decision) else "AMOUNT"
-    return (
-        "aeat app modelo iva-wallet override "
-        f"--filing-year {filing_year} --period {period} --amount {amount} "
-        '--reason "external evidence reviewed" --evidence-locator "SOURCE" --confirm'
-    )
-
-
 def taxpayer_nif_for_bucket(bucket_id: str) -> str | None:
     """Return the profile tax id for a bucket, or ``None`` when absent."""
     values = _profile_path_values_for_bucket(bucket_id)
@@ -899,8 +1047,6 @@ __all__ = [
     "ModeloIvaWalletReconciliationBlockedError",
     "apply_iva_compensation_decision_binding",
     "caller_supplied_prior_compensation_value",
-    "iva_wallet_blocked_message",
-    "iva_wallet_override_suggestion",
     "lazily_reconcile_local_iva_compensation_for_work_unit",
     "load_persisted_iva_compensation_decision_for_work_unit",
     "require_persisted_iva_compensation_decision_for_work_unit",

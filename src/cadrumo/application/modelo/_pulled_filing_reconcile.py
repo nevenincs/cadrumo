@@ -32,6 +32,16 @@ finding. The registry schema types both as minimum-length-one tuples on every
 casilla definition, so there is always something to carry and no substitution
 path exists.
 
+THE AGREEMENT THRESHOLD IS THE REGISTRY'S, NOT THIS MODULE'S. How close two
+values must be to count as agreeing is a regulatory question versioned by filing
+year and revision: the registry publishes a tolerance per verification
+expectation and folds the strictest across them. Some revisions publish one cent;
+others publish ``0.00`` and so demand exact equality. This module therefore reads
+``verification_policy().tolerance`` from the law-resolved snapshot rather than
+carrying a constant of its own — a hardcoded cent would silently absorb a
+one-cent divergence on every revision of the second kind, which is an
+under-declaration this channel exists to surface.
+
 See Also:
     :func:`~application.modelo.detect_casilla_divergences`
         The pure comparison this delegates to.
@@ -44,10 +54,14 @@ See Also:
         revision id. Supplies the formula graph the population scope walks and
         the casilla definitions each finding carries its grounding from, so a
         divergence cites the same references the registry grounds the value at.
+    :class:`RegistrySnapshot`
+        Carries that revision together with the verification policy the
+        comparison tolerance is published on.
 """
 
 from __future__ import annotations
 
+from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...domain.modelos import (
@@ -59,9 +73,7 @@ from ._reconcile_casilla import detect_casilla_divergences
 from ._reconcile_population import resolve_casilla_population_scope
 
 if TYPE_CHECKING:
-    from decimal import Decimal
-
-    from ...domain.calculations.registry import CasillaDefinition, CasillaId, ModeloRevision
+    from ...domain.calculations.registry import CasillaDefinition, CasillaId, RegistrySnapshot
     from ...domain.modelos import CalculationRevision, WorkUnit
     from ..calculations import CalculationObservationRepository
 
@@ -85,21 +97,50 @@ def _pulled_filed_values(
     return dict(stored.observation.casilla_values)
 
 
-def _law_resolved_revision(work_unit: WorkUnit) -> ModeloRevision | None:
-    """Resolve this work unit's revision from its own triple, or ``None``.
+def _law_resolved_snapshot(work_unit: WorkUnit) -> RegistrySnapshot | None:
+    """Resolve this work unit's registry snapshot from its own triple, or ``None``.
 
     Resolution is law-determined from modelo, filing year and period, never from
     a stored revision id. A failure here means the registry publishes no revision
     for the triple, which is a legitimate state for an unpublished filing year;
     an advisory reconcile must not turn it into a verification error.
+
+    The whole snapshot is kept rather than only its revision because the
+    comparison tolerance is published on the snapshot's verification policy, not
+    on the revision — see :func:`_registry_reconcile_tolerance`.
     """
     from ...core.errors import CadrumoError
     from ._calculation_helpers import resolve_registry_snapshot_for_work_unit
 
     try:
-        return resolve_registry_snapshot_for_work_unit(work_unit).revision
+        return resolve_registry_snapshot_for_work_unit(work_unit)
     except (LookupError, KeyError, AttributeError, ValueError, CadrumoError):
         return None
+
+
+def _registry_reconcile_tolerance(snapshot: RegistrySnapshot) -> Decimal:
+    """Return the registry's own published tolerance for this snapshot.
+
+    The tolerance below which two casilla values are treated as agreeing is a
+    REGULATORY value, versioned by filing year and revision: the registry
+    declares it per verification expectation and folds the STRICTEST across them.
+    Some revisions publish one cent, others publish ``0.00`` and so demand exact
+    equality. Hardcoding a cent here would silently absorb a one-cent
+    under-declaration on every revision of the second kind.
+
+    Returns:
+        The published tolerance, or exact equality (``0``) when the revision
+        declares no verification expectations at all. Exact is the deliberate
+        fallback: with no published contract there is no authority to widen the
+        comparison, and the error direction of guessing too strict is a visible
+        advisory finding, while guessing too loose is a silent omission.
+    """
+    from ...domain.calculations.registry import RegistryValidationError
+
+    try:
+        return snapshot.verification_policy().tolerance
+    except RegistryValidationError:
+        return Decimal("0")
 
 
 def pulled_filing_divergence_findings(
@@ -130,9 +171,10 @@ def pulled_filing_divergence_findings(
     if not filed_values:
         return []
 
-    registry_revision = _law_resolved_revision(work_unit)
-    if registry_revision is None:
+    snapshot = _law_resolved_snapshot(work_unit)
+    if snapshot is None:
         return []
+    registry_revision = snapshot.revision
 
     scope = resolve_casilla_population_scope(registry_revision=registry_revision, calculation=target)
     if scope.is_empty:
@@ -142,6 +184,7 @@ def pulled_filing_divergence_findings(
         computed=target.casilla_values,
         filed=filed_values,
         scope=scope.divergence_scope,
+        tolerance=_registry_reconcile_tolerance(snapshot),
     )
     if not divergences:
         return []

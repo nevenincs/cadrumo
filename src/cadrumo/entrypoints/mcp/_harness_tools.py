@@ -288,7 +288,7 @@ def build_whoami_identity() -> WhoamiIdentity:
     ensure_profile_keys_registered()
     health = assess_active_profile_health_with_session()
     tax_id_present = health.profile_record_present and TAX_ID_FACT_PATH not in health.missing_required
-    from ..cli._common import resolve_cli_precondition_action
+    from ..cli import resolve_cli_precondition_action
 
     return WhoamiIdentity(
         active_profile=health.active_profile_label,

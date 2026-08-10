@@ -132,8 +132,10 @@ def test_novel_source_binding_raises_not_silent_zero() -> None:
     exactly the TOML-authoring mistake the gate must convert from a silent zero
     into a loud ``ModeloAggregationBindingError`` at calculate time.
     """
-    modelo_def = resources().modelos.get("303")
-    revision = modelo_def.revisions["2023-y-siguientes"]
+    # Resolved from (modelo, filing year, period) rather than indexed by a
+    # literal revision id: AEAT re-cuts revision layouts, and this modelo's
+    # "2023-y-siguientes" was decomposed into four narrower revisions.
+    revision = resources().modelos.authority.snapshot("303", filing_year=2025, period="1T").revision
     synthetic = DataBindingDefinition.model_construct(
         id="synthetic-missing-source-binding",
         source="synthetic_unrouted_source_qqq",

@@ -1,7 +1,7 @@
 """Payload-contract and registry-binding tests for bucket storage errors.
 
 The suite pins every bucket error as an :class:`~core.errors.CadrumoError` with a
-registered code, distinct registry identity, safe operator suggestion, and
+registered code, distinct registry identity, explicit envelope action state, and
 structured context for bucket-id / lock-holder payloads. These contracts keep
 manifest, lockfile, recovery, and active-bucket failures observable without
 leaking raw storage details.
@@ -57,21 +57,6 @@ def test_every_class_inherits_from_cadrumo_error(error_cls: type[BucketError]) -
 def test_every_class_has_a_registered_code(error_cls: type[BucketError]) -> None:
     code = get_registered_error_code(error_cls)
     assert code.code in ERROR_REGISTRY
-
-
-@pytest.mark.parametrize(
-    ("error_cls", "expected_suggestion"),
-    (
-        pytest.param(NoActiveBucketError, "aeat config profile list", id="no-active-bucket"),
-        pytest.param(BucketLockedError, "aeat config login NAME", id="bucket-locked"),
-    ),
-)
-def test_default_suggestions_reference_operator_commands(
-    error_cls: type[BucketError],
-    expected_suggestion: str,
-) -> None:
-    code = get_registered_error_code(error_cls)
-    assert code.default_suggestion == expected_suggestion
 
 
 def test_bucket_busy_payload_carries_bucket_id_and_pid() -> None:

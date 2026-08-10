@@ -66,22 +66,22 @@ def collect_official_box_unpopulated_diagnostics(
         :func:`~cadrumo.application.modelo._verification_actions._evaluate_predicate_expression`:
             Verification-side evaluator for the same predicate DSL.
     """
-    # Lazy import avoids the calculate/verification action cycle. The predicate
-    # module owns the public DSL matcher and parser contract.
-    from ._verification_predicates import (
-        PREDICATE_IMPLIES_ANY_NONZERO,
-        evaluate_advisory_predicate_fires,
-        parse_predicate_casilla_ids,
+    # Lazy imports avoid the calculate/verification action cycle. The domain
+    # registry owns predicate syntax; the verification module owns evaluation.
+    from ...domain.calculations.registry import (
+        VerificationPredicateOperator,
+        parse_verification_predicate_expression,
     )
+    from ._verification_predicates import evaluate_advisory_predicate_fires
 
     diagnostics: list[CalculationSourceDiagnostic] = []
     for predicate in revision.verification_predicates:
         if predicate.finding_kind != "ADVISORY":
             continue
-        match = PREDICATE_IMPLIES_ANY_NONZERO.match(predicate.expression.strip())
-        if match is None:
+        parsed = parse_verification_predicate_expression(predicate.expression)
+        if parsed is None or parsed.operator is not VerificationPredicateOperator.IMPLIES_ANY_NONZERO:
             continue
-        ids = parse_predicate_casilla_ids(match.group("ids"))
+        ids = parsed.casilla_ids
         if len(ids) < 2:
             continue
         # The fire condition is the verification side's, called rather than

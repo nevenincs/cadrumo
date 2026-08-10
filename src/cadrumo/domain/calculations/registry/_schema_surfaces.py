@@ -20,9 +20,9 @@ from ._fixed_width_codec import (
     ExportPaddingValue,
     validate_fixed_width_shape,
 )
+from ....core import CasillaId
 from ._ids import (
     BindingId,
-    CasillaId,
     ExportFieldId,
     ExportLayoutId,
     FormulaId,
@@ -710,8 +710,14 @@ class ExportFieldDefinition(RegistryModel):
     decimals: int | None = Field(default=None, ge=0)
     signed: bool
     value_policy: ExportValuePolicyValue = None
+    allowed_values: tuple[str, ...] | None = None
     legal_refs: LegalRefs
     source_refs: SourceRefs
+
+    @field_validator("allowed_values")
+    @classmethod
+    def _canonicalise_allowed_values(cls, value: tuple[str, ...] | None) -> tuple[str, ...] | None:
+        return None if value is None else tuple(sorted(value))
 
     @model_validator(mode="after")
     def _validate_field_kind(self) -> ExportFieldDefinition:
@@ -732,7 +738,49 @@ class ExportFieldDefinition(RegistryModel):
         self._validate_decimals()
         validate_fixed_width_shape(self)
         self._validate_value_policy()
+        self._validate_allowed_values()
         return self
+
+    def _validate_allowed_values(self) -> None:
+        """Constrain an exact reviewed semantic integer domain."""
+        if self.allowed_values is None:
+            return
+        if self.value_policy is not None:
+            raise RegistryValidationError(
+                f"export field {self.id!r} cannot combine allowed_values with value_policy",
+            )
+        if not self.allowed_values or len(set(self.allowed_values)) != len(self.allowed_values):
+            raise RegistryValidationError(
+                f"export field {self.id!r} allowed_values must be non-empty and unique",
+            )
+        if (
+            self.kind in {CasillaFieldKind.FILLER, CasillaFieldKind.LITERAL, CasillaFieldKind.CHECKSUM}
+            or self.data_type != "integer"
+            or self.signed
+            or self.padding != "left_zero"
+            or self.justification != "right"
+            or self.decimals is not None
+            or self.date_format is not None
+            or self.length is None
+        ):
+            raise RegistryValidationError(
+                f"export field {self.id!r} allowed_values requires an unsigned right-justified "
+                "left-zero-padded fixed-width integer",
+            )
+        invalid = tuple(
+            value
+            for value in self.allowed_values
+            if not value
+            or not value.isascii()
+            or not value.isdigit()
+            or str(int(value)) != value
+            or len(value) > self.length
+        )
+        if invalid:
+            raise RegistryValidationError(
+                f"export field {self.id!r} allowed_values contains noncanonical or out-of-width entries: "
+                f"{invalid!r}",
+            )
 
     def _validate_value_policy(self) -> None:
         """Require each explicit policy to match its complete fixed-width shape."""

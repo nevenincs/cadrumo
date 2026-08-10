@@ -157,18 +157,12 @@ def test_auth_scope_errors_have_canonical_registry_envelopes(error: Exception, c
     assert envelope.message == resolve_error_message(error)
 
 
-def test_auth_scope_conflict_registry_guidance_is_command_neutral() -> None:
-    """The shared logout/reset scope error points to their common auth help."""
+def test_auth_scope_conflict_has_explicit_no_recovery() -> None:
+    """The shared logout/reset scope error carries no untyped recovery command."""
     error = AuthOperationScopeConflictError(
         translated_message="application.auth.operator.errors.scope_conflict",
     )
 
-    # The guidance is a REGISTRY fact, as this test's name says: default
-    # suggestions were retired as the envelope's remediation authority, so the
-    # command-neutral help string is asserted where it now lives.
-    assert ERROR_REGISTRY["REFUSED_AUTH_OPERATION_SCOPE_CONFLICT"].default_suggestion == (
-        "aeat config auth --help"
-    )
     assert build_error_envelope(error).action is None
 
 

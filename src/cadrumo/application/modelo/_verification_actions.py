@@ -46,7 +46,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
@@ -62,7 +62,6 @@ from ...adapters.persistence.profile.participation_index import TransactionParti
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import ActionEvidenceProvenance, BindingSourceKind, M210GrossIncomeSourceMode, Modelo
 from ...core.config import Settings
-from ...core.i18n import tr
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
 from ...domain.calculations.registry import (
@@ -131,9 +130,6 @@ from ._iva_wallet_gate import (
     ModeloIvaWalletReconciliationBlocked,
 )
 from ._iva_wallet_gate import (
-    iva_wallet_blocked_message as _iva_wallet_blocked_message,
-)
-from ._iva_wallet_gate import (
     require_persisted_iva_compensation_decision_matches_revision as _require_iva_compensation_revision_match,
 )
 from ._ledger_drift_gate import ledger_drift_findings
@@ -188,7 +184,6 @@ from ._workflow_gate import run_revision_workflow_gate as _run_revision_workflow
 
 if TYPE_CHECKING:
     from ...adapters.persistence.storage import SecureObjectWrite
-    from ...domain.iva_compensation import IvaCompensationReconciliationDecision
     from ..calculations import IvaWalletDecisionRepository
 
 from ._verification_predicates import (
@@ -197,11 +192,7 @@ from ._verification_predicates import (
 from ._verification_predicates import (
     M349_NUMERO_RECTIFICACIONES_CASILLA as _M349_NUMERO_RECTIFICACIONES_CASILLA,
 )
-from ._verification_predicates import (
-    PREDICATE_IMPLIES_ANY_NONZERO,
-    evaluate_applicability_filter,
-    parse_predicate_casilla_ids,
-)
+from ._verification_predicates import evaluate_applicability_filter
 from ._verification_predicates import (
     evaluate_advisory_predicate_fires as evaluate_advisory_predicate_fires,
 )
@@ -221,11 +212,9 @@ from ._verification_predicates import (
 # Retain pinned verification-actions test imports while consuming public helper contracts.
 _CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS = CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS
 _CROSS_PERIOD_DEPENDENCY_LEGAL_REFS = CROSS_PERIOD_DEPENDENCY_LEGAL_REFS
-_PREDICATE_IMPLIES_ANY_NONZERO = PREDICATE_IMPLIES_ANY_NONZERO
 _evaluate_advisory_predicate_fires = evaluate_advisory_predicate_fires
 _evaluate_applicability_filter = evaluate_applicability_filter
 _evaluate_predicate_expression = evaluate_predicate_expression
-_parse_predicate_casilla_ids = parse_predicate_casilla_ids
 
 
 def _normalised_observation_refs(observations: Iterable[CasillaObservation | None], field_name: str) -> tuple[str, ...]:
@@ -320,6 +309,7 @@ def _cuota_less_without_base_findings(
     target: CalculationRevision,
     work_unit: WorkUnit,
     transaction_repository: TransactionCatalogueRepository | None = None,
+    blocking_finding_observer: Callable[[ModeloVerificationFinding, str, str], None] | None = None,
 ) -> list[ModeloVerificationFinding]:
     """Refuse a row whose declared category can only ever contribute a base it lacks.
 
@@ -361,19 +351,20 @@ def _cuota_less_without_base_findings(
             continue
         if transaction.taxable_base is not None:
             continue
-        findings.append(
-            ModeloVerificationFinding(
-                kind=ModeloVerificationFindingKind.BLOCKING_RULE,
-                severity=ModeloVerificationFindingSeverity.BLOCKING,
-                message=(
-                    f"Ledger row {transaction_id} declares IVA category {category.value!r}, which carries no "
-                    "cuota by law, and no taxable base. The row therefore contributes nothing to this return "
-                    "while representing a declared operation, understating the base casilla."
-                ),
-                legal_refs=_CUOTA_LESS_WITHOUT_BASE_LEGAL_REFS,
-                source_refs=registry_source_refs,
-            ),
+        finding = ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            message_locale_key="application.modelo.findings.cuota_less_ledger_row_base_missing",
+            message_facts={
+                "transaction_id": transaction_id,
+                "iva_category_code": category.value,
+            },
+            legal_refs=_CUOTA_LESS_WITHOUT_BASE_LEGAL_REFS,
+            source_refs=registry_source_refs,
         )
+        findings.append(finding)
+        if blocking_finding_observer is not None:
+            blocking_finding_observer(finding, transaction_id, category.value)
     return findings
 
 
@@ -382,6 +373,7 @@ def _missing_evidence_findings(
     target: CalculationRevision,
     work_unit: WorkUnit,
     transaction_repository: TransactionCatalogueRepository | None,
+    blocking_finding_observer: Callable[[ModeloVerificationFinding, CalculationSourceDiagnostic], None] | None = None,
 ) -> list[ModeloVerificationFinding]:
     """Build verification findings for evidence-less positive IVA rows.
 
@@ -420,22 +412,33 @@ def _missing_evidence_findings(
     registry_source_refs = _optional_observation_refs(target.observations, "source_refs")
     for diagnostic in diagnostics:
         is_deductible_gap = diagnostic.source_kind == MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND
+        message_facts: dict[str, str | int | bool | Decimal] = {
+            "diagnostic_reason_code": str(diagnostic.reason),
+            "source_kind_code": diagnostic.source_kind,
+        }
+        if diagnostic.binding_id is not None:
+            message_facts["binding_id"] = str(diagnostic.binding_id)
+        if diagnostic.source_ref is not None:
+            message_facts["source_ref"] = diagnostic.source_ref
         if is_deductible_gap:
-            findings.append(
-                ModeloVerificationFinding(
-                    kind=ModeloVerificationFindingKind.BLOCKING_RULE,
-                    severity=ModeloVerificationFindingSeverity.BLOCKING,
-                    message=diagnostic.message,
-                    legal_refs=_MISSING_EVIDENCE_LEGAL_REFS,
-                    source_refs=registry_source_refs,
-                ),
+            finding = ModeloVerificationFinding(
+                kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+                severity=ModeloVerificationFindingSeverity.BLOCKING,
+                message_locale_key="application.modelo.findings.transaction_evidence_missing_deductible",
+                message_facts=message_facts,
+                legal_refs=_MISSING_EVIDENCE_LEGAL_REFS,
+                source_refs=registry_source_refs,
             )
+            findings.append(finding)
+            if blocking_finding_observer is not None:
+                blocking_finding_observer(finding, diagnostic)
             continue
         findings.append(
             ModeloVerificationFinding(
                 kind=ModeloVerificationFindingKind.ADVISORY,
                 severity=ModeloVerificationFindingSeverity.WARNING,
-                message=diagnostic.message,
+                message_locale_key="application.modelo.findings.transaction_evidence_missing_output",
+                message_facts=message_facts,
                 legal_refs=_MISSING_EVIDENCE_LEGAL_REFS,
                 source_refs=registry_source_refs,
             ),
@@ -496,9 +499,12 @@ def _collect_verification_gate_findings(
             work_unit,
             target,
             repository=iva_compensation_decision_repository,
+            subject_leaf_key="modelo.work.verify",
         )
     except ModeloIvaWalletReconciliationBlocked as exc:
-        findings.append(_iva_wallet_error_verification_finding(exc))
+        finding = _iva_wallet_error_verification_finding(exc)
+        findings.append(finding)
+        failures_by_finding_id[id(finding)] = exc.precondition_failure
     clean_state_verdict = _cross_period_clean_state_verdict_for_work_unit(
         work_unit,
         observation_repository=observation_repository,
@@ -565,20 +571,27 @@ def _collect_verification_gate_findings(
         target=target,
         work_unit=work_unit,
         transaction_repository=transaction_repository,
+        blocking_finding_observer=lambda finding, diagnostic: failures_by_finding_id.__setitem__(
+            id(finding),
+            build_verification_precondition_failure(
+                calculation_revision_id=target.calculation_revision_id,
+                work_unit_id=target.work_unit_id,
+                condition_id="modelo.work.verify.deductible_vat_evidence.present",
+                scenario_id="modelo.work.verify.deductible_vat_evidence.missing",
+                evidence_id="modelo.work.verify.deductible_vat_evidence",
+                evidence_values={
+                    "diagnostic_reason_code": str(diagnostic.reason),
+                    "source_kind_code": diagnostic.source_kind,
+                    "transaction_id": str(diagnostic.binding_id or ""),
+                    "binding_id": str(diagnostic.binding_id or ""),
+                    "casilla_id": str(diagnostic.casilla_id or ""),
+                    "source_ref": str(diagnostic.source_ref or ""),
+                },
+                provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
+            ),
+        ),
     )
     findings.extend(missing_evidence_findings)
-    for finding in missing_evidence_findings:
-        if finding.severity is not ModeloVerificationFindingSeverity.BLOCKING:
-            continue
-        failures_by_finding_id[id(finding)] = build_verification_precondition_failure(
-            calculation_revision_id=target.calculation_revision_id,
-            work_unit_id=target.work_unit_id,
-            condition_id="modelo.work.verify.deductible_vat_evidence.present",
-            scenario_id="modelo.work.verify.deductible_vat_evidence.missing",
-            evidence_id="modelo.work.verify.deductible_vat_evidence",
-            evidence_values={"source_ref_count": len(finding.source_refs)},
-            provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
-        )
     # Beside the evidence gate and for the same reason: both refuse a draft whose
     # rows cannot support what it declares, and both block at verify so the later
     # export and filing refusals are unreachable rather than merely later.
@@ -586,18 +599,23 @@ def _collect_verification_gate_findings(
         target=target,
         work_unit=work_unit,
         transaction_repository=transaction_repository,
+        blocking_finding_observer=lambda finding, transaction_id, category_code: failures_by_finding_id.__setitem__(
+            id(finding),
+            build_verification_precondition_failure(
+                calculation_revision_id=target.calculation_revision_id,
+                work_unit_id=target.work_unit_id,
+                condition_id="modelo.work.verify.ledger_row.taxable_base_present",
+                scenario_id="modelo.work.verify.ledger_row.cuota_less_base_missing",
+                evidence_id="modelo.work.verify.ledger_row",
+                evidence_values={
+                    "transaction_id": transaction_id,
+                    "iva_category_code": category_code,
+                },
+                provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
+            ),
+        ),
     )
     findings.extend(cuota_less_findings)
-    for finding in cuota_less_findings:
-        failures_by_finding_id[id(finding)] = build_verification_precondition_failure(
-            calculation_revision_id=target.calculation_revision_id,
-            work_unit_id=target.work_unit_id,
-            condition_id="modelo.work.verify.ledger_row.taxable_base_present",
-            scenario_id="modelo.work.verify.ledger_row.cuota_less_base_missing",
-            evidence_id="modelo.work.verify.ledger_row",
-            evidence_values={"source_ref_count": len(finding.source_refs)},
-            provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
-        )
     # Runs beside the evidence gate, not inside it: that gate reads the live
     # ledger while the casilla values come from the stored draft, and this is
     # what refuses the case where those two views have drifted apart.
@@ -606,22 +624,28 @@ def _collect_verification_gate_findings(
         work_unit=work_unit,
         transaction_repository=transaction_repository,
         source_refs=_optional_observation_refs(target.observations, "source_refs"),
+        blocking_finding_observer=lambda finding, anchored, changed_ids, removed_ids: (
+            failures_by_finding_id.__setitem__(
+                id(finding),
+                build_verification_precondition_failure(
+                    calculation_revision_id=target.calculation_revision_id,
+                    work_unit_id=target.work_unit_id,
+                    condition_id="modelo.work.verify.ledger_snapshot.current",
+                    scenario_id="modelo.work.verify.ledger_snapshot.drift_detected",
+                    evidence_id="modelo.work.verify.ledger_snapshot",
+                    evidence_values={
+                        "snapshot_anchored": anchored,
+                        "changed_transaction_count": len(changed_ids),
+                        "changed_transaction_ids": "|".join(changed_ids),
+                        "removed_transaction_count": len(removed_ids),
+                        "removed_transaction_ids": "|".join(removed_ids),
+                    },
+                    provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+                ),
+            )
+        ),
     )
     findings.extend(drift_findings)
-    for finding in drift_findings:
-        failures_by_finding_id[id(finding)] = build_verification_precondition_failure(
-            calculation_revision_id=target.calculation_revision_id,
-            work_unit_id=target.work_unit_id,
-            condition_id="modelo.work.verify.ledger_snapshot.current",
-            scenario_id="modelo.work.verify.ledger_snapshot.drift_detected",
-            evidence_id="modelo.work.verify.ledger_snapshot",
-            evidence_values={
-                "source_transaction_count": len(target.source_transaction_ids),
-                "snapshot_anchored": target.ledger_filing_snapshot is not None,
-                "source_ref_count": len(finding.source_refs),
-            },
-            provenance=ActionEvidenceProvenance.PERSISTED_STATE,
-        )
     return findings, resolved_casilla_ids, missing_required_casilla_ids, failures_by_finding_id
 
 
@@ -889,8 +913,8 @@ def verify_modelo_revision_with_preconditions(
                 ),
             )
         raise CalculationRevisionStateError(
-            f"calculation revision {calculation_revision_id!r} is in state "
-            f"{target.state.value!r}; only DRAFT revisions can be verified",
+            translated_message="errors.error.error_modelo_calculation_revision_state",
+            context={"calculation_revision_id": calculation_revision_id, "state": target.state.value},
         )
 
     _assert_revision_content_integrity(target)
@@ -1302,14 +1326,18 @@ def _unrouted_oss_source_finding(
     source_refs: tuple[SourceRefId, ...],
 ) -> ModeloVerificationFinding:
     """Build the blocking finding for OSS observations no aggregation binding consumes."""
-    unrouted_source_refs = ", ".join(issue.source_ref or "unidentified OSS source" for issue in unrouted_issues)
+    source_ref_ids = tuple(issue.source_ref for issue in unrouted_issues if issue.source_ref is not None)
+    message_facts: dict[str, str | int | bool | Decimal] = {
+        "source_ref_count": len(source_ref_ids),
+        "unidentified_source_count": len(unrouted_issues) - len(source_ref_ids),
+    }
+    if source_ref_ids:
+        message_facts["source_ref_ids"] = "|".join(source_ref_ids)
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.BLOCKING_RULE,
         severity=ModeloVerificationFindingSeverity.BLOCKING,
-        message=(
-            "Modelo 369 has OSS/IOSS observations that no declared aggregation binding consumes; "
-            f"unrouted source references: {unrouted_source_refs}"
-        ),
+        message_locale_key="application.modelo.findings.oss_source_unrouted",
+        message_facts=message_facts,
         legal_refs=legal_refs or WORKFLOW_GATE_LEGAL_REFS,
         source_refs=source_refs,
     )
@@ -1324,10 +1352,8 @@ def _missing_oss_evidence_finding(
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.BLOCKING_RULE,
         severity=ModeloVerificationFindingSeverity.BLOCKING,
-        message=(
-            "Modelo 369 has unresolved OSS/IOSS aggregation sources: no OSS-tagged issued invoice evidence "
-            "was persisted for a revision that declares ledger_oss_aggregation bindings."
-        ),
+        message_locale_key="application.modelo.findings.oss_evidence_missing",
+        message_facts={},
         legal_refs=legal_refs or WORKFLOW_GATE_LEGAL_REFS,
         source_refs=source_refs,
     )
@@ -1382,12 +1408,12 @@ def _collect_revision_verification_findings(
         finding = ModeloVerificationFinding(
             kind=ModeloVerificationFindingKind.BLOCKING_RULE,
             severity=ModeloVerificationFindingSeverity.BLOCKING,
-            message=tr(
-                "application.modelo.findings.registry_snapshot_unresolved",
-                modelo=str(work_unit.modelo),
-                filing_year=str(work_unit.filing_year),
-                period=work_unit.period.registry_token,
-            ),
+            message_locale_key="application.modelo.findings.registry_snapshot_unresolved",
+            message_facts={
+                "modelo": str(work_unit.modelo),
+                "filing_year": work_unit.filing_year,
+                "period": work_unit.period.registry_token,
+            },
             legal_refs=WORKFLOW_GATE_LEGAL_REFS,
         )
         findings.append(finding)
@@ -1608,7 +1634,8 @@ def _missing_required_casilla_finding(
         kind=ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA,
         severity=ModeloVerificationFindingSeverity.BLOCKING,
         casilla_id=casilla_id,
-        message=tr("application.modelo.findings.missing_required_casilla", casilla_id=casilla_id),
+        message_locale_key="application.modelo.findings.missing_required_casilla",
+        message_facts={"casilla_id": str(casilla_id)},
         legal_refs=legal_refs,
         source_refs=source_refs,
     )
@@ -1617,34 +1644,17 @@ def _missing_required_casilla_finding(
 missing_required_casilla_finding = _missing_required_casilla_finding
 
 
-def _iva_wallet_blocking_verification_finding(
-    decision: IvaCompensationReconciliationDecision,
-) -> ModeloVerificationFinding:
-    return ModeloVerificationFinding(
-        kind=ModeloVerificationFindingKind.BLOCKING_RULE,
-        severity=ModeloVerificationFindingSeverity.BLOCKING,
-        message=_iva_wallet_blocked_message(decision),
-        legal_refs=(_IVA_COMPENSATION_CARRY_LEGAL_REF,),
-    )
-
-
-iva_wallet_blocking_verification_finding = _iva_wallet_blocking_verification_finding
-
-
 def _iva_wallet_error_verification_finding(error: ModeloIvaWalletReconciliationBlocked) -> ModeloVerificationFinding:
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.BLOCKING_RULE,
         severity=ModeloVerificationFindingSeverity.BLOCKING,
-        message=_translated_exception_message(error),
+        message_locale_key="application.modelo.findings.iva_wallet_precondition_failed",
+        message_facts={
+            "condition_id": error.precondition_failure.verdict.failed_condition_id,
+            "scenario_id": error.precondition_failure.scenario_id,
+        },
         legal_refs=(_IVA_COMPENSATION_CARRY_LEGAL_REF,),
     )
-
-
-def _translated_exception_message(error: ModeloIvaWalletReconciliationBlocked) -> str:
-    key = getattr(error, "translated_message", None)
-    if isinstance(key, str) and key.strip() and key != "application.modelo.errors.iva_wallet_blocked":
-        return tr(key)
-    return str(error)
 
 
 def _classify_verification_outcome(
