@@ -74,9 +74,6 @@ _ALLOWED_DIRECT_OUTPUTS: dict[tuple[str, str, str], str] = {
         "IS the stderr funnel: every write in this function emits redacted_text, "
         "already through the error-path redaction boundary."
     ),
-    ("application/wizard/_commands.py", "_echo_wizard_success_text", "typer.echo"): (
-        "IS a funnel: echoes render_command_output()'s text arm for the wizard success surface."
-    ),
     ("entrypoints/cli/_common.py", "emit_help_text", "typer.echo"): (
         "Click-generated help text (ctx.get_help()), composed by click from "
         "static command metadata. It carries no operator data to redact."
@@ -103,15 +100,13 @@ _ALLOWED_DIRECT_OUTPUTS: dict[tuple[str, str, str], str] = {
         "behind a public sink, so a future caller could feed it redactable "
         "material. Revisit if that sink grows a caller carrying identity data."
     ),
-    ("application/wizard/_commands.py", "_emit_save_exit_notice", "typer.echo"): (
-        "IS a funnel: echoes render_command_output()'s text arm for the "
-        "save-and-exit surface, matching its sibling _echo_wizard_success_text. "
-        "The prior entry tolerated a raw echo here on the argument that the CLI "
-        "policy redacts opaque profile IDs rather than operator-chosen names, so "
-        "funnelling was a no-op on today's content. That reasoning is why the "
-        "drift survived: it made the fix look optional while leaving two "
-        "channels in one module free to diverge the moment the payload or the "
-        "policy changed."
+    ("application/wizard/_commands.py", "_echo_wizard_text", "typer.echo"): (
+        "IS the wizard funnel, and is now the ONLY one: echoes "
+        "render_command_output()'s text arm after prepending the sandbox banner. "
+        "The success surface and the save-and-exit disclosure both delegate here. "
+        "It replaced two entries that each held a private copy of the "
+        "render-and-echo pair -- which is how one of them came to bypass the "
+        "boundary while its sibling did not."
     ),
     ("entrypoints/cli/_config/_secure_input.py", "write_to_controlling_terminal", "write"): (
         "Recovery-code display writes directly to the controlling terminal "

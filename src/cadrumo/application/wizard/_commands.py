@@ -1578,6 +1578,28 @@ def _emit_wizard_success(
     )
 
 
+def _echo_wizard_text(lines: list[str], *, payload: object) -> None:
+    """Render wizard text lines through the output boundary and emit them.
+
+    The single place this module's operator-facing text crosses into stdout.
+    Both the success surface and the save-and-exit disclosure funnel through
+    here, so the sandbox banner, the redaction pass and the reveal-identifiers
+    resolution are applied once rather than once per emitter. Two emitters each
+    holding a private copy of the render-and-echo pair is how one of them came
+    to bypass the boundary while its sibling did not.
+    """
+    import typer as _typer
+
+    from ...core.output_rendering import render_command_output
+    from ..operator_output import sandbox_banner_line, sandbox_notice_for_active_bucket
+
+    sandbox_notice = sandbox_notice_for_active_bucket()
+    if sandbox_notice is not None:
+        lines.insert(0, sandbox_banner_line(sandbox_notice))
+    rendered = render_command_output(format_name="text", payload=payload, lines=lines)
+    _typer.echo(rendered.text)
+
+
 def _echo_wizard_success_text(
     mode: WizardPersistMode,
     profile_name: str,
@@ -1594,11 +1616,6 @@ def _echo_wizard_success_text(
     lines would be visible to automation and invisible to the operator
     running the verb plainly.
     """
-    import typer as _typer
-
-    from ...core.output_rendering import render_command_output
-    from ..operator_output import sandbox_banner_line, sandbox_notice_for_active_bucket
-
     lines = [
         f"{tr('application.wizard.output_labels.profile')}\t{profile_name}",
         f"{tr('application.wizard.output_labels.status')}\t{verb}",
@@ -1607,11 +1624,7 @@ def _echo_wizard_success_text(
         lines.append(f"{tr('application.wizard.output_labels.active_profile')}\t{profile_name}")
     lines.append(f"{tr('application.wizard.output_labels.next')}\t{next_command}")
     lines.extend(message for enabled, message in disclosures if enabled)
-    sandbox_notice = sandbox_notice_for_active_bucket()
-    if sandbox_notice is not None:
-        lines.insert(0, sandbox_banner_line(sandbox_notice))
-    rendered = render_command_output(format_name="text", payload=result, lines=lines)
-    _typer.echo(rendered.text)
+    _echo_wizard_text(lines, payload=result)
 
 
 def _wizard_success_notices(
@@ -1690,12 +1703,9 @@ def _emit_save_exit_notice(profile_name: str, *, message: str | None = None) -> 
     output language (see :func:`_emit_wizard_success`); ``None`` resolves it
     now for the direct, walk-less callers.
     """
-    import typer as _typer
-
     from ...core.click_context import json_output_requested
     from ...core.json_contract import Notice, NoticeSeverity
-    from ...core.output_rendering import render_command_output
-    from ..operator_output import emit_operator_json_success, sandbox_banner_line, sandbox_notice_for_active_bucket
+    from ..operator_output import emit_operator_json_success
     from ._results import ConfigProfileCreateResult, ProfileWizardStatus
 
     resume_command = f"aeat config profile create {profile_name}"
@@ -1733,11 +1743,7 @@ def _emit_save_exit_notice(profile_name: str, *, message: str | None = None) -> 
     # renderer rather than a raw echo. Two channels emitting the same
     # identifier under different redaction states is the drift being closed.
     lines = [f"{message}\t{resume_command}"]
-    sandbox_notice = sandbox_notice_for_active_bucket()
-    if sandbox_notice is not None:
-        lines.insert(0, sandbox_banner_line(sandbox_notice))
-    rendered = render_command_output(format_name="text", payload=result, lines=lines)
-    _typer.echo(rendered.text)
+    _echo_wizard_text(lines, payload=result)
 
 
 def _execute_wizard_command(
