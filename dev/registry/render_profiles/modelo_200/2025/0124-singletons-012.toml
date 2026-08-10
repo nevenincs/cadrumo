@@ -1,0 +1,225 @@
+schema_version = 1
+fragment_id = "singletons-012"
+width_17_rules = []
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 105
+source_cell = "A105"
+ordinal = 100
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m200-2025-dp200001-r0105"
+decision_statement = "DP200001 source row 105: encode selected as 1 and absent or unselected as 0."
+justification = "Reviewed exact-anchor policy for DP200001 source row 105; it is not represented as official-source text."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DP200001"
+source_row = 105
+source_cell = "A105"
+ordinal = 100
+record_identity = "DP200001"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 107
+source_cell = "A107"
+ordinal = 102
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m200-2025-dp200001-r0107"
+decision_statement = "DP200001 source row 107: encode selected as 1 and absent or unselected as 0."
+justification = "Reviewed exact-anchor policy for DP200001 source row 107; it is not represented as official-source text."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DP200001"
+source_row = 107
+source_cell = "A107"
+ordinal = 102
+record_identity = "DP200001"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 108
+source_cell = "A108"
+ordinal = 103
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m200-2025-dp200001-r0108"
+decision_statement = "DP200001 source row 108: encode selected as 1 and absent or unselected as 0."
+justification = "Reviewed exact-anchor policy for DP200001 source row 108; it is not represented as official-source text."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DP200001"
+source_row = 108
+source_cell = "A108"
+ordinal = 103
+record_identity = "DP200001"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 109
+source_cell = "A109"
+ordinal = 104
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m200-2025-dp200001-r0109"
+decision_statement = "DP200001 source row 109: encode selected as 1 and absent or unselected as 0."
+justification = "Reviewed exact-anchor policy for DP200001 source row 109; it is not represented as official-source text."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DP200001"
+source_row = 109
+source_cell = "A109"
+ordinal = 104
+record_identity = "DP200001"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 113
+source_cell = "A113"
+ordinal = 108
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "E113"
+expected_normalized_statement = "Teléfono fijo de contacto para incidencias"
+justification = "Reviewed official-source conclusion for exact field DP200001 row 113, combining this exact description and declared width with the AEAT common numeric, exercise/type, justificante, or period instructions applicable to that named field."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 114
+source_cell = "A114"
+ordinal = 109
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001"
+source_cell = "E114"
+expected_normalized_statement = "Teléfono móvil de contacto para incidencias"
+justification = "Reviewed official-source conclusion for exact field DP200001 row 114, combining this exact description and declared width with the AEAT common numeric, exercise/type, justificante, or period instructions applicable to that named field."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1", "2", "3"]
+
+[singleton_rules.anchor]
+sheet = "DP200001B"
+source_row = 19
+source_cell = "A19"
+ordinal = 14
+record_identity = "DP200001B"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001B"
+source_cell = "E19"
+expected_normalized_statement = "Balance 0.No consta 1.Mod.normal 2.Mod.abreviado 3. Mod.PYMES"
+justification = "Reviewed official-source conclusion for exact field DP200001B row 19, combining this exact description and declared width with the AEAT common numeric, exercise/type, justificante, or period instructions applicable to that named field."
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1", "2", "3"]
+
+[singleton_rules.anchor]
+sheet = "DP200001B"
+source_row = 20
+source_cell = "A20"
+ordinal = 15
+record_identity = "DP200001B"
+
+[singleton_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "DP200001B"
+source_cell = "E20"
+expected_normalized_statement = "ECPN 0.No consta 1.Mod.normal 2.Mod.abreviado 3. Mod.PYMES"
+justification = "Reviewed official-source conclusion for exact field DP200001B row 20, combining this exact description and declared width with the AEAT common numeric, exercise/type, justificante, or period instructions applicable to that named field."
+
+[design_identity]
+modelo = "200"
+design_epoch = "2025"
+source_ref = "aeat-dr-200-2025"
+source_sha256 = "a4506d24b7973a745d1225d59147078e03f14a30791a229d852b37f757442505"

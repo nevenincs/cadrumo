@@ -10,8 +10,9 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterable
+from hashlib import sha256
 from pathlib import Path
-from typing import Final, Literal
+from typing import Annotated, Final, Literal
 
 import rtoml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -23,6 +24,7 @@ from ._semantic_map_join import JoinedRecordDesign
 
 __all__ = [
     "RENDER_PROFILE_SCHEMA_VERSION",
+    "OfficialSourceEvidence",
     "RenderProfile",
     "RenderProfileAnchor",
     "RenderProfileDesignIdentity",
@@ -31,11 +33,15 @@ __all__ = [
     "RenderProfileSourceEvidence",
     "RenderProfileSourceEvidenceEntry",
     "ReviewedEvidence",
+    "ReviewedPolicyDecision",
     "SingletonNumericRule",
     "Width17MembershipRule",
     "load_and_validate_render_profile",
+    "load_render_profile",
+    "load_render_profile_source_evidence",
     "project_render_profile_eligibility",
     "validate_render_profile",
+    "validate_render_profile_authority",
 ]
 
 
@@ -67,19 +73,42 @@ class RenderProfileAnchor(_StrictModel):
     record_identity: str = Field(min_length=1)
 
 
-class ReviewedEvidence(_StrictModel):
-    """Non-empty, anchor-specific review evidence for one authored rule."""
+class OfficialSourceEvidence(_StrictModel):
+    """A profile conclusion grounded in text read from an exact official cell."""
 
+    authority_kind: Literal["official_source"]
     source_sheet: str = Field(min_length=1)
     source_cell: str = Field(pattern=r"^[A-Z]+[1-9][0-9]*$")
     expected_normalized_statement: str = Field(min_length=1)
     justification: str = Field(min_length=1)
 
     @model_validator(mode="after")
-    def _reject_whitespace_only_review_text(self) -> ReviewedEvidence:
+    def _reject_whitespace_only_review_text(self) -> OfficialSourceEvidence:
         if not self.expected_normalized_statement.strip() or not self.justification.strip():
-            raise ValueError("reviewed evidence and justification must contain non-whitespace text")
+            raise ValueError("official evidence and justification must contain non-whitespace text")
         return self
+
+
+class ReviewedPolicyDecision(_StrictModel):
+    """An exact-anchor policy decision that makes no claim about source text."""
+
+    authority_kind: Literal["reviewed_policy"]
+    decision_id: str = Field(min_length=1, pattern=r"^[a-z0-9][a-z0-9-]*$")
+    governed_anchor: RenderProfileAnchor
+    decision_statement: str = Field(min_length=1)
+    justification: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _reject_whitespace_only_review_text(self) -> ReviewedPolicyDecision:
+        if not self.decision_statement.strip() or not self.justification.strip():
+            raise ValueError("reviewed policy and justification must contain non-whitespace text")
+        return self
+
+
+ReviewedEvidence = Annotated[
+    OfficialSourceEvidence | ReviewedPolicyDecision,
+    Field(discriminator="authority_kind"),
+]
 
 
 class RenderProfileSourceEvidenceEntry(_StrictModel):
@@ -132,6 +161,8 @@ class Width17MembershipRule(_StrictModel):
 
     @model_validator(mode="after")
     def _require_explicit_type_specific_representation(self) -> Width17MembershipRule:
+        if not isinstance(self.evidence, OfficialSourceEvidence):
+            raise ValueError("width-17 membership requires verified official-source evidence")
         expected = (15, "unsigned") if self.aeat_type == "Num" else (14, "n-prefix-negative-blank-nonnegative")
         if (self.integer_digits, self.sign_policy) != expected:
             raise ValueError(f"{self.aeat_type} width-17 representation conflicts with its explicit sign policy")
@@ -151,6 +182,24 @@ class SingletonNumericRule(_StrictModel):
         "percentage_decimal",
         "digit_string",
         "identifier_digits",
+        "checkbox",
+        "year_yyyy",
+        "year_last_two_digits",
+        "month_mm",
+        "day_dd",
+    ]
+    value_policy: Literal[
+        "unsigned-integer",
+        "implied-decimal",
+        "yyyymmdd",
+        "enumerated-digits",
+        "digit-string",
+        "identifier-digits",
+        "selected-1-unselected-0",
+        "four-digit-year",
+        "four-digit-year-final-two-digits",
+        "two-digit-month",
+        "two-digit-day",
     ]
     integer_digits: int = Field(ge=0)
     decimal_digits: int = Field(ge=0)
@@ -161,15 +210,31 @@ class SingletonNumericRule(_StrictModel):
 
     @model_validator(mode="after")
     def _require_kind_specific_declaration(self) -> SingletonNumericRule:
-        if self.semantic_kind == "enumeration":
+        if self.semantic_kind in {"enumeration", "checkbox"}:
             if not self.allowed_values or any(
                 not item or not item.isascii() or not item.isdigit() for item in self.allowed_values
             ):
-                raise ValueError("enumeration rules require explicit non-empty ASCII-digit allowed_values")
+                raise ValueError(f"{self.semantic_kind} rules require explicit non-empty ASCII-digit allowed_values")
             if len(set(self.allowed_values)) != len(self.allowed_values):
                 raise ValueError("enumeration allowed_values must be unique")
         elif self.allowed_values:
             raise ValueError("allowed_values must be explicitly empty outside an enumeration rule")
+        required_policy = {
+            "integer": "unsigned-integer",
+            "decimal": "implied-decimal",
+            "percentage_decimal": "implied-decimal",
+            "date_yyyymmdd": "yyyymmdd",
+            "enumeration": "enumerated-digits",
+            "digit_string": "digit-string",
+            "identifier_digits": "identifier-digits",
+            "checkbox": "selected-1-unselected-0",
+            "year_yyyy": "four-digit-year",
+            "year_last_two_digits": "four-digit-year-final-two-digits",
+            "month_mm": "two-digit-month",
+            "day_dd": "two-digit-day",
+        }[self.semantic_kind]
+        if self.value_policy != required_policy:
+            raise ValueError(f"{self.semantic_kind} requires value_policy {required_policy!r}")
         if self.semantic_kind == "date_yyyymmdd" and (self.integer_digits, self.decimal_digits) != (8, 0):
             raise ValueError("date_yyyymmdd requires exactly 8 integer digits and 0 decimal digits")
         if self.semantic_kind == "integer" and (self.integer_digits <= 0 or self.decimal_digits != 0):
@@ -184,8 +249,20 @@ class SingletonNumericRule(_StrictModel):
             raise ValueError(f"{self.semantic_kind} requires positive integer digits and 0 decimal digits")
         if self.semantic_kind == "enumeration" and self.decimal_digits != 0:
             raise ValueError("enumeration requires 0 decimal digits")
-        if self.evidence.source_sheet != self.anchor.sheet or self.evidence.source_cell != self.anchor.source_cell:
-            raise ValueError("smaller-field evidence must be anchored to the exact governed field")
+        exact_shapes = {
+            "checkbox": (1, 0),
+            "year_yyyy": (4, 0),
+            "year_last_two_digits": (2, 0),
+            "month_mm": (2, 0),
+            "day_dd": (2, 0),
+        }
+        expected_shape = exact_shapes.get(self.semantic_kind)
+        if expected_shape is not None and (self.integer_digits, self.decimal_digits) != expected_shape:
+            raise ValueError(f"{self.semantic_kind} requires exactly {expected_shape!r} integer/decimal digits")
+        if self.semantic_kind == "checkbox" and self.allowed_values != ("0", "1"):
+            raise ValueError("checkbox requires allowed_values ('0', '1')")
+        if isinstance(self.evidence, ReviewedPolicyDecision) and self.evidence.governed_anchor != self.anchor:
+            raise ValueError("reviewed policy must name the exact governed anchor")
         return self
 
 
@@ -228,6 +305,13 @@ def load_and_validate_render_profile(
     source_evidence: RenderProfileSourceEvidence,
 ) -> RenderProfile:
     """Load sorted TOML fragments and validate exact coverage against parser IR."""
+    profile = load_render_profile(profile_directory)
+    validate_render_profile(profile, joined, source_evidence)
+    return profile
+
+
+def load_render_profile(profile_directory: Path) -> RenderProfile:
+    """Load sorted TOML fragments without weakening their strict authored schema."""
     if not profile_directory.is_dir() or profile_directory.is_symlink() or profile_directory.is_junction():
         raise RegistryValidationError(f"render profile path must be a real directory: {profile_directory}")
     paths = tuple(sorted(profile_directory.glob("*.toml"), key=lambda path: path.name))
@@ -242,8 +326,66 @@ def load_and_validate_render_profile(
         except (OSError, ValueError, TypeError) as exc:
             raise RegistryValidationError(f"invalid render profile fragment {path.name!r}: {exc}") from exc
     profile = _compile_fragments(fragments)
-    validate_render_profile(profile, joined, source_evidence)
     return profile
+
+
+def load_render_profile_source_evidence(
+    source_path: Path,
+    profile: RenderProfile,
+) -> RenderProfileSourceEvidence:
+    """Read every claimed official cell from the hash-verified binary itself."""
+    if not source_path.is_file() or source_path.is_symlink():
+        raise RegistryValidationError(f"render profile source must be a regular file: {source_path}")
+    actual_sha256 = _file_sha256(source_path)
+    if actual_sha256 != profile.design_identity.source_sha256:
+        raise RegistryValidationError(
+            "render profile source binary SHA-256 does not match the exact design identity",
+        )
+    if source_path.suffix.lower() not in {".xlsx", ".xlsm"}:
+        raise RegistryValidationError(
+            f"render profile source evidence requires an OOXML workbook: {source_path}",
+        )
+
+    from openpyxl import load_workbook
+
+    official_evidence = tuple(
+        evidence
+        for evidence in (
+            *(rule.evidence for rule in profile.width_17_rules),
+            *(rule.evidence for rule in profile.singleton_rules),
+        )
+        if isinstance(evidence, OfficialSourceEvidence)
+    )
+    if not official_evidence:
+        raise RegistryValidationError("render profile contains no official-source evidence to resolve")
+    locators = tuple(dict.fromkeys((item.source_sheet, item.source_cell) for item in official_evidence))
+    workbook = load_workbook(source_path, read_only=True, data_only=True)
+    try:
+        entries: list[RenderProfileSourceEvidenceEntry] = []
+        for sheet_name, cell in locators:
+            if sheet_name not in workbook.sheetnames:
+                raise RegistryValidationError(
+                    f"render profile evidence sheet does not exist: {sheet_name!r}",
+                )
+            value = workbook[sheet_name][cell].value
+            normalized = _normalize_source_statement(value)
+            if not normalized:
+                raise RegistryValidationError(
+                    f"render profile evidence locator does not contain source text: {(sheet_name, cell)!r}",
+                )
+            entries.append(
+                RenderProfileSourceEvidenceEntry(
+                    sheet=sheet_name,
+                    cell=cell,
+                    normalized_statement=normalized,
+                ),
+            )
+    finally:
+        workbook.close()
+    return RenderProfileSourceEvidence(
+        design_identity=profile.design_identity,
+        entries=tuple(entries),
+    )
 
 
 def validate_render_profile(
@@ -258,6 +400,19 @@ def validate_render_profile(
         source_ref=joined.source.source_ref,
         source_sha256=joined.source.source_sha256,
     )
+    eligibility = project_render_profile_eligibility(
+        joined_field.parser_field for joined_field in joined.fields
+    )
+    validate_render_profile_authority(profile, expected_identity, eligibility, source_evidence)
+
+
+def validate_render_profile_authority(
+    profile: RenderProfile,
+    expected_identity: RenderProfileDesignIdentity,
+    eligibility: RenderProfileEligibility,
+    source_evidence: RenderProfileSourceEvidence,
+) -> None:
+    """Validate a complete profile against source-owned identity and eligibility."""
     if profile.design_identity != expected_identity:
         raise RegistryValidationError(
             f"render profile identity {profile.design_identity!r} does not match exact official design "
@@ -269,9 +424,6 @@ def validate_render_profile(
         )
     _validate_reviewed_evidence(profile, source_evidence)
 
-    eligibility = project_render_profile_eligibility(
-        joined_field.parser_field for joined_field in joined.fields
-    )
     eligible = {_field_anchor(field): field for field in eligibility.all_fields}
     governed = tuple(anchor for rule in profile.width_17_rules for anchor in rule.anchors) + tuple(
         rule.anchor for rule in profile.singleton_rules
@@ -350,6 +502,8 @@ def _validate_reviewed_evidence(
         rule.evidence for rule in profile.singleton_rules
     )
     for evidence in reviewed:
+        if isinstance(evidence, ReviewedPolicyDecision):
+            continue
         locator = evidence.source_sheet, evidence.source_cell
         actual_statement = actual_by_locator.get(locator)
         if actual_statement is None:
@@ -446,3 +600,17 @@ def _anchor_key(anchor: RenderProfileAnchor) -> tuple[str, int, int, str, str]:
         anchor.source_cell or "",
         anchor.record_identity,
     )
+
+
+def _file_sha256(path: Path) -> str:
+    digest = sha256()
+    with path.open("rb") as source:
+        for chunk in iter(lambda: source.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _normalize_source_statement(value: object) -> str:
+    if value is None:
+        return ""
+    return " ".join(str(value).split())

@@ -1,0 +1,249 @@
+schema_version = 1
+fragment_id = "singletons-005"
+width_17_rules = []
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 49
+source_cell = "A49"
+ordinal = 44
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m200-2025-dp200001-r0049"
+decision_statement = "DP200001 source row 49: encode selected as 1 and absent or unselected as 0."
+justification = "Reviewed exact-anchor policy for DP200001 source row 49; it is not represented as official-source text."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DP200001"
+source_row = 49
+source_cell = "A49"
+ordinal = 44
+record_identity = "DP200001"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 50
+source_cell = "A50"
+ordinal = 45
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m200-2025-dp200001-r0050"
+decision_statement = "DP200001 source row 50: encode selected as 1 and absent or unselected as 0."
+justification = "Reviewed exact-anchor policy for DP200001 source row 50; it is not represented as official-source text."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DP200001"
+source_row = 50
+source_cell = "A50"
+ordinal = 45
+record_identity = "DP200001"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 51
+source_cell = "A51"
+ordinal = 46
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m200-2025-dp200001-r0051"
+decision_statement = "DP200001 source row 51: encode selected as 1 and absent or unselected as 0."
+justification = "Reviewed exact-anchor policy for DP200001 source row 51; it is not represented as official-source text."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DP200001"
+source_row = 51
+source_cell = "A51"
+ordinal = 46
+record_identity = "DP200001"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 52
+source_cell = "A52"
+ordinal = 47
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m200-2025-dp200001-r0052"
+decision_statement = "DP200001 source row 52: encode selected as 1 and absent or unselected as 0."
+justification = "Reviewed exact-anchor policy for DP200001 source row 52; it is not represented as official-source text."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DP200001"
+source_row = 52
+source_cell = "A52"
+ordinal = 47
+record_identity = "DP200001"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 53
+source_cell = "A53"
+ordinal = 48
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m200-2025-dp200001-r0053"
+decision_statement = "DP200001 source row 53: encode selected as 1 and absent or unselected as 0."
+justification = "Reviewed exact-anchor policy for DP200001 source row 53; it is not represented as official-source text."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DP200001"
+source_row = 53
+source_cell = "A53"
+ordinal = 48
+record_identity = "DP200001"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 54
+source_cell = "A54"
+ordinal = 49
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m200-2025-dp200001-r0054"
+decision_statement = "DP200001 source row 54: encode selected as 1 and absent or unselected as 0."
+justification = "Reviewed exact-anchor policy for DP200001 source row 54; it is not represented as official-source text."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DP200001"
+source_row = 54
+source_cell = "A54"
+ordinal = 49
+record_identity = "DP200001"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 55
+source_cell = "A55"
+ordinal = 50
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m200-2025-dp200001-r0055"
+decision_statement = "DP200001 source row 55: encode selected as 1 and absent or unselected as 0."
+justification = "Reviewed exact-anchor policy for DP200001 source row 55; it is not represented as official-source text."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DP200001"
+source_row = 55
+source_cell = "A55"
+ordinal = 50
+record_identity = "DP200001"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "checkbox"
+value_policy = "selected-1-unselected-0"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1"]
+
+[singleton_rules.anchor]
+sheet = "DP200001"
+source_row = 56
+source_cell = "A56"
+ordinal = 51
+record_identity = "DP200001"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m200-2025-dp200001-r0056"
+decision_statement = "DP200001 source row 56: encode selected as 1 and absent or unselected as 0."
+justification = "Reviewed exact-anchor policy for DP200001 source row 56; it is not represented as official-source text."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DP200001"
+source_row = 56
+source_cell = "A56"
+ordinal = 51
+record_identity = "DP200001"
+
+[design_identity]
+modelo = "200"
+design_epoch = "2025"
+source_ref = "aeat-dr-200-2025"
+source_sha256 = "a4506d24b7973a745d1225d59147078e03f14a30791a229d852b37f757442505"
