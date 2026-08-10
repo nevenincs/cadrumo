@@ -10,6 +10,7 @@ the provider chooses the filename, the caller supplies the directory.
 
 from __future__ import annotations
 
+import json
 import secrets
 from datetime import UTC, datetime
 from pathlib import Path
@@ -20,9 +21,10 @@ import pytest
 from ......core.errors import build_error_envelope
 from ......core.external_constants import UTF_8_ENCODING
 from ...bucket import RecoveryVerificationError
-from ...errors import DecryptionError, StorageValidationError
+from ...errors import DecryptionError, EnvelopeVersionError, StorageValidationError
 from .._master_key import FileFallbackMasterKeyProvider
 from .._recovery import (
+    WRAPPED_MASTER_KEY_SCHEMA_VERSION,
     RecoveryKey,
     WrappedMasterKey,
     atomically_install_verified_recovery,
@@ -181,6 +183,57 @@ class TestMasterKeyWrapping:
             unwrap_master_key(wrapped=wrapped, recovery_key_bytes=b"\x00" * 16)
         assert excinfo.value.translated_message == "errors.integrity.integrity_storage_validation"
 
+    def test_the_writer_stamps_the_declared_version(self) -> None:
+        wrapped = wrap_master_key(
+            master_key=secrets.token_bytes(32),
+            recovery_key=generate_recovery_key(),
+        )
+        assert wrapped.schema_version == WRAPPED_MASTER_KEY_SCHEMA_VERSION
+
+    def test_unwrap_refuses_a_non_current_schema_version(self) -> None:
+        rk = generate_recovery_key()
+        wrapped = wrap_master_key(master_key=secrets.token_bytes(32), recovery_key=rk)
+        foreign = wrapped.model_copy(update={"schema_version": WRAPPED_MASTER_KEY_SCHEMA_VERSION + 1})
+
+        with pytest.raises(EnvelopeVersionError, match="consumer expects"):
+            unwrap_master_key(wrapped=foreign, recovery_key_bytes=rk.raw)
+
+    def test_the_version_refusal_precedes_the_kek_derivation(self) -> None:
+        """A wrong recovery key would otherwise reach derivation and fail decryption.
+
+        Discriminating without a mock: with the correct-length but WRONG
+        recovery key, a version check placed after the unwrap would derive a
+        KEK from the operator's material and surface ``DecryptionError``. The
+        version error instead proves the refusal beat the derivation, which is
+        the point -- a refusal arriving afterwards has already spent the secret
+        it exists to guard.
+        """
+        wrapped = wrap_master_key(
+            master_key=secrets.token_bytes(32),
+            recovery_key=generate_recovery_key(),
+        )
+        foreign = wrapped.model_copy(update={"schema_version": WRAPPED_MASTER_KEY_SCHEMA_VERSION + 1})
+
+        with pytest.raises(EnvelopeVersionError):
+            unwrap_master_key(wrapped=foreign, recovery_key_bytes=secrets.token_bytes(32))
+
+    def test_the_version_refusal_precedes_the_recovery_key_length_gate(self) -> None:
+        """The version is read before the recovery key is measured at all.
+
+        The length gate sits between the version check and the derivation, so
+        a wrong-length key discriminates the two orderings: the storage
+        validation error would win if the version check had been placed after
+        it, and every later step is downstream of both.
+        """
+        wrapped = wrap_master_key(
+            master_key=secrets.token_bytes(32),
+            recovery_key=generate_recovery_key(),
+        )
+        foreign = wrapped.model_copy(update={"schema_version": WRAPPED_MASTER_KEY_SCHEMA_VERSION + 1})
+
+        with pytest.raises(EnvelopeVersionError):
+            unwrap_master_key(wrapped=foreign, recovery_key_bytes=b"\x00" * 16)
+
 
 class TestWrappedMasterKeyPersistence:
     """`master.recovery.key` round-trips through atomic writer + loader."""
@@ -193,9 +246,41 @@ class TestWrappedMasterKeyPersistence:
         save_wrapped_master_key(wrapped, target)
         assert target.exists()
         loaded = load_wrapped_master_key(target)
+        # Strict equality across the real atomic writer and loader. The record
+        # has no defaultable field left -- every one of the three is required --
+        # so this comparison covers the whole shape rather than a subset, and a
+        # save-drops-field regression cannot hide behind a defaulted value.
         assert loaded == wrapped
+        assert loaded.schema_version == WRAPPED_MASTER_KEY_SCHEMA_VERSION
+        assert loaded.nonce_b64 == wrapped.nonce_b64
+        assert loaded.ciphertext_b64 == wrapped.ciphertext_b64
         # Round-trip via the recovery key.
         assert unwrap_master_key(wrapped=loaded, recovery_key_bytes=rk.raw) == master_key
+
+    def test_load_refuses_a_stored_file_omitting_the_schema_version(self, tmp_path: Path) -> None:
+        """Anti-tautology proof: strip the marker on disk and read it back.
+
+        This is the payload a defaulted marker cannot refuse: it would hydrate
+        at the current version, satisfy any exactness check reading the
+        hydrated record, and be handed to the unwrap as though the writer had
+        stamped it.
+        """
+        wrapped = wrap_master_key(
+            master_key=secrets.token_bytes(32),
+            recovery_key=generate_recovery_key(),
+        )
+        target = tmp_path / "fallback-store" / "master.recovery.key"
+        save_wrapped_master_key(wrapped, target)
+
+        document = json.loads(target.read_text(encoding=UTF_8_ENCODING))
+        del document["schema_version"]
+        assert "schema_version" not in document, "the fixture must actually remove the marker"
+        target.write_text(json.dumps(document), encoding=UTF_8_ENCODING)
+
+        with pytest.raises(StorageValidationError, match="wrapped recovery master key file") as excinfo:
+            load_wrapped_master_key(target)
+
+        assert excinfo.value.translated_message == "errors.integrity.integrity_storage_validation"
 
     def test_saved_file_is_strict_json(self, tmp_path: Path) -> None:
         master_key = secrets.token_bytes(32)
@@ -225,7 +310,11 @@ class TestWrappedMasterKeyPersistence:
         assert str(tmp_path) not in str(excinfo.value)
 
     def test_unwrap_rejects_malformed_base64_as_localized_storage_validation(self) -> None:
-        wrapped = WrappedMasterKey(nonce_b64="not-base64", ciphertext_b64="also-not-base64")
+        wrapped = WrappedMasterKey(
+            schema_version=WRAPPED_MASTER_KEY_SCHEMA_VERSION,
+            nonce_b64="not-base64",
+            ciphertext_b64="also-not-base64",
+        )
 
         with pytest.raises(StorageValidationError, match="wrapped recovery master key is malformed") as excinfo:
             unwrap_master_key(wrapped=wrapped, recovery_key_bytes=secrets.token_bytes(32))

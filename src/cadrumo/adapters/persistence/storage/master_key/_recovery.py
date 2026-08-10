@@ -71,6 +71,9 @@ from ..crypto import (
     encrypt_record,
 )
 from ..errors import (
+    EnvelopeVersionError,
+)
+from ..errors import (
     storage_validation_error as _storage_validation_error,
 )
 from ._zeroise import zeroise as _zeroise
@@ -151,6 +154,19 @@ class RecoveryKey:
         self.wipe()
 
 
+WRAPPED_MASTER_KEY_SCHEMA_VERSION: Final[int] = 1
+"""The one wrapped-recovery-master-key format version this build reads and writes.
+
+Declared as a named constant so the version has one home, and compared
+explicitly by :func:`unwrap_master_key` before the recovery key is touched.
+A marker parsed into a field and then consulted by nobody is not a
+compatibility mechanism; this file is the last route back to a bucket whose
+master key is otherwise lost, so a format this build cannot interpret must
+fail loudly rather than be fed to a decryption that can only produce garbage
+or a misleading authentication failure.
+"""
+
+
 class WrappedMasterKey(BaseModel):
     """Frozen container for the recovery-key-wrapped master.key file.
 
@@ -163,11 +179,16 @@ class WrappedMasterKey(BaseModel):
     raw ``bytes``) so the JSON serialisation is portable across pydantic
     versions and operating systems. The ``to_blob`` / ``from_blob``
     helpers convert back to the in-memory :class:`EncryptedBlob` form.
+
+    ``schema_version`` is required and carries no default. A default equal
+    to the current version makes a stored file that omits the key hydrate AS
+    current, so an exactness check reading the hydrated record can never see
+    the omission and passes it through to the unwrap.
     """
 
     model_config = _STRICT_FROZEN
 
-    schema_version: int = Field(default=1, ge=1)
+    schema_version: int = Field(ge=1)
     nonce_b64: str = Field(min_length=1)
     ciphertext_b64: str = Field(min_length=1)
 
@@ -185,6 +206,7 @@ class WrappedMasterKey(BaseModel):
     def from_blob(cls, blob: EncryptedBlob) -> WrappedMasterKey:
         """Build a :class:`WrappedMasterKey` from an in-memory blob."""
         return cls(
+            schema_version=WRAPPED_MASTER_KEY_SCHEMA_VERSION,
             nonce_b64=base64.b64encode(blob.nonce).decode("ascii"),
             ciphertext_b64=base64.b64encode(blob.ciphertext).decode("ascii"),
         )
@@ -354,8 +376,20 @@ def unwrap_master_key(*, wrapped: WrappedMasterKey, recovery_key_bytes: Buffer) 
         expected to :func:`zeroise` once it has re-minted custody from it.
 
     Raises:
+        EnvelopeVersionError: When ``wrapped`` claims a format version other
+            than :data:`WRAPPED_MASTER_KEY_SCHEMA_VERSION`. Checked first, so
+            a record this build cannot interpret is refused before the
+            recovery key is read and before a KEK is derived from it.
         StorageValidationError: When ``recovery_key_bytes`` is not exactly 32 bytes.
     """
+    # Ahead of the recovery key entirely, not merely ahead of decrypt_record:
+    # deriving the KEK spends the operator's recovery material, and a refusal
+    # that arrives afterwards has already done the thing it exists to prevent.
+    if wrapped.schema_version != WRAPPED_MASTER_KEY_SCHEMA_VERSION:
+        raise EnvelopeVersionError(
+            f"wrapped recovery master key is at version {wrapped.schema_version}; "
+            f"consumer expects {WRAPPED_MASTER_KEY_SCHEMA_VERSION}",
+        )
     recovery_view = memoryview(recovery_key_bytes)
     if len(recovery_view) != _RECOVERY_KEY_SIZE:
         raise _storage_validation_error(
@@ -427,6 +461,7 @@ def atomically_install_verified_recovery(
 
 
 __all__ = [
+    "WRAPPED_MASTER_KEY_SCHEMA_VERSION",
     "RecoveryKey",
     "WrappedMasterKey",
     "atomically_install_verified_recovery",

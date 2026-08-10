@@ -94,6 +94,13 @@ deletion (which the scaffold-preserve contract forbids).
 
 ## Shipped search artefacts are licence-clean
 
+*(This section is the home of the retired rule slug
+`shipped-search-licence-clean`. There is no file of that name and there should
+not be: the mandate was merged here rather than shipped as its own rule, because
+the always-on corpus loads into every session and each new file taxes all of
+them. The slug is spelled out so a search for it lands here instead of returning
+nothing and reading as an amendment that never took.)*
+
 Documentation search artefacts that ship in the package or the built docs must
 come only from licence-clean sources and contain only laundered identifiers and
 rankings. **Never ship** anything derived from NC, ND or gated sources; raw
@@ -106,6 +113,15 @@ computed on the dev box by a pinned, named model under the MIT or Apache-2.0
 licence over project-authored or project-bundled vocabulary. Its provenance stamp
 must name the model, exact revision, licence, vocabulary fingerprint and
 serialized size, and it must be no larger than 3 MB.
+
+**That exception currently has NO consumer.** The tree carries no
+term-embedding matrix, no compiler for one, and no client tier that would read
+one — they were removed, and whether that removal stands is an open ruling. The
+permission is kept open rather than re-narrowed because a permission that
+oscillates is worse than one that is documented. So read it as a door that is
+deliberately unlocked and presently unused: shipping a matrix through it is not
+"already sanctioned practice", it is the first use, and it needs the ruling
+first.
 
 **Commit only the LIGHT precompiled data** — the laundered relevance mapping,
 synonym candidates, held-out queries, the Handbook fragments, and any qualifying

@@ -303,9 +303,14 @@ class CipherEnvelope(BaseModel):
     Attributes:
         cipher_schema_version: Wire-format version of the cipher
             envelope itself (independent of the inner plaintext
-            envelope's :attr:`Envelope.schema_version`). Gated against
+            envelope's :attr:`Envelope.schema_version`). Required and
+            stamped explicitly by the writer, then gated against
             :data:`CIPHER_ENVELOPE_SCHEMA_VERSION` on load, before the
-            master key is consulted.
+            master key is consulted. It carries no default: a default
+            equal to the current version makes a stored document that
+            omits the key hydrate AS current, which the equality gate
+            then passes -- enforcement that reads as present while the
+            one payload it most needs to catch walks through it.
         written_at: Timezone-aware datetime captured at write time.
         classification: The
             :class:`~adapters.persistence.storage.SensitivityClass` of the inner
@@ -317,7 +322,7 @@ class CipherEnvelope(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    cipher_schema_version: int = Field(default=CIPHER_ENVELOPE_SCHEMA_VERSION, ge=1)
+    cipher_schema_version: int = Field(ge=1)
     written_at: datetime
     classification: SensitivityClass
     encryption: EncryptionMetadata
@@ -401,6 +406,7 @@ def save_encrypted_envelope[T: BaseModel](
     )
     blob = encrypt_record(plaintext, key=derived_key, associated_data=aad)
     cipher_envelope = CipherEnvelope(
+        cipher_schema_version=CIPHER_ENVELOPE_SCHEMA_VERSION,
         written_at=envelope.written_at,
         classification=envelope.classification,
         encryption=EncryptionMetadata.from_blob(blob, associated_data=aad),
