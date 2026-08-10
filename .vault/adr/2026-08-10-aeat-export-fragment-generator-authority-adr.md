@@ -12,7 +12,7 @@ supersedes:
   - '2026-08-08-aeat-design-relayout-boundary-export-fragment-generator-adr'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:df91ac1a2d6515d8e44766c72c33084866728e21bf01cdb4ad5c6a9f174a739b'
+body_hash: 'sha256:9585791d0d6aa8f65ac8c93a42360b0d59a787ecc2cccc4a59de11ed10dfec59'
 ---
 # `aeat-export-fragment-generator-authority` adr: `official-binary coordinates, reviewed render profiles, and semantic maps generate export fragments` | (**status:** `accepted`)
 
@@ -52,6 +52,10 @@ The accepted official-binary and semantic-map split leaves some wire facts unaut
 - Typed, hash-pinned exceptions may describe parser or source anomalies but may never supply coordinates, bypass mapping bijection, override official content, or substitute for exhaustive render-profile coverage.
 - Generated TOML and provenance are CLI-owned and never hand-edited.
 - One invocation targets one authored revision/design pair; revision splitting, renames, and migration remain explicit outside the generator.
+- User-profile `export_headers` metadata and export-only `filing_export.*` paths are legacy producer redeclarations and are deleted, not migrated or aliased. Registry export meaning reaches the renderer only through canonical typed owners and the filing producer snapshot.
+- Modelo 100 filing modality is a semantic carve-out rather than an export producer: its sole persisted home is `renta_filing.declaration_type`, typed by the public core `RentaDeclaracionType`. Bindings, questions, setup, wizard, calculation, comparator, and XML projection consume that one axis directly; `FilingProducerKey` does not duplicate it.
+- The rental reduction tier is not export metadata. Its canonical profile home is `renta_rental.reduccion_art_23_2_tier_2024`, retaining its existing enum and legal grounding.
+- Old profile paths, old enum import paths, fallback reads, aliases, silent migration, and re-entry through generic profile facts are hard failures.
 
 ## Implementation
 
@@ -64,6 +68,8 @@ Join fixed-width source fields to the reviewed semantic map, then resolve only a
 Generate the entire target revision's `export/` tree plus an adjacent non-loader provenance manifest. The manifest records source, semantic-map, and render-profile digests; parser, profile, and generator schema versions; target revision; normalized loader-semantic digest; and file digests.
 
 Generate into a temporary target, load and validate it completely, compare normalized semantics and provenance, and swap atomically. `--check` regenerates independently and refuses semantic, profile, provenance, or exact generated drift.
+
+The profile-side cutover deletes the `export_headers` selector taxonomy and export-only `filing_export.*` fields. It atomically retargets every Renta modality consumer to `renta_filing.declaration_type`, relocates `RentaDeclaracionType` to the core public facade without an old-path re-export, and retargets the rental reduction tier to `renta_rental.reduccion_art_23_2_tier_2024`. Tests reject every removed path and import surface.
 
 The gate suite covers parser completeness, official-total recovery, fixed-record geometry, variable-envelope classification and composition, canonical-reference validity, mapping bijection, exhaustive profile coverage, `Num` versus signed-`N` encoding, all 126 smaller-field rules, applicability, deterministic double generation, mutation failures, extent and overlap, complete registry load, repository drift, and real emitted bytes across representative revision boundaries.
 
@@ -80,3 +86,4 @@ The chosen profile is the narrowest extension that preserves the decisive split 
 - Designs containing a variable envelope cannot generate fixed-width output until the separate envelope contract and composition proof pass.
 - Source, parser, or profile corrections can produce large generated diffs, but exhaustive validation and deterministic checks make that drift explicit.
 - Tests fail if generation reads legacy layout membership, applies a default to an uncovered anchor, conflates `Num` with signed `N`, leaves a smaller field ungrounded, accepts profile conflict or hash drift, truncates a variable envelope, or permits deleted compatibility surfaces to reappear.
+- Renta calculation and question bindings retain their semantic modality axis independently of export layout support; deleting export producer redeclarations cannot delete or default personal-income-tax inputs.

@@ -3,12 +3,11 @@ tags:
   - '#adr'
   - '#tributacion-conjunta-individual'
 date: '2026-07-01'
-modified: '2026-07-17'
-body_hash: 'sha256:7c7e5b38f4aa8b21614494db098bed380041aaef6ec730233428578b7a98cc2f'
+modified: '2026-08-10'
+body_hash: 'sha256:139b1bcf9339eefa704f4612366b45af015a5488a62ef5bb844dd9785bed3c1e'
 related:
   - "[[2026-06-30-tributacion-conjunta-individual-research]]"
 ---
-
 # `tributacion-conjunta-individual` adr: `tributacion conjunta vs individual comparison surface` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -17,7 +16,7 @@ Issue #547 (P1, NEEDS-DESIGN) reports that no surface computes a Modelo 100 fili
 
 ## Considerations
 
-- Modalidad axis exists: binding `renta-2025-profile-declaration-type` (profile_key `filing_export.n`, `TIPOTRIBUTACION`), values 1/2. No new core enum is required.
+- Modalidad axis exists: binding `renta-2025-profile-declaration-type` (profile key `renta_filing.declaration_type`, `TIPOTRIBUTACION`), values 1/2. Its existing `RentaDeclaracionType` is publicly owned by `cadrumo.core` because the axis crosses profile, registry, calculation, comparator, and XML layers; no second modality enum or axis is permitted.
 - Reduccion Art. 84 exists: formula `0179-renta-2025-reduccion-art-84-conjunta` targets casilla 0461, emitting 3.400 EUR (modalidad 1, Art. 82.1.1) or 2.150 EUR (modalidad 2 monoparental, Art. 82.1.2) when `declaration_type==2`, gated by `family-minor-children-in-unit`. Figures match the bundled AEAT Renta manuals 2022..2025; legal_refs cite ley-35-2006 art-82/83/84.
 - Spouse identity axes exist (tax_id, name, birth_date, sex, disability, non-resident, EU/EEA) and marriage/family axes exist; spouse INCOME does not.
 - The comparator reuses the shared engine core (`calculate_registry_snapshot`) so formula arithmetic is single-sourced, but the work-unit entry point assembles inputs on a locally-built path that mirrors the calculate path rather than sharing it.
@@ -26,8 +25,8 @@ Issue #547 (P1, NEEDS-DESIGN) reports that no surface computes a Modelo 100 fili
 ## Considered options
 
 Decision 1 - modalidad axis and reduccion:
-- (A, chosen) Reuse the existing `declaration-type` binding and Art. 84 formula; add no new axis. Pro: the axis and the 3.400/2.150 reduccion already exist and are corpus-grounded; zero new core surface. Con: none material.
-- (B, rejected) Introduce a new core `TributacionModalidad` StrEnum. Rejected: duplicates the live `declaration_type` binding; violates no-legacy/no-duplication and adds a parallel axis for a value the registry already carries.
+- (A, chosen) Reuse the existing `declaration-type` binding and Art. 84 formula; keep one axis and relocate its existing `RentaDeclaracionType` owner to the core public facade. Pro: the axis and the 3.400/2.150 reduccion already exist and are corpus-grounded; cross-layer ownership follows the dependency boundary without changing values. Con: every import must cut over atomically.
+- (B, rejected) Introduce a second `TributacionModalidad` enum or retain a domain-local compatibility export. Rejected: either duplicates the live `declaration_type` axis or preserves two import authorities; both violate no-legacy/no-duplication.
 
 Decision 2 - where the comparison lives and how it runs:
 - (A, chosen) Keep the dedicated read verb `aeat app modelo work compare-taxation` as the canonical home, and add a discoverability nudge from the overview surface as a typed Notice when the active profile is a married unidad familiar, pointing to the verb. Pro: dedicated verb already exists and is correct; the nudge closes the "operator never learns it exists" gap without a bespoke result field. Con: the overview must detect the married-profile signal.
@@ -53,7 +52,7 @@ Decision 4 - bounded first slice vs full unidad-familiar matrix:
 
 We will ratify the existing single-return comparator as the accepted first slice and make four changes, none of which forks the calculation path.
 
-We will keep `aeat app modelo work compare-taxation` as the canonical comparison home and reuse the existing `declaration-type` binding and Art. 84 reduccion formula unchanged; no new core enum axis is added.
+We will keep `aeat app modelo work compare-taxation` as the canonical comparison home and reuse the existing `declaration-type` binding and Art. 84 reduccion formula unchanged. The existing `RentaDeclaracionType` moves to the core public facade, its domain definition and old-path export are deleted, and every consumer imports the one core owner.
 
 We will consolidate `compare_taxation_for_work_unit` onto the same input-assembly helper the live calculate path uses, so the comparison and the calculate path cannot drift, satisfying one-aggregation-path.
 
