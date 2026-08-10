@@ -110,19 +110,17 @@ def test_error_envelope_carries_resolved_precondition_action_through_json() -> N
     ]
 
 
-def test_default_and_exception_suggestions_are_not_error_envelope_authority() -> None:
+def test_error_envelope_has_explicit_no_recovery_without_a_typed_action() -> None:
     error = ActiveProfilePointerError(path="broken-pointer.json")
     registered = error.code
 
     assert registered is not None
-    assert registered.default_suggestion is not None
     assert error.suggestion is not None
     envelope = build_error_envelope(error)
     rendered = render_error_text(error)
 
     assert envelope.action is None
     assert "suggestion" not in envelope.model_dump()
-    assert registered.default_suggestion not in rendered
     assert error.suggestion not in rendered
 
 

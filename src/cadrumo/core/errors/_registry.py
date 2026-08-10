@@ -102,7 +102,6 @@ class ErrorCode(BaseModel):
     code: str
     category: ErrorCategory
     message_key: str
-    default_suggestion: str | None
     retryable: bool
     runbook_id: str | None
 

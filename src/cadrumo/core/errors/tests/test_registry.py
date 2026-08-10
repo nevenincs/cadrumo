@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....application.modelo import WorkUnitAlreadyDiscardedError, WorkUnitMutationRefusedError
 from ...access_gate import LiveSubmitForbiddenError
 from ...i18n import UnmatchedPlaceholderError, tr
 from ...logging import SecretScrubbingFilter, configure_logging
@@ -19,6 +20,7 @@ from .. import (
     ERROR_REGISTRY,
     ErrorCategory,
     ErrorCode,
+    get_error_exit_code,
     get_registered_error_code,
     register,
     render_error_json,
@@ -35,7 +37,6 @@ def _sample_code(code: str) -> ErrorCode:
         code=code,
         category=ErrorCategory.ERROR,
         message_key="errors.error.sample_error",
-        default_suggestion="cadrumo modelos list",
         retryable=False,
         runbook_id=None,
     )
@@ -53,7 +54,6 @@ def test_duplicate_registration_raises_clear_error() -> None:
         code=existing.code,
         category=ErrorCategory.FAIL,
         message_key="errors.fail.duplicate_error",
-        default_suggestion=None,
         retryable=False,
         runbook_id=None,
     )
@@ -193,6 +193,19 @@ def test_core_error_prefixes_are_grep_stable() -> None:
         assert f'"category":"{expected_category}"' in rendered_json
         rendered_text = render_error_text(error)
         assert rendered_text.startswith(f"{expected_text_prefix} ")
+
+
+def test_modelo_lifecycle_terminal_errors_are_refused() -> None:
+    """Terminal lifecycle errors retain the canonical refusal category and exit family."""
+    expected_codes = {
+        WorkUnitAlreadyDiscardedError: "REFUSED_MODELO_WORK_UNIT_ALREADY_DISCARDED",
+        WorkUnitMutationRefusedError: "REFUSED_MODELO_WORK_UNIT_MUTATION_REFUSED",
+    }
+    for error_type, expected_code in expected_codes.items():
+        code = get_registered_error_code(error_type)
+        assert code.code == expected_code
+        assert code.category is ErrorCategory.REFUSED
+        assert get_error_exit_code(code.category) == 2
 
 
 # ---------------------------------------------------------------------------

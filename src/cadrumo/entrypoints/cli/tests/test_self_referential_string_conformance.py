@@ -12,12 +12,8 @@ Typer/click tree walked **in process** (no shell-out):
 **Class 1 - command-naming hint strings.** Next-action and failure-hint strings
 that name an ``aeat ...`` command path MUST resolve to a live command, and every
 long/short option they cite MUST be a real parameter of that command (or a root
-global). The authoritative sources walked here are:
-
-- the error registry's ``ErrorCode.default_suggestion`` rows
-  (``cadrumo.core.errors.ERROR_REGISTRY``) - the copy-paste recovery commands the
-  CLI error boundary prints;
-- the locale catalogue's ``cli.*`` leaf strings that embed an ``aeat app`` /
+global). The authoritative source walked here is the locale catalogue's ``cli.*`` leaf
+strings that embeds an ``aeat app`` /
   ``aeat config`` invocation - help text, refusal messages, and next-action
   hints rendered to the operator;
 - the workflow engine's ``next_action`` detail strings, which name a recovery
@@ -44,8 +40,8 @@ To enrol a new enum-choice surface: append an :class:`_EnumChoiceSurface` row to
 members, and the handler's real accepted set.
 
 Real-behavior only: the gate imports the real ``cadrumo`` app object, walks the
-materialized click tree, and reads the real error registry and locale catalogue.
-No test doubles, no skips. It fails loudly on a drifted hint or a
+materialized click tree, and reads the real locale catalogue. No test doubles,
+no skips. It fails loudly on a drifted hint or a
 handler-refused advertised member.
 """
 
@@ -59,7 +55,6 @@ from typing import Protocol, TypeGuard
 import pytest
 
 from ....application.modelo import ModeloCalculationRevisionSelector
-from ....core.errors import ERROR_REGISTRY
 from ....core.i18n._render import _locale_map
 from ....domain.attachments import AttachmentSource
 from ....tests.cli_runner import cadrumo_click_command
@@ -111,21 +106,6 @@ _LITERAL_HINT_STRINGS: tuple[str, ...] = (
     "aeat app modelo export",
     "aeat app modelo work file",
 )
-
-
-def _registry_suggestion_strings() -> Iterator[tuple[str, str]]:
-    """Yield ``(error_code, suggestion)`` for every command-naming suggestion."""
-    seen: set[str] = set()
-    for code, row in ERROR_REGISTRY.items():
-        suggestion = row.default_suggestion
-        if suggestion is None:
-            continue
-        if _AEAT_TOKEN_RE.search(suggestion) is None:
-            continue
-        if suggestion in seen:
-            continue
-        seen.add(suggestion)
-        yield code, suggestion
 
 
 def _locale_command_strings() -> Iterator[tuple[str, str]]:
@@ -207,26 +187,6 @@ def _cited_from_text(text: str) -> list[_CitedCommand]:
         if parsed is not None:
             out.append(parsed)
     return out
-
-
-def test_registry_suggestions_present() -> None:
-    """The error registry exposes command-naming suggestions to pin.
-
-    Guards against a refactor that empties the suggestion surface and makes the
-    registry-suggestion gate vacuously pass.
-    """
-    suggestions = list(_registry_suggestion_strings())
-    assert suggestions, "error registry exposes no Cadrumo-command default_suggestions to pin"
-
-
-def test_registry_suggestions_resolve() -> None:
-    """Every error-registry default_suggestion resolves against the live CLI."""
-    violations: list[str] = []
-    for code, suggestion in _registry_suggestion_strings():
-        for cited in _cited_from_text(suggestion):
-            for problem in _validate_command(cited):
-                violations.append(f"ErrorCode {code}: {problem}")
-    assert not violations, "error-registry suggestions cite non-conforming commands:\n  " + "\n  ".join(violations)
 
 
 def test_locale_command_strings_resolve() -> None:

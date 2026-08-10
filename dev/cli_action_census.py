@@ -45,7 +45,6 @@ _UTF_8: Final[str] = "utf-8"
 # and therefore belongs in the seed rather than waiting to be rediscovered.
 INITIAL_ACTION_ALIASES: Final[frozenset[str]] = frozenset(
     {
-        "default_suggestion",
         "fix_command",
         "next_action",
         "next_command",

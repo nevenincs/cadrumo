@@ -251,13 +251,6 @@ def test_recovery_verification_error_round_trips_through_build_error_envelope() 
 
     assert envelope.code == "AUTH_STORAGE_BUCKET_RECOVERY_VERIFICATION"
     assert envelope.category == "AUTH"
-    # The registry still declares the remediation, but default suggestions were
-    # retired as the ENVELOPE's remediation authority in favour of a catalogue
-    # action identity. This code has not been migrated to one, so the envelope
-    # offers no recovery step today; the string is pinned at its actual home.
-    assert ERROR_REGISTRY["AUTH_STORAGE_BUCKET_RECOVERY_VERIFICATION"].default_suggestion == (
-        "aeat config recover"
-    )
     assert envelope.action is None
     assert not envelope.retryable
 

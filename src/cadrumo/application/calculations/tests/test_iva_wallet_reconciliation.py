@@ -461,13 +461,6 @@ def test_iva_wallet_reconciliation_error_round_trips_through_build_error_envelop
     envelope = build_error_envelope(exc, trace_id=None)
     assert envelope.code == "REFUSED_IVA_WALLET_RECONCILIATION_INVARIANT"
     assert envelope.retryable is False
-    # The registry still declares the remediation, but default suggestions were
-    # retired as the ENVELOPE's remediation authority in favour of a catalogue
-    # action identity. This code has not been migrated to one, so the envelope
-    # offers no recovery step today; the string is pinned at its actual home.
-    assert ERROR_REGISTRY["REFUSED_IVA_WALLET_RECONCILIATION_INVARIANT"].default_suggestion == (
-        "aeat app live iva-wallet pull"
-    )
     assert envelope.action is None
 
 

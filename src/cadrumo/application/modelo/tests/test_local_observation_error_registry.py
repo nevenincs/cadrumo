@@ -37,7 +37,6 @@ def test_modelo_local_observation_error_is_registered_and_envelopes() -> None:
 
     assert code.code == "REFUSED_MODELO_LOCAL_OBSERVATION"
     assert code.category is ErrorCategory.REFUSED
-    assert code.default_suggestion == "aeat app modelo filing-record observe-local --help"
     assert ERROR_REGISTRY[code.code] is code
 
     envelope = build_error_envelope(
@@ -48,7 +47,7 @@ def test_modelo_local_observation_error_is_registered_and_envelopes() -> None:
 
     assert envelope.code == "REFUSED_MODELO_LOCAL_OBSERVATION"
     assert envelope.category == "REFUSED"
-    assert envelope.suggestion == "aeat app modelo filing-record observe-local --help"
+    assert envelope.action is None
     assert envelope.message == "local observation requires at least one --set CASILLA=DECIMAL value"
 
 
