@@ -122,7 +122,7 @@ def _snapshot(filing_year: int) -> RegistrySnapshot:
 
 def _seed_prior_year_saldo(*, source_year: int, saldo: Decimal, obs_repo: CalculationObservationRepository) -> None:
     """Record a prior-year M100 end-of-year generated saldo (casilla 1391)."""
-    obs_repo.save_observation(
+    obs_repo.save(obs_repo.prepare_observation_envelope(
         registry_grounded_modelo_observation(
             modelo=_MODELO,
             filing_year=source_year,
@@ -131,7 +131,7 @@ def _seed_prior_year_saldo(*, source_year: int, saldo: Decimal, obs_repo: Calcul
         ),
         source_kind="app_filing",
         captured_at=_CLOCK,
-    )
+    ))
 
 
 def _seed_taxpayer_unit_profile() -> None:

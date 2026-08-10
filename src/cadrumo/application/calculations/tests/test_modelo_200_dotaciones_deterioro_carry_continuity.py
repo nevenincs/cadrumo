@@ -114,7 +114,7 @@ _ADVISORY_PREDICATE_ID = "modelo-200-dotaciones-deterioro-cumplido-disponible-in
 def _seed_prior_saldo_final(*, source_year: int, obs_repo: CalculationObservationRepository) -> None:
     """Record a prior-year end-of-year dotaciones-deterioro saldo final (01498/01499)."""
     stock = _STOCK_BY_SOURCE_YEAR[source_year]
-    obs_repo.save_observation(
+    obs_repo.save(obs_repo.prepare_observation_envelope(
         RegistryModeloObservation(
             modelo=_MODELO_200,
             filing_year=source_year,
@@ -131,7 +131,7 @@ def _seed_prior_saldo_final(*, source_year: int, obs_repo: CalculationObservatio
         ),
         source_kind="app_filing",
         captured_at=_CLOCK,
-    )
+    ))
 
 
 def _calculate_200(

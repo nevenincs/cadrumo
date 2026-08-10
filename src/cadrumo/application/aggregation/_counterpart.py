@@ -73,7 +73,30 @@ def _validate_country(value: str, *, field_name: str) -> str:
     return value
 
 
-class CounterpartObservation(BaseModel):
+class _CounterpartBoundaryModel(BaseModel):
+    """Shared Pydantic boundary validation for counterpart records."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    @field_validator("source_kind", mode="before", check_fields=False)
+    @classmethod
+    def _source_kind_is_canonical(cls, value: object) -> CounterpartSourceKind:
+        if not isinstance(value, str):
+            raise ValueError("source_kind must be a string")
+        return _validate_source_kind(value)
+
+    @field_validator("operation_kind", check_fields=False)
+    @classmethod
+    def _operation_kind_is_canonical(cls, value: str) -> str:
+        return _validate_operation_kind(value)
+
+    @field_validator("counterparty_country", check_fields=False)
+    @classmethod
+    def _country_is_uppercase(cls, value: str) -> str:
+        return _validate_country(value, field_name="counterparty_country")
+
+
+class CounterpartObservation(_CounterpartBoundaryModel):
     """One typed observation for a 347 or 349 aggregator pass.
 
     This model is the operator boundary: ``aeat app modelo aggregate`` validates
@@ -88,8 +111,6 @@ class CounterpartObservation(BaseModel):
     registry counterpart binding types the same concepts as a
     :class:`~datetime.date` and a registry period code.
     """
-
-    model_config = STRICT_FROZEN_CONFIG
 
     source_kind: CounterpartSourceKind
     source_object_id: str = Field(min_length=1)
@@ -118,28 +139,8 @@ class CounterpartObservation(BaseModel):
     groi_verified: bool = False
     nif_iva_verified: bool = False
 
-    @field_validator("source_kind", mode="before")
-    @classmethod
-    def _source_kind_is_canonical(cls, value: object) -> CounterpartSourceKind:
-        if not isinstance(value, str):
-            raise ValueError("source_kind must be a string")
-        return _validate_source_kind(value)
-
-    @field_validator("operation_kind")
-    @classmethod
-    def _operation_kind_is_canonical(cls, value: str) -> str:
-        return _validate_operation_kind(value)
-
-    @field_validator("counterparty_country")
-    @classmethod
-    def _country_is_uppercase(cls, value: str) -> str:
-        return _validate_country(value, field_name="counterparty_country")
-
-
-class CounterpartRollup(BaseModel):
+class CounterpartRollup(_CounterpartBoundaryModel):
     """One (source_kind, counterparty_nif, operation_kind) rollup row."""
-
-    model_config = STRICT_FROZEN_CONFIG
 
     source_kind: CounterpartSourceKind
     counterparty_nif: str = Field(min_length=1, max_length=20)
@@ -154,24 +155,6 @@ class CounterpartRollup(BaseModel):
     groi_ready: bool = True
     nif_iva_ready: bool = True
     declarable_readiness_satisfied: bool = True
-
-    @field_validator("source_kind", mode="before")
-    @classmethod
-    def _source_kind_is_canonical(cls, value: object) -> CounterpartSourceKind:
-        if not isinstance(value, str):
-            raise ValueError("source_kind must be a string")
-        return _validate_source_kind(value)
-
-    @field_validator("operation_kind")
-    @classmethod
-    def _operation_kind_is_canonical(cls, value: str) -> str:
-        return _validate_operation_kind(value)
-
-    @field_validator("counterparty_country")
-    @classmethod
-    def _country_is_uppercase(cls, value: str) -> str:
-        return _validate_country(value, field_name="counterparty_country")
-
 
 class CounterpartAggregation(BaseModel):
     """347 / 349 counterpart aggregation output."""

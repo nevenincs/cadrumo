@@ -1223,7 +1223,7 @@ def filed_pull_all_cmd(
     _emit_live_auth_preflight()
     run = asyncio.run(pull_filed_history(output_root=resolved_root, profile=profile, limit=limit))
     result, lines = _filed_pull_all_result_and_lines(run)
-    notices = _filed_pull_all_notices(run)
+    notices = _filed_pull_all_notices(run, limit=limit)
     _emit_envelope(
         ctx,
         command="app.live.filed.pull_all",
@@ -1241,6 +1241,7 @@ def _filed_pull_all_result_and_lines(run: FiledHistoryOnboardingRun) -> tuple[An
     lines = [
         _metric_line("pair_count", len(run.pairs)),
         _metric_line("captured_count", run.captured_count),
+        _metric_line("reached_count", run.reached_count),
         _metric_line("refused_count", len(refused)),
         _metric_line("empty_count", len(empty)),
         _metric_line("iva_wallet_status", run.iva_wallet_status),
@@ -1283,6 +1284,7 @@ def _filed_pull_all_result_and_lines(run: FiledHistoryOnboardingRun) -> tuple[An
         refused_count=len(refused),
         empty_count=len(empty),
         captured_count=run.captured_count,
+        reached_count=run.reached_count,
         scoping_signal=run.scoping_signal.value,
         denominator_note=run.denominator_note,
         iva_wallet_status=run.iva_wallet_status,
@@ -1295,7 +1297,39 @@ def _filed_pull_all_result_and_lines(run: FiledHistoryOnboardingRun) -> tuple[An
     return result, tuple(lines)
 
 
-def _filed_pull_all_notices(run: FiledHistoryOnboardingRun) -> list[Notice]:
+def _limit_reached_notice(reached_count: int, *, limit: int | None) -> Notice | None:
+    """Warn when a sweep stopped on its ``--limit`` rather than on running out.
+
+    One authority for every ``--limit``-bearing filed read, because the silence
+    is the same defect on each of them: an unwalked pair is indistinguishable
+    from one AEAT holds nothing for, which reads as "nothing was filed".
+
+    The predicate is the REACHED tally, never the captured one. ``captured_count``
+    is ``len(observation_paths)``, appended only on the write path, so a preview
+    leaves it at zero -- ``captured_count >= limit`` would read false exactly when
+    a dry run was truncated, staying silent on the one surface where the operator
+    has no other signal.
+    """
+    if limit is None or reached_count < limit:
+        return None
+    return Notice(
+        severity=NoticeSeverity.WARNING,
+        code="live.filed.limit_reached",
+        message=tr(
+            "cli.app.live.filed.limit_reached",
+            default=(
+                "The sweep stopped at the --limit of {limit} after reaching {reached} declaration(s); "
+                "pairs beyond that point were not walked. A missing pair is not evidence that nothing "
+                "was filed -- re-run with a higher --limit or none."
+            ),
+            limit=limit,
+            reached=reached_count,
+        ),
+        context={"limit": str(limit), "reached_count": str(reached_count)},
+    )
+
+
+def _filed_pull_all_notices(run: FiledHistoryOnboardingRun, *, limit: int | None = None) -> list[Notice]:
     """Collect the run's advisories, each from its own authority.
 
     Assembled rather than re-derived: the expected-but-not-found warning and the
@@ -1304,6 +1338,11 @@ def _filed_pull_all_notices(run: FiledHistoryOnboardingRun) -> list[Notice]:
     restated at this transport boundary.
     """
     notices: list[Notice] = []
+    # First, because truncation qualifies every advisory below it: a pair the
+    # sweep never walked reads as "expected but not found".
+    truncation = _limit_reached_notice(run.reached_count, limit=limit)
+    if truncation is not None:
+        notices.append(truncation)
     missing = expected_but_not_found_notice(run)
     if missing is not None:
         notices.append(missing)
@@ -1358,9 +1397,18 @@ def _notice_lines(notices: Sequence[Notice]) -> tuple[str, ...]:
 
 def _filed_capture_notices(
     report: FiledDataCaptureReport | BulkFiledDataCaptureReport | SourceFiledDataCaptureReport,
+    *,
+    limit: int | None = None,
 ) -> tuple[Notice, ...]:
-    """Return capture-owned advisories for the envelope without touching result payloads."""
-    return report.evidence_notices
+    """Return capture-owned advisories for the envelope without touching result payloads.
+
+    The truncation advisory leads, for the same reason it does on the sweep: it
+    qualifies every count below it. ``reached_count`` is declared once on the
+    tally all three reports share, so this reads the same field whichever report
+    arrives.
+    """
+    truncation = _limit_reached_notice(report.reached_count, limit=limit)
+    return ((truncation,) if truncation is not None else ()) + report.evidence_notices
 
 
 @filed_app.command("pull", help=tr("cli.app.live.filed.pull_help"))
@@ -1454,7 +1502,7 @@ def filed_pull_cmd(
             calculation_observation_count=report.calculation_observation_count,
             calculation_observation_keys=list(report.calculation_observation_keys),
         )
-        notices = _filed_capture_notices(report)
+        notices = _filed_capture_notices(report, limit=limit)
         _emit_envelope(
             ctx,
             command="app.live.filed.pull",
@@ -1518,7 +1566,7 @@ def filed_pull_cmd(
         ],
     )
     skipped = _skipped_casilla_notice(report.skipped_casillas)
-    capture_notices = _filed_capture_notices(report)
+    capture_notices = _filed_capture_notices(report, limit=limit)
     notices = [*capture_notices]
     # Rebuilt from the notice rather than written twice, so the text line and the
     # JSON notice cannot drift apart.

@@ -19,9 +19,9 @@ from __future__ import annotations
 from datetime import date, datetime
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Annotated
+from typing import Annotated, Protocol, Self, cast
 
-from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
+from pydantic import BaseModel, BeforeValidator, Field, PlainSerializer, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import ElidedProse
@@ -37,11 +37,23 @@ from ...domain.deadlines import Recovery as _Recovery
 from ._coverage import ObligationCoverageReport
 
 
-def _period_from_serialized(value: object) -> object:
-    """Hydrate overview JSON period strings into :class:`~core.Period`."""
+def _hydrate_calendar_period(value: object) -> object:
+    """Hydrate a calendar JSON period string into :class:`~core.Period`."""
     if isinstance(value, str):
         return _Period.from_string(value)
     return value
+
+
+def _serialize_calendar_period(value: _Period) -> str:
+    """Render a typed calendar period for JSON serialization."""
+    return str(value)
+
+
+_CalendarPeriod = Annotated[
+    _Period,
+    BeforeValidator(_hydrate_calendar_period),
+    PlainSerializer(_serialize_calendar_period, return_type=str),
+]
 
 
 class OverviewPeriodState(StrEnum):
@@ -114,6 +126,43 @@ def user_state_for(obligation_status: _ObligationStatus) -> OverviewPeriodState:
     return _USER_STATE_FOR_OBLIGATION_STATUS[obligation_status]
 
 
+class _CalendarJustificanteStateCarrier(Protocol):
+    """Fields governed by the calendar justificante evidence invariant."""
+
+    aeat_submission_state: OverviewAeatSubmissionState | None
+    justificante_verified: bool | None
+    verified_justificante_csv: str | None
+
+
+class _CalendarJustificanteStateInvariant(BaseModel):
+    """Enforce the shared AEAT submission and justificante evidence invariant."""
+
+    @model_validator(mode="after")
+    def _enforce_justificante_state_consistency(self) -> Self:
+        value = cast(_CalendarJustificanteStateCarrier, self)
+        if value.aeat_submission_state is None and value.justificante_verified is None:
+            return self
+        if value.aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED:
+            if value.justificante_verified is not True:
+                raise ValueError(
+                    "justificante_verified must be true when aeat_submission_state is justificante_verified",
+                )
+            if value.verified_justificante_csv is None:
+                raise ValueError(
+                    "verified_justificante_csv is required when justificante_verified is true",
+                )
+            return self
+        if value.justificante_verified is True:
+            raise ValueError(
+                "justificante_verified cannot be true unless aeat_submission_state is justificante_verified",
+            )
+        if value.verified_justificante_csv is not None:
+            raise ValueError(
+                "verified_justificante_csv cannot be set unless aeat_submission_state is justificante_verified",
+            )
+        return self
+
+
 class OverviewCalendarRange(BaseModel):
     """Inclusive date window for the ``overview calendar`` query.
 
@@ -140,7 +189,7 @@ class OverviewCalendarRange(BaseModel):
         return self.from_date <= candidate <= self.to_date
 
 
-class OverviewCalendarFilingEvidence(BaseModel):
+class OverviewCalendarFilingEvidence(_CalendarJustificanteStateInvariant):
     """Filing evidence attached to one legal calendar obligation.
 
     The local fields describe the application's filing-record axis; the
@@ -155,7 +204,7 @@ class OverviewCalendarFilingEvidence(BaseModel):
 
     modelo: str | None = Field(default=None, min_length=1, max_length=8)
     filing_year: int | None = Field(default=None, ge=2000, le=2099)
-    period: _Period | None = None
+    period: _CalendarPeriod | None = None
     local_filing_state: OverviewLocalFilingState = OverviewLocalFilingState.NOT_READY_TO_FILE
     local_filing_record_id: str | None = Field(default=None, min_length=1, max_length=128)
     local_calculation_revision_id: str | None = Field(default=None, min_length=1, max_length=128)
@@ -171,36 +220,6 @@ class OverviewCalendarFilingEvidence(BaseModel):
     justificante_verified: bool = False
     evidence_source: str | None = Field(default=None, min_length=1, max_length=64)
 
-    @field_serializer("period", mode="plain")
-    def _serialize_period(self, value: _Period | None) -> str | None:
-        return str(value) if value is not None else None
-
-    @field_validator("period", mode="before")
-    @classmethod
-    def _hydrate_period(cls, value: object) -> object:
-        return _period_from_serialized(value)
-
-    @model_validator(mode="after")
-    def _enforce_justificante_state_consistency(self) -> OverviewCalendarFilingEvidence:
-        state_is_verified = self.aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
-        if self.justificante_verified != state_is_verified:
-            raise ValueError(
-                "OverviewCalendarFilingEvidence.justificante_verified must be true exactly when "
-                "aeat_submission_state is justificante_verified",
-            )
-        if self.justificante_verified and self.verified_justificante_csv is None:
-            raise ValueError(
-                "OverviewCalendarFilingEvidence.verified_justificante_csv is required when "
-                "justificante_verified is true",
-            )
-        if not self.justificante_verified and self.verified_justificante_csv is not None:
-            raise ValueError(
-                "OverviewCalendarFilingEvidence.verified_justificante_csv cannot be set unless "
-                "justificante_verified is true",
-            )
-        return self
-
-
 class OverviewCalendarEntry(BaseModel):
     """One legal ``(modelo, period)`` row in the calendar view.
 
@@ -213,7 +232,7 @@ class OverviewCalendarEntry(BaseModel):
     model_config = _STRICT_FROZEN
 
     modelo: str = Field(min_length=1, max_length=8)
-    period: _Period
+    period: _CalendarPeriod
     opens_on: date
     closes_on: date
     adjusted_closes_on: date
@@ -231,15 +250,6 @@ class OverviewCalendarEntry(BaseModel):
     local_work_unit_id: WorkUnitId | None = None
     local_work_unit_name: str | None = Field(default=None, min_length=1, max_length=200)
     local_work_unit_revision_id: str | None = Field(default=None, min_length=1, max_length=128)
-
-    @field_serializer("period", mode="plain")
-    def _serialize_period(self, value: _Period) -> str:
-        return str(value)
-
-    @field_validator("period", mode="before")
-    @classmethod
-    def _hydrate_period(cls, value: object) -> object:
-        return _period_from_serialized(value)
 
     @model_validator(mode="after")
     def _enforce_window_order(self) -> OverviewCalendarEntry:
@@ -284,7 +294,7 @@ class OverviewCalendarEventType(StrEnum):
 _EventSummary = Annotated[str, ElidedProse(256)]
 
 
-class OverviewCalendarEvent(BaseModel):
+class OverviewCalendarEvent(_CalendarJustificanteStateInvariant):
     """One observed local event attached to an overview calendar range.
 
     Filing events may carry :class:`OverviewAeatSubmissionState` when a
@@ -320,7 +330,7 @@ class OverviewCalendarEvent(BaseModel):
     snapshot_id: str | None = Field(default=None, min_length=1, max_length=128)
     modelo: str | None = Field(default=None, min_length=1, max_length=8)
     filing_year: int | None = Field(default=None, ge=2000, le=2099)
-    period: _Period | None = None
+    period: _CalendarPeriod | None = None
     status: str | None = Field(default=None, max_length=64)
     source_url: str | None = Field(default=None, max_length=512)
     authenticated_identity: str | None = Field(default=None, max_length=32, exclude=True)
@@ -328,43 +338,6 @@ class OverviewCalendarEvent(BaseModel):
     aeat_submitted_at: datetime | None = None
     justificante_verified: bool | None = None
     verified_justificante_csv: str | None = Field(default=None, min_length=1, max_length=64)
-
-    @field_serializer("period", mode="plain")
-    def _serialize_period(self, value: _Period | None) -> str | None:
-        return str(value) if value is not None else None
-
-    @field_validator("period", mode="before")
-    @classmethod
-    def _hydrate_period(cls, value: object) -> object:
-        return _period_from_serialized(value)
-
-    @model_validator(mode="after")
-    def _enforce_justificante_state_consistency(self) -> OverviewCalendarEvent:
-        if self.aeat_submission_state is None and self.justificante_verified is None:
-            return self
-        if self.aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED:
-            if self.justificante_verified is not True:
-                raise ValueError(
-                    "OverviewCalendarEvent.justificante_verified must be true when "
-                    "aeat_submission_state is justificante_verified",
-                )
-            if self.verified_justificante_csv is None:
-                raise ValueError(
-                    "OverviewCalendarEvent.verified_justificante_csv is required when justificante_verified is true",
-                )
-            return self
-        if self.justificante_verified is True:
-            raise ValueError(
-                "OverviewCalendarEvent.justificante_verified cannot be true unless "
-                "aeat_submission_state is justificante_verified",
-            )
-        if self.verified_justificante_csv is not None:
-            raise ValueError(
-                "OverviewCalendarEvent.verified_justificante_csv cannot be set unless "
-                "aeat_submission_state is justificante_verified",
-            )
-        return self
-
 
 class CalendarWarning(BaseModel):
     """One under-specified-profile warning attached to a calendar query."""
@@ -394,19 +367,9 @@ class SuppressedCalendarEntry(BaseModel):
     model_config = _STRICT_FROZEN
 
     modelo: str = Field(min_length=1, max_length=8)
-    period: _Period
+    period: _CalendarPeriod
     verdict: ApplicabilityVerdict
     reason: str = Field(min_length=1)
-
-    @field_serializer("period", mode="plain")
-    def _serialize_period(self, value: _Period) -> str:
-        return str(value)
-
-    @field_validator("period", mode="before")
-    @classmethod
-    def _hydrate_period(cls, value: object) -> object:
-        return _period_from_serialized(value)
-
 
 class OverviewCalendar(BaseModel):
     """Result of an ``aeat app overview calendar`` query.

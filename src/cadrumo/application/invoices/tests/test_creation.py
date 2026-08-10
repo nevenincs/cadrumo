@@ -152,23 +152,7 @@ def test_create_catalogue_invoice_persists_and_refuses_duplicate(tmp_path: Path)
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         result = create_catalogue_invoice(
-            bucket_id=_BUCKET_ID,
-            kind=InvoiceKind.RECEIVED,
-            counterparty_name="Papeleria Sol SL",
-            counterparty_tax_id="A58818501",
-            counterparty_country="ES",
-            invoice_number="2026-0142",
-            issued_at=date(2026, 3, 10),
-            taxable_base=Decimal("100.00"),
-            iva_rate=Decimal("21"),
-            currency="EUR",
-            payment_status=PaymentStatus.PENDING,
-        )
-        reloaded = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID).load().get(result.invoice.invoice_id)
-        assert reloaded == result.invoice
-
-        with pytest.raises(InvoiceValidationError):
-            create_catalogue_invoice(
+            invoice=build_catalogue_invoice(
                 bucket_id=_BUCKET_ID,
                 kind=InvoiceKind.RECEIVED,
                 counterparty_name="Papeleria Sol SL",
@@ -179,6 +163,26 @@ def test_create_catalogue_invoice_persists_and_refuses_duplicate(tmp_path: Path)
                 taxable_base=Decimal("100.00"),
                 iva_rate=Decimal("21"),
                 currency="EUR",
+                payment_status=PaymentStatus.PENDING,
+            ),
+        )
+        reloaded = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID).load().get(result.invoice.invoice_id)
+        assert reloaded == result.invoice
+
+        with pytest.raises(InvoiceValidationError):
+            create_catalogue_invoice(
+                invoice=build_catalogue_invoice(
+                    bucket_id=_BUCKET_ID,
+                    kind=InvoiceKind.RECEIVED,
+                    counterparty_name="Papeleria Sol SL",
+                    counterparty_tax_id="A58818501",
+                    counterparty_country="ES",
+                    invoice_number="2026-0142",
+                    issued_at=date(2026, 3, 10),
+                    taxable_base=Decimal("100.00"),
+                    iva_rate=Decimal("21"),
+                    currency="EUR",
+                ),
             )
 
 
@@ -233,18 +237,20 @@ def test_create_catalogue_invoice_intra_community_feeds_modelo_349(tmp_path: Pat
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         repository = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID)
         create_catalogue_invoice(
-            bucket_id=_BUCKET_ID,
-            kind=InvoiceKind.ISSUED,
-            counterparty_name="Kunde GmbH",
-            counterparty_tax_id="DE345678901",
-            counterparty_country="DE",
-            invoice_number="EU-2026-001",
-            issued_at=date(2026, 2, 10),
-            taxable_base=Decimal("2000.00"),
-            iva_rate=Decimal("0"),
-            currency="EUR",
-            iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
-            operation_type=IntracomOperationType.E,
+            invoice=build_catalogue_invoice(
+                bucket_id=_BUCKET_ID,
+                kind=InvoiceKind.ISSUED,
+                counterparty_name="Kunde GmbH",
+                counterparty_tax_id="DE345678901",
+                counterparty_country="DE",
+                invoice_number="EU-2026-001",
+                issued_at=date(2026, 2, 10),
+                taxable_base=Decimal("2000.00"),
+                iva_rate=Decimal("0"),
+                currency="EUR",
+                iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+                operation_type=IntracomOperationType.E,
+            ),
             repository=repository,
         )
         resolution = InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(
@@ -265,31 +271,35 @@ def test_create_catalogue_invoice_service_keys_feed_modelo_349(tmp_path: Path) -
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         repository = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID)
         issued = create_catalogue_invoice(
-            bucket_id=_BUCKET_ID,
-            kind=InvoiceKind.ISSUED,
-            counterparty_name="Service SARL",
-            counterparty_tax_id="FR12345678901",
-            counterparty_country="FR",
-            invoice_number="SERV-OUT-2026-001",
-            issued_at=date(2026, 2, 10),
-            taxable_base=Decimal("4000.00"),
-            iva_rate=Decimal("0"),
-            currency="EUR",
-            operation_type=IntracomOperationType.S,
+            invoice=build_catalogue_invoice(
+                bucket_id=_BUCKET_ID,
+                kind=InvoiceKind.ISSUED,
+                counterparty_name="Service SARL",
+                counterparty_tax_id="FR12345678901",
+                counterparty_country="FR",
+                invoice_number="SERV-OUT-2026-001",
+                issued_at=date(2026, 2, 10),
+                taxable_base=Decimal("4000.00"),
+                iva_rate=Decimal("0"),
+                currency="EUR",
+                operation_type=IntracomOperationType.S,
+            ),
             repository=repository,
         ).invoice
         received = create_catalogue_invoice(
-            bucket_id=_BUCKET_ID,
-            kind=InvoiceKind.RECEIVED,
-            counterparty_name="Servizi SRL",
-            counterparty_tax_id="IT12345678901",
-            counterparty_country="IT",
-            invoice_number="SERV-IN-2026-001",
-            issued_at=date(2026, 3, 5),
-            taxable_base=Decimal("3000.00"),
-            iva_rate=Decimal("0"),
-            currency="EUR",
-            operation_type=IntracomOperationType.ADQUISICION_SERVICIOS,
+            invoice=build_catalogue_invoice(
+                bucket_id=_BUCKET_ID,
+                kind=InvoiceKind.RECEIVED,
+                counterparty_name="Servizi SRL",
+                counterparty_tax_id="IT12345678901",
+                counterparty_country="IT",
+                invoice_number="SERV-IN-2026-001",
+                issued_at=date(2026, 3, 5),
+                taxable_base=Decimal("3000.00"),
+                iva_rate=Decimal("0"),
+                currency="EUR",
+                operation_type=IntracomOperationType.ADQUISICION_SERVICIOS,
+            ),
             repository=repository,
         ).invoice
         resolution = InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(
@@ -383,17 +393,19 @@ def test_an_operator_supplied_operation_date_survives_to_a_declared_devengo_rank
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         recorded = create_catalogue_invoice(
-            bucket_id=_BUCKET_ID,
-            kind=InvoiceKind.ISSUED,
-            counterparty_name="Cliente Norte SL",
-            counterparty_tax_id="A58818501",
-            counterparty_country="ES",
-            invoice_number="2026-Q1-OP",
-            issued_at=date(2026, 4, 10),
-            taxable_base=Decimal("1000.00"),
-            iva_rate=Decimal("21"),
-            currency="EUR",
-            operation_date=date(2026, 3, 28),
+            invoice=build_catalogue_invoice(
+                bucket_id=_BUCKET_ID,
+                kind=InvoiceKind.ISSUED,
+                counterparty_name="Cliente Norte SL",
+                counterparty_tax_id="A58818501",
+                counterparty_country="ES",
+                invoice_number="2026-Q1-OP",
+                issued_at=date(2026, 4, 10),
+                taxable_base=Decimal("1000.00"),
+                iva_rate=Decimal("21"),
+                currency="EUR",
+                operation_date=date(2026, 3, 28),
+            ),
         )
         reloaded = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID).load().get(recorded.invoice.invoice_id)
         assert reloaded is not None
@@ -416,16 +428,18 @@ def test_omitting_the_operation_date_leaves_the_record_on_the_issue_date_proxy(t
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         recorded = create_catalogue_invoice(
-            bucket_id=_BUCKET_ID,
-            kind=InvoiceKind.ISSUED,
-            counterparty_name="Cliente Norte SL",
-            counterparty_tax_id="A58818501",
-            counterparty_country="ES",
-            invoice_number="2026-Q2-NO-OP",
-            issued_at=date(2026, 4, 10),
-            taxable_base=Decimal("1000.00"),
-            iva_rate=Decimal("21"),
-            currency="EUR",
+            invoice=build_catalogue_invoice(
+                bucket_id=_BUCKET_ID,
+                kind=InvoiceKind.ISSUED,
+                counterparty_name="Cliente Norte SL",
+                counterparty_tax_id="A58818501",
+                counterparty_country="ES",
+                invoice_number="2026-Q2-NO-OP",
+                issued_at=date(2026, 4, 10),
+                taxable_base=Decimal("1000.00"),
+                iva_rate=Decimal("21"),
+                currency="EUR",
+            ),
         )
         reloaded = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID).load().get(recorded.invoice.invoice_id)
         assert reloaded is not None
@@ -449,21 +463,23 @@ def test_m349_excludes_a_self_contradicting_record_but_names_it(tmp_path: Path) 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         repository = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID)
         contradictory = create_catalogue_invoice(
-            bucket_id=_BUCKET_ID,
-            kind=InvoiceKind.ISSUED,
-            counterparty_name="Waren GmbH",
-            counterparty_tax_id="DE123456789",
-            counterparty_country="DE",
-            invoice_number="GOODS-OUT-2026-001",
-            issued_at=date(2026, 2, 10),
-            taxable_base=Decimal("5000.00"),
-            iva_rate=Decimal("21"),
-            currency="EUR",
-            # The CLI derives the category from the operation type before
-            # calling this service; the service itself does not, so the test
-            # supplies the pair the operator's path would have produced.
-            iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
-            operation_type=IntracomOperationType.E,
+            invoice=build_catalogue_invoice(
+                bucket_id=_BUCKET_ID,
+                kind=InvoiceKind.ISSUED,
+                counterparty_name="Waren GmbH",
+                counterparty_tax_id="DE123456789",
+                counterparty_country="DE",
+                invoice_number="GOODS-OUT-2026-001",
+                issued_at=date(2026, 2, 10),
+                taxable_base=Decimal("5000.00"),
+                iva_rate=Decimal("21"),
+                currency="EUR",
+                # The CLI derives the category from the operation type before
+                # calling this service; the service itself does not, so the test
+                # supplies the pair the operator's path would have produced.
+                iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+                operation_type=IntracomOperationType.E,
+            ),
             repository=repository,
         ).invoice
         resolution = InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(
@@ -496,18 +512,20 @@ def test_m349_declares_a_coherent_exempt_supply_with_no_diagnostic(tmp_path: Pat
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         repository = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID)
         create_catalogue_invoice(
-            bucket_id=_BUCKET_ID,
-            kind=InvoiceKind.ISSUED,
-            counterparty_name="Waren GmbH",
-            counterparty_tax_id="DE123456789",
-            counterparty_country="DE",
-            invoice_number="GOODS-OUT-2026-002",
-            issued_at=date(2026, 2, 10),
-            taxable_base=Decimal("5000.00"),
-            iva_rate=Decimal("0"),
-            currency="EUR",
-            iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
-            operation_type=IntracomOperationType.E,
+            invoice=build_catalogue_invoice(
+                bucket_id=_BUCKET_ID,
+                kind=InvoiceKind.ISSUED,
+                counterparty_name="Waren GmbH",
+                counterparty_tax_id="DE123456789",
+                counterparty_country="DE",
+                invoice_number="GOODS-OUT-2026-002",
+                issued_at=date(2026, 2, 10),
+                taxable_base=Decimal("5000.00"),
+                iva_rate=Decimal("0"),
+                currency="EUR",
+                iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+                operation_type=IntracomOperationType.E,
+            ),
             repository=repository,
         )
         resolution = InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(
@@ -542,33 +560,37 @@ def test_intracommunity_services_now_carry_a_category_and_reach_m349(tmp_path: P
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         repository = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID)
         issued = create_catalogue_invoice(
-            bucket_id=_BUCKET_ID,
-            kind=InvoiceKind.ISSUED,
-            counterparty_name="Service SARL",
-            counterparty_tax_id="FR12345678901",
-            counterparty_country="FR",
-            invoice_number="SERV-OUT-2026-100",
-            issued_at=date(2026, 2, 10),
-            taxable_base=Decimal("4000.00"),
-            iva_rate=Decimal("0"),
-            currency="EUR",
-            iva_category=IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY,
-            operation_type=IntracomOperationType.S,
+            invoice=build_catalogue_invoice(
+                bucket_id=_BUCKET_ID,
+                kind=InvoiceKind.ISSUED,
+                counterparty_name="Service SARL",
+                counterparty_tax_id="FR12345678901",
+                counterparty_country="FR",
+                invoice_number="SERV-OUT-2026-100",
+                issued_at=date(2026, 2, 10),
+                taxable_base=Decimal("4000.00"),
+                iva_rate=Decimal("0"),
+                currency="EUR",
+                iva_category=IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY,
+                operation_type=IntracomOperationType.S,
+            ),
             repository=repository,
         ).invoice
         received = create_catalogue_invoice(
-            bucket_id=_BUCKET_ID,
-            kind=InvoiceKind.RECEIVED,
-            counterparty_name="Servizi SRL",
-            counterparty_tax_id="IT12345678901",
-            counterparty_country="IT",
-            invoice_number="SERV-IN-2026-100",
-            issued_at=date(2026, 3, 5),
-            taxable_base=Decimal("3000.00"),
-            iva_rate=Decimal("0"),
-            currency="EUR",
-            iva_category=IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
-            operation_type=IntracomOperationType.ADQUISICION_SERVICIOS,
+            invoice=build_catalogue_invoice(
+                bucket_id=_BUCKET_ID,
+                kind=InvoiceKind.RECEIVED,
+                counterparty_name="Servizi SRL",
+                counterparty_tax_id="IT12345678901",
+                counterparty_country="IT",
+                invoice_number="SERV-IN-2026-100",
+                issued_at=date(2026, 3, 5),
+                taxable_base=Decimal("3000.00"),
+                iva_rate=Decimal("0"),
+                currency="EUR",
+                iva_category=IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
+                operation_type=IntracomOperationType.ADQUISICION_SERVICIOS,
+            ),
             repository=repository,
         ).invoice
         resolution = InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(
@@ -642,17 +664,19 @@ def test_a_supplied_line_set_persists_per_rate_instead_of_collapsing_to_one_line
     """
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         result = create_catalogue_invoice(
-            bucket_id=profile.bucket_id,
-            kind=InvoiceKind.ISSUED,
-            counterparty_name="Cliente Mixto SL",
-            counterparty_tax_id="B12345674",
-            counterparty_country="ES",
-            invoice_number="F-2026-MIXED-001",
-            issued_at=date(2026, 4, 1),
-            taxable_base=Decimal("1500.00"),
-            iva_rate=None,
-            currency="EUR",
-            lines=_mixed_rate_lines(),
+            invoice=build_catalogue_invoice(
+                bucket_id=profile.bucket_id,
+                kind=InvoiceKind.ISSUED,
+                counterparty_name="Cliente Mixto SL",
+                counterparty_tax_id="B12345674",
+                counterparty_country="ES",
+                invoice_number="F-2026-MIXED-001",
+                issued_at=date(2026, 4, 1),
+                taxable_base=Decimal("1500.00"),
+                iva_rate=None,
+                currency="EUR",
+                lines=_mixed_rate_lines(),
+            ),
             repository=InvoiceCatalogueRepository(objects=profile.repository),
         )
         restored = InvoiceCatalogueRepository(objects=profile.repository).load().get(result.invoice.invoice_id)
@@ -734,20 +758,22 @@ def test_a_rectificativa_with_series_and_recargo_is_writable_and_persists(tmp_pa
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         result = create_catalogue_invoice(
-            bucket_id=_BUCKET_ID,
-            kind=InvoiceKind.ISSUED,
-            counterparty_name="Minorista Recargo SL",
-            counterparty_tax_id="B12345674",
-            counterparty_country="ES",
-            invoice_number="R-2026-0001",
-            issued_at=date(2026, 5, 4),
-            taxable_base=Decimal("1000.00"),
-            iva_rate=Decimal("21"),
-            currency="EUR",
-            invoice_class=InvoiceClass.RECTIFICATIVA,
-            series="R",
-            rectifies_invoice_number="F-2026-0044",
-            recargo_amount=Decimal("52.00"),
+            invoice=build_catalogue_invoice(
+                bucket_id=_BUCKET_ID,
+                kind=InvoiceKind.ISSUED,
+                counterparty_name="Minorista Recargo SL",
+                counterparty_tax_id="B12345674",
+                counterparty_country="ES",
+                invoice_number="R-2026-0001",
+                issued_at=date(2026, 5, 4),
+                taxable_base=Decimal("1000.00"),
+                iva_rate=Decimal("21"),
+                currency="EUR",
+                invoice_class=InvoiceClass.RECTIFICATIVA,
+                series="R",
+                rectifies_invoice_number="F-2026-0044",
+                recargo_amount=Decimal("52.00"),
+            ),
         )
         restored = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID).load().get(result.invoice.invoice_id)
 
@@ -846,16 +872,18 @@ def test_canonical_creation_emits_the_lifecycle_event_for_its_direction(
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         result = create_catalogue_invoice(
-            bucket_id=_BUCKET_ID,
-            kind=kind,
-            counterparty_name="Papeleria Sol SL",
-            counterparty_tax_id="A58818501",
-            counterparty_country="ES",
-            invoice_number=f"EV-2026-{kind.value}",
-            issued_at=date(2026, 6, 1),
-            taxable_base=Decimal("100.00"),
-            iva_rate=Decimal("21"),
-            currency="EUR",
+            invoice=build_catalogue_invoice(
+                bucket_id=_BUCKET_ID,
+                kind=kind,
+                counterparty_name="Papeleria Sol SL",
+                counterparty_tax_id="A58818501",
+                counterparty_country="ES",
+                invoice_number=f"EV-2026-{kind.value}",
+                issued_at=date(2026, 6, 1),
+                taxable_base=Decimal("100.00"),
+                iva_rate=Decimal("21"),
+                currency="EUR",
+            ),
         )
         from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 

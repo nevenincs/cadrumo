@@ -180,7 +180,7 @@ def _seed_quarterly_filing(
     :meth:`CalculationObservationRepository.save_observation` write path with the
     non-official ``app_filing`` source_kind.
     """
-    obs_repo.save_observation(
+    obs_repo.save(obs_repo.prepare_observation_envelope(
         RegistryModeloObservation(
             modelo=source_modelo,
             filing_year=_YEAR,
@@ -194,7 +194,7 @@ def _seed_quarterly_filing(
         ),
         source_kind=APP_FILING_SOURCE_KIND,
         captured_at=_T0,
-    )
+    ))
 
 
 def _calculate_annual(

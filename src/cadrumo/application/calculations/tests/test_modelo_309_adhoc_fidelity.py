@@ -171,7 +171,7 @@ def test_computed_total_persists_and_reloads_strictly(tmp_path: Path) -> None:
         repo = CalculationObservationRepository()
         result, _ = _calculate_309(filing_year=_YEAR_N, period=_PERIOD, leaf_cuotas=_YEAR_N_CUOTAS)
         obs = _registry_observation(filing_year=_YEAR_N, period=_PERIOD, result=result)
-        repo.save_observation(obs, source_kind="app_filing", captured_at=_CLOCK_N)
+        repo.save(repo.prepare_observation_envelope(obs, source_kind="app_filing", captured_at=_CLOCK_N))
         loaded = _find_observation(repo, filing_year=_YEAR_N, period=_PERIOD)
         assert loaded is not None
         assert loaded.observation == obs
@@ -187,8 +187,8 @@ def test_both_years_independently_retrievable_no_bleed(tmp_path: Path) -> None:
         result_n1, _ = _calculate_309(filing_year=_YEAR_N_PLUS_1, period=_PERIOD, leaf_cuotas=_YEAR_N_PLUS_1_CUOTAS)
         obs_n = _registry_observation(filing_year=_YEAR_N, period=_PERIOD, result=result_n)
         obs_n1 = _registry_observation(filing_year=_YEAR_N_PLUS_1, period=_PERIOD, result=result_n1)
-        repo.save_observation(obs_n, source_kind="app_filing", captured_at=_CLOCK_N)
-        repo.save_observation(obs_n1, source_kind="app_filing", captured_at=_CLOCK_N_PLUS_1)
+        repo.save(repo.prepare_observation_envelope(obs_n, source_kind="app_filing", captured_at=_CLOCK_N))
+        repo.save(repo.prepare_observation_envelope(obs_n1, source_kind="app_filing", captured_at=_CLOCK_N_PLUS_1))
         loaded_n = _find_observation(repo, filing_year=_YEAR_N, period=_PERIOD)
         loaded_n1 = _find_observation(repo, filing_year=_YEAR_N_PLUS_1, period=_PERIOD)
 
@@ -215,7 +215,7 @@ def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: P
         )
         assert obs != obs_missing
 
-        repo.save_observation(obs, source_kind="app_filing", captured_at=_CLOCK_N)
+        repo.save(repo.prepare_observation_envelope(obs, source_kind="app_filing", captured_at=_CLOCK_N))
         loaded = _find_observation(repo, filing_year=_YEAR_N, period=_PERIOD)
         assert loaded is not None
         assert loaded.observation != obs_missing

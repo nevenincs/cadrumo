@@ -262,7 +262,7 @@ def _seed_prior_year_m130_minoracion(objects: SecureObjectRepository) -> None:
     observation_repo = CalculationObservationRepository(objects=objects)
     for target_year in _M130_DIAGNOSTIC_YEARS:
         prior_year = target_year - 1
-        observation_repo.save_observation(
+        observation_repo.save(observation_repo.prepare_observation_envelope(
             RegistryModeloObservation(
                 modelo="100",
                 filing_year=prior_year,
@@ -282,7 +282,7 @@ def _seed_prior_year_m130_minoracion(objects: SecureObjectRepository) -> None:
             ),
             source_kind="app_filing",
             captured_at=datetime(target_year, 4, 6, 12, 0, tzinfo=UTC),
-        )
+        ))
 
 
 def _seed_taxpayer_profile() -> None:

@@ -8,8 +8,8 @@ that exposes those values without copying formula business logic into the
 resolver layer.
 
 See Also:
-    :func:`~application.modelo._calculation_source_staging.materialise_prorrata_regularizacion_current_year_values`
-        No-persist engine materialisation seam under test.
+    :func:`~application.modelo._calculation_source_staging.materialise_registry_values_for_source_resolution`
+        Canonical no-persist engine materialisation seam under test.
     :data:`~application.modelo._calculation_source_staging._PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS`
         Canonical source-value order consumed by the resolver.
     :class:`~domain.calculations.registry._bindings._ProrrataRegularizacionSelector`
@@ -34,7 +34,7 @@ from ....core.resources import bundled_path, resources
 from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
 from .._calculation_source_staging import (
     _PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS,
-    materialise_prorrata_regularizacion_current_year_values,
+    materialise_registry_values_for_source_resolution,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -107,7 +107,7 @@ def test_prorrata_regularizacion_source_values_are_materialised_by_registry_engi
     snapshot = resources().modelos.authority.snapshot("303", filing_year=_FILING_YEAR, period="4T")
     work_unit = _work_unit(revision_id=snapshot.revision.id)
 
-    materialised = materialise_prorrata_regularizacion_current_year_values(
+    materialised = materialise_registry_values_for_source_resolution(
         registry_snapshot=snapshot,
         work_unit=work_unit,
         casilla_inputs={
@@ -118,7 +118,7 @@ def test_prorrata_regularizacion_source_values_are_materialised_by_registry_engi
         backend_casilla_inputs=None,
         binding_values={"modelo-303-compensacion-pendiente-anteriores": Decimal("0.00")},
         filing_period_date=datetime(2026, 1, 20, tzinfo=UTC).date(),
-    )
+    ).select(_PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS)
 
     assert tuple(materialised.values) == _PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS
     assert materialised.missing_casilla_ids == ()

@@ -130,7 +130,7 @@ def _register_with_carried_prior() -> ProrrataRegister:
 
 
 def _save_prior_observation(repository: CalculationObservationRepository) -> None:
-    repository.save_observation(
+    repository.save(repository.prepare_observation_envelope(
         registry_grounded_modelo_observation(
             modelo=Modelo.M303.value,
             filing_year=_PRIOR_YEAR,
@@ -139,7 +139,7 @@ def _save_prior_observation(repository: CalculationObservationRepository) -> Non
         ),
         source_kind="app_filing",
         captured_at=_CAPTURED_AT,
-    )
+    ))
 
 
 def test_resolver_projects_modelo_303_binding_from_prorrata_register(tmp_path: Path) -> None:

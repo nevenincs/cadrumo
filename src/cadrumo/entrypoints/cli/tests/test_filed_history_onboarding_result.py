@@ -67,6 +67,7 @@ def _populated() -> FiledHistoryOnboardingResult:
         refused_count=1,
         empty_count=0,
         captured_count=1,
+        reached_count=2,
         scoping_signal=RegisterScopingSignal.LIKELY_UNIVERSAL.value,
         denominator_note="Measured against the profile's own declared facts; the register's offered list is unconfirmed.",
         iva_wallet_status="reconciled",
@@ -98,6 +99,39 @@ def test_the_result_refuses_an_unknown_field() -> None:
     corrupted["completeness_percentage"] = 87.5
     with pytest.raises(ValidationError, match="completeness_percentage"):
         FiledHistoryOnboardingResult.model_validate_json(json.dumps(corrupted))
+
+
+def test_the_reached_tally_survives_the_envelope_and_cannot_default_away() -> None:
+    """A dropped reached tally refuses; it does not quietly become zero.
+
+    This field answers "was this sweep truncated", and zero is the answer that
+    says it was not. Were it defaultable, a payload that lost the key on the way
+    to the operator would assert a complete sweep instead of failing.
+    """
+    saved = _populated()
+    payload = json.loads(saved.model_dump_json())
+    # Assert it was there before deleting it, or the refusal below could be
+    # caused by a field the payload never carried in the first place.
+    assert payload["reached_count"] == saved.reached_count == 2
+
+    del payload["reached_count"]
+
+    with pytest.raises(ValidationError, match="reached_count"):
+        FiledHistoryOnboardingResult.model_validate_json(json.dumps(payload))
+
+
+def test_the_reached_and_captured_tallies_are_separately_expressible() -> None:
+    """The two counts are different questions and must not collapse into one.
+
+    ``captured_count`` counts written observations, which a preview leaves at
+    zero however much it reached. One field for both would make a truncated dry
+    run indistinguishable from one that walked nothing.
+    """
+    preview = FiledHistoryOnboardingResult(
+        **{**json.loads(_populated().model_dump_json()), "captured_count": 0, "reached_count": 4},
+    )
+    assert preview.captured_count == 0
+    assert preview.reached_count == 4
 
 
 # --------------------------------------------------- the deliberate omissions

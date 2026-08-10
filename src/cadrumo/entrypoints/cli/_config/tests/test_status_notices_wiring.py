@@ -70,10 +70,10 @@ def test_one_official_observation_silences_the_notice(tmp_path) -> None:
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
-        CalculationObservationRepository().save_observation(
+        CalculationObservationRepository().save(CalculationObservationRepository().prepare_observation_envelope(
             RegistryModeloObservation(modelo=_MODELO, filing_year=_FILING_YEAR, period=_PERIOD),
             source_kind="aeat_sede_justificante",
-        )
+        ))
 
         data = build_status_page_data()
 

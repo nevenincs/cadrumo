@@ -178,7 +178,7 @@ def _seed_prior_year_m100(obs_repo: CalculationObservationRepository) -> None:
     a fresh bucket the engine raises if that prior-year value is absent. This is
     upstream substrate, not the casilla under test.
     """
-    obs_repo.save_observation(
+    obs_repo.save(obs_repo.prepare_observation_envelope(
         RegistryModeloObservation(
             modelo="100",
             filing_year=_PRIOR_YEAR,
@@ -197,7 +197,7 @@ def _seed_prior_year_m100(obs_repo: CalculationObservationRepository) -> None:
         ),
         source_kind=APP_FILING_SOURCE_KIND,
         captured_at=_T0,
-    )
+    ))
 
 
 def _seed_prior_1t_m130_filing(
@@ -241,7 +241,7 @@ def _seed_prior_1t_m130_filing(
             casilla_values=casillas,
         ),
     )
-    obs_repo.save_observation(observation, source_kind=APP_FILING_SOURCE_KIND, captured_at=_T0)
+    obs_repo.save(obs_repo.prepare_observation_envelope(observation, source_kind=APP_FILING_SOURCE_KIND, captured_at=_T0))
     return observation
 
 

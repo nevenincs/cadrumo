@@ -776,7 +776,7 @@ def _seed_observations(bucket_id: str) -> None:
     from ...calculations import CalculationObservationRepository
 
     obs = RegistryModeloObservation(modelo="303", filing_year=2024, period="4T")
-    CalculationObservationRepository().save_observation(obs, source_kind="app_filing")
+    CalculationObservationRepository().save(CalculationObservationRepository().prepare_observation_envelope(obs, source_kind="app_filing"))
 
 
 def _verify_observations(bucket_id: str) -> None:

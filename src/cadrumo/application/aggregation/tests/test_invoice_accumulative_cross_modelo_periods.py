@@ -303,7 +303,7 @@ def _persist_invoice_life(secure_objects: SecureObjectRepository) -> None:
 
 def _seed_prior_year_m100(secure_objects: SecureObjectRepository) -> None:
     """Observe the prior-year annual Renta net-income casillas M130's minoración reads."""
-    CalculationObservationRepository(objects=secure_objects).save_observation(
+    CalculationObservationRepository(objects=secure_objects).save(CalculationObservationRepository(objects=secure_objects).prepare_observation_envelope(
         RegistryModeloObservation(
             modelo="100",
             filing_year=_PRIOR_YEAR,
@@ -323,7 +323,7 @@ def _seed_prior_year_m100(secure_objects: SecureObjectRepository) -> None:
         ),
         source_kind="app_filing",
         captured_at=_FILE_AT,
-    )
+    ))
 
 
 def _wallet_decision(*, period: str) -> IvaCompensationReconciliationDecision:

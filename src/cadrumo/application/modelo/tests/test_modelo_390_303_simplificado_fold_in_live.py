@@ -132,7 +132,7 @@ def _seed_m303_quarters(*, obs_repo: CalculationObservationRepository) -> None:
     carry flow uses, stamped with the non-official ``app_filing`` source_kind.
     """
     for period, cuota in _CUOTA_BY_PERIOD.items():
-        obs_repo.save_observation(
+        obs_repo.save(obs_repo.prepare_observation_envelope(
             RegistryModeloObservation(
                 modelo="303",
                 filing_year=_YEAR,
@@ -163,7 +163,7 @@ def _seed_m303_quarters(*, obs_repo: CalculationObservationRepository) -> None:
                 provenance_locator=f"test-local-filing:{_YEAR}:{period}",
             ),
             normalize_m303_carry=True,
-        )
+        ))
 
 
 def _store_ready_profile(secure_objects: SecureObjectRepository) -> None:

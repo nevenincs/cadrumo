@@ -52,7 +52,7 @@ from ...aggregation import (
     compute_ledger_filing_snapshot,
 )
 from ...calculations import IvaWalletDecisionRepository
-from ...invoices import create_catalogue_invoice
+from ...invoices import build_catalogue_invoice, create_catalogue_invoice
 from ...ledger import (
     PurchaseInvoiceEvidenceService,
     attach_manual_transaction_evidence,
@@ -508,16 +508,18 @@ def test_modelo_303_verify_and_file_credit_a_linked_validated_invoice(
 
         invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
         created = create_catalogue_invoice(
-            bucket_id=_BUCKET_ID,
-            kind=InvoiceKind.RECEIVED,
-            counterparty_name="Proveedor Ejemplo SL",
-            counterparty_tax_id="B12345674",
-            counterparty_country="ES",
-            invoice_number="F2026-0042",
-            issued_at=date(_YEAR, 2, 15),
-            taxable_base=Decimal("200.00"),
-            iva_rate=Decimal("21"),
-            currency="EUR",
+            invoice=build_catalogue_invoice(
+                bucket_id=_BUCKET_ID,
+                kind=InvoiceKind.RECEIVED,
+                counterparty_name="Proveedor Ejemplo SL",
+                counterparty_tax_id="B12345674",
+                counterparty_country="ES",
+                invoice_number="F2026-0042",
+                issued_at=date(_YEAR, 2, 15),
+                taxable_base=Decimal("200.00"),
+                iva_rate=Decimal("21"),
+                currency="EUR",
+            ),
             repository=invoice_repo,
         )
 

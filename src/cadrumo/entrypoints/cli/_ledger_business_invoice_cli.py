@@ -23,6 +23,7 @@ import typer
 
 from ...application.invoices import (
     CatalogueInvoicePatch,
+    build_catalogue_invoice,
     create_catalogue_invoice,
     import_invoices_from_rows,
     read_bulk_invoice_import_source,
@@ -491,7 +492,7 @@ def invoice_add(
         operation_type,
     )
     try:
-        result = create_catalogue_invoice(
+        invoice = build_catalogue_invoice(
             bucket_id=bucket_id,
             kind=kind,
             counterparty_name=counterparty_name,
@@ -515,6 +516,7 @@ def invoice_add(
             rectifies_invoice_number=rectifies_invoice_number,
             recargo_amount=parse_optional_decimal_amount(recargo, label="recargo"),
         )
+        result = create_catalogue_invoice(invoice=invoice)
     except InvoiceValidationError as exc:
         raise _bad(str(exc)) from exc
     except ValidationError as exc:

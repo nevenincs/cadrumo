@@ -188,7 +188,7 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 def _seed_m303_compensacion_quarters(*, obs_repo: CalculationObservationRepository) -> None:
     """Persist one M303/2025 filing observation per quarter carrying the FIFO compensacion casillas."""
     for period, casillas in _M303_COMPENSACION_BY_PERIOD.items():
-        obs_repo.save_observation(
+        obs_repo.save(obs_repo.prepare_observation_envelope(
             RegistryModeloObservation(
                 modelo="303",
                 filing_year=_YEAR,
@@ -208,7 +208,7 @@ def _seed_m303_compensacion_quarters(*, obs_repo: CalculationObservationReposito
                 provenance_locator=f"test-local-filing:{_YEAR}:{period}",
             ),
             normalize_m303_carry=True,
-        )
+        ))
 
 
 def _calculate_m390_annual(secure_objects: SecureObjectRepository):

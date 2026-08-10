@@ -227,6 +227,10 @@ class FiledHistoryOnboardingResult(OutputSchema):
         refused_count: Pairs that produced a failure row rather than an answer.
         empty_count: Pairs that legitimately returned no rows.
         captured_count: Declaraciones captured across the run.
+        reached_count: Declaraciones the sweep REACHED. Distinct from
+            ``captured_count``, which counts written observation paths and so
+            stays zero in a preview — leaving it unable to say whether a limited
+            sweep stopped early on the very path where that matters most.
         scoping_signal: The offline reading of whether the register's option list
             looks NIF-scoped. Advisory; every value is a hedge.
         denominator_note: Prose statement of what the coverage denominator was
@@ -247,6 +251,7 @@ class FiledHistoryOnboardingResult(OutputSchema):
     refused_count: int
     empty_count: int
     captured_count: int
+    reached_count: int
     scoping_signal: str
     denominator_note: str
     iva_wallet_status: str

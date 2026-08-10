@@ -162,7 +162,7 @@ def test_exporter_header_facts_reach_official_persistence_and_typed_recovery(
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = CalculationObservationRepository()
-        persisted = repository.save_observation(
+        persisted = repository.save(repository.prepare_observation_envelope(
             _observation(
                 filing_year=2025,
                 result=result,
@@ -172,7 +172,7 @@ def test_exporter_header_facts_reach_official_persistence_and_typed_recovery(
             captured_at=_WHEN,
             source_headers=headers,
             normalize_m303_carry=True,
-        )
+        ))
         recovered = repository.load_observation("303", Period.from_year_and_code(2025, "1T"))
 
     assert tuple(fact.value for fact in headers if fact.header_key == "declaration_type") == (code,)
@@ -211,13 +211,13 @@ def test_each_official_disposition_persists_and_recovers_a_structural_carry_proj
     )
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = CalculationObservationRepository()
-        persisted = repository.save_observation(
+        persisted = repository.save(repository.prepare_observation_envelope(
             observation,
             source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
             captured_at=_WHEN,
             source_headers=(_header(code),),
             normalize_m303_carry=True,
-        )
+        ))
         recovered = repository.load_observation("303", Period.from_year_and_code(2025, "1T"))
 
     assert recovered == persisted
@@ -235,20 +235,20 @@ def test_identical_negative_inputs_diverge_only_by_carry_vs_refund_disposition(t
     observation = _observation(filing_year=2025, result=-_CREDIT, generated=_CREDIT)
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = CalculationObservationRepository()
-        carried = repository.save_observation(
+        carried = repository.save(repository.prepare_observation_envelope(
             observation,
             source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
             captured_at=_WHEN,
             source_headers=(_header("C"),),
             normalize_m303_carry=True,
-        )
-        refunded = repository.save_observation(
+        ))
+        refunded = repository.save(repository.prepare_observation_envelope(
             _observation(filing_year=2026, result=-_CREDIT, generated=_CREDIT),
             source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
             captured_at=_WHEN,
             source_headers=(_header("D"),),
             normalize_m303_carry=True,
-        )
+        ))
 
     assert carried.observation.casilla_values[M303_COMPENSATION_AVAILABLE_CASILLA] == Decimal("27.00")
     assert refunded.observation.casilla_values[M303_COMPENSATION_AVAILABLE_CASILLA] == _POSTERIOR
@@ -259,14 +259,14 @@ def test_local_and_official_refund_ingress_normalize_the_same_carry_pair(tmp_pat
     """Provenance differs; the normalized D/V/X refund pair does not."""
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = CalculationObservationRepository()
-        official = repository.save_observation(
+        official = repository.save(repository.prepare_observation_envelope(
             _observation(filing_year=2025, result=-_CREDIT, generated=_CREDIT),
             source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
             captured_at=_WHEN,
             source_headers=(_header("D"),),
             normalize_m303_carry=True,
-        )
-        local = repository.save_observation(
+        ))
+        local = repository.save(repository.prepare_observation_envelope(
             _observation(filing_year=2026, result=-_CREDIT, generated=_CREDIT),
             source_kind=ObservationSourceKind.APP_FILING,
             captured_at=_WHEN,
@@ -276,7 +276,7 @@ def test_local_and_official_refund_ingress_normalize_the_same_carry_pair(tmp_pat
                 provenance_locator="local-filing:303-2026-1T",
             ),
             normalize_m303_carry=True,
-        )
+        ))
 
     for casilla_id in (M303_COMPENSATION_AVAILABLE_CASILLA, M303_COMPENSATION_GENERADA_CASILLA):
         assert official.observation.casilla_values[casilla_id] == local.observation.casilla_values[casilla_id]
@@ -323,20 +323,20 @@ def test_official_ingress_refuses_missing_ambiguous_invalid_sign_incompatible_or
     projection: ResultDispositionProjection | None,
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path), pytest.raises(M303CarryIngressError):
-        CalculationObservationRepository().save_observation(
+        CalculationObservationRepository().save(CalculationObservationRepository().prepare_observation_envelope(
             _observation(filing_year=2025, result=result, generated=_CREDIT if result < 0 else None),
             source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
             captured_at=_WHEN,
             source_headers=headers,
             result_disposition=projection,
             normalize_m303_carry=True,
-        )
+        ))
 
 
 def test_ingress_refuses_an_explicit_available_value_that_contradicts_its_disposition(tmp_path: Path) -> None:
     """A semantic available value does not override a contradictory carry policy."""
     with isolated_runtime_profile(tmp_path=tmp_path), pytest.raises(M303CarryIngressError):
-        CalculationObservationRepository().save_observation(
+        CalculationObservationRepository().save(CalculationObservationRepository().prepare_observation_envelope(
             _observation(
                 filing_year=2025,
                 result=-_CREDIT,
@@ -347,13 +347,13 @@ def test_ingress_refuses_an_explicit_available_value_that_contradicts_its_dispos
             captured_at=_WHEN,
             source_headers=(_header("D"),),
             normalize_m303_carry=True,
-        )
+        ))
 
 
 def test_ingress_refuses_a_preexisting_available_generated_pair_that_conflicts_with_refund(tmp_path: Path) -> None:
     """A normalized-looking available value cannot mask a still-carried credit."""
     with isolated_runtime_profile(tmp_path=tmp_path), pytest.raises(M303CarryIngressError):
-        CalculationObservationRepository().save_observation(
+        CalculationObservationRepository().save(CalculationObservationRepository().prepare_observation_envelope(
             _observation(
                 filing_year=2025,
                 result=-_CREDIT,
@@ -364,7 +364,7 @@ def test_ingress_refuses_a_preexisting_available_generated_pair_that_conflicts_w
             captured_at=_WHEN,
             source_headers=(_header("D"),),
             normalize_m303_carry=True,
-        )
+        ))
 
 
 def _persist_history_projection(
@@ -450,12 +450,12 @@ def test_generic_storage_admits_undisposed_official_m303_and_only_carry_refuses(
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = CalculationObservationRepository()
-        undisposed = repository.save_observation(
+        undisposed = repository.save(repository.prepare_observation_envelope(
             _observation(filing_year=2025, result=-_CREDIT, generated=_CREDIT),
             source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
             captured_at=_WHEN,
             source_headers=(_header("C"),),
-        )
+        ))
 
         assert repository.load_observation("303", Period.from_year_and_code(2025, "1T")) == undisposed
         with pytest.raises(M303CarryIngressError):

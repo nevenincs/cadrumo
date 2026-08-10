@@ -71,10 +71,10 @@ def test_m200_fold_in_credits_modalidad_40_2_instalments(tmp_path: Path) -> None
         amounts = {"1P": Decimal("300.00"), "2P": Decimal("450.00"), "3P": Decimal("250.00")}
         repository = CalculationObservationRepository()
         for period, amount in amounts.items():
-            repository.save_observation(
+            repository.save(repository.prepare_observation_envelope(
                 _m202_observation(filing_year=2025, period=period, casilla_03=amount, casilla_34=Decimal("0")),
                 source_kind="app_filing",
-            )
+            ))
         values = _resolve_m200_pagos_fraccionados(repository)
         # The 40.2 relation captures the modalidad-cuota instalments — the sum of the
         # quarterly casilla-03 values the relation aggregated (computed from the inputs,
@@ -91,10 +91,10 @@ def test_m200_fold_in_credits_modalidad_40_3_instalments(tmp_path: Path) -> None
         amounts = {"1P": Decimal("100.00"), "2P": Decimal("200.00"), "3P": Decimal("150.00")}
         repository = CalculationObservationRepository()
         for period, amount in amounts.items():
-            repository.save_observation(
+            repository.save(repository.prepare_observation_envelope(
                 _m202_observation(filing_year=2025, period=period, casilla_03=Decimal("0"), casilla_34=amount),
                 source_kind="app_filing",
-            )
+            ))
         values = _resolve_m200_pagos_fraccionados(repository)
         assert values.get(_REL_40_3) == sum(amounts.values(), Decimal("0"))
         assert values.get(_REL_40_2) == Decimal("0")
@@ -143,10 +143,10 @@ def test_is3_first_year_flag_never_overrides_a_filed_m202_value(tmp_path: Path) 
         amounts = {"1P": Decimal("300.00"), "2P": Decimal("450.00"), "3P": Decimal("250.00")}
         repository = CalculationObservationRepository()
         for period, amount in amounts.items():
-            repository.save_observation(
+            repository.save(repository.prepare_observation_envelope(
                 _m202_observation(filing_year=2025, period=period, casilla_03=amount, casilla_34=Decimal("0")),
                 source_kind="app_filing",
-            )
+            ))
         values = _all_m202_relation_values(repository, first_year_cuota=True)
         # filed value preserved (the sum of the quarterly casilla-03 inputs), NOT zeroed
         assert values.get(_REL_40_2) == sum(amounts.values(), Decimal("0"))

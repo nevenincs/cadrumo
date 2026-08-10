@@ -112,11 +112,11 @@ def test_iter_modelo_yields_an_observation_filed_under_its_own_key(
     """Anti-vacuity: a correctly filed row still reaches the scan."""
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = CalculationObservationRepository()
-        repository.save_observation(
+        repository.save(repository.prepare_observation_envelope(
             _observation(2025),
             source_kind="aeat_sede_justificante",
             captured_at=_CAPTURED_AT,
-        )
+        ))
 
         scanned = tuple(repository.iter_modelo("303"))
 

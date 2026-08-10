@@ -179,11 +179,11 @@ def _run_carry_chain(
             relation_values={},
         )
         carried_saldo = result_n.values[_SALDO_CASILLA]
-        obs_repo.save_observation(
+        obs_repo.save(obs_repo.prepare_observation_envelope(
             _registry_observation(filing_year=_YEAR_N, period="4T", result=result_n),
             source_kind="app_filing",
             captured_at=_CLOCK,
-        )
+        ))
 
         snapshot_n1 = resources().modelos.authority.snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
         relation_values = resolve_relations_from_local_store(snapshot_n1, repository=obs_repo)

@@ -135,16 +135,18 @@ def test_remove_catalogue_invoice_deletes_unlinked_record(tmp_path: Path) -> Non
     """An unlinked invoice is removed and the updated catalogue persists."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         created = create_catalogue_invoice(
-            bucket_id=_BUCKET_ID,
-            kind=InvoiceKind.RECEIVED,
-            counterparty_name="Papeleria Sol SL",
-            counterparty_tax_id=_COUNTERPARTY_CIF,
-            counterparty_country="ES",
-            invoice_number="2026-0142",
-            issued_at=date(2026, 3, 10),
-            taxable_base=Decimal("100.00"),
-            iva_rate=Decimal("21"),
-            currency="EUR",
+            invoice=build_catalogue_invoice(
+                bucket_id=_BUCKET_ID,
+                kind=InvoiceKind.RECEIVED,
+                counterparty_name="Papeleria Sol SL",
+                counterparty_tax_id=_COUNTERPARTY_CIF,
+                counterparty_country="ES",
+                invoice_number="2026-0142",
+                issued_at=date(2026, 3, 10),
+                taxable_base=Decimal("100.00"),
+                iva_rate=Decimal("21"),
+                currency="EUR",
+            ),
         )
         invoice_id = created.invoice.invoice_id
 

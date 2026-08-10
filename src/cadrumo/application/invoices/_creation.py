@@ -405,68 +405,23 @@ def build_catalogue_invoice(
 
 def create_catalogue_invoice(
     *,
-    bucket_id: str,
-    kind: InvoiceKind,
-    counterparty_name: str,
-    counterparty_tax_id: str | None,
-    counterparty_country: str,
-    invoice_number: str,
-    issued_at: date,
-    taxable_base: Decimal,
-    iva_rate: Decimal | None,
-    currency: str,
-    payment_status: PaymentStatus = PaymentStatus.PENDING,
-    notes: str = "",
-    iva_category: IvaCategory | None = None,
-    operation_type: IntracomOperationType | None = None,
-    operation_date: date | None = None,
-    retention_rate: Decimal | None = None,
-    retention_amount: Decimal | None = None,
-    invoice_class: InvoiceClass = InvoiceClass.ORDINARIA,
-    series: str | None = None,
-    rectifies_invoice_number: str | None = None,
-    recargo_amount: Decimal | None = None,
-    lines: Sequence[InvoiceLine] | None = None,
+    invoice: Invoice,
     repository: InvoiceCatalogueRepositoryProtocol | None = None,
-    rate_provider: ExchangeRateProvider | None = None,
     event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,
     actor: str = "cli",
 ) -> CatalogueInvoiceCreateResult:
-    """Persist one rich catalogue :class:`Invoice` and return the updated catalogue.
+    """Persist one pre-built catalogue invoice and return the updated catalogue.
 
-    The invoice is built via :func:`build_catalogue_invoice`, merged into the
-    loaded :class:`InvoiceCatalogue`, and written back through the sanctioned
-    :class:`InvoiceCatalogueRepository`. A duplicate logical identity (same
-    derived ``invoice_id`` already present) is refused so an accidental
-    re-create cannot silently overwrite a linked record.
+    :func:`build_catalogue_invoice` is the sole construction authority for
+    operator-supplied fields and line synthesis. This service owns only the
+    catalogue mutation and its post-save audit event, so the construction
+    contract cannot drift between an in-memory candidate and the written record.
     """
+    bucket_id = invoice.bucket_id
+    if bucket_id is None:
+        raise InvoiceValidationError("a catalogue invoice must declare its bucket_id before persistence")
     repo = repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
-    invoice = build_catalogue_invoice(
-        bucket_id=bucket_id,
-        kind=kind,
-        counterparty_name=counterparty_name,
-        counterparty_tax_id=counterparty_tax_id,
-        counterparty_country=counterparty_country,
-        invoice_number=invoice_number,
-        issued_at=issued_at,
-        taxable_base=taxable_base,
-        iva_rate=iva_rate,
-        currency=currency,
-        payment_status=payment_status,
-        notes=notes,
-        iva_category=iva_category,
-        operation_type=operation_type,
-        operation_date=operation_date,
-        retention_rate=retention_rate,
-        retention_amount=retention_amount,
-        invoice_class=invoice_class,
-        series=series,
-        rectifies_invoice_number=rectifies_invoice_number,
-        recargo_amount=recargo_amount,
-        lines=lines,
-        rate_provider=rate_provider,
-    )
     catalogue = repo.load()
     if invoice.invoice_id in catalogue:
         raise InvoiceValidationError(

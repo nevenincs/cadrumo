@@ -222,7 +222,7 @@ def _seed_prior_m200_closing_stock(*, obs_repo: CalculationObservationRepository
     historical filing the ``filing_year_delta = -1`` carries fold into the current
     ejercicio.
     """
-    obs_repo.save_observation(
+    obs_repo.save(obs_repo.prepare_observation_envelope(
         RegistryModeloObservation(
             modelo=_M200,
             filing_year=_PRIOR_YEAR,
@@ -240,7 +240,7 @@ def _seed_prior_m200_closing_stock(*, obs_repo: CalculationObservationRepository
         ),
         source_kind=APP_FILING_SOURCE_KIND,
         captured_at=_T0,
-    )
+    ))
 
 
 def _seed_zero_m202_pagos(*, obs_repo: CalculationObservationRepository) -> None:
@@ -253,7 +253,7 @@ def _seed_zero_m202_pagos(*, obs_repo: CalculationObservationRepository) -> None
     the cross-year BIN / dotaciones carries the sole subject of the assertions.
     """
     for period in _M202_PAGO_PERIODS:
-        obs_repo.save_observation(
+        obs_repo.save(obs_repo.prepare_observation_envelope(
             RegistryModeloObservation(
                 modelo=_M202,
                 filing_year=_FILING_YEAR,
@@ -270,7 +270,7 @@ def _seed_zero_m202_pagos(*, obs_repo: CalculationObservationRepository) -> None
             ),
             source_kind=APP_FILING_SOURCE_KIND,
             captured_at=_T0,
-        )
+        ))
 
 
 def _calculate_m200(

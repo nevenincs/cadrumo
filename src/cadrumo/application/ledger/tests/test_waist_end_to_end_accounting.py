@@ -46,7 +46,11 @@ import pytest
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....application.aggregation import CalculationSourceContext
-from ....application.invoices import InvoiceCatalogueSourceResolver, create_catalogue_invoice
+from ....application.invoices import (
+    InvoiceCatalogueSourceResolver,
+    build_catalogue_invoice,
+    create_catalogue_invoice,
+)
 from ....core import STRUCTURED_DOCUMENT_SHAPES, BindingSourceKind, Period
 from ....domain.attachments import (
     AttachmentFileContent,
@@ -322,16 +326,18 @@ class TestHop5ConfirmAndHop6Invoice:
     def _confirm(runtime_profile: TestRuntimeProfile) -> Invoice:
         draft = _extract_invoice_fields_from_structured_record(_evidence())
         return create_catalogue_invoice(
-            bucket_id=_BUCKET_ID,
-            kind=InvoiceKind.RECEIVED,
-            counterparty_name="Proveedor Waist SL",
-            counterparty_tax_id=draft.supplier_tax_id,
-            counterparty_country="ES",
-            invoice_number=draft.invoice_number or "FAC-2024-0007",
-            issued_at=date(2024, 3, 15),
-            taxable_base=draft.taxable_base or Decimal("0"),
-            iva_rate=Decimal("21"),
-            currency="EUR",
+            invoice=build_catalogue_invoice(
+                bucket_id=_BUCKET_ID,
+                kind=InvoiceKind.RECEIVED,
+                counterparty_name="Proveedor Waist SL",
+                counterparty_tax_id=draft.supplier_tax_id,
+                counterparty_country="ES",
+                invoice_number=draft.invoice_number or "FAC-2024-0007",
+                issued_at=date(2024, 3, 15),
+                taxable_base=draft.taxable_base or Decimal("0"),
+                iva_rate=Decimal("21"),
+                currency="EUR",
+            ),
         ).invoice
 
     def test_the_invoice_carries_the_facts_the_draft_carried(self, runtime_profile: TestRuntimeProfile) -> None:
