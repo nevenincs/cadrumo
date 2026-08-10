@@ -4,7 +4,7 @@ tags:
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
 modified: '2026-08-10'
-body_hash: 'sha256:c292ec8554fbae501ebae466956aee4a935b87fe2f2e06c214ad6f0c94084db3'
+body_hash: 'sha256:f243bf0478d9a843ff9918089cc365f74c031bffa4f803decbc144b5bc874c35'
 tier: L3
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
@@ -92,18 +92,20 @@ Use the proven authority to replace unverified trees, close the blocked split sp
 Regenerate the highest-priority calculation-model revisions and discharge the held relayout obligations.
 
 - [ ] `W04.P07.S19` - Author and review semantic maps for the required Modelo 303 design epochs; `dev/registry/mappings/modelo_303/`.
-- [ ] `W04.P07.S20` - Generate and validate the complete Modelo 303 revision trees and provenance manifests; `src/cadrumo/_data/registry/aeat/modelos/303/revisions/`.
-- [ ] `W04.P07.S21` - Author, generate, and validate the blocked Modelo 390 revision trees through the same authority; `src/cadrumo/_data/registry/aeat/modelos/390/revisions/`.
+- [ ] `W04.P07.S20` - Generate and validate complete Modelo 303 revision trees and provenance manifests, then delete every superseded manual export tree with no fallback; `src/cadrumo/_data/registry/aeat/modelos/303/revisions/`.
+- [ ] `W04.P07.S21` - Generate and validate complete Modelo 390 revision trees and provenance manifests, then delete every superseded manual export tree with no fallback; `src/cadrumo/_data/registry/aeat/modelos/390/revisions/`.
 
 ### Phase `W04.P08` - campaign integration and release
 
 Re-run relayout, binding, calculation, and export proofs before exact-scope delivery.
 
-- [ ] `W04.P08.S22` - Bootstrap explicit Modelo 200 semantic maps, regenerate its held revision trees, and re-key the revision only from generated provenance; `src/cadrumo/_data/registry/aeat/modelos/200/revisions/`.
-- [ ] `W04.P08.S23` - Reconcile the relayout plan rows and superseded assumptions against generated evidence; `.vault/plan/2026-08-08-aeat-design-relayout-boundary-plan.md`.
-- [ ] `W04.P08.S24` - Run formal code review and resolve every high and medium finding; `.vault/audit/`.
-- [ ] `W04.P08.S25` - Run focused static, registry, binding, calculation, export, and emitted-byte gates and record exact proof boundaries; `src/cadrumo/`.
-- [ ] `W04.P08.S27` - Commit and push only the reviewed generator and relayout payload with clean conflict and status proof; `.`.
+- [ ] `W04.P08.S22` - Bootstrap explicit Modelo 200 semantic maps, generate and re-key its held revisions from provenance, then delete the superseded manual fragment tree; `src/cadrumo/_data/registry/aeat/modelos/200/revisions/`.
+- [ ] `W04.P08.S23` - Delete obsolete single-file and direct-revision registry loader compatibility paths and their migration tests after generated replacements land; `src/cadrumo/domain/calculations/registry/`.
+- [ ] `W04.P08.S24` - Replace record-design derivative fallbacks and print-only unmeasured outcomes with hard failures and structural no-legacy guards for generated targets; `src/cadrumo/domain/calculations/registry/tests/`.
+- [ ] `W04.P08.S25` - Reconcile the relayout plan rows and superseded assumptions against generated and deletion evidence; `.vault/plan/2026-08-08-aeat-design-relayout-boundary-plan.md`.
+- [ ] `W04.P08.S27` - Run formal code review and resolve every high and medium finding; `.vault/audit/`.
+- [ ] `W04.P08.S28` - Run focused static, registry, binding, calculation, export, emitted-byte, and no-legacy gates and record exact proof boundaries; `src/cadrumo/`.
+- [ ] `W04.P08.S29` - Commit and push only the reviewed generator, relayout, and legacy-deletion payload with clean conflict and ancestry proof; `.`.
 
 ## Parallelization
 
