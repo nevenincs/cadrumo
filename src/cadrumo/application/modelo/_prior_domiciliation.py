@@ -6,6 +6,11 @@ by the externally attested baseline being rectified.  This module therefore
 requires a persisted, source-header-derived ``U`` observation joined by the
 baseline's justificante CSV; a computed amount, a current profile, or an old
 local export cannot substitute for that official evidence.
+
+The baseline is read from the :class:`ModeloRecord` that filed it and the
+:class:`CalculationRevision` that produced its figures — both persisted, so the
+marker rests on what was actually filed rather than on what the current export
+would compute.
 """
 
 from __future__ import annotations
@@ -176,6 +181,10 @@ def resolve_prior_domiciliation_election(
     observation join keys on, and the header is what the disposition below is
     checked against -- so no stage can be reordered without weakening the one
     after it.
+
+    ``revision`` is the draft :class:`CalculationRevision` being exported; it
+    supplies the amendment link the chain starts from and never the proof
+    itself, which is why a computed figure cannot stand in for the baseline.
     """
     if not isinstance(election, PriorDomiciliationElection):
         raise ModeloPriorDomiciliationElectionRefusedError(

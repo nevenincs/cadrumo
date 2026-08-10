@@ -4,8 +4,8 @@ Every surface calls :func:`record_sync_run` at the point its run finishes, on
 partial failure as well as on success. Nothing else writes this store.
 
 The write is a co-write and not two writes. The record and the bucket event it
-carries the id of are handed to the secure-object repository's batch save in one
-call, with both repositories bound to the SAME repository instance so they share
+carries the id of are handed to the :class:`SecureObjectRepository` batch save
+in one call, with both repositories bound to the SAME instance so they share
 one session scope and roll back together. That is the shipped pattern rather
 than a per-repository wrapper method: the wrappers that exist are sugar over the
 same batch save, and a record type that owns no catalogue of its own has the
