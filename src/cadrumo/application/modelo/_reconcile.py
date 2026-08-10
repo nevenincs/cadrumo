@@ -57,7 +57,7 @@ from pydantic import BaseModel, Field
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo
 from ...core.errors import CadrumoError
-from ...core.identity import BucketId, WorkUnitId
+from ...core.identity import BucketId, WorkUnitId, same_tax_identifier, tax_id_identity_token
 from ...core.time import now
 from ._action_errors import WorkUnitNotFoundError
 from ._reconcile_casilla import CasillaDivergence, CasillaDivergenceKind, detect_casilla_divergences
@@ -580,7 +580,7 @@ def _identity_header_diffs(
     profile_tax_id = _active_profile_tax_id(active_bucket_id)
     if not profile_tax_id:
         advisories.append(_identity_anchor_unverified("tax_id", modelo=str(work_unit.modelo)))
-    elif profile_tax_id != _normalise_tax_id(evidence_tax_id):
+    elif not same_tax_identifier(profile_tax_id, evidence_tax_id):
         diffs.append(
             ModeloReconciliationDiff(
                 field_name="tax_id",
@@ -1166,7 +1166,16 @@ def _active_profile_tax_id(bucket_id: str) -> str:
 
 
 def _normalise_tax_id(value: object) -> str:
-    return str(value or "").strip().upper()
+    """Coerce an untyped profile value to the canonical storage-keying token.
+
+    This helper owns only the ``object`` coercion that
+    :func:`~core.identity.tax_id_identity_token` deliberately does not accept;
+    the normal form itself is the canonical one. Its result is a display and
+    presence value, never a comparison key -- two identifiers are compared with
+    :func:`~core.identity.same_tax_identifier`, which strips separators so a
+    printed ``B-1234567-4`` matches a stored ``B12345674``.
+    """
+    return tax_id_identity_token(str(value or ""))
 
 
 __all__ = [

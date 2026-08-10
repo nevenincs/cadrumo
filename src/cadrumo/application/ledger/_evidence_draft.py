@@ -127,7 +127,7 @@ from ...core import (
 from ...core.config import Settings
 from ...core.config import load_settings as _load_settings
 from ...core.external_constants import DEFAULT_CURRENCY, XML_MIME_TYPE
-from ...core.identity import tax_id_identity_token
+from ...core.identity import same_tax_identifier
 from ...core.parsing import parse_iso8601_date
 from ...domain.attachments import AttachmentNotFoundError, link_attachment_invoice, normalize_media_type
 from ...domain.currency import ExchangeRateProvider
@@ -1806,12 +1806,24 @@ def _agreed_counterparty_tax_id(*, supplied: str | None, extracted: str | None) 
     printing either would put a tax identity into a pasteable artefact for no
     gain.
 
-    Comparison is on :func:`~cadrumo.core.identity.tax_id_identity_token`, the
-    canonical "are these the same identifier" form, rather than a local
-    trim-and-uppercase. It deliberately asserts no checksum -- a counterparty
-    may be non-resident and carry a foreign identifier -- which is exactly right
-    here: this answers "same identifier?", and the separate validation gate on
-    the invoice model answers "valid Spanish identifier?".
+    Comparison is on :func:`~cadrumo.core.identity.same_tax_identifier`, the
+    canonical "are these the same identifier" predicate. It deliberately asserts
+    no checksum -- a counterparty may be non-resident and carry a foreign
+    identifier -- which is exactly right here: this answers "same identifier?",
+    and the separate validation gate on the invoice model answers "valid Spanish
+    identifier?".
+
+    The axis that matters on THIS path is separators, not case. One side is
+    whatever an on-host extractor read off a printed document, and printed
+    identifiers carry hyphens and spaces routinely, so the comparison must
+    normalise them away: ``B-1234567-4`` and ``B12345674`` are one identifier.
+    :func:`~cadrumo.core.identity.tax_id_identity_token` would NOT match those
+    two -- it stays trim-and-uppercase because it keys stored objects and must
+    never merge two characters-differ identifiers into one row. Keying and
+    comparing are different questions, and this one is comparing.
+
+    A blank on either side answers "not the same" and refuses, because an
+    invoice cannot be confirmed against an identity nothing supplied.
 
     Args:
         supplied: The operator's ``--counterparty-nif``, or ``None``.
@@ -1831,7 +1843,7 @@ def _agreed_counterparty_tax_id(*, supplied: str | None, extracted: str | None) 
         # the operator's value is authoritative. This is the override case the
         # flag has always served, and it stays.
         return supplied
-    if tax_id_identity_token(supplied) != tax_id_identity_token(extracted):
+    if not same_tax_identifier(supplied, extracted):
         raise PurchaseInvoiceEvidenceInputError(
             "cannot confirm an invoice: the counterparty_tax_id supplied does not match the one "
             "extracted from the document. Check the tax id printed on the invoice; re-run the "
