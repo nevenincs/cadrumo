@@ -137,6 +137,19 @@ errors all came from claims that were structurally sound and never observed.
 - S13 and S16 are decisions, not implementations. They close when the decision
   is recorded with its grounding, including a decision to leave things as they
   are.
+- S31 closes when the lane-reachability gate is GREEN, not when thirteen files
+  have been added to a path list. The count is today's measurement and the row
+  states it as evidence, never as the pass condition: a tally encodes a moment
+  and then detects nothing, which is the failure mode that produced this hole.
+  The gate already asks the property, so the property is the criterion.
+- S32 closes on a triage record that names every red with an owner, not on a
+  green suite. Some of what enrolment exposes will belong to other campaigns,
+  and routing those honestly is the close - absorbing them would make this row
+  a dumping ground and hide who actually owes the fix.
+- S33 closes on a dated answer with evidence, including the answer that nothing
+  shipped past it. It does not close because S31 and S32 turned the gate green:
+  a gate going green afterwards says nothing about how long it was red before,
+  and that question is the whole row.
 
 Commit verification for every row: resolve the sha with `git log --format=%H
 --grep=<subject> -1` and read `git show <sha> --numstat`. Never verify with
