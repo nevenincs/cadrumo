@@ -9,7 +9,12 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.core.hashing import canonical_json_bytes
-from cadrumo.domain.calculations.registry import ExportFieldDefinition, ExportLayoutDefinition, RegistryValidationError
+from cadrumo.domain.calculations.registry import (
+    ExportFieldDefinition,
+    ExportLayoutDefinition,
+    ExportValuePolicy,
+    RegistryValidationError,
+)
 
 from .. import _provenance_manifest
 from .._provenance_manifest import (
@@ -285,6 +290,35 @@ def test_loader_semantic_digest_normalises_loader_order_but_detects_coordinate_c
 
     assert loader_semantic_digest(_loaded_layout(records_reversed=True)) == baseline
     assert loader_semantic_digest(_loaded_layout(first_offset=2)) != baseline
+
+
+def test_loader_semantic_digest_detects_value_policy_change() -> None:
+    """A runtime value transform is loader-visible meaning, never omitted metadata."""
+    plain = ExportFieldDefinition.model_validate(
+        {
+            "id": "selected",
+            "offset": 1,
+            "length": 1,
+            "kind": "casilla",
+            "casilla_id": "01",
+            "data_type": "integer",
+            "required": False,
+            "padding": "left_zero",
+            "justification": "right",
+            "signed": False,
+            "legal_refs": ("ley-27-2014:art-40",),
+            "source_refs": ("aeat-dr-200-2025",),
+        },
+    )
+    selected = plain.model_copy(update={"value_policy": ExportValuePolicy.SELECTED_1_UNSELECTED_0})
+    plain_layout = _one_field_layout().model_copy(
+        update={"records": (_one_field_layout().records[0].model_copy(update={"fields": (plain,)}),)},
+    )
+    selected_layout = plain_layout.model_copy(
+        update={"records": (plain_layout.records[0].model_copy(update={"fields": (selected,)}),)},
+    )
+
+    assert loader_semantic_digest(selected_layout) != loader_semantic_digest(plain_layout)
 
 
 def test_manifest_refuses_legacy_shapes_schema_drift_duplicate_outputs_and_unsafe_paths() -> None:

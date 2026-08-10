@@ -36,7 +36,13 @@ from typing import Final, cast
 
 from .....core import CasillaId
 from .....core.decimal import coerce_decimal_strict
-from .....domain.calculations.registry import CasillaFieldKind, ExportFieldDefinition, ExportRecordDefinition
+from .....domain.calculations.registry import (
+    CasillaFieldKind,
+    ExportFieldDefinition,
+    ExportRecordDefinition,
+    RegistryValidationError,
+    project_export_value,
+)
 from .....domain.modelos import ModeloExportError
 from ._errors import AeatExportFormatError
 from ._formats import (
@@ -273,7 +279,15 @@ class RegistryFixedWidthRecordRenderer:
             )
 
         if field.data_type == "integer":
-            headers[field.id] = _integer_text(field, raw)
+            try:
+                projected = project_export_value(field.value_policy, raw)
+            except RegistryValidationError as exc:
+                raise _export_error(
+                    f"export field {field.id!r} has an invalid value_policy input",
+                    field_id=field.id,
+                    reason="value_policy",
+                ) from exc
+            headers[field.id] = _integer_text(field, str(projected))
             kind = FieldKind.NUMERIC
         elif field.data_type == "text":
             headers[field.id] = raw

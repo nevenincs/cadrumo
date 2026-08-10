@@ -12,6 +12,7 @@ from pydantic import ValidationError
 
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import (
+    ExportValuePolicy,
     RegistryValidationError,
     load_catalogue_file,
     resolve_record_design_binary,
@@ -554,9 +555,7 @@ def test_real_m200_profile_exactly_covers_source_eligibility_and_excludes_variab
         filing_year=2025,
         design_epoch="2025",
     )
-    eligibility = project_render_profile_eligibility(
-        field for sheet in intermediate.sheets for field in sheet.fields
-    )
+    eligibility = project_render_profile_eligibility(field for sheet in intermediate.sheets for field in sheet.fields)
     design_identity = RenderProfileDesignIdentity(
         modelo="200",
         design_epoch=intermediate.source.design_epoch,
@@ -619,19 +618,19 @@ def test_real_m200_profile_exactly_covers_source_eligibility_and_excludes_variab
     assert not any(field.sheet == "DP200000" for field in eligibility.all_fields)
 
     checkbox_rows = {
-        *(('DP200001', row) for row in (24, 27)),
-        *(('DP200001', row) for row in range(29, 106)),
-        *(('DP200001', row) for row in range(107, 110)),
-        ('DP200001B', 22),
-        ('DP200001B', 23),
-        ('DP200002B', 149),
-        ('DP200020B', 39),
+        *(("DP200001", row) for row in (24, 27)),
+        *(("DP200001", row) for row in range(29, 106)),
+        *(("DP200001", row) for row in range(107, 110)),
+        ("DP200001B", 22),
+        ("DP200001B", 23),
+        ("DP200002B", 149),
+        ("DP200020B", 39),
     }
     checkbox_rules = {rule for rule in profile.singleton_rules if rule.semantic_kind == "checkbox"}
     assert {(rule.anchor.sheet, rule.anchor.source_row) for rule in checkbox_rules} == checkbox_rows
     assert all(
         rule.allowed_values == ("0", "1")
-        and rule.value_policy == "selected-1-unselected-0"
+        and rule.value_policy is ExportValuePolicy.SELECTED_1_UNSELECTED_0
         and isinstance(rule.evidence, ReviewedPolicyDecision)
         and rule.evidence.governed_anchor == rule.anchor
         for rule in checkbox_rules
@@ -642,7 +641,7 @@ def test_real_m200_profile_exactly_covers_source_eligibility_and_excludes_variab
         ("DP200DID", 20),
     }
     assert all(
-        rule.value_policy == "four-digit-year-final-two-digits"
+        rule.value_policy is ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS
         and isinstance(rule.evidence, ReviewedPolicyDecision)
         and rule.evidence.governed_anchor == rule.anchor
         for rule in year_rules

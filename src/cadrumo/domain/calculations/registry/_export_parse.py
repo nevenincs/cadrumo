@@ -18,6 +18,7 @@ from ....core.external_constants import LATIN_1_ENCODING as _LATIN_1_ENCODING
 from ....core.parsing import parse_bool as _core_parse_bool
 from ....core.paths import path_stat_fingerprint
 from ._errors import RegistryValidationError
+from ._export_value_policy import validate_export_wire_value
 from ._ids import BindingId, CasillaId, ExportFieldId, ExportLayoutId, RecordId, validated_casilla_id
 from ._schema import (
     CasillaFieldKind,
@@ -418,6 +419,7 @@ def _parse_record_fields(
 
 
 def _parse_field_value(field: ExportFieldDefinition, raw: str) -> Decimal | str | bool | None:
+    validate_export_wire_value(field.value_policy, raw)
     if field.kind == CasillaFieldKind.FILLER:
         return None
     if field.data_type == "money":

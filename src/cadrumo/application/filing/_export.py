@@ -75,6 +75,7 @@ from ...domain.calculations.registry import (
     RegistryValidationError,
     export_fields_overlap,
     parse_export_payload,
+    project_export_value,
     xml_dictionary_entries,
 )
 from ...domain.filing import (
@@ -930,6 +931,10 @@ def _format_field(field: ExportFieldDefinition, value: object) -> str:
         raise FilingExportValidationError(f"export field {field.id!r} must declare length")
     if field.kind == CasillaFieldKind.FILLER:
         return " " * field.length
+    try:
+        value = project_export_value(field.value_policy, value)
+    except RegistryValidationError as exc:
+        raise FilingExportValidationError(f"export field {field.id!r} has an invalid value_policy input") from exc
     if field.data_type == "money":
         rendered = _format_money(value, length=field.length, signed=field.signed)
     elif field.data_type == "integer":
@@ -1018,6 +1023,9 @@ def _mismatched_casilla_ids(
     schema_provider: RegistrySchemaAccessor,
 ) -> tuple[tuple[CasillaId, ...], tuple[CasillaId, ...]]:
     values = {value.casilla_id: value.value for value in draft.values}
+    policies_by_field_identity = {
+        (record.id, field.id): field.value_policy for record in layout.records for field in record.fields
+    }
     mismatched: list[CasillaId] = []
     checked: list[CasillaId] = []
     for parsed in parse_export_payload(
@@ -1037,6 +1045,15 @@ def _mismatched_casilla_ids(
         expected = values.get(parsed.casilla_id)
         if expected is None:
             expected = Decimal("0")
+        try:
+            expected = project_export_value(
+                policies_by_field_identity[(parsed.record_id, parsed.field_id)],
+                expected,
+            )
+        except (KeyError, RegistryValidationError) as exc:
+            raise FilingExportValidationError(
+                f"export field {parsed.field_id!r} could not project its expected verification value",
+            ) from exc
         if isinstance(parsed.value, Decimal):
             expected_decimal = coerce_decimal(expected, default=Decimal("0")) or Decimal("0")
             if round_to_cents(expected_decimal) != round_to_cents(parsed.value):
