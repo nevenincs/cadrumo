@@ -25,7 +25,7 @@ from typing import Annotated, Self
 from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import ElidedProse, Period
+from ...core import ElidedProse, Hex64Str, Period
 from ...core.errors import BaseSeverity as _BaseSeverity
 from ...core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
 from ...core.identity import ProfileId
@@ -35,17 +35,6 @@ from ...domain.user_profile import (
     UserProfileRecord,
     UserProfileStatus,
 )
-
-# Sha-256 content-fingerprint shape shared by the profile-snapshot canonical
-# hash, the stored-hash snapshot pointer, and the current-hash recompute
-# result. Stays bare-str (fingerprint, not identity); factored to a single
-# annotated alias to remove the three-way duplication of the shape literal
-# while preserving full static type information.
-_ProfileSnapshotHash = Annotated[
-    str,
-    Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$"),
-]
-
 
 # ---------------------------------------------------------------------------
 # Lifecycle commands
@@ -283,7 +272,7 @@ class ProfileSnapshot(BaseModel):
     revision_id: str = Field(min_length=1, max_length=64)
     filing_year: int = Field(ge=2000, le=2100)
     period: Period
-    canonical_hash: _ProfileSnapshotHash
+    canonical_hash: Hex64Str
     created_at: datetime
     facts: tuple[UserProfileFact, ...]
 
@@ -301,8 +290,8 @@ class ProfileStaleCheckReport(BaseModel):
 
     snapshot_id: str = Field(min_length=1, max_length=128)
     profile_id: ProfileId
-    stored_hash: _ProfileSnapshotHash
-    current_hash: _ProfileSnapshotHash
+    stored_hash: Hex64Str
+    current_hash: Hex64Str
     stale: bool
 
 

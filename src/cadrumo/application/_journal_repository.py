@@ -27,12 +27,12 @@ from typing import Protocol
 
 from pydantic import ValidationError
 
-from ..core import StorageCategory, exclusive_file_lock, is_link_like, storage_location
+from ..core import HEX_PATTERN_64, StorageCategory, exclusive_file_lock, is_link_like, storage_location
 from ..core.atomic_write import atomic_write_hardened_text
 from ..core.errors import CadrumoError
 from ..core.external_constants import UTF_8_ENCODING
 
-JOURNAL_OPERATION_ID_PATTERN = re.compile(r"^[0-9a-f]{64}$")
+JOURNAL_OPERATION_ID_PATTERN = re.compile(HEX_PATTERN_64)
 _DIRECTORY_MODE = 0o700
 _FILE_MODE = 0o600
 

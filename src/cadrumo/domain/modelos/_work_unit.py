@@ -30,7 +30,7 @@ from typing import Annotated, cast, override
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, Period
+from ...core import STRICT_FROZEN_CONFIG, Hex64Str, Period
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, WorkUnitId
 from ..calculations.registry import RevisionId
@@ -62,15 +62,6 @@ ModeloActorLabel = Annotated[
 _DiscardReason = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=500),
-]
-_OptionalHex64 = Annotated[
-    str | None,
-    StringConstraints(
-        strip_whitespace=True,
-        min_length=64,
-        max_length=64,
-        pattern=r"^[0-9a-f]{64}$",
-    ),
 ]
 _RevisionId = RevisionId
 """The canonical registry revision-id type, not a second local constraint.
@@ -181,9 +172,9 @@ class WorkUnit(BaseModel):
     discarded_at: datetime | None = None
     discarded_by: ModeloActorLabel | None = None
     discard_reason: _DiscardReason | None = None
-    current_calculation_revision_id: _OptionalHex64 = None
-    filed_calculation_revision_id: _OptionalHex64 = None
-    current_filing_record_id: _OptionalHex64 = None
+    current_calculation_revision_id: Hex64Str | None = None
+    filed_calculation_revision_id: Hex64Str | None = None
+    current_filing_record_id: Hex64Str | None = None
     # ISD (Modelo 650/660) and ITPyAJD (Modelo 600/620) context axis:
     # CCAA of the causante (Ley 22/2009 Art. 32) or the bien-location CCAA.
     # None for modelos where jurisdiction follows the declarant's profile CCAA.

@@ -19,7 +19,7 @@ from typing import Annotated, Literal
 
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
-from ...core import CasillaId
+from ...core import CasillaId, Hex64Str
 from ..calculations.registry import ModeloId
 from ._errors import ManualValidationError
 from ._ids import ManualId, ManualPart
@@ -294,18 +294,6 @@ class ManualCatalogue(_ManualStrictFrozen):
         return len(self.manuals)
 
 
-_Sha256 = Annotated[
-    str,
-    StringConstraints(
-        strip_whitespace=True,
-        min_length=64,
-        max_length=64,
-        pattern=r"^[a-f0-9]{64}$",
-    ),
-]
-"""Lowercase hex-encoded SHA-256 digest."""
-
-
 class FetchedManualPart(_ManualStrictFrozen):
     """Result of a successful manual fetch and validation."""
 
@@ -314,7 +302,7 @@ class FetchedManualPart(_ManualStrictFrozen):
     part: ManualPart
     source_pdf_url: AnyHttpUrl
     relative_pdf_path: str
-    sha256: _Sha256
+    sha256: Hex64Str
     content_length: int
     fetched_at: datetime
     synthetic: bool = False
