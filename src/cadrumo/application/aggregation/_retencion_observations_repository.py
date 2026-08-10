@@ -43,7 +43,7 @@ from ...adapters.persistence.storage import (
     SensitivityClass,
     safe_repository_id,
 )
-from ...core import STRICT_FROZEN_CONFIG, Period
+from ...core import STRICT_FROZEN_CONFIG, AggregationCaptureKind, Period
 from ...core.time import UtcInstant, now
 from ._errors import AggregationValidationError, t
 from ._observation_window import hashed_tax_id_token, replace_observation_window
@@ -98,7 +98,7 @@ class _RetencionObservationEnvelopePayload(BaseModel):
     period: Period
     observation: RetencionObservation
     captured_at: UtcInstant
-    source_kind: str = Field(min_length=1)
+    source_kind: AggregationCaptureKind
     source_metadata: Mapping[str, str] = Field(default_factory=dict)
 
 
@@ -172,7 +172,7 @@ class RetencionObservationRepository(SecureBoundRepository[_RetencionObservation
         filing_year: int,
         period: Period,
         observation: RetencionObservation,
-        source_kind: str,
+        source_kind: AggregationCaptureKind,
         captured_at: datetime | None = None,
         source_metadata: Mapping[str, str] | None = None,
     ) -> _RetencionObservationEnvelopePayload:
@@ -199,7 +199,7 @@ class RetencionObservationRepository(SecureBoundRepository[_RetencionObservation
         filing_year: int,
         period: Period,
         observation: RetencionObservation,
-        source_kind: str,
+        source_kind: AggregationCaptureKind,
         captured_at: datetime | None = None,
         source_metadata: Mapping[str, str] | None = None,
     ) -> None:
@@ -223,7 +223,7 @@ class RetencionObservationRepository(SecureBoundRepository[_RetencionObservation
         filing_year: int,
         period: Period,
         observations: Sequence[RetencionObservation],
-        source_kind: str,
+        source_kind: AggregationCaptureKind,
         captured_at: datetime | None = None,
         source_metadata: Mapping[str, str] | None = None,
     ) -> None:
@@ -304,7 +304,7 @@ def persist_retencion_observations(
     filing_year: int,
     period: Period,
     observations: Sequence[RetencionObservation],
-    source_kind: str = "aggregate_pull",
+    source_kind: AggregationCaptureKind = AggregationCaptureKind.AGGREGATE_PULL,
 ) -> None:
     """The ONE shared write path every per-perceptor producer calls.
 

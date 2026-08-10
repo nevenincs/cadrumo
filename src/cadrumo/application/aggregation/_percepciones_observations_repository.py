@@ -57,7 +57,7 @@ from ...adapters.persistence.storage import (
     SensitivityClass,
     safe_repository_id,
 )
-from ...core import STRICT_FROZEN_CONFIG, Period
+from ...core import STRICT_FROZEN_CONFIG, AggregationCaptureKind, Period
 from ...core.time import UtcInstant, now
 from ...domain.calculations.registry import WithholdingObservation
 from ._errors import AggregationValidationError, t
@@ -112,7 +112,7 @@ class _PercepcionObservationEnvelopePayload(BaseModel):
     period: Period
     observation: WithholdingObservation
     captured_at: UtcInstant
-    source_kind: str = Field(min_length=1)
+    source_kind: AggregationCaptureKind
     source_metadata: Mapping[str, str] = Field(default_factory=dict)
 
 
@@ -190,7 +190,7 @@ class PercepcionObservationRepository(SecureBoundRepository[_PercepcionObservati
         filing_year: int,
         period: Period,
         observation: WithholdingObservation,
-        source_kind: str,
+        source_kind: AggregationCaptureKind,
         captured_at: datetime | None = None,
         source_metadata: Mapping[str, str] | None = None,
     ) -> _PercepcionObservationEnvelopePayload:
@@ -217,7 +217,7 @@ class PercepcionObservationRepository(SecureBoundRepository[_PercepcionObservati
         filing_year: int,
         period: Period,
         observation: WithholdingObservation,
-        source_kind: str,
+        source_kind: AggregationCaptureKind,
         captured_at: datetime | None = None,
         source_metadata: Mapping[str, str] | None = None,
     ) -> None:
@@ -241,7 +241,7 @@ class PercepcionObservationRepository(SecureBoundRepository[_PercepcionObservati
         filing_year: int,
         period: Period,
         observations: Sequence[WithholdingObservation],
-        source_kind: str,
+        source_kind: AggregationCaptureKind,
         captured_at: datetime | None = None,
         source_metadata: Mapping[str, str] | None = None,
     ) -> None:
@@ -318,7 +318,7 @@ def persist_percepcion_observations(
     filing_year: int,
     period: Period,
     observations: Sequence[WithholdingObservation],
-    source_kind: str = "aggregate_pull",
+    source_kind: AggregationCaptureKind = AggregationCaptureKind.AGGREGATE_PULL,
 ) -> None:
     """The ONE shared write path every per-perceptor-clave producer calls.
 

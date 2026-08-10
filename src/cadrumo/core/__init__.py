@@ -378,6 +378,7 @@ if TYPE_CHECKING:
     from ._pid_liveness import pid_is_alive
     from .aggregation import (
         OBSERVATION_BACKED_BINDING_SOURCE_KINDS,
+        AggregationCaptureKind,
         BindingSourceKind,
         IntracomOperationType,
     )
@@ -462,6 +463,7 @@ __all__: list[str] = [
     "Art104TresExclusion",
     "AuthProviderDescription",
     "AuthProviderKind",
+    "AggregationCaptureKind",
     "BindingSourceKind",
     "BucketPointer",
     "CasillaId",
@@ -663,6 +665,10 @@ def __getattr__(name: str) -> object:
         from .aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS
 
         return OBSERVATION_BACKED_BINDING_SOURCE_KINDS
+    if name == "AggregationCaptureKind":
+        from .aggregation import AggregationCaptureKind
+
+        return AggregationCaptureKind
     if name == "BindingSourceKind":
         from .aggregation import BindingSourceKind
 
