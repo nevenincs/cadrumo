@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Iterator
 from pathlib import Path
 from typing import cast
@@ -9,6 +10,7 @@ from typing import cast
 import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.storage import EnvelopeVersionError
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.i18n import tr
 from ....core.resources import resources
@@ -35,6 +37,12 @@ from .. import (
     RemoveProfileCommand,
     RenameProfileCommand,
     UserProfileLifecycleRepository,
+)
+from .._repository import (
+    USER_PROFILE_VALUE_NAMESPACE,
+    _USER_PROFILE_VALUE_SENSITIVITY,
+    _USER_PROFILE_VALUE_VERSION,
+    user_profile_value_object_key,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -671,3 +679,56 @@ def test_complete_setup_refuses_an_active_profile(
     )
     with pytest.raises(UserProfileValidationError):
         service.complete_setup(CompleteSetupCommand(profile_id=_PROFILE_BUCKET_ID))
+
+
+def test_load_refuses_a_stored_record_declaring_no_schema_version(
+    secure_objects: SecureObjectRepository,
+    schema: ProfileSchemaDefinition,
+) -> None:
+    """Anti-tautology proof: strip the marker from the stored bytes and reload.
+
+    The check has to read the decrypted payload while it is still a mapping.
+    The typed field resolves from a default factory reading the schema
+    authority, so after validation the marker is present whether or not the
+    bytes carried it -- a check placed later would pass here and prove nothing.
+
+    Nothing this build writes reaches this state: the one production
+    construction site stamps id and version from the loaded schema. The marker
+    is removed deliberately, which is the only way an unstamped payload exists.
+
+    This closes the READ boundary only. A record constructed in memory without
+    the field still resolves it from the default factory; making that
+    unconstructable was the wider remedy this row deliberately does not take.
+    """
+    svc = _service(secure_objects, schema)
+    svc.register(
+        RegisterProfileCommand(
+            profile_id=_PROFILE_BUCKET_ID,
+            display_name="Operator",
+            facts=_all_required_facts(schema),
+        ),
+    )
+    assert UserProfileLifecycleRepository().load(_PROFILE_BUCKET_ID).schema_version == schema.version
+
+    object_key = user_profile_value_object_key(_PROFILE_BUCKET_ID)
+    record = secure_objects.load(
+        USER_PROFILE_VALUE_NAMESPACE,
+        object_key,
+        expected_class=_USER_PROFILE_VALUE_SENSITIVITY,
+        max_supported_version=_USER_PROFILE_VALUE_VERSION,
+    )
+    assert record is not None
+    envelope = json.loads(record.payload.decode("utf-8"))
+    assert "schema_version" in envelope["payload"], "the writer must stamp it for this proof to be meaningful"
+    del envelope["payload"]["schema_version"]
+    secure_objects.save(
+        namespace=USER_PROFILE_VALUE_NAMESPACE,
+        object_key=object_key,
+        classification=record.classification,
+        schema_version=record.schema_version,
+        written_at=record.written_at,
+        payload=json.dumps(envelope).encode("utf-8"),
+    )
+
+    with pytest.raises(EnvelopeVersionError, match="declares no schema_version"):
+        UserProfileLifecycleRepository().load(_PROFILE_BUCKET_ID)

@@ -22,6 +22,7 @@ objects encrypted at rest by
 
 from __future__ import annotations
 
+import json
 from collections.abc import Iterable
 
 from pydantic import ValidationError
@@ -238,6 +239,42 @@ def user_profile_snapshot_object_key(profile_id: str, snapshot_id: str) -> str:
     return f"user-profile-snapshot:{trimmed_profile}:{trimmed_snapshot}"
 
 
+def _require_stored_payload_schema_version(raw_payload: bytes, *, namespace: str, subject: str) -> None:
+    """Refuse a stored profile payload whose bytes declare no schema version.
+
+    Read from the decrypted JSON while it is still a mapping, which is the only
+    point where the question can be answered. The typed model resolves the
+    field from a ``default_factory`` reading the schema authority, so once
+    validation has run the marker is present whether or not the bytes carried
+    it -- a check placed after that seam passes on every payload and proves
+    nothing.
+
+    An unstamped payload is corruption, not history. Nothing this build writes
+    can produce one: the single production construction site stamps the id and
+    version from the loaded schema, and the field's own default derives from
+    the same authority, so bytes without the marker came from outside that
+    path and this build cannot say what schema they were written under.
+
+    Lives at the profile boundary rather than in the shared secure-object
+    repository, whose generic path serves every namespace: a check there would
+    change behaviour for records that have no such marker and are not ours.
+    """
+    try:
+        document = json.loads(raw_payload.decode("utf-8"))
+    except (UnicodeDecodeError, ValueError):
+        # Malformed bytes are not this check's subject; the typed validation
+        # below reports them with the field-level detail it already produces.
+        return
+    inner = document.get("payload") if isinstance(document, dict) else None
+    if not isinstance(inner, dict) or "schema_version" in inner:
+        return
+    raise EnvelopeVersionError(
+        f"stored {subject} declares no schema_version; this build cannot establish "
+        "which profile schema the payload was written under",
+        context={"namespace": namespace, "subject": subject},
+    )
+
+
 class _BucketBoundRepository:
     """Shared bucket-binding init for the user-profile repository pair.
 
@@ -411,6 +448,11 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
                 translated_message="application.user_profile.errors.repository_profile_record_missing",
                 context={"profile_id": profile_id, "bucket_id": self._bucket_id},
             )
+        _require_stored_payload_schema_version(
+            record.payload,
+            namespace=USER_PROFILE_VALUE_NAMESPACE,
+            subject="user profile record",
+        )
         try:
             envelope = Envelope[UserProfileRecord].model_validate_json(record.payload.decode("utf-8"))
         except ValidationError as exc:
@@ -723,6 +765,16 @@ class UserProfileSnapshotRepository(_BucketBoundRepository):
                 translated_message="application.user_profile.errors.repository_profile_snapshot_missing",
                 context={"snapshot_id": snapshot_id, "bucket_id": self._bucket_id},
             )
+        # Defence in depth on this half: the snapshot's own marker is already
+        # required with no default, so an unstamped payload would fail typed
+        # validation anyway. Checked here too so the refusal is the same typed
+        # one at both read sites, and so the guarantee does not silently depend
+        # on that field never gaining a default.
+        _require_stored_payload_schema_version(
+            record.payload,
+            namespace=USER_PROFILE_SNAPSHOT_NAMESPACE,
+            subject="user profile snapshot",
+        )
         envelope = Envelope[UserProfileSnapshot].model_validate_json(record.payload.decode("utf-8"))
         if not inner_envelope_classification_is_expected(envelope.classification, _USER_PROFILE_SNAPSHOT_SENSITIVITY):
             raise ClassificationError(
