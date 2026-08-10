@@ -171,7 +171,7 @@ def test_calendar_does_not_conflict_live_capture_csv_with_matching_filed_history
 
 def test_calendar_does_not_conflict_matching_verified_csv_across_reference_namespaces() -> None:
     """CSV-backed local evidence and expediente-backed filed-history evidence can describe the same receipt."""
-    csv = "JUST-303-2025-1T"
+    csv = "JUST3032025X1T7"
     expediente_id = "12345678901234567890"
     payload = _calculation_observation_payload(
         source_kind="aeat_sede_justificante",

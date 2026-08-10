@@ -711,7 +711,7 @@ def test_calendar_strict_mode_refuses_imported_csv_register_without_justificante
 
 
 def test_calendar_text_output_names_verified_aeat_evidence() -> None:
-    csv = "JUST-303-2025-1T"
+    csv = "JUST3032025X1T7"
     record = _modelo_record_with_external_justificante(csv=csv)
     _stamp_calendar_enrolment_from_censo()
     with profile_storage_session(PRIMARY_PROFILE_ID):

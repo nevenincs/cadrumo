@@ -20,7 +20,7 @@ _PRESENTED_AT = datetime(2025, 4, 15, 12, 0, tzinfo=UTC)
 
 def _receipt(**updates: object) -> Justificante:
     values: dict[str, object] = {
-        "csv": "JUST-303-2025-1T",
+        "csv": "JUST3032025X1T7",
         "modelo": "303",
         "ejercicio": "2025",
         "period": _PERIOD,

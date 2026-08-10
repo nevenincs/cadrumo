@@ -24,7 +24,6 @@ from typing import TYPE_CHECKING, Any, Literal, Protocol
 from urllib.parse import urlsplit
 
 from .....core import STRICT_FROZEN_CONFIG, fold_diacritics
-from .....core import is_aeat_csv as _core_is_aeat_csv
 from .....core.config import Settings
 from .....core.external_constants import PDF_MIME_TYPE
 from .....core.i18n import tr
@@ -54,17 +53,6 @@ from ._errors import (
 _log = get_logger(__name__)
 _WHITESPACE_RE = compile(r"\s+")
 _EXTERNAL = Settings.external_constants()
-
-
-def is_aeat_csv(value: str) -> bool:
-    """Return whether ``value`` is one complete AEAT CSV identifier.
-
-    Delegates to the canonical :func:`core.is_aeat_csv` contract so the sede
-    adapters, the inbound justificante extractor, and the public verifier
-    cannot drift on what width AEAT actually issues. Re-exported here because
-    the sede modules already import their shape helpers from this module.
-    """
-    return _core_is_aeat_csv(value)
 
 
 def is_aeat_auth_gate_redirect(current_url: str) -> bool:

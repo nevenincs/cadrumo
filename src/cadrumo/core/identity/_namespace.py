@@ -36,13 +36,16 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Annotated, Final
 
-from pydantic import StringConstraints
+from pydantic import BeforeValidator, StringConstraints
+
+from .._aeat_csv import AEAT_CSV_MAX_LENGTH, AEAT_CSV_MIN_LENGTH, normalise_aeat_csv
 
 __all__ = [
     "AEAT_EXPEDIENTE_ID_MAX_LENGTH",
     "AEAT_EXPEDIENTE_ID_MIN_LENGTH",
     "AEAT_EXPEDIENTE_ID_PATTERN",
     "AeatClaveLiquidacion",
+    "AeatCsv",
     "AeatExpedienteId",
     "AeatPresentationId",
     "IdentifierNamespace",
@@ -61,7 +64,7 @@ class IdentifierNamespace(StrEnum):
         AEAT_CSV: Código Seguro de Verificación. AEAT's per-document verifier
             hash, printed on a justificante and accepted at the public cotejo
             endpoint to re-serve that document. Shape contract lives at
-            :mod:`core._aeat_csv`; its pydantic alias is not yet declared.
+            :mod:`core._aeat_csv`. Alias: :data:`AeatCsv`.
         AEAT_PRESENTATION_ID: *Número de justificante*. AEAT's internal
             presentation identifier, printed on the receipt body. Distinct
             from :attr:`AEAT_EXPEDIENTE_ID`, which never appears on a
@@ -122,6 +125,48 @@ class IdentifierNamespace(StrEnum):
 #     group. Whether any warrants typing at all is a separate question this
 #     taxonomy does not answer.
 
+
+AeatCsv = Annotated[
+    str,
+    BeforeValidator(normalise_aeat_csv),
+    StringConstraints(
+        min_length=AEAT_CSV_MIN_LENGTH,
+        max_length=AEAT_CSV_MAX_LENGTH,
+        pattern=rf"^[A-Z0-9]{{{AEAT_CSV_MIN_LENGTH},{AEAT_CSV_MAX_LENGTH}}}$",
+    ),
+]
+"""AEAT's Codigo Seguro de Verificacion, at the documented contract's bound.
+
+Eight to thirty-two uppercase alphanumerics, the shape :mod:`core._aeat_csv`
+states and every real captured CSV satisfies. A receipt-domain alias once
+carried a wider four-to-sixty-four bound with no pattern at all, and the two
+coexisted as one concept at two strengths. That alias is retired rather than
+kept as a second opinion.
+
+The alias NORMALISES through the shared comparison form BEFORE its own
+constraints run, which is the same shape :data:`~core.identity.TaxIdIdentityToken`
+already uses in this package. Ordering matters: a trailing uppercase transform
+runs AFTER the pattern check, so it would still refuse the lowercase value it
+was added to accept. Normalising first means the constraints only ever see the
+canonical form.
+
+Uppercasing rather than refusing a lowercase value is a
+correction rather than a convenience. Case-insensitive matching of one CSV
+against another is a deliberate, named, tested capability of the calendar
+evidence surface -- two case-equivalent values are the same identifier and are
+expected to conflict as one. A pattern-only alias would have refused the
+lowercase side at the model boundary and deleted that capability, which is why
+normalising belongs here rather than at each comparison site: the boundary is
+the one place every value passes through.
+
+The bound is the one place in this taxonomy where the TIGHTER type won, so the
+reasoning is recorded rather than assumed: every AEAT-issued CSV observed in
+this repository sits at sixteen characters, mid-window, with margin on both
+sides, while the retired bound admitted values no receipt could carry. The
+evidence is three real captures rather than a specification, which is thin --
+what makes the tighter bound safe is the margin and the asymmetry of the two
+failure directions, not the size of the sample.
+"""
 
 AEAT_EXPEDIENTE_ID_MIN_LENGTH: Final[int] = 12
 AEAT_EXPEDIENTE_ID_MAX_LENGTH: Final[int] = 32

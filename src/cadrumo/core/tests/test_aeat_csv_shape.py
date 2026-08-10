@@ -33,12 +33,3 @@ class TestCanonicalShape:
     def test_match_is_anchored_at_both_ends(self) -> None:
         """A well-shaped run inside a longer token is not a CSV."""
         assert is_aeat_csv("PREFIX" + "A" * 16 + "SUFFIX!") is False
-
-
-def test_sede_helper_delegates_to_the_canonical_contract() -> None:
-    """The sede adapters must not carry a second width table."""
-    from ...adapters.outbound.aeat.sede._adapter_utils import is_aeat_csv as sede_is_aeat_csv
-
-    for length in (7, 8, 16, 24, 25, 32, 33):
-        candidate = "A" * length
-        assert sede_is_aeat_csv(candidate) is is_aeat_csv(candidate), candidate

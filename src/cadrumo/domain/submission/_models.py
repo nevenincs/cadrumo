@@ -33,9 +33,8 @@ from pydantic import BaseModel, Field, StringConstraints, field_validator, model
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period
 from ...core.hashing import sha256_hex
-from ...core.identity import SubjectTaxId
+from ...core.identity import AeatCsv, SubjectTaxId
 from ...core.time import validate_utc_aware
-from ..justificante import JustificanteCsv
 from ._errors import SubmissionValidationError
 
 _SUBMISSION_ID_LENGTH = 16
@@ -191,7 +190,7 @@ class ModeloPresentado(BaseModel):
     period: Period
     profile_tax_id: SubjectTaxId = Field(min_length=1)
     status: SubmissionStatus
-    justificante_csv: JustificanteCsv | None = None
+    justificante_csv: AeatCsv | None = None
     justificante_pdf_path: Path | None = None
     submitted_at: datetime
     acknowledged_at: datetime | None = None
