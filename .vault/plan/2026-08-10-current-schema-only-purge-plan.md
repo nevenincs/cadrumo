@@ -4,7 +4,7 @@ tags:
   - '#current-schema-only-purge'
 date: '2026-08-10'
 modified: '2026-08-10'
-body_hash: 'sha256:6373cb5ef2f6fcb3a8b4612ddf1d3882303699ca6e36b1bc2656d044f8ec084a'
+body_hash: 'sha256:3840857daf514e37d719aae7bad4cd82d1213fe3422312d30308fa9520a8948b'
 tier: L3
 related:
   - '[[2026-07-09-compatibility-lifecycle-adr]]'
@@ -32,16 +32,19 @@ application legacy. Workflow action-detail compatibility remains exclusively own
 the CLI action-envelope plan and is not duplicated here.
 
 Version numbers appearing in this plan's Phase headings and Step rows are the
-values the canonical schemas declared when the plan was authored. They are a
-record of intent, not an assertion about HEAD, and must never be read as
-evidence that the tree already carries them. At authoring time the profile
-record in fact defaulted to schema version 1 while the canonical user-profile
-schema declared 4, and the identity check was a ceiling that accepted every
-pre-current value; the gap between the plan's stated version and the tree's
-actual one was the defect, not a typo in the plan. Each implementing change
-therefore reads the current version from its schema authority rather than
-inlining the literal at the call site, so a later schema advance moves the
-behaviour without a sweep through this document.
+values this document ASSERTED when it was authored. They are a record of intent,
+never an assertion about HEAD, and they must not be read as evidence that the
+tree carries them. The profile phase is the worked example and it is worth
+stating exactly: the plan says "version 4", the record's field defaulted to 1,
+and the canonical user-profile schema in fact declares 5. All three numbers were
+different, and the plan's was wrong when it was written -- not stale, wrong.
+
+That is why every implementing change reads the current version from its schema
+authority instead of inlining a literal at the call site. Had the remedy been
+"set it to 4" the plan's own error would have been compiled into the code. A
+literal 5 written today would be the same defect one revision later, and the
+gate this plan installs found exactly that shape: hardcoded version literals in
+seeded fixtures, refused the moment exact equality replaced the ceiling.
 
 ## Steps
 
@@ -115,9 +118,9 @@ result disposition.
 Fail official Modelo 303 observation writes before repository mutation when
 `result_disposition` is absent.
 
-- [ ] `W03.P07.S21` - Require result_disposition for applicable official Modelo 303 observation payloads; `src/cadrumo/application/calculations/_observations_repository.py`.
+- [x] `W03.P07.S21` - Require result_disposition for applicable official Modelo 303 observation payloads; `src/cadrumo/application/calculations/_observations_repository.py`.
 - [x] `W03.P07.S22` - Require Modelo 303 result_disposition before any filing persistence write; `src/cadrumo/application/modelo/_revision_persistence.py`.
-- [ ] `W03.P07.S23` - Prove under-declared Modelo 303 observations are refused and current dispositions round trip; `src/cadrumo/application/calculations/tests/test_m303_carry_ingress.py`.
+- [x] `W03.P07.S23` - Prove under-declared Modelo 303 observations are refused and current dispositions round trip; `src/cadrumo/application/calculations/tests/test_m303_carry_ingress.py`.
 
 ## Parallelization
 
