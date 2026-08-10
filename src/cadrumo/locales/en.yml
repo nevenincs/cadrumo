@@ -2279,6 +2279,10 @@ cli:
         pull_all_pairs_refused: '{count} modelo/ejercicio pair(s) could not be read
           and were NOT reported as empty: {pairs}. Re-run to retry; a refusal is not
           evidence that nothing was filed.'
+        pull_dry_run_help: Report what a bulk pull would capture without writing anything.
+          Bulk mode only.
+        pull_dry_run_single_mode_error: --dry-run is only valid for a bulk pull with
+          --from-year/--to-year; a single-modelo pull has no dry run.
         pull_help: Pull filed-declaration data from the authenticated AEAT register.
         pull_modelo_help: Limit this pull to this modelo.
         pull_sources_help: Pull the filed observations required by a target filing's

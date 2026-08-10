@@ -2472,6 +2472,11 @@ cli:
         pull_all_pairs_refused: 'No se han podido leer {count} par(es) de modelo y
           ejercicio y NO se han declarado vacíos: {pairs}. Vuelva a ejecutar la orden
           para reintentarlo; una negativa no prueba que no se presentara nada.'
+        pull_dry_run_help: Muestra lo que capturaria esta descarga masiva sin escribir
+          nada. Solo en modo masivo.
+        pull_dry_run_single_mode_error: --dry-run solo es valido para una descarga
+          masiva con --from-year/--to-year; la descarga de un solo modelo no admite
+          simulacion.
         pull_help: Descarga datos de declaraciones presentadas del registro autenticado
           de AEAT.
         pull_modelo_help: Limita esta descarga a este modelo.

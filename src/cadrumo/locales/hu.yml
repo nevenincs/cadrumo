@@ -2393,6 +2393,11 @@ cli:
         pull_all_pairs_refused: '{count} modelo/adóév pár nem volt olvasható, és NEM
           üresként lett jelentve: {pairs}. Futtassa újra az újrapróbálkozáshoz; az
           elutasítás nem bizonyítja, hogy semmit sem nyújtottak be.'
+        pull_dry_run_help: Megmutatja, mit toltene le ez a tomeges letoltes, anelkul
+          hogy barmit irna. Csak tomeges modban.
+        pull_dry_run_single_mode_error: A --dry-run csak tomeges letoltesnel ervenyes
+          a --from-year/--to-year kapcsolokkal; az egyetlen modellre vonatkozo letoltes
+          nem tamogatja a probafuttatast.
         pull_help: Letölti a benyújtott nyilatkozatok adatait a hitelesített AEAT
           nyilvántartásból.
         pull_modelo_help: Korlátozza ezt a letöltést erre a modellre.

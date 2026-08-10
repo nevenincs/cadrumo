@@ -1398,6 +1398,10 @@ def filed_pull_cmd(
     period: Annotated[str | None, typer.Option("--period", help=tr("cli.app.live.period_help"))] = None,
     expediente_id: Annotated[str | None, typer.Option("--expediente", help=tr("cli.app.live.expediente_help"))] = None,
     limit: Annotated[int | None, typer.Option("--limit", min=1, help=tr("cli.app.live.limit_help"))] = None,
+    dry_run: Annotated[
+        bool,
+        typer.Option("--dry-run", help=tr("cli.app.live.filed.pull_dry_run_help")),
+    ] = False,
 ) -> None:
     """Capture filed-declaration observations through the read-only AEAT register.
 
@@ -1415,6 +1419,12 @@ def filed_pull_cmd(
     _emit_live_auth_preflight()
     selected_modelos = tuple(modelos or ())
     if len(selected_modelos) == 1 and year is not None and year_from is None and year_to is None:
+        if dry_run:
+            # Single-modelo capture has no dry-run path, so accepting the flag here
+            # would hand an operator a real write under a flag whose whole promise
+            # is leaving no trace. Refused rather than ignored, and rather than
+            # extending single mode, which is a different decision.
+            raise typer.BadParameter(tr("cli.app.live.filed.pull_dry_run_single_mode_error"))
         resolved_period = _live_period_option(period, year=year)
         report = asyncio.run(
             capture_filed_data(
@@ -1464,6 +1474,7 @@ def filed_pull_cmd(
             output_root=resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir),
             modelos=selected_modelos or None,
             limit=limit,
+            dry_run=dry_run,
         ),
     )
     lines = _filed_capture_lines(
@@ -1476,6 +1487,7 @@ def filed_pull_cmd(
     )
     result = FiledCaptureResult(
         mode="bulk",
+        dry_run=report.dry_run,
         output_root=report.output_root,
         modelos=list(report.modelos),
         year_from=report.year_from,

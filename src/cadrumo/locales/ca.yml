@@ -2457,6 +2457,11 @@ cli:
         pull_all_pairs_refused: 'No s''han pogut llegir {count} parell(s) de model
           i exercici i NO s''han declarat buits: {pairs}. Torneu a executar l''ordre
           per reintentar-ho; una negativa no prova que no es presentés res.'
+        pull_dry_run_help: Mostra que capturaria aquesta descarrega massiva sense
+          escriure res. Nomes en mode massiu.
+        pull_dry_run_single_mode_error: --dry-run nomes es valid per a una descarrega
+          massiva amb --from-year/--to-year; la descarrega d'un sol model no admet
+          simulacio.
         pull_help: Descàrrega dades de declaracions presentades del registre autenticat
           d'AEAT.
         pull_modelo_help: Limita aquesta descàrrega a aquest model.

@@ -279,6 +279,7 @@ class FiledCaptureResult(OutputSchema):
     year_to: int | None = None
     captured_count: int
     failed_count: int = 0
+    dry_run: bool = False
     observation_paths: list[str]
     artefact_refs: list[str]
     justificante_metadata_count: int = 0
