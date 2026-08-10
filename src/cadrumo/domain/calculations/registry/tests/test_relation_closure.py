@@ -251,7 +251,7 @@ def test_registry_validator_rejects_relation_source_period_outside_source_revisi
     mutated_revision = revision.model_copy(update={"relations": (relation, *revision.relations[1:])})
     mutated_modelo = _with_revision(modelo, mutated_revision)
 
-    with pytest.raises(RegistryValidationError, match="does not support source periods"):
+    with pytest.raises(RegistryValidationError, match="is not supported by any selected source revision"):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(
             _replace_modelo(modelos, mutated_modelo),
         )
@@ -271,8 +271,56 @@ def test_registry_validator_rejects_cross_model_relation_years_without_source_re
     )
     mutated_target = _with_revision(target_modelo, widened_revision)
 
-    with pytest.raises(RegistryValidationError, match="lacks source revision year coverage for 2014-2022"):
+    with pytest.raises(RegistryValidationError, match="lacks exact source revision coverage"):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_registry((source_modelo, mutated_target))
+
+
+def test_m303_2024_relation_coverage_unions_the_early_and_late_revisions() -> None:
+    """The 2024 split is period-wise, never a spanning-revision fallback.
+
+    The committed registry validates because 1T/2T and 3T/4T have distinct
+    revision owners. Removing early 2T leaves the derived source coordinate
+    for late 3T without an owner, which must be red rather than silently
+    consulting a legacy 2023+ revision.
+    """
+    modelos, catalogues = _committed_tree()
+    modelo_303 = _modelo(modelos, "303")
+    early = modelo_303.revisions["2024-hasta-08-y-2t"]
+    period_selector = early.period_selector.model_copy(
+        update={"periods": tuple(period for period in early.period_selector.periods if period != "2T")},
+    )
+    mutated_early = early.model_copy(update={"period_selector": period_selector})
+    mutated_303 = _with_revision(modelo_303, mutated_early)
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"lacks exact source revision coverage for derived period '2T' in source years 2024",
+    ):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(
+            _replace_modelo(modelos, mutated_303),
+        )
+
+
+def test_m303_first_quarter_history_requires_an_observation_backed_target() -> None:
+    """2009/1T may read filed 2008/4T, but only as historical observation data."""
+    modelos, catalogues = _committed_tree()
+    modelo_303 = _modelo(modelos, "303")
+    revision = modelo_303.revisions["2009-y-siguientes"]
+    binding_id = "modelo-303-compensacion-pendiente-anteriores"
+    bindings = tuple(
+        binding.model_copy(update={"source": BindingSourceKind.MANUAL_INPUT}) if binding.id == binding_id else binding
+        for binding in revision.bindings
+    )
+    mutated_revision = revision.model_copy(update={"bindings": bindings})
+    mutated_303 = _with_revision(modelo_303, mutated_revision)
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"lacks exact source revision coverage for derived period '4T' in source years 2008",
+    ):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(
+            _replace_modelo(modelos, mutated_303),
+        )
 
 
 def test_registry_validator_rejects_relation_to_unknown_source_casilla_id() -> None:

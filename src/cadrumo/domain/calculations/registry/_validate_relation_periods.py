@@ -9,7 +9,9 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from ._schema import ModeloDefinition, ModeloRevision, PeriodSelector, RelationRevisionSelector
+from ._errors import RegistryValidationError
+from ._period_offset_math import apply_period_offset
+from ._schema import ModeloDefinition, ModeloRevision, PeriodSelector, RelationDefinition, RelationRevisionSelector
 
 
 def select_relation_source_revisions(
@@ -89,10 +91,176 @@ def validate_source_year_coverage(
     return failures
 
 
+def validate_relation_source_coordinate_coverage(
+    scope: str,
+    *,
+    relation: RelationDefinition,
+    target_selector: PeriodSelector,
+    source_revisions: Iterable[ModeloRevision],
+    source_periods: Iterable[str],
+    source_is_observation_history: bool,
+) -> tuple[tuple[tuple[ModeloRevision, tuple[str, ...]], ...], list[str]]:
+    """Resolve exact source-revision ownership for a cross-model relation.
+
+    A source model may partition one year across multiple revisions. Validate
+    every declared or offset-derived ``(source year, source period)``
+    coordinate against the *union* of those revisions, requiring exactly one
+    owner for each in-modelled coordinate.
+
+    The sole history boundary is generic: an observation-backed carry can read
+    a filing before the earliest modelled source year.  That filing still has
+    to use a known period shape and semantic casilla (checked by the caller),
+    but it cannot be required to have an engine revision that predates the
+    modelled registry.
+    """
+    candidates = tuple(source_revisions)
+    covered_periods_by_revision: dict[str, set[str]] = {}
+    revisions_by_id = {revision.id: revision for revision in candidates}
+    failures: list[str] = []
+
+    coordinates: tuple[tuple[str, int, str | None], ...]
+    if relation.source_period_offset_from_target is None:
+        coordinates = tuple((source_period, 0, None) for source_period in source_periods)
+    else:
+        derived_coordinates: list[tuple[str, int, str | None]] = []
+        for target_period in relation.target_periods:
+            try:
+                offset_year_delta, source_period = apply_period_offset(
+                    relation.source_period_offset_from_target,
+                    target_period=target_period,
+                )
+            except RegistryValidationError:
+                # The sibling period-shape validation reports this with the
+                # relation id and target-period context.
+                continue
+            derived_coordinates.append((source_period, offset_year_delta, target_period))
+        coordinates = tuple(derived_coordinates)
+
+    for source_period, offset_year_delta, target_period in coordinates:
+        period_candidates = tuple(
+            revision for revision in candidates if source_period in revision.period_selector.periods
+        )
+        if not period_candidates:
+            target_context = "" if target_period is None else f" for target period {target_period!r}"
+            failures.append(
+                f"{scope} derived source period {source_period!r}{target_context} "
+                "is not supported by any selected source revision",
+            )
+            continue
+
+        for source_start, source_end in _offset_source_year_intervals(
+            target_selector,
+            relation=relation,
+            offset_year_delta=offset_year_delta,
+        ):
+            for segment_start, segment_end, owners in _coverage_segments(
+                source_start,
+                source_end,
+                period_candidates,
+            ):
+                if len(owners) == 1:
+                    covered_periods_by_revision.setdefault(owners[0].id, set()).add(source_period)
+                    continue
+                if (
+                    not owners
+                    and source_is_observation_history
+                    and _is_pre_modelled_history(segment_end, period_candidates)
+                ):
+                    # There is no engine revision for this historical filing.
+                    # Attach the period to the earliest compatible revision so
+                    # the caller still checks the canonical source casilla.
+                    earliest = min(
+                        period_candidates,
+                        key=lambda revision: _earliest_selector_year(revision.period_selector),
+                    )
+                    covered_periods_by_revision.setdefault(earliest.id, set()).add(source_period)
+                    continue
+                coverage = "lacks" if not owners else "has ambiguous"
+                failures.append(
+                    f"{scope} {coverage} exact source revision coverage for derived "
+                    f"period {source_period!r} in source years {_year_interval_label(segment_start, segment_end)}",
+                )
+
+    coverage = tuple(
+        (revisions_by_id[revision_id], tuple(sorted(periods)))
+        for revision_id, periods in sorted(covered_periods_by_revision.items())
+    )
+    return coverage, failures
+
+
 def period_selectors_overlap(left: PeriodSelector, right: PeriodSelector) -> bool:
     if not set(left.periods).intersection(right.periods):
         return False
     return _year_selectors_overlap(left, right)
+
+
+def _offset_source_year_intervals(
+    target_selector: PeriodSelector,
+    *,
+    relation: RelationDefinition,
+    offset_year_delta: int,
+) -> tuple[tuple[int, int | None], ...]:
+    selector = relation.source_revision_selector
+    if selector.year is not None:
+        source_year = selector.year + offset_year_delta
+        return ((source_year, source_year),)
+    filing_year_delta = relation_filing_year_delta(selector) + offset_year_delta
+    return tuple(
+        (start + filing_year_delta, None if end is None else end + filing_year_delta)
+        for start, end in _selector_year_intervals(target_selector)
+    )
+
+
+def _coverage_segments(
+    start: int,
+    end: int | None,
+    candidates: tuple[ModeloRevision, ...],
+) -> tuple[tuple[int, int | None, tuple[ModeloRevision, ...]], ...]:
+    """Return maximal year segments with a stable set of revision owners."""
+    boundaries = {start}
+    if end is not None:
+        boundaries.add(end + 1)
+    for revision in candidates:
+        for candidate_start, candidate_end in _selector_year_intervals(revision.period_selector):
+            if candidate_start > start and (end is None or candidate_start <= end):
+                boundaries.add(candidate_start)
+            if candidate_end is not None:
+                after_candidate = candidate_end + 1
+                if after_candidate > start and (end is None or after_candidate <= end):
+                    boundaries.add(after_candidate)
+    ordered_boundaries = sorted(boundaries)
+    segments: list[tuple[int, int | None, tuple[ModeloRevision, ...]]] = []
+    for index, segment_start in enumerate(ordered_boundaries):
+        if end is not None and segment_start > end:
+            continue
+        next_boundary = ordered_boundaries[index + 1] if index + 1 < len(ordered_boundaries) else None
+        segment_end = end if next_boundary is None else next_boundary - 1
+        owners = tuple(
+            revision for revision in candidates if revision.period_selector.includes_year(segment_start)
+        )
+        segments.append((segment_start, segment_end, owners))
+    return tuple(segments)
+
+
+def _is_pre_modelled_history(end: int | None, candidates: tuple[ModeloRevision, ...]) -> bool:
+    if end is None:
+        return False
+    return end < min(_earliest_selector_year(revision.period_selector) for revision in candidates)
+
+
+def _earliest_selector_year(selector: PeriodSelector) -> int:
+    intervals = _selector_year_intervals(selector)
+    if not intervals:
+        raise ValueError("relation source revision must declare a year selector")
+    return min(start for start, _ in intervals)
+
+
+def _year_interval_label(start: int, end: int | None) -> str:
+    if end is None:
+        return f"{start}+"
+    if start == end:
+        return str(start)
+    return f"{start}-{end}"
 
 
 def _relation_source_revision_matches(

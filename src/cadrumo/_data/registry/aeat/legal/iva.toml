@@ -1600,24 +1600,23 @@ required_text = [
     "módulos",
 ]
 
-[legal."orden-hac-819-2024:art-1"]
+[legal."orden-hac-819-2024:art-unico"]
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "orden"
-corpus_ref = "corpus/normatives/html/orden-hac-819-2024-art-1.html#a1"
-document_id = "BOE-A-2024-6840"
-article = "1"
-permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-6840#a1"
-published_at = 2024-04-09
-effective_from = 2024-04-10
+corpus_ref = "corpus/normatives/html/orden-hac-819-2024-articulo-unico.html#aunico"
+document_id = "BOE-A-2024-16129"
+article = "único"
+permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2024-16129"
+published_at = 2024-08-05
+effective_from = 2024-08-06
 review_status = "reviewed"
-reviewed_at = 2026-05-30
-reviewed_by = "operator"
-notes = "Articulo 1 de la Orden HAC/819/2024: aprobacion del modelo 303 'Impuesto sobre el Valor Anadido. Autoliquidacion' para los ejercicios 2023 y siguientes. Modifica la Orden EHA/3786/2008 introduciendo las casillas del nuevo formulario: [64] suma de resultados ([46]+[58]+[76]), [65] porcentaje atribuible Administracion del Estado, [66] importe atribuible Administracion del Estado ([64]x[65]/100), [69] resultado autoliquidacion ([66]+[77]+[68]-[78]), [71] resultado final ([69]-[70]+[109])."
+reviewed_at = 2026-08-10
+reviewed_by = "agent-prepared-pending-operator"
+notes = "Artículo único de la Orden HAC/819/2024: sustituye el anexo I de la Orden EHA/3786/2008. La disposición final única ordena aplicarlo por primera vez a la autoliquidación mensual de septiembre de 2024 y a la trimestral del tercer trimestre de 2024; effective_from registra su entrada en vigor el 6 de agosto de 2024. Esta entrada fundamenta únicamente la modificación de diseño; las fórmulas y valores de casillas conservan sus autoridades sustantivas propias."
 required_text = [
-    "Aprobación del modelo 303",
-    "Impuesto sobre el Valor Añadido",
-    "Autoliquidación",
+    "El anexo I de la Orden EHA/3786/2008",
+    "se sustituye por el anexo de esta orden",
 ]
 
 [legal."ley-37-1992:art-124"]
@@ -1809,6 +1808,32 @@ retrieved_at = 2026-07-02
 applies_from = 2025-01-01
 applies_to = 2025-12-31
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
+review_status = "reviewed"
+
+[sources."boe-orden-hfp-1172-2022-iva-authority"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/orden-hfp-1172-2022.html"
+sha256 = "3ba48312e1ae6b939de017dbcf9a34d25559594ccbc14a6da14492af87755abb"
+bytes = 488128
+retrieved_at = 2026-08-10
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-20025"
+review_status = "reviewed"
+
+[sources."boe-orden-hfp-1359-2023-iva-authority"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/orden-hfp-1359-2023.html"
+sha256 = "faecb5b5c83d4191e213ff2bc1b47fc1b3d39f882793de296196ccdd3dd540ed"
+bytes = 478836
+retrieved_at = 2026-08-10
+applies_from = 2024-01-01
+applies_to = 2024-12-31
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25882"
 review_status = "reviewed"
 
 [sources."boe-orden-hac-1425-2025-iva-authority"]

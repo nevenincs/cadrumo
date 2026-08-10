@@ -10,7 +10,8 @@ required, `kind = "casilla"` export fields at page-01 offsets 225/974 were
 never populated -- a live export-completeness gap for any 2024 filer with a
 transitional-rate row.
 
-Ground truth (bundled AEAT Diseño de Registros, aeat-dr-303-2025):
+Ground truth (the bundled 2023, 2024 early/late, 2025, and 2026 AEAT Diseños
+de Registros):
 
     [154] "05" -> 500 (5,00 %) for 2023-01-01..2024-09-30 (Nota 8, pre-flip)
     [154] "05" -> 750 (7,50 %) for 2024-10-01..2024-12-31 (Nota 8, post-flip)
@@ -34,8 +35,7 @@ semantics here would misclassify an October-filed Q3 2024 return into the
 Q4 window and print 7,5 % where the design states 5 %.
 
 GROUNDING GAP, CARRIED FORWARD FROM THE REGISTRY COMMENT: the DESIGN
-authority for every constant and window boundary here is solid
-(aeat-dr-303-2025). The LEGAL authority for the 5 % rate's own
+authority for every constant and window boundary is revision-specific. The LEGAL authority for the 5 % rate's own
 2023 -> 09/3T-2024 span is not fully grounded (real-decreto-ley-4-2024
 covers only the 7,5 %/2 %/0 % follow-on from 10/4T 2024; the instrument that
 opened the original 5 % window in January 2023 is not yet bundled). This test
@@ -162,7 +162,7 @@ def test_mutation_reverting_154_to_manual_reds_the_gate(tmp_path: Path) -> None:
         / "modelos"
         / "303"
         / "revisions"
-        / "2023-y-siguientes"
+        / "2024-desde-09-y-3t"
         / "casillas"
         / "civa.repercutido.general__c21.toml"
     )
@@ -177,7 +177,7 @@ def test_mutation_reverting_154_to_manual_reds_the_gate(tmp_path: Path) -> None:
 
     modelos, _catalogues = load_registry_tree(scratch_root)
     m303 = next(m for m in modelos if m.id == "303")
-    rev = m303.revisions["2023-y-siguientes"]
+    rev = m303.revisions["2024-desde-09-y-3t"]
     casillas = {c.id: c for c in rev.casillas}
 
     assert casillas["154"].input_kind == "manual"
