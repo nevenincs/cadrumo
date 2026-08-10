@@ -27,15 +27,21 @@ from ...application.modelo import (
     require_profile_ready_for_modelo_work,
     resolve_registry_revision_for_work_target,
 )
-from ...application.operator_actions import next_action
+from ...application.operator_actions import ActionReference
 from ...core import Modelo, Period
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
-from ...core.json_contract import Notice, NoticeSeverity
+from ...core.json_contract import (
+    ActionArgumentSource,
+    ActionArgumentStatus,
+    Notice,
+    NoticeSeverity,
+    ResolvedActionArgument,
+)
 from ...domain.calculations.registry import RegistrySnapshotError
 from ...domain.contribuyente import parse_tax_region
 from ...domain.modelos import WorkUnit
-from ._common import _emit_envelope, active_profile_label
+from ._common import _emit_envelope, active_profile_label, resolve_notice_action
 from ._modelo_cli_support import resolve_explicit_or_active_bucket_id
 from ._modelo_payloads import (
     WorkCreateResult,
@@ -454,19 +460,16 @@ def _register_work_list_command(work_app: typer.Typer, deps: _LifecycleDeps) -> 
             f"active_profile\t{active_profile_label() or ''}",
             *work_unit_list_lines(units, include_discarded=include_discarded),
         ]
-        next_step = Notice(
+        no_single_follow_up = Notice(
             severity=NoticeSeverity.INFO,
             code="modelo.work.list.next_action",
             message=tr(
                 "cli.app.modelo.work.list_next_action_summary",
-                default="Inspect one work unit's full state before drafting or recalculating it.",
+                default=("The list can contain multiple work units. Choose one concrete work unit before continuing."),
             ),
-            action=next_action(
-                "operator.modelo.work.status",
-                arguments={"work_unit_id": units[0].work_unit_id[-12:]} if len(units) == 1 else None,
-            ),
+            context={"work_unit_count": str(len(units))},
         )
-        _emit_envelope(ctx, command="modelo.work.list", result=result, lines=lines, notices=[next_step])
+        _emit_envelope(ctx, command="modelo.work.list", result=result, lines=lines, notices=[no_single_follow_up])
 
 
 def _register_work_status_command(work_app: typer.Typer, deps: _LifecycleDeps) -> None:
@@ -508,11 +511,19 @@ def _register_work_status_command(work_app: typer.Typer, deps: _LifecycleDeps) -
             code="modelo.work.status.next_action",
             message=tr(
                 "cli.app.modelo.work.status_next_action_summary",
-                default="Draft or recalculate this work unit, then verify the resulting draft.",
+                default=("This work unit can now be recalculated and then verified."),
             ),
-            action=next_action(
-                "operator.modelo.work.calculate",
-                arguments={"work_unit_id": unit.work_unit_id[-12:]},
+            action=resolve_notice_action(
+                action=ActionReference(action_id="operator.modelo.work.calculate"),
+                argument_bindings=(
+                    ResolvedActionArgument(
+                        argument_name="work_unit_id",
+                        status=ActionArgumentStatus.RESOLVED,
+                        value=unit.work_unit_id,
+                        source=ActionArgumentSource.VERDICT_CONTEXT,
+                        source_key="work_unit_id",
+                    ),
+                ),
             ),
         )
         _emit_envelope(ctx, command="modelo.work.status", result=result, lines=lines, notices=[next_step])

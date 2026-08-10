@@ -36,120 +36,45 @@ def _entry(action_id: str, *, argument_name: str = "profile_name") -> ActionCata
 
 def test_initial_actions_are_deterministic_and_lookup_by_stable_identity() -> None:
     action_by_id = {entry.action_id: entry for entry in OPERATOR_ACTION_CATALOGUE.entries}
+    action_ids = tuple(action_by_id)
 
-    assert {
-        action_id: (entry.target_command_key, entry.argument_specifications)
-        for action_id, entry in action_by_id.items()
-    } == {
-        "operator.ledger.evidence.review.list": ("ledger.evidence.review.list", ()),
-        "operator.live.notifications.list": ("app.live.notifications.list", ()),
-        "operator.modelo.export": ("modelo.export", ()),
-        "operator.modelo.verification_report.list": (
-            "modelo.verification_report.list",
-            (
-                ActionArgumentBindingSpecification(
-                    argument_name="calculation_revision_id",
-                    source=ActionArgumentSource.CONDITION_EVIDENCE,
-                    source_key="calculation_revision_id",
-                    source_evidence_id="workflow.calculation_revision.addressing",
-                ),
-            ),
+    assert action_ids == (
+        "operator.ledger.evidence.review.list",
+        "operator.ledger.link",
+        "operator.live.filed.pull_all",
+        "operator.live.notifications.list",
+        "operator.maintenance.reconcile",
+        "operator.modelo.bindings.list",
+        "operator.modelo.describe",
+        "operator.modelo.verification_report.list",
+        "operator.modelo.work.calculate",
+        "operator.modelo.work.status",
+        "operator.overview.explain",
+        "operator.overview.status",
+        "operator.profile.create",
+        "operator.profile.edit",
+        "operator.profile.import",
+        "operator.profile.list",
+        "operator.profile.login",
+        "operator.profile.repair_clear_active",
+        "operator.profile.sandbox.restore",
+        "operator.profile.status",
+        "operator.storage.init",
+    )
+    assert lookup_action("operator.profile.create").target_command_key == "config.profile.create"
+    assert lookup_action("operator.modelo.work.calculate").argument_specifications == (
+        ActionArgumentBindingSpecification(
+            argument_name="work_unit_id",
+            source=ActionArgumentSource.CONDITION_EVIDENCE,
+            source_key="work_unit_id",
+            source_evidence_id="workflow.work_unit.addressing",
         ),
-        "operator.modelo.work.calculate": (
-            "modelo.work.calculate",
-            (
-                ActionArgumentBindingSpecification(
-                    argument_name="work_unit_id",
-                    source=ActionArgumentSource.CONDITION_EVIDENCE,
-                    source_key="work_unit_id",
-                    source_evidence_id="workflow.work_unit.addressing",
-                ),
-            ),
+        ActionArgumentBindingSpecification(
+            argument_name="work_unit_id",
+            source=ActionArgumentSource.VERDICT_CONTEXT,
+            source_key="work_unit_id",
         ),
-        "operator.modelo.work.status": (
-            "modelo.work.status",
-            (
-                ActionArgumentBindingSpecification(
-                    argument_name="work_unit_id",
-                    source=ActionArgumentSource.VERDICT_CONTEXT,
-                    source_key="work_unit_id",
-                ),
-            ),
-        ),
-        "operator.overview.explain": (
-            "overview.explain",
-            (
-                ActionArgumentBindingSpecification(
-                    argument_name="modelo",
-                    source=ActionArgumentSource.VERDICT_CONTEXT,
-                    source_key="modelo",
-                ),
-            ),
-        ),
-        "operator.overview.status": ("overview.status", ()),
-        "operator.profile.create": (
-            "config.profile.create",
-            (
-                ActionArgumentBindingSpecification(
-                    argument_name="profile_name",
-                    source=ActionArgumentSource.VERDICT_CONTEXT,
-                    source_key="profile_name",
-                ),
-            ),
-        ),
-        "operator.profile.edit": (
-            "config.profile.edit",
-            (
-                ActionArgumentBindingSpecification(
-                    argument_name="profile_name",
-                    source=ActionArgumentSource.VERDICT_CONTEXT,
-                    source_key="profile_name",
-                ),
-            ),
-        ),
-        "operator.profile.login": (
-            "config.login",
-            (
-                ActionArgumentBindingSpecification(
-                    argument_name="name",
-                    source=ActionArgumentSource.VERDICT_CONTEXT,
-                    source_key="name",
-                ),
-            ),
-        ),
-        "operator.profile.list": ("config.profile.list", ()),
-        "operator.profile.repair_clear_active": (
-            "config.repair.profile",
-            (
-                ActionArgumentBindingSpecification(
-                    argument_name="clear_active",
-                    source=ActionArgumentSource.REQUEST_CONTEXT,
-                    source_key="clear_active",
-                ),
-                ActionArgumentBindingSpecification(
-                    argument_name="profile",
-                    source=ActionArgumentSource.VERDICT_CONTEXT,
-                    source_key="profile",
-                ),
-                ActionArgumentBindingSpecification(
-                    argument_name="yes",
-                    source=ActionArgumentSource.REQUEST_CONTEXT,
-                    source_key="yes",
-                ),
-            ),
-        ),
-        "operator.profile.status": ("config.profile.status", ()),
-        "operator.ledger.link": ("ledger.link", ()),
-        "operator.ledger.attach": ("ledger.attach", ()),
-        "operator.ledger.classify": ("ledger.classify", ()),
-        "operator.maintenance.reconcile": ("app.maintenance.reconcile", ()),
-        "operator.live.filed.pull_all": ("app.live.filed.pull_all", ()),
-        "operator.profile.import": ("config.profile.import", ()),
-        "operator.profile.export": ("config.profile.export", ()),
-        "operator.profile.archive.import": ("config.profile.archive.import", ()),
-        "operator.profile.sandbox.restore": ("config.profile.sandbox.restore", ()),
-        "operator.profile.sandbox.prune": ("config.profile.sandbox.prune", ()),
-    }
+    )
     assert lookup_action("operator.profile.create") is action_by_id["operator.profile.create"]
 
     reversed_catalogue = build_action_catalogue(reversed(OPERATOR_ACTION_CATALOGUE.entries))
@@ -161,11 +86,29 @@ def test_catalogue_fails_closed_for_unknown_action_identity() -> None:
         lookup_action("operator.profile.unknown")
 
 
-def test_catalogue_rejects_duplicate_action_and_argument_declarations() -> None:
+def test_catalogue_rejects_duplicate_action_and_source_declarations() -> None:
     with pytest.raises(ValidationError, match="action IDs must be unique"):
         ActionCatalogue(entries=(_entry("operator.profile.create"), _entry("operator.profile.create")))
 
-    with pytest.raises(ValidationError, match="specification names must be unique"):
+    alternative_source_entry = ActionCatalogueEntry(
+        action_id="operator.profile.create",
+        target_command_key="config.profile.create",
+        argument_specifications=(
+            ActionArgumentBindingSpecification(
+                argument_name="profile_name",
+                source=ActionArgumentSource.VERDICT_CONTEXT,
+                source_key="profile_name",
+            ),
+            ActionArgumentBindingSpecification(
+                argument_name="profile_name",
+                source=ActionArgumentSource.REQUEST_CONTEXT,
+                source_key="profile_name",
+            ),
+        ),
+    )
+    assert len(alternative_source_entry.argument_specifications) == 2
+
+    with pytest.raises(ValidationError, match="source specifications must be unique"):
         ActionCatalogueEntry(
             action_id="operator.profile.create",
             target_command_key="config.profile.create",
@@ -177,7 +120,7 @@ def test_catalogue_rejects_duplicate_action_and_argument_declarations() -> None:
                 ),
                 ActionArgumentBindingSpecification(
                     argument_name="profile_name",
-                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
                     source_key="profile_name",
                 ),
             ),

@@ -104,17 +104,19 @@ def test_classify_reject_and_apply_are_mutually_exclusive(tmp_path: Path, extra_
     assert "--reject" in result.output and "--apply" in result.output
 
 
-def test_split_recommendation_notice_is_info_with_typed_action() -> None:
+def test_split_recommendation_notice_is_info_without_an_invented_action() -> None:
     transaction_id = "txn-contract"
 
     notice = split_recommendation_notice(transaction_id)
 
     assert notice.severity is NoticeSeverity.INFO
     assert notice.code == "ledger.classify.split_recommended"
-    assert notice.action is not None
-    assert notice.action.action_id == "operator.ledger.classify"
-    assert notice.action.target_command_key == "ledger.classify"
-    assert notice.context == {"transaction_id": transaction_id, "source": "evidence_read"}
+    assert notice.action is None
+    assert notice.context == {
+        "transaction_id": transaction_id,
+        "source": "evidence_read",
+        "actionability": "split_requires_operator_review",
+    }
 
 
 def test_list_hide_llm_rejected_retains_unrelated_rows(tmp_path: Path) -> None:

@@ -296,48 +296,6 @@ def _register_evidence_remove_command() -> None:
         )
 
 
-def extract_review_suggestion(*, evidence_id: str | None, reference: str) -> str:
-    """Return the follow-up command an operator can paste after an extract.
-
-    Embeds NO extracted value, which is the whole point. A suggestion rides
-    the notices channel and is therefore redacted with the rest of the
-    envelope, and a tax identity stays redacted even under
-    ``reveal_identifiers`` -- so a suggestion carrying the supplier's NIF
-    reached the operator as ``--counterparty-nif sha256:1c9f9632``. It was
-    not merely ugly: it could not be pasted, and it failed precisely for the
-    natural-person suppliers who make up most freelance invoices, while
-    continuing to work for companies. Revealing the value would have traded
-    the redaction funnel away to fix it, since the same string may be pasted
-    into an issue or a log.
-
-    Naming the stored draft instead satisfies both constraints rather than
-    choosing between them. ``evidence confirm`` re-extracts on-host from the
-    same reference and takes every field value as an OPTIONAL override, so
-    the supplier NIF is resolved from stored state rather than round-tripped
-    through the operator's terminal. The reference itself is a
-    content-addressed digest, which
-    :func:`~cadrumo.application.ledger.derive_purchase_invoice_evidence_id`
-    documents as directly referenceable and needing no output mask -- it
-    survives the funnel unchanged, which is why this shape works at all.
-
-    ``--counterparty-name`` is carried as a literal placeholder because
-    confirm refuses without it: there is no extraction heuristic for the
-    counterparty name, so it is the one field the operator must supply.
-
-    Args:
-        evidence_id: The ``--evidence-id`` the extract ran against, or
-            ``None`` when it ran against an attachment. Selects which
-            reference flag the suggestion names; the extract command
-            guarantees exactly one of the two was supplied.
-        reference: The evidence or attachment id the draft was read from.
-
-    Returns:
-        A command that is executable as printed, after redaction.
-    """
-    reference_flag = "--evidence-id" if evidence_id is not None else "--attachment-id"
-    return f"aeat app ledger evidence confirm --kind received {reference_flag} {reference} --counterparty-name <name>"
-
-
 #: Operator surface recorded on a token this command mints. Names the exact verb
 #: rather than "cli", because a withdrawal survey answers "where was this
 #: acknowledged" and a whole-entrypoint label cannot.
@@ -592,7 +550,10 @@ def _register_evidence_extract_command() -> None:
                     "cli.app.ledger.evidence.extract_review_hint_message",
                     default=("This is a best-effort draft; confirm every field before minting an invoice."),
                 ),
-                context={"reference": reviewed_reference},
+                context={
+                    "reference": reviewed_reference,
+                    "actionability": "review_and_required_invoice_fields_need_operator_input",
+                },
             ),
         ]
         # Per-field degradation, so a thin read is distinguishable from a clean
@@ -908,9 +869,15 @@ def _run_evidence_confirm(
                 code="ledger.evidence.confirm.linked_transaction_hint",
                 message=tr(
                     "cli.app.ledger.evidence.confirm_link_hint_message",
-                    default="Link this invoice to a ledger transaction with `aeat app ledger link`.",
+                    default=(
+                        "The invoice was recorded, but confirmation did not identify its matching ledger transaction. "
+                        "Verify the matching transaction before linking the two records."
+                    ),
                 ),
-                context={"invoice_id": invoice.invoice_id},
+                context={
+                    "invoice_id": invoice.invoice_id,
+                    "actionability": "matching_transaction_requires_operator_selection",
+                },
             ),
         )
     # The confirm surface describes the SAME pre-override draft, so the operator
@@ -982,4 +949,4 @@ def _evidence_text_lines(record: PurchaseInvoiceEvidence) -> list[str]:
     ]
 
 
-__all__ = ["evidence_app", "extract_review_suggestion", "register_evidence_commands"]
+__all__ = ["evidence_app", "register_evidence_commands"]

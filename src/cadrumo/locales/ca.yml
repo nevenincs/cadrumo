@@ -3419,10 +3419,10 @@ cli:
         verify_idempotent_noop: 'Operació idempotent sense efecte: la revisió de càlcul
           %{calculation_revision_id} ja està verificada; s''ha retornat l''informe
           de verificació existent sense canvis.'
-        verify_next_action_granted_summary: La verificació s'ha superat. Exporta l'artefacte
-          de presentació.
+        verify_next_action_granted_summary: La verificació ha estat satisfactòria.
+          Exporteu l'artefacte de presentació.
         verify_next_action_incomplete_summary: La verificació ha trobat elements bloquejadors.
-          Resol-los, recalcula i torna a executar la verificació.
+          Resoleu-los, recalculeu i torneu a executar la verificació.
         verify_selector_help: Selector de revisió esborrany (current, latest-draft
           o explícit).
         wizard_help: Guia pas a pas per les caselles manuals pendents de la unitat
@@ -3926,20 +3926,21 @@ cli:
         non_official_notice: Les dades derivades del certificat són evidència aportada
           per l'operador, mai verificada per l'AEAT; l'alta censal es manté al nivell
           no oficial.
-        pull_cleared_notice: 'L''AEAT continua tenint un valor en {count} camp(s)
-          que vas buidar: {axes}. S''han deixat buits; buidar-los aquí no canvia el
-          registre de l''AEAT.'
-        pull_divergences_notice: 'L''AEAT informa {count} camp(s) de manera diferent
-          del que vas declarar: {axes}. La teva resposta es manté; resol cada discrepància
-          tu mateix.'
+        pull_cleared_notice: 'L''autoritat censal encara conserva un valor per a {count}
+          camp(s) que vas esborrar: {axes}. S''han deixat buits; esborrar-los aquí
+          no canvia el registre de l''autoritat.'
+        pull_divergences_notice: 'L''autoritat censal informa de {count} camp(s) amb
+          valors diferents dels que has declarat: {axes}. La teva resposta es manté;
+          resol cada discrepància tu mateix.'
         pull_help: Llegeix la teva identitat i el teu domicili de les dades censals
           de l'AEAT i previsualitza'ls o inscriu-los al perfil actiu.
         pull_preview_notice: 'Només previsualització: no s''ha escrit res al perfil.
           Torna a executar amb --apply per inscriure aquestes dades.'
-        pull_verified_tier_notice: Aquestes dades s'han llegit directament de l'AEAT,
-          de manera que l'alta censal compta com a verificada.
-        pull_withheld_notice: 'Els valors de {count} camp(s) no es mostren: {axes}.
-          Compara''ls tu mateix amb els de l''AEAT; aquesta eina no els imprimeix.'
+        pull_verified_tier_notice: Aquests fets s'han llegit directament de l'autoritat
+          censal, de manera que la incorporació al cens compta com a verificada.
+        pull_withheld_notice: 'Els valors de {count} camp(s) s''oculten a la sortida:
+          {axes}. Compara''ls tu mateix amb l''autoritat censal; aquesta eina no els
+          mostrarà.'
         refresh_help: Descàrrega d'AEAT l'últim cens i desa un snapshot
         show_help: Mostra l'últim cens informat per AEAT per a aquest perfil
         snapshot_id_help: Id de snapshot concret (s'accepten prefixos)
@@ -5442,8 +5443,9 @@ cli:
     calendar_local_modelo_events_unavailable: L'evidència local d'esdeveniments de
       modelo no està disponible per a aquesta fila del calendari.
     coverage:
-      incomplete_summary: 'No s''han pogut determinar amb certesa %{count} obligació(ns)
-        de presentació per a aquest perfil i podrien quedar sense declarar: %{modelos}.'
+      investigate: No s'ha pogut determinar amb certesa l'obligació de presentació
+        %{modelo} per a aquest perfil i podria quedar sense declarar. Reviseu la seva
+        explicació de presentació.
     drafts: Esborranys
     explain:
       help: Descompon l'aplicabilitat d'un modelo davant del perfil actiu. Mostra
@@ -5476,7 +5478,7 @@ cli:
         0A (anual), 01-12 (mesos). Combina''l amb --year per triar l''any.'
       year_help: Any de declaració (p. ex. 2026).
     post_filing:
-      pending_summary: '%{count} esdeveniment(s) posteriors a la presentació d''AEAT
+      pending_summary: '%{count} esdeveniment(s) de l''AEAT posterior(s) a la presentació
         requereixen atenció: %{kinds}.'
     prepare:
       help: 'Recorre els passos de preparació de dades per a un model/període en ordre:

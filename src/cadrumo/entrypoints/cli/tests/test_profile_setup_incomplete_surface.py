@@ -192,3 +192,8 @@ def test_overview_calendar_all_profiles_surfaces_setup_incomplete_honestly() -> 
     assert advisory is not None, notices
     assert advisory["severity"] == "info"
     assert advisory["context"]["labels"] == "onboarding"
+    assert advisory["action"]["action"] == {
+        "action_id": "operator.profile.status",
+        "target_command_key": "config.profile.status",
+    }
+    assert advisory["action"]["argument_bindings"] == []

@@ -309,13 +309,14 @@ def _divergence_notice(
     code: str,
     locale_key: str,
     default: str,
-    suggestion: str | None,
 ) -> Notice | None:
     """Build one divergence warning, or ``None`` when no row falls in its class.
 
     The three divergence classes render the same way — count the rows, name
     their paths, carry both on the notice context — and differ only in which
-    rows they select and what they tell the operator to do about them.
+    rows they select and what they tell the operator to do about them. They
+    deliberately carry no typed action: a disagreement is evidence for an
+    operator's own adjudication, not authority to change a profile value.
     """
     if not rows:
         return None
@@ -358,16 +359,15 @@ def _divergence_notices(divergences: tuple[CensoPullDivergencePayload, ...]) -> 
     they never declared.
     """
     notices: list[Notice] = []
-    for rows, code, locale_key, default, suggestion in (
+    for rows, code, locale_key, default in (
         (
             tuple(row for row in divergences if row.profile_value is not None),
             "config.profile.censo.pull.divergences",
             "cli.config.profile.censo.pull_divergences_notice",
             (
-                "AEAT reports {count} field(s) differently from your declared answer: {axes}. "
+                "The census authority reports {count} field(s) differently from your declared answer: {axes}. "
                 "Your answer stands; resolve each one yourself."
             ),
-            "aeat config profile edit",
         ),
         (
             tuple(row for row in divergences if _values_are_withheld(row)),
@@ -375,29 +375,32 @@ def _divergence_notices(divergences: tuple[CensoPullDivergencePayload, ...]) -> 
             "cli.config.profile.censo.pull_withheld_notice",
             (
                 "The values for {count} field(s) are withheld from output: {axes}. "
-                "Compare them yourself against AEAT; this tool will not print them."
+                "Compare them yourself against the census authority; this tool will not print them."
             ),
-            None,
         ),
         (
             tuple(row for row in divergences if row.profile_value is None),
             "config.profile.censo.pull.cleared",
             "cli.config.profile.censo.pull_cleared_notice",
             (
-                "AEAT still holds a value for {count} field(s) you cleared: {axes}. "
-                "They were left empty; clearing them here does not change AEAT's record."
+                "The census authority still holds a value for {count} field(s) you cleared: {axes}. "
+                "They were left empty; clearing them here does not change the authority's record."
             ),
-            "aeat config profile edit",
         ),
     ):
-        notice = _divergence_notice(rows, code=code, locale_key=locale_key, default=default, suggestion=suggestion)
+        notice = _divergence_notice(rows, code=code, locale_key=locale_key, default=default)
         if notice is not None:
             notices.append(notice)
     return notices
 
 
 def _tier_notices(*, applied: bool, adopted: tuple[CensoPullFactPayload, ...]) -> list[Notice]:
-    """State what the run actually did: enrolled at the verified tier, or previewed."""
+    """State what the run actually did: enrolled at the verified tier, or previewed.
+
+    Preview is intentionally actionless. Applying is a fresh write decision
+    and needs the originating live-read request to be materialised again; this
+    success notice cannot claim either from its diagnostic payload.
+    """
     notices: list[Notice] = []
     if applied and adopted:
         notices.append(
@@ -406,7 +409,10 @@ def _tier_notices(*, applied: bool, adopted: tuple[CensoPullFactPayload, ...]) -
                 code="config.profile.censo.pull.verified_tier",
                 message=tr(
                     "cli.config.profile.censo.pull_verified_tier_notice",
-                    default="These facts were read from AEAT itself, so the censo enrolment counts as verified.",
+                    default=(
+                        "These facts were read from the census authority itself, so the censo enrolment counts "
+                        "as verified."
+                    ),
                 ),
             ),
         )

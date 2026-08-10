@@ -1,4 +1,4 @@
-"""Canonical declarations for operator-recovery actions.
+"""Canonical declarations for operator next actions.
 
 An entry states only the stable action identifier, its canonical result-schema
 command key, and where a later verdict may obtain each named argument.  Adding
@@ -10,12 +10,12 @@ projection.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.json_contract import ResolvedActionReference
+from ...core.json_contract import ResolvedActionReference, ResolvedNoticeAction
 from ._models import ActionArgumentSource
 
 _NAMESPACED_ID_PATTERN = r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$"
@@ -23,7 +23,7 @@ _FIELD_KEY_PATTERN = r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)*$"
 
 
 class ActionArgumentBindingSpecification(BaseModel):
-    """Declare how a verdict may materialise one named target argument.
+    """Declare how an application outcome may materialise one target argument.
 
     This is deliberately distinct from the value-bearing
     :class:`~cadrumo.application.operator_actions.ActionArgumentBinding` on a
@@ -55,7 +55,7 @@ class ActionArgumentBindingSpecification(BaseModel):
 
 
 class ActionCatalogueEntry(BaseModel):
-    """One stable recovery action projected to a canonical command-schema key."""
+    """One stable next action projected to a canonical command-schema key."""
 
     model_config = _STRICT_FROZEN
 
@@ -65,15 +65,36 @@ class ActionCatalogueEntry(BaseModel):
 
     @field_validator("argument_specifications")
     @classmethod
-    def _unique_argument_names(
+    def _unique_source_specifications(
         cls,
         value: tuple[ActionArgumentBindingSpecification, ...],
     ) -> tuple[ActionArgumentBindingSpecification, ...]:
-        """Refuse competing source strategies for the same target argument."""
-        names = tuple(item.argument_name for item in value)
-        if len(set(names)) != len(names):
-            raise ValueError("action argument specification names must be unique")
-        return tuple(sorted(value, key=lambda item: item.argument_name))
+        """Refuse only a duplicated full source strategy for one target argument.
+
+        A successful notice can honestly materialise one canonical argument from
+        more than one declared provenance.  For example, a work-unit address
+        may come from a verified condition evidence record or from the concrete
+        verdict context of a successful operation.  The resolver matches the
+        producer binding against this full tuple, so merely sharing an argument
+        name is not ambiguous.
+        """
+        identities = tuple(
+            (item.argument_name, item.source, item.source_key, item.source_evidence_id)
+            for item in value
+        )
+        if len(set(identities)) != len(identities):
+            raise ValueError("action argument source specifications must be unique")
+        return tuple(
+            sorted(
+                value,
+                key=lambda item: (
+                    item.argument_name,
+                    item.source.value,
+                    item.source_key,
+                    item.source_evidence_id or "",
+                ),
+            ),
+        )
 
 
 class ActionCatalogue(BaseModel):
@@ -173,6 +194,60 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             target_command_key="config.profile.status",
         ),
         ActionCatalogueEntry(
+            action_id="operator.ledger.link",
+            target_command_key="ledger.link",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="transaction_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="transaction_id",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="invoice_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="invoice_id",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.ledger.evidence.review.list",
+            target_command_key="ledger.evidence.review.list",
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.live.filed.pull_all",
+            target_command_key="app.live.filed.pull_all",
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.live.notifications.list",
+            target_command_key="app.live.notifications.list",
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.storage.init",
+            target_command_key="config.storage.init",
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.profile.sandbox.restore",
+            target_command_key="config.profile.sandbox.restore",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="name",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="name",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.profile.import",
+            target_command_key="config.profile.import",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="path",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="out",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
             action_id="operator.overview.status",
             target_command_key="overview.status",
         ),
@@ -188,12 +263,36 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
-            action_id="operator.live.notifications.list",
-            target_command_key="app.live.notifications.list",
+            action_id="operator.modelo.bindings.list",
+            target_command_key="modelo.bindings.list",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="modelo",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="modelo",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="year",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="year",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="period",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="period",
+                ),
+            ),
         ),
         ActionCatalogueEntry(
-            action_id="operator.ledger.evidence.review.list",
-            target_command_key="ledger.evidence.review.list",
+            action_id="operator.modelo.describe",
+            target_command_key="modelo.describe",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="modelo",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="modelo",
+                ),
+            ),
         ),
         ActionCatalogueEntry(
             action_id="operator.modelo.work.calculate",
@@ -204,6 +303,11 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
                     source=ActionArgumentSource.CONDITION_EVIDENCE,
                     source_key="work_unit_id",
                     source_evidence_id="workflow.work_unit.addressing",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="work_unit_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="work_unit_id",
                 ),
             ),
         ),
@@ -219,10 +323,6 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
-            action_id="operator.modelo.export",
-            target_command_key="modelo.export",
-        ),
-        ActionCatalogueEntry(
             action_id="operator.modelo.verification_report.list",
             target_command_key="modelo.verification_report.list",
             argument_specifications=(
@@ -235,44 +335,8 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
-            action_id="operator.ledger.link",
-            target_command_key="ledger.link",
-        ),
-        ActionCatalogueEntry(
-            action_id="operator.ledger.attach",
-            target_command_key="ledger.attach",
-        ),
-        ActionCatalogueEntry(
-            action_id="operator.ledger.classify",
-            target_command_key="ledger.classify",
-        ),
-        ActionCatalogueEntry(
             action_id="operator.maintenance.reconcile",
             target_command_key="app.maintenance.reconcile",
-        ),
-        ActionCatalogueEntry(
-            action_id="operator.live.filed.pull_all",
-            target_command_key="app.live.filed.pull_all",
-        ),
-        ActionCatalogueEntry(
-            action_id="operator.profile.import",
-            target_command_key="config.profile.import",
-        ),
-        ActionCatalogueEntry(
-            action_id="operator.profile.export",
-            target_command_key="config.profile.export",
-        ),
-        ActionCatalogueEntry(
-            action_id="operator.profile.archive.import",
-            target_command_key="config.profile.archive.import",
-        ),
-        ActionCatalogueEntry(
-            action_id="operator.profile.sandbox.restore",
-            target_command_key="config.profile.sandbox.restore",
-        ),
-        ActionCatalogueEntry(
-            action_id="operator.profile.sandbox.prune",
-            target_command_key="config.profile.sandbox.prune",
         ),
     ),
 )
@@ -289,8 +353,8 @@ def lookup_action(action_id: str) -> ActionCatalogueEntry:
     return OPERATOR_ACTION_CATALOGUE.lookup(action_id)
 
 
-def next_action(action_id: str, *, arguments: Mapping[str, str] | None = None) -> ResolvedActionReference:
-    """Resolve a declared operator action into a :class:`Notice`-attachable reference.
+def next_action(action_id: str) -> ResolvedNoticeAction:
+    """Resolve a zero-argument action into a fully materialised notice action.
 
     Forward guidance on a SUCCESS path used to be a literal ``aeat ...`` string
     inside a locale message. That is untestable and rots silently: renaming a
@@ -308,26 +372,23 @@ def next_action(action_id: str, *, arguments: Mapping[str, str] | None = None) -
 
     Args:
         action_id: A namespaced id declared in the operator action catalogue.
-        arguments: Optional declared target-argument values for this success path.
 
     Returns:
-        The reference to attach as ``Notice(action=...)``.
+        The fully materialised action to attach as ``Notice(action=...)``.
 
     Raises:
         KeyError: ``action_id`` is not declared in the catalogue.
     """
     entry = lookup_action(action_id)
-    supplied_names = set(arguments or {})
-    declared_names = {item.argument_name for item in entry.argument_specifications}
-    if not supplied_names <= declared_names:
-        unknown_names = tuple(sorted(supplied_names - declared_names))
+    if entry.argument_specifications:
         raise ValueError(
-            f"operator action arguments are not declared for {action_id}: {unknown_names}",
+            f"notice action requires materialised argument bindings: {entry.action_id}",
         )
-    return ResolvedActionReference(
-        action_id=entry.action_id,
-        target_command_key=entry.target_command_key,
-        arguments=arguments,
+    return ResolvedNoticeAction(
+        action=ResolvedActionReference(
+            action_id=entry.action_id,
+            target_command_key=entry.target_command_key,
+        ),
     )
 
 
@@ -338,4 +399,5 @@ __all__ = [
     "ActionCatalogueEntry",
     "build_action_catalogue",
     "lookup_action",
+    "next_action",
 ]

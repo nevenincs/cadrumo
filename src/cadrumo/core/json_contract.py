@@ -448,6 +448,37 @@ class ResolvedPreconditionAction(BaseModel):
             raise ValueError("fully resolved recovery actions require immediate conditionality")
 
 
+class ResolvedNoticeAction(BaseModel):
+    """A fully materialised next action carried by a successful notice.
+
+    This transport record is deliberately distinct from
+    :class:`ResolvedPreconditionAction`: success notices do not report a
+    failed condition, conditional recovery state, or a terminal outcome.  The
+    operator-surface resolver must establish the catalogue target and every
+    required input before constructing this record; this DTO in turn refuses
+    any unresolved argument so a consumer never receives a partial action.
+    """
+
+    model_config = _STRICT_FROZEN_CONFIG
+
+    action: ResolvedActionReference
+    argument_bindings: tuple[ResolvedActionArgument, ...] = Field(default_factory=tuple)
+
+    @field_validator("argument_bindings")
+    @classmethod
+    def _canonicalize_resolved_arguments(
+        cls,
+        value: tuple[ResolvedActionArgument, ...],
+    ) -> tuple[ResolvedActionArgument, ...]:
+        """Require one concrete value for each supplied success-action argument."""
+        names = tuple(item.argument_name for item in value)
+        if len(set(names)) != len(names):
+            raise ValueError("notice action argument names must be unique")
+        if any(item.status is not ActionArgumentStatus.RESOLVED for item in value):
+            raise ValueError("success notice actions require fully resolved argument bindings")
+        return tuple(sorted(value, key=lambda item: item.argument_name))
+
+
 class Notice(BaseModel):
     """One typed, non-blocking diagnostic on the envelope ``notices`` channel.
 
@@ -467,20 +498,12 @@ class Notice(BaseModel):
         message: Localized operator-facing presentation text. It cannot carry
             an executable command identity.
         action: Optional schema-resolved action projection, and still the ONLY
-            notice field that may identify an executable action. It carries one
-            of two shapes, distinguished by ``failed_condition_id``:
-            a :class:`ResolvedPreconditionAction` when the notice reports a
-            failed precondition and its recovery, or a bare
-            :class:`ResolvedActionReference` when the operation SUCCEEDED and
-            the notice merely points at a reasonable next verb.
+            notice field that may identify an executable action. It carries a
+            :class:`ResolvedPreconditionAction` for a failed precondition or a
+            fully materialised :class:`ResolvedNoticeAction` after success.
 
-            The success shape exists so forward guidance stops being hardcoded
-            command prose. A literal ``aeat ...`` string in a locale catalogue
-            is untestable and rots silently when a verb is renamed - the rename
-            sweeps the registrations and leaves the prose behind. An
-            ``action_id`` resolved against the action catalogue and the live
-            command surface cannot: a renamed verb fails resolution loudly
-            instead of shipping a dead instruction to the operator.
+            The success shape keeps forward guidance out of locale prose and
+            retains every concrete target argument and its provenance.
         context: Optional deterministic non-action diagnostic metadata (e.g.
             source-resolution ``reason`` / ``source_kind``). Reserved action
             keys and executable command prose are rejected here.
@@ -497,7 +520,7 @@ class Notice(BaseModel):
     severity: NoticeSeverity
     code: str = Field(min_length=1)
     message: str = Field(min_length=1)
-    action: ResolvedPreconditionAction | ResolvedActionReference | None = None
+    action: ResolvedPreconditionAction | ResolvedNoticeAction | None = None
     context: Mapping[str, str] | None = None
 
     @field_validator("message")
@@ -989,6 +1012,7 @@ __all__ = [
     "OutputSchemaError",
     "ResolvedActionArgument",
     "ResolvedActionReference",
+    "ResolvedNoticeAction",
     "ResolvedPreconditionAction",
     "SchemaEnvelope",
     "derive_status",

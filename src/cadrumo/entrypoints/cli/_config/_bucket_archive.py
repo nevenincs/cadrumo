@@ -22,11 +22,17 @@ from typing import TYPE_CHECKING
 
 import typer
 
-from ....application.operator_actions import next_action
+from ....application.operator_actions import ActionReference
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
-from ....core.json_contract import Notice, NoticeSeverity
-from .._common import _emit_envelope, _no_active_profile_refusal
+from ....core.json_contract import (
+    ActionArgumentSource,
+    ActionArgumentStatus,
+    Notice,
+    NoticeSeverity,
+    ResolvedActionArgument,
+)
+from .._common import _emit_envelope, _no_active_profile_refusal, resolve_notice_action
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 
@@ -180,10 +186,11 @@ def _build_export_completeness_notice() -> Notice:
     the sealed archive is the transport that IS. This info notice is the
     positive counterpart, so an operator comparing the two verbs in the
     same session sees the completeness claim stated explicitly on both
-    sides rather than only as an absence on one.
+    sides rather than only as an absence on one. It deliberately has no
+    typed action because restoration needs an independently selected archive
+    and recovery credentials that this completed export cannot materialise.
     """
     return Notice(
-        action=next_action("operator.profile.archive.import"),
         severity=NoticeSeverity.INFO,
         code="config.profile.archive.export.full_backup",
         message=tr(
@@ -194,8 +201,8 @@ def _build_export_completeness_notice() -> Notice:
                 "cross-period calculation inputs, in addition to the profile, "
                 "ledger, calculation, and filing history. When exported with "
                 "--recovery-wrap-passphrase it is the encrypted cross-host transfer "
-                "path for profile bundles. Store it somewhere safe; restore with "
-                "'aeat config profile archive import'."
+                "path for profile bundles. Store it somewhere safe; restoration "
+                "requires a separately selected archive and recovery credentials."
             ),
         ),
     )
@@ -298,17 +305,28 @@ def _build_archive_import_active_switch_notice(label: str) -> Notice:
     bucket UUID or a literal unfilled placeholder.
     """
     return Notice(
-        action=next_action("operator.profile.login"),
         severity=NoticeSeverity.INFO,
         code="config.profile.archive.import.active_profile_switched",
         message=tr(
             "cli.config.profile.archive.import_active_switch_info",
             default=(
                 "The restored profile {name} is now the ACTIVE profile; subsequent "
-                "commands operate on it. Run 'aeat config login <name>' to change "
+                "commands operate on it. The available profile-login action changes "
                 "the active profile."
             ),
             name=label,
+        ),
+        action=resolve_notice_action(
+            action=ActionReference(action_id="operator.profile.login"),
+            argument_bindings=(
+                ResolvedActionArgument(
+                    argument_name="name",
+                    status=ActionArgumentStatus.RESOLVED,
+                    value=label,
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="name",
+                ),
+            ),
         ),
         context={"active_profile": label},
     )

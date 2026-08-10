@@ -1,14 +1,4 @@
-"""A source advisory reaches the operator through the typed notice channel.
-
-Non-blocking diagnostics reach an operator only as envelope ``Notice`` rows;
-anything the projector drops is invisible to every surface that has to show it.
-The rate-box coverage advisory is the case under test because its remedy is the
-whole basis of the two-gate split -- the export refusal on the same condition is
-fair only if the operator was told, in time, what to repair.
-
-The machine-queryable reason and the message must survive the hop. Executable
-remediation no longer rides a free-form ``suggestion`` field.
-"""
+"""A source advisory retains typed diagnostic facts without an inferred action."""
 
 from __future__ import annotations
 
@@ -16,6 +6,7 @@ import pytest
 
 from ....application.aggregation import CalculationSourceDiagnostic
 from .._modelo_work_calculate_cli import _work_calculate_source_advisory_output
+from .._modelo_rendering import source_diagnostic_notice
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -26,7 +17,6 @@ _MESSAGE = (
 )
 _REMEDY = "Record the IVA rate on the ledger rows that lack one, then recalculate"
 
-
 def _rate_box_diagnostic() -> CalculationSourceDiagnostic:
     return CalculationSourceDiagnostic(
         reason=_REASON,
@@ -36,16 +26,23 @@ def _rate_box_diagnostic() -> CalculationSourceDiagnostic:
     )
 
 
-def test_the_advisory_becomes_a_notice_carrying_reason_and_message() -> None:
-    notices, lines = _work_calculate_source_advisory_output((_rate_box_diagnostic(),))
+def test_the_advisory_becomes_a_non_action_notice_carrying_reason_and_message() -> None:
+    notice = source_diagnostic_notice(_rate_box_diagnostic(), code="modelo.work.calculate.source_advisory")
 
-    assert len(notices) == 1
-    context = notices[0].context
+    context = notice.context
     assert context is not None, "the advisory reached the operator with no structured provenance"
     assert context["reason"] == _REASON
     assert context["source_kind"] == "ledger_iva_aggregation"
+    assert notice.action is None
+    assert notice.message == _MESSAGE
     assert context["remedy"] == _REMEDY
+
+
+def test_the_advisory_text_projection_carries_the_non_command_remedy() -> None:
+    notices, lines = _work_calculate_source_advisory_output((_rate_box_diagnostic(),))
+
     assert notices[0].message == _MESSAGE
+    assert notices[0].action is None
     assert len(lines) == 1
     assert _MESSAGE in lines[0]
     assert _REMEDY in lines[0]

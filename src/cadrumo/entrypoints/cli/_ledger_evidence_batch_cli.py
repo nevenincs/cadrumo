@@ -34,12 +34,12 @@ from typing import TYPE_CHECKING
 
 import typer
 
-from ...application.operator_actions import next_action
+from ...application.operator_actions import ActionReference
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.output_rendering import OutputFormat
 from ...domain.iva import InvoiceKind
-from ._common import _bad, _emit_envelope, _format_of, _state, _tx_repo
+from ._common import _bad, _emit_envelope, _format_of, _state, _tx_repo, resolve_notice_action
 from ._ledger_evidence_batch_payloads import EvidenceBatchResult
 
 if TYPE_CHECKING:
@@ -233,14 +233,12 @@ def _run_notices(run: BatchRunResult) -> list[Notice]:
                         "guessed from them and nothing failed; re-run once the cause below is cleared."
                     ),
                 ),
-                # Straight from the probe that measured the condition, never a
-                # fixed verb: telling an operator to download a model they may
-                # already have is a wrong instruction, not merely a vague one.
                 context={
                     "paused": str(run.count_of("paused")),
                     "reason": pause.reason,
                     "detail": pause.detail,
                     "causes": ",".join(pause.causes) or "-",
+                    "actionability": "runtime_remediation_requires_operator_assessment",
                 },
             ),
         )
@@ -257,7 +255,9 @@ def _run_notices(run: BatchRunResult) -> list[Notice]:
                         "They are held, not failed."
                     ),
                 ),
-                action=next_action("operator.ledger.evidence.review.list"),
+                action=resolve_notice_action(
+                    action=ActionReference(action_id="operator.ledger.evidence.review.list"),
+                ),
                 context={"pending_review": str(held)},
             ),
         )
@@ -266,10 +266,23 @@ def _run_notices(run: BatchRunResult) -> list[Notice]:
 
 def _notice_line(notice: Notice) -> str:
     # MACHINE-FORMAT-RATIONALE-LEDGER-EVIDENCE-BATCH-NOTICE: tab-separated machine
-    # record (severity, code, message, action), matching the notice line shape
-    # the modelo discovery surface already emits.
-    action = notice.action.target_command_key if notice.action is not None else "-"
-    return f"notice\t{notice.severity.value}\t{notice.code}\t{notice.message}\t{action}"
+    # record. A fully-resolved action is rendered by its typed identity, target,
+    # and materialised bindings; notices without one do not gain a synthetic
+    # command field.
+    values = ["notice", notice.severity.value, notice.code, notice.message]
+    if notice.action is not None:
+        values.extend(
+            [
+                notice.action.action.action_id,
+                notice.action.action.target_command_key,
+                ",".join(
+                    f"{binding.argument_name}={binding.value}"
+                    for binding in notice.action.argument_bindings
+                )
+                or "-",
+            ],
+        )
+    return "\t".join(values)
 
 
 def _batch_text_lines(run: BatchRunResult, *, bucket_id: str, direction: InvoiceKind) -> list[str]:
@@ -299,7 +312,6 @@ def _batch_text_lines(run: BatchRunResult, *, bucket_id: str, direction: Invoice
     if pause is not None:
         lines.append(f"paused_reason\t{pause.reason}")
         lines.append(f"paused_detail\t{pause.detail}")
-        lines.append(f"paused_remediation\t{pause.remediation}")
         lines.append(f"paused_causes\t{','.join(pause.causes) or '-'}")
     lines.append(f"any_failed\t{run.any_failed}")
     lines.append(f"any_deferred\t{run.any_deferred}")

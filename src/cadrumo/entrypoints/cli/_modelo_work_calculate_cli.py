@@ -607,10 +607,13 @@ def _work_calculate_source_advisory_output(
     under-declared (no-silent-under-declaration). The diagnostic ``message``
     already carries the observation's category / rate / flow provenance.
 
-    The text lines are rebuilt from the notices rather than from the diagnostics,
-    so the two surfaces cannot drift. Executable remediation belongs to the
-    typed ``Notice.action`` projection; this renderer never reads the removed
-    legacy ``suggestion`` field.
+    A diagnostic's free-form ``remedy`` is not an executable action and is not
+    projected through the notice channel. The notice retains only its typed
+    diagnostic context; the canonical calculation result remains responsible
+    for any domain-specific guidance.
+
+    The text lines are rebuilt from the notices, so their rendered diagnostic
+    content and the JSON envelope cannot drift.
     """
     if not diagnostics:
         return [], []

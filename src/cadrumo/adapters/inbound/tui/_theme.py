@@ -41,7 +41,7 @@ from textual.theme import Theme
 from textual.widgets import Static
 
 from ....core.config import TuiAppearance, load_settings
-from ....core.json_contract import Notice, NoticeSeverity, ResolvedActionReference, ResolvedPreconditionAction
+from ....core.json_contract import Notice, NoticeSeverity
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -260,19 +260,15 @@ _NOTICE_GLYPH: Final[dict[NoticeSeverity, str]] = {
 
 
 def _notice_action_target(notice: Notice) -> str | None:
-    """Return the resolved action target that this read-only surface may show.
+    """Return the already-resolved action target the read-only TUI may show.
 
-    The TUI receives an already-resolved wire projection. It must not look up
-    an action again or reconstruct a shell command: the dotted target identity
-    is the contract's displayable action reference. A terminal precondition has
-    no recovery target and therefore produces no action line.
+    Notice producers resolve executable actions against the live operator
+    surface before emission.  This adapter therefore projects only that typed
+    target and never recreates a shell command; notices intentionally carrying
+    no action remain a single message line.
     """
     action = notice.action
-    if isinstance(action, ResolvedActionReference):
-        return action.target_command_key
-    if isinstance(action, ResolvedPreconditionAction) and action.action is not None:
-        return action.action.target_command_key
-    return None
+    return None if action is None else action.action.target_command_key
 
 
 class NoticeBand(Vertical, can_focus=False):

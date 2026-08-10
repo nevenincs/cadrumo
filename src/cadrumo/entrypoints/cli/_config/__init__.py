@@ -8,13 +8,12 @@ show`` sub-command reads and renders the active profile's persisted
 
 from __future__ import annotations
 
-from ....application.operator_actions import next_action
-
 from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 import typer
 
+from ....application.operator_actions import ActionReference as _ActionReference
 from ....application.operator_surface import build_help_document as _build_help_document
 from ....application.operator_surface import render_help_text as _render_help_text
 from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
@@ -25,7 +24,7 @@ from ....core.json_contract import NoticeSeverity as _NoticeSeverity
 from ....core.logging import get_logger as _get_logger
 from ....core.wizard_catalogue import get_setup_flow as _get_setup_flow
 from .._command_suggestions import CadrumoTyperGroup as _CadrumoTyperGroup
-from .._common import _emit_envelope
+from .._common import _emit_envelope, resolve_notice_action
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from ._apoderado import apoderado_app, register_apoderado_commands
@@ -259,7 +258,7 @@ def _profile_setup_incomplete_notices(pointers: Sequence[_ProfileBucketPointer])
                 count=len(pointers),
                 labels=labels,
             ),
-            action=next_action("operator.profile.status"),
+            action=resolve_notice_action(action=_ActionReference(action_id="operator.profile.status")),
             context={"count": str(len(pointers)), "labels": labels},
         ),
     ]

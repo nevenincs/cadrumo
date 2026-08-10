@@ -3867,20 +3867,21 @@ cli:
         non_official_notice: A tanúsítványból származó adatok az operátor által szolgáltatott
           bizonyítékok, sosem AEAT által ellenőrzöttek; a censal nyilvántartás nem
           hivatalos szinten marad.
-        pull_cleared_notice: 'Az AEAT még mindig tárol értéket {count} olyan mezőnél,
-          amelyet kiürítettél: {axes}. Ezek üresen maradtak; az itteni törlés nem
-          módosítja az AEAT nyilvántartását.'
-        pull_divergences_notice: 'Az AEAT {count} mezőt a bevallott válaszodtól eltérően
-          közöl: {axes}. A te válaszod marad érvényben; mindegyik eltérést neked kell
-          rendezned.'
+        pull_cleared_notice: 'A népesség-nyilvántartó hatóság továbbra is tartalmaz
+          értéket {count} általad törölt mezőhöz: {axes}. Üresen maradtak; az itt
+          végzett törlés nem módosítja a hatóság nyilvántartását.'
+        pull_divergences_notice: 'A népesség-nyilvántartó hatóság {count} mezőnél
+          eltérő értéket jelez a megadott válaszodhoz képest: {axes}. A válaszod változatlan
+          marad; minden eltérést neked kell rendezni.'
         pull_help: Beolvassa a személyazonosságodat és a lakcímedet az AEAT nyilvántartási
           adataiból, majd előnézetet ad vagy rögzíti azokat az aktív profilban.
         pull_preview_notice: 'Csak előnézet: a profilba semmi nem került. Az adatok
           rögzítéséhez futtasd újra a --apply kapcsolóval.'
-        pull_verified_tier_notice: Ezek az adatok közvetlenül az AEAT-tól származnak,
-          ezért a nyilvántartásba vétel igazoltnak számít.
-        pull_withheld_notice: '{count} mező értékét nem jelenítjük meg: {axes}. Hasonlítsd
-          össze magad az AEAT adataival; ez az eszköz nem írja ki őket.'
+        pull_verified_tier_notice: Ezeket a tényeket közvetlenül a népesség-nyilvántartó
+          hatóságtól olvastuk, ezért a censo felvétele ellenőrzöttnek számít.
+        pull_withheld_notice: 'A(z) {count} mező értéke ki van takarva a kimenetben:
+          {axes}. Hasonlítsd össze őket a népesség-nyilvántartó hatóság adataival;
+          ez az eszköz nem írja ki őket.'
         refresh_help: A legfrissebb nyilvántartás letöltése az AEAT-ból és pillanatkép
           mentése.
         show_help: Az AEAT által legutóbb jelentett nyilvántartás megjelenítése erre
@@ -5389,8 +5390,9 @@ cli:
     calendar_local_modelo_events_unavailable: Ehhez a naptársorhoz nem érhető el helyi
       modell eseménybizonyíték.
     coverage:
-      incomplete_summary: '%{count} benyújtási kötelezettséget nem sikerült egyértelműen
-        a profilhoz rendelni, ezért kimaradhatnak a jelentésből: %{modelos}.'
+      investigate: A(z) %{modelo} bevallási kötelezettséget nem sikerült egyértelműen
+        megállapítani ehhez a profilhoz, és bevallatlan maradhat. Tekintse át a bevallási
+        magyarázatát.
     drafts: Tervezetek
     explain:
       help: Egy nyomtatvány alkalmazhatóságának elemzése az aktív profillal szemben.

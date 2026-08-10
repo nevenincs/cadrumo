@@ -123,7 +123,11 @@ def emit_llm_rejection(
                 "LLM suggestion rejected and recorded. The transaction is unchanged; classify it manually when ready."
             ),
         ),
-        context={"transaction_id": result.transaction_id, "suggestion_kind": result.suggestion_kind},
+        context={
+            "transaction_id": result.transaction_id,
+            "suggestion_kind": result.suggestion_kind,
+            "actionability": "manual_classification_requires_category_selection",
+        },
     )
     lines = [
         f"{tr('cli.ledger.labels.id')}\t{result.transaction_id}",
@@ -162,9 +166,9 @@ def transport_from_provenance(provenance: str) -> str:
 def split_recommendation_notice(transaction_id: str) -> Notice:
     """Build the typed ``info`` :class:`Notice` recommending an evidence-driven split.
 
-    Fired when the evidence read judged the invoice multi-component. Executable
-    identity rides the typed action projection; transaction-specific arguments
-    remain in the notice context.
+    Fired when the evidence read judged the invoice multi-component. Selecting
+    whether to split is an operator decision, so the notice records the
+    observed transaction and does not invent a runnable next action.
     """
     return Notice(
         severity=NoticeSeverity.INFO,
@@ -177,8 +181,11 @@ def split_recommendation_notice(transaction_id: str) -> Notice:
                 "base and IVA children."
             ),
         ),
-        action=next_action("operator.ledger.classify"),
-        context={"transaction_id": transaction_id, "source": "evidence_read"},
+        context={
+            "transaction_id": transaction_id,
+            "source": "evidence_read",
+            "actionability": "split_requires_operator_review",
+        },
     )
 
 
@@ -549,10 +556,7 @@ def _render_classify_llm_preview(
     if suggestion.recommends_split:
         notice = split_recommendation_notice(suggestion.transaction_id)
         notices.append(notice)
-        lines.append(
-            f"{tr('cli.ledger.classify.split_recommended_label')}\t"
-            f"{notice.action.target_command_key if notice.action is not None else '-'}",
-        )
+        lines.append(f"{tr('cli.ledger.classify.split_recommended_label')}\t{notice.message}")
     _emit_envelope(ctx, command="ledger.classify", result=suggest_result, lines=lines, notices=notices)
 
 
@@ -610,10 +614,7 @@ def _render_saturate_llm_preview(
     if suggestion.recommends_split:
         notice = split_recommendation_notice(suggestion.transaction_id)
         notices.append(notice)
-        lines.append(
-            f"{tr('cli.ledger.classify.split_recommended_label')}\t"
-            f"{notice.action.target_command_key if notice.action is not None else '-'}",
-        )
+        lines.append(f"{tr('cli.ledger.classify.split_recommended_label')}\t{notice.message}")
     _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines, notices=notices)
 
 

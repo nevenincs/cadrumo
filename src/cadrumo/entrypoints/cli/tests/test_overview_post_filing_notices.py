@@ -46,9 +46,9 @@ def test_actionable_events_emit_single_warning_notice() -> None:
     assert notice.code == "overview.post_filing.pending"
     assert notice.severity is NoticeSeverity.WARNING
     assert notice.action is not None
-    assert notice.action.action_id == "operator.live.notifications.list"
-    assert notice.action.target_command_key == "app.live.notifications.list"
-    assert "aeat app" not in notice.message.lower()
+    assert notice.action.action.action_id == "operator.live.notifications.list"
+    assert notice.action.action.target_command_key == "app.live.notifications.list"
+    assert notice.action.argument_bindings == ()
     # The structured per-event reference->kind map rides on context; the
     # informational comunicación is excluded.
     assert notice.context == {

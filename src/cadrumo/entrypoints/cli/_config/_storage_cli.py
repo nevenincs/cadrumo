@@ -24,11 +24,12 @@ from typing import TYPE_CHECKING, Final
 
 import typer
 
+from ....application.operator_actions import ActionReference
 from ....application.storage_management import StorageCheckIssueKind, StorageTreeIssueKind
 from ....core import StorageArea
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
-from .._common import _emit_envelope
+from .._common import _emit_envelope, resolve_notice_action
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 
 # Eager import so the @register_schema decorators run on the CLI build path.
@@ -219,6 +220,7 @@ def config_storage_check(
                     "cli.config.storage.check.drifted",
                     default="The storage tree does not match its declaration.",
                 ),
+                action=resolve_notice_action(action=ActionReference(action_id="operator.storage.init")),
                 context={"issue_count": str(len(report.issues))},
             ),
         )

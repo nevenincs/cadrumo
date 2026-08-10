@@ -33,11 +33,19 @@ from ...application.ledger import (
     ledger_transaction_tracking_payload,
     summarize_manual_transactions,
 )
+from ...application.operator_actions import ActionReference
 from ...application.review import FilterParseError
 from ...core import LedgerSortField, LedgerSortOrder, Period, resolve_active_bucket_id
 from ...core.decimal import coerce_decimal_strict
 from ...core.i18n import tr
-from ...core.json_contract import Notice, NoticeSeverity, strict_round_trip
+from ...core.json_contract import (
+    ActionArgumentSource,
+    ActionArgumentStatus,
+    Notice,
+    NoticeSeverity,
+    ResolvedActionArgument,
+    strict_round_trip,
+)
 from ...domain.buckets import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.categories import (
     CATEGORY_FAMILY_MEMBERS,
@@ -55,6 +63,7 @@ from ._common import (
     _tx_repo,
     active_profile_label,
     optional_decimal_text,
+    resolve_notice_action,
 )
 from ._ledger_list import (
     LLM_DECISION_EVENT_TYPES,
@@ -250,6 +259,7 @@ def _register_ledger_llm_diagnostics_command(app: typer.Typer) -> None:
                             "Run an LLM-assisted classification to populate them."
                         ),
                     ),
+                    context={"actionability": "provider_and_transaction_selection_required"},
                 ),
             )
             lines.append(
@@ -372,6 +382,31 @@ def _link_inconsistency_notices(rows: tuple[LinkInconsistency, ...]) -> list[Not
     """
     if not rows:
         return []
+    context = {"link_inconsistency_count": str(len(rows))}
+    action = None
+    if len(rows) == 1:
+        row = rows[0]
+        action = resolve_notice_action(
+            action=ActionReference(action_id="operator.ledger.link"),
+            argument_bindings=(
+                ResolvedActionArgument(
+                    argument_name="transaction_id",
+                    status=ActionArgumentStatus.RESOLVED,
+                    value=row.transaction_id,
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="transaction_id",
+                ),
+                ResolvedActionArgument(
+                    argument_name="invoice_id",
+                    status=ActionArgumentStatus.RESOLVED,
+                    value=row.invoice_id,
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="invoice_id",
+                ),
+            ),
+        )
+    else:
+        context["actionability"] = "multiple_link_pairs_require_operator_selection"
     return [
         Notice(
             severity=NoticeSeverity.WARNING,
@@ -384,7 +419,8 @@ def _link_inconsistency_notices(rows: tuple[LinkInconsistency, ...]) -> list[Not
                     f"catalogues; the affected invoice association cannot be trusted."
                 ),
             ),
-            context={"link_inconsistency_count": str(len(rows))},
+            action=action,
+            context=context,
         ),
     ]
 
@@ -625,17 +661,19 @@ def _register_ledger_preflight_command(app: typer.Typer) -> None:
                     "can support a zero-activity local filing."
                 ),
             )
-            suggestion = "aeat app ledger add --help; aeat app ledger import --help"
             notices.append(
                 Notice(
                     severity=NoticeSeverity.WARNING,
                     code="ledger.preflight.empty_period",
                     message=message,
-                    context={"period": canonical.registry_token, "year": str(canonical.filing_year)},
+                    context={
+                        "period": canonical.registry_token,
+                        "year": str(canonical.filing_year),
+                        "actionability": "activity_assessment_requires_operator_input",
+                    },
                 ),
             )
             lines.append(f"advisory\tempty_ledger\t{message}")
-            lines.append(f"next\t{suggestion}")
         for issue in report.issues:
             lines.append(f"issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}")
         from ._ledger_payloads import LedgerPreflightResult
@@ -1178,7 +1216,10 @@ def _latest_llm_rejection_notice(
                 "The most recent LLM suggestion for this transaction was rejected; classify it manually when ready."
             ),
         ),
-        context=context,
+        context={
+            **context,
+            "actionability": "manual_classification_requires_category_selection",
+        },
     )
 
 

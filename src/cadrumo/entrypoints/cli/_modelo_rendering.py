@@ -93,10 +93,9 @@ def m184_socio_handoff_notices(revision: CalculationRevision) -> list[Notice]:
     When a Modelo 184 revision carries typed :class:`Modelo184MemberRow` detail
     rows, the entity operator who files the M184 is handed, per socio, the exact
     attributed base plus the ``attribution_received`` fact keys the socio records
-    on their OWN profile, and the exact ``aeat app modelo work calculate
-    --binding`` command that folds the base into the socio's Modelo 100 (the
-    cross-bucket value is carried by hand onto the relation-canonical casilla
-    1577, not auto-flowed across profiles). Grounded in LIRPF arts. 86-89.
+    on their OWN profile. The cross-bucket value is carried by hand onto the
+    relation-canonical casilla 1577, not auto-flowed across profiles. Grounded
+    in LIRPF arts. 86-89.
     Returns an empty list for any revision without member rows (non-M184, or an
     M184 with no socios), so the handoff stays silent unless there is a real
     per-socio value to relay.
@@ -902,15 +901,15 @@ def verification_report_notices(report) -> list[Notice]:
     :attr:`Notice.context` so a machine consumer can still distinguish a
     blocking finding from an advisory one. ``legal_refs`` / ``source_refs``
     ride on the context too, mirroring the regulatory grounding the
-    text-mode ``finding_legal_refs`` lines render. The finding's
-    ``next_action`` becomes the notice ``suggestion``.
+    text-mode ``finding_legal_refs`` lines render. The full finding message and
+    free-form ``next_action`` remain in the canonical finding result contract;
+    neither is inferred into an executable notice action.
 
     A granted (clean) verify carries no findings, so this returns an empty
     list and the envelope stays :attr:`EnvelopeStatus.SUCCESS`.
     """
     notices: list[Notice] = []
     for finding in report.findings:
-        message, _ = _render_verification_finding_text(finding)
         context: dict[str, str] = {
             "severity": finding.severity.value,
             "kind": finding.kind.value,
@@ -927,7 +926,10 @@ def verification_report_notices(report) -> list[Notice]:
             Notice(
                 severity=NoticeSeverity.WARNING,
                 code=f"modelo.work.verify.finding.{finding.kind.value}",
-                message=message,
+                message=(
+                    f"Verification reported a {finding.kind.value} finding. "
+                    "See the structured finding result for details."
+                ),
                 context=context,
             ),
         )

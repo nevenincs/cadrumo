@@ -103,14 +103,17 @@ def test_the_remedy_reaches_structured_notice_context() -> None:
     The wizard call site previously built its own context and dropped the remedy
     entirely, so an operator on that path never saw what to do. Both call sites now
     share this projection, and this pins the field it was losing.
+    The remedy remains guidance, not a fully materialized command target.
     """
     diagnostics = _m200_bound_carry_diagnostics()
     remedied = [d for d in diagnostics if d.remedy]
     assert remedied, "the absent-bound-carry diagnostics must carry a remedy for this gate to bite"
     for diagnostic in remedied:
-        context = source_diagnostic_notice(diagnostic, code=_CODE).context
+        notice = source_diagnostic_notice(diagnostic, code=_CODE)
+        context = notice.context
         assert context is not None
         assert context["remedy"] == diagnostic.remedy
+        assert notice.action is None
 
 
 def test_absent_subjects_are_omitted_rather_than_written_blank() -> None:

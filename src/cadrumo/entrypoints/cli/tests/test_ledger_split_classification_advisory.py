@@ -118,8 +118,12 @@ def test_split_of_classified_parent_emits_dropped_classification_advisory() -> N
     (notice,) = [n for n in notices if n["code"] == "ledger.split.classification_dropped"]
     assert notice["severity"] == "info"
     assert "BUSINESS" in notice["message"]
-    assert "classify" in notice["suggestion"]
-    assert notice["context"]["parent_classification"] == "BUSINESS"
+    assert notice["action"] is None
+    assert notice["context"] == {
+        "parent_classification": "BUSINESS",
+        "actionability": "child_classification_requires_operator_decision",
+    }
+    assert "suggestion" not in notice
 
 
 def test_split_of_unclassified_parent_emits_no_dropped_classification_advisory() -> None:

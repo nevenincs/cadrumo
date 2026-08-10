@@ -130,10 +130,11 @@ if TYPE_CHECKING:
     from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ...application.auth import AuthProviderListing
-    from ...application.operator_actions import PreconditionVerdict
-    from ...application.workflow import WorkflowState
+    from ...application.operator_actions import ActionReference, PreconditionVerdict
+    from ...application.operator_surface import OperatorSurfaceReconciliation
     from ...core import Period
-    from ...core.json_contract import Notice, ResolvedActionReference
+    from ...core.json_contract import Notice, ResolvedActionArgument, ResolvedActionReference, ResolvedNoticeAction
+    from ...application.workflow import WorkflowState
     from ...domain.deadlines import TaxpayerProfile
     from ...domain.filing import ModeloDraft
     from ...domain.invoices import InvoiceCatalogue
@@ -142,9 +143,11 @@ if TYPE_CHECKING:
     from ..mcp._input_schema import VerbInputSchema
 
 __all__ = [
+    "active_profile_label",
     "emit_help_text",
     "parse_decimal_amount",
     "parse_optional_decimal_amount",
+    "resolve_notice_action",
 ]
 
 
@@ -544,6 +547,164 @@ def _emit_envelope(
     rendered = render_command_output(format_name=output_format.value, payload=result, lines=rendered_lines)
     if rendered.text:
         typer.echo(rendered.text)
+
+
+def resolve_notice_action(
+    *,
+    action: ActionReference,
+    argument_bindings: tuple[ResolvedActionArgument, ...] = (),
+) -> ResolvedNoticeAction:
+    """Resolve a fully materialised successful notice action against the live CLI.
+
+    This is the sole entrypoint bridge for successful ``Notice.action`` values.
+    It derives the current result-schema, Click/S05 input, mounted-family,
+    profile-policy, and MCP projections, then delegates all action validation
+    to the application-owned resolver.  Producers therefore supply only their
+    stable action identity and provenance-bearing concrete values; they cannot
+    hand-assemble a wire action or silently omit a live required input.
+    """
+    from ...application.operator_actions import OPERATOR_ACTION_CATALOGUE
+    from ...application.operator_surface import resolve_notice_action as resolve_application_notice_action
+
+    return resolve_application_notice_action(
+        action=action,
+        argument_bindings=argument_bindings,
+        catalogue=OPERATOR_ACTION_CATALOGUE,
+        reconciliation=_current_operator_surface_reconciliation(),
+    )
+
+
+def _current_operator_surface_reconciliation() -> OperatorSurfaceReconciliation:
+    """Build the complete current CLI surface reconciliation without inference."""
+    from ...application.operator_surface import (
+        ExplicitExclusionInventoryRow,
+        InputSchemaInventoryRow,
+        LiveLeafInventoryRow,
+        McpExposureInventoryRow,
+        MountedFamilyInventoryRow,
+        ProfilePolicyInventoryRow,
+        ReconciliationSurface,
+        ResultSchemaInventoryRow,
+        get_operator_surface_contract,
+        reconcile_operator_surface_inventory,
+    )
+    from ...application.storage_write_policy import is_profile_bound_write_verb_path
+    from ...entrypoints.mcp._input_schema import build_verb_input_schemas
+    from ...entrypoints.mcp._tools import build_tool_descriptors
+    from ...entrypoints.schema_surface import CALLBACK_RESULT_REUSE_BY_CLI_PATH, ROOT_LANDING_SCHEMA_KEYS
+    from ._app_contract import command_schema_refs
+
+    schema_references = command_schema_refs()
+    command_keys = tuple(reference.command for reference in schema_references)
+    if len(set(command_keys)) != len(command_keys):
+        raise ValueError("current result-schema registry has duplicate command identities")
+    input_schemas = build_verb_input_schemas(tuple(sorted(command_keys)))
+    if set(input_schemas) != set(command_keys):
+        raise ValueError("current input-schema projection does not exactly match the result-schema registry")
+
+    callback_aliases_by_key: dict[str, set[tuple[str, ...]]] = {}
+    for callback_path, command_key in CALLBACK_RESULT_REUSE_BY_CLI_PATH.items():
+        callback_aliases_by_key.setdefault(command_key, set()).add(callback_path)
+
+    primary_paths: dict[str, tuple[str, ...]] = {}
+    for command_key, schema in input_schemas.items():
+        resolved_leaf = schema.resolved_leaf
+        if resolved_leaf.subject_leaf_key != command_key:
+            raise ValueError(
+                f"input-schema projection changed command identity: {command_key} -> {resolved_leaf.subject_leaf_key}",
+            )
+        primary_paths[command_key] = resolved_leaf.cli_path
+
+    descriptors = build_tool_descriptors()
+    descriptor_by_key = {descriptor.command_key: descriptor for descriptor in descriptors}
+    if len(descriptor_by_key) != len(descriptors):
+        raise ValueError("current MCP projection has duplicate command identities")
+    if not set(descriptor_by_key).issubset(command_keys):
+        raise ValueError("current MCP projection contains a command absent from the result-schema registry")
+
+    live_leaves = tuple(
+        LiveLeafInventoryRow(
+            subject_leaf_key=command_key,
+            canonical_cli_path=primary_paths[command_key],
+            alias_cli_paths=tuple(sorted(callback_aliases_by_key.get(command_key, set()))),
+            provenance="S05 live Click input-schema resolution with declared callback reuse",
+        )
+        for command_key in sorted(command_keys)
+    )
+    result_schemas = tuple(
+        ResultSchemaInventoryRow(
+            subject_leaf_key=reference.command,
+            schema_name=reference.schema_name,
+            provenance="SCHEMA_REGISTRY through command_schema_refs",
+        )
+        for reference in schema_references
+    )
+    input_rows = tuple(
+        InputSchemaInventoryRow(
+            subject_leaf_key=command_key,
+            required_input_names=tuple(parameter.name for parameter in schema.required_inputs),
+            provenance="S05 VerbInputSchema.required_inputs",
+        )
+        for command_key, schema in sorted(input_schemas.items())
+    )
+    mounted_families = tuple(
+        MountedFamilyInventoryRow(
+            root=family.root.value,
+            child=family.child,
+            provenance="OperatorSurfaceContract.command_families",
+        )
+        for family in get_operator_surface_contract().command_families
+    )
+    profile_policies = tuple(
+        ProfilePolicyInventoryRow(
+            subject_leaf_key=command_key,
+            classification=(
+                "profile_bound_write"
+                if is_profile_bound_write_verb_path(" ".join(primary_paths[command_key]))
+                else "non_profile_bound"
+            ),
+            should_expose_via_mcp=command_key not in ROOT_LANDING_SCHEMA_KEYS,
+            provenance="application storage policy plus root landing exposure contract",
+        )
+        for command_key in sorted(command_keys)
+    )
+    mcp_exposures = tuple(
+        McpExposureInventoryRow(
+            subject_leaf_key=command_key,
+            exposed=command_key in descriptor_by_key,
+            provenance="build_tool_descriptors",
+        )
+        for command_key in sorted(command_keys)
+    )
+    exclusions = tuple(
+        exclusion
+        for command_key in sorted(ROOT_LANDING_SCHEMA_KEYS)
+        for exclusion in (
+            ExplicitExclusionInventoryRow(
+                subject_leaf_key=command_key,
+                surface=ReconciliationSurface.MOUNTED_FAMILY,
+                reason="root landing callback has no mounted command family",
+                authority="ROOT_LANDING_SCHEMA_KEYS",
+                provenance="entrypoints.schema_surface",
+            ),
+            ExplicitExclusionInventoryRow(
+                subject_leaf_key=command_key,
+                surface=ReconciliationSurface.MCP_EXPOSURE,
+                reason="root landing callback is excluded from MCP tools",
+                authority="ROOT_LANDING_SCHEMA_KEYS",
+                provenance="entrypoints.schema_surface",
+            ),
+        )
+    )
+    return reconcile_operator_surface_inventory(
+        live_leaves=live_leaves,
+        result_schemas=result_schemas,
+        input_schemas=input_rows,
+        mounted_families=mounted_families,
+        profile_policies=profile_policies,
+        mcp_exposures=mcp_exposures,
+        exclusions=exclusions,
+    )
 
 
 def active_profile_label() -> str | None:

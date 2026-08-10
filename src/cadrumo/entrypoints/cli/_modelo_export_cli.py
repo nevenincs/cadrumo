@@ -56,7 +56,7 @@ def _local_export_evidence_notice(result: ModeloExportResult) -> Notice:
     return Notice(
         severity=NoticeSeverity.WARNING,
         code="modelo.export.local_export_not_official_evidence",
-        message=result.official_evidence_message,
+        message="The local export is not official filing evidence.",
         context={
             "evidence_status": result.local_evidence_status,
             "modelo": str(result.modelo),

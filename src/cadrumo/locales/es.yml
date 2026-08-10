@@ -3955,20 +3955,21 @@ cli:
         non_official_notice: Los datos derivados del certificado son evidencia aportada
           por el operador, nunca verificada por la AEAT; el alta censal permanece
           en el nivel no oficial.
-        pull_cleared_notice: 'La AEAT sigue teniendo un valor en {count} campo(s)
-          que vaciaste: {axes}. Se han dejado vacíos; vaciarlos aquí no cambia el
-          registro de la AEAT.'
-        pull_divergences_notice: 'La AEAT informa {count} campo(s) de forma distinta
-          a lo que declaraste: {axes}. Tu respuesta se mantiene; resuelve cada discrepancia
-          tú mismo.'
+        pull_cleared_notice: 'La autoridad censal aún mantiene un valor para {count}
+          campo(s) que borraste: {axes}. Se dejaron vacíos; borrarlos aquí no cambia
+          el registro de la autoridad.'
+        pull_divergences_notice: 'La autoridad censal informa de {count} campo(s)
+          con valores distintos de los declarados: {axes}. Se mantiene tu respuesta;
+          resuelve cada discrepancia tú mismo.'
         pull_help: Lee tu identidad y tu domicilio de los datos censales de la AEAT
           y previsualiza o inscríbelos en el perfil activo.
         pull_preview_notice: 'Solo previsualización: no se ha escrito nada en el perfil.
           Vuelve a ejecutar con --apply para inscribir estos datos.'
-        pull_verified_tier_notice: Estos datos se han leído directamente de la AEAT,
-          por lo que el alta censal cuenta como verificada.
-        pull_withheld_notice: 'Los valores de {count} campo(s) no se muestran: {axes}.
-          Compáralos tú mismo con los de la AEAT; esta herramienta no los imprime.'
+        pull_verified_tier_notice: Estos datos se leyeron directamente de la autoridad
+          censal, por lo que la incorporación al censo cuenta como verificada.
+        pull_withheld_notice: 'Los valores de {count} campo(s) se ocultan en la salida:
+          {axes}. Compáralos tú mismo con la autoridad censal; esta herramienta no
+          los mostrará.'
         refresh_help: Descarga de AEAT el último censo y guarda un snapshot
         show_help: Muestra el último censo informado por AEAT para este perfil
         snapshot_id_help: Id de snapshot concreto (se aceptan prefijos)
@@ -5489,8 +5490,9 @@ cli:
     calendar_local_modelo_events_unavailable: La evidencia local de eventos de modelo
       no está disponible para esta fila del calendario.
     coverage:
-      incomplete_summary: 'No se pudieron acotar de forma concluyente %{count} obligación(es)
-        de presentación para este perfil y podrían quedar sin declarar: %{modelos}.'
+      investigate: No se ha podido determinar con certeza la obligación de presentación
+        %{modelo} para este perfil y podría quedar sin declarar. Revise su explicación
+        de presentación.
     drafts: Borradores
     explain:
       help: Descompone la aplicabilidad de un modelo frente al perfil activo. Muestra

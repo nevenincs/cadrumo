@@ -26,7 +26,6 @@ from ...application.ledger import (
     split_transaction,
     stash_manual_transaction,
 )
-from ...application.operator_actions import next_action
 from ...core import resolve_active_bucket_id
 from ...core.external_constants import PDF_MIME_TYPE
 from ...core.i18n import tr
@@ -167,10 +166,6 @@ def _stale_finalized_revision_notices(result: ManualLedgerTransactionResult) -> 
                     "running work calculate."
                 ),
             ),
-            suggestion=(
-                "aeat app ledger evidence add PATH; aeat app ledger attach TRANSACTION_ID "
-                "--purchase-invoice-evidence-id EVIDENCE_ID  # before `aeat app modelo work calculate`"
-            ),
             context={
                 "work_unit_id": blocker.work_unit_id,
                 "calculation_revision_id": blocker.calculation_revision_id,
@@ -179,6 +174,7 @@ def _stale_finalized_revision_notices(result: ManualLedgerTransactionResult) -> 
                 "filing_year": str(blocker.filing_year),
                 "period": blocker.period,
                 "reason": "finalized_revision_predates_evidence",
+                "actionability": "finalized_revision_has_no_safe_recovery_action",
             },
         )
         for blocker in result.stale_finalized_revisions
@@ -500,7 +496,6 @@ def ledger_pull_folder(
     if refused_count:
         notices.append(
             Notice(
-                action=next_action("operator.ledger.attach"),
                 severity=NoticeSeverity.WARNING,
                 code="ledger.pull_folder.files_refused",
                 message=tr(
@@ -508,8 +503,8 @@ def ledger_pull_folder(
                     refused_count=refused_count,
                     default=(
                         f"{refused_count} file(s) in this folder could not be fetched under the "
-                        "drive.file scope; download them manually and attach with "
-                        "'aeat app ledger attach --attachment-id ...'."
+                        "drive.file scope; download them manually before selecting the matching "
+                        "transaction and attachment."
                     ),
                 ),
                 context={"folder_id": folder_id, "refused_count": str(refused_count)},
@@ -896,14 +891,16 @@ def _split_classification_dropped_notices(
         return []
     return [
         Notice(
-            action=next_action("operator.ledger.classify"),
             severity=NoticeSeverity.INFO,
             code="ledger.split.classification_dropped",
             message=tr(
                 "cli.ledger.split.classification_dropped",
                 classification=parent_classification.value,
             ),
-            context={"parent_classification": parent_classification.value},
+            context={
+                "parent_classification": parent_classification.value,
+                "actionability": "child_classification_requires_operator_decision",
+            },
         ),
     ]
 

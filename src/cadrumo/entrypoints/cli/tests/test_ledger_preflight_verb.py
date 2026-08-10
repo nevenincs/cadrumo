@@ -51,8 +51,7 @@ def test_preflight_empty_catalogue_is_ready() -> None:
     assert "issues\t0" in result.output
     assert "ready\ttrue" in result.output
     assert "advisory\tempty_ledger" in result.output
-    assert "aeat app ledger add --help" in result.output
-    assert "aeat app ledger import --help" in result.output
+    assert "activity occurred" in result.output
 
 
 def test_preflight_empty_catalogue_json_notice_marks_warning() -> None:
@@ -68,8 +67,13 @@ def test_preflight_empty_catalogue_json_notice_marks_warning() -> None:
     notice = envelope["notices"][0]
     assert notice["severity"] == "warning"
     assert notice["code"] == "ledger.preflight.empty_period"
-    assert notice["suggestion"] == "aeat app ledger add --help; aeat app ledger import --help"
-    assert notice["context"] == {"period": "1T", "year": "2026"}
+    assert notice["action"] is None
+    assert notice["context"] == {
+        "period": "1T",
+        "year": "2026",
+        "actionability": "activity_assessment_requires_operator_input",
+    }
+    assert "suggestion" not in notice
 
 
 def test_preflight_rejects_malformed_period() -> None:

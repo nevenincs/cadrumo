@@ -314,5 +314,29 @@ def test_check_reports_a_one_sided_invoice_link(tmp_path: Path) -> None:
     assert "ledger.check.link_inconsistency" in codes
     notice = next(item for item in payload["notices"] if item["code"] == "ledger.check.link_inconsistency")
     assert notice["severity"] == "warning"
-    assert notice["suggestion"] == "aeat app ledger link"
+    assert notice["action"] == {
+        "action": {
+            "action_id": "operator.ledger.link",
+            "target_command_key": "ledger.link",
+        },
+        "argument_bindings": [
+            {
+                "argument_name": "invoice_id",
+                "status": "resolved",
+                "value": invoice_id,
+                "source": "operator_action.verdict_context",
+                "source_key": "invoice_id",
+                "source_evidence_id": None,
+            },
+            {
+                "argument_name": "transaction_id",
+                "status": "resolved",
+                "value": transaction_id,
+                "source": "operator_action.verdict_context",
+                "source_key": "transaction_id",
+                "source_evidence_id": None,
+            },
+        ],
+    }
+    assert "suggestion" not in notice
     assert notice["context"] == {"link_inconsistency_count": "1"}
