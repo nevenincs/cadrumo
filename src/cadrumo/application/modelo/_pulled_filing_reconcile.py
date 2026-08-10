@@ -39,6 +39,11 @@ See Also:
         Supplies the casilla scope that keeps an empty bucket silent.
     :class:`~domain.modelos.CalculationRevision`
         The local side of the comparison.
+    :class:`ModeloRevision`
+        Law-resolved from the work unit's own triple, never from a stored
+        revision id. Supplies the formula graph the population scope walks and
+        the casilla definitions each finding carries its grounding from, so a
+        divergence cites the same references the registry grounds the value at.
 """
 
 from __future__ import annotations
