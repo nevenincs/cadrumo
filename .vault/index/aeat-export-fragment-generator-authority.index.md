@@ -6,7 +6,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:f35376e0674e1d5a54ad764d617624ee8b8590a95215bdfd929e1a86d69f57b5'
+body_hash: 'sha256:3e3f2ce9501dd53231fc30eb0e4fbc3bf46c7bc3d6001cd6d4a04b1ea5b22dfe'
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P01-S01]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P01-S02]]'
@@ -20,6 +20,7 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W02-P03-S09]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W02-P04-S10]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W02-P04-S11]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-W02-P04-S12]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-s01-source-catalogue-audit]]'
@@ -35,6 +36,7 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-s09-provenance-emission-review-audit]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-s10-loader-validation-audit]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-s11-atomic-publication-audit]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-s12-check-mode-audit]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-s30-variable-envelope-code-review-audit]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-source-authority-research]]'
 ---
@@ -63,6 +65,7 @@ Auto-generated index of all documents tagged with `#aeat-export-fragment-generat
 - `2026-08-10-aeat-export-fragment-generator-authority-s09-provenance-emission-review-audit` - `aeat-export-fragment-generator-authority` audit: `s09 provenance emission review`
 - `2026-08-10-aeat-export-fragment-generator-authority-s10-loader-validation-audit` - `aeat-export-fragment-generator-authority` audit: `S10 loader validation review`
 - `2026-08-10-aeat-export-fragment-generator-authority-s11-atomic-publication-audit` - `aeat-export-fragment-generator-authority` audit: `S11 atomic export publication code review`
+- `2026-08-10-aeat-export-fragment-generator-authority-s12-check-mode-audit` - `aeat-export-fragment-generator-authority` audit: `S12 read-only generated export check`
 - `2026-08-10-aeat-export-fragment-generator-authority-s30-variable-envelope-code-review-audit` - `aeat-export-fragment-generator-authority` audit: `S30 variable envelope code review`
 
 ### exec
@@ -79,6 +82,7 @@ Auto-generated index of all documents tagged with `#aeat-export-fragment-generat
 - `2026-08-10-aeat-export-fragment-generator-authority-W02-P03-S09` - Emit source, map, schema, semantic, and file digests in the provenance manifest
 - `2026-08-10-aeat-export-fragment-generator-authority-W02-P04-S10` - Validate generated trees through the real registry loader before publication
 - `2026-08-10-aeat-export-fragment-generator-authority-W02-P04-S11` - Publish complete generated trees and provenance atomically from an isolated temporary target
+- `2026-08-10-aeat-export-fragment-generator-authority-W02-P04-S12` - Implement check mode that independently regenerates and rejects semantic, provenance, or byte drift
 
 ### plan
 

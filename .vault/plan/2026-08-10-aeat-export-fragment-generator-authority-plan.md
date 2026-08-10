@@ -4,7 +4,7 @@ tags:
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
 modified: '2026-08-10'
-body_hash: 'sha256:34deb74a1bfb229de54e31cb4518a6348f26ad8bfb029deac7a648bb4875c95c'
+body_hash: 'sha256:31a84bfffdc3e5b0d5609d5d5d6a6748df8bb150d8836a0a74bcb9c833d208b5'
 tier: L3
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
@@ -64,7 +64,7 @@ Prevent partial publication and turn every generated artifact into a reproducibl
 
 - [x] `W02.P04.S10` - Validate generated trees through the real registry loader before publication; `dev/registry/`.
 - [x] `W02.P04.S11` - Publish complete generated trees and provenance atomically from an isolated temporary target; `dev/registry/`.
-- [ ] `W02.P04.S12` - Implement check mode that independently regenerates and rejects semantic, provenance, or byte drift; `dev/registry/`.
+- [x] `W02.P04.S12` - Implement check mode that independently regenerates and rejects semantic, provenance, or byte drift; `dev/registry/`.
 
 ## Wave `W03` - adversarial correctness proof
 
