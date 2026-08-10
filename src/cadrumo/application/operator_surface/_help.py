@@ -170,6 +170,20 @@ def _root_help() -> HelpDocument:
                     "and sensitive web-address content stay protected."
                 ),
             ),
+            # Deliberately the CONFIG document's key, rendered here as well. An
+            # operator cannot set what no surface names, and this operator is
+            # frequently an agent holding only the help text -- so the settable
+            # storage variables have to be reachable from the root landing, not
+            # only from a subcommand's help. Sharing the key rather than minting
+            # a root one keeps one translated sentence instead of two that drift.
+            tr(
+                "cli.operator_surface.help.config.paragraph_storage_isolation",
+                default=(
+                    "For an isolated blank state, set CADRUMO_LOCAL_STORAGE_ROOT, "
+                    "CADRUMO_SECRET_STORE_BACKEND=file, CADRUMO_SECRET_STORE_DIR, and "
+                    "CADRUMO_SECRET_PASSPHRASE; logs default under that storage root."
+                ),
+            ),
         ),
         sections=(
             HelpSection(
