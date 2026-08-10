@@ -4,7 +4,7 @@ tags:
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
 modified: '2026-08-10'
-body_hash: 'sha256:9476c614d802589f69ef9d65833705a0b05b2837cb2dda2f8996eab0a3de7de7'
+body_hash: 'sha256:080c3457e5a206c0dc1940d9fba54cf1ec692a62fbb348a8f289f43a19faca6b'
 tier: L3
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
@@ -77,7 +77,7 @@ Cover every authority boundary with positive and negative real-behavior tests.
 - [x] `W03.P05.S13` - Prove parser completeness, declared totals, source applicability, and source-hash enforcement; `dev/registry/tests/`.
 - [x] `W03.P05.S14` - Prove missing, duplicate, ambiguous, fuzzy, and illegal-exception mappings refuse the whole design; `dev/registry/tests/`.
 - [x] `W03.P05.S15` - Prove offset, length, source-anchor, target-revision, and generated-file mutations are detected; `dev/registry/tests/`.
-- [ ] `W03.P05.S33` - Prove refusal for missing, duplicate, overlapping, conflicting, unknown-anchor, inapplicable, defaulted, legacy-derived, or source-hash-drifting profile authority, plus official Total: recovery, Num and signed-N behavior, and non-truncation of DP200000; `dev/registry/tests/`.
+- [x] `W03.P05.S33` - Prove refusal for missing, duplicate, overlapping, conflicting, unknown-anchor, inapplicable, defaulted, legacy-derived, or source-hash-drifting profile authority, plus official Total: recovery, Num and signed-N behavior, and non-truncation of DP200000; `dev/registry/tests/`.
 
 ### Phase `W03.P06` - repository and byte gates
 
