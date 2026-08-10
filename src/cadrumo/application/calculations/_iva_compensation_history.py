@@ -43,12 +43,11 @@ from ...adapters.persistence.storage import (
     SensitivityClass,
     safe_repository_id,
 )
-from ...core import CasillaValueKind, Modelo, Period
+from ...core import CasillaId, CasillaValueKind, Modelo, Period
 from ...core.identity import AeatExpedienteId, ContentDigest, SubjectTaxId
 from ...core.resources import resources
 from ...core.time import now
 from ...domain.calculations.registry import (
-    CasillaId,
     undeclared_casilla_ids,
 )
 from ...domain.iva_compensation import (

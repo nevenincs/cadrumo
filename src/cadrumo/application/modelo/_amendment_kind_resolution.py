@@ -39,12 +39,12 @@ from decimal import Decimal
 
 from ...core import (
     AmendmentLiabilityDirection,
+    CasillaId,
     Period,
     classify_amendment_liability_direction,
     resolve_amendment_kind_regime,
     result_disposition_casilla_ids,
 )
-from ...domain.calculations.registry import CasillaId
 from ...domain.modelos import CalculationRevisionAmendmentKind
 from ._action_errors import AmendmentComplementariaLiabilityDecreaseError, AmendmentKindNotPermittedError
 

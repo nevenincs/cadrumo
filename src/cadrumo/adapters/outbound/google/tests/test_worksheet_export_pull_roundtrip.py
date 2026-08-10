@@ -30,14 +30,12 @@ from .....application.storage.calc_sheets import (
     build_export_plan,
     registry_sha,
 )
-from .....core import Period
+from .....core import CasillaId, Period, validated_casilla_id
 from .....core.resources import resources
 from .....domain.calculations.registry import (
-    CasillaId,
     InputKind,
     NoRevisionForPeriodError,
     calculate_registry_snapshot,
-    validated_casilla_id,
 )
 from .....domain.period import calculation_filing_date
 from .._calc_sheets_pull import (

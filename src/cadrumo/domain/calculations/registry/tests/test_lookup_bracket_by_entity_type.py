@@ -22,9 +22,9 @@ from decimal import Decimal
 
 import pytest
 
+from .....core import CasillaId
 from .._errors import RegistryValidationError
 from .._formula_runtime import _evaluate_expression
-from .._ids import CasillaId
 from .._schema import BracketEntry, FormulaExpression, ParameterDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

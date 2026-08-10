@@ -7,7 +7,7 @@ no binding or formula, so an estimación-objetiva filer who declares the 1T-3T
 "ingresos a cuenta" (casilla 47) but leaves the 4T "cuota derivada del régimen
 simplificado" (casilla 48) at zero would file a zero-cuota result with no
 gate. This module pins the ``implies_nonzero(["47", "48"])`` ADVISORY guard
-shipped on both M303 revisions (2009-y-siguientes inline, 2023-y-siguientes
+shipped across M303 revisions (2009-y-siguientes inline, later revisions
 fragmented — aeat-registry-authority-flow).
 """
 
@@ -18,11 +18,10 @@ from functools import lru_cache
 
 import pytest
 
+from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaId,
     VerificationPredicateDefinition,
-    validated_casilla_id,
 )
 from ....domain.modelos import (
     ModeloVerificationFindingKind,
@@ -35,7 +34,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _M303_ADVISORY_PREDICATE_IDS = {
     "2009-y-siguientes": "modelo-303-2009-regimen-simplificado-cuota-determinada-cuando-ingresos",
-    "2023-y-siguientes": "modelo-303-regimen-simplificado-cuota-determinada-cuando-ingresos-declarados",
+    "2023": "modelo-303-regimen-simplificado-cuota-determinada-cuando-ingresos-declarados",
+    "2024-hasta-08-y-2t": "modelo-303-regimen-simplificado-cuota-determinada-cuando-ingresos-declarados",
+    "2024-desde-09-y-3t": "modelo-303-regimen-simplificado-cuota-determinada-cuando-ingresos-declarados",
+    "2025": "modelo-303-regimen-simplificado-cuota-determinada-cuando-ingresos-declarados",
+    "2026-y-siguientes": "modelo-303-regimen-simplificado-cuota-determinada-cuando-ingresos-declarados",
 }
 _M303_REVISION_IDS = tuple(sorted(_M303_ADVISORY_PREDICATE_IDS))
 

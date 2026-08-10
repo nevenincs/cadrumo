@@ -14,8 +14,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import Period, PriorDomiciliationElection
-from ....domain.calculations.registry import CasillaFieldKind, CasillaId
+from ....core import CasillaId, Period, PriorDomiciliationElection
+from ....domain.calculations.registry import CasillaFieldKind
 from ....domain.submission import ModeloDraftStatus
 from .. import ModeloOperatorProfile, build_draft
 from .._export_parity import _did_page_suppressed, boe_representable_casilla_ids, rendered_casilla_ids

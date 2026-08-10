@@ -41,12 +41,11 @@ from functools import cache
 
 import pytest
 
+from ....core import CasillaId, validated_casilla_id
 from ....core.resources import bundled_path
 from ....domain.calculations.registry import (
-    CasillaId,
     VerificationPredicateDefinition,
     load_modelo_path,
-    validated_casilla_id,
 )
 from ....domain.modelos import (
     ModeloVerificationFindingKind,
@@ -171,7 +170,8 @@ def test_medios_ajenos_personal_asalariado_both_positive_fires_advisory() -> Non
     assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY
     assert findings[0].severity is ModeloVerificationFindingSeverity.WARNING
     assert "orden-hac-1347-2024:anexo-i-instruccion-2-3" in findings[0].legal_refs
-    assert findings[0].message  # a non-empty operator-facing message is rendered
+    assert findings[0].message_locale_key == "application.modelo.findings.registry_advisory_predicate_fired"
+    assert dict(findings[0].message_facts) == {"predicate_id": _AB_PREDICATE_ID}
 
 
 def test_medios_ajenos_personal_asalariado_single_letra_holds() -> None:

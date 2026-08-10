@@ -8,9 +8,9 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import BindingId, CasillaId, validated_casilla_id
+from ....domain.calculations.registry import BindingId
 from ....domain.deadlines import (
     EntityType,
     IVARegime,

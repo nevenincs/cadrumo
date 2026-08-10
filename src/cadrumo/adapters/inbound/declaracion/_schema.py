@@ -23,8 +23,8 @@ from typing import Literal
 from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ....core import Period, PeriodError
-from ....domain.calculations.registry import CasillaId, RegistrySnapshotRef
+from ....core import CasillaId, Period, PeriodError
+from ....domain.calculations.registry import RegistrySnapshotRef
 from ..pdf import ExtractedCasilla
 
 

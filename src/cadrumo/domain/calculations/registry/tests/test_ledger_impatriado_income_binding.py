@@ -27,13 +27,12 @@ from decimal import Decimal
 
 import pytest
 
+from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
 from .. import (
-    CasillaId,
     build_snapshot,
     resolve_ledger_impatriado_income_aggregation_binding_values,
     unsupported_ledger_impatriado_income_observations,
-    validated_casilla_id,
 )
 from ._registry_schema_support import _committed_modelo
 

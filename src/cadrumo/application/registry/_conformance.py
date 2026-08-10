@@ -109,6 +109,7 @@ from pydantic import BaseModel, Field
 from ...core import NON_REGISTRY_MODELOS as _NON_REGISTRY_MODELOS
 from ...core import REVIEWED_REVISION_REVIEW_STATUSES as _REVIEWED_REVISION_REVIEW_STATUSES
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
+from ...core import CasillaId as _CasillaId
 from ...core import ExportLayoutFormat as _ExportLayoutFormat
 from ...core import Modelo as _Modelo
 from ...core import RevisionReviewStatus as _RevisionReviewStatus
@@ -116,7 +117,7 @@ from ...core.access_gate import ModeloAuthorization as _ModeloAuthorization
 from ...core.resources import bundled_path as _bundled_path
 from ...domain.calculations.registry import REQUIRED_COVERAGE_TIERS as _REQUIRED_COVERAGE_TIERS
 from ...domain.calculations.registry import BindingId as _BindingId
-from ...domain.calculations.registry import CasillaId as _CasillaId
+
 from ...domain.calculations.registry import ConstructEvidenceLedger as _ConstructEvidenceLedger
 from ...domain.calculations.registry import ConstructEvidenceRow as _ConstructEvidenceRow
 from ...domain.calculations.registry import DeclaredAxisUsage as _DeclaredAxisUsage

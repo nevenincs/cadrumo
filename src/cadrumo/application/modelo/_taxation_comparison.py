@@ -52,12 +52,11 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
-from ...core import Modelo
+from ...core import CasillaId, Modelo
 from ...core import Period as _Period
 from ...core.errors import CoreError
 from ...domain.calculations.registry import (
     BindingId,
-    CasillaId,
     RegistrySnapshot,
     RelationId,
     calculate_registry_snapshot,

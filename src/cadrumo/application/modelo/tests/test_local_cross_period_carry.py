@@ -42,13 +42,11 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.calculations.registry import (
     MODELO_303_IVA_COMPENSATION_BINDING_ID,
-    CasillaId,
     RegistryModeloObservation,
     iva_wallet_owned_binding_ids_for_revision,
-    validated_casilla_id,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
@@ -516,7 +514,7 @@ def test_carry_resolver_excludes_303_iva_compensation_binding(repos: _Repos) -> 
         modelo="303",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "2T"),
-        revision_id="2023-y-siguientes",
+        revision_id="2026-y-siguientes",
         repository=wu_repo,
         clock=_T4,
     )
@@ -568,7 +566,7 @@ def test_source_mesh_excludes_303_iva_compensation_relation_binding(repos: _Repo
         modelo="303",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "2T"),
-        revision_id="2023-y-siguientes",
+        revision_id="2026-y-siguientes",
         repository=wu_repo,
         clock=_T4,
     )
@@ -627,7 +625,7 @@ def test_existing_activity_m303_1t_missing_prior_filing_blocks_wallet_zero(repos
         modelo="303",
         filing_year=2025,
         period=Period.from_year_and_code(2025, "1T"),
-        revision_id="2023-y-siguientes",
+        revision_id="2025",
         repository=wu_repo,
         clock=_T1,
     )
@@ -651,7 +649,7 @@ def test_first_iva_period_m303_1t_uses_wallet_first_period_zero(repos: _Repos) -
         modelo="303",
         filing_year=2025,
         period=Period.from_year_and_code(2025, "1T"),
-        revision_id="2023-y-siguientes",
+        revision_id="2025",
         repository=wu_repo,
         clock=_T1,
     )
@@ -714,7 +712,7 @@ def test_unreadable_prior_303_observation_cannot_prove_a_first_period_zero(repos
         modelo="303",
         filing_year=2025,
         period=Period.from_year_and_code(2025, "1T"),
-        revision_id="2023-y-siguientes",
+        revision_id="2025",
         repository=wu_repo,
         clock=_T1,
     )

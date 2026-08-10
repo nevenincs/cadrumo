@@ -54,6 +54,7 @@ from .....application.workflow import (
     WorkflowStateRepository,
     WorkflowStep,
 )
+from .....core import CasillaId, validated_casilla_id
 from .....core import Period as _Period
 from .....core.config import override_settings
 from .....domain import ModeloIdentifier
@@ -66,11 +67,9 @@ from .....domain.buckets import (
     derive_bucket_event_id,
 )
 from .....domain.calculations.registry import (
-    CasillaId,
     CasillaObservation,
     RegistryModeloObservation,
     RegistrySnapshotRef,
-    validated_casilla_id,
 )
 from .....domain.categories import SpendingCategory
 from .....domain.contribuyente.assets import AmortizacionEntry, AmortizacionLedger, AssetClass, AssetRecord

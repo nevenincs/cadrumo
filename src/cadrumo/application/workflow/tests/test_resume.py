@@ -16,12 +16,14 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....core import (
     ActionConditionality,
     ActionEvidenceProvenance,
+    CasillaId,
     Modelo,
     NoRecoveryOutcome,
     Period,
+    validated_casilla_id,
 )
 from ....core.errors import SiteHealthError, resolve_error_message
-from ....domain.calculations.registry import CasillaId, CasillaObservation, validated_casilla_id
+from ....domain.calculations.registry import CasillaObservation
 from ....domain.deadlines import ObligationStatus
 from ....domain.modelos import (
     CalculationRevision,

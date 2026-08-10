@@ -32,10 +32,10 @@ from ...application.modelo import (
     compare_modelo_years,
     project_modelo_100_from_m130,
 )
-from ...core import Modelo
+from ...core import CasillaId, Modelo
 from ...core.i18n import tr
 from ...core.output_rendering import jsonable_output_payload
-from ...domain.calculations.registry import CasillaId, RegistrySnapshotError, RegistryValidationError
+from ...domain.calculations.registry import RegistrySnapshotError, RegistryValidationError
 from ._common import MODELO_CODE_CHOICE, _emit_envelope
 from ._modelo_payloads import (
     CasillaObservationPayload,

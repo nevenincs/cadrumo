@@ -25,6 +25,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....application.aggregation import RentaIncomeObservation
+from .....core import CasillaId, validated_casilla_id
 from .....core.aggregation import (
     BindingAggregation,
     BindingAggregationOp,
@@ -33,14 +34,12 @@ from .....core.aggregation import (
 )
 from .....core.resources import bundled_path
 from .. import (
-    CasillaId,
     DataBindingDefinition,
     build_snapshot,
     resolve_ledger_renta_income_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,
     unsupported_ledger_renta_income_observations,
     validate_ledger_renta_income_aggregation_binding_definition,
-    validated_casilla_id,
 )
 from .._binding_selector_utils import selector_as_dict
 from ._registry_schema_support import _committed_modelo

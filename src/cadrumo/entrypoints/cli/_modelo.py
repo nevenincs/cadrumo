@@ -40,21 +40,20 @@ from ...application.modelo import (
     declared_modelo_period_tokens,
     get_work_unit,
     guard_active_profile_foral_ccaa,
+    lifecycle_continuation_for_work_history,
     modelo_work_address_from_operator_target,
     registry_bindings_for_scope,
     resolve_modelo_revision_for_operator_target,
     resolve_modelo_work_unit_for_operator_target,
 )
-from ...application.operator_actions import next_action
-from ...core import Modelo, Period, PeriodError
+from ...core import CasillaId, Modelo, Period, PeriodError, validated_casilla_id
 from ...core.aggregation import LEDGER_BINDING_SOURCE_KINDS
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors import CadrumoError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
-from ...core.json_contract import Notice, NoticeSeverity
 from ...core.logging import get_logger
-from ...domain.calculations.registry import CasillaId, RegistryValidationError, validated_casilla_id
+from ...domain.calculations.registry import RegistryValidationError
 from ...domain.modelos import CalculationRevision, CalculationRevisionAmendmentKind, WorkUnit
 from ._common import (
     MODELO_CODE_CHOICE,
@@ -71,9 +70,6 @@ from ._modelo_cli_support import (
 )
 from ._modelo_cli_support import (
     bad_parameter_from_localized_context as _bad_parameter_from_localized_context,
-)
-from ._modelo_cli_support import (
-    calculation_revision_not_found_bad_parameter as _calculation_revision_not_found_bad_parameter,
 )
 from ._modelo_cli_support import (
     parse_binding_override as _parse_binding_override,
@@ -836,20 +832,14 @@ register_work_revision_commands(
 
 @work_app.command(
     "history",
-    help=tr(
-        "cli.app.modelo.work.history_help",
-        default="Show every bucket event scoped to one work unit's full lifecycle.",
-    ),
+    help=tr("cli.app.modelo.work.history_help"),
 )
 def work_history(
     ctx: typer.Context,
     work_unit_id: Annotated[
         str | None,
         typer.Argument(
-            help=tr(
-                "cli.app.modelo.work.history_work_unit_id_help",
-                default="Work unit id whose lifecycle to render.",
-            ),
+            help=tr("cli.app.modelo.work.history_work_unit_id_help"),
         ),
     ] = None,
     modelo: _ModeloOpt = None,
@@ -883,17 +873,7 @@ def work_history(
         bucket_id=bucket_id,
     )
     history = assemble_work_unit_history(unit.work_unit_id)
-    from ...application.operator_actions import ActionReference
-    from ...core import (
-        ActionArgumentSource,
-        ActionArgumentStatus,
-    )
-    from ...core.json_contract import (
-        Notice,
-        NoticeSeverity,
-        ResolvedActionArgument,
-    )
-    from ._common import _emit_envelope, resolve_notice_action
+    from ._common import _emit_envelope, resolve_lifecycle_continuation_notice
     from ._modelo_payloads import WorkHistoryResult, WorkUnitHistoryEventPayload
 
     result = WorkHistoryResult(
@@ -932,36 +912,8 @@ def work_history(
         )
         for event in history.events
     )
-    next_action = Notice(
-        severity=NoticeSeverity.INFO,
-        code="modelo.work.history.next_action",
-        message=tr(
-            "cli.app.modelo.work.history_next_action_summary",
-            default="Review this work unit's current state before choosing its next operation.",
-        ),
-        action=resolve_notice_action(
-            action=ActionReference(action_id="operator.modelo.work.status"),
-            argument_bindings=(
-                ResolvedActionArgument(
-                    argument_name="work_unit_id",
-                    status=ActionArgumentStatus.RESOLVED,
-                    value=history.work_unit_id,
-                    source=ActionArgumentSource.VERDICT_CONTEXT,
-                    source_key="work_unit_id",
-                ),
-            ),
-        ),
-    )
+    next_step = resolve_lifecycle_continuation_notice(lifecycle_continuation_for_work_history(unit))
     _emit_envelope(ctx, command="modelo.work.history", result=result, lines=lines, notices=[next_step])
-
-
-def _calculation_revision_not_found_bad_parameter_wide(
-    calculation_revision_id: str,
-    exc: BaseException,
-) -> typer.BadParameter:
-    """Widen the exc parameter to BaseException for the register_work_verification_commands contract."""
-    assert isinstance(exc, CalculationRevisionNotFoundError)
-    return _calculation_revision_not_found_bad_parameter(calculation_revision_id, exc)
 
 
 register_work_verification_commands(
@@ -971,7 +923,6 @@ register_work_verification_commands(
     resolve_revision_for_cli=_resolve_revision_for_cli,
     resolve_default_actor=_resolve_default_actor,
     bad_parameter_from_error=_bad_parameter_from_error,
-    calculation_revision_not_found_bad_parameter=_calculation_revision_not_found_bad_parameter_wide,
 )
 
 

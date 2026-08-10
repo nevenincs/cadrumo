@@ -22,10 +22,9 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....core.errors import resolve_error_message
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,

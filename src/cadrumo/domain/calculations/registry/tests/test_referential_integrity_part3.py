@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import BindingSourceKind
-from .. import CasillaId, validated_casilla_id
+from .....core import BindingSourceKind, CasillaId, validated_casilla_id
 from .._schema import SourceCitation
 from .._schema_input_kind import InputKind
 from .._validate import RegistryValidator

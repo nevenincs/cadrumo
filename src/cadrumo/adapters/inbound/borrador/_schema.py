@@ -24,8 +24,8 @@ from typing import Literal, Protocol
 from pydantic import BaseModel, Field
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ....core import Modelo
-from ....domain.calculations.registry import CasillaId
+from ....core import CasillaId, Modelo
+from ....core.identity import AeatCsv
 from ..pdf import ExtractedCasilla
 
 
@@ -133,5 +133,5 @@ class InboundBorradorObservation(BaseModel):
     source_pdf_path: Path
     source_pdf_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     parsed_at: datetime
-    csv: str | None = None
+    csv: AeatCsv | None = None
     warnings: tuple[str, ...] = ()

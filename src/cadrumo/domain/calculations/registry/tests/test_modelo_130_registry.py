@@ -7,18 +7,16 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import normalise_corpus_text
+from .....core import CasillaId, normalise_corpus_text, validated_casilla_id
 from .....core.resources import bundled_path
 from .....tests.registry_observations import registry_grounded_modelo_observation
 from .. import (
-    CasillaId,
     InputKind,
     ModeloDefinition,
     RegistryCatalogues,
     RegistryValidationError,
     calculate_registry_snapshot,
     resolve_previous_filing_binding_values,
-    validated_casilla_id,
 )
 from .._binding_selector_utils import selector_as_dict
 from .._bindings import RegistryModeloObservation

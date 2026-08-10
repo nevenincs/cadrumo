@@ -55,10 +55,9 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period, ResultDisposition
+from ....core import CasillaId, Period, ResultDisposition, validated_casilla_id
 from ....core.errors import CadrumoError
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.deadlines import EntityType, IVARegime, LegalEntityForm, TaxpayerProfile
 from ....domain.invoices import InvoiceCatalogue
 from ....domain.iva import EUMemberState, InvoiceKind, IvaCategory
@@ -628,11 +627,14 @@ def _calculate_m390_annual(secure_objects: SecureObjectRepository, *, filing_yea
 def _non_official_local_chain_advisory_periods(report: VerificationReport) -> set[str]:
     periods: set[str] = set()
     for finding in report.findings:
-        if finding.kind.value != "advisory":
+        if finding.message_locale_key != "application.modelo.findings.cross_period_non_official_local_chain.message":
             continue
-        if "app_filing" not in finding.message or "303" not in finding.message:
+        facts = finding.message_facts
+        if facts.get("source_modelo") != "303" or facts.get("origin_code") != "app_filing":
             continue
-        periods.update(period for period in _QUARTER_ORDER if f"={period}" in finding.message)
+        source_period = facts.get("source_period")
+        if source_period in _QUARTER_ORDER:
+            periods.add(source_period)
     return periods
 
 

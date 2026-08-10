@@ -29,13 +29,12 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 
-from ...core import Modelo
+from ...core import ActionEvidenceProvenance, CasillaId, Modelo
 from ...core.aggregation import BindingSourceKind
 from ...core.decimal import coerce_decimal_strict
 from ...core.money import round_to_cents
 from ...domain.calculations.registry import (
     BindingId,
-    CasillaId,
     CasillaObservation,
     ModeloRevision,
     RegistrySnapshot,
@@ -223,11 +222,6 @@ def _raise_if_m390_303_reconciliation_would_save_silent_zero(
 
     missing_relation_ids = frozenset(relation_id for relation_id, _binding_id, _target, _annual in missing)
     raise ModeloCrossPeriodCleanStateError(
-        (
-            "Modelo 390 calculation refused: nonzero annual IVA totals are present, "
-            "but the Modelo 303 reconciliation bindings did not resolve from clean "
-            "current quarterly filing observations."
-        ),
         translated_message="application.modelo.errors.cross_period_clean_state_incomplete",
         context={
             "modelo": str(work_unit.modelo),

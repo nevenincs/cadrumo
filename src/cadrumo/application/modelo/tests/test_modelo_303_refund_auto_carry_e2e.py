@@ -44,10 +44,10 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import AuthProviderKind, Period
+from ....core import AuthProviderKind, CasillaId, Period, validated_casilla_id
 from ....core.config import Settings
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaId, RelationId, validated_casilla_id
+from ....domain.calculations.registry import RelationId
 from ....domain.deadlines import IVARegime, ModeloIVAProfile, TaxpayerProfile
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile

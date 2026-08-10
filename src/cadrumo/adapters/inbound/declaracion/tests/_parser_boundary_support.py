@@ -11,11 +11,11 @@ import pytest
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
-from .....core import Period
+from .....core import CasillaId, Period, validated_casilla_id
 from .....core.errors import CadrumoError
 from .....core.money import round_to_cents
 from .....core.resources import resources
-from .....domain.calculations.registry import CasillaId, validated_casilla_id
+
 from .....domain.justificante import PdfModeloImportError
 from .....tests import FIXTURES_DIR
 from ...pdf import source_pdf_reference_path

@@ -28,9 +28,8 @@ from decimal import Decimal
 from pathlib import Path
 from typing import ClassVar
 
-from .....core import Modelo
+from .....core import CasillaId, Modelo, validated_casilla_id
 from .....core.time import now
-from .....domain.calculations.registry import CasillaId, validated_casilla_id
 from ...pdf import (
     SPANISH_AMOUNT_GROUP,
     ExtractedCasilla,

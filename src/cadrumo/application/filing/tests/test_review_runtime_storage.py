@@ -10,9 +10,8 @@ import pytest
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.errors import StorageValidationError
-from ....core import Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....core.config import override_settings
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.filing import ModeloDraft
 from ....domain.submission import ModeloDraftStatus
 from ....domain.transactions import (

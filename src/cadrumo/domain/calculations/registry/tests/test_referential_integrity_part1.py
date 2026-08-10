@@ -7,8 +7,7 @@ from datetime import date
 
 import pytest
 
-from .....core import BindingSourceKind
-from .. import CasillaId, validated_casilla_id
+from .....core import BindingSourceKind, CasillaId, validated_casilla_id
 from .._binding_selector_utils import BindingFixedExportSelector
 from .._schema import (
     CasillaAlias,

@@ -38,8 +38,8 @@ from pathlib import Path
 import pytest
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 
-from ....core import Period
-from ....domain.calculations.registry import CasillaObservation, validated_casilla_id
+from ....core import Period, validated_casilla_id
+from ....domain.calculations.registry import CasillaObservation
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,

@@ -30,8 +30,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
+from ...core import CasillaId
 from ...domain.calculations.registry import (
-    CasillaId,
     ModeloRevision,
     derive_rate_box_partitions,
     rate_box_coverage_shortfalls,

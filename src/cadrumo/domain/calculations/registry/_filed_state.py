@@ -8,11 +8,11 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-from ....core import STRICT_FROZEN_CONFIG, Period
+from ....core import STRICT_FROZEN_CONFIG, CasillaId, Period
 from ._bindings import CasillaObservation, RegistryModeloObservation
 from ._errors import RegistryValidationError
 from ._formula_runtime import RegistryCalculationResult
-from ._ids import CasillaId, FormulaId, LegalRefId, ModeloId, SourceRefId
+from ._ids import FormulaId, LegalRefId, ModeloId, SourceRefId
 
 __all__ = [
     "RegistryFiledStateComparison",

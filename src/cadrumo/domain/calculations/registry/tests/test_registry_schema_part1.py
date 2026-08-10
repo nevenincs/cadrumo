@@ -7,10 +7,11 @@ from typing import get_args
 
 import pytest
 
+from .....core import CasillaId, validated_casilla_id
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....core.identity import SPANISH_TAX_ID_WIDTH, IdentityError, validate_spanish_tax_id
 from ..._export_field_kind import CasillaFieldKind
-from .. import BboxAnchorSpec, CasillaId, RegistrySnapshot, validated_casilla_id
+from .. import BboxAnchorSpec, RegistrySnapshot
 from .._authority import ValidatedRegistryAuthority
 from .._binding_selector_utils import selector_as_dict
 from .._schema import DataBindingDefinition

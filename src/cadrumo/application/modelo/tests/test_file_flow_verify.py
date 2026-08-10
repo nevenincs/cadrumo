@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....domain.calculations.registry import CasillaId
+from ....core import CasillaId
 from ...workflow import WorkflowDeadlineContextDetails
 from ._file_flow_support import (
     DEFAULT_130_BASELINE_INPUTS,

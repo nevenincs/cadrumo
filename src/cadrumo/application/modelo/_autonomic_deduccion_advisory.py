@@ -44,8 +44,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from ...core.i18n import tr
-from ...domain.calculations.registry import CasillaId, RegistrySnapshot
+from ...core import CasillaId
+from ...domain.calculations.registry import RegistrySnapshot
 from ...domain.modelos import (
     ModeloError,
     ModeloVerificationFinding,
@@ -135,11 +135,11 @@ def _madrid_nacimiento_adopcion_eligibility_advisory_finding(
         kind=ModeloVerificationFindingKind.ADVISORY,
         severity=ModeloVerificationFindingSeverity.WARNING,
         casilla_id=casilla_id,
-        message=tr(
-            "application.modelo.findings.madrid_nacimiento_adopcion_eligibility_advisory",
-            casilla_id=casilla_id,
-            weighted_count=str(weighted_count),
-        ),
+        message_locale_key="application.modelo.findings.madrid_nacimiento_adopcion_eligibility_advisory",
+        message_facts={
+            "casilla_id": casilla_id,
+            "weighted_count": weighted_count,
+        },
         legal_refs=_ADVISORY_LEGAL_REFS,
     )
 

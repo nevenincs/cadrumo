@@ -20,12 +20,13 @@ from __future__ import annotations
 from collections.abc import Mapping
 from pathlib import Path
 
+from ....core import CasillaId
 from ._binding_selector_utils import selector_as_dict
 from ._bindings import (
     is_layout_binding_selector,
     validate_binding_selector_shape,
 )
-from ._ids import BindingId, CasillaId
+from ._ids import BindingId
 from ._schema import (
     DataBindingDefinition,
     FormulaDefinition,

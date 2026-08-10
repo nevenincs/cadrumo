@@ -32,7 +32,7 @@ from decimal import Decimal, localcontext
 
 from pydantic import BaseModel, Field, model_validator
 
-from ....core import STRICT_FROZEN_CONFIG
+from ....core import STRICT_FROZEN_CONFIG, CasillaId, validated_casilla_id
 from ....domain.period import calculation_filing_date
 from . import _formula_runtime_irnr as _irnr
 from . import _formula_runtime_m131 as _m131
@@ -97,13 +97,11 @@ from ._formula_text_inputs import validate_text_input_targets as _validate_text_
 from ._formula_text_inputs import validated_text_input_casilla_ids as _validated_text_input_casilla_ids
 from ._ids import (
     BindingId,
-    CasillaId,
     FormulaId,
     LegalRefId,
     ParameterId,
     RelationId,
     SourceRefId,
-    validated_casilla_id,
 )
 from ._runtime_graph import formula_evaluation_order
 from ._schema import FormulaExpression, ParameterDefinition, RegistrySnapshot

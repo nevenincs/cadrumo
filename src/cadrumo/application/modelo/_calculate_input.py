@@ -39,6 +39,7 @@ from ...core import (
     FETCH_GATED_M210_TIPO_RENTA_CODES,
     M210_TIPO_RENTA_CODE_PROJECTION,
     M347_THRESHOLD_EUR,
+    CasillaId,
     DescendantRelacion,
     M210GrossIncomeSourceMode,
     Modelo,
@@ -50,7 +51,6 @@ from ...core.resources import resources
 from ...domain.calculations.registry import (
     BindingId,
     CasillaDefinition,
-    CasillaId,
     DataBindingDefinition,
     ModeloRevision,
     RegistryValidationError,

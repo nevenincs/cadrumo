@@ -51,17 +51,16 @@ from pathlib import Path
 
 import pytest
 
+from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     BindingId,
-    CasillaId,
     RegistryCalculationResult,
     RegistryModeloObservation,
     RelationId,
     calculate_registry_snapshot,
     materialize_relation_binding_values,
     resolve_bound_inputs_by_casilla_id,
-    validated_casilla_id,
 )
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile

@@ -54,7 +54,7 @@ from pathlib import Path
 import pytest
 
 from .....application.aggregation import aggregate_renta_ledger_expenses
-from .....core import Period
+from .....core import CasillaId, Period, validated_casilla_id
 from .....core.resources import bundled_path
 from ....categories import SpendingCategory
 from ....invoices import InvoiceCatalogue
@@ -69,11 +69,9 @@ from ....transactions import (
     TransactionLifecycleState,
 )
 from .. import (
-    CasillaId,
     ModeloRevision,
     build_snapshot,
     resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values,
-    validated_casilla_id,
 )
 from ._registry_schema_support import _committed_modelo
 

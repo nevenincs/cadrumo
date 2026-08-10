@@ -50,6 +50,7 @@ from ._aeat_hosts import REMOTE_READ_SCHEME, canonical_remote_hostname
 from ._export_value_policy import (
     ExportValuePolicy,
     ExportValuePolicyValue,
+    RequiredExportValuePolicyValue,
     coerce_export_value_policy,
     project_export_value,
     validate_export_wire_value,
@@ -66,7 +67,6 @@ from ._fixed_width_codec import (
 from ._ids import (
     ApplicationLinkId,
     BindingId,
-    CasillaId,
     ConstructId,
     CrossReferenceId,
     DeadlineWindowId,
@@ -89,8 +89,6 @@ from ._ids import (
     WorkbookOutputId,
     WorkbookParityRefId,
     is_registry_id,
-    validated_casilla_id,
-    validated_casilla_id_map,
 )
 
 # Applicability is imported after _schema so its transitive import of
@@ -737,7 +735,6 @@ __all__ = [
     "CasillaDefinition",
     "CasillaFieldKind",
     "CasillaFieldKindValue",
-    "CasillaId",
     "CasillaObservation",
     "CensoModeloEventKind",
     "CensoModeloFoundationCommand",
@@ -931,6 +928,7 @@ __all__ = [
     "RentaWebOpenReplayDriver",
     "RentaWebOpenSyntheticProfile",
     "RequiredCoverageTier",
+    "RequiredExportValuePolicyValue",
     "ResolvedConstruct",
     "ResolvedConstructMember",
     "ResolvedExportLayout",
@@ -1168,8 +1166,6 @@ __all__ = [
     "validate_renta_web_open_expected_casilla_values",
     "validate_retenciones_aggregation_binding",
     "validate_text_input_targets",
-    "validated_casilla_id",
-    "validated_casilla_id_map",
     "validated_text_input_casilla_ids",
     "verify_legal_catalogue",
     "verify_legal_reference",

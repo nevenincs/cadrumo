@@ -14,9 +14,9 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
 
+from ....core import CasillaId
 from ....core.i18n import MissingTranslationError
 from . import _validate_semantic_role_typos as _semantic_role_typos
-from ._ids import CasillaId
 from ._schema import CasillaDefinition, ModeloDefinition
 from ._validate_semantic_role_required import REQUIRED_ROLE_LABEL_PATTERNS, required_role_declaration_failures
 from ._validate_semantic_role_required import (

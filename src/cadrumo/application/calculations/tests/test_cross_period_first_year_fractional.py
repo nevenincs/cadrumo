@@ -21,8 +21,8 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from ....core import Period
-from ....domain.calculations.registry import CasillaId, Modelo202Modality, validated_casilla_id
+from ....core import CasillaId, Period, validated_casilla_id
+from ....domain.calculations.registry import Modelo202Modality
 from .. import (
     CrossPeriodCleanStateVerdict,
     CrossPeriodDependencyEvidence,

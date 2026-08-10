@@ -38,12 +38,11 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_serializer, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ....core import Period
+from ....core import CasillaId, Period
 from ....core.time import now as _utc_now
 from ....core.time import validate_utc_aware
 from ....domain.calculations.registry import (
     BindingId,
-    CasillaId,
     FormulaId,
     LegalRefId,
     ModeloId,

@@ -41,7 +41,6 @@ from typing import TYPE_CHECKING
 
 from ...core import Modelo
 from ...core.decimal import coerce_decimal_strict
-from ...core.i18n import tr
 from ...domain.modelos import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -52,7 +51,8 @@ from ..user_profile import UserProfileLifecycleRepository
 from ._semantic_role_resolution import casilla_id_for_unique_revision_semantic_role
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry import CasillaId, LegalRefId, RegistrySnapshot
+    from ...core import CasillaId
+    from ...domain.calculations.registry import LegalRefId, RegistrySnapshot
     from ...domain.modelos import WorkUnit
 
 _ATRIBUCION_ACT_ECO_ROLE = "irpf_rendimiento_act_eco_atribuido_rdto_neto"
@@ -118,12 +118,12 @@ def _attribution_received_omission_advisory_findings(
             ModeloVerificationFinding(
                 kind=ModeloVerificationFindingKind.ADVISORY,
                 severity=ModeloVerificationFindingSeverity.WARNING,
-                message=tr(
-                    "application.modelo.findings.attribution_received_unfolded",
-                    filing_year=work_unit.filing_year,
-                    total_base=total_base,
-                    casilla_id=casilla_id,
-                ),
+                message_locale_key="application.modelo.findings.attribution_received_unfolded",
+                message_facts={
+                    "filing_year": work_unit.filing_year,
+                    "total_base": total_base,
+                    "casilla_id": casilla_id,
+                },
                 legal_refs=_ATRIBUCION_LEGAL_REFS,
                 source_refs=(),
             ),
@@ -134,12 +134,12 @@ def _attribution_received_omission_advisory_findings(
             ModeloVerificationFinding(
                 kind=ModeloVerificationFindingKind.ADVISORY,
                 severity=ModeloVerificationFindingSeverity.WARNING,
-                message=tr(
-                    "application.modelo.findings.attribution_received_uncaptured",
-                    casilla_id=casilla_id,
-                    filing_year=work_unit.filing_year,
-                    casilla_value=casilla_value,
-                ),
+                message_locale_key="application.modelo.findings.attribution_received_uncaptured",
+                message_facts={
+                    "casilla_id": casilla_id,
+                    "filing_year": work_unit.filing_year,
+                    "casilla_value": casilla_value if casilla_value is not None else "absent",
+                },
                 legal_refs=_ATRIBUCION_LEGAL_REFS,
                 source_refs=(),
             ),

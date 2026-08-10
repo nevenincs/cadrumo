@@ -39,9 +39,9 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Modelo
+from ....core import CasillaId, Modelo
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaId, ModeloRevision
+from ....domain.calculations.registry import ModeloRevision
 from ....domain.contribuyente import (
     DescendantInfo,
     GuarderiaMonthSpend,

@@ -32,9 +32,9 @@ from tempfile import TemporaryDirectory
 
 import pytest
 
-from ......core import Modelo, Period
+from ......core import Modelo, Period, validated_casilla_id
 from ......core.errors import build_error_envelope
-from ......domain.calculations.registry import bundled_authority, resolve_export_layout, validated_casilla_id
+from ......domain.calculations.registry import bundled_authority, resolve_export_layout
 from .._declarations import _record_submitted_file_extraction_error
 from .._declarations_observations import _observed_casillas_from_submitted_file
 from .._declarations_schema import Declaracion
@@ -46,7 +46,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_outbound_adapter]
 # The two revisions AEAT's published designs bind, exercised through the filing
 # year that selects each: a change that only works on the current revision is a
 # change that silently stops reading the older filings the carry depends on.
-_YEARS_BY_REVISION = {"2009-y-siguientes": 2022, "2023-y-siguientes": 2025}
+_YEARS_BY_REVISION = {"2009-y-siguientes": 2022, "2025": 2025}
 
 
 def _snapshot(filing_year: int):

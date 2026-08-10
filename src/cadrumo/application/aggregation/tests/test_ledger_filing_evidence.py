@@ -20,8 +20,7 @@ import pytest
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
+from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.iva import IvaCategory
 from ....domain.modelos import (
     CalculationRevision,

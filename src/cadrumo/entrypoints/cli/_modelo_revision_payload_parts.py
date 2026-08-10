@@ -19,9 +19,10 @@ from __future__ import annotations
 from pydantic import Field, model_validator
 
 from ...application.modelo import ResultSummaryRole
+from ...core import CasillaId
 from ...core.identity import CalculationRevisionId, WorkUnitId
 from ...core.json_contract import OutputSchema
-from ...domain.calculations.registry import BindingId, CasillaId, FormulaId, LegalRefId, RelationId, SourceRefId
+from ...domain.calculations.registry import BindingId, FormulaId, LegalRefId, RelationId, SourceRefId
 
 
 class DetailRowPayload(OutputSchema):

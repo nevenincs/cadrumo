@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
+from ....core import CasillaId, validated_casilla_id
 from ....core.config import override_settings
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_runtime_profile
 

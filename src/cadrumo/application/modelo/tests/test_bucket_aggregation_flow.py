@@ -14,10 +14,9 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....core.errors import resolve_error_message
 from ....domain.buckets import BucketEventType
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from ....domain.modelos import CalculationRevision
 from ....domain.transactions import (
@@ -156,10 +155,10 @@ def _seed_303_work_unit(
         filing_year=2026,
         period=typed_period,
         # The law-determined M303 revision for filing_year 2026 is
-        # ``2023-y-siguientes`` (``2009-y-siguientes`` covers only 2009-2022).
+        # ``2026-y-siguientes`` (``2009-y-siguientes`` covers only 2009-2022).
         # The calc-time assertion (snapshot.revision.id ==
         # work_unit.revision_id) refuses the stale pin.
-        revision_id="2023-y-siguientes",
+        revision_id="2026-y-siguientes",
         repository=work_unit_repository,
         clock=_T0,
     )

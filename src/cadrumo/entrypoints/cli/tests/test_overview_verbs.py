@@ -28,8 +28,8 @@ import pytest
 from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
-from ....core import Period
-from ....domain.calculations.registry import CasillaId, RegistrySnapshotRef, validated_casilla_id
+from ....core import CasillaId, Period, validated_casilla_id
+from ....domain.calculations.registry import RegistrySnapshotRef
 from ....domain.filing import (
     ModeloDraft,
     ModeloValue,

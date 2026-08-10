@@ -47,8 +47,9 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Literal
 
+from ...core import CasillaId, validated_casilla_id
 from ...core.external_constants import ART_7P_EXEMPTION_CAP_EUR, REBECA_MARITIME_EXEMPTION_FRACTION
-from ..calculations.registry import CasillaId, CasillaObservation, LegalRefId, SourceRefId, validated_casilla_id
+from ..calculations.registry import CasillaObservation, LegalRefId, SourceRefId
 from ._errors import RentaError, RentaValidationError
 
 # Casilla in Modelo 100 that receives exempt income (renta exenta section).

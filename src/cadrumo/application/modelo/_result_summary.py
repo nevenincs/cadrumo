@@ -38,11 +38,10 @@ from enum import StrEnum
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Period
+from ...core import CasillaId, Period
 from ...core.errors import CadrumoError
 from ...core.i18n import output_language
 from ...core.logging import get_logger
-from ...domain.calculations.registry import CasillaId
 from ...domain.calculations.registry import fold_reconciliation_total_casilla_ids
 from ...domain.modelos import CalculationRevision, WorkUnit
 from ._calculation_helpers import resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit

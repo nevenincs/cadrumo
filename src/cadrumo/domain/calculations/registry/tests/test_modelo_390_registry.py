@@ -8,10 +8,10 @@ from typing import Any
 
 import pytest
 
+from .....core import CasillaId, validated_casilla_id
 from .....core.aggregation import BindingAggregationOp, BindingSourceKind
 from .....core.resources import bundled_path
 from .. import (
-    CasillaId,
     InputKind,
     ModeloDefinition,
     ModeloRevision,
@@ -21,7 +21,6 @@ from .. import (
     binding_aggregation_op,
     binding_source_casilla_ids,
     expression_casilla_refs,
-    validated_casilla_id,
 )
 from .._binding_selector_utils import selector_as_dict
 from .._bindings import binding_source_modelo

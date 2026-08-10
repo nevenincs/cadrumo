@@ -30,8 +30,9 @@ from decimal import Decimal
 
 import pytest
 
+from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
-from .. import CasillaId, ValidatedRegistryAuthority, validated_casilla_id
+from .. import ValidatedRegistryAuthority
 from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,

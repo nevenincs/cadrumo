@@ -23,9 +23,10 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from typing import Final
 
+from ....core import CasillaId
 from ....core.decimal import format_decimal
 from ....core.errors import CadrumoError
-from ....domain.calculations.registry import BindingId, CasillaId, FormulaExpression, ParameterId, RelationId
+from ....domain.calculations.registry import BindingId, FormulaExpression, ParameterId, RelationId
 from ._errors import CalcSheetsEngineError
 from ._layout import SheetLayout
 

@@ -32,10 +32,11 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from .....core import CasillaId, validated_casilla_id
 from .._bindings import CasillaObservation, RegistryModeloObservation
 from .._formula_runtime import RegistryCalculationResult, RegistryCalculationUnresolvedOutcome
 from .._formula_runtime_ops import RegistryUnresolvedOutcomeReason
-from .._ids import CasillaId, LegalRefId, SourceRefId, validated_casilla_id
+from .._ids import LegalRefId, SourceRefId
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

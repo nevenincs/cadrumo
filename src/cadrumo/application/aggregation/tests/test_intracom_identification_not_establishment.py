@@ -28,13 +28,11 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     BindingId,
-    CasillaId,
     resolve_ledger_iva_aggregation_binding_values,
-    validated_casilla_id,
 )
 from ....domain.iva import EUMemberState, IvaCategory
 from ....domain.transactions import (
@@ -58,7 +56,7 @@ _CASILLA_59_BASE: BindingId = "modelo-303-casilla-59-entregas-intracomunitarias-
 
 @cache
 def _modelo_303_revision():
-    return resources().modelos.get("303").revisions["2023-y-siguientes"]
+    return resources().modelos.authority.snapshot("303", filing_year=2025, period="1T").revision
 
 
 def _casilla_59(aggregation: IvaLedgerAggregation) -> Decimal:

@@ -20,8 +20,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period
-from ....domain.calculations.registry import CasillaId, RegistrySnapshotRef
+from ....core import CasillaId, Period
+from ....domain.calculations.registry import RegistrySnapshotRef
 from ....domain.filing import (
     ModeloCasillaProvenance,
     ModeloDraft,

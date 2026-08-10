@@ -57,8 +57,8 @@ from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
 
-from ...core import BindingSourceKind, Modelo, Period, ProrrataRegisterRegime
-from ...domain.calculations.registry import CasillaId, ModeloRevision
+from ...core import BindingSourceKind, CasillaId, Modelo, Period, ProrrataRegisterRegime
+from ...domain.calculations.registry import ModeloRevision
 from ...domain.iva import (
     especial_mandatory_rule,
     is_m303_annual_settlement_period,

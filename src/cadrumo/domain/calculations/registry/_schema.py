@@ -23,7 +23,7 @@ from pydantic import (
     model_validator,
 )
 
-from ....core import Period, PeriodKind, RevisionReviewStatus, TaxDomain, registry_period_kind
+from ....core import CasillaId, Period, PeriodKind, RevisionReviewStatus, TaxDomain, registry_period_kind
 from ....core.aggregation import BindingAggregation, BindingSourceKind, BindingTypedEnumKind
 from ....core.classification import SensitivityClass
 from .._export_field_kind import CasillaFieldKind, CasillaFieldKindValue
@@ -32,7 +32,6 @@ from ._errors import RegistryValidationError
 from ._ids import (
     ApplicationLinkId,
     BindingId,
-    CasillaId,
     ConstructId,
     CrossReferenceId,
     DeadlineWindowId,

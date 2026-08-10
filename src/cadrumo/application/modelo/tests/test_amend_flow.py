@@ -26,10 +26,9 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import AuthProviderKind, Period
+from ....core import AuthProviderKind, CasillaId, Period, validated_casilla_id
 from ....core.config import Settings
 from ....domain.buckets import BucketEventType
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionAmendmentKind,
@@ -722,7 +721,7 @@ def test_amend_refuses_printed_number_metadata_token(repos: _Repos) -> None:
         modelo="303",
         filing_year=2025,
         period_code="1T",
-        revision_id_value="2023-y-siguientes",
+        revision_id_value="2025",
         casilla_values={_M303_RESULT_CASILLA: Decimal("100")},
     )
 

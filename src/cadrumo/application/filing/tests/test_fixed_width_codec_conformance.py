@@ -9,10 +9,9 @@ from pathlib import Path
 import pytest
 
 from ....adapters.outbound.aeat.export import RegistryFixedWidthRecordRenderer
-from ....core import Period
+from ....core import CasillaId, Period
 from ....domain.calculations.registry import (
     CasillaFieldKind,
-    CasillaId,
     ExportFieldDefinition,
     ExportRecordDefinition,
     ExportValuePolicy,

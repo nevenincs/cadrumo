@@ -24,7 +24,7 @@ from decimal import Decimal
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Modelo, Period
+from ...core import CasillaId, Modelo, Period, validated_casilla_id
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors import CadrumoError
 from ...core.logging import get_logger
@@ -33,7 +33,6 @@ from ...core.resources import resources
 from ...domain.calculations.registry import (
     BindingId,
     CasillaDefinition,
-    CasillaId,
     FormulaId,
     LegalRefId,
     ModeloRevision,
@@ -45,7 +44,6 @@ from ...domain.calculations.registry import (
     calculate_registry_snapshot,
     enum_consumed_binding_ids,
     revision_date_binding_ids,
-    validated_casilla_id,
 )
 from ...domain.modelos import (
     CalculationRevision,

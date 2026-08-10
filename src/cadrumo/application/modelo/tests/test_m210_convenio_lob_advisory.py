@@ -28,13 +28,13 @@ from __future__ import annotations
 
 import pytest
 
+from ....core import validated_casilla_id
 from ....core.resources import bundled_path
 from ....domain.calculations.registry import (
     RegistrySnapshot,
     build_snapshot,
     load_convenio_authority,
     load_registry_tree,
-    validated_casilla_id,
 )
 from ....domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
 from ....domain.modelos import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
@@ -132,7 +132,8 @@ def test_lob_advisory_fires_for_every_matched_treaty_override(
     assert finding.severity is ModeloVerificationFindingSeverity.WARNING
     assert finding.casilla_id == _TIPO_RENTA
     assert finding.legal_refs == expected_legal_refs
-    assert country_code in finding.message
+    assert finding.message_locale_key == "application.modelo.findings.m210_convenio_lob_advisory"
+    assert finding.message_facts["country_code"] == country_code
     assert "next_action" not in finding.model_dump(mode="json")
 
 

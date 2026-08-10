@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from .. import CasillaId
+from .....core import CasillaId
 from ._modelo_100_registry_support import (
     _ANEXO_C_ENERGY_EXCESS_ROLE_PREFIX,
     _ANEXO_C_ENERGY_EXCESS_ROLES,

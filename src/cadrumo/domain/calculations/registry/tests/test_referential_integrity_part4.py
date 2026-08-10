@@ -6,9 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from .....core import Period
+from .....core import CasillaId, Period, validated_casilla_id
 from ..._export_field_kind import CasillaFieldKind
-from .. import CasillaId, validated_casilla_id
 from .._schema import (
     AlgorithmBindingDefinition,
     AlgorithmProviderDefinition,

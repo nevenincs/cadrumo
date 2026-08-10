@@ -33,6 +33,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from ....core import CasillaId
 from ....core.aggregation import BindingAggregationOp
 from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import (
@@ -41,7 +42,7 @@ from ._binding_selector_utils import (
     binding_export_selector,
 )
 from ._errors import RegistryValidationError
-from ._ids import BindingId, CasillaId
+from ._ids import BindingId
 from ._schema import (
     CasillaDefinition,
     CasillaFieldKind,

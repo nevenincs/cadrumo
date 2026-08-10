@@ -38,13 +38,11 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaId,
     calculate_registry_snapshot,
     resolve_bound_inputs_by_casilla_id,
-    validated_casilla_id,
 )
 from ....domain.iva import IvaCategory
 from ....domain.transactions import (

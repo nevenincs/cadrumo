@@ -47,7 +47,13 @@ from typing import Annotated, Literal, override
 
 from pydantic import BaseModel, Field, StringConstraints, TypeAdapter, ValidationError, field_validator, model_validator
 
-from ...core import M210_TIPO_RENTA_CODE_PROJECTION, STRICT_FROZEN_CONFIG, M210GrossIncomeSourceMode
+from ...core import (
+    M210_TIPO_RENTA_CODE_PROJECTION,
+    STRICT_FROZEN_CONFIG,
+    CasillaId,
+    M210GrossIncomeSourceMode,
+    validated_casilla_id,
+)
 from ...core.aggregation import BindingSourceKind
 from ...core.hashing import content_hash_hex
 from ...core.identity import CalculationRevisionId, FilingRecordId, WorkUnitId
@@ -55,11 +61,9 @@ from ...core.time import validate_utc_aware
 from .._identifiers import canonical_decimal_string as _canonical_decimal
 from ..calculations.registry import (
     BindingId,
-    CasillaId,
     CasillaObservation,
     RegistryCalculationUnresolvedOutcome,
     RelationId,
-    validated_casilla_id,
 )
 from ._errors import ModeloError, ModeloValidationError
 from ._ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot
@@ -90,8 +94,8 @@ class CalculationRevisionAmendmentKind(StrEnum):
       amendment mechanism established by LGT art. 120.4
       (``ley-58-2003:art-120``, apartado 4) and developed by RD 117/2024
       (which amended the Reglamento de gestión, RD 1065/2007). For the
-      modelos whose tax-specific orden implements it (Modelo 303 from
-      the 2023-y-siguientes revision onward), the rectificativa replaces
+      modelos whose tax-specific orden implements it (Modelo 303 from the
+      2023 filing year onward), the rectificativa replaces
       BOTH the complementaria and the separate solicitud de rectificación:
       a single amended autoliquidación that may raise OR lower the
       resultado, carrying its own fichero-BOE indicator and, when it

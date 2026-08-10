@@ -25,13 +25,11 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....core import Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaId,
     CasillaObservation,
     RegistryModeloObservation,
-    validated_casilla_id,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .._binding_prefill import BindingPrefillReport, resolve_bindings_from_local_store

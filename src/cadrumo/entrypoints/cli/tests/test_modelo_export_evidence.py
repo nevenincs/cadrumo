@@ -22,8 +22,7 @@ from ....application.storage.calc_sheets import (
     serialize_offline_export,
     sheet_evidence_from_ledger_filing,
 )
-from ....core import Period
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
+from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.modelos import (
     LedgerEvidenceRow,
     LedgerFilingEvidence,

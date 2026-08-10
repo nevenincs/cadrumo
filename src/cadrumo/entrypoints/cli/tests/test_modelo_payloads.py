@@ -19,11 +19,10 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
+from ....core import CasillaId, validated_casilla_id
 from ....domain.calculations.registry import (
-    CasillaId,
     CasillaObservation,
     RelationId,
-    validated_casilla_id,
 )
 from ....domain.modelos import (
     CalculationRevision,

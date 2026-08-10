@@ -53,12 +53,11 @@ if TYPE_CHECKING:
 from pydantic import BaseModel, Field
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ....core import Period
+from ....core import CasillaId, Period
 from ....core.config import load_settings
 from ....core.decimal import coerce_decimal
 from ....domain.calculations.registry import (
     BindingId,
-    CasillaId,
     InputKind,
     RegistrySnapshot,
     RelationId,

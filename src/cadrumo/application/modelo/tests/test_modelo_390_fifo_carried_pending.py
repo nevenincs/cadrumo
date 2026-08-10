@@ -66,12 +66,10 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period, ResultDisposition
+from ....core import CasillaId, Period, ResultDisposition, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaId,
     RegistryModeloObservation,
-    validated_casilla_id,
 )
 from ....domain.iva_compensation import (
     M303_COMPENSATION_POSTERIOR_CASILLA,

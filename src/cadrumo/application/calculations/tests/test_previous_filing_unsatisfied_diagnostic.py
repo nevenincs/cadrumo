@@ -33,13 +33,11 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Modelo, Period
+from ....core import CasillaId, Modelo, Period, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     BindingId,
-    CasillaId,
     RegistryModeloObservation,
-    validated_casilla_id,
 )
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile

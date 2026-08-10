@@ -8,6 +8,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
 from ....categories import SpendingCategory, resolve_category_profiles
 from ....renta import (
@@ -18,7 +19,6 @@ from ....renta import (
     evaluate_renta_deductibility,
 )
 from .. import (
-    CasillaId,
     DataBindingDefinition,
     ModeloRevision,
     RegistrySnapshot,
@@ -28,7 +28,6 @@ from .. import (
     resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values,
     unsupported_ledger_renta_gastos_estimacion_directa_observations,
     validate_ledger_renta_gastos_estimacion_directa_aggregation_binding_definition,
-    validated_casilla_id,
 )
 from .._binding_selector_utils import selector_as_dict
 from ._registry_schema_support import _committed_modelo

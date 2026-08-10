@@ -28,9 +28,17 @@ from typing import Any
 import pytest
 
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from ....core import BindingSourceKind, Modelo, Period, ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from ....core import (
+    BindingSourceKind,
+    CasillaId,
+    Modelo,
+    Period,
+    ProrrataProvisionalProvenance,
+    ProrrataRegisterRegime,
+    validated_casilla_id,
+)
 from ....core.resources import bundled_path, resources
-from ....domain.calculations.registry import CasillaId, RegistrySnapshot, validated_casilla_id
+from ....domain.calculations.registry import RegistrySnapshot
 from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile

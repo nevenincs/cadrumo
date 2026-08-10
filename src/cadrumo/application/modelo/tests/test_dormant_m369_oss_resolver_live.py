@@ -15,8 +15,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage import SecureObjectRepository
-from ....core import BindingSourceKind, Period
-from ....domain.calculations.registry import CasillaId
+from ....core import BindingSourceKind, CasillaId, Period
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.invoices import (
     Invoice,
@@ -438,7 +437,7 @@ def test_m369_unresolved_oss_source_refuses_verification_and_export(
             candidate
             for candidate in report.findings
             if candidate.kind.value == "blocking_rule"
-            and "unresolved OSS/IOSS aggregation sources" in candidate.message
+            and candidate.message_locale_key == "application.modelo.findings.oss_evidence_missing"
         ),
         None,
     )
@@ -552,7 +551,7 @@ def test_m369_unrouted_observation_refuses_verification_and_export(
             candidate
             for candidate in report.findings
             if candidate.kind.value == "blocking_rule"
-            and "no declared aggregation binding consumes" in candidate.message
+            and candidate.message_locale_key == "application.modelo.findings.oss_source_unrouted"
         ),
         None,
     )
@@ -561,7 +560,7 @@ def test_m369_unrouted_observation_refuses_verification_and_export(
     assert finding.legal_refs
     assert finding.source_refs
     source_ref = next(issue.source_ref for issue in result.revision.source_issues if issue.source_ref is not None)
-    assert source_ref in finding.message
+    assert source_ref in str(finding.message_facts["source_ref_ids"]).split("|")
     persisted = cr_repo.load().get(result.revision.calculation_revision_id)
     assert persisted is not None
     assert persisted.state is CalculationRevisionState.BORRADOR

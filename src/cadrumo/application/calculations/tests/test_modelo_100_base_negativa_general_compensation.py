@@ -27,14 +27,12 @@ import pytest
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     BindingId,
-    CasillaId,
     RegistrySnapshot,
     RelationId,
-    validated_casilla_id,
 )
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos import CalculationRevision, ModeloVerificationFindingKind

@@ -14,8 +14,8 @@ from collections import defaultdict
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 
+from ....core import CasillaId
 from ....core.i18n import MissingTranslationError
-from ._ids import CasillaId
 from ._schema import (
     CasillaContinuidadEvolutionDefinition,
     CasillaDefinition,

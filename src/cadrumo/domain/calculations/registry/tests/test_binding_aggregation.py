@@ -25,13 +25,13 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from .....core import CasillaId, validated_casilla_id
 from .....core.aggregation import (
     ROW_SET_GROUPING_FOR_BINDING_SOURCE,
     BindingAggregation,
     BindingAggregationOp,
     BindingSourceKind,
 )
-from .. import CasillaId, validated_casilla_id
 from .._binding_aggregation import _ROWS_DEFAULT_SOURCE_KINDS, binding_aggregation_op, default_binding_aggregation_op
 from .._schema import DataBindingDefinition
 

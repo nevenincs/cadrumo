@@ -153,7 +153,7 @@ A companion test cross-validates the recargo contribution to the annual
 devengada total by dropping every quarter's recargo_amount and asserting the
 delta equals the dropped total exactly (never a hand-computed absolute
 figure) - the same fix this revision needed once already had (recall
-casilla 27 on Modelo 303 2023-y-siguientes, which the M303 grounding pass
+casilla 27 on the applicable Modelo 303 epoch, which the M303 grounding pass
 found silently excluded the recargo de equivalencia cuota tiers). Before
 this fix, ``iva.anual.cuota-devengada-total`` resolved to 84.672
 (88.416 - 3.744, the annual recargo total) - a modelling gap symmetrical to
@@ -171,17 +171,16 @@ from decimal import Decimal
 
 import pytest
 
+from .....core import CasillaId, validated_casilla_id
 from .....core.resources import resources
 from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
 from .. import (
-    CasillaId,
     IvaLedgerObservation,
     RegistryCalculationResult,
     ValidatedRegistryAuthority,
     calculate_registry_snapshot,
     resolve_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
-    validated_casilla_id,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

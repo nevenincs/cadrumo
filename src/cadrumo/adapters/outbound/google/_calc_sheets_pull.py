@@ -70,14 +70,13 @@ from ....application.storage.calc_sheets import (
     registry_sha,
 )
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ....core import Period
+from ....core import CasillaId, Period
 from ....core.decimal import coerce_decimal, coerce_finite_european_decimal
 from ....core.i18n import tr
 from ....core.time import coerce_utc_aware
 from ....domain.calculations.registry import (
     BindingId,
     CasillaDefinition,
-    CasillaId,
     InputKind,
     LegalRefId,
     ModeloId,

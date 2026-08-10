@@ -9,9 +9,9 @@ from pathlib import Path
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
+from ....core import CasillaId, validated_casilla_id
 from ....core.errors import BaseSeverity
 from ....core.i18n import Translatable as tr
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.invoices import (
     Invoice,
     InvoiceLine,

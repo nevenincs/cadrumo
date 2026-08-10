@@ -13,8 +13,9 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
+from .....core import CasillaId, validated_casilla_id
 from .._bindings import CasillaObservation
-from .._ids import CasillaId, LegalRefId, SourceRefId, validated_casilla_id
+from .._ids import LegalRefId, SourceRefId
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

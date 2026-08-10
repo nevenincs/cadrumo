@@ -28,15 +28,13 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Modelo
+from ....core import CasillaId, Modelo, validated_casilla_id
 from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from ....domain.calculations.registry import (
     CasillaDefinition,
-    CasillaId,
     DataBindingDefinition,
     ModeloRevision,
     PeriodSelector,
-    validated_casilla_id,
 )
 from ....domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
 from ....tests.secure_sql import isolated_profile_storage_root

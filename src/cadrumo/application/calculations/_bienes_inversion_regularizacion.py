@@ -25,7 +25,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from ...core import BindingSourceKind, Modelo, Period
+from ...core import BindingSourceKind, CasillaId, Modelo, Period
 from ...domain.bienes_inversion import (
     BienesInversionIvaRegister,
     BienInversionRecordError,
@@ -34,7 +34,7 @@ from ...domain.bienes_inversion import (
     compute_registro_regularizacion,
     compute_registro_transmisiones,
 )
-from ...domain.calculations.registry import BindingId, CasillaId, ModeloRevision
+from ...domain.calculations.registry import BindingId, ModeloRevision
 from ...domain.iva import m303_annual_settlement_period_tokens
 from ..aggregation import (
     CalculationSourceContext,

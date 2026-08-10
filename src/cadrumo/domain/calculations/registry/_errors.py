@@ -16,8 +16,9 @@ from __future__ import annotations
 from collections.abc import Iterable, Sequence
 from typing import Self
 
+from ....core import CasillaId
 from ....core.errors import CadrumoError, CoreValidationError
-from ._ids import BindingId, CasillaId, RelationId
+from ._ids import BindingId, RelationId
 
 
 class RegistryError(CadrumoError, ValueError):

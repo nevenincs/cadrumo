@@ -8,14 +8,13 @@ from html import unescape
 
 import pytest
 
+from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
 from .. import (
-    CasillaId,
     RegistryValidator,
     build_snapshot,
     calculate_registry_snapshot,
     resolve_export_layout,
-    validated_casilla_id,
 )
 from .._errors import RegistryValidationError
 from .._legal import verify_legal_catalogue

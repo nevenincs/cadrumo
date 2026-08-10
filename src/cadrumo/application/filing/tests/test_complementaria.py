@@ -9,8 +9,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ....core import Period
-from ....domain.calculations.registry import CasillaId, RegistrySnapshotRef, validated_casilla_id
+from ....core import CasillaId, Period, validated_casilla_id
+from ....domain.calculations.registry import RegistrySnapshotRef
 from ....domain.filing import (
     ModeloAmendmentError,
     ModeloBuilderError,

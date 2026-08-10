@@ -7,12 +7,11 @@ from urllib.parse import urlsplit
 
 import pytest
 
+from ......core import CasillaId, validated_casilla_id
 from ......core.config import Settings
 from ......domain.calculations.registry import (
-    CasillaId,
     RentaWebOpenLivePayload,
     equivalent_renta_web_open_value,
-    validated_casilla_id,
 )
 from ......tests.aeat_literal_fixtures import (
     AEAT_SUFFIX_LOOKALIKE_HOST_CANARY,

@@ -28,8 +28,7 @@ from .....application.storage.calc_sheets import (
     TabName,
     serialize_offline_workbook,
 )
-from .....core import Period
-from .....domain.calculations.registry import CasillaId, validated_casilla_id
+from .....core import CasillaId, Period, validated_casilla_id
 from .._calc_sheets_apply import _build_evidence_value_data
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

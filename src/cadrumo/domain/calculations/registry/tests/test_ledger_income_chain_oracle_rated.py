@@ -59,7 +59,7 @@ from pathlib import Path
 import pytest
 
 from .....application.aggregation import aggregate_renta_income_ledger
-from .....core import Period
+from .....core import CasillaId, Period, validated_casilla_id
 from .....core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
 from ....iva import IvaCategory
 from ....transactions import (
@@ -74,10 +74,8 @@ from ....transactions import (
     load_retencion_actividades_rates,
 )
 from .. import (
-    CasillaId,
     resolve_ledger_renta_income_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,
-    validated_casilla_id,
 )
 from ._ledger_income_chain_oracle_support import modelo_130_revision
 

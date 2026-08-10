@@ -17,14 +17,13 @@ from collections.abc import Callable, Iterable, Mapping
 from datetime import date
 from typing import Final, Literal
 
-from ....core import BindingSourceKind, Period
+from ....core import BindingSourceKind, CasillaId, Period
 from ....core.hashing import sha256_hex
 from ....core.i18n import tr
 from ....domain.calculations.registry import (
     BindingAggregationOp,
     BindingRowSetSelector,
     CasillaDefinition,
-    CasillaId,
     DataBindingDefinition,
     FormulaDefinition,
     InputKind,

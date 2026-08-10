@@ -20,11 +20,10 @@ from decimal import Decimal
 
 import pytest
 
+from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaId,
     VerificationPredicateDefinition,
-    validated_casilla_id,
 )
 from ....domain.modelos import (
     ModeloVerificationFindingKind,
@@ -82,7 +81,8 @@ def test_vivienda_advisory_fires_when_claimed_without_any_eligibility_signal() -
         assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY, year
         assert findings[0].severity is ModeloVerificationFindingSeverity.WARNING, year
         assert "ley-35-2006:dt-18" in findings[0].legal_refs, year
-        assert findings[0].message, year  # a non-empty operator-facing message is rendered
+        assert findings[0].message_locale_key == "application.modelo.findings.registry_advisory_predicate_fired", year
+        assert dict(findings[0].message_facts) == {"predicate_id": _predicate_id(year)}, year
 
 
 def test_vivienda_advisory_fires_when_acquisition_date_is_post_2012() -> None:

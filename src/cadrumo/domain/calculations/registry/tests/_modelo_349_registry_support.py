@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from functools import lru_cache
 
+from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
-from .. import CasillaId, ModeloRevision, load_registry_tree, validated_casilla_id
+from .. import ModeloRevision, load_registry_tree
 
 _WWW6_HOST = aeat_host("www6")
 

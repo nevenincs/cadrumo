@@ -51,7 +51,7 @@ from enum import StrEnum
 from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...domain.calculations.registry import CasillaId
+from ...core import CasillaId
 
 
 class CasillaDivergenceKind(StrEnum):

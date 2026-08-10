@@ -18,8 +18,9 @@ from functools import cache
 
 import pytest
 
+from .....core import CasillaId, validated_casilla_id
 from .....core.resources import resources
-from .. import CasillaId, RegistryFoldRequirement, validated_casilla_id
+from .. import RegistryFoldRequirement
 from .._bindings_previous_filing import (
     previous_filing_observation_requirements,
 )

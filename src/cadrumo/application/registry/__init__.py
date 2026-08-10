@@ -58,11 +58,12 @@ from ...adapters.outbound.aeat.sede import (
     registry_observation_from_filed_declaration as _registry_observation_from_filed_declaration,
 )
 from ...core import BindingSourceKind as _BindingSourceKind
+from ...core import CasillaId as _CasillaId
+from ...core import validated_casilla_id as _validated_casilla_id
 from ...core.resources import bundled_path as _bundled_path
 
 # Importing the renta package registers the first-slice routing
 # cross-domain snapshot check required by Modelo 100 snapshots.
-from ...domain.calculations.registry import CasillaId as _CasillaId
 from ...domain.calculations.registry import ExportLayoutId as _ExportLayoutId
 from ...domain.calculations.registry import (
     InputKind as _InputKind,
@@ -92,7 +93,7 @@ from ...domain.calculations.registry import (
     resolve_relation_values_from_observations as _resolve_relation_values_from_observations,
 )
 from ...domain.calculations.registry import undeclared_casilla_ids as _undeclared_casilla_ids
-from ...domain.calculations.registry import validated_casilla_id as _validated_casilla_id
+
 from ...domain.calculations.registry import verify_legal_catalogue as _verify_legal_catalogue
 from ...domain.period import calculation_filing_date as _calculation_filing_date
 from ._conformance import (

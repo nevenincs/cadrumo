@@ -6,8 +6,8 @@ from decimal import Decimal
 
 import pytest
 
+from .....core import CasillaId, validated_casilla_id
 from .....tests.registry_observations import registry_grounded_modelo_observation
-from .. import CasillaId, validated_casilla_id
 from .._bindings import RegistryModeloObservation
 from .._relations import resolve_relation_values_from_observations
 from .._schema import ModeloDefinition, ModeloRevision

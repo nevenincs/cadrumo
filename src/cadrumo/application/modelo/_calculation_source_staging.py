@@ -32,10 +32,10 @@ from datetime import date
 from decimal import Decimal
 from types import MappingProxyType
 
+from ...core import CasillaId
 from ...core.aggregation import BindingSourceKind
 from ...domain.calculations.registry import (
     BindingId,
-    CasillaId,
     InputKind,
     ModeloRevision,
     RegistrySnapshot,

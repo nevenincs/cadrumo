@@ -29,10 +29,9 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
-from ....core import BindingSourceKind, Period
+from ....core import BindingSourceKind, CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
 from ....domain.bienes_inversion import BienInversionIvaRecord, BienInversionKind
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
 from ....tests.secure_sql import isolated_runtime_profile
 from .._calculation_actions import _resolve_bucket_source_mesh

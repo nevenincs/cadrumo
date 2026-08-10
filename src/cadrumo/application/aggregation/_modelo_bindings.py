@@ -41,12 +41,20 @@ from ...adapters.persistence.storage import (
     EnvelopeVersionError,
     StorageValidationError,
 )
-from ...core import BindingSourceKind, M210GrossIncomeSourceMode, Modelo, Period, PeriodError, StandardPeriodCode
+from ...core import (
+    BindingSourceKind,
+    CasillaId,
+    M210GrossIncomeSourceMode,
+    Modelo,
+    Period,
+    PeriodError,
+    StandardPeriodCode,
+    validated_casilla_id,
+)
 from ...core.money import round_to_cents
 from ...domain.calculations.registry import (
     BindingId,
     CasillaDefinition,
-    CasillaId,
     IvaLedgerObservation,
     ModeloRevision,
     UngroundedRentaIncome,
@@ -66,7 +74,6 @@ from ...domain.calculations.registry import (
     unsupported_ledger_renta_gastos_estimacion_directa_observations,
     unsupported_ledger_renta_gastos_pago_fraccionado_observations,
     unsupported_ledger_renta_income_observations,
-    validated_casilla_id,
 )
 from ...domain.invoices import (
     Invoice,

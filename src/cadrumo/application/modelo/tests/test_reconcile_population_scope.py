@@ -16,10 +16,9 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import BindingSourceKind
+from ....core import BindingSourceKind, CasillaId
 from ....domain.calculations.registry import (
     BindingId,
-    CasillaId,
     InputKind,
     ModeloRevision,
     bundled_authority,

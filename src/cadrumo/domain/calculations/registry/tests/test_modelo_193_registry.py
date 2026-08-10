@@ -7,10 +7,10 @@ from decimal import Decimal
 
 import pytest
 
+from .....core import CasillaId
 from .....core.resources import bundled_path
 from .....tests.registry_observations import registry_grounded_modelo_observation
 from .. import (
-    CasillaId,
     RegistryValidator,
     build_snapshot,
     calculate_registry_snapshot,

@@ -29,8 +29,9 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from ....core import Period, ProrrataProvisionalProvenance, ProrrataRegisterRegime
-from ....domain.calculations.registry import CasillaId, CasillaObservation, validated_casilla_id
+from ....core import CasillaId, Period, ProrrataProvisionalProvenance, ProrrataRegisterRegime, validated_casilla_id
+from ....core.resources import resources
+from ....domain.calculations.registry import CasillaObservation
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
@@ -82,7 +83,7 @@ def _seed_verified_m303_revision(
 ) -> tuple[CalculationRevision, WorkUnit]:
     values = dict(_SETTLEMENT_VALUES if casilla_values is None else casilla_values)
     period = Period.from_year_and_code(2026, period_code)
-    revision_id = "2023-y-siguientes"
+    revision_id = resources().modelos.authority.snapshot("303", filing_year=2026, period=period.registry_token).revision.id
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET_ID,
         modelo="303",

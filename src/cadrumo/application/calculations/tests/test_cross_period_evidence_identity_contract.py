@@ -15,8 +15,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ....core import Period
-from ....domain.calculations.registry import validated_casilla_id
+from ....core import Period, validated_casilla_id
 from ....domain.modelos import ExternalEvidenceKind
 from .._cross_period_models import (
     CrossPeriodDependencyEvidence,

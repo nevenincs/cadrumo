@@ -44,9 +44,10 @@ from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ...core import CasillaId
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
-from ...domain.calculations.registry import CasillaId, CasillaObservation
+from ...domain.calculations.registry import CasillaObservation
 from ...domain.modelos import (
     CalculationRevision,
     CalculationRevisionAmendmentKind,
@@ -237,8 +238,8 @@ def amend_modelo_revision[CasillaKey](
     )
     if new_revision_id in revisions:
         raise CalculationRevisionStateError(
-            f"amendment overrides produce calculation_revision_id {new_revision_id!r} "
-            f"that already exists in the catalogue; no-op overrides cannot be filed as amendments",
+            translated_message="errors.error.error_modelo_calculation_revision_state",
+            context={"calculation_revision_id": new_revision_id, "state": "duplicate_amendment_revision"},
         )
 
     # Carry regulatory grounding onto the amendment: build typed

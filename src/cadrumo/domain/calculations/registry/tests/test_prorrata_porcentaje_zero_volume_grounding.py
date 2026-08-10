@@ -23,7 +23,7 @@ is the computed branch, not this one; returning 0 for a blank declaration
 asserts a total loss of the deduction right on a taxpayer who declared no fact
 supporting it.
 
-The two live revisions disagreed on exactly this branch: ``2023-y-siguientes``
+The two live revision families disagreed on exactly this branch: the post-2022 family
 returned 100 while ``2009-y-siguientes`` still returned 0, so a fully-taxable
 trader amending a 2009-2022 filing had every deduction zeroed. The applicable
 law is identical across both windows — art. 102 was last amended by Ley 3/2006
@@ -46,14 +46,13 @@ from decimal import Decimal
 
 import pytest
 
+from .....core import CasillaId, validated_casilla_id
 from .....core.resources import resources
 from ....iva import ProrrataInputs, ProrrataKind, compute_prorrata_general
 from .. import (
-    CasillaId,
     calculate_registry_snapshot,
     resolve_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
-    validated_casilla_id,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -66,7 +65,7 @@ _VOLUMEN_CON_DERECHO_ID: CasillaId = validated_casilla_id(
 )
 
 #: 2020 resolves to the 2009-y-siguientes revision (period_selector 2009-2022),
-#: 2024 to 2023-y-siguientes. Both windows sit entirely inside the unamended
+#: 2024 to its early-period epoch. Both windows sit entirely inside the unamended
 #: art. 102.Uno / art. 104.Uno text, so both are bound by the same reading.
 _LIVE_FILING_YEARS = (2020, 2024)
 

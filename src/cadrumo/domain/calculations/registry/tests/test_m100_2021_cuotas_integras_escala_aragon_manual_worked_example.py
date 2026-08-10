@@ -16,12 +16,11 @@ from pathlib import Path
 
 import pytest
 
+from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
 from .. import (
-    CasillaId,
     ManualWorkedExamplePayload,
     ValidatedRegistryAuthority,
-    validated_casilla_id,
 )
 from .._schema_input_kind import InputKind
 from ._scenarios import (

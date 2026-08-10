@@ -15,9 +15,9 @@ from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-from ....core import Period
+from ....core import CasillaId, Period
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaId, Modelo202Modality, RegistrySnapshot
+from ....domain.calculations.registry import Modelo202Modality, RegistrySnapshot
 from ....domain.justificante import Justificante
 from ....domain.modelos import (
     CalculationRevision,
@@ -59,7 +59,6 @@ _M390_YEAR = 2025
 _M390_PERIOD = "0A"
 _M390_FIRST_QUARTER = Period.from_year_and_code(_M390_YEAR, "1T")
 _M390_REVISION = "2010-y-siguientes"
-_M303_REVISION = "2023-y-siguientes"
 _M353_YEAR = 2026
 _M353_PERIOD = "12"
 _CLOCK = datetime(2026, 1, 20, 10, 0, tzinfo=UTC)
@@ -378,7 +377,11 @@ def _seed_official_303_source_filings(
             modelo="303",
             filing_year=_M390_YEAR,
             period=Period.from_year_and_code(_M390_YEAR, period),
-            revision_id=_M303_REVISION,
+            revision_id=resources().modelos.authority.snapshot(
+                "303",
+                filing_year=_M390_YEAR,
+                period=period,
+            ).revision.id,
             clock=_CLOCK,
         )
         values = _source_values(period, tuple(sorted(source_casilla_ids)))

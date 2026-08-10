@@ -39,9 +39,9 @@ from pathlib import Path
 
 import pytest
 
+from ....core import CasillaId
 from ....core.resources import bundled_path
 from ....domain.calculations.registry import (
-    CasillaId,
     ExportLayoutDefinition,
     IvaLedgerObservation,
     ModeloRevision,

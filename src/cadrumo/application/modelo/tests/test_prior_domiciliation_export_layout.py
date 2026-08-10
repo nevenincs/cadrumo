@@ -9,8 +9,8 @@ import pytest
 
 from ....application.filing import build_runtime_schema_provider, render_layout
 from ....application.filing._export_parity import boe_representable_casilla_ids, rendered_casilla_ids
-from ....core import Period, PriorDomiciliationElection, ResultDisposition
-from ....domain.calculations.registry import CasillaFieldKind, RegistrySnapshotRef, validated_casilla_id
+from ....core import Period, PriorDomiciliationElection, ResultDisposition, validated_casilla_id
+from ....domain.calculations.registry import CasillaFieldKind, RegistrySnapshotRef
 from ....domain.filing import ModeloDraft, ModeloValue, ModeloValueKind
 from ....domain.submission import ModeloDraftStatus
 
@@ -61,7 +61,7 @@ def _approved_m303_draft(
 @pytest.mark.parametrize(
     ("filing_year", "revision_id", "marker_offset", "casilla_111_offset", "source_ref"),
     [
-        (2025, "2023-y-siguientes", 406, 424, "aeat-dr-303-2025"),
+        (2025, "2025", 406, 424, "aeat-dr-303-2025"),
         (2026, "2026-y-siguientes", 440, 441, "aeat-dr-303-2026"),
     ],
 )
@@ -117,7 +117,7 @@ def test_prior_domiciliation_marker_is_rendered_at_the_official_page_three_byte_
 @pytest.mark.parametrize(
     ("filing_year", "revision_id"),
     [
-        (2025, "2023-y-siguientes"),
+        (2025, "2025"),
         (2026, "2026-y-siguientes"),
     ],
 )

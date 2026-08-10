@@ -25,7 +25,7 @@ publishes per verification expectation, and it would be natural to assume this
 module simply forgot to. It did not, for three reasons, and the first is
 decisive: THE REGISTRY PUBLISHES NO TOLERANCE FOR THIS AXIS. Its tolerance is
 declared on verification expectations, which govern filed-versus-computed
-reconciliation -- a legal question about whether a taxpayer's return agrees with
+reconciliation — a legal question about whether a taxpayer's return agrees with
 the authority. Engine-versus-spreadsheet is not that question, so adopting that
 tolerance here would apply a legal allowance to an axis no law governs.
 
@@ -57,7 +57,8 @@ from typing import TYPE_CHECKING, Literal
 from pydantic import BaseModel
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ....domain.calculations.registry import CasillaId, InputKind
+from ....core import CasillaId
+from ....domain.calculations.registry import InputKind
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence

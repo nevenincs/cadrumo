@@ -9,18 +9,17 @@ from typing import Annotated, Literal
 
 from pydantic import BeforeValidator, Field, field_validator, model_validator
 
-from ....core import DeclaracionIdioma, ExportLayoutFormat
+from ....core import CasillaId, DeclaracionIdioma, ExportLayoutFormat
 from ....core.aggregation import RelationAggregation
 from .._export_field_kind import CasillaFieldKind, CasillaFieldKindValue
 from ._errors import RegistryValidationError
-from ._export_value_policy import ExportValuePolicyValue, export_value_policy_wire_length
+from ._export_value_policy import ExportValuePolicy, ExportValuePolicyValue, export_value_policy_wire_length
 from ._fixed_width_codec import (
     ExportEncodingValue,
     ExportJustificationValue,
     ExportPaddingValue,
     validate_fixed_width_shape,
 )
-from ....core import CasillaId
 from ._ids import (
     BindingId,
     ExportFieldId,
@@ -745,9 +744,9 @@ class ExportFieldDefinition(RegistryModel):
         """Constrain an exact reviewed semantic integer domain."""
         if self.allowed_values is None:
             return
-        if self.value_policy is not None:
+        if self.value_policy is not None and self.value_policy is not ExportValuePolicy.ENUMERATED_DIGITS:
             raise RegistryValidationError(
-                f"export field {self.id!r} cannot combine allowed_values with value_policy",
+                f"export field {self.id!r} cannot combine allowed_values with value_policy {self.value_policy.value!r}",
             )
         if not self.allowed_values or len(set(self.allowed_values)) != len(self.allowed_values):
             raise RegistryValidationError(
@@ -790,22 +789,67 @@ class ExportFieldDefinition(RegistryModel):
             raise RegistryValidationError(
                 f"export field {self.id!r} cannot declare value_policy on kind {self.kind!r}",
             )
-        if (
-            self.data_type != "integer"
-            or self.signed
-            or self.padding != "left_zero"
-            or self.justification != "right"
-            or self.decimals is not None
-            or self.date_format is not None
-        ):
+        integer_policies = {
+            ExportValuePolicy.SELECTED_1_UNSELECTED_0,
+            ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS,
+            ExportValuePolicy.UNSIGNED_INTEGER,
+            ExportValuePolicy.ENUMERATED_DIGITS,
+            ExportValuePolicy.FOUR_DIGIT_YEAR,
+            ExportValuePolicy.TWO_DIGIT_MONTH,
+            ExportValuePolicy.TWO_DIGIT_DAY,
+        }
+        digit_identity_policies = {
+            ExportValuePolicy.DIGIT_STRING,
+            ExportValuePolicy.IDENTIFIER_DIGITS,
+        }
+        common_unsigned = not self.signed and self.justification == "right"
+        valid_shape = False
+        if self.value_policy in integer_policies:
+            valid_shape = (
+                self.data_type == "integer"
+                and common_unsigned
+                and self.padding == "left_zero"
+                and self.decimals is None
+                and self.date_format is None
+            )
+        elif self.value_policy is ExportValuePolicy.IMPLIED_DECIMAL:
+            valid_shape = (
+                self.data_type == "decimal"
+                and common_unsigned
+                and self.padding == "left_zero"
+                and self.decimals is not None
+                and self.date_format is None
+            )
+        elif self.value_policy is ExportValuePolicy.YYYYMMDD:
+            valid_shape = (
+                self.data_type == "date"
+                and not self.signed
+                and self.padding == "none"
+                and self.justification == "none"
+                and self.decimals is None
+                and self.date_format == "aaaammdd"
+            )
+        elif self.value_policy in digit_identity_policies:
+            valid_shape = (
+                self.data_type == "text"
+                and not self.signed
+                and self.padding == "none"
+                and self.justification == "none"
+                and self.decimals is None
+                and self.date_format is None
+            )
+        if not valid_shape:
             raise RegistryValidationError(
-                f"export field {self.id!r} value_policy requires an unsigned right-justified "
-                "left-zero-padded integer with no decimals or date_format",
+                f"export field {self.id!r} value_policy {self.value_policy.value!r} conflicts with its field shape",
             )
         expected_length = export_value_policy_wire_length(self.value_policy)
-        if self.length != expected_length:
+        if expected_length is not None and self.length != expected_length:
             raise RegistryValidationError(
                 f"export field {self.id!r} value_policy {self.value_policy!r} requires length {expected_length}",
+            )
+        if self.value_policy is ExportValuePolicy.ENUMERATED_DIGITS and self.allowed_values is None:
+            raise RegistryValidationError(
+                f"export field {self.id!r} value_policy {self.value_policy.value!r} requires allowed_values",
             )
 
     def _validate_decimals(self) -> None:

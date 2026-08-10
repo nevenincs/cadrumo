@@ -30,13 +30,11 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....core.decimal import coerce_decimal
 from ....domain.calculations.registry import (
     CasillaFieldKind,
-    CasillaId,
     parse_export_payload,
-    validated_casilla_id,
 )
 from ....domain.filing import ModeloDraft, ModeloInputs
 from ....domain.submission import ModeloDraftStatus

@@ -6,12 +6,12 @@ from collections import defaultdict
 from collections.abc import Iterable
 from dataclasses import dataclass
 
+from ....core import CasillaId
 from ._cross_revision_divergence import (
     CrossRevisionCasillaDivergence,
     iter_cross_revision_casilla_divergences,
 )
 from ._errors import RegistryValidationError
-from ._ids import CasillaId
 from ._schema import ModeloDefinition
 
 __all__ = (

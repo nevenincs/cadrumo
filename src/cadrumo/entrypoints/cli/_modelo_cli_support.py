@@ -18,7 +18,6 @@ import typer
 from pydantic import TypeAdapter, ValidationError
 
 from ...application.modelo import (
-    CalculationRevisionNotFoundError,
     Modelo184MemberRow,
     Modelo232VinculadaRow,
     Modelo347ContraparteRow,
@@ -43,14 +42,14 @@ from ...application.modelo import (
     validate_m349_country_prefix_context,
     validate_m349_nif_format,
 )
-from ...core import M210GrossIncomeSourceMode, Modelo, RescateType
+from ...core import CasillaId, M210GrossIncomeSourceMode, Modelo, RescateType, validated_casilla_id
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors import CadrumoError, resolve_error_message
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...domain.buckets import BUCKET_ACTOR_LABEL_MAX_LENGTH
-from ...domain.calculations.registry import BindingId, CasillaId, RelationId, validated_casilla_id
+from ...domain.calculations.registry import BindingId, RelationId
 from ._common import active_bucket_id_or_refuse
 from ._errors import CliRefusedBoundaryError
 from ._modelo_rendering import short_id
@@ -627,36 +626,6 @@ def bad_parameter_from_localized_context(exc: BaseException) -> typer.BadParamet
     return typer.BadParameter(str(exc))
 
 
-def calculation_revision_not_found_bad_parameter(
-    calculation_revision_id: str,
-    exc: CalculationRevisionNotFoundError,
-) -> typer.BadParameter:
-    """Render a not-found calc-revision id, hinting when it is really a work-unit id."""
-    stripped = calculation_revision_id.strip()
-    try:
-        unit = get_work_unit(stripped)
-    except Exception:
-        _log.debug(
-            "calculation revision hint lookup failed; falling back to registered error rendering",
-            exc_info=True,
-        )
-        return bad_parameter_from_error(exc)
-    return typer.BadParameter(
-        tr(
-            "cli.app.modelo.work.id_is_work_unit_not_calc_revision_natural",
-            default=(
-                "This id is a work-unit-id, but verify/file need a calculation-revision-id. "
-                "For the common path, run 'aeat app modelo work calculate --modelo %{modelo} "
-                "--year %{year} --period %{period}' and then rerun verify/file for that "
-                "same modelo/year/period. Exact ids remain available as an advanced escape hatch."
-            ),
-            modelo=unit.modelo,
-            year=unit.filing_year,
-            period=unit.period.registry_token,
-        ),
-    )
-
-
 def work_candidate_lines(candidates: tuple[ModeloWorkUnitCandidate, ...]) -> str:
     """Return tabular candidate guidance for ambiguous visible filing targets."""
     rows = [
@@ -865,7 +834,6 @@ __all__ = [
     "OutputLanguageOpt",
     "bad_parameter_from_error",
     "bad_parameter_from_localized_context",
-    "calculation_revision_not_found_bad_parameter",
     "load_calculation_revision",
     "load_work_unit",
     "optional_decimal_option",

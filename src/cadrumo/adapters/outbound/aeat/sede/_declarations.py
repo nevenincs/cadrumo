@@ -32,7 +32,7 @@ from urllib.parse import urlsplit
 
 from pydantic import AnyHttpUrl
 
-from .....core import ObservedHeaderFact, Period
+from .....core import CasillaId, ObservedHeaderFact, Period
 from .....core.config import Settings
 from .....core.external_constants import JSON_MIME_TYPE as _JSON_MIME_TYPE
 from .....core.hashing import sha256_hex
@@ -45,7 +45,6 @@ from .....core.time import now
 # of a Modelo 100 revision fails loudly if that check is unregistered, so
 # the M100 routing referential-integrity gate runs on this declarations path.
 from .....domain.calculations.registry import (
-    CasillaId,
     RegistrySnapshot,
     RegistryValidationError,
     RemoteStateGuardPolicy,

@@ -49,8 +49,8 @@ from decimal import Decimal
 
 import pytest
 
+from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
-from .. import CasillaId, validated_casilla_id
 from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,

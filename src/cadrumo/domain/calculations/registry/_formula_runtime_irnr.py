@@ -31,7 +31,7 @@ from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING, NoReturn
 
-from ....core import ConvenioOverrideKind, TipoRentaIrnr
+from ....core import CasillaId, ConvenioOverrideKind, TipoRentaIrnr
 from ...contribuyente import UE_EEA_COUNTRY_CODES
 from ._convenio import ConvenioOverride
 from ._errors import RegistryValidationError
@@ -49,7 +49,7 @@ from ._formula_runtime_ops import (
 from ._formula_runtime_ops import (
     resolve_scalar_parameter as _resolve_scalar_parameter,
 )
-from ._ids import BindingId, CasillaId, ParameterId
+from ._ids import BindingId, ParameterId
 from ._schema import FormulaExpression
 
 if TYPE_CHECKING:

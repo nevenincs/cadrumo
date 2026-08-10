@@ -9,8 +9,9 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from decimal import Decimal
 
+from ..core import CasillaId
 from ..core.resources import resources
-from ..domain.calculations.registry import CasillaId, CasillaObservation, RegistryModeloObservation
+from ..domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 
 
 def registry_grounded_observations(

@@ -34,9 +34,8 @@ from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import ElidedProse, Modelo, Period, PeriodKind, ProrrataRegisterRegime
+from ...core import CasillaId, ElidedProse, Modelo, Period, PeriodKind, ProrrataRegisterRegime
 from ...core.resources import resources
-from ...domain.calculations.registry import CasillaId
 from ...domain.categories import CategoryProfile, SpendingCategory
 from ...domain.contribuyente import (
     CCAA,

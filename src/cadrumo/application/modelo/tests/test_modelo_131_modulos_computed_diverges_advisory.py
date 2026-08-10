@@ -20,7 +20,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....domain.calculations.registry import CasillaId, VerificationPredicateDefinition, validated_casilla_id
+from ....core import CasillaId, validated_casilla_id
+from ....domain.calculations.registry import VerificationPredicateDefinition
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos import ModeloVerificationFindingKind
 from .._verification_actions import _evaluate_advisory_predicate_fires, _evaluate_verification_predicates

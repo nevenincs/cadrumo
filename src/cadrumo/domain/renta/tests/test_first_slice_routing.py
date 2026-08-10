@@ -19,9 +19,9 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import Modelo
+from ....core import CasillaId, Modelo
 from ....core.resources import resources
-from ...calculations.registry import CasillaId, renta_first_slice_binding_target_casillas
+from ...calculations.registry import renta_first_slice_binding_target_casillas
 from ...categories import SpendingCategory
 from .._first_slice_routing import (
     FIRST_SLICE_EXPENSE_CASILLAS,

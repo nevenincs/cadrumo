@@ -37,13 +37,12 @@ from typing import Any
 
 import pytest
 
+from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaId,
     RegistrySnapshot,
     calculate_registry_snapshot,
     resolve_parameter,
-    validated_casilla_id,
 )
 from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
 from ....domain.user_profile import UserProfileFact, UserProfileRecord

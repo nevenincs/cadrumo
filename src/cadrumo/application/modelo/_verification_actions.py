@@ -60,13 +60,12 @@ from ...adapters.persistence.profile.modelos_verification_reports import Verific
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...core import ActionEvidenceProvenance, BindingSourceKind, M210GrossIncomeSourceMode, Modelo
+from ...core import ActionEvidenceProvenance, BindingSourceKind, CasillaId, M210GrossIncomeSourceMode, Modelo
 from ...core.config import Settings
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
 from ...domain.calculations.registry import (
     CasillaDefinition,
-    CasillaId,
     CasillaObservation,
     DataBindingDefinition,
     InputKind,
@@ -192,10 +191,10 @@ from ._verification_predicates import (
 from ._verification_predicates import (
     M349_NUMERO_RECTIFICACIONES_CASILLA as _M349_NUMERO_RECTIFICACIONES_CASILLA,
 )
-from ._verification_predicates import evaluate_applicability_filter
 from ._verification_predicates import (
     evaluate_advisory_predicate_fires as evaluate_advisory_predicate_fires,
 )
+from ._verification_predicates import evaluate_applicability_filter
 from ._verification_predicates import (
     evaluate_predicate_expression as evaluate_predicate_expression,
 )

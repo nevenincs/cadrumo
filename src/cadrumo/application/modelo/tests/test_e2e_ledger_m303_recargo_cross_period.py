@@ -53,8 +53,8 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
+from ....core import CasillaId, Period, validated_casilla_id
+from ....core.resources import resources
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from ....domain.modelos import CalculationRevision
 from ....domain.transactions import (
@@ -83,7 +83,6 @@ _TAX_ID = "12345678Z"
 _T0 = datetime(2025, 1, 10, 10, 0, tzinfo=UTC)
 _FILE_AT = datetime(2025, 4, 10, 12, 0, tzinfo=UTC)
 
-_M303_REVISION = "2023-y-siguientes"
 type RecargoTier = Literal["general", "reducido"]
 type RecargoAmountsByPeriod = dict[str, dict[RecargoTier, Decimal]]
 
@@ -268,7 +267,7 @@ def _calculate_m303_quarter(secure_objects: SecureObjectRepository, *, period: s
         modelo="303",
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, period),
-        revision_id=_M303_REVISION,
+        revision_id=resources().modelos.authority.snapshot("303", filing_year=_YEAR, period=period).revision.id,
         repository=wu_repo,
         clock=_T0,
     )

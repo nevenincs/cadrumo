@@ -20,9 +20,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from .....core import Period
+from .....core import CasillaId, Period, validated_casilla_id
 from .....core.hashing import sha256_hex
-from .....domain.calculations.registry import CasillaId, validated_casilla_id
 from .._records import (
     SheetCellAddress,
     SheetEvidenceContributorRow,

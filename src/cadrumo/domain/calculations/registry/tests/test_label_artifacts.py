@@ -9,8 +9,8 @@ from pathlib import Path
 
 import pytest
 
+from .....core import CasillaId, validated_casilla_id
 from .....tests.locales_root_fixture import locales_root_scope
-from .. import CasillaId, validated_casilla_id
 from .._schema import CasillaDefinition, ModeloDefinition, ModeloRevision, PeriodSelector
 from .._validate_label_artifacts import collect_label_artifact_findings, validate_no_label_artifacts
 from .._validate_registry_scope import validate_registry_scope

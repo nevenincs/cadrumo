@@ -39,8 +39,9 @@ from datetime import date, datetime
 
 from pydantic import TypeAdapter, ValidationError
 
+from ...core import CasillaId
 from ...core.hashing import sha256_hex
-from ...domain.calculations.registry import CasillaId, LegalRefId, SourceRefId
+from ...domain.calculations.registry import LegalRefId, SourceRefId
 from ...domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,

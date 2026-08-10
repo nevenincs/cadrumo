@@ -45,8 +45,8 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period
-from ....domain.calculations.registry import CasillaId, RegistryValidationError, validated_casilla_id
+from ....core import CasillaId, Period, validated_casilla_id
+from ....domain.calculations.registry import RegistryValidationError
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from ....domain.modelos import ModeloVerificationFindingKind
@@ -437,11 +437,20 @@ def test_verify_passes_with_projected_boxes_and_no_under_declaration_advisory(
     assert not under_declaration_advisories
 
     # The per-box equals consistency predicates hold (box == source by
-    # projection), so no BLOCKING_RULE finding cites their predicate-id shape.
+    # projection), so no BLOCKING_RULE finding carries one of their exact ids.
+    snapshot = _authority_for_303().snapshot("303", filing_year=2026, period="1T")
+    consistency_predicate_ids = {
+        predicate.predicate_id
+        for predicate in snapshot.revision.verification_predicates
+        if predicate.expression.strip().startswith("equals(")
+    }
+    assert consistency_predicate_ids
     consistency_blockers = [
         finding
         for finding in report.findings
-        if finding.kind is ModeloVerificationFindingKind.BLOCKING_RULE and "dr303" in finding.message
+        if finding.kind is ModeloVerificationFindingKind.BLOCKING_RULE
+        and finding.message_locale_key == "application.modelo.findings.cross_casilla_invariant_violated"
+        and finding.message_facts.get("predicate_id") in consistency_predicate_ids
     ]
     assert not consistency_blockers
 

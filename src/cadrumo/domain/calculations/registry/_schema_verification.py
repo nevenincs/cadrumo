@@ -56,21 +56,22 @@ from typing import Annotated, Literal
 
 from pydantic import BeforeValidator, Field, field_validator, model_validator
 
+from ....core import CasillaId
 from ._errors import RegistryValidationError
-from ._ids import CasillaId, VerificationExpectationId
+from ._ids import VerificationExpectationId
 from ._schema_base import LegalRefs, RegistryModel, SourceRefs
 from ._schema_scalars import DecimalValue
 
 __all__ = [
     "KNOWN_PROFILE_FLAG_ADVISORY_FIELDS",
     "KNOWN_VERIFICATION_PREDICATE_OPERATORS",
-    "RegistryVerificationPolicy",
-    "ParsedVerificationPredicate",
     "VERIFICATION_PREDICATE_SPECIFICATIONS",
+    "ParsedVerificationPredicate",
+    "RegistryVerificationPolicy",
     "VerificationDiscrepancyCause",
     "VerificationExpectationDefinition",
-    "VerificationPredicateOperator",
     "VerificationPredicateDefinition",
+    "VerificationPredicateOperator",
     "VerificationPredicateSpecification",
     "VerificationPredicateSyntax",
     "VerificationRoundingCode",
@@ -206,15 +207,15 @@ def fold_reconciliation_total_casilla_ids(
 ) -> Mapping[Literal["ingresar", "devolver"], CasillaId]:
     """Fold every expectation's reconciliation-total casillas into one mapping.
 
-    The canonical fold for this axis. Three surfaces need it -- the verification
-    policy, the filing subview and the result summary -- and each previously
+    The canonical fold for this axis. Three surfaces need it — the verification
+    policy, the filing subview and the result summary — and each previously
     open-coded its own loop with a different tie-break, so the same revision
     could in principle name one casilla as the ``ingresar`` total on one surface
     and a different one on another.
 
     AMBIGUITY IS REFUSED RATHER THAN RESOLVED. The other folded axes have a
-    defensible ordering -- union for a set, strictest for a tolerance -- but
-    there is no "stricter" of two casilla ids, so any tie-break here would be an
+    defensible ordering — union for a set, strictest for a tolerance — but there
+    is no "stricter" of two casilla ids, so any tie-break here would be an
     invention rather than a rule, and whichever surface adopted it first would
     silently become the authority. Two expectations naming DIFFERENT casillas
     for one kind is a registry-authoring fault, so it raises; naming the same

@@ -74,12 +74,10 @@ from typing import Literal
 from pydantic import AnyHttpUrl, BaseModel, Field, field_validator
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from .....core import CasillaValueKind, FiledHistoryDiscoverySignal, Modelo, ObservedHeaderFact, Period
+from .....core import CasillaId, CasillaValueKind, FiledHistoryDiscoverySignal, Modelo, ObservedHeaderFact, Period
 from .....core.decimal import coerce_decimal_strict
-from .....core.identity import AeatExpedienteId, ContentDigest
+from .....core.identity import AeatCsv, AeatExpedienteId, ContentDigest
 from .....core.time import UtcInstant
-from .....domain.calculations.registry import CasillaId
-from ._adapter_utils import is_aeat_csv
 from ._errors import SedeValidationError
 
 
@@ -154,19 +152,11 @@ class JustificanteRef(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    csv: str = Field(min_length=8, max_length=32)
+    csv: AeatCsv
     expediente_id: AeatExpedienteId
     cotejo_url: AnyHttpUrl
     pdf_url: AnyHttpUrl
     mode: Literal["read"] = "read"
-
-    @field_validator("csv")
-    @classmethod
-    def _csv_shape(cls, value: str) -> str:
-        """Reject CSV values that do not match the AEAT uppercase alphanumeric pattern."""
-        if not is_aeat_csv(value):
-            raise SedeValidationError(f"csv does not match AEAT shape: {value!r}")
-        return value
 
 
 class SedeCapture(BaseModel):

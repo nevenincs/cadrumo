@@ -44,8 +44,9 @@ from typing import TypeGuard
 
 from pydantic import Field
 
+from ....core import CasillaId
 from ....core.aggregation import BindingSourceKind
-from ._ids import BindingId, CasillaId
+from ._ids import BindingId
 from ._ledger_bindings import iva_ledger_selector
 from ._schema import DataBindingDefinition, ModeloRevision
 from ._schema_base import RegistryModel

@@ -10,7 +10,7 @@ import pytest
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....domain.calculations.registry import CasillaId
+from ....core import CasillaId
 from ....domain.iva_compensation import IvaCompensationOverride
 from ....domain.modelos import (
     CalculationRevision,

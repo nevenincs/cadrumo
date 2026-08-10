@@ -26,8 +26,9 @@ from functools import cache
 
 import pytest
 
+from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
-from .. import CasillaId, RegistrySnapshot, build_snapshot, validated_casilla_id
+from .. import RegistrySnapshot, build_snapshot
 from .._formula_runtime import calculate_registry_snapshot
 from .._loader import load_registry_tree
 

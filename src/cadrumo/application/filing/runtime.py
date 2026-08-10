@@ -50,7 +50,7 @@ from typing import Literal, Protocol
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Period
+from ...core import CasillaId, Period
 from ...core.aggregation import BindingSourceKind
 from ...core.identity import SubjectTaxId
 from ...core.resources import bundled_path
@@ -61,7 +61,6 @@ from ...domain.calculations.registry import (
     CalculationCompletenessManifest,
     CasillaConstraints,
     CasillaDefinition,
-    CasillaId,
     DataBindingDefinition,
     ExportLayoutDefinition,
     FormulaDefinition,

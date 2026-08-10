@@ -22,7 +22,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ._ids import CasillaId
+from ....core import CasillaId
 from ._schema import AlgorithmProviderDefinition, LegalReference, ModeloRevision, SourceReference
 from ._validate_evidence import EvidenceValidator
 from ._validate_helpers import missing_refs as _missing_refs

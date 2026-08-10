@@ -22,7 +22,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 
-from ....domain.calculations.registry import CasillaId
+from ....core import CasillaId
 from ....domain.modelos import LedgerFilingEvidence
 from ._errors import CalcSheetsEngineError
 from ._records import SheetEvidenceContributorRow, SheetEvidenceFacet, SheetEvidenceManualEntry

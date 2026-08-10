@@ -13,6 +13,7 @@ from collections import defaultdict
 from collections.abc import Iterable
 from itertools import pairwise
 
+from ....core import CasillaId
 from ._cross_revision_divergence import (
     CrossRevisionCasillaDivergence,
     iter_cross_revision_casilla_divergences,
@@ -20,7 +21,6 @@ from ._cross_revision_divergence import (
     revisions_overlap,
 )
 from ._errors import RegistryValidationError
-from ._ids import CasillaId
 from ._schema import (
     CasillaContinuidadEvolutionDefinition,
     ModeloDefinition,

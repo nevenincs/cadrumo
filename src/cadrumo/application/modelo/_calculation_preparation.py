@@ -25,8 +25,8 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...core import Modelo
-from ...domain.calculations.registry import BindingId, CasillaId, ModeloRevision, RegistrySnapshot, RelationId
+from ...core import ActionEvidenceProvenance, CasillaId, Modelo
+from ...domain.calculations.registry import BindingId, ModeloRevision, RegistrySnapshot, RelationId
 from ...domain.deadlines import IVARegime
 from ...domain.modelos import (
     WorkUnit,
@@ -311,27 +311,6 @@ def _raise_if_ledger_preflight_blocks_calculation(
         return
     first_issue = blocking_issues[0]
     raise ModeloAggregationBindingError(
-        # BOTH message and translated_message, deliberately. The operator-facing
-        # envelope resolves translated_message first (core.errors._registry
-        # resolve_error_message), so this `message` changes nothing an operator
-        # sees -- it changes only `str(exc)`, which is what a traceback and a
-        # pytest failure line show.
-        #
-        # Without it the failure line is the bare wrapper key, IDENTICAL for all
-        # 16 blocking preflight reasons, with the actual cause reachable only
-        # through context["reason"]. Two unrelated defects then present
-        # byte-identically: that is how a missing counterparty identification
-        # state was triaged three times as an unrelated casilla-122 binding
-        # failure, because the name carried no information and got read as
-        # evidence.
-        #
-        # Scoped to THIS raise site on purpose. Rendering context in CadrumoError
-        # would reach every refusal in the codebase, and 2122 pytest.raises(
-        # match=...) sites assert on refusal text.
-        message=(
-            f"ledger preflight blocked: {first_issue.reason.value} "
-            f"(transaction {first_issue.transaction_id}, {report.period})"
-        ),
         translated_message="application.modelo.errors.ledger_preflight_blocked",
         context={
             "transaction_id": first_issue.transaction_id,
@@ -397,13 +376,8 @@ def _raise_if_m200_ledger_requires_accounting_result_input(
     )
     if ledger_transaction_count == 0:
         return
-    period_label = f"{work_unit.filing_year}/{work_unit.period.registry_token}"
     raise ModeloAggregationBindingError(
-        (
-            "Modelo 200 does not derive accounting profit from ledger transactions yet; "
-            f"the bucket has {ledger_transaction_count} business ledger row(s) in {period_label}. "
-            "Supply casilla 00501 from the company's accounting result before calculating."
-        ),
+        translated_message="errors.error.error_modelo_aggregation_binding",
         context={
             "modelo": str(work_unit.modelo),
             "filing_year": work_unit.filing_year,

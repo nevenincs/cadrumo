@@ -37,8 +37,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from ...core.i18n import tr
-from ...domain.calculations.registry import CasillaId
+from ...core import CasillaId
 from ...domain.modelos import (
     ModeloError,
     ModeloVerificationFinding,
@@ -83,11 +82,11 @@ def _dt12_antiquity_advisory_finding(
             kind=ModeloVerificationFindingKind.ADVISORY,
             severity=ModeloVerificationFindingSeverity.WARNING,
             casilla_id=reduccion_id,
-            message=tr(
-                "application.modelo.findings.dt12a_reduccion_antiquity_possible",
-                reduccion_id=reduccion_id,
-                reduccion_value=str(reduccion_value),
-            ),
+            message_locale_key="application.modelo.findings.dt12a_reduccion_antiquity_possible",
+            message_facts={
+                "reduccion_id": reduccion_id,
+                "reduccion_value": reduccion_value,
+            },
             legal_refs=("ley-35-2006:dt-12",),
         )
     return None

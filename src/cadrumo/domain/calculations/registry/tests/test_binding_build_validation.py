@@ -29,9 +29,10 @@ from __future__ import annotations
 
 import pytest
 
+from .....core import CasillaId, validated_casilla_id
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from .....core.resources import bundled_path
-from .. import CasillaId, RegistryCatalogues, RegistryValidator, validated_casilla_id
+from .. import RegistryCatalogues, RegistryValidator
 from .._bindings import (
     _BINDING_SELECTOR_REGISTRY,
     _BINDING_VALIDATOR_REGISTRY,

@@ -27,7 +27,7 @@ from pathlib import Path
 
 import pytest
 
-from ......core import Modelo, Period
+from ......core import Modelo, Period, validated_casilla_id
 from ......domain.calculations.registry import bundled_authority, resolve_export_layout
 from ......tests.aeat_literal_fixtures import aeat_url
 from .._declarations_observations import (
@@ -97,7 +97,7 @@ def _exported_fichero(tmp_path: Path, *, declaration_type: str) -> bytes:
         export_draft,
     )
     from ......core import Period
-    from ......domain.calculations.registry import validated_casilla_id
+
 
     provider = build_runtime_schema_provider(modelos=("303",))
     draft = build_draft(

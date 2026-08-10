@@ -23,9 +23,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
+from ...core import CasillaId
 from ...core.external_constants import MODELO_100_ART_20_TRABAJO_REDUCCION_RNT_CEILING_EUR
-from ...core.i18n import tr
-from ...domain.calculations.registry import CasillaId
 from ...domain.modelos import (
     ModeloError,
     ModeloVerificationFinding,
@@ -82,12 +81,12 @@ def _art20_reduccion_advisory_finding(
             kind=ModeloVerificationFindingKind.ADVISORY,
             severity=ModeloVerificationFindingSeverity.WARNING,
             casilla_id=reduccion_id,
-            message=tr(
-                "application.modelo.findings.art20_reduccion_possible",
-                rnt_id=rnt_id,
-                rnt_value=str(rnt_value),
-                reduccion_id=reduccion_id,
-            ),
+            message_locale_key="application.modelo.findings.art20_reduccion_possible",
+            message_facts={
+                "rnt_id": rnt_id,
+                "rnt_value": rnt_value,
+                "reduccion_id": reduccion_id,
+            },
             legal_refs=("ley-35-2006:art-20",),
         )
     return None

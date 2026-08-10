@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
+from ....core import CasillaId, validated_casilla_id
 from .._config._google_payloads import (
     GoogleSyncCalcComputeResult,
     GoogleSyncCalcPullResult,

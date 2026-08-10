@@ -16,11 +16,11 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from .....core import CasillaId, validated_casilla_id
 from .....core.aggregation import BindingTypedEnumKind
 from .....core.resources import bundled_path, resources
 from ..._export_field_kind import CasillaFieldKind
 from .. import revision_reference_identity_failures
-from .._ids import CasillaId, validated_casilla_id
 from .._schema import DataBindingDefinition, ModeloDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

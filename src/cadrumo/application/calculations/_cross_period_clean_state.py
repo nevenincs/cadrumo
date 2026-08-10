@@ -20,9 +20,8 @@ from datetime import date
 from typing import Final, NamedTuple, cast
 
 from ...adapters.persistence.profile.justificante import JustificanteRepository
-from ...core import Modelo, Period
+from ...core import CasillaId, Modelo, Period
 from ...domain.calculations.registry import (
-    CasillaId,
     Modelo202Modality,
     RegistryFoldRequirement,
     RegistrySnapshot,

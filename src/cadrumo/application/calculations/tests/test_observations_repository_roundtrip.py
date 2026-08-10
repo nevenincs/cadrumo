@@ -22,14 +22,14 @@ from pydantic import ValidationError
 
 from ....adapters.persistence.storage import EnvelopeVersionError
 from ....core import (
+    CasillaId,
     Period,
     SecureObjectWrite,
+    validated_casilla_id,
 )
 from ....domain.calculations.registry import (
-    CasillaId,
     CasillaObservation,
     RegistryModeloObservation,
-    validated_casilla_id,
 )
 from ....domain.iva_compensation import (
     IvaCompensationAuthoritySource,
@@ -609,7 +609,7 @@ class TestCaptureInstantContract:
             "observation": _populated_observation(),
             "captured_at": datetime(2024, 4, 15, 10, 30, tzinfo=UTC),
             "source_kind": ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
-            "stamped_revision_id": "2023-y-siguientes",
+            "stamped_revision_id": "revision-for-envelope-roundtrip",
         }
 
     def test_utc_aware_capture_instant_is_accepted(self) -> None:

@@ -21,9 +21,9 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.profile.filing_amendments import ModeloAmendmentRepository
-from ....core import Period, StorageCategory, storage_path
+from ....core import CasillaId, Period, StorageCategory, storage_path, validated_casilla_id
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations.registry import CasillaId, RegistrySnapshotRef, validated_casilla_id
+from ...calculations.registry import RegistrySnapshotRef
 from .._amendment import (
     AmendmentKind,
     CasillaChange,

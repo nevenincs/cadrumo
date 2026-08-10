@@ -8,7 +8,7 @@ from typing import TypedDict
 import pytest
 from pydantic import ValidationError
 
-from ...calculations.registry import CasillaId
+from ....core import CasillaId
 
 type RowModelCall = Callable[[], object]
 

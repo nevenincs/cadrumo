@@ -21,14 +21,13 @@ from ....adapters.outbound.aeat.sede import (
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from ....core import CasillaValueKind, Period
+from ....core import CasillaValueKind, Period, validated_casilla_id
 from ....core.config import Settings
 from ....core.json_contract import NoticeSeverity
 from ....domain.buckets import BucketEventType
 from ....domain.calculations.registry import (
     RegistryModeloObservation,
     RegistryValidationError,
-    validated_casilla_id,
 )
 from ....domain.iva_compensation import IvaCompensationPeriodState
 from ....domain.modelos import (

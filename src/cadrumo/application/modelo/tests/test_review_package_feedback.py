@@ -50,9 +50,9 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 from pydantic import ValidationError
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ....core import Period
+from ....core import Period, validated_casilla_id
 from ....domain.buckets import BucketEventObjectType, BucketEventType
-from ....domain.calculations.registry import CasillaObservation, validated_casilla_id
+from ....domain.calculations.registry import CasillaObservation
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,

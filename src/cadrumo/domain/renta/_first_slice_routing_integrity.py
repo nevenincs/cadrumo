@@ -35,8 +35,8 @@ through the abstract Protocol without naming ``renta``.
 
 from __future__ import annotations
 
-from ...core import Modelo
-from ..calculations.registry import CasillaId, register_cross_domain_snapshot_check
+from ...core import CasillaId, Modelo
+from ..calculations.registry import register_cross_domain_snapshot_check
 
 
 def check_first_slice_routing(

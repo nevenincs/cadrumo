@@ -22,8 +22,8 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas as _canvas
 
+from ......core import CasillaId
 from ......core.money import round_to_cents
-from ......domain.calculations.registry import CasillaId
 
 # A4 dimensions and standard AEAT-like margins.
 A4_WIDTH, A4_HEIGHT = A4

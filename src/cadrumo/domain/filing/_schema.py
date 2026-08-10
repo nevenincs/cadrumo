@@ -13,13 +13,13 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, Hex16Str, Period
+from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, CasillaId, Hex16Str, Period
 from ...core.errors import BaseSeverity
 from ...core.hashing import content_hash_hex
 from ...core.i18n import Translatable as tr
 from ...core.identity import ContentDigest, SubjectTaxId
 from ...core.time import UtcInstant
-from ..calculations.registry import BindingId, CasillaId, FormulaId, LegalRefId, RegistrySnapshotRef, SourceRefId
+from ..calculations.registry import BindingId, FormulaId, LegalRefId, RegistrySnapshotRef, SourceRefId
 from ..submission import ModeloDraftStatus
 from ._errors import FilingValidationError
 

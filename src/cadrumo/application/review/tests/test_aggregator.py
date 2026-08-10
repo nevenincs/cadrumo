@@ -11,11 +11,11 @@ import pytest
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....core import Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....core.config import Settings
 from ....core.errors import BaseSeverity
 from ....core.i18n import Translatable as tr
-from ....domain.calculations.registry import CasillaId, RegistrySnapshotRef, validated_casilla_id
+from ....domain.calculations.registry import RegistrySnapshotRef
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import InvoiceKind
 from ....domain.transactions import (

@@ -33,7 +33,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....domain.calculations.registry import CasillaId, RegistrySnapshot, validated_casilla_id, validated_casilla_id_map
+from ....core import CasillaId, validated_casilla_id, validated_casilla_id_map
+from ....domain.calculations.registry import RegistrySnapshot
 from .._taxation_comparison import (
     INDIVIDUAL_BRANCH_SINGLE_EARNER_CAVEAT,
     TaxationComparisonError,

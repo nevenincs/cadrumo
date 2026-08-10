@@ -12,13 +12,13 @@ from xml.etree.ElementTree import Element
 
 from defusedxml import ElementTree
 
-from ....core import ExportLayoutFormat
+from ....core import CasillaId, ExportLayoutFormat, validated_casilla_id
 from ....core.decimal import normalize_decimal_separators
 from ....core.external_constants import LATIN_1_ENCODING as _LATIN_1_ENCODING
 from ....core.paths import path_stat_fingerprint
 from ._errors import RegistryValidationError
 from ._fixed_width_codec import parse_fixed_width_export_field
-from ._ids import BindingId, CasillaId, ExportFieldId, ExportLayoutId, RecordId, validated_casilla_id
+from ._ids import BindingId, ExportFieldId, ExportLayoutId, RecordId
 from ._schema import (
     CasillaFieldKind,
     ExportFieldDefinition,

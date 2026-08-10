@@ -14,8 +14,7 @@ from pydantic import ValidationError
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period
-from ....domain.calculations.registry import CasillaId, validated_casilla_id
+from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
@@ -41,13 +40,14 @@ from .._selectors import (
     ModeloWorkSelectorRequest,
     ModeloWorkSelectorState,
     ModeloWorkVisibleTargetAmbiguousError,
+    active_natural_target_work_units,
+    natural_target_work_units,
     resolve_modelo_calculation_revision_pick,
     resolve_modelo_work_bucket,
     resolve_modelo_work_unit,
     select_current_verified_revision,
     select_exportable_revision,
     select_modelo_calculation_revision,
-    visible_target_work_units,
 )
 from .._work_addressing import (
     ModeloWorkAddress,
@@ -200,7 +200,9 @@ def test_visible_target_resolution_reports_absent_before_exact_creation(work_rep
     assert resolution.period == _P_2026_1T
 
 
-def test_visible_target_resolution_ignores_discarded_work_units(work_repo: WorkUnitCatalogueRepository) -> None:
+def test_natural_target_resolution_retains_discarded_work_units_for_terminal_state_handling(
+    work_repo: WorkUnitCatalogueRepository,
+) -> None:
     unit = create_work_unit(
         bucket_id=work_repo.bucket_id or _SELECTOR_PROFILE_ID,
         modelo="130",
@@ -222,8 +224,10 @@ def test_visible_target_resolution_ignores_discarded_work_units(work_repo: WorkU
     work_repo.save(upsert_work_unit(work_repo.load(), discarded))
 
     resolution = resolve_modelo_work_unit(_request(), repository=work_repo)
-    assert resolution.state is ModeloWorkSelectorState.ABSENT
-    assert visible_target_work_units(_request(), repository=work_repo) == ()
+    assert resolution.state is ModeloWorkSelectorState.RESOLVED
+    assert resolution.work_unit == discarded
+    assert natural_target_work_units(_request(), repository=work_repo) == (discarded,)
+    assert active_natural_target_work_units(_request(), repository=work_repo) == ()
 
 
 def test_visible_target_resolution_returns_single_active_work_unit(work_repo: WorkUnitCatalogueRepository) -> None:

@@ -21,7 +21,7 @@ See Also:
 
 from __future__ import annotations
 
-from .....domain.calculations.registry import CasillaId, validated_casilla_id
+from .....core import CasillaId, validated_casilla_id
 
 
 def _casilla_id(value: object) -> CasillaId:

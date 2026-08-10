@@ -8,15 +8,13 @@ from decimal import Decimal
 
 import pytest
 
+from .....core import CasillaId, validated_casilla_id, validated_casilla_id_map
 from .. import (
-    CasillaId,
     calculate_registry_snapshot,
     parse_export_payload,
     resolve_bound_inputs_by_casilla_id,
     resolve_export_layout,
     resolve_relation_values,
-    validated_casilla_id,
-    validated_casilla_id_map,
 )
 from .._authority import ValidatedRegistryAuthority
 from .._schema import RegistrySnapshot

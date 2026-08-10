@@ -46,14 +46,13 @@ from typing import Final
 from pydantic import BaseModel, TypeAdapter
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import BindingSourceKind, Modelo, Period
+from ...core import BindingSourceKind, CasillaId, Modelo, Period
 from ...core.resources import resources
 from ...core.time import now
 from ...domain.calculations.registry import (
     MODELO_303_IVA_COMPENSATION_BINDING_ID,
     BindingId,
     CasillaDefinition,
-    CasillaId,
     CasillaObservation,
     FormulaDefinition,
     RegistryFoldRequirement,

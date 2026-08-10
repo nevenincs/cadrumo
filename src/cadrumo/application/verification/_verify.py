@@ -21,14 +21,13 @@ from pathlib import Path
 from typing import Protocol
 
 from ...adapters.inbound.declaracion import InboundDeclaracionObservation
-from ...core import Period
+from ...core import CasillaId, Period
 from ...core.decimal import coerce_decimal
 from ...core.logging import get_logger
 from ...core.resources import bundled_path
 from ...core.time import now
 from ...domain.calculations.registry import (
     BindingId,
-    CasillaId,
     InputKind,
     RegistrySnapshot,
     RegistrySnapshotError,

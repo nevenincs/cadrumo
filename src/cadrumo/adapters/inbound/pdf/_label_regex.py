@@ -20,8 +20,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 
+from ....core import CasillaId
 from ....core.decimal import normalize_decimal_separators
-from ....domain.calculations.registry import CasillaId
 
 # AEAT per UNE 82100 uses a non-breaking space (U+00A0)
 # or narrow no-break space (U+202F) as the thousands separator —

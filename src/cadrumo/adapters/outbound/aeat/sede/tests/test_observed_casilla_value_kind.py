@@ -20,8 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from ......core import CasillaValueKind
-from ......domain.calculations.registry import validated_casilla_id
+from ......core import CasillaValueKind, validated_casilla_id
 from .._declarations_observations import _observed_value_kind, non_numeric_observed_casillas
 from .._errors import SedeValidationError
 from .._schema import ObservedCasillaSkip, ObservedCasillaValue

@@ -24,7 +24,7 @@ from typing import Literal, TypeGuard
 
 from pydantic import BaseModel, Field, TypeAdapter, field_validator, model_validator
 
-from ....core import STRICT_FROZEN_CONFIG, Period
+from ....core import STRICT_FROZEN_CONFIG, CasillaId, Period
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind, CounterpartSourceKind
 from ...iva_compensation import (
     M303_COMPENSATION_APLICADA_CASILLA,
@@ -92,7 +92,7 @@ from ._donativo_bindings import (
     DonativoSelector as _DonativoSelector,
 )
 from ._errors import RegistryValidationError
-from ._ids import BindingId, CasillaId, FormulaId, LegalRefId, ModeloId, OracleId, SourceRefId
+from ._ids import BindingId, FormulaId, LegalRefId, ModeloId, OracleId, SourceRefId
 from ._invoice_bindings import (
     INVOICE_BINDING_SOURCE_KINDS,
     InvoiceObservation,

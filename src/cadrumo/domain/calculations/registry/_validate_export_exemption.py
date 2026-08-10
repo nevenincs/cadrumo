@@ -82,11 +82,10 @@ See Also:
 
 from __future__ import annotations
 
-from ....core import ExportExemptionReason, ExportLayoutFormat
+from ....core import CasillaId, ExportExemptionReason, ExportLayoutFormat
 from ....core.aggregation import BindingSourceKind
 from ._bindings import binding_source_casilla_ids, binding_source_modelo
 from ._export import derive_export_layouts_from_bindings, fixed_width_record_casilla_ids
-from ._ids import CasillaId
 from ._runtime_graph import expression_casilla_refs
 from ._schema import ModeloRevision
 

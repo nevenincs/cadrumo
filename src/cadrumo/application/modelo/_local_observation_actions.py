@@ -29,11 +29,10 @@ from typing import Final
 
 from pydantic import BaseModel, ValidationError
 
-from ...core import STRICT_FROZEN_CONFIG, Period
+from ...core import STRICT_FROZEN_CONFIG, CasillaId, Period, validated_casilla_id
 from ...core.resources import resources
 from ...core.time import now as _utc_now
 from ...domain.calculations.registry import (
-    CasillaId,
     CasillaObservation,
     RegistryModeloObservation,
     RegistrySnapshot,
@@ -43,7 +42,6 @@ from ...domain.calculations.registry import (
     casillas_by_id,
     format_noncanonical_casilla_reference,
     undeclared_casilla_ids,
-    validated_casilla_id,
 )
 from ..calculations import CalculationObservationRepository, ObservationSourceKind, observation_key
 from ._action_errors import ModeloLocalObservationError
