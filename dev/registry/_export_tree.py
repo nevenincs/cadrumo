@@ -41,6 +41,7 @@ from ._provenance_manifest import (
     ExportFragmentProvenanceManifest,
     ExportFragmentTarget,
     emit_export_fragment_provenance_manifest,
+)
 from ._render_profile import (
     RenderProfile,
     RenderProfileAnchor,
@@ -48,7 +49,6 @@ from ._render_profile import (
     SingletonNumericRule,
     Width17MembershipRule,
     validate_render_profile,
-)
 )
 from ._semantic_map import SemanticMap
 from ._semantic_map_join import JoinedRecordDesign, JoinedRecordDesignField, JoinedRecordDesignRecord

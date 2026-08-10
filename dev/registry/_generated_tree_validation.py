@@ -28,8 +28,8 @@ from ._provenance_manifest import (
     ExportFragmentProvenanceManifest,
     ExportFragmentTarget,
     verify_export_fragment_provenance_manifest,
-from ._render_profile import RenderProfile, RenderProfileSourceEvidence
 )
+from ._render_profile import RenderProfile, RenderProfileSourceEvidence
 from ._semantic_map import SemanticMap
 from ._semantic_map_join import JoinedRecordDesign
 
