@@ -92,6 +92,16 @@ family) do not consume this alias; they are referential identities outside
 the content-addressed-hex family.
 """
 
+FilingRecordId = _Hex64Str
+"""Hex-64 identity of one filing record bound to a calculation revision.
+
+Declared here rather than in the modelo domain because the identity is
+consumed across package boundaries -- the evidence and cross-period
+application surfaces and the CLI payload layer each name one -- and because it
+adds no constraint beyond :data:`Hex64Str`, which is the discipline every
+hex-64 identity concept in this codebase follows.
+"""
+
 VerificationReportId = _Hex64Str
 """Hex-64 identity of one verification report bound to a calculation revision.
 
@@ -165,6 +175,7 @@ __all__ = [
     "BucketId",
     "ContentDigest",
     "ContentDigestOrAbsent",
+    "FilingRecordId",
     "IdentifierNamespace",
     "IdentityDocument",
     "IdentityError",

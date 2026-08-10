@@ -9,12 +9,12 @@ from typing import Protocol, Self
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG, Period
+from ...core.identity import FilingRecordId
 from ...domain.calculations.registry import CasillaId, LegalRefId, RegistryModeloObservation, SourceRefId
 from ...domain.modelos import (
     CalculationRevisionId,
     CalculationRevisionState,
     ExternalEvidenceKind,
-    FilingRecordId,
     VerificationCompletenessStatus,
 )
 from ._observations_repository import ObservationSourceKind

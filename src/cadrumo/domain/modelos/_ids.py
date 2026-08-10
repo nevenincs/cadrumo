@@ -42,14 +42,7 @@ CalculationRevisionId = Annotated[
 ]
 """Hex-64 identity of one calculation revision under a work unit."""
 
-FilingRecordId = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=64, max_length=64, pattern=_HEX_64_PATTERN),
-]
-"""Hex-64 identity of one filing record bound to a calculation revision."""
-
 __all__ = (
     "CalculationRevisionId",
-    "FilingRecordId",
     "WorkUnitId",
 )

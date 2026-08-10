@@ -35,10 +35,10 @@ from pydantic import BaseModel, Field, StringConstraints, field_validator, model
 
 from ...core import STRICT_FROZEN_CONFIG, Period
 from ...core.hashing import content_hash_hex
-from ...core.identity import BucketId, TransactionId
+from ...core.identity import BucketId, FilingRecordId, TransactionId
 from ._codes import ModeloCode
 from ._errors import ModeloValidationError
-from ._ids import CalculationRevisionId, FilingRecordId, WorkUnitId
+from ._ids import CalculationRevisionId, WorkUnitId
 
 ModeloActorLabel = Annotated[
     str,

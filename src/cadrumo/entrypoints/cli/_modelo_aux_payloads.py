@@ -29,7 +29,7 @@ from ...application.workflow import (
 )
 from ...core import Period
 from ...core.aggregation import RetencionClave
-from ...core.identity import BucketId, ContentDigest
+from ...core.identity import BucketId, ContentDigest, FilingRecordId
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction, register_schema
 from ...domain.buckets import (
     BucketActorLabel,
@@ -38,7 +38,7 @@ from ...domain.buckets import (
     BucketEventType,
 )
 from ...domain.calculations.registry import LegalRefId, ModeloDescribeReport, SourceRefId
-from ...domain.modelos import CalculationRevisionId, FilingRecordId, WorkUnitId
+from ...domain.modelos import CalculationRevisionId, WorkUnitId
 from ._decimal_wire import NonNegativeDecimalWireText
 
 
