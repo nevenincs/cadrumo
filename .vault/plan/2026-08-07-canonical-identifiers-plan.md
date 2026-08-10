@@ -4,7 +4,7 @@ tags:
   - '#canonical-identifiers'
 date: '2026-08-07'
 modified: '2026-08-10'
-body_hash: 'sha256:b1125658e290126c843c0abd26af322d17c4bca30c9dff186ae9bda96be58f81'
+body_hash: 'sha256:dea65c09eda062d264c323c9cc5e7085852067e4011ca467d53c2e98b211eaa7'
 tier: L3
 related:
   - '[[2026-08-07-canonical-identifiers-adr]]'
@@ -238,7 +238,7 @@ enrollment work itself, and moves the two truncated display forms onto the
 primitive already built for them.
 
 - [ ] `W05.P07.S35` - adjudicate each of the twelve bare `revision_id` sites against its actual producer (registry `ModeloRevision.id` versus the hex-64 `CalculationRevisionId`), recording the per-site decision in the Step record before retyping any of them; `src/cadrumo/domain/calculations/registry/_snapshot_coordinate.py`.
-- [ ] `W05.P07.S36` - retype every site adjudicated in `W05.P07.S35` onto `CalculationRevisionId` or the new `RegistryRevisionId` alias per its recorded disposition; `src/cadrumo/domain/calculations/registry/`.
+- [ ] `W05.P07.S36` - retype every site adjudicated in `W05.P07.S35` onto `CalculationRevisionId` or the canonical `RevisionId` per its recorded disposition. DO NOT MINT `RegistryRevisionId`. This row previously instructed creating it and that instruction was superseded on 2026-08-11: the concept already has a canonical home as `type RevisionId` in the registry ids module, exported from the registry facade and carrying 16 users at HEAD, so minting a second alias beside it fragments a canonical type and is precisely the criticality this campaign exists to close. It would also have shipped green, because a faithfully-implemented wrong specification passes every gate and produces an honest exec record. Substitutability is measured and constrains the retype: `RevisionId` carries min_length, max_length and a pattern where a bare `str` carries none, so every retype NARROWS its site and is correct ONLY where the adjudication recorded a genuine registry revision slug; `src/cadrumo/domain/calculations/registry/`.
 - [ ] `W05.P07.S37` - retype `short_work_unit_id` and `short_calculation_revision_id` onto the existing `core.Hex16Str` primitive rather than the full-length aliases; `src/cadrumo/application/workflow/_resume.py, src/cadrumo/application/modelo/_selectors.py`.
 
 ### Phase `W05.P08` - new AEAT-issued and app-derived namespace members
