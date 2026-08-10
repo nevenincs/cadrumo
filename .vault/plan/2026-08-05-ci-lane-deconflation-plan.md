@@ -4,7 +4,7 @@ tags:
   - '#ci-lane-deconflation'
 date: '2026-08-05'
 modified: '2026-08-10'
-body_hash: 'sha256:f146deea1e1d2c7be23b4e5e6a538f6b6f690bbedc6af753d165572e45851ffa'
+body_hash: 'sha256:8924c99ac49d7c01cc19de8bbd0b3bd2ef02195de7f34570318663447bc958dc'
 tier: L2
 related:
   - '[[2026-07-21-ci-discipline-adr]]'
@@ -58,6 +58,7 @@ Enrolling the integration suite and the dev tooling gates exposed accumulated ro
 - [ ] `P02.S31` - Enrol the thirteen unreachable dev/registry/tests modules into a lane that names their path, because the lane-reachability gate reports them across all three of its assertions and no lane path scope covers them, the pathless unit recipes inheriting a testpaths that never reaches the directory while test-dev-tooling names the newmodelo and aeip siblings but not this one, and the misbelief is durable rather than an oversight because the same inert ignore for the workbook-parity module is written three times, once in addopts and once in each pathless unit recipe, by someone who believed the unit lane collected there; `justfile and pyproject.toml`.
 - [ ] `P02.S32` - Triage the reds that enrolment exposes across thirteen modules and one hundred and seventy-two test identities, recording separately what passes, what reds, and who owns each red, because a lane addition that turns the tree red for everyone without triage is worse than the hole it closes, and because the rot is already measured in one direction with campaign wave and step identifiers sitting in production test docstrings in three of these files, which is the Code Stands Alone mandate violated in the exact place nothing ever ran and accumulated because nothing ever ran there, routing any failure in the render-profile module to its in-flight author rather than absorbing it; `dev/registry/tests`.
 - [ ] `P02.S33` - Establish how long the lane-reachability gate has been red and whether anything shipped past it, because the gate lives under src/cadrumo/tests deliberately so that nine lanes reach it and it fails in twenty-eight seconds at -n0, which means this is not a guard nobody could reach but one everybody reaches and nobody actioned, and a hard gate with no allowlist that stays red becomes a gate everyone learns to route around, the same decorative-guard decay that made the integration parallel flag permanent and loud rather than quiet; `src/cadrumo/tests/test_lane_reachability.py and the commit history of its reported paths`.
+- [ ] `P02.S34` - Decide how dev tooling lane reds become visible between manual dispatches, because the agent-eval tests are enrolled by test-dev-tooling and that recipe is invoked only by the dispatch-only ci-full lane, so fourteen failures including ten from a live campaign sat red for hours with no signal and were found only by a hand run undertaken for an unrelated reason, and because this is a cadence defect rather than a reachability one so enrolment cannot close it and the lane-reachability gate correctly does not report it, and because the obvious remedy is closed off by standing operator rulings that there are no scheduled runs and no nightlies and that runners are self-hosted only under expense control with local-first as the mandate rather than a workaround, leaving two honest options, either these tests become reachable from a lane leads actually run locally, or this plan states plainly that dev tooling reds are invisible between manual dispatches and names who is accountable for noticing, and the row is the choice rather than either option; `justfile and .github/workflows/ci-full.yml`.
 
 ### Phase `P03` - Registry and core follow-through
 
@@ -150,6 +151,14 @@ errors all came from claims that were structurally sound and never observed.
   shipped past it. It does not close because S31 and S32 turned the gate green:
   a gate going green afterwards says nothing about how long it was red before,
   and that question is the whole row.
+- S34 closes on a recorded decision, and the second option closes it as honestly
+  as the first. Stating plainly that dev-tooling reds are invisible between
+  manual dispatches, with a named accountable party, is a real close - a known
+  and owned gap beats an unowned one. What does NOT close it is proposing a
+  scheduled run or a nightly: both are refused by standing operator ruling, and
+  a remedy the operator has already declined is not a decision, it is a
+  re-litigation. S34 is not a prerequisite for S31, which fixes a different
+  class in a different directory.
 
 Commit verification for every row: resolve the sha with `git log --format=%H
 --grep=<subject> -1` and read `git show <sha> --numstat`. Never verify with
