@@ -42,7 +42,7 @@ import typer
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
 from .._common import _emit_envelope, _state
-from ._censo_payloads import CensoPullDivergencePayload, CensoPullFactPayload, CensoPullResult
+from ._censo_payloads import CensoFactPayload, CensoFileIngestResult, CensoPullDivergencePayload, CensoPullResult
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -98,8 +98,6 @@ def censo_file(
     from ....application.user_profile import apply_cotejo
     from ....application.workflow import workflow_state_repository
     from ....domain.censo import censo_facts_from_certificado
-    from .._config_payloads import CensoFileFactPayload, CensoFileIngestResult
-
     certificado = parse_certificado_censal_bytes(file.read_bytes())
     facts = censo_facts_from_certificado(certificado)
 
@@ -116,7 +114,7 @@ def censo_file(
         state = repository.load()
         repository.save(apply_cotejo(state, adopted=facts, divergences=()))
 
-    rows = tuple(CensoFileFactPayload(path=fact.path, value=str(fact.value), source=fact.source) for fact in facts)
+    rows = tuple(CensoFactPayload(path=fact.path, value=str(fact.value), source=fact.source) for fact in facts)
     result = CensoFileIngestResult(applied=apply, facts=rows)
     lines = [f"applied\t{str(apply).lower()}"]
     lines.extend(f"fact\t{row.path}\t{row.value}" for row in rows)
@@ -190,7 +188,7 @@ def censo_pull(
         workflow_state_repository().save(apply_censal_read(state, read))
 
     adopted = tuple(
-        CensoPullFactPayload(path=fact.path, value=str(fact.value), source=fact.source)
+        CensoFactPayload(path=fact.path, value=str(fact.value), source=fact.source)
         for fact in reconciliation.adopted
     )
     divergences = tuple(
@@ -242,7 +240,7 @@ def _unchanged_facts(
     projected: Iterable[UserProfileFact],
     reconciliation: CensalReconciliation,
     adoptable_paths: Iterable[str],
-) -> tuple[CensoPullFactPayload, ...]:
+) -> tuple[CensoFactPayload, ...]:
     """Project the read's third outcome: paths already at the authority's value.
 
     The reconciliation emits a path the profile already holds at AEAT's value
@@ -261,7 +259,7 @@ def _unchanged_facts(
     adoptable = frozenset(adoptable_paths)
     decided = {fact.path for fact in reconciliation.adopted} | {path for path, _ in reconciliation.divergences}
     return tuple(
-        CensoPullFactPayload(path=fact.path, value=str(fact.value), source=fact.source)
+        CensoFactPayload(path=fact.path, value=str(fact.value), source=fact.source)
         for fact in projected
         if fact.path in adoptable and fact.path not in decided
     )
@@ -271,8 +269,8 @@ def _pull_lines(
     *,
     applied: bool,
     source_url: str,
-    adopted: tuple[CensoPullFactPayload, ...],
-    unchanged: tuple[CensoPullFactPayload, ...],
+    adopted: tuple[CensoFactPayload, ...],
+    unchanged: tuple[CensoFactPayload, ...],
     divergences: tuple[CensoPullDivergencePayload, ...],
 ) -> list[str]:
     """Render the pull's tab-separated text rows, one per outcome."""
@@ -332,7 +330,7 @@ def _divergence_notice(
 def _pull_notices(
     *,
     applied: bool,
-    adopted: tuple[CensoPullFactPayload, ...],
+    adopted: tuple[CensoFactPayload, ...],
     divergences: tuple[CensoPullDivergencePayload, ...],
 ) -> list[Notice]:
     """Build the pull's diagnostics: divergence warnings, tier and preview hints.
@@ -394,7 +392,7 @@ def _divergence_notices(divergences: tuple[CensoPullDivergencePayload, ...]) -> 
     return notices
 
 
-def _tier_notices(*, applied: bool, adopted: tuple[CensoPullFactPayload, ...]) -> list[Notice]:
+def _tier_notices(*, applied: bool, adopted: tuple[CensoFactPayload, ...]) -> list[Notice]:
     """State what the run actually did: enrolled at the verified tier, or previewed.
 
     Preview is intentionally actionless. Applying is a fresh write decision
