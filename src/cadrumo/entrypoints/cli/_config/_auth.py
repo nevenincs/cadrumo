@@ -11,9 +11,10 @@ import typer
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from ....core.json_contract import strict_round_trip
-from .._common import _emit_envelope
+from .._common import _emit_envelope, resolve_cli_precondition_action
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
+from ._status_rendering import precondition_action_lines
 
 auth_app = typer.Typer(name="auth", help=tr("cli.config.auth.help"), no_args_is_help=True)
 
@@ -133,7 +134,15 @@ def auth_configure(
     from .._config_payloads import AuthConfigurePayload as _AuthConfigurePayload
 
     configure_result = result
-    auth_configure_payload = _AuthConfigurePayload.from_result(configure_result)
+    precondition_action = (
+        resolve_cli_precondition_action(configure_result.precondition_verdict)
+        if configure_result.precondition_verdict is not None
+        else None
+    )
+    auth_configure_payload = _AuthConfigurePayload.from_result(
+        configure_result,
+        precondition_action=precondition_action,
+    )
     lines = [
         f"provider\t{configure_result.provider}",
         f"file\t{configure_result.file}",
@@ -151,7 +160,7 @@ def auth_configure(
         )
         if configure_result.identity_alignment_detail:
             lines.append(f"identity_alignment_detail\t{configure_result.identity_alignment_detail}")
-    lines.append(f"next_action\t{configure_result.next_action}")
+    lines.extend(precondition_action_lines(precondition_action))
     _emit_envelope(ctx, command="config.auth.configure", result=auth_configure_payload, lines=lines)
 
 

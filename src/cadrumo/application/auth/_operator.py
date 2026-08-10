@@ -44,6 +44,13 @@ from .._workflow_auth_models import (
     CertificateSourceRecord,
 )
 from ..auth_credentials import ActiveCertificateCredentials
+from ..operator_actions import (
+    ActionConditionality,
+    ConditionEvidence,
+    ConditionEvidenceProvenance,
+    NoRecoveryOutcome,
+    PreconditionVerdict,
+)
 from ._acquisition_lock import (
     AuthAcquisitionLockState,
     clear_auth_acquisition_lock,
@@ -327,7 +334,6 @@ def _auth_configure_result(
     if provider == AuthProviderKind.CLAVE_MOVIL.value and alignment != "matches":
         complete = False
         incomplete_reason = alignment_detail
-    next_action = _auth_configure_next_action(provider=provider, complete=complete, alignment=alignment)
     return AuthConfigureResult(
         provider=provider,
         file=str(certificate_path) if certificate_path is not None else "",
@@ -337,50 +343,68 @@ def _auth_configure_result(
         provider_identity_present=bool(provider_identity) if provider == AuthProviderKind.CLAVE_MOVIL.value else True,
         identity_alignment=alignment,
         identity_alignment_detail=alignment_detail,
-        next_action=next_action,
+        precondition_verdict=(
+            _incomplete_auth_configuration_verdict(
+                provider=provider,
+                certificate_path=certificate_path,
+                profile_tax_id_present=bool(profile_tax_id),
+                provider_identity_present=bool(provider_identity),
+                identity_alignment=alignment,
+            )
+            if not complete
+            else None
+        ),
     )
 
 
-def _auth_configure_next_action(*, provider: str, complete: bool, alignment: str) -> str:
-    """Route the operator to the command that follows an auth configuration.
+def _incomplete_auth_configuration_verdict(
+    *,
+    provider: str,
+    certificate_path: Path | None,
+    profile_tax_id_present: bool,
+    provider_identity_present: bool,
+    identity_alignment: str,
+) -> PreconditionVerdict:
+    """Record an incomplete configuration without inventing a recovery command.
 
-    An incomplete certificate config routes to re-supply the file. A Cl@ve
-    identity that does not align with the active profile cannot pass live
-    auth; ``auth test`` would only re-report the same mismatch, so route the
-    operator to the actual fix instead. Otherwise route to ``auth test``.
+    Choosing a certificate file or changing one of two competing identities is
+    an operator decision.  The application records the exact failed condition,
+    but cannot honestly materialise a single executable command from those
+    facts.
     """
-    if provider == AuthProviderKind.CLAVE_MOVIL.value and alignment in {
-        "mismatch",
-        "clave_identity_missing",
-        "profile_tax_id_missing",
-        "profile_tax_id_missing_and_clave_identity_missing",
-    }:
-        return _identity_alignment_next_action(alignment)
-    if not complete:
-        return f"aeat config auth configure --provider {provider} --file PATH"
-    if provider == AuthProviderKind.CLAVE_MOVIL.value:
-        return "aeat config auth test --provider clave_movil"
-    return f"aeat config auth test --provider {provider}"
-
-
-def _identity_alignment_next_action(alignment: str) -> str:
-    """Return the concrete command that resolves a Cl@ve alignment fault.
-
-    Fully localised (round-5 M6 — earlier versions dropped into English
-    mid-sentence in non-English locales). A misaligned Cl@ve identity
-    cannot authenticate; a missing Cl@ve identity routes to the
-    configuration command that supplies it; a missing or mismatched
-    profile tax id routes to the profile editor / switcher.
-    """
-    if alignment == "clave_identity_missing":
-        return tr("application.auth.operator.alignment.clave_identity_missing_next_action")
-    if alignment == "profile_tax_id_missing":
-        return tr("application.auth.operator.alignment.profile_tax_id_missing_next_action")
-    if alignment == "profile_tax_id_missing_and_clave_identity_missing":
-        return tr("application.auth.operator.alignment.both_missing_next_action")
-    # mismatch: the two identities differ; switch to the matching
-    # profile or correct whichever value is wrong.
-    return tr("application.auth.operator.alignment.mismatch_next_action")
+    if provider == AuthProviderKind.CERTIFICATE.value:
+        condition_id = "auth.certificate.file_ready"
+        evidence = ConditionEvidence(
+            condition_id=condition_id,
+            evidence_id="auth.configure.certificate.file_readiness",
+            provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+            values={
+                "certificate_file_provided": certificate_path is not None,
+                "certificate_file_resolves": False,
+                "provider": provider,
+            },
+        )
+    elif provider == AuthProviderKind.CLAVE_MOVIL.value:
+        condition_id = "auth.clave_movil.identity_aligned"
+        evidence = ConditionEvidence(
+            condition_id=condition_id,
+            evidence_id="auth.configure.clave_movil.identity_alignment",
+            provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+            values={
+                "identity_alignment": identity_alignment,
+                "profile_tax_id_present": profile_tax_id_present,
+                "provider": provider,
+                "provider_identity_present": provider_identity_present,
+            },
+        )
+    else:
+        raise RuntimeError(f"unsupported incomplete auth provider: {provider}")
+    return PreconditionVerdict(
+        failed_condition_id=condition_id,
+        evidence=(evidence,),
+        conditionality=ActionConditionality.NOT_APPLICABLE,
+        no_recovery_outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+    )
 
 
 def _identity_alignment_detail(

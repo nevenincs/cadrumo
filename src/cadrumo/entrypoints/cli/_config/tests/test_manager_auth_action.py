@@ -738,22 +738,14 @@ def test_the_certificate_is_selected_before_the_provider_is_activated(tmp_path: 
 
 
 @pytest.mark.usefixtures("active_profile")
-def test_run_certificate_surfaces_the_repair_command_when_no_file_is_configured() -> None:
-    """An incomplete certificate configuration must name the repair command, not just "done".
-
-    ``configure_operator_auth`` already computes ``complete=False``, a
-    missing-file reason, and a concrete ``next_action`` (``aeat config
-    auth configure --provider certificate --file PATH``) for this case;
-    the manager action must surface it rather than rendering the generic
-    "active certificate: -" message the direct CLI uses only for the
-    operationally-complete case.
-    """
+def test_run_certificate_surfaces_the_incomplete_reason_without_command_prose() -> None:
+    """An incomplete certificate configuration reports its local reason, not a fabricated command."""
     outcome = _certificate_answering(
         lambda _page, _rebuild=None: _answer(**{_AUTH_PROVIDER_PATH: AuthProviderKind.CERTIFICATE.value}),
     )
 
-    assert tr("application.auth.operator.errors.certificate_file_required") in outcome.message
-    assert "aeat config auth configure --provider certificate --file PATH" in outcome.message
+    assert outcome.message == tr("application.auth.operator.errors.certificate_file_required")
+    assert "aeat " not in outcome.message
     assert outcome.message != tr(
         "flows.manager.action.certificate_done",
         name="-",

@@ -24,7 +24,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CadrumoError
@@ -112,7 +112,16 @@ class AuthConfigureResult(BaseModel):
     provider_identity_present: bool = False
     identity_alignment: str = ""
     identity_alignment_detail: str = ""
-    next_action: str = ""
+    precondition_verdict: PreconditionVerdict | None = None
+
+    @model_validator(mode="after")
+    def _require_a_verdict_for_an_incomplete_configuration(self) -> AuthConfigureResult:
+        """Keep an incomplete configuration attached to its exact failed condition."""
+        if self.complete and self.precondition_verdict is not None:
+            raise ValueError("complete auth configuration cannot carry a precondition verdict")
+        if not self.complete and self.precondition_verdict is None:
+            raise ValueError("incomplete auth configuration requires a precondition verdict")
+        return self
 
 
 class AuthStatusResult(BaseModel):

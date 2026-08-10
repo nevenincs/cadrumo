@@ -847,10 +847,15 @@ class AuthConfigurePayload(OutputSchema):
     provider_identity_present: bool = False
     identity_alignment: str = ""
     identity_alignment_detail: str = ""
-    next_action: str = ""
+    precondition_action: ResolvedPreconditionAction | None = None
 
     @classmethod
-    def from_result(cls, result: AuthConfigureResult) -> AuthConfigurePayload:
+    def from_result(
+        cls,
+        result: AuthConfigureResult,
+        *,
+        precondition_action: ResolvedPreconditionAction | None,
+    ) -> AuthConfigurePayload:
         """Project the application auth result into this CLI envelope.
 
         Explicit field projection: the envelope derives its values from
@@ -863,6 +868,8 @@ class AuthConfigurePayload(OutputSchema):
             :class:`AuthConfigurePayload`
             instance.
         """
+        if (result.precondition_verdict is None) is not (precondition_action is None):
+            raise ValueError("auth configuration precondition action must match the application verdict")
         return cls(
             provider=result.provider,
             file=result.file,
@@ -872,7 +879,7 @@ class AuthConfigurePayload(OutputSchema):
             provider_identity_present=result.provider_identity_present,
             identity_alignment=result.identity_alignment,
             identity_alignment_detail=result.identity_alignment_detail,
-            next_action=result.next_action,
+            precondition_action=precondition_action,
         )
 
 
