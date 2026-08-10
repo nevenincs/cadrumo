@@ -1,0 +1,330 @@
+"""Real-filesystem proof for the persisted semantic-map fragment contract."""
+
+from __future__ import annotations
+
+import ast
+import inspect
+from pathlib import Path
+
+import pytest
+
+import dev.registry as registry_facade
+from cadrumo.domain.calculations.registry import RegistryValidationError
+from dev.registry import SEMANTIC_MAP_FRAGMENT_SCHEMA_VERSION, load_semantic_map
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+_RECORD = """
+[[records]]
+sheet = "Registro tipo 1"
+record_identity = "registro-tipo-1"
+export_record_id = "registro-tipo-1"
+record_type = "declaracion"
+"""
+
+_ENTRY = """
+[[entries]]
+export_field_id = "registro-tipo-1.declarante-nif"
+kind = "header"
+header_key = "profile_tax_id"
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2026"]
+
+[entries.anchor]
+sheet = "Registro tipo 1"
+source_row = 14
+source_cell = "A14"
+ordinal = 1
+record_identity = "registro-tipo-1"
+"""
+
+
+def _fragment(*, fragment_id: str, body: str, epoch: str = "2026") -> str:
+    return (
+        f"schema_version = {SEMANTIC_MAP_FRAGMENT_SCHEMA_VERSION}\n"
+        f'fragment_id = "{fragment_id}"\n'
+        'modelo = "303"\n'
+        f'design_epoch = "{epoch}"\n'
+        f"{body.strip()}\n"
+    )
+
+
+def _write(path: Path, text: str) -> Path:
+    path.write_text(text, encoding="utf-8")
+    return path
+
+
+def test_loads_fragments_in_filename_order_independent_of_creation_order(tmp_path: Path) -> None:
+    root = tmp_path / "semantic-map"
+    root.mkdir()
+    _write(root / "0002-fields.toml", _fragment(fragment_id="fields", body=_ENTRY))
+    _write(root / "0001-records.toml", _fragment(fragment_id="records", body=_RECORD))
+
+    semantic_map = load_semantic_map(root)
+
+    assert semantic_map.modelo == "303"
+    assert semantic_map.design_epoch == "2026"
+    assert tuple(record.export_record_id for record in semantic_map.records) == ("registro-tipo-1",)
+    assert tuple(entry.export_field_id for entry in semantic_map.entries) == (
+        "registro-tipo-1.declarante-nif",
+    )
+
+
+def test_compiled_semantics_have_canonical_order_across_fragments(tmp_path: Path) -> None:
+    root = tmp_path / "semantic-map"
+    root.mkdir()
+    zeta = (_RECORD + _ENTRY).replace("Registro tipo 1", "Zeta").replace("registro-tipo-1", "zeta")
+    alpha = (_RECORD + _ENTRY).replace("Registro tipo 1", "Alpha").replace("registro-tipo-1", "alpha")
+    _write(root / "0002-alpha.toml", _fragment(fragment_id="alpha", body=alpha))
+    _write(root / "0001-zeta.toml", _fragment(fragment_id="zeta", body=zeta))
+
+    semantic_map = load_semantic_map(root)
+
+    assert tuple(record.sheet for record in semantic_map.records) == ("Alpha", "Zeta")
+    assert tuple(entry.anchor.sheet for entry in semantic_map.entries) == ("Alpha", "Zeta")
+
+
+def test_entry_order_uses_the_canonical_cell_before_ordinal_anchor_key(tmp_path: Path) -> None:
+    root = tmp_path / "semantic-map"
+    root.mkdir()
+    later_cell_lower_ordinal = _ENTRY.replace("source_row = 14", "source_row = 20").replace(
+        'source_cell = "A14"',
+        'source_cell = "B20"',
+    )
+    earlier_cell_higher_ordinal = (
+        _ENTRY.replace("source_row = 14", "source_row = 20")
+        .replace('source_cell = "A14"', 'source_cell = "A20"')
+        .replace("ordinal = 1", "ordinal = 2")
+        .replace("declarante-nif", "declarante-name")
+    )
+    _write(
+        root / "0001-authority.toml",
+        _fragment(
+            fragment_id="authority",
+            body=_RECORD + later_cell_lower_ordinal + earlier_cell_higher_ordinal,
+        ),
+    )
+
+    semantic_map = load_semantic_map(root)
+
+    assert tuple(entry.anchor.source_cell for entry in semantic_map.entries) == ("A20", "B20")
+
+
+def test_lexical_filename_order_determines_the_first_fragment_failure(tmp_path: Path) -> None:
+    root = tmp_path / "semantic-map"
+    root.mkdir()
+    _write(root / "0002-second.toml", "not = [valid")
+    _write(root / "0001-first.toml", "also = [invalid")
+
+    with pytest.raises(RegistryValidationError, match=r"0001-first\.toml"):
+        load_semantic_map(root)
+
+
+@pytest.mark.parametrize(
+    ("second_body", "message"),
+    (
+        (_RECORD, "exact record anchors"),
+        (
+            _RECORD.replace('record_identity = "registro-tipo-1"', 'record_identity = "other"'),
+            "export record ids",
+        ),
+        (_ENTRY, "exact field anchors"),
+        (
+            _ENTRY.replace("source_row = 14", "source_row = 15").replace('source_cell = "A14"', 'source_cell = "A15"'),
+            "export field ids",
+        ),
+    ),
+)
+def test_refuses_cross_fragment_semantic_collisions(
+    tmp_path: Path,
+    second_body: str,
+    message: str,
+) -> None:
+    root = tmp_path / "semantic-map"
+    root.mkdir()
+    first_body = _RECORD if "record" in message else _ENTRY
+    other_required = _ENTRY if "record" in message else _RECORD
+    _write(root / "0001-authority.toml", _fragment(fragment_id="authority", body=first_body + other_required))
+    _write(root / "0002-collision.toml", _fragment(fragment_id="collision", body=second_body))
+
+    with pytest.raises(RegistryValidationError, match=message):
+        load_semantic_map(root)
+
+
+def test_refuses_duplicate_fragment_ids(tmp_path: Path) -> None:
+    root = tmp_path / "semantic-map"
+    root.mkdir()
+    _write(root / "0001-same.toml", _fragment(fragment_id="same", body=_RECORD))
+    _write(root / "0002-same.toml", _fragment(fragment_id="same", body=_ENTRY))
+
+    with pytest.raises(RegistryValidationError, match="duplicate fragment ids"):
+        load_semantic_map(root)
+
+
+def test_refuses_conflicting_design_identity(tmp_path: Path) -> None:
+    root = tmp_path / "semantic-map"
+    root.mkdir()
+    _write(root / "0001-records.toml", _fragment(fragment_id="records", body=_RECORD))
+    _write(root / "0002-fields.toml", _fragment(fragment_id="fields", body=_ENTRY, epoch="2025"))
+
+    with pytest.raises(RegistryValidationError, match="conflicting modelo/design identities"):
+        load_semantic_map(root)
+
+
+@pytest.mark.parametrize(
+    ("name", "text", "message"),
+    (
+        ("not-toml.txt", "not toml", "accepts only regular TOML fragments"),
+        ("invalid.toml", "not = [valid", "invalid TOML"),
+        (
+            "0001-unknown.toml",
+            _fragment(fragment_id="unknown", body=_RECORD) + "unknown_key = true\n",
+            "invalid semantic-map fragment",
+        ),
+        (
+            "0001-version.toml",
+            _fragment(fragment_id="version", body=_RECORD).replace("schema_version = 1", "schema_version = 2"),
+            "invalid semantic-map fragment",
+        ),
+        (
+            "0001-coercion.toml",
+            _fragment(fragment_id="coercion", body=_RECORD).replace("schema_version = 1", 'schema_version = "1"'),
+            "invalid semantic-map fragment",
+        ),
+        (
+            "0001-nested.toml",
+            _fragment(fragment_id="nested", body=_ENTRY) + "unknown_anchor_fact = true\n",
+            "invalid semantic-map fragment",
+        ),
+    ),
+)
+def test_refuses_noncanonical_fragment_files(
+    tmp_path: Path,
+    name: str,
+    text: str,
+    message: str,
+) -> None:
+    root = tmp_path / "semantic-map"
+    root.mkdir()
+    _write(root / name, text)
+
+    with pytest.raises(RegistryValidationError, match=message):
+        load_semantic_map(root)
+
+
+def test_refuses_empty_fragment_and_empty_directory(tmp_path: Path) -> None:
+    root = tmp_path / "semantic-map"
+    root.mkdir()
+    with pytest.raises(RegistryValidationError, match="contains no TOML fragments"):
+        load_semantic_map(root)
+
+    _write(root / "0001-empty.toml", _fragment(fragment_id="empty", body=""))
+    with pytest.raises(RegistryValidationError, match="must contain records or entries"):
+        load_semantic_map(root)
+
+
+def test_refuses_filename_fragment_id_drift(tmp_path: Path) -> None:
+    root = tmp_path / "semantic-map"
+    root.mkdir()
+    _write(root / "0001-wrong.toml", _fragment(fragment_id="records", body=_RECORD))
+
+    with pytest.raises(RegistryValidationError, match="NNNN-<fragment_id>"):
+        load_semantic_map(root)
+
+
+def test_refuses_single_file_and_link_fallback_surfaces(tmp_path: Path) -> None:
+    standalone = _write(
+        tmp_path / "0001-authority.toml",
+        _fragment(fragment_id="authority", body=_RECORD + _ENTRY),
+    )
+    with pytest.raises(RegistryValidationError, match="must be a real directory"):
+        load_semantic_map(standalone)
+
+    linked_directory = tmp_path / "linked-map"
+    linked_directory.symlink_to(tmp_path, target_is_directory=True)
+    with pytest.raises(RegistryValidationError, match="must be a real directory"):
+        load_semantic_map(linked_directory)
+
+    root = tmp_path / "semantic-map"
+    root.mkdir()
+    (root / "0001-authority.toml").symlink_to(standalone)
+    with pytest.raises(RegistryValidationError, match="accepts only regular TOML fragments"):
+        load_semantic_map(root)
+
+
+def test_public_loader_has_one_toml_parser_owner() -> None:
+    loader_module = inspect.getmodule(load_semantic_map)
+    assert loader_module is not None
+    tree = ast.parse(inspect.getsource(loader_module))
+    import_from_nodes = tuple(node for node in ast.walk(tree) if isinstance(node, ast.ImportFrom))
+    imported_modules = {node.module for node in import_from_nodes if node.module is not None} | {
+        alias.name for node in ast.walk(tree) if isinstance(node, ast.Import) for alias in node.names
+    }
+    direct_imports = {
+        (alias.name, alias.asname)
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Import)
+        for alias in node.names
+    }
+    imported_aliases = {
+        alias.asname or alias.name: f"{node.module}.{alias.name}"
+        for node in import_from_nodes
+        if node.module is not None
+        for alias in node.names
+    } | {
+        alias.asname or alias.name: alias.name
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Import)
+        for alias in node.names
+    }
+    called_targets = {
+        _resolved_call_target(node.func, imported_aliases)
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+    }
+
+    assert imported_modules == {
+        "__future__",
+        "re",
+        "collections.abc",
+        "pathlib",
+        "typing",
+        "pydantic",
+        "cadrumo.core",
+        "cadrumo.domain.calculations.registry",
+        "_semantic_map",
+    }
+    imported_names_by_module = {
+        node.module: {alias.name for alias in node.names}
+        for node in import_from_nodes
+        if node.module in {"cadrumo.core", "cadrumo.domain.calculations.registry", "_semantic_map"}
+    }
+    assert imported_names_by_module == {
+        "cadrumo.core": {"freeze_toml", "read_toml"},
+        "cadrumo.domain.calculations.registry": {"ModeloId", "RegistryValidationError"},
+        "_semantic_map": {"SemanticMap", "SemanticMapEntry", "SemanticMapRecord"},
+    }
+    assert direct_imports == {("re", None)}
+    assert not any(
+        target.endswith(("load_modelo_directory", "load_record_design_intermediate", "load_render_profile"))
+        for target in called_targets
+    )
+    assert registry_facade.__all__ == [
+        "SEMANTIC_MAP_FRAGMENT_SCHEMA_VERSION",
+        "SemanticMap",
+        "SemanticMapAnchor",
+        "SemanticMapEntry",
+        "SemanticMapFragment",
+        "SemanticMapRecord",
+        "load_semantic_map",
+    ]
+    assert registry_facade.load_semantic_map is load_semantic_map
+
+
+def _resolved_call_target(node: ast.expr, imported_aliases: dict[str, str]) -> str:
+    if isinstance(node, ast.Name):
+        return imported_aliases.get(node.id, node.id)
+    if isinstance(node, ast.Attribute):
+        return f"{_resolved_call_target(node.value, imported_aliases)}.{node.attr}"
+    return type(node).__name__
