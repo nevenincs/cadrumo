@@ -14,16 +14,14 @@ from functools import lru_cache
 from pathlib import Path
 from types import MappingProxyType
 
-from pydantic import TypeAdapter, ValidationError
+from pydantic import ValidationError
 
-from ...core import read_toml
+from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER, read_toml
 from ...core.paths import file_stat_fingerprint
 from ...core.resources import bundled_path
 from ._errors import IvaCatalogueError
 from ._schema import IvaCatalogue, IvaCategory, IvaCitation, IvaCitationGrounding, IvaRegulation
 
-_OBJECT_SEQUENCE = TypeAdapter(tuple[object, ...])
-_STRING_OBJECT_MAPPING = TypeAdapter(dict[str, object])
 
 
 def load_iva_catalogue(path: Path) -> IvaCatalogue:
@@ -51,11 +49,11 @@ def _load_iva_catalogue_cached(path: str, byte_count: int, modified_ns: int) -> 
         raise IvaCatalogueError(f"{target}: missing [[regulations]] entries")
 
     regulations: dict[IvaCategory, IvaRegulation] = {}
-    for index, raw_regulation in enumerate(_OBJECT_SEQUENCE.validate_python(raw_regulations), start=1):
+    for index, raw_regulation in enumerate(OBJECT_TUPLE_ADAPTER.validate_python(raw_regulations), start=1):
         if not isinstance(raw_regulation, Mapping):
             raise IvaCatalogueError(f"{target}: regulations[{index}] must be a table")
         try:
-            regulation = _parse_regulation(_STRING_OBJECT_MAPPING.validate_python(raw_regulation))
+            regulation = _parse_regulation(STR_KEYED_MAPPING_ADAPTER.validate_python(raw_regulation))
         except (ValidationError, ValueError) as exc:
             raise IvaCatalogueError(f"{target}: invalid regulations[{index}]: {exc}") from exc
         if regulation.category in regulations:
@@ -116,13 +114,13 @@ def resolve_catalogue(*, on: date) -> IvaCatalogue:
 def _parse_regulation(raw_regulation: object) -> IvaRegulation:
     if not isinstance(raw_regulation, dict):
         raise IvaCatalogueError("regulation entry must be a table")
-    data = _STRING_OBJECT_MAPPING.validate_python(raw_regulation)
+    data = STR_KEYED_MAPPING_ADAPTER.validate_python(raw_regulation)
     category = IvaCategory(str(data.get("category")))
     raw_citations = data.get("citations", ())
     if not isinstance(raw_citations, list | tuple):
         raise IvaCatalogueError("citations must be a list")
     raw_manual = data.get("manual_references")
-    manual_refs = _OBJECT_SEQUENCE.validate_python(raw_manual) if isinstance(raw_manual, list) else ()
+    manual_refs = OBJECT_TUPLE_ADAPTER.validate_python(raw_manual) if isinstance(raw_manual, list) else ()
     return IvaRegulation.model_validate(
         {
             "category": category,
@@ -130,7 +128,7 @@ def _parse_regulation(raw_regulation: object) -> IvaRegulation:
             "requires_supplier_iva_id": data.get("requires_supplier_iva_id"),
             "manual_references": tuple(manual_refs),
             "citations": tuple(
-                _parse_citation(raw_citation) for raw_citation in _OBJECT_SEQUENCE.validate_python(raw_citations)
+                _parse_citation(raw_citation) for raw_citation in OBJECT_TUPLE_ADAPTER.validate_python(raw_citations)
             ),
             "notes": data.get("notes", ""),
             "legal_basis_exempt": bool(data.get("legal_basis_exempt", False)),
@@ -141,7 +139,7 @@ def _parse_regulation(raw_regulation: object) -> IvaRegulation:
 def _parse_citation(raw_citation: object) -> IvaCitation:
     if not isinstance(raw_citation, dict):
         raise IvaCatalogueError("citation entry must be a table")
-    data = _STRING_OBJECT_MAPPING.validate_python(raw_citation)
+    data = STR_KEYED_MAPPING_ADAPTER.validate_python(raw_citation)
     return IvaCitation.model_validate(
         {
             "legal_reference": data.get("legal_reference"),
