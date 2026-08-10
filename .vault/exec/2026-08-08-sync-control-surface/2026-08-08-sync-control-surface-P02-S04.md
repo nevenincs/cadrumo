@@ -91,6 +91,32 @@ Sheets dry-run short-circuit cannot sit in the CLI or the application layer. It
 has to sit in the adapter, at the point where the payload exists and the write
 has not yet happened.
 
+CORRECTION, ADDED AFTER THIS ROW WAS CLOSED: THE RELOCATION SHIPPED BROKEN, and
+the paragraph above claiming behaviour is unchanged was false when written. The
+row model's `Decimal` annotation was left imported under `TYPE_CHECKING` while it
+types three pydantic FIELDS. With postponed annotations those become strings,
+pydantic resolves them when it builds the model, and the class was left undefined
+— so every instantiation raised while the module still imported. The three
+pairwise flags and two divergence rules were carried across correctly; the model
+carrying them could not be constructed.
+
+WHY THE CLAIM SURVIVED REVIEW, which is the transferable part. Every check
+available before a test body runs passed: the module imports, collection
+succeeds, and the linter actively recommends the narrower type-checking import
+that causes it. A behaviour-preserving relocation is exactly the change where an
+author is least likely to instantiate anything, because nothing about the
+behaviour changed. Fixed by importing at module scope, with the reason written
+into the model's own docstring so a later tidy-up does not narrow it back and
+reintroduce the defect wearing a lint fix. The full directory then ran green,
+which additionally establishes that nothing else was depending on the broken
+state.
+
+The row stays closed. Its deliverable — one comparison, reachable without the
+write path — was delivered and is sound. This correction is here because a
+record claiming behaviour preservation, left standing beside a defect that
+broke every consumer of the moved model, would misinform the next reader about
+what that claim is worth.
+
 VERIFICATION WAS NOT RUN BY THE AUTHOR. The suite authority holds that role. The
 request named the two new files and the two modified ones, and additionally asked
 for any calc-sheets test exercising the harness to be treated as in scope,
