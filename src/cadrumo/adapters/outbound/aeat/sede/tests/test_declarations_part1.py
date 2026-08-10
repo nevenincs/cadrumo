@@ -113,6 +113,106 @@ def test_declarations_page_shape_context_redacts_url_query_and_input_values() ->
     assert context["raw_sha256"]
 
 
+def test_declarations_page_shape_context_carries_page_text_so_the_leak_assertion_can_fire() -> None:
+    """Positive control for the two ``not in str(context)`` assertions above.
+
+    Both pass for two unrelated reasons they cannot tell apart: because
+    something redacted the value, or because the shape reader never reads that
+    part of the page at all. ``QUERY-CANARY`` sits in an ``input``'s ``value``
+    and ``ROW-CANARY`` in a ``z-listcell``; the reader carries neither, so on
+    their own those assertions are evidence about the reader's field selection,
+    not about redaction, and they would read exactly the same if page text
+    could never reach ``str(context)`` by any route.
+
+    This is what makes them evidence. The canary is placed where the reader
+    does carry text verbatim through ``bounded_text`` -- the ``title`` and the
+    ``z-listheader`` -- and the assertion is inverted: it must be PRESENT. The
+    listheader is the deliberate choice over any other carried field, because
+    it is the nearest neighbour of the ``z-listcell`` the sibling watches: the
+    two sit in the same widget, and the whole claim is that the boundary
+    between them is real. A change that stopped list text reaching the context
+    reds this test at the moment the sibling's pass would have gone vacuous,
+    rather than silently.
+
+    It pins a CHANNEL, not a permission. Column headings and the page title are
+    deliberately recorded in a shape diagnostic; row cells and input values
+    deliberately are not.
+    """
+    html = """
+    <html>
+      <head><title>TITLE-CANARY</title></head>
+      <body>
+        <div class="z-listbox">
+          <div class="z-listheader">HEADER-CANARY</div>
+          <div class="z-listitem"><div class="z-listcell">row text</div></div>
+        </div>
+      </body>
+    </html>
+    """
+
+    context = _declarations_page_shape_context(
+        html,
+        landing_url=_DECLARATIONS_LISTING_URL,
+        stage="post_buscar",
+        modelo="303",
+        ejercicio=2026,
+    )
+
+    assert "TITLE-CANARY" in str(context)
+    assert "HEADER-CANARY" in str(context)
+    assert context["list_headers"] == ("HEADER-CANARY",)
+
+
+def test_declarations_page_shape_context_field_set_is_closed() -> None:
+    """The guard for ``ROW-CANARY``, which no witness can supply.
+
+    The witness above works for ``QUERY-CANARY`` because the reader carries
+    title and header text and can therefore be shown to surface page text at
+    all. It cannot be written for ``ROW-CANARY``: nothing here carries
+    ``z-listcell`` text, so there is no channel to demonstrate, and
+    ``assert "ROW-CANARY" not in str(context)`` is a permanent statement about
+    which fields this reader selects rather than about redaction. Chasing it
+    with another witness would only restate the confusion.
+
+    The regression it is really standing guard over is someone adding a field
+    that does carry row text -- a cell projection, a first-row sample, a
+    matched-expediente echo -- and the instrument for that is a closed field
+    set, not a canary. Adding a key reds this test and forces the author to say
+    what the new field carries.
+
+    The sibling wallet reader gets this for free: ``_WalletPageShape`` is a
+    ``TypedDict``, so its shape cannot grow unnoticed. This one returns a bare
+    ``dict[str, object]`` built from an inline literal, so it can. The reader
+    with no structural guard is precisely the one whose leak assertion watches a
+    channel that does not exist.
+    """
+    context = _declarations_page_shape_context(
+        "<html><head><title>t</title></head><body></body></html>",
+        landing_url=_DECLARATIONS_LISTING_URL,
+        stage="post_buscar",
+    )
+
+    assert set(context) == {
+        "stage",
+        "modelo",
+        "ejercicio",
+        "landing_url",
+        "title",
+        "has_modelo_label",
+        "has_ejercicio_label",
+        "has_buscar_button",
+        "has_no_results_text",
+        "listbox_count",
+        "listitem_count",
+        "comboitem_count",
+        "table_count",
+        "form_count",
+        "buttons",
+        "list_headers",
+        "raw_sha256",
+    }
+
+
 def test_modelo_303_filed_observation_derives_compensation_available() -> None:
     observation = _filed_observation(
         modelo="303",
