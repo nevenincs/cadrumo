@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 
-from ....core.aggregation import BindingSourceKind
+from ....core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS, BindingSourceKind
 from ._bindings_previous_filing import is_direct_previous_filing_binding
 from ._errors import RegistryValidationError
 from ._iva_wallet_relation_targets import (
@@ -170,7 +170,7 @@ def _relation_is_prior_year_filing_carry(relation: RelationDefinition, revision:
     # prior-filed observation rather than a modeled/derived computation; the
     # year-coverage relaxation applies equally to both.
     targets_observation_slot = any(
-        binding.id == relation.target_binding and str(binding.source) in {"previous_filing", "relation_prefill"}
+        binding.id == relation.target_binding and binding.source in OBSERVATION_BACKED_BINDING_SOURCE_KINDS
         for binding in revision.bindings
     )
     if not targets_observation_slot:
