@@ -2956,9 +2956,11 @@ cli:
           app modelo work calculate --modelo %{modelo} --year %{year} --period %{period}'
           and then rerun verify/file for that same modelo/year/period. Exact ids remain
           available as an advanced escape hatch.
-        id_selector_ambiguous: The displayed work id {selector} matches more than
+        id_selector_ambiguous: 'The displayed work id {selector} matches more than
           one active work unit. Use the full 64-character work-unit id from the candidates
-          below.`n{candidates}
+          below.
+
+          {candidates}'
         include_discarded_help: Include discarded work units in the listing (excluded
           by default)
         invalid_binding_key: '--binding key is not a valid BindingId (lowercase alphanumeric

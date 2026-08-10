@@ -23,6 +23,8 @@ from textual.reactive import reactive
 from textual.timer import Timer
 from textual.widgets import Static
 
+from ....core.redaction import redact_for_cli_output
+
 StatusTone = Literal["idle", "progress", "success", "warning", "error"]
 """Closed presentation states supported by :class:`PinnedStatusBar`."""
 
@@ -80,7 +82,7 @@ class PinnedStatusBar(Vertical):
 
     def __init__(self, *, summary: str = "", id: str | None = None, classes: str | None = None) -> None:
         super().__init__(id=id, classes=classes)
-        self._summary = self._require_text(summary, field="summary")
+        self._summary = redact_for_cli_output(self._require_text(summary, field="summary"))
         self._message = ""
         self._countdown_message = ""
         self._countdown_deadline: float | None = None
@@ -109,7 +111,7 @@ class PinnedStatusBar(Vertical):
 
     def set_summary(self, summary: str) -> None:
         """Replace the durable first line without changing message state."""
-        self._summary = self._require_text(summary, field="summary")
+        self._summary = redact_for_cli_output(self._require_text(summary, field="summary"))
         self.query_one(".status-summary", Static).update(self._summary)
 
     def clear_message(self) -> None:
@@ -163,7 +165,7 @@ class PinnedStatusBar(Vertical):
         self._countdown_message = ""
 
     def _set_message(self, tone: StatusTone, message: str) -> None:
-        rendered = self._require_text(message, field="message")
+        rendered = redact_for_cli_output(self._require_text(message, field="message"))
         self._message = rendered
         self.tone = tone
         self.remove_class(*_TONE_CLASSES)

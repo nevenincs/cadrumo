@@ -169,7 +169,7 @@ def test_bare_invocation_preserves_selected_profile_with_missing_manifest() -> N
     json_result = _invoke(["--format", "json"])
 
     assert text_result.exit_code == 0, text_result.output
-    assert "Active profile: unavailable." in text_result.output
+    assert "An active profile is selected, but its display label is unavailable." in text_result.output
     assert "aeat config repair profile" in text_result.output
     assert "aeat config profile create NAME" not in text_result.output
     assert CLI_PROFILE_ID_PLACEHOLDER not in text_result.output

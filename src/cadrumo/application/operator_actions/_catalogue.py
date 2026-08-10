@@ -335,20 +335,8 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
-            action_id="operator.modelo.export",
-            target_command_key="modelo.export",
-        ),
-        ActionCatalogueEntry(
             action_id="operator.maintenance.reconcile",
             target_command_key="app.maintenance.reconcile",
-        ),
-        ActionCatalogueEntry(
-            action_id="operator.profile.export",
-            target_command_key="config.profile.export",
-        ),
-        ActionCatalogueEntry(
-            action_id="operator.profile.sandbox.prune",
-            target_command_key="config.profile.sandbox.prune",
         ),
     ),
 )

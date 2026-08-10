@@ -612,16 +612,16 @@ def active_profile_label_for_error() -> str | None:
     The error boundary is the one place that must never be disrupted by
     identity resolution: a failure resolving the active-profile label must
     not mask the original error being reported. Delegates to the CLI
-    transport's :func:`_common._active_profile_label` (the same plaintext
+    transport's :func:`_common.active_profile_label` (the same plaintext
     manifest-label read the success path uses, never the redacted UUID)
     and collapses any failure to ``None`` so the error still emits with a
     null identity anchor. The import is function-local to avoid a module
     cycle with :mod:`_common`, which imports this module.
     """
     try:
-        from ._common import _active_profile_label  # pyright: ignore[reportPrivateUsage]
+        from ._common import active_profile_label
 
-        return _active_profile_label()
+        return active_profile_label()
     except Exception:  # identity resolution must never break error emit
         _log.debug("cli error boundary: active-profile label resolution failed", exc_info=True)
         return None

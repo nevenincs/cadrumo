@@ -23,12 +23,14 @@ as ``aeat --version``.
 
 from __future__ import annotations
 
+import json
+import re
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextvars import ContextVar
 from datetime import date as _date
 from decimal import Decimal
 from enum import StrEnum
-from functools import partial
+from functools import cache, partial
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, cast
 
@@ -124,17 +126,16 @@ def case_insensitive_choice(enum_class: type[StrEnum]) -> typer_click_types.Para
 # runtime import; the ``TYPE_CHECKING`` block keeps static checkers
 # resolving them.
 if TYPE_CHECKING:
+    from ..mcp._input_schema import VerbInputSchema
     from ...adapters.persistence.profile.filing_drafts import ModeloDraftRepository
     from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ...application.auth import AuthProviderListing
-    from ...application.operator_actions import ActionReference
+    from ...application.operator_actions import ActionReference, PreconditionVerdict
     from ...application.operator_surface import OperatorSurfaceReconciliation
-    from ...core.json_contract import Notice, ResolvedActionArgument, ResolvedNoticeAction
-    from ...application.operator_actions import PreconditionVerdict
-    from ...application.workflow import WorkflowState
     from ...core import Period
-    from ...core.json_contract import Notice, ResolvedActionReference
+    from ...core.json_contract import Notice, ResolvedActionArgument, ResolvedActionReference, ResolvedNoticeAction
+    from ...application.workflow import WorkflowState
     from ...domain.deadlines import TaxpayerProfile
     from ...domain.filing import ModeloDraft
     from ...domain.invoices import InvoiceCatalogue
@@ -142,6 +143,7 @@ if TYPE_CHECKING:
     from ...domain.user_profile import UserProfileRecord
 
 __all__ = [
+    "active_profile_label",
     "emit_help_text",
     "parse_decimal_amount",
     "parse_optional_decimal_amount",
@@ -392,7 +394,7 @@ def _is_metadata_invocation(ctx: typer.Context) -> bool:
 
 
 def _format_of(ctx: typer.Context) -> OutputFormat:
-    state = ctx.ensure_object(dict)
+    state = cast(dict[str, object], ctx.ensure_object(dict))
     format_value = state.get("format", OutputFormat.TEXT)
     if isinstance(format_value, OutputFormat):
         return format_value
@@ -402,6 +404,63 @@ def _format_of(ctx: typer.Context) -> OutputFormat:
 def emit_help_text(ctx: typer.Context) -> None:
     """Emit Click/Typer help text through the shared CLI output boundary."""
     typer.echo(ctx.get_help())
+
+
+@cache
+def _live_action_input_schema(command_key: str) -> VerbInputSchema:
+    """Resolve one action target through the live Click input-schema authority."""
+    from ..mcp._input_schema import build_verb_input_schemas
+
+    return build_verb_input_schemas((command_key,))[command_key]
+
+
+def _resolve_notice_actions(notices: Sequence[Notice] | None) -> tuple[Notice, ...]:
+    """Join success-notice actions to their live CLI paths before presentation."""
+    from ...application.operator_actions import lookup_action
+    from ...core.json_contract import ResolvedActionReference
+
+    resolved: list[Notice] = []
+    for notice in notices or ():
+        action = notice.action
+        if not isinstance(action, ResolvedActionReference):
+            resolved.append(notice)
+            continue
+        declaration = lookup_action(action.action_id)
+        if declaration.target_command_key != action.target_command_key:
+            raise ValueError(
+                f"notice action target contradicts catalogue: {action.action_id} -> {action.target_command_key}",
+            )
+        schema = _live_action_input_schema(action.target_command_key)
+        parameter_names = {parameter.name for parameter in schema.parameters}
+        argument_names = set(action.arguments or {})
+        if not argument_names <= parameter_names:
+            raise ValueError(
+                f"notice action arguments do not exist on live target {action.target_command_key}: "
+                f"{tuple(sorted(argument_names - parameter_names))}",
+            )
+        resolved.append(notice.model_copy(update={"action": action.model_copy(update={"cli_path": schema.cli_path})}))
+    return tuple(resolved)
+
+
+_SAFE_ACTION_TOKEN = re.compile(r"^[A-Za-z0-9._:/=@+-]+$")
+
+
+def _action_text_lines(notices: Sequence[Notice]) -> tuple[str, ...]:
+    """Derive executable text commands from the same resolved action DTOs as JSON."""
+    from ...core.json_contract import ResolvedActionReference
+    from ...core.product_identity import PRODUCT_IDENTITY
+    from ..mcp._input_schema import cli_argv_for
+
+    lines: list[str] = []
+    for notice in notices:
+        action = notice.action
+        if not isinstance(action, ResolvedActionReference) or action.cli_path is None:
+            continue
+        schema = _live_action_input_schema(action.target_command_key)
+        argv = cli_argv_for(schema, dict(action.arguments or {}))[2:]
+        rendered = " ".join(token if _SAFE_ACTION_TOKEN.fullmatch(token) else json.dumps(token) for token in argv)
+        lines.append(f"next_action\t{PRODUCT_IDENTITY.cli_executable} {rendered}")
+    return tuple(lines)
 
 
 def _emit_envelope(
@@ -455,6 +514,7 @@ def _emit_envelope(
     """
     metadata_invocation = _is_metadata_invocation(ctx)
     output_format = _format_of(ctx)
+    resolved_notices = _resolve_notice_actions(notices)
     if output_format is OutputFormat.JSON:
         if metadata_invocation:
             # The ``--help`` / ``--version`` fast path stays off the
@@ -466,18 +526,18 @@ def _emit_envelope(
             # in test_json_schema_conformance.py.
             from ...core.json_contract import emit_json_success
 
-            emit_json_success(command, result, notices=notices or (), active_profile=None)
+            emit_json_success(command, result, notices=resolved_notices, active_profile=None)
             return
         from ...application.operator_output import emit_operator_json_success
 
-        active_profile = _active_profile_label()
-        emit_operator_json_success(command, result, notices=notices or (), active_profile=active_profile)
+        active_profile = active_profile_label()
+        emit_operator_json_success(command, result, notices=resolved_notices, active_profile=active_profile)
         return
     # Route non-JSON paths through render_command_output so unsupported
     # ``--format`` values (e.g. ``xml``) raise the shared refusal contract.
     # ``render_command_output``
     # ignores ``payload`` outside JSON mode and emits the line iterator.
-    rendered_lines = lines
+    rendered_lines = (*lines, *_action_text_lines(resolved_notices))
     if not metadata_invocation:
         from ...application.operator_output import sandbox_banner_line, sandbox_notice_for_active_bucket
 
@@ -647,7 +707,7 @@ def _current_operator_surface_reconciliation() -> OperatorSurfaceReconciliation:
     )
 
 
-def _active_profile_label() -> str | None:
+def active_profile_label() -> str | None:
     """Return the active taxpayer profile's display label, or ``None``.
 
     Resolves the active bucket id through the same core precedence chain

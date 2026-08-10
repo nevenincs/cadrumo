@@ -46,7 +46,6 @@ def test_initial_actions_are_deterministic_and_lookup_by_stable_identity() -> No
         "operator.maintenance.reconcile",
         "operator.modelo.bindings.list",
         "operator.modelo.describe",
-        "operator.modelo.export",
         "operator.modelo.verification_report.list",
         "operator.modelo.work.calculate",
         "operator.modelo.work.status",
@@ -54,12 +53,10 @@ def test_initial_actions_are_deterministic_and_lookup_by_stable_identity() -> No
         "operator.overview.status",
         "operator.profile.create",
         "operator.profile.edit",
-        "operator.profile.export",
         "operator.profile.import",
         "operator.profile.list",
         "operator.profile.login",
         "operator.profile.repair_clear_active",
-        "operator.profile.sandbox.prune",
         "operator.profile.sandbox.restore",
         "operator.profile.status",
         "operator.storage.init",
@@ -78,6 +75,7 @@ def test_initial_actions_are_deterministic_and_lookup_by_stable_identity() -> No
             source_key="work_unit_id",
         ),
     )
+    assert lookup_action("operator.profile.create") is action_by_id["operator.profile.create"]
 
     reversed_catalogue = build_action_catalogue(reversed(OPERATOR_ACTION_CATALOGUE.entries))
     assert reversed_catalogue.model_dump(mode="json") == OPERATOR_ACTION_CATALOGUE.model_dump(mode="json")

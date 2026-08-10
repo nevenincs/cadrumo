@@ -4,7 +4,7 @@ tags:
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
 modified: '2026-08-10'
-body_hash: 'sha256:abac4572e090992dd9f572f7f2a6144e77888bbc55a20c10ce8edeffb150a7d1'
+body_hash: 'sha256:181f444f85afcabcb6978fdffa8f00bf0140126874ab09b5e5083c99ad509d46'
 tier: L3
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
@@ -62,7 +62,7 @@ Join exact parser anchors to reviewed semantics and render a complete target rev
 
 Prevent partial publication and turn every generated artifact into a reproducible repository contract.
 
-- [ ] `W02.P04.S10` - Validate generated trees through the real registry loader before publication; `dev/registry/`.
+- [x] `W02.P04.S10` - Validate generated trees through the real registry loader before publication; `dev/registry/`.
 - [ ] `W02.P04.S11` - Publish complete generated trees and provenance atomically from an isolated temporary target; `dev/registry/`.
 - [ ] `W02.P04.S12` - Implement check mode that independently regenerates and rejects semantic, provenance, or byte drift; `dev/registry/`.
 

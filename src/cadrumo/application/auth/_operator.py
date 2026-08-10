@@ -27,8 +27,6 @@ See Also:
 
 from __future__ import annotations
 
-from ...application.operator_actions import next_action
-
 import hashlib
 from datetime import datetime
 from pathlib import Path

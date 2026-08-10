@@ -3207,9 +3207,11 @@ cli:
           ejecuta 'aeat app modelo work calculate --modelo %{modelo} --year %{year}
           --period %{period}' y vuelve a ejecutar verify/file para ese mismo modelo/año/periodo.
           Los ids exactos siguen disponibles como vía avanzada.
-        id_selector_ambiguous: El id de trabajo mostrado {selector} coincide con más
-          de una unidad de trabajo activa. Usa el id completo de 64 caracteres de
-          una de las candidatas siguientes.`n{candidates}
+        id_selector_ambiguous: 'El id de trabajo mostrado {selector} coincide con
+          más de una unidad de trabajo activa. Usa el id completo de 64 caracteres
+          de la unidad de trabajo entre los candidatos siguientes.
+
+          {candidates}'
         include_discarded_help: Incluir las unidades descartadas en el listado (excluidas
           por defecto)
         invalid_binding_key: 'La clave --binding no es un BindingId válido (alfanumérico
@@ -5525,7 +5527,7 @@ cli:
         0A (anual), 01-12 (meses). Combínalo con --year para elegir el año.'
       year_help: Año de declaración (p. ej. 2026).
     post_filing:
-      pending_summary: '%{count} evento(s) de la AEAT posterior(es) a la presentación
+      pending_summary: '%{count} evento(s) posteriores a la presentación de la AEAT
         requieren atención: %{kinds}.'
     prepare:
       help: 'Recorre los pasos de preparación de datos para un modelo/periodo en orden:

@@ -86,9 +86,7 @@ _PRESENTATION_KEY_TOKENS: Final[frozenset[str]] = frozenset(
 #: command from the authority's own name, and refuses legitimate prose such as
 #: "No persisted AEAT session found on disk." What this reserves for the typed
 #: action projection is command identity, which only the lowercase token carries.
-_RAW_AEAT_COMMAND_PATTERN: Final[re.Pattern[str]] = re.compile(
-    r"(?:^|[\s`'\";|&()])aeat(?=$|[\s`'\";|&()])"
-)
+_RAW_AEAT_COMMAND_PATTERN: Final[re.Pattern[str]] = re.compile(r"(?:^|[\s`'\";|&()])aeat(?=$|[\s`'\";|&()])")
 _RESERVED_ACTION_CONTEXT_KEYS: Final[frozenset[str]] = frozenset(
     {
         "action",
@@ -119,6 +117,7 @@ _STRICT_ROOT_CONFIG = ConfigDict(
 def _is_presentation_key(key: str) -> bool:
     """Return whether a fact key carries presentation or action guidance."""
     return any(token in _PRESENTATION_KEY_TOKENS for token in re.split(r"[._]", key))
+
 
 #: Envelope contract version shared by the success :class:`SchemaEnvelope`
 #: and the stderr error envelope. Both documents carry the same outer
@@ -232,10 +231,7 @@ class ActionConditionEvidence(BaseModel):
             raise ValueError("action evidence value keys must be stable fact identifiers")
         if any(_is_presentation_key(key) for key in value):
             raise ValueError("action evidence value keys cannot carry presentation or action prose")
-        if any(
-            isinstance(item, str) and _RAW_AEAT_COMMAND_PATTERN.search(item)
-            for item in value.values()
-        ):
+        if any(isinstance(item, str) and _RAW_AEAT_COMMAND_PATTERN.search(item) for item in value.values()):
             raise ValueError("action evidence values cannot carry raw aeat command prose")
         return MappingProxyType(dict(sorted(value.items())))
 
@@ -259,6 +255,32 @@ class ResolvedActionReference(BaseModel):
 
     action_id: str = Field(pattern=_NAMESPACED_ID_PATTERN, min_length=3, max_length=160)
     target_command_key: str = Field(pattern=_FIELD_KEY_PATTERN, min_length=1, max_length=160)
+    cli_path: tuple[str, ...] | None = Field(default=None, exclude_if=lambda value: value is None)
+    arguments: Mapping[str, str] | None = Field(default=None, exclude_if=lambda value: value is None)
+
+    @field_validator("cli_path")
+    @classmethod
+    def _cli_path_is_canonical(cls, value: tuple[str, ...] | None) -> tuple[str, ...] | None:
+        if value is None:
+            return None
+        if not value or any(not token or token != token.strip() or token.startswith("-") for token in value):
+            raise ValueError("resolved action CLI path requires canonical command tokens")
+        return value
+
+    @field_validator("arguments")
+    @classmethod
+    def _freeze_arguments(cls, value: Mapping[str, str] | None) -> Mapping[str, str] | None:
+        if value is None:
+            return None
+        if any(not key or key != key.strip() for key in value):
+            raise ValueError("resolved action argument names must be non-blank canonical names")
+        if any(not item or item != item.strip() for item in value.values()):
+            raise ValueError("resolved action argument values must be non-blank canonical strings")
+        return MappingProxyType(dict(sorted(value.items())))
+
+    @field_serializer("arguments")
+    def _serialize_arguments(self, value: Mapping[str, str] | None) -> dict[str, str] | None:
+        return None if value is None else dict(value)
 
 
 class ResolvedActionArgument(BaseModel):
@@ -362,6 +384,29 @@ class ResolvedPreconditionAction(BaseModel):
         if has_action == has_no_recovery:
             raise ValueError("a precondition action requires exactly one action or no_recovery_outcome")
 
+        self._reject_arguments_their_evidence_does_not_support()
+
+        missing_from_bindings = tuple(
+            item.argument_name for item in self.argument_bindings if item.status is ActionArgumentStatus.MISSING
+        )
+        if self.missing_argument_names != missing_from_bindings:
+            raise ValueError("missing_argument_names must exactly match missing action arguments")
+
+        self._reject_conditionality_the_projection_contradicts(
+            has_no_recovery=has_no_recovery,
+            missing_from_bindings=missing_from_bindings,
+        )
+        return self
+
+    def _reject_arguments_their_evidence_does_not_support(self) -> None:
+        """Refuse any condition-evidence argument the declared evidence cannot back.
+
+        The value equality is deliberately type-strict. A binding merely
+        comparing equal to its evidence fact -- ``1`` against ``True``, or a
+        string against the number it spells -- would put on the wire an argument
+        the evidence does not state, and this DTO's entire claim is that the
+        target and every argument were resolved before presentation.
+        """
         evidence_by_id = {item.evidence_id: item for item in self.evidence}
         for argument in self.argument_bindings:
             if argument.source is not ActionArgumentSource.CONDITION_EVIDENCE:
@@ -377,12 +422,19 @@ class ResolvedPreconditionAction(BaseModel):
             if type(argument.value) is not type(evidence_value) or argument.value != evidence_value:
                 raise ValueError("condition-evidence action argument value must exactly match its evidence fact")
 
-        missing_from_bindings = tuple(
-            item.argument_name for item in self.argument_bindings if item.status is ActionArgumentStatus.MISSING
-        )
-        if self.missing_argument_names != missing_from_bindings:
-            raise ValueError("missing_argument_names must exactly match missing action arguments")
+    def _reject_conditionality_the_projection_contradicts(
+        self,
+        *,
+        has_no_recovery: bool,
+        missing_from_bindings: tuple[str, ...],
+    ) -> None:
+        """Refuse a conditionality the projection's own shape rules out.
 
+        Conditionality is derivable from whether a recovery exists and whether
+        its arguments resolved. Carrying it on the wire anyway and checking it
+        here is what makes a disagreement between the two a refusal rather than
+        a silent reinterpretation by whatever reads the envelope.
+        """
         if has_no_recovery:
             if self.argument_bindings or self.missing_argument_names:
                 raise ValueError("no-recovery outcomes cannot carry action arguments")
@@ -394,7 +446,6 @@ class ResolvedPreconditionAction(BaseModel):
             raise ValueError("missing action arguments require requires_arguments conditionality")
         elif not missing_from_bindings and self.conditionality is not ActionConditionality.IMMEDIATE:
             raise ValueError("fully resolved recovery actions require immediate conditionality")
-        return self
 
 
 class ResolvedNoticeAction(BaseModel):
@@ -895,9 +946,7 @@ def validate_registered_envelope_document(document: object) -> dict[str, object]
     raw_document = cast("dict[object, object]", document)
     if not all(isinstance(key, str) for key in raw_document):
         raise OutputSchemaError("operator JSON envelope keys must be strings")
-    typed_document: dict[str, object] = {
-        key: value for key, value in raw_document.items() if isinstance(key, str)
-    }
+    typed_document: dict[str, object] = {key: value for key, value in raw_document.items() if isinstance(key, str)}
     status = typed_document.get("status")
     if status == EnvelopeStatus.ERROR.value:
         from .errors import ErrorEnvelope

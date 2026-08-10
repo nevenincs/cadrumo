@@ -64,6 +64,14 @@ _AUTH_SOPORTE_PATH = "auth.numero_soporte"
 _AUTH_FECHA_VALIDEZ_PATH = "auth.fecha_validez"
 _IDENTITY_TAX_ID_PATH = "identity.tax_id"
 
+
+def _auth_field_label(path: str) -> str:
+    """Resolve an auth path through the profile schema's label authority."""
+    from ....domain.user_profile import load_user_profile_schema
+
+    section_key, _field_key = path.split(".", 1)
+    return profile_field_label(section_key, load_user_profile_schema().field(path))
+
 _AUTH_PROFILE_PATHS = (
     _AUTH_PROVIDER_PATH,
     _AUTH_CLAVE_MOVIL_ROUTE_PATH,
@@ -88,8 +96,8 @@ It is committed on its own terms in :func:`_commit_auth_choice`.
 
 _AUTH_PAGE_PATHS = (
     _AUTH_PROVIDER_PATH,
-    _AUTH_CLAVE_MOVIL_ROUTE_PATH,
     _IDENTITY_TAX_ID_PATH,
+    _AUTH_CLAVE_MOVIL_ROUTE_PATH,
     _AUTH_DNI_NIE_PATH,
     _AUTH_SOPORTE_PATH,
     _AUTH_FECHA_VALIDEZ_PATH,
@@ -231,8 +239,8 @@ def _censal_pull_unavailable() -> str | None:
     on_record = _auth_facts_on_record()
     if not on_record.get(_AUTH_PROVIDER_PATH, "").strip():
         return tr("flows.manager.action.censal_pull_no_provider")
-    if _clave_refusal(on_record) is not None:
-        return tr("flows.manager.action.censal_pull_auth_incomplete")
+    if (refusal := _clave_refusal(on_record)) is not None:
+        return f"{tr('flows.manager.action.censal_pull_auth_incomplete')} {refusal}"
     return None
 
 
@@ -946,10 +954,11 @@ def _clave_refusal(collected: Mapping[str, str]) -> str | None:
     from ....core.config import load_settings
 
     settings = load_settings()
+    facts = clave_auth_facts_from_profile_values(collected)
     credentials = resolve_clave_credentials(
         AuthProviderKind(collected[_AUTH_PROVIDER_PATH]),
         settings=settings,
-        facts=clave_auth_facts_from_profile_values(collected),
+        facts=facts,
     )
     if credentials is None:
         # The certificate provider authenticates with an installed
@@ -958,15 +967,21 @@ def _clave_refusal(collected: Mapping[str, str]) -> str | None:
     if not credentials.dni_nie:
         return tr(
             "flows.manager.action.auth_clave_incomplete",
-            missing=tr("flows.manager.action.auth_dni_nie"),
+            missing=_auth_field_label(_AUTH_DNI_NIE_PATH),
         )
     if credentials.provider_kind is not AuthProviderKind.CLAVE_MOVIL:
         return None
-    route = ClaveMovilRoute(collected[_AUTH_CLAVE_MOVIL_ROUTE_PATH])
+    route = facts.clave_movil_route or (
+        ClaveMovilRoute.APP_REQUEST if settings.cadrumo_clave_prefer_non_qr else ClaveMovilRoute.QR
+    )
     if route is ClaveMovilRoute.QR:
         return None
     if not credentials.contraste:
-        return tr("flows.manager.action.auth_contraste_missing")
+        return tr(
+            "flows.manager.action.auth_contraste_missing",
+            nie_field=_auth_field_label(_AUTH_SOPORTE_PATH),
+            dni_field=_auth_field_label(_AUTH_FECHA_VALIDEZ_PATH),
+        )
     return None
 
 

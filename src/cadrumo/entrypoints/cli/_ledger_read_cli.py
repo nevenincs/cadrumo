@@ -55,13 +55,13 @@ from ...domain.categories import (
 from ...domain.invoices import LinkInconsistency
 from ...domain.transactions import Transaction, ledger_irpf_category_catalogue
 from ._common import (
-    _active_profile_label,
     _bad,
     _canonical_period,
     _emit_envelope,
     _optional_canonical_period,
     _state,
     _tx_repo,
+    active_profile_label,
     optional_decimal_text,
     resolve_notice_action,
 )
@@ -971,7 +971,7 @@ def _register_ledger_status_command(app: typer.Typer) -> None:
         )
         transactions = transaction_repository.load()
         lines = [
-            f"{tr('cli.ledger.labels.profile', default='Profile')}\t{_active_profile_label() or '<none>'}",
+            f"{tr('cli.ledger.labels.profile', default='Profile')}\t{active_profile_label() or '<none>'}",
             f"business_income_total\t{report.business_income_total}",
             f"business_expense_total\t{report.business_expense_total}",
             f"business_net_total\t{report.business_net_total}",

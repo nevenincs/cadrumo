@@ -85,7 +85,7 @@ def validate_generated_export_tree(
 
     modelo_id = str(context.target.modelo)
     revision_id = str(context.target.revision_id)
-    modelo_root, revision_root, export_root = _require_isolated_target_context(
+    modelo_root, _revision_root, export_root = _require_isolated_target_context(
         registry_root,
         modelo_id=modelo_id,
         revision_id=revision_id,
@@ -191,10 +191,7 @@ def _require_exact_generated_outputs(export_root: Path, output_files: tuple[str,
         raise RegistryValidationError("generated render result declares no output files")
     actual_files, actual_directories = _collect_regular_tree_members(export_root)
     expected_directories = {
-        parent.as_posix()
-        for path in expected_files
-        for parent in path.parents
-        if parent != PurePosixPath(".")
+        parent.as_posix() for path in expected_files for parent in path.parents if parent != PurePosixPath(".")
     }
     if actual_files != expected_files or actual_directories != expected_directories:
         raise RegistryValidationError(

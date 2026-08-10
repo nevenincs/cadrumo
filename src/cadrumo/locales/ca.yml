@@ -3180,9 +3180,11 @@ cli:
           --year %{year} --period %{period}' i torna a executar verify/file per al
           mateix model/any/període. Els ids exactes continuen disponibles com a via
           avançada.
-        id_selector_ambiguous: L'id de treball mostrat {selector} coincideix amb més
-          d'una unitat de treball activa. Utilitzeu l'id complet de 64 caràcters d'una
-          de les candidates següents.`n{candidates}
+        id_selector_ambiguous: 'L''id de treball mostrat {selector} coincideix amb
+          més d''una unitat de treball activa. Utilitza l''id complet de 64 caràcters
+          de la unitat de treball entre els candidats següents.
+
+          {candidates}'
         include_discarded_help: Incloure les unitats descartades en el llistat (excloses
           per defecte)
         invalid_binding_key: 'La clau --binding no és un BindingId vàlid (alfanumèric
@@ -4396,7 +4398,7 @@ cli:
           mixed: mixta
           reclaimable: alliberable
         occupancy:
-          absent: absent
+          absent: inexistent
           empty: buida
           populated: amb dades
           unresolved: sense resoldre

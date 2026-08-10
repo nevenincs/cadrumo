@@ -74,8 +74,8 @@ from ._command_suggestions import (
     register_lazy_subcommand as _register_lazy_subcommand,
 )
 from ._common import (
-    _active_profile_label,
     _emit_envelope,
+    active_profile_label,
     attach_cli_policy_refusal_projection,
     attach_cli_policy_verdict,
     cli_policy_refusal_context,
@@ -320,7 +320,7 @@ def _emit_bare_invocation_and_exit(ctx: typer.Context) -> None:
 
     active = resolve_active_bucket_id()
     landing = build_root_landing_report(
-        _active_profile_label(),
+        active_profile_label(),
         profile_selected=active is not None,
         registered_profile_count=len(list_profile_buckets()) if active is None else 0,
     )

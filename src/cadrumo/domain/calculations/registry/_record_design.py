@@ -48,7 +48,14 @@ from ._record_design_coverage import (
     derive_calculation_completeness_casillas,
     derive_diseno_coverage_casillas,
 )
-from ._record_design_schema import RecordDesignField, RecordDesignSheet
+from ._record_design_schema import (
+    RecordDesignField,
+    RecordDesignRelativeSuffixMarker,
+    RecordDesignSheet,
+    RecordDesignVariableBodyMarker,
+    RecordDesignVariableEnvelope,
+    RecordDesignVariableTotalMarker,
+)
 
 _log = get_logger(__name__)
 
@@ -308,6 +315,9 @@ def _extract_sheet_rows(
     sheet_name = sheet_name.strip()
     fields: list[RecordDesignField] = []
     total_positions: int | None = None
+    variable_body: RecordDesignVariableBodyMarker | None = None
+    closing_suffix: RecordDesignRelativeSuffixMarker | None = None
+    variable_total: RecordDesignVariableTotalMarker | None = None
     trailing_blank_rows = 0
     for row_number, row in rows:
         values = tuple(row)
@@ -318,13 +328,64 @@ def _extract_sheet_rows(
                     break
             continue
         trailing_blank_rows = 0
-        row_total = _total_positions_from_row(values)
-        if row_total is not None:
-            total_positions = row_total
+        total_label_index = _total_label_index(values)
+        if total_label_index is not None:
+            row_total = _positive_integer_after(values, total_label_index)
+            if row_total is not None:
+                total_positions = row_total
+            elif sheet_name == "DP200000" and any(
+                _optional_text(candidate) == "Variable" for candidate in values[total_label_index + 1 :]
+            ):
+                variable_total = RecordDesignVariableTotalMarker(
+                    sheet=sheet_name,
+                    row=row_number,
+                    label="total",
+                    length="Variable",
+                )
             continue
         ordinal = _int_or_none(_cell(values, header.ordinal_index))
         offset = _int_or_none(_cell(values, header.offset_index))
         length = _int_or_none(_cell(values, header.length_index))
+        raw_offset = _optional_text(_cell(values, header.offset_index))
+        raw_length = _optional_text(_cell(values, header.length_index))
+        if sheet_name == "DP200000" and ordinal is not None and offset is not None and raw_length == "Variable":
+            variable_body = RecordDesignVariableBodyMarker(
+                sheet=sheet_name,
+                row=row_number,
+                ordinal=ordinal,
+                offset=offset,
+                length="Variable",
+                type_code=_required_text(_cell(values, header.type_index), sheet_name, row_number, "type"),
+                description=_field_description_text(
+                    values,
+                    header=header,
+                    content=_optional_header_text(values, header.content_index),
+                    sheet=sheet_name,
+                    row=row_number,
+                ),
+                validation=_optional_header_text(values, header.validation_index),
+                content=_optional_header_text(values, header.content_index),
+            )
+            continue
+        if sheet_name == "DP200000" and ordinal is not None and raw_offset == "***" and length is not None:
+            closing_suffix = RecordDesignRelativeSuffixMarker(
+                sheet=sheet_name,
+                row=row_number,
+                ordinal=ordinal,
+                offset="***",
+                length=length,
+                type_code=_required_text(_cell(values, header.type_index), sheet_name, row_number, "type"),
+                description=_field_description_text(
+                    values,
+                    header=header,
+                    content=_optional_header_text(values, header.content_index),
+                    sheet=sheet_name,
+                    row=row_number,
+                ),
+                validation=_optional_header_text(values, header.validation_index),
+                content=_optional_header_text(values, header.content_index),
+            )
+            continue
         if ordinal is None or offset is None or length is None:
             continue
         type_code = _required_text(_cell(values, header.type_index), sheet_name, row_number, "type")
@@ -352,7 +413,45 @@ def _extract_sheet_rows(
                 content=content,
             ),
         )
-    return RecordDesignSheet(name=sheet_name, fields=tuple(fields), total_positions=total_positions)
+    terminal_extent = max((item.offset + item.length - 1 for item in fields), default=None)
+    if total_positions is not None and terminal_extent != total_positions:
+        raise RegistryValidationError(
+            f"record-design sheet {sheet_name!r} declares {total_positions} total positions "
+            f"but parsed fields fill {terminal_extent}",
+        )
+    markers = (variable_body, closing_suffix, variable_total)
+    variable_envelope: RecordDesignVariableEnvelope | None = None
+    if any(marker is not None for marker in markers):
+        if not all(marker is not None for marker in markers):
+            raise RegistryValidationError(
+                f"record-design sheet {sheet_name!r} has an incomplete variable-envelope composition",
+            )
+        if total_positions is not None or terminal_extent is None:
+            raise RegistryValidationError(
+                f"record-design sheet {sheet_name!r} mixes fixed-total and variable-envelope geometry",
+            )
+        assert variable_body is not None
+        assert closing_suffix is not None
+        assert variable_total is not None
+        if variable_body.offset != terminal_extent + 1:
+            raise RegistryValidationError(
+                f"record-design sheet {sheet_name!r} variable body starts at {variable_body.offset} "
+                f"after fixed prefix extent {terminal_extent}",
+            )
+        variable_envelope = RecordDesignVariableEnvelope(
+            name=sheet_name,
+            prefix_fields=tuple(fields),
+            prefix_extent=terminal_extent,
+            body=variable_body,
+            closing_suffix=closing_suffix,
+            variable_total=variable_total,
+        )
+    return RecordDesignSheet(
+        name=sheet_name,
+        fields=tuple(fields),
+        total_positions=total_positions,
+        variable_envelope=variable_envelope,
+    )
 
 
 def _is_blank_row(values: tuple[object, ...]) -> bool:
@@ -498,15 +597,18 @@ def _optional_header_index(values: tuple[object, ...], *header_names: str) -> in
     return None
 
 
-def _total_positions_from_row(values: tuple[object, ...]) -> int | None:
+def _total_label_index(values: tuple[object, ...]) -> int | None:
     for index, value in enumerate(values):
-        if _normalise_header_cell(value) != "total":
-            continue
-        for candidate in values[index + 1 :]:
-            total = _int_or_none(candidate)
-            if total is not None:
-                return total
-        return None
+        if _normalise_header_cell(value) in {"total", "total:"}:
+            return index
+    return None
+
+
+def _positive_integer_after(values: tuple[object, ...], label_index: int) -> int | None:
+    for candidate in values[label_index + 1 :]:
+        total = _int_or_none(candidate)
+        if total is not None and total > 0:
+            return total
     return None
 
 
@@ -1260,7 +1362,11 @@ __all__ = [
     "DerivedDisenoCasilla",
     "DisenoCoverageReport",
     "RecordDesignField",
+    "RecordDesignRelativeSuffixMarker",
     "RecordDesignSheet",
+    "RecordDesignVariableBodyMarker",
+    "RecordDesignVariableEnvelope",
+    "RecordDesignVariableTotalMarker",
     "build_diseno_coverage_report",
     "calculation_closure_casilla_ids",
     "calculation_closure_legal_refs",

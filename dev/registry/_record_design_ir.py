@@ -12,12 +12,13 @@ from __future__ import annotations
 from collections.abc import Mapping
 from enum import StrEnum
 from pathlib import Path
-from typing import Final
+from typing import Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from cadrumo.domain.calculations.registry import (
     RecordDesignSheet,
+    RecordDesignVariableEnvelope,
     RegistryValidationError,
     ResolvedRecordDesignBinary,
     SourceReference,
@@ -32,12 +33,13 @@ __all__ = [
     "RecordDesignIntermediateField",
     "RecordDesignIntermediateSheet",
     "RecordDesignIntermediateSource",
+    "RecordDesignIntermediateVariableEnvelope",
     "RecordDesignWorkbookFormat",
     "load_record_design_intermediate",
 ]
 
 
-RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION: Final[int] = 1
+RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION: Final[int] = 2
 """Schema version for the parser-owned intermediate representation.
 
 The provenance contract records this value beside every generated revision. A
@@ -95,11 +97,36 @@ class RecordDesignIntermediateSheet(_StrictModel):
     fields: tuple[RecordDesignIntermediateField, ...] = Field(min_length=1)
 
 
+class RecordDesignIntermediateVariableEnvelope(_StrictModel):
+    """Parser-owned composition wrapper excluded from fixed-record consumers."""
+
+    sheet: str = Field(min_length=1)
+    record_identity: str = Field(min_length=1)
+    prefix_extent: int = Field(gt=0)
+    prefix_fields: tuple[RecordDesignIntermediateField, ...] = Field(min_length=1)
+    body_source_row: int = Field(gt=0)
+    body_source_cell: str | None = Field(default=None, pattern=r"^[A-Z]+[1-9][0-9]*$")
+    body_ordinal: int = Field(gt=0)
+    body_offset: int = Field(gt=0)
+    body_length: Literal["Variable"]
+    closing_source_row: int = Field(gt=0)
+    closing_source_cell: str | None = Field(default=None, pattern=r"^[A-Z]+[1-9][0-9]*$")
+    closing_ordinal: int = Field(gt=0)
+    closing_offset: Literal["***"]
+    closing_length: int = Field(gt=0)
+    closing_content: str | None = None
+    total_source_row: int = Field(gt=0)
+    total_source_cell: str | None = Field(default=None, pattern=r"^[A-Z]+[1-9][0-9]*$")
+    total_label: Literal["total"]
+    total_length: Literal["Variable"]
+
+
 class RecordDesignIntermediate(_StrictModel):
     """Verified source metadata plus the shipped parser's complete output."""
 
     source: RecordDesignIntermediateSource
     sheets: tuple[RecordDesignIntermediateSheet, ...] = Field(min_length=1)
+    variable_envelopes: tuple[RecordDesignIntermediateVariableEnvelope, ...] = ()
 
 
 def load_record_design_intermediate(
@@ -148,8 +175,18 @@ def _build_record_design_intermediate(
     sheets = tuple(
         _intermediate_sheet(sheet, workbook_format=workbook_format)
         for sheet in parsed_sheets
+        if sheet.variable_envelope is None
     )
-    return RecordDesignIntermediate(source=source_anchor, sheets=sheets)
+    variable_envelopes = tuple(
+        _intermediate_variable_envelope(sheet.variable_envelope, workbook_format=workbook_format)
+        for sheet in parsed_sheets
+        if sheet.variable_envelope is not None
+    )
+    return RecordDesignIntermediate(
+        source=source_anchor,
+        sheets=sheets,
+        variable_envelopes=variable_envelopes,
+    )
 
 
 def _workbook_format(path: Path) -> RecordDesignWorkbookFormat:
@@ -198,3 +235,46 @@ def _source_cell(row: int, workbook_format: RecordDesignWorkbookFormat) -> str |
     }:
         return f"A{row}"
     return None
+
+
+def _intermediate_variable_envelope(
+    envelope: RecordDesignVariableEnvelope,
+    *,
+    workbook_format: RecordDesignWorkbookFormat,
+) -> RecordDesignIntermediateVariableEnvelope:
+    return RecordDesignIntermediateVariableEnvelope(
+        sheet=envelope.name,
+        record_identity=envelope.name,
+        prefix_extent=envelope.prefix_extent,
+        prefix_fields=tuple(
+            RecordDesignIntermediateField(
+                sheet=envelope.name,
+                record_identity=envelope.name,
+                source_row=field.row,
+                source_cell=_source_cell(field.row, workbook_format),
+                ordinal=field.ordinal,
+                offset=field.offset,
+                length=field.length,
+                aeat_type=field.type_code,
+                normalized_description=field.description,
+                validation=field.validation,
+                content=field.content,
+            )
+            for field in envelope.prefix_fields
+        ),
+        body_source_row=envelope.body.row,
+        body_source_cell=_source_cell(envelope.body.row, workbook_format),
+        body_ordinal=envelope.body.ordinal,
+        body_offset=envelope.body.offset,
+        body_length=envelope.body.length,
+        closing_source_row=envelope.closing_suffix.row,
+        closing_source_cell=_source_cell(envelope.closing_suffix.row, workbook_format),
+        closing_ordinal=envelope.closing_suffix.ordinal,
+        closing_offset=envelope.closing_suffix.offset,
+        closing_length=envelope.closing_suffix.length,
+        closing_content=envelope.closing_suffix.content,
+        total_source_row=envelope.variable_total.row,
+        total_source_cell=_source_cell(envelope.variable_total.row, workbook_format),
+        total_label=envelope.variable_total.label,
+        total_length=envelope.variable_total.length,
+    )

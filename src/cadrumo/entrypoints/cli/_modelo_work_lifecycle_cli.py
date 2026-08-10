@@ -41,7 +41,7 @@ from ...core.json_contract import (
 from ...domain.calculations.registry import RegistrySnapshotError
 from ...domain.contribuyente import parse_tax_region
 from ...domain.modelos import WorkUnit
-from ._common import _emit_envelope, resolve_notice_action
+from ._common import _emit_envelope, active_profile_label, resolve_notice_action
 from ._modelo_cli_support import resolve_explicit_or_active_bucket_id
 from ._modelo_payloads import (
     WorkCreateResult,
@@ -456,7 +456,10 @@ def _register_work_list_command(work_app: typer.Typer, deps: _LifecycleDeps) -> 
                 "work_units": [work_unit_payload(unit) for unit in units],
             },
         )
-        lines = work_unit_list_lines(units, bucket_id=bucket_id, include_discarded=include_discarded)
+        lines = [
+            f"active_profile\t{active_profile_label() or ''}",
+            *work_unit_list_lines(units, include_discarded=include_discarded),
+        ]
         no_single_follow_up = Notice(
             severity=NoticeSeverity.INFO,
             code="modelo.work.list.next_action",
@@ -498,8 +501,12 @@ def _register_work_status_command(work_app: typer.Typer, deps: _LifecycleDeps) -
             bucket_id=bucket_id,
         )
         result = WorkStatusResult.model_validate(work_unit_payload(unit).model_dump(mode="python"))
-        lines = ["operation\tmodelo.work.status", *work_unit_lines(unit)]
-        next_action = Notice(
+        lines = [
+            f"active_profile\t{active_profile_label() or ''}",
+            "operation\tmodelo.work.status",
+            *work_unit_lines(unit, include_bucket_id=False),
+        ]
+        next_step = Notice(
             severity=NoticeSeverity.INFO,
             code="modelo.work.status.next_action",
             message=tr(
