@@ -830,6 +830,15 @@ def compare_modelo_years(
         primary_section = sections[0] if sections else ""
         return label, primary_section
 
+    # Both sides are the application's OWN arithmetic, which is what separates
+    # this from the tree's other per-casilla comparators. A money tolerance
+    # would be wrong here rather than merely unnecessary: two of our own
+    # revisions differing by a cent differ by a cent, and absorbing that
+    # would hide a real change. Absence is zero for the same reason -- a
+    # casilla one revision never resolved contributes nothing to it.
+    # ``detect_casilla_divergences`` and ``compare_calculation_to_filed_observation``
+    # both compare against AEAT, where rounding IS an artefact, and
+    # ``casillas_a_recapture_would_change`` skips absence entirely.
     obs_by_id = {obs.casilla_id: obs for revision in (rev_a, rev_b) for obs in revision.observations}
     delta_rows: list[ModeloCompareDeltaRow] = []
     for casilla_id in sorted(set(rev_a.casilla_values) | set(rev_b.casilla_values)):

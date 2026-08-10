@@ -1278,6 +1278,15 @@ def casillas_a_recapture_would_change(
     wider extraction -- and reporting it as a divergence would fire the advisory
     on every extraction improvement.
 
+    NOT substitutable with the tree's other per-casilla comparators, and the
+    intersection rule above is why. ``detect_casilla_divergences`` and
+    ``compare_calculation_to_filed_observation`` both REPORT absence, as
+    missing-on-one-side rows, and the revision-vs-revision delta in
+    ``application/modelo/_projection.py`` treats an absent casilla as zero.
+    All three of those contracts would fire this advisory on an extraction
+    improvement, which is the one thing it must never do. The absence contract
+    is the discriminator, not the tolerance.
+
     Args:
         fresh: The newly captured observation.
         stored: The prior stamped registry observation for the same key.
