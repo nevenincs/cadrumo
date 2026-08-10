@@ -154,6 +154,7 @@ from ._errors import RegistryApplicationError, RegistryApplicationInputError
 
 _import_module("cadrumo.domain.renta")
 
+
 def _verified_required_casilla_ids(
     required_casilla_refs: tuple[object, ...],
     *,

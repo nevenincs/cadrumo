@@ -139,6 +139,7 @@ class CounterpartObservation(_CounterpartBoundaryModel):
     groi_verified: bool = False
     nif_iva_verified: bool = False
 
+
 class CounterpartRollup(_CounterpartBoundaryModel):
     """One (source_kind, counterparty_nif, operation_kind) rollup row."""
 
@@ -155,6 +156,7 @@ class CounterpartRollup(_CounterpartBoundaryModel):
     groi_ready: bool = True
     nif_iva_ready: bool = True
     declarable_readiness_satisfied: bool = True
+
 
 class CounterpartAggregation(BaseModel):
     """347 / 349 counterpart aggregation output."""

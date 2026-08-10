@@ -132,38 +132,40 @@ def _seed_m303_quarters(*, obs_repo: CalculationObservationRepository) -> None:
     carry flow uses, stamped with the non-official ``app_filing`` source_kind.
     """
     for period, cuota in _CUOTA_BY_PERIOD.items():
-        obs_repo.save(obs_repo.prepare_observation_envelope(
-            RegistryModeloObservation(
-                modelo="303",
-                filing_year=_YEAR,
-                period=period,
-                observations=registry_grounded_observations(
+        obs_repo.save(
+            obs_repo.prepare_observation_envelope(
+                RegistryModeloObservation(
                     modelo="303",
                     filing_year=_YEAR,
                     period=period,
-                    casilla_values={
-                        _M303_SIMPLIFICADO_CUOTA_DEVENGADA: cuota,
-                        M303_COMPENSATION_RESULTADO_CASILLA: Decimal("0"),
-                        # Zero-filled: this test's scope is the simplificado
-                        # relation alone, but the three régimen-general
-                        # relations are enrolled unconditionally and must
-                        # still resolve for the live calculate to report no
-                        # unresolved relation_prefill diagnostics.
-                        _M303_CUOTA_DEVENGADA_TOTAL: Decimal("0"),
-                        _M303_CUOTA_DEDUCIBLE_TOTAL: Decimal("0"),
-                        _M303_RESULTADO_REGIMEN_GENERAL: Decimal("0"),
-                    },
+                    observations=registry_grounded_observations(
+                        modelo="303",
+                        filing_year=_YEAR,
+                        period=period,
+                        casilla_values={
+                            _M303_SIMPLIFICADO_CUOTA_DEVENGADA: cuota,
+                            M303_COMPENSATION_RESULTADO_CASILLA: Decimal("0"),
+                            # Zero-filled: this test's scope is the simplificado
+                            # relation alone, but the three régimen-general
+                            # relations are enrolled unconditionally and must
+                            # still resolve for the live calculate to report no
+                            # unresolved relation_prefill diagnostics.
+                            _M303_CUOTA_DEVENGADA_TOTAL: Decimal("0"),
+                            _M303_CUOTA_DEDUCIBLE_TOTAL: Decimal("0"),
+                            _M303_RESULTADO_REGIMEN_GENERAL: Decimal("0"),
+                        },
+                    ),
                 ),
-            ),
-            source_kind=APP_FILING_SOURCE_KIND,
-            captured_at=_T0,
-            result_disposition=ResultDispositionProjection(
-                disposition=ResultDisposition.NEGATIVA,
-                provenance_kind="app_filing",
-                provenance_locator=f"test-local-filing:{_YEAR}:{period}",
-            ),
-            normalize_m303_carry=True,
-        ))
+                source_kind=APP_FILING_SOURCE_KIND,
+                captured_at=_T0,
+                result_disposition=ResultDispositionProjection(
+                    disposition=ResultDisposition.NEGATIVA,
+                    provenance_kind="app_filing",
+                    provenance_locator=f"test-local-filing:{_YEAR}:{period}",
+                ),
+                normalize_m303_carry=True,
+            )
+        )
 
 
 def _store_ready_profile(secure_objects: SecureObjectRepository) -> None:

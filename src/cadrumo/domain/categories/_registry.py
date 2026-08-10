@@ -36,7 +36,6 @@ from ._proportionality import (
 from ._spending_category import SpendingCategory
 
 
-
 def load_category_profile_file(path: Path) -> Mapping[SpendingCategory, CategoryProfile]:
     """Load one year-keyed spending-category profile TOML file.
 

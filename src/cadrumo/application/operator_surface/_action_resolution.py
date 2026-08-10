@@ -27,9 +27,7 @@ def resolve_catalogue_action(
     """Resolve one declared action against its reconciled live command target."""
     declaration = catalogue.lookup(action.action_id)
     targets = tuple(
-        leaf
-        for leaf in reconciliation.leaves
-        if leaf.live_leaf.subject_leaf_key == declaration.target_command_key
+        leaf for leaf in reconciliation.leaves if leaf.live_leaf.subject_leaf_key == declaration.target_command_key
     )
     if len(targets) != 1:
         raise ValueError(

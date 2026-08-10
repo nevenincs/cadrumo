@@ -303,27 +303,29 @@ def _persist_invoice_life(secure_objects: SecureObjectRepository) -> None:
 
 def _seed_prior_year_m100(secure_objects: SecureObjectRepository) -> None:
     """Observe the prior-year annual Renta net-income casillas M130's minoración reads."""
-    CalculationObservationRepository(objects=secure_objects).save(CalculationObservationRepository(objects=secure_objects).prepare_observation_envelope(
-        RegistryModeloObservation(
-            modelo="100",
-            filing_year=_PRIOR_YEAR,
-            period="0A",
-            observations=registry_grounded_observations(
+    CalculationObservationRepository(objects=secure_objects).save(
+        CalculationObservationRepository(objects=secure_objects).prepare_observation_envelope(
+            RegistryModeloObservation(
                 modelo="100",
                 filing_year=_PRIOR_YEAR,
                 period="0A",
-                casilla_values={
-                    _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
-                    _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
-                    _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
-                    _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
-                    _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0"),
-                },
+                observations=registry_grounded_observations(
+                    modelo="100",
+                    filing_year=_PRIOR_YEAR,
+                    period="0A",
+                    casilla_values={
+                        _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
+                        _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
+                        _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
+                        _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
+                        _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0"),
+                    },
+                ),
             ),
-        ),
-        source_kind="app_filing",
-        captured_at=_FILE_AT,
-    ))
+            source_kind="app_filing",
+            captured_at=_FILE_AT,
+        )
+    )
 
 
 def _wallet_decision(*, period: str) -> IvaCompensationReconciliationDecision:

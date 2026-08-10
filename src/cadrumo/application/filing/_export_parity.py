@@ -112,10 +112,7 @@ def _m303_nota_three_requires_bank_account(
         draft.modelo == "303"
         and headers.get(_M303_RECTIFICATIVA_HEADER) == "1"
         and prior_domiciliation_election is PriorDomiciliationElection.KEEP
-        and any(
-            value.casilla_id == _M303_CASILLA_111 and value.value is not None
-            for value in draft.values
-        )
+        and any(value.casilla_id == _M303_CASILLA_111 and value.value is not None for value in draft.values)
     )
 
 

@@ -188,27 +188,29 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 def _seed_m303_compensacion_quarters(*, obs_repo: CalculationObservationRepository) -> None:
     """Persist one M303/2025 filing observation per quarter carrying the FIFO compensacion casillas."""
     for period, casillas in _M303_COMPENSACION_BY_PERIOD.items():
-        obs_repo.save(obs_repo.prepare_observation_envelope(
-            RegistryModeloObservation(
-                modelo="303",
-                filing_year=_YEAR,
-                period=period,
-                observations=registry_grounded_observations(
+        obs_repo.save(
+            obs_repo.prepare_observation_envelope(
+                RegistryModeloObservation(
                     modelo="303",
                     filing_year=_YEAR,
                     period=period,
-                    casilla_values=casillas,
+                    observations=registry_grounded_observations(
+                        modelo="303",
+                        filing_year=_YEAR,
+                        period=period,
+                        casilla_values=casillas,
+                    ),
                 ),
-            ),
-            source_kind=APP_FILING_SOURCE_KIND,
-            captured_at=_T0,
-            result_disposition=ResultDispositionProjection(
-                disposition=ResultDisposition.COMPENSACION,
-                provenance_kind="app_filing",
-                provenance_locator=f"test-local-filing:{_YEAR}:{period}",
-            ),
-            normalize_m303_carry=True,
-        ))
+                source_kind=APP_FILING_SOURCE_KIND,
+                captured_at=_T0,
+                result_disposition=ResultDispositionProjection(
+                    disposition=ResultDisposition.COMPENSACION,
+                    provenance_kind="app_filing",
+                    provenance_locator=f"test-local-filing:{_YEAR}:{period}",
+                ),
+                normalize_m303_carry=True,
+            )
+        )
 
 
 def _calculate_m390_annual(secure_objects: SecureObjectRepository):

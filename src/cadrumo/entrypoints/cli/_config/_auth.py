@@ -203,11 +203,7 @@ def auth_status(
         result=envelope_result,
         lines=(
             _auth_status_summary_line(payload),
-            *(
-                f"{key}\t{value}"
-                for key, value in payload.items()
-                if key != "active_profile_precondition_action"
-            ),
+            *(f"{key}\t{value}" for key, value in payload.items() if key != "active_profile_precondition_action"),
             *precondition_action_lines(precondition_action),
         ),
     )
@@ -282,11 +278,7 @@ def auth_test(
         command="config.auth.test",
         result=envelope_result,
         lines=(
-            *(
-                f"{key}\t{value}"
-                for key, value in payload.items()
-                if key != "active_profile_precondition_action"
-            ),
+            *(f"{key}\t{value}" for key, value in payload.items() if key != "active_profile_precondition_action"),
             *precondition_action_lines(precondition_action),
         ),
     )

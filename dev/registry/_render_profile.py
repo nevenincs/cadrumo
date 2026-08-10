@@ -208,10 +208,7 @@ class SingletonNumericRule(_StrictModel):
     def _require_kind_specific_declaration(self) -> SingletonNumericRule:
         if self.semantic_kind in {"enumeration", "checkbox"}:
             if not self.allowed_values or any(
-                not item
-                or not item.isascii()
-                or not item.isdigit()
-                or str(int(item)) != item
+                not item or not item.isascii() or not item.isdigit() or str(int(item)) != item
                 for item in self.allowed_values
             ):
                 raise ValueError(
@@ -251,9 +248,7 @@ class SingletonNumericRule(_StrictModel):
             raise ValueError(f"{self.semantic_kind} requires positive integer digits and 0 decimal digits")
         if self.semantic_kind == "enumeration" and self.decimal_digits != 0:
             raise ValueError("enumeration requires 0 decimal digits")
-        if self.semantic_kind == "enumeration" and any(
-            len(item) > self.integer_digits for item in self.allowed_values
-        ):
+        if self.semantic_kind == "enumeration" and any(len(item) > self.integer_digits for item in self.allowed_values):
             raise ValueError("enumeration allowed_values must fit the declared integer width")
         exact_shapes = {
             "checkbox": (1, 0),
@@ -509,9 +504,7 @@ def render_profile_digest(
     width_rules: list[dict[str, object]] = [
         {
             **rule.model_dump(mode="json", exclude={"anchors"}),
-            "anchors": [
-                anchor.model_dump(mode="json") for anchor in sorted(rule.anchors, key=_anchor_key)
-            ],
+            "anchors": [anchor.model_dump(mode="json") for anchor in sorted(rule.anchors, key=_anchor_key)],
         }
         for rule in sorted(profile.width_17_rules, key=lambda item: item.aeat_type)
     ]

@@ -232,6 +232,7 @@ class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):
             joined = ", ".join(populated)
             raise TransactionValidationError(f"INTERNAL_TRANSFER rows must not carry tax or evidence fields: {joined}")
 
+
 class ManualLedgerTransactionPatch(_ManualLedgerTransactionInput):
     """Typed partial update for one bucket-scoped ledger transaction."""
 
@@ -334,6 +335,7 @@ class LedgerTransactionPayload(_LedgerCountryCodeModel):
     # rendered as ISO-8601 strings.
     created_at: str
     modified_at: str
+
 
 class LedgerTransactionReviewPayload(LedgerTransactionPayload):
     """Canonical read projection for one ledger transaction plus review status.

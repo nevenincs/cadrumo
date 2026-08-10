@@ -199,21 +199,23 @@ def _seed_prior_year_m100_zero_carry(secure_objects: SecureObjectRepository) -> 
 
     Seeded identically on both poles, so it cannot be the thing they differ on.
     """
-    CalculationObservationRepository(objects=secure_objects).save(CalculationObservationRepository(objects=secure_objects).prepare_observation_envelope(
-        RegistryModeloObservation(
-            modelo=Modelo.M100.value,
-            filing_year=_YEAR - 1,
-            period=_M100_ANNUAL_PERIOD,
-            observations=registry_grounded_observations(
+    CalculationObservationRepository(objects=secure_objects).save(
+        CalculationObservationRepository(objects=secure_objects).prepare_observation_envelope(
+            RegistryModeloObservation(
                 modelo=Modelo.M100.value,
                 filing_year=_YEAR - 1,
                 period=_M100_ANNUAL_PERIOD,
-                casilla_values={_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0")},
+                observations=registry_grounded_observations(
+                    modelo=Modelo.M100.value,
+                    filing_year=_YEAR - 1,
+                    period=_M100_ANNUAL_PERIOD,
+                    casilla_values={_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0")},
+                ),
             ),
-        ),
-        source_kind=ObservationSourceKind.APP_FILING,
-        captured_at=_T0,
-    ))
+            source_kind=ObservationSourceKind.APP_FILING,
+            captured_at=_T0,
+        )
+    )
 
 
 def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:

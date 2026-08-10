@@ -23,7 +23,6 @@ from ._errors import IvaCatalogueError
 from ._schema import IvaCatalogue, IvaCategory, IvaCitation, IvaCitationGrounding, IvaRegulation
 
 
-
 def load_iva_catalogue(path: Path) -> IvaCatalogue:
     """Load one IVA catalogue TOML file.
 

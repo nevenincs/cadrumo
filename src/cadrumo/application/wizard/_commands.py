@@ -78,7 +78,6 @@ from ._persistence import WizardPersistMode
 from ._setup_legal_validators import attach_setup_legal_validators
 
 
-
 def _translation_context(value: object) -> dict[str, object]:
     if not isinstance(value, Mapping):
         return {}
