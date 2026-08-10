@@ -178,7 +178,14 @@ def test_iva_compensation_modelo_error_round_trips_through_build_error_envelope(
     envelope = build_error_envelope(exc, trace_id=None)
     assert envelope.code == "REFUSED_IVA_COMPENSATION_MODELO"
     assert envelope.retryable is False
-    assert envelope.suggestion == "aeat app live iva-wallet history"
+    # The registry still declares the remediation, but default suggestions were
+    # retired as the ENVELOPE's remediation authority in favour of a catalogue
+    # action identity. This code has not been migrated to one, so the envelope
+    # offers no recovery step today; the string is pinned at its actual home.
+    assert ERROR_REGISTRY["REFUSED_IVA_COMPENSATION_MODELO"].default_suggestion == (
+        "aeat app live iva-wallet history"
+    )
+    assert envelope.action is None
     assert envelope.message != "IVA compensation history only accepts Modelo 303 observations"
 
 
