@@ -56,7 +56,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import BindingSourceKind, Period
+from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     BindingId,
@@ -82,6 +82,7 @@ from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository, ObservationSourceKind
 from .. import CasillaDivergenceKind, detect_casilla_divergences
 from .._pulled_filing_reconcile import pulled_filing_divergence_findings
+from .._reconcile_population import _CARRY_SOURCE_KINDS as _PRODUCTION_CARRY_SOURCE_KINDS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -125,12 +126,12 @@ _EMPTY_BUCKET_AMOUNT = Decimal("0")
 #: comparison reads its filed side from. A casilla opened by one of these would
 #: be compared against the figures that opened it, so the subject casilla must
 #: not be one.
-_CARRY_SOURCE_KINDS = frozenset(
-    {
-        BindingSourceKind.PREVIOUS_FILING,
-        BindingSourceKind.RELATION_PREFILL,
-    },
-)
+#:
+#: Imported from the production scope resolver rather than restated. A local copy
+#: would keep passing after production widened or narrowed the set, so the test
+#: would silently stop selecting the subject the production rule selects — and it
+#: would agree with itself while disagreeing with the code under test.
+_CARRY_SOURCE_KINDS = _PRODUCTION_CARRY_SOURCE_KINDS
 
 
 @pytest.fixture
