@@ -34,7 +34,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from types import MappingProxyType
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from ...application.operator_actions import next_action
 from ...core import Period as _Period
@@ -52,6 +52,7 @@ from ._calendar_models import (
 
 if TYPE_CHECKING:
     from ...adapters.outbound.aeat.sede import FiledDeclaracionObservation
+    from ..calculations import ObservationEnvelopePayload
     from ...domain.justificante import Justificante
     from ...domain.modelos import ModeloRecord
     from ..live import JustificanteCaptureSnapshot
@@ -487,7 +488,7 @@ def _is_active_aeat_filing_status(status: str | None) -> bool:
 
 
 def _filing_evidence_from_calculation_observation(
-    payload: object,
+    payload: ObservationEnvelopePayload,
     *,
     expected_tax_id: str | None,
     justificantes_by_csv: Mapping[str, tuple[Justificante, ...]],
@@ -499,18 +500,10 @@ def _filing_evidence_from_calculation_observation(
     the row to :attr:`OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED`;
     otherwise the row remains submitted-observed evidence.
     """
-    source_kind = str(getattr(payload, "source_kind", ""))
+    source_kind = payload.source_kind
     if not is_official_aeat_observation_source(source_kind):
         return None
-    source_metadata_raw = getattr(payload, "source_metadata", None)
-    source_metadata: Mapping[str, object]
-    if isinstance(source_metadata_raw, Mapping):
-        # CAST-RATIONALE-CALENDAR-EVIDENCE-SOURCE-METADATA: isinstance narrows to
-        # Mapping but cannot check its type parameters.
-        # nosemgrep: no-cast-in-domain-application
-        source_metadata = cast(Mapping[str, object], source_metadata_raw)
-    else:
-        source_metadata = {}
+    source_metadata = payload.source_metadata
     if not source_metadata:
         return None
     status = str(source_metadata.get("aeat_register_status", "")).strip()
@@ -523,20 +516,19 @@ def _filing_evidence_from_calculation_observation(
     authenticated_identity = str(source_metadata.get("authenticated_identity", "")).strip().upper()
     if expected and (not authenticated_identity or authenticated_identity != expected):
         return None
-    observation = getattr(payload, "observation", None)
-    if observation is None:
-        return None
-    _obs_year = int(observation.filing_year)
-    _obs_period = getattr(observation, "filing_period", None)
-    if isinstance(_obs_period, _Period):
+    observation = payload.observation
+    _obs_year = observation.filing_year
+    _obs_period = observation.filing_period
+    if _obs_period is not None:
         if _obs_period.filing_year != _obs_year:
             return None
     else:
-        registry_token = observation.period
-        if not isinstance(registry_token, str):
-            return None
+        # filing_period is derived at construction from filing_year and period,
+        # so it is absent only when a caller passed None explicitly. The model
+        # permits that, so the fallback stays live rather than being deleted as
+        # unreachable.
         try:
-            _obs_period = _period_from_registry_token(_obs_year, registry_token)
+            _obs_period = _period_from_registry_token(_obs_year, observation.period)
         except ValueError:
             return None
     verified_justificante = _calculation_observation_verified_justificante(
@@ -559,12 +551,12 @@ def _filing_evidence_from_calculation_observation(
         ),
         aeat_submitted_at=verified_justificante.presented_at
         if verified_justificante is not None
-        else getattr(payload, "captured_at", None),
+        else payload.captured_at,
         aeat_reference_id=aeat_expediente_id,
-        aeat_evidence_kind=source_kind,
+        aeat_evidence_kind=source_kind.value,
         verified_justificante_csv=verified_justificante.csv if verified_justificante is not None else None,
         justificante_verified=verified,
-        evidence_source=source_kind,
+        evidence_source=source_kind.value,
     )
 
 
