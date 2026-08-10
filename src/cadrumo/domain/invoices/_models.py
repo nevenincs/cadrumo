@@ -51,7 +51,7 @@ from ._enums import (
     iva_rate_slot_percentage,
 )
 from ._errors import InvoiceValidationError
-from ._ids import InvoiceId
+from ...core.identity import InvoiceId
 from ._payload_normalisation import normalise_invoice_enum_fields, normalise_invoice_string_fields
 
 if TYPE_CHECKING:

@@ -54,6 +54,6 @@ def test_not_applicable_verify_finding_localizes_binding_kv_guidance() -> None:
     assert "KULCS=ÉRTÉK" in finding.message
     assert "egyenlőségjel bal oldalán" in finding.message
     assert "source modelos the taxpayer does not file" not in finding.message
-    assert "put the binding id on the left" not in (finding.next_action or "")
+    assert "next_action" not in finding.model_dump(mode="json")
     assert set(_CROSS_PERIOD_DEPENDENCY_LEGAL_REFS) <= set(finding.legal_refs)
     assert tuple(finding.source_refs) == (_SOURCE_REF,)

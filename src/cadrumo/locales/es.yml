@@ -7510,6 +7510,8 @@ flows:
       passphrase_confirm: Confirme la nueva contraseña
       passphrase_current: Contraseña actual
       passphrase_done: Contraseña cambiada.
+      passphrase_failed: No se pudo cambiar la contraseña. Revisa el estado del almacenamiento
+        local y vuelve a intentarlo.
       passphrase_mismatch: La nueva contraseña y su confirmación no coinciden.
       passphrase_new: Nueva contraseña
       passphrase_wrong_current: Esa no es la contraseña actual.
@@ -7692,6 +7694,7 @@ flows:
         página. No se puede deshacer.
       title: ¿Reiniciar todo el proceso?
     header: '{flow} - pregunta {position} de {total}, sección {section}'
+    header_single_section: '{flow} — pregunta {position} de {total}'
     section_unavailable: Sección no disponible
 live:
   errors:

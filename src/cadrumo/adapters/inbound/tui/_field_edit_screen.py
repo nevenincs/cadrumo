@@ -165,7 +165,10 @@ class FieldEditScreen(ModalScreen[str | None]):
         override = self._choice_labels.get(value)
         if override is not None:
             return override
-        return next((choice.label for choice in self._field.choices if choice.value == value), value)
+        return next(
+            (choice.label for choice in self._field.choices if choice.value == value),
+            tr("flows.manager.choice_unavailable"),
+        )
 
     @property
     def _box_hides_a_value(self) -> bool:

@@ -124,11 +124,6 @@ def _attribution_received_omission_advisory_findings(
                     total_base=total_base,
                     casilla_id=casilla_id,
                 ),
-                next_action=tr(
-                    "application.modelo.findings.attribution_received_unfolded_next_action",
-                    casilla_id=casilla_id,
-                    total_base=total_base,
-                ),
                 legal_refs=_ATRIBUCION_LEGAL_REFS,
                 source_refs=(),
             ),
@@ -144,9 +139,6 @@ def _attribution_received_omission_advisory_findings(
                     casilla_id=casilla_id,
                     filing_year=work_unit.filing_year,
                     casilla_value=casilla_value,
-                ),
-                next_action=tr(
-                    "application.modelo.findings.attribution_received_uncaptured_next_action",
                 ),
                 legal_refs=_ATRIBUCION_LEGAL_REFS,
                 source_refs=(),

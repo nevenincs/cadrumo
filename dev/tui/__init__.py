@@ -1,6 +1,6 @@
 """Discardable evaluation harness for the full-screen TUI surfaces.
 
-Renders any of the seven surfaces headlessly, drives them with real
+Renders any registered surface headlessly, drives it with real
 keystrokes, and prints the frame as text an agent can read — alongside the
 focus cycle, the offered key affordances, the flow engine's own state, and
 the appearance defects a structural check cannot see.
@@ -18,7 +18,7 @@ discarding it is deleting ``dev/tui/``.
 Usage::
 
     uv run --no-sync python -m dev.tui surfaces
-    uv run --no-sync python -m dev.tui open setup
+    uv run --no-sync python -m dev.tui open manager
     uv run --no-sync python -m dev.tui press tab enter
     uv run --no-sync python -m dev.tui undo
 """

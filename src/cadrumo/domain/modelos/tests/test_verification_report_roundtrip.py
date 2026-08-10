@@ -109,7 +109,6 @@ def _populated_report(revision_id: str) -> VerificationReport:
             severity=ModeloVerificationFindingSeverity.BLOCKING,
             casilla_id=_IVA_DEVENGADO_CASILLA,
             message="iva.devengado is required but unresolved",
-            next_action="aeat app modelo work calculate <id> --casilla iva.devengado=...",
             legal_refs=_TEST_FINDING_LEGAL_REFS,
         ),
         ModeloVerificationFinding(
@@ -171,7 +170,6 @@ def test_verification_report_catalogue_survives_encrypted_storage(
     assert f0.kind is ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA
     assert f0.severity is ModeloVerificationFindingSeverity.BLOCKING
     assert f0.casilla_id == _IVA_DEVENGADO_CASILLA
-    assert f0.next_action is not None
     f1 = loaded_report.findings[1]
     assert f1.kind is ModeloVerificationFindingKind.UNRESOLVED_BINDING
     assert f1.severity is ModeloVerificationFindingSeverity.WARNING
@@ -283,6 +281,22 @@ def test_verification_finding_requires_legal_refs() -> None:
         )
 
     assert "legal_refs" in str(raised.value)
+
+
+def test_verification_finding_refuses_retired_free_form_recovery_text() -> None:
+    """The persisted domain finding carries facts, never operator command prose."""
+
+    with pytest.raises(ValidationError, match="next_action"):
+        ModeloVerificationFinding.model_validate(
+            {
+                "kind": ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA,
+                "severity": ModeloVerificationFindingSeverity.BLOCKING,
+                "casilla_id": _IVA_DEVENGADO_CASILLA,
+                "message": "iva.devengado is required but unresolved",
+                "next_action": "aeat app modelo work calculate",
+                "legal_refs": _TEST_FINDING_LEGAL_REFS,
+            },
+        )
 
 
 def test_verification_finding_rejects_blank_grounding_refs() -> None:

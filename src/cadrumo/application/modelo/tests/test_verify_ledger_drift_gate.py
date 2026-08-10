@@ -209,8 +209,7 @@ def test_reclassifying_then_verifying_the_stale_draft_is_refused(tmp_path: Path)
         assert any("ledger no longer matches" in finding.message for finding in blocking)
         # The refusal resolves the operator's position instead of restating it.
         drift = next(finding for finding in blocking if "ledger no longer matches" in finding.message)
-        assert drift.next_action is not None
-        assert "calculate" in drift.next_action
+        assert "next_action" not in drift.model_dump(mode="json")
         assert "ley-37-1992:art-164" in drift.legal_refs
 
         # Nothing was frozen: the draft is still a draft, with no evidence bundle.

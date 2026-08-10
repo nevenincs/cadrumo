@@ -26,7 +26,6 @@ from ...calculations import (
 from ...modelo._verification_actions import (
     _classify_verification_outcome,
     _cross_period_clean_state_findings,
-    _cross_period_clean_state_next_action,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -71,9 +70,7 @@ def test_registry_revision_divergence_produces_blocking_finding_with_grounding()
     assert finding.kind is ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN
     assert finding.severity is ModeloVerificationFindingSeverity.BLOCKING
     assert "registry_revision_divergence" in finding.message
-    assert finding.next_action is not None
-    assert "re-stamped under the current revision" in finding.next_action
-    assert "aeat app live filed pull-sources --modelo 303 --year 2025 --period 1T" in finding.next_action
+    assert "next_action" not in finding.model_dump(mode="json")
     assert "ley-58-2003:art-119" in finding.legal_refs
     assert finding.source_refs == _M303_REQUIREMENT_SOURCE_REFS
 
@@ -97,17 +94,3 @@ def test_clean_current_dependency_produces_no_findings() -> None:
     )
 
     assert _cross_period_clean_state_findings(_verdict(evidence)) == ()
-
-
-def test_registry_revision_divergence_next_action_names_re_file_remediation() -> None:
-    evidence = CrossPeriodDependencyEvidence(
-        requirement=_requirement(),
-        blockers=(CrossPeriodCleanStateBlocker.REGISTRY_REVISION_DIVERGENCE,),
-    )
-
-    next_action = _cross_period_clean_state_next_action(_verdict(evidence), evidence)
-
-    assert "does not re-confirm" in next_action
-    assert "re-stamped under the current revision" in next_action
-    assert "aeat app live filed pull-sources --modelo 303 --year 2025 --period 1T" in next_action
-    assert "Import or capture the upstream justificante/CSV/live evidence" not in next_action

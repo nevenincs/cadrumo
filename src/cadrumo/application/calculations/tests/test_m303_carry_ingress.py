@@ -592,3 +592,31 @@ def test_identical_negative_casillas_produce_distinct_compensation_and_refund_hi
     assert carried_state.available_end_amount == _POSTERIOR + _CREDIT
     assert refunded_state.generated_amount == Decimal("0")
     assert refunded_state.available_end_amount == _POSTERIOR
+
+
+def test_official_m303_with_a_declaration_header_persists_without_a_projection(tmp_path: Path) -> None:
+    """The control that would have caught the over-scoped predicate.
+
+    Official Modelo 303 carry evidence carrying a declaration-type header but
+    no projected ``result_disposition`` is NOT under-declared: for official
+    evidence the header is what establishes the declaration type, and it is a
+    persisted field on the envelope, so a later reader can still establish it.
+
+    Keying the screen on the projection instead of on the evidence refused
+    this whole population -- callers that had supplied the establishing fact
+    and simply had not projected it. The screen now delegates the header
+    question, so this write lands and the row reloads equal.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repository = CalculationObservationRepository()
+
+        stored = repository.save_observation(
+            _observation(filing_year=2025, result=-_CREDIT, generated=_CREDIT),
+            source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
+            captured_at=_WHEN,
+            source_headers=(_header("C"),),
+        )
+
+        assert stored.result_disposition is None, "the fixture must carry the header WITHOUT a projection"
+        assert stored.source_headers == (_header("C"),), "the establishing header must survive persistence"
+        assert repository.load_observation("303", Period.from_year_and_code(2025, "1T")) == stored

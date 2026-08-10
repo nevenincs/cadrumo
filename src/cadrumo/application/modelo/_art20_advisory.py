@@ -88,7 +88,6 @@ def _art20_reduccion_advisory_finding(
                 rnt_value=str(rnt_value),
                 reduccion_id=reduccion_id,
             ),
-            next_action=tr("application.modelo.findings.art20_reduccion_next_action"),
             legal_refs=("ley-35-2006:art-20",),
         )
     return None

@@ -217,6 +217,15 @@ def source_diagnostic_notice(diagnostic: CalculationSourceDiagnostic, *, code: s
         "relation_id": diagnostic.relation_id,
         "casilla_id": diagnostic.casilla_id,
         "source_ref": diagnostic.source_ref,
+        # Grounding, rendered as the joined registry identifiers rather than
+        # dropped. An advisory about a regulated figure carries the provisions
+        # that establish it, and this projection is the only surface an operator
+        # reads it from -- refs left on the model and not projected here would be
+        # grounding that reaches nobody. Empty tuples join to "" and are filtered
+        # out below, so an ungrounded advisory omits the keys rather than
+        # claiming a blank provision.
+        "legal_refs": ", ".join(diagnostic.legal_refs),
+        "source_refs": ", ".join(diagnostic.source_refs),
         # Non-command remediation stays distinct from the diagnosis so machine
         # consumers need not recover it from prose. Executable command identity
         # remains reserved for Notice.action by the Notice validator.

@@ -62,10 +62,23 @@ def require_official_m303_carry_disposition(envelope: ObservationEnvelopePayload
     official AEAT evidence, and it declares at least one casilla a later
     reader would treat as carry evidence.
 
-    This requires a disposition that something upstream already resolved. It
-    does not resolve one: the determination belongs to the declaration-type
+    What it requires is EVIDENCE the disposition is establishable, not that a
+    projection has already been built. For official evidence the declaration
+    type is established by the submitted-file header, so a payload carrying
+    that header is not under-declared merely because no caller has projected it
+    yet -- and the header is a persisted field on this envelope, so a later
+    reader can still establish it. Keying on the projection instead refused a
+    whole population whose disposition was fully evidenced.
+
+    The header question is delegated to :func:`_header_projection` rather than
+    re-read here. One function answers what a declaration-type header
+    establishes, including which headers are ambiguous or carry a code the
+    diseño does not admit; a second reading of the same bytes is how two
+    answers to one question drift apart.
+
+    Nothing is resolved here either way. The determination belongs to the
     header for official evidence and to the filing boundary for local
-    evidence, and answering it a second time here would let the two disagree.
+    evidence, and answering it a second time would let the two disagree.
     """
     if str(envelope.observation.modelo) != Modelo.M303.value:
         return
@@ -75,6 +88,11 @@ def require_official_m303_carry_disposition(envelope: ObservationEnvelopePayload
         return
     declared = frozenset(envelope.observation.casilla_values)
     if declared.isdisjoint(M303_CARRY_CASILLAS):
+        return
+    # Last, so it runs only on payloads already inside the population. A
+    # malformed header on an out-of-scope payload keeps returning early rather
+    # than acquiring a refusal this screen never gave it.
+    if _header_projection(envelope) is not None:
         return
     raise M303CarryIngressError(
         "official Modelo 303 carry evidence cannot be persisted without a resolved result disposition",

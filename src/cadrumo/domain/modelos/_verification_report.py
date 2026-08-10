@@ -6,7 +6,8 @@ calculation :class:`CalculationRevision` meets the
 ``verificado_completo`` contract,
 which blocking findings prevent that transition, which inputs are
 missing, which :class:`CasillaId` identifiers are unresolved, which
-waivers were accepted, and what the operator should do next.
+waivers were accepted, and the factual reason the verification outcome was
+granted or refused.
 
 The report is bucket-scoped and content-addressed by the
 verification outcome (parent calculation revision, completeness
@@ -131,7 +132,6 @@ class ModeloVerificationFinding(BaseModel):
     casilla_id: CasillaId | None = None
     expectation_id: VerificationExpectationId | None = None
     message: _FindingMessage
-    next_action: _FindingMessage | None = None
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
     source_refs: tuple[SourceRefId, ...] = ()
 

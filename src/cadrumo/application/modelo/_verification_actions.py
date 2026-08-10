@@ -46,7 +46,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
@@ -152,7 +152,6 @@ from ._revision_persistence import emit_modelo_bucket_event as _emit_bucket_even
 from ._verification_cross_period import (
     CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS,
     CROSS_PERIOD_DEPENDENCY_LEGAL_REFS,
-    cross_period_clean_state_next_action,
 )
 from ._verification_cross_period import (
     IVA_COMPENSATION_CARRY_LEGAL_REF as _IVA_COMPENSATION_CARRY_LEGAL_REF,
@@ -178,6 +177,7 @@ from ._verification_cross_period import (
 from ._verification_cross_period import (
     zero_value_previous_filing_binding_ids as _zero_value_previous_filing_binding_ids,
 )
+from ._verification_preconditions import ModeloVerificationResult, project_verification_findings
 from ._workflow_gate import build_revision_workflow_engine as _build_revision_workflow_engine
 from ._workflow_gate import run_revision_workflow_gate as _run_revision_workflow_gate
 
@@ -216,7 +216,6 @@ from ._verification_predicates import (
 # Retain pinned verification-actions test imports while consuming public helper contracts.
 _CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS = CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS
 _CROSS_PERIOD_DEPENDENCY_LEGAL_REFS = CROSS_PERIOD_DEPENDENCY_LEGAL_REFS
-_cross_period_clean_state_next_action = cross_period_clean_state_next_action
 _PREDICATE_IMPLIES_ANY_NONZERO = PREDICATE_IMPLIES_ANY_NONZERO
 _evaluate_advisory_predicate_fires = evaluate_advisory_predicate_fires
 _evaluate_applicability_filter = evaluate_applicability_filter
@@ -336,7 +335,7 @@ def _cuota_less_without_base_findings(
     verify grants and freezes a gap-carrying bundle, and the later export and
     filing refusals then arrive after the operator has been told the draft is
     fine. A non-granting verify leaves the revision BORRADOR, so the base can be
-    entered and the draft re-verified, which is what ``next_action`` says.
+    entered and the draft re-verified through the normal calculation lifecycle.
 
     Scoped to rows the revision actually consumed: a cuota-less row outside
     ``source_transaction_ids`` reached no casilla and is not this gate's business.
@@ -365,11 +364,6 @@ def _cuota_less_without_base_findings(
                     f"Ledger row {transaction_id} declares IVA category {category.value!r}, which carries no "
                     "cuota by law, and no taxable base. The row therefore contributes nothing to this return "
                     "while representing a declared operation, understating the base casilla."
-                ),
-                next_action=(
-                    f"Set the base with `aeat app ledger classify {transaction_id} --taxable-base AMOUNT`, "
-                    "then recalculate and rerun verification. If the row is not a declarable operation, "
-                    "reclassify its IVA category instead."
                 ),
                 legal_refs=_CUOTA_LESS_WITHOUT_BASE_LEGAL_REFS,
                 source_refs=registry_source_refs,
@@ -421,75 +415,22 @@ def _missing_evidence_findings(
     registry_source_refs = _optional_observation_refs(target.observations, "source_refs")
     for diagnostic in diagnostics:
         is_deductible_gap = diagnostic.source_kind == MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND
+        if is_deductible_gap:
+            findings.append(
+                ModeloVerificationFinding(
+                    kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+                    severity=ModeloVerificationFindingSeverity.BLOCKING,
+                    message=diagnostic.message,
+                    legal_refs=_MISSING_EVIDENCE_LEGAL_REFS,
+                    source_refs=registry_source_refs,
+                ),
+            )
+            continue
         findings.append(
             ModeloVerificationFinding(
-                # The deductible side BLOCKS here; the output-IVA side stays advisory.
-                # One condition was previously classified two ways at two lifecycle
-                # points: advisory at verify, which grants and freezes a gap-carrying
-                # bundle, then a hard refusal at export and at local filing. Blocking
-                # at verify is what makes those later refusals unreachable rather than
-                # merely later -- a non-granting verify captures no bundle and leaves
-                # the revision BORRADOR, so the operator can attach the invoice and
-                # re-verify, which is exactly what next_action tells them to do.
-                # LIVA art. 97 makes the factura constitutive of the right to deduct,
-                # so the evidence-free escape hatch the governing evidence-enforcement
-                # decision required before promoting a category is closed on this side.
-                # It is NOT closed for output IVA: no CLI path mints issued-invoice
-                # evidence, so promoting that side would over-block a taxpayer who has
-                # no way to satisfy it.
-                kind=(
-                    ModeloVerificationFindingKind.BLOCKING_RULE
-                    if is_deductible_gap
-                    else ModeloVerificationFindingKind.ADVISORY
-                ),
-                severity=(
-                    ModeloVerificationFindingSeverity.BLOCKING
-                    if is_deductible_gap
-                    else ModeloVerificationFindingSeverity.WARNING
-                ),
+                kind=ModeloVerificationFindingKind.ADVISORY,
+                severity=ModeloVerificationFindingSeverity.WARNING,
                 message=diagnostic.message,
-                next_action=(
-                    # Two routes out, and they do NOT share a next step. Attaching
-                    # the invoice is value-neutral, so re-verifying the same draft
-                    # is correct. Reclassifying the row changes what the casillas
-                    # should say, so the draft is stale and verify will refuse it
-                    # until a recalculate produces a revision that matches the
-                    # ledger. Naming only "rerun verification" sent the operator
-                    # who took the second route straight into that refusal.
-                    #
-                    # `evidence confirm` is named first and `evidence add` +
-                    # `attach --purchase-invoice-evidence-id` second, not the
-                    # reverse. Only `confirm` mints a real reconciliation-catalogue
-                    # `Invoice`, which passes RD 1619/2012 art. 6 content
-                    # validation before it can satisfy this gate; a bare
-                    # `PurchaseInvoiceEvidence` record from `attach` has every
-                    # content field optional and is not checked against art. 6 at
-                    # all. Leading with the unvalidated path taught the operator
-                    # to take it, which is what left this gate's own satisfying
-                    # condition weaker than the statute it cites.
-                    # This branch's total length is bound by the 500-char
-                    # `_FindingMessage` elision cap (domain/modelos/_verification_report.py),
-                    # and this text sits within a few characters of it -- a
-                    # binding_id is a fixed-length sha256 hex digest, so the
-                    # budget does not vary between rows, but adding prose here
-                    # needs a fresh length check, not an assumption of headroom.
-                    f"Register the invoice with `aeat app ledger evidence add PATH`, confirm it with `aeat app "
-                    "ledger evidence confirm --kind received --evidence-id ID --counterparty-name NAME`, bind it "
-                    f"with `aeat app ledger link {diagnostic.binding_id} --invoice-id ID`, then rerun "
-                    f"verification. `aeat app ledger attach {diagnostic.binding_id} "
-                    "--purchase-invoice-evidence-id ID` also satisfies this gate but skips art. 6 content "
-                    "validation -- prefer confirm."
-                    if is_deductible_gap
-                    else (
-                        f"Advisory only: keep issued/sales invoice support for ledger row {diagnostic.binding_id}. "
-                        "There is currently no dedicated public CLI path that mints issued-invoice evidence like "
-                        "`aeat app ledger evidence add` does for purchase invoices. If you already have a secure "
-                        "attachment id, link it with "
-                        f"`aeat app ledger attach {diagnostic.binding_id} "
-                        "--attachment-id ATTACHMENT_ID`, then rerun "
-                        "verification."
-                    )
-                ),
                 legal_refs=_MISSING_EVIDENCE_LEGAL_REFS,
                 source_refs=registry_source_refs,
             ),
@@ -509,12 +450,14 @@ def _collect_verification_gate_findings(
     transaction_repository: TransactionCatalogueRepository | None,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None,
     cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet],
-) -> tuple[list[ModeloVerificationFinding], list[CasillaId], list[CasillaId]]:
+) -> tuple[list[ModeloVerificationFinding], list[CasillaId], list[CasillaId], frozenset[int]]:
+    registry_snapshot_finding_ids: set[int] = set()
     findings, resolved_casilla_ids, missing_required_casilla_ids = _collect_revision_verification_findings(
         work_unit=work_unit,
         target=target,
         profile=workflow_profile,
         transaction_repository=transaction_repository,
+        registry_snapshot_finding_observer=lambda finding: registry_snapshot_finding_ids.add(id(finding)),
     )
     incomplete_modality_finding = _modelo_202_incomplete_modality_finding(
         work_unit=work_unit,
@@ -582,7 +525,7 @@ def _collect_verification_gate_findings(
             source_refs=_optional_observation_refs(target.observations, "source_refs"),
         ),
     )
-    return findings, resolved_casilla_ids, missing_required_casilla_ids
+    return findings, resolved_casilla_ids, missing_required_casilla_ids, frozenset(registry_snapshot_finding_ids)
 
 
 def _existing_granting_verification_report(
@@ -712,7 +655,7 @@ def _resolve_verification_repositories(
     )
 
 
-def verify_modelo_revision(
+def verify_modelo_revision_with_preconditions(
     calculation_revision_id: str,
     *,
     actor: str,
@@ -731,7 +674,7 @@ def verify_modelo_revision(
     workflow_runs_dir: Path | None = None,
     settings: Settings | None = None,
     clock: datetime | None = None,
-) -> VerificationReport:
+) -> ModeloVerificationResult:
     """Evaluate a draft revision against registry, clean-state, provenance, and workflow gates.
 
     The verifier loads the draft
@@ -780,7 +723,8 @@ def verify_modelo_revision(
         clock: Optional timestamp override for deterministic verification.
 
     Returns:
-        The persisted :class:`VerificationReport`.
+        The application result containing the persisted
+        :class:`VerificationReport` and its ordered typed preconditions.
 
     Raises:
         :class:`~cadrumo.application.modelo.CalculationRevisionNotFoundError`: The
@@ -825,7 +769,13 @@ def verify_modelo_revision(
         # one. Mirrors the re-file no-op in file_modelo_revision.
         existing = _existing_granting_verification_report(vr_repo.load(), calculation_revision_id)
         if existing is not None:
-            return existing
+            return ModeloVerificationResult(
+                report=existing,
+                finding_preconditions=project_verification_findings(
+                    existing.findings,
+                    calculation_revision_id=calculation_revision_id,
+                ),
+            )
         raise CalculationRevisionStateError(
             f"calculation revision {calculation_revision_id!r} is in state "
             f"{target.state.value!r}; only DRAFT revisions can be verified",
@@ -848,17 +798,19 @@ def verify_modelo_revision(
         action="verify",
     )
 
-    findings, resolved_casilla_ids, missing_required_casilla_ids = _collect_verification_gate_findings(
-        work_unit=work_unit,
-        target=target,
-        workflow_profile=workflow_profile,
-        observation_repository=repos.observation,
-        filing_repository=repos.filing,
-        calculation_repository=cr_repo,
-        verification_repository=vr_repo,
-        transaction_repository=transaction_repository,
-        iva_compensation_decision_repository=iva_compensation_decision_repository,
-        cross_period_expected_member_sets=cross_period_expected_member_sets,
+    findings, resolved_casilla_ids, missing_required_casilla_ids, registry_snapshot_finding_ids = (
+        _collect_verification_gate_findings(
+            work_unit=work_unit,
+            target=target,
+            workflow_profile=workflow_profile,
+            observation_repository=repos.observation,
+            filing_repository=repos.filing,
+            calculation_repository=cr_repo,
+            verification_repository=vr_repo,
+            transaction_repository=transaction_repository,
+            iva_compensation_decision_repository=iva_compensation_decision_repository,
+            cross_period_expected_member_sets=cross_period_expected_member_sets,
+        )
     )
     _append_model_specific_findings(
         findings,
@@ -940,7 +892,56 @@ def verify_modelo_revision(
         occurred_at=now,
     )
 
-    return report
+    return ModeloVerificationResult(
+        report=report,
+        finding_preconditions=project_verification_findings(
+            findings,
+            calculation_revision_id=calculation_revision_id,
+            registry_snapshot_finding_ids=registry_snapshot_finding_ids,
+        ),
+    )
+
+
+def verify_modelo_revision(
+    calculation_revision_id: str,
+    *,
+    actor: str,
+    workflow_profile: TaxpayerProfile,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
+    transaction_repository: TransactionCatalogueRepository | None = None,
+    verification_repository: VerificationReportCatalogueRepositoryProtocol | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
+    calculation_observation_repository: CalculationObservationRepository | None = None,
+    participation_index_repository: TransactionParticipationIndexRepository | None = None,
+    cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
+    workflow_engine: WorkflowEngine | None = None,
+    workflow_runs_dir: Path | None = None,
+    settings: Settings | None = None,
+    clock: datetime | None = None,
+) -> VerificationReport:
+    """Persist and return the domain verification report without transport recovery data."""
+    return verify_modelo_revision_with_preconditions(
+        calculation_revision_id,
+        actor=actor,
+        workflow_profile=workflow_profile,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+        filing_repository=filing_repository,
+        transaction_repository=transaction_repository,
+        verification_repository=verification_repository,
+        bucket_event_repository=bucket_event_repository,
+        iva_compensation_decision_repository=iva_compensation_decision_repository,
+        calculation_observation_repository=calculation_observation_repository,
+        participation_index_repository=participation_index_repository,
+        cross_period_expected_member_sets=cross_period_expected_member_sets,
+        workflow_engine=workflow_engine,
+        workflow_runs_dir=workflow_runs_dir,
+        settings=settings,
+        clock=clock,
+    ).report
 
 
 def _repair_verified_revision_current_pointer(
@@ -1197,10 +1198,6 @@ def _unrouted_oss_source_finding(
             "Modelo 369 has OSS/IOSS observations that no declared aggregation binding consumes; "
             f"unrouted source references: {unrouted_source_refs}"
         ),
-        next_action=(
-            "Correct the OSS/IOSS invoice classification or add its law-grounded registry binding, rerun "
-            "`aeat app modelo work calculate`, then rerun verification."
-        ),
         legal_refs=legal_refs or WORKFLOW_GATE_LEGAL_REFS,
         source_refs=source_refs,
     )
@@ -1219,10 +1216,6 @@ def _missing_oss_evidence_finding(
             "Modelo 369 has unresolved OSS/IOSS aggregation sources: no OSS-tagged issued invoice evidence "
             "was persisted for a revision that declares ledger_oss_aggregation bindings."
         ),
-        next_action=(
-            "Record and classify the OSS/IOSS issued invoice evidence, rerun `aeat app modelo work calculate`, "
-            "then rerun verification."
-        ),
         legal_refs=legal_refs or WORKFLOW_GATE_LEGAL_REFS,
         source_refs=source_refs,
     )
@@ -1234,6 +1227,7 @@ def _collect_revision_verification_findings(
     target: CalculationRevision,
     profile: TaxpayerProfile,
     transaction_repository: TransactionCatalogueRepository | None,
+    registry_snapshot_finding_observer: Callable[[ModeloVerificationFinding], None] | None = None,
 ) -> tuple[list[ModeloVerificationFinding], list[CasillaId], list[CasillaId]]:
     """Build the verification finding list for one calculation revision.
 
@@ -1268,20 +1262,20 @@ def _collect_revision_verification_findings(
             period=work_unit.period.registry_token,
         )
     except (FileNotFoundError, RegistrySnapshotError):
-        findings.append(
-            ModeloVerificationFinding(
-                kind=ModeloVerificationFindingKind.BLOCKING_RULE,
-                severity=ModeloVerificationFindingSeverity.BLOCKING,
-                message=tr(
-                    "application.modelo.findings.registry_snapshot_unresolved",
-                    modelo=str(work_unit.modelo),
-                    filing_year=str(work_unit.filing_year),
-                    period=work_unit.period.registry_token,
-                ),
-                next_action="aeat app registry verify",
-                legal_refs=WORKFLOW_GATE_LEGAL_REFS,
+        finding = ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            message=tr(
+                "application.modelo.findings.registry_snapshot_unresolved",
+                modelo=str(work_unit.modelo),
+                filing_year=str(work_unit.filing_year),
+                period=work_unit.period.registry_token,
             ),
+            legal_refs=WORKFLOW_GATE_LEGAL_REFS,
         )
+        findings.append(finding)
+        if registry_snapshot_finding_observer is not None:
+            registry_snapshot_finding_observer(finding)
         return findings, resolved_casilla_ids, missing_required_casilla_ids
 
     revision_keys = set(target.input_values_by_casilla_id)
@@ -1302,7 +1296,6 @@ def _collect_revision_verification_findings(
                 findings.append(
                     _missing_required_casilla_finding(
                         casilla_id,
-                        target.work_unit_id,
                         casilla_def=casilla,
                     ),
                 )
@@ -1405,7 +1398,6 @@ require_cross_period_clean_state = _require_cross_period_clean_state
 
 def _missing_required_casilla_finding(
     casilla_id: CasillaId,
-    work_unit_id: str,
     *,
     casilla_def: CasillaDefinition | None = None,
 ) -> ModeloVerificationFinding:
@@ -1424,7 +1416,6 @@ def _missing_required_casilla_finding(
         severity=ModeloVerificationFindingSeverity.BLOCKING,
         casilla_id=casilla_id,
         message=tr("application.modelo.findings.missing_required_casilla", casilla_id=casilla_id),
-        next_action=(f"aeat app modelo work calculate {work_unit_id} --casilla {casilla_id}=VALUE"),
         legal_refs=legal_refs,
         source_refs=source_refs,
     )
@@ -1440,7 +1431,6 @@ def _iva_wallet_blocking_verification_finding(
         kind=ModeloVerificationFindingKind.BLOCKING_RULE,
         severity=ModeloVerificationFindingSeverity.BLOCKING,
         message=_iva_wallet_blocked_message(decision),
-        next_action=tr("application.modelo.findings.iva_wallet_next_action"),
         legal_refs=(_IVA_COMPENSATION_CARRY_LEGAL_REF,),
     )
 
@@ -1453,7 +1443,6 @@ def _iva_wallet_error_verification_finding(error: ModeloIvaWalletReconciliationB
         kind=ModeloVerificationFindingKind.BLOCKING_RULE,
         severity=ModeloVerificationFindingSeverity.BLOCKING,
         message=_translated_exception_message(error),
-        next_action=tr("application.modelo.findings.iva_wallet_next_action"),
         legal_refs=(_IVA_COMPENSATION_CARRY_LEGAL_REF,),
     )
 

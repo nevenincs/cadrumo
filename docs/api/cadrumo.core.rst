@@ -89,10 +89,13 @@ Submodules
    cadrumo.core._notificacion_estado_servicio
    cadrumo.core._objeto_tributario
    cadrumo.core._observed_header_fact
+   cadrumo.core._operator_progress
    cadrumo.core._optional_extras
+   cadrumo.core._payment_election
    cadrumo.core._period
    cadrumo.core._pid_liveness
    cadrumo.core._post_filing_event
+   cadrumo.core._prior_domiciliation_election
    cadrumo.core._profile_session
    cadrumo.core._prorrata_exclusions
    cadrumo.core._prorrata_register

@@ -1,28 +1,17 @@
-"""The seven full-screen surfaces, each built the way production builds it.
+"""The full-screen surfaces, each built the way production builds it.
 
 Every builder here composes the app from the same doors the CLI hands it —
-the real registration door, the real login door, the real overview and
-status projections, the real setup definition. A builder that hand-made a
+the real registration door, the real login door, and the real overview and
+status projections. A builder that hand-made a
 view-model would produce a surface that renders, and tell you nothing
 about the one the operator meets.
 
 Surfaces that need a profile say so through ``needs_profile``; the runner
 enters the harness storage root and creates it before building.
 
-**Which surface is the setup wizard.** The interactive setup experience an
-operator actually meets is ``registration`` (create credentials) followed by
-``manager`` (fill and edit profile fields). The paged ``setup`` /
-``setup-modify`` flow is DELIBERATELY RETIRED as an interactive surface:
-``manager_is_the_right_frontend`` routes every interactive invocation on a
-capable host to the manager, because two interactive answers to "manage a
-profile" was the parallel-authority failure the architecture rules forbid.
-``setup_flow_definition`` survives in production only for the scripted /
-``--quiet`` headless path, which renders no screen at all.
-
-The retired surfaces stay registered here on purpose — evaluating what a dead
-path still paints is how you tell an orphan from a regression — but a finding
-against them is a DEAD-CODE finding, never an operator-facing one. Say which
-you mean.
+The interactive setup experience is ``registration`` (create credentials)
+followed by ``manager`` (fill and edit profile fields). The harness exposes
+only operator-reachable interactive surfaces.
 """
 
 from __future__ import annotations
@@ -57,31 +46,6 @@ class Surface:
     persisted record beyond a bare profile. Entered instead of the shared
     ``needs_profile``/``needs_session`` path; a surface sets one or the
     other, never both."""
-
-
-def _setup(mode: FlowMode) -> Callable[[], App]:
-    def build() -> App:
-        from cadrumo.adapters.inbound.tui import FlowTuiApp
-        from cadrumo.application.wizard import ProfileFactsCheckpointStore, setup_flow_definition
-        from cadrumo.core.wizard_catalogue import get_setup_flow
-
-        from ._fixture import PROFILE_LABEL, ensure_profile
-
-        flow = get_setup_flow()
-        creating = mode is FlowMode.CREATE
-        definition = setup_flow_definition(flow, attach_descendants=creating)
-
-        # CREATE declares checkpointing AVAILABLE, so the app demands a real
-        # store. Injecting the production one — bound to the harness profile
-        # — is what makes save-and-exit and resume drivable here at all.
-        store = (
-            ProfileFactsCheckpointStore(flow, profile_id=ensure_profile(), profile_name=PROFILE_LABEL)
-            if creating
-            else None
-        )
-        return FlowTuiApp(definition, mode=mode, checkpoint_store=store, registered_values={})
-
-    return build
 
 
 def _registration() -> App:
@@ -234,18 +198,6 @@ def _modelo_work_wizard() -> App:
 SURFACES: dict[str, Surface] = {
     s.name: s
     for s in (
-        Surface(
-            "setup",
-            "RETIRED paged flow, CREATE — no interactive operator reaches this",
-            _setup(FlowMode.CREATE),
-            needs_profile=True,
-        ),
-        Surface(
-            "setup-modify",
-            "RETIRED paged flow, MODIFY — no interactive operator reaches this",
-            _setup(FlowMode.MODIFY),
-            needs_profile=True,
-        ),
         Surface(
             "registration",
             "THE REAL setup wizard, step 1: credential-first profile creation",

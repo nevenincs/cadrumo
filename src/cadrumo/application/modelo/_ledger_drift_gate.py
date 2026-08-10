@@ -114,11 +114,7 @@ def _drift_finding(
     removed: int,
     anchored: bool,
 ) -> ModeloVerificationFinding:
-    """Build the blocking drift finding, naming the command that moves the operator on.
-
-    ``next_action`` names ``calculate``, not ``verify``. A refusal that names
-    the command the operator just ran restates their position instead of
-    resolving it.
+    """Build the blocking drift finding without persisting recovery prose.
 
     The message carries COUNTS rather than a joined id list. A finding message
     is capped at 500 characters and a contributor set is unbounded, so joining
@@ -138,10 +134,6 @@ def _drift_finding(
             f"the ledger no longer matches the stored calculation for modelo {work_unit.modelo} "
             f"{work_unit.filing_year} {work_unit.period.registry_token}: {detail}. "
             "Verifying it would grant over casilla values the ledger no longer supports."
-        ),
-        next_action=(
-            f"Recalculate first with `aeat app modelo work calculate {work_unit.work_unit_id}`, "
-            "then verify the revision that produces."
         ),
         legal_refs=LEDGER_DRIFT_LEGAL_REFS,
         source_refs=source_refs,

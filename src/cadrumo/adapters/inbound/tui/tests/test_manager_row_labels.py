@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....application.user_profile import ProfileFieldView
+from .....application.user_profile import ProfileFieldChoice, ProfileFieldView
 from .. import ProfileManagerApp
 
 pytestmark = [
@@ -74,3 +74,40 @@ def test_a_required_instance_row_keeps_its_required_mark() -> None:
 
     assert label.startswith("2")
     assert label.endswith("*")
+
+
+def test_a_closed_choice_row_renders_its_operator_label_not_its_token() -> None:
+    storage_value = "app_request"
+    operator_label = "Request in app"
+    _state, _label, rendered = ProfileManagerApp._rendered_row(
+        _row(
+            path="auth.clave_movil_route",
+            label="Cl@ve Móvil route",
+            value=storage_value,
+            choices=(ProfileFieldChoice(value=storage_value, label=operator_label),),
+        ),
+    )
+
+    assert rendered == operator_label
+    assert storage_value not in rendered
+
+
+def test_the_shipped_clave_route_row_never_renders_app_request() -> None:
+    from .....application.user_profile import build_profile_overview
+    from .....core.i18n import tr
+    from .....domain.user_profile import UserProfileFact, UserProfileRecord
+
+    storage_value = "app_request"
+    record = UserProfileRecord(
+        profile_id="00000000-0000-4000-8000-0000000000c1",
+        display_name="Cl@ve route projection",
+        facts=(UserProfileFact(path="auth.clave_movil_route", value=storage_value),),
+    )
+    overview = build_profile_overview(record)
+    route = next(
+        field for section in overview.sections for field in section.fields if field.path == "auth.clave_movil_route"
+    )
+
+    rendered = ProfileManagerApp._rendered_row(route)[2]
+    assert rendered == tr("flows.manager.action.auth_clave_movil_route_app_request")
+    assert storage_value not in rendered

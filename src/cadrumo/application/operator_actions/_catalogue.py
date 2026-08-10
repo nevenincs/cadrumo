@@ -323,6 +323,10 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
+            action_id="operator.registry.verify",
+            target_command_key="registry.verify",
+        ),
+        ActionCatalogueEntry(
             action_id="operator.modelo.verification_report.list",
             target_command_key="modelo.verification_report.list",
             argument_specifications=(

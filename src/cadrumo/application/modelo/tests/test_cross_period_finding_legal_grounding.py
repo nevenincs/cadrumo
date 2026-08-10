@@ -231,8 +231,7 @@ def test_not_applicable_suppression_summary_carries_dependency_legal_refs() -> N
     assert tuple(summary.source_refs) == _DEFAULT_DEPENDENCY_SOURCE_REFS
     assert "--binding CLAVE=VALOR" in summary.message
     assert "único signo igual" in summary.message
-    assert summary.next_action is not None
-    assert "--binding CLAVE=VALOR" in summary.next_action
+    assert "next_action" not in summary.model_dump(mode="json")
     assert "corresponding casilla" not in summary.message
 
 

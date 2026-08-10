@@ -222,12 +222,6 @@ def m303_m349_intracom_reconcile_findings(
                 f"intracomunitarias) — a gap of {gap} EUR. Both declarations describe the same "
                 "intra-community activity and should agree before filing."
             ),
-            next_action=(
-                "Advisory only: reconcile the Modelo 303 boxes 10 (adquisiciones) and 59 (entregas) "
-                "against the Modelo 349 per-operator rows for the same period. A gap usually means an "
-                "operator row is missing or duplicated on the 349, or an intra-community invoice is "
-                "mis-booked on the 303."
-            ),
             legal_refs=_RECONCILE_LEGAL_REFS,
             source_refs=_RECONCILE_SOURCE_REFS,
         ),

@@ -106,11 +106,6 @@ def _m210_convenio_lob_advisory_finding(
             document_id=override.document_id,
             tipo_renta=tipo_renta.value,
         ),
-        next_action=tr(
-            "application.modelo.findings.m210_convenio_lob_advisory_next_action",
-            cc=override.country_code,
-            document_id=override.document_id,
-        ),
         legal_refs=override.legal_refs,
     )
 

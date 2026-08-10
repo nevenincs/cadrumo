@@ -459,15 +459,15 @@ test-ratchets:
 # the log for `^FAILED` to get the fail list, so a 24-minute run yielded a
 # count with no identities and the whole suite had to be re-run to learn what
 # broke. Adding `f` back keeps the skip report the flag was added for.
-[doc('Run the unit test suite in parallel, ignoring workbook parity tests. Quiet progress; failures shown.')]
+[doc('Run the unit test suite in parallel. Quiet progress; failures shown.')]
 [group('testing')]
 test-unit durations="":
-    @uv run --no-sync pytest -q -rsf -n {{pytest_workers}} --dist=loadfile -m 'unit and not external_tool and not os_keychain' --ignore=dev/registry/tests/test_workbook_parity.py {{ if durations == "" { "" } else { "--durations=" + durations } }}
+    @uv run --no-sync pytest -q -rsf -n {{pytest_workers}} --dist=loadfile -m 'unit and not external_tool and not os_keychain' {{ if durations == "" { "" } else { "--durations=" + durations } }}
 
 # Run the unit test suite serially for reruns after a parallel failure.
 [group('testing')]
 test-unit-serial:
-    @uv run --no-sync pytest -q -rsf -n0 -m 'unit and not external_tool and not os_keychain' --ignore=dev/registry/tests/test_workbook_parity.py
+    @uv run --no-sync pytest -q -rsf -n0 -m 'unit and not external_tool and not os_keychain'
 
 # Run the integration test suite in two lanes: the bulk in parallel (xdist,
 # excluding serial-marked tests), then the isolation-sensitive `serial`-marked
@@ -507,7 +507,7 @@ test-integration:
 [doc('Run the dev/ tooling gates that no other lane reaches (audit, deploy, env, locales, sanitizer, registry, docs, agent-eval, ingest-harness subsystems).')]
 [group('testing')]
 test-dev-tooling:
-    @uv run --no-sync pytest -q -n {{pytest_workers}} -m "(unit or integration) and not resident_service" dev/audit/tests dev/deploy/tests dev/env/tests dev/locales/tests dev/tests dev/sanitizer/tests dev/registry/newmodelo/tests dev/registry/aeip/tests dev/docs/preprocess/tests dev/docs/sequences/tests dev/docs/terminology/tests dev/docs/terminology_handbook/tests dev/agent_eval/tests dev/ingest_harness/tests
+    @uv run --no-sync pytest -q -n {{pytest_workers}} -m "(unit or integration) and not resident_service and not external_tool" dev/audit/tests dev/deploy/tests dev/env/tests dev/locales/tests dev/tests dev/sanitizer/tests dev/registry/tests dev/registry/newmodelo/tests dev/registry/aeip/tests dev/docs/preprocess/tests dev/docs/sequences/tests dev/docs/terminology/tests dev/docs/terminology_handbook/tests dev/agent_eval/tests dev/ingest_harness/tests
 
 # Run the dev-tree workflow/tooling conformance gates that CI runs per-push
 # (workflow structural pins, evidence-transport conformance, shard-plugin

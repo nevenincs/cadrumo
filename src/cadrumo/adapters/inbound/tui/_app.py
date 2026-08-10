@@ -43,6 +43,7 @@ from ....application.flows import (
     next_page,
     page_status,
     reset_page,
+    resolve_copy,
     restart_flow,
     review,
     save_checkpoint,
@@ -50,6 +51,7 @@ from ....application.flows import (
     visible_sequence,
 )
 from ....core.flows import REPEATING_INSTANCE_SEPARATOR, FlowMode, FlowWidgetKind, PageStatus
+from ....core.i18n import tr
 from ._question_screen import QuestionScreen
 from ._review_screen import ReviewScreen
 from ._theme import BASE_CSS as _BASE_CSS
@@ -59,14 +61,26 @@ if TYPE_CHECKING:
     from ....application.flows import CheckpointStore, FlowDefinition, FlowState, VisiblePage
 
 
+def _operator_flow_context(definition: FlowDefinition, mode: FlowMode) -> dict[str, str]:
+    """Return error interpolation values containing presentation copy only."""
+    return {
+        "flow_id": resolve_copy(definition.title),
+        "mode": tr("flows.review.mode_create" if mode is FlowMode.CREATE else "flows.review.mode_modify"),
+    }
+
+
 class FlowTuiApp(App[None]):
     """Full-screen projection of one flow run."""
 
     CSS = (
         _BASE_CSS
         + """
-    #flow-header {
+    #flow-top {
         dock: top;
+        height: 2;
+        width: 100%;
+    }
+    #flow-header {
         height: 1;
         width: 100%;
         background: $primary;
@@ -75,7 +89,6 @@ class FlowTuiApp(App[None]):
         padding: 0 2;
     }
     #flow-progress {
-        dock: top;
         height: 1;
         width: 100%;
         padding: 0 2;
@@ -169,7 +182,7 @@ class FlowTuiApp(App[None]):
         if checkpoint_available(definition, mode) and checkpoint_store is None:
             raise _FlowCheckpointError(
                 translated_message="flows.errors.checkpoint_store_missing",
-                context={"flow_id": definition.id, "mode": mode.value},
+                context=_operator_flow_context(definition, mode),
             )
         self.definition = definition
         self.state: FlowState = resume_state if resume_state is not None else start_flow(definition, mode=mode)
@@ -350,7 +363,7 @@ class FlowTuiApp(App[None]):
             # with ``None``.
             raise _FlowCheckpointError(
                 translated_message="flows.errors.checkpoint_store_missing",
-                context={"flow_id": self.definition.id, "mode": self.state.mode.value},
+                context=_operator_flow_context(self.definition, self.state.mode),
             )
         save_checkpoint(self.definition, self.state, self._store)
         self.final_state = self.state
@@ -472,7 +485,7 @@ def run_flow_tui(
     if app.final_state is None or app.final_projection is None:
         raise _FlowCheckpointError(
             translated_message="flows.errors.tui_abandoned",
-            context={"flow_id": definition.id, "mode": mode.value},
+            context=_operator_flow_context(definition, mode),
         )
     return app.final_state, app.final_projection
 

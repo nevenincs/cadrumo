@@ -13,6 +13,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   cadrumo.application.operator_surface._action_resolution
    cadrumo.application.operator_surface._classification
    cadrumo.application.operator_surface._contract
    cadrumo.application.operator_surface._crud_contract
