@@ -596,7 +596,7 @@ application:
           adóazonosítóját.
         clave_route_missing: 'A Cl@ve Móvil élő hitelesítéséhez szükséges: %{route_field}.
           Nyissa meg a profilkezelő Azonosítás részét, válassza a QR-kód vagy a Kérés
-          az alkalmazásban lehetőséget, mentse, majd próbálja újra.'
+          az alkalmazásban lehetőséget, mentse, majd próbálja újra a szinkronizálást.'
         corrupt_session: A mentett hitelesítési munkamenet sérült és nem olvasható.
           Futtassa az `aeat config auth logout`, majd az `aeat config auth test` parancsot.
         no_session: Nincs aktív AEAT munkamenet; futtassa a `aeat config auth test`

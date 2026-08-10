@@ -93,7 +93,7 @@ def test_settings_remain_the_identity_fallback_when_the_profile_carries_the_requ
 
 def test_missing_profile_route_refuses_even_when_environment_selects_qr() -> None:
     """The route has one authority: the encrypted profile field."""
-    _register_profile(**{"auth.dni_nie": _TAX_ID, "auth.clave_movil_route": ClaveMovilRoute.QR.value})
+    _register_profile(**{"auth.dni_nie": _TAX_ID})
     with (
         override_settings(
             cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID),
@@ -396,7 +396,7 @@ def test_every_provider_carries_an_expectation_for_the_session_check() -> None:
     missing.
     """
 
-    _register_profile(**{"auth.dni_nie": _TAX_ID})
+    _register_profile(**{"auth.dni_nie": _TAX_ID, "auth.clave_movil_route": ClaveMovilRoute.QR.value})
     missing: list[str] = []
     for kind in AuthProviderKind:
         with override_settings(

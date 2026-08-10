@@ -964,8 +964,8 @@ def _clave_refusal(collected: Mapping[str, str]) -> str | None:
     route = facts.clave_movil_route
     if route is None:
         return tr(
-            "flows.manager.action.auth_clave_incomplete",
-            missing=_auth_field_label(_AUTH_CLAVE_MOVIL_ROUTE_PATH),
+            "application.auth.sessions.errors.clave_route_missing",
+            route_field=_auth_field_label(_AUTH_CLAVE_MOVIL_ROUTE_PATH),
         )
     if route is ClaveMovilRoute.QR:
         return None
