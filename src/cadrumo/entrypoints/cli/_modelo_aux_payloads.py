@@ -158,7 +158,6 @@ class WorkflowRunPayload(OutputSchema):
     aborted_reason: str | None
     started_at: str
     summary: str
-    next_action: str | None
 
 
 @register_schema("modelo.work.runs")
