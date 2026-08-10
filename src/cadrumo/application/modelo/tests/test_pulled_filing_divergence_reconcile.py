@@ -34,6 +34,17 @@ route reaches through. No mock, fake, stub, monkeypatch, skip or xfail.
 Neither expected outcome is derived from a registry formula. The subject casilla
 is a bound casilla whose value this module supplies on both sides; the gap is an
 input to the run, chosen here, not a number read back out of the engine.
+
+FIXTURE DEFAULTS ARE A DELIBERATE AXIS. Every model built here is populated away
+from its defaults wherever a non-default value is honest, because the default
+state is exactly what a save-drops-field / load-re-defaults regression collapses
+to: a fixture sitting at the defaults cannot tell a field that survived from one
+that was dropped and re-defaulted on the way back. Where a field IS left at its
+default the reason is written beside it, and it is always one of three — the
+model refuses a value there in this lifecycle state, the field belongs to a
+modelo or artefact family this row is not, or populating it would assert
+evidence the run never produced. A field left at its default with no reason is
+the state this module does not carry.
 """
 
 from __future__ import annotations
@@ -95,6 +106,13 @@ _CAPTURED_AT = datetime(2026, 3, 18, 11, 42, 3, tzinfo=UTC)
 
 _SYNTHETIC_TAX_ID = "12345678Z"
 _SYNTHETIC_EXPEDIENTE_ID = f"{_MODELO}{_FILING_YEAR}{_PERIOD_CODE}ABCD1234EFGH567"
+# The código seguro de verificación is the coordinate that makes a sede
+# justificante retrievable from AEAT at all, so a justificante-sourced row
+# carrying none is indistinguishable from one whose metadata was dropped.
+_SYNTHETIC_JUSTIFICANTE_CSV = "MNPQ7RS9TUVW2XYZ4AB6"
+# The runtime harness labels every bucket "Test runtime profile" by default, so
+# that value is the one a dropped label re-defaults to.
+_BUCKET_LABEL = "Pulled-filing reconcile fixture bucket"
 
 # Both sides of the comparison are inputs to the run declared here. Integral
 # magnitudes keep the rendered advisory text unambiguous.
@@ -117,8 +135,13 @@ _CARRY_SOURCE_KINDS = frozenset(
 
 @pytest.fixture
 def observation_repository(tmp_path: Path) -> Iterator[CalculationObservationRepository]:
-    """Yield a repository over a real encrypted bucket holding nothing yet."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+    """Yield a repository over a real encrypted bucket holding nothing yet.
+
+    ``label`` is the harness's one defaultable provisioning argument and lands in
+    the bucket's plaintext manifest, so it is supplied rather than left at the
+    shared default it would re-default to if the manifest write dropped it.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label=_BUCKET_LABEL) as profile:
         yield CalculationObservationRepository(objects=profile.repository)
 
 
@@ -171,13 +194,37 @@ def _grounding_foil(revision: ModeloRevision, subject: CasillaDefinition) -> Cas
     )
 
 
-def _work_unit() -> WorkUnit:
+def _work_unit(*, current_calculation_revision_id: str | None = None) -> WorkUnit:
     """Build the work unit under verification against the law-resolved revision.
 
     ``revision_id`` is the authority's answer, not an injected selector: the
     production reconcile re-resolves it from the same triple and refuses a
     divergence, so a work unit pinned to anything else would silently make every
     case here vacuous.
+
+    ``current_calculation_revision_id`` points at the draft calculation this unit
+    holds, so the pair is internally coherent rather than a unit claiming to hold
+    no calculation while a calculation for it is under verification. It is not
+    one of the five axes ``derive_work_unit_id`` folds, so attaching it once the
+    calculation exists leaves the content-addressed id untouched.
+
+    The remaining defaultable fields stay at their defaults, each because the
+    model or the modelo leaves no honest alternative:
+
+    * ``state`` stays ``BORRADOR``. The only other member is ``DESCARTADO``,
+      which names an abandoned unit, and the reconcile is a live-verification
+      advisory.
+    * ``discarded_at``, ``discarded_by`` and ``discard_reason`` are REFUSED by
+      the model while the state is ``BORRADOR``; there is no non-default value
+      to populate rather than a value not chosen.
+    * ``filed_calculation_revision_id`` and ``current_filing_record_id`` would
+      assert a local filing. This application never files; the calculation here
+      is a draft, and the filed side of the comparison is AEAT's own register
+      row rather than anything this bucket recorded. Pointing either at the
+      draft would also contradict its ``BORRADOR`` state.
+    * ``causante_ccaa`` is the ISD (650/660) and ITPyAJD (600/620) jurisdiction
+      axis. Modelo 130 follows the declarant's profile CCAA, so a value here
+      would state a jurisdiction the modelo does not carry.
     """
     revision = _law_resolved_revision()
     period = Period.from_year_and_code(_FILING_YEAR, _PERIOD_CODE)
@@ -198,6 +245,7 @@ def _work_unit() -> WorkUnit:
         name=f"{_MODELO}-{_FILING_YEAR}-{_PERIOD_CODE}",
         created_at=_WORK_UNIT_CREATED_AT,
         updated_at=_WORK_UNIT_UPDATED_AT,
+        current_calculation_revision_id=current_calculation_revision_id,
     )
 
 
@@ -217,10 +265,63 @@ def _calculation(
     scope undetermined.
 
     ``observations`` is populated from the registry rather than left at its
-    default so the persisted grounding envelope is exercised. Their own
-    ``formula_id``, ``op`` and ``operand_*`` fields stay empty because the
-    subject is a bound casilla and the model contracts those fields as empty when
-    no formula ran; filling them would record a computation that did not happen.
+    default so the persisted grounding envelope is exercised.
+
+    The other three evidence axes stay empty on purpose, and that IS the design
+    above rather than an unconsidered default: ``input_values_by_casilla_id``
+    (direct operator input), ``source_transaction_ids`` (ledger contribution)
+    and ``relation_overrides`` are the remaining inputs
+    ``resolve_casilla_population_scope`` reads. Supplying any of them alongside
+    the overrides would leave which axis opened the scope undetermined, and a
+    relation value would be worse still — its value originates in the very
+    filed-observation store the comparison reads its filed side from, which is
+    why the scope excludes relations from evidence in the first place.
+
+    Every remaining defaultable field is left at its default for a stated
+    reason:
+
+    * ``row_binding_values`` carries row-indexed values for repeating export
+      records. Modelo 130 declares scalar casillas only, so a row coordinate
+      here would index records the diseño does not have.
+    * ``m210_official_tipo_renta_code`` and ``m210_gross_income_source_mode``
+      are Modelo 210 axes; the code field's validator refuses any token outside
+      the registry's Modelo 210 projection, so no honest value exists for a 130.
+    * ``borrador_snapshot_id`` and ``bindings_sourced_from_borrador`` would say
+      the local figures were sourced from an AEAT borrador, which contradicts
+      the operator override that actually supplies them here.
+    * ``unresolved_outcomes`` records casillas the engine could not resolve.
+      Every casilla here resolves — the values are supplied — and a populated
+      entry becomes a BLOCKING verification finding, which would change what
+      each case measures.
+    * ``ledger_filing_snapshot`` and ``ledger_filing_evidence`` are captured at
+      verify/file time over consumed ledger rows. This is an unsnapshotted
+      draft that consumed none.
+    * ``source_provenance`` traces which resolver mesh and which upstream source
+      objects produced the revision. No mesh ran; the values were supplied
+      directly, so a trace would name resolvers that never executed.
+    * ``source_issues`` records a source that reached no declared binding. There
+      is no unrouted source here, and a populated issue both blocks verification
+      and enters the content-addressed id.
+    * ``detail_rows`` belongs to the informational modelos whose content is
+      repeating records (184, 232, 347, 349). Modelo 130 is not one.
+    * ``verified_at``, ``verified_by``, ``filed_at``, ``filed_by``,
+      ``superseded_at``, ``discarded_at``, ``discarded_by`` and
+      ``discard_reason`` are REFUSED by the model while the state is
+      ``BORRADOR``. There is no non-default value available to populate.
+    * ``amendment_kind``, ``amends_filing_record_id`` and ``amendment_reason``
+      are all-set-or-all-None. Declaring an amendment would make the divergence
+      case ambiguous rather than stronger: an amendment draft is EXPECTED to
+      disagree with the filing it amends, so a finding could no longer be read
+      as a genuine gap.
+
+    The registry-grounded observations themselves leave ``formula_id``, ``op``,
+    ``operand_refs``, ``operand_casilla_refs`` and ``operand_values`` empty
+    because the subject is a bound casilla and the model contracts those fields
+    as empty when no formula ran; filling them would record a computation that
+    did not happen. ``absent_by_design`` stays ``False`` for the opposite
+    reason — it marks a zero materialised because the binding found no source
+    anchor for the period, and this fixture supplies a real value through that
+    binding, so ``True`` would mislabel a value-bearing observation.
     """
     overrides = dict(binding_overrides or {})
     values = dict(casilla_values)
@@ -246,6 +347,28 @@ def _calculation(
     )
 
 
+def _work_unit_and_calculation(
+    *,
+    casilla_values: Mapping[CasillaId, Decimal],
+    binding_overrides: Mapping[BindingId, str] | None = None,
+) -> tuple[WorkUnit, CalculationRevision]:
+    """Return the coherent work unit and draft calculation each case runs on.
+
+    The calculation is built first because its content-addressed id is what the
+    unit's ``current_calculation_revision_id`` points at. The draft unit the
+    calculation is addressed to and the returned unit share one ``work_unit_id``:
+    that pointer is not one of the id's five axes, so attaching it cannot
+    re-address the calculation away from the unit that carries it.
+    """
+    draft_unit = _work_unit()
+    target = _calculation(
+        draft_unit,
+        casilla_values=casilla_values,
+        binding_overrides=binding_overrides,
+    )
+    return _work_unit(current_calculation_revision_id=target.calculation_revision_id), target
+
+
 def _persist_pulled_filing(
     repository: CalculationObservationRepository,
     *,
@@ -259,20 +382,46 @@ def _persist_pulled_filing(
     one a real pull stamps.
 
     Every defaultable field on the envelope that this row can honestly carry is
-    populated away from its default. ``member_nif`` is the deliberate exception:
-    a member NIF widens the storage identifier, and the reconcile reads the
-    single-filer key, so setting it would file the row where the subject cannot
-    find it and silently convert every case below into the no-filing case. The
-    Modelo 303 disposition and prior-domiciliation projections and the fichero
-    header facts are left unset for the opposite reason: this is a Modelo 130
-    register row and no submitted fichero was read, so authoring them would
-    assert evidence that does not exist.
+    populated away from its default: ``captured_at`` is an explicit instant,
+    ``stamped_revision_id`` the law-resolved id, and ``source_metadata`` carries
+    the register status, the expediente id, the authenticated identity and the
+    justificante CSV — the coordinate that makes a sede justificante retrievable
+    at all, and therefore the one whose absence would be indistinguishable from
+    a metadata field dropped at persistence.
+
+    The rest are left at their defaults, each for a reason:
+
+    * ``member_nif`` widens the storage identifier for a grupo-de-entidades
+      member, and the reconcile reads the single-filer key. Setting it would
+      file the row where the subject cannot find it and silently convert every
+      case below into the no-filing case.
+    * ``source_headers`` carries typed diseño header facts, and
+      ``ObservedHeaderFact`` admits a single source artefact kind — the
+      submitted fichero — because a justificante is a receipt that does not
+      expose the record design's header fields. This row's provenance IS a
+      justificante, so a header fact here would attribute evidence to a source
+      that cannot produce it, and its locator would name a record position no
+      artefact was read from.
+    * ``result_disposition`` is the validated Modelo 303 declaration
+      disposition and ``prior_domiciliation_election`` the Modelo 303
+      rectificativa's prior-direct-debit election. This is a Modelo 130 register
+      row; neither concept exists for it.
+    * ``normalize_m303_carry`` is the Modelo 303 carry-ingress policy switch. It
+      returns the envelope untouched for any other modelo, so enabling it here
+      would state an intent the write path cannot act on.
+
+    ``m303_compensation_basis`` is set only by that ingress on the envelope it
+    returns; the write path exposes no parameter for it, so it is not a fixture
+    choice to make.
     """
     repository.save_observation(
         RegistryModeloObservation(
             modelo=_MODELO,
             filing_year=_FILING_YEAR,
             period=_PERIOD_CODE,
+            # ``filing_period`` is omitted because the model's own before-validator
+            # hydrates it from filing_year and period and then refuses any value
+            # inconsistent with them, so no differing value is constructible.
             observations=registry_grounded_observations(
                 modelo=_MODELO,
                 filing_year=_FILING_YEAR,
@@ -287,6 +436,7 @@ def _persist_pulled_filing(
             "aeat_register_status": "ALTA",
             "aeat_expediente_id": _SYNTHETIC_EXPEDIENTE_ID,
             "authenticated_identity": _SYNTHETIC_TAX_ID,
+            "aeat_justificante_csv": _SYNTHETIC_JUSTIFICANTE_CSV,
         },
     )
 
@@ -301,9 +451,7 @@ def test_no_pulled_filing_produces_no_findings(
     """
     revision = _law_resolved_revision()
     subject, binding = _subject_casilla(revision)
-    work_unit = _work_unit()
-    target = _calculation(
-        work_unit,
+    work_unit, target = _work_unit_and_calculation(
         casilla_values={subject.id: _LOCAL_AMOUNT},
         binding_overrides={binding.id: str(_LOCAL_AMOUNT)},
     )
@@ -338,8 +486,7 @@ def test_a_pulled_filing_against_an_empty_bucket_produces_no_findings(
     """
     revision = _law_resolved_revision()
     subject, _binding = _subject_casilla(revision)
-    work_unit = _work_unit()
-    target = _calculation(work_unit, casilla_values={subject.id: _EMPTY_BUCKET_AMOUNT})
+    work_unit, target = _work_unit_and_calculation(casilla_values={subject.id: _EMPTY_BUCKET_AMOUNT})
     _persist_pulled_filing(observation_repository, casilla_values={subject.id: _FILED_AMOUNT})
 
     findings = pulled_filing_divergence_findings(
@@ -370,9 +517,7 @@ def test_a_populated_calculation_agreeing_with_the_filing_produces_no_findings(
     """
     revision = _law_resolved_revision()
     subject, binding = _subject_casilla(revision)
-    work_unit = _work_unit()
-    target = _calculation(
-        work_unit,
+    work_unit, target = _work_unit_and_calculation(
         casilla_values={subject.id: _AGREED_AMOUNT},
         binding_overrides={binding.id: str(_AGREED_AMOUNT)},
     )
@@ -404,9 +549,7 @@ def test_a_diverging_casilla_raises_one_warning_carrying_that_casillas_own_groun
     revision = _law_resolved_revision()
     subject, binding = _subject_casilla(revision)
     foil = _grounding_foil(revision, subject)
-    work_unit = _work_unit()
-    target = _calculation(
-        work_unit,
+    work_unit, target = _work_unit_and_calculation(
         casilla_values={subject.id: _LOCAL_AMOUNT},
         binding_overrides={binding.id: str(_LOCAL_AMOUNT)},
     )
