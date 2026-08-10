@@ -5,7 +5,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:719b6f07018ffea165d925d8a874f2c3a1c1b5ff78d9dfe1245571cabb082182'
+body_hash: 'sha256:6583e04a592176960751048fa9770c8a2f9e8eeab598d957143042a162c1db4a'
 step_id: 'S43'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
@@ -19,17 +19,20 @@ related:
 
 ## Description
 
-- Replace the `DP200000`-specific parser branch with generic collection of official body, relative-closing, and variable-total markers.
-- Track raw marker rows before typed conversion so standalone or malformed body, closer, and Variable-total declarations cannot disappear into a fixed record.
-- Require exact composition, source order, contiguous prefix geometry, and no fixed-total inference before constructing the typed envelope.
-- Add source-level regression coverage for Modelo 200, all five pinned Modelo 303 binaries, and every registered partial-envelope source.
+- Replace the `DP200000`-specific parser branch with recognition led by the exact official Variable body marker.
+- Treat a row that mixes a positive fixed total with `Variable` as a decisive conflict even when no body or closer is present.
+- Require complete body, relative-closing, and Variable-total composition, exact source order, contiguous prefix geometry, and no fixed-total inference once a body is present.
+- Keep relative closers and Variable-total facts without a body outside envelope recognition because the registered corpus proves they are not unique envelope markers.
+- Add source-level regression coverage for Modelo 200, all five pinned Modelo 303 binaries, and the registered M131, M232, and M390 partial-marker sources.
 
 ## Outcome
 
-The production parser recognizes the official variable-envelope shape without a modelo or tab-name selector. Every raw body, closing, or Variable-total marker is decisive: it either forms a fully ordered typed envelope or raises `RegistryValidationError`. Ten registered partial sources are an explicit real-source refusal matrix, preventing a broad parseability pass from silently dropping their marker rows. The real Modelo 200 source and each 2023, 2024-early, 2024-late, 2025, and 2026 Modelo 303 binary produce the expected typed envelope; fixed-width generation continues to refuse it without truncation or inferred total.
+The production parser recognizes the official variable-envelope shape without a modelo or tab-name selector. A raw Variable body marker always enters strict composition validation, and a mixed positive fixed plus Variable total always refuses. Once recognition is active, missing, malformed, duplicate, discontinuous, misordered, or fixed-total-conflicting composition facts raise `RegistryValidationError`.
 
-Reproduced verification: the parser, IR, and generation boundary suite passed 66 tests with two upstream `openpyxl` conditional-formatting warnings; the full `dev/registry/tests` lane passed 191 tests; scoped Ruff passed; scoped BasedPyright reported zero errors, warnings, and notes.
+The final real-source review corrected an earlier broader trigger. A relative `***` closer or Variable-total fact without a body is not independently decisive: ten registered M131, M232, and M390 binaries contain those partial facts as legitimate non-envelope source material. Those binaries remain in the ordinary registered-source parseability gate. The real Modelo 200 source and each 2023, 2024-early, 2024-late, 2025, and 2026 Modelo 303 binary produce the expected typed envelope; fixed-width generation refuses every retained envelope without truncation or inferred total.
+
+Final reproduced verification passed 53 selected parser, intermediate-representation, and generation-boundary tests, then 191 tests across the full `dev/registry/tests` lane. Scoped Ruff passed, and scoped BasedPyright reported zero errors, warnings, and notes.
 
 ## Notes
 
-The shared worktree carried stranded S43 code and audit scaffolds. They were independently grounded, verified, and completed without touching unrelated peer changes. Repository-wide vault checks retain pre-existing corpus warnings outside this step's scope.
+The independent review first recommended treating every raw closer or Variable-total marker as decisive. Real registered-source evidence then disproved that generalization because it reclassified ten legitimate M131, M232, and M390 designs. The accepted final remediation is body-led recognition plus isolated mixed-total refusal. This record was reconciled during S53 after the stale interim wording was detected; no S43 production behavior changed during that documentation correction.

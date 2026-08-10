@@ -417,8 +417,11 @@ def test_manifest_refuses_legacy_shapes_schema_drift_duplicate_outputs_and_unsaf
         ExportFragmentProvenanceManifest(
             **(manifest.model_dump() | {"output_files": manifest.output_files + manifest.output_files}),
         )
-    with pytest.raises(ValidationError, match="parser schema drift"):
-        ExportFragmentProvenanceManifest(**(manifest.model_dump() | {"parser_schema_version": 1}))
+    for obsolete_parser_schema_version in (1, 2):
+        with pytest.raises(ValidationError, match="parser schema drift"):
+            ExportFragmentProvenanceManifest(
+                **(manifest.model_dump() | {"parser_schema_version": obsolete_parser_schema_version}),
+            )
     without_render_profile = manifest.model_dump()
     without_render_profile.pop("render_profile_schema_version")
     without_render_profile.pop("render_profile_sha256")

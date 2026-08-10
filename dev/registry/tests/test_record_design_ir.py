@@ -10,6 +10,8 @@ from openpyxl import load_workbook
 
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import (
+    RecordDesignCompositeRelativeClosing,
+    RecordDesignRelativeSuffixMarker,
     RegistryValidationError,
     extract_record_design,
     load_catalogue_file,
@@ -18,6 +20,9 @@ from cadrumo.domain.calculations.registry import (
 
 from .. import _record_design_ir
 from .._record_design_ir import (
+    RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION,
+    RecordDesignIntermediateCompositeRelativeClosing,
+    RecordDesignIntermediateRelativeSuffixMarker,
     RecordDesignWorkbookFormat,
     load_record_design_intermediate,
 )
@@ -30,6 +35,11 @@ _MODELO_303_DESIGNS = (
     ("aeat-dr-303-2024-late", 2024, "2024-late"),
     ("aeat-dr-303-2025", 2025, "2025"),
     ("aeat-dr-303-2026", 2026, "2026"),
+)
+_MODELO_220_DESIGNS = (
+    ("aeat-dr-220-2023", 2023, "2023"),
+    ("aeat-dr-220-2024", 2024, "2024"),
+    ("aeat-dr-220-2025", 2025, "2025"),
 )
 
 
@@ -107,6 +117,8 @@ def test_intermediate_is_a_complete_total_preserving_projection_of_the_verified_
     envelope = next(envelope for envelope in intermediate.variable_envelopes if envelope.sheet == "DP200000")
     parser_envelope = next(sheet.variable_envelope for sheet in parsed_sheets if sheet.name == envelope.sheet)
     assert parser_envelope is not None
+    assert isinstance(envelope.closing, RecordDesignIntermediateRelativeSuffixMarker)
+    assert isinstance(parser_envelope.closing, RecordDesignRelativeSuffixMarker)
     assert envelope.sheet == "DP200000"
     assert envelope.record_identity == "DP200000"
     assert tuple(
@@ -173,35 +185,35 @@ def test_intermediate_is_a_complete_total_preserving_projection_of_the_verified_
     assert envelope.body_validation is None
     assert envelope.body_content is None
     assert (
-        envelope.closing_source_row,
-        envelope.closing_source_cell,
-        envelope.closing_ordinal,
-        envelope.closing_offset,
-        envelope.closing_length,
-        envelope.closing_aeat_type,
-        envelope.closing_normalized_description,
-        envelope.closing_validation,
-        envelope.closing_content,
+        envelope.closing.source_row,
+        envelope.closing.source_cell,
+        envelope.closing.ordinal,
+        envelope.closing.offset,
+        envelope.closing.length,
+        envelope.closing.aeat_type,
+        envelope.closing.normalized_description,
+        envelope.closing.validation,
+        envelope.closing.content,
     ) == (
-        parser_envelope.closing_suffix.row,
-        f"A{parser_envelope.closing_suffix.row}",
-        parser_envelope.closing_suffix.ordinal,
-        parser_envelope.closing_suffix.offset,
-        parser_envelope.closing_suffix.length,
-        parser_envelope.closing_suffix.type_code,
-        parser_envelope.closing_suffix.description,
-        parser_envelope.closing_suffix.validation,
-        parser_envelope.closing_suffix.content,
+        parser_envelope.closing.row,
+        f"A{parser_envelope.closing.row}",
+        parser_envelope.closing.ordinal,
+        parser_envelope.closing.offset,
+        parser_envelope.closing.length,
+        parser_envelope.closing.type_code,
+        parser_envelope.closing.description,
+        parser_envelope.closing.validation,
+        parser_envelope.closing.content,
     )
     assert (
-        envelope.closing_source_cell,
-        envelope.closing_offset,
-        envelope.closing_length,
+        envelope.closing.source_cell,
+        envelope.closing.offset,
+        envelope.closing.length,
     ) == ("A15", "***", 18)
-    assert envelope.closing_aeat_type == "An"
-    assert envelope.closing_normalized_description.startswith("Constante. </T")
-    assert envelope.closing_validation is None
-    assert envelope.closing_content == '"</T200020250A0000>"'
+    assert envelope.closing.aeat_type == "An"
+    assert envelope.closing.normalized_description.startswith("Constante. </T")
+    assert envelope.closing.validation is None
+    assert envelope.closing.content == '"</T200020250A0000>"'
     assert (
         envelope.total_source_row,
         envelope.total_source_cell,
@@ -292,6 +304,8 @@ def test_intermediate_preserves_each_modelo_303_variable_envelope(
     parser_envelope = parser_envelopes[0]
     assert parser_envelope is not None
     envelope = intermediate.variable_envelopes[0]
+    assert isinstance(envelope.closing, RecordDesignIntermediateRelativeSuffixMarker)
+    assert isinstance(parser_envelope.closing, RecordDesignRelativeSuffixMarker)
     assert envelope.sheet == envelope.record_identity == parser_envelope.name == "DP30300"
     assert envelope.prefix_extent == parser_envelope.prefix_extent == 328
     assert (envelope.body_source_row, envelope.body_ordinal, envelope.body_offset, envelope.body_length) == (
@@ -301,20 +315,92 @@ def test_intermediate_preserves_each_modelo_303_variable_envelope(
         parser_envelope.body.length,
     )
     assert (
-        envelope.closing_source_row,
-        envelope.closing_ordinal,
-        envelope.closing_offset,
-        envelope.closing_length,
+        envelope.closing.source_row,
+        envelope.closing.ordinal,
+        envelope.closing.offset,
+        envelope.closing.length,
     ) == (
-        parser_envelope.closing_suffix.row,
-        parser_envelope.closing_suffix.ordinal,
-        parser_envelope.closing_suffix.offset,
-        parser_envelope.closing_suffix.length,
+        parser_envelope.closing.row,
+        parser_envelope.closing.ordinal,
+        parser_envelope.closing.offset,
+        parser_envelope.closing.length,
     )
     assert (envelope.total_source_row, envelope.total_label, envelope.total_length) == (
         parser_envelope.variable_total.row,
         parser_envelope.variable_total.label,
         parser_envelope.variable_total.length,
+    )
+
+
+@pytest.mark.parametrize(("source_ref", "filing_year", "design_epoch"), _MODELO_220_DESIGNS)
+def test_intermediate_preserves_each_modelo_220_composite_relative_closing(
+    source_ref: str,
+    filing_year: int,
+    design_epoch: str,
+) -> None:
+    """The public SHA-bound loader retains all six M220 closing rows in typed IR."""
+    source_root = bundled_path()
+    catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "is.toml"))
+    resolved = resolve_record_design_binary(
+        source_root,
+        catalogues.sources,
+        source_ref=source_ref,
+        filing_year=filing_year,
+        design_epoch=design_epoch,
+    )
+    parser_envelope = next(
+        sheet.variable_envelope
+        for sheet in extract_record_design(resolved.path)
+        if sheet.variable_envelope is not None
+    )
+    intermediate = load_record_design_intermediate(
+        source_root,
+        catalogues.sources,
+        source_ref=source_ref,
+        filing_year=filing_year,
+        design_epoch=design_epoch,
+    )
+
+    assert resolved.source.sha256 == intermediate.source.source_sha256
+    assert RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION == 3
+    assert len(intermediate.variable_envelopes) == 1
+    envelope = intermediate.variable_envelopes[0]
+    assert isinstance(parser_envelope.closing, RecordDesignCompositeRelativeClosing)
+    assert isinstance(envelope.closing, RecordDesignIntermediateCompositeRelativeClosing)
+    assert tuple(
+        (
+            part.source_row,
+            part.source_cell,
+            part.ordinal,
+            part.offset,
+            part.length,
+            part.aeat_type,
+            part.normalized_description,
+            part.validation,
+            part.content,
+        )
+        for part in envelope.closing.parts
+    ) == tuple(
+        (
+            part.row,
+            f"A{part.row}",
+            part.ordinal,
+            part.offset,
+            part.length,
+            part.type_code,
+            part.description,
+            part.validation,
+            part.content,
+        )
+        for part in parser_envelope.closing.parts
+    )
+    assert tuple(part.content for part in envelope.closing.parts) == (
+        "</T",
+        "220",
+        "(*)[A|E|I|0]",
+        None,
+        "0A",
+        "0000>",
     )
 
 
