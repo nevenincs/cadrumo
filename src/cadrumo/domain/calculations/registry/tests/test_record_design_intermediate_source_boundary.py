@@ -6,13 +6,17 @@ from pathlib import Path
 from shutil import copyfile
 
 import pytest
-from dev.registry._record_design_ir import RecordDesignIntermediate, load_record_design_intermediate
+from dev.registry._record_design_ir import (
+    RecordDesignIntermediate,
+    RecordDesignIntermediateRelativeSuffixMarker,
+    load_record_design_intermediate,
+)
 
 from .....core.resources import bundled_path
 from .._corpus_catalogue import resolve_record_design_binary
 from .._loader import load_catalogue_file
 from .._record_design import extract_record_design
-from .._record_design_schema import RecordDesignSheet
+from .._record_design_schema import RecordDesignRelativeSuffixMarker, RecordDesignSheet
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -154,13 +158,15 @@ def _assert_complete_parser_projection(
         assert intermediate_envelope.body_normalized_description == parsed_envelope.body.description
         assert intermediate_envelope.body_validation == parsed_envelope.body.validation
         assert intermediate_envelope.body_content == parsed_envelope.body.content
-        assert intermediate_envelope.closing_source_row == parsed_envelope.closing_suffix.row
-        assert intermediate_envelope.closing_offset == parsed_envelope.closing_suffix.offset
-        assert intermediate_envelope.closing_length == parsed_envelope.closing_suffix.length
-        assert intermediate_envelope.closing_aeat_type == parsed_envelope.closing_suffix.type_code
-        assert intermediate_envelope.closing_normalized_description == parsed_envelope.closing_suffix.description
-        assert intermediate_envelope.closing_validation == parsed_envelope.closing_suffix.validation
-        assert intermediate_envelope.closing_content == parsed_envelope.closing_suffix.content
+        assert isinstance(intermediate_envelope.closing, RecordDesignIntermediateRelativeSuffixMarker)
+        assert isinstance(parsed_envelope.closing, RecordDesignRelativeSuffixMarker)
+        assert intermediate_envelope.closing.source_row == parsed_envelope.closing.row
+        assert intermediate_envelope.closing.offset == parsed_envelope.closing.offset
+        assert intermediate_envelope.closing.length == parsed_envelope.closing.length
+        assert intermediate_envelope.closing.aeat_type == parsed_envelope.closing.type_code
+        assert intermediate_envelope.closing.normalized_description == parsed_envelope.closing.description
+        assert intermediate_envelope.closing.validation == parsed_envelope.closing.validation
+        assert intermediate_envelope.closing.content == parsed_envelope.closing.content
         assert intermediate_envelope.total_source_row == parsed_envelope.variable_total.row
         assert intermediate_envelope.total_label == parsed_envelope.variable_total.label
         assert intermediate_envelope.total_length == parsed_envelope.variable_total.length

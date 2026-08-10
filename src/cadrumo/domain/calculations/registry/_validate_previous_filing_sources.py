@@ -4,7 +4,7 @@ Validates that every ``previous_filing``
 :class:`~cadrumo.domain.calculations.registry.DataBindingDefinition` declared on a
 :class:`~cadrumo.domain.calculations.registry.ModeloDefinition` resolves to a
 known source modelo and that its declared
-:class:`~cadrumo.domain.calculations.registry.CasillaId` values exist in the
+:class:`~cadrumo.core.CasillaId` values exist in the
 matching source revisions.
 
 See Also:

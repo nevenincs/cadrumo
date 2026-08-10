@@ -9,10 +9,10 @@ from __future__ import annotations
 
 import pytest
 
+from ....application.modelo import profile_requirements_for_binding
 from ....application.user_profile import build_profile_preflight_requirement
 from ....core.resources import resources
 from ....domain.calculations.registry import binding_profile_keys
-from ....application.modelo import profile_requirements_for_binding
 from .._modelo import _date_binding_profile_requirements
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -106,10 +106,7 @@ def test_a_real_profile_binding_resolves_to_its_profile_facts() -> None:
     unit, binding = _an_addressable_profile_binding()
     schema = resources().user_profile_schema.singleton
     # Binding keys are schema PATHS, so the label is resolved by path.
-    labelled = [
-        build_profile_preflight_requirement(key, schema=schema).label
-        for key in binding_profile_keys(binding)
-    ]
+    labelled = [build_profile_preflight_requirement(key, schema=schema).label for key in binding_profile_keys(binding)]
 
     rendered = _date_binding_profile_requirements(unit, str(binding.id))
 

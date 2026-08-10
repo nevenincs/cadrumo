@@ -28,6 +28,7 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -59,6 +60,11 @@ def ledger_drift_findings(
     work_unit: WorkUnit,
     transaction_repository: TransactionCatalogueRepository | None,
     source_refs: tuple[str, ...] = (),
+    blocking_finding_observer: Callable[
+        [ModeloVerificationFinding, bool, tuple[str, ...], tuple[str, ...]],
+        None,
+    ]
+    | None = None,
 ) -> list[ModeloVerificationFinding]:
     """Refuse a draft whose contributing ledger rows moved since it was calculated.
 
@@ -91,19 +97,23 @@ def ledger_drift_findings(
     tx_repo = transaction_repository or TransactionCatalogueRepository(bucket_id=work_unit.bucket_id)
     anchor = target.ledger_filing_snapshot
     if anchor is None:
-        return [_drift_finding(work_unit=work_unit, source_refs=source_refs, changed=0, removed=0, anchored=False)]
+        finding = _drift_finding(work_unit=work_unit, source_refs=source_refs, changed=0, removed=0, anchored=False)
+        if blocking_finding_observer is not None:
+            blocking_finding_observer(finding, False, (), ())
+        return [finding]
     verdict = evaluate_ledger_filing_staleness(anchor, tx_repo.load())
     if not verdict.is_stale:
         return []
-    return [
-        _drift_finding(
-            work_unit=work_unit,
-            source_refs=source_refs,
-            changed=len(verdict.changed),
-            removed=len(verdict.removed),
-            anchored=True,
-        ),
-    ]
+    finding = _drift_finding(
+        work_unit=work_unit,
+        source_refs=source_refs,
+        changed=len(verdict.changed),
+        removed=len(verdict.removed),
+        anchored=True,
+    )
+    if blocking_finding_observer is not None:
+        blocking_finding_observer(finding, True, tuple(verdict.changed), tuple(verdict.removed))
+    return [finding]
 
 
 def _drift_finding(
@@ -116,25 +126,21 @@ def _drift_finding(
 ) -> ModeloVerificationFinding:
     """Build the blocking drift finding without persisting recovery prose.
 
-    The message carries COUNTS rather than a joined id list. A finding message
-    is capped at 500 characters and a contributor set is unbounded, so joining
-    the drifted ids is the same defect shape found six times across the
-    bucket-event payloads — and the ids are recoverable from the recalculate
-    this refusal instructs anyway.
+    The locale-neutral presentation facts carry counts; the exact changed and
+    removed identities remain on the paired precondition evidence record.
     """
-    detail = (
-        f"{changed} contributing row(s) changed and {removed} were removed since this draft was calculated"
-        if anchored
-        else "this draft carries no record of the ledger state it was calculated from"
-    )
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.BLOCKING_RULE,
         severity=ModeloVerificationFindingSeverity.BLOCKING,
-        message=(
-            f"the ledger no longer matches the stored calculation for modelo {work_unit.modelo} "
-            f"{work_unit.filing_year} {work_unit.period.registry_token}: {detail}. "
-            "Verifying it would grant over casilla values the ledger no longer supports."
-        ),
+        message_locale_key="application.modelo.findings.ledger_snapshot_drift",
+        message_facts={
+            "modelo": str(work_unit.modelo),
+            "filing_year": work_unit.filing_year,
+            "period": work_unit.period.registry_token,
+            "anchored": anchored,
+            "changed_count": changed,
+            "removed_count": removed,
+        },
         legal_refs=LEDGER_DRIFT_LEGAL_REFS,
         source_refs=source_refs,
     )

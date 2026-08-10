@@ -47,6 +47,10 @@ import typer
 
 from ....application.bucket_maintenance import SandboxMergeScope
 from ....application.operator_actions import ActionReference
+from ....core import (
+    ActionArgumentSource,
+    ActionArgumentStatus,
+)
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from ....core.json_contract import (
@@ -563,12 +567,10 @@ def _register_sandbox_archive_command(app: typer.Typer) -> None:
             code="config.profile.sandbox.archive.restorable",
             message=tr(
                 "cli.config.profile.sandbox.archive_restorable_info",
-                default=(
-                    "The sandbox is now dormant; the available recovery action can bring %{name} back."
-                ),
+                default=("The sandbox is now dormant; the available recovery action can bring %{name} back."),
                 name=name,
             ),
-        action=resolve_notice_action(
+            action=resolve_notice_action(
                 action=ActionReference(action_id="operator.profile.sandbox.restore"),
                 argument_bindings=(
                     ResolvedActionArgument(
@@ -578,8 +580,8 @@ def _register_sandbox_archive_command(app: typer.Typer) -> None:
                         source=ActionArgumentSource.VERDICT_CONTEXT,
                         source_key="name",
                     ),
+                ),
             ),
-        ),
         )
         _emit_envelope(
             ctx,

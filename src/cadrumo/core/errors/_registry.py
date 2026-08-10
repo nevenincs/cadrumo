@@ -71,22 +71,11 @@ class ErrorCategory(StrEnum):
     LOCKED = "LOCKED"
 
 
-_TEXT_PREFIX: dict[ErrorCategory, str] = {
-    ErrorCategory.ERROR: "Error.",
-    ErrorCategory.REFUSED: "Refused.",
-    ErrorCategory.AUTH: "Auth.",
-    ErrorCategory.INTEGRITY: "Integrity.",
-    ErrorCategory.FAIL: "Failed.",
-    ErrorCategory.INTERNAL: "Internal.",
-    ErrorCategory.LOCKED: "Locked.",
-}
-
-
 def _category_text_prefix(category: ErrorCategory) -> str:
     """Return the sentence-case stderr prefix for ``category``."""
     from ..i18n import tr
 
-    return tr(f"errors.prefix.{category.value.lower()}", default=_TEXT_PREFIX[category])
+    return tr(f"errors.prefix.{category.value.lower()}")
 
 
 class ErrorCode(BaseModel):

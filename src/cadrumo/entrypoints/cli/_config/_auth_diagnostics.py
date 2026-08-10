@@ -87,6 +87,7 @@ def auth_diagnostics_show(
     from .._config_payloads import AuthDiagnosticsShowResult
 
     reported_at = detail.phone_state_reported_at.isoformat() if detail.phone_state_reported_at is not None else ""
+    observed_at = detail.phone_state_observed_at.isoformat() if detail.phone_state_observed_at is not None else ""
     bool_value = _optional_bool_text
     show_result = AuthDiagnosticsShowResult(**detail.model_dump())
     _emit_envelope(
@@ -119,6 +120,8 @@ def auth_diagnostics_show(
             f"certificate_file_present\t{bool_value(detail.certificate_file_present)}",
             f"certificate_path_fingerprint\t{detail.certificate_path_fingerprint}",
             f"phone_state\t{detail.phone_state}",
+            f"phone_state_source\t{detail.phone_state_source or ''}",
+            f"phone_state_observed_at\t{observed_at}",
             f"phone_state_reported_at\t{reported_at}",
             f"operator_report_commands\t{'; '.join(detail.operator_report_commands)}",
             f"html_captured\t{detail.html_captured}",

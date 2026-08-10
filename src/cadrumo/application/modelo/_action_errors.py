@@ -56,18 +56,6 @@ class WorkUnitNotFoundError(ModeloError, KeyError):
     """Raised when a work-unit lookup or mutation targets a missing id."""
 
 
-class WorkUnitAlreadyDiscardedError(ModeloError):
-    """Raised when discard is invoked on a work unit already discarded."""
-
-
-class WorkUnitMutationRefusedError(ModeloError):
-    """Raised when a mutation targets a discarded work unit."""
-
-
-class CalculationRevisionNotFoundError(ModeloError, CoreNotFoundError):
-    """Raised when a calculation revision lookup fails."""
-
-
 class ModeloPreconditionErrorMixin:
     """Attach one locale-neutral application decision to a registered error."""
 
@@ -76,7 +64,6 @@ class ModeloPreconditionErrorMixin:
         message: str | None = None,
         *,
         context: Mapping[str, object] | None = None,
-        suggestion: str | None = None,
         translated_message: str | None = None,
         precondition_failure: ModeloPreconditionFailure | None = None,
     ) -> None:
@@ -84,7 +71,6 @@ class ModeloPreconditionErrorMixin:
         parent_init(
             message,
             context=context,
-            suggestion=suggestion,
             translated_message=translated_message,
         )
         self._precondition_failure = precondition_failure
@@ -93,6 +79,24 @@ class ModeloPreconditionErrorMixin:
     def precondition_failure(self) -> ModeloPreconditionFailure | None:
         """Return the failed-precondition carrier for a later transport."""
         return self._precondition_failure
+
+    @property
+    def terminal_precondition_verdict(self) -> PreconditionVerdict | None:
+        """Expose the one application-owned verdict to the generic CLI boundary."""
+        failure = self.precondition_failure
+        return None if failure is None else failure.verdict
+
+
+class WorkUnitAlreadyDiscardedError(ModeloPreconditionErrorMixin, ModeloError):
+    """Raised when discard is invoked on a work unit already discarded."""
+
+
+class WorkUnitMutationRefusedError(ModeloPreconditionErrorMixin, ModeloError):
+    """Raised when a lifecycle mutation targets a rejected work-unit state."""
+
+
+class CalculationRevisionNotFoundError(ModeloPreconditionErrorMixin, ModeloError, CoreNotFoundError):
+    """Raised when a calculation revision lookup fails."""
 
 
 class CalculationRevisionStateError(ModeloPreconditionErrorMixin, ModeloError):

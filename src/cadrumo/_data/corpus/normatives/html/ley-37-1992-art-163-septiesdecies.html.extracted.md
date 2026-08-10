@@ -20,7 +20,3 @@ Cinco. Reglamentariamente se establecerán las disposiciones necesarias para el 
 Se modifica, con efectos de 1 de julio de 2021, por el art. 10.19 del Real Decreto-ley 7/2021, de 27 de abril. Ref. BOE-A-2021-6872
 Se añade por el art. 1.35 de la Ley 28/2014, de 27 de noviembre. Ref. BOE-A-2014-12329.
 Texto añadido, publicado el 28/11/2014, en vigor a partir del 01/01/2015.
-Sección 2.ª Régimen exterior de la Unión. Régimen especial aplicable a los servicios prestados por empresarios o profesionales no establecidos en la Comunidad a destinatarios que no tengan la condición de empresarios o profesionales actuando como tales
-Se modifica, con efectos de 1 de julio de 2021, por el art. 10.20 del Real Decreto-ley 7/2021, de 27 de abril. Ref. BOE-A-2021-6872
-Se añade por el art. 1.35 de la Ley 28/2014, de 27 de noviembre. Ref. BOE-A-2014-12329.
-Texto añadido, publicado el 28/11/2014, en vigor a partir del 01/01/2015.

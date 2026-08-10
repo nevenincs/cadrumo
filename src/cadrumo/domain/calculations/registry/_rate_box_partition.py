@@ -231,12 +231,7 @@ def derive_rate_box_partitions(revision: ModeloRevision) -> tuple[RateBoxPartiti
     casillas_by_binding = _casillas_by_binding(revision)
     exports = {casilla.id: bool(casilla.export_refs) for casilla in revision.casillas}
 
-    grouped: dict[tuple[tuple[str, str], ...], list[tuple[DataBindingDefinition, Mapping[str, object]]]] = {}
-    for binding in revision.bindings:
-        if binding.source is not BindingSourceKind.LEDGER_IVA_AGGREGATION:
-            continue
-        axes = _iva_selector_axes(binding)
-        grouped.setdefault(_partition_key(axes), []).append((binding, axes))
+    grouped = _ledger_iva_bindings_by_partition_key(revision)
 
     partitions: list[RateBoxPartition] = []
     for members in grouped.values():

@@ -463,12 +463,12 @@ _register_lazy_wizard_leaf(
     ),
     epilog=tr(
         "cli.config.profile.create_epilog",
-           default=(
-               "Minimal freelancer profile: aeat config profile create PROFILE"
-               " --entity-type natural_person --tax-id <DNI/NIE/NIF>"
-               " --name <NAME> --surnames <SURNAMES> --activity <ACTIVITY>"
-               " --irpf-income-categories actividad_economica --quiet --accept-defaults"
-           ),
+        default=(
+            "Minimal freelancer profile: aeat config profile create PROFILE"
+            " --entity-type natural_person --tax-id <DNI/NIE/NIF>"
+            " --name <NAME> --surnames <SURNAMES> --activity <ACTIVITY>"
+            " --irpf-income-categories actividad_economica --quiet --accept-defaults"
+        ),
     ),
 )
 

@@ -17,7 +17,7 @@ import pytest
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period
+from ....core import NoRecoveryOutcome, Period
 from ....domain.modelos import WorkUnit, WorkUnitState
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
@@ -115,23 +115,29 @@ def test_the_refusal_names_the_state_and_the_target_coordinates(
 
     context = raised.value.context
     assert context is not None
-    assert context["state"] == WorkUnitState.DESCARTADO.value
-    assert context["work_unit_id"] == created.work_unit_id
-    assert context["modelo"] == _MODELO
-    assert context["filing_year"] == str(_FILING_YEAR)
-    assert context["period"] == _PERIOD_CODE
-    assert context["discarded_by"] == "operator"
+    assert context == {
+        "work_unit_id": created.work_unit_id,
+        "work_unit_state": WorkUnitState.DESCARTADO.value,
+        "modelo": _MODELO,
+        "filing_year": _FILING_YEAR,
+        "period": _PERIOD_CODE,
+        "revision_id": _REVISION_ID,
+    }
+    failure = raised.value.precondition_failure
+    assert failure is not None
+    assert failure.identity == (
+        "modelo.work.create",
+        "modelo.work.create.lifecycle.target_available",
+        "modelo.work.create.lifecycle.target_discarded",
+    )
+    assert failure.verdict.action is None
+    assert failure.verdict.no_recovery_outcome is NoRecoveryOutcome.TERMINAL
 
 
-def test_the_refusal_does_not_reuse_the_circular_mutation_message(
+def test_the_refusal_has_its_own_terminal_create_scenario(
     discard_repos: tuple[str, WorkUnitCatalogueRepository],
 ) -> None:
-    """The sibling key advises creating a fresh unit, which is what just failed.
-
-    Pinning the key rather than the prose keeps this a structural assertion while
-    still catching a future author who routes this refusal onto the generic
-    mutation-refused message and reintroduces the circular instruction.
-    """
+    """The create refusal identifies the terminal target state without recovery prose."""
     bucket_id, repository = discard_repos
     created = _create(repository, bucket_id=bucket_id)
     discard_work_unit(created.work_unit_id, actor="operator", repository=repository, clock=_T0)
@@ -139,7 +145,11 @@ def test_the_refusal_does_not_reuse_the_circular_mutation_message(
     with pytest.raises(WorkUnitMutationRefusedError) as raised:
         _create(repository, bucket_id=bucket_id)
 
-    assert raised.value.translated_message != "application.modelo.errors.work_unit_mutation_refused"
+    assert raised.value.translated_message == "application.modelo.errors.work_unit_create_discarded"
+    verdict = raised.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.action is None
+    assert verdict.no_recovery_outcome is NoRecoveryOutcome.TERMINAL
 
 
 def test_an_active_unit_still_returns_idempotently(

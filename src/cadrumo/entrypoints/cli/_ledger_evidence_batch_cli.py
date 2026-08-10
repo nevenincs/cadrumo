@@ -47,6 +47,7 @@ if TYPE_CHECKING:
 
 __all__ = ["register_evidence_batch_command"]
 
+
 def register_evidence_batch_command(evidence_app: typer.Typer) -> None:
     """Mount ``aeat app ledger evidence batch`` on the evidence sub-app."""
 
@@ -275,10 +276,7 @@ def _notice_line(notice: Notice) -> str:
             [
                 notice.action.action.action_id,
                 notice.action.action.target_command_key,
-                ",".join(
-                    f"{binding.argument_name}={binding.value}"
-                    for binding in notice.action.argument_bindings
-                )
+                ",".join(f"{binding.argument_name}={binding.value}" for binding in notice.action.argument_bindings)
                 or "-",
             ],
         )

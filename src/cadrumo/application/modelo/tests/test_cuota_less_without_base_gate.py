@@ -122,7 +122,8 @@ def test_a_cuota_less_row_with_no_base_blocks() -> None:
     assert len(findings) == 1
     finding = findings[0]
     assert finding.severity is ModeloVerificationFindingSeverity.BLOCKING
-    assert "tx-1" in finding.message
+    assert finding.message_locale_key == "application.modelo.findings.cuota_less_ledger_row_base_missing"
+    assert finding.message_facts["transaction_id"] == "tx-1"
     # The refusal must name the fix, not merely the fault.
     assert "next_action" not in finding.model_dump(mode="json")
     # Grounded in the duty to declare the operation, not in the deduction-evidence

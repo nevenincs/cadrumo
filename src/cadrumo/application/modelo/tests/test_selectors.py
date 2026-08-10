@@ -31,6 +31,7 @@ from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...user_profile import UserProfileLifecycleRepository
 from .. import create_work_unit
+from .._action_errors import CalculationRevisionStateError
 from .._selectors import (
     ModeloCalculationRevisionSelector,
     ModeloCalculationRevisionSelectorAmbiguousError,
@@ -610,8 +611,15 @@ def test_addressed_revision_policy_resolvers_enforce_command_specific_state(
         )
         == verified
     )
-    with pytest.raises(ModeloCalculationRevisionSelectorStateError, match="filing requires verificado_completo"):
+    with pytest.raises(CalculationRevisionStateError) as raised:
         resolve_fileable_modelo_calculation_revision_address(
             address=address,
             selector=ModeloCalculationRevisionSelector.LATEST_DRAFT,
         )
+    failure = raised.value.precondition_failure
+    assert failure is not None
+    assert failure.scenario_id == "modelo.work.file.calculation_revision.unverified"
+    assert raised.value.terminal_precondition_verdict is failure.verdict
+    assert failure.verdict.action is not None
+    assert failure.verdict.action.action_id == "operator.modelo.work.verify"
+    assert failure.verdict.argument_bindings[0].value == work_unit.work_unit_id

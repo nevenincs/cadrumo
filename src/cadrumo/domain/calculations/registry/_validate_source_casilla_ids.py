@@ -1,6 +1,6 @@
 """Shared source-casilla-id helpers for cross-model validation.
 
-Returns the canonical :class:`~domain.calculations.registry.CasillaId`
+Returns the canonical :class:`~core.CasillaId`
 values a :class:`~domain.calculations.registry.ModeloRevision` can expose
 to cross-model relation validators.
 
@@ -23,7 +23,7 @@ from ._schema import ModeloRevision
 def revision_output_ids(revision: ModeloRevision) -> set[CasillaId]:
     """Return canonical source ids exposed by one registry revision.
 
-    The returned :class:`~domain.calculations.registry.CasillaId` set
+    The returned :class:`~core.CasillaId` set
     includes declared casillas plus algorithm-binding outputs from the
     supplied :class:`~domain.calculations.registry.ModeloRevision`.
     """
@@ -52,7 +52,7 @@ def source_casilla_id_reference_failure(
             canonical outputs are available to relation or previous-filing
             closure.
         source_casilla_id: Candidate
-            :class:`~domain.calculations.registry.CasillaId` source
+            :class:`~core.CasillaId` source
             reference token to validate.
         source_scope: Human-readable scope prefix for the emitted failure.
         missing_failure: Failure message to reuse for a truly unknown source id.

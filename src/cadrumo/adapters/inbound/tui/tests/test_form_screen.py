@@ -14,9 +14,11 @@ from __future__ import annotations
 
 import pytest
 from textual.app import App
-from textual.widgets import DataTable, Input, SelectionList, Static
+from textual.containers import ScrollableContainer
+from textual.widgets import Button, DataTable, Input, SelectionList, Static
 
 from .. import FormApp, FormField, FormFieldKind, FormPage, FormScreen, form_choices, multi_choice_tokens
+from .._theme import ContentScroll
 
 pytestmark = [
     pytest.mark.unit,
@@ -137,7 +139,30 @@ async def test_a_multi_choice_field_stores_the_tokens_it_was_given() -> None:
         app.screen.query_one("#edit-choices", SelectionList).select_all()
         await pilot.click("#btn-edit-save")
         await pilot.pause()
-        assert set(multi_choice_tokens(_rows(app)["scopes"])) == {"READ", "WRITE"}
+        assert _rows(app)["scopes"] == "Read, Write"
+        await pilot.click("#btn-form-save")
+        await pilot.pause()
+    assert app.collected is not None
+    assert set(multi_choice_tokens(app.collected["scopes"])) == {"READ", "WRITE"}
+
+
+@pytest.mark.asyncio
+async def test_choice_rows_render_labels_and_never_storage_tokens() -> None:
+    """The page may store a schema token but must speak in operator labels."""
+    field = FormField(
+        key="route",
+        label="Cl@ve Móvil route",
+        value="app_request",
+        kind=FormFieldKind.SINGLE_CHOICE,
+        choices=form_choices([("qr", "QR code"), ("app_request", "Request in app")]),
+    )
+    app = FormApp(_page(field))
+
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.pause()
+        rendered = _rows(app)["route"]
+        assert rendered == "Request in app"
+        assert "app_request" not in rendered
         app.exit(None)
 
 
@@ -216,3 +241,44 @@ async def test_a_shrinking_page_drops_the_values_it_no_longer_asks_for() -> None
         await pilot.pause()
     assert app.collected is not None
     assert "child-1" not in app.collected
+
+
+@pytest.mark.asyncio
+async def test_an_overflowing_form_has_exactly_one_visible_vertical_scrollbar() -> None:
+    """The outer page, not its auto-height table, owns vertical scrolling.
+
+    Twenty real rows are a positive control: at this terminal height the
+    page cannot fit, so a test that merely observed no table scrollbar would
+    be vacuous. The mounted widget geometry proves both the overflow and the
+    single-owner result that prevents adjacent right-side tracks.
+    """
+    app = FormApp(
+        _page(
+            *[FormField(key=f"field-{index}", label=f"Field {index}", value=str(index)) for index in range(20)],
+        ),
+    )
+    async with app.run_test(size=(80, 16)) as pilot:
+        await pilot.pause()
+        form = _form(app)
+        outer = form.query_one(ContentScroll)
+        table = form.query_one("#form-table", DataTable)
+
+        assert outer.virtual_size.height > outer.container_size.height
+        assert outer.show_vertical_scrollbar
+        assert not table.show_vertical_scrollbar
+        assert table.virtual_size.height == table.container_size.height
+        assert table.max_scroll_y == 0
+
+        visible_owners = [
+            widget
+            for widget in app.screen.walk_children()
+            if isinstance(widget, ScrollableContainer) and widget.display and widget.show_vertical_scrollbar
+        ]
+        assert visible_owners == [outer]
+
+        await pilot.press("tab")
+        await pilot.pause()
+        cancel = form.query_one("#btn-form-cancel", Button)
+        assert cancel.has_focus
+        assert outer.region.contains_region(cancel.region)
+        app.exit(None)

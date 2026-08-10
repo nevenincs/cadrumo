@@ -19,6 +19,7 @@ from ..core.errors import CadrumoError
 from ..core.logging import get_logger
 from .auth import (
     ProviderProbeResult,
+    bind_profile_auth_settings,
     probe_provider_credentials,
     project_active_certificate_credentials,
     select_provider,
@@ -271,6 +272,16 @@ def build_auth_readiness(
     effective_certificate_path = certificate.effective_certificate_path
     backend_settings = certificate.backend_settings
     certificate_credentials = certificate.certificate_credentials
+
+    if probe_live_backend and provider_kind in (
+        AuthProviderKind.CLAVE_MOVIL,
+        AuthProviderKind.CLAVE_PERMANENTE,
+    ):
+        backend_settings = bind_profile_auth_settings(
+            provider_kind,
+            settings=load_settings(),
+            state=state,
+        )
 
     configured = _provider_configured(
         state,

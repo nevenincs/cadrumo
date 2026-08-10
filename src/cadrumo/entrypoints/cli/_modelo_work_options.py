@@ -19,6 +19,7 @@ from typing import Annotated
 
 import typer
 
+from ...core import PaymentElection, PriorDomiciliationElection, RefundElection
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ._common import MODELO_CODE_CHOICE
@@ -43,8 +44,23 @@ _NameOpt = Annotated[str | None, typer.Option("--name", help=tr("cli.app.modelo.
 _WorkUnitIdOpt = Annotated[str | None, typer.Option("--work-unit-id", help=tr("cli.app.modelo.work.work_unit_id_help"))]
 _RevisionSelectorOpt = Annotated[
     str,
-    typer.Option("--select", help=tr("cli.app.modelo.work.revision_selector_help", default="Revision selector.")),
+    typer.Option("--select", help=tr("cli.app.modelo.work.revision_selector_help")),
 ]
 _WizardOutputLanguageOpt = Annotated[
     OutputLanguage | None, typer.Option("--output-language", help=tr("cli.app.modelo.work.output_language_help"))
+]
+_RefundElectionOpt = Annotated[
+    RefundElection,
+    typer.Option("--refund-election", help=tr("cli.app.modelo.work.refund_election_help")),
+]
+_PaymentElectionOpt = Annotated[
+    PaymentElection,
+    typer.Option("--payment-election", help=tr("cli.app.modelo.work.payment_election_help")),
+]
+_PriorDomiciliationElectionOpt = Annotated[
+    PriorDomiciliationElection,
+    typer.Option(
+        "--prior-domiciliation-election",
+        help=tr("cli.app.modelo.work.prior_domiciliation_election_help"),
+    ),
 ]

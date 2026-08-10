@@ -130,7 +130,7 @@ class RegistryCalculationEntry(BaseModel):
     """One trace row emitted by the registry formula runtime.
 
     Carries the per-formula provenance for a single formula-computed
-    :class:`~domain.calculations.registry.CasillaId`. Entries cover only
+    :class:`~core.CasillaId`. Entries cover only
     casillas computed by a registry formula; input and bound casillas remain in
     :class:`~domain.calculations.registry.CasillaObservation` storage and
     must be read through :attr:`RegistryCalculationResult.observations`.

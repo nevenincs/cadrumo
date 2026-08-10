@@ -17,6 +17,8 @@ from typing import Final, Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from cadrumo.domain.calculations.registry import (
+    RecordDesignCompositeRelativeClosing,
+    RecordDesignRelativeSuffixMarker,
     RecordDesignSheet,
     RecordDesignVariableEnvelope,
     RegistryValidationError,
@@ -30,7 +32,9 @@ from cadrumo.domain.calculations.registry import (
 __all__ = [
     "RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION",
     "RecordDesignIntermediate",
+    "RecordDesignIntermediateCompositeRelativeClosing",
     "RecordDesignIntermediateField",
+    "RecordDesignIntermediateRelativeSuffixMarker",
     "RecordDesignIntermediateSheet",
     "RecordDesignIntermediateSource",
     "RecordDesignIntermediateVariableEnvelope",
@@ -39,7 +43,7 @@ __all__ = [
 ]
 
 
-RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION: Final[int] = 2
+RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION: Final[int] = 3
 """Schema version for the parser-owned intermediate representation.
 
 The provenance contract records this value beside every generated revision. A
@@ -97,6 +101,43 @@ class RecordDesignIntermediateSheet(_StrictModel):
     fields: tuple[RecordDesignIntermediateField, ...] = Field(min_length=1)
 
 
+class RecordDesignIntermediateRelativeSuffixMarker(_StrictModel):
+    """One exact parser-owned relative closing row."""
+
+    source_row: int = Field(gt=0)
+    source_cell: str | None = Field(default=None, pattern=r"^[A-Z]+[1-9][0-9]*$")
+    ordinal: int = Field(gt=0)
+    offset: Literal["***"]
+    length: int = Field(gt=0)
+    aeat_type: str = Field(min_length=1)
+    normalized_description: str = Field(min_length=1)
+    validation: str | None = None
+    content: str | None = None
+
+
+class RecordDesignIntermediateCompositeRelativeClosing(_StrictModel):
+    """Six distinct Modelo 220 closing rows, retained without concatenation."""
+
+    tag_prefix: RecordDesignIntermediateRelativeSuffixMarker
+    modelo: RecordDesignIntermediateRelativeSuffixMarker
+    discriminant: RecordDesignIntermediateRelativeSuffixMarker
+    filing_year: RecordDesignIntermediateRelativeSuffixMarker
+    period: RecordDesignIntermediateRelativeSuffixMarker
+    tag_suffix: RecordDesignIntermediateRelativeSuffixMarker
+
+    @property
+    def parts(self) -> tuple[RecordDesignIntermediateRelativeSuffixMarker, ...]:
+        """Return the six exact source rows in official order."""
+        return (
+            self.tag_prefix,
+            self.modelo,
+            self.discriminant,
+            self.filing_year,
+            self.period,
+            self.tag_suffix,
+        )
+
+
 class RecordDesignIntermediateVariableEnvelope(_StrictModel):
     """Parser-owned composition wrapper excluded from fixed-record consumers."""
 
@@ -113,15 +154,7 @@ class RecordDesignIntermediateVariableEnvelope(_StrictModel):
     body_normalized_description: str = Field(min_length=1)
     body_validation: str | None = None
     body_content: str | None = None
-    closing_source_row: int = Field(gt=0)
-    closing_source_cell: str | None = Field(default=None, pattern=r"^[A-Z]+[1-9][0-9]*$")
-    closing_ordinal: int = Field(gt=0)
-    closing_offset: Literal["***"]
-    closing_length: int = Field(gt=0)
-    closing_aeat_type: str = Field(min_length=1)
-    closing_normalized_description: str = Field(min_length=1)
-    closing_validation: str | None = None
-    closing_content: str | None = None
+    closing: RecordDesignIntermediateRelativeSuffixMarker | RecordDesignIntermediateCompositeRelativeClosing
     total_source_row: int = Field(gt=0)
     total_source_cell: str | None = Field(default=None, pattern=r"^[A-Z]+[1-9][0-9]*$")
     total_label: Literal["total"]
@@ -278,17 +311,47 @@ def _intermediate_variable_envelope(
         body_normalized_description=envelope.body.description,
         body_validation=envelope.body.validation,
         body_content=envelope.body.content,
-        closing_source_row=envelope.closing_suffix.row,
-        closing_source_cell=_source_cell(envelope.closing_suffix.row, workbook_format),
-        closing_ordinal=envelope.closing_suffix.ordinal,
-        closing_offset=envelope.closing_suffix.offset,
-        closing_length=envelope.closing_suffix.length,
-        closing_aeat_type=envelope.closing_suffix.type_code,
-        closing_normalized_description=envelope.closing_suffix.description,
-        closing_validation=envelope.closing_suffix.validation,
-        closing_content=envelope.closing_suffix.content,
+        closing=_intermediate_relative_closing(envelope.closing, workbook_format=workbook_format),
         total_source_row=envelope.variable_total.row,
         total_source_cell=_source_cell(envelope.variable_total.row, workbook_format),
         total_label=envelope.variable_total.label,
         total_length=envelope.variable_total.length,
+    )
+
+
+def _intermediate_relative_closing(
+    closing: RecordDesignRelativeSuffixMarker | RecordDesignCompositeRelativeClosing,
+    *,
+    workbook_format: RecordDesignWorkbookFormat,
+) -> RecordDesignIntermediateRelativeSuffixMarker | RecordDesignIntermediateCompositeRelativeClosing:
+    if isinstance(closing, RecordDesignCompositeRelativeClosing):
+        parts = tuple(
+            _intermediate_relative_suffix(part, workbook_format=workbook_format) for part in closing.parts
+        )
+        return RecordDesignIntermediateCompositeRelativeClosing(
+            tag_prefix=parts[0],
+            modelo=parts[1],
+            discriminant=parts[2],
+            filing_year=parts[3],
+            period=parts[4],
+            tag_suffix=parts[5],
+        )
+    return _intermediate_relative_suffix(closing, workbook_format=workbook_format)
+
+
+def _intermediate_relative_suffix(
+    suffix: RecordDesignRelativeSuffixMarker,
+    *,
+    workbook_format: RecordDesignWorkbookFormat,
+) -> RecordDesignIntermediateRelativeSuffixMarker:
+    return RecordDesignIntermediateRelativeSuffixMarker(
+        source_row=suffix.row,
+        source_cell=_source_cell(suffix.row, workbook_format),
+        ordinal=suffix.ordinal,
+        offset=suffix.offset,
+        length=suffix.length,
+        aeat_type=suffix.type_code,
+        normalized_description=suffix.description,
+        validation=suffix.validation,
+        content=suffix.content,
     )

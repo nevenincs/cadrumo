@@ -73,6 +73,7 @@ def test_common_action_resolver_uses_the_live_surface_for_zero_and_required_inpu
         "action": {
             "action_id": "operator.overview.status",
             "target_command_key": "overview.status",
+            "cli_path": ["app", "overview", "status"],
         },
         "argument_bindings": [],
     }
@@ -174,6 +175,7 @@ def test_common_action_resolver_accepts_modelo_calculate_verdict_context_binding
         "action": {
             "action_id": "operator.modelo.work.calculate",
             "target_command_key": "modelo.work.calculate",
+            "cli_path": ["app", "modelo", "work", "calculate"],
         },
         "argument_bindings": [
             {
@@ -197,7 +199,7 @@ def test_common_action_resolver_accepts_modelo_calculate_verdict_context_binding
         (r"C:\tmp\$(Write-Output PWN)\bundle.aeat", r"'C:\tmp\$(Write-Output PWN)\bundle.aeat'"),
         (r"C:\$env:TEMP\bundle.aeat", r"'C:\$env:TEMP\bundle.aeat'"),
         (r"C:\tmp\`quoted\bundle.aeat", r"'C:\tmp\`quoted\bundle.aeat'"),
-        (r'''C:\tmp\"quoted"\bundle.aeat''', r"""'C:\tmp\"quoted"\bundle.aeat'"""),
+        (r"""C:\tmp\"quoted"\bundle.aeat""", r"""'C:\tmp\"quoted"\bundle.aeat'"""),
         (r"C:\O'Brien\bundle.aeat", r"'C:\O''Brien\bundle.aeat'"),
     ),
 )

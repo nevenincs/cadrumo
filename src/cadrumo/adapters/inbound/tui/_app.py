@@ -86,12 +86,12 @@ class FlowTuiApp(App[None]):
         background: $primary;
         color: $text;
         text-style: bold;
-        padding: 0 2;
+        padding: 0 1;
     }
     #flow-progress {
         height: 1;
         width: 100%;
-        padding: 0 2;
+        padding: 0 1;
         background: $surface;
         color: $text-muted;
     }
@@ -99,19 +99,19 @@ class FlowTuiApp(App[None]):
        inside the shared `.cadrumo-scroll` host and `.cadrumo-column`, so
        its border, padding, margin and auto height come from the one panel
        definition every surface shares. */
-    #page-prompt { text-style: bold; margin: 0 0 1 0; }
+    #page-prompt { text-style: bold; margin: 0; }
     #page-badge {
         background: $warning 30%;
         color: $warning;
         width: auto;
         padding: 0 1;
-        margin: 0 0 1 0;
+        margin: 0;
     }
-    #page-help { color: $text-muted; text-style: italic; margin: 0 0 1 0; }
-    #page-format-hint { color: $text-muted; margin: 0 0 1 0; }
-    #page-failure-modes { color: $text-muted; margin: 0 0 1 0; }
-    #page-legal-zone { color: $text-muted; text-style: italic; margin: 0 0 1 0; }
-    #widget-area { margin: 1 0; height: auto; }
+    #page-help { color: $text-muted; text-style: italic; margin: 0; }
+    #page-format-hint { color: $text-muted; margin: 0; }
+    #page-failure-modes { color: $text-muted; margin: 0; }
+    #page-legal-zone { color: $text-muted; text-style: italic; margin: 0; }
+    #widget-area { margin: 0; height: auto; }
     #widget-area Input { border: tall $accent; background: $background; }
     #widget-area RadioSet, #widget-area OptionList {
         border: round $panel;
@@ -125,8 +125,8 @@ class FlowTuiApp(App[None]):
     #live-validation { color: $error; margin: 0; }
     #answer-echo { color: $success; text-style: bold; margin: 0; }
     #commit-verdicts { color: $error; margin: 0; }
-    #nav-buttons { height: 1; align-horizontal: right; margin: 1 0 0 0; }
-    #nav-buttons Button { margin: 0 0 0 2; }
+    #nav-buttons { height: 1; align-horizontal: right; margin: 0; }
+    #nav-buttons Button { margin: 0 0 0 1; }
     #review-header {
         dock: top;
         height: 1;
@@ -134,12 +134,12 @@ class FlowTuiApp(App[None]):
         background: $primary;
         color: $text;
         text-style: bold;
-        padding: 0 2;
+        padding: 0 1;
     }
     #review-table {
         border: round $primary;
         background: $surface;
-        margin: 1 2;
+        margin: 0;
         /* 1fr, not auto. A DataTable is its own scroll container and is a
            real control the operator drives with the arrow keys, so it must
            be the one thing that scrolls here. At `height: auto` it grew to
@@ -152,11 +152,11 @@ class FlowTuiApp(App[None]):
         color: $error;
         border: round $error;
         padding: 0 1;
-        margin: 1 2;
+        margin: 0;
         width: 100%;
     }
-    #review-save-note { color: $warning; margin: 0 2; }
-    #btn-submit { dock: bottom; margin: 1 2; }
+    #review-save-note { color: $warning; margin: 0; }
+    #btn-submit { dock: bottom; margin: 0; }
     """
     )
 

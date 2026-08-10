@@ -18,7 +18,9 @@ from ...application.modelo import (
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
     discard_work_unit,
-    ensure_modelo_work_unit_for_visible_target,
+    ensure_modelo_work_unit_for_active_target,
+    lifecycle_continuation_for_work_list,
+    lifecycle_continuation_for_work_status,
     list_work_units,
     modelo_work_create_applicability_refusal,
     modelo_work_create_refusal_locale_key,
@@ -27,19 +29,16 @@ from ...application.modelo import (
     require_profile_ready_for_modelo_work,
     resolve_registry_revision_for_work_target,
 )
-from ...application.operator_actions import ActionReference
-from ...core import ActionArgumentSource, ActionArgumentStatus, Modelo, Period
+from ...core import Modelo, Period
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.json_contract import (
     Notice,
-    NoticeSeverity,
-    ResolvedActionArgument,
 )
 from ...domain.calculations.registry import RegistrySnapshotError
 from ...domain.contribuyente import parse_tax_region
 from ...domain.modelos import WorkUnit
-from ._common import _emit_envelope, active_profile_label, resolve_notice_action
+from ._common import _emit_envelope, active_profile_label, resolve_lifecycle_continuation_notice
 from ._modelo_cli_support import resolve_explicit_or_active_bucket_id
 from ._modelo_payloads import (
     WorkCreateResult,
@@ -50,7 +49,6 @@ from ._modelo_payloads import (
 )
 from ._modelo_rendering import (
     advisory_notice,
-    short_id,
     work_unit_lines,
     work_unit_list_lines,
     work_unit_payload,
@@ -177,41 +175,21 @@ def _register_work_create_command(work_app: typer.Typer, deps: _LifecycleDeps) -
             bool,
             typer.Option(
                 "--allow-not-applicable",
-                help=tr(
-                    "cli.app.modelo.work.allow_not_applicable_help",
-                    default=(
-                        "Crear la unidad de trabajo aunque el modelo no aplique al tipo de contribuyente del "
-                        "perfil activo."
-                    ),
-                ),
+                help=tr("cli.app.modelo.work.allow_not_applicable_help"),
             ),
         ] = False,
         quiet: Annotated[
             bool,
             typer.Option(
                 "--quiet",
-                help=tr(
-                    "cli.app.modelo.work.create_quiet_help",
-                    default=(
-                        "Omitir la salida de confirmación legible; el envoltorio --format json, "
-                        "los avisos y el código de salida no se ven afectados."
-                    ),
-                ),
+                help=tr("cli.app.modelo.work.create_quiet_help"),
             ),
         ] = False,
         causante_ccaa_raw: Annotated[
             str | None,
             typer.Option(
                 "--causante-ccaa",
-                help=tr(
-                    "cli.app.modelo.work.causante_ccaa_help",
-                    default=(
-                        "CCAA de residencia habitual del causante (ISD Modelo 650/660) o CCAA donde se ubica "
-                        "el bien transmitido (ITPyAJD Modelo 600/620). Determina la Hacienda competente "
-                        "(Ley 22/2009 Art. 32). País Vasco y Navarra son regímenes forales; consulta la "
-                        "Hacienda autonómica correspondiente."
-                    ),
-                ),
+                help=tr("cli.app.modelo.work.causante_ccaa_help"),
             ),
         ] = None,
         output_language: OutputLanguage | None = typer.Option(
@@ -263,7 +241,7 @@ def _register_work_create_command(work_app: typer.Typer, deps: _LifecycleDeps) -
         )
 
         try:
-            ensure_result = ensure_modelo_work_unit_for_visible_target(
+            ensure_result = ensure_modelo_work_unit_for_active_target(
                 bucket_id=resolved_bucket,
                 modelo=modelo,
                 filing_year=resolved_year,
@@ -331,7 +309,7 @@ def _emit_work_create_result(
     if reused:
         status_message, operation = _reused_work_status_message(name=name, name_applied=name_applied)
     else:
-        status_message = tr("cli.app.modelo.work.create_created", default="New work unit created.")
+        status_message = tr("cli.app.modelo.work.create_created")
         operation = "modelo.work.create"
 
     result = WorkCreateResult.model_validate(
@@ -369,10 +347,6 @@ def _reused_work_status_message(*, name: str | None, name_applied: str | None) -
         return (
             tr(
                 "cli.app.modelo.work.create_reused_renamed",
-                default=(
-                    "Existing work unit returned (idempotent on modelo/year/period); nothing new was created. "
-                    "The supplied --name was applied as a rename to %{name}."
-                ),
                 name=name_applied,
             ),
             "modelo.work.reuse",
@@ -381,20 +355,12 @@ def _reused_work_status_message(*, name: str | None, name_applied: str | None) -
         return (
             tr(
                 "cli.app.modelo.work.create_reused_name_match",
-                default=(
-                    "Existing work unit returned (idempotent on modelo/year/period); nothing new was created. "
-                    "The supplied --name matches the stored name."
-                ),
             ),
             "modelo.work.reuse",
         )
     return (
         tr(
             "cli.app.modelo.work.create_reused",
-            default=(
-                "Existing work unit returned (idempotent on modelo/year/period); nothing new was created. "
-                "Rename it with `aeat app modelo work rename`."
-            ),
         ),
         "modelo.work.reuse",
     )
@@ -459,32 +425,7 @@ def _register_work_list_command(work_app: typer.Typer, deps: _LifecycleDeps) -> 
             f"active_profile\t{active_profile_label() or ''}",
             *work_unit_list_lines(units, include_discarded=include_discarded),
         ]
-        selected_action = None
-        if len(units) == 1:
-            selected_id = short_id(units[0].work_unit_id)
-            assert selected_id is not None
-            selected_action = resolve_notice_action(
-                action=ActionReference(action_id="operator.modelo.work.status"),
-                argument_bindings=(
-                    ResolvedActionArgument(
-                        argument_name="work_unit_id",
-                        status=ActionArgumentStatus.RESOLVED,
-                        value=selected_id,
-                        source=ActionArgumentSource.VERDICT_CONTEXT,
-                        source_key="work_unit_id",
-                    ),
-                ),
-            )
-        follow_up = Notice(
-            severity=NoticeSeverity.INFO,
-            code="modelo.work.list.next_action",
-            message=tr(
-                "cli.app.modelo.work.list_next_action_summary",
-                default=("The list can contain multiple work units. Choose one concrete work unit before continuing."),
-            ),
-            action=selected_action,
-            context={"work_unit_count": str(len(units))},
-        )
+        follow_up = resolve_lifecycle_continuation_notice(lifecycle_continuation_for_work_list(units))
         _emit_envelope(ctx, command="modelo.work.list", result=result, lines=lines, notices=[follow_up])
 
 
@@ -522,26 +463,7 @@ def _register_work_status_command(work_app: typer.Typer, deps: _LifecycleDeps) -
             "operation\tmodelo.work.status",
             *work_unit_lines(unit, include_bucket_id=False),
         ]
-        next_step = Notice(
-            severity=NoticeSeverity.INFO,
-            code="modelo.work.status.next_action",
-            message=tr(
-                "cli.app.modelo.work.status_next_action_summary",
-                default=("This work unit can now be recalculated and then verified."),
-            ),
-            action=resolve_notice_action(
-                action=ActionReference(action_id="operator.modelo.work.calculate"),
-                argument_bindings=(
-                    ResolvedActionArgument(
-                        argument_name="work_unit_id",
-                        status=ActionArgumentStatus.RESOLVED,
-                        value=unit.work_unit_id,
-                        source=ActionArgumentSource.VERDICT_CONTEXT,
-                        source_key="work_unit_id",
-                    ),
-                ),
-            ),
-        )
+        next_step = resolve_lifecycle_continuation_notice(lifecycle_continuation_for_work_status(unit))
         _emit_envelope(ctx, command="modelo.work.status", result=result, lines=lines, notices=[next_step])
 
 
@@ -561,7 +483,7 @@ def _register_work_rename_command(work_app: typer.Typer, deps: _LifecycleDeps) -
         """Update one work unit's display name."""
         deps.require_active_profile()
         if name is None or not name.strip():
-            raise typer.BadParameter(tr("cli.app.modelo.work.name_required", default="Supply --name."))
+            raise typer.BadParameter(tr("cli.app.modelo.work.name_required"))
         unit = deps.resolve_work_unit_for_cli(
             work_unit_id=work_unit_id,
             modelo=modelo,
@@ -572,7 +494,9 @@ def _register_work_rename_command(work_app: typer.Typer, deps: _LifecycleDeps) -
         )
         try:
             unit = rename_work_unit(unit.work_unit_id, name, actor=actor or deps.resolve_default_actor())
-        except (WorkUnitNotFoundError, WorkUnitMutationRefusedError) as exc:
+        except WorkUnitMutationRefusedError:
+            raise
+        except WorkUnitNotFoundError as exc:
             raise deps.bad_parameter_from_error(exc) from exc
         result = WorkRenameResult.model_validate(work_unit_payload(unit).model_dump(mode="python"))
         lines = ["operation\tmodelo.work.rename", *work_unit_lines(unit)]
@@ -619,7 +543,9 @@ def _register_work_discard_command(work_app: typer.Typer, deps: _LifecycleDeps) 
         )
         try:
             unit = discard_work_unit(unit.work_unit_id, actor=actor or deps.resolve_default_actor(), reason=reason)
-        except (WorkUnitNotFoundError, WorkUnitAlreadyDiscardedError) as exc:
+        except WorkUnitAlreadyDiscardedError:
+            raise
+        except WorkUnitNotFoundError as exc:
             raise deps.bad_parameter_from_error(exc) from exc
         result = WorkDiscardResult.model_validate(work_unit_payload(unit).model_dump(mode="python"))
         lines = ["operation\tmodelo.work.discard", *work_unit_lines(unit)]

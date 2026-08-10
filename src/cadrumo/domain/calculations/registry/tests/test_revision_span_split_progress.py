@@ -41,7 +41,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _KNOWN_SPANNING: Final[frozenset[tuple[str, str]]] = frozenset(
     {
         ("303", "2009-y-siguientes"),  # row #117
-        ("303", "2023-y-siguientes"),  # rows #113, #123
         ("390", "2010-y-siguientes"),  # rows #110, #115, #118
     },
 )

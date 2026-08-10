@@ -13,6 +13,16 @@ from ....core import CasillaId, DeclaracionIdioma, ExportLayoutFormat
 from ....core.aggregation import RelationAggregation
 from .._export_field_kind import CasillaFieldKind, CasillaFieldKindValue
 from ._errors import RegistryValidationError
+from ._export_semantics import (
+    ExportComputedKey,
+    ExportComputedKeyValue,
+    ExportDraftAttribute,
+    ExportDraftAttributeValue,
+    ExportHeaderKey,
+    ExportHeaderKeyValue,
+    ExportSemanticPayloadAxis,
+    export_semantic_payload_axis,
+)
 from ._export_value_policy import ExportValuePolicy, ExportValuePolicyValue, export_value_policy_wire_length
 from ._fixed_width_codec import (
     ExportEncodingValue,
@@ -49,10 +59,17 @@ __all__ = [
     "CasillaContinuidadEvolutionDefinition",
     "CasillaDefinition",
     "DeclaracionIdiomaValue",
+    "ExportComputedKey",
+    "ExportComputedKeyValue",
+    "ExportDraftAttribute",
+    "ExportDraftAttributeValue",
     "ExportFieldDefinition",
+    "ExportHeaderKey",
+    "ExportHeaderKeyValue",
     "ExportLayoutDefinition",
     "ExportLayoutFormatValue",
     "ExportRecordDefinition",
+    "ExportSemanticPayloadAxis",
     "ExportValuePolicyValue",
     "OneBasedExportOffset",
     "RecordDiscriminator",
@@ -698,9 +715,9 @@ class ExportFieldDefinition(RegistryModel):
     casilla_id: CasillaId | None = None
     binding: BindingId | None = None
     literal: str | None = None
-    header_key: str | None = None
-    draft_attribute: Literal["modelo", "period", "profile_tax_id", "filing_year", "period_code"] | None = None
-    computed_key: Literal["envelope_closing_tag"] | None = None
+    header_key: ExportHeaderKeyValue | None = None
+    draft_attribute: ExportDraftAttributeValue | None = None
+    computed_key: ExportComputedKeyValue | None = None
     data_type: Literal["text", "integer", "decimal", "money", "date", "boolean"]
     required: bool
     padding: ExportPaddingValue
@@ -720,18 +737,28 @@ class ExportFieldDefinition(RegistryModel):
 
     @model_validator(mode="after")
     def _validate_field_kind(self) -> ExportFieldDefinition:
-        if self.kind == CasillaFieldKind.CASILLA and self.casilla_id is None:
-            raise RegistryValidationError(f"export field {self.id!r} must declare casilla_id")
-        if self.kind == CasillaFieldKind.BINDING and self.binding is None:
-            raise RegistryValidationError(f"export field {self.id!r} must declare binding")
-        if self.kind == CasillaFieldKind.LITERAL and self.literal is None:
-            raise RegistryValidationError(f"export field {self.id!r} must declare literal")
-        if self.kind == CasillaFieldKind.HEADER and self.header_key is None:
-            raise RegistryValidationError(f"export field {self.id!r} must declare header_key")
-        if self.kind == CasillaFieldKind.DRAFT and self.draft_attribute is None:
-            raise RegistryValidationError(f"export field {self.id!r} must declare draft_attribute")
-        if self.kind == CasillaFieldKind.COMPUTED and self.computed_key is None:
-            raise RegistryValidationError(f"export field {self.id!r} must declare computed_key")
+        payloads = {
+            ExportSemanticPayloadAxis.CASILLA_ID: self.casilla_id,
+            ExportSemanticPayloadAxis.BINDING: self.binding,
+            ExportSemanticPayloadAxis.LITERAL: self.literal,
+            ExportSemanticPayloadAxis.HEADER_KEY: self.header_key,
+            ExportSemanticPayloadAxis.DRAFT_ATTRIBUTE: self.draft_attribute,
+            ExportSemanticPayloadAxis.COMPUTED_KEY: self.computed_key,
+        }
+        required = export_semantic_payload_axis(self.kind)
+        declared = tuple(axis for axis, value in payloads.items() if value is not None)
+        if required is None:
+            if declared:
+                raise RegistryValidationError(
+                    f"export field {self.id!r} kind {self.kind.value!r} must not declare semantic payloads: "
+                    f"{', '.join(axis.value for axis in declared)}",
+                )
+        elif declared != (required,):
+            declared_description = ", ".join(axis.value for axis in declared) if declared else "none"
+            raise RegistryValidationError(
+                f"export field {self.id!r} kind {self.kind.value!r} must declare only {required.value}; "
+                f"declared {declared_description}",
+            )
         if self.kind == CasillaFieldKind.FILLER and self.length is None:
             raise RegistryValidationError(f"export field {self.id!r} filler must declare length")
         self._validate_decimals()

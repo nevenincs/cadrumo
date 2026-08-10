@@ -22,9 +22,8 @@ from collections.abc import Callable, Iterable
 from datetime import date
 from decimal import Decimal
 
-from ...core import Modelo
+from ...core import ActionEvidenceProvenance, Modelo
 from ...core.decimal import coerce_decimal_strict
-from ...core.i18n import tr
 from ...domain.calculations.registry import (
     LegalRefId,
     Modelo202Modality,
@@ -55,6 +54,7 @@ from ..calculations import (
     m111_no_retenciones_periods_for_bucket,
 )
 from ._action_errors import ModeloCrossPeriodCleanStateError
+from ._preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure
 from ._registry_resources import authority_via_resources as _authority_via_resources
 
 
@@ -100,23 +100,24 @@ def _modelo_202_incomplete_modality_finding(
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.BLOCKING_RULE,
         severity=ModeloVerificationFindingSeverity.BLOCKING,
-        message=(
-            "Modelo 202 modality is incomplete: profile fact "
-            f"{_MODELO_202_INCN_PROFILE_FACT} (INCN prior 12 months) is required to choose "
-            "LIS art. 40.2 vs art. 40.3 before verification, filing, or export."
-        ),
+        message_locale_key="application.modelo.findings.modelo_202_modality_incomplete",
+        message_facts={"profile_fact_id": _MODELO_202_INCN_PROFILE_FACT},
         legal_refs=verdict.legal_refs,
     )
 
 
-def _raise_if_modelo_202_modality_incomplete(*, work_unit: WorkUnit, profile: TaxpayerProfile | None) -> None:
+def _raise_if_modelo_202_modality_incomplete(
+    *,
+    work_unit: WorkUnit,
+    profile: TaxpayerProfile | None,
+    subject_leaf_key: str = "modelo.work.verify",
+) -> None:
     if profile is None:
         return
     finding = _modelo_202_incomplete_modality_finding(work_unit=work_unit, profile=profile)
     if finding is None:
         return
     raise ModeloCrossPeriodCleanStateError(
-        finding.message,
         translated_message="application.modelo.errors.cross_period_clean_state_incomplete",
         context={
             "modelo": str(work_unit.modelo),
@@ -125,6 +126,21 @@ def _raise_if_modelo_202_modality_incomplete(*, work_unit: WorkUnit, profile: Ta
             "missing_profile_fact": _MODELO_202_INCN_PROFILE_FACT,
             "modality": Modelo202Modality.INCOMPLETE.value,
         },
+        precondition_failure=build_modelo_precondition_failure(
+            subject_leaf_key=subject_leaf_key,
+            condition_id=f"{subject_leaf_key}.m202.modality.complete",
+            scenario_id=f"{subject_leaf_key}.m202.modality.incomplete",
+            evidence_id=f"{subject_leaf_key}.m202.modality",
+            evidence_values={
+                "work_unit_id": work_unit.work_unit_id,
+                "modelo": str(work_unit.modelo),
+                "year": work_unit.filing_year,
+                "period": work_unit.period.registry_token,
+                "profile_fact_id": _MODELO_202_INCN_PROFILE_FACT,
+                "modality_code": Modelo202Modality.INCOMPLETE.value,
+            },
+            provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
+        ),
     )
 
 
@@ -345,17 +361,20 @@ def _cross_period_clean_state_findings(
                     has_first_filer_candidate_block = True
                 requirement = evidence.requirement
                 requirement_period = requirement.period.registry_token
-                blocker_text = _summarize_cross_period_ids(tuple(blocker.value for blocker in evidence.blockers))
-                origin_text = _summarize_cross_period_ids(requirement.origin_ids)
                 finding = ModeloVerificationFinding(
                     kind=ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN,
                     severity=ModeloVerificationFindingSeverity.BLOCKING,
-                    message=(
-                        "cross-period dependency is not clean: "
-                        f"modelo={requirement.source_modelo} year={requirement.filing_year} "
-                        f"period={requirement_period} origin={requirement.origin.value} "
-                        f"origin_ids={origin_text} blockers={blocker_text}"
-                    ),
+                    message_locale_key="application.modelo.findings.cross_period_dependency_unclean",
+                    message_facts={
+                        "source_modelo": str(requirement.source_modelo),
+                        "source_filing_year": requirement.filing_year,
+                        "source_period": requirement_period,
+                        "origin_code": requirement.origin.value,
+                        "origin_ids": _join_cross_period_ids(requirement.origin_ids),
+                        "blocker_codes": _join_cross_period_ids(
+                            tuple(blocker.value for blocker in evidence.blockers),
+                        ),
+                    },
                     legal_refs=_cross_period_requirement_legal_refs(requirement),
                     source_refs=_cross_period_requirement_source_refs(requirement),
                 )
@@ -403,13 +422,14 @@ def _cross_period_operator_declared_suppression_advisory_finding(
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.ADVISORY,
         severity=ModeloVerificationFindingSeverity.WARNING,
-        message=(
-            "cross-period dependency scoped out as no-prior-obligation (pre-activity): "
-            f"modelo={requirement.source_modelo} year={requirement.filing_year} "
-            f"period={requirement_period} origin={requirement.origin.value}. The period falls "
-            f"strictly before the operator-declared activity-start date {declared_date}, which has "
-            "not yet been corroborated against an AEAT censo snapshot."
-        ),
+        message_locale_key="application.modelo.findings.cross_period_operator_declared_suppression",
+        message_facts={
+            "source_modelo": str(requirement.source_modelo),
+            "source_filing_year": requirement.filing_year,
+            "source_period": requirement_period,
+            "origin_code": requirement.origin.value,
+            "activity_start_date": declared_date,
+        },
         legal_refs=_CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS,
         source_refs=_cross_period_requirement_source_refs(requirement),
     )
@@ -446,14 +466,13 @@ def _cross_period_first_year_fractional_suppression_advisory_finding(
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.ADVISORY,
         severity=ModeloVerificationFindingSeverity.WARNING,
-        message=(
-            "Modelo 202 dependency scoped out: first-year, no fractional-payment obligation "
-            f"(modelo={requirement.source_modelo} {requirement.filing_year}/{requirement_period}). "
-            "A first-year IS filer under modalidad cuota (LIS art. 40.2) has no Modelo 202 "
-            f"obligation: no prior IS return (activity-start {declared_date}) provides the cuota "
-            "basis. If modalidad base (art. 40.3) was elected, the entity IS obligated — confirm "
-            "the modality (see next action)."
-        ),
+        message_locale_key="application.modelo.findings.cross_period_first_year_fractional_suppression",
+        message_facts={
+            "source_modelo": str(requirement.source_modelo),
+            "source_filing_year": requirement.filing_year,
+            "source_period": requirement_period,
+            "activity_start_date": declared_date,
+        },
         legal_refs=_M202_FIRST_YEAR_LEGAL_REFS,
         source_refs=_cross_period_requirement_source_refs(requirement),
     )
@@ -474,28 +493,19 @@ def _cross_period_missing_activity_start_finding(
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN,
         severity=ModeloVerificationFindingSeverity.BLOCKING,
-        message=(
-            "a cross-period dependency is missing its prior filing or evidence and the profile records "
-            f"no activity-start date for modelo={verdict.target_modelo} year={verdict.target_filing_year} "
-            f"period={verdict.target_period.registry_token}. If this is the first period of economic "
-            "activity, no prior obligation existed; record the activity-start date so the pre-activity "
-            "dependency can be scoped out. Otherwise capture the missing AEAT evidence."
-        ),
+        message_locale_key="application.modelo.findings.cross_period_activity_start_missing",
+        message_facts={
+            "target_modelo": str(verdict.target_modelo),
+            "target_filing_year": verdict.target_filing_year,
+            "target_period": verdict.target_period.registry_token,
+        },
         legal_refs=_CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS,
     )
 
 
-def _summarize_cross_period_ids(
-    values: Iterable[str],
-    *,
-    limit: int = 2,
-    max_chars: int = 120,
-) -> str:
-    items = tuple(dict.fromkeys(values))
-    text = ", ".join(items) if len(items) <= limit else ", ".join((*items[:limit], f"+{len(items) - limit} more"))
-    if len(text) <= max_chars:
-        return text
-    return f"{text[: max_chars - 4]}..."
+def _join_cross_period_ids(values: Iterable[str]) -> str:
+    """Join exact stable identities without introducing presentation prose."""
+    return "|".join(dict.fromkeys(values))
 
 
 def _cross_period_modelo_not_applicable_advisory_finding(
@@ -527,17 +537,11 @@ def _cross_period_modelo_not_applicable_advisory_finding(
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.ADVISORY,
         severity=ModeloVerificationFindingSeverity.WARNING,
-        message=tr(
-            "application.modelo.findings.cross_period_modelo_not_applicable.message",
-            default=(
-                "Cross-period dependencies on source modelos the taxpayer does not file were scoped out as "
-                "not applicable: {modelos}. For suffered retenciones, enter the income-certificate amount "
-                "with --binding KEY=VALUE, not --casilla. KEY=VALUE means the binding id on the left of one "
-                "equals sign and the value on the right. For mutually exclusive pagos fraccionados, confirm "
-                "the activity-estimation regime on the profile."
-            ),
-            modelos=", ".join(modelos),
-        ),
+        message_locale_key="application.modelo.findings.cross_period_modelo_not_applicable.message",
+        message_facts={
+            "source_modelos": "|".join(str(modelo) for modelo in modelos),
+            "source_modelo_count": len(modelos),
+        },
         legal_refs=legal_refs,
         source_refs=source_refs,
     )
@@ -550,17 +554,19 @@ def _cross_period_zero_value_previous_filing_advisory_finding(
     """NON-BLOCKING advisory for an explicit zero prior-year carry."""
     requirement = evidence.requirement
     requirement_period = requirement.period.registry_token
-    origin_text = _summarize_cross_period_ids(requirement.origin_ids)
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.ADVISORY,
         severity=ModeloVerificationFindingSeverity.WARNING,
-        message=(
-            "cross-period previous-filing carry treated as zero by explicit operator input: "
-            f"modelo={requirement.source_modelo} year={requirement.filing_year} "
-            f"period={requirement_period} origin_ids={origin_text} for target modelo={verdict.target_modelo} "
-            f"year={verdict.target_filing_year} period={verdict.target_period.registry_token}. No prior filing "
-            "evidence is required because the taxpayer is not applying a positive prior-year negative-base balance."
-        ),
+        message_locale_key="application.modelo.findings.cross_period_zero_value_previous_filing",
+        message_facts={
+            "source_modelo": str(requirement.source_modelo),
+            "source_filing_year": requirement.filing_year,
+            "source_period": requirement_period,
+            "origin_ids": _join_cross_period_ids(requirement.origin_ids),
+            "target_modelo": str(verdict.target_modelo),
+            "target_filing_year": verdict.target_filing_year,
+            "target_period": verdict.target_period.registry_token,
+        },
         legal_refs=tuple(
             dict.fromkeys((*_M100_ZERO_BIN_LEGAL_REFS, *_cross_period_requirement_legal_refs(requirement))),
         ),
@@ -575,18 +581,20 @@ def _cross_period_m111_no_retenciones_advisory_finding(
     """NON-BLOCKING advisory for explicit M111 no-retenciones/no-obligation evidence."""
     requirement = evidence.requirement
     requirement_period = requirement.period.registry_token
-    origin_text = _summarize_cross_period_ids(requirement.origin_ids)
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.ADVISORY,
         severity=ModeloVerificationFindingSeverity.WARNING,
-        message=(
-            "Modelo 111 scoped out as no-retenciones/no-obligation: "
-            f"modelo={requirement.source_modelo} year={requirement.filing_year} "
-            f"period={requirement_period} origin_ids={origin_text} target={verdict.target_modelo} "
-            f"year={verdict.target_filing_year} period={verdict.target_period.registry_token}. Fact "
-            f"{M111_NO_RETENCIONES_PROFILE_PATH} attests no rentas subject to retencion or ingreso a "
-            "cuenta were paid, so AEAT says an all-blank Modelo 111 must not be filed."
-        ),
+        message_locale_key="application.modelo.findings.cross_period_m111_no_retenciones",
+        message_facts={
+            "source_modelo": str(requirement.source_modelo),
+            "source_filing_year": requirement.filing_year,
+            "source_period": requirement_period,
+            "origin_ids": _join_cross_period_ids(requirement.origin_ids),
+            "target_modelo": str(verdict.target_modelo),
+            "target_filing_year": verdict.target_filing_year,
+            "target_period": verdict.target_period.registry_token,
+            "profile_fact_id": M111_NO_RETENCIONES_PROFILE_PATH,
+        },
         legal_refs=tuple(
             dict.fromkeys((*_M111_NO_RETENCIONES_LEGAL_REFS, *_cross_period_requirement_legal_refs(requirement))),
         ),
@@ -607,13 +615,13 @@ def _cross_period_non_official_local_chain_advisory_finding(
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.ADVISORY,
         severity=ModeloVerificationFindingSeverity.WARNING,
-        message=tr(
-            "application.modelo.findings.cross_period_non_official_local_chain.message",
-            source_modelo=requirement.source_modelo,
-            filing_year=requirement.filing_year,
-            period=requirement_period,
-            origin=requirement.origin.value,
-        ),
+        message_locale_key="application.modelo.findings.cross_period_non_official_local_chain.message",
+        message_facts={
+            "source_modelo": str(requirement.source_modelo),
+            "source_filing_year": requirement.filing_year,
+            "source_period": requirement_period,
+            "origin_code": requirement.origin.value,
+        },
         legal_refs=_cross_period_requirement_legal_refs(requirement),
         source_refs=_cross_period_requirement_source_refs(requirement),
     )
@@ -634,8 +642,13 @@ def _require_cross_period_clean_state(
     taxpayer_files_economic_activity: bool | None = None,
     workflow_profile: TaxpayerProfile | None = None,
     target_revision: CalculationRevision | None = None,
+    subject_leaf_key: str = "modelo.work.verify",
 ) -> None:
-    _raise_if_modelo_202_modality_incomplete(work_unit=work_unit, profile=workflow_profile)
+    _raise_if_modelo_202_modality_incomplete(
+        work_unit=work_unit,
+        profile=workflow_profile,
+        subject_leaf_key=subject_leaf_key,
+    )
     verdict = _cross_period_clean_state_verdict_for_work_unit(
         work_unit,
         observation_repository=observation_repository,
@@ -651,10 +664,51 @@ def _require_cross_period_clean_state(
         zero_value_previous_filing_binding_ids=_zero_value_previous_filing_binding_ids(target_revision),
         m111_no_retenciones_periods=m111_no_retenciones_periods_for_bucket(work_unit.bucket_id),
     )
+    failures_by_finding_id: dict[int, ModeloPreconditionFailure] = {}
+
+    def _observe_blocking_finding(
+        finding: ModeloVerificationFinding,
+        evidence: CrossPeriodDependencyEvidence | None,
+    ) -> None:
+        if evidence is None:
+            failures_by_finding_id[id(finding)] = build_modelo_precondition_failure(
+                subject_leaf_key=subject_leaf_key,
+                condition_id=f"{subject_leaf_key}.activity_start_date.present",
+                scenario_id=f"{subject_leaf_key}.activity_start_date.missing_for_first_filer_adjudication",
+                evidence_id=f"{subject_leaf_key}.activity_start_date",
+                evidence_values={
+                    "work_unit_id": work_unit.work_unit_id,
+                    "modelo": str(work_unit.modelo),
+                    "year": work_unit.filing_year,
+                    "period": work_unit.period.registry_token,
+                    "dependency_count": len(verdict.dependencies) if verdict is not None else 0,
+                },
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+            )
+            return
+        requirement = evidence.requirement
+        failures_by_finding_id[id(finding)] = build_modelo_precondition_failure(
+            subject_leaf_key=subject_leaf_key,
+            condition_id=f"{subject_leaf_key}.cross_period_dependency.clean",
+            scenario_id=f"{subject_leaf_key}.cross_period_dependency.unclean",
+            evidence_id=f"{subject_leaf_key}.cross_period_dependency",
+            evidence_values={
+                "work_unit_id": work_unit.work_unit_id,
+                "source_modelo": requirement.source_modelo,
+                "year": requirement.filing_year,
+                "period": requirement.period.registry_token,
+                "origin_code": requirement.origin.value,
+                "origin_ids": "|".join(requirement.origin_ids),
+                "blocker_codes": "|".join(blocker.value for blocker in evidence.blockers),
+            },
+            provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
+        )
+
     findings = _cross_period_clean_state_findings(
         verdict,
         iva_compensation_decision=iva_compensation_decision,
         activity_start_date=activity_start_date,
+        blocking_finding_observer=_observe_blocking_finding,
     )
     # Only BLOCKING findings gate the file/export path. NON-BLOCKING WARNING
     # advisories (e.g. indeterminate revision-stamp re-confirmation) surface
@@ -664,7 +718,6 @@ def _require_cross_period_clean_state(
         return
     first = blocking_findings[0]
     raise ModeloCrossPeriodCleanStateError(
-        first.message,
         translated_message="application.modelo.errors.cross_period_clean_state_incomplete",
         context={
             "modelo": work_unit.modelo,
@@ -672,6 +725,7 @@ def _require_cross_period_clean_state(
             "period": work_unit.period.registry_token,
             "finding_count": str(len(blocking_findings)),
         },
+        precondition_failure=failures_by_finding_id[id(first)],
     )
 
 

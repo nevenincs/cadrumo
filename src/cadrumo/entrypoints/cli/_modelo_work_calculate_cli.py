@@ -461,9 +461,10 @@ def _run_work_calculate(
         )
     except RegistryValidationError as exc:
         raise typer.BadParameter(deps.missing_binding_guidance(exc, resolved_work_unit_id)) from exc
+    except WorkUnitMutationRefusedError:
+        raise
     except (
         WorkUnitNotFoundError,
-        WorkUnitMutationRefusedError,
         CalculationRegistryUnavailableError,
         Modelo100BorradorBindingError,
         ModeloIvaWalletReconciliationBlocked,

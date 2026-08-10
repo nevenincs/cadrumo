@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from ...domain.modelos import WorkUnitCatalogueRepositoryProtocol, WorkUnitState
-from ._action_errors import WorkUnitMutationRefusedError, WorkUnitNotFoundError
+from ...domain.modelos import WorkUnitCatalogueRepositoryProtocol
 from ._calculation_helpers import resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit
 from ._profile_readiness_gate import require_profile_ready_for_work_unit
+from ._work_lifecycle import ActiveWorkUnitUse, require_active_work_unit
 
 
 def load_bucket_aggregation_context(
@@ -15,17 +15,12 @@ def load_bucket_aggregation_context(
 ):
     """Return ``(work_unit, snapshot)`` for aggregation calculation."""
     work_units = work_unit_repository.load()
-    work_unit = work_units.get(work_unit_id)
-    if work_unit is None:
-        raise WorkUnitNotFoundError(
-            translated_message="application.modelo.errors.work_unit_not_found",
-            context={"work_unit_id": work_unit_id},
-        )
-    if work_unit.state is WorkUnitState.DESCARTADO:
-        raise WorkUnitMutationRefusedError(
-            translated_message="application.modelo.errors.work_unit_discarded_cannot_calculate",
-            context={"work_unit_id": work_unit_id},
-        )
+    work_unit = require_active_work_unit(
+        work_units,
+        work_unit_id=work_unit_id,
+        repository_bucket_id=work_unit_repository.bucket_id,
+        use=ActiveWorkUnitUse.CALCULATE,
+    )
     require_profile_ready_for_work_unit(work_unit)
 
     return work_unit, _resolve_registry_snapshot_for_work_unit(work_unit)

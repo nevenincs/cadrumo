@@ -206,9 +206,20 @@ def test_reclassifying_then_verifying_the_stale_draft_is_refused(tmp_path: Path)
             if finding.severity is ModeloVerificationFindingSeverity.BLOCKING
         ]
         assert blocking, "a reclassified-away deduction must not leave the stale draft grantable"
-        assert any("ledger no longer matches" in finding.message for finding in blocking)
         # The refusal resolves the operator's position instead of restating it.
-        drift = next(finding for finding in blocking if "ledger no longer matches" in finding.message)
+        drift = next(
+            finding
+            for finding in blocking
+            if finding.message_locale_key == "application.modelo.findings.ledger_snapshot_drift"
+        )
+        assert dict(drift.message_facts) == {
+            "anchored": True,
+            "changed_count": 1,
+            "filing_year": 2026,
+            "modelo": "303",
+            "period": "1T",
+            "removed_count": 0,
+        }
         assert "next_action" not in drift.model_dump(mode="json")
         assert "ley-37-1992:art-164" in drift.legal_refs
 

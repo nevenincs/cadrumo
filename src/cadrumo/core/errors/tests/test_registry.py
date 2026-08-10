@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import ast
+import inspect
 import logging
 from pathlib import Path
 
@@ -26,7 +28,7 @@ from .. import (
     render_error_json,
     render_error_text,
 )
-from .._registry import _DEFERRED_BIND, _flush_deferred_binds
+from .._registry import _DEFERRED_BIND, _category_text_prefix, _flush_deferred_binds
 from .._registry import logger as _registry_logger
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -46,6 +48,36 @@ def test_error_code_model_is_frozen() -> None:
     code = _sample_code("ERROR_TEST_SAMPLE")
     with pytest.raises((ValidationError, TypeError), match=r"frozen|Instance is frozen|attribute"):
         setattr(code, "code", "ERROR_TEST_MUTATED")  # noqa: B010 - frozen-model refusal is the assertion
+
+
+@pytest.mark.parametrize(
+    ("forbidden_field", "value"),
+    (
+        ("default_suggestion", None),
+        ("action", None),
+        ("no_recovery_outcome", "operator_decision"),
+    ),
+)
+def test_error_code_rejects_retired_and_policy_fields(forbidden_field: str, value: object) -> None:
+    """Only application verdicts may carry recovery or terminal policy."""
+    payload = _sample_code("ERROR_TEST_RETIRED_FIELD").model_dump(mode="json")
+    payload[forbidden_field] = value
+
+    with pytest.raises(ValidationError) as exc_info:
+        ErrorCode.model_validate(payload)
+
+    assert forbidden_field not in ErrorCode.model_json_schema()["properties"]
+    assert forbidden_field in str(exc_info.value)
+
+
+def test_category_prefix_resolution_has_no_in_code_translation_default() -> None:
+    """Category presentation must resolve through the locale catalogue alone."""
+    tree = ast.parse(inspect.getsource(_category_text_prefix))
+    calls = [node for node in ast.walk(tree) if isinstance(node, ast.Call)]
+    translation_calls = [node for node in calls if isinstance(node.func, ast.Name) and node.func.id == "tr"]
+
+    assert len(translation_calls) == 1
+    assert all(keyword.arg != "default" for keyword in translation_calls[0].keywords)
 
 
 def test_duplicate_registration_raises_clear_error() -> None:

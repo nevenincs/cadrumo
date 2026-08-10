@@ -761,7 +761,7 @@ def _expected_tax_id_for_filing_record(filing: ModeloRecord) -> str:
             "cannot stamp live-capture evidence without the filing profile tax identity",
         ) from exc
     values = record_to_values(record)
-    tax_id = str(values.get("identity.tax_id") or values.get("tax.id") or "").strip().upper()
+    tax_id = tax_id_identity_token(str(values.get("identity.tax_id") or values.get("tax.id") or ""))
     if not tax_id:
         raise LiveApplicationInputError(
             "cannot stamp live-capture evidence without the filing profile tax identity",

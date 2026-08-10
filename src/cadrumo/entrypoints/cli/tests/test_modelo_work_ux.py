@@ -175,10 +175,13 @@ def test_work_list_without_a_selected_unit_does_not_claim_an_executable_action(
     result = _invoke(["--format", "json", "app", "modelo", "work", "list"])
 
     assert result.exit_code == 0, result.output
-    notice = next(item for item in _notices(result.output) if item["code"] == "modelo.work.list.next_action")
+    notice = next(item for item in _notices(result.output) if item["code"] == "modelo.work.list.selection_required")
     assert "aeat " not in notice["message"].lower()
     assert notice["action"] is None
-    assert notice["context"] == {"work_unit_count": "0"}
+    assert notice["context"] == {
+        "continuation_outcome": "operator_decision",
+        "work_unit_count": "0",
+    }
 
 
 def test_work_list_and_status_text_name_profile_once_without_bucket_placeholders(
@@ -199,15 +202,13 @@ def test_work_list_and_status_text_name_profile_once_without_bucket_placeholders
         assert "<profile-id>" not in result.output
         assert "<bucket-id>" not in result.output
     short_work_unit_id = work_unit_id[-12:]
-    assert f"next_action\taeat app modelo work status {short_work_unit_id}" in listed.output
+    assert f"next_action\taeat app modelo work status {work_unit_id}" in listed.output
     assert f"next_action\taeat app modelo work calculate {work_unit_id}" in status.output
 
     list_json = _invoke(["--format", "json", "app", "modelo", "work", "list"])
     assert list_json.exit_code == 0, list_json.output
     list_action = next(
-        item["action"]
-        for item in _notices(list_json.output)
-        if item["code"] == "modelo.work.list.next_action"
+        item["action"] for item in _notices(list_json.output) if item["code"] == "modelo.work.list.next_action"
     )
     assert list_action == {
         "action": {
@@ -219,7 +220,7 @@ def test_work_list_and_status_text_name_profile_once_without_bucket_placeholders
             {
                 "argument_name": "work_unit_id",
                 "status": "resolved",
-                "value": short_work_unit_id,
+                "value": work_unit_id,
                 "source": "operator_action.verdict_context",
                 "source_key": "work_unit_id",
                 "source_evidence_id": None,
@@ -230,9 +231,7 @@ def test_work_list_and_status_text_name_profile_once_without_bucket_placeholders
     status_json = _invoke(["--format", "json", "app", "modelo", "work", "status", short_work_unit_id])
     assert status_json.exit_code == 0, status_json.output
     action = next(
-        item["action"]
-        for item in _notices(status_json.output)
-        if item["code"] == "modelo.work.status.next_action"
+        item["action"] for item in _notices(status_json.output) if item["code"] == "modelo.work.status.next_action"
     )
     assert action == {
         "action": {
@@ -287,12 +286,13 @@ def test_work_list_with_multiple_units_requires_an_explicit_selection(
     listed_json = _invoke(["--format", "json", "app", "modelo", "work", "list"])
     assert listed_json.exit_code == 0, listed_json.output
     notice = next(
-        item
-        for item in _notices(listed_json.output)
-        if item["code"] == "modelo.work.list.next_action"
+        item for item in _notices(listed_json.output) if item["code"] == "modelo.work.list.selection_required"
     )
     assert notice["action"] is None
-    assert notice["context"] == {"work_unit_count": "2"}
+    assert notice["context"] == {
+        "continuation_outcome": "operator_decision",
+        "work_unit_count": "2",
+    }
 
 
 def test_work_status_and_list_show_presentado_after_file(_isolated_cli_backend: Path) -> None:

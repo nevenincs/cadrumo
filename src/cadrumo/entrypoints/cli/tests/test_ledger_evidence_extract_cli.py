@@ -120,7 +120,9 @@ def test_extract_by_evidence_id_recovers_every_grounded_field(tmp_path: Path) ->
     assert result["iva_amount"] == "21.00"
     assert result["grand_total"] == "121.00"
     assert result["raw_text_length"] > 0
-    review_notice = next(notice for notice in envelope["notices"] if notice["code"] == "ledger.evidence.extract.review_hint")
+    review_notice = next(
+        notice for notice in envelope["notices"] if notice["code"] == "ledger.evidence.extract.review_hint"
+    )
     assert review_notice["action"] is None
     assert review_notice["context"]["actionability"] == "review_and_required_invoice_fields_need_operator_input"
     assert "suggestion" not in review_notice

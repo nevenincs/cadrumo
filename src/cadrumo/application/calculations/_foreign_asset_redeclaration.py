@@ -25,6 +25,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
+from urllib.parse import quote
 
 from ...core import (
     MODELO_720_FOREIGN_ASSET_CLASS_CODES,
@@ -54,12 +55,6 @@ _M720_VALUATION_CASILLA_GROUPS: Mapping[CasillaId, ForeignAssetObligationGroup] 
     "valores.valoracion": ForeignAssetObligationGroup.VALORES_DERECHOS_SEGUROS,
     "inmuebles.valoracion": ForeignAssetObligationGroup.INMUEBLES,
 }
-_M720_GROUP_LABELS: Mapping[ForeignAssetObligationGroup, str] = {
-    ForeignAssetObligationGroup.CUENTAS: "cuentas",
-    ForeignAssetObligationGroup.VALORES_DERECHOS_SEGUROS: "valores, derechos, seguros e IIC",
-    ForeignAssetObligationGroup.INMUEBLES: "inmuebles",
-}
-
 _M720_GROUP_VALUATION_CASILLAS: Mapping[ForeignAssetObligationGroup, CasillaId] = {
     group: casilla_id for casilla_id, group in _M720_VALUATION_CASILLA_GROUPS.items()
 }
@@ -82,7 +77,6 @@ _M721_BALANCE_CASILLA: CasillaId = "moneda.saldo-31-diciembre"
 @dataclass(frozen=True, slots=True)
 class _RedeclarationPosition:
     key: tuple[str, ...]
-    label: str
     group: ForeignAssetObligationGroup
     value_eur: Decimal
 
@@ -160,12 +154,17 @@ def _redeclaration_advisory_findings(
             ModeloVerificationFinding(
                 kind=ModeloVerificationFindingKind.ADVISORY,
                 severity=ModeloVerificationFindingSeverity.WARNING,
-                message=(
-                    f"Modelo {modelo} re-declaration advisory: {current.label} grew by "
-                    f"{delta_eur} EUR over the prior declared baseline "
-                    f"({prior.value_eur} -> {current.value_eur}) and is absent from "
-                    "the current declaration."
-                ),
+                message_locale_key="application.modelo.findings.foreign_asset_redeclaration",
+                message_facts={
+                    "modelo_code": modelo,
+                    "filing_year": filing_year,
+                    "position_key": _position_key_code(current.key),
+                    "group_code": current.group.value,
+                    "prior_value_eur": prior.value_eur,
+                    "current_value_eur": current.value_eur,
+                    "delta_value_eur": delta_eur,
+                    "redeclaration_increase_threshold_eur": threshold.redeclaration_increase_delta_eur,
+                },
                 legal_refs=threshold.legal_refs,
                 source_refs=threshold.source_refs,
             )
@@ -184,7 +183,6 @@ def _modelo_720_positions(observation: RegistryModeloObservation) -> Mapping[tup
     return {
         (group.value,): _RedeclarationPosition(
             key=(group.value,),
-            label=_M720_GROUP_LABELS[group],
             group=group,
             value_eur=value,
         )
@@ -216,7 +214,6 @@ def _modelo_721_positions(observation: RegistryModeloObservation) -> Mapping[tup
             value_eur = item.value if existing is None else existing.value_eur + item.value
             positions[key] = _RedeclarationPosition(
                 key=key,
-                label=f"custodian {custodian_name}/{custodian_country} token {token}",
                 group=ForeignAssetObligationGroup.MONEDAS_VIRTUALES,
                 value_eur=value_eur,
             )
@@ -226,6 +223,11 @@ def _modelo_721_positions(observation: RegistryModeloObservation) -> Mapping[tup
 
 def _decimal_text(value: Decimal) -> str:
     return format(value, "f")
+
+
+def _position_key_code(key: tuple[str, ...]) -> str:
+    """Encode the complete source-position identity as a locale-neutral token."""
+    return "|".join(quote(part, safe="") for part in key)
 
 
 def modelo_720_declared_observation(

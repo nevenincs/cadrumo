@@ -27,11 +27,24 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from datetime import datetime
+from enum import StrEnum
+from types import MappingProxyType
+
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ...core import Period
+from ...core import (
+    STRICT_FROZEN_CONFIG,
+    ActionArgumentSource,
+    ActionArgumentStatus,
+    ActionEvidenceProvenance,
+    NoRecoveryOutcome,
+    Period,
+)
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
 from ...domain.contribuyente import CCAA
@@ -44,10 +57,261 @@ from ...domain.modelos import (
     derive_work_unit_id,
     upsert_work_unit,
 )
-from ._action_errors import WorkUnitAlreadyDiscardedError, WorkUnitMutationRefusedError, WorkUnitNotFoundError
+from ..operator_actions import (
+    ActionArgumentBinding,
+    ActionReference,
+    ConditionEvidence,
+)
+from ._action_errors import (
+    CalculationRevisionNotFoundError,
+    WorkUnitAlreadyDiscardedError,
+    WorkUnitMutationRefusedError,
+    WorkUnitNotFoundError,
+)
+from ._preconditions import build_modelo_precondition_failure_for_scenario
 from ._registry_resources import reject_unknown_period_for_revision, reject_unknown_revision
 from ._revision_persistence import build_modelo_bucket_event as _build_bucket_event
 from ._revision_persistence import modelo_bucket_event_write as _bucket_event_write
+
+_CONTINUATION_ID_PATTERN = r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$"
+
+
+class ActiveWorkUnitUse(StrEnum):
+    """Application operations that require a mutable work-unit lifecycle state."""
+
+    CALCULATE = "calculate"
+    IMPORT = "import"
+
+
+class RevisionParentOperation(StrEnum):
+    """Revision operations that require an active parent work unit."""
+
+    VERIFY = "verify"
+    FILE = "file"
+
+
+@dataclass(frozen=True)
+class _ActiveWorkUnitRefusal:
+    """Canonical command-specific projection for one rejected discarded state."""
+
+    subject_leaf_key: str
+    scenario_id: str
+    evidence_id: str
+    translated_message: str
+
+
+_ACTIVE_WORK_UNIT_REFUSALS: Mapping[ActiveWorkUnitUse, _ActiveWorkUnitRefusal] = MappingProxyType(
+    {
+        ActiveWorkUnitUse.CALCULATE: _ActiveWorkUnitRefusal(
+            subject_leaf_key="modelo.work.calculate",
+            scenario_id="modelo.work.calculate.lifecycle.discarded",
+            evidence_id="modelo.work.calculate.lifecycle.observation",
+            translated_message="application.modelo.errors.work_unit_discarded_cannot_calculate",
+        ),
+        ActiveWorkUnitUse.IMPORT: _ActiveWorkUnitRefusal(
+            subject_leaf_key="modelo.filing_record.import",
+            scenario_id="modelo.filing_record.import.lifecycle.discarded",
+            evidence_id="modelo.filing_record.import.lifecycle.observation",
+            translated_message="application.modelo.errors.work_unit_discarded_cannot_import",
+        ),
+    }
+)
+
+
+_REVISION_PARENT_DISCARDED_REFUSALS: Mapping[RevisionParentOperation, _ActiveWorkUnitRefusal] = MappingProxyType(
+    {
+        RevisionParentOperation.VERIFY: _ActiveWorkUnitRefusal(
+            subject_leaf_key="modelo.work.verify",
+            scenario_id="modelo.work.verify.calculation_revision.work_unit_target_discarded",
+            evidence_id="modelo.work.verify.calculation_revision.addressing",
+            translated_message="application.modelo.errors.calculation_revision_parent_work_unit_discarded",
+        ),
+        RevisionParentOperation.FILE: _ActiveWorkUnitRefusal(
+            subject_leaf_key="modelo.work.file",
+            scenario_id="modelo.work.file.calculation_revision.work_unit_target_discarded",
+            evidence_id="modelo.work.file.calculation_revision.addressing",
+            translated_message="application.modelo.errors.calculation_revision_parent_work_unit_discarded",
+        ),
+    }
+)
+
+
+class ModeloWorkLifecycleContinuation(BaseModel):
+    """Application-owned forward path for one observed work-unit lifecycle state.
+
+    The lifecycle service owns whether an observed work-unit state admits a
+    concrete following action. The CLI only localizes this record and resolves
+    its declared action through the live operator surface; it cannot choose a
+    different action or manufacture a target argument.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    notice_code: str = Field(pattern=_CONTINUATION_ID_PATTERN, min_length=3, max_length=160)
+    summary_locale_key: str = Field(pattern=_CONTINUATION_ID_PATTERN, min_length=3, max_length=160)
+    evidence: ConditionEvidence
+    action: ActionReference | None = None
+    argument_bindings: tuple[ActionArgumentBinding, ...] = ()
+    no_recovery_outcome: NoRecoveryOutcome | None = None
+
+    @field_validator("argument_bindings")
+    @classmethod
+    def _canonicalize_argument_bindings(
+        cls,
+        value: tuple[ActionArgumentBinding, ...],
+    ) -> tuple[ActionArgumentBinding, ...]:
+        """Require a unique, fully materialized continuation target."""
+        names = tuple(item.argument_name for item in value)
+        if len(set(names)) != len(names):
+            raise ValueError("lifecycle continuation action argument names must be unique")
+        if any(item.status is not ActionArgumentStatus.RESOLVED for item in value):
+            raise ValueError("lifecycle continuation actions require resolved argument bindings")
+        return tuple(sorted(value, key=lambda item: item.argument_name))
+
+    @model_validator(mode="after")
+    def _validate_action_or_explicit_outcome(self) -> ModeloWorkLifecycleContinuation:
+        """Keep each observed continuation either executable or explicitly closed."""
+        if (self.action is None) == (self.no_recovery_outcome is None):
+            raise ValueError("lifecycle continuation requires exactly one action or no_recovery_outcome")
+        if self.action is None:
+            if self.argument_bindings:
+                raise ValueError("closed lifecycle continuations cannot carry action arguments")
+            return self
+
+        for binding in self.argument_bindings:
+            if binding.source is not ActionArgumentSource.VERDICT_CONTEXT:
+                raise ValueError("lifecycle continuation arguments must derive from continuation evidence")
+            assert binding.source_key is not None
+            evidence_value = self.evidence.values.get(binding.source_key)
+            if evidence_value is None and binding.source_key not in self.evidence.values:
+                raise ValueError("lifecycle continuation arguments must reference an evidence fact")
+            if type(binding.value) is not type(evidence_value) or binding.value != evidence_value:
+                raise ValueError("lifecycle continuation argument value must match its evidence fact")
+        return self
+
+
+def _continuation_evidence(
+    *,
+    condition_id: str,
+    evidence_id: str,
+    values: Mapping[str, str | int | bool],
+) -> ConditionEvidence:
+    """Build the strictly factual state observation behind one continuation."""
+    return ConditionEvidence(
+        condition_id=condition_id,
+        evidence_id=evidence_id,
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        values=values,
+    )
+
+
+def lifecycle_continuation_for_work_list(
+    work_units: Sequence[WorkUnit],
+) -> ModeloWorkLifecycleContinuation:
+    """Return the only honest continuation for a work-unit list observation."""
+    work_unit_count = len(work_units)
+    evidence = _continuation_evidence(
+        condition_id="modelo.work.list.selection",
+        evidence_id="modelo.work.list.observation",
+        values={"work_unit_count": work_unit_count},
+    )
+    if work_unit_count == 0:
+        return ModeloWorkLifecycleContinuation(
+            notice_code="modelo.work.list.selection_required",
+            summary_locale_key="cli.app.modelo.work.list_no_active_work_summary",
+            evidence=evidence,
+            no_recovery_outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+        )
+    if work_unit_count != 1:
+        return ModeloWorkLifecycleContinuation(
+            notice_code="modelo.work.list.selection_required",
+            summary_locale_key="cli.app.modelo.work.list_selection_required_summary",
+            evidence=evidence,
+            no_recovery_outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+        )
+
+    work_unit = work_units[0]
+    evidence = _continuation_evidence(
+        condition_id="modelo.work.list.selection",
+        evidence_id="modelo.work.list.observation",
+        values={"work_unit_count": work_unit_count, "work_unit_id": work_unit.work_unit_id},
+    )
+    return ModeloWorkLifecycleContinuation(
+        notice_code="modelo.work.list.next_action",
+        summary_locale_key="cli.app.modelo.work.list_single_status_summary",
+        evidence=evidence,
+        action=ActionReference(action_id="operator.modelo.work.status"),
+        argument_bindings=(
+            ActionArgumentBinding(
+                argument_name="work_unit_id",
+                status=ActionArgumentStatus.RESOLVED,
+                value=work_unit.work_unit_id,
+                source=ActionArgumentSource.VERDICT_CONTEXT,
+                source_key="work_unit_id",
+            ),
+        ),
+    )
+
+
+def lifecycle_continuation_for_work_history(
+    work_unit: WorkUnit,
+) -> ModeloWorkLifecycleContinuation:
+    """Return the canonical state-inspection continuation for one history observation."""
+    evidence = _continuation_evidence(
+        condition_id="modelo.work.history.inspection",
+        evidence_id="modelo.work.history.observation",
+        values={"work_unit_id": work_unit.work_unit_id},
+    )
+    return ModeloWorkLifecycleContinuation(
+        notice_code="modelo.work.history.next_action",
+        summary_locale_key="cli.app.modelo.work.history_next_action_summary",
+        evidence=evidence,
+        action=ActionReference(action_id="operator.modelo.work.status"),
+        argument_bindings=(
+            ActionArgumentBinding(
+                argument_name="work_unit_id",
+                status=ActionArgumentStatus.RESOLVED,
+                value=work_unit.work_unit_id,
+                source=ActionArgumentSource.VERDICT_CONTEXT,
+                source_key="work_unit_id",
+            ),
+        ),
+    )
+
+
+def lifecycle_continuation_for_work_status(
+    work_unit: WorkUnit,
+) -> ModeloWorkLifecycleContinuation:
+    """Return calculation only when the real calculation guard admits this unit."""
+    evidence = _continuation_evidence(
+        condition_id="modelo.work.status.calculation",
+        evidence_id="modelo.work.status.observation",
+        values={"work_unit_id": work_unit.work_unit_id, "work_unit_state": work_unit.state.value},
+    )
+    if work_unit.state is WorkUnitState.DESCARTADO:
+        return ModeloWorkLifecycleContinuation(
+            notice_code="modelo.work.status.action_unavailable",
+            summary_locale_key="cli.app.modelo.work.status_discarded_summary",
+            evidence=evidence,
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+        )
+    if work_unit.state is not WorkUnitState.BORRADOR:
+        raise ValueError(f"unhandled work-unit lifecycle state: {work_unit.state.value}")
+    return ModeloWorkLifecycleContinuation(
+        notice_code="modelo.work.status.next_action",
+        summary_locale_key="cli.app.modelo.work.status_calculate_summary",
+        evidence=evidence,
+        action=ActionReference(action_id="operator.modelo.work.calculate"),
+        argument_bindings=(
+            ActionArgumentBinding(
+                argument_name="work_unit_id",
+                status=ActionArgumentStatus.RESOLVED,
+                value=work_unit.work_unit_id,
+                source=ActionArgumentSource.VERDICT_CONTEXT,
+                source_key="work_unit_id",
+            ),
+        ),
+    )
 
 
 def _default_name(*, modelo: str, filing_year: int, period: Period) -> str:
@@ -91,16 +355,24 @@ def create_work_unit(
     not exist yet.
     """
     if period.filing_year != filing_year:
+        evidence_values = {
+            "modelo": modelo,
+            "filing_year": filing_year,
+            "period_year": period.filing_year,
+            "period": period.registry_token,
+            "revision_id": revision_id,
+            "filing_year_matches_period": False,
+        }
         raise WorkUnitMutationRefusedError(
-            f"filing_year {filing_year!r} does not match period year {period.filing_year!r}",
-            context={
-                "modelo": modelo,
-                "filing_year": filing_year,
-                "period_year": period.filing_year,
-                "period": period.registry_token,
-                "revision_id": revision_id,
-            },
-            suggestion="pass a Period whose filing year matches the filing_year argument",
+            translated_message="application.modelo.errors.work_unit_filing_year_period_mismatch",
+            context=evidence_values,
+            precondition_failure=build_modelo_precondition_failure_for_scenario(
+                subject_leaf_key="modelo.work.create",
+                scenario_id="modelo.work.create.period.filing_year.mismatch",
+                evidence_id="modelo.work.create.period.observation",
+                evidence_values=evidence_values,
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+            ),
         )
     from ._profile_readiness_gate import (
         require_existing_profile_baseline_ready_for_modelo_work,
@@ -138,21 +410,17 @@ def create_work_unit(
     existing = catalogue.get(work_unit_id)
     if existing is not None:
         if existing.state is WorkUnitState.DESCARTADO:
+            evidence_values = _work_unit_lifecycle_facts(existing)
             raise WorkUnitMutationRefusedError(
-                f"work unit {work_unit_id!r} for {modelo} {filing_year} "
-                f"{period.registry_token} is discarded, and creating it again "
-                "resolves to that same discarded unit because the id is "
-                "content-addressed over exactly these coordinates",
                 translated_message="application.modelo.errors.work_unit_create_discarded",
-                context={
-                    "work_unit_id": work_unit_id,
-                    "state": existing.state.value,
-                    "modelo": modelo,
-                    "filing_year": str(filing_year),
-                    "period": period.registry_token,
-                    "discarded_at": str(existing.discarded_at),
-                    "discarded_by": existing.discarded_by or "",
-                },
+                context=evidence_values,
+                precondition_failure=build_modelo_precondition_failure_for_scenario(
+                    subject_leaf_key="modelo.work.create",
+                    scenario_id="modelo.work.create.lifecycle.target_discarded",
+                    evidence_id="modelo.work.create.lifecycle.observation",
+                    evidence_values=evidence_values,
+                    provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+                ),
             )
         return existing
     now = clock or _utc_now()
@@ -259,6 +527,87 @@ def _work_unit_in_repository_bucket(
     return unit
 
 
+def _work_unit_lifecycle_facts(work_unit: WorkUnit) -> dict[str, str | int]:
+    """Return the primitive state coordinates carried by every lifecycle refusal."""
+    return {
+        "work_unit_id": work_unit.work_unit_id,
+        "work_unit_state": work_unit.state.value,
+        "modelo": str(work_unit.modelo),
+        "filing_year": work_unit.filing_year,
+        "period": work_unit.period.registry_token,
+        "revision_id": work_unit.revision_id,
+    }
+
+
+def require_active_work_unit(
+    work_units: WorkUnitCatalogue,
+    *,
+    work_unit_id: str,
+    repository_bucket_id: str | None,
+    use: ActiveWorkUnitUse,
+) -> WorkUnit:
+    """Resolve one scoped active work unit or raise its declared lifecycle refusal.
+
+    Calculation and external-import operations share this guard so a discarded
+    state has one authority for addressability, typed facts, and the declared
+    terminal verdict. Callers select only their operation identity; they cannot
+    recreate the state predicate or its action/no-recovery outcome.
+    """
+    work_unit = work_units.get(work_unit_id)
+    if work_unit is None or (repository_bucket_id is not None and work_unit.bucket_id != repository_bucket_id):
+        raise WorkUnitNotFoundError(
+            translated_message="application.modelo.errors.work_unit_not_found",
+            context={"work_unit_id": work_unit_id},
+        )
+    if work_unit.state is WorkUnitState.BORRADOR:
+        return work_unit
+    if work_unit.state is not WorkUnitState.DESCARTADO:
+        raise ValueError(f"unhandled work-unit lifecycle state: {work_unit.state.value}")
+
+    refusal = _ACTIVE_WORK_UNIT_REFUSALS[use]
+    evidence_values = _work_unit_lifecycle_facts(work_unit)
+    raise WorkUnitMutationRefusedError(
+        translated_message=refusal.translated_message,
+        context=evidence_values,
+        precondition_failure=build_modelo_precondition_failure_for_scenario(
+            subject_leaf_key=refusal.subject_leaf_key,
+            scenario_id=refusal.scenario_id,
+            evidence_id=refusal.evidence_id,
+            evidence_values=evidence_values,
+            provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+        ),
+    )
+
+
+def require_revision_parent_active(
+    *,
+    work_unit: WorkUnit,
+    calculation_revision_id: str,
+    operation: RevisionParentOperation,
+) -> WorkUnit:
+    """Admit a verify/file revision only while its persisted parent work unit is active."""
+    if work_unit.state is WorkUnitState.BORRADOR:
+        return work_unit
+    if work_unit.state is not WorkUnitState.DESCARTADO:
+        raise ValueError(f"unhandled work-unit lifecycle state: {work_unit.state.value}")
+    refusal = _REVISION_PARENT_DISCARDED_REFUSALS[operation]
+    evidence_values = {
+        **_work_unit_lifecycle_facts(work_unit),
+        "calculation_revision_id": calculation_revision_id,
+    }
+    raise CalculationRevisionNotFoundError(
+        translated_message=refusal.translated_message,
+        context=evidence_values,
+        precondition_failure=build_modelo_precondition_failure_for_scenario(
+            subject_leaf_key=refusal.subject_leaf_key,
+            scenario_id=refusal.scenario_id,
+            evidence_id=refusal.evidence_id,
+            evidence_values=evidence_values,
+            provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+        ),
+    )
+
+
 def get_work_unit(
     work_unit_id: str,
     *,
@@ -284,8 +633,7 @@ def rename_work_unit(
 ) -> WorkUnit:
     """Update a :class:`WorkUnit` display name and emit a rename event.
 
-    Discarded work units are immutable through this lifecycle surface; callers
-    must create a fresh work unit for renewed work on the same filing target.
+    Discarded work units are immutable through this lifecycle surface.
     Successful renames preserve the content-addressed work-unit id and update
     only display metadata plus ``updated_at``.
 
@@ -298,11 +646,17 @@ def rename_work_unit(
     existing = _work_unit_in_repository_bucket(work_unit_id, repository=repo)
     catalogue: WorkUnitCatalogue = repo.load()
     if existing.state is WorkUnitState.DESCARTADO:
+        evidence_values = _work_unit_lifecycle_facts(existing)
         raise WorkUnitMutationRefusedError(
-            f"work unit {work_unit_id!r} is discarded, and re-creating the same "
-            "modelo / year / period resolves to this same discarded unit rather "
-            "than a fresh one",
             translated_message="application.modelo.errors.work_unit_mutation_refused",
+            context=evidence_values,
+            precondition_failure=build_modelo_precondition_failure_for_scenario(
+                subject_leaf_key="modelo.work.rename",
+                scenario_id="modelo.work.rename.lifecycle.discarded",
+                evidence_id="modelo.work.rename.lifecycle.observation",
+                evidence_values=evidence_values,
+                provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+            ),
         )
     now = clock or _utc_now()
     cleaned_name = new_name.strip()
@@ -356,10 +710,17 @@ def discard_work_unit(
     existing = _work_unit_in_repository_bucket(work_unit_id, repository=repo)
     catalogue: WorkUnitCatalogue = repo.load()
     if existing.state is WorkUnitState.DESCARTADO:
+        evidence_values = _work_unit_lifecycle_facts(existing)
         raise WorkUnitAlreadyDiscardedError(
-            f"work unit {work_unit_id!r} is already discarded "
-            f"(by {existing.discarded_by!r} at {existing.discarded_at!s})",
             translated_message="application.modelo.errors.work_unit_already_discarded",
+            context=evidence_values,
+            precondition_failure=build_modelo_precondition_failure_for_scenario(
+                subject_leaf_key="modelo.work.discard",
+                scenario_id="modelo.work.discard.lifecycle.already_discarded",
+                evidence_id="modelo.work.discard.lifecycle.observation",
+                evidence_values=evidence_values,
+                provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+            ),
         )
     now = clock or _utc_now()
     discarded = existing.model_copy(

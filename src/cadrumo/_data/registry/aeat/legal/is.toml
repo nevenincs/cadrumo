@@ -1256,6 +1256,7 @@ bytes = 1353283
 retrieved_at = 2026-07-21
 applies_from = 2023-01-01
 applies_to = 2023-12-31
+record_design_epoch = "2023"
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_23/DR220e23.xlsm"
 review_status = "reviewed"
 
@@ -1269,6 +1270,7 @@ bytes = 1559124
 retrieved_at = 2026-07-21
 applies_from = 2024-01-01
 applies_to = 2024-12-31
+record_design_epoch = "2024"
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_24/DR220e24.xlsx"
 review_status = "reviewed"
 
@@ -1282,6 +1284,7 @@ bytes = 1662928
 retrieved_at = 2026-07-21
 applies_from = 2025-01-01
 applies_to = 2025-12-31
+record_design_epoch = "2025"
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_25/DR220e25.xlsx"
 review_status = "reviewed"
 

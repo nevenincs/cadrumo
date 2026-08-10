@@ -108,7 +108,9 @@ def test_modelo_111_calculate_verify_export_without_copied_ids(tmp_path: Path) -
         ],
     )  # fmt: skip
     assert status.exit_code == 0, status.output
-    status_notice = next(notice for notice in _notices(status.output) if notice["code"] == "modelo.work.status.next_action")
+    status_notice = next(
+        notice for notice in _notices(status.output) if notice["code"] == "modelo.work.status.next_action"
+    )
     assert status_notice["action"]["action"] == {
         "action_id": "operator.modelo.work.calculate",
         "target_command_key": "modelo.work.calculate",
@@ -506,7 +508,9 @@ def test_adjacent_work_commands_resolve_visible_targets() -> None:
     assert history.exit_code == 0, history.output
     assert _payload(history.output)["work_unit_id"] == work_unit_id
     assert _payload(history.output)["event_count"] >= 2
-    history_notice = next(notice for notice in _notices(history.output) if notice["code"] == "modelo.work.history.next_action")
+    history_notice = next(
+        notice for notice in _notices(history.output) if notice["code"] == "modelo.work.history.next_action"
+    )
     assert history_notice["action"]["action"] == {
         "action_id": "operator.modelo.work.status",
         "target_command_key": "modelo.work.status",

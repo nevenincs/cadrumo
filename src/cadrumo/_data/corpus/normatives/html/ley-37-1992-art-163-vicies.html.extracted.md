@@ -9,7 +9,3 @@ Tres. Los empresarios o profesionales que se acojan a este régimen especial y r
 Se modifica, con efectos de 1 de julio de 2021, por el art. 10.20 del Real Decreto-ley 7/2021, de 27 de abril. Ref. BOE-A-2021-6872
 Se añade por el art. 1.35 de la Ley 28/2014, de 27 de noviembre. Ref. BOE-A-2014-12329.
 Texto añadido, publicado el 28/11/2014, en vigor a partir del 01/01/2015.
-Sección 3.ª Régimen de la Unión. Régimen especial aplicable a los servicios prestados por empresarios o profesionales establecidos en la Comunidad, pero no en el Estado miembro de consumo, a destinatarios que no tengan la condición de empresarios o profesionales actuando como tales, a las ventas a distancia intracomunitarias de bienes y a las entregas interiores de bienes realizadas en las condiciones previstas en el artículo 8 bis.b) de esta Ley
-Se modifica, con efectos de 1 de julio de 2021, por el art. 10.21 del Real Decreto-ley 7/2021, de 27 de abril. Ref. BOE-A-2021-6872
-Se añade por el art. 1.35 de la Ley 28/2014, de 27 de noviembre. Ref. BOE-A-2014-12329.
-Texto añadido, publicado el 28/11/2014, en vigor a partir del 01/01/2015.

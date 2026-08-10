@@ -75,7 +75,7 @@ def _create_work_unit(*, modelo: str, year: int, period: str) -> dict[str, objec
     revision is a derived fact and creation accepts an explicit id only when
     it equals that resolution. Pinning a literal here buys nothing and goes
     stale the moment a new revision opens: these fixtures previously pinned
-    M303 to ``2023-y-siguientes`` for 2026, which began refusing outright
+    M303 to an obsolete revision for 2026, which began refusing outright
     once the 2026 revision shipped and capped that window at 2025-12-31.
     """
     result = invoke_cached_cli(
@@ -295,27 +295,29 @@ def _seed_m100_profile_facts(bucket_id: str) -> None:
 def _seed_prior_m100_zero_carry() -> None:
     from ....application.calculations import CalculationObservationRepository
 
-    CalculationObservationRepository().save_observation(
-        RegistryModeloObservation(
-            modelo="100",
-            filing_year=2023,
-            period="0A",
-            observations=registry_grounded_observations(
+    CalculationObservationRepository().save(
+        CalculationObservationRepository().prepare_observation_envelope(
+            RegistryModeloObservation(
                 modelo="100",
                 filing_year=2023,
                 period="0A",
-                casilla_values={
-                    "0224": Decimal("0"),
-                    "1388": Decimal("0"),
-                    "1391": Decimal("0"),
-                    "1479": Decimal("0"),
-                    "1553": Decimal("0"),
-                    "1577": Decimal("0"),
-                },
+                observations=registry_grounded_observations(
+                    modelo="100",
+                    filing_year=2023,
+                    period="0A",
+                    casilla_values={
+                        "0224": Decimal("0"),
+                        "1388": Decimal("0"),
+                        "1391": Decimal("0"),
+                        "1479": Decimal("0"),
+                        "1553": Decimal("0"),
+                        "1577": Decimal("0"),
+                    },
+                ),
             ),
-        ),
-        source_kind="app_filing",
-        captured_at=datetime(2024, 6, 30, 12, 0, tzinfo=UTC),
+            source_kind="app_filing",
+            captured_at=datetime(2024, 6, 30, 12, 0, tzinfo=UTC),
+        )
     )
 
 

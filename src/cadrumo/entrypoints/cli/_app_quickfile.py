@@ -40,7 +40,14 @@ from ._modelo_cli_support import (
     work_calculate_input_bundle_from_cli,
 )
 from ._modelo_rendering import advisory_notice, verification_report_notices
-from ._modelo_work_options import _ActorOpt, _BucketIdOpt, _RevisionOpt
+from ._modelo_work_options import (
+    _ActorOpt,
+    _BucketIdOpt,
+    _PaymentElectionOpt,
+    _PriorDomiciliationElectionOpt,
+    _RefundElectionOpt,
+    _RevisionOpt,
+)
 
 app = typer.Typer(
     name="quickfile",
@@ -98,21 +105,9 @@ def quickfile(
         typer.Option("--row", help=tr("cli.app.modelo.work.row_help")),
     ] = None,
     actor: _ActorOpt = None,
-    refund_election: Annotated[
-        RefundElection,
-        typer.Option("--refund-election", help=tr("cli.app.modelo.work.refund_election_help")),
-    ] = RefundElection.COMPENSAR,
-    payment_election: Annotated[
-        PaymentElection,
-        typer.Option("--payment-election", help=tr("cli.app.modelo.work.payment_election_help")),
-    ] = PaymentElection.INGRESO,
-    prior_domiciliation_election: Annotated[
-        PriorDomiciliationElection,
-        typer.Option(
-            "--prior-domiciliation-election",
-            help=tr("cli.app.modelo.work.prior_domiciliation_election_help"),
-        ),
-    ] = PriorDomiciliationElection.KEEP,
+    refund_election: _RefundElectionOpt = RefundElection.COMPENSAR,
+    payment_election: _PaymentElectionOpt = PaymentElection.INGRESO,
+    prior_domiciliation_election: _PriorDomiciliationElectionOpt = PriorDomiciliationElection.KEEP,
     output_language: OutputLanguageOpt = None,
 ) -> None:
     """Run readiness -> create -> calculate -> verify -> export for one modelo target."""

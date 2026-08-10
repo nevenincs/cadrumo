@@ -59,7 +59,9 @@ def test_verification_report_lines_preserve_persisted_findings_without_recovery_
         VerificationReport,
         derive_verification_report_id,
     )
+    from .._modelo_payloads import VerificationReportListResult, VerificationReportShowResult
     from .._modelo_rendering import verification_report_lines as _verification_report_lines
+    from .._modelo_rendering import verification_report_payload as _verification_report_payload
 
     run_at = datetime(2026, 5, 27, 10, 0, 0, tzinfo=UTC)
     calc_id = "a" * 64
@@ -94,6 +96,17 @@ def test_verification_report_lines_preserve_persisted_findings_without_recovery_
     assert finding_line.endswith("\tnull")
     assert not any("next_action" in line for line in lines)
     assert not any("aeat app " in line for line in lines)
+
+    # Persisted reports go through the same production finding projection as
+    # report ``view`` and ``list``. Historical facts cannot reconstruct a live
+    # recovery action, so the typed payload and its JSON wire shape must retain
+    # an explicit null.
+    payload = _verification_report_payload(report)
+    assert payload.findings[0].action is None
+    view = VerificationReportShowResult.model_validate(payload.model_dump(mode="python")).model_dump(mode="json")
+    listing = VerificationReportListResult(report_count=1, reports=[payload]).model_dump(mode="json")
+    assert view["findings"][0]["action"] is None
+    assert listing["reports"][0]["findings"][0]["action"] is None
 
 
 def test_verification_report_payload_resolves_the_exact_registry_recovery_verdict() -> None:

@@ -41,7 +41,7 @@ def gather_observed_requirement_values(
     Matches exactly one
     :class:`~domain.calculations.registry.RegistryModeloObservation` per
     declared source period and extracts the requirement's single source
-    :class:`~domain.calculations.registry.CasillaId` value from each. The
+    :class:`~core.CasillaId` value from each. The
     returned tuple carries one value per ``requirement.periods`` entry, in
     declaration order, ready for :func:`fold_observed_requirement_values`.
     """

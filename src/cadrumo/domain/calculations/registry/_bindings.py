@@ -330,7 +330,7 @@ def _decimal_tuple_from_json_array(value: object) -> object:
 class CasillaObservation(BaseModel):
     """One typed casilla observation emitted by the formula runtime.
 
-    Carries a :class:`~domain.calculations.registry.CasillaId`, final
+    Carries a :class:`~core.CasillaId`, final
     :class:`decimal.Decimal` value, required legal/source provenance, and
     optional formula lineage. When ``formula_id`` is set, the runtime computed
     this casilla and ``operand_refs`` / ``operand_values`` trace its inputs

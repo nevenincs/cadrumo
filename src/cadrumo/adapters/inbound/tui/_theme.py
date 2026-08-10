@@ -37,8 +37,9 @@ from typing import TYPE_CHECKING, Final, override
 
 from textual.app import ComposeResult
 from textual.containers import Vertical, VerticalScroll
+from textual.geometry import Size
 from textual.theme import Theme
-from textual.widgets import Static
+from textual.widgets import DataTable, Static
 
 from ....core.config import TuiAppearance, load_settings
 from ....core.json_contract import Notice, NoticeSeverity, ResolvedNoticeAction
@@ -52,14 +53,12 @@ if TYPE_CHECKING:
 CADRUMO_LIGHT_THEME_NAME: Final[str] = "cadrumo-light"
 CADRUMO_DARK_THEME_NAME: Final[str] = "cadrumo-dark"
 
-CONTENT_WIDTH_PERCENT: Final[str] = "86%"
+CONTENT_WIDTH_PERCENT: Final[str] = "100%"
 """Share of the terminal the content column occupies.
 
-Expressed as a proportion, never a cell count. Cell constants were the
-original defect: a body pinned at 96 cells wasted a wide terminal and
-clipped a narrow one, and simply raising the number moves the problem
-rather than removing it. A proportion scales with whatever the operator
-actually gave the application, leaving a consistent gutter at every size.
+Expressed as a proportion, never a cell count. Full-screen means the body
+uses the terminal the operator gave it; borders provide enough visual
+separation without throwing away a fixed gutter on both sides.
 """
 
 
@@ -118,48 +117,45 @@ CADRUMO_THEMES: Final[tuple[Theme, ...]] = (CADRUMO_LIGHT, CADRUMO_DARK)
 SCROLLBAR_CELLS: Final[int] = 1
 """Width of the vertical scrollbar track, in cells.
 
-The scroll host reserves this on the right (``scrollbar-gutter: stable``)
-and pads by the same amount on the left, so the reservation is symmetric
-and the centred content column lands on the terminal's true midline. The
-two must always agree, which is why they are one constant substituted
-into the stylesheet rather than two numbers typed twice.
+The one outer scroll host uses this track only when content overflows.
+Nested auto-height tables suppress their vertical tracks and leave scrolling
+to that host.
 """
 
 _BASE_CSS_TEMPLATE: Final[str] = """
     Screen {
         background: $background;
         color: $foreground;
-        /* Both axes. Horizontal alone left every surface hugging the top of
-           a tall terminal with the whole lower half empty, which is what
-           "not centred" actually looked like. */
-        align: center middle;
+        align: left top;
     }
 
     /* The shared fluid content column. A surface marks its body with this
-       class instead of pinning a width: the column is a PROPORTION of the
-       terminal, so it grows with a wide one and shrinks with a narrow one
-       while keeping the same gutter on both sides. No cell constants. */
+       class instead of pinning a width. It consumes the full content box;
+       the terminal size, not an arbitrary percentage, is the limit. */
     .cadrumo-column {
-        width: 86%;
+        width: 100%;
         height: auto;
     }
 
-    /* A scroll host must not eat the column's centring. `scrollbar-gutter:
-       stable` reserves the track so the layout does not jump when the
-       scrollbar appears — but it reserves on the RIGHT ONLY, which moves
-       the content box off the terminal's midline and drags the centred
-       column with it (measured: gutters 8 left / 10 right at 120 columns).
-       Matching that reservation with an equal left padding restores the
-       symmetry: the content box is now inset by the scrollbar width on
-       both sides, so its midline is the terminal's midline. Both values
-       track SCROLLBAR_CELLS — they are one measurement, not two. */
+    /* One outer host owns vertical scrolling. A permanent gutter and its
+       compensating left pad wasted two columns even when nothing overflowed. */
     .cadrumo-scroll {
         width: 100%;
         height: 1fr;
-        align-horizontal: center;
+        align-horizontal: left;
         scrollbar-size-vertical: SCROLLBAR_CELLS;
-        scrollbar-gutter: stable;
-        padding: 0 0 0 SCROLLBAR_CELLS;
+        scrollbar-gutter: auto;
+        padding: 0;
+    }
+
+    /* Tables inside that host expand to their rows; the outer host scrolls.
+       Keeping a second vertical track on each table is the side-by-side
+       scrollbar defect. Horizontal scrolling remains available when a narrow
+       terminal cannot fit a table's columns. */
+    .cadrumo-scroll DataTable {
+        height: auto;
+        overflow-y: hidden;
+        scrollbar-size-vertical: 0;
     }
 
     /* The docked title band every full-screen surface carries. */
@@ -170,17 +166,17 @@ _BASE_CSS_TEMPLATE: Final[str] = """
         background: $primary;
         color: $text;
         text-style: bold;
-        padding: 0 2;
+        padding: 0 1;
     }
 
-    /* One padding scale, so panels across surfaces breathe identically. */
+    /* Borders already separate panels; keep the usable area for content. */
     .cadrumo-panel {
         border: round $primary;
         border-title-color: $accent;
         border-title-style: bold;
         background: $surface;
-        padding: 1 3;
-        margin: 1 0;
+        padding: 0 1;
+        margin: 0;
         width: 100%;
         height: auto;
     }
@@ -191,9 +187,9 @@ _BASE_CSS_TEMPLATE: Final[str] = """
     /* Buttons must read as focused from across the room: reversed brand
        fill plus a marker, so focus never depends on colour alone. */
     Button {
-        height: 3;
+        height: 1;
         border: none;
-        padding: 0 3;
+        padding: 0 1;
         background: $panel;
         color: $foreground;
     }
@@ -220,7 +216,7 @@ BASE_CSS: Final[str] = _BASE_CSS_TEMPLATE.replace("SCROLLBAR_CELLS", str(SCROLLB
 """Chrome and layout shared by every Cadrumo full-screen surface.
 
 An app composes this ahead of its own rules (``CSS = BASE_CSS + "..."``)
-so the banner, the centred content column, and the button treatment are
+so the banner, the full-width content column, and the button treatment are
 defined once. Colours resolve through theme tokens exclusively, which is
 what lets one app serve both appearances without a second stylesheet.
 """
@@ -238,6 +234,21 @@ class ContentScroll(VerticalScroll, can_focus=False):
     by tabbing the real controls, and the scroll still responds to the
     mouse wheel and to Page Up / Page Down.
     """
+
+
+class ContentDataTable[CellType](DataTable[CellType]):
+    """A table that expands to its rows inside the shared scroll host.
+
+    Textual caps an auto-height ``DataTable`` at the remaining viewport and
+    gives it a second vertical scroll domain. Mirroring its reactive virtual
+    height into its layout height lets :class:`ContentScroll` own the complete
+    page instead: every row and every following action remains reachable, with
+    one scrollbar representing the whole surface.
+    """
+
+    def watch_virtual_size(self, size: Size) -> None:
+        """Keep the layout box equal to the current rows and header."""
+        self.styles.height = max(1, size.height)
 
 
 NOTICE_BAND_CSS: Final[str] = """
@@ -367,6 +378,7 @@ __all__ = [
     "CADRUMO_THEMES",
     "CONTENT_WIDTH_PERCENT",
     "NOTICE_BAND_CSS",
+    "ContentDataTable",
     "ContentScroll",
     "NoticeBand",
     "install_cadrumo_themes",

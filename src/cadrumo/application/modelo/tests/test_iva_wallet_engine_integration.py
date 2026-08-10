@@ -195,10 +195,8 @@ def test_missing_wallet_filed_history_decision_blocks_real_modelo_303_engine(tmp
                 bucket_event_repository=event_repo,
                 clock=_DECIDED_AT,
             )
-        assert exc_info.value.suggestion is not None
-        assert "iva-wallet override" in exc_info.value.suggestion
-        assert "--amount AMOUNT" in exc_info.value.suggestion
-        assert "iva-wallet seed" not in exc_info.value.suggestion
+        assert exc_info.value.suggestion is None
+        assert exc_info.value.precondition_failure.scenario_id == "modelo.work.calculate.iva_wallet.blocked"
         assert len(calc_repo.load()) == 0
 
 
@@ -383,33 +381,32 @@ def _official_303_envelope(
             header_key="declaration_type",
             value=declaration_type.value,
             source_artefact_kind="submitted_file",
-            source_locator=(
-                "modelo-303-fichero-boe:modelo-303-page-01:declaration-type:"
-                f"{declaration_type.value}"
-            ),
+            source_locator=(f"modelo-303-fichero-boe:modelo-303-page-01:declaration-type:{declaration_type.value}"),
         ),
     )
-    repository.save_observation(
-        RegistryModeloObservation(
-            modelo="303",
-            filing_year=work_unit.filing_year,
-            period=work_unit.period.registry_token,
-            observations=revision.observations,
-        ),
-        source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
-        captured_at=_DECIDED_AT,
-        stamped_revision_id=stamped_revision_id or work_unit.revision_id,
-        source_headers=source_headers,
-        result_disposition=(
-            ResultDispositionProjection(
-                disposition=result_disposition,
-                provenance_kind="source_header",
-                provenance_locator="test:conflicting-official-disposition",
-            )
-            if result_disposition is not None
-            else None
-        ),
-        normalize_m303_carry=result_disposition is None,
+    repository.save(
+        repository.prepare_observation_envelope(
+            RegistryModeloObservation(
+                modelo="303",
+                filing_year=work_unit.filing_year,
+                period=work_unit.period.registry_token,
+                observations=revision.observations,
+            ),
+            source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
+            captured_at=_DECIDED_AT,
+            stamped_revision_id=stamped_revision_id or work_unit.revision_id,
+            source_headers=source_headers,
+            result_disposition=(
+                ResultDispositionProjection(
+                    disposition=result_disposition,
+                    provenance_kind="source_header",
+                    provenance_locator="test:conflicting-official-disposition",
+                )
+                if result_disposition is not None
+                else None
+            ),
+            normalize_m303_carry=result_disposition is None,
+        )
     )
 
 
@@ -613,9 +610,7 @@ def test_normal_wallet_replay_revalidates_prior_envelope_recurrence(
             snapshot=_snapshot_303(period="2T"),
         )
         assert initial is not None
-        assert any(
-            source.source_locator == "observation-envelope:303:2026:1T" for source in initial.authority_sources
-        )
+        assert any(source.source_locator == "observation-envelope:303:2026:1T" for source in initial.authority_sources)
 
         if mutation == "stale_stamp":
             _official_303_envelope(

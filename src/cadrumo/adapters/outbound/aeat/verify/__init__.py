@@ -37,6 +37,7 @@ from urllib.parse import parse_qs, urlencode, urlsplit
 from pydantic import AnyUrl
 
 from .....core import is_aeat_csv as _is_aeat_csv
+from .....core import normalise_aeat_csv as _normalise_aeat_csv
 from .....core.async_cleanup import close_async_resources as _close_async_resources
 from .....core.config import Settings as _Settings
 from .....core.errors import CadrumoError as _CadrumoError
@@ -212,7 +213,7 @@ async def verify_csv(
             because browser construction, navigation, the guard, or parsing
             fails.
     """
-    csv = csv.strip().upper()
+    csv = _normalise_aeat_csv(csv)
     if not _is_aeat_csv(csv):
         raise _JustificanteVerificationError(
             f"cannot verify {csv!r}: an AEAT CSV is 8-32 uppercase alphanumeric characters",

@@ -93,7 +93,7 @@ def initial_values(
     """Build initial numeric casilla values and absent-by-design markers.
 
     The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` supplies
-    :class:`~cadrumo.domain.calculations.registry.CasillaId` membership, formula
+    :class:`~cadrumo.core.CasillaId` membership, formula
     targets, and :class:`~cadrumo.domain.calculations.registry.BindingId` slots
     before formula evaluation starts.
     """
@@ -174,7 +174,7 @@ def _reject_unknown_inputs(
     inputs: Mapping[CasillaId, Decimal],
     casillas: Mapping[CasillaId, CasillaDefinition],
 ) -> None:
-    """Reject supplied :class:`~cadrumo.domain.calculations.registry.CasillaId` keys."""
+    """Reject supplied :class:`~cadrumo.core.CasillaId` keys."""
     unknown = sorted(set(inputs).difference(casillas))
     if unknown:
         raise RegistryValidationError(

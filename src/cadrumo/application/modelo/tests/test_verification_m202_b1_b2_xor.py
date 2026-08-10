@@ -53,7 +53,12 @@ def test_modelo_202_b1_b2_resultado_previo_both_positive_is_blocking() -> None:
 
         assert len(findings) == 1, revision_id
         assert findings[0].kind is ModeloVerificationFindingKind.BLOCKING_RULE, revision_id
-        assert _M202_B1_B2_RESULTADO_PREVIO_XOR_PREDICATE_ID in findings[0].message, revision_id
+        assert findings[0].message_locale_key == "application.modelo.findings.cross_casilla_invariant_violated", (
+            revision_id
+        )
+        assert dict(findings[0].message_facts) == {"predicate_id": _M202_B1_B2_RESULTADO_PREVIO_XOR_PREDICATE_ID}, (
+            revision_id
+        )
         assert "ley-27-2014:art-40-3" in findings[0].legal_refs, revision_id
 
 

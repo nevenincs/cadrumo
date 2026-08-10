@@ -8,9 +8,9 @@ the active profile bucket.
 
 Public functions return redacted summaries, bounded body placeholders, and
 hash fingerprints instead of raw page bodies or taxpayer identifiers.
-Operator phone-state reports are appended back into the encrypted diagnostic
-payload so later troubleshooting can distinguish "app did not prompt" from
-"operator did not check" without creating a plaintext side channel.
+When AEAT exposes an authenticated post-Cl@ve landing, that browser transition
+is recorded as the authoritative phone-state observation. Operator reports are
+offered only when the browser state cannot determine what happened on the app.
 """
 
 from __future__ import annotations
@@ -40,12 +40,19 @@ _DIAGNOSTIC_SCHEMA_VERSION = CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.schema_version
 
 
 class AuthDiagnosticPhoneState(StrEnum):
-    """Closed vocabulary of operator-observed Cl@ve Móvil app states."""
+    """Closed vocabulary of observed Cl@ve Móvil app states."""
 
     APP_PROMPTED_AND_ACCEPTED = "app_prompted_and_accepted"
     APP_PROMPTED_NOT_ACCEPTED = "app_prompted_not_accepted"
     APP_DID_NOT_PROMPT = "app_did_not_prompt"
     OPERATOR_DID_NOT_CHECK = "operator_did_not_check"
+
+
+class AuthDiagnosticPhoneStateSource(StrEnum):
+    """Closed authority that established a diagnostic phone state."""
+
+    AEAT_AUTHENTICATED_LANDING = "aeat_authenticated_landing"
+    OPERATOR_REPORT = "operator_report"
 
 
 AUTH_DIAGNOSTIC_PHONE_STATES: tuple[str, ...] = tuple(state.value for state in AuthDiagnosticPhoneState)
@@ -88,12 +95,16 @@ class AuthDiagnosticSummary(BaseModel):
     #: as free text: the taxonomy used to be enforced only on the mutation
     #: verb, so a persisted row could list a state the mutation API refuses.
     phone_state: AuthDiagnosticPhoneState | None = None
+    phone_state_source: AuthDiagnosticPhoneStateSource | None = None
+    phone_state_observed_at: datetime | None = None
     phone_state_reported_at: datetime | None = None
 
     @model_validator(mode="after")
     def _instants_are_utc(self) -> AuthDiagnosticSummary:
         """Hold every projected instant to the canonical UTC contract."""
         validate_utc_aware(self.captured_at)
+        if self.phone_state_observed_at is not None:
+            validate_utc_aware(self.phone_state_observed_at)
         if self.phone_state_reported_at is not None:
             validate_utc_aware(self.phone_state_reported_at)
         return self
@@ -149,6 +160,8 @@ class _DiagnosticPayload(BaseModel):
     auth_attempt: dict[str, object] = {}
     operator_report: dict[str, object] = {}
     phone_state: str = ""
+    phone_state_source: str = ""
+    phone_state_observed_at: str = ""
 
 
 def list_auth_diagnostics() -> AuthDiagnosticListReport:
@@ -193,7 +206,9 @@ def load_auth_diagnostic(diagnostic_id: str) -> AuthDiagnosticDetail | None:
             **summary.model_dump(),
             **_detail_fingerprints_from_payload(payload),
             "html_excerpt": excerpt,
-            "operator_report_commands": _operator_report_commands(summary.diagnostic_id or diagnostic_id),
+            "operator_report_commands": (
+                _operator_report_commands(summary.diagnostic_id or diagnostic_id) if summary.phone_state is None else ()
+            ),
         },
     )
 
@@ -333,10 +348,28 @@ def _summary_from_payload(payload: _DiagnosticPayload) -> AuthDiagnosticSummary:
         raise AuthDiagnosticPayloadError("auth diagnostic payload is missing captured_at")
     auth_attempt = payload.auth_attempt
     operator_report = payload.operator_report
+    browser_phone_state = _validated_phone_state(payload.phone_state)
     phone_state_reported_at = None
     raw_reported_at = operator_report.get("reported_at")
     if isinstance(raw_reported_at, str) and raw_reported_at:
         phone_state_reported_at = _validated_utc_instant(raw_reported_at, field="operator_report.reported_at")
+    phone_state_observed_at = None
+    if browser_phone_state is not None:
+        if payload.phone_state_source != AuthDiagnosticPhoneStateSource.AEAT_AUTHENTICATED_LANDING:
+            raise AuthDiagnosticPayloadError(
+                "browser-proven auth diagnostic phone state is missing its authenticated landing source",
+            )
+        if not payload.phone_state_observed_at:
+            raise AuthDiagnosticPayloadError(
+                "browser-proven auth diagnostic phone state is missing its observation instant",
+            )
+        phone_state_observed_at = _validated_utc_instant(
+            payload.phone_state_observed_at,
+            field="phone_state_observed_at",
+        )
+        phone_state_reported_at = None
+    else:
+        phone_state_observed_at = phone_state_reported_at
     raw_headless = auth_attempt.get("headless")
     summary = AuthDiagnosticSummary(
         diagnostic_id=payload.diagnostic_id,
@@ -368,7 +401,13 @@ def _summary_from_payload(payload: _DiagnosticPayload) -> AuthDiagnosticSummary:
         certificate_path_configured=_optional_bool(auth_attempt.get("certificate_path_configured")),
         certificate_password_configured=_optional_bool(auth_attempt.get("certificate_password_configured")),
         certificate_file_present=_optional_bool(auth_attempt.get("certificate_file_present")),
-        phone_state=_validated_phone_state(operator_report.get("phone_state") or payload.phone_state),
+        phone_state=browser_phone_state or _validated_phone_state(operator_report.get("phone_state")),
+        phone_state_source=(
+            AuthDiagnosticPhoneStateSource.AEAT_AUTHENTICATED_LANDING
+            if browser_phone_state is not None
+            else (AuthDiagnosticPhoneStateSource.OPERATOR_REPORT if operator_report.get("phone_state") else None)
+        ),
+        phone_state_observed_at=phone_state_observed_at,
         phone_state_reported_at=phone_state_reported_at,
     )
     return summary
@@ -461,6 +500,7 @@ __all__ = [
     "AuthDiagnosticDetail",
     "AuthDiagnosticListReport",
     "AuthDiagnosticPhoneState",
+    "AuthDiagnosticPhoneStateSource",
     "AuthDiagnosticReportResult",
     "AuthDiagnosticSummary",
     "list_auth_diagnostics",

@@ -107,15 +107,15 @@ def _objective_estimation_exclusion_advisory_findings(
         return ()
 
     declared_values = tuple(
-        (profile_field, parameter_id, label, getattr(profile, profile_field))
-        for profile_field, parameter_id, label in _PARAMETER_BY_PROFILE_FIELD
+        (profile_field, parameter_id, getattr(profile, profile_field))
+        for profile_field, parameter_id, _label in _PARAMETER_BY_PROFILE_FIELD
     )
     if all(raw_value is None for *_prefix, raw_value in declared_values):
         return ()
 
     parameters = resources().legal_parameters.singleton
     findings: list[ModeloVerificationFinding] = []
-    for profile_field, parameter_id, label, raw_value in declared_values:
+    for profile_field, parameter_id, raw_value in declared_values:
         if raw_value is None:
             continue
         declared = _as_decimal(raw_value, profile_field)
@@ -127,11 +127,15 @@ def _objective_estimation_exclusion_advisory_findings(
             ModeloVerificationFinding(
                 kind=ModeloVerificationFindingKind.ADVISORY,
                 severity=ModeloVerificationFindingSeverity.WARNING,
-                message=(
-                    "estimacion objetiva declared volume exceeds the settled official exclusion magnitude: "
-                    f"modelo={modelo} year={work_unit.filing_year} field={profile_field} "
-                    f"declared={declared} EUR threshold={threshold} EUR ({label})."
-                ),
+                message_locale_key="application.modelo.findings.objective_estimation_exclusion_threshold_exceeded",
+                message_facts={
+                    "modelo_id": modelo,
+                    "filing_year": work_unit.filing_year,
+                    "profile_field_id": profile_field,
+                    "parameter_id": parameter_id,
+                    "declared": declared,
+                    "threshold": threshold,
+                },
                 legal_refs=parameter.legal_refs,
                 source_refs=_scope_source_refs(work_unit.filing_year),
             ),

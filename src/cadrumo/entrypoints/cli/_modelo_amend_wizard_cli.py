@@ -644,7 +644,7 @@ def _values_kind_reason_definition(
         default=(
             "complementaria adds to the prior tax due; sustitutiva fully replaces the prior "
             "filing; rectificativa is the unified correction mechanism for modelos whose "
-            "orden implements it (e.g. Modelo 303 from 2023-y-siguientes). Only the kinds "
+            "orden implements it (e.g. Modelo 303 from filing year 2023). Only the kinds "
             "legally available for this filing's period are accepted."
         ),
     )

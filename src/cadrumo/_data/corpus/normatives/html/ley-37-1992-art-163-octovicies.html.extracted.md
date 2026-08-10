@@ -11,10 +11,3 @@ En caso de que el Reino de España sea el Estado miembro de identificación, los
 Tres. Los empresarios o profesionales que se acojan a este régimen especial y realicen en el territorio de aplicación del impuesto operaciones a las que se refiere este régimen especial conjuntamente con otras distintas que determinen la obligación de registrarse y de presentar declaraciones-liquidaciones en dicho territorio, deberán deducir las cuotas soportadas en la adquisición o importación de bienes y servicios que se entiendan realizadas en dicho territorio y sean utilizados en la realización de las operaciones a que se refiere este régimen especial a través de las declaraciones-liquidaciones correspondientes que deban presentar en el territorio de aplicación del impuesto.
 Se añade, con efectos de 1 de julio de 2021, por el art. 10.22 del Real Decreto-ley 7/2021, de 27 de abril. Ref. BOE-A-2021-6872
 Texto añadido, publicado el 28/04/2021, en vigor a partir del 01/07/2021.
-TÍTULO X
-Obligaciones de los sujetos pasivos
-CAPÍTULO I
-Normas generales
-Se añade por el art. 33 de la Ley 11/2023, de 8 de mayo. Ref. BOE-A-2023-11022
-Esta modificación entra en vigor el 1 de enero de 2024, según establece la disposición final 18 de la citada Ley.
-Texto añadido, publicado el 09/05/2023, en vigor a partir del 01/01/2024.

@@ -38,7 +38,7 @@ from ._gate_support import fragment_declaring
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REVISION_ID = "2023-y-siguientes"
+_REVISION_ID = "2025"
 _CASILLA_BASE = "iva.autorepercutido.intracomunitaria.devengado.base"
 _BINDING_BASE = "modelo-303-iva-autorepercutido-intracomunitaria-devengado-base"
 _FORMULA_BOX_10 = "modelo-303-dr303-10-projection"

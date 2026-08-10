@@ -7,7 +7,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core import STRICT_FROZEN_CONFIG, ActionEvidenceProvenance
 from ...domain.modelos import (
     ModeloVerificationFinding,
     ModeloVerificationFindingSeverity,
@@ -29,6 +29,8 @@ class VerificationFindingPreconditionProjection(BaseModel):
         is_blocking = self.finding.severity is ModeloVerificationFindingSeverity.BLOCKING
         if not is_blocking and self.precondition_failure is not None:
             raise ValueError("warning verification findings cannot carry a precondition failure")
+        if is_blocking and self.precondition_failure is None:
+            raise ValueError("blocking verification findings require a precondition failure")
         if self.precondition_failure is not None and self.precondition_failure.subject_leaf_key != "modelo.work.verify":
             raise ValueError("verification finding preconditions must identify the verify leaf")
         return self

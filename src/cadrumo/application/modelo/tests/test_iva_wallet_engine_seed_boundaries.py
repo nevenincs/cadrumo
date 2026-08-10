@@ -57,10 +57,8 @@ def test_no_seed_no_override_303_calculate_blocks_missing_in_scope_prior_history
                 bucket_event_repository=event_repo,
                 clock=_DECIDED_AT,
             )
-        assert exc_info.value.suggestion is not None
-        assert "iva-wallet override" in exc_info.value.suggestion
-        assert "--amount 0" in exc_info.value.suggestion
-        assert "iva-wallet seed" not in exc_info.value.suggestion
+        assert exc_info.value.suggestion is None
+        assert exc_info.value.precondition_failure.scenario_id == "modelo.work.calculate.iva_wallet.blocked"
 
 
 def test_in_scope_period_rejects_supplied_first_period_zero_decision(tmp_path: Path) -> None:

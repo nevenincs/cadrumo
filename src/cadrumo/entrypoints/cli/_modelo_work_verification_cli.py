@@ -30,15 +30,8 @@ from ...application.calculations import (
     m111_no_retenciones_periods_for_bucket,
 )
 from ...application.modelo import (
-    CalculationRevisionNotFoundError,
-    CalculationRevisionStateError,
     ModeloCalculationRevisionSelector,
-    ModeloPaymentElectionCapabilityRefusedError,
-    ModeloPaymentElectionIncompatibleError,
-    ModeloPriorDomiciliationElectionRefusedError,
-    ModeloRefundElectionNotEligibleError,
     ModeloVerifySelector,
-    WorkUnitNotFoundError,
     file_modelo_revision,
     require_profile_ready_for_work_unit,
     verify_modelo_revision_with_preconditions,
@@ -75,7 +68,10 @@ from ._modelo_work_options import (
     _BucketIdOpt,
     _CalculationRevisionIdArg,
     _ModeloOpt,
+    _PaymentElectionOpt,
     _PeriodOpt,
+    _PriorDomiciliationElectionOpt,
+    _RefundElectionOpt,
     _RevisionOpt,
     _RevisionSelectorOpt,
     _WorkUnitIdOpt,
@@ -100,8 +96,6 @@ class _VerificationDeps:
     require_active_profile: Callable[[], None]
     resolve_revision_for_cli: Callable[..., Any]
     resolve_default_actor: Callable[[], str]
-    bad_parameter_from_error: Callable[[BaseException], typer.BadParameter]
-    calculation_revision_not_found_bad_parameter: Callable[[str, BaseException], typer.BadParameter]
 
 
 # KWARGS-ANY-RATIONALE-CLI-DI-RESOLVERS: resolve_revision_for_cli is an injected
@@ -115,7 +109,6 @@ def register_work_verification_commands(
     resolve_revision_for_cli: Callable[..., Any],
     resolve_default_actor: Callable[[], str],
     bad_parameter_from_error: Callable[[BaseException], typer.BadParameter],
-    calculation_revision_not_found_bad_parameter: Callable[[str, BaseException], typer.BadParameter],
 ) -> None:
     """Register revision verification, dependency, and internal filing commands."""
     deps = _VerificationDeps(
@@ -123,8 +116,6 @@ def register_work_verification_commands(
         require_active_profile=require_active_profile,
         resolve_revision_for_cli=resolve_revision_for_cli,
         resolve_default_actor=resolve_default_actor,
-        bad_parameter_from_error=bad_parameter_from_error,
-        calculation_revision_not_found_bad_parameter=calculation_revision_not_found_bad_parameter,
     )
     _register_work_verify_command(work_app, deps=deps)
     _register_work_dependencies_command(
@@ -150,7 +141,7 @@ def _register_work_verify_command(work_app: typer.Typer, *, deps: _VerificationD
             ModeloVerifySelector,
             typer.Option(
                 "--select",
-                help=tr("cli.app.modelo.work.verify_selector_help", default="Draft revision selector."),
+                help=tr("cli.app.modelo.work.verify_selector_help"),
             ),
         ] = ModeloVerifySelector.CURRENT,
         bucket_id: _BucketIdOpt = None,
@@ -165,40 +156,29 @@ def _register_work_verify_command(work_app: typer.Typer, *, deps: _VerificationD
         """Persist a :class:`VerificationReport` for the selected draft revision."""
         deps.activate_output_language(ctx, output_language)
         deps.require_active_profile()
-        try:
-            selected_revision = deps.resolve_revision_for_cli(
-                calculation_revision_id=calculation_revision_id,
-                work_unit_id=work_unit_id,
-                modelo=modelo,
-                year=year,
-                period=period,
-                registry_revision=revision,
-                bucket_id=bucket_id,
-                selector=select.to_calculation_revision_selector().value,
-                default_for="verify",
-            )
-            require_profile_ready_for_work_unit(load_work_unit(selected_revision.work_unit_id))
-            workflow_profile = _filing_taxpayer_or_refuse(workflow_state_repository().load())
-            # A revision already out of BORRADOR is the current verified answer, so
-            # the verify call is a guarded-idempotent no-op that returns the
-            # existing granting report unchanged (no re-run, no duplicate lifecycle
-            # event). Capture that before the call to surface it as an info Notice.
-            already_verified = selected_revision.state is not CalculationRevisionState.BORRADOR
-            verification = verify_modelo_revision_with_preconditions(
-                selected_revision.calculation_revision_id,
-                actor=actor or deps.resolve_default_actor(),
-                workflow_profile=workflow_profile,
-            )
-        except CalculationRevisionNotFoundError as exc:
-            if calculation_revision_id is not None:
-                raise deps.calculation_revision_not_found_bad_parameter(calculation_revision_id, exc) from exc
-            raise deps.bad_parameter_from_error(exc) from exc
-        except (
-            CalculationRevisionStateError,
-            WorkUnitNotFoundError,
-        ) as exc:
-            raise deps.bad_parameter_from_error(exc) from exc
-
+        selected_revision = deps.resolve_revision_for_cli(
+            calculation_revision_id=calculation_revision_id,
+            work_unit_id=work_unit_id,
+            modelo=modelo,
+            year=year,
+            period=period,
+            registry_revision=revision,
+            bucket_id=bucket_id,
+            selector=select.to_calculation_revision_selector().value,
+            default_for="verify",
+        )
+        require_profile_ready_for_work_unit(load_work_unit(selected_revision.work_unit_id))
+        workflow_profile = _filing_taxpayer_or_refuse(workflow_state_repository().load())
+        # A revision already out of BORRADOR is the current verified answer, so
+        # the verify call is a guarded-idempotent no-op that returns the
+        # existing granting report unchanged (no re-run, no duplicate lifecycle
+        # event). Capture that before the call to surface it as an info Notice.
+        already_verified = selected_revision.state is not CalculationRevisionState.BORRADOR
+        verification = verify_modelo_revision_with_preconditions(
+            selected_revision.calculation_revision_id,
+            actor=actor or deps.resolve_default_actor(),
+            workflow_profile=workflow_profile,
+        )
         report = verification.report
         report_payload = verification_report_payload(
             report,
@@ -266,7 +246,7 @@ def _register_work_dependencies_command(
         activate_output_language(ctx, output_language)
         require_active_profile()
         if period is not None and modelo is None:
-            raise typer.BadParameter("--period requires --modelo")
+            raise typer.BadParameter(tr("cli.app.modelo.work.dependencies_period_requires_modelo"))
 
         try:
             state = workflow_state_repository().load()
@@ -453,27 +433,9 @@ def _register_work_file_command(work_app: typer.Typer, *, deps: _VerificationDep
             str | None,
             typer.Option("--notes", help=tr("cli.app.modelo.work.notes_help")),
         ] = None,
-        refund_election: Annotated[
-            RefundElection,
-            typer.Option(
-                "--refund-election",
-                help=tr("cli.app.modelo.work.refund_election_help"),
-            ),
-        ] = RefundElection.COMPENSAR,
-        payment_election: Annotated[
-            PaymentElection,
-            typer.Option(
-                "--payment-election",
-                help=tr("cli.app.modelo.work.payment_election_help"),
-            ),
-        ] = PaymentElection.INGRESO,
-        prior_domiciliation_election: Annotated[
-            PriorDomiciliationElection,
-            typer.Option(
-                "--prior-domiciliation-election",
-                help=tr("cli.app.modelo.work.prior_domiciliation_election_help"),
-            ),
-        ] = PriorDomiciliationElection.KEEP,
+        refund_election: _RefundElectionOpt = RefundElection.COMPENSAR,
+        payment_election: _PaymentElectionOpt = PaymentElection.INGRESO,
+        prior_domiciliation_election: _PriorDomiciliationElectionOpt = PriorDomiciliationElection.KEEP,
         output_language: OutputLanguage | None = typer.Option(
             None,
             "--output-language",
@@ -484,51 +446,36 @@ def _register_work_file_command(work_app: typer.Typer, *, deps: _VerificationDep
         """Create an internal :class:`ModeloRecord` for a verified revision."""
         deps.activate_output_language(ctx, output_language)
         deps.require_active_profile()
-        try:
-            selected_revision = deps.resolve_revision_for_cli(
-                calculation_revision_id=calculation_revision_id,
-                work_unit_id=work_unit_id,
-                modelo=modelo,
-                year=year,
-                period=period,
-                registry_revision=revision,
-                bucket_id=bucket_id,
-                selector=select,
-                default_for="file",
-            )
-            require_profile_ready_for_work_unit(load_work_unit(selected_revision.work_unit_id))
-            workflow_profile = _filing_taxpayer_or_refuse(workflow_state_repository().load())
-            # A revision already in PRESENTADO is the current filed answer, so the
-            # file call is a guarded-idempotent no-op that returns the existing
-            # record unchanged (no duplicate filing record or lifecycle event).
-            # Capture that before the call to surface it as an info Notice.
-            already_filed = selected_revision.state is CalculationRevisionState.PRESENTADO
-            record = file_modelo_revision(
-                selected_revision.calculation_revision_id,
-                actor=actor or deps.resolve_default_actor(),
-                workflow_profile=workflow_profile,
-                notes=notes,
-                refund_election=refund_election,
-                payment_election=payment_election,
-                prior_domiciliation_election=prior_domiciliation_election,
-            )
-        except CalculationRevisionNotFoundError as exc:
-            if calculation_revision_id is not None:
-                raise deps.calculation_revision_not_found_bad_parameter(calculation_revision_id, exc) from exc
-            raise deps.bad_parameter_from_error(exc) from exc
-        except (
-            CalculationRevisionStateError,
-            ModeloPaymentElectionCapabilityRefusedError,
-            ModeloPaymentElectionIncompatibleError,
-            ModeloPriorDomiciliationElectionRefusedError,
-            ModeloRefundElectionNotEligibleError,
-            WorkUnitNotFoundError,
-        ) as exc:
-            raise deps.bad_parameter_from_error(exc) from exc
-
+        selected_revision = deps.resolve_revision_for_cli(
+            calculation_revision_id=calculation_revision_id,
+            work_unit_id=work_unit_id,
+            modelo=modelo,
+            year=year,
+            period=period,
+            registry_revision=revision,
+            bucket_id=bucket_id,
+            selector=select,
+            default_for="file",
+        )
+        require_profile_ready_for_work_unit(load_work_unit(selected_revision.work_unit_id))
+        workflow_profile = _filing_taxpayer_or_refuse(workflow_state_repository().load())
+        # A revision already in PRESENTADO is the current filed answer, so the
+        # file call is a guarded-idempotent no-op that returns the existing
+        # record unchanged (no duplicate filing record or lifecycle event).
+        # Capture that before the call to surface it as an info Notice.
+        already_filed = selected_revision.state is CalculationRevisionState.PRESENTADO
+        record = file_modelo_revision(
+            selected_revision.calculation_revision_id,
+            actor=actor or deps.resolve_default_actor(),
+            workflow_profile=workflow_profile,
+            notes=notes,
+            refund_election=refund_election,
+            payment_election=payment_election,
+            prior_domiciliation_election=prior_domiciliation_election,
+        )
         result = WorkFileResult.model_validate(filing_record_payload(record).model_dump(mode="python"))
         lines = ["operation\tmodelo.work.file", *filing_record_lines(record)]
-        lines.append("filing_disambiguation\t(internal only — does not submit to AEAT)")
+        lines.append(f"filing_disambiguation\t{tr('cli.app.modelo.work.file_internal_disambiguation')}")
         notices: list[Notice] = []
         if already_filed:
             noop_message = tr(

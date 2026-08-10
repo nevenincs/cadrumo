@@ -45,6 +45,7 @@ from ...core import post_filing_event_is_actionable as _post_filing_event_is_act
 from ...core import resolve_notificacion_estado_servicio as _resolve_notificacion_estado_servicio
 from ...core.external_constants import IVA_REGIME_MODELOS
 from ...core.i18n import tr as _tr
+from ...core.identity import same_tax_identifier
 from ...core.logging import get_logger as _get_logger
 from ...core.time import now
 from ...domain.calculations.registry import (
@@ -536,17 +537,21 @@ def _notification_matches_expected_tax_id(
     *,
     allow_missing_row_identity: bool = False,
 ) -> bool:
-    expected = (expected_tax_id or "").strip().upper()
+    expected = (expected_tax_id or "").strip()
     if not expected:
         return True
     row_tax_ids = {
-        str(getattr(row, "titular_nif", "") or "").strip().upper(),
-        str(getattr(row, "destinatario_nif", "") or "").strip().upper(),
+        str(getattr(row, "titular_nif", "") or "").strip(),
+        str(getattr(row, "destinatario_nif", "") or "").strip(),
     }
     row_tax_ids.discard("")
     if not row_tax_ids:
         return allow_missing_row_identity
-    return expected in row_tax_ids
+    # Set membership over trim-and-uppercase values compared the printed
+    # and stored spellings of one identifier as different bearers: it never
+    # stripped the separators AEAT prints, so B-1234567-4 missed B12345674
+    # and a matching row read as somebody else's.
+    return any(same_tax_identifier(expected, row_tax_id) for row_tax_id in row_tax_ids)
 
 
 def build_overview_calendar_events(

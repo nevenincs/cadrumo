@@ -319,6 +319,50 @@ def test_exact_work_unit_id_in_calculation_revision_slot_has_only_the_canonical_
 
 
 @pytest.mark.parametrize(
+    ("default_for", "revision_state"),
+    (
+        ("verify", CalculationRevisionState.BORRADOR),
+        ("file", CalculationRevisionState.VERIFICADO_COMPLETO),
+    ),
+)
+def test_positional_work_unit_id_resolves_its_current_revision_after_calculation(
+    addressing_repos: tuple[str, WorkUnitCatalogueRepository, CalculationRevisionCatalogueRepository],
+    default_for: Literal["verify", "file"],
+    revision_state: CalculationRevisionState,
+) -> None:
+    """The declared calculate recovery makes the unchanged verify/file selector executable."""
+    bucket_id, work_repository, calculation_repository = addressing_repos
+    work_unit = _seed_work_unit(work_repository, bucket_id=bucket_id)
+    revision = _seed_revision(
+        calculation_repository,
+        work_unit_id=work_unit.work_unit_id,
+        state=revision_state,
+        created_at=_T0 + timedelta(minutes=1),
+        output=Decimal("10"),
+    )
+    work_repository.save(
+        upsert_work_unit(
+            work_repository.load(),
+            work_unit.model_copy(update={"current_calculation_revision_id": revision.calculation_revision_id}),
+        ),
+    )
+
+    resolved = resolve_modelo_revision_for_operator_target(
+        calculation_revision_id=work_unit.work_unit_id,
+        work_unit_id=None,
+        modelo=None,
+        year=None,
+        period=None,
+        registry_revision_id=None,
+        selector=ModeloCalculationRevisionSelector.CURRENT,
+        default_for=default_for,
+    )
+
+    assert resolved == revision
+    assert resolved.work_unit_id == work_unit.work_unit_id
+
+
+@pytest.mark.parametrize(
     ("default_for", "subject_leaf_key"),
     (("verify", "modelo.work.verify"), ("file", "modelo.work.file")),
 )

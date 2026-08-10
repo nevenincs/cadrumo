@@ -163,10 +163,7 @@ def overview_post_filing_event_notices(events: Sequence[OverviewCalendarEvent]) 
     kinds = sorted({event.post_filing_kind.value for event in actionable if event.post_filing_kind is not None})
     message = tr(
         "cli.overview.post_filing.pending_summary",
-        default=(
-            "%{count} AEAT post-filing event(s) require attention: %{kinds}. "
-            "Review the affected notifications."
-        ),
+        default=("%{count} AEAT post-filing event(s) require attention: %{kinds}. Review the affected notifications."),
         count=len(actionable),
         kinds=", ".join(kinds),
     )

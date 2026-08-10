@@ -108,9 +108,7 @@ class TestTextOutputIsReadable:
 
     def test_show_uses_aligned_aggregate_fields(self, tmp_path) -> None:
         with override_settings(cadrumo_local_storage_root=tmp_path):
-            result = invoke_cached_cli(
-                ["config", "storage", "show", StorageArea.LOGS.value, "--output-language", "en"]
-            )
+            result = invoke_cached_cli(["config", "storage", "show", StorageArea.LOGS.value, "--output-language", "en"])
 
         assert result.exit_code == 0, semantic_cli_output(result)
         assert any(line.startswith("Area") and line.endswith("logs") for line in result.output.splitlines())
@@ -147,9 +145,7 @@ class TestTextOutputIsReadable:
             target = storage_path(StorageCategory.BLOBS)
             target.mkdir(parents=True, exist_ok=True)
             (target / "durable.bin").write_bytes(b"preserve")
-            result = invoke_cached_cli(
-                ["config", "storage", "reclaim", "state", "--yes", "--output-language", "es"]
-            )
+            result = invoke_cached_cli(["config", "storage", "reclaim", "state", "--yes", "--output-language", "es"])
 
         output = semantic_cli_output(result)
         assert result.exit_code != 0
@@ -166,9 +162,7 @@ class TestTextOutputIsReadable:
             target = storage_path(StorageCategory.LLM_CACHE)
             target.mkdir(parents=True, exist_ok=True)
             (target / "cached.bin").write_bytes(b"rebuild")
-            result = invoke_cached_cli(
-                ["config", "storage", "reclaim", "cache", "--output-language", "es"]
-            )
+            result = invoke_cached_cli(["config", "storage", "reclaim", "cache", "--output-language", "es"])
 
         output = semantic_cli_output(result)
         assert result.exit_code != 0

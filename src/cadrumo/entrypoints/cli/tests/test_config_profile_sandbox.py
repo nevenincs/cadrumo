@@ -841,9 +841,7 @@ def test_sandbox_banner_preserves_resolved_modelo_next_action() -> None:
     status_json = _invoke(("--format", "json", "app", "modelo", "work", "status", work_unit_id[-12:]))
     assert status_json.exit_code == 0, status_json.output
     notice = next(
-        item
-        for item in unwrap_envelope_notices(status_json.output)
-        if item["code"] == "modelo.work.status.next_action"
+        item for item in unwrap_envelope_notices(status_json.output) if item["code"] == "modelo.work.status.next_action"
     )
     assert notice["action"] == {
         "action": {

@@ -17,7 +17,6 @@ and uniform :class:`~cadrumo.core.json_contract.Notice` rows into
 
 from __future__ import annotations
 
-import re as _re
 from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
@@ -69,17 +68,6 @@ _M184_SOCIO_HANDOFF_CODE = "modelo.work.m184_socio_handoff"
 # --binding override on 1577.
 _M184_ATRIBUCION_ACT_ECO_CASILLA = "1577"
 _M184_ATRIBUCION_LEGAL_REFS = "ley-35-2006:art-86, ley-35-2006:art-87, ley-35-2006:art-88, ley-35-2006:art-89"
-_CROSS_PERIOD_DEPENDENCY_UNCLEAN_MESSAGE = _re.compile(
-    r"cross-period dependency is not clean: modelo=(?P<modelo>\S+) year=(?P<year>\d+) "
-    r"period=(?P<period>\S+) origin=(?P<origin>\S+) origin_ids=(?P<origin_ids>.+) "
-    r"blockers=(?P<blockers>.+)",
-)
-_CROSS_PERIOD_OPERATOR_DECLARED_SUPPRESSION_MESSAGE = _re.compile(
-    r"cross-period dependency scoped out as no-prior-obligation \(pre-activity\): "
-    r"modelo=(?P<modelo>\S+) year=(?P<year>\d+) period=(?P<period>\S+) origin=(?P<origin>\S+)\. "
-    r"The period falls strictly before the operator-declared activity-start date "
-    r"(?P<activity_start_date>\S+), which has not yet been corroborated against an AEAT censo snapshot\.",
-)
 
 
 def m184_socio_handoff_notices(revision: CalculationRevision) -> list[Notice]:
@@ -1020,7 +1008,7 @@ def verification_report_lines(
                     finding.severity.value,
                     casilla,
                     _render_verification_finding_message(finding),
-                    _verification_finding_action_text(action),
+                    resolved_precondition_action_json_cell(action),
                 ),
             ),
         )
@@ -1031,39 +1019,6 @@ def verification_report_lines(
     return lines
 
 
-
-
 def _render_verification_finding_message(finding: ModeloVerificationFinding) -> str:
-    """Localize recognized finding prose without deriving recovery semantics."""
-    dependency_match = _CROSS_PERIOD_DEPENDENCY_UNCLEAN_MESSAGE.fullmatch(finding.message)
-    if dependency_match is not None:
-        return tr(
-            "application.modelo.findings.cross_period_dependency_unclean",
-            default=(
-                "cross-period dependency is not clean: modelo=%{modelo} year=%{year} "
-                "period=%{period} origin=%{origin} origin_ids=%{origin_ids} blockers=%{blockers}"
-            ),
-            modelo=dependency_match["modelo"],
-            year=dependency_match["year"],
-            period=dependency_match["period"],
-            origin=dependency_match["origin"],
-            origin_ids=dependency_match["origin_ids"],
-            blockers=dependency_match["blockers"],
-        )
-    match = _CROSS_PERIOD_OPERATOR_DECLARED_SUPPRESSION_MESSAGE.fullmatch(finding.message)
-    if match is not None:
-        return tr(
-            "application.modelo.findings.cross_period_operator_declared_suppression",
-            default=(
-                "cross-period dependency scoped out as no-prior-obligation (pre-activity): "
-                "modelo=%{modelo} year=%{year} period=%{period} origin=%{origin}. The period falls "
-                "strictly before the operator-declared activity-start date %{activity_start_date}, which has "
-                "not yet been corroborated against an AEAT censo snapshot."
-            ),
-            modelo=match["modelo"],
-            year=match["year"],
-            period=match["period"],
-            origin=match["origin"],
-            activity_start_date=match["activity_start_date"],
-        )
-    return finding.message
+    """Render one persisted locale key and its typed facts at the CLI boundary."""
+    return tr(finding.message_locale_key, **finding.message_facts)

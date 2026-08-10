@@ -233,6 +233,7 @@ from ._diagnostics import (
     AuthDiagnosticDetail,
     AuthDiagnosticListReport,
     AuthDiagnosticPhoneState,
+    AuthDiagnosticPhoneStateSource,
     AuthDiagnosticReportResult,
     AuthDiagnosticSummary,
     list_auth_diagnostics,
@@ -252,6 +253,7 @@ from ._operator import (
 )
 from ._operator_probes import (
     ProviderConfigurationProbe,
+    bind_profile_auth_settings,
     probe_provider_configuration,
     probe_provider_credentials,
 )
@@ -293,6 +295,7 @@ from ._sessions import (
     PersistedAuthSession,
     SessionDeserializationError,
     StorageStatePaths,
+    bind_clave_credentials_to_settings,
     clave_auth_facts_from_profile_values,
     delete_persisted_session,
     ensure_authenticated_aeat_session,
@@ -330,6 +333,7 @@ __all__ = [
     "AuthDiagnosticListReport",
     "AuthDiagnosticPayloadError",
     "AuthDiagnosticPhoneState",
+    "AuthDiagnosticPhoneStateSource",
     "AuthDiagnosticReportResult",
     "AuthDiagnosticSummary",
     "AuthLoginNotEnabledError",
@@ -374,6 +378,8 @@ __all__ = [
     "apoderado_answers_from_state",
     "auth_acquisition_lock_path",
     "auth_lock_ttl_seconds",
+    "bind_clave_credentials_to_settings",
+    "bind_profile_auth_settings",
     "build_apoderado_flow_definition",
     "build_live_auth_preflight_report",
     "certificate_source_tax_id",

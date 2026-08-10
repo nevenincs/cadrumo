@@ -85,8 +85,8 @@ class LoginApp(CredentialApp["ProfileLoginOutcome"]):
         BASE_CSS
         + CREDENTIAL_PANEL_CSS
         + """
-    #login-intro { margin: 0 0 1 0; }
-    #login-actions Button { margin: 0 0 0 2; }
+    #login-intro { margin: 0; }
+    #login-actions Button { margin: 0 0 0 1; }
     """
     )
 

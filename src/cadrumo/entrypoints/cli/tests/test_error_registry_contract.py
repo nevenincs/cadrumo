@@ -16,7 +16,9 @@ from ....adapters.outbound.aeat.auth.certificate import AeatSessionExpiredError
 from ....adapters.outbound.aeat.browser.session import BrowserError
 from ....application.review import ReviewKindReservedError
 from ....core.access_gate import LiveSubmitForbiddenError
+from ....core.config import override_settings
 from ....core.errors import ErrorCategory, render_error_text
+from ....core.i18n import tr
 from ....core.observability import RunContextMissingError
 from ....domain.portals import PortalIntegrityError
 
@@ -24,25 +26,29 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 @pytest.mark.parametrize(
-    ("error_factory", "expected_prefix"),
+    ("error_factory", "category"),
     [
-        (LiveSubmitForbiddenError, "Locked."),
-        (lambda: ReviewKindReservedError("queue", "tracked separately"), "Refused."),
-        (AeatSessionExpiredError, "Auth."),
-        (PortalIntegrityError, "Integrity."),
-        (BrowserError, "Failed."),
-        (RunContextMissingError, "Internal."),
+        (LiveSubmitForbiddenError, ErrorCategory.LOCKED),
+        (lambda: ReviewKindReservedError("queue", "tracked separately"), ErrorCategory.REFUSED),
+        (AeatSessionExpiredError, ErrorCategory.AUTH),
+        (PortalIntegrityError, ErrorCategory.INTEGRITY),
+        (BrowserError, ErrorCategory.FAIL),
+        (RunContextMissingError, ErrorCategory.INTERNAL),
     ],
 )
-def test_rendered_prefixes_are_grep_stable(
+@pytest.mark.parametrize("locale", ("en", "es", "ca", "hu"))
+def test_rendered_prefixes_are_catalogue_derived(
     error_factory: Callable[[], Exception],
-    expected_prefix: str,
+    category: ErrorCategory,
+    locale: str,
 ) -> None:
-    """Each representative exception renders with the sentence-case prefix
-    canonicalised by ``_category_text_prefix``."""
-    rendered = render_error_text(error_factory())
+    """Each registered category renders from its selected locale key."""
+    with override_settings(cadrumo_output_language=locale):
+        rendered = render_error_text(error_factory())
     first_line = rendered.splitlines()[0]
-    assert first_line.startswith(f"{expected_prefix} ")
+    prefix = tr(f"errors.prefix.{category.value.lower()}", locale=locale)
+    assert prefix != f"errors.prefix.{category.value.lower()}"
+    assert first_line.startswith(f"{prefix} ")
 
 
 def test_every_error_category_has_a_cli_prefix_probe() -> None:

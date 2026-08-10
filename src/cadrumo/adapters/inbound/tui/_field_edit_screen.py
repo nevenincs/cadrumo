@@ -80,17 +80,17 @@ _EDIT_DIALOG_CSS = """
 #edit-dialog {
     border: thick $accent;
     background: $surface;
-    padding: 1 3;
-    width: 60%;
+    padding: 0 1;
+    width: 100%;
     height: auto;
 }
 #edit-label { text-style: bold; }
 #edit-hint { color: $text-muted; }
 #edit-refusal { color: $error; text-style: bold; }
 #edit-masked-note { color: $text-muted; }
-#edit-dialog Input { margin: 0 0 1 0; }
-#edit-actions { height: auto; align-horizontal: right; margin: 1 0 0 0; }
-#edit-actions Button { margin: 0 0 0 2; }
+#edit-dialog Input { margin: 0; }
+#edit-actions { height: auto; align-horizontal: right; margin: 0; }
+#edit-actions Button { margin: 0 0 0 1; }
 """
 """Styling carried by the dialog itself rather than by whichever page opened it.
 

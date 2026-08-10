@@ -45,7 +45,10 @@ from ._modelo_payloads import ModeloExportPayload
 from ._modelo_work_options import (
     _BucketIdOpt,
     _ModeloOpt,
+    _PaymentElectionOpt,
     _PeriodOpt,
+    _PriorDomiciliationElectionOpt,
+    _RefundElectionOpt,
     _RegistryRevisionOpt,
     _RevisionSelectorOpt,
     _YearOpt,
@@ -177,27 +180,9 @@ def register_export_commands(
                 ),
             ),
         ] = None,
-        refund_election: Annotated[
-            RefundElection,
-            typer.Option(
-                "--refund-election",
-                help=tr("cli.app.modelo.work.refund_election_help"),
-            ),
-        ] = RefundElection.COMPENSAR,
-        payment_election: Annotated[
-            PaymentElection,
-            typer.Option(
-                "--payment-election",
-                help=tr("cli.app.modelo.work.payment_election_help"),
-            ),
-        ] = PaymentElection.INGRESO,
-        prior_domiciliation_election: Annotated[
-            PriorDomiciliationElection,
-            typer.Option(
-                "--prior-domiciliation-election",
-                help=tr("cli.app.modelo.work.prior_domiciliation_election_help"),
-            ),
-        ] = PriorDomiciliationElection.KEEP,
+        refund_election: _RefundElectionOpt = RefundElection.COMPENSAR,
+        payment_election: _PaymentElectionOpt = PaymentElection.INGRESO,
+        prior_domiciliation_election: _PriorDomiciliationElectionOpt = PriorDomiciliationElection.KEEP,
     ) -> None:
         """Export a verified-complete or filed modelo revision to disk."""
         workflow_state = workflow_state_repository().load()

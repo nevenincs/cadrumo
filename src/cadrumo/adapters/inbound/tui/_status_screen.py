@@ -31,13 +31,14 @@ from typing import override
 from textual.app import App, ComposeResult
 from textual.binding import Binding, BindingsMap
 from textual.containers import Vertical
-from textual.widgets import DataTable, Footer, Static
+from textual.widgets import Footer, Static
 
 from ....core.i18n import tr
 from ....core.json_contract import Notice
 from ._theme import (
     BASE_CSS,
     NOTICE_BAND_CSS,
+    ContentDataTable,
     ContentScroll,
     NoticeBand,
     install_cadrumo_themes,
@@ -152,7 +153,7 @@ class StatusApp(App[None]):
         + """
     .status-panel DataTable { height: auto; width: 100%; background: $surface; }
     .status-empty { color: $text-muted; text-style: italic; }
-    .status-commands { color: $text-muted; margin: 1 0 0 0; }
+    .status-commands { color: $text-muted; margin: 0; }
     """
     )
 
@@ -232,7 +233,11 @@ class StatusApp(App[None]):
         if not self._data.facts:
             panel.mount(Static(tr("flows.status.profile.none"), classes="status-empty"))
             return
-        table = DataTable(id="profile-facts", cursor_type="none", zebra_stripes=True)
+        table: ContentDataTable[str] = ContentDataTable(
+            id="profile-facts",
+            cursor_type="none",
+            zebra_stripes=True,
+        )
         panel.mount(table)
         table.add_columns(
             tr("flows.status.profile.column.field"),
@@ -250,7 +255,11 @@ class StatusApp(App[None]):
         if not self._data.profiles:
             panel.mount(Static(tr("flows.status.profiles.none"), classes="status-empty"))
             return
-        table = DataTable(id="profiles-table", cursor_type="none", zebra_stripes=True)
+        table: ContentDataTable[str] = ContentDataTable(
+            id="profiles-table",
+            cursor_type="none",
+            zebra_stripes=True,
+        )
         panel.mount(table)
         table.add_columns(
             tr("flows.status.profiles.column.label"),

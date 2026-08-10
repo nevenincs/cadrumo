@@ -178,6 +178,7 @@ from ._verification_preconditions import (
     build_verification_precondition_failure,
     project_verification_findings,
 )
+from ._work_lifecycle import RevisionParentOperation, require_revision_parent_active
 from ._workflow_gate import build_revision_workflow_engine as _build_revision_workflow_engine
 from ._workflow_gate import run_revision_workflow_gate as _run_revision_workflow_gate
 
@@ -890,6 +891,17 @@ def verify_modelo_revision_with_preconditions(
             translated_message="application.modelo.errors.calculation_revision_not_found",
             context={"calculation_revision_id": calculation_revision_id},
         )
+    work_units = wu_repo.load()
+    work_unit = work_units.get(target.work_unit_id)
+    if work_unit is None:
+        raise WorkUnitNotFoundError(
+            f"calculation revision {calculation_revision_id!r} references missing work_unit_id={target.work_unit_id!r}",
+        )
+    require_revision_parent_active(
+        work_unit=work_unit,
+        calculation_revision_id=calculation_revision_id,
+        operation=RevisionParentOperation.VERIFY,
+    )
     if target.state is not CalculationRevisionState.BORRADOR:
         # Idempotent re-verify (aeat-cli-contract): a
         # revision that has already been verified-and-granted (VERIFICADO_COMPLETO,
@@ -918,12 +930,6 @@ def verify_modelo_revision_with_preconditions(
 
     _assert_revision_content_integrity(target)
 
-    work_units = wu_repo.load()
-    work_unit = work_units.get(target.work_unit_id)
-    if work_unit is None:
-        raise WorkUnitNotFoundError(
-            f"calculation revision {calculation_revision_id!r} references missing work_unit_id={target.work_unit_id!r}",
-        )
     from ._profile_readiness_gate import require_profile_ready_for_work_unit
 
     require_profile_ready_for_work_unit(work_unit)

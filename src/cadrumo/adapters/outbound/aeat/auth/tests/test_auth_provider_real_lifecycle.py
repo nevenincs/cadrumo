@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from ......application.auth import AuthProvider
+from ......application.auth import AuthProvider, load_auth_diagnostic
 from ......application.auth_credentials import unnamed_certificate_credentials
 from ......core import AuthProviderKind
 from ......core.async_cleanup import AsyncResourceCleanupError
@@ -276,6 +276,47 @@ async def test_clave_movil_public_verify_drives_real_own_name_representation_gat
     assert isinstance(assertion.assertion_detail, ClaveMovilLoginAssertionDetail)
     assert assertion.assertion_detail.landing_url is not None
     assert assertion.assertion_detail.landing_url.startswith(target_url)
+
+
+@pytest.mark.asyncio
+async def test_authenticated_representation_landing_records_phone_acceptance_without_operator_report(
+    tmp_path: Path,
+) -> None:
+    """A real browser transition after Cl@ve is the phone-state authority."""
+    bucket_id = "clave-movil-real-representation-diagnostic"
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
+        async with opened_http_boundary() as boundary:
+            boundary.configure("clave-movil-representation-missing")
+            settings_values = _settings(tmp_path, AuthProviderKind.CLAVE_MOVIL).model_dump()
+            settings_values["cadrumo_clave_prefer_non_qr"] = False
+            settings = Settings.model_validate(settings_values)
+            provider = select_provider(
+                AuthProviderKind.CLAVE_MOVIL,
+                settings=settings,
+                browser_session_factory=real_browser_factory(
+                    boundary=boundary,
+                    profile_name="clave-movil-representation-diagnostic",
+                ),
+            )
+            external = Settings.external_constants()
+            target_url = f"{external.aeat.domains.www1}{external.aeat.pre303.presentation_service_path}"
+            try:
+                with pytest.raises(ClaveMovilApprovalTimeoutError) as raised:
+                    await provider.authenticate_for_target(target_url=target_url)
+            finally:
+                await provider.close()
+
+        assert raised.value.context is not None
+        diagnostic_id = raised.value.context["diagnostic_id"]
+        assert isinstance(diagnostic_id, str)
+        detail = load_auth_diagnostic(diagnostic_id)
+
+    assert detail is not None
+    assert detail.phone_state == "app_prompted_and_accepted"
+    assert detail.phone_state_source == "aeat_authenticated_landing"
+    assert detail.phone_state_observed_at is not None
+    assert detail.phone_state_reported_at is None
+    assert detail.operator_report_commands == ()
 
 
 @pytest.mark.asyncio
