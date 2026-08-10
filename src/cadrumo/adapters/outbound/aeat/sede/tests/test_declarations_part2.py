@@ -570,7 +570,7 @@ class TestDeclaracionPdfObservation:
             modelo="130",
             ejercicio=2026,
             period=Period.from_year_and_code(2026, "1T"),
-            expediente_id="EXPEDIENTE-CANARY-123",
+            expediente_id="20269999CANARY123",
             estado="ALTA",
             presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
             justificante_link_text="Ver",
@@ -587,8 +587,8 @@ class TestDeclaracionPdfObservation:
         err = exc_info.value
         assert err.__cause__ is None
         assert err.__context__ is None
-        assert "EXPEDIENTE-CANARY-123" not in str(err)
-        assert "EXPEDIENTE-CANARY-123" not in str(getattr(err, "context", {}))
+        assert "20269999CANARY123" not in str(err)
+        assert "20269999CANARY123" not in str(getattr(err, "context", {}))
 
     def test_modelo_111_declaration_pdf_values_become_observed_casillas(self) -> None:
         snapshot = _modelo_snapshot("111", filing_year=2025, period="1T")

@@ -42,6 +42,7 @@ from pydantic import BaseModel, Field, field_validator
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core import DeudaDireccion, ObjetoTributario, Period
 from .....core.config import Settings
+from .....core.identity import AeatClaveLiquidacion
 from .....domain.calculations.registry import RemoteStateGuardPolicy
 from ._adapter_utils import assert_read_landing
 
@@ -88,7 +89,7 @@ class Deuda(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    clave_liquidacion: str = Field(min_length=1, max_length=64)
+    clave_liquidacion: AeatClaveLiquidacion
     objeto_tributario: ObjetoTributario
     importe_pendiente: Decimal = Field(ge=Decimal("0"))
     direccion: DeudaDireccion
@@ -106,6 +107,12 @@ class Deuda(BaseModel):
         and procedural state are both unknown as though AEAT had reported
         them, so the boundary refuses rather than storing a blank that later
         reads as real.
+
+        ``clave_liquidacion`` keeps its place here after being retyped onto
+        :data:`~core.identity.AeatClaveLiquidacion`: that alias carries the
+        length bound, which is exactly the bound this validator exists to
+        supplement, so dropping the field from this list on the grounds that
+        it is "now typed" would silently re-admit the blank.
         """
         if not value.strip():
             raise ValueError("must not be blank")

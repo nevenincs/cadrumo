@@ -18,6 +18,7 @@ from typing import Annotated
 from pydantic import AnyHttpUrl, BaseModel, Field, StringConstraints, ValidationInfo, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG, Period, PeriodError
+from ...core.identity import AeatPresentationId
 
 JustificanteCsv = Annotated[str, StringConstraints(min_length=4, max_length=64)]
 """AEAT Código Seguro de Verificación printed on a justificante de presentación.
@@ -77,7 +78,7 @@ class Justificante(BaseModel):
     modelo: str = Field(..., min_length=1, max_length=16)
     ejercicio: str | None = Field(default=None, max_length=8)
     period: Period
-    presentation_id: str | None = Field(default=None, max_length=64)
+    presentation_id: AeatPresentationId | None = None
     presented_at: datetime
     tax_id: str = Field(..., min_length=4, max_length=32)
     total_a_ingresar: Decimal | None = None

@@ -20,7 +20,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _COTEJO_PATH = Settings.external_constants().aeat.sede_paths.cotejo_query
 _CSV = "FIXTURECSV1234X7"
 _BASE_URL = Settings.external_constants().aeat.domains.sede
-_EXPEDIENTE_ID = "EXP2026000001"
+_EXPEDIENTE_ID = "202600000001E"
 
 
 def _detail_html(query: str) -> str:
