@@ -47,8 +47,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 #: sweep reads back. AEAT legitimately permits a complementaria, so a value
 #: changing between captures is ordinary rather than exceptional -- which is
 #: exactly why the advisory exists and why the count it feeds has to be right.
-_ORIGINAL_RESULT = Decimal("50.00")
-_CORRECTED_RESULT = Decimal("999.00")
+#:
+#: BOTH ARE NEGATIVE, and that is a constraint rather than a preference. The
+#: seed observation carries declaration type "N", a negative disposition, and
+#: the M303 carry ingress screens disposition against the sign of the filed
+#: resultado: a negative disposition demands a negative resultado. A positive
+#: pair is refused at persist time, so the divergence read this file exists to
+#: exercise is never reached and every assertion below dies before running.
+_ORIGINAL_RESULT = Decimal("-50.00")
+_CORRECTED_RESULT = Decimal("-999.00")
 
 
 def _observation(*, result: Decimal):
