@@ -21,13 +21,9 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
-from ....adapters.inbound.einvoice import (
-    DocumentShape,
-    EInvoiceXmlParseError,
-    parse_einvoice_document,
-)
+from ....adapters.inbound.einvoice import EInvoiceXmlParseError, parse_einvoice_document
 from ....adapters.inbound.pdf import extract_pages_text_from_bytes
-from ....core import STRUCTURED_DOCUMENT_SHAPES
+from ....core import STRUCTURED_DOCUMENT_SHAPES, DocumentShape
 from ....llm import LLMPdfRasterisationError, rasterise_pdf_pages_to_base64_png
 from ....tests.fixtures import (
     FIXTURE_PROVENANCE_REAL,
