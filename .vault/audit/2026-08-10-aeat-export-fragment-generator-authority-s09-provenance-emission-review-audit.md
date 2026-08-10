@@ -5,7 +5,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:ed904ace524d63d98ef85587475c6ac6f3a75e6380c5cb8add8e2024f643027d'
+body_hash: 'sha256:b5abe6a0f34b6dc243b14bd1076ee39726db3e1de65e5d90d8508f076c692906'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
 ---

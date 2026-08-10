@@ -933,81 +933,15 @@ class RelationPrefillSourceResolver:
             for relation_id in requirement.relation_ids
         }
         resolved = tuple(item for item in relation_values.values if item.value is not None)
-        formula_relation_ids = _formula_relation_ids(snapshot)
-        unresolved_relation_ids = frozenset(
-            item.relation
-            for item in relation_values.values
-            if item.value is None and item.relation in formula_relation_ids
+        unresolved = _unresolved_relation_ids(
+            snapshot,
+            relation_values=relation_values,
+            requirements_by_relation=requirements_by_relation,
+            modelo_id=str(context.modelo),
         )
-        # Two non-formula silences, both advised (no-silent-under-declaration).
-        #
-        # An ORPHANED relation — one whose ``target_binding`` is not declared on
-        # the revision — produces no value, no slot and nothing observable, so its
-        # absence reaches nothing at all.
-        #
-        # A BOUND relation — one whose ``target_binding`` IS declared — is the
-        # subtler case and was previously left silent as "intended cold-start
-        # behaviour". It is advised now because cold start is not what the silence
-        # was protecting. A source period the taxpayer had no obligation for is
-        # already removed upstream by ``_scoped_relation_source_requirements``
-        # against the declared activity start, so a genuine first-ejercicio filer's
-        # prior-year carries never reach this point. What the exclusion additionally
-        # silenced was the filer who DID have the obligation and whose filing is
-        # simply not in the store — and there the engine threads the absent slot as
-        # a zero, which reduces no liability and therefore over-declares.
-        #
-        # The two remain separate sets because their consequences differ: the
-        # orphan reaches nothing, the bound one reaches a casilla as a zero.
-        declared_binding_ids = frozenset(binding.id for binding in snapshot.revision.bindings)
-        relation_target_binding = {relation.id: relation.target_binding for relation in snapshot.revision.relations}
-        unresolved_non_formula_relation_ids = frozenset(
-            item.relation
-            for item in relation_values.values
-            if item.value is None
-            and item.relation not in formula_relation_ids
-            and relation_target_binding.get(item.relation) not in declared_binding_ids
-        )
-        # Membership in ``requirements_by_relation`` is what makes this advisory
-        # safe, and it is load-bearing rather than incidental. That mapping is
-        # built from the SCOPED requirement set, so a source period the taxpayer
-        # had no obligation for has no entry at all. Testing ``value is None``
-        # alone would fire on every genuine first-ejercicio filer, because a
-        # scoped-out relation still appears in ``relation_values`` unresolved.
-        #
-        # The second narrowing is ``taxpayer_files_source``. A carry the taxpayer
-        # does not FILE — a retención suffered, where the payer files the source
-        # modelo — cannot be remedied by capturing or filing anything, so advising
-        # on it would put an unactionable line in front of every filer who simply
-        # had no such withholding. That axis is registry-declared per dependency
-        # (the same signal the clean-state gate scopes on), never inferred.
-        taxpayer_filed_source_modelos = frozenset(
-            classification.source_modelo
-            for classification in snapshot.revision.dependency_classifications
-            if classification.taxpayer_files_source
-        )
-        #
-        # The third narrowing is ownership. The Modelo 303 compensación slot is the
-        # IVA wallet decision's under the one-mechanism-per-calculation-type
-        # taxonomy, so this resolver advising on it would be a second mechanism
-        # speaking about a value it does not own. The coordinate set is already
-        # modelled, so the check is the registry's own predicate rather than a
-        # binding-id comparison invented here.
-        unresolved_bound_relation_ids = frozenset(
-            item.relation
-            for item in relation_values.values
-            if item.value is None
-            and item.relation not in formula_relation_ids
-            and item.relation in requirements_by_relation
-            and requirements_by_relation[item.relation].source_modelo in taxpayer_filed_source_modelos
-            and _requirement_periods_are_datable(requirements_by_relation[item.relation])
-            and relation_target_binding.get(item.relation) in declared_binding_ids
-            and not is_iva_wallet_owned_relation_target(
-                modelo_id=str(context.modelo),
-                revision_id=str(snapshot.revision.id),
-                relation_id=str(item.relation),
-                target_binding=str(relation_target_binding.get(item.relation)),
-            )
-        )
+        unresolved_relation_ids = unresolved.formula_fed
+        unresolved_non_formula_relation_ids = unresolved.orphaned
+        unresolved_bound_relation_ids = unresolved.bound
         resolved_relation_values = {item.relation: item.value for item in resolved if item.value is not None}
         # Materialise the resolved relation values into their declared
         # ``target_binding`` slots HERE, inside the resolver, so the merged
