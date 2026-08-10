@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:3dc2c34809c502efbc081ef6722f66cde607e8bda7e0d5f15dc43e377ddd96ef'
+body_hash: 'sha256:65d74df72625434b1b6eb4ca9f775e969eaae72b98cb31013c5a3e4bebda79c9'
 related:
   - "[[2026-08-07-canonical-identifiers-reference]]"
   - "[[2026-08-07-justificante-identity-matching-adr]]"
@@ -769,4 +769,116 @@ receipt domain "owns the bound because it owns the artefact the value is read
 from": that sentence asserts the ownership this amendment overturns, and
 leaving it standing over a retyped alias would reproduce the defect at source
 level, where the next reader meets it first.
+
+
+## Amendment (2026-08-10): the sibling-ADR citation is wrong, and the namespace marker has no target
+
+### The citation, and what the sibling actually says
+
+Four places in this record cite `2026-08-07-justificante-identity-matching`
+as having deferred a typed namespace marker to this campaign, calling it that
+record's "Option 4":
+
+- Considerations, the sibling-ADR bullet.
+- Considered options item 5's rejection ("a fix depending on this exact
+  hardening (the sibling ADR's Option 4)").
+- Constraints ("This record's implementing plan supplies that sibling ADR's
+  deferred 'Option 4' - the typed namespace marker - as a later, separate
+  Step").
+- Implementation, staged enrollment item 4 ("enroll it as the sibling ADR's
+  deferred Option 4: `matches_filing_target`'s `presentation_id` parameter
+  becomes typed `AeatPresentationId | AeatCsv | None`").
+
+The sibling record says something else, in two respects.
+
+1. **Its Option 4 is its CHOSEN option** - "differentiate by site, and add the
+   CSV check the third site is currently missing". It is not deferred, it is
+   not about a namespace marker, and it has landed.
+2. **The typed namespace marker is its Option 6, and it is REJECTED**: "Add a
+   typed `identifier_namespace` marker to `matches_filing_target` instead of
+   removing `presentation_id`. Rejected as unnecessary given Option 5: once
+   the parameter is gone, there is no namespace left to mark. **Superseded,
+   not merely deferred.**" That closing sentence reads as though it was
+   written to pre-empt exactly the reading this record then made of it.
+
+**This was wrong at birth, not drift.** Both records landed in one commit,
+`90346fd83f`, and the supersession sentence was already present in the sibling
+at that moment. A co-authoring pass wrote a citation to a sibling's Considered
+options without reading them.
+
+### What is true at HEAD
+
+`matches_filing_target(self, *, modelo, filing_year, period, tax_id=None)`.
+The `presentation_id` parameter is gone, removed under the sibling's Option 5
+at `13eebf1247` (2026-08-07 23:31). Reintroducing it in order to type it would
+be a rollback of an accepted, landed subtractive fix, which this record's own
+Constraints already forbid.
+
+The guard this record's plan proposed to add already exists:
+`domain/justificante/tests/test_filing_target.py:75-96` raises `TypeError` on
+a `presentation_id=` argument, passing the removed parameter under an explicit
+type-checker suppression so that the refusal itself is the assertion.
+
+`resolve_identifier_namespace` does not exist anywhere in `src` or `dev`.
+`IdentifierNamespace` does exist, exported from `core.identity`, and is named
+by exactly two files - its own module and its own test. The typed ALIASES are
+a different story and are genuinely wired: `AeatExpedienteId`,
+`AeatPresentationId` and `AeatClaveLiquidacion` are consumed by five
+production modules outside `core/identity`. The alias half of chosen Option 1
+is live; the namespace-marker half is not.
+
+### The consequence this record must not leave implicit
+
+**The namespace-marker half of the chosen option now has no planned
+production consumer at all.** Its only one was `matches_filing_target`'s
+parameter, and that parameter is structurally unavailable. Landing
+`resolve_identifier_namespace` on the current plan would therefore ship a
+function whose sole intended enrollment cannot happen, beside an enum that
+already has no consumer outside its own test - the same dormancy this campaign
+has been burned by once already, where a typed alias declared ahead of its
+consumer became a shadow of the declaration it was meant to replace.
+
+Zero consumers is evidence about the symbol and never about the capability, so
+this is not a finding that the namespace concept is worthless. It is a finding
+that **the record no longer names anywhere it would be used**, and that a
+decision is owed before more of it is built.
+
+### Rulings
+
+**1. Every "sibling ADR's deferred Option 4" citation in this record is
+withdrawn.** The correct reading is that the sibling chose its Option 4,
+removed the parameter under its Option 5, and rejected the typed marker as its
+Option 6, superseded. This record inherits no deferred hardening from it.
+
+**2. `matches_filing_target` is out of scope for this taxonomy.** No Step of
+this campaign may add, retype or re-document a `presentation_id` parameter on
+that predicate. The absence is the guard, and the existing refusal test is
+what keeps it absent.
+
+**3. The namespace-marker half is HELD, not cancelled, pending a first real
+consumer.** `resolve_identifier_namespace` does not land until a site is named
+that genuinely needs to ask which namespaces a bare value is consistent with,
+and that site is recorded in the deciding Step. A semantic sweep run for this
+amendment surfaced none - only the enum's own module, its own test, and an
+in-flight census tool. **The disconfirming observation for that Step: a
+genuine consumer is a site holding a value whose namespace is UNKNOWN at the
+point of use. If every candidate turns out to hold a value whose namespace is
+already fixed by its own field type, that is evidence the resolver should be
+DROPPED rather than enrolled, and the Step must record that outcome rather
+than manufacture a caller for it.**
+
+**4. `IdentifierNamespace`'s dormancy becomes a stated, owned condition of
+this record** rather than an unremarked fact. It ships exported with no
+production consumer. That is tolerable only while ruling 3 is open; if ruling
+3 resolves to drop, the enum goes with it rather than surviving as an exported
+concept nothing uses.
+
+### Implementing rows
+
+`W03.P04.S26`, `S27` and `S28` in `2026-08-07-canonical-identifiers-plan` each
+address the removed parameter and are retired in the same action as this
+amendment, with the reason recorded rather than silently dropped. `S24` and
+`S25` are re-scoped behind ruling 3 and do not execute until a deciding Step
+names a consumer or rules the resolver out. That deciding Step is added to
+`W03.P04`.
 
