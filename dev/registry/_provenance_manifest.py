@@ -67,7 +67,7 @@ EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION: Final[int] = 2
 EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION: Final[int] = 1
 """Reviewed parser-to-wire normalization contract recorded for every field."""
 
-_LOADER_SEMANTIC_SCHEMA_VERSION: Final[int] = 2
+_LOADER_SEMANTIC_SCHEMA_VERSION: Final[int] = 3
 _SHA256_PATTERN: Final[str] = r"^[0-9a-f]{64}$"
 EXPORT_FRAGMENT_PROVENANCE_FILENAME: Final[str] = "_generation.provenance.json"
 """Internal JSON member ignored by the TOML-only registry loader."""
@@ -145,6 +145,7 @@ _FIELD_KEYS: Final[frozenset[str]] = frozenset(
         "decimals",
         "signed",
         "value_policy",
+        "allowed_values",
         "legal_refs",
         "source_refs",
     },
@@ -831,6 +832,7 @@ def _normalise_loader_field(payload: Mapping[str, object]) -> dict[str, object]:
         "decimals": payload["decimals"],
         "signed": payload["signed"],
         "value_policy": payload["value_policy"],
+        "allowed_values": payload["allowed_values"],
         "legal_refs": _sorted_strings(payload["legal_refs"], subject="loader field legal_refs"),
         "source_refs": _sorted_strings(payload["source_refs"], subject="loader field source_refs"),
     }

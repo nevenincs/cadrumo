@@ -321,6 +321,55 @@ def test_loader_semantic_digest_detects_value_policy_change() -> None:
     assert loader_semantic_digest(selected_layout) != loader_semantic_digest(plain_layout)
 
 
+def test_loader_semantic_digest_detects_allowed_values_change() -> None:
+    """The exact reviewed enumeration domain is loader-visible meaning."""
+    plain = ExportFieldDefinition.model_validate(
+        {
+            "id": "enumerated",
+            "offset": 1,
+            "length": 1,
+            "kind": "casilla",
+            "casilla_id": "01",
+            "data_type": "integer",
+            "required": False,
+            "padding": "left_zero",
+            "justification": "right",
+            "signed": False,
+            "legal_refs": ("ley-27-2014:art-40",),
+            "source_refs": ("aeat-dr-200-2025",),
+        },
+    )
+    constrained = ExportFieldDefinition.model_validate(
+        plain.model_dump(mode="python") | {"allowed_values": ("3", "1")},
+    )
+    reordered = ExportFieldDefinition.model_validate(
+        plain.model_dump(mode="python") | {"allowed_values": ("1", "3")},
+    )
+    changed = ExportFieldDefinition.model_validate(
+        plain.model_dump(mode="python") | {"allowed_values": ("1", "4")},
+    )
+    base_layout = _one_field_layout()
+    plain_layout = base_layout.model_copy(
+        update={"records": (base_layout.records[0].model_copy(update={"fields": (plain,)}),)},
+    )
+    constrained_layout = plain_layout.model_copy(
+        update={
+            "records": (
+                plain_layout.records[0].model_copy(update={"fields": (constrained,)}),
+            ),
+        },
+    )
+    reordered_layout = plain_layout.model_copy(
+        update={"records": (plain_layout.records[0].model_copy(update={"fields": (reordered,)}),)},
+    )
+    changed_layout = plain_layout.model_copy(
+        update={"records": (plain_layout.records[0].model_copy(update={"fields": (changed,)}),)},
+    )
+
+    assert loader_semantic_digest(constrained_layout) != loader_semantic_digest(plain_layout)
+    assert loader_semantic_digest(constrained_layout) == loader_semantic_digest(reordered_layout)
+    assert loader_semantic_digest(constrained_layout) != loader_semantic_digest(changed_layout)
+
 def test_manifest_refuses_legacy_shapes_schema_drift_duplicate_outputs_and_unsafe_paths() -> None:
     """Old/incomplete shapes cannot parse as current provenance evidence."""
     manifest = _manifest()
