@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-10'
-body_hash: 'sha256:0dc6912160990a9ef65bbb560ecb713486df82a7f3db1e8f53d6d822a1553cf2'
+body_hash: 'sha256:9ea9b01bc3e11cf4553eddd818cc2afc9323673fa80dcc59ed8bbb70b00bce58'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -466,13 +466,13 @@ Lands the review surface, the blocking-findings gate, assertion-shaped correctio
 - [x] `W09.P17.S310` - Route the ledger evidence batch streamed progress line through the shared CLI redaction funnel, so text mode cannot emit a document name the same command's envelope arms redact; `src/cadrumo/entrypoints/cli`.
 - [x] `W09.P17.S311` - Gate the redaction funnel by property rather than by path, asserting no operator-facing emit primitive in the CLI package reaches stdout without passing a redacting renderer, with a positive control proving the detector fires; `src/cadrumo/entrypoints/cli/tests`.
 - [ ] `W09.P17.S312` - Measure whether the CLI redaction rule set matches a Spanish CIF in a free-text position, and record the answer as coverage gap or deliberate false-positive avoidance rather than assuming either; `src/cadrumo/core/redaction`.
-- [ ] `W09.P17.S313` - Correct the outbound LLM adapter facade docstring to describe the six symbols it actually exports, and replace or remove the worked example whose import raises; `src/cadrumo/adapters/outbound/llm`.
+- [ ] `W09.P17.S313` - Rewrite the outbound LLM adapter facade docstring to describe what that package now is, four persistence-backed stores, and point the client surface at the sibling package that owns it, rather than describing the pre-split surface or promoting symbols back; `src/cadrumo/adapters/outbound/llm`.
 - [ ] `W09.P17.S314` - Re-point the two consent-gate cross-references in the evidence draft text module at the module that actually defines the gate, since the cited adapter module does not exist; `src/cadrumo/llm`.
 - [ ] `W09.P17.S315` - Determine whether package docstring examples are collected as doctests anywhere in the suite, and record the answer, so a shipped example that raises is either caught by a gate or knowingly ungated; `dev/docs`.
 - [ ] `W09.P17.S316` - Sweep the remaining stale outbound LLM cross-references by asking the live module whether each named symbol is exported, never by matching the reference string, since more than a third of the population is valid; `src/cadrumo/llm`.
 - [ ] `W09.P17.S317` - Gate docstring cross-references so a role naming a symbol its cited module does not export fails, with an anti-vacuity control proving the detector fires; `src/cadrumo/tests`.
 - [ ] `W09.P17.S318` - Funnel the wizard save-exit notice through the shared output boundary, matching the sibling emitter in the same module that already does; `src/cadrumo/application/wizard`.
-- [ ] `W09.P17.S319` - Establish whether the integration lane that holds the output-surface gate is executed by any blocking check, and record the answer, since the gate proved capable of catching the defect it did not catch; `dev/ci`.
+- [ ] `W09.P17.S319` - Establish whether the integration lane is executed by any blocking check and plan against the population rather than the known-failure count, since that count is a floor over modules that have never been executed; `dev/ci`.
 - [ ] `W09.P17.S320` - Correct the overstated redaction rationale carried in the streamed-progress fix, which claims the funnel masks filesystem paths when it masks only embedded identifiers; `src/cadrumo/entrypoints/cli`.
 
 ## Wave `W10` - Consent lifecycle, deinstallation, and surface conformance
