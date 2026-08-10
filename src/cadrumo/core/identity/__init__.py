@@ -92,6 +92,16 @@ family) do not consume this alias; they are referential identities outside
 the content-addressed-hex family.
 """
 
+WorkUnitId = _Hex64Str
+"""Hex-64 identity of one modelo work unit.
+
+The work unit is the addressable subject of the modelo workflow, so its
+identity is named by nearly every layer above the record: the workflow engine,
+the modelo application services, the persistence adapters and the CLI payload
+surface. Declared here because it adds no constraint beyond :data:`Hex64Str`,
+which is the discipline every hex-64 identity concept in this codebase follows.
+"""
+
 CalculationRevisionId = _Hex64Str
 """Hex-64 identity of one calculation revision under a work unit.
 
@@ -200,6 +210,7 @@ __all__ = [
     "TaxIdIdentityToken",
     "TransactionId",
     "VerificationReportId",
+    "WorkUnitId",
     "iso_country_for_nif_iva_prefix",
     "nif_check_letter",
     "nif_iva_format_for_country",

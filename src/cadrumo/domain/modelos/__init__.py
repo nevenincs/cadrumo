@@ -113,7 +113,6 @@ from ._iae_exemption import (
     Modelo840IaeExemptionStatus,
     assess_modelo_840_iae_cifra_negocios_exemption,
 )
-from ._ids import WorkUnitId
 from ._ledger_filing_snapshot import (
     LedgerEvidenceRow,
     LedgerFilingEvidence,
@@ -235,7 +234,6 @@ __all__ = (
     "WorkUnit",
     "WorkUnitCatalogue",
     "WorkUnitCatalogueRepositoryProtocol",
-    "WorkUnitId",
     "WorkUnitPersistenceError",
     "WorkUnitState",
     "assert_revision_snapshot_evidence_coverage",

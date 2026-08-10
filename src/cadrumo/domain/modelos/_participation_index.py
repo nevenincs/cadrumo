@@ -35,10 +35,9 @@ from typing import Annotated
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, TypeAdapter, ValidationError, model_validator
 
 from ...core import Period
-from ...core.identity import CalculationRevisionId, FilingRecordId, TransactionId
+from ...core.identity import CalculationRevisionId, FilingRecordId, TransactionId, WorkUnitId
 from ._codes import ModeloCode
 from ._errors import ModeloError, ModeloValidationError
-from ._ids import WorkUnitId
 
 _JustificanteReference = Annotated[
     str,

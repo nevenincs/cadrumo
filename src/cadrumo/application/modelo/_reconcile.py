@@ -57,9 +57,8 @@ from pydantic import BaseModel, Field
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo
 from ...core.errors import CadrumoError
-from ...core.identity import BucketId
+from ...core.identity import BucketId, WorkUnitId
 from ...core.time import now
-from ...domain.modelos import WorkUnitId
 from ._action_errors import WorkUnitNotFoundError
 from ._reconcile_casilla import CasillaDivergence, CasillaDivergenceKind, detect_casilla_divergences
 from ._reconciliation_records import (

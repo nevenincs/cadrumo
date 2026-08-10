@@ -50,7 +50,7 @@ from pydantic import BaseModel, Field, StringConstraints, TypeAdapter, Validatio
 from ...core import M210_TIPO_RENTA_CODE_PROJECTION, STRICT_FROZEN_CONFIG, M210GrossIncomeSourceMode
 from ...core.aggregation import BindingSourceKind
 from ...core.hashing import content_hash_hex
-from ...core.identity import CalculationRevisionId, FilingRecordId
+from ...core.identity import CalculationRevisionId, FilingRecordId, WorkUnitId
 from ...core.time import validate_utc_aware
 from .._identifiers import canonical_decimal_string as _canonical_decimal
 from ..calculations.registry import (
@@ -62,7 +62,6 @@ from ..calculations.registry import (
     validated_casilla_id,
 )
 from ._errors import ModeloError, ModeloValidationError
-from ._ids import WorkUnitId
 from ._ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot
 from ._row_models import ModeloDetailRow
 
