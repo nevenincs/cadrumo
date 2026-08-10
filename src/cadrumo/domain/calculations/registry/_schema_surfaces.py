@@ -744,9 +744,10 @@ class ExportFieldDefinition(RegistryModel):
         """Constrain an exact reviewed semantic integer domain."""
         if self.allowed_values is None:
             return
-        if self.value_policy is not None and self.value_policy is not ExportValuePolicy.ENUMERATED_DIGITS:
+        if self.value_policy is not ExportValuePolicy.ENUMERATED_DIGITS:
             raise RegistryValidationError(
-                f"export field {self.id!r} cannot combine allowed_values with value_policy {self.value_policy.value!r}",
+                f"export field {self.id!r} allowed_values requires value_policy "
+                f"{ExportValuePolicy.ENUMERATED_DIGITS.value!r}",
             )
         if not self.allowed_values or len(set(self.allowed_values)) != len(self.allowed_values):
             raise RegistryValidationError(

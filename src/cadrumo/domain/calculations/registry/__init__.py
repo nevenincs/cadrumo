@@ -50,8 +50,11 @@ from ._aeat_hosts import REMOTE_READ_SCHEME, canonical_remote_hostname
 from ._export_value_policy import (
     ExportValuePolicy,
     ExportValuePolicyValue,
+    ParsedExportPolicyValue,
+    ParsedExportPolicyWireValue,
     RequiredExportValuePolicyValue,
     coerce_export_value_policy,
+    normalize_parsed_export_policy_value,
     project_export_value,
     validate_export_wire_value,
 )
@@ -865,6 +868,8 @@ __all__ = [
     "ParityVerdict",
     "ParsedExportFieldValue",
     "ParsedExportPayload",
+    "ParsedExportPolicyValue",
+    "ParsedExportPolicyWireValue",
     "PayerFact",
     "PeriodSelector",
     "ProfileKeyGrounding",
@@ -1066,6 +1071,7 @@ __all__ = [
     "materialize_relation_binding_values",
     "modelo_202_modality_from_inputs",
     "modelo_locale_key",
+    "normalize_parsed_export_policy_value",
     "pad_fixed_width_text",
     "parse_export_payload",
     "parse_fixed_width_export_field",

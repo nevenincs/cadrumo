@@ -12,11 +12,11 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from cadrumo.core import CasillaId
 from cadrumo.domain.calculations.registry import (
     BindingId,
     CasillaFieldKind,
     CasillaFieldKindValue,
-    CasillaId,
     ExportFieldId,
     LegalRefs,
     ModeloId,

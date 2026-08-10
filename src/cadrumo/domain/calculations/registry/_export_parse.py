@@ -17,6 +17,7 @@ from ....core.decimal import normalize_decimal_separators
 from ....core.external_constants import LATIN_1_ENCODING as _LATIN_1_ENCODING
 from ....core.paths import path_stat_fingerprint
 from ._errors import RegistryValidationError
+from ._export_value_policy import ParsedExportPolicyValue
 from ._fixed_width_codec import parse_fixed_width_export_field
 from ._ids import BindingId, ExportFieldId, ExportLayoutId, RecordId
 from ._schema import (
@@ -47,7 +48,7 @@ class ParsedExportFieldValue(RegistryModel):
     casilla_id: CasillaId | None = None
     binding_id: BindingId | None = None
     raw: str
-    value: Decimal | str | bool | None
+    value: ParsedExportPolicyValue
     source_locator: str
 
 
@@ -416,7 +417,10 @@ def _parse_record_fields(
     return tuple(parsed)
 
 
-def _parse_field_value(field: ExportFieldDefinition, raw: str) -> Decimal | str | bool | None:
+def _parse_field_value(
+    field: ExportFieldDefinition,
+    raw: str,
+) -> ParsedExportPolicyValue:
     return parse_fixed_width_export_field(field, raw)
 
 

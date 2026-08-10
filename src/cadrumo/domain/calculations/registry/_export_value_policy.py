@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from decimal import Decimal
+from dataclasses import dataclass
+from datetime import date
+from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from fractions import Fraction
 from math import isfinite
@@ -18,6 +20,26 @@ class ExportValuePolicy(StrEnum):
 
     SELECTED_1_UNSELECTED_0 = "selected-1-unselected-0"
     FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS = "four-digit-year-final-two-digits"
+    UNSIGNED_INTEGER = "unsigned-integer"
+    IMPLIED_DECIMAL = "implied-decimal"
+    YYYYMMDD = "yyyymmdd"
+    ENUMERATED_DIGITS = "enumerated-digits"
+    DIGIT_STRING = "digit-string"
+    IDENTIFIER_DIGITS = "identifier-digits"
+    FOUR_DIGIT_YEAR = "four-digit-year"
+    TWO_DIGIT_MONTH = "two-digit-month"
+    TWO_DIGIT_DAY = "two-digit-day"
+
+
+@dataclass(frozen=True, slots=True)
+class ParsedExportPolicyWireValue:
+    """Validated wire value retained when its source semantic value is not invertible."""
+
+    policy: ExportValuePolicy
+    raw: str
+
+
+type ParsedExportPolicyValue = Decimal | str | bool | int | ParsedExportPolicyWireValue | None
 
 
 def coerce_export_value_policy(value: object) -> object:
@@ -32,17 +54,22 @@ def coerce_export_value_policy(value: object) -> object:
     return value
 
 
-ExportValuePolicyValue = Annotated[ExportValuePolicy | None, BeforeValidator(coerce_export_value_policy)]
+RequiredExportValuePolicyValue = Annotated[ExportValuePolicy, BeforeValidator(coerce_export_value_policy)]
+ExportValuePolicyValue = RequiredExportValuePolicyValue | None
 
 _WIRE_LENGTH_BY_POLICY: dict[ExportValuePolicy, int] = {
     ExportValuePolicy.SELECTED_1_UNSELECTED_0: 1,
     ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS: 2,
+    ExportValuePolicy.YYYYMMDD: 8,
+    ExportValuePolicy.FOUR_DIGIT_YEAR: 4,
+    ExportValuePolicy.TWO_DIGIT_MONTH: 2,
+    ExportValuePolicy.TWO_DIGIT_DAY: 2,
 }
 
 
-def export_value_policy_wire_length(policy: ExportValuePolicy) -> int:
-    """Return the exact fixed-width slot length authorized by ``policy``."""
-    return _WIRE_LENGTH_BY_POLICY[policy]
+def export_value_policy_wire_length(policy: ExportValuePolicy) -> int | None:
+    """Return a fixed policy width, or ``None`` when the field declares it."""
+    return _WIRE_LENGTH_BY_POLICY.get(policy)
 
 
 def project_export_value(policy: ExportValuePolicy | None, value: object) -> object:
@@ -53,10 +80,34 @@ def project_export_value(policy: ExportValuePolicy | None, value: object) -> obj
     """
     if policy is None:
         return value
+    if isinstance(value, ParsedExportPolicyWireValue):
+        if (
+            policy is not ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS
+            or value.policy is not policy
+        ):
+            raise RegistryValidationError(
+                "parsed export wire values are admitted only for the matching non-invertible short-year policy",
+            )
+        validate_export_wire_value(policy, value.raw)
+        return value.raw
     if policy is ExportValuePolicy.SELECTED_1_UNSELECTED_0:
         return _project_selected_unselected(value)
     if policy is ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS:
         return _project_four_digit_year(value)
+    if policy in {ExportValuePolicy.UNSIGNED_INTEGER, ExportValuePolicy.ENUMERATED_DIGITS}:
+        return _project_unsigned_integer(value)
+    if policy is ExportValuePolicy.IMPLIED_DECIMAL:
+        return _project_unsigned_decimal(value)
+    if policy is ExportValuePolicy.YYYYMMDD:
+        return _project_yyyymmdd(value)
+    if policy in {ExportValuePolicy.DIGIT_STRING, ExportValuePolicy.IDENTIFIER_DIGITS}:
+        return _project_digit_identity(policy, value)
+    if policy is ExportValuePolicy.FOUR_DIGIT_YEAR:
+        return _project_full_year(value)
+    if policy is ExportValuePolicy.TWO_DIGIT_MONTH:
+        return _project_calendar_part(value, label="month", minimum=1, maximum=12)
+    if policy is ExportValuePolicy.TWO_DIGIT_DAY:
+        return _project_calendar_part(value, label="day", minimum=1, maximum=31)
     raise RegistryValidationError(f"unknown export value policy {policy!r}")
 
 
@@ -72,7 +123,45 @@ def validate_export_wire_value(policy: ExportValuePolicy | None, raw: str) -> No
         if len(raw) != 2 or not raw.isascii() or not raw.isdigit():
             raise RegistryValidationError("short-year export field must contain exactly two ASCII digits")
         return
+    if policy in {
+        ExportValuePolicy.UNSIGNED_INTEGER,
+        ExportValuePolicy.IMPLIED_DECIMAL,
+        ExportValuePolicy.ENUMERATED_DIGITS,
+        ExportValuePolicy.DIGIT_STRING,
+        ExportValuePolicy.IDENTIFIER_DIGITS,
+    }:
+        _require_ascii_digits(raw, label=policy.value)
+        return
+    if policy is ExportValuePolicy.FOUR_DIGIT_YEAR:
+        _validate_full_year(raw)
+        return
+    if policy is ExportValuePolicy.TWO_DIGIT_MONTH:
+        _validate_calendar_part(raw, label="month", minimum=1, maximum=12)
+        return
+    if policy is ExportValuePolicy.TWO_DIGIT_DAY:
+        _validate_calendar_part(raw, label="day", minimum=1, maximum=31)
+        return
+    if policy is ExportValuePolicy.YYYYMMDD:
+        _validate_yyyymmdd(raw)
+        return
     raise RegistryValidationError(f"unknown export value policy {policy!r}")
+
+
+def normalize_parsed_export_policy_value(
+    policy: ExportValuePolicy | None,
+    raw: str,
+    parsed: ParsedExportPolicyValue,
+) -> ParsedExportPolicyValue:
+    """Return a renderer-admissible semantic value for canonical parsed wire."""
+    if policy in {
+        ExportValuePolicy.FOUR_DIGIT_YEAR,
+        ExportValuePolicy.TWO_DIGIT_MONTH,
+        ExportValuePolicy.TWO_DIGIT_DAY,
+    }:
+        return int(raw)
+    if policy is ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS:
+        return ParsedExportPolicyWireValue(policy=policy, raw=raw)
+    return parsed
 
 
 def _project_selected_unselected(value: object) -> str:
@@ -114,11 +203,121 @@ def _project_four_digit_year(value: object) -> str:
     raise RegistryValidationError("short-year export value must be a four-digit integer or four ASCII-digit string")
 
 
+def _project_unsigned_integer(value: object) -> Decimal:
+    number = _strict_decimal(value, label="unsigned integer")
+    if number.is_signed() or number != number.to_integral_value():
+        raise RegistryValidationError("unsigned integer export value must be finite, integral, and non-negative")
+    return number
+
+
+def _project_unsigned_decimal(value: object) -> Decimal:
+    number = _strict_decimal(value, label="implied-decimal")
+    if number.is_signed():
+        raise RegistryValidationError("implied-decimal export value must be non-negative")
+    return number
+
+
+def _strict_decimal(value: object, *, label: str) -> Decimal:
+    if isinstance(value, bool) or value is None or isinstance(value, (float, Fraction)):
+        raise RegistryValidationError(f"{label} export value must be an exact integer, Decimal, or canonical string")
+    if isinstance(value, int):
+        number = Decimal(value)
+    elif isinstance(value, Decimal):
+        number = value
+    elif isinstance(value, str):
+        if not value or value.strip() != value or value.startswith("+"):
+            raise RegistryValidationError(f"{label} export string is not canonical")
+        try:
+            number = Decimal(value)
+        except InvalidOperation as exc:
+            raise RegistryValidationError(f"{label} export string is not numeric") from exc
+        if format(number, "f") != value:
+            raise RegistryValidationError(f"{label} export string is not canonical")
+    else:
+        raise RegistryValidationError(f"{label} export value must be an exact integer, Decimal, or canonical string")
+    if not number.is_finite():
+        raise RegistryValidationError(f"{label} export value must be finite")
+    return number
+
+
+def _project_digit_identity(policy: ExportValuePolicy, value: object) -> str:
+    if not isinstance(value, str):
+        raise RegistryValidationError(f"{policy.value} export value must be an ASCII digit string")
+    _require_ascii_digits(value, label=policy.value)
+    return value
+
+
+def _project_full_year(value: object) -> str:
+    if isinstance(value, bool):
+        raise RegistryValidationError("four-digit-year export value must not be boolean")
+    if isinstance(value, int):
+        raw = str(value)
+    elif isinstance(value, str):
+        raw = value
+    else:
+        raise RegistryValidationError("four-digit-year export value must be an integer or ASCII digit string")
+    _validate_full_year(raw)
+    return raw
+
+
+def _project_calendar_part(value: object, *, label: str, minimum: int, maximum: int) -> str:
+    if isinstance(value, bool):
+        raise RegistryValidationError(f"two-digit-{label} export value must not be boolean")
+    if isinstance(value, int):
+        number = value
+    elif isinstance(value, str) and 1 <= len(value) <= 2 and value.isascii() and value.isdigit():
+        number = int(value)
+    else:
+        raise RegistryValidationError(f"two-digit-{label} export value must be an integer or one/two ASCII digits")
+    if not minimum <= number <= maximum:
+        raise RegistryValidationError(f"two-digit-{label} export value is outside {minimum}..{maximum}")
+    return f"{number:02d}"
+
+
+def _project_yyyymmdd(value: object) -> str:
+    if type(value) is date:
+        return value.strftime("%Y%m%d")
+    if not isinstance(value, str):
+        raise RegistryValidationError("yyyymmdd export value must be a date or exactly eight ASCII digits")
+    _validate_yyyymmdd(value)
+    return value
+
+
+def _require_ascii_digits(raw: str, *, label: str) -> None:
+    if not raw or not raw.isascii() or not raw.isdigit():
+        raise RegistryValidationError(f"{label} export field must contain only non-empty ASCII digits")
+
+
+def _validate_full_year(raw: str) -> None:
+    if len(raw) != 4 or not raw.isascii() or not raw.isdigit() or not 1000 <= int(raw) <= 9999:
+        raise RegistryValidationError("four-digit-year export field must contain a year from 1000 through 9999")
+
+
+def _validate_calendar_part(raw: str, *, label: str, minimum: int, maximum: int) -> None:
+    if len(raw) != 2 or not raw.isascii() or not raw.isdigit() or not minimum <= int(raw) <= maximum:
+        raise RegistryValidationError(
+            f"two-digit-{label} export field must contain exactly two ASCII digits in {minimum}..{maximum}",
+        )
+
+
+def _validate_yyyymmdd(raw: str) -> None:
+    if len(raw) != 8 or not raw.isascii() or not raw.isdigit():
+        raise RegistryValidationError("yyyymmdd export field must contain exactly eight ASCII digits")
+    try:
+        date(int(raw[:4]), int(raw[4:6]), int(raw[6:]))
+    except ValueError as exc:
+        raise RegistryValidationError("yyyymmdd export field must contain a real calendar date") from exc
+
+
 __all__ = [
     "ExportValuePolicy",
     "ExportValuePolicyValue",
+    "ParsedExportPolicyValue",
+    "ParsedExportPolicyWireValue",
+    "RequiredExportValuePolicyValue",
     "coerce_export_value_policy",
     "export_value_policy_wire_length",
+    "normalize_parsed_export_policy_value",
     "project_export_value",
     "validate_export_wire_value",
 ]
