@@ -1,7 +1,7 @@
 """On-host vision read: in-memory PDF rasterisation plus the LocalAdapter images path.
 
 Proves a scan-only PDF is rasterised to base64 PNG pages fully in process memory
-and that :class:`cadrumo.adapters.outbound.llm._providers.local.LocalAdapter`
+and that :class:`cadrumo.llm._providers.local.LocalAdapter`
 forwards those images on the Ollama ``images`` message field to a loopback
 endpoint -- so a local vision model can read the document with no byte leaving
 the host (``sensitive-financial-data-secure-storage-only``).

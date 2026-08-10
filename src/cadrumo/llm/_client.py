@@ -771,7 +771,7 @@ class LLMClient:
 
         Applied at the client's single dispatch point, like every other boundary
         on this path, and scoped to on-host providers through
-        :func:`~adapters.outbound.llm.provider_reads_off_host` rather than a
+        :func:`~llm._consent.provider_reads_off_host` rather than a
         hand-kept list of local transports -- so a provider added later is
         off-host by construction, and correctly unbounded here, because an
         off-host dispatch occupies none of this machine's device memory. The
@@ -912,7 +912,7 @@ class LLMClient:
     def _require_image_support(adapter: _ProviderAdapter, request: ProviderRequest) -> None:
         """Refuse a vision request routed at an adapter that cannot carry images.
 
-        :class:`~adapters.outbound.llm.ProviderRequest` carries ``images`` for
+        :class:`~llm._providers.base.ProviderRequest` carries ``images`` for
         EVERY provider, but only an adapter declaring ``supports_images``
         actually puts them on the wire. Without this gate a text-only adapter
         drops them
@@ -923,7 +923,7 @@ class LLMClient:
 
         Enforced here, at the client's single dispatch point, rather than inside
         each adapter: the same reasoning
-        :func:`~adapters.outbound.llm.post_provider_request` records for the
+        :func:`~llm._providers.base.post_provider_request` records for the
         transport boundary -- a property of the dispatch, never of each
         adapter's memory to catch.
 

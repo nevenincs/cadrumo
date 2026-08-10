@@ -2,7 +2,7 @@
 
 Speaks the Ollama ``/api/chat`` endpoint (resolved per call from
 ``Settings.cadrumo_llm_ollama_chat_url``) and adapts its response into the
-:class:`~adapters.outbound.llm._providers.base.ProviderCompletion` shape.
+:class:`~llm._providers.base.ProviderCompletion` shape.
 The adapter assumes the runtime is reachable on localhost; remote Ollama
 deployments are out of scope.
 
