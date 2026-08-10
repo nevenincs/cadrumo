@@ -32,7 +32,7 @@ environment. A named provider with no model refuses, mirroring the vision
 reader's guard.
 
 This is a floor, not the consent gate. The gate itself is
-:meth:`~adapters.outbound.llm.LLMClient._require_evidence_consent`, applied at
+:class:`LLMClient`'s per-invocation evidence-consent check, applied at
 the client's dispatch choke point where no caller can reach around it by
 constructing a request directly: this reader marks every request it builds as
 evidence-derived unless the caller names the public corpus, and an off-host
@@ -370,7 +370,7 @@ def extract_invoice_fields_from_text(
     The pin is documentation, not the boundary. Widening this signature cannot
     actually send a taxpayer's document off-host, because the extractor marks
     every request it builds as evidence-derived and
-    :meth:`~adapters.outbound.llm.LLMClient._require_evidence_consent` refuses a
+    :class:`LLMClient`'s per-invocation evidence-consent check refuses a
     marked request at any off-host provider without a per-invocation consent
     token. That is the property to preserve if this signature ever changes: the
     refusal lives below this function, not in it.
