@@ -49,6 +49,7 @@ from .....core import AuthProviderDescription, AuthProviderKind
 from .....core.config import Settings as _Settings
 from .....core.config import unwrap_optional_secret
 from .....core.i18n import tr
+from .....core.identity import same_tax_identifier
 from .....core.logging import get_logger
 from .....core.time import now
 from .....domain.calculations.registry import canonical_remote_hostname
@@ -688,7 +689,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
                 context["identity_alignment"] = "clave_identity_missing"
             elif not profile_identity:
                 context["identity_alignment"] = "profile_tax_id_missing"
-            elif profile_identity == provider_identity.strip().upper():
+            elif same_tax_identifier(profile_identity, provider_identity):
                 context["identity_alignment"] = "matches"
             else:
                 context["identity_alignment"] = "mismatch"

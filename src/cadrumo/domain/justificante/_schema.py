@@ -17,7 +17,7 @@ from pathlib import Path
 from pydantic import AnyHttpUrl, BaseModel, Field, ValidationInfo, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG, Period, PeriodError
-from ...core.identity import AeatCsv, AeatPresentationId, ContentDigest
+from ...core.identity import AeatCsv, AeatPresentationId, ContentDigest, same_tax_identifier
 
 
 class JustificanteParserBackend(StrEnum):
@@ -120,5 +120,5 @@ class Justificante(BaseModel):
             self.modelo.strip() == modelo.strip()
             and str(self.ejercicio or "").strip() == str(filing_year)
             and self.period == period
-            and (tax_id is None or self.tax_id.strip().upper() == tax_id.strip().upper())
+            and (tax_id is None or same_tax_identifier(self.tax_id, tax_id))
         )

@@ -61,7 +61,7 @@ from ...core import (
 )
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
-from ...core.identity import FilingRecordId
+from ...core.identity import FilingRecordId, same_tax_identifier
 from ...core.resources import resources
 from ...core.time import UtcInstant, now
 from ...domain.calculations.registry import RegistryModeloObservation, RegistrySnapshotError, undeclared_casilla_ids
@@ -789,7 +789,6 @@ class IvaWalletDecisionRepository(SecureBoundRepository[IvaWalletDecisionEnvelop
         Returns an immutable tuple of :class:`IvaCompensationReconciliationDecision`.
         """
         filing_period = _require_observation_period(target_period)
-        taxpayer_token = taxpayer_nif.strip().upper()
         decisions: list[IvaCompensationReconciliationDecision] = []
         for record in self._objects.list_records(
             self.history_namespace,
@@ -800,7 +799,7 @@ class IvaWalletDecisionRepository(SecureBoundRepository[IvaWalletDecisionEnvelop
                 record.payload.decode(UTF_8_ENCODING),
             )
             decision = envelope.payload.decision
-            if decision.taxpayer_nif.strip().upper() == taxpayer_token and decision.target_period == filing_period:
+            if same_tax_identifier(decision.taxpayer_nif, taxpayer_nif) and decision.target_period == filing_period:
                 decisions.append(decision)
         return tuple(sorted(decisions, key=lambda item: (item.decided_at, item.wallet_captured_at or item.decided_at)))
 
