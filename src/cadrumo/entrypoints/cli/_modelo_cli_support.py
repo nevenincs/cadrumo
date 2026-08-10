@@ -42,7 +42,14 @@ from ...application.modelo import (
     validate_m349_country_prefix_context,
     validate_m349_nif_format,
 )
-from ...core import CasillaId, M210GrossIncomeSourceMode, Modelo, RescateType, validated_casilla_id
+from ...core import (
+    HEX_PATTERN_64,
+    CasillaId,
+    M210GrossIncomeSourceMode,
+    Modelo,
+    RescateType,
+    validated_casilla_id,
+)
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors import CadrumoError, resolve_error_message
 from ...core.external_constants import OutputLanguage
@@ -84,9 +91,6 @@ OutputLanguageOpt = Annotated[
     typer.Option("--output-language", "--language", help=tr("cli.config.auth.output_language_help")),
 ]
 
-_WORK_UNIT_ID_RE = r"^[0-9a-f]{64}$"
-"""SHA-256 hex digest expected as the canonical work-unit identifier."""
-
 _BINDING_MAX_LEN = 128
 _CASILLA_MAX_LEN = 64
 _BINDING_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(BindingId)
@@ -109,7 +113,7 @@ _ROW_DECIMAL_FIELDS: frozenset[str] = frozenset(
 def validate_work_unit_id(value: str) -> str:
     """Validate that *value* is a 64-character lowercase hex string."""
     stripped = value.strip()
-    if not re.fullmatch(_WORK_UNIT_ID_RE, stripped):
+    if not re.fullmatch(HEX_PATTERN_64, stripped):
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.work.invalid_work_unit_id",
@@ -122,7 +126,7 @@ def validate_work_unit_id(value: str) -> str:
 def validate_calculation_revision_id(value: str) -> str:
     """Validate that *value* is a 64-character lowercase hex string."""
     stripped = value.strip()
-    if not re.fullmatch(_WORK_UNIT_ID_RE, stripped):
+    if not re.fullmatch(HEX_PATTERN_64, stripped):
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.work.invalid_calculation_revision_id",
