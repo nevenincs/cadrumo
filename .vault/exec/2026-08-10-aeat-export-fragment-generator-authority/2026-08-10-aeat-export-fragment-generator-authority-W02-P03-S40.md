@@ -5,7 +5,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:dd5514698d4bde89e2b43696c78d43050ed1b7cd86e28574355af5421e3e83d1'
+body_hash: 'sha256:87c847b5558de1317a28efb7f8b2b6ce70f1b0691684fcd8cd91bbaaa0079e0f'
 step_id: 'S40'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
@@ -31,6 +31,8 @@ The export schema now represents reviewed fixed-width integer enumeration domain
 
 Focused codec, schema, parser, and value-policy verification passed with 116 tests; the broader registry-schema slice passed with 143 tests. The final remediation slice passed 47 tests. Ruff passed and strict BasedPyright reported zero diagnostics. Independent formal review closed its one HIGH finding after coexistence refusal and order-invariance remediation; no open high, medium, or low findings remain.
 
+The schema, codec, tests, audit, and initial execution record landed in `fd804c8a10`. The isolated loader-semantic version, normalization, and digest-mutation follow-up landed in `6f89cfc80e`; its cached diff contained exactly the two reviewed development-tool files and excluded every paused S32 profile/provenance change.
+
 ## Notes
 
-The independent reviewer reran Ruff and strict BasedPyright after remediation. Three post-remediation reviewer pytest attempts could not collect during transient peer edits to registry identifier/protocol modules; the durable audit separates that boundary from the executor's green post-remediation lane. No S40 test failed. Paused S32 render-profile and provenance-schema work remains uncommitted and is excluded from this Step's patch.
+The independent reviewer reran Ruff and strict BasedPyright after remediation. Three post-remediation reviewer pytest attempts could not collect during transient peer edits to registry identifier/protocol modules; the durable audit separates that boundary from the executor's green post-remediation lane. No S40 test failed. Paused S32 render-profile and provenance-schema work remains uncommitted and is excluded from this Step's commits.
