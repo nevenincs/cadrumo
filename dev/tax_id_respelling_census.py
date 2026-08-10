@@ -100,13 +100,6 @@ class Finding:
     name: str
     kind: str
     snippet: str
-    enclosing: str
-    """Name of the enclosing function, or ``"<module>"``.
-
-    Exemptions key on ``(path, enclosing)`` rather than a line number, so
-    editing above an excused site does not silently retire its exemption and
-    editing the site itself does not preserve one.
-    """
 
 
 def _looks_like_a_tax_id(name: str) -> bool:
@@ -151,10 +144,9 @@ def _base_text(node: ast.AST) -> str | None:
 class _FunctionScan(ast.NodeVisitor):
     """Collect respellings in one function, following local bindings."""
 
-    def __init__(self, path: str, source_lines: list[str], enclosing: str) -> None:
+    def __init__(self, path: str, source_lines: list[str]) -> None:
         self.path = path
         self.lines = source_lines
-        self.enclosing = enclosing
         self.normalised: dict[str, int] = {}
         self.consumed: set[str] = set()
         self.findings: list[Finding] = []
@@ -167,15 +159,12 @@ class _FunctionScan(ast.NodeVisitor):
             root = _base_text(node.value)
             if root and _looks_like_a_tax_id(root):
                 for target in node.targets:
-                    # The BOUND NAME overrules a hint in the expression: a
-                    # `country = ... country_code_for_printed_tax_identifier(...)`
-                    # chain carries a tax-id word and normalises a country code.
-                    if isinstance(target, ast.Name) and _looks_like_a_tax_id(target.id):
+                    if isinstance(target, ast.Name):
                         self.normalised[target.id] = node.lineno
         self.generic_visit(node)
 
     def _record(self, name: str, line: int, kind: str) -> None:
-        self.findings.append(Finding(self.path, line, name, kind, self._snippet(line), self.enclosing))
+        self.findings.append(Finding(self.path, line, name, kind, self._snippet(line)))
 
     def _operand_is_respelled(self, node: ast.AST) -> str | None:
         if _is_normalising_chain(node):
@@ -187,12 +176,6 @@ class _FunctionScan(ast.NodeVisitor):
         return None
 
     def visit_Compare(self, node: ast.Compare) -> None:
-        # `x is None` asks whether a value is absent, not whether two
-        # identifiers name one bearer. Reporting it sent the gate at a
-        # presence check that no canonical form replaces.
-        if any(isinstance(c, ast.Constant) and c.value is None for c in node.comparators):
-            self.generic_visit(node)
-            return
         for operand in (node.left, *node.comparators):
             name = self._operand_is_respelled(operand)
             if name:
@@ -222,18 +205,6 @@ class _FunctionScan(ast.NodeVisitor):
         self.generic_visit(node)
 
 
-def _enclosing_of(tree: ast.AST, line: int) -> str:
-    """Return the innermost function containing *line*, or ``"<module>"``."""
-    best, best_start = "<module>", -1
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
-            continue
-        end = getattr(node, "end_lineno", None) or node.lineno
-        if node.lineno <= line <= end and node.lineno > best_start:
-            best, best_start = node.name, node.lineno
-    return best
-
-
 def _scan_module(path: pathlib.Path, source: str) -> list[Finding]:
     tree = ast.parse(source)
     lines = source.splitlines()
@@ -244,8 +215,7 @@ def _scan_module(path: pathlib.Path, source: str) -> list[Finding]:
     for node in ast.walk(tree):
         if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.Module):
             continue
-        enclosing = getattr(node, "name", "<module>")
-        scan = _FunctionScan(rel, lines, enclosing)
+        scan = _FunctionScan(rel, lines)
         for child in ast.iter_child_nodes(node):
             scan.visit(child)
         for finding in scan.findings:
@@ -262,7 +232,7 @@ def _scan_module(path: pathlib.Path, source: str) -> list[Finding]:
             if name not in scan.consumed and (line, "unclassified") not in seen_lines:
                 seen_lines.add((line, "unclassified"))
                 findings.append(
-                    Finding(rel, line, name, "unclassified", scan._snippet(line), enclosing),
+                    Finding(rel, line, name, "unclassified", scan._snippet(line)),
                 )
 
     # Every remaining tax-id-shaped chain, wherever it sits.
@@ -289,7 +259,7 @@ def _scan_module(path: pathlib.Path, source: str) -> list[Finding]:
             continue
         seen_lines.add((line, "free_standing"))
         snippet = lines[line - 1].strip() if 0 < line <= len(lines) else ""
-        findings.append(Finding(rel, line, base, "free_standing", snippet, _enclosing_of(tree, line)))
+        findings.append(Finding(rel, line, base, "free_standing", snippet))
     return findings
 
 
@@ -302,60 +272,6 @@ def census(revision: str) -> list[Finding]:
         except SyntaxError:
             continue
     return sorted(findings, key=lambda f: (f.kind, f.path, f.line))
-
-
-@dataclass(frozen=True)
-class Exemption:
-    """One site allowed to keep an open-coded normal form, with its reason."""
-
-    path: str
-    symbol: str
-    reason: str
-
-    def key(self) -> tuple[str, str]:
-        """Return the ``(path, symbol)`` identity this exemption answers."""
-        return (self.path, self.symbol)
-
-
-#: Sites that open-code the normal form and are allowed to.
-#:
-#: Keyed by ``(path, symbol)`` and never by line, so an edit above the site
-#: does not silently retire its exemption. Each states a reason, and
-#: :func:`stale_exemptions` fails an entry that no longer answers a live
-#: occurrence, so the list cannot outlive what it excuses.
-EXEMPTIONS: Final[tuple[Exemption, ...]] = ()
-"""Sites allowed to keep an open-coded normal form, with a reason each.
-
-Empty, and deliberately so. The obvious two entries -- the canonical
-``tax_id_identity_token`` and ``normalise_nif_iva`` definitions -- were
-written first and then removed: this census flags a respelling by the
-tax-identifier words in the normalised EXPRESSION, and both definitions
-normalise a parameter named ``value``, so neither is detected and neither
-needs excusing. Two entries excusing nothing would have shipped looking like
-considered judgement, and the next author would have inherited them as
-precedent for adding a third.
-
-Keyed by ``(path, enclosing)`` and never by line. :func:`stale_exemptions`
-fails any entry that stops answering a live occurrence, so this list cannot
-outlive what it excuses.
-"""
-
-
-def unexempted(findings: list[Finding]) -> list[Finding]:
-    """Return findings not answered by a named :data:`EXEMPTIONS` entry."""
-    excused = {entry.key() for entry in EXEMPTIONS}
-    return [f for f in findings if (f.path, f.enclosing) not in excused]
-
-
-def stale_exemptions(findings: list[Finding]) -> tuple[Exemption, ...]:
-    """Return exemptions that no longer answer a live occurrence.
-
-    An exemption for a site that has been fixed or deleted is worse than no
-    exemption: it reads as a considered judgement while excusing nothing, and
-    the next author inherits it as precedent.
-    """
-    live = {(f.path, f.enclosing) for f in findings}
-    return tuple(entry for entry in EXEMPTIONS if entry.key() not in live)
 
 
 def main(argv: list[str] | None = None) -> int:
