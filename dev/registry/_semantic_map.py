@@ -20,6 +20,7 @@ from cadrumo.domain.calculations.registry import (
     ExportFieldId,
     LegalRefs,
     ModeloId,
+    RecordId,
     SourceRefs,
 )
 
@@ -27,6 +28,7 @@ __all__ = [
     "SemanticMap",
     "SemanticMapAnchor",
     "SemanticMapEntry",
+    "SemanticMapRecord",
 ]
 
 
@@ -68,13 +70,16 @@ class SemanticMapEntry(_StrictModel):
     binding: BindingId | None = None
     literal: str | None = None
     header_key: str | None = Field(default=None, min_length=1)
-    draft_attribute: Literal[
-        "modelo",
-        "period",
-        "profile_tax_id",
-        "filing_year",
-        "period_code",
-    ] | None = None
+    draft_attribute: (
+        Literal[
+            "modelo",
+            "period",
+            "profile_tax_id",
+            "filing_year",
+            "period_code",
+        ]
+        | None
+    ) = None
     computed_key: Literal["envelope_closing_tag"] | None = None
     legal_refs: LegalRefs
     source_refs: SourceRefs
@@ -118,14 +123,41 @@ class SemanticMapEntry(_StrictModel):
         return self
 
 
+class SemanticMapRecord(_StrictModel):
+    """Reviewed semantic identity for one exact parser record.
+
+    The source design still owns record order, length, fields, and every wire
+    characteristic.  This map supplies only the canonical registry identifier
+    and business record type that cannot be inferred from a workbook tab name.
+    """
+
+    sheet: str = Field(min_length=1)
+    record_identity: str = Field(min_length=1)
+    export_record_id: RecordId
+    record_type: str = Field(min_length=1)
+
+
 class SemanticMap(_StrictModel):
     """One authored semantic map for one modelo and one design epoch.
 
-    Entry anchors are structural keys only at this stage.  Exact parser joining,
-    uniqueness, catalogue resolution, source applicability, and anomaly handling
-    remain later explicit generator contracts.
+    Entries and records are exact parser keys only at this stage.  Exact parser
+    joining, uniqueness, catalogue resolution, source applicability, and anomaly
+    handling remain later explicit generator contracts.
     """
 
     modelo: ModeloId
     design_epoch: str = Field(min_length=1)
+    records: tuple[SemanticMapRecord, ...] = Field(min_length=1)
     entries: tuple[SemanticMapEntry, ...] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _require_unique_record_semantics(self) -> SemanticMap:
+        record_keys = tuple((record.sheet, record.record_identity) for record in self.records)
+        duplicate_keys = sorted({key for key in record_keys if record_keys.count(key) > 1})
+        if duplicate_keys:
+            raise ValueError(f"semantic map contains duplicate exact record anchors: {duplicate_keys!r}")
+        record_ids = tuple(str(record.export_record_id) for record in self.records)
+        duplicate_ids = sorted({record_id for record_id in record_ids if record_ids.count(record_id) > 1})
+        if duplicate_ids:
+            raise ValueError(f"semantic map contains duplicate canonical export record ids: {duplicate_ids!r}")
+        return self

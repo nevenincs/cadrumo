@@ -122,3 +122,27 @@ def test_wizard_edit_status_verb_is_localized(
         assert "status\tupdated" not in lines
     if _EXPECTED_NEXT_LABEL != "next":
         assert not any(line.startswith("next\t") for line in lines)
+
+
+def test_wizard_edit_without_name_updates_the_active_profile(
+    _isolated_backend: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """An omitted edit subject resolves through the real active-profile state."""
+    from ....core import require_active_bucket_id
+    from ...user_profile import ProfileRepository, profile_storage_session, record_to_path_values
+
+    _invoke_wizard("create", _QUIET_PROFILE_ARGS, capsys)
+
+    output = _invoke_wizard(
+        "edit",
+        ["--quiet", "--activity", "Servicios actualizados"],
+        capsys,
+    )
+
+    profile_id = require_active_bucket_id()
+    with profile_storage_session(profile_id):
+        active_profile = ProfileRepository().load(profile_id)
+        assert active_profile.label == "operator"
+        assert record_to_path_values(active_profile.record)["activities.description"] == "Servicios actualizados"
+    assert f"{_EXPECTED_PROFILE_LABEL}\toperator" in output

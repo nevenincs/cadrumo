@@ -28,7 +28,6 @@ from typing import TYPE_CHECKING
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage import (
-    BUCKET_AUDIT_DIRNAME,
     BUCKET_BLOBS_DIRNAME,
     BUCKET_DB_DIRNAME,
     StorageCustodyProfile,
@@ -930,7 +929,6 @@ class BucketMaintenanceService:
         subdir_specs = (
             (BUCKET_DB_DIRNAME, paths.db_dir, (manifest,)),
             (BUCKET_BLOBS_DIRNAME, paths.blobs_dir, ()),
-            (BUCKET_AUDIT_DIRNAME, paths.audit_dir, ()),
         )
         rows: list[BucketDiskUsageSubdirRow] = []
         total_bytes = 0

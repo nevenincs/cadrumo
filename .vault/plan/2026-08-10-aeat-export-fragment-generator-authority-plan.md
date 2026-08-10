@@ -4,7 +4,7 @@ tags:
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
 modified: '2026-08-10'
-body_hash: 'sha256:5d006d87a6d66e5452637ca91893e15efce1b5c6faa2148f046cd4a3aa945128'
+body_hash: 'sha256:2b8f802a6aebef009815ca6a6c6ae0fdf2603a26d3bd52b7c8fbf5e0f0432536'
 tier: L3
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
@@ -53,7 +53,7 @@ Join exact parser anchors to reviewed semantics and render a complete target rev
 
 - [x] `W02.P03.S07` - Implement fail-closed parser-to-semantic-map joining without fuzzy or positional matching; `dev/registry/`.
 - [ ] `W02.P03.S08` - Render the complete target export tree with stable partitioning and canonical TOML serialization; `dev/registry/`.
-- [ ] `W02.P03.S09` - Emit source, map, schema, semantic, and file digests in the provenance manifest; `dev/registry/`.
+- [x] `W02.P03.S09` - Emit source, map, schema, semantic, and file digests in the provenance manifest; `dev/registry/`.
 
 ### Phase `W02.P04` - publication and check mode
 

@@ -182,7 +182,7 @@ def _reconcile_notices(outcome: ProfileBundleExportReconciliation) -> tuple[Noti
                     ),
                     count=str(len(outcome.failures)),
                 ),
-                action=resolve_notice_action(action=ActionReference(action_id="operator.app.maintenance.reconcile")),
+                action=resolve_notice_action(action=ActionReference(action_id="operator.maintenance.reconcile")),
                 context={
                     "failed_count": str(len(outcome.failures)),
                     "journal_ids": ",".join(failure.journal_id for failure in outcome.failures),

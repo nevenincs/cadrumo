@@ -14,14 +14,16 @@ import pytest
 
 from ....core import (
     STORAGE_TAXONOMY,
+    StorageArea,
     StorageCategory,
     StorageNodeKind,
     StorageScope,
     storage_path,
 )
 from ....core.config import STORAGE_ROOT_MODE, ensure_storage_tree, load_settings, override_settings
-from .._models import StorageOccupancy, StorageTreeIssueKind
+from .._models import StorageAreaDisposition, StorageOccupancy, StorageTreeIssueKind
 from .._service import (
+    collect_storage_area_inventory,
     collect_storage_inventory,
     inspect_storage_tree,
     materialise_storage_tree,
@@ -31,6 +33,29 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 class TestInventoryCoversTheDeclaration:
+    def test_public_inventory_has_exactly_one_row_per_area(self, tmp_path) -> None:
+        with override_settings(cadrumo_local_storage_root=tmp_path):
+            report = collect_storage_area_inventory()
+
+        assert tuple(row.area for row in report.rows) == tuple(StorageArea)
+        assert {row.disposition for row in report.rows} == {
+            StorageAreaDisposition.DURABLE,
+            StorageAreaDisposition.RECLAIMABLE,
+            StorageAreaDisposition.MIXED,
+        }
+
+    def test_public_inventory_measures_aggregate_bytes_without_internal_names(self, tmp_path) -> None:
+        with override_settings(cadrumo_local_storage_root=tmp_path):
+            target = storage_path(StorageCategory.LOGS)
+            target.mkdir(parents=True, exist_ok=True)
+            (target / "one.log").write_bytes(b"12345")
+            report = collect_storage_area_inventory()
+
+        logs = next(row for row in report.rows if row.area is StorageArea.LOGS)
+        assert logs.occupancy is StorageOccupancy.POPULATED
+        assert logs.footprint_bytes == 5
+        assert logs.reclaimable
+
     def test_every_declared_member_gets_exactly_one_row(self, tmp_path) -> None:
         with override_settings(cadrumo_local_storage_root=tmp_path):
             report = collect_storage_inventory()
@@ -147,7 +172,7 @@ class TestTreeCheckReportsWithoutRepairing:
         offenders = [
             issue for issue in report.issues if issue.kind is StorageTreeIssueKind.FILE_WHERE_DIRECTORY_EXPECTED
         ]
-        assert [issue.category for issue in offenders] == [StorageCategory.LOGS]
+        assert [issue.area for issue in offenders] == [StorageArea.LOGS]
         assert not report.healthy
 
     def test_a_directory_where_a_file_belongs_is_reported(self, tmp_path) -> None:
@@ -160,7 +185,7 @@ class TestTreeCheckReportsWithoutRepairing:
         offenders = [
             issue for issue in report.issues if issue.kind is StorageTreeIssueKind.DIRECTORY_WHERE_FILE_EXPECTED
         ]
-        assert [issue.category for issue in offenders] == [StorageCategory.USAGE_RATIOS]
+        assert [issue.area for issue in offenders] == [StorageArea.EXPORTS]
 
     def test_a_file_valued_leaf_that_was_never_written_is_not_a_finding(self, tmp_path) -> None:
         with override_settings(cadrumo_local_storage_root=tmp_path):

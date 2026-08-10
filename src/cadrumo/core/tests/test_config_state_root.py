@@ -56,7 +56,7 @@ def test_storage_root_derives_every_substrate_dir(tmp_path: Path) -> None:
         StorageCategory.LOGS,
         StorageCategory.SECRETS,
         StorageCategory.BLOBS,
-        StorageCategory.AUDIT,
+        StorageCategory.LIVE_STATE,
     )
     resolved = {category: storage_path(category, settings=settings) for category in substrate}
 
@@ -213,7 +213,7 @@ def test_settings_tree_never_lands_under_repository_root(tmp_path: Path) -> None
         settings.cadrumo_log_dir,
         settings.cadrumo_secret_store_dir,
         settings.cadrumo_blob_store_dir,
-        settings.cadrumo_audit_dir,
+        settings.cadrumo_live_state_dir,
     )
     for path in state_tree:
         assert path is not None

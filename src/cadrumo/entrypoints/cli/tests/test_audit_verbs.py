@@ -37,17 +37,17 @@ def _isolated_backend(tmp_path: Path) -> Iterator[Path]:
     # "probe-audit", not the taxonomy's "audit": isolated_profile_storage_root
     # overrides only StorageCategory.SECRETS during bucket provisioning, so
     # nothing else derives or re-reads this location -- it is a pure
-    # isolation destination for cadrumo_audit_dir, never asserted upon.
-    audit_dir = tmp_path / "probe-audit"
+    # Isolation destination for cadrumo_live_state_dir, never asserted upon.
+    live_state_dir = tmp_path / "probe-live-state"
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        override_settings(cadrumo_audit_dir=audit_dir),
+        override_settings(cadrumo_live_state_dir=live_state_dir),
         profile_create_storage_span("11111111-1111-4111-8111-111111111111"),
     ):
         workflow_state_repository().update(
             lambda state: register_minimal_profile(state, profile_id="11111111-1111-4111-8111-111111111111")
         )
-        yield audit_dir
+        yield live_state_dir
 
 
 _WORK_UNIT_ID = "a" * 64

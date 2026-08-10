@@ -35,34 +35,58 @@ def render_cli_root_landing_lines(landing: RootLandingReport) -> tuple[str, ...]
         tr("cli.root.landing.headline"),
         tr("cli.root.landing.tagline"),
         "",
-        _welcome_line(landing),
+        tr("cli.root.landing.context_heading"),
+        f"  {_welcome_line(landing)}",
         "",
     ]
-    lines.extend(_quick_start_lines(has_profile=landing.active_profile is not None))
-    lines.extend(("", *_section_lines(), "", tr("cli.root.landing.help_line")))
+    if landing.active_profile is not None:
+        lines.extend(
+            (
+                f"  {tr('cli.root.landing.session_unchecked')}",
+                f"  {tr('cli.root.landing.session_status_command')}",
+                f"  {tr('cli.root.landing.session_login_command')}",
+                "",
+            )
+        )
+    elif landing.profile_selected:
+        lines.extend((f"  {tr('cli.root.landing.profile_repair_command')}", ""))
+    lines.extend(_quick_start_lines(landing=landing))
+    lines.extend(
+        (
+            "",
+            *_section_lines(),
+            "",
+            tr("cli.root.landing.privacy_line"),
+            "",
+            tr("cli.root.landing.help_line"),
+        )
+    )
     return tuple(lines)
 
 
 def _welcome_line(landing: RootLandingReport) -> str:
     """Return the localized welcome line for the projected profile state."""
-    if landing.active_profile is None:
-        return tr("cli.root.landing.welcome_no_profile")
-    return tr("cli.root.landing.welcome_profile", profile=landing.active_profile)
+    return landing.message
 
 
-def _quick_start_lines(*, has_profile: bool) -> list[str]:
+def _quick_start_lines(*, landing: RootLandingReport) -> list[str]:
     """Return localized quick-start lines keyed by projected profile presence."""
-    setup_line = (
-        tr("cli.root.landing.quick_start_setup_done")
-        if has_profile
-        else tr("cli.root.landing.quick_start_setup_needed")
-    )
+    if landing.active_profile is not None:
+        setup_line = tr("cli.root.landing.quick_start_setup_done")
+    elif landing.profile_selected:
+        setup_line = tr("cli.root.landing.quick_start_setup_repair")
+    elif landing.command == "aeat config login NAME":
+        setup_line = tr("cli.root.landing.quick_start_setup_login")
+    else:
+        setup_line = tr("cli.root.landing.quick_start_setup_needed")
     return [
         tr("cli.root.landing.quick_start_heading"),
         setup_line,
         tr("cli.root.landing.quick_start_status"),
         tr("cli.root.landing.quick_start_import"),
         tr("cli.root.landing.quick_start_review"),
+        tr("cli.root.landing.quick_start_modelo"),
+        tr("cli.root.landing.quick_start_queue"),
         tr("cli.root.landing.quick_start_repair"),
     ]
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import shlex
 from pathlib import Path
 
 import pytest
@@ -15,10 +16,46 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 def _isolated_env(tmp_path: Path) -> dict[str, str | None]:
     return {
         "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "cadrumo-local"),
+        "CADRUMO_SECRET_STORE_BACKEND": "file",
+        "CADRUMO_SECRET_STORE_DIR": str(tmp_path / "secret-store"),
         "CADRUMO_SECRET_PASSPHRASE": "profile-choice-help-passphrase",
         "CADRUMO_DATABASE_URL": None,
         "COLUMNS": "220",
     }
+
+
+def test_profile_create_minimal_example_creates_a_ready_profile(tmp_path: Path) -> None:
+    """The command advertised as minimal must run and satisfy profile readiness."""
+
+    env = _isolated_env(tmp_path)
+    help_result = invoke_cached_cli(
+        ["--language", "en", "config", "profile", "create", "--help"],
+        env=env,
+    )
+    assert help_result.exit_code == 0, help_result.output
+    compact_help = " ".join(help_result.output.split())
+    match = re.search(r"Minimal freelancer profile: (?P<command>aeat config profile create .+)$", compact_help)
+    assert match is not None, help_result.output
+
+    command = match.group("command")
+    replacements = {
+        "PROFILE": "minimal-profile",
+        "<DNI/NIE/NIF>": "00000000T",
+        "<NAME>": "Minimal",
+        "<SURNAMES>": "Operator",
+        "<ACTIVITY>": "consulting",
+    }
+    for placeholder, value in replacements.items():
+        command = command.replace(placeholder, value)
+    argv = shlex.split(command)
+    assert argv[:2] == ["aeat", "config"]
+
+    created = invoke_cached_cli(["--language", "en", *argv[1:]], env=env)
+    assert created.exit_code == 0, created.output
+    status = invoke_cached_cli(["--language", "en", "config", "profile", "status"], env=env)
+    assert status.exit_code == 0, status.output
+    assert "readiness\tblocked" not in status.output
+    assert "profile\tminimal-profile" in status.output
 
 
 def _choice_tokens_from_invalid_value(output: str) -> set[str]:

@@ -34,8 +34,9 @@ import contextlib
 import functools
 import inspect
 import io
+import json
 import sys
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Callable, Generator, Mapping, Sequence
 from contextlib import contextmanager
 from contextvars import ContextVar, Token
 from typing import Final, Never, Protocol, TypeGuard, cast, get_args
@@ -53,7 +54,7 @@ from ...core.errors import (
     render_error_json,
     render_error_text,
 )
-from ...core.json_contract import Notice
+from ...core.json_contract import Notice, ResolvedPreconditionAction
 from ...core.logging import get_logger
 from ...core.redaction import redact_for_cli_output
 from ...domain.user_profile import StoredProfileDriftError
@@ -295,7 +296,7 @@ def _violation_path(loc: tuple[object, ...], declared: frozenset[str]) -> str:
     return ".".join(parts)
 
 
-def _violation_rule(item: object) -> str:
+def _violation_rule(item: Mapping[str, object]) -> str:
     """Return the rule an error broke, with no text the validator authored.
 
     Pydantic's own messages are composed from the DECLARED constraint -- "String
@@ -313,11 +314,12 @@ def _violation_rule(item: object) -> str:
     is sensitive, and the whole point of this projection is that it never has to
     make one.
     """
-    assert isinstance(item, dict)
     kind = str(item.get("type", "validation_error"))
     if kind not in _VALIDATOR_AUTHORED_MESSAGE_TYPES:
         return str(item.get("msg", "validation error"))
-    raised = (item.get("ctx") or {}).get("error")
+    context = item.get("ctx")
+    typed_context = cast(Mapping[str, object], context) if isinstance(context, Mapping) else None
+    raised = typed_context.get("error") if typed_context is not None else None
     named = type(raised).__name__ if raised is not None else None
     return f"{kind} ({named})" if named else kind
 
@@ -617,7 +619,7 @@ def active_profile_label_for_error() -> str | None:
     cycle with :mod:`_common`, which imports this module.
     """
     try:
-        from ._common import _active_profile_label
+        from ._common import _active_profile_label  # pyright: ignore[reportPrivateUsage]
 
         return _active_profile_label()
     except Exception:  # identity resolution must never break error emit
@@ -647,8 +649,51 @@ def sandbox_notice_for_error() -> Notice | None:
         return None
 
 
-def render_error_payload(error: BaseException, *, as_json: bool, command: str | None = None) -> str:
-    """Render ``error`` to its stderr payload, carrying the sandbox indicator.
+def _render_precondition_action_text(
+    text: str,
+    *,
+    command: str | None,
+    action: ResolvedPreconditionAction,
+) -> str:
+    """Append the canonical action DTO to text output without inventing prose.
+
+    Text mode remains a derived view of the same strict wire record passed to
+    :func:`render_error_json`.  The field names below are the
+    :class:`ResolvedPreconditionAction` schema names, not independently authored
+    recovery labels, and nested values use deterministic JSON so condition
+    evidence and binding provenance cannot be flattened into ambiguous prose.
+    """
+    lines = [text.rstrip("\n")]
+    if command is not None:
+        lines.append(f"  command: {command}")
+    action_document = action.model_dump(mode="json")
+    for field_name in (
+        "failed_condition_id",
+        "evidence",
+        "action",
+        "argument_bindings",
+        "missing_argument_names",
+        "conditionality",
+        "no_recovery_outcome",
+    ):
+        value = json.dumps(
+            action_document[field_name],
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        lines.append(f"  action.{field_name}: {value}")
+    return "\n".join(lines) + "\n"
+
+
+def render_error_payload(
+    error: BaseException,
+    *,
+    as_json: bool,
+    command: str | None = None,
+    action: ResolvedPreconditionAction | None = None,
+) -> str:
+    """Render ``error`` to its stderr payload, carrying typed action data.
 
     The single renderer both terminal funnels use — the command boundary's
     :func:`_emit_error_and_exit` and the process boundary's
@@ -658,17 +703,23 @@ def render_error_payload(error: BaseException, *, as_json: bool, command: str | 
     renders through
     :func:`~cadrumo.application.operator_output.sandbox_banner_line`, the same
     formatter the text-mode success path uses, so the banner is byte-identical
-    across success and failure.
+    across success and failure. A supplied ``action`` is the already-resolved
+    application verdict projection: JSON places it in the canonical error
+    member, while text serializes that exact DTO beneath the localized error
+    line without reconstructing a command or recovery sentence.
     """
     notice = sandbox_notice_for_error()
     if as_json:
         return render_error_json(
             error,
+            action=action,
             active_profile=active_profile_label_for_error(),
             command=command,
             notices=() if notice is None else (notice,),
         )
     text = render_error_text(error)
+    if action is not None:
+        text = _render_precondition_action_text(text, command=command, action=action)
     if notice is None:
         return text
     from ...application.operator_output import sandbox_banner_line
@@ -739,18 +790,29 @@ def _emit_error_and_exit(error: CadrumoError) -> Never:
     error document; the sandbox indicator rides both output modes via
     :func:`render_error_payload`.
     """
+    from ._common import cli_policy_refusal_projection
+
+    projection = cli_policy_refusal_projection(error)
+    command = _active_command_identifier()
+    action: ResolvedPreconditionAction | None = None
+    if projection is not None:
+        action = projection.precondition_action
+        if projection.requested_leaf is not None:
+            command = projection.requested_leaf.subject_leaf_key
+
     code = get_registered_error_code(error)
     payload = render_error_payload(
         error,
         as_json=json_output_requested(),
-        command=_active_command_identifier(),
+        command=command,
+        action=action,
     )
     write_stderr(payload)
     raise typer.Exit(code=get_error_exit_code(code.category)) from error
 
 
 @contextmanager
-def error_boundary_under_test() -> Iterator[None]:
+def error_boundary_under_test() -> Generator[None]:
     """Temporarily force :func:`command_error_boundary` to re-raise originals.
 
     Tests that need to assert on the raised exception type rather than

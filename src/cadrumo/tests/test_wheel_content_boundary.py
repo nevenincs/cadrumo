@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import shutil
 import subprocess
+import tarfile
 import zipfile
 from collections.abc import Callable
 from pathlib import Path
@@ -44,6 +45,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _WHEEL_PREFIX = "cadrumo"
 _WHEEL_DATA_PREFIX = "cadrumo/_data"
 _WHEEL_CORPUS_PREFIX = f"{_WHEEL_DATA_PREFIX}/corpus/"
+_FORBIDDEN_REPOSITORY_ROOTS = frozenset({".vault", ".vaultspec", "dev"})
 
 # Corpus source binaries the wheel-split excludes; they ship in the two
 # ``aeat-data-*`` companions, so zero of them may appear in this slim wheel.
@@ -88,6 +90,30 @@ def wheel_members(tmp_path_factory: pytest.TempPathFactory) -> frozenset[str]:
         return frozenset(info.filename for info in archive.infolist())
 
 
+@pytest.fixture(scope="module")
+def sdist_members(tmp_path_factory: pytest.TempPathFactory) -> frozenset[str]:
+    """Build the source distribution and return repository-relative archive members."""
+
+    if shutil.which("uv") is None:
+        raise AssertionError(
+            "uv binary not found on PATH; the packaging content-boundary gate "
+            "cannot run without the project's build driver",
+        )
+    out_dir = tmp_path_factory.mktemp("sdist-out")
+    subprocess.run(
+        ["uv", "build", "--sdist", "--out-dir", str(out_dir)],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    archives = sorted(out_dir.glob("cadrumo-*.tar.gz"))
+    if len(archives) != 1:
+        raise AssertionError(f"expected exactly one cadrumo-*.tar.gz in {out_dir}; got {[p.name for p in archives]!r}")
+    with tarfile.open(archives[0], mode="r:gz") as archive:
+        return frozenset("/".join(Path(member.name).parts[1:]) for member in archive.getmembers())
+
+
 def _test_members(members: frozenset[str]) -> list[str]:
     """Return every wheel member that lives under a ``tests`` package."""
 
@@ -107,6 +133,21 @@ def test_wheel_excludes_every_test_member(wheel_members: frozenset[str]) -> None
         f"the wheel ships {len(offenders)} test member(s) the data-budget exclude should have shed; "
         f"first ten: {offenders[:10]!r}"
     )
+
+
+def test_distributions_exclude_repository_development_infrastructure(
+    wheel_members: frozenset[str],
+    sdist_members: frozenset[str],
+) -> None:
+    """Neither product archive delivers Vault records or repository-only tooling."""
+
+    for archive_kind, members in (("wheel", wheel_members), ("sdist", sdist_members)):
+        offenders = sorted(
+            member
+            for member in members
+            if Path(member).parts and Path(member).parts[0] in _FORBIDDEN_REPOSITORY_ROOTS
+        )
+        assert not offenders, f"{archive_kind} delivers development-only repository members: {offenders[:10]!r}"
 
 
 def test_wheel_keeps_required_data_roots(wheel_members: frozenset[str]) -> None:

@@ -26,8 +26,9 @@ See Also:
     :func:`cadrumo.core.config.classify_storage_route`
         Produces the :class:`~cadrumo.core.config.StorageRouteClassification`
         inspected for guarded mutation paths.
-    :data:`cadrumo.core.storage_route_guidance.EXPLICIT_DATABASE_URL_PROFILE_RECOVERY`
-        Operator recovery text attached to explicit database URL refusals.
+    :mod:`cadrumo.application.operator_actions`
+        Canonical failed-condition, evidence, action, and no-recovery records
+        returned for write-policy refusals.
 """
 
 from __future__ import annotations
@@ -35,10 +36,10 @@ from __future__ import annotations
 from collections.abc import Sequence
 from enum import StrEnum
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 
+from ..core import STORAGE_ROOT_SETTINGS_FIELD, Modelo, read_pointer
 from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ..core import Modelo, read_pointer
 from ..core.config import (
     Settings,
     StorageRouteClassification,
@@ -48,7 +49,16 @@ from ..core.config import (
     settings_for_active_profile_bucket,
 )
 from ..core.i18n import tr
-from ..core.storage_route_guidance import EXPLICIT_DATABASE_URL_PROFILE_RECOVERY
+from .operator_actions import (
+    ActionArgumentBinding,
+    ActionArgumentStatus,
+    ActionConditionality,
+    ActionReference,
+    ConditionEvidence,
+    ConditionEvidenceProvenance,
+    NoRecoveryOutcome,
+    PreconditionVerdict,
+)
 
 
 class StorageWritePolicyCode(StrEnum):
@@ -68,6 +78,20 @@ class StorageWritePolicyCode(StrEnum):
     NO_VERB_PATH = "no_verb_path"
     REFUSED_ROOT_FALLBACK = "refused_root_fallback"
     REFUSED_EXPLICIT_DATABASE_URL = "refused_explicit_database_url"
+
+
+class StorageWritePolicyCondition(StrEnum):
+    """Stable failed-condition identities owned by the write policy."""
+
+    PROFILE_ACTIVE = "profile.active"
+    ACTIVE_BUCKET_ROUTE = "storage.route.active_bucket"
+
+
+class StorageWritePolicyEvidence(StrEnum):
+    """Stable evidence identities emitted for write-policy failures."""
+
+    PROFILE_STORAGE_ROUTE = "profile.active.storage_route"
+    ACTIVE_BUCKET_ROUTE_CLASSIFICATION = "storage.route.active_bucket.classification"
 
 
 class StorageWritePolicyDecision(BaseModel):
@@ -90,7 +114,8 @@ class StorageWritePolicyDecision(BaseModel):
         message_key: Locale key for a refusal message rendered at the CLI
             boundary.
         detail_message_key: Optional nested detail key for the refusal message.
-        recovery_hint: Structured operator recovery hint for the error envelope.
+        verdict: Typed failed-condition outcome for a refusal. Allowed decisions
+            never carry a failed verdict.
     """
 
     model_config = _STRICT_FROZEN
@@ -102,7 +127,16 @@ class StorageWritePolicyDecision(BaseModel):
     route_kind: StorageRouteKind | None = None
     message_key: str = ""
     detail_message_key: str = ""
-    recovery_hint: str = ""
+    verdict: PreconditionVerdict | None = None
+
+    @model_validator(mode="after")
+    def _verdict_matches_decision(self) -> StorageWritePolicyDecision:
+        """Require a verdict exactly when the write policy refuses dispatch."""
+        if self.allowed and self.verdict is not None:
+            raise ValueError("allowed storage write-policy decisions cannot carry a failed verdict")
+        if not self.allowed and self.verdict is None:
+            raise ValueError("refusing storage write-policy decisions require a failed verdict")
+        return self
 
     def render_refusal_message(self, *, locale: str | None = None) -> str:
         """Render the translated user-facing refusal message through :func:`~cadrumo.core.i18n.tr`."""
@@ -111,12 +145,6 @@ class StorageWritePolicyDecision(BaseModel):
         if self.detail_message_key:
             return tr(self.message_key, details=tr(self.detail_message_key, locale=locale), locale=locale)
         return tr(self.message_key, locale=locale)
-
-    def refusal_context(self) -> dict[str, str] | None:
-        """Return structured context for :class:`~cadrumo.entrypoints.cli._errors.CliRefusedBoundaryError`."""
-        if not self.recovery_hint:
-            return None
-        return {"recovery": self.recovery_hint}
 
 
 PROFILE_BOUND_WRITE_VERB_PATHS: tuple[str, ...] = (
@@ -157,9 +185,7 @@ PROFILE_BOUND_WRITE_VERB_PATHS: tuple[str, ...] = (
     "app ledger evidence remove",
     "app ledger evidence confirm",
     "app ledger restore",
-    "app ledger invoice add",
     "app ledger invoice import",
-    "app ledger invoice remove",
     # Fetches a document and stores its bytes as encrypted evidence through
     # ``add_attachment_bytes``; ``pull-folder`` is the same primitive applied
     # once per Drive child. A link is never stored on its own, so both verbs
@@ -268,7 +294,6 @@ PROFILE_BOUND_WRITE_VERB_PATHS: tuple[str, ...] = (
     "config google sync push",
     "config google sync calc pull",
     "config google sync calc compute",
-    "config reset",
 )
 """Profile-bound mutation verb prefixes guarded by the root write policy.
 
@@ -344,6 +369,7 @@ def inspect_storage_write_policy(
             bootstrap_exempt=False,
             route_kind=route.kind,
             message_key="cli.config.errors.no_active_profile",
+            verdict=_missing_active_profile_verdict(route),
         )
     if route.kind is StorageRouteKind.EXPLICIT_DATABASE_URL:
         return StorageWritePolicyDecision(
@@ -354,7 +380,7 @@ def inspect_storage_write_policy(
             route_kind=route.kind,
             message_key="errors.storage.runtime.not_ready",
             detail_message_key="errors.storage.runtime.route_not_active_bucket",
-            recovery_hint=EXPLICIT_DATABASE_URL_PROFILE_RECOVERY,
+            verdict=_explicit_database_route_verdict(route),
         )
     return StorageWritePolicyDecision(
         allowed=True,
@@ -363,6 +389,68 @@ def inspect_storage_write_policy(
         bootstrap_exempt=False,
         route_kind=route.kind,
     )
+
+
+def _missing_active_profile_verdict(route: StorageRouteClassification) -> PreconditionVerdict:
+    """Return the conditional profile-creation action for a cold-root write."""
+    condition_id = StorageWritePolicyCondition.PROFILE_ACTIVE.value
+    evidence_id = StorageWritePolicyEvidence.PROFILE_STORAGE_ROUTE.value
+    return PreconditionVerdict(
+        failed_condition_id=condition_id,
+        evidence=(
+            ConditionEvidence(
+                condition_id=condition_id,
+                evidence_id=evidence_id,
+                provenance=ConditionEvidenceProvenance.RUNTIME_OBSERVATION,
+                values={
+                    "active_bucket_attached": False,
+                    "active_profile_present": False,
+                    "route_kind": route.kind.value,
+                },
+            ),
+        ),
+        action=ActionReference(action_id="operator.profile.create"),
+        argument_bindings=(
+            ActionArgumentBinding(
+                argument_name="profile_name",
+                status=ActionArgumentStatus.MISSING,
+            ),
+        ),
+        missing_argument_names=("profile_name",),
+        conditionality=ActionConditionality.REQUIRES_ARGUMENTS,
+    )
+
+
+def _explicit_database_route_verdict(route: StorageRouteClassification) -> PreconditionVerdict:
+    """Return the closed outcome for an operator-owned database URL override."""
+    condition_id = StorageWritePolicyCondition.ACTIVE_BUCKET_ROUTE.value
+    return PreconditionVerdict(
+        failed_condition_id=condition_id,
+        evidence=(
+            ConditionEvidence(
+                condition_id=condition_id,
+                evidence_id=StorageWritePolicyEvidence.ACTIVE_BUCKET_ROUTE_CLASSIFICATION.value,
+                provenance=ConditionEvidenceProvenance.RUNTIME_OBSERVATION,
+                values={
+                    "active_bucket_attached": False,
+                    "database_url_explicit": True,
+                    "explicit_route_setting": _settings_environment_name("cadrumo_database_url"),
+                    "route_kind": route.kind.value,
+                    "storage_root_setting": _settings_environment_name(STORAGE_ROOT_SETTINGS_FIELD),
+                },
+            ),
+        ),
+        conditionality=ActionConditionality.NOT_APPLICABLE,
+        no_recovery_outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+    )
+
+
+def _settings_environment_name(field_name: str) -> str:
+    """Resolve a settings field to the real environment identity or fail."""
+    environment_name = field_name.upper()
+    if field_name not in Settings.model_fields or environment_name not in Settings.env_var_names():
+        raise RuntimeError(f"settings field has no environment authority: {field_name}")
+    return environment_name
 
 
 def is_profile_bound_write_verb_path(verb_path: str) -> bool:
@@ -444,7 +532,9 @@ def _option_value(argv_tokens: Sequence[str], option: str) -> str | None:
 __all__ = [
     "PROFILE_BOUND_WRITE_VERB_PATHS",
     "StorageWritePolicyCode",
+    "StorageWritePolicyCondition",
     "StorageWritePolicyDecision",
+    "StorageWritePolicyEvidence",
     "inspect_storage_write_policy",
     "is_profile_bound_write_verb_path",
 ]

@@ -47,7 +47,6 @@ See Also:
 from __future__ import annotations
 
 from ._action_resolution import (
-    ResolvedCatalogueAction,
     resolve_catalogue_action,
     resolve_notice_action,
 )
@@ -100,6 +99,12 @@ from ._manifest import (
     ResultSchemaInventoryRow,
     build_operator_surface_manifest,
     reconcile_operator_surface_inventory,
+    ManifestActionResolution,
+    ReconciledOperatorLeaf,
+    ResolvedCatalogueAction,
+    ResolvedManifestActionProfile,
+    resolve_action_catalogue,
+    resolve_manifest_action_profiles,
 )
 from ._models import (
     FilingStatus,
@@ -108,6 +113,7 @@ from ._models import (
     HelpSection,
     HelpSurface,
     LifecycleContract,
+    ManifestActionProfile,
     ModeloLifecycleStep,
     MountedCommandDomain,
     MountedCommandFamily,
@@ -147,6 +153,8 @@ __all__ = [
     "LifecycleStateVerb",
     "LiveLeafInventoryRow",
     "McpExposureInventoryRow",
+    "ManifestActionProfile",
+    "ManifestActionResolution",
     "ModeloLifecycleStep",
     "MountedCommandDomain",
     "MountedCommandFamily",
@@ -163,6 +171,8 @@ __all__ = [
     "ProfilePolicyInventoryRow",
     "ReconciliationSurface",
     "ResolvedCatalogueAction",
+    "ReconciledOperatorLeaf",
+    "ResolvedManifestActionProfile",
     "ResultSchemaInventoryRow",
     "RootLandingReport",
     "RootSurface",
@@ -186,5 +196,7 @@ __all__ = [
     "require_accepted_root",
     "resolve_catalogue_action",
     "resolve_notice_action",
+    "resolve_action_catalogue",
+    "resolve_manifest_action_profiles",
     "resolve_source_kind_alias",
 ]

@@ -9,14 +9,17 @@ layout after the future publication step has validated the generated tree.
 from __future__ import annotations
 
 import json
+import os
+import tempfile
 from collections.abc import Mapping
 from pathlib import Path, PurePosixPath, PureWindowsPath
-from typing import Final, cast
+from typing import Final, Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
 from cadrumo.core.hashing import canonical_json_bytes, content_hash_hex, hash_file
 from cadrumo.domain.calculations.registry import (
+    ExportFieldDefinition,
     ExportLayoutDefinition,
     ModeloId,
     RegistryValidationError,
@@ -24,39 +27,54 @@ from cadrumo.domain.calculations.registry import (
     SourceRefId,
 )
 
-from ._record_design_ir import RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION, RecordDesignIntermediate
-from ._semantic_map import SemanticMap
+from ._record_design_ir import (
+    RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION,
+    RecordDesignIntermediateField,
+)
+from ._semantic_map import SemanticMap, SemanticMapEntry
+from ._semantic_map_join import JoinedRecordDesign
 
 __all__ = [
     "EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION",
     "EXPORT_FRAGMENT_PROVENANCE_FILENAME",
     "EXPORT_FRAGMENT_PROVENANCE_SCHEMA_VERSION",
+    "EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION",
+    "ExportFieldDerivation",
+    "ExportFieldDerivationCode",
     "ExportFragmentOutputDigest",
     "ExportFragmentProvenanceManifest",
     "ExportFragmentTarget",
     "build_export_fragment_provenance_manifest",
     "collect_export_fragment_output_digests",
+    "emit_export_fragment_provenance_manifest",
     "export_fragment_provenance_manifest_json_bytes",
     "export_fragment_provenance_path",
     "load_export_fragment_provenance_manifest",
     "loader_semantic_digest",
     "normalised_loader_semantics",
     "semantic_map_digest",
+    "verify_export_fragment_provenance_manifest",
 ]
 
 
 EXPORT_FRAGMENT_PROVENANCE_SCHEMA_VERSION: Final[int] = 1
 """Current wire schema for the adjacent non-loader provenance manifest."""
 
-EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION: Final[int] = 1
+EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION: Final[int] = 2
 """Current generator contract recorded by every provenance manifest."""
+
+EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION: Final[int] = 1
+"""Reviewed parser-to-wire normalization contract recorded for every field."""
 
 _LOADER_SEMANTIC_SCHEMA_VERSION: Final[int] = 1
 _SHA256_PATTERN: Final[str] = r"^[0-9a-f]{64}$"
 EXPORT_FRAGMENT_PROVENANCE_FILENAME: Final[str] = "export.provenance.json"
 """Sibling filename for an export directory's non-loader provenance manifest."""
 
-_SEMANTIC_MAP_KEYS: Final[frozenset[str]] = frozenset({"modelo", "design_epoch", "entries"})
+_SEMANTIC_MAP_KEYS: Final[frozenset[str]] = frozenset({"modelo", "design_epoch", "records", "entries"})
+_SEMANTIC_MAP_RECORD_KEYS: Final[frozenset[str]] = frozenset(
+    {"sheet", "record_identity", "export_record_id", "record_type"},
+)
 _SEMANTIC_MAP_ENTRY_KEYS: Final[frozenset[str]] = frozenset(
     {
         "anchor",
@@ -130,6 +148,16 @@ _FIELD_KEYS: Final[frozenset[str]] = frozenset(
 _DISCRIMINATOR_KEYS: Final[frozenset[str]] = frozenset({"offset", "length", "requires"})
 _DICTIONARY_OVERRIDE_KEYS: Final[frozenset[str]] = frozenset({"field_id", "path", "reason"})
 
+type ExportFieldDerivationCode = Literal[
+    "filler-v1",
+    "literal-exact-v1",
+    "numeric-date-aaaammdd-v1",
+    "numeric-decimal-v1",
+    "numeric-integer-v1",
+    "text-a-v1",
+    "text-an-v1",
+]
+
 
 class _StrictModel(BaseModel):
     """Frozen development-tool boundary with no read tolerance."""
@@ -161,7 +189,68 @@ class ExportFragmentOutputDigest(_StrictModel):
         raw_parts = value.split("/")
         if any(part in {"", ".", ".."} for part in raw_parts):
             raise ValueError("output digest path must not contain empty, current, or parent segments")
+        if not value.endswith(".toml"):
+            raise ValueError("output digest path must refer to a generated TOML file")
         return PurePosixPath(value).as_posix()
+
+
+class ExportFieldDerivation(_StrictModel):
+    """Complete evidence for one rendered field's reviewed wire normalization.
+
+    The parser coordinate and semantic-map meaning are retained beside the exact
+    emitted field.  A generic or unreviewed normalization code cannot enter a
+    generated manifest: adding a supported form requires extending this closed
+    contract and its schema-version review.
+    """
+
+    export_record_id: str = Field(min_length=1)
+    parser_field: RecordDesignIntermediateField
+    semantic_entry: SemanticMapEntry
+    field: ExportFieldDefinition
+    normalization_schema_version: int = Field(ge=1)
+    derivation_code: ExportFieldDerivationCode
+
+    @model_validator(mode="after")
+    def _require_exact_authority_and_emitted_field(self) -> ExportFieldDerivation:
+        parser_anchor = self.parser_field
+        semantic_anchor = self.semantic_entry.anchor
+        if (
+            parser_anchor.sheet,
+            parser_anchor.source_row,
+            parser_anchor.source_cell,
+            parser_anchor.ordinal,
+            parser_anchor.record_identity,
+        ) != (
+            semantic_anchor.sheet,
+            semantic_anchor.source_row,
+            semantic_anchor.source_cell,
+            semantic_anchor.ordinal,
+            semantic_anchor.record_identity,
+        ):
+            raise ValueError("field derivation requires the same complete parser and semantic-map anchor")
+        if self.normalization_schema_version != EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION:
+            raise ValueError(
+                "normalization schema drift: derivation records "
+                f"{self.normalization_schema_version}, expected {EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION}",
+            )
+        if self.field.id != self.semantic_entry.export_field_id:
+            raise ValueError("field derivation emitted id does not match semantic-map entry")
+        if self.field.offset != self.parser_field.offset or self.field.length != self.parser_field.length:
+            raise ValueError("field derivation emitted coordinates do not match parser field")
+        for attribute in (
+            "kind",
+            "casilla_id",
+            "binding",
+            "literal",
+            "header_key",
+            "draft_attribute",
+            "computed_key",
+            "legal_refs",
+            "source_refs",
+        ):
+            if getattr(self.field, attribute) != getattr(self.semantic_entry, attribute):
+                raise ValueError(f"field derivation emitted {attribute} does not match semantic-map entry")
+        return self
 
 
 class ExportFragmentProvenanceManifest(_StrictModel):
@@ -183,6 +272,7 @@ class ExportFragmentProvenanceManifest(_StrictModel):
     design_epoch: str = Field(min_length=1)
     loader_semantic_sha256: str = Field(pattern=_SHA256_PATTERN)
     output_files: tuple[ExportFragmentOutputDigest, ...] = Field(min_length=1)
+    field_derivations: tuple[ExportFieldDerivation, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
     def _refuse_unknown_schema_or_unordered_outputs(self) -> ExportFragmentProvenanceManifest:
@@ -206,6 +296,11 @@ class ExportFragmentProvenanceManifest(_StrictModel):
             raise ValueError("provenance output files must be sorted by relative path")
         if len(set(paths)) != len(paths):
             raise ValueError("provenance output files must not contain duplicate relative paths")
+        field_keys = tuple((item.export_record_id, str(item.field.id)) for item in self.field_derivations)
+        if field_keys != tuple(sorted(field_keys)):
+            raise ValueError("provenance field derivations must be sorted by record and field id")
+        if len(set(field_keys)) != len(field_keys):
+            raise ValueError("provenance field derivations must not contain duplicate emitted fields")
         return self
 
 
@@ -221,10 +316,14 @@ def semantic_map_digest(semantic_map: SemanticMap) -> str:
     entries = _as_object_list(payload["entries"], subject="semantic-map entries")
     normalised_entries = [_normalise_semantic_map_entry(entry) for entry in entries]
     normalised_entries.sort(key=_semantic_entry_sort_key)
+    records = _as_object_list(payload["records"], subject="semantic-map records")
+    normalised_records = [_normalise_semantic_map_record(record) for record in records]
+    normalised_records.sort(key=_semantic_record_sort_key)
     return content_hash_hex(
         {
             "modelo": payload["modelo"],
             "design_epoch": payload["design_epoch"],
+            "records": normalised_records,
             "entries": normalised_entries,
         },
     )
@@ -285,6 +384,10 @@ def collect_export_fragment_output_digests(export_root: Path) -> tuple[ExportFra
         if not candidate.is_file():
             continue
         relative_path = PurePosixPath(*candidate.relative_to(export_root).parts).as_posix()
+        if candidate.suffix != ".toml":
+            raise RegistryValidationError(
+                f"export provenance refuses non-TOML output under generated export root: {relative_path}",
+            )
         resolved_candidate = candidate.resolve()
         try:
             resolved_candidate.relative_to(resolved_root)
@@ -299,18 +402,19 @@ def collect_export_fragment_output_digests(export_root: Path) -> tuple[ExportFra
 
 def build_export_fragment_provenance_manifest(
     *,
-    intermediate: RecordDesignIntermediate,
+    joined: JoinedRecordDesign,
     semantic_map: SemanticMap,
     target: ExportFragmentTarget,
     loaded_layout: ExportLayoutDefinition,
     export_root: Path,
+    field_derivations: tuple[ExportFieldDerivation, ...],
 ) -> ExportFragmentProvenanceManifest:
-    """Assemble provenance from fixed authorities without emitting a file."""
-    _validate_generation_scope(intermediate=intermediate, semantic_map=semantic_map, target=target)
-    return ExportFragmentProvenanceManifest(
+    """Assemble provenance only from the exact joined and rendered authorities."""
+    _validate_generation_scope(joined=joined, semantic_map=semantic_map, target=target)
+    manifest = ExportFragmentProvenanceManifest(
         manifest_schema_version=EXPORT_FRAGMENT_PROVENANCE_SCHEMA_VERSION,
-        source_ref=intermediate.source.source_ref,
-        source_sha256=intermediate.source.source_sha256,
+        source_ref=joined.source.source_ref,
+        source_sha256=joined.source.source_sha256,
         parser_schema_version=RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION,
         generator_schema_version=EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION,
         semantic_map_sha256=semantic_map_digest(semantic_map),
@@ -319,7 +423,80 @@ def build_export_fragment_provenance_manifest(
         design_epoch=target.design_epoch,
         loader_semantic_sha256=loader_semantic_digest(loaded_layout),
         output_files=collect_export_fragment_output_digests(export_root),
+        field_derivations=tuple(
+            sorted(field_derivations, key=lambda item: (item.export_record_id, str(item.field.id)))
+        ),
     )
+    _require_field_derivations_match_layout(manifest.field_derivations, loaded_layout)
+    return manifest
+
+
+def emit_export_fragment_provenance_manifest(
+    *,
+    joined: JoinedRecordDesign,
+    semantic_map: SemanticMap,
+    target: ExportFragmentTarget,
+    loaded_layout: ExportLayoutDefinition,
+    export_root: Path,
+    field_derivations: tuple[ExportFieldDerivation, ...],
+) -> ExportFragmentProvenanceManifest:
+    """Write one complete canonical sibling manifest after a fresh tree renders.
+
+    This only emits attestation into an isolated, un-published target.  Tree
+    validation and atomic target publication remain later generator boundaries.
+    """
+    manifest = build_export_fragment_provenance_manifest(
+        joined=joined,
+        semantic_map=semantic_map,
+        target=target,
+        loaded_layout=loaded_layout,
+        export_root=export_root,
+        field_derivations=field_derivations,
+    )
+    manifest_path = export_fragment_provenance_path(export_root)
+    if manifest_path.is_symlink() or manifest_path.is_junction():
+        raise RegistryValidationError(f"export provenance refuses linked manifest target: {manifest_path}")
+    if manifest_path.exists():
+        raise RegistryValidationError(f"export provenance manifest already exists: {manifest_path}")
+    _write_canonical_manifest_atomically(manifest_path, export_fragment_provenance_manifest_json_bytes(manifest))
+    return manifest
+
+
+def verify_export_fragment_provenance_manifest(
+    *,
+    export_root: Path,
+    joined: JoinedRecordDesign,
+    semantic_map: SemanticMap,
+    target: ExportFragmentTarget,
+    loaded_layout: ExportLayoutDefinition,
+    field_derivations: tuple[ExportFieldDerivation, ...],
+) -> ExportFragmentProvenanceManifest:
+    """Refuse current-authority, file, loader-semantic, or derivation drift."""
+    manifest_path = export_fragment_provenance_path(export_root)
+    if manifest_path.is_symlink() or manifest_path.is_junction():
+        raise RegistryValidationError(f"export provenance refuses linked manifest: {manifest_path}")
+    if not manifest_path.is_file():
+        raise RegistryValidationError(f"export provenance manifest is missing: {manifest_path}")
+    manifest = load_export_fragment_provenance_manifest(manifest_path.read_bytes())
+    _require_manifest_matches_current_authorities(
+        manifest,
+        joined=joined,
+        semantic_map=semantic_map,
+        target=target,
+    )
+    actual_outputs = collect_export_fragment_output_digests(export_root)
+    if manifest.output_files != actual_outputs:
+        raise RegistryValidationError("export provenance output-file digests do not match generated tree")
+    actual_loader_digest = loader_semantic_digest(loaded_layout)
+    if manifest.loader_semantic_sha256 != actual_loader_digest:
+        raise RegistryValidationError("export provenance loader-semantic digest does not match generated tree")
+    _require_field_derivations_match_layout(manifest.field_derivations, loaded_layout)
+    expected_derivations = tuple(
+        sorted(field_derivations, key=lambda item: (item.export_record_id, str(item.field.id)))
+    )
+    if manifest.field_derivations != expected_derivations:
+        raise RegistryValidationError("export provenance field derivations do not match the rendered tree")
+    return manifest
 
 
 def export_fragment_provenance_manifest_json_bytes(manifest: ExportFragmentProvenanceManifest) -> bytes:
@@ -351,17 +528,21 @@ def load_export_fragment_provenance_manifest(raw: bytes) -> ExportFragmentProven
 
 def _validate_generation_scope(
     *,
-    intermediate: RecordDesignIntermediate,
+    joined: JoinedRecordDesign,
     semantic_map: SemanticMap,
     target: ExportFragmentTarget,
 ) -> None:
+    if joined.modelo != target.modelo:
+        raise RegistryValidationError(
+            f"joined modelo {joined.modelo!r} does not match generation target {target.modelo!r}",
+        )
     if semantic_map.modelo != target.modelo:
         raise RegistryValidationError(
             f"semantic-map modelo {semantic_map.modelo!r} does not match generation target {target.modelo!r}",
         )
-    if intermediate.source.design_epoch != target.design_epoch:
+    if joined.source.design_epoch != target.design_epoch:
         raise RegistryValidationError(
-            f"record-design epoch {intermediate.source.design_epoch!r} does not match generation target "
+            f"record-design epoch {joined.source.design_epoch!r} does not match generation target "
             f"{target.design_epoch!r}",
         )
     if semantic_map.design_epoch != target.design_epoch:
@@ -369,6 +550,138 @@ def _validate_generation_scope(
             f"semantic-map epoch {semantic_map.design_epoch!r} does not match generation target "
             f"{target.design_epoch!r}",
         )
+    if tuple(
+        sorted(
+            (field.semantic_entry for field in joined.fields),
+            key=lambda entry: (
+                entry.anchor.sheet,
+                entry.anchor.source_row,
+                "" if entry.anchor.source_cell is None else entry.anchor.source_cell,
+                entry.anchor.ordinal,
+                entry.anchor.record_identity,
+                str(entry.export_field_id),
+            ),
+        )
+    ) != tuple(
+        sorted(
+            semantic_map.entries,
+            key=lambda entry: (
+                entry.anchor.sheet,
+                entry.anchor.source_row,
+                "" if entry.anchor.source_cell is None else entry.anchor.source_cell,
+                entry.anchor.ordinal,
+                entry.anchor.record_identity,
+                str(entry.export_field_id),
+            ),
+        )
+    ):
+        raise RegistryValidationError("joined fields do not attest the supplied complete semantic map")
+    if tuple(
+        sorted(
+            (record.semantic_record for record in joined.records),
+            key=lambda record: (
+                record.sheet,
+                record.record_identity,
+                str(record.export_record_id),
+                record.record_type,
+            ),
+        )
+    ) != tuple(
+        sorted(
+            semantic_map.records,
+            key=lambda record: (
+                record.sheet,
+                record.record_identity,
+                str(record.export_record_id),
+                record.record_type,
+            ),
+        )
+    ):
+        raise RegistryValidationError("joined records do not attest the supplied complete semantic map")
+
+
+def _require_manifest_matches_current_authorities(
+    manifest: ExportFragmentProvenanceManifest,
+    *,
+    joined: JoinedRecordDesign,
+    semantic_map: SemanticMap,
+    target: ExportFragmentTarget,
+) -> None:
+    _validate_generation_scope(joined=joined, semantic_map=semantic_map, target=target)
+    expected = {
+        "source_ref": joined.source.source_ref,
+        "source_sha256": joined.source.source_sha256,
+        "parser_schema_version": RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION,
+        "generator_schema_version": EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION,
+        "semantic_map_sha256": semantic_map_digest(semantic_map),
+        "modelo": target.modelo,
+        "revision_id": target.revision_id,
+        "design_epoch": target.design_epoch,
+    }
+    mismatches = {
+        name: (getattr(manifest, name), expected_value)
+        for name, expected_value in expected.items()
+        if getattr(manifest, name) != expected_value
+    }
+    if mismatches:
+        raise RegistryValidationError(
+            f"export provenance manifest does not match current generation authorities: {mismatches!r}",
+        )
+
+
+def _require_field_derivations_match_layout(
+    field_derivations: tuple[ExportFieldDerivation, ...],
+    loaded_layout: ExportLayoutDefinition,
+) -> None:
+    layout_fields = {
+        (str(record.id), str(field.id)): field
+        for record in loaded_layout.records
+        for field in record.fields
+    }
+    derivation_fields = {
+        (item.export_record_id, str(item.field.id)): item.field for item in field_derivations
+    }
+    if len(layout_fields) != len(tuple(field for record in loaded_layout.records for field in record.fields)):
+        raise RegistryValidationError("loader export layout contains duplicate record and field identities")
+    if len(derivation_fields) != len(field_derivations):
+        raise RegistryValidationError("export provenance contains duplicate field derivations")
+    if frozenset(derivation_fields) != frozenset(layout_fields):
+        missing = sorted(
+            f"{record_id}/{field_id}" for record_id, field_id in layout_fields.keys() - derivation_fields.keys()
+        )
+        unexpected = sorted(
+            f"{record_id}/{field_id}" for record_id, field_id in derivation_fields.keys() - layout_fields.keys()
+        )
+        raise RegistryValidationError(
+            f"export provenance derivations do not cover exactly the generated layout: "
+            f"missing={missing!r}, unexpected={unexpected!r}",
+        )
+    for identity, expected_field in layout_fields.items():
+        if derivation_fields[identity] != expected_field:
+            raise RegistryValidationError(
+                f"export provenance derivation does not match generated field {identity[0]!r}/{identity[1]!r}",
+            )
+
+
+def _write_canonical_manifest_atomically(path: Path, payload: bytes) -> None:
+    """Make the sibling evidence all-or-nothing without publishing its tree."""
+    if not path.parent.is_dir():
+        raise RegistryValidationError(f"export provenance manifest parent is missing: {path.parent}")
+    descriptor, temporary_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
+    temporary_path = Path(temporary_name)
+    try:
+        with os.fdopen(descriptor, "wb") as stream:
+            stream.write(payload)
+            stream.flush()
+            os.fsync(stream.fileno())
+        if path.exists():
+            raise RegistryValidationError(f"export provenance manifest already exists: {path}")
+        os.replace(temporary_path, path)
+    except OSError as exc:
+        raise RegistryValidationError(f"cannot write export provenance manifest {path}: {exc}") from exc
+    finally:
+        if temporary_path.exists():
+            temporary_path.unlink()
 
 
 def _normalise_semantic_map_entry(payload: Mapping[str, object]) -> dict[str, object]:
@@ -409,11 +722,35 @@ def _semantic_entry_sort_key(payload: Mapping[str, object]) -> tuple[str, int, s
     )
 
 
+def _normalise_semantic_map_record(payload: Mapping[str, object]) -> dict[str, object]:
+    _require_exact_keys(payload, _SEMANTIC_MAP_RECORD_KEYS, subject="semantic-map record")
+    return {
+        "sheet": _as_string(payload["sheet"], subject="semantic-map record sheet"),
+        "record_identity": _as_string(
+            payload["record_identity"],
+            subject="semantic-map record record_identity",
+        ),
+        "export_record_id": _as_string(
+            payload["export_record_id"],
+            subject="semantic-map record export_record_id",
+        ),
+        "record_type": _as_string(payload["record_type"], subject="semantic-map record record_type"),
+    }
+
+
+def _semantic_record_sort_key(payload: Mapping[str, object]) -> tuple[str, str, str, str]:
+    return (
+        _as_string(payload["sheet"], subject="semantic-map record sheet"),
+        _as_string(payload["record_identity"], subject="semantic-map record record_identity"),
+        _as_string(payload["export_record_id"], subject="semantic-map record export_record_id"),
+        _as_string(payload["record_type"], subject="semantic-map record record_type"),
+    )
+
+
 def _normalise_loader_record(payload: Mapping[str, object]) -> dict[str, object]:
     _require_exact_keys(payload, _RECORD_KEYS, subject="loader export record")
     fields = [
-        _normalise_loader_field(item)
-        for item in _as_object_list(payload["fields"], subject="loader record fields")
+        _normalise_loader_field(item) for item in _as_object_list(payload["fields"], subject="loader record fields")
     ]
     fields.sort(key=_loader_field_sort_key)
     row_fields = _as_object(payload["row_field_casilla_ids"], subject="loader row-field casilla ids")

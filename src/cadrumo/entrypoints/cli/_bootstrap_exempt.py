@@ -115,8 +115,9 @@ BOOTSTRAP_EXEMPT_VERB_PATHS: tuple[str, ...] = (
     # precondition mismatch rather than a security boundary. ``rename`` goes
     # through BucketMaintenanceService, which wraps it in
     # ``profile_storage_session``; ``duplicate`` reads its source through the
-    # same self-scoped span; ``validate NAME`` is the read-only twin of
-    # ``show NAME``, which the root callback already carves out by hand.
+    # same self-scoped span. Explicit ``validate NAME`` is the read-only twin
+    # of ``show NAME`` and is carved out by the root callback; its unnamed
+    # active-profile form deliberately remains gated.
     # Credentials are still required — they are just supplied to the target
     # rather than demanded as a prior login into an unrelated profile.
     #
@@ -132,7 +133,6 @@ BOOTSTRAP_EXEMPT_VERB_PATHS: tuple[str, ...] = (
     # ``test_archive_export_must_stay_login_gated``.
     "config profile duplicate",
     "config profile rename",
-    "config profile validate",
     # Bundled-registry discovery: lists public modelo metadata and must stay
     # reachable before a profile has been unlocked.
     "app modelo list",

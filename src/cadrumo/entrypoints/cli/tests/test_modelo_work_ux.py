@@ -36,6 +36,7 @@ from ._modelo_work_ux_support import (
     _invoke,
 )
 from ._modelo_work_ux_support import _isolated_cli_backend as _isolated_cli_backend
+from .envelope_helpers import unwrap_envelope_notices as _notices
 from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -61,6 +62,9 @@ def test_work_history_records_creation_event(_isolated_cli_backend: Path) -> Non
     assert event["actor"]
     assert event["payload"]["modelo"] == "130"
     assert event["payload"]["revision_id"] == "2019-y-siguientes"
+    notice = next(item for item in _notices(history.output) if item["code"] == "modelo.work.history.next_action")
+    assert "aeat " not in notice["message"].lower()
+    assert notice["action"]["action_id"] == "operator.modelo.work.status"
 
 
 def test_first_work_calculate_binding_error_guides_the_operator(_isolated_cli_backend: Path) -> None:
@@ -120,6 +124,24 @@ def test_work_status_resolves_a_visible_filing_target(_isolated_cli_backend: Pat
     assert payload["short_work_unit_id"] == work_unit_id[-12:]
     assert "current_calculation_revision_id" in payload
     assert "filed_calculation_revision_id" in payload
+    notice = next(item for item in _notices(result.output) if item["code"] == "modelo.work.status.next_action")
+    assert "aeat " not in notice["message"].lower()
+    assert notice["action"]["action_id"] == "operator.modelo.work.calculate"
+
+
+def test_displayed_short_work_unit_id_drives_status_and_calculate(_isolated_cli_backend: Path) -> None:
+    """The short id surfaced by `work list` is a usable operator handle."""
+    _create_profile()
+    work_unit_id = _create_calculable_work_unit()
+    short_work_unit_id = work_unit_id[-12:]
+
+    status = _invoke(["--format", "json", "app", "modelo", "work", "status", short_work_unit_id])
+    assert status.exit_code == 0, status.output
+    assert _payload(status.output)["work_unit_id"] == work_unit_id
+
+    calculated = _invoke(["--format", "json", "app", "modelo", "work", "calculate", short_work_unit_id])
+    assert calculated.exit_code == 0, calculated.output
+    assert _payload(calculated.output)["work_unit_id"] == work_unit_id
 
 
 def test_work_list_surfaces_revision_pointer_fields(_isolated_cli_backend: Path) -> None:
@@ -142,6 +164,21 @@ def test_work_list_surfaces_revision_pointer_fields(_isolated_cli_backend: Path)
     assert unit["current_calculation_revision_id"] == revision_id
     assert unit["short_current_calculation_revision_id"] == revision_id[-12:]
     assert unit["filed_calculation_revision_id"] is None
+
+
+def test_work_list_projects_next_step_as_typed_action(_isolated_cli_backend: Path) -> None:
+    """The real work-list command must not put executable prose in a notice."""
+    _create_profile()
+
+    result = _invoke(["--format", "json", "app", "modelo", "work", "list"])
+
+    assert result.exit_code == 0, result.output
+    notice = next(item for item in _notices(result.output) if item["code"] == "modelo.work.list.next_action")
+    assert "aeat " not in notice["message"].lower()
+    assert notice["action"] == {
+        "action_id": "operator.modelo.work.status",
+        "target_command_key": "modelo.work.status",
+    }
 
 
 def test_work_status_and_list_show_presentado_after_file(_isolated_cli_backend: Path) -> None:

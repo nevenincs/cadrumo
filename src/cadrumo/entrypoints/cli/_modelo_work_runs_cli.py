@@ -24,6 +24,8 @@ See Also:
 
 from __future__ import annotations
 
+from ...application.operator_actions import next_action
+
 from collections.abc import Callable, Mapping
 from typing import Annotated
 

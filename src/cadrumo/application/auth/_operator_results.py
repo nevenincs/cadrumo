@@ -80,7 +80,6 @@ class AuthConfigureResult(BaseModel):
     file: str = ""
     complete: bool = True
     incomplete_reason: str = ""
-    active_profile: str = ""
     profile_tax_id_present: bool = False
     provider_identity_present: bool = False
     identity_alignment: str = ""

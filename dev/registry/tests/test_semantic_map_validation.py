@@ -69,6 +69,14 @@ def _semantic_map_payload(*, entries: tuple[dict[str, object], ...]) -> dict[str
     return {
         "modelo": "200",
         "design_epoch": "2025",
+        "records": (
+            {
+                "sheet": "Registro tipo 1",
+                "record_identity": "registro-tipo-1",
+                "export_record_id": "registro-tipo-1",
+                "record_type": "declaracion",
+            },
+        ),
         "entries": entries,
     }
 

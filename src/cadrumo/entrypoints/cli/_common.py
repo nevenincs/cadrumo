@@ -24,21 +24,25 @@ as ``aeat --version``.
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping, Sequence
+from contextvars import ContextVar
 from datetime import date as _date
 from decimal import Decimal
 from enum import StrEnum
+from functools import partial
 from pathlib import Path
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Protocol, cast
 
 import click
 import typer
 import typer._click.types as typer_click_types
+from pydantic import BaseModel, Field, field_validator
 
-from ...core import NON_REGISTRY_MODELOS, Modelo
+from ...core import NON_REGISTRY_MODELOS, STRICT_FROZEN_CONFIG, Modelo
 from ...core.cli_metadata import is_metadata_invocation
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
+from ...core.json_contract import ResolvedPreconditionAction
 from ...core.output_rendering import OutputFormat, render_command_output
 from ._command_suggestions import INVOCATION_REMAINDER_META_KEY
 
@@ -126,9 +130,11 @@ if TYPE_CHECKING:
     from ...application.auth import AuthProviderListing
     from ...application.operator_actions import ActionReference
     from ...application.operator_surface import OperatorSurfaceReconciliation
+    from ...core.json_contract import Notice, ResolvedActionArgument, ResolvedNoticeAction
+    from ...application.operator_actions import PreconditionVerdict
     from ...application.workflow import WorkflowState
     from ...core import Period
-    from ...core.json_contract import Notice, ResolvedActionArgument, ResolvedNoticeAction
+    from ...core.json_contract import Notice, ResolvedActionReference
     from ...domain.deadlines import TaxpayerProfile
     from ...domain.filing import ModeloDraft
     from ...domain.invoices import InvoiceCatalogue
@@ -141,6 +147,238 @@ __all__ = [
     "parse_optional_decimal_amount",
     "resolve_notice_action",
 ]
+
+
+REQUESTED_CLI_LEAF_META_KEY = "cadrumo.requested_cli_leaf"
+"""Context key holding the terminal leaf selected before root guards run."""
+
+_CLI_POLICY_REFUSAL_PROJECTION_ATTRIBUTE = "_cadrumo_cli_policy_refusal_projection"
+
+
+class RequestedCliLeaf(BaseModel):
+    """Immutable identity of the real terminal command the operator requested."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    subject_leaf_key: str = Field(min_length=1)
+    canonical_cli_path: tuple[str, ...] = Field(min_length=1)
+
+    @field_validator("canonical_cli_path")
+    @classmethod
+    def _path_tokens_are_canonical(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if any(not token or token != token.strip() or token.startswith("-") for token in value):
+            raise ValueError("requested CLI leaf path requires canonical command tokens")
+        return value
+
+
+_REQUESTED_CLI_LEAF_CONTEXT: ContextVar[RequestedCliLeaf | None] = ContextVar(
+    "cadrumo_requested_cli_leaf",
+    default=None,
+)
+
+
+class CliPolicyRefusalProjection(BaseModel):
+    """Typed policy handoff awaiting generic boundary transport in S18."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    requested_leaf: RequestedCliLeaf | None
+    precondition_action: ResolvedPreconditionAction
+
+
+class _CommandGroup(Protocol):
+    def get_command(self, ctx: object, cmd_name: str) -> object | None:
+        """Resolve one real child command."""
+
+
+def attach_cli_policy_refusal_projection[ExceptionT: Exception](
+    error: ExceptionT,
+    *,
+    projection: CliPolicyRefusalProjection,
+) -> ExceptionT:
+    """Attach the strict S17 handoff without changing generic S18 transport."""
+    setattr(error, _CLI_POLICY_REFUSAL_PROJECTION_ATTRIBUTE, projection)
+    return error
+
+
+def cli_policy_refusal_projection(error: BaseException) -> CliPolicyRefusalProjection | None:
+    """Read the typed policy handoff that S18 will teach the boundary to emit."""
+    value = getattr(error, _CLI_POLICY_REFUSAL_PROJECTION_ATTRIBUTE, None)
+    if value is None:
+        return None
+    if not isinstance(value, CliPolicyRefusalProjection):
+        raise TypeError("CLI policy refusal contains an invalid typed projection")
+    return value
+
+
+def cli_policy_refusal_context(projection: CliPolicyRefusalProjection) -> dict[str, object] | None:
+    """Render configuration identities from typed evidence, never recovery prose."""
+    context: dict[str, object] = {}
+    for evidence in projection.precondition_action.evidence:
+        for key, value in evidence.values.items():
+            if key.endswith("_setting"):
+                context[key] = value
+    return context or None
+
+
+def preserve_requested_cli_leaf(ctx: typer.Context) -> RequestedCliLeaf | None:
+    """Resolve and retain the terminal live leaf before root policy guards."""
+    existing = ctx.meta.get(REQUESTED_CLI_LEAF_META_KEY)
+    if existing is not None:
+        if not isinstance(existing, RequestedCliLeaf):
+            raise TypeError("requested CLI leaf context contains an invalid value")
+        return existing
+
+    raw_tokens = tuple(str(token) for token in ctx.meta.get(INVOCATION_REMAINDER_META_KEY, ()))
+    command: object = ctx.command
+    canonical_path: list[str] = []
+    for token in raw_tokens:
+        if token.startswith("-") or not hasattr(command, "get_command"):
+            break
+        child = cast(_CommandGroup, command).get_command(ctx, token)
+        if child is None:
+            return None
+        command_name = getattr(child, "name", None)
+        canonical_path.append(command_name if isinstance(command_name, str) and command_name else token)
+        command = child
+        if not hasattr(command, "get_command"):
+            from ..schema_surface import normalise_cli_path_to_schema_key
+
+            requested = RequestedCliLeaf(
+                subject_leaf_key=normalise_cli_path_to_schema_key(tuple(canonical_path)),
+                canonical_cli_path=tuple(canonical_path),
+            )
+            ctx.meta[REQUESTED_CLI_LEAF_META_KEY] = requested
+            token = _REQUESTED_CLI_LEAF_CONTEXT.set(requested)
+            ctx.call_on_close(partial(_REQUESTED_CLI_LEAF_CONTEXT.reset, token))
+            return requested
+    return None
+
+
+def requested_cli_leaf(ctx: typer.Context) -> RequestedCliLeaf | None:
+    """Return the already-preserved requested terminal identity, if any."""
+    value = ctx.meta.get(REQUESTED_CLI_LEAF_META_KEY)
+    if value is None:
+        return None
+    if not isinstance(value, RequestedCliLeaf):
+        raise TypeError("requested CLI leaf context contains an invalid value")
+    return value
+
+
+def current_requested_cli_leaf() -> RequestedCliLeaf | None:
+    """Return the preserved leaf from the current Click context, if one exists."""
+    bound = _REQUESTED_CLI_LEAF_CONTEXT.get()
+    if bound is not None:
+        return bound
+    ctx = click.get_current_context(silent=True)
+    if ctx is None:
+        return None
+    return requested_cli_leaf(cast(typer.Context, ctx))
+
+
+def project_cli_policy_refusal(
+    *,
+    requested_leaf: RequestedCliLeaf | None,
+    verdict: PreconditionVerdict,
+) -> CliPolicyRefusalProjection:
+    """Project one application verdict without teaching the CLI applicability."""
+    from ...application.operator_actions import ActionArgumentStatus, lookup_action
+    from ...core.json_contract import (
+        ActionArgumentSource as WireArgumentSource,
+    )
+    from ...core.json_contract import (
+        ActionArgumentStatus as WireArgumentStatus,
+    )
+    from ...core.json_contract import (
+        ActionConditionality as WireConditionality,
+    )
+    from ...core.json_contract import (
+        ActionConditionEvidence,
+        ActionEvidenceProvenance,
+        ResolvedActionArgument,
+        ResolvedActionReference,
+    )
+    from ...core.json_contract import (
+        NoRecoveryOutcome as WireNoRecoveryOutcome,
+    )
+
+    resolved_action: ResolvedActionReference | None = None
+    if verdict.action is not None:
+        declaration = lookup_action(verdict.action.action_id)
+        declared_arguments = {item.argument_name: item for item in declaration.argument_specifications}
+        observed_arguments = {item.argument_name: item for item in verdict.argument_bindings}
+        if set(observed_arguments) != set(declared_arguments):
+            raise ValueError(
+                f"CLI policy action arguments do not match catalogue declaration: {verdict.action.action_id}"
+            )
+        for name, argument in observed_arguments.items():
+            if argument.status is ActionArgumentStatus.MISSING:
+                continue
+            specification = declared_arguments[name]
+            if (
+                argument.source is not specification.source
+                or argument.source_key != specification.source_key
+                or argument.source_evidence_id != specification.source_evidence_id
+            ):
+                raise ValueError(f"CLI policy action argument source contradicts catalogue: {name}")
+        resolved_action = ResolvedActionReference(
+            action_id=declaration.action_id,
+            target_command_key=declaration.target_command_key,
+        )
+
+    projected = ResolvedPreconditionAction(
+        failed_condition_id=verdict.failed_condition_id,
+        evidence=tuple(
+            ActionConditionEvidence(
+                condition_id=item.condition_id,
+                evidence_id=item.evidence_id,
+                provenance=ActionEvidenceProvenance(item.provenance.value),
+                values=item.values,
+            )
+            for item in verdict.evidence
+        ),
+        action=resolved_action,
+        argument_bindings=tuple(
+            ResolvedActionArgument(
+                argument_name=item.argument_name,
+                status=WireArgumentStatus(item.status.value),
+                value=item.value,
+                source=WireArgumentSource(item.source.value) if item.source is not None else None,
+                source_key=item.source_key,
+                source_evidence_id=item.source_evidence_id,
+            )
+            for item in verdict.argument_bindings
+        ),
+        missing_argument_names=verdict.missing_argument_names,
+        conditionality=WireConditionality(verdict.conditionality.value),
+        no_recovery_outcome=(
+            WireNoRecoveryOutcome(verdict.no_recovery_outcome.value)
+            if verdict.no_recovery_outcome is not None
+            else None
+        ),
+    )
+    return CliPolicyRefusalProjection(
+        requested_leaf=requested_leaf,
+        precondition_action=projected,
+    )
+
+
+def attach_cli_policy_verdict[ExceptionT: Exception](
+    error: ExceptionT,
+    *,
+    verdict: PreconditionVerdict,
+    requested_leaf: RequestedCliLeaf | None = None,
+) -> ExceptionT:
+    """Project and attach an application verdict at the shared CLI boundary."""
+    leaf = requested_leaf if requested_leaf is not None else current_requested_cli_leaf()
+    return attach_cli_policy_refusal_projection(
+        error,
+        projection=project_cli_policy_refusal(
+            requested_leaf=leaf,
+            verdict=verdict,
+        ),
+    )
+
 
 # ---------------------------------------------------------------------
 # Transport helpers
@@ -414,8 +652,8 @@ def _active_profile_label() -> str | None:
 
     Resolves the active bucket id through the same core precedence chain
     every command uses (:func:`~cadrumo.core.resolve_active_bucket_id`), then
-    reads its plaintext manifest label
-    (:func:`~cadrumo.application.workflow.read_profile_bucket_by_id`) — the
+    resolves its live plaintext manifest label
+    (:func:`~cadrumo.application.workflow.resolve_profile_bucket`) — the
     same non-secret display name
     :func:`~cadrumo.application.operator_output.sandbox_notice_for_active_bucket`
     reads,
@@ -430,14 +668,14 @@ def _active_profile_label() -> str | None:
     profile manifests.
     """
     from ...adapters.persistence.storage import StorageValidationError
-    from ...application.workflow import read_profile_bucket_by_id
+    from ...application.workflow import resolve_profile_bucket
     from ...core import FormerProductStateError, resolve_active_bucket_id
 
     try:
         bucket_id = resolve_active_bucket_id()
         if bucket_id is None:
             return None
-        pointer = read_profile_bucket_by_id(bucket_id)
+        pointer = resolve_profile_bucket(bucket_id)
     except (FormerProductStateError, StorageValidationError):
         return None
     return pointer.label if pointer is not None else None
@@ -464,16 +702,26 @@ def _no_active_profile_refusal() -> Exception:
     second one. ``list_profile_buckets`` reads only manifest files and
     never unlocks a bucket, so this check is cheap.
     """
+    from ...application.profile_preconditions import inspect_active_profile_precondition
     from ...application.workflow import list_profile_buckets
     from ._errors import CliRefusedBoundaryError
 
+    registered_profile_count = len(list_profile_buckets())
+    verdict = inspect_active_profile_precondition(
+        active_profile_present=False,
+        registered_profile_count=registered_profile_count,
+    )
+    if verdict is None:
+        raise RuntimeError("no-active-profile refusal did not produce a failed verdict")
     # Each branch calls tr() with a literal key so the locale scaffold's
     # static discovery can find both keys; a single tr(variable) call would
     # be invisible to that AST-literal scan and the second key would never
     # get scaffolded across the four catalogues.
-    if list_profile_buckets():
-        return CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile_registered"))
-    return CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
+    if registered_profile_count:
+        error = CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile_registered"))
+    else:
+        error = CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
+    return attach_cli_policy_verdict(error, verdict=verdict)
 
 
 def _state() -> WorkflowState:
@@ -851,9 +1099,6 @@ def _declared_tax_id(record: UserProfileRecord | None) -> str:
     return (fact_value(record, "identity.tax_id") or "").strip()
 
 
-#: ``identity.tax_id``'s declared ``model_selectors`` token, as
-#: :func:`format_profile_selector_requirements` expects it - a selector token,
-#: not the ``section.field`` path.
 _TAX_ID_SELECTOR = "tax.id"
 
 
@@ -874,24 +1119,32 @@ def _filing_taxpayer_or_refuse(state: WorkflowState) -> TaxpayerProfile:
     writes or packages a declaration routes through here, so absence refuses
     once rather than at each call site.
     """
+    from ...application.profile_preconditions import inspect_filing_taxpayer_identity_precondition
     from ...application.user_profile import format_profile_selector_requirements
     from ...core.resources import resources
     from ...domain.calculations.registry import build_profile_grounding_index
     from ._errors import CliRefusedBoundaryError
 
-    if not _declared_tax_id(state.active_profile_record()):
-        raise CliRefusedBoundaryError(
-            translated_message="cli.common.errors.filing_requires_declared_tax_id",
-            context={
-                "requirements": ", ".join(
-                    format_profile_selector_requirements(
-                        [_TAX_ID_SELECTOR],
-                        schema=resources().user_profile_schema.singleton,
-                        grounding_index=build_profile_grounding_index(resources().modelos.authority),
+    record = state.active_profile_record()
+    verdict = inspect_filing_taxpayer_identity_precondition(
+        declared_tax_id=_declared_tax_id(record),
+        profile_name=record.profile_id if record is not None else None,
+    )
+    if verdict is not None:
+        raise attach_cli_policy_verdict(
+            CliRefusedBoundaryError(
+                translated_message="cli.common.errors.filing_requires_declared_tax_id",
+                context={
+                    "requirements": ", ".join(
+                        format_profile_selector_requirements(
+                            [_TAX_ID_SELECTOR],
+                            schema=resources().user_profile_schema.singleton,
+                            grounding_index=build_profile_grounding_index(resources().modelos.authority),
+                        ),
                     ),
-                ),
-            },
-            suggestion="aeat config profile edit",
+                },
+            ),
+            verdict=verdict,
         )
     return _profile_to_taxpayer(state)
 

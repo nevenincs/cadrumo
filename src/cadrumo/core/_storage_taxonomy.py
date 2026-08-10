@@ -146,6 +146,15 @@ class StorageGrouping(StrEnum):
     EXPORTS = "exports"
 
 
+class StorageArea(StrEnum):
+    """Stable operator vocabulary for the four aggregate storage families."""
+
+    STATE = "state"
+    LOGS = "logs"
+    CACHE = "cache"
+    EXPORTS = "exports"
+
+
 class FingerprintParticipation(StrEnum):
     """Whether writes beneath a member move the data-root drift digest.
 
@@ -261,17 +270,6 @@ EXTERNAL_PATH_SETTINGS_FIELDS: Final[dict[str, ExternalPathDeclaration]] = {
             ),
         ),
         ExternalPathDeclaration(
-            settings_field="cadrumo_libreoffice_executable",
-            role=ExternalPathRole.EXTERNAL_EXECUTABLE,
-            reason=(
-                "A third-party binary installed by the platform or the operator. The application "
-                "executes it and does not choose where it lives. Classified nowhere before the "
-                "taxonomy existed, and invisible to a name-suffix selector because it ends in "
-                "none of _dir, _path, or _root -- which is why the binding gate selects by "
-                "annotation."
-            ),
-        ),
-        ExternalPathDeclaration(
             settings_field="cadrumo_wallet_diagnostic_dump_dir",
             role=ExternalPathRole.OPERATOR_DIRECTED_OUTPUT,
             reason=(
@@ -298,16 +296,14 @@ class StorageCategory(StrEnum):
 
     Root-scoped members carry their bare category name. Bucket- and
     keystore-scoped members carry a scope-qualifying prefix, which is what keeps
-    the top-level ``blobs``/``audit`` categories distinct from the per-bucket
-    subdirectories that share their on-disk names.
+    root-scoped names distinct from per-bucket subdirectories.
     """
 
     # ── State substrate and identity ────────────────────────────────────────
     TOKENS = "tokens"
     SECRETS = "secrets"
     BLOBS = "blobs"
-    AUDIT = "audit"
-    REGISTRY_PARITY_STORE = "registry-parity-store"
+    LIVE_STATE = "live-state"
 
     # ── Fixed layout: within the secret store ────────────────────────────────
     SECRETS_MASTER_KEY = "secrets.master-key"
@@ -316,12 +312,11 @@ class StorageCategory(StrEnum):
     SECRETS_KEYRING_LOCK = "secrets.keyring-lock"
     SECRETS_MASTER_RECOVERY_KEY = "secrets.master-recovery-key"
 
-    # ── Fixed layout: live IVA remote-state capture, nested under audit ──────
-    AUDIT_LIVE = "audit.live"
-    AUDIT_LIVE_IVA_WALLET = "audit.live.iva-wallet"
-    AUDIT_LIVE_IVA_REMOTE_STATE = "audit.live.iva-remote-state"
-    AUDIT_LIVE_IVA_REMOTE_STATE_FILED_HISTORY = "audit.live.iva-remote-state.filed-history"
-    AUDIT_LIVE_IVA_REMOTE_STATE_WALLET = "audit.live.iva-remote-state.wallet"
+    # ── Fixed layout: live IVA remote-state capture ─────────────────────────
+    LIVE_STATE_IVA_WALLET = "live-state.iva-wallet"
+    LIVE_STATE_IVA_REMOTE_STATE = "live-state.iva-remote-state"
+    LIVE_STATE_IVA_REMOTE_STATE_FILED_HISTORY = "live-state.iva-remote-state.filed-history"
+    LIVE_STATE_IVA_REMOTE_STATE_WALLET = "live-state.iva-remote-state.wallet"
 
     # ── Diagnostic and append-only telemetry logs ───────────────────────────
     LOGS = "logs"
@@ -368,7 +363,6 @@ class StorageCategory(StrEnum):
     BUCKET_DATABASE = "bucket.db"
     BUCKET_DATABASE_FILE = "bucket.db-file"
     BUCKET_BLOBS = "bucket.blobs"
-    BUCKET_AUDIT = "bucket.audit"
     BUCKET_MANIFEST = "bucket.manifest"
     BUCKET_LOCK = "bucket.lock"
     BUCKET_OUTPUT_LANGUAGE_HINT = "bucket.output-language-hint"
@@ -569,6 +563,7 @@ __all__ = [
     "ExternalPathDeclaration",
     "ExternalPathRole",
     "FingerprintParticipation",
+    "StorageArea",
     "StorageCategory",
     "StorageGrouping",
     "StorageLifecycle",

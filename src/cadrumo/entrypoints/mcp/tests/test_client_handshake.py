@@ -71,6 +71,13 @@ async def _list_memory_session_output_schemas() -> dict[str, dict[str, object] |
         return {tool.name: tool.output_schema for tool in listed.tools}
 
 
+async def _list_memory_session_input_schemas() -> dict[str, dict[str, object]]:
+    server = build_server(build_tool_descriptors())
+    async with connect(server) as session:
+        listed = await session.list_tools()
+        return {tool.name: tool.input_schema for tool in listed.tools}
+
+
 def _object_schema_mapping(value: object) -> dict[str, object]:
     """Validate an SDK JSON-schema fragment before asserting its object shape."""
     assert isinstance(value, dict)
@@ -93,6 +100,17 @@ def test_memory_session_tools_list_preserves_object_shaped_response_envelopes() 
     error_properties = _object_schema_mapping(error_branch["properties"])
     assert success_properties["command"] == {"const": "contract", "type": "string"}
     assert error_properties["status"] == {"const": "error", "type": "string"}
+
+
+def test_memory_session_tools_list_preserves_resolver_backed_action_capabilities() -> None:
+    input_schemas = _run(_list_memory_session_input_schemas())
+    tool_name = tool_name_for_command("overview.status")
+    schema = _object_schema_mapping(input_schemas[tool_name])
+    capabilities = schema["x-cadrumo-action-capabilities"]
+    descriptor = next(item for item in build_tool_descriptors() if item.name == tool_name)
+    assert isinstance(capabilities, list)
+    assert capabilities == descriptor.input_schema["x-cadrumo-action-capabilities"]
+    assert [capability["action_id"] for capability in capabilities] == ["operator.overview.status"]
 
 
 async def _stdio_handshake() -> _HandshakeObservation:

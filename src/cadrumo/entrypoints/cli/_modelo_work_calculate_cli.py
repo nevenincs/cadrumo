@@ -628,9 +628,14 @@ def _work_calculate_source_advisory_output(
     diagnostics = calculation_result.source_diagnostics
     if not diagnostics:
         return [], []
-    notices = [
-        source_diagnostic_notice(diagnostic, code="modelo.work.calculate.source_advisory") for diagnostic in diagnostics
-    ]
+    notices: list[Notice] = []
+    seen_messages: set[str] = set()
+    for diagnostic in diagnostics:
+        notice = source_diagnostic_notice(diagnostic, code="modelo.work.calculate.source_advisory")
+        if notice.message in seen_messages:
+            continue
+        seen_messages.add(notice.message)
+        notices.append(notice)
     lines = [
         tr(
             "cli.app.modelo.work.calculate_source_advisory",

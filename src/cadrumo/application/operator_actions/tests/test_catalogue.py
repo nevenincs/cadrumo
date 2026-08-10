@@ -35,16 +35,18 @@ def _entry(action_id: str, *, argument_name: str = "profile_name") -> ActionCata
 
 
 def test_initial_actions_are_deterministic_and_lookup_by_stable_identity() -> None:
-    action_ids = tuple(entry.action_id for entry in OPERATOR_ACTION_CATALOGUE.entries)
+    action_by_id = {entry.action_id: entry for entry in OPERATOR_ACTION_CATALOGUE.entries}
+    action_ids = tuple(action_by_id)
 
     assert action_ids == (
-        "operator.app.maintenance.reconcile",
         "operator.ledger.evidence.review.list",
         "operator.ledger.link",
         "operator.live.filed.pull_all",
         "operator.live.notifications.list",
+        "operator.maintenance.reconcile",
         "operator.modelo.bindings.list",
         "operator.modelo.describe",
+        "operator.modelo.export",
         "operator.modelo.verification_report.list",
         "operator.modelo.work.calculate",
         "operator.modelo.work.status",
@@ -52,9 +54,12 @@ def test_initial_actions_are_deterministic_and_lookup_by_stable_identity() -> No
         "operator.overview.status",
         "operator.profile.create",
         "operator.profile.edit",
+        "operator.profile.export",
         "operator.profile.import",
+        "operator.profile.list",
         "operator.profile.login",
         "operator.profile.repair_clear_active",
+        "operator.profile.sandbox.prune",
         "operator.profile.sandbox.restore",
         "operator.profile.status",
         "operator.storage.init",

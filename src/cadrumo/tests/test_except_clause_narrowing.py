@@ -92,7 +92,7 @@ class TestWorkbookParityScanNarrowing:
     def test_corrupt_xlsx_returns_failed_report(self, tmp_path) -> None:
         """openpyxl raises BadZipFile on corrupt .xlsx — absorbed into a failed report."""
 
-        from ..domain.calculations.registry import scan_workbook
+        from dev.registry._workbook_parity import scan_workbook
 
         # Create a file with .xlsx extension but not a valid ZIP/OOXML
         bad_xlsx = tmp_path / "bad.xlsx"
@@ -113,7 +113,7 @@ class TestTokenizerFallbackNarrowing:
     """_formula_references falls back to regex on TokenizerError; other errors propagate."""
 
     def test_tokenizer_error_triggers_regex_fallback(self) -> None:
-        from ..domain.calculations.registry._workbook_parity import _formula_references
+        from dev.registry._workbook_parity import _formula_references
 
         # openpyxl Tokenizer raises TokenizerError on malformed formula syntax
         # A formula that starts with '=' but has unmatched parens/brackets
@@ -122,7 +122,7 @@ class TestTokenizerFallbackNarrowing:
         assert isinstance(result, tuple)
 
     def test_well_formed_formula_returns_refs(self) -> None:
-        from ..domain.calculations.registry._workbook_parity import _formula_references
+        from dev.registry._workbook_parity import _formula_references
 
         result = _formula_references("Sheet1", "=SUM(A1,B2,C3)", remaining=10)
         assert isinstance(result, tuple)

@@ -35,7 +35,7 @@ _ACTIVE_TEST_BUCKET_ID = "00000000-0000-4000-8000-000000000000"
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        override_settings(cadrumo_audit_dir=tmp_path / "probe-audit"),
+        override_settings(cadrumo_live_state_dir=tmp_path / "probe-live-state"),
         profile_create_storage_span(_ACTIVE_TEST_BUCKET_ID),
     ):
         workflow_state_repository().update(

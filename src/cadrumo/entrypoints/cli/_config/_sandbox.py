@@ -49,7 +49,13 @@ from ....application.bucket_maintenance import SandboxMergeScope
 from ....application.operator_actions import ActionReference
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
-from ....core.json_contract import ActionArgumentSource, ActionArgumentStatus, Notice, NoticeSeverity, ResolvedActionArgument
+from ....core.json_contract import (
+    ActionArgumentSource,
+    ActionArgumentStatus,
+    Notice,
+    NoticeSeverity,
+    ResolvedActionArgument,
+)
 from .._common import _emit_envelope, resolve_notice_action
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
@@ -564,7 +570,7 @@ def _register_sandbox_archive_command(app: typer.Typer) -> None:
                 ),
                 name=name,
             ),
-            action=resolve_notice_action(
+        action=resolve_notice_action(
                 action=ActionReference(action_id="operator.profile.sandbox.restore"),
                 argument_bindings=(
                     ResolvedActionArgument(
@@ -574,8 +580,8 @@ def _register_sandbox_archive_command(app: typer.Typer) -> None:
                         source=ActionArgumentSource.VERDICT_CONTEXT,
                         source_key="name",
                     ),
-                ),
             ),
+        ),
         )
         _emit_envelope(
             ctx,

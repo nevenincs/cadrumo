@@ -442,7 +442,6 @@ class OverviewStatusReport(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    active_profile: str | None = None
     active_profile_name: str | None = None
     transactions: int = Field(ge=0)
     invoices: int = Field(ge=0)

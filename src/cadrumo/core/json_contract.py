@@ -78,8 +78,16 @@ _PRESENTATION_KEY_TOKENS: Final[frozenset[str]] = frozenset(
         "title",
     }
 )
+#: Case-SENSITIVE by mandate, not by oversight. The product-naming rule makes the
+#: casing carry the meaning: the sole human CLI executable is the exact lowercase
+#: token ``aeat``, while ``AEAT`` names the Spanish tax authority and is retained
+#: wherever the referent is that authority, its official evidence, or its external
+#: protocol. A case-insensitive match therefore cannot distinguish an executable
+#: command from the authority's own name, and refuses legitimate prose such as
+#: "No persisted AEAT session found on disk." What this reserves for the typed
+#: action projection is command identity, which only the lowercase token carries.
 _RAW_AEAT_COMMAND_PATTERN: Final[re.Pattern[str]] = re.compile(
-    r"(?i)(?:^|[\s`'\";|&()])aeat\s+(?:app|config)(?=$|[\s`'\";|&()])"
+    r"(?:^|[\s`'\";|&()])aeat(?=$|[\s`'\";|&()])"
 )
 _RESERVED_ACTION_CONTEXT_KEYS: Final[frozenset[str]] = frozenset(
     {
@@ -438,8 +446,13 @@ class Notice(BaseModel):
             ``"modelo.calculate.unconsumed_iva"``).
         message: Localized operator-facing presentation text. It cannot carry
             an executable command identity.
-        action: Optional schema-resolved, fully materialised next action. It
-            is the only notice field that may identify an executable action.
+        action: Optional schema-resolved action projection, and still the ONLY
+            notice field that may identify an executable action. It carries a
+            :class:`ResolvedPreconditionAction` for a failed precondition or a
+            fully materialised :class:`ResolvedNoticeAction` after success.
+
+            The success shape keeps forward guidance out of locale prose and
+            retains every concrete target argument and its provenance.
         context: Optional deterministic non-action diagnostic metadata (e.g.
             source-resolution ``reason`` / ``source_kind``). Reserved action
             keys and executable command prose are rejected here.
@@ -456,7 +469,7 @@ class Notice(BaseModel):
     severity: NoticeSeverity
     code: str = Field(min_length=1)
     message: str = Field(min_length=1)
-    action: ResolvedNoticeAction | None = None
+    action: ResolvedPreconditionAction | ResolvedNoticeAction | None = None
     context: Mapping[str, str] | None = None
 
     @field_validator("message")

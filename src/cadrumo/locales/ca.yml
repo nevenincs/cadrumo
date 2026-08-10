@@ -1477,8 +1477,6 @@ application:
         sha rebut {manual_id}.
       invalid_manual_rule_kind: El tipus de regla manual ha de ser un de {allowed_rule_kinds};
         s ha rebut {rule_kind}.
-      invalid_oracle_environment: L'entorn dels oracles del registre ha de ser un
-        de {allowed_values}; s'ha rebut {value}.
       invalid_topic_locale: El locale de temes del registre ha de ser un de {allowed_locales};
         sha rebut {locale_code}.
       manual_section_not_found: No sha trobat la secció {section} a {manual_id} {year}
@@ -2060,8 +2058,8 @@ cli:
         confirm_invoice_number_help: Sobreescriu el número de factura extret.
         confirm_iva_rate_help: Sobreescriu el tipus d'IVA extret (ometre per mantenir
           el valor extret).
-        confirm_link_hint_message: Vincula aquesta factura a un moviment del llibre
-          amb `aeat app ledger link`.
+        confirm_link_hint_message: Aquesta factura encara no està vinculada a un moviment
+          del llibre.
         confirm_operation_type_help: 'Clau del model 349 per a un lliurament intracomunitari.
           Obligatòria quan el document declara un lliurament intracomunitari: la categoria
           no permet saber si va seguir una importació exempta.'
@@ -2509,8 +2507,7 @@ cli:
         escrites al disc han rebut el seu registre d'auditoria pendent.
       reconcile_failures_warning: No s'han pogut netejar {count} exportació(ns) de
         perfil interrompudes i s'han conservat per a un intent posterior. Pot quedar
-        al disc un fitxer temporal sense xifrar per a cadascuna. Torna a executar
-        'aeat app maintenance reconcile' quan es resolgui la causa.
+        al disc un fitxer temporal sense xifrar per a cadascuna.
       reconcile_help: Neteja les exportacions de perfil que una fallada va deixar
         a mitges, eliminant qualsevol fitxer temporal sense xifrar i registrant els
         esdeveniments d'auditoria pendents.
@@ -3858,8 +3855,7 @@ cli:
           el registre d''auditoria i les entrades de càlcul entre períodes, a més
           del perfil, el llibre comptable, els càlculs i l''historial de presentacions.
           Si s''exporta amb --recovery-wrap-passphrase, és la via xifrada de transferència
-          entre equips per a paquets de perfil. Desa''l en un lloc segur; restaura''l
-          amb ''aeat config profile archive import''.'
+          entre equips per a paquets de perfil.'
         export_help: Escriu un arxiu de còpia de seguretat completa, segellat i xifrat
           AEAD, a CAMÍ; afegeix --recovery-wrap-passphrase abans d'enviar-lo per correu
           o transferir-lo entre equips.
@@ -3871,8 +3867,7 @@ cli:
         help: Fes còpia de seguretat i restaura un perfil com a arxiu segellat i xifrat
           AEAD (el transport de recuperació de custòdia completa).
         import_active_switch_info: El perfil restaurat {name} ara és el perfil ACTIU;
-          les ordres següents operen sobre ell. Executa 'aeat config login <name>'
-          per canviar el perfil actiu.
+          les ordres següents operen sobre ell.
         import_force_help: Sobreescriu un perfil existent que comparteixi l'identificador
           de bucket de l'arxiu.
         import_help: Restaura un perfil des d'un arxiu segellat i xifrat a CAMÍ.
@@ -3945,8 +3940,10 @@ cli:
         refresh_help: Descàrrega d'AEAT l'últim cens i desa un snapshot
         show_help: Mostra l'últim cens informat per AEAT per a aquest perfil
         snapshot_id_help: Id de snapshot concret (s'accepten prefixos)
-      create_epilog: 'Perfil mínim per a autònom: --entity-type natural_person --tax-id
-        <NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
+      create_epilog: 'Perfil mínim per a autònom: aeat config profile create PROFILE
+        --entity-type natural_person --tax-id <DNI/NIE/NIF> --name <NAME> --surnames
+        <SURNAMES> --activity <ACTIVITY> --irpf-income-categories actividad_economica
+        --quiet --accept-defaults'
       create_help: Inicialitza un perfil actiu nou.
       delete_active_cleared: El perfil eliminat era l'actiu; el punter de perfil actiu
         s'ha esborrat. Executa aeat config login NAME o aeat config profile create
@@ -3988,10 +3985,9 @@ cli:
         de contrasenya es demana (oculta) o es llegeix amb --secrets-stdin, mai per
         argv.
       export_encrypted_info: Aquest paquet de perfil s'ha escrit a {out} amb xifratge
-        AEAD per frase de contrasenya. Importa'l amb 'aeat config profile import RUTA';
-        la frase de contrasenya es demana (oculta) o es llegeix amb --secrets-stdin.
-        Només conté el paquet estructurat del perfil; usa l'arxiu de recuperació xifrat
-        per a una còpia completa amb evidències adjuntes i auditoria.
+        AEAD per frase de contrasenya. Només conté el paquet estructurat del perfil;
+        usa l'arxiu de recuperació xifrat per a una còpia completa amb evidències
+        adjuntes i auditoria.
       export_help: Escriu un paquet portable de perfil xifrat per frase de contrasenya
         a RUTA; el JSON en clar requereix --cleartext-local i només és per a ús local/SAR.
       export_name_help: Perfil que vols exportar; per defecte, l'actiu
@@ -4003,8 +3999,7 @@ cli:
         ha de tenir almenys 8 caràcters.
       export_reconcile_incomplete_warning: No s'han pogut netejar {count} exportació(ns)
         de perfil interrompudes d'una execució anterior. Pot quedar al disc un fitxer
-        temporal sense xifrar per a cadascuna. Executa 'aeat app maintenance reconcile'
-        quan es resolgui la causa.
+        temporal sense xifrar per a cadascuna.
       export_requires_destination: Indica --to RUTA com a destinació del paquet, o
         executa l'ordre en un terminal interactiu perquè se't pregunti.
       export_requires_transport: Usa --encrypt per a un paquet xifrat de transferència,
@@ -4014,8 +4009,7 @@ cli:
         complet, les revisions de càlcul i els registres de presentació. S''ha escrit
         a {out}. Usa''l només per a gestió local/SAR; no l''enviïs per correu, no
         el sincronitzis ni el transfereixis. Esborra''l quan acabi aquesta gestió
-        local/SAR. Selecciona l''exportació xifrada per a un paquet estructurat de
-        transferència xifrat AEAD.'
+        local/SAR.'
       export_transport_conflict: Tria --encrypt o --cleartext-local, no tots dos.
       help: Gestionar valors de configuració del perfil actiu
       history:
@@ -4038,8 +4032,7 @@ cli:
       history_until_help: Filtrar l'historial a esdeveniments en o abans d'aquesta
         marca ISO-8601 (p. ex. 2026-04-30T23:59:59+00:00)
       import_active_switch_info: El perfil importat {name} ara és el perfil ACTIU;
-        les ordres següents operen sobre ell. Executa 'aeat config login <name>' per
-        canviar el perfil actiu.
+        les ordres següents operen sobre ell.
       import_encrypted_bundle_invalid: No s'ha pogut desxifrar o validar el paquet
         de perfil xifrat. Comprova la frase de contrasenya i el fitxer.
       import_help: Registra un paquet portable de perfil des d'un fitxer
@@ -4110,8 +4103,7 @@ cli:
         archive_name_help: Nom del sandbox (sense el prefix).
         archive_requires_yes: Arxivar un sandbox és una transició d'estat. Torna a
           executar 'aeat config profile sandbox archive %{name} --yes' per confirmar.
-        archive_restorable_info: El sandbox ara està latent; executa 'aeat config
-          profile sandbox restore %{name}' per recuperar-lo.
+        archive_restorable_info: El sandbox %{name} ara està latent i es pot recuperar.
         archive_yes_help: Confirma l'arxivat.
         create_active_info: El sandbox és ara el perfil ACTIU; tots els comandaments
           s'executen sobre ell fins que canviï de perfil o el descarti.
@@ -4147,8 +4139,7 @@ cli:
         prune_requires_yes: Descartar tots els sandboxes és destructiu. Torna a executar
           'aeat config profile sandbox prune --yes' per confirmar.
         prune_skipped_active_info: S'ha omès el sandbox actiu %{names}; canvia a un
-          altre perfil i torna a executar 'aeat config profile sandbox prune --yes'
-          per descartar-lo.
+          altre perfil per descartar-lo.
         prune_yes_help: Confirma el descart de tots els sandboxes.
         restore_help: Recupera un sandbox arxivat i el torna a l'estat actiu.
         restore_name_help: Nom del sandbox (sense el prefix).
@@ -4328,32 +4319,73 @@ cli:
       check:
         drifted: L'arbre d'emmagatzematge no coincideix amb la seva declaració.
         help: Verifica l'arbre d'emmagatzematge amb la seva declaració sense reparar-lo
+        issue:
+          missing_path: falta una ruta d'emmagatzematge obligatòria
+          path_type_mismatch: una ruta d'emmagatzematge té un tipus de sistema de
+            fitxers inesperat
+          permissions_drifted: els permisos de l'arrel d'emmagatzematge no compleixen
+            els requisits
         mode_unenforced: Aquesta plataforma no implementa els bits de permisos POSIX,
           així que no s'han comprovat els permisos de l'arrel.
       errors:
-        reclaim_refused: 'es rebutja alliberar %{category}: %{reason}. %{path} conté
-          %{entries} entrades i no se n''ha eliminat cap.'
-        reclaim_unconfirmed: alliberar %{category} elimina %{entries} entrades a %{path}
-          i requereix confirmació explícita.
+        reclaim_area_refused: 'Es rebutja alliberar %{area}: %{reason}. Les %{entries}
+          entrades romanen intactes.'
+        reclaim_area_unconfirmed: Alliberar %{area} elimina %{entries} entrades i
+          requereix confirmació explícita.
       help: Inspecciona i manté l'arbre d'emmagatzematge local
       init:
         already_materialised: Tots els directoris declarats ja existien; no se n'ha
           creat cap.
         help: Crea tots els directoris declarats conservant el que ja hi hagi
+      labels:
+        already_present: Ja presents
+        area: Àrea
+        areas: Àrees
+        checked_areas: Àrees comprovades
+        created: Creats
+        detail: Detall
+        entries: Entrades
+        entry_count: Nombre d'entrades
+        footprint: Mida
+        healthy: Correcte
+        issues: Problemes
+        lifecycle: Cicle de vida
+        'no': 'no'
+        notice_info: Informació
+        notice_warning: Avís
+        occupancy: Ocupació
+        path: Ruta
+        reclaimable: Alliberable
+        removed_entries: Entrades eliminades
+        resolved_paths: Rutes resoltes
+        retained_entries: Entrades conservades
+        storage_root: Arrel d'emmagatzematge
+        targets: Destinacions
+        'yes': sí
       list:
-        help: Mostra cada categoria d'emmagatzematge, la seva ruta i si conté res
+        area_help: Mostra l'ocupació i l'espai agregat de cada àrea d'emmagatzematge
         relocation_is_manual: Per moure l'arbre, atura l'aplicació, copia'l tu mateix
           i després apunta %{variable} a la nova ubicació. Cap ordre no el mou, perquè
           una còpia que acaba per als registres però no per al material de claus deixa
           tots dos inservibles.
       reclaim:
-        category_help: Categoria d'emmagatzematge que es vol alliberar
-        help: Elimina el contingut regenerable d'una categoria d'emmagatzematge
+        area_argument_help: Àrea d'emmagatzematge que es vol alliberar
+        area_help: Elimina el contingut regenerable d'una àrea d'emmagatzematge
         incomplete: Algunes entrades no s'han pogut eliminar i encara són al disc.
         yes_help: Confirma l'eliminació; sense aquesta opció l'ordre es rebutja
       show:
-        category_help: Categoria d'emmagatzematge que es vol mostrar
-        help: Mostra una categoria d'emmagatzematge completa
+        area_argument_help: Àrea d'emmagatzematge que es vol mostrar
+        area_help: Mostra una àrea d'emmagatzematge completa
+      values:
+        lifecycle:
+          durable: duradora
+          mixed: mixta
+          reclaimable: alliberable
+        occupancy:
+          absent: absent
+          empty: buida
+          populated: amb dades
+          unresolved: sense resoldre
     unset:
       help: Eliminar el valor assignat a una clau de configuració
       key_help: Clau a netejar
@@ -5073,8 +5105,7 @@ cli:
       note_help: Nota opcional registrada a cada fitxer adjunt obtingut.
       notices:
         files_refused: '%{refused_count} fitxer(s) d''aquesta carpeta no s''han pogut
-          obtenir sota el permís drive.file; descàrrega''ls manualment i adjunta''ls
-          amb ''aeat app ledger attach --attachment-id ...''.'
+          obtenir sota el permís drive.file; descàrrega''ls manualment i adjunta''ls.'
     remove:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       dry_run_help: Informar els efectes sense eliminar el moviment del llibre
@@ -5112,7 +5143,7 @@ cli:
       child_description_help: Descripció d'una transacció filla; es pot repetir
       classification_dropped: La classificació del pare %{classification} no s'ha
         copiat als fills de la divisió; cada fill queda com a NOT_YET_PROCESSED i
-        necessita una classificació independent.
+        necessita reclassificar-se.
       errors:
         child_args_mismatch: Cada import fill ha de tenir una descripció filla corresponent
         min_two_children: Has d'indicar almenys dues transaccions filles
@@ -5285,53 +5316,62 @@ cli:
         storage_check: Comprova directoris absents o mal ubicats a l'arbre d'emmagatzematge.
         storage_init: Crea qualsevol directori d'emmagatzematge que falti
         storage_list: Consulta on es desa cada tipus de dada local
-        storage_reclaim: Allibera espai eliminant una categoria que l'aplicació pot
-          reconstruir
-        storage_show: Consulta una categoria d'emmagatzematge en detall
+        storage_reclaim: Allibera espai eliminant una àrea que l'aplicació pot reconstruir
+        storage_show: Consulta una àrea d'emmagatzematge en detall
       root:
-        diagnostics_live_filed: Diagnosticar les declaracions presentades capturades
-          en viu.
-        diagnostics_overview: Mostrar el diagnòstic general de l'estat del sistema.
-        diagnostics_registry_inspect: Inspeccionar el registre de models fiscals.
-        diagnostics_repair: Executar comprovacions de salut i reparar l'estat de l'aplicació.
-        diagnostics_review_queue: Mostrar la cua de revisió pendent.
-        footer: Executeu 'aeat <ordre> --help' per obtenir més informació sobre cada
-          ordre.
-        heading: CADRUMO, eina de declaracions fiscals amb l'AEAT.
-        ledger_allocate: Assignar transaccions a un període fiscal.
-        ledger_archive: Arxivar entrades del llibre de transaccions.
-        ledger_attach: Adjuntar un fitxer d'origen a una entrada del llibre.
-        ledger_classify: Classificar transaccions del llibre segons la naturalesa
-          fiscal.
-        ledger_export: Exportar el llibre de transaccions.
-        ledger_import: Importar transaccions al llibre des d'una font externa.
-        ledger_list: Llistar entrades del llibre de transaccions.
-        ledger_remove: Eliminar una entrada del llibre de transaccions.
-        ledger_reset: Reiniciar l'estat del llibre de transaccions.
-        ledger_review: Revisar entrades del llibre per a la classificació fiscal.
-        ledger_stash: Desar temporalment els canvis pendents del llibre.
-        ledger_status: Mostrar l'estat del llibre de transaccions.
-        ledger_update: Actualitzar una entrada del llibre de transaccions.
-        ledger_view: Veure el detall d'una entrada del llibre.
-        modelo_bindings_list: Llistar les vinculacions del model fiscal actiu.
-        modelo_list: Llistar els models fiscals disponibles.
-        modelo_work: 'Treballar amb un model fiscal: introduir dades, calcular i exportar.'
-        paragraph_storage_isolation: Per a una execució aillada des de zero, definiu
-          CADRUMO_LOCAL_STORAGE_ROOT, CADRUMO_SECRET_STORE_BACKEND=file, CADRUMO_SECRET_STORE_DIR
-          i CADRUMO_SECRET_PASSPHRASE; els logs queden per defecte sota aquest directori
-          d'emmagatzematge.
-        paragraph_two_roots: 'Dues superficies principals: ''app'' per a operacions
-          de declaració i ''config'' per a configuració i diagnòstic.'
-        paragraph_type_help: Escriviu 'aeat <ordre> --help' per obtenir ajuda detallada.
-        section_daily_ledger: Llibre diari de transaccions
+        diagnostics_logs: Mostra la ruta del registre i les últimes línies.
+        diagnostics_overview_verbose: Mostra l'estat general amb més detall.
+        diagnostics_repair_json: Retorna en JSON l'informe complet de salut local.
+        diagnostics_version: Mostra l'empremta del paquet i del registre.
+        family_app: Obre les ordres fiscals vinculades al perfil.
+        family_config: Obre perfils, sessió, custòdia, emmagatzematge i reparació.
+        footer: 'Detalls: --help. Elimina dades sensibles; després informa a github.com/nevenincs/cadrumo/issues.'
+        heading: CADRUMO - flux local amb l'Agència Estatal d'Administració Tributària
+          (AEAT)
+        paragraph_app_root: L'arrel app gestiona resum, llibre, models, revisió, registre
+          i lectures autenticades de l'AEAT.
+        paragraph_config_root: L'arrel config gestiona perfils, dades locals xifrades,
+          claus de recuperació, sessions, autenticació amb l'AEAT i reparació.
+        paragraph_local_first: CADRUMO conserva les dades fiscals en local i exposa
+          exactament dues arrels d'ordres.
+        paragraph_privacy: Les etiquetes de perfil són visibles. Es protegeixen identitats
+          fiscals, credencials, identificadors d'emmagatzematge, claus d'objecte i
+          contingut sensible d'adreces web.
+        paragraph_profile_terms: Un perfil desa fets i ajustos locals d'un contribuent.
+          El perfil actiu és el context seleccionat. Una sessió permet reprendre l'accés
+          a les dades xifrades.
+        paragraph_review_terms: La cua de revisió conté troballes que requereixen
+          actuació. El registre conté regles i fonts fiscals validades i versionades;
+          no desa dades fiscals ni presenta declaracions.
+        paragraph_tax_terms: El llibre conté moviments importats. Un model és un formulari
+          oficial de l'AEAT, diferent de la seva unitat de treball o exportació local.
+        recovery_login: Inicia o renova una sessió absent, tancada o caducada.
+        recovery_passphrase: Recupera el magatzem de secrets amb el codi registrat.
+        recovery_profile: Inspecciona un problema detectat al punter del perfil actiu.
+        recovery_repair: Abans de canviar dades, executa aquest informe de salut de
+          només lectura.
+        section_command_families: Famílies d'ordres
         section_diagnostics: Diagnòstic
-        section_modelo_lifecycle: Cicle de vida del model
-        section_setup: Configuració
-        setup_configure_auth: Configurar l'autenticació amb l'AEAT.
-        setup_create_profile: Crear un nou perfil de contribuent.
-        setup_inspect_profile: Inspeccionar el perfil de contribuent actiu.
+        section_recovery: Reprendre o recuperar
+        section_start_resume: Començar o continuar
+        section_workflow: Flux principal
+        start_create: Crea el primer perfil fiscal local.
+        start_edit: Completa o corregeix un perfil incomplet.
+        start_list: Llista els perfils registrats i identifica l'actiu.
+        start_login: Selecciona un perfil i inicia o renova la sessió.
+        start_status: Comprova la preparació i l'acció següent autoritzada.
+        workflow_import: Importa moviments bancaris o comptables.
+        workflow_ledger_review: Revisa les files importades que requereixen atenció.
+        workflow_modelo: Crea o gestiona unitats de treball de models.
+        workflow_overview: Resumeix l'estat del perfil i del treball.
+        workflow_profile_status: Mostra la preparació del perfil.
+        workflow_registry: Inspecciona metadades i fonts validades del registre.
+        workflow_review_queue: Mostra elements del perfil pendents de revisió.
+        workflow_verification: Llista informes desats de verificació de declaracions.
     landing:
       active_profile_message: 'Perfil actiu: %{profile}.'
+      active_profile_unavailable_message: Hi ha un perfil actiu seleccionat, però
+        la seva etiqueta no està disponible.
       no_active_profile_message: No hi ha cap perfil actiu.
       text_template: '%{message} Ordre suggerida: %{command}'
   overview:
@@ -5505,9 +5545,6 @@ cli:
     year_help: Any de declaració per a --period (p. ex. 2024).
   registry:
     app_help: Gestió del registre de models fiscals
-    audit_oracles_environment_help: Entorn del catàleg de paritat en viu a auditar
-      (production, test_environment o both)
-    audit_oracles_help: Mostrar discrepàncies d'oracles de paritat en viu a l'arrencada
     casilla_help: Id de casella a comparar; repetiu-lo per substituir les caselles
       calculades per defecte
     citations:
@@ -5549,26 +5586,17 @@ cli:
       view_help: Mostrar l'estructura d'un manual i, opcionalment, una secció
       year_help: Any fiscal del manual (p. ex. 2024)
     metrics:
-      applicability_declaration_count: declaracions d'aplicabilitat
       application_link_count: vincles d'aplicació
       application_link_surfaces: superficies de vincle d'aplicació
       artefact_refs: refs d'artefacte
-      backend_exists: backend existent
       captured_count: captures
       casilla_count: caselles
       compared_casillas: caselles comparades
-      comparison_count: comparacions
       cross_reference_count: referències creuades
-      difference_count: diferències
-      differences: diferències
       drift_count: desviacions
-      environment: entorn
       extraction_profile_count: perfils d'extracció
-      failed_count: fallades
       failed_declaration_count: Nombre de declaracions fallides
-      failure_count: errors
       formula_count: fórmules
-      formula_workbook_count: llibres de fórmules
       legal_reference_count: referències legals
       missing_filed_casillas: caselles presentades que falten
       missing_local_casillas: caselles locals que falten
@@ -5576,48 +5604,22 @@ cli:
       modelo_count: models
       modelos: models
       observation_paths: rutes d'observació
-      orphan_oracle_ids: ids d'oracle orfes
-      passed: aprovades
-      registered_oracle_ids: ids d'oracle registrats
       revision: revisió
       revision_count: revisions
       row_count: files
-      runner_detail: detall del runner
-      runner_status: estat del runner
-      scanned_count: escanejades
-      scenario_id: id d'escenari
       source_reference_count: referències de font
       status: estat
-      tape_path: ruta de la cinta
-      unsupported_xls_count: xls no admesos
       verification_expectation_count: expectatives de verificació
       verified: verificades
-      workbook_count: llibres de treball
       workbook_parity_ref_count: refs de paritat del llibre
-      workbook_path: ruta del llibre de treball
     observation_help: Manifest xifrat d'observació de declaració presentada que cal
       verificar
-    parity_app_help: Executar escenaris i cintes de paritat per a comprovacions manuals
-    parity_output_help: Fitxer JSON de destinació per a la cinta de paritat generada
-    parity_replay_help: Reproduir una cinta de paritat arxivada contra el runtime
-      actual del registre
-    parity_run_help: Executar un escenari de paritat desat i arxivar la cinta resultant
-    parity_scenario_help: Ruta a un fitxer JSON d'escenari de paritat
-    parity_store_root_help: Directori arrel usat per desar les cintes de paritat generades
-    parity_tape_help: Ruta a un fitxer JSON de cinta de paritat desada
     source_observation_help: Manifest xifrat d'observació font requerit per vinculacions
       de declaracions prèvies o relacions
     verify_filed_state_help: Comparar el càlcul local del registre amb l'estat presentat
       capturat de l'AEAT
     verify_help: Verificar la integritat del registre local
     verify_source_root_help: Ruta al directori d'origen per verificar
-    workbooks_app_help: Gestió de llibres de treball del registre
-    workbooks_limit_help: Límit de llibres a compilar
-    workbooks_output_help: Directori de sortida per als llibres compilats
-    workbooks_resume_help: Reprendre la compilació de llibres des de l'últim punt
-    workbooks_root_help: Directori arrel que conté les definicions dels llibres
-    workbooks_timeout_help: Temps d'espera màxim (en segons) per a la compilació
-    workbooks_verify_help: Verificar la integritat dels llibres de treball generats
   review:
     app_help: Cua de revisió humana per a registres que requereixen criteri de l'operador
     errors:
@@ -5661,25 +5663,37 @@ cli:
     format_help: 'Format de sortida: text, json.'
     help_help: Mostra l'ajuda.
     landing:
+      context_heading: Context actual
       headline: Assistent fiscal CADRUMO
-      help_line: 'Més ajuda: executeu `aeat --help`, `aeat config --help` o `aeat
-        app --help`. Els modificadors globals (`--format json`, `--language ca`, `--profile
-        NOM`, `--quiet`, `--verbose`, `--debug`) han de posar-se ABANS del subcomandament,
-        p. ex. `aeat --format json app ledger list` (no `aeat app ledger list --format
-        json`).'
-      quick_start_heading: Inici rapid
-      quick_start_import: '  3. `aeat app ledger import <extracte-bancari.csv> --provider
-        csv` - afegir els moviments bancaris.'
-      quick_start_repair: '  5. `aeat config repair` - diagnosticar configuració,
-        emmagatzematge i salut local.'
-      quick_start_review: '  4. `aeat app ledger review` - revisar i classificar les
+      help_line: 'Més ajuda: executa `aeat --help`, `aeat config --help` o `aeat app
+        --help`. Els modificadors globals inclouen `--format json`, `--language ca`,
+        `--profile NOM`, `--quiet`, `--verbose` i `--debug`. Posa''ls abans del subcomandament.
+        Per exemple, executa `aeat --format json app ledger list`, no `aeat app ledger
+        list --format json`.'
+      privacy_line: 'Privacitat: les etiquetes de perfil són visibles; les dades fiscals
+        i els identificadors d''emmagatzematge queden protegits.'
+      profile_repair_command: 'Repara l''estat del perfil: `aeat config repair profile`.'
+      quick_start_heading: Inici ràpid
+      quick_start_import: '  3. `aeat app ledger import --file extracte.csv --provider
+        csv` - importa moviments.'
+      quick_start_modelo: '  5. `aeat app modelo work --help` - mostra les accions
+        per crear, calcular, verificar i exportar.'
+      quick_start_queue: '  6. `aeat app review queue` - localitza elements del perfil
+        que requereixen atenció.'
+      quick_start_repair: '  7. `aeat config repair` - inspecciona configuració, emmagatzematge
+        i salut local.'
+      quick_start_review: '  4. `aeat app ledger review` - revisa i classifica les
         files importades.'
-      quick_start_setup_done: '  1. `aeat config profile status` - comprovar el perfil
-        actiu abans del treball operatiu.'
-      quick_start_setup_needed: '  1. `aeat config profile create NAME` - crear primer
-        el perfil fiscal local.'
-      quick_start_status: '  2. `aeat app overview status` - llegir l''estat actual
-        de l''espai i els diagnòstics.'
+      quick_start_setup_done: '  1. `aeat config profile status` - comprova la preparació
+        i l''acció següent.'
+      quick_start_setup_login: '  1. `aeat config login NAME` - activa un perfil de
+        contribuent registrat.'
+      quick_start_setup_needed: '  1. `aeat config profile create NAME` - crea un
+        perfil fiscal local.'
+      quick_start_setup_repair: '  1. `aeat config repair profile` - inspecciona i
+        repara el perfil seleccionat.'
+      quick_start_status: '  2. `aeat app overview status` - resumeix l''estat del
+        perfil i del treball.'
       section_config: '  config - perfil, autenticació i diagnòstics'
       section_ledger: '  app ledger - importació bancària i revisió de moviments'
       section_modelo: '  app modelo - catàleg de models i unitats de treball'
@@ -5687,10 +5701,17 @@ cli:
       section_registry: '  app registry - dades locals del registre AEAT'
       section_review: '  app review - elements que necessiten atenció'
       sections_heading: Seccions principals
-      tagline: Flux fiscal espanyol local-first per a autònoms.
-      welcome_no_profile: Benvingut. Encara no hi ha cap perfil actiu configurat;
-        comenceu per la configuració.
-      welcome_profile: Benvingut de nou. El perfil actiu és `%{profile}`.
+      session_login_command: 'Inicia o renova una sessió de perfil: `aeat config login
+        [NAME]`.'
+      session_status_command: 'Comprova la preparació: `aeat config profile status`.'
+      session_unchecked: La sessió i la preparació no s'infereixen del perfil seleccionat.
+      tagline: Flux local amb l'Agència Estatal d'Administració Tributària (AEAT)
+        per a contribuents i assessors.
+      welcome_no_profile: 'Perfil actiu: cap. Crea''n un abans del treball vinculat
+        al perfil.'
+      welcome_profile: 'Perfil actiu: `%{profile}`.'
+      welcome_profile_unavailable: 'Perfil actiu: no disponible. Repara el perfil
+        seleccionat abans del treball vinculat al perfil.'
     language_help: Idioma de la sortida i del text d'ajuda (en, es, ca, hu).
     profile_help: Nom del perfil actiu.
     quiet_help: Mostra només els errors.
@@ -7177,10 +7198,10 @@ errors:
       activa. Executa `aeat config login NAME` i torna-ho a provar.
     refused_storage_passphrase_too_short: La frase de contrasenya és massa curta.
       Ha de tenir com a mínim 8 caràcters.
-    refused_storage_reclaim: 'Es rebutja alliberar aquesta categoria d''emmagatzematge:
-      el seu cicle de vida declarat conserva el seu contingut.'
-    refused_storage_reclaim_unconfirmed: Alliberar una categoria d'emmagatzematge
-      elimina dades i requereix confirmació explícita.
+    refused_storage_reclaim: 'Es rebutja alliberar aquesta àrea d''emmagatzematge:
+      el seu cicle de vida declarat conserva el contingut.'
+    refused_storage_reclaim_unconfirmed: Alliberar una àrea d'emmagatzematge elimina
+      dades i requereix confirmació.
     refused_storage_secret_already_exists: Ja existeix un secret amb aquesta clau.
       Fes servir l'opció de sobreescriptura si el vols reemplaçar.
     refused_storage_session_expired: La sessió activa ha caducat per inactivitat.
@@ -7438,6 +7459,7 @@ flows:
     language:
       unavailable: Aquest perfil no ofereix cap configuració d'idioma.
     progress: '{present} de {total} camps emplenats, en falten {missing} per presentar'
+    required_complete: Hi és tota la informació del perfil requerida per l'esquema.
     recovery_boundary: 'La creació i la rotació del codi de recuperació només es fan
       des del terminal: aeat config recovery create / aeat config recovery rotate.
       Les 24 paraules es mostren una sola vegada i no es poden tornar a mostrar.'
@@ -7573,6 +7595,11 @@ live:
       objectiu.
     year_range_invalid: El rang d'exercicis indicat no és vàlid.
   filed:
+    pull:
+      submitted_file_extraction_failed: 'La declaració del model {modelo} {period}
+        {ejercicio} (expedient {expediente_id}) no s''ha pogut llegir mitjançant el
+        disseny del fitxer presentat. El PDF de la declaració, si l''AEAT el va proporcionar,
+        continua sent l''única via d''extracció. Motiu de l''analitzador: {reason}'
     pull_all:
       denominator_note_profile: Mesurat sobre {expected} parell(s) que esperen les
         dades declarades pel mateix contribuent. Uns altres {offered_only} parell(s)
@@ -66501,395 +66528,522 @@ modelo:
         2026-y-siguientes:
           casilla:
             '01':
-              help: null
-              label: null
+              help: 'Casella 01: base imposable de l''IVA meritat en el règim general
+                al tipus superreduït del 4%.'
+              label: IVA meritat, règim general tipus superreduït 4% - base imposable
             '02':
-              help: null
-              label: null
+              help: 'Casella 02: percentatge del tipus de l''IVA meritat en el règim
+                general al tipus superreduït del 4%.'
+              label: IVA meritat, règim general tipus superreduït 4% - percentatge
+                del tipus
             '03':
-              help: null
-              label: null
+              help: 'Casella 03: quota d''IVA meritat en el règim general al tipus
+                superreduït del 4%.'
+              label: IVA meritat, règim general tipus superreduït 4% - quota
             '04':
-              help: null
-              label: null
+              help: 'Casella 04: base imposable de l''IVA meritat en el règim general
+                al tipus reduït del 10%.'
+              label: IVA meritat, règim general tipus reduït 10% - base imposable
             '05':
-              help: null
-              label: null
+              help: 'Casella 05: percentatge del tipus de l''IVA meritat en el règim
+                general al tipus reduït del 10%.'
+              label: IVA meritat, règim general tipus reduït 10% - percentatge del
+                tipus
             '06':
-              help: null
-              label: null
+              help: 'Casella 06: quota d''IVA meritat en el règim general al tipus
+                reduït del 10%.'
+              label: IVA meritat, règim general tipus reduït 10% - quota
             '07':
-              help: null
-              label: null
+              help: 'Casella 07: base imposable de l''IVA meritat en el règim general
+                al tipus general del 21%.'
+              label: IVA meritat, règim general tipus general 21% - base imposable
             08:
-              help: null
-              label: null
+              help: 'Casella 08: percentatge del tipus de l''IVA meritat en el règim
+                general al tipus general del 21%.'
+              label: IVA meritat, règim general tipus general 21% - percentatge del
+                tipus
             09:
-              help: null
-              label: null
+              help: 'Casella 09: quota d''IVA meritat en el règim general al tipus
+                general del 21%.'
+              label: IVA meritat, règim general tipus general 21% - quota
             '10':
-              help: null
-              label: null
+              help: 'Casella 10: base de l''IVA meritat per adquisicions intracomunitàries
+                de béns i serveis.'
+              label: IVA meritat per adquisicions intracomunitàries de béns i serveis
+                - base
             '108':
-              help: null
-              label: null
+              help: 'Casella 108: altres ajustos en una autoliquidació rectificativa
+                per supòsits determinats per discrepància de criteri administratiu.'
+              label: Rectificativa - altres ajustos en supòsits determinats per discrepància
+                de criteri administratiu
             '109':
-              help: null
-              label: null
+              help: 'Casella 109: devolucions acordades per l''AEAT en autoliquidacions
+                anteriors del mateix exercici i període.'
+              label: Resultat - devolucions acordades per l'AEAT d'autoliquidacions
+                anteriors de l'exercici i període
             '11':
-              help: null
-              label: null
+              help: 'Casella 11: quota d''IVA meritat per adquisicions intracomunitàries
+                de béns i serveis.'
+              label: IVA meritat per adquisicions intracomunitàries de béns i serveis
+                - quota
             '111':
-              help: null
-              label: null
+              help: 'Casella 111: import de la rectificació declarat en una autoliquidació
+                rectificativa.'
+              label: Rectificativa - import de la rectificació
             '112':
               help: null
               label: null
             '12':
-              help: null
-              label: null
+              help: 'Casella 12: base de l''IVA meritat per altres operacions amb
+                inversió del subjecte passiu excloses les intracomunitàries.'
+              label: IVA meritat per altres operacions amb inversió del subjecte passiu
+                excloses les intracomunitàries - base
             '120':
-              help: null
-              label: null
+              help: 'Casella 120: informació addicional sobre operacions no subjectes
+                per regles de localització, exclosa la casella 123.'
+              label: Informació addicional - operacions no subjectes per regles de
+                localització, exclosa la casella 123
             '122':
-              help: null
-              label: null
+              help: 'Casella 122: informació addicional sobre operacions subjectes
+                a inversió del subjecte passiu.'
+              label: Informació addicional - operacions subjectes a inversió del subjecte
+                passiu
             '123':
-              help: null
-              label: null
+              help: 'Casella 123: informació addicional sobre operacions no subjectes
+                per regles de localització en règims especials de finestreta única.'
+              label: Informació addicional - operacions no subjectes per localització
+                en règims especials de finestreta única
             '124':
-              help: null
-              label: null
+              help: 'Casella 124: informació addicional sobre operacions subjectes
+                en règims especials de finestreta única.'
+              label: Informació addicional - operacions subjectes en règims especials
+                de finestreta única
             '13':
-              help: null
-              label: null
+              help: 'Casella 13: quota d''IVA meritat per altres operacions amb inversió
+                del subjecte passiu excloses les intracomunitàries.'
+              label: IVA meritat per altres operacions amb inversió del subjecte passiu
+                excloses les intracomunitàries - quota
             '14':
-              help: null
-              label: null
+              help: 'Casella 14: base imposable de la modificació de bases i quotes
+                d''IVA meritat.'
+              label: Modificació de bases i quotes d'IVA meritat - base imposable
             '15':
-              help: null
-              label: null
+              help: 'Casella 15: quota de la modificació de bases i quotes d''IVA
+                meritat.'
+              label: Modificació de bases i quotes d'IVA meritat - quota
             '150':
-              help: null
-              label: null
+              help: 'Casella 150: base imposable de l''IVA meritat en el règim general
+                nou tipus tram 1.'
+              label: IVA meritat, règim general nou tipus tram 1 - base imposable
             '151':
-              help: null
-              label: null
+              help: 'Casella 151: percentatge del tipus de l''IVA meritat en el règim
+                general nou tipus tram 1.'
+              label: IVA meritat, règim general nou tipus tram 1 - percentatge del
+                tipus
             '152':
-              help: null
-              label: null
+              help: 'Casella 152: quota d''IVA meritat en el règim general nou tipus
+                tram 1.'
+              label: IVA meritat, règim general nou tipus tram 1 - quota
             '153':
-              help: null
-              label: null
+              help: 'Casella 153: base imposable de l''IVA meritat en el règim general
+                nou tipus tram 2.'
+              label: IVA meritat, règim general nou tipus tram 2 - base imposable
             '154':
-              help: null
-              label: null
+              help: 'Casella 154: percentatge del tipus de l''IVA meritat en el règim
+                general nou tipus tram 2.'
+              label: IVA meritat, règim general nou tipus tram 2 - percentatge del
+                tipus
             '155':
-              help: null
-              label: null
+              help: 'Casella 155: quota d''IVA meritat en el règim general nou tipus
+                tram 2.'
+              label: IVA meritat, règim general nou tipus tram 2 - quota
             '156':
-              help: null
-              label: null
+              help: 'Casella 156: base imposable del recàrrec d''equivalència al 0,5%.'
+              label: Recàrrec d'equivalència al 0,5% - base imposable
             '157':
-              help: null
-              label: null
+              help: 'Casella 157: percentatge del tipus del recàrrec d''equivalència
+                al 0,5%.'
+              label: Recàrrec d'equivalència al 0,5% - percentatge del tipus
             '158':
-              help: null
-              label: null
+              help: 'Casella 158: quota del recàrrec d''equivalència al 0,5%.'
+              label: Recàrrec d'equivalència al 0,5% - quota
             '16':
-              help: null
-              label: null
+              help: 'Casella 16: base imposable del recàrrec d''equivalència al 1,0%.'
+              label: Recàrrec d'equivalència al 1,0% - base imposable
             '165':
-              help: null
-              label: null
+              help: 'Casella 165: base imposable de l''IVA meritat en el règim general
+                al tipus del 2% des de 2024.'
+              label: IVA meritat, règim general tipus 2% des de 2024 - base imposable
             '166':
-              help: null
-              label: null
+              help: 'Casella 166: percentatge del tipus de l''IVA meritat en el règim
+                general al tipus del 2% des de 2024.'
+              label: IVA meritat, règim general tipus 2% des de 2024 - percentatge
+                del tipus
             '167':
-              help: null
-              label: null
+              help: 'Casella 167: quota d''IVA meritat en el règim general al tipus
+                del 2% des de 2024.'
+              label: IVA meritat, règim general tipus 2% des de 2024 - quota
             '168':
-              help: null
-              label: null
+              help: 'Casella 168: base imposable del nou tipus de recàrrec d''equivalència
+                des de 2024.'
+              label: Nou tipus de recàrrec d'equivalència des de 2024 - base imposable
             '169':
-              help: null
-              label: null
+              help: 'Casella 169: percentatge del tipus del nou recàrrec d''equivalència
+                des de 2024.'
+              label: Nou tipus de recàrrec d'equivalència des de 2024 - percentatge
+                del tipus
             '17':
-              help: null
-              label: null
+              help: 'Casella 17: percentatge del tipus del recàrrec d''equivalència
+                al 1,0%.'
+              label: Recàrrec d'equivalència al 1,0% - percentatge del tipus
             '170':
-              help: null
-              label: null
+              help: 'Casella 170: quota del nou recàrrec d''equivalència des de 2024.'
+              label: Nou tipus de recàrrec d'equivalència des de 2024 - quota
             '18':
-              help: null
-              label: null
+              help: 'Casella 18: quota del recàrrec d''equivalència al 1,0%.'
+              label: Recàrrec d'equivalència al 1,0% - quota
             '19':
-              help: null
-              label: null
+              help: 'Casella 19: base imposable del recàrrec d''equivalència al 1,4%.'
+              label: Recàrrec d'equivalència al 1,4% - base imposable
             '20':
-              help: null
-              label: null
+              help: 'Casella 20: percentatge del tipus del recàrrec d''equivalència
+                al 1,4%.'
+              label: Recàrrec d'equivalència al 1,4% - percentatge del tipus
             '21':
-              help: null
-              label: null
+              help: 'Casella 21: quota del recàrrec d''equivalència al 1,4%.'
+              label: Recàrrec d'equivalència al 1,4% - quota
             '22':
-              help: null
-              label: null
+              help: 'Casella 22: base imposable del recàrrec d''equivalència al 5,2%.'
+              label: Recàrrec d'equivalència al 5,2% - base imposable
             '23':
-              help: null
-              label: null
+              help: 'Casella 23: percentatge del tipus del recàrrec d''equivalència
+                al 5,2%.'
+              label: Recàrrec d'equivalència al 5,2% - percentatge del tipus
             '24':
-              help: null
-              label: null
+              help: 'Casella 24: quota del recàrrec d''equivalència al 5,2%.'
+              label: Recàrrec d'equivalència al 5,2% - quota
             '25':
-              help: null
-              label: null
+              help: 'Casella 25: base imposable de la modificació de bases i quotes
+                del recàrrec d''equivalència.'
+              label: Modificació de bases i quotes del recàrrec d'equivalència - base
+                imposable
             '26':
-              help: null
-              label: null
+              help: 'Casella 26: quota de la modificació de bases i quotes del recàrrec
+                d''equivalència.'
+              label: Modificació de bases i quotes del recàrrec d'equivalència - quota
             '27':
-              help: null
-              label: null
+              help: 'Casella 27: total de la quota meritada.'
+              label: Total quota meritada
             '28':
-              help: null
-              label: null
+              help: 'Casella 28: base de l''IVA deduïble en operacions interiors corrents.'
+              label: IVA deduïble en operacions interiors corrents - base
             '29':
-              help: null
-              label: null
+              help: 'Casella 29: quota d''IVA deduïble en operacions interiors corrents.'
+              label: IVA deduïble en operacions interiors corrents - quota
             '30':
-              help: null
-              label: null
+              help: 'Casella 30: base de l''IVA deduïble en operacions interiors de
+                béns d''inversió.'
+              label: IVA deduïble en operacions interiors de béns d'inversió - base
             '31':
-              help: null
-              label: null
+              help: 'Casella 31: quota d''IVA deduïble en operacions interiors de
+                béns d''inversió.'
+              label: IVA deduïble en operacions interiors de béns d'inversió - quota
             '32':
-              help: null
-              label: null
+              help: 'Casella 32: base de l''IVA deduïble en importacions de béns corrents.'
+              label: IVA deduïble en importacions de béns corrents - base
             '33':
-              help: null
-              label: null
+              help: 'Casella 33: quota d''IVA deduïble en importacions de béns corrents.'
+              label: IVA deduïble en importacions de béns corrents - quota
             '34':
-              help: null
-              label: null
+              help: 'Casella 34: base de l''IVA deduïble en importacions de béns d''inversió.'
+              label: IVA deduïble en importacions de béns d'inversió - base
             '35':
-              help: null
-              label: null
+              help: 'Casella 35: quota d''IVA deduïble en importacions de béns d''inversió.'
+              label: IVA deduïble en importacions de béns d'inversió - quota
             '36':
-              help: null
-              label: null
+              help: 'Casella 36: base de l''IVA deduïble en adquisicions intracomunitàries
+                corrents.'
+              label: IVA deduïble en adquisicions intracomunitàries corrents - base
             '37':
-              help: null
-              label: null
+              help: 'Casella 37: quota d''IVA deduïble en adquisicions intracomunitàries
+                corrents.'
+              label: IVA deduïble en adquisicions intracomunitàries corrents - quota
             '38':
-              help: null
-              label: null
+              help: 'Casella 38: base de l''IVA deduïble en adquisicions intracomunitàries
+                de béns d''inversió.'
+              label: IVA deduïble en adquisicions intracomunitàries de béns d'inversió
+                - base
             '39':
-              help: null
-              label: null
+              help: 'Casella 39: quota d''IVA deduïble en adquisicions intracomunitàries
+                de béns d''inversió.'
+              label: IVA deduïble en adquisicions intracomunitàries de béns d'inversió
+                - quota
             '40':
-              help: null
-              label: null
+              help: 'Casella 40: base de la rectificació de deduccions.'
+              label: Rectificació de deduccions - base
             '41':
-              help: null
-              label: null
+              help: 'Casella 41: quota de la rectificació de deduccions.'
+              label: Rectificació de deduccions - quota
             '42':
-              help: null
-              label: null
+              help: 'Casella 42: quota de compensacions del règim especial d''agricultura,
+                ramaderia i pesca.'
+              label: Compensacions del règim especial d'agricultura, ramaderia i pesca
+                - quota
             '43':
-              help: null
-              label: null
+              help: 'Casella 43: quota de regularització de béns d''inversió.'
+              label: Regularització de béns d'inversió - quota
             '44':
-              help: null
-              label: null
+              help: 'Casella 44: quota de regularització de prorrata per percentatge
+                definitiu.'
+              label: Regularització de prorrata per percentatge definitiu - quota
             '45':
-              help: null
-              label: null
+              help: 'Casella 45: total de la quota d''IVA a deduir.'
+              label: Total a deduir - quota
             '47':
-              help: null
-              label: null
+              help: 'Casella 47: suma d''ingressos a compte del conjunt d''activitats
+                en règim simplificat en el 1T, 2T o 3T.'
+              label: Règim simplificat, 1T-2T-3T - suma d'ingressos a compte del conjunt
+                d'activitats
             '48':
-              help: null
-              label: null
+              help: 'Casella 48: suma de quotes derivades del conjunt d''activitats
+                en règim simplificat en el 4T.'
+              label: Règim simplificat, 4T - suma de quotes derivades del conjunt
+                d'activitats
             '49':
-              help: null
-              label: null
+              help: 'Casella 49: suma d''ingressos a compte realitzats durant l''exercici
+                en règim simplificat en el 4T.'
+              label: Règim simplificat, 4T - suma d'ingressos a compte realitzats
+                en l'exercici
             '50':
-              help: null
-              label: null
+              help: 'Casella 50: resultat del règim simplificat en el 4T, calculat
+                com la casella 48 menys la casella 49.'
+              label: Règim simplificat, 4T - resultat ([48] - [49])
             '51':
-              help: null
-              label: null
+              help: 'Casella 51: quotes d''IVA meritades per adquisicions intracomunitàries
+                de béns en règim simplificat.'
+              label: Règim simplificat - quotes meritades per adquisicions intracomunitàries
+                de béns
             '52':
-              help: null
-              label: null
+              help: 'Casella 52: quotes d''IVA meritades per lliuraments d''actius
+                fixos en règim simplificat.'
+              label: Règim simplificat - quotes meritades per lliuraments d'actius
+                fixos
             '53':
-              help: null
-              label: null
+              help: 'Casella 53: quotes d''IVA meritades en règim simplificat per
+                operacions amb inversió del subjecte passiu.'
+              label: Règim simplificat - quotes meritades d'IVA meritat per inversió
+                del subjecte passiu
             '54':
-              help: null
-              label: null
+              help: 'Casella 54: total de la quota resultant en règim simplificat.'
+              label: Règim simplificat - total quota resultant
             '55':
-              help: null
-              label: null
+              help: 'Casella 55: IVA deduïble per adquisició o importació d''actius
+                fixos en règim simplificat.'
+              label: Règim simplificat - IVA deduïble per adquisició o importació
+                d'actius fixos
             '56':
-              help: null
-              label: null
+              help: 'Casella 56: IVA deduïble per regularització de béns d''inversió
+                en règim simplificat.'
+              label: Règim simplificat - IVA deduïble per regularització de béns d'inversió
             '57':
-              help: null
-              label: null
+              help: 'Casella 57: total d''IVA deduïble en règim simplificat, calculat
+                com la casella 55 més la casella 56.'
+              label: Règim simplificat - total IVA deduïble ([55] + [56])
             '58':
-              help: null
-              label: null
+              help: 'Casella 58: resultat del règim simplificat, calculat com la casella
+                54 menys la casella 57.'
+              label: Resultat del règim simplificat ([54] - [57])
             '59':
-              help: null
-              label: null
+              help: 'Casella 59: informació addicional sobre lliuraments intracomunitaris
+                de béns i serveis.'
+              label: Informació addicional - lliuraments intracomunitaris de béns
+                i serveis
             '60':
-              help: null
-              label: null
+              help: 'Casella 60: informació addicional sobre exportacions i operacions
+                assimilades.'
+              label: Informació addicional - exportacions i operacions assimilades
             '62':
-              help: null
-              label: null
+              help: 'Casella 62: base imposable de lliuraments de criteri de caixa
+                meritats segons l''article 75 LIVA.'
+              label: Informació addicional - lliuraments de criteri de caixa meritats
+                art. 75 LIVA - base imposable
             '63':
-              help: null
-              label: null
+              help: 'Casella 63: quota de lliuraments de criteri de caixa meritats
+                segons l''article 75 LIVA.'
+              label: Informació addicional - lliuraments de criteri de caixa meritats
+                art. 75 LIVA - quota
             '64':
-              help: null
-              label: null
+              help: 'Casella 64: suma de resultats, calculada com la casella 46 més
+                la casella 58 més la casella 76.'
+              label: Resultat - suma de resultats ([46] + [58] + [76])
             '65':
-              help: null
-              label: null
+              help: 'Casella 65: percentatge del resultat atribuïble a l''Administració
+                de l''Estat.'
+              label: Resultat - percentatge atribuïble a l'Administració de l'Estat
             '66':
-              help: null
-              label: null
+              help: 'Casella 66: import atribuïble a l''Administració de l''Estat,
+                calculat com la casella 64 per la casella 65 dividit per 100.'
+              label: Resultat - import atribuïble a l'Administració de l'Estat ([64]
+                x [65] / 100)
             '68':
-              help: null
-              label: null
+              help: 'Casella 68: resultat de regularització anual de tributació conjunta.'
+              label: Resultat - resultat de regularització anual de tributació conjunta
             '70':
-              help: null
-              label: null
+              help: 'Casella 70: resultats a ingressar procedents d''autoliquidacions
+                anteriors del mateix exercici i període.'
+              label: Resultat - resultats a ingressar d'autoliquidacions anteriors
+                de l'exercici i període
             '71':
-              help: null
-              label: null
+              help: 'Casella 71: resultat final calculat com la casella 69 menys la
+                casella 70 més la casella 109.'
+              label: Resultat final ([69] - [70] + [109])
             '74':
-              help: null
-              label: null
+              help: 'Casella 74: base imposable d''adquisicions en el règim de criteri
+                de caixa.'
+              label: Informació addicional - adquisicions de criteri de caixa - base
+                imposable
             '75':
-              help: null
-              label: null
+              help: 'Casella 75: quota d''adquisicions en el règim de criteri de caixa.'
+              label: Informació addicional - adquisicions de criteri de caixa - quota
             '76':
-              help: null
-              label: null
+              help: 'Casella 76: ajust del resultat per regularització de quotes segons
+                l''article 80.cinc.5a LIVA.'
+              label: Resultat - regularització de quotes art. 80 cinc 5a LIVA
             '77':
-              help: null
-              label: null
+              help: 'Casella 77: IVA a la importació liquidat per la Duana que resta
+                pendent d''ingrés.'
+              label: Resultat - IVA a l'importació liquidat per la Duana pendent d'ingrés
             modulos-iva-1-unidades:
               help: null
-              label: null
+              label: 'Mòdul 1 (Personal empleat): nombre d''unitats'
             modulos-iva-2-unidades:
               help: null
-              label: null
+              label: 'Mòdul 2 (unitat activitat específica: distància recorreguda,
+                càrrega de vehicles o superfície del local): nombre d''unitats'
             modulos-iva-3-unidades:
               help: null
-              label: null
+              label: 'Mòdul 3 (unitat activitat específica: consum d''energia elèctrica
+                o altra): nombre d''unitats'
             modulos-iva-cuota-derivada:
               help: null
-              label: null
+              label: Quota derivada del règim simplificat (major de quota meritada
+                neta de deduïbles/forfet, o quota mínima)
             modulos-iva-cuota-devengada:
               help: null
-              label: null
+              label: Quota meritada per operacions corrents (Σ unitats mòdul × quota
+                meritada anual per unitat)
             modulos-iva-epigrafe:
               help: null
-              label: null
+              label: Epígraf IAE de l'activitat en règim simplificat d'IVA (mòduls)
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
-              label: null
+              help: Exercici fiscal al qual es refereix l'autoliquidació.
+              label: Exercici fiscal de l'autoliquidació
             x-chim6r1ee1in4qbfchng:
-              help: null
-              label: null
+              help: 'Període trimestral de l''autoliquidació: 1T, 2T, 3T o 4T.'
+              label: Període trimestral
             x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushec9gn6p8:
-              help: null
-              label: null
+              help: Base imposable de l'autoconsum del promotor immobiliari, basada
+                en el cost de construcció.
+              label: Base imposable de l'autoconsum del promotor immobiliari
             x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushecdqmut31:
-              help: null
-              label: null
+              help: Quota d'IVA de l'autoconsum del promotor immobiliari, calculada
+                al 21% de la base imposable.
+              label: Quota d'IVA de l'autoconsum del promotor immobiliari
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
-              help: null
-              label: null
+              help: IVA autorepercutit deduïble en operacions interiors subjectes
+                a inversió del subjecte passiu.
+              label: IVA autorepercutit deduïble en operacions interiors
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
-              help: null
-              label: null
+              help: IVA autorepercutit meritat en operacions interiors subjectes a
+                inversió del subjecte passiu.
+              label: IVA autorepercutit meritat en operacions interiors
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
-              help: null
-              label: null
+              help: Quota d'IVA autorepercutit en adquisicions intracomunitàries subjectes
+                a inversió del subjecte passiu.
+              label: Quota d'IVA autorepercutit en adquisicions intracomunitàries
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
-              help: null
-              label: null
+              help: IVA autorepercutit deduïble en adquisicions intracomunitàries
+                de béns i serveis.
+              label: IVA autorepercutit deduïble en adquisicions intracomunitàries
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
-              help: null
-              label: null
+              help: IVA autorepercutit meritat en adquisicions intracomunitàries de
+                béns i serveis.
+              label: IVA autorepercutit meritat en adquisicions intracomunitàries
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
-              help: null
-              label: null
+              help: Suma la base imposable autorepercutida meritada en adquisicions
+                intracomunitàries.
+              label: Base imposable autorepercutida meritada en adquisicions intracomunitàries
             x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
-              help: null
-              label: null
+              help: Quotes pendents de períodes anteriors aplicades en aquest període.
+              label: Compensacions de períodes anteriors aplicades en aquest període
             x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
-              help: null
-              label: null
+              help: Saldo d'IVA a compensar disponible per traslladar a períodes posteriors.
+              label: Saldo de compensació disponible al final del període
             x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
-              help: null
-              label: null
+              help: Saldo d'IVA a compensar generat per l'autoliquidació d'aquest
+                període.
+              label: Saldo a compensar generat en aquest període
             x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
-              help: null
-              label: null
+              help: Quotes d'IVA a compensar que resten pendents de períodes anteriors.
+              label: Quotes a compensar pendents de períodes anteriors
             x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
-              help: null
-              label: null
+              help: Compensacions d'IVA de períodes anteriors que resten pendents
+                per a períodes posteriors.
+              label: Compensacions de períodes anteriors pendents per a períodes posteriors
             x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
-              help: null
-              label: null
+              help: Total de la quota d'IVA deduïble, inclòs l'IVA suportat interior
+                i l'IVA autorepercutit deduïble.
+              label: Total quota d'IVA deduïble
             x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
-              help: null
-              label: null
+              help: Total de la quota d'IVA meritada, inclòs l'IVA repercutit i l'IVA
+                autorepercutit aplicable.
+              label: Total quota d'IVA meritada
             x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
-              help: null
-              label: null
+              help: Percentatge de prorrata general calculat a partir del volum amb
+                dret a deducció sobre el volum total.
+              label: Percentatge de prorrata general
             x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
-              help: null
-              label: null
+              help: Volum anual d'operacions que originen dret a deduir l'IVA.
+              label: Volum anual d'operacions que originen dret a deducció
             x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
-              help: null
-              label: null
+              help: Volum anual total d'operacions emprat per al càlcul de la prorrata
+                general.
+              label: Volum anual total d'operacions
             x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
-              help: null
-              label: null
+              help: Regularització de l'IVA corresponent a béns d'inversió.
+              label: Regularització de béns d'inversió
             x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
-              help: null
-              label: null
+              help: Total d'IVA repercutit calculat al tipus general del 21%.
+              label: Quota IVA repercutit al tipus general (21%)
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
-              help: null
-              label: null
+              help: Total d'IVA repercutit calculat al tipus reduït del 10%.
+              label: Quota d'IVA repercutit al tipus reduït (10%)
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
-              help: null
-              label: null
+              help: Casella transitòria del RD-ley 4/2024 per al tipus reduït, que
+                conviu amb el tipus reduït ordinari del 10%.
+              label: Quota d’IVA repercutit al tipus reduït transitori (5%/7,5%)
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
-              help: null
-              label: null
+              help: Total d'IVA repercutit calculat al tipus superreduït del 4%.
+              label: Quota d'IVA repercutit al tipus superreduït (4%)
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
-              help: null
-              label: null
+              help: Casella transitòria del RDL 4/2024 per al tipus superreduït, que
+                conviu amb el tipus superreduït ordinari del 4%.
+              label: Quota d’IVA repercutit al tipus superreduït transitori (2%)
             x-d5r62bjiclpnar3kc5i6u:
-              help: null
-              label: null
+              help: Resultat de l'autoliquidació després de la fórmula d'ajust del
+                Modelo 303.
+              label: Resultat de l'autoliquidació
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
-              help: null
-              label: null
+              help: Resultat del règim general calculat com IVA meritat menys IVA
+                deduïble.
+              label: Resultat del règim general
             x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
-              help: null
-              label: null
+              help: IVA suportat deduïble en importacions de béns corrents.
+              label: Quota d'IVA suportat deduïble en importacions de béns corrents
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
-              help: null
-              label: null
+              help: Total d'IVA suportat pagat en compres interiors de béns i serveis
+                corrents.
+              label: Quota IVA suportat en operacions interiors corrents
           construct:
             modelo-303-iva-autoliquidacion:
               field:
@@ -68476,8 +68630,7 @@ modelo:
           field:
             label: null
 overview:
-  no_aeat_history: Aquest perfil no conté proves de declaracions confirmades per l'AEAT.
-    Recupereu l'historial de declaracions que conserva l'AEAT.
+  no_aeat_history: Aquest perfil no té cap presentació confirmada per l'AEAT.
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: S'ha aplicat prorrata 50 %% (Art. 61 LIRPF)

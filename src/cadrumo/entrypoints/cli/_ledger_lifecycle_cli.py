@@ -503,8 +503,8 @@ def ledger_pull_folder(
                     refused_count=refused_count,
                     default=(
                         f"{refused_count} file(s) in this folder could not be fetched under the "
-                        "drive.file scope; download them manually and attach with "
-                        "'aeat app ledger attach --attachment-id ...'."
+                        "drive.file scope; download them manually before selecting the matching "
+                        "transaction and attachment."
                     ),
                 ),
                 context={"folder_id": folder_id, "refused_count": str(refused_count)},

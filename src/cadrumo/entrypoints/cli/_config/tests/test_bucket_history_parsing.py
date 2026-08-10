@@ -20,6 +20,7 @@ from .._bucket_history import (
     _bucket_history_event_payload,
     _parse_bucket_event_types,
     _parse_bucket_history_instant,
+    _resolve_profile_history_target,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -128,4 +129,23 @@ def test_bucket_history_event_payload_requires_payload_version() -> None:
                 "object_type": BucketEventObjectType.PROFILE,
                 "object_id": "profile-1",
             },
+        )
+
+
+def test_profile_history_without_name_resolves_the_active_profile(tmp_path) -> None:
+    """The omitted subject is the real active profile, not a copied default."""
+    from .....tests.secure_sql import isolated_profile_storage_root
+    from .._manager_frontend import attempt_registration
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        attempt = attempt_registration(
+            "History Subject",
+            "history-subject-operator-secret",
+            "en",
+        )
+        assert attempt.outcome is not None, attempt.refusal
+
+        assert _resolve_profile_history_target(None) == (
+            "History Subject",
+            attempt.outcome.bucket_id,
         )

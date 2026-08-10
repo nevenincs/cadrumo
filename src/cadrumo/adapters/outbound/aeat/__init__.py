@@ -34,6 +34,6 @@ See Also:
 
 from __future__ import annotations
 
-from ._operator_progress import operator_progress_sink
+from ._operator_progress import emit_operator_progress, operator_progress_sink
 
-__all__ = ["operator_progress_sink"]
+__all__ = ["emit_operator_progress", "operator_progress_sink"]

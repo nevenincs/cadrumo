@@ -462,12 +462,12 @@ test-ratchets:
 [doc('Run the unit test suite in parallel, ignoring workbook parity tests. Quiet progress; failures shown.')]
 [group('testing')]
 test-unit durations="":
-    @uv run --no-sync pytest -q -rsf -n {{pytest_workers}} --dist=loadfile -m 'unit and not external_tool and not os_keychain' --ignore=src/cadrumo/domain/calculations/registry/tests/workbook_parity {{ if durations == "" { "" } else { "--durations=" + durations } }}
+    @uv run --no-sync pytest -q -rsf -n {{pytest_workers}} --dist=loadfile -m 'unit and not external_tool and not os_keychain' --ignore=dev/registry/tests/test_workbook_parity.py {{ if durations == "" { "" } else { "--durations=" + durations } }}
 
 # Run the unit test suite serially for reruns after a parallel failure.
 [group('testing')]
 test-unit-serial:
-    @uv run --no-sync pytest -q -rsf -n0 -m 'unit and not external_tool and not os_keychain' --ignore=src/cadrumo/domain/calculations/registry/tests/workbook_parity
+    @uv run --no-sync pytest -q -rsf -n0 -m 'unit and not external_tool and not os_keychain' --ignore=dev/registry/tests/test_workbook_parity.py
 
 # Run the integration test suite in two lanes: the bulk in parallel (xdist,
 # excluding serial-marked tests), then the isolation-sensitive `serial`-marked
@@ -613,7 +613,7 @@ test-smoke:
 [doc('Run the LibreOffice workbook parity tests (external_tool marker, outside the default unit lane).')]
 [group('testing')]
 test-workbook-parity:
-    uv run --no-sync pytest -m external_tool src/cadrumo/domain/calculations/registry/tests/workbook_parity/test_workbook_parity.py
+    uv run --no-sync pytest -m external_tool dev/registry/tests/test_workbook_parity.py
 
 # Run the Homebrew/Scoop/mcpb channel-artifact conformance tests. These bind
 # the generated formula and manifest to a real built cohort. Explicit paths

@@ -23,9 +23,10 @@ from datetime import date
 import pytest
 
 from ....domain.user_profile import UserProfileFact
-from ....tests.cli_runner import invoke_cached_cli
+from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
-from .._common import _declared_tax_id
+from .._common import _declared_tax_id, cli_policy_refusal_projection
+from .._errors import CliRefusedBoundaryError, error_boundary_under_test
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -126,8 +127,7 @@ def test_the_fixture_really_declares_no_tax_id() -> None:
     _persist_facts(include_tax_id=False)
 
     assert _declared_tax_id(_active_record()) == "", (
-        "the fixture profile must declare no tax id at all; a stored empty string "
-        "would make the refusal test vacuous"
+        "the fixture profile must declare no tax id at all; a stored empty string would make the refusal test vacuous"
     )
 
 
@@ -149,6 +149,40 @@ def test_export_refuses_when_the_operator_declared_no_tax_id() -> None:
     assert "identity.tax_id" in result.output or "tax id" in result.output.lower(), (
         f"the refusal must name WHICH fact is missing, not merely that one is:\n{result.output}"
     )
+
+
+def test_export_identity_refusal_carries_the_profile_edit_action() -> None:
+    _create_profile()
+    _persist_facts(include_tax_id=False)
+
+    with error_boundary_under_test(), pytest.raises(CliRefusedBoundaryError) as raised:
+        cadrumo_click_command().main(
+            args=[
+                "--format",
+                "json",
+                "app",
+                "modelo",
+                "export",
+                "--modelo",
+                "303",
+                "--year",
+                "2026",
+                "--period",
+                "1T",
+                "--output",
+                "declaration.boe",
+            ],
+            prog_name="aeat",
+            standalone_mode=False,
+        )
+
+    projection = cli_policy_refusal_projection(raised.value)
+    assert projection is not None
+    assert projection.requested_leaf is not None
+    assert projection.requested_leaf.subject_leaf_key == "modelo.export"
+    assert projection.precondition_action.failed_condition_id == "taxpayer.identity.tax_id.declared"
+    assert projection.precondition_action.action is not None
+    assert projection.precondition_action.action.action_id == "operator.profile.edit"
 
 
 def test_a_declared_tax_id_is_not_refused_by_the_identity_guard() -> None:

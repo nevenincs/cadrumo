@@ -5,37 +5,10 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:0894f4fc23f1274f9780edc8c5b0842aaba0c3f1fcce946696e1db99fc1519f9'
+body_hash: 'sha256:cb13cddfa5916644d0d7ed3e67636115ccca5d9c4b1a997ab9bf96be4bfa86dc'
 related:
   - "[[2026-08-09-cli-action-envelope-hardening-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace cli-action-envelope-hardening with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- PHASE SUMMARY:
-     This file rolls up every <Step Record> belonging to one Phase
-     of the originating plan. Each Step (S##) in the Phase produces
-     one <Step Record> in `.vault/exec/`; this summary aggregates
-     them, lists modified / created files across the Phase, and
-     reports verification status. -->
 
 # `cli-action-envelope-hardening` `W02.P03` summary
 

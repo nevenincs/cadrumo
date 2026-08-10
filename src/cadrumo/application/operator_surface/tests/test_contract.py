@@ -28,6 +28,7 @@ from __future__ import annotations
 import ast
 import inspect
 from collections.abc import Iterator, Mapping
+from itertools import pairwise
 from pathlib import Path
 
 import pytest
@@ -536,7 +537,7 @@ def test_help_documents_are_backend_owned_and_current_surface_only() -> None:
     assert "CADRUMO_SECRET_PASSPHRASE" in config_text
     assert ("aeat config " + "init") not in root_text
     assert "aeat app ledger import" in root_text
-    assert "aeat app live filed list" in root_text
+    assert "aeat app modelo verification-report list" in root_text
     assert "aeat app live filed pull" in app_text
     assert "aeat config bucket" not in root_text
     assert "aeat config bucket" not in config_text
@@ -579,7 +580,7 @@ def test_help_documents_build_in_every_shipped_locale(locale: OutputLanguage) ->
     assert "aeat config profile create NAME" in root_text
     assert ("aeat config " + "init") not in root_text
     assert "aeat app ledger import" in root_text
-    assert "aeat app live filed list" in root_text
+    assert "aeat app modelo verification-report list" in root_text
     assert "aeat app live filed pull" in app_text
     assert "aeat config bucket" not in root_text
     assert "aeat config bucket" not in config_text
@@ -607,7 +608,13 @@ def test_help_command_rows_are_backed_by_mounted_command_families(locale: Output
                         continue
                     tokens = entry.command.split()
                     assert tokens[0] == "aeat"
-                    assert (tokens[1], tokens[2]) in mounted
+                    if all(token.startswith("-") for token in tokens[1:]):
+                        continue
+                    if len(tokens) == 2:
+                        assert tokens[1] in {root for root, _child in mounted}
+                        continue
+                    adjacent_pairs = set(pairwise(tokens[1:]))
+                    assert adjacent_pairs & mounted
 
 
 _LENGTH_CAPPED_MODELS: dict[str, type[BaseModel]] = {
@@ -730,11 +737,21 @@ def test_help_and_landing_locale_strings_stay_within_field_caps() -> None:
 def test_root_landing_report_reads_profile_state_input_only() -> None:
     missing = build_root_landing_report(None)
     active = build_root_landing_report("operator")
+    unavailable = build_root_landing_report(None, profile_selected=True)
+    registered = build_root_landing_report(None, registered_profile_count=1)
 
     assert missing.command == "aeat config profile create NAME"
+    assert missing.profile_selected is False
     assert missing.active_profile is None
     assert active.command == "aeat app overview status"
+    assert active.profile_selected is True
     assert active.active_profile == "operator"
+    assert unavailable.command == "aeat config repair profile"
+    assert unavailable.profile_selected is True
+    assert unavailable.active_profile is None
+    assert registered.command == "aeat config login NAME"
+    assert registered.profile_selected is False
+    assert registered.active_profile is None
 
 
 @pytest.mark.unit

@@ -61,10 +61,32 @@ def overview_next_step_notices(report: OverviewStatusReport) -> list[Notice]:
     ``success``.
     """
     return [
-        Notice(severity=NoticeSeverity.INFO, code="overview.status.next_step", message=line.strip())
+        Notice(
+            severity=NoticeSeverity.INFO,
+            code="overview.status.next_step",
+            message=_next_step_notice_message(line),
+        )
         for line in _next_step_lines(report)
         if line.strip()
     ]
+
+
+def _next_step_notice_message(line: str) -> str:
+    """Keep executable guidance in text rendering, not in notice prose.
+
+    The overview text rows intentionally start with the concrete command and
+    then a human explanation separated by ``" - "``.  The command remains in
+    the text surface, while the envelope notice carries only that localized
+    explanation; executable identity belongs to ``Notice.action`` as catalogue
+    coverage expands, never to ``Notice.message``.
+    """
+    _command, separator, explanation = line.strip().partition(" - ")
+    if separator and explanation:
+        return explanation
+    return tr(
+        "cli.overview.status.next_step_available",
+        default="A recommended next step is available in the overview output.",
+    )
 
 
 _COVERAGE_NOTICE_CODE = "overview.coverage.incomplete"
@@ -138,7 +160,7 @@ def overview_post_filing_event_notices(events: Sequence[OverviewCalendarEvent]) 
         return []
     kinds = sorted({event.post_filing_kind.value for event in actionable if event.post_filing_kind is not None})
     message = tr(
-        "cli.overview.post_filing.pending",
+        "cli.overview.post_filing.pending_summary",
         default=(
             "%{count} AEAT post-filing event(s) require attention: %{kinds}. "
             "Review the affected notifications."
@@ -603,16 +625,9 @@ def _work_units_line(report: OverviewStatusReport) -> str:
 
 
 def _profile_line(report: OverviewStatusReport) -> str:
-    if report.active_profile is None:
+    if report.active_profile_name is None:
         return tr("cli.overview.status.profile_missing")
-    # The prose line names the operator-chosen display name only; the
-    # immutable bucket UUID is structured-payload noise in prose and is
-    # carried solely on the JSON / secondary `profile_id` field. Fall
-    # back to the UUID alone when the manifest carried no display name.
-    name = report.active_profile_name
-    if name:
-        return tr("cli.overview.status.profile_active", profile=name)
-    return tr("cli.overview.status.profile_active", profile=report.active_profile)
+    return tr("cli.overview.status.profile_active", profile=report.active_profile_name)
 
 
 def _transactions_line(report: OverviewStatusReport) -> str:

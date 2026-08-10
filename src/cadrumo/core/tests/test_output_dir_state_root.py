@@ -43,7 +43,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset(
     {
         "attachments",
-        "audit",
         "blobs",
         "cache",
         "corpus-search",
@@ -57,11 +56,11 @@ PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset(
         "iva-read-evidence",
         "justificantes",
         "live",
+        "live-state",
         "llm-cache",
         "llm-run-telemetry",
         "llm-usage",
         "logs",
-        "parity",
         "registry",
         "registry-verdict",
         "runs",
@@ -87,7 +86,7 @@ DERIVED_OUTPUT_SUBPATHS: Final[dict[str, str]] = {
     "cadrumo_token_dir": "tokens",
     "cadrumo_secret_store_dir": "secrets",
     "cadrumo_blob_store_dir": "blobs",
-    "cadrumo_audit_dir": "audit",
+    "cadrumo_live_state_dir": "live-state",
     "cadrumo_log_dir": "logs",
     "cadrumo_llm_usage_dir": "llm-usage",
     "cadrumo_llm_run_telemetry_dir": "llm-run-telemetry",
@@ -109,7 +108,6 @@ DERIVED_OUTPUT_SUBPATHS: Final[dict[str, str]] = {
     "cadrumo_invoices_dir": "financial/invoices",
     "cadrumo_attachments_dir": "financial/attachments",
     "cadrumo_usage_ratios_path": "financial/usage-ratios.json",
-    "cadrumo_registry_parity_store_dir": "audit/registry/parity",
 }
 """The relative location of every root-derived output, stated independently.
 

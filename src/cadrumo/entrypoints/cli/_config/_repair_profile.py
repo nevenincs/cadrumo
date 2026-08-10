@@ -6,6 +6,8 @@ to diagnose and repair the bucket-backed profile state.
 
 from __future__ import annotations
 
+from ....application.operator_actions import next_action
+
 import typing
 from collections.abc import Callable
 
@@ -24,7 +26,7 @@ from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from ._errors import ConfigBoundaryError as _ConfigBoundaryError
 
 if typing.TYPE_CHECKING:
-    from ....application.workflow import ProfileBucketPointer
+    from ....application.workflow import ActiveProfileHealth, ProfileBucketPointer
     from ....domain.user_profile import UserProfileRecord
 
 
@@ -109,11 +111,16 @@ def _emit_pointer_repair(ctx: typer.Context, *, clear_active: bool, confirmed: b
 
     result = repair_active_profile_pointer(clear_active=clear_active, confirmed=confirmed)
     health = result.after or result.before
-    payload = _redact_profile_repair_payload(result.model_dump(mode="json"))
+    active_profile = _repair_profile_label(health)
+    payload = result.model_dump(mode="json")
+    for field_name, snapshot in (("before", result.before), ("after", result.after)):
+        if snapshot is not None and isinstance(payload.get(field_name), dict):
+            payload[field_name]["active_profile"] = _repair_profile_label(snapshot)
+    payload = _redact_profile_repair_payload(payload)
     lines = [
         f"dry_run\t{result.dry_run}",
         f"cleared_pointer\t{result.cleared_pointer}",
-        f"active_profile\t{CLI_PROFILE_ID_PLACEHOLDER if health.active_profile else ''}",
+        f"active_profile\t{active_profile or ''}",
         f"source\t{health.source}",
         f"status\t{health.status}",
         f"registered_bucket\t{health.registered_bucket}",
@@ -126,6 +133,15 @@ def _emit_pointer_repair(ctx: typer.Context, *, clear_active: bool, confirmed: b
         lines.append(f"next_action\t{health.next_action}")
     repair_payload = RepairProfileResult.model_validate(payload)
     _emit_envelope(ctx, command="config.repair.profile", result=repair_payload, lines=lines)
+
+
+def _repair_profile_label(health: ActiveProfileHealth) -> str | None:
+    """Project a manifest label while keeping an unresolved bucket id private."""
+    if health.active_profile_label:
+        return health.active_profile_label
+    if health.active_profile:
+        return CLI_PROFILE_ID_PLACEHOLDER
+    return None
 
 
 # The repair envelope carries a heterogeneous operator-facing payload (strings,

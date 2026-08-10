@@ -18,13 +18,14 @@ from __future__ import annotations
 import asyncio
 
 import pytest
-from textual.widgets import Button, Input, Select, Static
+from textual.widgets import Button, Input, Select
 
 from .....application.user_profile import login_profile, logout_active_profile
 from .....entrypoints.cli._config._login_frontend import attempt_login
 from .....entrypoints.cli._config._manager_frontend import attempt_registration
 from .....tests.secure_sql import isolated_profile_storage_root
 from .. import LoginApp, LoginChoice
+from .._status_bar import PinnedStatusBar
 
 pytestmark = [
     pytest.mark.integration,
@@ -119,7 +120,9 @@ async def test_a_wrong_password_refuses_in_place_without_leaving(tmp_path) -> No
             assert app.is_running, "the screen must stay open so the operator can retry"
             # Emptiness, not wording: that the refusal zone was populated
             # is the screen's decision; which words fill it is locale data.
-            assert str(app.query_one("#login-refusal", Static).content), "the refusal must be shown on the page"
+            status = app.query_one("#credential-status", PinnedStatusBar)
+            assert status.tone == "error"
+            assert status.message, "the refusal must be shown in the pinned channel"
             assert app.query_one("#field-passphrase", Input).value == "", (
                 "the rejected password must be cleared, or the retry appends to the mistake"
             )
@@ -132,7 +135,8 @@ async def test_a_wrong_password_refuses_in_place_without_leaving(tmp_path) -> No
             await _unlock_with(pilot, _PASSWORD)
             assert app.outcome is None, "the backoff must hold the immediate retry"
             assert app.is_running, "a throttled retry must refuse in place, not close the screen"
-            assert str(app.query_one("#login-refusal", Static).content)
+            assert status.tone == "error"
+            assert status.message
 
             app.exit(None)
 
@@ -223,7 +227,9 @@ async def test_an_empty_password_refuses_without_calling_the_door(tmp_path) -> N
 
             assert app.outcome is None
             assert app.is_running, "a blank submission is a correction, not an exit"
-            assert str(app.query_one("#login-refusal", Static).content)
+            status = app.query_one("#credential-status", PinnedStatusBar)
+            assert status.tone == "error"
+            assert status.message
             app.exit(None)
 
 

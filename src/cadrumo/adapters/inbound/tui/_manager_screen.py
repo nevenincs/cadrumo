@@ -29,9 +29,12 @@ See Also:
 from __future__ import annotations
 
 import threading
+from collections.abc import Callable
+from contextlib import AbstractContextManager, nullcontext
 from contextvars import copy_context
 from dataclasses import dataclass, replace
-from typing import TYPE_CHECKING, ClassVar, override
+from enum import StrEnum
+from typing import TYPE_CHECKING, ClassVar, cast, override
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding
@@ -42,15 +45,34 @@ from textual.worker import Worker, WorkerState
 from ....core.i18n import tr
 from ._field_edit_screen import FieldEditScreen
 from ._form_screen import FormScreen, presenting_forms_through
-from ._theme import BASE_CSS, ContentScroll, install_cadrumo_themes, toggle_appearance
+from ._status_bar import PinnedStatusBar
+from ._theme import (
+    BASE_CSS,
+    NOTICE_BAND_CSS,
+    ContentScroll,
+    NoticeBand,
+    install_cadrumo_themes,
+    toggle_appearance,
+)
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Mapping, Sequence
+    from collections.abc import Mapping, Sequence
 
     from textual.widgets.data_table import ColumnKey
 
     from ....application.user_profile import ProfileFieldView, ProfileOverview, ProfileSectionView
     from ._form_screen import FormPage
+
+
+type ManagerProgressSinkBinder = Callable[[Callable[[str], None]], AbstractContextManager[None]]
+
+
+class ManagerActionDisposition(StrEnum):
+    """How a completed action should be presented to the operator."""
+
+    SUCCESS = "success"
+    WARNING = "warning"
+    REFUSED = "refused"
 
 
 @dataclass(frozen=True, slots=True)
@@ -78,6 +100,7 @@ class ManagerActionOutcome:
     message: str
     overview: ProfileOverview | None = None
     close_session: bool = False
+    disposition: ManagerActionDisposition = ManagerActionDisposition.SUCCESS
 
 
 @dataclass(frozen=True, slots=True)
@@ -120,6 +143,8 @@ class ManagerAction:
     action is what knows why its fields are inseparable, and this module
     stays ignorant of what any of them mean.
     """
+    progress_sink: ManagerProgressSinkBinder | None = None
+    """Scope that redirects operation progress into this screen, when present."""
 
 
 _PRESENT_GLYPH = "●"
@@ -162,18 +187,6 @@ read three identical ``NIF`` rows, since the path telling them apart is
 shown only once the row is opened.
 """
 
-_REFUSAL_TONE = "-refusal"
-"""Something the page would not do. The operator's next task."""
-
-_RESULT_TONE = "-result"
-"""What an action did. Information, not a demand."""
-
-_PROGRESS_TONE = "-progress"
-"""Work still under way, which will be replaced by its own outcome."""
-
-_NOTICE_TONES = (_REFUSAL_TONE, _RESULT_TONE, _PROGRESS_TONE)
-"""Every tone the one notice channel can take, so setting one clears the rest."""
-
 _FORM_WAIT_POLL_SECONDS = 0.1
 """How often the action thread re-checks that the application is still up.
 
@@ -206,25 +219,11 @@ class ProfileManagerApp(App[None]):
 
     CSS = (
         BASE_CSS
+        + NOTICE_BAND_CSS
         + """
-    #manager-progress {
-        dock: top;
-        height: 1;
-        width: 100%;
-        padding: 0 2;
-        background: $surface;
-        color: $text-muted;
-    }
-    #manager-notice {
-        dock: top;
-        height: auto;
-        width: 100%;
-        padding: 0 2;
-        color: $text;
-    }
-    #manager-notice.-refusal { color: $error; text-style: bold; }
-    #manager-notice.-result { color: $text; }
-    #manager-notice.-progress { color: $text-muted; }
+    #manager-header { dock: top; width: 100%; height: auto; background: $surface; }
+    #manager-header > PinnedStatusBar { dock: none; border-bottom: none; }
+    #manager-advisories { width: 100%; height: auto; padding: 0 2; border-bottom: solid $primary; }
     .manager-section DataTable { height: auto; width: 100%; background: $surface; }
     #manager-actions { height: auto; width: 100%; }
     #manager-actions Button { width: 100%; margin: 0 0 1 0; }
@@ -323,8 +322,9 @@ class ProfileManagerApp(App[None]):
     @override
     def compose(self) -> ComposeResult:
         yield Static(id="manager-banner", classes="cadrumo-banner")
-        yield Static(id="manager-progress")
-        yield Static(id="manager-notice")
+        with Vertical(id="manager-header"):
+            yield PinnedStatusBar(id="manager-status")
+            yield Vertical(id="manager-advisories")
         with ContentScroll(id="manager-body", classes="cadrumo-scroll"), Vertical(classes="cadrumo-column"):
             if self._actions:
                 with Vertical(id="manager-actions-panel", classes="cadrumo-panel"):
@@ -362,7 +362,7 @@ class ProfileManagerApp(App[None]):
         """
         self._render_chrome()
         self._clear_notice()
-        self._render_progress()
+        self._render_profile_context()
         self._field_by_key.clear()
         self._table_by_section.clear()
         self._columns_by_section.clear()
@@ -416,7 +416,7 @@ class ProfileManagerApp(App[None]):
 
         self._render_chrome()
         self._clear_notice()
-        self._render_progress()
+        self._render_profile_context()
         for was, now in zip(previous.sections, updated.sections, strict=True):
             table = self._table_by_section.get(now.key)
             columns = self._columns_by_section.get(now.key)
@@ -441,16 +441,27 @@ class ProfileManagerApp(App[None]):
                         # equivalent for a cell written in place.
                         table.update_cell(after.path, column, new_cell, update_width=True)
 
-    def _render_progress(self) -> None:
-        """Restate the present/total/missing counts under the current overview."""
-        self.query_one("#manager-progress", Static).update(
+    def _render_profile_context(self) -> None:
+        """Render requirements from the schema and advisories from Notices."""
+        missing_fields = self.overview.missing_required_fields
+        resolved_paths = {field.path for field in missing_fields}
+        missing_labels = [field.label for field in missing_fields]
+        missing_labels.extend(path for path in self.overview.missing_required if path not in resolved_paths)
+        summary = (
             tr(
-                "flows.manager.progress",
-                present=self.overview.present_count,
-                total=self.overview.total_count,
-                missing=len(self.overview.missing_required),
-            ),
+                "cli.diagnostics.summary.profile_missing_fields",
+                count=len(self.overview.missing_required),
+                fields=", ".join(missing_labels),
+            )
+            if self.overview.missing_required
+            else tr("flows.manager.required_complete")
         )
+        self.query_one("#manager-status", PinnedStatusBar).set_summary(summary)
+
+        advisories = self.query_one("#manager-advisories", Vertical)
+        advisories.remove_children()
+        if self.overview.notices:
+            advisories.mount(NoticeBand(self.overview.notices, id="manager-notice-band"))
 
     @staticmethod
     def _section_title(section: ProfileSectionView) -> str:
@@ -676,7 +687,7 @@ class ProfileManagerApp(App[None]):
         write_context = copy_context()
 
         def _write() -> ProfileOverview:
-            written = write_context.run(self._persist_field, path, value)
+            written = cast("ProfileOverview | None", write_context.run(self._persist_field, path, value))
             if written is None:
                 # The door declares it hands back the reloaded page, so this
                 # is a broken contract rather than a refused value. Raised
@@ -708,10 +719,11 @@ class ProfileManagerApp(App[None]):
         """
         if event.state not in {WorkerState.SUCCESS, WorkerState.ERROR, WorkerState.CANCELLED}:
             return
-        if self._pending_write is not None and event.worker is self._pending_write:
+        event_worker = cast("Worker[object]", event.worker)
+        if self._pending_write is not None and event_worker is self._pending_write:
             self._settle_write(self._pending_write)
             return
-        if self._pending_action is not None and event.worker is self._pending_action:
+        if self._pending_action is not None and event_worker is self._pending_action:
             self._settle_action(self._pending_action)
 
     def _settle_write(self, worker: Worker[ProfileOverview]) -> None:
@@ -759,7 +771,7 @@ class ProfileManagerApp(App[None]):
             # back to their shell, the same coherent landing the quit
             # binding already gives them -- there is nowhere else to route
             # a session that just ended.
-            self.app.exit(None)
+            self.exit(None)
             return
         if outcome.overview is not None:
             # A full redraw, not a cell diff: an action can change the
@@ -768,21 +780,21 @@ class ProfileManagerApp(App[None]):
             self._render()
         # After the redraw, which clears the channel: reporting first would
         # write the outcome and then immediately wipe it.
-        self._report(outcome.message)
+        match outcome.disposition:
+            case ManagerActionDisposition.SUCCESS:
+                self._report(outcome.message)
+            case ManagerActionDisposition.WARNING:
+                self._warn(outcome.message)
+            case ManagerActionDisposition.REFUSED:
+                self._refuse(outcome.message)
 
     def _clear_notice(self) -> None:
-        """Empty the channel and drop its tone.
-
-        The tone goes with the text: leaving it behind would colour the
-        next message as whatever the last one was, and an empty line still
-        carrying the refusal style is a stripe of error colour explaining
-        nothing.
-        """
-        self._announce("", "")
+        """Reset the diagnostic line while preserving its pinned space."""
+        self.query_one("#manager-status", PinnedStatusBar).clear_message()
 
     def _refuse(self, message: str) -> None:
         """Show something the page would not do, and why."""
-        self._announce(message, _REFUSAL_TONE)
+        self.query_one("#manager-status", PinnedStatusBar).show_error(message)
 
     def _refuse_worker(self, error: BaseException | None, *, message_key: str) -> None:
         """Show what a finished worker failed with, never as a blank line.
@@ -798,35 +810,36 @@ class ProfileManagerApp(App[None]):
         rather than on the exception's type, because no type owns that
         emptiness — a door that raises bare renders just as blank.
         """
-        rendered = str(error) if error is not None else ""
+        if error is None:
+            rendered = ""
+        else:
+            from ....core.errors import CadrumoError, resolve_error_message
+
+            rendered = resolve_error_message(error) if isinstance(error, CadrumoError) else str(error)
         self._refuse(rendered or tr(message_key))
 
     def _report(self, message: str) -> None:
         """Show what an action did."""
-        self._announce(message, _RESULT_TONE)
+        self.query_one("#manager-status", PinnedStatusBar).show_success(message)
+
+    def _warn(self, message: str) -> None:
+        """Show a completed action whose partial failures need attention."""
+        self.query_one("#manager-status", PinnedStatusBar).show_warning(message)
 
     def _progress(self, message: str) -> None:
         """Show what is happening while it is still happening."""
-        self._announce(message, _PROGRESS_TONE)
+        self.query_one("#manager-status", PinnedStatusBar).show_progress(message)
 
-    def _announce(self, message: str, tone: str) -> None:
-        """Put one line in the page's single diagnostic channel.
-
-        There is one channel because the operator has one place to look.
-        Refusals and results were previously split across two widgets of
-        different prominence — a bold docked line for a rejected field, a
-        muted line under the buttons for everything an action had to say —
-        so an action refusing for want of a certificate whispered while a
-        mistyped date shouted, though both are the page answering back.
-
-        What differs between them is emphasis, not location: a refusal is
-        the operator's next task and is coloured as such, a result is
-        information, and progress is neither and recedes.
-        """
-        notice = self.query_one("#manager-notice", Static)
-        notice.update(message)
-        for candidate in _NOTICE_TONES:
-            notice.set_class(candidate == tone, candidate)
+    def _progress_from_worker(self, message: str) -> None:
+        """Move a worker-thread progress emission onto Textual's UI task."""
+        if not self.is_running:
+            return
+        try:
+            self.call_from_thread(self._progress, message)
+        except RuntimeError:
+            # A thread-backed action may outlive a closing application. At
+            # that point there is no screen left to update.
+            return
 
     def _set_busy(self, busy: bool) -> None:
         """Show that background work is running, and refuse to start more.
@@ -884,7 +897,10 @@ class ProfileManagerApp(App[None]):
         action_context = copy_context()
 
         def _run() -> ManagerActionOutcome:
-            with presenting_forms_through(self._present_form_here):
+            progress_scope = (
+                action.progress_sink(self._progress_from_worker) if action.progress_sink is not None else nullcontext()
+            )
+            with presenting_forms_through(self._present_form_here), progress_scope:
                 return action.run()
 
         self._pending_action = self.run_worker(
@@ -1037,7 +1053,9 @@ def run_profile_manager_tui(
 __all__ = [
     "FieldEditScreen",
     "ManagerAction",
+    "ManagerActionDisposition",
     "ManagerActionOutcome",
+    "ManagerProgressSinkBinder",
     "ProfileManagerApp",
     "run_profile_manager_tui",
 ]

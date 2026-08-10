@@ -20,7 +20,7 @@ from cadrumo.domain.calculations.registry import (
 )
 
 from ._record_design_ir import RecordDesignIntermediate, RecordDesignIntermediateField
-from ._semantic_map import SemanticMap, SemanticMapAnchor, SemanticMapEntry
+from ._semantic_map import SemanticMap, SemanticMapAnchor, SemanticMapEntry, SemanticMapRecord
 
 __all__ = [
     "SemanticMapAnomalyException",
@@ -50,6 +50,7 @@ class SemanticMapAnomalyException(_StrictModel):
 
 
 _AnchorKey = tuple[str, int, str | None, int, str]
+type _RecordKey = tuple[str, str]
 
 
 def validate_semantic_map(
@@ -74,6 +75,7 @@ def validate_semantic_map(
     _validate_source_authority(intermediate, snapshot)
     _validate_anomaly_exceptions(anomaly_exceptions, intermediate)
     _validate_exact_bijection(semantic_map, intermediate)
+    _validate_exact_record_bijection(semantic_map, intermediate)
     _validate_entry_references(semantic_map, snapshot)
 
 
@@ -202,6 +204,39 @@ def _validate_entry_references(semantic_map: SemanticMap, snapshot: RegistrySnap
         _validate_catalogue_refs(entry, snapshot)
 
 
+def _validate_exact_record_bijection(
+    semantic_map: SemanticMap,
+    intermediate: RecordDesignIntermediate,
+) -> None:
+    intermediate_keys = tuple(
+        _intermediate_record_key(sheet.sheet, sheet.record_identity) for sheet in intermediate.sheets
+    )
+    semantic_keys = tuple(_semantic_record_key(record) for record in semantic_map.records)
+    duplicate_intermediate = _duplicate_record_keys(intermediate_keys)
+    if duplicate_intermediate:
+        raise RegistryValidationError(
+            "parser intermediate contains duplicate exact record anchors; refusing ambiguous semantic-map join: "
+            f"{_format_record_keys(duplicate_intermediate)}",
+        )
+    duplicate_semantic = _duplicate_record_keys(semantic_keys)
+    if duplicate_semantic:
+        raise RegistryValidationError(
+            "semantic map contains duplicate exact record anchors; refusing ambiguous parser join: "
+            f"{_format_record_keys(duplicate_semantic)}",
+        )
+    missing = tuple(sorted(set(intermediate_keys) - set(semantic_keys)))
+    extra = tuple(sorted(set(semantic_keys) - set(intermediate_keys)))
+    if missing or extra:
+        details: list[str] = []
+        if missing:
+            details.append(f"missing semantic record entries {_format_record_keys(missing)}")
+        if extra:
+            details.append(f"extra semantic record entries {_format_record_keys(extra)}")
+        raise RegistryValidationError(
+            "semantic map must form a complete exact record bijection with parser output; " + "; ".join(details),
+        )
+
+
 def _validate_catalogue_refs(entry: SemanticMapEntry, snapshot: RegistrySnapshot) -> None:
     unknown_legal = tuple(sorted(set(entry.legal_refs) - set(snapshot.legal)))
     if unknown_legal:
@@ -223,6 +258,14 @@ def _semantic_anchor_key(anchor: SemanticMapAnchor) -> _AnchorKey:
     return anchor.sheet, anchor.source_row, anchor.source_cell, anchor.ordinal, anchor.record_identity
 
 
+def _intermediate_record_key(sheet: str, record_identity: str) -> _RecordKey:
+    return sheet, record_identity
+
+
+def _semantic_record_key(record: SemanticMapRecord) -> _RecordKey:
+    return record.sheet, record.record_identity
+
+
 def _duplicate_anchor_keys(keys: tuple[_AnchorKey, ...]) -> tuple[_AnchorKey, ...]:
     counts = Counter(keys)
     return tuple(sorted(key for key, count in counts.items() if count > 1))
@@ -233,9 +276,18 @@ def _duplicate_string_keys(keys: tuple[str, ...]) -> tuple[str, ...]:
     return tuple(sorted(key for key, count in counts.items() if count > 1))
 
 
+def _duplicate_record_keys(keys: tuple[_RecordKey, ...]) -> tuple[_RecordKey, ...]:
+    counts = Counter(keys)
+    return tuple(sorted(key for key, count in counts.items() if count > 1))
+
+
 def _format_anchor_keys(keys: tuple[_AnchorKey, ...]) -> str:
     return ", ".join(
         f"(sheet={sheet!r}, source_row={source_row}, source_cell={source_cell!r}, ordinal={ordinal}, "
         f"record_identity={record_identity!r})"
         for sheet, source_row, source_cell, ordinal, record_identity in keys
     )
+
+
+def _format_record_keys(keys: tuple[_RecordKey, ...]) -> str:
+    return ", ".join(f"(sheet={sheet!r}, record_identity={record_identity!r})" for sheet, record_identity in keys)

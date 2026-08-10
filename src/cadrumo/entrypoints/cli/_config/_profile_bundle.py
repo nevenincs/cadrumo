@@ -35,7 +35,13 @@ from ....core.errors import CadrumoError as _CadrumoError
 from ....core.errors import resolve_error_message as _resolve_error_message
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
-from ....core.json_contract import ActionArgumentSource, ActionArgumentStatus, Notice, NoticeSeverity, ResolvedActionArgument
+from ....core.json_contract import (
+    ActionArgumentSource,
+    ActionArgumentStatus,
+    Notice,
+    NoticeSeverity,
+    ResolvedActionArgument,
+)
 from .._common import _emit_envelope, _no_active_profile_refusal, resolve_notice_action
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
@@ -294,7 +300,7 @@ def _reconcile_failure_notices(
                 ),
                 count=str(len(failures)),
             ),
-            action=resolve_notice_action(action=ActionReference(action_id="operator.app.maintenance.reconcile")),
+            action=resolve_notice_action(action=ActionReference(action_id="operator.maintenance.reconcile")),
             context={
                 "failed_count": str(len(failures)),
                 "journal_ids": ",".join(failure.journal_id for failure in failures),

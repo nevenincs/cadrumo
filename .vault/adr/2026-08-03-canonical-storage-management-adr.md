@@ -3,12 +3,14 @@ tags:
   - '#adr'
   - '#canonical-storage-management'
 date: '2026-08-03'
-modified: '2026-08-04'
+modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:8b3385c7a7b9ed9570d4d184579e12778f6497c500e25bede60fcb3472e87f73'
+body_hash: 'sha256:1191f51b18f93bdee35866c04fa2a791ca86ababcb9d8c1520c593b6009b7456'
 related:
   - "[[2026-08-03-canonical-storage-management-research]]"
   - "[[2026-07-13-data-output-standardization-adr]]"
+  - "[[2026-08-07-dev-harness-bleed-adr]]"
+  - "[[2026-08-07-pdf-sanitizer-contributor-tooling-adr]]"
 ---
 
 # `canonical-storage-management` adr: `canonical storage management API and config storage surface` | (**status:** `accepted`)
@@ -960,6 +962,116 @@ landing was within the same execution day. Two plan Steps that depend on this
 fix — re-pointing `bucket_paths` and `keystore_path` onto the corrected scoped
 accessor — remain open.
 
+**R24 — Repository infrastructure is never product payload.** `.vault/`,
+`.vaultspec/`, and `dev/` are repository-only development infrastructure.
+They MUST NOT enter a wheel, sdist, installer, release asset, installed resource
+lookup, or runtime fallback path. The non-test `src/cadrumo` package is the
+shipped consumer product and may contain only capabilities an installed
+consumer can reach or that those capabilities require. Maintainer and
+contributor tooling has zero standing home there.
+
+Tests remain governed by the accepted `2026-08-07-dev-harness-bleed-adr`
+boundary: wheel/sdist-excluded tests may stay under their owning product
+package and import `dev/` tooling. That permission does not permit the tooling
+implementation, its command transport, or its artefact store to remain shipped.
+
+**R25 — `config storage` uses a stable operator vocabulary, not
+`StorageCategory`.** Add a distinct closed operator-boundary enum,
+`StorageArea`, with exactly four values: `state`, `logs`, `cache`, and
+`exports`. It is not an alias or re-export of `StorageCategory`.
+`StorageCategory` remains the internal typed filesystem authority and may grow,
+split, rename, or delete members without changing CLI syntax.
+
+`list` returns one aggregate row per `StorageArea`; `show AREA` reports the
+area's resolved footprint, occupancy, lifecycle disposition, and
+reclaimability. `reclaim AREA` accepts the same four-value vocabulary:
+`state` and `exports` refuse because they contain durable state;
+`logs` and `cache` may proceed only after a complete preflight proves that every
+target is root-scoped, reclaimable by lifecycle, and contains no protected
+declared descendant. Selection and preflight are derived from taxonomy axes,
+not a second member allowlist.
+
+`init` and `check` continue to operate over the internal declaration without a
+selector. Their public results aggregate by area and may report actionable
+paths and issue counts, but MUST NOT emit `StorageCategory` members, scope
+members, secret-store leaf names, bucket/keystore nodes, or other internal
+topology as public CLI or MCP contract data.
+
+This ruling replaces R7's direct enum argument and row-per-category contract.
+R1-R6 continue to govern the internal declaration and resolver.
+
+**R26 — Internal storage nodes stay internal.** `StorageCategory`,
+`StorageLocation`, scopes, node kinds, and descendant relationships remain the
+single implementation authority used by settings, materialisation, liveness
+gates, persistence, and storage-management services. They are not operator
+nouns and MUST NOT appear in Typer arguments, registered output schemas,
+operator-surface manifests, help catalogues, MCP schemas, or generated user
+documentation.
+
+A test or developer inspection API may enumerate them because its audience is
+the repository. No installed command gains an expert or hidden switch that
+re-exposes the internal enumeration.
+
+**R27 — Registry oracle, workbook, and parity maintenance moves atomically to
+`dev/registry`.** Remove the installed leaves `registry audit-oracles`,
+`registry workbooks verify`, `registry parity run`, and
+`registry parity replay`. Their handlers, exclusive payload models,
+application wrappers, executable workbook/oracle/parity machinery, tests,
+error-registry rows, locale keys, and maintainer-only settings move to or are
+re-expressed under `dev/registry`.
+
+Delete `cadrumo_workbook_parity_per_file_timeout_s`,
+`cadrumo_workbook_parity_recalc_timeout_s`,
+`cadrumo_workbook_parity_libreoffice_timeout_s`, and
+`cadrumo_registry_parity_store_dir` from product Settings. Delete
+`StorageCategory.REGISTRY_PARITY_STORE` and its location declaration.
+Parity tapes use a dev-owned output root or an explicit dev-CLI option; they
+never enter the consumer storage tree or `config storage`.
+
+The move is capability-based. Registry types and validation/calculation
+primitives with a proven installed consumer remain in `src/cadrumo`; a symbol
+used only by the moved tooling leaves with it. Shipped modules never import
+`dev/`. There is no retained product dispatch module or command alias.
+
+**R28 — Runtime `audit` is renamed to `live-state`.** Replace
+`StorageCategory.AUDIT` with `StorageCategory.LIVE_STATE`,
+`cadrumo_audit_dir` with `cadrumo_live_state_dir`,
+`CADRUMO_AUDIT_DIR` with `CADRUMO_LIVE_STATE_DIR`, and the on-disk root
+`audit/` with `live-state/`.
+
+Delete the redundant `AUDIT_LIVE` intermediate node. Rename and flatten its
+actual descendants beneath `live-state/`:
+`LIVE_STATE_IVA_WALLET`, `LIVE_STATE_IVA_REMOTE_STATE`,
+`LIVE_STATE_IVA_REMOTE_STATE_FILED_HISTORY`, and
+`LIVE_STATE_IVA_REMOTE_STATE_WALLET`. Descriptions and operator text name live
+AEAT state or remote-state evidence, never a general audit sink.
+
+This intentionally overrides R3's "no path moves" ruling. R13's scope mechanism
+continues to govern genuine scoped collisions, but its `audit` collision is
+retired: neither a top-level audit category nor a per-bucket audit directory
+remains.
+
+**R29 — Delete writer-less `bucket.audit`.** Delete
+`StorageCategory.BUCKET_AUDIT`, `BUCKET_AUDIT_DIRNAME`,
+`BucketPaths.audit_dir`, its namespace/path definition, bucket-creation mkdir,
+disk-usage row, profile-deletion special case, facade exports, fixtures, and
+pinning assertions. Bucket audit events continue to use their real encrypted
+database/event-store authority; no replacement filesystem directory is
+introduced.
+
+**R30 — No compatibility surface accompanies this amendment.** Under
+`PRE_RELEASE`, remove old CLI leaves, selector values, schemas, settings fields,
+environment variables, taxonomy members, paths, locale keys, documentation,
+and tests outright. Do not add deprecated commands, aliases, hidden switches,
+re-export bridges, environment fallbacks, path-copy logic, old-directory
+readers, migrations, or warnings that preserve the retired surface.
+
+Existing `audit/`, `audit/registry/parity/`, and per-bucket `audit/`
+directories are not discovered or migrated by the new product. They may be
+discarded manually. This ruling also amends R21: area-level reclaim has one
+derived all-target preflight and containment proof; it does not preserve the
+old category-level command behind an internal or compatibility flag.
+
 ## Implementation Amendment Log
 
 This ADR was amended six times during execution before this audit pass, and
@@ -1038,6 +1150,22 @@ offers the operator less than it could. The trade is asymmetric: the gain is
 convenience on a rare operation, the loss on failure is encrypted taxpayer
 records separated from the key material that opens them.
 
+The amendment separates three vocabularies that the first implementation
+conflated: the operator's four durable questions, the product's internal
+filesystem graph, and the contributor's maintenance tools. The internal graph
+must remain detailed for materialisation and safety gates, but its current 59
+members are implementation facts, not a usable or stable command language.
+Conversely, registry parity and workbook/oracle execution have repository
+consumers but no installed consumer; retaining them in `src/cadrumo` turns
+development reachability into a product claim. The accepted tooling-boundary
+precedent and the deny-by-default packaging configuration make `dev/` their
+canonical home.
+
+The audit rename and `bucket.audit` deletion apply the same semantic test to
+storage names: keep only concepts with a real writer and name them for what they
+store. Once parity leaves, the root called `audit` stores only live state; the
+per-bucket directory stores nothing at all.
+
 ## Consequences
 
 The operator gains a truthful answer to where data lives, enumerable before
@@ -1085,3 +1213,30 @@ makes every replay refusal untrustworthy. This is called out because the
 symptom (digests moved) looks exactly like the failure the same mechanism exists
 to catch, and an implementer seeing it must not reach for parity with the old
 eight-field set.
+
+The installed CLI loses four maintainer leaves and every script calling them
+must move to the dev command. `config storage show` and `reclaim` accept four
+stable areas instead of the internal member enumeration; public JSON, MCP, help,
+and generated documentation shrink accordingly.
+
+Product Settings lose the parity store, three workbook-maintenance timeouts,
+and the falsely named audit field. The product storage taxonomy falls from 59
+members to 56 under this exact disposition: parity store and `bucket.audit`
+leave, and the redundant `audit.live` intermediate is removed while the
+remaining live-state nodes are renamed.
+
+The on-disk live-state root changes from `audit/live/...` to
+`live-state/...`. Existing local data and environment configuration are not
+migrated or read through aliases. That is an intentional PRE_RELEASE break, not
+an implementation omission.
+
+The wheel and sdist become more honest: installed consumers retain registry
+authority and calculation capabilities they use, while workbook automation,
+oracle audits, curated parity scenarios, tapes, and their configuration remain
+repository infrastructure. Dependencies and error/locale entries used only by
+those moved capabilities can leave the product after a caller census; shared
+runtime dependencies stay.
+
+Deleting `bucket.audit` removes a directory from new bucket layouts and from
+disk-usage reporting. Real audit events are unaffected because they were never
+written there.

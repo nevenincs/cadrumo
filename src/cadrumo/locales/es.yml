@@ -1488,8 +1488,6 @@ application:
         se recibió {manual_id}.
       invalid_manual_rule_kind: El tipo de regla del manual del registro debe ser
         uno de {allowed_rule_kinds}; se recibió {rule_kind}.
-      invalid_oracle_environment: El entorno de oráculos del registro debe ser uno
-        de {allowed_values}; se recibió {value}.
       invalid_topic_locale: El locale de temas del registro debe ser uno de {allowed_locales};
         se recibió {locale_code}.
       manual_section_not_found: No se encontró la sección {section} en {manual_id}
@@ -2074,8 +2072,8 @@ cli:
         confirm_invoice_number_help: Sobrescribe el número de factura extraido.
         confirm_iva_rate_help: Sobrescribe el tipo de IVA extraido (omitir para conservar
           el valor extraido).
-        confirm_link_hint_message: Vincula esta factura a un movimiento del libro
-          con `aeat app ledger link`.
+        confirm_link_hint_message: Esta factura aún no está vinculada a un movimiento
+          del libro.
         confirm_operation_type_help: 'Clave del modelo 349 para una entrega intracomunitaria.
           Obligatoria cuando el documento declara una entrega intracomunitaria: la
           categoría no permite saber si siguió a una importación exenta.'
@@ -2526,8 +2524,7 @@ cli:
         ya escritas en disco han recibido su registro de auditoría pendiente.
       reconcile_failures_warning: No se han podido limpiar {count} exportación(es)
         de perfil interrumpidas y se han conservado para un intento posterior. Puede
-        quedar en disco un archivo temporal sin cifrar por cada una. Vuelve a ejecutar
-        'aeat app maintenance reconcile' cuando se resuelva la causa.
+        quedar en disco un archivo temporal sin cifrar por cada una.
       reconcile_help: Limpia las exportaciones de perfil que un fallo dejó a medias,
         eliminando cualquier archivo temporal sin cifrar y registrando los eventos
         de auditoría pendientes.
@@ -3887,8 +3884,7 @@ cli:
           el registro de auditoría y las entradas de cálculo entre periodos, además
           del perfil, el libro contable, los cálculos y el historial de presentaciones.
           Si se exporta con --recovery-wrap-passphrase, es la vía cifrada de transferencia
-          entre equipos para paquetes de perfil. Guárdalo en un lugar seguro; restáuralo
-          con ''aeat config profile archive import''.'
+          entre equipos para paquetes de perfil.'
         export_help: Escribe un archivo de copia de seguridad completa, sellado y
           cifrado AEAD, en RUTA; añade --recovery-wrap-passphrase antes de enviarlo
           por correo o transferirlo entre equipos.
@@ -3900,8 +3896,7 @@ cli:
         help: Copia de seguridad y restauración de un perfil como archivo sellado
           y cifrado AEAD (el transporte de recuperación de custodia completa).
         import_active_switch_info: El perfil restaurado {name} es ahora el perfil
-          ACTIVO; las órdenes siguientes operan sobre él. Ejecuta 'aeat config login
-          <name>' para cambiar el perfil activo.
+          ACTIVO; las órdenes siguientes operan sobre él.
         import_force_help: Sobrescribe un perfil existente que comparta el identificador
           de bucket del archivo.
         import_help: Restaura un perfil desde un archivo sellado y cifrado en RUTA.
@@ -3974,8 +3969,10 @@ cli:
         refresh_help: Descarga de AEAT el último censo y guarda un snapshot
         show_help: Muestra el último censo informado por AEAT para este perfil
         snapshot_id_help: Id de snapshot concreto (se aceptan prefijos)
-      create_epilog: 'Perfil mínimo para autónomo: --entity-type natural_person --tax-id
-        <DNI/NIE/NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
+      create_epilog: 'Perfil mínimo para autónomo: aeat config profile create PROFILE
+        --entity-type natural_person --tax-id <DNI/NIE/NIF> --name <NAME> --surnames
+        <SURNAMES> --activity <ACTIVITY> --irpf-income-categories actividad_economica
+        --quiet --accept-defaults'
       create_help: Inicializa un nuevo perfil activo.
       delete_active_cleared: El perfil eliminado era el activo; el puntero de perfil
         activo se ha borrado. Ejecuta aeat config login NAME o aeat config profile
@@ -4020,10 +4017,9 @@ cli:
         de contraseña se solicita (oculta) o se lee con --secrets-stdin, nunca por
         argv.
       export_encrypted_info: Este paquete de perfil se escribió en {out} con cifrado
-        AEAD por frase de contraseña. Impórtalo con 'aeat config profile import RUTA';
-        la frase de contraseña se solicita (oculta) o se lee con --secrets-stdin.
-        Solo contiene el paquete estructurado del perfil; usa el archivo de recuperación
-        cifrado para una copia completa con evidencias adjuntas y auditoría.
+        AEAD por frase de contraseña. Solo contiene el paquete estructurado del perfil;
+        usa el archivo de recuperación cifrado para una copia completa con evidencias
+        adjuntas y auditoría.
       export_help: Escribe un paquete portátil de perfil cifrado por frase de contraseña
         en RUTA; el JSON en claro requiere --cleartext-local y solo es para uso local/SAR.
       export_name_help: Perfil que quieres exportar; por defecto, el activo
@@ -4035,8 +4031,7 @@ cli:
         debe tener al menos 8 caracteres.
       export_reconcile_incomplete_warning: No se han podido limpiar {count} exportación(es)
         de perfil interrumpidas de una ejecución anterior. Puede quedar en disco un
-        archivo temporal sin cifrar por cada una. Ejecuta 'aeat app maintenance reconcile'
-        cuando se resuelva la causa.
+        archivo temporal sin cifrar por cada una.
       export_requires_destination: Indica --to RUTA como destino del paquete, o ejecuta
         el comando en un terminal interactivo para que se te pregunte.
       export_requires_transport: Usa --encrypt para un paquete cifrado de transferencia,
@@ -4046,8 +4041,7 @@ cli:
         movimientos completo, las revisiones de cálculo y los registros de presentación.
         Se escribió en {out}. Úsalo solo para gestión local/SAR; no lo envíes por
         correo, no lo sincronices ni lo transfieras. Bórralo cuando termine esa gestión
-        local/SAR. Selecciona la exportación cifrada para un paquete estructurado
-        de transferencia cifrado AEAD.'
+        local/SAR.'
       export_transport_conflict: Elige --encrypt o --cleartext-local, no ambos.
       help: Gestionar valores de configuración del perfil activo
       history:
@@ -4069,8 +4063,7 @@ cli:
       history_until_help: Filtrar el historial a eventos en o antes de esta marca
         ISO-8601 (p. ej. 2026-04-30T23:59:59+00:00)
       import_active_switch_info: El perfil importado {name} es ahora el perfil ACTIVO;
-        las órdenes siguientes operan sobre él. Ejecuta 'aeat config login <name>'
-        para cambiar el perfil activo.
+        las órdenes siguientes operan sobre él.
       import_encrypted_bundle_invalid: No se pudo descifrar o validar el paquete de
         perfil cifrado. Comprueba la frase de contraseña y el archivo.
       import_help: Registra un paquete portátil de perfil desde un archivo
@@ -4144,8 +4137,8 @@ cli:
         archive_name_help: Nombre del sandbox (sin el prefijo).
         archive_requires_yes: Archivar un sandbox es una transición de estado. Vuelve
           a ejecutar 'aeat config profile sandbox archive %{name} --yes' para confirmar.
-        archive_restorable_info: El sandbox ahora está latente; ejecuta 'aeat config
-          profile sandbox restore %{name}' para recuperarlo.
+        archive_restorable_info: El sandbox %{name} ahora está latente y se puede
+          recuperar.
         archive_yes_help: Confirma el archivado.
         create_active_info: El sandbox es ahora el perfil ACTIVO; todos los comandos
           se ejecutan sobre él hasta que cambie de perfil o lo descarte.
@@ -4181,8 +4174,7 @@ cli:
         prune_requires_yes: Descartar todos los sandboxes es destructivo. Vuelve a
           ejecutar 'aeat config profile sandbox prune --yes' para confirmar.
         prune_skipped_active_info: Se omitió el sandbox activo %{names}; cambia a
-          otro perfil y vuelve a ejecutar 'aeat config profile sandbox prune --yes'
-          para descartarlo.
+          otro perfil para descartarlo.
         prune_yes_help: Confirma el descarte de todos los sandboxes.
         restore_help: Recupera un sandbox archivado y lo devuelve a estado activo.
         restore_name_help: Nombre del sandbox (sin el prefijo).
@@ -4364,32 +4356,73 @@ cli:
       check:
         drifted: El árbol de almacenamiento no coincide con su declaración.
         help: Verifica el árbol de almacenamiento frente a su declaración sin repararlo
+        issue:
+          missing_path: falta una ruta de almacenamiento obligatoria
+          path_type_mismatch: una ruta de almacenamiento tiene un tipo de sistema
+            de archivos inesperado
+          permissions_drifted: los permisos de la raíz de almacenamiento no cumplen
+            los requisitos
         mode_unenforced: Esta plataforma no implementa los bits de permisos POSIX,
           así que no se han comprobado los permisos de la raíz.
       errors:
-        reclaim_refused: 'se rechaza liberar %{category}: %{reason}. %{path} contiene
-          %{entries} entradas y no se ha eliminado ninguna.'
-        reclaim_unconfirmed: liberar %{category} elimina %{entries} entradas en %{path}
-          y requiere confirmación explícita.
+        reclaim_area_refused: 'Se rechaza liberar %{area}: %{reason}. Las %{entries}
+          entradas permanecen intactas.'
+        reclaim_area_unconfirmed: Liberar %{area} elimina %{entries} entradas y requiere
+          confirmación explícita.
       help: Inspecciona y mantiene el árbol de almacenamiento local
       init:
         already_materialised: Todos los directorios declarados ya existían; no se
           ha creado ninguno.
         help: Crea todos los directorios declarados conservando lo que ya exista
+      labels:
+        already_present: Ya presentes
+        area: Área
+        areas: Áreas
+        checked_areas: Áreas comprobadas
+        created: Creados
+        detail: Detalle
+        entries: Entradas
+        entry_count: Número de entradas
+        footprint: Tamaño
+        healthy: Correcto
+        issues: Problemas
+        lifecycle: Ciclo de vida
+        'no': 'no'
+        notice_info: Información
+        notice_warning: Aviso
+        occupancy: Ocupación
+        path: Ruta
+        reclaimable: Liberable
+        removed_entries: Entradas eliminadas
+        resolved_paths: Rutas resueltas
+        retained_entries: Entradas conservadas
+        storage_root: Raíz de almacenamiento
+        targets: Destinos
+        'yes': sí
       list:
-        help: Muestra cada categoría de almacenamiento, su ruta y si contiene algo
+        area_help: Muestra la ocupación y el espacio agregado de cada área de almacenamiento
         relocation_is_manual: Para mover el árbol, detén la aplicación, cópialo tú
           mismo y luego apunta %{variable} a la nueva ubicación. Ningún comando lo
           mueve, porque una copia que termina para los registros pero no para el material
           de claves deja ambos inservibles.
       reclaim:
-        category_help: Categoría de almacenamiento que se va a liberar
-        help: Elimina el contenido regenerable de una categoría de almacenamiento
+        area_argument_help: Área de almacenamiento que se va a liberar
+        area_help: Elimina el contenido regenerable de un área de almacenamiento
         incomplete: Algunas entradas no se han podido eliminar y siguen en el disco.
         yes_help: Confirma la eliminación; sin esta opción el comando se rechaza
       show:
-        category_help: Categoría de almacenamiento que se va a mostrar
-        help: Muestra una categoría de almacenamiento al completo
+        area_argument_help: Área de almacenamiento que se va a mostrar
+        area_help: Muestra un área de almacenamiento completa
+      values:
+        lifecycle:
+          durable: duradera
+          mixed: mixta
+          reclaimable: liberable
+        occupancy:
+          absent: ausente
+          empty: vacía
+          populated: con datos
+          unresolved: sin resolver
     unset:
       help: Eliminar el valor asignado a una clave de configuración
       key_help: Clave a limpiar
@@ -5112,8 +5145,7 @@ cli:
       note_help: Nota opcional registrada en cada archivo adjunto obtenido.
       notices:
         files_refused: '%{refused_count} archivo(s) de esta carpeta no se pudieron
-          obtener bajo el permiso drive.file; descárgalos manualmente y adjúntalos
-          con ''aeat app ledger attach --attachment-id ...''.'
+          obtener bajo el permiso drive.file; descárgalos manualmente y adjúntalos.'
     remove:
       actor_help: Nombre del operador registrado en el evento del bucket
       dry_run_help: Informar los efectos sin eliminar el movimiento del libro
@@ -5151,7 +5183,7 @@ cli:
       child_description_help: Descripción de una transacción hija; se puede repetir
       classification_dropped: La clasificación del padre %{classification} no se copió
         a los hijos de la división; cada hijo queda como NOT_YET_PROCESSED y necesita
-        una clasificación independiente.
+        reclasificarse.
       errors:
         child_args_mismatch: Cada importe hijo debe tener una descripción hija correspondiente
         min_two_children: Debes indicar al menos dos transacciones hijas
@@ -5328,54 +5360,66 @@ cli:
           ubicados
         storage_init: Crea cualquier directorio de almacenamiento que falte
         storage_list: Consulta dónde se guarda cada tipo de dato local
-        storage_reclaim: Libera espacio eliminando una categoría que la aplicación
-          puede reconstruir
-        storage_show: Consulta una categoría de almacenamiento en detalle
+        storage_reclaim: Libera espacio eliminando un área que la aplicación puede
+          reconstruir
+        storage_show: Consulta un área de almacenamiento en detalle
       root:
-        diagnostics_live_filed: Diagnosticar las declaraciones presentadas capturadas
-          en vivo.
-        diagnostics_overview: Mostrar el diagnóstico general del estado del sistema.
-        diagnostics_registry_inspect: Inspeccionar el registro de modelos fiscales.
-        diagnostics_repair: Ejecutar comprobaciones de salud y reparar el estado de
-          la aplicación.
-        diagnostics_review_queue: Mostrar la cola de revisión pendiente.
-        footer: Ejecute 'aeat <comando> --help' para obtener más información sobre
-          cada comando.
-        heading: CADRUMO, herramienta de declaraciones fiscales con la AEAT.
-        ledger_allocate: Asignar transacciones a un periodo fiscal.
-        ledger_archive: Archivar entradas del libro de transacciones.
-        ledger_attach: Adjuntar un fichero de origen a una entrada del libro.
-        ledger_classify: Clasificar transacciones del libro según su naturaleza fiscal.
-        ledger_export: Exportar el libro de transacciones.
-        ledger_import: Importar transacciones al libro desde una fuente externa.
-        ledger_list: Listar entradas del libro de transacciones.
-        ledger_remove: Eliminar una entrada del libro de transacciones.
-        ledger_reset: Reiniciar el estado del libro de transacciones.
-        ledger_review: Revisar entradas del libro para su clasificación fiscal.
-        ledger_stash: Guardar temporalmente cambios del libro pendientes.
-        ledger_status: Mostrar el estado del libro de transacciones.
-        ledger_update: Actualizar una entrada del libro de transacciones.
-        ledger_view: Ver el detalle de una entrada del libro.
-        modelo_bindings_list: Listar las vinculaciones del modelo fiscal activo.
-        modelo_list: Listar los modelos fiscales disponibles.
-        modelo_work: 'Trabajar con un modelo fiscal: introducir datos, calcular y
-          exportar.'
-        paragraph_storage_isolation: Para una ejecución aislada desde cero, defina
-          CADRUMO_LOCAL_STORAGE_ROOT, CADRUMO_SECRET_STORE_BACKEND=file, CADRUMO_SECRET_STORE_DIR
-          y CADRUMO_SECRET_PASSPHRASE; los logs quedan por defecto bajo ese directorio
-          de almacenamiento.
-        paragraph_two_roots: 'Dos superficies principales: ''app'' para operaciones
-          de declaración y ''config'' para configuración y diagnóstico.'
-        paragraph_type_help: Escriba 'aeat <comando> --help' para obtener ayuda detallada.
-        section_daily_ledger: Libro diario de transacciones
+        diagnostics_logs: Muestra la ruta del log y sus últimas líneas.
+        diagnostics_overview_verbose: Muestra el estado general con más detalle.
+        diagnostics_repair_json: Devuelve en JSON el informe completo de salud local.
+        diagnostics_version: Muestra la huella del paquete y del registro.
+        family_app: Abre los comandos fiscales vinculados al perfil.
+        family_config: Abre perfiles, sesión, custodia, almacenamiento y reparación.
+        footer: Añade --help para más detalle. Elimina datos sensibles del log y después
+          informa en github.com/nevenincs/cadrumo/issues.
+        heading: CADRUMO - flujo local con la Agencia Estatal de Administración Tributaria
+          (AEAT)
+        paragraph_app_root: La raíz app gestiona resumen, libro, modelos, revisión,
+          registro y lecturas autenticadas de la AEAT.
+        paragraph_config_root: La raíz config gestiona perfiles, datos locales cifrados,
+          claves de recuperación, sesiones, autenticación con la AEAT y reparación.
+        paragraph_local_first: CADRUMO conserva los datos fiscales en local y expone
+          exactamente dos raíces de comandos.
+        paragraph_privacy: Las etiquetas de perfil son visibles. Se protegen identidades
+          fiscales, credenciales, identificadores de almacenamiento, claves de objeto
+          y contenido sensible de direcciones web.
+        paragraph_profile_terms: Un perfil guarda hechos y ajustes locales de un contribuyente.
+          El perfil activo es el contexto seleccionado. Una sesión permite reanudar
+          el acceso a sus datos cifrados.
+        paragraph_review_terms: La cola de revisión contiene hallazgos que requieren
+          actuación. El registro contiene reglas y fuentes fiscales validadas y versionadas;
+          no guarda datos fiscales ni presenta declaraciones.
+        paragraph_tax_terms: El libro contiene movimientos importados. Un modelo es
+          un formulario oficial de la AEAT, distinto de su unidad de trabajo o exportación
+          local.
+        recovery_login: Inicia o renueva una sesión ausente, cerrada o caducada.
+        recovery_passphrase: Recupera el almacén de secretos con el código registrado.
+        recovery_profile: Inspecciona un problema detectado en el puntero de perfil
+          activo.
+        recovery_repair: Antes de cambiar datos, ejecuta este informe de salud de
+          solo lectura.
+        section_command_families: Familias de comandos
         section_diagnostics: Diagnóstico
-        section_modelo_lifecycle: Ciclo de vida del modelo
-        section_setup: Configuración
-        setup_configure_auth: Configurar la autenticación con la AEAT.
-        setup_create_profile: Crear un nuevo perfil de contribuyente.
-        setup_inspect_profile: Inspeccionar el perfil de contribuyente activo.
+        section_recovery: Reanudar o recuperar
+        section_start_resume: Empezar o continuar
+        section_workflow: Flujo principal
+        start_create: Crea el primer perfil fiscal local.
+        start_edit: Completa o corrige un perfil incompleto.
+        start_list: Lista los perfiles registrados e identifica el activo.
+        start_login: Selecciona un perfil e inicia o renueva su sesión.
+        start_status: Comprueba la preparación y la siguiente acción autorizada.
+        workflow_import: Importa movimientos bancarios o contables.
+        workflow_ledger_review: Revisa las filas importadas que requieren atención.
+        workflow_modelo: Crea o gestiona unidades de trabajo de modelos.
+        workflow_overview: Resume el estado del perfil y del trabajo.
+        workflow_profile_status: Muestra la preparación del perfil.
+        workflow_registry: Inspecciona metadatos y fuentes validados del registro.
+        workflow_review_queue: Muestra elementos del perfil pendientes de revisión.
+        workflow_verification: Lista informes guardados de verificación de declaraciones.
     landing:
       active_profile_message: 'Perfil activo: %{profile}.'
+      active_profile_unavailable_message: Hay un perfil activo seleccionado, pero
+        su etiqueta no está disponible.
       no_active_profile_message: No hay ningún perfil activo.
       text_template: '%{message} Comando sugerido: %{command}'
   overview:
@@ -5552,9 +5596,6 @@ cli:
     year_help: Año de declaración para --period (p. ej. 2024).
   registry:
     app_help: Gestión del registro de modelos fiscales
-    audit_oracles_environment_help: Entorno del catálogo de paridad en vivo a auditar
-      (production, test_environment o both)
-    audit_oracles_help: Mostrar discrepancias de oráculos de paridad en vivo al arrancar
     casilla_help: Id de casilla a comparar; repetir para sustituir las casillas calculadas
       por defecto
     citations:
@@ -5596,26 +5637,17 @@ cli:
       view_help: Mostrar la estructura de un manual y, opcionalmente, una sección
       year_help: Año fiscal del manual (p. ej. 2024)
     metrics:
-      applicability_declaration_count: Nº declaraciones de aplicabilidad
       application_link_count: Nº enlaces de aplicación
       application_link_surfaces: Superficies de enlace de aplicación
       artefact_refs: Referencias de artefactos
-      backend_exists: Backend existe
       captured_count: Nº capturados
       casilla_count: Nº casillas
       compared_casillas: Casillas comparadas
-      comparison_count: Nº comparaciones
       cross_reference_count: Nº referencias cruzadas
-      difference_count: Nº diferencias
-      differences: Diferencias
       drift_count: Nº desviaciones (drift)
-      environment: Entorno
       extraction_profile_count: Nº perfiles de extracción
-      failed_count: Nº fallidos
       failed_declaration_count: Número de declaraciones fallidas
-      failure_count: Nº fallos
       formula_count: Nº fórmulas
-      formula_workbook_count: Nº libros de fórmulas
       legal_reference_count: Nº referencias legales
       missing_filed_casillas: Casillas presentadas faltantes
       missing_local_casillas: Casillas locales faltantes
@@ -5623,50 +5655,22 @@ cli:
       modelo_count: Nº modelos
       modelos: Modelos
       observation_paths: Rutas de observación
-      orphan_oracle_ids: IDs de oráculo huérfanos
-      passed: Pasados
-      registered_oracle_ids: IDs de oráculo registrados
       revision: Revisión
       revision_count: Nº revisiones
       row_count: Nº filas
-      runner_detail: Detalle del ejecutor
-      runner_status: Estado del ejecutor
-      scanned_count: Nº escaneados
-      scenario_id: ID de escenario
       source_reference_count: Nº referencias de origen
       status: Estado
-      tape_path: Ruta de la cinta
-      unsupported_xls_count: Nº XLS no soportados
       verification_expectation_count: Nº expectativas de verificación
       verified: Verificado
-      workbook_count: Nº libros (workbooks)
       workbook_parity_ref_count: Nº referencias de paridad de libro
-      workbook_path: Ruta del libro
     observation_help: Manifiesto cifrado de observación de declaración presentada
       que se va a verificar
-    parity_app_help: Ejecutar escenarios y cintas de paridad para comprobaciones manuales
-    parity_output_help: Archivo JSON de destino para la cinta de paridad generada
-    parity_replay_help: Reproducir una cinta de paridad archivada contra el runtime
-      actual del registro
-    parity_run_help: Ejecutar un escenario de paridad guardado y archivar la cinta
-      resultante
-    parity_scenario_help: Ruta a un archivo JSON de escenario de paridad
-    parity_store_root_help: Directorio raíz usado para guardar las cintas de paridad
-      generadas
-    parity_tape_help: Ruta a un archivo JSON de cinta de paridad guardada
     source_observation_help: Manifiesto cifrado de observación fuente requerido por
       vínculos de declaraciones previas o relaciones
     verify_filed_state_help: Comparar el cálculo local del registro con el estado
       presentado capturado de AEAT
     verify_help: Verificar la integridad del registro local
     verify_source_root_help: Ruta al directorio de origen para verificar
-    workbooks_app_help: Gestión de libros de trabajo del registro
-    workbooks_limit_help: Límite de libros a compilar
-    workbooks_output_help: Directorio de salida para los libros compilados
-    workbooks_resume_help: Reanudar la compilación de libros desde el último punto
-    workbooks_root_help: Directorio raíz que contiene las definiciones de los libros
-    workbooks_timeout_help: Tiempo de espera máximo (en segundos) para la compilación
-    workbooks_verify_help: Verificar la integridad de los libros de trabajo generados
   review:
     app_help: 'Cola de revisión del operador: clasifica transacciones del libro, justificantes
       de compra e incidencias de modelo'
@@ -5710,25 +5714,37 @@ cli:
     format_help: 'Formato de salida: text, json.'
     help_help: Mostrar la ayuda.
     landing:
+      context_heading: Contexto actual
       headline: Asistente fiscal CADRUMO
       help_line: 'Más ayuda: ejecuta `aeat --help`, `aeat config --help` o `aeat app
-        --help`. Los modificadores globales (`--format json`, `--language es`, `--profile
-        NOMBRE`, `--quiet`, `--verbose`, `--debug`) deben ir ANTES del subcomando,
-        p. ej. `aeat --format json app ledger list` (no `aeat app ledger list --format
-        json`).'
+        --help`. Los modificadores globales incluyen `--format json`, `--language
+        es`, `--profile NOMBRE`, `--quiet`, `--verbose` y `--debug`. Colócalos antes
+        del subcomando. Por ejemplo, ejecuta `aeat --format json app ledger list`,
+        no `aeat app ledger list --format json`.'
+      privacy_line: 'Privacidad: las etiquetas de perfil son visibles; los datos fiscales
+        y los identificadores de almacenamiento quedan protegidos.'
+      profile_repair_command: 'Repara el estado del perfil: `aeat config repair profile`.'
       quick_start_heading: Inicio rápido
-      quick_start_import: '  3. `aeat app ledger import <extracto-bancario.csv> --provider
-        csv` - añadir tus movimientos bancarios.'
-      quick_start_repair: '  5. `aeat config repair` - diagnosticar configuración,
+      quick_start_import: '  3. `aeat app ledger import --file extracto.csv --provider
+        csv` - importa movimientos.'
+      quick_start_modelo: '  5. `aeat app modelo work --help` - muestra las acciones
+        para crear, calcular, verificar y exportar.'
+      quick_start_queue: '  6. `aeat app review queue` - localiza elementos del perfil
+        que requieren atención.'
+      quick_start_repair: '  7. `aeat config repair` - inspecciona configuración,
         almacenamiento y salud local.'
-      quick_start_review: '  4. `aeat app ledger review` - revisar y clasificar las
+      quick_start_review: '  4. `aeat app ledger review` - revisa y clasifica las
         filas importadas.'
-      quick_start_setup_done: '  1. `aeat config profile status` - comprobar el perfil
-        activo antes del trabajo operativo.'
-      quick_start_setup_needed: '  1. `aeat config profile create NAME` - crear primero
-        tu perfil fiscal local.'
-      quick_start_status: '  2. `aeat app overview status` - leer el estado actual
-        del espacio y sus diagnósticos.'
+      quick_start_setup_done: '  1. `aeat config profile status` - comprueba la preparación
+        y la siguiente acción.'
+      quick_start_setup_login: '  1. `aeat config login NAME` - activa un perfil de
+        contribuyente registrado.'
+      quick_start_setup_needed: '  1. `aeat config profile create NAME` - crea un
+        perfil fiscal local.'
+      quick_start_setup_repair: '  1. `aeat config repair profile` - inspecciona y
+        repara el perfil seleccionado.'
+      quick_start_status: '  2. `aeat app overview status` - resume el estado del
+        perfil y del trabajo.'
       section_config: '  config - perfil, autenticación y diagnósticos'
       section_ledger: '  app ledger - importación bancaria y revisión de movimientos'
       section_modelo: '  app modelo - catálogo de modelos y unidades de trabajo'
@@ -5736,10 +5752,17 @@ cli:
       section_registry: '  app registry - datos locales del registro AEAT'
       section_review: '  app review - elementos que requieren atención'
       sections_heading: Secciones principales
-      tagline: Flujo fiscal español local-first para autónomos.
-      welcome_no_profile: Bienvenido. Todavía no hay un perfil activo configurado;
-        empieza por la configuración.
-      welcome_profile: Bienvenido de nuevo. El perfil activo es `%{profile}`.
+      session_login_command: 'Inicia o renueva una sesión de perfil: `aeat config
+        login [NAME]`.'
+      session_status_command: 'Comprueba la preparación: `aeat config profile status`.'
+      session_unchecked: La sesión y la preparación no se infieren del perfil seleccionado.
+      tagline: Flujo local con la Agencia Estatal de Administración Tributaria (AEAT)
+        para contribuyentes y asesores.
+      welcome_no_profile: 'Perfil activo: ninguno. Crea uno antes del trabajo vinculado
+        al perfil.'
+      welcome_profile: 'Perfil activo: `%{profile}`.'
+      welcome_profile_unavailable: 'Perfil activo: no disponible. Repara el perfil
+        seleccionado antes del trabajo vinculado al perfil.'
     language_help: Idioma de la salida y del texto de ayuda (en, es, ca, hu).
     profile_help: Nombre del perfil activo.
     quiet_help: Mostrar solo los errores.
@@ -7224,10 +7247,10 @@ errors:
       Ejecuta `aeat config login NAME` y vuelve a intentarlo.
     refused_storage_passphrase_too_short: La frase de contraseña es demasiado corta.
       Debe tener al menos 8 caracteres.
-    refused_storage_reclaim: 'Se rechaza liberar esta categoría de almacenamiento:
-      su ciclo de vida declarado conserva su contenido.'
-    refused_storage_reclaim_unconfirmed: Liberar una categoría de almacenamiento elimina
-      datos y requiere confirmación explícita.
+    refused_storage_reclaim: 'Se rechaza liberar esta área de almacenamiento: su ciclo
+      de vida declarado conserva su contenido.'
+    refused_storage_reclaim_unconfirmed: Liberar un área de almacenamiento elimina
+      datos y requiere confirmación.
     refused_storage_secret_already_exists: Ya existe un secreto con esa clave. Usa
       la opción de sobrescritura si quieres reemplazarlo.
     refused_storage_session_expired: La sesión activa ha caducado por inactividad.
@@ -7486,6 +7509,7 @@ flows:
     language:
       unavailable: Este perfil no ofrece un ajuste de idioma.
     progress: '{present} de {total} campos rellenados, faltan {missing} para presentar'
+    required_complete: Está presente toda la información del perfil requerida por el esquema.
     recovery_boundary: 'El código de recuperación se crea y se rota solo desde la
       terminal: aeat config recovery create / aeat config recovery rotate. Las 24
       palabras se muestran una sola vez y no se pueden volver a mostrar.'
@@ -7621,6 +7645,11 @@ live:
       periodo objetivo.
     year_range_invalid: El rango de ejercicios indicado no es válido.
   filed:
+    pull:
+      submitted_file_extraction_failed: 'La declaración del modelo {modelo} {period}
+        {ejercicio} (expediente {expediente_id}) no se pudo leer a través del diseño
+        de fichero presentado. El PDF de la declaración, si AEAT lo proporcionó, sigue
+        siendo la única vía de extracción. Motivo del analizador: {reason}'
     pull_all:
       denominator_note_profile: Medido sobre {expected} par(es) que esperan los datos
         declarados por el propio contribuyente. Otros {offered_only} par(es) proceden
@@ -68757,394 +68786,433 @@ modelo:
           casilla:
             '01':
               help: null
-              label: null
+              label: IVA devengado RG tipo super-reducido 4pct - Base imponible
             '02':
               help: null
-              label: null
+              label: IVA devengado RG tipo super-reducido 4pct - Tipo porcentaje
             '03':
               help: null
-              label: null
+              label: IVA devengado RG tipo super-reducido 4pct - Cuota
             '04':
               help: null
-              label: null
+              label: IVA devengado RG tipo reducido 10pct - Base imponible
             '05':
               help: null
-              label: null
+              label: IVA devengado RG tipo reducido 10pct - Tipo porcentaje
             '06':
               help: null
-              label: null
+              label: IVA devengado RG tipo reducido 10pct - Cuota
             '07':
               help: null
-              label: null
+              label: IVA devengado RG tipo general 21pct - Base imponible
             08:
               help: null
-              label: null
+              label: IVA devengado RG tipo general 21pct - Tipo porcentaje
             09:
               help: null
-              label: null
+              label: IVA devengado RG tipo general 21pct - Cuota
             '10':
               help: null
-              label: null
+              label: IVA devengado adquisiciones intracomunitarias bienes y servicios
+                - Base
             '108':
               help: null
-              label: null
+              label: Rectificativa - Otros ajustes determinados supuestos por discrepancia
+                criterio administrativo
             '109':
               help: null
-              label: null
+              label: Resultado - Devoluciones acordadas AEAT anteriores autoliquidaciones
+                del ejercicio y periodo
             '11':
               help: null
-              label: null
+              label: IVA devengado adquisiciones intracomunitarias bienes y servicios
+                - Cuota
             '111':
               help: null
-              label: null
+              label: Rectificativa - Importe de la rectificacion
             '112':
               help: null
               label: null
             '12':
               help: null
-              label: null
+              label: IVA devengado otras ops inversion sujeto pasivo excl intracom
+                - Base
             '120':
               help: null
-              label: null
+              label: Informacion adicional - Ops no sujetas reglas localizacion (excl
+                casilla 123)
             '122':
               help: null
-              label: null
+              label: Informacion adicional - Ops sujetas inversion sujeto pasivo
             '123':
               help: null
-              label: null
+              label: Informacion adicional - Ops no sujetas localizacion regimenes
+                especiales ventanilla unica
             '124':
               help: null
-              label: null
+              label: Informacion adicional - Ops sujetas regimenes especiales ventanilla
+                unica
             '13':
               help: null
-              label: null
+              label: IVA devengado otras ops inversion sujeto pasivo excl intracom
+                - Cuota
             '14':
               help: null
-              label: null
+              label: Modificacion bases y cuotas IVA devengado - Base imponible
             '15':
               help: null
-              label: null
+              label: Modificacion bases y cuotas IVA devengado - Cuota
             '150':
               help: null
-              label: null
+              label: IVA devengado regimen general nuevo tipo tier 1 - Base imponible
             '151':
               help: null
-              label: null
+              label: IVA devengado regimen general nuevo tipo tier 1 - Tipo porcentaje
             '152':
               help: null
-              label: null
+              label: IVA devengado regimen general nuevo tipo tier 1 - Cuota
             '153':
               help: null
-              label: null
+              label: IVA devengado regimen general nuevo tipo tier 2 - Base imponible
             '154':
               help: null
-              label: null
+              label: IVA devengado regimen general nuevo tipo tier 2 - Tipo porcentaje
             '155':
               help: null
-              label: null
+              label: IVA devengado regimen general nuevo tipo tier 2 - Cuota
             '156':
               help: null
-              label: null
+              label: Recargo equivalencia tipo 0.5pct - Base imponible
             '157':
               help: null
-              label: null
+              label: Recargo equivalencia tipo 0.5pct - Tipo porcentaje
             '158':
               help: null
-              label: null
+              label: Recargo equivalencia tipo 0.5pct - Cuota
             '16':
               help: null
-              label: null
+              label: Recargo equivalencia tipo 1.0pct - Base imponible
             '165':
               help: null
-              label: null
+              label: IVA devengado regimen general tipo 2pct desde 2024 - Base imponible
             '166':
               help: null
-              label: null
+              label: IVA devengado regimen general tipo 2pct desde 2024 - Tipo porcentaje
             '167':
               help: null
-              label: null
+              label: IVA devengado regimen general tipo 2pct desde 2024 - Cuota
             '168':
               help: null
-              label: null
+              label: Recargo equivalencia nuevo tipo desde 2024 - Base imponible
             '169':
               help: null
-              label: null
+              label: Recargo equivalencia nuevo tipo desde 2024 - Tipo porcentaje
             '17':
               help: null
-              label: null
+              label: Recargo equivalencia tipo 1.0pct - Tipo porcentaje
             '170':
               help: null
-              label: null
+              label: Recargo equivalencia nuevo tipo desde 2024 - Cuota
             '18':
               help: null
-              label: null
+              label: Recargo equivalencia tipo 1.0pct - Cuota
             '19':
               help: null
-              label: null
+              label: Recargo equivalencia tipo 1.4pct - Base imponible
             '20':
               help: null
-              label: null
+              label: Recargo equivalencia tipo 1.4pct - Tipo porcentaje
             '21':
               help: null
-              label: null
+              label: Recargo equivalencia tipo 1.4pct - Cuota
             '22':
               help: null
-              label: null
+              label: Recargo equivalencia tipo 5.2pct - Base imponible
             '23':
               help: null
-              label: null
+              label: Recargo equivalencia tipo 5.2pct - Tipo porcentaje
             '24':
               help: null
-              label: null
+              label: Recargo equivalencia tipo 5.2pct - Cuota
             '25':
               help: null
-              label: null
+              label: Modificacion bases y cuotas recargo equivalencia - Base imponible
             '26':
               help: null
-              label: null
+              label: Modificacion bases y cuotas recargo equivalencia - Cuota
             '27':
               help: null
-              label: null
+              label: Total cuota devengada
             '28':
               help: null
-              label: null
+              label: IVA deducible ops interiores corrientes - Base
             '29':
               help: null
-              label: null
+              label: IVA deducible ops interiores corrientes - Cuota
             '30':
               help: null
-              label: null
+              label: IVA deducible ops interiores bienes inversion - Base
             '31':
               help: null
-              label: null
+              label: IVA deducible ops interiores bienes inversion - Cuota
             '32':
               help: null
-              label: null
+              label: IVA deducible importaciones bienes corrientes - Base
             '33':
               help: null
-              label: null
+              label: IVA deducible importaciones bienes corrientes - Cuota
             '34':
               help: null
-              label: null
+              label: IVA deducible importaciones bienes inversion - Base
             '35':
               help: null
-              label: null
+              label: IVA deducible importaciones bienes inversion - Cuota
             '36':
               help: null
-              label: null
+              label: IVA deducible adquisiciones intracomunitarias corrientes - Base
             '37':
               help: null
-              label: null
+              label: IVA deducible adquisiciones intracomunitarias corrientes - Cuota
             '38':
               help: null
-              label: null
+              label: IVA deducible adquisiciones intracomunitarias bienes inversion
+                - Base
             '39':
               help: null
-              label: null
+              label: IVA deducible adquisiciones intracomunitarias bienes inversion
+                - Cuota
             '40':
               help: null
-              label: null
+              label: Rectificacion deducciones - Base
             '41':
               help: null
-              label: null
+              label: Rectificacion deducciones - Cuota
             '42':
               help: null
-              label: null
+              label: Compensaciones regimen especial agricultura ganaderia y pesca
+                - Cuota
             '43':
               help: null
-              label: null
+              label: Regularizacion bienes de inversion - Cuota
             '44':
               help: null
-              label: null
+              label: Regularizacion prorrata por porcentaje definitivo - Cuota
             '45':
               help: null
-              label: null
+              label: Total a deducir - Cuota
             '47':
               help: null
-              label: null
+              label: RS - 1T-2T-3T - Suma ingresos a cuenta conjunto actividades
             '48':
               help: null
-              label: null
+              label: RS - 4T - Suma cuotas derivadas regimen simplificado conjunto
+                actividades
             '49':
               help: null
-              label: null
+              label: RS - 4T - Suma ingresos a cuenta realizados en el ejercicio
             '50':
               help: null
-              label: null
+              label: RS - 4T - Resultado ([48]-[49])
             '51':
               help: null
-              label: null
+              label: RS - Cuotas devengadas adquisiciones intracomunitarias bienes
             '52':
               help: null
-              label: null
+              label: RS - Cuotas devengadas entregas activos fijos
             '53':
               help: null
-              label: null
+              label: RS - Cuotas devengadas IVA devengado inversion sujeto pasivo
             '54':
               help: null
-              label: null
+              label: RS - Total cuota resultante
             '55':
               help: null
-              label: null
+              label: RS - IVA deducible adquisicion o importacion activos fijos
             '56':
               help: null
-              label: null
+              label: RS - IVA deducible regularizacion bienes inversion
             '57':
               help: null
-              label: null
+              label: RS - Total IVA deducible regimen simplificado ([55]+[56])
             '58':
               help: null
-              label: null
+              label: RS - Resultado regimen simplificado ([54]-[57])
             '59':
               help: null
-              label: null
+              label: Informacion adicional - Entregas intracomunitarias bienes y servicios
             '60':
               help: null
-              label: null
+              label: Informacion adicional - Exportaciones y operaciones asimiladas
             '62':
               help: null
-              label: null
+              label: Informacion adicional - Entregas criterio caja devengado art
+                75 LIVA - Base imponible
             '63':
               help: null
-              label: null
+              label: Informacion adicional - Entregas criterio caja devengado art
+                75 LIVA - Cuota
             '64':
-              help: null
-              label: null
+              help: 'Casilla 64: suma de resultados, calculada como casilla 46 más
+                casilla 58 más casilla 76.'
+              label: Resultado - Suma de resultados ([46]+[58]+[76])
             '65':
               help: null
-              label: null
+              label: Resultado - Porcentaje atribuible Administracion del Estado
             '66':
               help: null
-              label: null
+              label: Resultado - Importe atribuible Administracion del Estado ([64]×[65]/100)
             '68':
               help: null
-              label: null
+              label: Resultado - Tributacion conjunta resultado regularizacion anual
             '70':
               help: null
-              label: null
+              label: Resultado - Resultados a ingresar de anteriores autoliquidaciones
+                del ejercicio y periodo
             '71':
               help: null
-              label: null
+              label: Resultado final ([69]-[70]+[109])
             '74':
               help: null
-              label: null
+              label: Informacion adicional - Adquisiciones criterio caja - Base imponible
             '75':
               help: null
-              label: null
+              label: Informacion adicional - Adquisiciones criterio caja - Cuota
             '76':
               help: null
-              label: null
+              label: Resultado - Regularizacion cuotas art 80 cinco 5a LIVA
             '77':
               help: null
-              label: null
+              label: Resultado - IVA a la importacion liquidado por la Aduana pendiente
+                de ingreso
             modulos-iva-1-unidades:
               help: null
-              label: null
+              label: 'Módulo 1 (Personal empleado): número de unidades'
             modulos-iva-2-unidades:
               help: null
-              label: null
+              label: 'Módulo 2 (unidad actividad-específica: distancia recorrida,
+                carga vehículos o superficie del local): número de unidades'
             modulos-iva-3-unidades:
               help: null
-              label: null
+              label: 'Módulo 3 (unidad actividad-específica: consumo de energía eléctrica
+                u otra): número de unidades'
             modulos-iva-cuota-derivada:
               help: null
-              label: null
+              label: Cuota derivada del régimen simplificado (mayor de cuota devengada
+                neta de deducibles/forfait, o cuota mínima)
             modulos-iva-cuota-devengada:
               help: null
-              label: null
+              label: Cuota devengada por operaciones corrientes (Σ unidades módulo
+                × cuota devengada anual por unidad)
             modulos-iva-epigrafe:
               help: null
-              label: null
+              label: Epígrafe IAE de la actividad en régimen simplificado de IVA (módulos)
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: null
+              label: Ejercicio al que se refiere la autoliquidacion
             x-chim6r1ee1in4qbfchng:
               help: null
-              label: null
+              label: Periodo trimestral (1T / 2T / 3T / 4T)
             x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushec9gn6p8:
               help: null
-              label: null
+              label: Base imponible del autoconsumo del promotor inmobiliario (coste
+                de construccion, Art. 9.1.c + Art. 79.4 LISIVA)
             x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushecdqmut31:
               help: null
-              label: null
+              label: Cuota IVA del autoconsumo del promotor inmobiliario (21% sobre
+                base imponible, Art. 9.1.c + Art. 90 LISIVA)
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
               help: null
-              label: null
+              label: Cuota IVA deducible autorepercutida en operaciones interiores
+                con inversion del sujeto pasivo (LIVA art 84.Uno.2 + art 92; oficial
+                casilla 37)
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
               help: null
-              label: null
+              label: Cuota IVA autorepercutida en operaciones interiores con inversion
+                del sujeto pasivo (LIVA art 84.Uno.2; oficial casilla 13)
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
               help: null
-              label: null
+              label: Cuota IVA autorepercutida en adquisiciones intracomunitarias
+                (LIVA art 84.Uno.2)
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
               help: null
-              label: null
+              label: Cuota IVA deducible autorepercutida en adquisiciones intracomunitarias
+                (LIVA art 13 + art 15 + art 84.Uno.2 + art 92; oficial casillas 36/37)
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
               help: null
-              label: null
+              label: Cuota IVA autorepercutida devengada en adquisiciones intracomunitarias
+                (LIVA art 13 + art 15 + art 84.Uno.2; oficial casillas 10/11)
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
-              help: null
-              label: null
+              help: Suma la base imponible autorrepercutida devengada en adquisiciones
+                intracomunitarias.
+              label: Base imponible autorepercutida devengada en adquisiciones intracomunitarias
+                (LIVA art 13 + art 15 + art 84.Uno.2; oficial casillas 10/11)
             x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
               help: null
-              label: null
+              label: Cuotas a compensar de periodos anteriores aplicadas en este periodo
             x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
               help: null
-              label: null
+              label: Saldo de compensacion disponible para periodos posteriores
             x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
               help: null
-              label: null
+              label: Saldo a compensar generado en este periodo
             x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
               help: null
-              label: null
+              label: Cuotas a compensar pendientes de periodos anteriores
             x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
               help: null
-              label: null
+              label: Cuotas a compensar de periodos previos pendientes para periodos
+                posteriores
             x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
               help: null
-              label: null
+              label: Total cuota IVA deducible (soportado en operaciones interiores
+                + autorepercutido deducible)
             x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
               help: null
-              label: null
+              label: Total cuota IVA devengada (repercutido a los tres tipos + autorepercutido
+                en adquisiciones intracomunitarias)
             x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
               help: null
-              label: null
+              label: Prorrata general - porcentaje (volumen con derecho / volumen
+                total × 100)
             x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
               help: null
-              label: null
+              label: Volumen anual de operaciones que originan derecho a deducción
             x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
               help: null
-              label: null
+              label: Volumen anual total de operaciones
             x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
               help: null
-              label: null
+              label: Regularización por bienes de inversión (LIVA arts. 107-110)
             x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
               help: null
-              label: null
+              label: Cuota IVA repercutido al tipo general (21%)
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
               help: null
-              label: null
+              label: Cuota IVA repercutido al tipo reducido (10%)
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
-              help: null
-              label: null
+              help: Casilla transitoria del RD-ley 4/2024 para el tipo reducido, que
+                convive con el tipo reducido ordinario del 10%.
+              label: Cuota IVA repercutido al tipo reducido transitorio (5%/7,5%)
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
               help: null
-              label: null
+              label: Cuota IVA repercutido al tipo super-reducido (4%)
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
-              help: null
-              label: null
+              help: Casilla transitoria del RD-ley 4/2024 para el tipo super-reducido,
+                que convive con el tipo super-reducido ordinario del 4%.
+              label: Cuota IVA repercutido al tipo super-reducido transitorio (2%)
             x-d5r62bjiclpnar3kc5i6u:
               help: null
-              label: null
+              label: Resultado de la autoliquidacion ([66]+[77]+[68]-[78])
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
               help: null
-              label: null
+              label: Resultado del regimen general (cuota devengada - cuota deducible)
             x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
               help: null
-              label: null
+              label: Cuota IVA soportado deducible en importaciones de bienes corrientes
+                (LIVA art 17 + art 92; oficial casilla 33)
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: null
-              label: null
+              label: Cuota IVA soportado en operaciones interiores corrientes
           construct:
             modelo-303-iva-autoliquidacion:
               field:
@@ -70812,8 +70880,7 @@ modelo:
           field:
             label: Modelo 848 (orden-hac-85-2003), ejercicios 2003 y siguientes
 overview:
-  no_aeat_history: Este perfil no contiene pruebas de declaraciones confirmadas por
-    la AEAT. Recupere el historial de declaraciones que conserva la AEAT.
+  no_aeat_history: Este perfil no tiene ninguna presentación confirmada por la AEAT.
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: Se ha aplicado prorrata 50 % (Art. 61 LIRPF)

@@ -519,7 +519,7 @@ def _register_work_status_command(work_app: typer.Typer, deps: _LifecycleDeps) -
                 ),
             ),
         )
-        _emit_envelope(ctx, command="modelo.work.status", result=result, lines=lines, notices=[next_action])
+        _emit_envelope(ctx, command="modelo.work.status", result=result, lines=lines, notices=[next_step])
 
 
 def _register_work_rename_command(work_app: typer.Typer, deps: _LifecycleDeps) -> None:

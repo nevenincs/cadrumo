@@ -26,7 +26,7 @@ import threading
 from typing import TYPE_CHECKING
 
 import pytest
-from textual.widgets import DataTable, Input, Static
+from textual.widgets import DataTable, Input
 
 from .....adapters.inbound.tui import (
     FormField,
@@ -132,7 +132,9 @@ def _manager_offering(action: ManagerAction) -> ProfileManagerApp:
 
 
 def _notice(app: ProfileManagerApp) -> str:
-    return str(app.query_one("#manager-notice", Static).content)
+    from .....adapters.inbound.tui import PinnedStatusBar
+
+    return app.query_one("#manager-status", PinnedStatusBar).message
 
 
 def _open_form(app: ProfileManagerApp) -> FormScreen | None:

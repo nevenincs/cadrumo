@@ -1,225 +1,293 @@
-"""Real joins from declared operator actions to successful notice actions."""
+"""Contract tests for canonical action-to-live-schema resolution."""
 
 from __future__ import annotations
 
 import pytest
 
-from ....core.json_contract import ActionArgumentSource, ActionArgumentStatus, ResolvedActionArgument
 from ...operator_actions import (
-    OPERATOR_ACTION_CATALOGUE,
+    ActionArgumentBindingSpecification,
+    ActionArgumentSource,
     ActionCatalogue,
     ActionCatalogueEntry,
     ActionReference,
+    NoRecoveryOutcome,
 )
-from .. import resolve_catalogue_action, resolve_notice_action
+from .. import ManifestActionProfile
 from .._manifest import (
     InputSchemaInventoryRow,
     LiveLeafInventoryRow,
-    McpExposureInventoryRow,
-    MountedFamilyInventoryRow,
     OperatorSurfaceReconciliation,
-    ProfilePolicyInventoryRow,
     ReconciledOperatorLeaf,
     ResultSchemaInventoryRow,
+    resolve_manifest_action_profiles,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _reconciliation(*, target_command_key: str, required_input_names: tuple[str, ...]) -> OperatorSurfaceReconciliation:
-    """Build the actual typed reconciliation shape for one live target."""
-    return OperatorSurfaceReconciliation(
-        leaves=(
-            ReconciledOperatorLeaf(
-                live_leaf=LiveLeafInventoryRow(
-                    subject_leaf_key=target_command_key,
-                    canonical_cli_path=("config", "profile", "target"),
-                    provenance="real S05 command traversal projection",
-                ),
-                result_schema=ResultSchemaInventoryRow(
-                    subject_leaf_key=target_command_key,
-                    schema_name="TargetPayload",
-                    provenance="SCHEMA_REGISTRY",
-                ),
-                input_schema=InputSchemaInventoryRow(
-                    subject_leaf_key=target_command_key,
-                    required_input_names=required_input_names,
-                    provenance="S05 VerbInputSchema.required_inputs",
-                ),
-                mounted_family=MountedFamilyInventoryRow(
-                    root="config",
-                    child="profile",
-                    provenance="OperatorSurfaceContract.command_families",
-                ),
-                profile_policy=ProfilePolicyInventoryRow(
-                    subject_leaf_key=target_command_key,
-                    classification="profile_bound_read",
-                    should_expose_via_mcp=True,
-                    provenance="profile policy classification",
-                ),
-                mcp_exposure=McpExposureInventoryRow(
-                    subject_leaf_key=target_command_key,
-                    exposed=True,
-                    provenance="MCP tool descriptor inventory",
-                ),
-                exclusions=(),
-            ),
+def _leaf(
+    subject_leaf_key: str,
+    *,
+    required_inputs: tuple[str, ...] = (),
+    cli_path: tuple[str, ...] | None = None,
+    result_schema_key: str | None = None,
+    input_schema_key: str | None = None,
+    has_result_schema: bool = True,
+    has_input_schema: bool = True,
+) -> ReconciledOperatorLeaf:
+    path = cli_path if cli_path is not None else tuple(subject_leaf_key.split("."))
+    return ReconciledOperatorLeaf(
+        live_leaf=LiveLeafInventoryRow(
+            subject_leaf_key=subject_leaf_key,
+            canonical_cli_path=path,
+            provenance="resolved production command identity",
+        ),
+        result_schema=(
+            ResultSchemaInventoryRow(
+                subject_leaf_key=result_schema_key or subject_leaf_key,
+                schema_name="ActionResolutionPayload",
+                provenance="registered result schema",
+            )
+            if has_result_schema
+            else None
+        ),
+        input_schema=(
+            InputSchemaInventoryRow(
+                subject_leaf_key=input_schema_key or subject_leaf_key,
+                required_input_names=required_inputs,
+                provenance="live required input schema",
+            )
+            if has_input_schema
+            else None
+        ),
+        mounted_family=None,
+        profile_policy=None,
+        mcp_exposure=None,
+        exclusions=(),
+    )
+
+
+def _catalogue_entry(
+    *,
+    action_id: str = "operator.recovery.run",
+    target_command_key: str = "app.recovery.run",
+    inputs: tuple[str, ...] = ("subject_id",),
+) -> ActionCatalogueEntry:
+    return ActionCatalogueEntry(
+        action_id=action_id,
+        target_command_key=target_command_key,
+        argument_specifications=tuple(
+            ActionArgumentBindingSpecification(
+                argument_name=input_name,
+                source=ActionArgumentSource.REQUEST_CONTEXT,
+                source_key=input_name,
+            )
+            for input_name in inputs
         ),
     )
 
 
-def _profile_name_argument() -> ResolvedActionArgument:
-    """One concrete producer argument using the catalogue's declared provenance."""
-    return ResolvedActionArgument(
-        argument_name="profile_name",
-        status=ActionArgumentStatus.RESOLVED,
-        value="Ada",
-        source=ActionArgumentSource.VERDICT_CONTEXT,
-        source_key="profile_name",
+def _reconciliation(*leaves: ReconciledOperatorLeaf) -> OperatorSurfaceReconciliation:
+    return OperatorSurfaceReconciliation(leaves=leaves)
+
+
+def test_profiles_resolve_exact_actions_and_preserve_typed_no_recovery() -> None:
+    subject = _leaf("app.guard.run")
+    target = _leaf("app.recovery.run", required_inputs=("subject_id",))
+    catalogue = ActionCatalogue(entries=(_catalogue_entry(inputs=("subject_id", "optional_detail")),))
+    actionable = ManifestActionProfile(
+        subject_leaf_key="app.guard.run",
+        condition_id="guard.subject.missing",
+        scenario_id="scenario.subject.absent",
+        action=ActionReference(action_id="operator.recovery.run"),
+    )
+    closed = ManifestActionProfile(
+        subject_leaf_key="app.guard.run",
+        condition_id="guard.operation.forbidden",
+        scenario_id="scenario.safety.boundary",
+        no_recovery_outcome=NoRecoveryOutcome.SAFETY,
     )
 
-
-def test_zero_input_catalogue_action_resolves_to_a_success_notice_action() -> None:
-    action = resolve_notice_action(
-        action=ActionReference(action_id="operator.overview.status"),
-        argument_bindings=(),
-        catalogue=OPERATOR_ACTION_CATALOGUE,
-        reconciliation=_reconciliation(target_command_key="overview.status", required_input_names=()),
+    resolution = resolve_manifest_action_profiles(
+        profiles=(actionable, closed),
+        catalogue=catalogue,
+        reconciliation=_reconciliation(subject, target),
     )
 
-    assert action.model_dump(mode="json") == {
-        "action": {
-            "action_id": "operator.overview.status",
-            "target_command_key": "overview.status",
-        },
-        "argument_bindings": [],
-    }
+    actionable_resolution = next(
+        profile for profile in resolution.profiles if profile.declaration.identity == actionable.identity
+    )
+    assert actionable_resolution.subject_leaf is subject
+    assert actionable_resolution.resolved_action is not None
+    assert actionable_resolution.resolved_action.action_id == "operator.recovery.run"
+    assert actionable_resolution.resolved_action.target_leaf is target
+    assert resolution.action_for("operator.recovery.run") is actionable_resolution.resolved_action
+
+    closed_resolution = next(
+        profile for profile in resolution.profiles if profile.declaration.identity == closed.identity
+    )
+    assert closed_resolution.declaration.no_recovery_outcome is NoRecoveryOutcome.SAFETY
+    assert closed_resolution.resolved_action is None
 
 
-def test_required_catalogue_input_retains_concrete_value_and_provenance() -> None:
-    action = resolve_notice_action(
-        action=ActionReference(action_id="operator.profile.create"),
-        argument_bindings=(_profile_name_argument(),),
-        catalogue=OPERATOR_ACTION_CATALOGUE,
-        reconciliation=_reconciliation(
-            target_command_key="config.profile.create",
-            required_input_names=("profile_name",),
-        ),
+def test_every_catalogue_target_is_live_even_when_no_profile_references_it() -> None:
+    live_entry = _catalogue_entry()
+    dead_entry = _catalogue_entry(
+        action_id="operator.recovery.ghost",
+        target_command_key="app.recovery.ghost",
+    )
+    profile = ManifestActionProfile(
+        subject_leaf_key="app.guard.run",
+        condition_id="guard.subject.missing",
+        scenario_id="scenario.subject.absent",
+        action=ActionReference(action_id=live_entry.action_id),
     )
 
-    (argument,) = action.argument_bindings
-    assert argument.value == "Ada"
-    assert argument.source is ActionArgumentSource.VERDICT_CONTEXT
-    assert argument.source_key == "profile_name"
-
-
-def test_one_argument_can_use_exactly_one_of_its_declared_source_strategies() -> None:
-    reconciliation = _reconciliation(
-        target_command_key="modelo.work.calculate",
-        required_input_names=("work_unit_id",),
-    )
-    evidence_argument = ResolvedActionArgument(
-        argument_name="work_unit_id",
-        status=ActionArgumentStatus.RESOLVED,
-        value="work-1",
-        source=ActionArgumentSource.CONDITION_EVIDENCE,
-        source_key="work_unit_id",
-        source_evidence_id="workflow.work_unit.addressing",
-    )
-    verdict_argument = ResolvedActionArgument(
-        argument_name="work_unit_id",
-        status=ActionArgumentStatus.RESOLVED,
-        value="work-2",
-        source=ActionArgumentSource.VERDICT_CONTEXT,
-        source_key="work_unit_id",
-    )
-
-    for argument in (evidence_argument, verdict_argument):
-        action = resolve_notice_action(
-            action=ActionReference(action_id="operator.modelo.work.calculate"),
-            argument_bindings=(argument,),
-            catalogue=OPERATOR_ACTION_CATALOGUE,
-            reconciliation=reconciliation,
-        )
-        assert action.argument_bindings == (argument,)
-
-    wrong_source = ResolvedActionArgument(
-        argument_name="work_unit_id",
-        status=ActionArgumentStatus.RESOLVED,
-        value="work-3",
-        source=ActionArgumentSource.REQUEST_CONTEXT,
-        source_key="work_unit_id",
-    )
-    with pytest.raises(ValueError, match="provenance does not match"):
-        resolve_notice_action(
-            action=ActionReference(action_id="operator.modelo.work.calculate"),
-            argument_bindings=(wrong_source,),
-            catalogue=OPERATOR_ACTION_CATALOGUE,
-            reconciliation=reconciliation,
+    with pytest.raises(ValueError, match="orphan action target command identity") as exc_info:
+        resolve_manifest_action_profiles(
+            profiles=(profile,),
+            catalogue=ActionCatalogue(entries=(live_entry, dead_entry)),
+            reconciliation=_reconciliation(
+                _leaf("app.guard.run"),
+                _leaf("app.recovery.run", required_inputs=("subject_id",)),
+            ),
         )
 
+    assert dead_entry.action_id in str(exc_info.value)
+    assert dead_entry.target_command_key in str(exc_info.value)
 
-def test_required_or_unresolved_producer_arguments_refuse_success_notice_actions() -> None:
-    reconciliation = _reconciliation(
-        target_command_key="config.profile.create",
-        required_input_names=("profile_name",),
-    )
 
-    with pytest.raises(ValueError, match="missing required input bindings"):
-        resolve_notice_action(
-            action=ActionReference(action_id="operator.profile.create"),
-            argument_bindings=(),
-            catalogue=OPERATOR_ACTION_CATALOGUE,
-            reconciliation=reconciliation,
+def test_action_resolution_rejects_insufficient_required_input_sources() -> None:
+    catalogue = ActionCatalogue(entries=(_catalogue_entry(inputs=("subject_id",)),))
+
+    with pytest.raises(ValueError, match="insufficient action argument specifications") as exc_info:
+        resolve_manifest_action_profiles(
+            profiles=(),
+            catalogue=catalogue,
+            reconciliation=_reconciliation(
+                _leaf("app.recovery.run", required_inputs=("subject_id", "confirmation")),
+            ),
         )
 
-    with pytest.raises(ValueError, match="cannot carry unresolved"):
-        resolve_notice_action(
-            action=ActionReference(action_id="operator.profile.create"),
-            argument_bindings=(
-                ResolvedActionArgument(
-                    argument_name="profile_name",
-                    status=ActionArgumentStatus.MISSING,
+    assert "confirmation" in str(exc_info.value)
+
+
+@pytest.mark.parametrize(
+    ("has_result_schema", "has_input_schema", "expected_surface"),
+    [
+        (False, True, "result"),
+        (True, False, "input"),
+    ],
+)
+def test_action_resolution_rejects_missing_target_schema_accounting(
+    has_result_schema: bool,
+    has_input_schema: bool,
+    expected_surface: str,
+) -> None:
+    with pytest.raises(ValueError, match=rf"action target lacks {expected_surface} schema accounting"):
+        resolve_manifest_action_profiles(
+            profiles=(),
+            catalogue=ActionCatalogue(entries=(_catalogue_entry(),)),
+            reconciliation=_reconciliation(
+                _leaf(
+                    "app.recovery.run",
+                    required_inputs=("subject_id",),
+                    has_result_schema=has_result_schema,
+                    has_input_schema=has_input_schema,
                 ),
             ),
-            catalogue=OPERATOR_ACTION_CATALOGUE,
-            reconciliation=reconciliation,
         )
 
 
-def test_catalogue_and_producer_argument_declarations_fail_closed() -> None:
+def test_action_resolution_rejects_unknown_action_and_orphan_subject_identities() -> None:
+    catalogue = ActionCatalogue(entries=(_catalogue_entry(),))
     reconciliation = _reconciliation(
-        target_command_key="config.profile.create",
-        required_input_names=("profile_name",),
+        _leaf("app.guard.run"),
+        _leaf("app.recovery.run", required_inputs=("subject_id",)),
     )
-    incomplete_catalogue = ActionCatalogue(
-        entries=(
-            ActionCatalogueEntry(
-                action_id="operator.profile.custom_create",
-                target_command_key="config.profile.create",
-            ),
-        ),
+    unknown_action = ManifestActionProfile(
+        subject_leaf_key="app.guard.run",
+        condition_id="guard.subject.missing",
+        scenario_id="scenario.subject.absent",
+        action=ActionReference(action_id="operator.recovery.unknown"),
     )
-    with pytest.raises(ValueError, match="lacks declarations for required inputs"):
-        resolve_catalogue_action(
-            action=ActionReference(action_id="operator.profile.custom_create"),
-            catalogue=incomplete_catalogue,
+    with pytest.raises(ValueError, match="unknown manifest action-profile action identity"):
+        resolve_manifest_action_profiles(
+            profiles=(unknown_action,),
+            catalogue=catalogue,
             reconciliation=reconciliation,
         )
 
-    with pytest.raises(ValueError, match="not declared by the catalogue"):
-        resolve_notice_action(
-            action=ActionReference(action_id="operator.profile.create"),
-            argument_bindings=(
-                _profile_name_argument(),
-                ResolvedActionArgument(
-                    argument_name="display_name",
-                    status=ActionArgumentStatus.RESOLVED,
-                    value="Ada",
-                    source=ActionArgumentSource.VERDICT_CONTEXT,
-                    source_key="profile_name",
+    orphan_subject = ManifestActionProfile(
+        subject_leaf_key="app.guard.ghost",
+        condition_id="guard.subject.missing",
+        scenario_id="scenario.subject.absent",
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+    )
+    with pytest.raises(ValueError, match="orphan manifest action-profile subject identity"):
+        resolve_manifest_action_profiles(
+            profiles=(orphan_subject,),
+            catalogue=catalogue,
+            reconciliation=reconciliation,
+        )
+
+
+def test_action_resolution_rejects_duplicate_profile_and_ambiguous_live_identities() -> None:
+    catalogue = ActionCatalogue(entries=(_catalogue_entry(),))
+    profile = ManifestActionProfile(
+        subject_leaf_key="app.guard.run",
+        condition_id="guard.subject.missing",
+        scenario_id="scenario.subject.absent",
+        no_recovery_outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+    )
+    reconciliation = _reconciliation(
+        _leaf("app.guard.run"),
+        _leaf("app.recovery.run", required_inputs=("subject_id",)),
+    )
+    with pytest.raises(ValueError, match="duplicate manifest action-profile identity"):
+        resolve_manifest_action_profiles(
+            profiles=(profile, profile),
+            catalogue=catalogue,
+            reconciliation=reconciliation,
+        )
+
+    with pytest.raises(ValueError, match="ambiguous reconciled CLI path"):
+        resolve_manifest_action_profiles(
+            profiles=(),
+            catalogue=catalogue,
+            reconciliation=_reconciliation(
+                _leaf("app.guard.run", cli_path=("app", "shared")),
+                _leaf(
+                    "app.recovery.run",
+                    cli_path=("app", "shared"),
+                    required_inputs=("subject_id",),
                 ),
             ),
-            catalogue=OPERATOR_ACTION_CATALOGUE,
-            reconciliation=reconciliation,
+        )
+
+
+@pytest.mark.parametrize(
+    ("result_schema_key", "input_schema_key", "expected_surface"),
+    [
+        ("app.recovery.other", None, "result_schema"),
+        (None, "app.recovery.other", "input_schema"),
+    ],
+)
+def test_action_resolution_rejects_internally_misaligned_schema_identity(
+    result_schema_key: str | None,
+    input_schema_key: str | None,
+    expected_surface: str,
+) -> None:
+    with pytest.raises(ValueError, match=rf"reconciled {expected_surface} identity mismatch"):
+        resolve_manifest_action_profiles(
+            profiles=(),
+            catalogue=ActionCatalogue(entries=(_catalogue_entry(),)),
+            reconciliation=_reconciliation(
+                _leaf(
+                    "app.recovery.run",
+                    required_inputs=("subject_id",),
+                    result_schema_key=result_schema_key,
+                    input_schema_key=input_schema_key,
+                ),
+            ),
         )

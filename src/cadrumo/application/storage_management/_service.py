@@ -21,13 +21,16 @@ from __future__ import annotations
 
 import os
 import shutil
+from collections.abc import Iterable
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
 from ...core import (
     STORAGE_TAXONOMY,
+    StorageArea,
     StorageCategory,
     StorageLifecycle,
+    StorageLocation,
     StorageNodeKind,
     StorageScope,
     bucket_scoped_storage_path,
@@ -39,6 +42,9 @@ from ...core.config import STORAGE_ROOT_MODE, ensure_storage_tree, load_settings
 from ...core.logging import get_logger
 from ._errors import StorageReclaimRefusedError, StorageReclaimUnconfirmedError
 from ._models import (
+    StorageAreaDisposition,
+    StorageAreaInventoryReport,
+    StorageAreaInventoryRow,
     StorageInitReport,
     StorageInventoryReport,
     StorageInventoryRow,
@@ -110,6 +116,18 @@ def collect_storage_inventory(*, settings: Settings | None = None) -> StorageInv
     )
 
 
+def collect_storage_area_inventory(*, settings: Settings | None = None) -> StorageAreaInventoryReport:
+    """Aggregate the internal declaration into the four stable public areas."""
+    resolved = settings if settings is not None else load_settings()
+    active_bucket = _active_bucket_id()
+    internal = tuple(_inventory_row(category, resolved, active_bucket) for category in STORAGE_TAXONOMY)
+    rows = tuple(_area_inventory_row(area, internal) for area in StorageArea)
+    return StorageAreaInventoryReport(
+        storage_root=Path(resolved.cadrumo_local_storage_root),
+        rows=rows,
+    )
+
+
 def inspect_storage_tree(*, settings: Settings | None = None) -> StorageTreeCheckReport:
     """Report where the materialised tree disagrees with its declaration.
 
@@ -170,7 +188,7 @@ def inspect_storage_tree(*, settings: Settings | None = None) -> StorageTreeChec
                 StorageTreeIssue(
                     kind=StorageTreeIssueKind.MISSING_DIRECTORY,
                     path=expected_directory,
-                    category=category,
+                    area=StorageArea(location.grouping.value),
                     detail="declared directory has not been materialised",
                 ),
             )
@@ -179,7 +197,7 @@ def inspect_storage_tree(*, settings: Settings | None = None) -> StorageTreeChec
                 StorageTreeIssue(
                     kind=StorageTreeIssueKind.FILE_WHERE_DIRECTORY_EXPECTED,
                     path=expected_directory,
-                    category=category,
+                    area=StorageArea(location.grouping.value),
                     detail="a file occupies a path the taxonomy declares a directory",
                 ),
             )
@@ -188,7 +206,7 @@ def inspect_storage_tree(*, settings: Settings | None = None) -> StorageTreeChec
                 StorageTreeIssue(
                     kind=StorageTreeIssueKind.DIRECTORY_WHERE_FILE_EXPECTED,
                     path=target,
-                    category=category,
+                    area=StorageArea(location.grouping.value),
                     detail="a directory occupies a path the taxonomy declares a file",
                 ),
             )
@@ -236,100 +254,166 @@ def materialise_storage_tree(*, settings: Settings | None = None) -> StorageInit
     )
 
 
-def reclaim_storage_category(
-    category: StorageCategory,
+def reclaim_storage_area(
+    area: StorageArea,
     *,
     confirmed: bool = False,
     settings: Settings | None = None,
 ) -> StorageReclaimReport:
-    """Delete the regenerable contents of ``category``, keeping the directory.
+    """Reclaim all safe roots in ``area`` after one complete preflight.
 
-    The guard is the member's declared
-    :class:`~cadrumo.core.StorageLifecycle`. A category declared unbounded by
-    design is refused, and the refusal names the resolved path, the number of
-    entries it holds, and the lifecycle that forbade the delete.
-
-    The whole subtree beneath the category is removed, not only the parts the
-    taxonomy declares. Production code nests locations beneath enrolled
-    categories that the declaration does not enumerate, so a reclaim that
-    deleted only declared children would silently leave the bulk behind.
-
-    Args:
-        category: The member to reclaim. Must be root-scoped and declared
-            reclaimable.
-        confirmed: Explicit acknowledgement that data will be deleted.
-        settings: Settings to resolve against.
-
-    Returns:
-        What was removed, and what survived.
-
-    Raises:
-        StorageReclaimRefusedError: When the declared lifecycle forbids
-            deletion, or the member is not root-scoped.
-        StorageReclaimUnconfirmedError: When ``confirmed`` is false.
+    Selection, lifecycle admission, scope admission, and containment are all
+    derived from the taxonomy. No target is touched until every target passes.
     """
     resolved = settings if settings is not None else load_settings()
-    location = storage_location(category)
-
-    if location.scope is not StorageScope.ROOT:
-        # A per-bucket member is reached through its bucket's lifecycle, which
-        # owns the ordering between a bucket's database, its blobs, and the
-        # keystore that opens them. Reclaiming one of those in isolation would
-        # strand the others.
+    if area in {StorageArea.STATE, StorageArea.EXPORTS}:
+        row = next(row for row in collect_storage_area_inventory(settings=resolved).rows if row.area is area)
         raise StorageReclaimRefusedError(
-            category,
-            lifecycle=location.lifecycle,
-            path=None,
-            entry_count=0,
-            reason=f"{location.scope.value} members belong to a profile bucket's own lifecycle",
+            area,
+            entry_count=row.entry_count,
+            reason="the area contains durable state",
         )
 
-    target = storage_path(category, settings=resolved)
-    entry_count = _immediate_entry_count(target)
-
-    if not storage_lifecycle_permits_reclaim(location.lifecycle):
-        raise StorageReclaimRefusedError(
-            category,
-            lifecycle=location.lifecycle,
-            path=target,
-            entry_count=entry_count,
-            reason=f"its declared lifecycle is {location.lifecycle.value}",
-        )
+    candidates = tuple(
+        (category, location, storage_path(category, settings=resolved))
+        for category, location in STORAGE_TAXONOMY.items()
+        if location.grouping.value == area.value and location.lifecycle in RECLAIMABLE_LIFECYCLES
+    )
+    _preflight_reclaim_targets(area, candidates, resolved)
+    targets = _minimal_paths(path for _, _, path in candidates)
+    entry_count = sum(_immediate_entry_count(path) for path in targets)
     if not confirmed:
-        raise StorageReclaimUnconfirmedError(category, path=target, entry_count=entry_count)
-
-    if not target.exists():
-        return StorageReclaimReport(category=category, path=target, removed_entries=0)
-
-    if target.is_file():
-        target.unlink()
-        return StorageReclaimReport(category=category, path=target, removed_entries=1)
+        raise StorageReclaimUnconfirmedError(area, entry_count=entry_count)
 
     removed = 0
     retained: list[Path] = []
-    for entry in sorted(target.iterdir()):
-        try:
-            if entry.is_dir() and not entry.is_symlink():
-                shutil.rmtree(entry)
+    for target in targets:
+        if not target.exists():
+            continue
+        entries = (target,) if target.is_file() else tuple(sorted(target.iterdir()))
+        for entry in entries:
+            try:
+                if entry.is_dir() and not entry.is_symlink():
+                    shutil.rmtree(entry)
+                else:
+                    entry.unlink()
+            except OSError:
+                retained.append(entry)
+                _LOGGER.debug("reclaim could not remove %s", entry, exc_info=True)
             else:
-                entry.unlink()
-        except OSError:
-            # A file held open by another process is a retained entry, not a
-            # failed reclaim: the operator asked for space back and got what
-            # could be released. The path is kept alongside the count so the
-            # boundary can tell an expected retention from a real failure.
-            retained.append(entry)
-            _LOGGER.debug("reclaim could not remove %s", entry, exc_info=True)
-        else:
-            removed += 1
+                removed += 1
 
     return StorageReclaimReport(
-        category=category,
-        path=target,
+        area=area,
+        target_count=len(targets),
         removed_entries=removed,
         retained_entries=len(retained),
         retained_paths=tuple(retained),
     )
+
+
+def _preflight_reclaim_targets(
+    area: StorageArea,
+    candidates: tuple[tuple[StorageCategory, StorageLocation, Path], ...],
+    settings: Settings,
+) -> None:
+    """Prove every selected target safe before the caller deletes anything."""
+    if not candidates:
+        raise StorageReclaimRefusedError(
+            area,
+            entry_count=0,
+            reason="the taxonomy declares no reclaimable targets",
+        )
+
+    root_members = tuple(
+        (category, location, storage_path(category, settings=settings))
+        for category, location in STORAGE_TAXONOMY.items()
+        if location.scope is StorageScope.ROOT
+    )
+    for category, location, target in candidates:
+        if location.scope is not StorageScope.ROOT:
+            raise StorageReclaimRefusedError(
+                area,
+                entry_count=0,
+                reason="a selected target is not root-scoped",
+            )
+        if not storage_lifecycle_permits_reclaim(location.lifecycle):
+            raise StorageReclaimRefusedError(
+                area,
+                entry_count=0,
+                reason="a selected target has a durable lifecycle",
+            )
+        for other, other_location, other_path in root_members:
+            if other is category or not other_path.is_relative_to(target):
+                continue
+            if not storage_lifecycle_permits_reclaim(other_location.lifecycle):
+                raise StorageReclaimRefusedError(
+                    area,
+                    entry_count=_immediate_entry_count(target),
+                    reason="a selected target contains protected declared data",
+                )
+
+
+def _area_inventory_row(
+    area: StorageArea,
+    rows: tuple[StorageInventoryRow, ...],
+) -> StorageAreaInventoryRow:
+    """Aggregate internal rows without projecting internal nouns to callers."""
+    selected = tuple(row for row in rows if row.grouping.value == area.value)
+    paths = _minimal_paths(row.path for row in selected if row.path is not None)
+    occupancies = {row.occupancy for row in selected}
+    if StorageOccupancy.POPULATED in occupancies:
+        occupancy = StorageOccupancy.POPULATED
+    elif StorageOccupancy.EMPTY in occupancies:
+        occupancy = StorageOccupancy.EMPTY
+    elif StorageOccupancy.ABSENT in occupancies:
+        occupancy = StorageOccupancy.ABSENT
+    else:
+        occupancy = StorageOccupancy.UNRESOLVED
+
+    permitted = [row.reclaimable for row in selected]
+    if permitted and all(permitted):
+        disposition = StorageAreaDisposition.RECLAIMABLE
+    elif any(permitted):
+        disposition = StorageAreaDisposition.MIXED
+    else:
+        disposition = StorageAreaDisposition.DURABLE
+
+    return StorageAreaInventoryRow(
+        area=area,
+        occupancy=occupancy,
+        disposition=disposition,
+        reclaimable=area in {StorageArea.LOGS, StorageArea.CACHE} and any(permitted),
+        resolved_paths=len(paths),
+        entry_count=sum(_immediate_entry_count(path) for path in paths),
+        footprint_bytes=sum(_path_size(path) for path in paths),
+    )
+
+
+def _minimal_paths(paths: Iterable[Path]) -> tuple[Path, ...]:
+    """Return unique outermost paths so aggregates and deletes never double count."""
+    ordered = sorted(set(paths), key=lambda path: (len(path.parts), str(path)))
+    return tuple(
+        path for path in ordered if not any(path.is_relative_to(parent) for parent in ordered if parent != path)
+    )
+
+
+def _path_size(path: Path) -> int:
+    """Measure bytes beneath ``path`` without following links out of the tree."""
+    if not path.exists():
+        return 0
+    if path.is_file() or path.is_symlink():
+        try:
+            return path.stat().st_size
+        except OSError:
+            return 0
+    total = 0
+    try:
+        for entry in path.iterdir():
+            total += _path_size(entry)
+    except OSError:
+        _LOGGER.debug("could not measure %s", path, exc_info=True)
+    return total
 
 
 def _inventory_row(
@@ -424,9 +508,10 @@ def _root_mode_is_enforceable() -> bool:
 
 __all__ = [
     "RECLAIMABLE_LIFECYCLES",
+    "collect_storage_area_inventory",
     "collect_storage_inventory",
     "inspect_storage_tree",
     "materialise_storage_tree",
-    "reclaim_storage_category",
+    "reclaim_storage_area",
     "storage_lifecycle_permits_reclaim",
 ]

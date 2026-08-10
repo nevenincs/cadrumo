@@ -52,6 +52,7 @@ from ._enums import (
 )
 from ._errors import InvoiceValidationError
 from ._ids import InvoiceId
+from ._payload_normalisation import normalise_invoice_enum_fields, normalise_invoice_string_fields
 
 if TYPE_CHECKING:
     pass
@@ -177,130 +178,6 @@ def _coerce_datetime(value: object) -> datetime:
         except ValueError as exc:
             raise InvoiceValidationError(f"expected a datetime or ISO-8601 string, got {value!r}") from exc
     raise InvoiceValidationError("expected a datetime or ISO-8601 string")
-
-
-def _normalise_invoice_enum_fields(payload: dict[str, object]) -> dict[str, object]:
-    if "kind" in payload and isinstance(payload["kind"], str):
-        try:
-            payload["kind"] = InvoiceKind(payload["kind"])
-        except ValueError as exc:
-            raise InvoiceValidationError("kind must be an InvoiceKind") from exc
-    if "payment_status" in payload and isinstance(payload["payment_status"], str):
-        try:
-            payload["payment_status"] = PaymentStatus(payload["payment_status"])
-        except ValueError as exc:
-            raise InvoiceValidationError("payment_status must be a PaymentStatus") from exc
-    if "invoice_class" in payload and isinstance(payload["invoice_class"], str):
-        try:
-            payload["invoice_class"] = InvoiceClass(payload["invoice_class"])
-        except ValueError as exc:
-            raise InvoiceValidationError("invoice_class must be an InvoiceClass") from exc
-    if "operation_date_role" in payload and isinstance(payload["operation_date_role"], str):
-        stripped = payload["operation_date_role"].strip()
-        if stripped:
-            try:
-                payload["operation_date_role"] = InvoiceOperationDateRole(stripped)
-            except ValueError as exc:
-                raise InvoiceValidationError("operation_date_role must be an InvoiceOperationDateRole") from exc
-        else:
-            payload["operation_date_role"] = None
-    if "counterparty_identification_state" in payload and isinstance(payload["counterparty_identification_state"], str):
-        stripped = payload["counterparty_identification_state"].strip()
-        if stripped:
-            try:
-                payload["counterparty_identification_state"] = EUMemberState(stripped.lower())
-            except ValueError as exc:
-                raise InvoiceValidationError(
-                    "counterparty_identification_state must be an EUMemberState",
-                ) from exc
-        else:
-            # An empty string is not a Member State and must not become one. It
-            # is the same absence a missing key is, and absence stays absence.
-            payload["counterparty_identification_state"] = None
-    if "iva_category" in payload and isinstance(payload["iva_category"], str):
-        stripped = payload["iva_category"].strip()
-        if stripped:
-            try:
-                payload["iva_category"] = IvaCategory(stripped)
-            except ValueError as exc:
-                raise InvoiceValidationError("iva_category must be an IvaCategory") from exc
-        else:
-            payload["iva_category"] = None
-    if "operation_type" in payload and isinstance(payload["operation_type"], str):
-        stripped = payload["operation_type"].strip().upper()
-        if stripped:
-            try:
-                payload["operation_type"] = IntracomOperationType(stripped)
-            except ValueError as exc:
-                raise InvoiceValidationError("operation_type must be an IntracomOperationType") from exc
-        else:
-            payload["operation_type"] = None
-    if "oss_ioss_regime" in payload and isinstance(payload["oss_ioss_regime"], str):
-        stripped = payload["oss_ioss_regime"].strip()
-        if stripped:
-            try:
-                payload["oss_ioss_regime"] = OssIossRegime(stripped)
-            except ValueError as exc:
-                raise InvoiceValidationError("oss_ioss_regime must be an OssIossRegime") from exc
-        else:
-            payload["oss_ioss_regime"] = None
-    if "oss_transaction_kind" in payload and isinstance(payload["oss_transaction_kind"], str):
-        stripped = payload["oss_transaction_kind"].strip()
-        if stripped:
-            try:
-                payload["oss_transaction_kind"] = TransactionKind(stripped)
-            except ValueError as exc:
-                raise InvoiceValidationError("oss_transaction_kind must be a TransactionKind") from exc
-        else:
-            payload["oss_transaction_kind"] = None
-    if "legal_mentions" in payload:
-        raw_mentions = payload["legal_mentions"]
-        if isinstance(raw_mentions, Sequence) and not isinstance(raw_mentions, str | bytes):
-            coerced: list[InvoiceLegalMention] = []
-            # Deserialisation boundary: the payload is a raw mapping, so the
-            # narrowed sequence carries no element type. Each entry is inspected
-            # by isinstance below before anything is read off it.
-            entries: Sequence[object] = raw_mentions  # pyright: ignore[reportUnknownVariableType]  # reason: deserialisation boundary, the payload sequence carries no element type and every entry is isinstance-checked below
-            for entry in entries:
-                if isinstance(entry, InvoiceLegalMention):
-                    coerced.append(entry)
-                    continue
-                if not isinstance(entry, str):
-                    raise InvoiceValidationError("legal_mentions entries must be an InvoiceLegalMention or its value")
-                try:
-                    coerced.append(InvoiceLegalMention(entry))
-                except ValueError as exc:
-                    raise InvoiceValidationError("legal_mentions entries must be an InvoiceLegalMention") from exc
-            payload["legal_mentions"] = tuple(coerced)
-    return payload
-
-
-def _normalise_invoice_string_fields(payload: dict[str, object]) -> dict[str, object]:
-    if "bucket_id" in payload and isinstance(payload["bucket_id"], str):
-        normalized_bucket = payload["bucket_id"].strip()
-        payload["bucket_id"] = normalized_bucket or None
-    if "invoice_number" in payload and isinstance(payload["invoice_number"], str):
-        payload["invoice_number"] = payload["invoice_number"].strip().upper()
-    if "counterparty_name" in payload and isinstance(payload["counterparty_name"], str):
-        payload["counterparty_name"] = payload["counterparty_name"].strip()
-    if "notes" in payload and isinstance(payload["notes"], str):
-        payload["notes"] = payload["notes"].strip()
-    if "series" in payload and isinstance(payload["series"], str):
-        stripped = payload["series"].strip()
-        payload["series"] = stripped or None
-    if "issuer_address" in payload and isinstance(payload["issuer_address"], str):
-        stripped = payload["issuer_address"].strip()
-        payload["issuer_address"] = stripped or None
-    if "recipient_address" in payload and isinstance(payload["recipient_address"], str):
-        stripped = payload["recipient_address"].strip()
-        payload["recipient_address"] = stripped or None
-    if "exemption_reference" in payload and isinstance(payload["exemption_reference"], str):
-        stripped = payload["exemption_reference"].strip()
-        payload["exemption_reference"] = stripped or None
-    if "rectifies_invoice_number" in payload and isinstance(payload["rectifies_invoice_number"], str):
-        stripped = payload["rectifies_invoice_number"].strip().upper()
-        payload["rectifies_invoice_number"] = stripped or None
-    return payload
 
 
 def _normalise_invoice_dates(payload: dict[str, object]) -> dict[str, object]:
@@ -751,8 +628,8 @@ class Invoice(BaseModel):
         if not isinstance(data, Mapping):
             return data
         payload = _STRING_OBJECT_MAPPING.validate_python(data)
-        payload = _normalise_invoice_enum_fields(payload)
-        payload = _normalise_invoice_string_fields(payload)
+        payload = normalise_invoice_enum_fields(payload)
+        payload = normalise_invoice_string_fields(payload)
         payload = _normalise_invoice_dates(payload)
         payload = _normalise_invoice_counterparty(payload)
         payload = _normalise_invoice_currency(payload)

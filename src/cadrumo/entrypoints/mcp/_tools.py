@@ -13,7 +13,7 @@ is unit-tested.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, cast
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -23,10 +23,10 @@ from ...application.operator_surface import (
     build_operator_surface_manifest,
 )
 from ...core.errors import ErrorEnvelope
-from ...core.json_contract import ENVELOPE_SCHEMA_VERSION, SCHEMA_REGISTRY
+from ...core.json_contract import ENVELOPE_SCHEMA_VERSION, SCHEMA_REGISTRY, Notice
 from ._annotations import McpAnnotations, annotations_for_command
 from ._dispatch import is_exposable_command, tool_name_for_command
-from ._input_schema import VerbInputSchema, build_verb_input_schemas
+from ._input_schema import VerbInputSchema, build_mcp_action_input_schemas
 from ._result_thinning import thin_output_schema
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
@@ -99,7 +99,20 @@ def _schema_definitions(value: object) -> dict[str, Any]:
     """Return one JSON Schema definitions mapping, or no definitions."""
     if not isinstance(value, Mapping):
         return {}
-    return {str(key): item for key, item in value.items()}
+    definitions = cast(Mapping[object, Any], value)
+    return {str(key): item for key, item in definitions.items()}
+
+
+def _merge_schema_definitions(*definition_sets: dict[str, Any]) -> dict[str, Any]:
+    """Merge generated schema definitions while refusing a name collision."""
+    merged: dict[str, Any] = {}
+    for definitions in definition_sets:
+        for name, definition in definitions.items():
+            prior = merged.get(name)
+            if prior is not None and prior != definition:
+                raise ValueError(f"conflicting generated JSON Schema definition: {name}")
+            merged[name] = definition
+    return merged
 
 
 def build_tool_descriptors() -> tuple[McpToolDescriptor, ...]:
@@ -124,8 +137,9 @@ def build_tool_descriptors() -> tuple[McpToolDescriptor, ...]:
     ).contract
     intent_map = {family.child.replace("-", "_"): family.operator_question for family in contract.command_families}
 
-    exposable_keys = tuple(ref.command for ref in refs if is_exposable_command(ref.command))
-    verb_schemas = build_verb_input_schemas(exposable_keys)
+    exposable_refs = tuple(ref for ref in refs if is_exposable_command(ref.command))
+    exposable_keys = tuple(ref.command for ref in exposable_refs)
+    verb_schemas = build_mcp_action_input_schemas(exposable_refs)
 
     descriptors: list[McpToolDescriptor] = []
     for key in exposable_keys:
@@ -166,37 +180,17 @@ def _output_schema_for(command_key: str) -> dict[str, Any]:
     definitions = _schema_definitions(result_schema.pop("$defs", {}))
     error_schema = ErrorEnvelope.model_json_schema()
     error_definitions = _schema_definitions(error_schema.pop("$defs", {}))
-    notices_schema = {
-        "type": "array",
-        "items": {
-            "type": "object",
-            "properties": {
-                "severity": {
-                    "enum": ["info", "warning"],
-                    "type": "string",
-                },
-                "code": {"minLength": 1, "type": "string"},
-                "message": {"minLength": 1, "type": "string"},
-                "suggestion": {
-                    "anyOf": [{"type": "string"}, {"type": "null"}],
-                },
-                "context": {
-                    "anyOf": [
-                        {
-                            "type": "object",
-                            "additionalProperties": {"type": "string"},
-                        },
-                        {"type": "null"},
-                    ],
-                },
-            },
-            "required": ["severity", "code", "message", "suggestion", "context"],
-            "additionalProperties": False,
-        },
-    }
+    notice_schema = Notice.model_json_schema()
+    notice_definitions = _schema_definitions(notice_schema.pop("$defs", {}))
+    notices_schema = {"type": "array", "items": notice_schema}
+    combined_definitions = _merge_schema_definitions(
+        definitions,
+        error_definitions,
+        notice_definitions,
+    )
     return _without_generated_titles(
         {
-            "$defs": {**definitions, **error_definitions},
+            "$defs": combined_definitions,
             # MCP's tools/list descriptor requires an object-shaped output schema at
             # the top level. The branches below retain the canonical success/error
             # envelope distinction within that required serializable shape.
@@ -253,8 +247,14 @@ def _without_generated_titles(schema: dict[str, Any]) -> dict[str, Any]:
     model rather than restating the key -- because the model is derivable from
     the command and no consumer reads either.
     """
-    if isinstance(schema, dict):
-        return {key: _without_generated_titles(value) for key, value in schema.items() if key != "title"}
-    if isinstance(schema, list):
-        return [_without_generated_titles(item) for item in schema]
-    return schema
+    return {key: _without_generated_title_value(cast(object, value)) for key, value in schema.items() if key != "title"}
+
+
+def _without_generated_title_value(value: object) -> object:
+    """Strip generated titles recursively from one nested schema value."""
+    if isinstance(value, Mapping):
+        mapping = cast(Mapping[object, object], value)
+        return _without_generated_titles({str(key): item for key, item in mapping.items()})
+    if isinstance(value, list):
+        return [_without_generated_title_value(item) for item in cast(list[object], value)]
+    return value

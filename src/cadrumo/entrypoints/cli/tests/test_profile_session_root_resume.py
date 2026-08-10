@@ -44,8 +44,10 @@ from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....core import ProfileSessionRefusalReason
 from ....core.config import SecretStoreBackend, load_settings, override_settings
 from ....core.time import now as _now
-from ....tests.cli_runner import invoke_cached_cli, semantic_cli_output
+from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli, semantic_cli_output
 from ....tests.secure_sql import isolated_profile_storage_root
+from .._common import cli_policy_refusal_projection
+from .._errors import CliRefusedBoundaryError, error_boundary_under_test
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -87,25 +89,25 @@ def _isolated_root(tmp_path: Path) -> Iterator[Path]:
             dispose_engine()
 
 
-def _bucket_id_or_none() -> str | None:
+def _bucket_id_or_none(label: str = _LABEL) -> str | None:
     from ....application.workflow import read_profile_bucket
 
-    pointer = read_profile_bucket(_LABEL)
+    pointer = read_profile_bucket(label)
     return pointer.bucket_id if pointer is not None else None
 
 
-def _create_profile() -> str:
+def _create_profile(label: str = _LABEL, *, tax_id: str = "12345678Z") -> str:
     """Create a real profile through the real CLI and return its bucket id."""
     created = invoke_cached_cli(
         [
             "config",
             "profile",
             "create",
-            _LABEL,
+            label,
             "--quiet",
             "--accept-defaults",
             "--tax-id",
-            "12345678Z",
+            tax_id,
             "--entity-type",
             "natural_person",
             "--name",
@@ -118,7 +120,7 @@ def _create_profile() -> str:
     )
     assert created.exit_code == 0, created.output
     close_active_bucket_session()
-    bucket_id = _bucket_id_or_none()
+    bucket_id = _bucket_id_or_none(label)
     assert bucket_id is not None
     return bucket_id
 
@@ -283,7 +285,11 @@ class TestProfileDiscoveryStaysReachableWhileLoggedOut:
         error = document.get("error")
         if error is not None:
             # Whatever else may stop it, it must not be the login gate.
-            assert error["suggestion"] != "aeat config login", document
+            action = error.get("action")
+            if action is not None:
+                resolved_action = action.get("action")
+                assert resolved_action is None or resolved_action["action_id"] != "operator.profile.login", document
+            assert "suggestion" not in error, document
             assert "aeat config login" not in semantic_cli_output(result)
 
     def test_archive_export_must_stay_login_gated(self) -> None:
@@ -320,9 +326,12 @@ class TestProfileDiscoveryStaysReachableWhileLoggedOut:
         for still_exempt in (
             "config profile rename",
             "config profile duplicate",
-            "config profile validate",
         ):
             assert is_bootstrap_exempt(still_exempt), still_exempt
+        assert not is_bootstrap_exempt("config profile validate"), (
+            "unnamed validate selects the active profile and must reach the canonical login gate; "
+            "the root callback separately carves out the explicit validate NAME shape"
+        )
 
     def test_the_login_gate_still_refuses_a_decrypting_verb(self) -> None:
         """The exemption opened one door, not the gate.
@@ -344,6 +353,77 @@ class TestProfileDiscoveryStaysReachableWhileLoggedOut:
 class TestFailClosedRefusals:
     """Absent and expired sessions refuse, naming the verb that fixes it."""
 
+    def test_unnamed_validate_is_gated_as_an_active_profile_read(self) -> None:
+        _create_profile()
+        close_active_bucket_session()
+
+        with override_settings(cadrumo_secret_passphrase=None):
+            result = invoke_cached_cli(["--format", "json", "config", "profile", "validate"])
+
+        assert result.exit_code != 0
+        document = json.loads(semantic_cli_output(result))
+        assert document["error"]["context"]["reason"] == "absent", document
+        assert document["error"]["category"] == "REFUSED", document
+
+    def test_explicit_validate_is_not_preempted_by_the_active_profile_gate(self) -> None:
+        _create_profile()
+        close_active_bucket_session()
+
+        result = invoke_cached_cli(["--format", "json", "config", "profile", "validate", _LABEL])
+
+        document = json.loads(semantic_cli_output(result))
+        projection = cli_policy_refusal_projection(document)
+        if projection is not None and projection.action is not None:
+            assert projection.action.action_id != "operator.profile.login", document
+        assert result.exit_code == 0, document
+
+    def test_unnamed_history_reads_the_authenticated_active_profile(self) -> None:
+        bucket_id = _create_profile()
+        from ....application.user_profile import profile_storage_session
+
+        with profile_storage_session(bucket_id):
+            result = invoke_cached_cli(["--format", "json", "config", "profile", "history"])
+
+        assert result.exit_code == 0, result.output
+        document = json.loads(semantic_cli_output(result))
+        assert document["command"] == "config.bucket.history", document
+        assert document["active_profile"] == _LABEL, document
+        assert document["result"]["bucket_id"] == "<bucket-id>", document
+
+    def test_explicit_history_reads_the_requested_profile_repository(self) -> None:
+        first_bucket_id = _create_profile("history-first")
+        from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+        from ....adapters.persistence.storage import secure_object_repository_for_bucket
+        from ....application.user_profile import profile_storage_session
+
+        with profile_storage_session(first_bucket_id):
+            first_catalogue = BucketEventHistoryRepository(
+                objects=secure_object_repository_for_bucket(first_bucket_id),
+            ).load()
+        assert first_catalogue.events
+        first_event = next(iter(first_catalogue.events.values()))
+
+        _create_profile("history-second", tax_id="87654321X")
+        with profile_storage_session(first_bucket_id):
+            result = invoke_cached_cli(
+                [
+                    "--format",
+                    "json",
+                    "config",
+                    "profile",
+                    "history",
+                    "history-first",
+                    "--object-id",
+                    first_event.object_id,
+                ],
+            )
+
+        assert result.exit_code == 0, result.output
+        document = json.loads(semantic_cli_output(result))
+        assert document["active_profile"] == "history-first", document
+        assert document["result"]["bucket_id"] == "<bucket-id>", document
+        assert document["result"]["events"], document
+
     def test_absent_session_refuses_naming_login(self) -> None:
         _create_profile()
         # Never logged in: no persisted session exists at all.
@@ -353,6 +433,30 @@ class TestFailClosedRefusals:
 
         assert result.exit_code != 0
         assert "aeat config login" in semantic_cli_output(result)
+
+    def test_absent_session_root_refusal_carries_the_login_action(self) -> None:
+        bucket_id = _create_profile()
+        close_active_bucket_session()
+
+        with (
+            override_settings(cadrumo_secret_passphrase=None),
+            error_boundary_under_test(),
+            pytest.raises(CliRefusedBoundaryError) as raised,
+        ):
+            cadrumo_click_command().main(
+                args=["--format", "json", "app", "ledger", "list"],
+                prog_name="aeat",
+                standalone_mode=False,
+            )
+
+        projection = cli_policy_refusal_projection(raised.value)
+        assert projection is not None
+        assert projection.requested_leaf is not None
+        assert projection.requested_leaf.subject_leaf_key == "ledger.list"
+        assert projection.precondition_action.failed_condition_id == "profile.session.logged_in"
+        assert projection.precondition_action.action is not None
+        assert projection.precondition_action.action.action_id == "operator.profile.login"
+        assert projection.precondition_action.argument_bindings[0].value == bucket_id
 
     def test_idle_expiry_refuses(self, _isolated_root: Path) -> None:
         bucket_id, dek = self._aged_session_material(storage_root=_isolated_root, minutes=20)

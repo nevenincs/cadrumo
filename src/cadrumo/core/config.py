@@ -300,9 +300,9 @@ class Settings(CadrumoMcpServingSettings):
         default=Path("blobs"),
         description="Directory containing the encrypted blob store (content-addressed, classification-aware)",
     )
-    cadrumo_audit_dir: Path = Field(
-        default=Path("audit"),
-        description="Directory for the governed audit sink (redacted, classification-aware)",
+    cadrumo_live_state_dir: Path = Field(
+        default=Path("live-state"),
+        description="Directory for live AEAT state and remote-state evidence",
     )
 
     # ── Outbound storage provider ───────────────────────────────────────────
@@ -433,16 +433,6 @@ class Settings(CadrumoMcpServingSettings):
             "``CADRUMO_LOCAL_STORAGE_ROOT`` scopes, isolating each workspace's "
             "log. An explicit ``CADRUMO_LOG_DIR`` override wins over the "
             "derived default."
-        ),
-    )
-
-    # ── Workbook parity scanner ─────────────────────────────────────────────
-    cadrumo_libreoffice_executable: Path | None = Field(
-        default=None,
-        description=(
-            "Optional explicit path to the soffice / libreoffice binary used by "
-            "the workbook-parity scanner. When None the scanner resolves it from "
-            "PATH."
         ),
     )
 
@@ -1199,8 +1189,7 @@ class Settings(CadrumoMcpServingSettings):
         "cadrumo_log_dir",
         "cadrumo_secret_store_dir",
         "cadrumo_blob_store_dir",
-        "cadrumo_audit_dir",
-        "cadrumo_registry_parity_store_dir",
+        "cadrumo_live_state_dir",
         "cadrumo_registry_disk_cache_dir",
         "aeat_manuals_root",
         "aeat_normatives_root",

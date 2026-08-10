@@ -9,6 +9,7 @@ from ._catalogue import (
     ActionCatalogueEntry,
     build_action_catalogue,
     lookup_action,
+    next_action,
 )
 from ._models import (
     ActionArgumentBinding,
@@ -38,4 +39,5 @@ __all__ = [
     "PreconditionVerdict",
     "build_action_catalogue",
     "lookup_action",
+    "next_action",
 ]

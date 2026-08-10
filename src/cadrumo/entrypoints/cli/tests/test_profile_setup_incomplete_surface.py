@@ -114,6 +114,10 @@ def test_config_list_names_setup_incomplete_status_and_advises() -> None:
     assert "config.profile.setup_incomplete" in codes
     advisory = next(n for n in notices if n["code"] == "config.profile.setup_incomplete")
     assert advisory["severity"] == "info"
+    assert advisory["action"] == {
+        "action_id": "operator.profile.status",
+        "target_command_key": "config.profile.status",
+    }
     assert advisory["context"]["labels"] == "onboarding"
 
 

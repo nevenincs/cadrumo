@@ -1,15 +1,4 @@
-"""CLI surface tests for ``aeat config storage``.
-
-Exercises the five verbs through the real Click tree against a real temporary
-storage root. The envelope contract is asserted from the parsed JSON document
-rather than from prose, so a locale change cannot move these tests and a
-message reworded in one catalogue cannot silently red them.
-
-The reclaim refusal is asserted at this layer as well as in the service suite,
-because the two prove different properties: the service suite proves the guard
-refuses, and this one proves the refusal actually reaches the operator instead
-of being swallowed on the way out.
-"""
+"""Real CLI contract tests for the stable four-area storage surface."""
 
 from __future__ import annotations
 
@@ -18,13 +7,7 @@ from typing import Any
 
 import pytest
 
-from ....core import (
-    STORAGE_TAXONOMY,
-    StorageCategory,
-    StorageLifecycle,
-    StorageScope,
-    storage_path,
-)
+from ....core import StorageArea, StorageCategory, storage_path
 from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli, semantic_cli_output
 
@@ -32,230 +15,196 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def _json_envelope(args: list[str]) -> Any:
-    """Invoke the CLI in JSON mode and return the parsed success envelope.
-
-    Typed loosely on purpose: the envelope is a wire document and every caller
-    below asserts against its shape directly, which is the assertion that would
-    fail loudly if the contract moved.
-    """
     result = invoke_cached_cli(["--format", "json", *args])
     assert result.exit_code == 0, semantic_cli_output(result)
     return json.loads(result.output)
 
 
-class TestListAnswersWhereTheDataIs:
-    def test_list_reports_every_declared_category_on_the_envelope_spine(self, tmp_path) -> None:
+def _all_keys(value: object) -> set[str]:
+    if isinstance(value, dict):
+        return set(value) | {key for child in value.values() for key in _all_keys(child)}
+    if isinstance(value, list):
+        return {key for child in value for key in _all_keys(child)}
+    return set()
+
+
+class TestListAggregatesByArea:
+    def test_list_returns_exactly_the_four_stable_areas(self, tmp_path) -> None:
         with override_settings(cadrumo_local_storage_root=tmp_path):
             envelope = _json_envelope(["config", "storage", "list"])
 
-        assert envelope["command"] == "config.storage.list"
-        assert envelope["status"] in {"success", "warning"}
-        assert "schema_version" in envelope
-        assert "notices" in envelope
-        rows = envelope["result"]["categories"]
-        assert {row["category"] for row in rows} == {member.value for member in STORAGE_TAXONOMY}
+        rows = envelope["result"]["areas"]
+        assert [row["area"] for row in rows] == [area.value for area in StorageArea]
+        assert {row["disposition"] for row in rows} == {"durable", "reclaimable", "mixed"}
 
-    def test_every_row_carries_the_columns_the_operator_surface_promises(self, tmp_path) -> None:
+    def test_list_measures_area_occupancy_and_footprint(self, tmp_path) -> None:
+        with override_settings(cadrumo_local_storage_root=tmp_path):
+            logs = storage_path(StorageCategory.LOGS)
+            logs.mkdir(parents=True, exist_ok=True)
+            (logs / "diagnostic.log").write_bytes(b"entry")
+            envelope = _json_envelope(["config", "storage", "list"])
+
+        by_area = {row["area"]: row for row in envelope["result"]["areas"]}
+        assert by_area[StorageArea.LOGS.value]["occupancy"] == "populated"
+        assert by_area[StorageArea.LOGS.value]["footprint_bytes"] == 5
+
+    def test_public_payload_contains_no_internal_taxonomy_fields(self, tmp_path) -> None:
         with override_settings(cadrumo_local_storage_root=tmp_path):
             envelope = _json_envelope(["config", "storage", "list"])
 
-        required = {
-            "path",
+        assert not {
+            "category",
+            "scope",
             "node_kind",
             "grouping",
-            "lifecycle",
-            "scope",
-            "override_policy",
-            "occupancy",
             "settings_field",
-        }
-        for row in envelope["result"]["categories"]:
-            assert required <= set(row), f"{row['category']} is missing {required - set(row)}"
+            "bucket_id",
+        } & _all_keys(envelope["result"])
 
-    def test_the_populated_column_distinguishes_a_written_category_from_an_empty_one(self, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
-            written = storage_path(StorageCategory.LOGS)
-            written.mkdir(parents=True, exist_ok=True)
-            (written / "diagnostic.log").write_bytes(b"entry")
-            empty = storage_path(StorageCategory.SUBMISSIONS)
-            empty.mkdir(parents=True, exist_ok=True)
-
-            envelope = _json_envelope(["config", "storage", "list"])
-
-        by_category = {row["category"]: row for row in envelope["result"]["categories"]}
-        assert by_category[StorageCategory.LOGS.value]["occupancy"] == "populated"
-        assert by_category[StorageCategory.SUBMISSIONS.value]["occupancy"] == "empty"
-
-    def test_list_advises_that_relocation_is_the_operators_own_move(self, tmp_path) -> None:
+    def test_relocation_advisory_remains_visible(self, tmp_path) -> None:
         with override_settings(cadrumo_local_storage_root=tmp_path):
             envelope = _json_envelope(["config", "storage", "list"])
 
-        codes = {notice["code"] for notice in envelope["notices"]}
-        assert "storage_root_relocation_is_manual" in codes
-        advisory = next(n for n in envelope["notices"] if n["code"] == "storage_root_relocation_is_manual")
-        # The advisory exists to hand over the one control that does relocate.
-        # An advisory that only declines, without naming it, is a dead end.
+        advisory = next(
+            notice for notice in envelope["notices"] if notice["code"] == "storage_root_relocation_is_manual"
+        )
         assert advisory["context"]["variable"] in advisory["message"]
 
-    def test_no_result_field_smuggles_a_diagnostic_past_the_notice_channel(self, tmp_path) -> None:
+
+class TestShowUsesAreaVocabulary:
+    def test_show_reports_one_aggregate_area(self, tmp_path) -> None:
         with override_settings(cadrumo_local_storage_root=tmp_path):
-            envelope = _json_envelope(["config", "storage", "list"])
+            envelope = _json_envelope(["config", "storage", "show", StorageArea.CACHE.value])
 
-        forbidden = {"next", "suggestion", "advisory"}
-        assert not forbidden & set(envelope["result"])
+        assert envelope["result"]["area"]["area"] == StorageArea.CACHE.value
+        assert envelope["result"]["area"]["disposition"] == "mixed"
+        assert "category" not in _all_keys(envelope["result"])
 
-
-class TestShowRendersTheAcceptedSetAtTheBoundary:
-    def test_show_reports_one_category_in_full(self, tmp_path) -> None:
+    def test_unknown_area_failure_names_the_four_accepted_values(self, tmp_path) -> None:
         with override_settings(cadrumo_local_storage_root=tmp_path):
-            envelope = _json_envelope(["config", "storage", "show", StorageCategory.LOGS.value])
-
-        payload = envelope["result"]["category"]
-        assert envelope["command"] == "config.storage.show"
-        assert payload["category"] == StorageCategory.LOGS.value
-        assert payload["lifecycle"] == STORAGE_TAXONOMY[StorageCategory.LOGS].lifecycle.value
-
-    def test_an_unknown_category_is_refused_with_the_accepted_set_named(self, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
-            result = invoke_cached_cli(["config", "storage", "show", "not-a-category"])
+            result = invoke_cached_cli(["config", "storage", "show", "not-an-area"])
 
         assert result.exit_code != 0
         output = semantic_cli_output(result)
-        # The CLI boundary must be instructive, never a bare "value invalid":
-        # the closed enum renders its members on a parse failure.
-        assert StorageCategory.LOGS.value in output
+        for area in StorageArea:
+            assert area.value in output
 
 
-class TestCheckReportsWithoutRepairing:
-    def test_check_is_healthy_on_a_materialised_tree(self, tmp_path) -> None:
+class TestTextOutputIsReadable:
+    def test_list_keeps_the_approved_table_and_wrapped_notice(self, tmp_path) -> None:
         with override_settings(cadrumo_local_storage_root=tmp_path):
-            _json_envelope(["config", "storage", "init"])
-            envelope = _json_envelope(["config", "storage", "check"])
+            result = invoke_cached_cli(["config", "storage", "list", "--output-language", "en"])
 
-        assert envelope["result"]["healthy"] is True
-        assert envelope["result"]["checked_locations"] > 0
+        assert result.exit_code == 0, semantic_cli_output(result)
+        assert "\t" not in result.output
+        assert "Storage root" in result.output
+        assert "Area" in result.output
+        assert "Lifecycle" in result.output
+        assert "Info:" in result.output
+        notice_lines = result.output.split("Info: ", maxsplit=1)[1].splitlines()
+        assert len(notice_lines) > 1
+        assert all(len(line) <= 96 for line in notice_lines)
+        assert all(line.startswith("      ") for line in notice_lines[1:])
 
-    def test_a_directory_where_a_file_belongs_reds_the_check_and_names_the_category(self, tmp_path) -> None:
-        """The drift shape the CLI can actually reach, and why it is this one.
+    def test_show_uses_aligned_aggregate_fields(self, tmp_path) -> None:
+        with override_settings(cadrumo_local_storage_root=tmp_path):
+            result = invoke_cached_cli(
+                ["config", "storage", "show", StorageArea.LOGS.value, "--output-language", "en"]
+            )
 
-        Bootstrap materialises the declared tree before any command body runs,
-        so a missing directory is created and a directory occupied by a file is
-        refused there — neither survives to be reported by ``check``. A
-        file-valued member's LEAF is deliberately not created by the
-        materialiser, so a directory sitting where a document belongs passes
-        straight through bootstrap and is exactly what this verb is left to
-        catch. Asserting the pre-empted shape here would test the bootstrap
-        refusal while appearing to test ``check``.
-        """
+        assert result.exit_code == 0, semantic_cli_output(result)
+        assert any(line.startswith("Area") and line.endswith("logs") for line in result.output.splitlines())
+        assert "Resolved paths" in result.output
+        assert "Footprint" in result.output
+        assert "Category" not in result.output
+
+    def test_init_noop_notice_remains_visible(self, tmp_path) -> None:
+        with override_settings(cadrumo_local_storage_root=tmp_path):
+            assert invoke_cached_cli(["config", "storage", "init", "--output-language", "en"]).exit_code == 0
+            second = invoke_cached_cli(["config", "storage", "init", "--output-language", "en"])
+
+        assert second.exit_code == 0, semantic_cli_output(second)
+        assert "Already present" in second.output
+        assert "Created" in second.output
+        assert "Info:" in second.output
+
+    def test_spanish_list_uses_one_coherent_output_language(self, tmp_path) -> None:
+        with override_settings(cadrumo_local_storage_root=tmp_path):
+            result = invoke_cached_cli(["config", "storage", "list", "--output-language", "es"])
+
+        assert result.exit_code == 0, semantic_cli_output(result)
+        assert "Raíz de almacenamiento" in result.output
+        assert "Área" in result.output
+        assert "Ciclo de vida" in result.output
+        assert "Información:" in result.output
+        assert "Storage root" not in result.output
+        assert "Lifecycle" not in result.output
+
+
+class TestCheckKeepsInternalNodesPrivate:
+    def test_check_issue_reports_area_without_category_or_node_kind(self, tmp_path) -> None:
         with override_settings(cadrumo_local_storage_root=tmp_path):
             _json_envelope(["config", "storage", "init"])
             target = storage_path(StorageCategory.USAGE_RATIOS)
             target.mkdir(parents=True, exist_ok=True)
-
             result = invoke_cached_cli(["--format", "json", "config", "storage", "check"])
 
-        assert result.exit_code != 0
+        assert result.exit_code == 2, semantic_cli_output(result)
         envelope = json.loads(result.output)
-        assert envelope["result"]["healthy"] is False
-        offenders = [
-            issue for issue in envelope["result"]["issues"] if issue["category"] == StorageCategory.USAGE_RATIOS.value
-        ]
-        assert offenders
-        assert offenders[0]["kind"] == "directory_where_file_expected"
-        assert envelope["status"] == "warning"
+        issue = envelope["result"]["issues"][0]
+        assert issue["area"] == StorageArea.EXPORTS.value
+        assert issue["kind"] == "path_type_mismatch"
+        assert "category" not in _all_keys(envelope["result"])
+        assert envelope["result"]["checked_areas"] == 4
+        assert StorageCategory.USAGE_RATIOS.value not in json.dumps(envelope["result"])
+        assert issue["path"] == str(tmp_path)
 
-    def test_bootstrap_refuses_an_occupied_directory_before_check_can_report_it(self, tmp_path) -> None:
-        """Pins the pre-emption above as behaviour rather than a comment.
-
-        The operator is not left without an answer — the bootstrap refusal names
-        the offending path — but the answer comes from a different surface, and
-        a future change that moved tree materialisation out of bootstrap would
-        silently make ``check`` the reporter instead. That is a change someone
-        should make deliberately, so it reds here first.
-        """
+    def test_text_check_groups_the_topology_neutral_issue(self, tmp_path) -> None:
         with override_settings(cadrumo_local_storage_root=tmp_path):
-            _json_envelope(["config", "storage", "init"])
-            target = storage_path(StorageCategory.SUBMISSIONS)
-            target.rmdir()
-            target.write_bytes(b"not a directory")
+            assert invoke_cached_cli(["config", "storage", "init"]).exit_code == 0
+            storage_path(StorageCategory.USAGE_RATIOS).mkdir(parents=True, exist_ok=True)
+            result = invoke_cached_cli(["config", "storage", "check", "--output-language", "en"])
 
-            result = invoke_cached_cli(["--format", "json", "config", "storage", "check"])
-
-        assert result.exit_code != 0
-        envelope = json.loads(result.output)
-        assert envelope["status"] == "error"
-        assert str(target) in envelope["error"]["message"]
+        assert result.exit_code == 2, semantic_cli_output(result)
+        assert "  - path_type_mismatch" in result.output
+        assert "    Area: exports" in result.output
+        assert "Category" not in result.output
 
 
-class TestInitMaterialisesAndPreserves:
-    def test_init_reports_the_root_and_leaves_existing_content_alone(self, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
-            _json_envelope(["config", "storage", "init"])
-            survivor = storage_path(StorageCategory.SUBMISSIONS) / "declaration.boe"
-            survivor.write_bytes(b"filed artefact")
-
-            envelope = _json_envelope(["config", "storage", "init"])
-
-        assert envelope["command"] == "config.storage.init"
-        assert survivor.read_bytes() == b"filed artefact"
-
-
-class TestReclaimRefusalReachesTheOperator:
-    @pytest.mark.parametrize(
-        "category",
-        [
-            member
-            for member, location in STORAGE_TAXONOMY.items()
-            if location.scope is StorageScope.ROOT and location.lifecycle is StorageLifecycle.UNBOUNDED_BY_DESIGN
-        ][:4],
-        ids=lambda c: c.value,
-    )
-    def test_a_protected_category_is_refused_and_keeps_its_content(self, category, tmp_path) -> None:
+class TestReclaimUsesAreaVocabulary:
+    @pytest.mark.parametrize("area", [StorageArea.STATE, StorageArea.EXPORTS])
+    def test_durable_area_refusal_keeps_content(self, area: StorageArea, tmp_path) -> None:
+        category = StorageCategory.BLOBS if area is StorageArea.STATE else StorageCategory.SUBMISSIONS
         with override_settings(cadrumo_local_storage_root=tmp_path):
             target = storage_path(category)
-            if target.suffix:
-                target.parent.mkdir(parents=True, exist_ok=True)
-                target.write_bytes(b"operator data")
-            else:
-                target.mkdir(parents=True, exist_ok=True)
-                (target / "operator.bin").write_bytes(b"operator data")
+            target.mkdir(parents=True, exist_ok=True)
+            marker = target / "operator.bin"
+            marker.write_bytes(b"preserve")
+            result = invoke_cached_cli(["config", "storage", "reclaim", area.value, "--yes"])
 
-            result = invoke_cached_cli(["config", "storage", "reclaim", category.value, "--yes"])
+        assert result.exit_code != 0
+        assert marker.read_bytes() == b"preserve"
+        assert area.value in semantic_cli_output(result)
 
-            assert result.exit_code != 0
-            output = semantic_cli_output(result)
-            # The refusal must name what it would have deleted and why, so the
-            # operator can tell a protected category from a broken command.
-            assert category.value in output
-            assert StorageLifecycle.UNBOUNDED_BY_DESIGN.value in output
-            if target.suffix:
-                assert target.read_bytes() == b"operator data"
-            else:
-                assert (target / "operator.bin").read_bytes() == b"operator data"
+    def test_unconfirmed_reclaim_deletes_nothing(self, tmp_path) -> None:
+        with override_settings(cadrumo_local_storage_root=tmp_path):
+            target = storage_path(StorageCategory.LLM_CACHE)
+            target.mkdir(parents=True, exist_ok=True)
+            marker = target / "cached.bin"
+            marker.write_bytes(b"regenerable")
+            result = invoke_cached_cli(["config", "storage", "reclaim", "cache"])
 
-    def test_reclaim_without_confirmation_refuses_and_deletes_nothing(self, tmp_path) -> None:
+        assert result.exit_code != 0
+        assert marker.exists()
+
+    def test_confirmed_cache_reclaim_reports_area_and_removes_regenerable_content(self, tmp_path) -> None:
         with override_settings(cadrumo_local_storage_root=tmp_path):
             target = storage_path(StorageCategory.LLM_CACHE)
             target.mkdir(parents=True, exist_ok=True)
             (target / "cached.bin").write_bytes(b"regenerable")
+            envelope = _json_envelope(["config", "storage", "reclaim", "cache", "--yes"])
 
-            result = invoke_cached_cli(["config", "storage", "reclaim", StorageCategory.LLM_CACHE.value])
-
-            assert result.exit_code != 0
-            assert (target / "cached.bin").exists()
-
-    def test_a_reclaimable_category_is_emptied_when_confirmed(self, tmp_path) -> None:
-        """The positive control: an all-refusing surface must not pass this file."""
-        with override_settings(cadrumo_local_storage_root=tmp_path):
-            target = storage_path(StorageCategory.LLM_CACHE)
-            target.mkdir(parents=True, exist_ok=True)
-            (target / "cached.bin").write_bytes(b"regenerable")
-
-            envelope = _json_envelope(
-                ["config", "storage", "reclaim", StorageCategory.LLM_CACHE.value, "--yes"],
-            )
-
-            assert envelope["command"] == "config.storage.reclaim"
-            assert envelope["result"]["removed_entries"] == 1
-            assert not (target / "cached.bin").exists()
-            assert target.is_dir()
+        assert envelope["result"]["area"] == StorageArea.CACHE.value
+        assert envelope["result"]["removed_entries"] == 1
+        assert "category" not in _all_keys(envelope["result"])
+        assert not (target / "cached.bin").exists()

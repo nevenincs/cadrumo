@@ -842,7 +842,6 @@ class AuthConfigurePayload(OutputSchema):
     status: str | None = None
     complete: bool
     incomplete_reason: str = ""
-    active_profile: str = ""
     profile_tax_id_present: bool = False
     provider_identity_present: bool = False
     identity_alignment: str = ""
@@ -868,7 +867,6 @@ class AuthConfigurePayload(OutputSchema):
             file=result.file,
             complete=result.complete,
             incomplete_reason=result.incomplete_reason,
-            active_profile=result.active_profile,
             profile_tax_id_present=result.profile_tax_id_present,
             provider_identity_present=result.provider_identity_present,
             identity_alignment=result.identity_alignment,

@@ -206,7 +206,6 @@ def diagnostics_run_health(
                 "cli.diagnostics.run_health.session_stale_message",
                 default="The persisted AEAT session has passed its idle deadline; a live read will re-authenticate.",
             ),
-            suggestion="aeat config auth login",
         )
         notices.append(notice)
         lines.append(
@@ -223,7 +222,6 @@ def diagnostics_run_health(
                 "cli.diagnostics.run_health.no_session_message",
                 default="No persisted AEAT session found on disk.",
             ),
-            suggestion="aeat config auth login",
         )
         notices.append(notice)
 

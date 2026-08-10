@@ -15,6 +15,7 @@ from collections.abc import Iterable
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.json_contract import ResolvedActionReference, ResolvedNoticeAction
 from ._models import ActionArgumentSource
 
 _NAMESPACED_ID_PATTERN = r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$"
@@ -185,12 +186,12 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
-            action_id="operator.profile.status",
-            target_command_key="config.profile.status",
+            action_id="operator.profile.list",
+            target_command_key="config.profile.list",
         ),
         ActionCatalogueEntry(
-            action_id="operator.app.maintenance.reconcile",
-            target_command_key="app.maintenance.reconcile",
+            action_id="operator.profile.status",
+            target_command_key="config.profile.status",
         ),
         ActionCatalogueEntry(
             action_id="operator.ledger.link",
@@ -333,6 +334,22 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
                 ),
             ),
         ),
+        ActionCatalogueEntry(
+            action_id="operator.modelo.export",
+            target_command_key="modelo.export",
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.maintenance.reconcile",
+            target_command_key="app.maintenance.reconcile",
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.profile.export",
+            target_command_key="config.profile.export",
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.profile.sandbox.prune",
+            target_command_key="config.profile.sandbox.prune",
+        ),
     ),
 )
 """Initial evidence-grounded actions for profile and workflow migrations.
@@ -348,6 +365,45 @@ def lookup_action(action_id: str) -> ActionCatalogueEntry:
     return OPERATOR_ACTION_CATALOGUE.lookup(action_id)
 
 
+def next_action(action_id: str) -> ResolvedNoticeAction:
+    """Resolve a zero-argument action into a fully materialised notice action.
+
+    Forward guidance on a SUCCESS path used to be a literal ``aeat ...`` string
+    inside a locale message. That is untestable and rots silently: renaming a
+    verb sweeps the registrations and leaves four translated catalogues naming a
+    command that no longer exists, handing the operator - frequently an
+    autonomous agent - an instruction it cannot recover from.
+
+    Resolution runs through :func:`lookup_action`, which fails closed on an
+    unknown id, so the command key comes from the catalogue rather than from
+    prose and a renamed action raises here instead of shipping.
+
+    This lives beside the catalogue rather than in the CLI transport because the
+    application layer also emits such notices; a CLI-owned helper would force an
+    application module to import ``entrypoints``, against the layer direction.
+
+    Args:
+        action_id: A namespaced id declared in the operator action catalogue.
+
+    Returns:
+        The fully materialised action to attach as ``Notice(action=...)``.
+
+    Raises:
+        KeyError: ``action_id`` is not declared in the catalogue.
+    """
+    entry = lookup_action(action_id)
+    if entry.argument_specifications:
+        raise ValueError(
+            f"notice action requires materialised argument bindings: {entry.action_id}",
+        )
+    return ResolvedNoticeAction(
+        action=ResolvedActionReference(
+            action_id=entry.action_id,
+            target_command_key=entry.target_command_key,
+        ),
+    )
+
+
 __all__ = [
     "OPERATOR_ACTION_CATALOGUE",
     "ActionArgumentBindingSpecification",
@@ -355,4 +411,5 @@ __all__ = [
     "ActionCatalogueEntry",
     "build_action_catalogue",
     "lookup_action",
+    "next_action",
 ]

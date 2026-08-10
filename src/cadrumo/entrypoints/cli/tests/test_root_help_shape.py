@@ -28,8 +28,8 @@ from .... import __version__
 from ....application.operator_surface import build_help_document
 from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
-from ....core import PRODUCT_IDENTITY
-from ....core.config import SecretStoreBackend, Settings
+from ....core import PRODUCT_IDENTITY, BucketPointer, write_pointer
+from ....core.config import SecretStoreBackend, Settings, load_settings
 from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root, isolated_sessionless_storage_root
@@ -101,18 +101,18 @@ def test_root_help_uses_curated_two_root_shape() -> None:
     retired_init = "aeat config " + "init"
 
     assert result.exit_code == 0, result.output
-    assert "The CLI has exactly two roots: config and app." in result.output
-    assert "Setup" in result.output
-    assert "Daily ledger work" in result.output
-    assert "Modelo lifecycle" in result.output
+    assert "exactly two command roots" in result.output
+    assert "Start or resume" in result.output
+    assert "Core workflow" in result.output
+    assert "Resume or recover" in result.output
+    assert "Profile labels stay visible" in result.output
     assert "Common mistypes" not in result.output
     assert "aeat config profile create NAME" in result.output
     assert retired_init not in result.output
     assert "aeat app overview status" in result.output
-    assert "aeat app live filed list" in result.output
-    assert "CADRUMO_LOCAL_STORAGE_ROOT" in result.output
-    assert "CADRUMO_SECRET_STORE_DIR" in result.output
-    assert "CADRUMO_SECRET_PASSPHRASE" in result.output
+    assert "aeat app modelo verification-report list" in result.output
+    assert "aeat --format json config repair" in result.output
+    assert "github.com/nevenincs/cadrumo/issues" in result.output
     assert "aeat config bucket" not in result.output
 
 
@@ -156,6 +156,31 @@ def test_curated_help_command_rows_resolve_in_real_typer_tree() -> None:
                 result = _invoke([*command_path, "--help"])
                 assert result.exit_code == 0, f"{entry.command}\n{result.output}"
                 assert "No such command" not in result.output
+
+
+def test_bare_invocation_preserves_selected_profile_with_missing_manifest() -> None:
+    """A valid active pointer with no manifest is degraded state, not blank state."""
+    write_pointer(
+        load_settings().cadrumo_local_storage_root,
+        BucketPointer(bucket_id="11111111-1111-4111-8111-111111111111", schema_version=1),
+    )
+
+    text_result = _invoke([])
+    json_result = _invoke(["--format", "json"])
+
+    assert text_result.exit_code == 0, text_result.output
+    assert "Active profile: unavailable." in text_result.output
+    assert "aeat config repair profile" in text_result.output
+    assert "aeat config profile create NAME" not in text_result.output
+    assert CLI_PROFILE_ID_PLACEHOLDER not in text_result.output
+
+    assert json_result.exit_code == 0, json_result.output
+    document = json.loads(json_result.output)
+    assert document["active_profile"] is None
+    assert document["result"]["profile_selected"] is True
+    assert document["result"]["active_profile"] is None
+    assert document["result"]["command"] == "aeat config repair profile"
+    assert CLI_PROFILE_ID_PLACEHOLDER not in json_result.output
 
 
 # The custody and audit families the curated help MUST cite, keyed by the live
@@ -509,6 +534,8 @@ class TestBareInvocationWithActiveProfile:
         assert "aeat app ledger import" in missing.output
 
         assert active.exit_code == 0, active.output
+        assert "Active profile: `operator`." in active.output
+        assert CLI_PROFILE_ID_PLACEHOLDER not in active.output
         assert overview.exit_code == 0, overview.output
         assert active.output != overview.output
         assert "aeat app overview status" in active.output
@@ -517,6 +544,26 @@ class TestBareInvocationWithActiveProfile:
         assert "profile\t" not in overview.output.lower()
         assert "integrity-warning" not in overview.output
         assert "unreadable_rows" not in overview.output
+
+    def test_bare_invocation_after_logout_points_to_login_not_create(self) -> None:
+        """A registered profile without a selection is a login state, not first run."""
+
+        with profile_create_storage_span("11111111-1111-4111-8111-111111111111"):
+            workflow_state_repository().update(
+                lambda current: register_minimal_profile(
+                    current,
+                    profile_id="11111111-1111-4111-8111-111111111111",
+                    display_name="operator",
+                )
+            )
+        logged_out = _invoke(["config", "logout"])
+        landing = _invoke([])
+
+        assert logged_out.exit_code == 0, logged_out.output
+        assert "logged_out_profile\toperator" in logged_out.output
+        assert landing.exit_code == 0, landing.output
+        assert "aeat config login NAME" in landing.output
+        assert "aeat config profile create NAME" not in landing.output
 
     def test_root_help_and_bare_invocation_use_root_format_json(self) -> None:
         help_result = _invoke(["--format", "json", "--help"])
@@ -540,10 +587,13 @@ class TestBareInvocationWithActiveProfile:
         assert active.exit_code == 0, active.output
         active_envelope = json.loads(active.output)
         active_payload = active_envelope.get("result", active_envelope)
-        # The root landing report carries the raw active bucket id, which the
-        # output redaction funnel replaces with the profile-id placeholder
-        # before it reaches the operator (see ``core.redaction``).
-        assert active_payload["active_profile"] == CLI_PROFILE_ID_PLACEHOLDER
+        # The root landing report carries the operator-facing display label.
+        # The outer envelope resolves the same label independently; neither
+        # surface should receive the UUID and rely on redaction to turn a
+        # storage identifier into a pretend operator identity.
+        assert active_payload["active_profile"] == "operator"
+        assert active_envelope["active_profile"] == "operator"
+        assert CLI_PROFILE_ID_PLACEHOLDER not in active.output
         # The RootLandingReport model carries (active_profile, command, message);
         # `transactions` is not part of the bare-invocation payload contract.
         assert "command" in active_payload

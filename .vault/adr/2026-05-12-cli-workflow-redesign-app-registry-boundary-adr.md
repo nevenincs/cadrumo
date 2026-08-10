@@ -3,13 +3,14 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-05-12'
-modified: '2026-07-17'
-body_hash: 'sha256:07e14356cd4456ce9f05dfd6cbc810525bc55535b0c4be9f5b647d85531a3112'
+modified: '2026-08-10'
+body_hash: 'sha256:42d3b760842cce2b11a37c54405bf5edac0c50f3b80a720c6f92260c9b703881'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-app-registry-boundary-research]]"
   - "[[2026-05-12-cli-workflow-redesign-app-live-shape-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-app-modelo-shape-adr]]"
+  - "[[2026-08-03-canonical-storage-management-adr]]"
 ---
 
 # `cli-workflow-redesign` adr: `app registry boundary` | (**status:** `accepted`)
@@ -23,11 +24,11 @@ CLI logging and error handling MUST use the central facilities: `cadrumo.core.lo
 CLI output MUST use the established emitters, including `cadrumo.entrypoints.cli._common._emit`, `cadrumo.entrypoints.cli._schemas.emit_json_success`, and `cadrumo.entrypoints.cli._schemas.emit_json_document`. New CLI behavior MUST be expressed by wiring existing backend/application/domain services and centralized error/output drivers, not by adding parallel CLI-local implementations.
 ## Problem Statement
 
-The registry CLI mixes local registry inspection, structural
-verification, oracle binding audits, workbook verification, parity execution,
-and live AEAT filed-declaration reads.
+The registry CLI mixed consumer-facing local registry inspection and structural
+verification with repository-maintainer oracle, workbook, and parity operations,
+as well as live AEAT filed-declaration reads.
 
-Apex §4.5 assigns registry authority to local registry inspection and
+Apex Â§4.5 assigns registry authority to local registry inspection and
 verification. Static modelo introspection belongs under `aeat app modelo`.
 
 The app-live-shape ADR accepts filed declaration workflows under
@@ -40,9 +41,10 @@ Live AEAT session behavior, sede declaration traversal, and
 filed-observation persistence cross the registry boundary and make the CLI
 shape unclear.
 
-Registry still needs to own local authority checks, registry structure
-verification, oracle binding audit, workbook verification, parity run/replay,
-and local filed-state verification against captured observations.
+The installed registry surface owns consumer-facing local authority inspection,
+registry structure verification, and local filed-state verification against
+captured observations. Oracle binding audits, workbook execution, and parity
+run/replay are repository maintenance and live only under `dev/registry`.
 
 Filed declaration traversal is remote AEAT observation. It belongs with the
 accepted `app live` boundary.
@@ -51,10 +53,10 @@ accepted `app live` boundary.
 
 - No compatibility aliases or shims are allowed.
 - No root `aeat live` is introduced.
-- `config repair` receives no filed-data, NIF-IVA/TGVI operational read, or
-  registry parity workflow.
-- All retained and moved commands use shared `--format json|text` and `_emit`
-  typed reports.
+- `config repair` receives no filed-data or NIF-IVA/TGVI operational read.
+- Product commands use the shared output envelope and typed reports.
+- Repository maintenance tooling is not registered in the installed CLI and is
+  absent from both product distributions.
 - Legacy per-command `--json`, manual `json.dumps`, and metric-only rendering
   are removed.
 
@@ -73,12 +75,12 @@ The following commands stay under `aeat app registry`:
 ```text
 aeat app registry inspect [--registry-root PATH] [--format json|text]
 aeat app registry verify [--registry-root PATH] [--source-root PATH] [--format json|text]
-aeat app registry audit-oracles [--registry-root PATH] [--environment production|test_environment|both] [--format json|text]
 aeat app registry verify-filed-state --observation PATH [--source-observation PATH ...] [--registry-root PATH] [--source-root PATH] [--casilla ID ...] [--format json|text]
-aeat app registry workbooks verify [--root PATH] [--limit N] [--per-file-timeout SECONDS] [--output PATH] [--resume-from PATH] [--format json|text]
-aeat app registry parity run --scenario PATH [--registry-root PATH] [--source-root PATH] [--store-root PATH] [--output PATH] [--format json|text]
-aeat app registry parity replay --tape PATH [--registry-root PATH] [--source-root PATH] [--format json|text]
 ```
+
+Oracle audits, workbook verification, and parity run/replay execute through the
+repository-only `dev.registry.maintenance_cli` entrypoint. They have no product
+command registration, payload schema, application wrapper, or product setting.
 
 Filed declaration live reads move to `aeat app live filed`:
 
@@ -103,9 +105,10 @@ refactor that introduces `app live filed`.
 
 ## Rationale
 
-Registry should answer whether local calculation registry material is
-structured, complete, bound, and parity-verified. It should not be the
-operator's live AEAT session traversal surface.
+The product registry surface should answer consumer questions about local
+calculation-registry material. Release-input audits and executable parity
+workflows are maintainer concerns, and live AEAT traversal is an operational
+consumer workflow; neither belongs in the installed registry command group.
 
 Moving live filed-data reads to `app live filed` aligns with the accepted
 app-live-shape ADR and makes remote-contact intent visible to the operator.
@@ -115,10 +118,10 @@ without initiating remote reads.
 
 ## Consequences
 
-The registry CLI has a narrower authority boundary: inspect local registry
-state, verify registry structure, audit oracle bindings, verify filed
-observations against registry/source state, verify workbooks, and run/replay
-parity.
+The registry CLI has a narrower consumer authority boundary: inspect local
+registry state, verify registry structure, and verify filed observations against
+registry/source state. Repository-maintainer audits and parity workflows remain
+available only from `dev/registry` in a source checkout.
 
 Live filed declaration reads become operational live workflows under
 `aeat app live filed`.

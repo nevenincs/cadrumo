@@ -1,9 +1,9 @@
 """State-root derivation for secure storage substrate settings.
 
-The ``"secrets"``, ``"blobs"``, and ``"audit"`` literals at the
+The ``"secrets"``, ``"blobs"``, and ``"live-state"`` literals at the
 default-derivation assertions are deliberate: each is the independent oracle
 for what its settings field (``cadrumo_secret_store_dir``,
-``cadrumo_blob_store_dir``, ``cadrumo_audit_dir``) defaults to when
+``cadrumo_blob_store_dir``, ``cadrumo_live_state_dir``) defaults to when
 unoverridden, not scaffolding. Re-deriving any of them from the taxonomy would
 make the assertion compare the settings derivation against itself.
 """
@@ -21,13 +21,11 @@ from ..config import Settings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"secrets", "blobs", "audit"})
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"secrets", "blobs", "live-state"})
 """Taxonomy-vocabulary literals this module deliberately pins. See the module docstring.
 
-``"audit"`` here names the on-disk directory segment ``cadrumo_audit_dir``
-resolves to (``storage_root / "audit"``), the audit-EVIDENCE storage
-category -- not the unrelated ``SensitivityClass.AUDIT`` enum member spelled
-the same way elsewhere in this corpus.
+``"live-state"`` here names the on-disk directory segment
+``cadrumo_live_state_dir`` resolves to (``storage_root / "live-state"``).
 """
 
 
@@ -38,7 +36,7 @@ def _settings_from_env(**env: str) -> Settings:
 
 def _assert_shared_storage_dirs(settings: Settings, storage_root: Path) -> None:
     assert settings.cadrumo_blob_store_dir == storage_root / "blobs"
-    assert settings.cadrumo_audit_dir == storage_root / "audit"
+    assert settings.cadrumo_live_state_dir == storage_root / "live-state"
 
 
 def test_secure_storage_dirs_default_under_local_storage_root(tmp_path: Path) -> None:

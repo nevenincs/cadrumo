@@ -6,7 +6,7 @@ from collections.abc import Mapping
 
 from pydantic import ConfigDict, TypeAdapter, ValidationError
 
-from ....core import Period
+from cadrumo.core import Period
 
 _SCENARIO_MAPPING_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(
     dict[str, object], config=ConfigDict(strict=True)
@@ -27,8 +27,7 @@ def hydrate_scenario_filing_period(data: object) -> object:
     """Derive ``filing_period`` from ``filing_year`` + ``period`` for a scenario payload.
 
     The pydantic ``mode="before"`` validator body shared by the registry
-    scenario models (:class:`~cadrumo.domain.calculations.registry.ParityScenario`
-    and the calculation scenario). Returns ``data`` unchanged when it is not a
+    parity scenario model. Returns ``data`` unchanged when it is not a
     mapping, already carries ``filing_period``, lacks a well-typed
     ``filing_year``/``period`` pair, or the pair does not form a valid
     :class:`~cadrumo.core.Period`.

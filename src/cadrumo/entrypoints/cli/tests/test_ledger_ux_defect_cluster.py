@@ -47,6 +47,16 @@ def test_categories_command_lists_the_canonical_spending_taxonomy(
     assert rent_category["related_category_ids"] == ["arrendamiento_local"]
 
 
+def test_ledger_status_text_names_active_profile_without_storage_id(tmp_path: Path) -> None:
+    """Status presents the operator label; the storage UUID is not useful text UX."""
+    result = _invoke(["--language", "en", "app", "ledger", "status"])
+
+    assert result.exit_code == 0, result.output
+    assert result.output.splitlines()[0] == "Profile\ttester"
+    assert "9e0f3a2b-5d1c-4a77-9b2d-27ed6d6c7f10" not in result.output
+    assert "<profile-id>" not in result.output
+
+
 def test_classify_rejects_an_invented_category_id(tmp_path: Path) -> None:
     """An id outside the closed taxonomy is refused, not silently kept."""
     txn = _imported_transaction_id(tmp_path)

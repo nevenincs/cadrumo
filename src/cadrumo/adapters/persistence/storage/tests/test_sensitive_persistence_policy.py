@@ -187,21 +187,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "target.open",
     ): "redacted diagnostic event store",
     (
-        "src/cadrumo/domain/calculations/registry/_parity_tapes.py",
-        "save_parity_scenario",
-        "path.write_text",
-    ): "registry parity tape generation",
-    (
-        "src/cadrumo/domain/calculations/registry/_parity_tapes.py",
-        "save_parity_tape",
-        "path.write_text",
-    ): "registry parity tape generation",
-    (
-        "src/cadrumo/application/registry/__init__.py",
-        "verify_registry_workbooks",
-        "output.write_text",
-    ): "registry verification report export through the registry service",
-    (
         "src/cadrumo/adapters/persistence/storage/bucket/_lockfile.py",
         "_try_create_lock",
         "os.open",
@@ -216,11 +201,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "_dump_wallet_diagnostic",
         "write_text",
     ): "operator-enabled IVA wallet diagnostic writes redacted structural metadata only",
-    (
-        "src/cadrumo/domain/calculations/registry/_workbook_parity.py",
-        "_converted_binary_xls_path",
-        "cached_path.write_bytes",
-    ): "registry workbook-parity conversion cache; non-user AEAT reference workbook bytes",
     (
         "src/cadrumo/agent/_workspace.py",
         "_write",
