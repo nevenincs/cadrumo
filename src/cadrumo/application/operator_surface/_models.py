@@ -26,9 +26,9 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ...core import BindingSourceKind
+from ...core import BindingSourceKind, NoRecoveryOutcome
 from ...core.logging import LogExtra
-from ..operator_actions import ActionReference, NoRecoveryOutcome
+from ..operator_actions import ActionReference
 
 _NAMESPACED_ID_PATTERN = r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$"
 

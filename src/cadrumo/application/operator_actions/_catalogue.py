@@ -15,8 +15,8 @@ from collections.abc import Iterable
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import ActionArgumentSource
 from ...core.json_contract import ResolvedActionReference, ResolvedNoticeAction
-from ._models import ActionArgumentSource
 
 _NAMESPACED_ID_PATTERN = r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$"
 _FIELD_KEY_PATTERN = r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)*$"

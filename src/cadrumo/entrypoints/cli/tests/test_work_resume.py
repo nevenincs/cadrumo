@@ -13,12 +13,8 @@ from click.testing import Result
 from ....application.modelo import create_work_unit, workflow_period_for_work_unit
 from ....application.operator_actions import (
     ActionArgumentBinding,
-    ActionArgumentStatus,
-    ActionConditionality,
     ActionReference,
     ConditionEvidence,
-    ConditionEvidenceProvenance,
-    NoRecoveryOutcome,
     PreconditionVerdict,
 )
 from ....application.user_profile import UserProfileLifecycleRepository, profile_create_storage_span
@@ -34,7 +30,15 @@ from ....application.workflow import (
     save_run,
     workflow_state_repository,
 )
-from ....core import Modelo, Period, resolve_active_bucket_id
+from ....core import (
+    ActionArgumentStatus,
+    ActionConditionality,
+    ActionEvidenceProvenance,
+    Modelo,
+    NoRecoveryOutcome,
+    Period,
+    resolve_active_bucket_id,
+)
 from ....domain.deadlines import ObligationStatus
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.cli_runner import invoke_cached_cli
@@ -123,7 +127,7 @@ def _aborted_run(run_id: str, *, reason: WorkflowAbortReason) -> WorkflowResult:
                 ConditionEvidence(
                     condition_id="workflow.site.available",
                     evidence_id="workflow.site.health",
-                    provenance=ConditionEvidenceProvenance.RUNTIME_OBSERVATION,
+                    provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
                     values={"site_available": False},
                 ),
             ),
@@ -182,7 +186,7 @@ def _builder_refused_run(run_id: str) -> WorkflowResult:
                 ConditionEvidence(
                     condition_id="workflow.draft.buildable",
                     evidence_id="workflow.draft.build_failure",
-                    provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+                    provenance=ActionEvidenceProvenance.APPLICATION_STATE,
                     values={"buildable": False},
                 ),
             ),

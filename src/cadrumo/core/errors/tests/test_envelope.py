@@ -7,13 +7,15 @@ import json
 import pytest
 from pydantic import ValidationError
 
-from ...config import override_settings
-from ...json_contract import (
+from ... import (
     ActionArgumentSource,
     ActionArgumentStatus,
     ActionConditionality,
-    ActionConditionEvidence,
     ActionEvidenceProvenance,
+)
+from ...config import override_settings
+from ...json_contract import (
+    ActionConditionEvidence,
     ResolvedActionArgument,
     ResolvedActionReference,
     ResolvedPreconditionAction,

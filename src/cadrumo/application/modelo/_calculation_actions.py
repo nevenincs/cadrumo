@@ -83,7 +83,6 @@ from ...domain.modelos import (
     upsert_calculation_revision,
 )
 from ..calculations import cross_period_dependency_requirements as _cross_period_dependency_requirements
-from ..operator_actions import ConditionEvidenceProvenance
 from ._action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
@@ -1402,7 +1401,7 @@ def _reject_caller_overrides_of_source_bindings(
                     "rejected_binding_count": len(rejected_bindings),
                     "rejected_binding_ids": "|".join(rejected_bindings),
                 },
-                provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
             ),
         )
     rejected_casillas = sorted(
@@ -1421,7 +1420,7 @@ def _reject_caller_overrides_of_source_bindings(
                     "rejected_casilla_count": len(rejected_casillas),
                     "rejected_casilla_ids": "|".join(rejected_casillas),
                 },
-                provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
             ),
         )
 
@@ -1604,6 +1603,6 @@ def _refuse_direct_cross_period_verification(
                     "year": work_unit.filing_year,
                     "period": work_unit.period.registry_token,
                 },
-                provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
             ),
         )

@@ -13,7 +13,6 @@ from ...domain.modelos import (
     ModeloVerificationFindingSeverity,
     VerificationReport,
 )
-from ..operator_actions import ConditionEvidenceProvenance
 from ._preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure
 
 
@@ -58,7 +57,7 @@ def build_verification_precondition_failure(
     scenario_id: str,
     evidence_id: str,
     evidence_values: Mapping[str, str | int | bool | Decimal],
-    provenance: ConditionEvidenceProvenance,
+    provenance: ActionEvidenceProvenance,
     action_id: str | None = None,
 ) -> ModeloPreconditionFailure:
     """Build one verify failure with the common persisted addressing facts."""

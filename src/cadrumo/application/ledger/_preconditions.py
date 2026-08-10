@@ -6,11 +6,13 @@ from collections.abc import Callable, Mapping
 from enum import StrEnum
 from typing import cast
 
-from ..operator_actions import (
+from ...core import (
     ActionConditionality,
-    ConditionEvidence,
-    ConditionEvidenceProvenance,
+    ActionEvidenceProvenance,
     NoRecoveryOutcome,
+)
+from ..operator_actions import (
+    ConditionEvidence,
     PreconditionVerdict,
 )
 
@@ -77,7 +79,7 @@ def ledger_no_recovery_verdict(
             ConditionEvidence(
                 condition_id=condition_id,
                 evidence_id=f"{condition_id}.observation",
-                provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
                 values=facts,
             ),
         ),

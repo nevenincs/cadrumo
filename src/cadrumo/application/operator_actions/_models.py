@@ -5,7 +5,6 @@ from __future__ import annotations
 import re
 from collections.abc import Mapping
 from decimal import Decimal
-from enum import StrEnum
 from types import MappingProxyType
 from typing import Final
 
@@ -17,7 +16,16 @@ from pydantic import (
     model_validator,
 )
 
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import (
+    STRICT_FROZEN_CONFIG as _STRICT_FROZEN,
+)
+from ...core import (
+    ActionArgumentSource,
+    ActionArgumentStatus,
+    ActionConditionality,
+    ActionEvidenceProvenance,
+    NoRecoveryOutcome,
+)
 
 _NAMESPACED_ID_PATTERN = r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$"
 _FIELD_KEY_PATTERN = r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)*$"
@@ -46,51 +54,6 @@ def _is_presentation_key(key: str) -> bool:
     return any(token in _PRESENTATION_KEY_TOKENS for token in re.split(r"[._]", key))
 
 
-class ConditionEvidenceProvenance(StrEnum):
-    """Authority that observed one failed-condition fact."""
-
-    APPLICATION_STATE = "application_state"
-    DOMAIN_EVALUATION = "domain_evaluation"
-    PERSISTED_STATE = "persisted_state"
-    REGISTRY_RECORD = "registry_record"
-    RUNTIME_OBSERVATION = "runtime_observation"
-
-
-class ActionArgumentSource(StrEnum):
-    """Namespaced origins for action argument materialisation.
-
-    This intentionally is not the AEAT registry binding-source taxonomy.  Its
-    values identify only data already available to an application verdict.
-    """
-
-    VERDICT_CONTEXT = "operator_action.verdict_context"
-    CONDITION_EVIDENCE = "operator_action.condition_evidence"
-    REQUEST_CONTEXT = "operator_action.request_context"
-
-
-class ActionArgumentStatus(StrEnum):
-    """Whether one action argument has a concrete value."""
-
-    RESOLVED = "resolved"
-    MISSING = "missing"
-
-
-class ActionConditionality(StrEnum):
-    """Whether a recovery action is presently materialisable."""
-
-    IMMEDIATE = "immediate"
-    REQUIRES_ARGUMENTS = "requires_arguments"
-    NOT_APPLICABLE = "not_applicable"
-
-
-class NoRecoveryOutcome(StrEnum):
-    """Closed reasons a refusal deliberately has no recovery action."""
-
-    TERMINAL = "terminal"
-    SAFETY = "safety"
-    OPERATOR_DECISION = "operator_decision"
-
-
 class ConditionEvidence(BaseModel):
     """Typed facts supporting a failed condition from one authority."""
 
@@ -98,7 +61,7 @@ class ConditionEvidence(BaseModel):
 
     condition_id: str = Field(pattern=_NAMESPACED_ID_PATTERN, min_length=3, max_length=160)
     evidence_id: str = Field(pattern=_NAMESPACED_ID_PATTERN, min_length=3, max_length=160)
-    provenance: ConditionEvidenceProvenance
+    provenance: ActionEvidenceProvenance
     values: Mapping[str, str | int | bool | Decimal] = Field(min_length=1)
 
     @field_validator("values")
@@ -297,12 +260,7 @@ class PreconditionVerdict(BaseModel):
 
 __all__ = [
     "ActionArgumentBinding",
-    "ActionArgumentSource",
-    "ActionArgumentStatus",
-    "ActionConditionality",
     "ActionReference",
     "ConditionEvidence",
-    "ConditionEvidenceProvenance",
-    "NoRecoveryOutcome",
     "PreconditionVerdict",
 ]

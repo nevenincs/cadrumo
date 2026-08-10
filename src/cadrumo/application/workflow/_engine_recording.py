@@ -6,14 +6,16 @@ from collections.abc import Callable
 from datetime import datetime
 from typing import NoReturn
 
+from ...core import (
+    ActionConditionality,
+    ActionEvidenceProvenance,
+    NoRecoveryOutcome,
+)
 from ...core.errors import SiteHealthError, build_error_envelope
 from ...core.logging import get_logger
 from ...core.time import now as _utcnow
 from ..operator_actions import (
-    ActionConditionality,
     ConditionEvidence,
-    ConditionEvidenceProvenance,
-    NoRecoveryOutcome,
     PreconditionVerdict,
 )
 from ._errors import UnhandledWorkflowError, WorkflowAbortSignalError
@@ -118,7 +120,7 @@ def _execution_failure_verdict(error_code: str) -> PreconditionVerdict:
             ConditionEvidence(
                 condition_id=condition_id,
                 evidence_id="workflow.execution.error_code",
-                provenance=ConditionEvidenceProvenance.RUNTIME_OBSERVATION,
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
                 values={"completed": False, "error_code": error_code},
             ),
         ),

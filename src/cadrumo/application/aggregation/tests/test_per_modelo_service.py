@@ -28,13 +28,12 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core import BindingSourceKind, Period
+from ....core import BindingSourceKind, NoRecoveryOutcome, Period
 from ....core.errors import get_registered_error_code
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     resolve_foreign_asset_binding_row_values,
 )
-from ...operator_actions import NoRecoveryOutcome
 from .. import (
     ACCEPTED_SOURCE_KINDS,
     AggregationErrorCodes,

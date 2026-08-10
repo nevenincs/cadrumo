@@ -14,11 +14,10 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period
+from ....core import NoRecoveryOutcome, Period
 from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry import DataBindingDefinition, ModeloRevision, PeriodSelector
 from ....tests.secure_sql import isolated_runtime_profile
-from ...operator_actions import NoRecoveryOutcome
 from .._errors import AggregationValidationError
 from .._modelo_bindings import RetencionesAggregationSourceResolver
 from .._preconditions import AggregationPreconditionCondition

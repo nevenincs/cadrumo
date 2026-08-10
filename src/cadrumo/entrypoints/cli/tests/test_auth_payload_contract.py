@@ -14,11 +14,13 @@ from ....application.auth import (
     ProviderProbeResult,
 )
 from ....application.operator_actions import (
-    ActionConditionality,
     ConditionEvidence,
-    ConditionEvidenceProvenance,
-    NoRecoveryOutcome,
     PreconditionVerdict,
+)
+from ....core import (
+    ActionConditionality,
+    ActionEvidenceProvenance,
+    NoRecoveryOutcome,
 )
 from .._common import resolve_cli_precondition_action
 from .._config_payloads import AuthLoginPayload, AuthStatusPayload, AuthTestPayload
@@ -97,7 +99,7 @@ def test_auth_status_payload_projects_the_application_verdict_to_the_wire_action
             ConditionEvidence(
                 condition_id="profile.active.required",
                 evidence_id="profile.active.required.missing",
-                provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
                 values={"active_profile_present": False},
             ),
         ),

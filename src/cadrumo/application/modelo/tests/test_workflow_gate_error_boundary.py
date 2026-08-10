@@ -21,13 +21,15 @@ from datetime import UTC, datetime
 
 import pytest
 
+from ....core import (
+    ActionConditionality,
+    ActionEvidenceProvenance,
+    NoRecoveryOutcome,
+)
 from ....core.config import override_settings
 from ....core.errors import render_error_json, render_error_text
 from ...operator_actions import (
-    ActionConditionality,
     ConditionEvidence,
-    ConditionEvidenceProvenance,
-    NoRecoveryOutcome,
     PreconditionVerdict,
 )
 from ...workflow import (
@@ -79,7 +81,7 @@ def _aborted_result(
                         ConditionEvidence(
                             condition_id="workflow.deadline.filing_window_open",
                             evidence_id="workflow.deadline.window",
-                            provenance=ConditionEvidenceProvenance.DOMAIN_EVALUATION,
+                            provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
                             values={"filing_window_open": False},
                         ),
                     ),

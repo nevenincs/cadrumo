@@ -52,6 +52,13 @@ from pydantic import (
     model_validator,
 )
 
+from ._operator_action_enums import (
+    ActionArgumentSource,
+    ActionArgumentStatus,
+    ActionConditionality,
+    ActionEvidenceProvenance,
+    NoRecoveryOutcome,
+)
 from .errors import CadrumoError
 from .logging import get_logger
 from .output_rendering import jsonable_output_payload
@@ -158,52 +165,6 @@ class NoticeSeverity(StrEnum):
 
     INFO = "info"
     WARNING = "warning"
-
-
-class ActionEvidenceProvenance(StrEnum):
-    """Authority that observed one failed-condition fact for wire projection.
-
-    This is a transport vocabulary, not an application policy model. The
-    application gate supplies evaluated evidence; this contract only carries
-    that evidence across the CLI/MCP envelope boundary.
-    """
-
-    APPLICATION_STATE = "application_state"
-    DOMAIN_EVALUATION = "domain_evaluation"
-    PERSISTED_STATE = "persisted_state"
-    REGISTRY_RECORD = "registry_record"
-    RUNTIME_OBSERVATION = "runtime_observation"
-
-
-class ActionArgumentSource(StrEnum):
-    """Provenance of a projected recovery-action argument value."""
-
-    VERDICT_CONTEXT = "operator_action.verdict_context"
-    CONDITION_EVIDENCE = "operator_action.condition_evidence"
-    REQUEST_CONTEXT = "operator_action.request_context"
-
-
-class ActionArgumentStatus(StrEnum):
-    """Whether a recovery-action argument has a concrete projected value."""
-
-    RESOLVED = "resolved"
-    MISSING = "missing"
-
-
-class ActionConditionality(StrEnum):
-    """Whether a projected recovery action is currently materialisable."""
-
-    IMMEDIATE = "immediate"
-    REQUIRES_ARGUMENTS = "requires_arguments"
-    NOT_APPLICABLE = "not_applicable"
-
-
-class NoRecoveryOutcome(StrEnum):
-    """Closed reasons a refusal deliberately has no recovery action."""
-
-    TERMINAL = "terminal"
-    SAFETY = "safety"
-    OPERATOR_DECISION = "operator_decision"
 
 
 class ActionConditionEvidence(BaseModel):
@@ -998,13 +959,8 @@ def validate_registered_envelope_document(document: object) -> dict[str, object]
 __all__ = [
     "ENVELOPE_SCHEMA_VERSION",
     "SCHEMA_REGISTRY",
-    "ActionArgumentSource",
-    "ActionArgumentStatus",
     "ActionConditionEvidence",
-    "ActionConditionality",
-    "ActionEvidenceProvenance",
     "EnvelopeStatus",
-    "NoRecoveryOutcome",
     "Notice",
     "NoticeSeverity",
     "OutputRootSchema",

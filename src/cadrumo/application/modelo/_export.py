@@ -52,6 +52,7 @@ from ...adapters.persistence.profile.modelos_verification_reports import Verific
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import (
+    ActionEvidenceProvenance,
     ExportLayoutFormat,
     Modelo,
     PaymentElection,
@@ -110,7 +111,6 @@ from ..filing import (
 )
 from ..filing._export_parity import did_page_required
 from ..filing.runtime import RegistrySchemaAccessor
-from ..operator_actions import ConditionEvidenceProvenance
 from ._action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
@@ -1388,7 +1388,7 @@ def export_modelo_revision(
                     "transaction_count": len(deductible_gap_transaction_ids),
                     "transaction_ids": "|".join(deductible_gap_transaction_ids),
                 },
-                provenance=ConditionEvidenceProvenance.PERSISTED_STATE,
+                provenance=ActionEvidenceProvenance.PERSISTED_STATE,
             ),
         )
     work_unit = wu_repo.load().get(revision.work_unit_id)

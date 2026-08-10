@@ -28,11 +28,13 @@ from ...application.overview import (
 from ...application.overview import (
     DataPrepStepState as _DataPrepStepState,
 )
-from ...core import Modelo
-from ...core.i18n import tr
-from ...core.json_contract import (
+from ...core import (
     ActionArgumentSource,
     ActionArgumentStatus,
+    Modelo,
+)
+from ...core.i18n import tr
+from ...core.json_contract import (
     Notice,
     NoticeSeverity,
     ResolvedActionArgument,

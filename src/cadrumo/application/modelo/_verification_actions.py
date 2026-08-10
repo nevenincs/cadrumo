@@ -60,7 +60,7 @@ from ...adapters.persistence.profile.modelos_verification_reports import Verific
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...core import BindingSourceKind, M210GrossIncomeSourceMode, Modelo
+from ...core import ActionEvidenceProvenance, BindingSourceKind, M210GrossIncomeSourceMode, Modelo
 from ...core.config import Settings
 from ...core.i18n import tr
 from ...core.time import now as _utc_now
@@ -113,7 +113,6 @@ from ..aggregation import (
     missing_evidence_advisory_observations,
 )
 from ..calculations import CalculationObservationRepository, CrossPeriodDependencyEvidence, CrossPeriodExpectedMemberSet
-from ..operator_actions import ConditionEvidenceProvenance
 from ..workflow import WorkflowEngine, WorkflowPurpose, WorkflowRunRepository
 from ._action_errors import (
     WORKFLOW_GATE_LEGAL_REFS,
@@ -489,7 +488,7 @@ def _collect_verification_gate_findings(
                 "profile_fact_id": "taxpayer_type.incn_prior_12_months",
                 "modality_code": "incomplete",
             },
-            provenance=ConditionEvidenceProvenance.DOMAIN_EVALUATION,
+            provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
         )
     iva_compensation_decision = None
     try:
@@ -533,7 +532,7 @@ def _collect_verification_gate_findings(
                     "modelo": str(work_unit.modelo),
                     "dependency_count": len(clean_state_verdict.dependencies) if clean_state_verdict is not None else 0,
                 },
-                provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
             )
             return
         requirement = evidence.requirement
@@ -551,7 +550,7 @@ def _collect_verification_gate_findings(
                 "origin_ids": "|".join(requirement.origin_ids),
                 "blocker_codes": "|".join(blocker.value for blocker in evidence.blockers),
             },
-            provenance=ConditionEvidenceProvenance.DOMAIN_EVALUATION,
+            provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
         )
 
     findings.extend(
@@ -578,7 +577,7 @@ def _collect_verification_gate_findings(
             scenario_id="modelo.work.verify.deductible_vat_evidence.missing",
             evidence_id="modelo.work.verify.deductible_vat_evidence",
             evidence_values={"source_ref_count": len(finding.source_refs)},
-            provenance=ConditionEvidenceProvenance.DOMAIN_EVALUATION,
+            provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
         )
     # Beside the evidence gate and for the same reason: both refuse a draft whose
     # rows cannot support what it declares, and both block at verify so the later
@@ -597,7 +596,7 @@ def _collect_verification_gate_findings(
             scenario_id="modelo.work.verify.ledger_row.cuota_less_base_missing",
             evidence_id="modelo.work.verify.ledger_row",
             evidence_values={"source_ref_count": len(finding.source_refs)},
-            provenance=ConditionEvidenceProvenance.DOMAIN_EVALUATION,
+            provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
         )
     # Runs beside the evidence gate, not inside it: that gate reads the live
     # ledger while the casilla values come from the stored draft, and this is
@@ -621,7 +620,7 @@ def _collect_verification_gate_findings(
                 "snapshot_anchored": target.ledger_filing_snapshot is not None,
                 "source_ref_count": len(finding.source_refs),
             },
-            provenance=ConditionEvidenceProvenance.PERSISTED_STATE,
+            provenance=ActionEvidenceProvenance.PERSISTED_STATE,
         )
     return findings, resolved_casilla_ids, missing_required_casilla_ids, failures_by_finding_id
 
@@ -715,7 +714,7 @@ def _append_model_specific_findings(
                 "detail_row_count": len(target.detail_rows),
                 "official_tipo_renta_present": target.m210_official_tipo_renta_code is not None,
             },
-            provenance=ConditionEvidenceProvenance.PERSISTED_STATE,
+            provenance=ActionEvidenceProvenance.PERSISTED_STATE,
         )
     findings.extend(
         modelo_720_redeclaration_findings(
@@ -1403,7 +1402,7 @@ def _collect_revision_verification_findings(
                 "year": work_unit.filing_year,
                 "period": work_unit.period.registry_token,
             },
-            provenance=ConditionEvidenceProvenance.REGISTRY_RECORD,
+            provenance=ActionEvidenceProvenance.REGISTRY_RECORD,
             action_id="operator.registry.verify",
         )
         return findings, resolved_casilla_ids, missing_required_casilla_ids, failures_by_finding_id
@@ -1440,7 +1439,7 @@ def _collect_revision_verification_findings(
                         "period": work_unit.period.registry_token,
                         "casilla_id": str(casilla_id),
                     },
-                    provenance=ConditionEvidenceProvenance.REGISTRY_RECORD,
+                    provenance=ActionEvidenceProvenance.REGISTRY_RECORD,
                 )
 
     oss_source_finding = _m369_unresolved_oss_source_finding(
@@ -1471,7 +1470,7 @@ def _collect_revision_verification_findings(
                 "unrouted_issue_count": unrouted_issue_count,
                 "source_ref_count": len(oss_source_finding.source_refs),
             },
-            provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
         )
 
     predicate_profile = _profile_with_art109_period_evidence(
@@ -1501,7 +1500,7 @@ def _collect_revision_verification_findings(
                     scenario_id="modelo.work.verify.registry_predicate.failed",
                     evidence_id="modelo.work.verify.registry_predicate",
                     evidence_values={"predicate_id": predicate.predicate_id},
-                    provenance=ConditionEvidenceProvenance.REGISTRY_RECORD,
+                    provenance=ActionEvidenceProvenance.REGISTRY_RECORD,
                 ),
             ),
         ),
@@ -1533,7 +1532,7 @@ def _collect_revision_verification_findings(
                         "tipo_renta": outcome.context.get("tipo_renta", ""),
                         "year": work_unit.filing_year,
                     },
-                    provenance=ConditionEvidenceProvenance.DOMAIN_EVALUATION,
+                    provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
                 ),
             ),
         ),

@@ -6,11 +6,13 @@ from collections.abc import Mapping
 from decimal import Decimal
 from enum import StrEnum
 
-from ..operator_actions import (
+from ...core import (
     ActionConditionality,
-    ConditionEvidence,
-    ConditionEvidenceProvenance,
+    ActionEvidenceProvenance,
     NoRecoveryOutcome,
+)
+from ..operator_actions import (
+    ConditionEvidence,
     PreconditionVerdict,
 )
 
@@ -43,7 +45,7 @@ def aggregation_no_recovery_verdict(
             ConditionEvidence(
                 condition_id=condition_id,
                 evidence_id=f"{condition_id}.observation",
-                provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
                 values=facts,
             ),
         ),

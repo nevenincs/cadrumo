@@ -24,16 +24,19 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .. import CasillaId, validated_casilla_id
-from ..json_contract import (
-    ENVELOPE_SCHEMA_VERSION,
+from .. import (
     ActionArgumentSource,
     ActionArgumentStatus,
     ActionConditionality,
-    ActionConditionEvidence,
     ActionEvidenceProvenance,
-    EnvelopeStatus,
+    CasillaId,
     NoRecoveryOutcome,
+    validated_casilla_id,
+)
+from ..json_contract import (
+    ENVELOPE_SCHEMA_VERSION,
+    ActionConditionEvidence,
+    EnvelopeStatus,
     Notice,
     NoticeSeverity,
     OutputSchema,

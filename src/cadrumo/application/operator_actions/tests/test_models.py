@@ -6,28 +6,46 @@ from collections.abc import Callable
 from decimal import Decimal
 
 import pytest
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
-from .. import (
-    ActionArgumentBinding,
+from ....core import (
     ActionArgumentSource,
     ActionArgumentStatus,
     ActionConditionality,
+    ActionEvidenceProvenance,
+    NoRecoveryOutcome,
+)
+from ....core.json_contract import (
+    ActionConditionEvidence,
+    ResolvedActionArgument,
+    ResolvedPreconditionAction,
+)
+from .. import (
+    ActionArgumentBinding,
     ActionReference,
     ConditionEvidence,
-    ConditionEvidenceProvenance,
-    NoRecoveryOutcome,
     PreconditionVerdict,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
+class _ActionContractComposition(BaseModel):
+    """Compose the application verdict and wire projection in one real schema."""
+
+    application_binding: ActionArgumentBinding
+    application_evidence: ConditionEvidence
+    application_verdict: PreconditionVerdict
+    wire_binding: ResolvedActionArgument
+    wire_evidence: ActionConditionEvidence
+    wire_verdict: ResolvedPreconditionAction
+
+
 def _evidence() -> ConditionEvidence:
     return ConditionEvidence(
         condition_id="profile.active",
         evidence_id="profile.active.selection",
-        provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
         values={"bucket_count": 0, "is_selected": False, "profile_key": "operator"},
     )
 
@@ -41,6 +59,44 @@ def _resolved_argument() -> ActionArgumentBinding:
         source_key="profile_key",
         source_evidence_id="profile.active.selection",
     )
+
+
+def test_application_and_wire_action_models_share_the_core_enum_objects_and_schema_definitions() -> None:
+    """One composed contract cannot grow parallel enum schema identities."""
+    assert ConditionEvidence.model_fields["provenance"].annotation is ActionEvidenceProvenance
+    assert ActionConditionEvidence.model_fields["provenance"].annotation is ActionEvidenceProvenance
+    assert ActionArgumentBinding.model_fields["status"].annotation is ActionArgumentStatus
+    assert ResolvedActionArgument.model_fields["status"].annotation is ActionArgumentStatus
+    assert ActionArgumentBinding.model_fields["source"].annotation == ActionArgumentSource | None
+    assert ResolvedActionArgument.model_fields["source"].annotation == ActionArgumentSource | None
+    assert PreconditionVerdict.model_fields["conditionality"].annotation is ActionConditionality
+    assert ResolvedPreconditionAction.model_fields["conditionality"].annotation is ActionConditionality
+    assert PreconditionVerdict.model_fields["no_recovery_outcome"].annotation == NoRecoveryOutcome | None
+    assert ResolvedPreconditionAction.model_fields["no_recovery_outcome"].annotation == NoRecoveryOutcome | None
+
+    schema = _ActionContractComposition.model_json_schema()
+    definitions = schema["$defs"]
+    expected_definitions = {
+        enum_type.__name__: tuple(member.value for member in enum_type)
+        for enum_type in (
+            ActionArgumentSource,
+            ActionArgumentStatus,
+            ActionConditionality,
+            ActionEvidenceProvenance,
+            NoRecoveryOutcome,
+        )
+    }
+    actual_definitions = {
+        title: tuple(definition["enum"])
+        for definition in definitions.values()
+        if (title := definition.get("title")) in expected_definitions
+    }
+
+    assert actual_definitions == expected_definitions
+    assert {
+        title: {name for name, definition in definitions.items() if definition.get("title") == title}
+        for title in expected_definitions
+    } == {title: {title} for title in expected_definitions}
 
 
 def test_immediate_verdict_is_immutable_and_serializes_evidence_deterministically() -> None:
@@ -191,7 +247,7 @@ def test_evidence_refuses_presentation_and_executable_command_prose(
         ConditionEvidence(
             condition_id="profile.active",
             evidence_id="profile.active.selection",
-            provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
             values=values,
         )
 
@@ -200,7 +256,7 @@ def test_evidence_allows_stable_identifiers_revisions_and_paths() -> None:
     evidence = ConditionEvidence(
         condition_id="modelo.ready",
         evidence_id="modelo.ready.registry",
-        provenance=ConditionEvidenceProvenance.REGISTRY_RECORD,
+        provenance=ActionEvidenceProvenance.REGISTRY_RECORD,
         values={
             "registry_path": "aeat/registry/modelo_303/2024",
             "revision_id": "aeat.model.303.v2024",
@@ -323,7 +379,7 @@ def test_equivalent_verdicts_canonicalize_evidence_bindings_and_missing_argument
     second_evidence = ConditionEvidence(
         condition_id="profile.active",
         evidence_id="profile.active.runtime",
-        provenance=ConditionEvidenceProvenance.RUNTIME_OBSERVATION,
+        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         values={"tenant_id": "tenant-a"},
     )
     profile_binding = _resolved_argument()
@@ -482,7 +538,7 @@ def test_action_and_argument_ids_reject_noncanonical_or_raw_prose_forms() -> Non
             lambda: ConditionEvidence(
                 condition_id="profile.active",
                 evidence_id="profile active selection",
-                provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
                 values={"profile_key": "operator"},
             ),
             "evidence_id",
@@ -525,7 +581,7 @@ def test_evidence_requires_stable_identity_and_typed_values() -> None:
     evidence = ConditionEvidence(
         condition_id="profile.active",
         evidence_id="profile.active.selection",
-        provenance=ConditionEvidenceProvenance.PERSISTED_STATE,
+        provenance=ActionEvidenceProvenance.PERSISTED_STATE,
         values={"amount": Decimal("12.50"), "count": 3},
     )
     assert evidence.model_dump(mode="json")["values"] == {"amount": "12.50", "count": 3}
@@ -534,7 +590,7 @@ def test_evidence_requires_stable_identity_and_typed_values() -> None:
         ConditionEvidence(
             condition_id="profile active",
             evidence_id="profile.active.selection",
-            provenance=ConditionEvidenceProvenance.PERSISTED_STATE,
+            provenance=ActionEvidenceProvenance.PERSISTED_STATE,
             values={"count": 3},
         )
 

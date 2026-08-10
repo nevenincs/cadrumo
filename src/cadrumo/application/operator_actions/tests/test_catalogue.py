@@ -7,6 +7,7 @@ from collections.abc import Callable
 import pytest
 from pydantic import ValidationError
 
+from ....core import ActionArgumentSource
 from .._catalogue import (
     OPERATOR_ACTION_CATALOGUE,
     ActionArgumentBindingSpecification,
@@ -15,7 +16,6 @@ from .._catalogue import (
     build_action_catalogue,
     lookup_action,
 )
-from .._models import ActionArgumentSource
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

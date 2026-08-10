@@ -15,8 +15,6 @@ from ..operator_actions import (
     ActionConditionality,
     ActionReference,
     ConditionEvidence,
-    ConditionEvidenceProvenance,
-    NoRecoveryOutcome,
     PreconditionVerdict,
     lookup_action,
 )
@@ -212,7 +210,7 @@ def build_modelo_precondition_failure(
     scenario_id: str,
     evidence_id: str,
     evidence_values: Mapping[str, str | int | bool | Decimal],
-    provenance: ConditionEvidenceProvenance,
+    provenance: ActionEvidenceProvenance,
     action_id: str | None = None,
     action_argument_values: Mapping[str, str | int | bool | Decimal] | None = None,
 ) -> ModeloPreconditionFailure:
@@ -246,9 +244,9 @@ def build_modelo_precondition_failure(
         action=ActionReference(action_id=action_id) if action_id is not None else None,
         argument_bindings=bindings,
         conditionality=(
-            ActionConditionality.IMMEDIATE if action_id is not None else ActionConditionality.NOT_APPLICABLE
+            ActionConditionality.IMMEDIATE if declared_action_id is not None else ActionConditionality.NOT_APPLICABLE
         ),
-        no_recovery_outcome=(None if action_id is not None else NoRecoveryOutcome.OPERATOR_DECISION),
+        no_recovery_outcome=profile.no_recovery_outcome,
     )
     return ModeloPreconditionFailure(
         subject_leaf_key=subject_leaf_key,

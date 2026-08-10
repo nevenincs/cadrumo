@@ -36,7 +36,6 @@ from ...domain.modelos import (
 from ...domain.period import calculation_filing_date
 from ...domain.transactions import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ..calculations import IvaWalletDecisionRepository
-from ..operator_actions import ConditionEvidenceProvenance
 from ._action_errors import ModeloAggregationBindingError
 from ._calculation_helpers import load_work_unit_for_calculation as _load_work_unit_for_calculation
 from ._calculation_helpers import resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit
@@ -353,7 +352,7 @@ def _raise_if_ledger_preflight_blocks_calculation(
                 "transaction_id": first_issue.transaction_id,
                 "reason_code": first_issue.reason.value,
             },
-            provenance=ConditionEvidenceProvenance.DOMAIN_EVALUATION,
+            provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
         ),
     )
 
@@ -425,7 +424,7 @@ def _raise_if_m200_ledger_requires_accounting_result_input(
                 "ledger_transaction_count": ledger_transaction_count,
                 "required_casilla_id": _M200_ACCOUNTING_RESULT_CASILLA,
             },
-            provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
         ),
     )
 

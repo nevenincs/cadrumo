@@ -195,6 +195,13 @@ from ._notificacion_estado_servicio import (
 )
 from ._objeto_tributario import ObjetoTributario
 from ._observed_header_fact import ObservedHeaderFact
+from ._operator_action_enums import (
+    ActionArgumentSource,
+    ActionArgumentStatus,
+    ActionConditionality,
+    ActionEvidenceProvenance,
+    NoRecoveryOutcome,
+)
 from ._operator_progress import OperatorProgress
 from ._optional_extras import (
     ANTHROPIC_EXTRA,
@@ -428,6 +435,10 @@ __all__: list[str] = [
     "STRUCTURED_DOCUMENT_SHAPES",
     "UNMODELED_OBLIGATIONS",
     "AcceleratorKind",
+    "ActionArgumentSource",
+    "ActionArgumentStatus",
+    "ActionConditionality",
+    "ActionEvidenceProvenance",
     "AmendmentKindRegime",
     "AmendmentLiabilityDirection",
     "Art104TresExclusion",
@@ -491,6 +502,7 @@ __all__: list[str] = [
     "ModelRuntime",
     "ModelSelectionAdvisory",
     "Modelo",
+    "NoRecoveryOutcome",
     "NotificacionEstadoServicio",
     "ObjetoTributario",
     "ObservedHeaderFact",
