@@ -437,13 +437,21 @@ def test_generic_domestic_exempt_output_only_increases_prorrata_denominator() ->
 
 @pytest.mark.parametrize(
     ("filing_year", "revision_id"),
-    ((2020, "2009-y-siguientes"), (2026, "2023-y-siguientes")),
+    (
+        (2020, "2009-y-siguientes"),
+        (2024, "2023-y-siguientes"),
+        (2026, "2026-y-siguientes"),
+    ),
 )
 def test_modelo_303_registry_has_no_casilla_61_binding_or_compatibility_route(
     filing_year: int,
     revision_id: str,
 ) -> None:
-    """Both shipped M303 revisions refuse casilla 61 as a form or binding route."""
+    """Every shipped M303 revision refuses casilla 61 as a form or binding route.
+
+    One year per shipped revision window, so a newly-shipped revision cannot
+    slip past this refusal by simply not being enumerated here.
+    """
     snapshot = resources().modelos.authority.snapshot(Modelo.M303.value, filing_year=filing_year, period="4T")
 
     assert str(snapshot.revision.id) == revision_id

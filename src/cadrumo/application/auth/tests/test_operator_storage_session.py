@@ -163,9 +163,13 @@ def test_auth_scope_conflict_registry_guidance_is_command_neutral() -> None:
         translated_message="application.auth.operator.errors.scope_conflict",
     )
 
-    envelope = build_error_envelope(error)
-
-    assert envelope.suggestion == "aeat config auth --help"
+    # The guidance is a REGISTRY fact, as this test's name says: default
+    # suggestions were retired as the envelope's remediation authority, so the
+    # command-neutral help string is asserted where it now lives.
+    assert ERROR_REGISTRY["REFUSED_AUTH_OPERATION_SCOPE_CONFLICT"].default_suggestion == (
+        "aeat config auth --help"
+    )
+    assert build_error_envelope(error).action is None
 
 
 def test_reserved_provider_reset_is_an_idempotent_noop(tmp_path: Path) -> None:

@@ -131,7 +131,9 @@ def _stage_profile_manifest(root: Path, bucket_id: str) -> None:
         paths,
         BucketManifest(
             bucket_id=bucket_id,
-            label=bucket_id,
+            # Derived, never the bare id: ProfileLabel refuses a UUID-shaped
+            # label so an operator label can never be read as a machine id.
+            label=f"profile-{bucket_id}",
             created_at=_STAGED_MANIFEST_CREATED_AT,
             last_unlocked_at=None,
             kdf_params=ManifestKdfParams(

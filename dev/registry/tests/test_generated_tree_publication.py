@@ -19,7 +19,11 @@ from .._generated_tree_publication import (
     publish_validated_generated_export_tree,
 )
 from .._generated_tree_validation import validate_generated_export_tree
-from .._provenance_manifest import EXPORT_FRAGMENT_PROVENANCE_FILENAME
+from .._provenance_manifest import (
+    EXPORT_FRAGMENT_PROVENANCE_FILENAME,
+    export_fragment_provenance_manifest_json_bytes,
+    load_export_fragment_provenance_manifest,
+)
 from .test_export_tree import _write_isolated_generated_authority_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -163,6 +167,93 @@ def test_publication_refuses_invalid_candidate_without_changing_live_export(
         )
 
     assert _tree_bytes(context.target_export_root) == before
+    assert _non_export_authority_bytes(context.target_export_root.parent) == before_authority
+    assert candidate_export_root.exists()
+    assert not _rollback_siblings(context.target_export_root)
+
+
+@pytest.mark.parametrize(
+    ("defect", "error"),
+    (
+        ("offset", "loader semantics do not equal the current rendered layout"),
+        ("length", "loader semantics do not equal the current rendered layout"),
+        ("source-anchor", "field derivations do not match the rendered tree"),
+        ("target-revision", "current generation authorities"),
+        ("generated-file", "output-file digests"),
+    ),
+)
+def test_publication_refuses_coordinate_authority_and_output_mutations_before_cutover(
+    m200_snapshot,
+    tmp_path,
+    defect: str,
+    error: str,
+) -> None:
+    """Every mutated candidate rejects as a whole while the live revision stays byte-identical."""
+    context, joined, semantic_map, rendered, candidate_export_root = _publication_inputs(
+        tmp_path,
+        m200_snapshot,
+        existing_export=True,
+    )
+    before_export = _tree_bytes(context.target_export_root)
+    before_authority = _non_export_authority_bytes(context.target_export_root.parent)
+    fragment = candidate_export_root / rendered.output_files[1]
+    manifest_path = candidate_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME
+
+    if defect == "offset":
+        original = fragment.read_bytes()
+        mutated = original.replace(b"offset = 1\n", b"offset = 2\n", 1)
+        assert mutated != original
+        fragment.write_bytes(mutated)
+    elif defect == "length":
+        original = fragment.read_bytes()
+        mutated = original.replace(b"length = 2\n", b"length = 3\n", 1)
+        assert mutated != original
+        fragment.write_bytes(mutated)
+    elif defect == "source-anchor":
+        manifest = load_export_fragment_provenance_manifest(manifest_path.read_bytes())
+        first_derivation = manifest.field_derivations[0]
+        mutated_derivation = first_derivation.model_copy(
+            update={
+                "parser_field": first_derivation.parser_field.model_copy(update={"source_cell": "A999"}),
+                "semantic_entry": first_derivation.semantic_entry.model_copy(
+                    update={
+                        "anchor": first_derivation.semantic_entry.anchor.model_copy(
+                            update={"source_cell": "A999"},
+                        ),
+                    },
+                ),
+            },
+        )
+        manifest_path.write_bytes(
+            export_fragment_provenance_manifest_json_bytes(
+                manifest.model_copy(
+                    update={
+                        "field_derivations": (mutated_derivation, *manifest.field_derivations[1:]),
+                    },
+                ),
+            ),
+        )
+    elif defect == "target-revision":
+        manifest = load_export_fragment_provenance_manifest(manifest_path.read_bytes())
+        manifest_path.write_bytes(
+            export_fragment_provenance_manifest_json_bytes(
+                manifest.model_copy(update={"revision_id": "2026"}),
+            ),
+        )
+    elif defect == "generated-file":
+        fragment.write_bytes(fragment.read_bytes() + b"# candidate mutation\n")
+    else:
+        raise AssertionError(f"unknown candidate mutation {defect!r}")
+
+    with pytest.raises(RegistryValidationError, match=error):
+        publish_validated_generated_export_tree(
+            context=context,
+            joined=joined,
+            semantic_map=semantic_map,
+            rendered=rendered,
+        )
+
+    assert _tree_bytes(context.target_export_root) == before_export
     assert _non_export_authority_bytes(context.target_export_root.parent) == before_authority
     assert candidate_export_root.exists()
     assert not _rollback_siblings(context.target_export_root)
