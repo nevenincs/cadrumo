@@ -1,10 +1,10 @@
 """Async-first public LLM client.
 
-Coordinates :class:`~adapters.outbound.llm.LLMRequest` inputs,
+Coordinates :class:`~llm.LLMRequest` inputs,
 :class:`~adapters.outbound.llm.LLMCache` lookup/write-through,
 :class:`~adapters.outbound.llm.UsageRecorder` accounting, and concrete
-:class:`~adapters.outbound.llm.LLMProvider` adapters before returning an
-:class:`~adapters.outbound.llm.LLMResponse`.
+:class:`~llm.LLMProvider` adapters before returning an
+:class:`~llm.LLMResponse`.
 """
 
 from __future__ import annotations
@@ -372,7 +372,7 @@ class LLMClient:
         run_telemetry_recorder: Optional
             :class:`~adapters.outbound.llm.LLMRunTelemetryRecorder` override.
         prompt_registry: Optional
-            :class:`~adapters.outbound.llm.PromptRegistry` override.
+            :class:`~llm.PromptRegistry` override.
         retry_policy: Optional :class:`LLMRetryPolicy` override governing how
             often and how long a transient transport failure is re-sent. Which
             failures qualify is not tunable here -- that is the error taxonomy's
@@ -466,10 +466,10 @@ class LLMClient:
         """Complete a prompt request.
 
         Args:
-            request: Structured :class:`~adapters.outbound.llm.LLMRequest`.
+            request: Structured :class:`~llm.LLMRequest`.
 
         Returns:
-            A :class:`~adapters.outbound.llm.LLMResponse` enriched with
+            A :class:`~llm.LLMResponse` enriched with
             cache and cost metadata.
 
         Raises:
@@ -822,7 +822,7 @@ class LLMClient:
         point for the reason the image boundary is: which requests may leave the
         host is a property of the DISPATCH, never of each caller remembering to
         pin a provider. A caller may still pin
-        :attr:`~adapters.outbound.llm.LLMProvider.LOCAL` as documentation, but
+        :attr:`~llm.LLMProvider.LOCAL` as documentation, but
         no pin is load-bearing -- ``extract_invoice_fields_from_text`` is
         exported with none, and a reader constructed with a cloud provider
         reaches the same line as every other request.
@@ -966,7 +966,7 @@ class LLMClient:
 
         A run-telemetry write failure must never mask the real completion
         result or a real provider error, so this swallows
-        :exc:`~adapters.outbound.llm.LLMCacheError` (the recorder's only
+        :exc:`~llm.LLMCacheError` (the recorder's only
         declared failure mode) after a debug log; the completion call's own
         return or exception always wins.
         """

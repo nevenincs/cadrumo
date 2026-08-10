@@ -7,9 +7,9 @@ by translating a normalized
 :class:`anthropic.AsyncAnthropic` ``messages.create`` call and converting the
 response (or any provider error) into the substrate's typed completion / error
 envelope. Network I/O is async; all SDK exceptions are mapped to
-:exc:`~adapters.outbound.llm.LLMProviderError`,
-:exc:`~adapters.outbound.llm.LLMRateLimitError`, or
-:exc:`~adapters.outbound.llm.LLMConfigError`.
+:exc:`~llm.LLMProviderError`,
+:exc:`~llm.LLMRateLimitError`, or
+:exc:`~llm.LLMConfigError`.
 """
 
 from __future__ import annotations
@@ -166,7 +166,7 @@ class AnthropicAdapter(_ProviderAdapter):
     factory.
 
     Attributes:
-        provider: The :class:`~adapters.outbound.llm.LLMProvider` tag
+        provider: The :class:`~llm.LLMProvider` tag
             selecting this adapter.
     """
 
@@ -178,7 +178,7 @@ class AnthropicAdapter(_ProviderAdapter):
 
         Args:
             api_key: Anthropic API key. Empty string raises
-                :exc:`~adapters.outbound.llm.LLMConfigError`.
+                :exc:`~llm.LLMConfigError`.
             timeout_s: Default per-request timeout passed to the SDK.
 
         Raises:
