@@ -63,7 +63,6 @@ See Also:
 
 from __future__ import annotations
 
-from ...core import Period, PeriodKind
 from ...core.aggregation import (
     CounterpartSourceKind,
     ForeignAssetClass,
@@ -323,8 +322,6 @@ __all__ = [
     "PerModeloAggregationLogFields",
     "PerModeloAggregationResult",
     "PercepcionObservationRepository",
-    "Period",
-    "PeriodKind",
     "ProfileSourceResolver",
     "ProrrataLedgerReference",
     "RentaIncomeObservation",
