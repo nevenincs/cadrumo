@@ -1228,6 +1228,7 @@ sha256 = "a4506d24b7973a745d1225d59147078e03f14a30791a229d852b37f757442505"
 bytes = 2316549
 retrieved_at = 2026-07-21
 applies_from = 2025-01-01
+record_design_epoch = "2025"
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_25/DR200e25.xls"
 review_status = "reviewed"
 
@@ -1241,6 +1242,7 @@ bytes = 11248640
 retrieved_at = 2026-05-03
 applies_from = 2024-01-01
 applies_to = 2024-12-31
+record_design_epoch = "2024"
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_24/DR200-2024.xls"
 review_status = "reviewed"
 

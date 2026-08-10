@@ -175,6 +175,7 @@ class SourceReference(RegistryModel):
     published_at: date | None = None
     applies_from: date | None = None
     applies_to: date | None = None
+    record_design_epoch: str | None = Field(default=None, min_length=1, max_length=128)
     source_url: RegistryExternalLink
     review_status: ReviewStatus
 
@@ -201,6 +202,10 @@ class SourceReference(RegistryModel):
                     f"(e.g. kind='form_spec' for an AEAT/BOE landing page HTML) or ingest the real "
                     f"Diseño workbook",
                 )
+        elif self.record_design_epoch is not None:
+            raise RegistryValidationError("record_design_epoch is only valid for kind='record_design'")
+        if self.record_design_epoch is not None and not self.record_design_epoch.strip():
+            raise RegistryValidationError("record_design_epoch must contain non-whitespace text")
         return self
 
     @field_validator("sha256")

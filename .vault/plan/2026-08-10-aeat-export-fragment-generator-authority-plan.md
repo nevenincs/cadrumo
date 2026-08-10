@@ -4,7 +4,7 @@ tags:
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
 modified: '2026-08-10'
-body_hash: 'sha256:1ab8bcc96e8d566532fcfb5fce8604ce277d4247605c00ca57a7e144ea144a8e'
+body_hash: 'sha256:2d32690793e088d0edb0620d2f5e5281c12f5023a610034ac93e10f5a82585c9'
 tier: L3
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
@@ -31,7 +31,7 @@ Define the exact official-source, parser intermediate, semantic-map, provenance,
 
 Make the exact binary and typed parser output the complete coordinate authority.
 
-- [ ] `W01.P01.S01` - Extend the existing validated source catalogue with hash-pinned binary selection and reject inapplicable or drifting sources; `src/cadrumo/_data/registry/aeat/legal/is.toml`.
+- [x] `W01.P01.S01` - Extend the existing validated source catalogue with hash-pinned binary selection and reject inapplicable or drifting sources; `src/cadrumo/_data/registry/aeat/legal/is.toml`.
 - [ ] `W01.P01.S02` - Define the typed intermediate representation with complete source anchors, coordinates, validation metadata, and declared totals; `dev/registry/`.
 - [ ] `W01.P01.S03` - Prove the intermediate representation consumes shipped parser output and never extracted derivatives; `src/cadrumo/domain/calculations/registry/tests/`.
 
