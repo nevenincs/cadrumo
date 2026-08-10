@@ -517,7 +517,7 @@ class WorkflowRunRepository:
 
 
 def _validate_workflow_run_envelope(payload: bytes) -> Envelope[WorkflowResult]:
-    """Validate one workflow-run envelope against the exact current v2 contract.
+    """Validate one workflow-run envelope against the exact current contract.
 
     The repository is pre-release, so a workflow-run schema change advances the
     current format and refuses earlier app-written payloads. There is no legacy

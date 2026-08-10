@@ -36,7 +36,7 @@ import json
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from http import HTTPStatus
-from typing import ClassVar
+from typing import ClassVar, override
 
 from ....core.config import override_settings
 from ....tests.loopback_llm import (
@@ -74,6 +74,7 @@ class _LoopbackRequestHandler(SilentLoopbackHandler):
                 return fields
         return self.fallback
 
+    @override
     def do_POST(self) -> None:
         prompt = json.dumps(read_json_body(self)["messages"])
         write_json_response(
@@ -110,6 +111,8 @@ def serving_a_loopback_reader(
     """
     _LoopbackRequestHandler.replies = tuple(replies)
     _LoopbackRequestHandler.fallback = dict(fallback or {})
-    with serving_loopback(_LoopbackRequestHandler, path="/api/chat") as chat_url:
-        with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
-            yield chat_url
+    with (
+        serving_loopback(_LoopbackRequestHandler, path="/api/chat") as chat_url,
+        override_settings(cadrumo_llm_ollama_chat_url=chat_url),
+    ):
+        yield chat_url

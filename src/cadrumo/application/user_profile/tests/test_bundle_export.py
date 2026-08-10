@@ -19,6 +19,7 @@ import pytest
 from pydantic import SecretStr, ValidationError
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.storage import ARGON2_VERSION
 from ....adapters.persistence.storage.bucket import bucket_paths
 from ....core import StorageCategory, storage_location
 from ....domain.buckets import BucketEvent, BucketEventType
@@ -314,7 +315,7 @@ def _encrypted_envelope(tmp_path: Path) -> tuple[Path, EncryptedProfileBundleExp
     )
 
 
-@pytest.mark.parametrize("marker", ["encrypted_bundle_schema_version", "payload_model", "kdf"])
+@pytest.mark.parametrize("marker", ["encrypted_bundle_schema_version", "payload_model", "kdf", "kdf_version"])
 def test_encrypted_transport_refuses_an_envelope_omitting_a_routing_marker(tmp_path: Path, marker: str) -> None:
     """Anti-tautology proof: strip a marker on disk and re-read the real file.
 
@@ -369,11 +370,36 @@ def test_encrypted_transport_refuses_a_future_envelope_schema_version(tmp_path: 
             decrypt_profile_bundle_with_passphrase(future, passphrase=_PASSPHRASE)
 
 
-def test_the_current_encrypted_envelope_round_trips_under_its_passphrase(tmp_path: Path) -> None:
-    """The positive control the refusals above need to mean anything."""
+def test_encrypted_transport_refuses_a_non_current_kdf_version(tmp_path: Path) -> None:
+    """A bundle claiming a KDF version this build does not derive under refuses.
+
+    The marker was stamped and never read, so such a bundle was decrypted under
+    parameters it had not agreed to -- succeeding or failing on the passphrase
+    rather than on the mismatch it actually carried.
+    """
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _create_profile()
         _, envelope = _encrypted_envelope(tmp_path)
+        foreign = envelope.model_copy(update={"kdf_version": envelope.kdf_version + 1})
+
+        with pytest.raises(EncryptedProfileBundleError, match="this application derives under"):
+            decrypt_profile_bundle_with_passphrase(foreign, passphrase=_PASSPHRASE)
+
+
+def test_the_current_encrypted_envelope_round_trips_under_its_passphrase(tmp_path: Path) -> None:
+    """The positive control the refusals above need to mean anything.
+
+    It carries real weight on ``kdf_version`` specifically: the writer stamps
+    the Argon2 ALGORITHM version, and the storage substrate also declares a
+    ``KDF_PARAMS_VERSION`` naming the master.kdf record SHAPE. The two are
+    unequal, so a gate written against the wrong one would refuse every bundle
+    this build produces -- and this assertion is what fails if that happens.
+    """
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _create_profile()
+        _, envelope = _encrypted_envelope(tmp_path)
+
+        assert envelope.kdf_version == ARGON2_VERSION
 
         recovered = decrypt_profile_bundle_with_passphrase(envelope, passphrase=_PASSPHRASE)
 

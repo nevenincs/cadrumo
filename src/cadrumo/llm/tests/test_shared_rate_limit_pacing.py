@@ -18,6 +18,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from http import HTTPStatus
 from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -67,6 +68,7 @@ def _serve(*, rate_limited: bool) -> Iterator[tuple[str, list[float]]]:
     arrivals: list[float] = []
 
     class _Endpoint(SilentLoopbackHandler):
+        @override
         def do_POST(self) -> None:
             read_json_body(self)
             arrivals.append(time.monotonic())

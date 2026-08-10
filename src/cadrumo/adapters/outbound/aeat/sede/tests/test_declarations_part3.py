@@ -297,7 +297,7 @@ def test_capture_filed_declaration_empty_nif_carries_translated_message() -> Non
         modelo="130",
         ejercicio=2026,
         period=Period.from_year_and_code(2026, "1T"),
-        expediente_id="EXP000000000001",
+        expediente_id="202600000000001E",
         estado="ALTA",
         tipo_solicitud=None,
         observaciones=None,

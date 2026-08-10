@@ -38,7 +38,6 @@ from typing import Final, override
 __all__ = [
     "SilentLoopbackHandler",
     "ollama_chat_reply",
-    "ollama_tags_reply",
     "openai_chat_reply",
     "read_json_body",
     "read_text_body",
@@ -219,18 +218,6 @@ def openai_chat_reply(
         "choices": [{"message": {"content": content}}],
         "usage": {"prompt_tokens": prompt_tokens, "completion_tokens": completion_tokens},
     }
-
-
-def ollama_tags_reply(*model_names: str) -> Mapping[str, object]:
-    """Return a well-formed Ollama ``/api/tags`` inventory envelope.
-
-    Args:
-        model_names: The installed model names the runtime would report.
-
-    Returns:
-        The inventory object, shaped as the real runtime shapes it.
-    """
-    return {"models": [{"name": name} for name in model_names]}
 
 
 @contextmanager

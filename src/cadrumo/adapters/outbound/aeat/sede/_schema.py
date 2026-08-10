@@ -67,26 +67,20 @@ Public surface: :class:`Expediente`, :class:`JustificanteRef`,
 
 from __future__ import annotations
 
-import re
 from datetime import datetime
 from decimal import Decimal
-from typing import Final, Literal
+from typing import Literal
 
 from pydantic import AnyHttpUrl, BaseModel, Field, field_validator
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core import CasillaValueKind, FiledHistoryDiscoverySignal, Modelo, ObservedHeaderFact, Period
 from .....core.decimal import coerce_decimal_strict
-from .....core.identity import ContentDigest
+from .....core.identity import AeatExpedienteId, ContentDigest
 from .....core.time import UtcInstant
 from .....domain.calculations.registry import CasillaId
 from ._adapter_utils import is_aeat_csv
 from ._errors import SedeValidationError
-
-# AEAT expediente identifiers are <year><sequence><checksum-letter>, e.g.
-# "202310013522456T" (length 16). Observed range: 14-20 characters in
-# the live capture.
-_EXPEDIENTE_ID_PATTERN: Final[re.Pattern[str]] = re.compile(r"^[0-9]{4,}[A-Z0-9]+$")
 
 
 class Expediente(BaseModel):
@@ -120,20 +114,12 @@ class Expediente(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    expediente_id: str = Field(min_length=12, max_length=32)
+    expediente_id: AeatExpedienteId
     modelo: str | None = Field(default=None, max_length=8)
     ejercicio: int | None = Field(default=None, ge=2000, le=2099)
     category_path: tuple[str, ...] = Field(min_length=1)
     detail_url: AnyHttpUrl
     mode: Literal["read"] = "read"
-
-    @field_validator("expediente_id")
-    @classmethod
-    def _expediente_id_shape(cls, value: str) -> str:
-        """Reject ``expediente_id`` values that do not match the AEAT shape pattern."""
-        if not _EXPEDIENTE_ID_PATTERN.match(value):
-            raise SedeValidationError(f"expediente_id does not match AEAT shape: {value!r}")
-        return value
 
     @field_validator("category_path")
     @classmethod
@@ -169,7 +155,7 @@ class JustificanteRef(BaseModel):
     model_config = _STRICT_FROZEN
 
     csv: str = Field(min_length=8, max_length=32)
-    expediente_id: str = Field(min_length=12, max_length=32)
+    expediente_id: AeatExpedienteId
     cotejo_url: AnyHttpUrl
     pdf_url: AnyHttpUrl
     mode: Literal["read"] = "read"
@@ -460,7 +446,7 @@ class FiledDeclaracionObservation(BaseModel):
     modelo: str = Field(min_length=1, max_length=8)
     ejercicio: int = Field(ge=2000, le=2099)
     period: Period
-    expediente_id: str = Field(min_length=12, max_length=32)
+    expediente_id: AeatExpedienteId
     status: str = Field(min_length=1, max_length=32)
     presented_at: datetime
     authenticated_identity: str = Field(min_length=1, max_length=32)
@@ -471,14 +457,6 @@ class FiledDeclaracionObservation(BaseModel):
     extraction_coverage: dict[str, float] = Field(default_factory=dict)
     registry_snapshot_id: str | None = Field(default=None, min_length=1, max_length=128)
     mode: Literal["read"] = "read"
-
-    @field_validator("expediente_id")
-    @classmethod
-    def _observation_expediente_id_shape(cls, value: str) -> str:
-        """Reject ``expediente_id`` values that do not match the AEAT shape pattern."""
-        if not _EXPEDIENTE_ID_PATTERN.match(value):
-            raise SedeValidationError(f"expediente_id does not match AEAT shape: {value!r}")
-        return value
 
 
 __all__ = [

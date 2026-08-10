@@ -44,7 +44,7 @@ from ...adapters.persistence.storage import (
     safe_repository_id,
 )
 from ...core import CasillaValueKind, Modelo, Period
-from ...core.identity import ContentDigest, SubjectTaxId
+from ...core.identity import AeatExpedienteId, ContentDigest, SubjectTaxId
 from ...core.resources import resources
 from ...core.time import now
 from ...domain.calculations.registry import (
@@ -118,7 +118,7 @@ class IvaCompensationAnnualSummary(BaseModel):
         ),
     )
     filing_year: int = Field(ge=2000, le=2099)
-    expediente_id: str = Field(min_length=1, max_length=32)
+    expediente_id: AeatExpedienteId
     status: str = Field(min_length=1, max_length=32)
     presented_at: datetime
     last_period_compensation_amount: Decimal = Field(ge=_ZERO)

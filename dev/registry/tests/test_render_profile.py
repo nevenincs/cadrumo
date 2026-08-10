@@ -350,6 +350,11 @@ def test_profile_refuses_source_evidence_sha_drift() -> None:
 
 def test_profile_models_refuse_implicit_defaults_selectors_and_sign_conflicts() -> None:
     """Authored rules are strict and every wire choice is explicit."""
+    anchor_payload = _anchor(12).model_dump(mode="python")
+    del anchor_payload["source_cell"]
+    with pytest.raises(ValidationError, match="source_cell"):
+        RenderProfileAnchor.model_validate(anchor_payload)
+
     singleton_payload = _singleton(_anchor(12)).model_dump(mode="python")
     del singleton_payload["semantic_kind"]
     with pytest.raises(ValidationError, match="semantic_kind"):
@@ -462,6 +467,82 @@ def test_fragment_loader_compiles_by_filename_and_refuses_fragment_identity_drif
         load_and_validate_render_profile(tmp_path, _joined(), _source_evidence())
 
 
+def test_profile_loader_refuses_legacy_or_non_profile_siblings(tmp_path: Path) -> None:
+    """A profile directory is an exhaustive authority set, never a tolerant legacy container."""
+    profile = _profile()
+    fragment = RenderProfileFragment(
+        schema_version=1,
+        fragment_id="width-17-num",
+        design_identity=profile.design_identity,
+        width_17_rules=(profile.width_17_rules[0],),
+        singleton_rules=(),
+    )
+    (tmp_path / "0001-profile.toml").write_text(_fragment_toml(fragment), encoding="utf-8")
+    (tmp_path / "legacy-derived-layout.json").write_text("{}\n", encoding="utf-8")
+
+    with pytest.raises(RegistryValidationError, match="only regular TOML fragments"):
+        load_render_profile(tmp_path)
+
+
+def test_profile_loader_refuses_conflicting_width17_authority(tmp_path: Path) -> None:
+    """Splitting one numeric type cannot smuggle in a contradictory reviewed convention."""
+    profile = _profile()
+    first = RenderProfileFragment(
+        schema_version=1,
+        fragment_id="width-17-num-a",
+        design_identity=profile.design_identity,
+        width_17_rules=(profile.width_17_rules[0],),
+        singleton_rules=(),
+    )
+    num_rule = profile.width_17_rules[0]
+    assert isinstance(num_rule.evidence, OfficialSourceEvidence)
+    conflicting_rule = num_rule.model_copy(
+        update={
+            "evidence": num_rule.evidence.model_copy(
+                update={"expected_normalized_statement": "Contradictory reviewed source statement."},
+            ),
+        },
+    )
+    conflicting = RenderProfileFragment(
+        schema_version=1,
+        fragment_id="width-17-num-b",
+        design_identity=profile.design_identity,
+        width_17_rules=(conflicting_rule,),
+        singleton_rules=(),
+    )
+    (tmp_path / "0001-num-a.toml").write_text(_fragment_toml(first), encoding="utf-8")
+    (tmp_path / "0002-num-b.toml").write_text(_fragment_toml(conflicting), encoding="utf-8")
+
+    with pytest.raises(RegistryValidationError, match="conflict on width-17 Num authority"):
+        load_render_profile(tmp_path)
+
+
+def test_profile_refuses_unknown_anchor_without_tolerating_partial_coverage() -> None:
+    """An anchor outside parser-owned eligibility blocks the entire reviewed profile."""
+    unknown = RenderProfileAnchor(
+        sheet="DP200001",
+        source_row=99,
+        source_cell="A99",
+        ordinal=99,
+        record_identity="DP200001",
+    )
+    unknown_rule = _singleton(unknown).model_copy(
+        update={
+            "evidence": OfficialSourceEvidence(
+                authority_kind="official_source",
+                source_sheet="DP200001",
+                source_cell="A12",
+                expected_normalized_statement="Independent review identifies this exact field as a two-digit string.",
+                justification="The source claim is real; only its governed parser anchor is inapplicable.",
+            ),
+        },
+    )
+    profile = _profile().model_copy(update={"singleton_rules": (unknown_rule,)})
+
+    with pytest.raises(RegistryValidationError, match="unknown="):
+        validate_render_profile(profile, _joined(), _source_evidence())
+
+
 def test_real_m200_profile_exactly_covers_source_eligibility_and_excludes_variable_envelope() -> None:
     """The committed profile validates exhaustively against the hash-verified source."""
     source_root = bundled_path()
@@ -493,6 +574,19 @@ def test_real_m200_profile_exactly_covers_source_eligibility_and_excludes_variab
     profile = load_render_profile(profile_directory)
     evidence = load_render_profile_source_evidence(resolved.path, profile)
     validate_render_profile_authority(profile, design_identity, eligibility, evidence)
+
+    width_rules = {rule.aeat_type: rule for rule in profile.width_17_rules}
+    assert set(width_rules) == {"Num", "N"}
+    assert (
+        width_rules["Num"].integer_digits,
+        width_rules["Num"].decimal_digits,
+        width_rules["Num"].sign_policy,
+    ) == (15, 2, "unsigned")
+    assert (
+        width_rules["N"].integer_digits,
+        width_rules["N"].decimal_digits,
+        width_rules["N"].sign_policy,
+    ) == (14, 2, "n-prefix-negative-blank-nonnegative")
 
     eligible_anchors = {
         RenderProfileAnchor(

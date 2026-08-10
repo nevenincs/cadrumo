@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core import Period
+from .....core.identity import AeatExpedienteId
 
 __all__ = ["Declaracion"]
 
@@ -21,7 +22,7 @@ class Declaracion(BaseModel):
     modelo: str = Field(min_length=1, max_length=8)
     ejercicio: int = Field(ge=2000, le=2099)
     period: Period
-    expediente_id: str = Field(min_length=12, max_length=32)
+    expediente_id: AeatExpedienteId
     estado: str = Field(min_length=1, max_length=16)
     tipo_solicitud: str | None = Field(default=None, max_length=128)
     observaciones: str | None = Field(default=None, max_length=512)

@@ -22,6 +22,7 @@ from collections.abc import Iterator
 from contextlib import closing, contextmanager
 from http import HTTPStatus
 from pathlib import Path
+from typing import override
 
 import pytest
 from pydantic import SecretStr
@@ -64,6 +65,7 @@ def _cloud_recorder() -> Iterator[tuple[str, list[str]]]:
     arrivals: list[str] = []
 
     class _Endpoint(SilentLoopbackHandler):
+        @override
         def do_POST(self) -> None:
             read_json_body(self)
             arrivals.append(self.path)

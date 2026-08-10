@@ -21,6 +21,11 @@ intentionally tiny:
 * :func:`same_tax_identifier` — the shared "these name the same bearer"
   predicate, checksum-free and separator-insensitive, for the places that
   compare an identifier rather than key on it.
+* :class:`IdentifierNamespace` and its per-namespace aliases
+  (:data:`AeatExpedienteId`, :data:`AeatClaveLiquidacion`,
+  :data:`AeatPresentationId`) — the closed document-identifier taxonomy, so a
+  value from one AEAT namespace cannot silently satisfy a field expecting
+  another.
 
 The module lives in :mod:`core` because identity validation is a
 domain concern, not a persistence concern. The persistence layer's
@@ -42,6 +47,15 @@ from ._documents import (
     IdentityDocument,
     IdentityError,
     validate_identity,
+)
+from ._namespace import (
+    AEAT_EXPEDIENTE_ID_MAX_LENGTH,
+    AEAT_EXPEDIENTE_ID_MIN_LENGTH,
+    AEAT_EXPEDIENTE_ID_PATTERN,
+    AeatClaveLiquidacion,
+    AeatExpedienteId,
+    AeatPresentationId,
+    IdentifierNamespace,
 )
 from ._nif_iva import (
     NIF_IVA_FORMATS,
@@ -121,11 +135,18 @@ malformed identifier fails fast at the model boundary with an
 """
 
 __all__ = [
+    "AEAT_EXPEDIENTE_ID_MAX_LENGTH",
+    "AEAT_EXPEDIENTE_ID_MIN_LENGTH",
+    "AEAT_EXPEDIENTE_ID_PATTERN",
     "NIF_IVA_FORMATS",
     "SPANISH_TAX_ID_WIDTH",
+    "AeatClaveLiquidacion",
+    "AeatExpedienteId",
+    "AeatPresentationId",
     "BucketId",
     "ContentDigest",
     "ContentDigestOrAbsent",
+    "IdentifierNamespace",
     "IdentityDocument",
     "IdentityError",
     "NifIvaFormatSpec",

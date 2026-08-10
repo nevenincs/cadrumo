@@ -22,6 +22,7 @@ from contextlib import contextmanager
 from http import HTTPStatus
 from pathlib import Path
 from queue import Queue
+from typing import override
 
 import pytest
 
@@ -94,6 +95,7 @@ def _serve_held_ollama(runtime: _HeldRuntime) -> Iterator[str]:
     """Serve ``/api/chat`` on loopback, blocking every request until released."""
 
     class _Endpoint(SilentLoopbackHandler):
+        @override
         def do_POST(self) -> None:
             body = read_json_body(self)
             messages = body["messages"]
