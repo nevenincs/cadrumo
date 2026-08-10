@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
@@ -162,3 +163,63 @@ def test_boolean_refuses_unhashable_invalid_values_through_the_typed_boundary(in
 def test_numeric_refuses_unhashable_invalid_values_through_the_typed_boundary(invalid: object) -> None:
     with pytest.raises(RegistryValidationError):
         render_fixed_width_export_field(_field(), invalid)
+
+
+def test_allowed_integer_domain_is_enforced_symmetrically_after_wire_normalization() -> None:
+    field = _field(length=2, allowed_values=("3", "1"))
+
+    assert field.allowed_values == ("1", "3")
+    assert render_fixed_width_export_field(field, 1) == "01"
+    assert parse_fixed_width_export_field(field, "03") == Decimal(3)
+    with pytest.raises(RegistryValidationError, match="outside allowed_values"):
+        render_fixed_width_export_field(field, "2")
+    with pytest.raises(RegistryValidationError, match="outside allowed_values"):
+        parse_fixed_width_export_field(field, "02")
+
+
+def test_schema_refuses_allowed_values_combined_with_a_value_policy() -> None:
+    with pytest.raises(ValidationError, match="cannot combine"):
+        _field(
+            length=1,
+            allowed_values=("1",),
+            value_policy="selected-1-unselected-0",
+        )
+
+
+@pytest.mark.parametrize(
+    "allowed_values",
+    ((), ("1", "1"), ("",), ("01",), ("+1",), ("１",), ("123456",)),
+)
+def test_schema_refuses_empty_duplicate_noncanonical_or_out_of_width_allowed_domains(
+    allowed_values: tuple[str, ...],
+) -> None:
+    with pytest.raises(ValidationError, match="allowed_values"):
+        _field(allowed_values=allowed_values)
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    (
+        {"data_type": "text"},
+        {"data_type": "decimal", "decimals": 2},
+        {"data_type": "money"},
+        {"signed": True, "data_type": "money"},
+        {"padding": "left_space"},
+        {"kind": "literal", "literal": "1"},
+    ),
+)
+def test_schema_refuses_allowed_domains_on_incompatible_field_shapes(overrides: dict[str, object]) -> None:
+    with pytest.raises(ValidationError, match="allowed_values"):
+        _field(allowed_values=("1", "3"), **overrides)
+
+
+def test_allowed_values_enforcement_has_one_canonical_codec_owner() -> None:
+    production_root = Path("src/cadrumo")
+    owners = tuple(
+        path
+        for path in production_root.rglob("*.py")
+        if "tests" not in path.parts
+        if "def _require_allowed_value" in path.read_text(encoding="utf-8")
+    )
+
+    assert owners == (production_root / "domain/calculations/registry/_fixed_width_codec.py",)

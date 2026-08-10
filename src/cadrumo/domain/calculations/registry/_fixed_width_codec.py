@@ -101,6 +101,9 @@ class _ExportField(Protocol):
     @property
     def value_policy(self) -> ExportValuePolicy | None: ...
 
+    @property
+    def allowed_values(self) -> tuple[str, ...] | None: ...
+
 
 def validate_fixed_width_shape(field: _ExportField) -> None:
     """Refuse contradictory padding, justification, and sign declarations."""
@@ -146,6 +149,7 @@ def render_fixed_width_export_field(field: _ExportField, value: object) -> str:
     if kind == "literal":
         value = field.literal
     value = project_export_value(field.value_policy, value)
+    _require_allowed_value(field, value)
     if field.data_type == "money":
         return _render_money(field, value)
     if field.data_type == "decimal":
@@ -206,6 +210,7 @@ def parse_fixed_width_export_field(field: _ExportField, raw: str) -> Decimal | s
     else:
         text = _unpad(field, raw)
         parsed = text if text else None
+    _require_allowed_value(field, parsed)
     if field.value_policy is None and render_fixed_width_export_field(field, parsed) != raw:
         raise RegistryValidationError(f"export field {field.id!r} contains noncanonical fixed-width data")
     return parsed
@@ -243,6 +248,19 @@ def _coerce_numeric(field: _ExportField, value: object) -> Decimal:
         return coerce_fixed_width_decimal(value)
     except ValueError as exc:
         raise RegistryValidationError(f"export field {field.id!r} has an invalid numeric value") from exc
+
+
+def _require_allowed_value(field: _ExportField, value: object) -> None:
+    if field.allowed_values is None:
+        return
+    number = _coerce_numeric(field, value)
+    if number != number.to_integral_value():
+        raise RegistryValidationError(f"export field {field.id!r} value is not an allowed integer")
+    canonical = str(int(number))
+    if canonical not in field.allowed_values:
+        raise RegistryValidationError(
+            f"export field {field.id!r} value {canonical!r} is outside allowed_values",
+        )
 
 
 def _render_integer(field: _ExportField, value: object) -> str:
