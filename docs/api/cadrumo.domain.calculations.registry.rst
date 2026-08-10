@@ -68,7 +68,6 @@ Submodules
    cadrumo.domain.calculations.registry._m347_threshold
    cadrumo.domain.calculations.registry._modelo_localization
    cadrumo.domain.calculations.registry._observation_fold
-   cadrumo.domain.calculations.registry._parity_tapes
    cadrumo.domain.calculations.registry._period_offset_math
    cadrumo.domain.calculations.registry._period_selector_match
    cadrumo.domain.calculations.registry._profile_grounding
@@ -85,7 +84,6 @@ Submodules
    cadrumo.domain.calculations.registry._renta_web_open_oracle
    cadrumo.domain.calculations.registry._retenciones_bindings
    cadrumo.domain.calculations.registry._runtime_graph
-   cadrumo.domain.calculations.registry._scenario_filing_period
    cadrumo.domain.calculations.registry._schedules
    cadrumo.domain.calculations.registry._schema
    cadrumo.domain.calculations.registry._schema_base
@@ -147,6 +145,3 @@ Submodules
    cadrumo.domain.calculations.registry._validate_verdict
    cadrumo.domain.calculations.registry._validate_verification_predicates
    cadrumo.domain.calculations.registry._withholding_bindings
-   cadrumo.domain.calculations.registry._workbook_parity
-   cadrumo.domain.calculations.registry._workbook_parity_models
-   cadrumo.domain.calculations.registry._workbook_parity_types
