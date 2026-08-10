@@ -538,10 +538,13 @@ def _taxpayer_ref(taxpayer_nif: str | None) -> str:
     two are not folded on the strength of looking alike: that one REFUSES a
     blank token, which is wrong here because a subjectless row is a legitimate
     domain value that must still project; and it returns the full digest, where
-    this surface wants a short CLI-safe ref. What the two genuinely share is one
-    composition over :func:`tax_id_identity_token` -- already the single
-    identity authority both go through. The hashing spelling repeats; the
-    identity rule does not.
+    this surface wants a short CLI-safe ref. The truncation width here is itself
+    an identity contract -- two refs compare equal only if every producer cuts
+    them identically -- so a shared function returning full hex would leave this
+    site cutting locally regardless. What the two genuinely share is one
+    expression over :func:`tax_id_identity_token` -- already the single identity
+    authority both go through. The hashing spelling repeats; the identity rule
+    does not.
     """
     if taxpayer_nif is None:
         return _ABSENT_TAXPAYER_REF

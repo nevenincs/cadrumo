@@ -55,14 +55,29 @@ def hashed_tax_id_token(tax_id: str, *, field_name: str) -> str:
             each caller's diagnostic names its own parameter.
 
     This stays package-private on purpose. The live IVA surface composes the
-    same two steps for its own subject ref and deliberately does not call this:
-    the blank refusal below is required here, where a perceptor with no
-    identifier cannot be keyed, and wrong there, where a subjectless row is a
-    legitimate domain value that must still project. Widening this to serve both
-    would mean either dropping the refusal the perceptor repositories depend on,
-    or raising a retenciones-perceptor diagnostic out of an IVA wallet read. The
-    shared part is one composition over :func:`tax_id_identity_token`, which is
-    already the single identity authority.
+    same two steps for its own subject ref and deliberately does not call this.
+    The two callers want OPPOSITE blank behaviour: refusing is required here,
+    where a perceptor with no identifier cannot be keyed, and wrong there, where
+    a subjectless row is a legitimate domain value that must still project. A
+    shared function cannot both raise and not raise, so that caller would guard
+    blank before calling and consume only the hash.
+
+    The return width is the second reason and the sharper one: this returns the
+    full digest, while the live ref is truncated, and a truncation width IS an
+    identity contract -- two refs compare equal only if every producer cuts them
+    identically. A shared function returning full hex leaves that caller cutting
+    locally anyway.
+
+    What is left to share is a single expression over
+    :func:`tax_id_identity_token`, which is already the one identity authority
+    both go through.
+
+    Note for anyone re-opening this: the domain-neutral refusal a relocation
+    would need already exists -- :class:`IdentityError` with
+    ``errors.identity.document_empty``, shipped in all four catalogues. So "the
+    error would leak retenciones vocabulary" is NOT a reason to keep these
+    apart, and was wrongly given as one when this note was first written. The
+    reasons are the opposite blank contracts and the width.
 
     Raises:
         AggregationValidationError: ``tax_id`` normalises to a blank token.
