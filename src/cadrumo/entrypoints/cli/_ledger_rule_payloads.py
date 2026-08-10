@@ -144,7 +144,7 @@ class RuleApplyResult(OutputSchema):
     applied: list[RuleApplyAppliedPayload] | None = None
 
 
-class LlmUsageProviderPayload(OutputSchema):
+class LlmUsageCostProviderPayload(OutputSchema):
     """Per-provider LLM usage/cost row.
 
     Mirrors :class:`LlmUsageCostProviderMetrics`, aggregated
@@ -204,7 +204,7 @@ class LedgerLlmDiagnosticsResult(OutputSchema):
     since: str | None = None
     until: str | None = None
     low_confidence_threshold: DecimalWireText
-    usage_providers: list[LlmUsageProviderPayload]
+    usage_providers: list[LlmUsageCostProviderPayload]
     total_calls: int = Field(ge=0)
     total_cache_hits: int = Field(ge=0)
     total_input_tokens: int = Field(ge=0)

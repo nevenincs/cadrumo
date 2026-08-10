@@ -16,7 +16,12 @@ import pytest
 
 from .....core.config import override_settings
 from .....tests import assert_path_matches_grammar
-from .._validate_verdict import VERDICT_OUTCOME_GREEN, ValidationVerdict, verdict_cache_path, write_verdict
+from .._validate_verdict import (
+    VERDICT_OUTCOME_GREEN,
+    RegistryValidationVerdict,
+    verdict_cache_path,
+    write_verdict,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -36,7 +41,12 @@ def test_the_real_verdict_file_matches_its_declared_shape(tmp_path: Path) -> Non
     with override_settings(cadrumo_local_storage_root=root):
         path = verdict_cache_path(registry_root)
         write_verdict(
-            path, ValidationVerdict(verdict_key="k" * 16, package_version="1.2.3", outcome=VERDICT_OUTCOME_GREEN)
+            path,
+            RegistryValidationVerdict(
+                verdict_key="k" * 16,
+                package_version="1.2.3",
+                outcome=VERDICT_OUTCOME_GREEN,
+            ),
         )
 
     assert path.is_file()

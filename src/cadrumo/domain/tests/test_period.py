@@ -9,6 +9,7 @@ import pytest
 from ...core import Period
 from ..period import (
     PeriodValidationError,
+    RegistryPeriodError,
     calculation_filing_date,
     period_end_date,
     period_start_date,
@@ -48,8 +49,9 @@ def test_period_refusals_stay_at_their_boundaries() -> None:
             Period.from_year_and_code(2026, combined)
 
     for boundary in (period_start_date, period_end_date):
-        with pytest.raises(PeriodValidationError, match=r"invalid registry period"):
+        with pytest.raises(RegistryPeriodError, match=r"invalid registry period") as exc_info:
             boundary(2026, "ZZ")
+        assert type(exc_info.value) is PeriodValidationError
 
 
 def test_registry_period_boundaries() -> None:

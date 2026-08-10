@@ -278,7 +278,7 @@ class LlmUsageModelPayload(OutputSchema):
         return _validate_success_rate(value)
 
 
-class LlmUsageProviderPayload(OutputSchema):
+class LlmRunHealthProviderPayload(OutputSchema):
     """One provider's aggregated run-usage metrics, plus its per-model breakdown.
 
     Mirrors :class:`~application.diagnostics_run_health.LlmRunHealthProviderMetrics`.
@@ -319,7 +319,7 @@ class LlmUsageResult(OutputSchema):
     since: str | None = None
     until: str | None = None
     provider: str | None = None
-    by_provider: list[LlmUsageProviderPayload]
+    by_provider: list[LlmRunHealthProviderPayload]
 
     @model_validator(mode="after")
     def _window_is_not_empty(self) -> LlmUsageResult:

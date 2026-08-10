@@ -55,9 +55,9 @@ from ._diagnostics_payloads import (
     LatencyPercentilesPayload,
     LatencyProviderRowPayload,
     LatencyResult,
+    LlmRunHealthProviderPayload,
     LlmRunProviderPayload,
     LlmUsageModelPayload,
-    LlmUsageProviderPayload,
     LlmUsageResult,
     RunHealthResult,
     RunRecordPayload,
@@ -555,7 +555,7 @@ def diagnostics_llm_usage(
         until=until_date.isoformat() if until_date is not None else None,
         provider=provider,
         by_provider=[
-            LlmUsageProviderPayload(
+            LlmRunHealthProviderPayload(
                 provider=row.provider,
                 runs=row.runs,
                 succeeded=row.succeeded,
