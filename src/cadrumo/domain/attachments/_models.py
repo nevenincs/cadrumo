@@ -16,12 +16,12 @@ from typing import Self, override
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, field_serializer, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import Hex64Str
 from ...core.errors import CoreValidationError
 from ...core.identity import BucketId, ContentDigest
 from ...core.time import parse_iso_datetime, validate_utc_aware
 from ._enums import AttachmentKind, AttachmentSource
 from ._errors import AttachmentValidationError
-from ._ids import AttachmentId
 
 _HEX_DIGITS = frozenset("0123456789abcdef")
 _LINK_ONLY_MIME_TYPE = "text/uri-list"
@@ -130,7 +130,7 @@ class Attachment(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    attachment_id: AttachmentId
+    attachment_id: Hex64Str
     kind: AttachmentKind
     source: AttachmentSource
     source_reference: str = Field(min_length=1)

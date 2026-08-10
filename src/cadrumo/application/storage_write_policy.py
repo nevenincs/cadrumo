@@ -191,7 +191,7 @@ PROFILE_BOUND_WRITE_VERB_PATHS: tuple[str, ...] = (
     "app ledger restore",
     "app ledger invoice import",
     # Fetches a document and stores its bytes as encrypted evidence through
-    # ``add_attachment_bytes``; ``pull-folder`` is the same primitive applied
+    # ``add_attachment``; ``pull-folder`` is the same primitive applied
     # once per Drive child. A link is never stored on its own, so both verbs
     # always write bucket-scoped attachment bytes when they succeed.
     "app ledger doclink",

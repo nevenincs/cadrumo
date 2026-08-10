@@ -19,7 +19,13 @@ from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import PDF_CONTAINER_SHAPES, DocumentShape
 from ....core.config import Settings
-from ....domain.attachments import AttachmentKind, AttachmentSource, add_attachment_bytes
+from ....domain.attachments import (
+    AttachmentBytesContent,
+    AttachmentIngestionRequest,
+    AttachmentKind,
+    AttachmentSource,
+    add_attachment,
+)
 from .._evidence import (
     MediaKind,
     PurchaseInvoiceEvidence,
@@ -128,15 +134,17 @@ def _stored_attachment_id(
     kind: AttachmentKind = AttachmentKind.INVOICE_PDF,
 ) -> str:
     """Store real bytes under a caller-chosen declared MIME type, and return the id."""
-    attachment = add_attachment_bytes(
+    attachment = add_attachment(
         AttachmentStore(objects=secure_objects),
-        data=data,
-        kind=kind,
-        source=AttachmentSource.LOCAL_FILE,
-        source_reference="operator-evidence",
-        mime_type=mime_type,
-        captured_at=datetime(2026, 8, 1, tzinfo=UTC),
-        bucket_id=_BUCKET_ID,
+        content=AttachmentBytesContent(data=data),
+        request=AttachmentIngestionRequest(
+            kind=kind,
+            source=AttachmentSource.LOCAL_FILE,
+            source_reference="operator-evidence",
+            mime_type=mime_type,
+            captured_at=datetime(2026, 8, 1, tzinfo=UTC),
+            bucket_id=_BUCKET_ID,
+        ),
     )
     return attachment.attachment_id
 
