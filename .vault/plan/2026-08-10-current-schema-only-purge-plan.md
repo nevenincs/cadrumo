@@ -4,7 +4,7 @@ tags:
   - '#current-schema-only-purge'
 date: '2026-08-10'
 modified: '2026-08-10'
-body_hash: 'sha256:9f32b94593a44c9deeccaf0d1483eb3e52708d3af710d6e877376b473c1b702b'
+body_hash: 'sha256:6f2b7a80a91f5f4c2ab9cbdeccdc644a65eb9398cfe0b56d4d89aa1674891dd9'
 tier: L3
 related:
   - '[[2026-07-09-compatibility-lifecycle-adr]]'
@@ -61,7 +61,7 @@ Make live profile records and immutable snapshots accept exactly the canonical v
 - [x] `W01.P01.S01` - Require exact schema id and schema version 4 for UserProfileRecord and UserProfileSnapshot; `src/cadrumo/domain/user_profile/_values.py`.
 - [x] `W01.P01.S02` - Stamp newly created profile records explicitly with the canonical schema version; `src/cadrumo/application/user_profile/_lifecycle.py`.
 - [x] `W01.P01.S03` - Prove current profile schema hydration and non-current marker refusal; `src/cadrumo/domain/user_profile/tests/test_payload_schema_identity.py`.
-- [ ] `W01.P01.S24` - Refuse a persisted profile payload that omits schema_version at both profile read boundaries, rather than making the field required. Required-ness was NOT taken because 229 of the 231 construction sites are in-memory test and harness constructions that are not the defect, while the defect is bytes hydrating as current. What required-ness would still buy, and what this row therefore does not deliver, is making the unstamped state unconstructable in memory as well as unreadable from disk; `src/cadrumo/application/user_profile/_repository.py at both the record load and the snapshot load, never in the shared SecureBoundRepository whose generic path serves other namespaces`.
+- [x] `W01.P01.S24` - Refuse a persisted profile payload that omits schema_version at both profile read boundaries, rather than making the field required. Required-ness was NOT taken because 229 of the 231 construction sites are in-memory test and harness constructions that are not the defect, while the defect is bytes hydrating as current. What required-ness would still buy, and what this row therefore does not deliver, is making the unstamped state unconstructable in memory as well as unreadable from disk; `src/cadrumo/application/user_profile/_repository.py at both the record load and the snapshot load, never in the shared SecureBoundRepository whose generic path serves other namespaces`.
 
 ### Phase `W01.P03` - Pin the active bucket pointer format
 
