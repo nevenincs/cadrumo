@@ -99,6 +99,13 @@ deletion (which the scaffold-preserve contract forbids).
 
 ## Shipped search artefacts are licence-clean
 
+*(This section is the home of the retired rule slug
+`shipped-search-licence-clean`. There is no file of that name and there should
+not be: the mandate was merged here rather than shipped as its own rule, because
+the always-on corpus loads into every session and each new file taxes all of
+them. The slug is spelled out so a search for it lands here instead of returning
+nothing and reading as an amendment that never took.)*
+
 Documentation search artefacts that ship in the package or the built docs must
 come only from licence-clean sources and contain only laundered identifiers and
 rankings. **Never ship** anything derived from NC, ND or gated sources; raw
