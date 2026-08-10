@@ -6,7 +6,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:4464111baf2366c2bad0ece2e54fc1d6276cfea8e2c8bbf0453a077096735099'
+body_hash: 'sha256:308c56fdb468068d05f4f8c98441c83ba5970c78ac10a1ba6a817ec050414726'
 related:
   - '[[2026-08-05-ci-lane-deconflation-P01-S02]]'
   - '[[2026-08-05-ci-lane-deconflation-P01-S03]]'
@@ -18,6 +18,15 @@ related:
   - '[[2026-08-05-ci-lane-deconflation-P02-S09]]'
   - '[[2026-08-05-ci-lane-deconflation-P02-S22]]'
   - '[[2026-08-05-ci-lane-deconflation-P02-S23]]'
+  - '[[2026-08-05-ci-lane-deconflation-P02-S29]]'
+  - '[[2026-08-05-ci-lane-deconflation-P02-S30]]'
+  - '[[2026-08-05-ci-lane-deconflation-P02-S31]]'
+  - '[[2026-08-05-ci-lane-deconflation-P02-S32]]'
+  - '[[2026-08-05-ci-lane-deconflation-P02-S33]]'
+  - '[[2026-08-05-ci-lane-deconflation-P02-S34]]'
+  - '[[2026-08-05-ci-lane-deconflation-P02-S36]]'
+  - '[[2026-08-05-ci-lane-deconflation-P02-S37]]'
+  - '[[2026-08-05-ci-lane-deconflation-P02-S38]]'
   - '[[2026-08-05-ci-lane-deconflation-P03-S11]]'
   - '[[2026-08-05-ci-lane-deconflation-P03-S12]]'
   - '[[2026-08-05-ci-lane-deconflation-P03-S13]]'
@@ -69,6 +78,13 @@ Auto-generated index of all documents tagged with `#ci-lane-deconflation`.
 - `2026-08-05-ci-lane-deconflation-P01-S04` - Move the ci-full docs build above the tooling-gates step so the terminology gates that resolve to built HTML get their artefact, blocked until the legal-entry defect stops masking the dependency
 - `2026-08-05-ci-lane-deconflation-P02-S22` - Author the ADR reshaping the overview.calendar payload, the resource_link remedy the gate names cannot apply to a computed verb with no persisted record and the irreducible floor leaves only 622 characters of headroom
 - `2026-08-05-ci-lane-deconflation-P02-S23` - Fix thin_output_schema growing the schemas it thins, its oneOf inline-or-linked shape duplicates the property body so thinning a shared-defs verb enlarges it
+- `2026-08-05-ci-lane-deconflation-P02-S30` - Give the operator surface contract suite one execution-scope marker
+- `2026-08-05-ci-lane-deconflation-P02-S31` - Enrol the unreachable dev/registry/tests modules
+- `2026-08-05-ci-lane-deconflation-P02-S32` - Triage the reds that enrolment exposes
+- `2026-08-05-ci-lane-deconflation-P02-S33` - Establish how long the lane-reachability gate has been red and whether anything shipped past it
+- `2026-08-05-ci-lane-deconflation-P02-S34` - Decide how dev tooling lane reds become visible between manual dispatches
+- `2026-08-05-ci-lane-deconflation-P02-S37` - Restore the operator-settable storage root to the root help document
+- `2026-08-05-ci-lane-deconflation-P02-S38` - export provenance writer recorded as a deliberate superset
 - `2026-08-05-ci-lane-deconflation-P03-S11` - Build the registry selector parity gate binding declared period_selector tokens to the accepted set, delegating to the production validator rather than restating it so the gate cannot become a second authority
 - `2026-08-05-ci-lane-deconflation-P03-S12` - Route the declaracion parser administrative-token set through the core authority, it hardcodes four tokens and is missing COMUNICACION and VARIACION from the core set it shadows
 - `2026-08-05-ci-lane-deconflation-P03-S14` - Fix the embedded newline in the rd-439-2007 art-76 legal entry notes field, the validator rejects any Unicode C category and a narrower scan for control characters reads as clean
@@ -91,6 +107,8 @@ Auto-generated index of all documents tagged with `#ci-lane-deconflation`.
 - `2026-08-05-ci-lane-deconflation-P03-S19` - State in the filing-period consistency validator's own docstring which coordinates it no longer covers and why, a test enforces the fact but the explanation belongs at the validator
 - `2026-08-05-ci-lane-deconflation-P04-S16` - Re-pin the model-facing description digest once the description sources settle, the gate forbids re-pinning from a dirty tree and the locale and CLI help surfaces are actively churning
 - `2026-08-05-ci-lane-deconflation-P04-S17` - Record a finding about the 204 semantic-dedup exec records rather than remediating them, all 204 carry empty Description Outcome and Notes and were bulk-scaffolded in one commit so 0 resolve to an implementing commit, and unchecking would assert work the tree shows was done
+- `2026-08-05-ci-lane-deconflation-P02-S29` - Stamp the host load reading at fire time into the pytest timeout failure output, and do NOT convert that ceiling to process CPU-time, because pytest-timeout offers only signal and thread methods and has no CPU notion at all so the conversion is not expressible in configuration, and more importantly because a wall-clock bound is the CORRECT instrument here rather than a tolerated one, since the thing this ceiling exists to kill is a wedged or deadlocked test and a deadlocked process burns almost no CPU so a CPU-time bound would never fire on the exact failure the ceiling was added for, which is the same share-hang argument that saved the wall threshold on the integration budgets except stronger because here wall is the only instrument that works, leaving the real defect as interpretability rather than instrument choice since nothing in a timeout traceback records host load so a legitimately slow test under saturation is indistinguishable from a genuine hang and reaches a lead ledger as a plausible fictitious defect with a traceback attached
+- `2026-08-05-ci-lane-deconflation-P02-S36` - MEASURED AND RULED. The selective local form does NOT qualify, and the reason is structural rather than a cost. Reachability across the whole dev tree is 22 test directories and 258 files, of which test-dev-tooling reaches 15 and test-dev-ci reaches 4, so only dev/docs/tests (46 files), dev/docs/apidocs/tests (1) and an empty migration directory are reached by no recipe and no workflow at all, and docs.yml invokes no pytest whatsoever. That makes the original figure of two hundred and forty-six files an overstatement by nineteen directories, because the forty-four minutes it priced was overwhelmingly the cost of re-reaching what two lanes already reach. Of the 46 remaining files, 22 reference playwright, sphinx, a docs build or a long mark.timeout, leaving 24 candidates. A bounded run over those 24 plus the apidocs directory collected 130 of 185 tests in 91.7 seconds with 16 failed and 13 errors, and 55 tests were DESELECTED by the local lane's own marker. The deselection is the ruling. Ten of the 24 candidate files are integration-marked at module level, so the local unit lane cannot select them at any price, and enrolling this directory there would leave every one of them exactly as unreached as it is today while printing green over them. The enrolment therefore cannot close the coverage gap it was proposed to close, which is a property of the markers and not of the machine. Cost only compounds it. 29 of the 130 selectable tests are currently non-passing, a never-run backlog that would red every lead's local run from the first day, and the 91.7 seconds is a floor measured while the heaviest fixture short-circuited on a HEAD-level ImportError from the CalculationRevisionId relocation rather than running its CLI-tree subprocess. Re-running once that clears would sharpen the ceiling and cannot change the direction, because the marker and backlog facts are not timing facts. The coverage half of the original question stands open and unaddressed by this row and belongs in CI, where an integration-capable lane can reach all 185. Note for whoever writes that row that this is the FIFTH remedy on this row family to be wider or blinder than the defect it targets, after a CPU bound that cannot fire on a wedge, a report hook that cannot fire on Windows, a raw descriptor write that the exit discards, and a reachability change whose cost was dominated by what it was never meant to reach
 
 ### plan
 
