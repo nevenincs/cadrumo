@@ -34,6 +34,18 @@ _MODELO_303_DESIGNS = (
     ("aeat-dr-303-2025", 429),
     ("aeat-dr-303-2026", 430),
 )
+_PARTIAL_VARIABLE_ENVELOPE_FAILURES = {
+    "aeat-dr-131-2019-2023-v101": "incomplete variable-envelope composition",
+    "aeat-dr-131-2024": "incomplete variable-envelope composition",
+    "aeat-dr-131-2025": "incomplete variable-envelope composition",
+    "aeat-dr-131-2026": "incomplete variable-envelope composition",
+    "aeat-dr-232-2016": "duplicate relative closing suffixes",
+    "aeat-dr-232-2018": "incomplete variable-envelope composition",
+    "aeat-dr-390-2022": "incomplete variable-envelope composition",
+    "aeat-dr-390-2023": "incomplete variable-envelope composition",
+    "aeat-dr-390-2024": "incomplete variable-envelope composition",
+    "aeat-dr-390-2025": "incomplete variable-envelope composition",
+}
 
 
 def test_modelo_200_workbook_recovers_source_declared_totals_and_variable_envelope() -> None:
@@ -701,7 +713,14 @@ def test_registered_record_design_sources_are_discovered_and_parseable() -> None
         if source.kind == "record_design"
     }
 
-    source_items = tuple(sorted(sources.items()))
+    assert set(sources) >= set(_PARTIAL_VARIABLE_ENVELOPE_FAILURES)
+    source_items = tuple(
+        sorted(
+            (source_id, path)
+            for source_id, path in sources.items()
+            if source_id not in _PARTIAL_VARIABLE_ENVELOPE_FAILURES
+        ),
+    )
     parsed_by_path = _official_record_designs(tuple(path for _source_id, path in source_items))
     parsed = {source_id: parsed_by_path[path] for source_id, path in source_items}
 
@@ -709,6 +728,22 @@ def test_registered_record_design_sources_are_discovered_and_parseable() -> None
     assert all(parsed.values())
     assert {path.suffix.lower() for path in sources.values()} >= {".pdf", ".xls", ".xlsx"}
     assert sum(len(sheet.fields) for sheets in parsed.values() for sheet in sheets) > len(sources)
+
+
+@pytest.mark.parametrize(
+    ("source_ref", "message"),
+    tuple(_PARTIAL_VARIABLE_ENVELOPE_FAILURES.items()),
+)
+def test_registered_partial_variable_envelopes_refuse_instead_of_truncating(
+    source_ref: str,
+    message: str,
+) -> None:
+    """Every official partial envelope is an explicit parser refusal, never a fixed record."""
+    _, catalogues = _committed_registry_tree()
+    source = catalogues.sources[source_ref]
+
+    with pytest.raises(RegistryValidationError, match=message):
+        extract_record_design(bundled_path() / source.corpus_path)
 
 
 # Run out-of-process: any sibling test that parses a workbook or PDF imports these

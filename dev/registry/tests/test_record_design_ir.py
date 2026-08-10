@@ -105,9 +105,7 @@ def test_intermediate_is_a_complete_total_preserving_projection_of_the_verified_
         )
 
     envelope = next(envelope for envelope in intermediate.variable_envelopes if envelope.sheet == "DP200000")
-    parser_envelope = next(
-        sheet.variable_envelope for sheet in parsed_sheets if sheet.name == envelope.sheet
-    )
+    parser_envelope = next(sheet.variable_envelope for sheet in parsed_sheets if sheet.name == envelope.sheet)
     assert parser_envelope is not None
     assert envelope.sheet == "DP200000"
     assert envelope.record_identity == "DP200000"
@@ -287,9 +285,7 @@ def test_intermediate_preserves_each_modelo_303_variable_envelope(
         design_epoch=design_epoch,
     )
 
-    parser_envelopes = tuple(
-        sheet.variable_envelope for sheet in parsed if sheet.variable_envelope is not None
-    )
+    parser_envelopes = tuple(sheet.variable_envelope for sheet in parsed if sheet.variable_envelope is not None)
     assert len(intermediate.sheets) == 6
     assert all(sheet.record_identity != "DP30300" for sheet in intermediate.sheets)
     assert len(parser_envelopes) == len(intermediate.variable_envelopes) == 1

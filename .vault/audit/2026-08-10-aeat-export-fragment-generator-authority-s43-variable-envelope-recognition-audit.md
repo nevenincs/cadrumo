@@ -5,7 +5,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:24c0e72195d91770729edac41cbbc716f21cf3359405dab09cc55c24cfb06438'
+body_hash: 'sha256:a00fd55656323598e055e8b910ea9aa7611b50fe9233dcb9f8d05d04017ec85b'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
@@ -15,23 +15,27 @@ related:
 
 ## Scope
 
+Verdict: **PASS.** The independent re-review found no open critical, high, or medium findings after raw-marker remediation.
+
 Independent review of `W04.P07.S43` against the accepted generator-authority decision, its active plan row, the parser/schema authority, parser-to-IR boundary, and fixed-width generation refusal.
 
 The review used bounded semantic discovery and exact-symbol confirmation. `src/cadrumo/domain/calculations/registry/_record_design.py` is the sole production envelope recognizer. Development modules consume its typed output; no alternate selector, duplicate parser, legacy export-layout input, or record-name classifier was found.
 
 ## Findings
 
-### body-led-exact-composition | resolved-high | A variable body now requires the complete official composition instead of falling back to a fixed record
+### raw-partial-marker-fallback | resolved-high | Every raw variable-envelope marker now enters strict refusal instead of silently becoming a fixed record
 
-The parser collects marker candidates generically and enters strict validation whenever the official `Variable` body marker occurs. It requires one body, one 18-byte relative closing suffix, one `Variable` total, contiguous fixed prefix geometry, immediate body offset, and ordered source rows and ordinals. Wrong-length, missing, duplicate, mixed-total, discontinuous, and misordered compositions refuse through the production workbook parser. The parser never derives a record total from the prefix extent.
+The initial review found that a standalone `Variable` total or relative `***` closer, and a malformed body or closer lacking parsed coordinates, could be dropped before typed marker construction. The parser now tracks raw body, relative-closing, and Variable-total declarations before numeric conversion. Every partial or malformed constellation enters the refusal path, so it cannot become a fixed record or derive a total from its prefix.
 
-### isolated-mixed-total | resolved-high | A contradictory fixed-plus-Variable total cannot silently choose a fixed extent
+Ten real registered source binaries exercise the new failure boundary: four Modelo 131, two Modelo 232, and four Modelo 390 designs. The normal parseability gate excludes only that declared refusal set, while a paired parameterized real-source gate requires each exact failure. This preserves deliberate current-source rejection rather than hiding those marker rows behind a green broad parseability result.
 
-A source row containing both a positive fixed total and `Variable` is independently decisive and refuses even when there is no body or closing marker. Both official `Total` and `Total:` spellings are covered by real temporary-workbook tests.
+### body-led-exact-composition | resolved-high | A complete envelope requires the exact official composition and geometry
+
+The parser requires one body, one 18-byte relative closing suffix, one `Variable` total, contiguous fixed prefix geometry, immediate body offset, and ordered source rows and ordinals before constructing the typed envelope. Wrong-length, missing, duplicate, mixed-total, discontinuous, and misordered compositions raise `RegistryValidationError`. The parser never derives a record total from prefix extent.
 
 ### source-epoch-coverage | resolved-medium | Real Modelo 200 and every pinned Modelo 303 binary prove the generic envelope contract
 
-The real Modelo 200 design and all five hash-pinned Modelo 303 epochs traverse the production parser. The Modelo 303 test requires six fixed sheets plus one `DP30300` envelope, retains body/closing/total/prefix facts, and confirms the envelope is excluded from fixed records. The parser-to-IR and fixed-generation-refusal tests consume that same typed result rather than reproducing the parsing decision.
+The real Modelo 200 design and all five hash-pinned Modelo 303 epochs traverse the production parser. The Modelo 303 test requires six fixed sheets plus one `DP30300` envelope, retains body/closing/total/prefix facts, and confirms the envelope is excluded from fixed records. The parser-to-IR and fixed-generation-refusal tests consume that typed result rather than reproducing the parsing decision.
 
 ### record-name-selector | resolved-medium | The legacy DP200000-specific recognition path is absent
 
@@ -39,4 +43,4 @@ A structural source inspection test fails if either `DP200000` or `DP30300` reap
 
 ## Recommendations
 
-Accept `W04.P07.S43` when the independent code-review verdict is PASS. Preserve parser-owned body-led composition recognition, strict malformed and ambiguous refusal, the five-epoch real-source regression matrix, and the structural no-name-selector assertion. Do not broaden this parser step into export-tree, business-semantics, or registry-layout work.
+`W04.P07.S43` is accepted. Preserve parser-owned recognition, strict malformed and partial refusal, the ten-source real partial-envelope matrix, the five-epoch Modelo 303 matrix, and the structural no-name-selector assertion. Do not broaden this parser step into export-tree, business-semantics, or registry-layout work.
