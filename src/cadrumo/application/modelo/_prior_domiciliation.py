@@ -10,44 +10,33 @@ local export cannot substitute for that official evidence.
 
 from __future__ import annotations
 
-from ...core import Modelo, PriorDomiciliationElection, ResultDisposition
+from ...core import Modelo, ObservedHeaderFact, PriorDomiciliationElection, ResultDisposition
 from ...domain.modelos import (
     CalculationRevision,
     CalculationRevisionAmendmentKind,
+    ModeloRecord,
     ModeloRecordCatalogueRepositoryProtocol,
     WorkUnit,
 )
 from ..calculations import (
     M303_DECLARATION_TYPE_HEADER_KEY,
     CalculationObservationRepository,
+    ObservationEnvelopePayload,
     PriorDomiciliationElectionProjection,
 )
 from ._action_errors import ModeloPriorDomiciliationElectionRefusedError
 
 
-def resolve_prior_domiciliation_election(
+def _require_rectificativa_baseline_link(
     *,
-    election: object,
     work_unit: WorkUnit,
     revision: CalculationRevision,
-    filing_repository: ModeloRecordCatalogueRepositoryProtocol,
-    observation_repository: CalculationObservationRepository,
-) -> PriorDomiciliationElectionProjection:
-    """Return safe election provenance, refusing any unproven ``X`` request.
+) -> str:
+    """Return the baseline filing id an ``X`` request must name, or refuse.
 
-    ``KEEP`` is intentionally a neutral no-proof default.  ``CANCEL_OR_MODIFY``
-    requires the rectificativa's explicit amendment link, an externally
-    evidenced baseline record, and the official same-target filed observation
-    that carries the exact baseline CSV and a submitted-file ``U`` header.
+    The marker asks AEAT to act on a PRIOR return, so the request is only
+    coherent from a Modelo 303 rectificativa that says which return it amends.
     """
-    if not isinstance(election, PriorDomiciliationElection):
-        raise ModeloPriorDomiciliationElectionRefusedError(
-            "prior domiciliation election must be a PriorDomiciliationElection value",
-            context={"received_type": type(election).__name__},
-        )
-    if election is PriorDomiciliationElection.KEEP:
-        return PriorDomiciliationElectionProjection(election=election)
-
     if work_unit.modelo != Modelo.M303.value:
         raise ModeloPriorDomiciliationElectionRefusedError(
             "prior domiciliation cancellation/modification is supported only for Modelo 303",
@@ -64,7 +53,22 @@ def resolve_prior_domiciliation_election(
             "prior domiciliation cancellation/modification requires an explicit baseline filing link",
             context={"calculation_revision_id": revision.calculation_revision_id},
         )
+    return baseline_id
 
+
+def _require_evidenced_baseline_filing(
+    *,
+    baseline_id: str,
+    work_unit: WorkUnit,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol,
+) -> ModeloRecord:
+    """Return the externally attested baseline filing, or refuse.
+
+    Both gates are about the same thing from opposite sides: the record must
+    carry AEAT's own acceptance, and it must be the SAME filing target as the
+    rectificativa -- a baseline for another period would move a direct debit
+    the operator never asked about.
+    """
     baseline = filing_repository.load().get(baseline_id)
     if baseline is None or baseline.external_evidence is None or not baseline.aeat_accepted:
         raise ModeloPriorDomiciliationElectionRefusedError(
@@ -81,7 +85,22 @@ def resolve_prior_domiciliation_election(
             "prior domiciliation baseline does not match the rectificativa filing target",
             context={"baseline_filing_record_id": baseline_id},
         )
+    return baseline
 
+
+def _require_official_baseline_observation(
+    *,
+    baseline: ModeloRecord,
+    baseline_id: str,
+    observation_repository: CalculationObservationRepository,
+) -> ObservationEnvelopePayload:
+    """Return the official filed observation joined to the baseline, or refuse.
+
+    The join is by the baseline's own justificante CSV rather than by
+    coordinates alone: matching year and period would also accept a different
+    filing for the same target, which is exactly the substitution this module
+    exists to prevent.
+    """
     observation = observation_repository.load_observation(str(baseline.modelo), baseline.period)
     if observation is None or not observation.source_kind.is_official_aeat:
         raise ModeloPriorDomiciliationElectionRefusedError(
@@ -97,10 +116,21 @@ def resolve_prior_domiciliation_election(
             "official baseline observation does not match the baseline evidence reference",
             context={"baseline_filing_record_id": baseline_id},
         )
+    return observation
+
+
+def _require_submitted_file_domiciliacion_header(
+    *,
+    observation: ObservationEnvelopePayload,
+    baseline_id: str,
+) -> ObservedHeaderFact:
+    """Return the single submitted-file ``U`` declaration-type header, or refuse.
+
+    Exactly one is required rather than at least one: two headers disagreeing
+    about the baseline's disposition leave no fact to rectify against.
+    """
     declaration_type_headers = tuple(
-        header
-        for header in observation.source_headers
-        if header.header_key == M303_DECLARATION_TYPE_HEADER_KEY
+        header for header in observation.source_headers if header.header_key == M303_DECLARATION_TYPE_HEADER_KEY
     )
     if len(declaration_type_headers) != 1:
         raise ModeloPriorDomiciliationElectionRefusedError(
@@ -122,6 +152,54 @@ def resolve_prior_domiciliation_election(
                 "header_value": declaration_type_header.value,
             },
         )
+    return declaration_type_header
+
+
+def resolve_prior_domiciliation_election(
+    *,
+    election: object,
+    work_unit: WorkUnit,
+    revision: CalculationRevision,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol,
+    observation_repository: CalculationObservationRepository,
+) -> PriorDomiciliationElectionProjection:
+    """Return safe election provenance, refusing any unproven ``X`` request.
+
+    ``KEEP`` is intentionally a neutral no-proof default.  ``CANCEL_OR_MODIFY``
+    requires the rectificativa's explicit amendment link, an externally
+    evidenced baseline record, and the official same-target filed observation
+    that carries the exact baseline CSV and a submitted-file ``U`` header.
+
+    The proof runs as an ordered chain of refusals, each stage narrowing what
+    the next may assume.  Order is load-bearing rather than cosmetic: the
+    baseline link is what the filing lookup needs, the filing is what the
+    observation join keys on, and the header is what the disposition below is
+    checked against -- so no stage can be reordered without weakening the one
+    after it.
+    """
+    if not isinstance(election, PriorDomiciliationElection):
+        raise ModeloPriorDomiciliationElectionRefusedError(
+            "prior domiciliation election must be a PriorDomiciliationElection value",
+            context={"received_type": type(election).__name__},
+        )
+    if election is PriorDomiciliationElection.KEEP:
+        return PriorDomiciliationElectionProjection(election=election)
+
+    baseline_id = _require_rectificativa_baseline_link(work_unit=work_unit, revision=revision)
+    baseline = _require_evidenced_baseline_filing(
+        baseline_id=baseline_id,
+        work_unit=work_unit,
+        filing_repository=filing_repository,
+    )
+    observation = _require_official_baseline_observation(
+        baseline=baseline,
+        baseline_id=baseline_id,
+        observation_repository=observation_repository,
+    )
+    declaration_type_header = _require_submitted_file_domiciliacion_header(
+        observation=observation,
+        baseline_id=baseline_id,
+    )
 
     disposition = observation.result_disposition
     if (
