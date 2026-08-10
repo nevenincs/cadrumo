@@ -174,10 +174,6 @@ def assert_renta_web_open_app_url(app_url: str) -> None:
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
             translated_message=tr("adapters.sede.errors.landing_off_policy"),
             context={"app_url": app_url, "policy_id": _READ_GUARD_POLICY.id},
-            suggestion=(
-                "The live payload names a simulator URL this driver may not request. "
-                "Correct the payload rather than widening the driver's policy."
-            ),
         ) from exc
 
 
@@ -197,15 +193,9 @@ _VISIBLE_PROBE_TIMEOUT_MS: int = 2_000
 _ELEMENT_WAIT_TIMEOUT_MS: int = 10_000
 
 
-def _renta_web_open_shape_suggestion() -> str:
-    """Return the localised shape-change suggestion string for Renta WEB Open error messages."""
-    return tr("adapters.aeat.sede.renta_web_open.suggestions.shape_change")
-
-
 _playwright_stage = build_playwright_stage_runner(
     surface_label="Renta WEB Open",
     log_prefix="renta web open",
-    shape_suggestion=_renta_web_open_shape_suggestion,
     logger=logger,
 )
 

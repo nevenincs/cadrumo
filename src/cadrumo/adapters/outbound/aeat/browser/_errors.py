@@ -40,7 +40,6 @@ class BrowserError(CadrumoError):
         *,
         failure_mode: BrowserFailureMode | str | None = None,
         context: Mapping[str, object] | None = None,
-        suggestion: str | None = None,
         translated_message: str | None = None,
     ) -> None:
         """Construct a browser error with an optional failure-mode tag."""
@@ -56,7 +55,6 @@ class BrowserError(CadrumoError):
         super().__init__(
             message,
             context=enriched_context or None,
-            suggestion=suggestion,
             translated_message=translated_message,
         )
 

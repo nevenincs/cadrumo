@@ -315,7 +315,6 @@ def _assert_own_name_representation_form_html(html: str, *, landing_url: str, ex
             "AEAT representation gate has representative mode selected; refusing to continue",
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
             context=_representation_gate_context(html, landing_url=landing_url),
-            suggestion="Use only the authenticated profile user's own-name access for read-only wallet capture.",
         )
     represented_fields = tuple(
         str(node.get("name") or node.get("id") or "")
@@ -331,7 +330,6 @@ def _assert_own_name_representation_form_html(html: str, *, landing_url: str, ex
                 **_representation_gate_context(html, landing_url=landing_url),
                 "represented_fields": represented_fields,
             },
-            suggestion="Use only the authenticated profile user's own-name access for read-only wallet capture.",
         )
 
 

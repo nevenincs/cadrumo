@@ -33,7 +33,6 @@ from tempfile import TemporaryDirectory
 import pytest
 
 from ......core import Modelo, Period, validated_casilla_id
-from ......core.errors import build_error_envelope
 from ......domain.calculations.registry import bundled_authority, resolve_export_layout
 from .._declarations import _record_submitted_file_extraction_error
 from .._declarations_observations import _observed_casillas_from_submitted_file
@@ -246,39 +245,6 @@ def test_a_refusal_is_recorded_before_the_declaration_pdf_fallback_is_considered
     recorded_at = source.index("_record_submitted_file_extraction_error(metadata, exc)")
     fallback_at = source.index("if not casillas and declaration_pdf_body is not None:")
     assert recorded_at < fallback_at, "the layout refusal must be recorded before the PDF fallback is evaluated"
-
-
-@pytest.mark.parametrize(("revision_id", "filing_year"), sorted(_YEARS_BY_REVISION.items()))
-def test_the_refusal_carries_an_actionable_next_step(
-    revision_id: str,
-    filing_year: int,
-) -> None:
-    """The refusal resolves to a suggestion rather than to ``None``.
-
-    A bare exception on an operator-reachable path is a different kind of
-    masking: the operator learns that something failed and nothing about what
-    to do, so the failure gets worked around instead of fixed.
-    """
-    del revision_id
-    _, payload = _exported_draft_and_payload(filing_year=filing_year, declaration_type="C")
-
-    with pytest.raises(SedeParseError) as caught:
-        _project(payload[: len(payload) // 2], filing_year=filing_year)
-
-    # The remediation TEXT is still produced at the raise site; only its delivery was
-    # retired, so the claim stays checkable against the live value rather than being
-    # deferred. This module's whole subject is that an operator-reachable refusal must
-    # say what to do: declaring the omitted record OPTIONAL is the fix, as against
-    # reading the payload by byte offset, which is the degradation this file keeps out.
-    remediation = caught.value.suggestion
-    assert remediation, "the refusal produces no remediation text at all"
-    assert "optional" in remediation, f"the remediation does not point at the fix: {remediation!r}"
-
-    # Delivery ground truth, so this cannot be read as proving the operator receives it.
-    # Default suggestions were retired as the authority and ``FAIL_SEDE_PARSE`` is not
-    # yet converted to a catalogue action identity, so the envelope carries no next step
-    # today. Its conversion is the adapters part-one step, behind the migration contract.
-    assert build_error_envelope(caught.value).action is None
 
 
 def test_the_projection_holds_no_modelo_303_positional_reader() -> None:

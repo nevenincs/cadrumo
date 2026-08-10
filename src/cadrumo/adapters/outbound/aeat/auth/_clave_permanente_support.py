@@ -124,7 +124,6 @@ def clave_permanente_login_error(
     message: str,
     *,
     failure_mode: ClavePermanenteFailureMode,
-    suggestion: str | None = None,
     context: dict[str, object] | None = None,
 ) -> AuthError:
     """Build a registered :class:`~adapters.outbound.aeat.auth.AuthError`.
@@ -136,7 +135,7 @@ def clave_permanente_login_error(
     """
     enriched_context = dict(context) if context is not None else {}
     enriched_context["failure_mode"] = failure_mode.value
-    return AuthError(message, context=enriched_context, suggestion=suggestion)
+    return AuthError(message, context=enriched_context)
 
 
 __all__ = [

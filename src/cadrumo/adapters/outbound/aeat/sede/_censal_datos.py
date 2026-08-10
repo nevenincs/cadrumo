@@ -616,10 +616,6 @@ async def _navigate_and_parse(
                     "landing_path": landing.path,
                     "marker_present": False,
                 },
-                suggestion=(
-                    "Re-authenticate (run `aeat config auth status`) and retry; if AEAT is serving a "
-                    "maintenance interstitial, retry later. Do not treat this as an absent censal record."
-                ),
             )
         log.info("fetch_censal_datos: read censal consulta from %s", landing.path)
         return result
@@ -732,10 +728,6 @@ async def _resolve_dispatched_origin(
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
             translated_message=tr("adapters.sede.errors.censal_no_dispatch"),
             context={"selector_url": _CENSAL_SELECTOR_URL, "landing_url": getattr(page, "url", None)},
-            suggestion=(
-                "Re-authenticate (run `aeat config auth status`) and retry. If the selector keeps "
-                "failing to dispatch, AEAT may be serving a maintenance interstitial; retry later."
-            ),
         )
     origin = f"{landed.scheme}://{landed.netloc}"
     # A dispatch off the AEAT apex must not become the origin we then request.
@@ -819,10 +811,6 @@ def _assert_read_landing(landing_url: str) -> None:
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
             translated_message=tr("adapters.sede.errors.censal_modification_surface"),
             context={"landing_url": landing_url, "marker": marker},
-            suggestion=(
-                "Censal changes are filed by the operator outside this application. "
-                "Re-run the read; if AEAT keeps redirecting, use the sede directly."
-            ),
         )
 
 

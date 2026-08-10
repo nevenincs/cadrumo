@@ -575,10 +575,6 @@ async def _navigate_and_parse(
                     "marker_present": False,
                     "row_count": 0,
                 },
-                suggestion=(
-                    "Re-authenticate (run `aeat config auth status`) and retry; if AEAT is serving a "
-                    "maintenance interstitial, retry later. Do not treat this as an empty inbox."
-                ),
             )
         log.info(
             "fetch_notifications: fetched %d row(s) from %s",

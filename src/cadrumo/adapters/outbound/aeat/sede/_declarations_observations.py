@@ -420,12 +420,6 @@ def _submitted_file_layout_refusal(
             "reason": reason,
         },
         translated_message=tr("adapters.sede.errors.submitted_file_layout_parse_failed"),
-        suggestion=(
-            "The reason names the export record the parse stopped on. Compare that record's "
-            "declaration in the modelo's registry export layout against what the exporter writes "
-            "for this disposition; a record the writer omits must be declared optional, not "
-            "required. Do not read the payload by byte offset instead."
-        ),
     )
 
 
