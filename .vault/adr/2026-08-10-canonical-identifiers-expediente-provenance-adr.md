@@ -11,7 +11,7 @@ related:
   - "[[2026-08-07-canonical-identifiers-reference]]"
 ---
 
-# `canonical-identifiers` adr: `IVA compensation expediente provenance` | (**status:** `proposed`)
+# `canonical-identifiers` adr: `IVA compensation expediente provenance` | (**status:** `accepted`)
 
 ## Problem Statement
 
