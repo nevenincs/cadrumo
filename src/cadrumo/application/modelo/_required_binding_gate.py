@@ -33,8 +33,10 @@ from ...core.resources import resources
 from ...domain.calculations.registry import BindingId, ModeloRevision
 from ...domain.modelos import CalculationRevision, WorkUnit
 from ...domain.user_profile import ProfileNotFoundError, load_user_profile_schema
+from ..operator_actions import ConditionEvidenceProvenance
 from ..user_profile import UserProfileLifecycleRepository
 from ._action_errors import ModeloRequiredBindingsMissingError
+from ._preconditions import build_modelo_precondition_failure
 from ._profile_binding import profile_fact_index, resolve_profile_binding_value
 
 _CONSTANT_VALUE_SOURCE = "constant_value"
@@ -176,21 +178,41 @@ def _raise_required_bindings_missing(
     action: str,
 ) -> None:
     period = work_unit.period.registry_token
-    command = (
-        f"aeat app modelo bindings list --modelo {work_unit.modelo} "
-        f"--year {work_unit.filing_year} --period {period} --missing"
-    )
-    joined = ", ".join(missing_bindings)
+    subject_leaf_key = {
+        "calculate": "modelo.work.calculate",
+        "verify": "modelo.work.verify",
+        "file": "modelo.work.file",
+    }.get(action)
+    context = {
+        "modelo": str(work_unit.modelo),
+        "filing_year": work_unit.filing_year,
+        "period": period,
+        "missing_binding_count": len(missing_bindings),
+        "missing_bindings": missing_bindings,
+    }
+    if subject_leaf_key is None:
+        raise ModeloRequiredBindingsMissingError(context=context)
     raise ModeloRequiredBindingsMissingError(
-        f"Modelo {work_unit.modelo} {work_unit.filing_year} {period} cannot {action} because required "
-        f"calculation bindings are missing: {joined}. Run `{command}`, then supply the missing source data "
-        "or explicit binding values before calculating.",
-        context={
-            "modelo": str(work_unit.modelo),
-            "filing_year": work_unit.filing_year,
-            "period": period,
-            "missing_binding_count": len(missing_bindings),
-            "missing_bindings": missing_bindings,
-        },
-        suggestion=command,
+        context=context,
+        precondition_failure=build_modelo_precondition_failure(
+            subject_leaf_key=subject_leaf_key,
+            condition_id="modelo.work.required_bindings.resolved",
+            scenario_id=f"{subject_leaf_key}.required_bindings_missing",
+            evidence_id="modelo.work.required_bindings",
+            evidence_values={
+                "work_unit_id": work_unit.work_unit_id,
+                "modelo": str(work_unit.modelo),
+                "year": work_unit.filing_year,
+                "period": period,
+                "missing_binding_count": len(missing_bindings),
+                "missing_binding_ids": "|".join(str(binding_id) for binding_id in missing_bindings),
+            },
+            provenance=ConditionEvidenceProvenance.REGISTRY_RECORD,
+            action_id="operator.modelo.bindings.list",
+            action_argument_values={
+                "modelo": str(work_unit.modelo),
+                "year": work_unit.filing_year,
+                "period": period,
+            },
+        ),
     )

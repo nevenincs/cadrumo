@@ -47,7 +47,10 @@ from ..aggregation import (
     CalculationSourceResolution,
     storage_degradation_resolution,
 )
+from ..operator_actions import ConditionEvidenceProvenance
+from ._action_errors import ModeloPreconditionErrorMixin
 from ._decimal_parsing import decimal_from_string
+from ._preconditions import build_modelo_precondition_failure
 
 if TYPE_CHECKING:
     from ..live import Borrador100Snapshot, Borrador100SnapshotRepository
@@ -55,7 +58,7 @@ if TYPE_CHECKING:
 _STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 
 
-class Modelo100BorradorBindingError(ModeloError):
+class Modelo100BorradorBindingError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised when borrador values cannot be consumed for a calculation."""
 
 
@@ -141,7 +144,19 @@ def resolve_modelo_100_borrador_bindings(
         raise Modelo100BorradorBindingError(
             translated_message="application.modelo.borrador_binding.errors.snapshot_load_failed",
             context={"borrador_snapshot_id": command.borrador_snapshot_id},
-            suggestion=exc.suggestion or "aeat app live borrador 100 list",
+            precondition_failure=build_modelo_precondition_failure(
+                subject_leaf_key="modelo.work.calculate",
+                condition_id="modelo.work.calculate.borrador_snapshot.active",
+                scenario_id="modelo.work.calculate.borrador_snapshot.load_failed",
+                evidence_id="modelo.work.calculate.borrador_snapshot",
+                evidence_values={
+                    "borrador_snapshot_id": command.borrador_snapshot_id,
+                    "modelo": command.modelo,
+                    "year": command.filing_year,
+                    "period": command.period.registry_token,
+                },
+                provenance=ConditionEvidenceProvenance.PERSISTED_STATE,
+            ),
         ) from exc
     _assert_same_axis(
         bucket_id=command.bucket_id,
@@ -152,7 +167,20 @@ def resolve_modelo_100_borrador_bindings(
     if snapshot.state is not SnapshotLifecycleState.ACTIVE:
         raise Modelo100BorradorBindingError(
             translated_message="application.modelo.borrador_binding.errors.snapshot_not_active",
-            suggestion="aeat app live borrador 100 list",
+            precondition_failure=build_modelo_precondition_failure(
+                subject_leaf_key="modelo.work.calculate",
+                condition_id="modelo.work.calculate.borrador_snapshot.active",
+                scenario_id="modelo.work.calculate.borrador_snapshot.inactive",
+                evidence_id="modelo.work.calculate.borrador_snapshot",
+                evidence_values={
+                    "borrador_snapshot_id": command.borrador_snapshot_id,
+                    "modelo": command.modelo,
+                    "year": command.filing_year,
+                    "period": command.period.registry_token,
+                    "lifecycle_state": snapshot.state.value,
+                },
+                provenance=ConditionEvidenceProvenance.PERSISTED_STATE,
+            ),
         )
 
     eligible_bindings = _borrador_capable_bindings(registry_snapshot)

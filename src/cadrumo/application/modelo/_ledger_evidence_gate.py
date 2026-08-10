@@ -6,8 +6,10 @@ verification, export, or local filing lets deductible input IVA proceed.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from decimal import Decimal
 from enum import StrEnum
+from typing import cast
 
 from ...domain.iva import (
     EVIDENCE_EXEMPT_IVA_CATEGORIES,
@@ -24,6 +26,8 @@ from ...domain.transactions import (
     TransactionLifecycleState,
 )
 from ..aggregation import invoice_kind_for_direction
+from ..operator_actions import ConditionEvidenceProvenance
+from ._preconditions import build_modelo_precondition_failure
 
 _EVIDENCE_EXPECTING_BUSINESS_STATES: frozenset[BusinessClassification] = frozenset(
     {
@@ -147,30 +151,38 @@ def raise_if_deductible_vat_evidence_missing(
     revision: CalculationRevision,
     *,
     error_type: type[ModeloError],
-    surface: str,
-    suggestion: str,
 ) -> None:
-    """Raise ``error_type`` when a finalized revision has unsupported input IVA.
+    """Raise a typed file refusal when a finalized revision has unsupported input IVA.
 
     Args:
         revision: :class:`CalculationRevision` whose bundled ledger evidence is
             checked before the lifecycle finish line.
         error_type: Modelo error class raised when deductible IVA lacks evidence.
-        surface: Human-readable lifecycle surface used in the refusal message.
-        suggestion: Operator command or action hint attached to the refusal.
     """
     transaction_ids = deductible_vat_evidence_gap_transaction_ids(revision)
     if not transaction_ids:
         return
-    raise error_type(
-        f"deductible VAT rows require linked purchase invoice evidence before {surface}",
+    error_factory = cast(Callable[..., ModeloError], error_type)
+    raise error_factory(
         translated_message="application.modelo.errors.deductible_vat_evidence_missing",
         context={
             "calculation_revision_id": revision.calculation_revision_id,
             "transaction_ids": list(transaction_ids),
             "reason": "deductible_vat_evidence_missing",
         },
-        suggestion=suggestion,
+        precondition_failure=build_modelo_precondition_failure(
+            subject_leaf_key="modelo.work.file",
+            condition_id="modelo.work.file.deductible_vat_evidence.present",
+            scenario_id="modelo.work.file.deductible_vat_evidence.missing",
+            evidence_id="modelo.work.file.deductible_vat_evidence",
+            evidence_values={
+                "calculation_revision_id": revision.calculation_revision_id,
+                "work_unit_id": revision.work_unit_id,
+                "transaction_count": len(transaction_ids),
+                "transaction_ids": "|".join(transaction_ids),
+            },
+            provenance=ConditionEvidenceProvenance.PERSISTED_STATE,
+        ),
     )
 
 

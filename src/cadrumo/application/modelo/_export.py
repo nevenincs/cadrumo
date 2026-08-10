@@ -38,8 +38,6 @@ See Also:
 
 from __future__ import annotations
 
-from ...application.operator_actions import next_action
-
 from collections.abc import Iterable, Mapping, Sequence
 from datetime import date, datetime
 from pathlib import Path
@@ -114,16 +112,19 @@ from ..filing import (
 )
 from ..filing._export_parity import did_page_required
 from ..filing.runtime import RegistrySchemaAccessor
+from ..operator_actions import ConditionEvidenceProvenance
 from ._action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     ModeloChargeAccountMissingError,
+    ModeloPreconditionErrorMixin,
     ModeloPriorDomiciliationElectionRefusedError,
     ModeloRefundAccountMissingError,
     WorkUnitNotFoundError,
 )
 from ._iva_wallet_gate import require_persisted_iva_compensation_decision_matches_revision
-from ._ledger_evidence_gate import raise_if_deductible_vat_evidence_missing
+from ._ledger_evidence_gate import deductible_vat_evidence_gap_transaction_ids
+from ._preconditions import build_modelo_precondition_failure
 from ._prior_domiciliation import resolve_prior_domiciliation_election
 from ._profile_export_binding import compose_legal_full_name, resolve_profile_export_values
 from ._required_binding_gate import (
@@ -219,7 +220,7 @@ class ModeloExportNoActiveBucketError(ModeloError):
     """
 
 
-class ModeloExportEvidenceMissingError(ModeloExportError):
+class ModeloExportEvidenceMissingError(ModeloPreconditionErrorMixin, ModeloExportError):
     """Raised when a ledger-derived revision lacks exportable evidence."""
 
 
@@ -1363,23 +1364,35 @@ def export_modelo_revision(
 
     revision = _load_revision_for_export(command.calculation_revision_id, repo=cr_repo)
     _raise_if_ledger_export_evidence_missing(revision)
-    raise_if_deductible_vat_evidence_missing(
-        revision,
-        error_type=ModeloExportEvidenceMissingError,
-        surface="export",
+    deductible_gap_transaction_ids = deductible_vat_evidence_gap_transaction_ids(revision)
+    if deductible_gap_transaction_ids:
         # Defence in depth over a state verify no longer lets form: the deductible
         # evidence gap now BLOCKS the verified-complete transition, so a revision
         # cannot reach export carrying one. Reaching here means a revision finalized
         # before that gate existed, or a gap that appeared after it was frozen --
         # both recoverable by re-verifying, because a blocked verify captures no
-        # bundle and leaves the draft open. The suggestion no longer says "before
-        # calculate": that was true only while verify granted over the gap.
-        suggestion=(
-            "aeat app ledger evidence add PATH; "
-            "aeat app ledger attach TRANSACTION_ID --purchase-invoice-evidence-id EVIDENCE_ID; "
-            "aeat app modelo work verify"
-        ),
-    )
+        # bundle and leaves the draft open.
+        raise ModeloExportEvidenceMissingError(
+            translated_message="application.modelo.errors.deductible_vat_evidence_missing",
+            context={
+                "calculation_revision_id": revision.calculation_revision_id,
+                "transaction_ids": list(deductible_gap_transaction_ids),
+                "reason": "deductible_vat_evidence_missing",
+            },
+            precondition_failure=build_modelo_precondition_failure(
+                subject_leaf_key="modelo.export",
+                condition_id="modelo.export.deductible_vat_evidence.present",
+                scenario_id="modelo.export.deductible_vat_evidence.missing",
+                evidence_id="modelo.export.deductible_vat_evidence",
+                evidence_values={
+                    "calculation_revision_id": revision.calculation_revision_id,
+                    "work_unit_id": revision.work_unit_id,
+                    "transaction_count": len(deductible_gap_transaction_ids),
+                    "transaction_ids": "|".join(deductible_gap_transaction_ids),
+                },
+                provenance=ConditionEvidenceProvenance.PERSISTED_STATE,
+            ),
+        )
     work_unit = wu_repo.load().get(revision.work_unit_id)
     if work_unit is None:
         raise WorkUnitNotFoundError(

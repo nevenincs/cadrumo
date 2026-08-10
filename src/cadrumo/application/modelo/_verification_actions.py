@@ -46,7 +46,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
@@ -112,7 +112,8 @@ from ..aggregation import (
     compute_ledger_filing_snapshot,
     missing_evidence_advisory_observations,
 )
-from ..calculations import CalculationObservationRepository, CrossPeriodExpectedMemberSet
+from ..calculations import CalculationObservationRepository, CrossPeriodDependencyEvidence, CrossPeriodExpectedMemberSet
+from ..operator_actions import ConditionEvidenceProvenance
 from ..workflow import WorkflowEngine, WorkflowPurpose, WorkflowRunRepository
 from ._action_errors import (
     WORKFLOW_GATE_LEGAL_REFS,
@@ -142,6 +143,7 @@ from ._m210_convenio_lob_advisory import _m210_convenio_lob_advisory_finding
 from ._m303_m349_reconcile import m303_m349_intracom_reconcile_findings
 from ._m720_redeclaration_gate import modelo_720_redeclaration_findings
 from ._objective_estimation_advisory import _objective_estimation_exclusion_advisory_findings
+from ._preconditions import ModeloPreconditionFailure
 from ._pulled_filing_reconcile import pulled_filing_divergence_findings
 from ._registry_helpers import assert_revision_content_integrity as _assert_revision_content_integrity
 from ._registry_resources import authority_via_resources as _authority_via_resources
@@ -177,7 +179,11 @@ from ._verification_cross_period import (
 from ._verification_cross_period import (
     zero_value_previous_filing_binding_ids as _zero_value_previous_filing_binding_ids,
 )
-from ._verification_preconditions import ModeloVerificationResult, project_verification_findings
+from ._verification_preconditions import (
+    ModeloVerificationResult,
+    build_verification_precondition_failure,
+    project_verification_findings,
+)
 from ._workflow_gate import build_revision_workflow_engine as _build_revision_workflow_engine
 from ._workflow_gate import run_revision_workflow_gate as _run_revision_workflow_gate
 
@@ -450,14 +456,19 @@ def _collect_verification_gate_findings(
     transaction_repository: TransactionCatalogueRepository | None,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None,
     cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet],
-) -> tuple[list[ModeloVerificationFinding], list[CasillaId], list[CasillaId], frozenset[int]]:
-    registry_snapshot_finding_ids: set[int] = set()
-    findings, resolved_casilla_ids, missing_required_casilla_ids = _collect_revision_verification_findings(
-        work_unit=work_unit,
-        target=target,
-        profile=workflow_profile,
-        transaction_repository=transaction_repository,
-        registry_snapshot_finding_observer=lambda finding: registry_snapshot_finding_ids.add(id(finding)),
+) -> tuple[
+    list[ModeloVerificationFinding],
+    list[CasillaId],
+    list[CasillaId],
+    dict[int, ModeloPreconditionFailure],
+]:
+    findings, resolved_casilla_ids, missing_required_casilla_ids, failures_by_finding_id = (
+        _collect_revision_verification_findings(
+            work_unit=work_unit,
+            target=target,
+            profile=workflow_profile,
+            transaction_repository=transaction_repository,
+        )
     )
     incomplete_modality_finding = _modelo_202_incomplete_modality_finding(
         work_unit=work_unit,
@@ -465,6 +476,21 @@ def _collect_verification_gate_findings(
     )
     if incomplete_modality_finding is not None:
         findings.append(incomplete_modality_finding)
+        failures_by_finding_id[id(incomplete_modality_finding)] = build_verification_precondition_failure(
+            calculation_revision_id=target.calculation_revision_id,
+            work_unit_id=target.work_unit_id,
+            condition_id="modelo.work.verify.m202.modality.complete",
+            scenario_id="modelo.work.verify.m202.modality.incomplete",
+            evidence_id="modelo.work.verify.m202.modality",
+            evidence_values={
+                "modelo": str(work_unit.modelo),
+                "year": work_unit.filing_year,
+                "period": work_unit.period.registry_token,
+                "profile_fact_id": "taxpayer_type.incn_prior_12_months",
+                "modality_code": "incomplete",
+            },
+            provenance=ConditionEvidenceProvenance.DOMAIN_EVALUATION,
+        )
     iva_compensation_decision = None
     try:
         iva_compensation_decision = _require_iva_compensation_revision_match(
@@ -474,58 +500,130 @@ def _collect_verification_gate_findings(
         )
     except ModeloIvaWalletReconciliationBlocked as exc:
         findings.append(_iva_wallet_error_verification_finding(exc))
+    clean_state_verdict = _cross_period_clean_state_verdict_for_work_unit(
+        work_unit,
+        observation_repository=observation_repository,
+        filing_repository=filing_repository,
+        calculation_repository=calculation_repository,
+        verification_repository=verification_repository,
+        expected_member_sets=_cross_period_expected_member_sets_from_profile(
+            workflow_profile,
+            cross_period_expected_member_sets,
+        ),
+        taxpayer_tax_id=workflow_profile.tax_id,
+        activity_start_date=workflow_profile.activity_start_date,
+        modelo_202_modality=derive_modelo_202_modality(workflow_profile).modality,
+        taxpayer_files_economic_activity=derive_taxpayer_files_economic_activity(workflow_profile),
+        workflow_profile=workflow_profile,
+        zero_value_previous_filing_binding_ids=_zero_value_previous_filing_binding_ids(target),
+    )
+
+    def _observe_cross_period_finding(
+        finding: ModeloVerificationFinding,
+        evidence: CrossPeriodDependencyEvidence | None,
+    ) -> None:
+        if evidence is None:
+            failures_by_finding_id[id(finding)] = build_verification_precondition_failure(
+                calculation_revision_id=target.calculation_revision_id,
+                work_unit_id=target.work_unit_id,
+                condition_id="modelo.work.verify.activity_start_date.present",
+                scenario_id="modelo.work.verify.activity_start_date.missing_for_first_filer_adjudication",
+                evidence_id="modelo.work.verify.activity_start_date",
+                evidence_values={
+                    "modelo": str(work_unit.modelo),
+                    "dependency_count": len(clean_state_verdict.dependencies) if clean_state_verdict is not None else 0,
+                },
+                provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+            )
+            return
+        requirement = evidence.requirement
+        failures_by_finding_id[id(finding)] = build_verification_precondition_failure(
+            calculation_revision_id=target.calculation_revision_id,
+            work_unit_id=target.work_unit_id,
+            condition_id="modelo.work.verify.cross_period_dependency.clean",
+            scenario_id="modelo.work.verify.cross_period_dependency.unclean",
+            evidence_id="modelo.work.verify.cross_period_dependency",
+            evidence_values={
+                "source_modelo": requirement.source_modelo,
+                "year": requirement.filing_year,
+                "period": requirement.period.registry_token,
+                "origin_code": requirement.origin.value,
+                "origin_ids": "|".join(requirement.origin_ids),
+                "blocker_codes": "|".join(blocker.value for blocker in evidence.blockers),
+            },
+            provenance=ConditionEvidenceProvenance.DOMAIN_EVALUATION,
+        )
+
     findings.extend(
         _cross_period_clean_state_findings(
-            _cross_period_clean_state_verdict_for_work_unit(
-                work_unit,
-                observation_repository=observation_repository,
-                filing_repository=filing_repository,
-                calculation_repository=calculation_repository,
-                verification_repository=verification_repository,
-                expected_member_sets=_cross_period_expected_member_sets_from_profile(
-                    workflow_profile,
-                    cross_period_expected_member_sets,
-                ),
-                taxpayer_tax_id=workflow_profile.tax_id,
-                activity_start_date=workflow_profile.activity_start_date,
-                modelo_202_modality=derive_modelo_202_modality(workflow_profile).modality,
-                taxpayer_files_economic_activity=derive_taxpayer_files_economic_activity(workflow_profile),
-                workflow_profile=workflow_profile,
-                zero_value_previous_filing_binding_ids=_zero_value_previous_filing_binding_ids(target),
-            ),
+            clean_state_verdict,
             iva_compensation_decision=iva_compensation_decision,
             activity_start_date=workflow_profile.activity_start_date,
+            blocking_finding_observer=_observe_cross_period_finding,
         ),
     )
-    findings.extend(
-        _missing_evidence_findings(
-            target=target,
-            work_unit=work_unit,
-            transaction_repository=transaction_repository,
-        ),
+    missing_evidence_findings = _missing_evidence_findings(
+        target=target,
+        work_unit=work_unit,
+        transaction_repository=transaction_repository,
     )
+    findings.extend(missing_evidence_findings)
+    for finding in missing_evidence_findings:
+        if finding.severity is not ModeloVerificationFindingSeverity.BLOCKING:
+            continue
+        failures_by_finding_id[id(finding)] = build_verification_precondition_failure(
+            calculation_revision_id=target.calculation_revision_id,
+            work_unit_id=target.work_unit_id,
+            condition_id="modelo.work.verify.deductible_vat_evidence.present",
+            scenario_id="modelo.work.verify.deductible_vat_evidence.missing",
+            evidence_id="modelo.work.verify.deductible_vat_evidence",
+            evidence_values={"source_ref_count": len(finding.source_refs)},
+            provenance=ConditionEvidenceProvenance.DOMAIN_EVALUATION,
+        )
     # Beside the evidence gate and for the same reason: both refuse a draft whose
     # rows cannot support what it declares, and both block at verify so the later
     # export and filing refusals are unreachable rather than merely later.
-    findings.extend(
-        _cuota_less_without_base_findings(
-            target=target,
-            work_unit=work_unit,
-            transaction_repository=transaction_repository,
-        ),
+    cuota_less_findings = _cuota_less_without_base_findings(
+        target=target,
+        work_unit=work_unit,
+        transaction_repository=transaction_repository,
     )
+    findings.extend(cuota_less_findings)
+    for finding in cuota_less_findings:
+        failures_by_finding_id[id(finding)] = build_verification_precondition_failure(
+            calculation_revision_id=target.calculation_revision_id,
+            work_unit_id=target.work_unit_id,
+            condition_id="modelo.work.verify.ledger_row.taxable_base_present",
+            scenario_id="modelo.work.verify.ledger_row.cuota_less_base_missing",
+            evidence_id="modelo.work.verify.ledger_row",
+            evidence_values={"source_ref_count": len(finding.source_refs)},
+            provenance=ConditionEvidenceProvenance.DOMAIN_EVALUATION,
+        )
     # Runs beside the evidence gate, not inside it: that gate reads the live
     # ledger while the casilla values come from the stored draft, and this is
     # what refuses the case where those two views have drifted apart.
-    findings.extend(
-        ledger_drift_findings(
-            target=target,
-            work_unit=work_unit,
-            transaction_repository=transaction_repository,
-            source_refs=_optional_observation_refs(target.observations, "source_refs"),
-        ),
+    drift_findings = ledger_drift_findings(
+        target=target,
+        work_unit=work_unit,
+        transaction_repository=transaction_repository,
+        source_refs=_optional_observation_refs(target.observations, "source_refs"),
     )
-    return findings, resolved_casilla_ids, missing_required_casilla_ids, frozenset(registry_snapshot_finding_ids)
+    findings.extend(drift_findings)
+    for finding in drift_findings:
+        failures_by_finding_id[id(finding)] = build_verification_precondition_failure(
+            calculation_revision_id=target.calculation_revision_id,
+            work_unit_id=target.work_unit_id,
+            condition_id="modelo.work.verify.ledger_snapshot.current",
+            scenario_id="modelo.work.verify.ledger_snapshot.drift_detected",
+            evidence_id="modelo.work.verify.ledger_snapshot",
+            evidence_values={
+                "source_transaction_count": len(target.source_transaction_ids),
+                "snapshot_anchored": target.ledger_filing_snapshot is not None,
+                "source_ref_count": len(finding.source_refs),
+            },
+            provenance=ConditionEvidenceProvenance.PERSISTED_STATE,
+        )
+    return findings, resolved_casilla_ids, missing_required_casilla_ids, failures_by_finding_id
 
 
 def _existing_granting_verification_report(
@@ -581,6 +679,7 @@ def _build_verification_report(
 def _append_model_specific_findings(
     findings: list[ModeloVerificationFinding],
     *,
+    failures_by_finding_id: dict[int, ModeloPreconditionFailure],
     work_unit: WorkUnit,
     target: CalculationRevision,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
@@ -603,7 +702,21 @@ def _append_model_specific_findings(
             observation_repository=observation_repository,
         ),
     )
-    findings.extend(m210_agrupacion_renta_verification_findings(work_unit=work_unit, revision=target))
+    m210_agrupacion_findings = m210_agrupacion_renta_verification_findings(work_unit=work_unit, revision=target)
+    findings.extend(m210_agrupacion_findings)
+    for finding in m210_agrupacion_findings:
+        failures_by_finding_id[id(finding)] = build_verification_precondition_failure(
+            calculation_revision_id=target.calculation_revision_id,
+            work_unit_id=target.work_unit_id,
+            condition_id="modelo.work.verify.m210.agrupacion.valid",
+            scenario_id="modelo.work.verify.m210.agrupacion.invalid",
+            evidence_id="modelo.work.verify.m210.agrupacion",
+            evidence_values={
+                "detail_row_count": len(target.detail_rows),
+                "official_tipo_renta_present": target.m210_official_tipo_renta_code is not None,
+            },
+            provenance=ConditionEvidenceProvenance.PERSISTED_STATE,
+        )
     findings.extend(
         modelo_720_redeclaration_findings(
             work_unit=work_unit,
@@ -773,7 +886,7 @@ def verify_modelo_revision_with_preconditions(
                 report=existing,
                 finding_preconditions=project_verification_findings(
                     existing.findings,
-                    calculation_revision_id=calculation_revision_id,
+                    failures_by_finding_id={},
                 ),
             )
         raise CalculationRevisionStateError(
@@ -798,7 +911,7 @@ def verify_modelo_revision_with_preconditions(
         action="verify",
     )
 
-    findings, resolved_casilla_ids, missing_required_casilla_ids, registry_snapshot_finding_ids = (
+    findings, resolved_casilla_ids, missing_required_casilla_ids, failures_by_finding_id = (
         _collect_verification_gate_findings(
             work_unit=work_unit,
             target=target,
@@ -814,6 +927,7 @@ def verify_modelo_revision_with_preconditions(
     )
     _append_model_specific_findings(
         findings,
+        failures_by_finding_id=failures_by_finding_id,
         work_unit=work_unit,
         target=target,
         work_unit_repository=wu_repo,
@@ -896,8 +1010,7 @@ def verify_modelo_revision_with_preconditions(
         report=report,
         finding_preconditions=project_verification_findings(
             findings,
-            calculation_revision_id=calculation_revision_id,
-            registry_snapshot_finding_ids=registry_snapshot_finding_ids,
+            failures_by_finding_id=failures_by_finding_id,
         ),
     )
 
@@ -1227,8 +1340,12 @@ def _collect_revision_verification_findings(
     target: CalculationRevision,
     profile: TaxpayerProfile,
     transaction_repository: TransactionCatalogueRepository | None,
-    registry_snapshot_finding_observer: Callable[[ModeloVerificationFinding], None] | None = None,
-) -> tuple[list[ModeloVerificationFinding], list[CasillaId], list[CasillaId]]:
+) -> tuple[
+    list[ModeloVerificationFinding],
+    list[CasillaId],
+    list[CasillaId],
+    dict[int, ModeloPreconditionFailure],
+]:
     """Build the verification finding list for one calculation revision.
 
     Returns ``(findings, resolved_casilla_ids, missing_required_casilla_ids)``. A
@@ -1251,6 +1368,7 @@ def _collect_revision_verification_findings(
     findings: list[ModeloVerificationFinding] = []
     resolved_casilla_ids: list[CasillaId] = []
     missing_required_casilla_ids: list[CasillaId] = []
+    failures_by_finding_id: dict[int, ModeloPreconditionFailure] = {}
 
     from ...domain.calculations.registry import RegistrySnapshotError
 
@@ -1274,9 +1392,21 @@ def _collect_revision_verification_findings(
             legal_refs=WORKFLOW_GATE_LEGAL_REFS,
         )
         findings.append(finding)
-        if registry_snapshot_finding_observer is not None:
-            registry_snapshot_finding_observer(finding)
-        return findings, resolved_casilla_ids, missing_required_casilla_ids
+        failures_by_finding_id[id(finding)] = build_verification_precondition_failure(
+            calculation_revision_id=target.calculation_revision_id,
+            work_unit_id=target.work_unit_id,
+            condition_id="modelo.work.verify.registry_snapshot.available",
+            scenario_id="modelo.work.verify.registry_snapshot.unavailable",
+            evidence_id="modelo.work.verify.registry_snapshot",
+            evidence_values={
+                "modelo": str(work_unit.modelo),
+                "year": work_unit.filing_year,
+                "period": work_unit.period.registry_token,
+            },
+            provenance=ConditionEvidenceProvenance.REGISTRY_RECORD,
+            action_id="operator.registry.verify",
+        )
+        return findings, resolved_casilla_ids, missing_required_casilla_ids, failures_by_finding_id
 
     revision_keys = set(target.input_values_by_casilla_id)
     for casilla in snapshot.revision.casillas:
@@ -1293,11 +1423,24 @@ def _collect_revision_verification_findings(
                 resolved_casilla_ids.append(casilla_id)
             else:
                 missing_required_casilla_ids.append(casilla_id)
-                findings.append(
-                    _missing_required_casilla_finding(
-                        casilla_id,
-                        casilla_def=casilla,
-                    ),
+                finding = _missing_required_casilla_finding(
+                    casilla_id,
+                    casilla_def=casilla,
+                )
+                findings.append(finding)
+                failures_by_finding_id[id(finding)] = build_verification_precondition_failure(
+                    calculation_revision_id=target.calculation_revision_id,
+                    work_unit_id=target.work_unit_id,
+                    condition_id="modelo.work.verify.required_casillas.complete",
+                    scenario_id="modelo.work.verify.required_casillas.missing",
+                    evidence_id="modelo.work.verify.required_casillas",
+                    evidence_values={
+                        "modelo": str(work_unit.modelo),
+                        "year": work_unit.filing_year,
+                        "period": work_unit.period.registry_token,
+                        "casilla_id": str(casilla_id),
+                    },
+                    provenance=ConditionEvidenceProvenance.REGISTRY_RECORD,
                 )
 
     oss_source_finding = _m369_unresolved_oss_source_finding(
@@ -1307,6 +1450,29 @@ def _collect_revision_verification_findings(
     )
     if oss_source_finding is not None:
         findings.append(oss_source_finding)
+        unrouted_issue_count = sum(
+            1
+            for issue in target.source_issues
+            if issue.binding_source is _OSS_AGGREGATION_SOURCE and issue.reason == "unrouted_observation"
+        )
+        is_unrouted = unrouted_issue_count > 0
+        failures_by_finding_id[id(oss_source_finding)] = build_verification_precondition_failure(
+            calculation_revision_id=target.calculation_revision_id,
+            work_unit_id=target.work_unit_id,
+            condition_id=(
+                "modelo.work.verify.oss_source.routed" if is_unrouted else "modelo.work.verify.oss_evidence.present"
+            ),
+            scenario_id=(
+                "modelo.work.verify.oss_source.unrouted" if is_unrouted else "modelo.work.verify.oss_evidence.missing"
+            ),
+            evidence_id=("modelo.work.verify.oss_source" if is_unrouted else "modelo.work.verify.oss_evidence"),
+            evidence_values={
+                "modelo": str(work_unit.modelo),
+                "unrouted_issue_count": unrouted_issue_count,
+                "source_ref_count": len(oss_source_finding.source_refs),
+            },
+            provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+        )
 
     predicate_profile = _profile_with_art109_period_evidence(
         work_unit=work_unit,
@@ -1326,6 +1492,18 @@ def _collect_revision_verification_findings(
             target.casilla_values,
             predicate_profile,
             target.input_values_by_casilla_id,
+            blocking_finding_observer=lambda finding, predicate: failures_by_finding_id.__setitem__(
+                id(finding),
+                build_verification_precondition_failure(
+                    calculation_revision_id=target.calculation_revision_id,
+                    work_unit_id=target.work_unit_id,
+                    condition_id="modelo.work.verify.registry_predicate.satisfied",
+                    scenario_id="modelo.work.verify.registry_predicate.failed",
+                    evidence_id="modelo.work.verify.registry_predicate",
+                    evidence_values={"predicate_id": predicate.predicate_id},
+                    provenance=ConditionEvidenceProvenance.REGISTRY_RECORD,
+                ),
+            ),
         ),
     )
 
@@ -1342,6 +1520,22 @@ def _collect_revision_verification_findings(
             snapshot=snapshot,
             year=work_unit.filing_year,
             tipo_renta="",
+            blocking_finding_observer=lambda finding, outcome: failures_by_finding_id.__setitem__(
+                id(finding),
+                build_verification_precondition_failure(
+                    calculation_revision_id=target.calculation_revision_id,
+                    work_unit_id=target.work_unit_id,
+                    condition_id="modelo.work.verify.m210.rate.resolved",
+                    scenario_id="modelo.work.verify.m210.rate.unresolved",
+                    evidence_id="modelo.work.verify.m210.rate",
+                    evidence_values={
+                        "reason_code": outcome.reason.value,
+                        "tipo_renta": outcome.context.get("tipo_renta", ""),
+                        "year": work_unit.filing_year,
+                    },
+                    provenance=ConditionEvidenceProvenance.DOMAIN_EVALUATION,
+                ),
+            ),
         ),
     )
 
@@ -1353,7 +1547,7 @@ def _collect_revision_verification_findings(
         snapshot=snapshot,
     )
 
-    return findings, resolved_casilla_ids, missing_required_casilla_ids
+    return findings, resolved_casilla_ids, missing_required_casilla_ids, failures_by_finding_id
 
 
 def _profile_with_art109_period_evidence(

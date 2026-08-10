@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import decimal as _decimal
 import re as _re
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from datetime import date
 from decimal import Decimal
 
@@ -307,6 +307,11 @@ def _cross_period_clean_state_findings(
     *,
     iva_compensation_decision: object | None = None,
     activity_start_date: date | None = None,
+    blocking_finding_observer: Callable[
+        [ModeloVerificationFinding, CrossPeriodDependencyEvidence | None],
+        None,
+    ]
+    | None = None,
 ) -> tuple[ModeloVerificationFinding, ...]:
     """Return verification findings for a cross-period clean-state verdict.
 
@@ -342,20 +347,21 @@ def _cross_period_clean_state_findings(
                 requirement_period = requirement.period.registry_token
                 blocker_text = _summarize_cross_period_ids(tuple(blocker.value for blocker in evidence.blockers))
                 origin_text = _summarize_cross_period_ids(requirement.origin_ids)
-                findings.append(
-                    ModeloVerificationFinding(
-                        kind=ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN,
-                        severity=ModeloVerificationFindingSeverity.BLOCKING,
-                        message=(
-                            "cross-period dependency is not clean: "
-                            f"modelo={requirement.source_modelo} year={requirement.filing_year} "
-                            f"period={requirement_period} origin={requirement.origin.value} "
-                            f"origin_ids={origin_text} blockers={blocker_text}"
-                        ),
-                        legal_refs=_cross_period_requirement_legal_refs(requirement),
-                        source_refs=_cross_period_requirement_source_refs(requirement),
+                finding = ModeloVerificationFinding(
+                    kind=ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN,
+                    severity=ModeloVerificationFindingSeverity.BLOCKING,
+                    message=(
+                        "cross-period dependency is not clean: "
+                        f"modelo={requirement.source_modelo} year={requirement.filing_year} "
+                        f"period={requirement_period} origin={requirement.origin.value} "
+                        f"origin_ids={origin_text} blockers={blocker_text}"
                     ),
+                    legal_refs=_cross_period_requirement_legal_refs(requirement),
+                    source_refs=_cross_period_requirement_source_refs(requirement),
                 )
+                findings.append(finding)
+                if blocking_finding_observer is not None:
+                    blocking_finding_observer(finding, evidence)
         if evidence.operator_declared_suppression_advisory:
             findings.append(_cross_period_operator_declared_suppression_advisory_finding(verdict, evidence))
         if evidence.non_official_local_chain_advisory:
@@ -367,7 +373,10 @@ def _cross_period_clean_state_findings(
         if evidence.m111_no_retenciones_no_obligation_advisory:
             findings.append(_cross_period_m111_no_retenciones_advisory_finding(verdict, evidence))
     if activity_start_date is None and has_first_filer_candidate_block:
-        findings.append(_cross_period_missing_activity_start_finding(verdict))
+        missing_activity_start_finding = _cross_period_missing_activity_start_finding(verdict)
+        findings.append(missing_activity_start_finding)
+        if blocking_finding_observer is not None:
+            blocking_finding_observer(missing_activity_start_finding, None)
     if verdict.has_modelo_not_applicable_advisory:
         findings.append(_cross_period_modelo_not_applicable_advisory_finding(verdict))
     return tuple(findings)

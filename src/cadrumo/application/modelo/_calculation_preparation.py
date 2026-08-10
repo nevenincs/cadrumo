@@ -36,6 +36,7 @@ from ...domain.modelos import (
 from ...domain.period import calculation_filing_date
 from ...domain.transactions import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ..calculations import IvaWalletDecisionRepository
+from ..operator_actions import ConditionEvidenceProvenance
 from ._action_errors import ModeloAggregationBindingError
 from ._calculation_helpers import load_work_unit_for_calculation as _load_work_unit_for_calculation
 from ._calculation_helpers import resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit
@@ -46,6 +47,7 @@ from ._iva_wallet_gate import (
     resolve_iva_compensation_decision_for_calculation,
     taxpayer_nif_for_bucket,
 )
+from ._preconditions import build_modelo_precondition_failure
 from ._registry_helpers import validate_casilla_input_ids as _validate_casilla_input_ids
 from ._required_binding_gate import (
     require_modelo_required_bindings_resolved as _require_modelo_required_bindings_resolved,
@@ -195,7 +197,7 @@ def prepare_calculation(
             unresolved_relation_ids=unresolved_relation_ids,
             unresolved_binding_ids=unresolved_binding_ids,
         ),
-        action="calculate or save a draft",
+        action="calculate",
     )
     return PreparedCalculation(
         work_units=work_units,
@@ -338,8 +340,20 @@ def _raise_if_ledger_preflight_blocks_calculation(
             "detail": first_issue.detail,
             "period": str(report.period),
         },
-        suggestion=(
-            f"aeat app ledger preflight --period {report.period.registry_token} --year {report.period.filing_year}"
+        precondition_failure=build_modelo_precondition_failure(
+            subject_leaf_key="modelo.work.calculate",
+            condition_id="modelo.work.calculate.ledger_preflight.ready",
+            scenario_id="modelo.work.calculate.ledger_preflight.blocked",
+            evidence_id="modelo.work.calculate.ledger_preflight",
+            evidence_values={
+                "work_unit_id": work_unit.work_unit_id,
+                "modelo": str(work_unit.modelo),
+                "year": report.period.filing_year,
+                "period": report.period.registry_token,
+                "transaction_id": first_issue.transaction_id,
+                "reason_code": first_issue.reason.value,
+            },
+            provenance=ConditionEvidenceProvenance.DOMAIN_EVALUATION,
         ),
     )
 
@@ -398,9 +412,20 @@ def _raise_if_m200_ledger_requires_accounting_result_input(
             "ledger_transaction_count": ledger_transaction_count,
             "required_casilla_id": _M200_ACCOUNTING_RESULT_CASILLA,
         },
-        suggestion=(
-            f"aeat app modelo work calculate {work_unit.work_unit_id} "
-            f"--casilla {_M200_ACCOUNTING_RESULT_CASILLA}=<resultado-contable>"
+        precondition_failure=build_modelo_precondition_failure(
+            subject_leaf_key="modelo.work.calculate",
+            condition_id="modelo.work.calculate.m200.accounting_result.present",
+            scenario_id="modelo.work.calculate.m200.accounting_result.ledger_rows_without_accounting_result",
+            evidence_id="modelo.work.calculate.m200.accounting_result",
+            evidence_values={
+                "work_unit_id": work_unit.work_unit_id,
+                "modelo": str(work_unit.modelo),
+                "year": work_unit.filing_year,
+                "period": work_unit.period.registry_token,
+                "ledger_transaction_count": ledger_transaction_count,
+                "required_casilla_id": _M200_ACCOUNTING_RESULT_CASILLA,
+            },
+            provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
         ),
     )
 

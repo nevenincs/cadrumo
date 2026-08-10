@@ -229,7 +229,12 @@ def test_modelo_349_refuses_intracom_ledger_rows_without_operator_rows(
     sample_transaction_ids = exc_info.value.context["sample_transaction_ids"]
     assert isinstance(sample_transaction_ids, tuple)
     assert intracom_sale.transaction_id in sample_transaction_ids
-    assert exc_info.value.suggestion == "aeat app ledger invoice add --help"
+    failure = exc_info.value.precondition_failure
+    assert failure is not None
+    assert failure.scenario_id == (
+        "modelo.work.calculate.m349.operator_rows.intracom_ledger_without_operator_rows"
+    )
+    assert failure.verdict.no_recovery_outcome is not None
     assert cr_repo.load().revisions == {}
 
 

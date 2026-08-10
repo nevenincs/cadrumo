@@ -694,7 +694,9 @@ def test_borrador_resolution_rejects_missing_snapshot_with_live_list_pointer(
 
     assert exc_info.value.translated_message == "application.modelo.borrador_binding.errors.snapshot_load_failed"
     assert exc_info.value.context == {"borrador_snapshot_id": "missing-snapshot"}
-    assert exc_info.value.suggestion == "aeat app live borrador 100 list"
+    failure = exc_info.value.precondition_failure
+    assert failure is not None
+    assert failure.scenario_id == "modelo.work.calculate.borrador_snapshot.load_failed"
 
 
 def test_borrador_resolution_rejects_non_modelo_100_consumers(
@@ -753,7 +755,9 @@ def test_borrador_resolution_rejects_superseded_snapshot_with_list_pointer(
             snapshot_repository=snapshot_repository,
         )
 
-    assert exc_info.value.suggestion == "aeat app live borrador 100 list"
+    failure = exc_info.value.precondition_failure
+    assert failure is not None
+    assert failure.scenario_id == "modelo.work.calculate.borrador_snapshot.inactive"
 
 
 def test_borrador_resolution_rejects_discarded_snapshot_with_list_pointer(
@@ -773,7 +777,9 @@ def test_borrador_resolution_rejects_discarded_snapshot_with_list_pointer(
             snapshot_repository=snapshot_repository,
         )
 
-    assert exc_info.value.suggestion == "aeat app live borrador 100 list"
+    failure = exc_info.value.precondition_failure
+    assert failure is not None
+    assert failure.scenario_id == "modelo.work.calculate.borrador_snapshot.inactive"
 
 
 def test_borrador_resolution_rejects_bucket_or_axis_mismatch(

@@ -29,10 +29,14 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping
+from typing import cast
+
 from ...core.errors import CoreNotFoundError
 from ...domain.modelos import ModeloError
 from ..operator_actions import PreconditionVerdict
 from ..workflow import WorkflowResult
+from ._preconditions import ModeloPreconditionFailure
 
 WORKFLOW_GATE_LEGAL_REFS: tuple[str, ...] = (
     "ley-58-2003:art-119",
@@ -64,7 +68,34 @@ class CalculationRevisionNotFoundError(ModeloError, CoreNotFoundError):
     """Raised when a calculation revision lookup fails."""
 
 
-class CalculationRevisionStateError(ModeloError):
+class ModeloPreconditionErrorMixin:
+    """Attach one locale-neutral application decision to a registered error."""
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: Mapping[str, object] | None = None,
+        suggestion: str | None = None,
+        translated_message: str | None = None,
+        precondition_failure: ModeloPreconditionFailure | None = None,
+    ) -> None:
+        parent_init = cast(Callable[..., None], super().__init__)
+        parent_init(
+            message,
+            context=context,
+            suggestion=suggestion,
+            translated_message=translated_message,
+        )
+        self._precondition_failure = precondition_failure
+
+    @property
+    def precondition_failure(self) -> ModeloPreconditionFailure | None:
+        """Return the failed-precondition carrier for a later transport."""
+        return self._precondition_failure
+
+
+class CalculationRevisionStateError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised when a state transition is requested from an incompatible source state."""
 
 
@@ -129,7 +160,7 @@ class ModeloLocalObservationError(ModeloError):
     """Raised when an operator-supplied local observation cannot be persisted."""
 
 
-class ModeloCrossPeriodCleanStateError(ModeloError):
+class ModeloCrossPeriodCleanStateError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised when a filing-grade workflow lacks clean prior-filing proof."""
 
 
@@ -192,11 +223,11 @@ class CalculationRegistryUnavailableError(ModeloError):
     """Raised when the registry snapshot for a work unit cannot be resolved."""
 
 
-class ModeloAggregationBindingError(ModeloError):
+class ModeloAggregationBindingError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised when bucket-derived aggregation bindings conflict with caller input."""
 
 
-class ModeloRequiredBindingsMissingError(ModeloError):
+class ModeloRequiredBindingsMissingError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised when Modelo 202 lifecycle work lacks required calculation bindings."""
 
 

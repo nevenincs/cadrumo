@@ -1,14 +1,9 @@
-"""Typed recovery outcomes for blocking verification findings.
-
-The persisted :class:`~cadrumo.domain.modelos.ModeloVerificationFinding` is an
-audit fact.  This module derives the application-owned precondition record
-that a later transport can resolve against the live operator action catalogue;
-it deliberately never writes command prose back into the domain report.
-"""
+"""Typed, locale-neutral precondition projections for modelo verification."""
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
+from decimal import Decimal
 
 from pydantic import BaseModel, model_validator
 
@@ -18,46 +13,30 @@ from ...domain.modelos import (
     ModeloVerificationFindingSeverity,
     VerificationReport,
 )
-from ..operator_actions import (
-    ActionConditionality,
-    ActionReference,
-    ConditionEvidence,
-    ConditionEvidenceProvenance,
-    NoRecoveryOutcome,
-    PreconditionVerdict,
-)
+from ..operator_actions import ConditionEvidenceProvenance
+from ._preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure
 
 
 class VerificationFindingPreconditionProjection(BaseModel):
-    """One application projection of a persisted verification finding.
-
-    Warnings remain report-visible facts but are not failed preconditions, so
-    they cannot acquire a recovery slot.  A blocking finding must instead
-    carry one strict verdict with either an action reference or an explicit
-    no-recovery outcome.
-    """
+    """Pair one report fact with its exact application precondition identity."""
 
     model_config = STRICT_FROZEN_CONFIG
 
     finding: ModeloVerificationFinding
-    precondition_verdict: PreconditionVerdict | None = None
+    precondition_failure: ModeloPreconditionFailure | None = None
 
     @model_validator(mode="after")
-    def _require_a_verdict_only_for_blocking_findings(self) -> VerificationFindingPreconditionProjection:
-        """Keep report severity and application recovery semantics aligned."""
+    def _require_a_failure_only_for_blocking_findings(self) -> VerificationFindingPreconditionProjection:
         is_blocking = self.finding.severity is ModeloVerificationFindingSeverity.BLOCKING
-        if is_blocking != (self.precondition_verdict is not None):
-            raise ValueError("only blocking verification findings require a precondition verdict")
+        if not is_blocking and self.precondition_failure is not None:
+            raise ValueError("warning verification findings cannot carry a precondition failure")
+        if self.precondition_failure is not None and self.precondition_failure.subject_leaf_key != "modelo.work.verify":
+            raise ValueError("verification finding preconditions must identify the verify leaf")
         return self
 
 
 class ModeloVerificationResult(BaseModel):
-    """Application verification output with domain facts and recovery verdicts.
-
-    The report remains the sole persisted audit artifact.  This transient
-    application result pairs each report finding with the verdict the CLI can
-    resolve, so a transport never has to derive an action from finding prose.
-    """
+    """Persisted report facts paired with transient application decisions."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -66,139 +45,65 @@ class ModeloVerificationResult(BaseModel):
 
     @model_validator(mode="after")
     def _require_exact_report_finding_projection(self) -> ModeloVerificationResult:
-        """Require one ordered projection for every report finding."""
         if tuple(projection.finding for projection in self.finding_preconditions) != self.report.findings:
             raise ValueError("verification preconditions must project the report findings in order")
         return self
 
 
-def project_verification_finding_no_recovery(
-    finding: ModeloVerificationFinding,
+def build_verification_precondition_failure(
     *,
     calculation_revision_id: str,
-    outcome: NoRecoveryOutcome = NoRecoveryOutcome.OPERATOR_DECISION,
-) -> VerificationFindingPreconditionProjection:
-    """Project a finding whose remedy requires an operator decision.
-
-    Multiple materially different remedies (for example correcting a ledger
-    row *or* reclassifying it) must not be collapsed into a counterfeit
-    command.  The explicit closed outcome preserves that fact without
-    presenting a non-executable recovery action.
-    """
-    return _project_finding(
-        finding,
-        calculation_revision_id=calculation_revision_id,
-        condition_id=f"modelo.verification.{finding.kind.value}",
-        evidence_id="modelo.verification.finding",
-        no_recovery_outcome=outcome,
-    )
-
-
-def project_registry_snapshot_unresolved_finding(
-    finding: ModeloVerificationFinding,
-    *,
-    calculation_revision_id: str,
-) -> VerificationFindingPreconditionProjection:
-    """Project the one verified registry-snapshot failure to ``registry verify``.
-
-    Registry validation is the single honest zero-argument recovery for this
-    application-owned availability condition.  Callers use this narrow entry
-    point only for the snapshot-resolution branch, never by inferring it from
-    arbitrary finding prose or a shared finding kind.
-    """
-    return _project_finding(
-        finding,
-        calculation_revision_id=calculation_revision_id,
-        condition_id="modelo.verification.registry_snapshot.available",
-        evidence_id="modelo.verification.registry_snapshot",
-        action_id="operator.registry.verify",
+    work_unit_id: str,
+    condition_id: str,
+    scenario_id: str,
+    evidence_id: str,
+    evidence_values: Mapping[str, str | int | bool | Decimal],
+    provenance: ConditionEvidenceProvenance,
+    action_id: str | None = None,
+) -> ModeloPreconditionFailure:
+    """Build one verify failure with the common persisted addressing facts."""
+    return build_modelo_precondition_failure(
+        subject_leaf_key="modelo.work.verify",
+        condition_id=condition_id,
+        scenario_id=scenario_id,
+        evidence_id=evidence_id,
+        evidence_values={
+            "calculation_revision_id": calculation_revision_id,
+            "work_unit_id": work_unit_id,
+            **evidence_values,
+        },
+        provenance=provenance,
+        action_id=action_id,
+        action_argument_values={} if action_id is not None else None,
     )
 
 
 def project_verification_findings(
     findings: Iterable[ModeloVerificationFinding],
     *,
-    calculation_revision_id: str,
-    registry_snapshot_finding_ids: frozenset[int] = frozenset(),
+    failures_by_finding_id: Mapping[int, ModeloPreconditionFailure],
 ) -> tuple[VerificationFindingPreconditionProjection, ...]:
-    """Project one in-flight verification finding sequence without prose inference.
-
-    The verifier marks the exact object constructed by its registry-snapshot
-    failure branch.  Every other blocking fact has no invented recovery;
-    warnings receive no verdict.  An unmatched marker is a programming error,
-    rather than permission to fall back to a finding kind or rendered message.
-    """
-    matched_registry_snapshot_ids: set[int] = set()
+    """Project findings by constructor identity; never classify from rendered text."""
+    matched_ids: set[int] = set()
     projections: list[VerificationFindingPreconditionProjection] = []
     for finding in findings:
-        if id(finding) in registry_snapshot_finding_ids:
-            matched_registry_snapshot_ids.add(id(finding))
-            projections.append(
-                project_registry_snapshot_unresolved_finding(
-                    finding,
-                    calculation_revision_id=calculation_revision_id,
-                ),
-            )
-            continue
+        failure = failures_by_finding_id.get(id(finding))
+        if failure is not None:
+            matched_ids.add(id(finding))
         projections.append(
-            project_verification_finding_no_recovery(
-                finding,
-                calculation_revision_id=calculation_revision_id,
+            VerificationFindingPreconditionProjection(
+                finding=finding,
+                precondition_failure=failure,
             ),
         )
-    if frozenset(matched_registry_snapshot_ids) != registry_snapshot_finding_ids:
-        raise ValueError("registry snapshot recovery marker must match an in-flight verification finding")
+    if matched_ids != set(failures_by_finding_id):
+        raise ValueError("verification precondition identity must match an in-flight finding")
     return tuple(projections)
-
-
-def _project_finding(
-    finding: ModeloVerificationFinding,
-    *,
-    calculation_revision_id: str,
-    condition_id: str,
-    evidence_id: str,
-    action_id: str | None = None,
-    no_recovery_outcome: NoRecoveryOutcome | None = None,
-) -> VerificationFindingPreconditionProjection:
-    """Build the closed carrier while keeping the domain finding transport-free."""
-    if finding.severity is ModeloVerificationFindingSeverity.WARNING:
-        return VerificationFindingPreconditionProjection(finding=finding)
-    if (action_id is None) == (no_recovery_outcome is None):
-        raise ValueError("blocking finding projection requires exactly one action or no-recovery outcome")
-
-    evidence = (
-        ConditionEvidence(
-            condition_id=condition_id,
-            evidence_id=evidence_id,
-            provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
-            values={
-                "calculation_revision_id": calculation_revision_id,
-                "finding_kind": finding.kind.value,
-                "is_blocking": True,
-            },
-        ),
-    )
-    verdict = PreconditionVerdict(
-        failed_condition_id=condition_id,
-        evidence=evidence,
-        action=ActionReference(action_id=action_id) if action_id is not None else None,
-        conditionality=(
-            ActionConditionality.IMMEDIATE
-            if action_id is not None
-            else ActionConditionality.NOT_APPLICABLE
-        ),
-        no_recovery_outcome=no_recovery_outcome,
-    )
-    return VerificationFindingPreconditionProjection(
-        finding=finding,
-        precondition_verdict=verdict,
-    )
 
 
 __all__ = [
     "ModeloVerificationResult",
     "VerificationFindingPreconditionProjection",
-    "project_registry_snapshot_unresolved_finding",
-    "project_verification_finding_no_recovery",
+    "build_verification_precondition_failure",
     "project_verification_findings",
 ]

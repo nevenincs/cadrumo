@@ -83,6 +83,7 @@ from ...domain.modelos import (
     upsert_calculation_revision,
 )
 from ..calculations import cross_period_dependency_requirements as _cross_period_dependency_requirements
+from ..operator_actions import ConditionEvidenceProvenance
 from ._action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
@@ -141,6 +142,7 @@ from ._m349_ledger_guard import (
     raise_if_m349_intracom_ledger_rows_need_operator_rows as _raise_if_m349_intracom_ledger_rows_need_operator_rows,
 )
 from ._operator_override_advisory import collect_operator_override_divergence_diagnostics
+from ._preconditions import build_modelo_precondition_failure
 from ._registry_helpers import validate_casilla_input_ids as _validate_casilla_input_ids
 from ._revision_persistence import persist_calculation_revision
 from ._transaction_catalogue_cache import MemoizedTransactionCatalogueRepository
@@ -1388,16 +1390,20 @@ def _reject_caller_overrides_of_source_bindings(
         set(caller_binding_values).intersection(_source_owned_binding_ids(revision, owned_sources)),
     )
     if rejected_bindings:
-        # For the IVA compensation binding the operator should use the seed verb, not
-        # a manual override, to set the prior carry-forward balance.
-        seed_suggestion = (
-            "aeat app modelo iva-wallet seed"
-            if any("compensacion-pendiente-anteriores" in b for b in rejected_bindings)
-            else None
-        )
         raise ModeloAggregationBindingError(
             translated_message="errors.error.error_modelo_aggregation_binding",
-            suggestion=seed_suggestion,
+            context={"rejected_binding_ids": rejected_bindings},
+            precondition_failure=build_modelo_precondition_failure(
+                subject_leaf_key="modelo.work.calculate",
+                condition_id="modelo.work.calculate.source_inputs.unowned",
+                scenario_id="modelo.work.calculate.source_inputs.binding_override_rejected",
+                evidence_id="modelo.work.calculate.source_inputs",
+                evidence_values={
+                    "rejected_binding_count": len(rejected_bindings),
+                    "rejected_binding_ids": "|".join(rejected_bindings),
+                },
+                provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+            ),
         )
     rejected_casillas = sorted(
         set(caller_casilla_inputs).intersection(_source_owned_bound_casilla_ids(revision, owned_sources)),
@@ -1406,6 +1412,17 @@ def _reject_caller_overrides_of_source_bindings(
         raise ModeloAggregationBindingError(
             translated_message="application.modelo.errors.caller_casilla_source_binding_conflict",
             context={"casillas": rejected_casillas},
+            precondition_failure=build_modelo_precondition_failure(
+                subject_leaf_key="modelo.work.calculate",
+                condition_id="modelo.work.calculate.source_inputs.unowned",
+                scenario_id="modelo.work.calculate.source_inputs.casilla_override_rejected",
+                evidence_id="modelo.work.calculate.source_inputs",
+                evidence_values={
+                    "rejected_casilla_count": len(rejected_casillas),
+                    "rejected_casilla_ids": "|".join(rejected_casillas),
+                },
+                provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+            ),
         )
 
 
@@ -1575,5 +1592,18 @@ def _refuse_direct_cross_period_verification(
                 "filing_year": str(work_unit.filing_year),
                 "period": work_unit.period.registry_token,
             },
-            suggestion="aeat app modelo work verify",
+            precondition_failure=build_modelo_precondition_failure(
+                subject_leaf_key="modelo.work.verify",
+                condition_id="modelo.work.verify.lifecycle_path.required",
+                scenario_id="modelo.work.verify.lifecycle_path.direct_cross_period_promotion_refused",
+                evidence_id="modelo.work.verify.lifecycle_path",
+                evidence_values={
+                    "calculation_revision_id": revision.calculation_revision_id,
+                    "work_unit_id": revision.work_unit_id,
+                    "modelo": str(work_unit.modelo),
+                    "year": work_unit.filing_year,
+                    "period": work_unit.period.registry_token,
+                },
+                provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+            ),
         )

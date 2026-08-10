@@ -309,7 +309,7 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(tmp_path: Path) 
         )
         workflow_profile = _workflow_profile(Decimal("500000"))
 
-        with pytest.raises(ModeloRequiredBindingsMissingError, match=_M202_INCN_BINDING):
+        with pytest.raises(ModeloRequiredBindingsMissingError) as verify_error:
             verify_modelo_revision(
                 draft.calculation_revision_id,
                 actor="operator-test",
@@ -320,6 +320,10 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(tmp_path: Path) 
                 verification_repository=verification_repo,
                 clock=_CLOCK,
             )
+        verify_failure = verify_error.value.precondition_failure
+        assert verify_failure is not None
+        assert verify_failure.scenario_id == "modelo.work.verify.required_bindings_missing"
+        assert _M202_INCN_BINDING in verify_error.value.context["missing_bindings"]
         stored = calc_repo.load().get(draft.calculation_revision_id)
         assert stored is not None
         assert stored.state is CalculationRevisionState.BORRADOR
@@ -329,7 +333,7 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(tmp_path: Path) 
             calculation_repository=calc_repo,
             state=CalculationRevisionState.VERIFICADO_COMPLETO,
         )
-        with pytest.raises(ModeloRequiredBindingsMissingError, match=_M202_PRIOR_PAYMENTS_BINDING):
+        with pytest.raises(ModeloRequiredBindingsMissingError) as file_error:
             file_modelo_revision(
                 verified.calculation_revision_id,
                 actor="operator-test",
@@ -340,8 +344,12 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(tmp_path: Path) 
                 verification_repository=verification_repo,
                 clock=_CLOCK,
             )
+        file_failure = file_error.value.precondition_failure
+        assert file_failure is not None
+        assert file_failure.scenario_id == "modelo.work.file.required_bindings_missing"
+        assert _M202_PRIOR_PAYMENTS_BINDING in file_error.value.context["missing_bindings"]
         export_path = tmp_path / "modelo-202-2026-1P.txt"
-        with pytest.raises(ModeloRequiredBindingsMissingError, match=_M202_RELATION_BINDING):
+        with pytest.raises(ModeloRequiredBindingsMissingError) as export_error:
             export_modelo_revision(
                 ModeloExportCommand(
                     calculation_revision_id=verified.calculation_revision_id,
@@ -355,6 +363,8 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(tmp_path: Path) 
                 verification_repository=verification_repo,
                 clock=_CLOCK,
             )
+        assert export_error.value.precondition_failure is None
+        assert _M202_RELATION_BINDING in export_error.value.context["missing_bindings"]
         assert export_path.exists() is False
 
 
