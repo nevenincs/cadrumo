@@ -58,7 +58,6 @@ from ....core.config import load_settings
 from ....core.decimal import coerce_decimal
 from ....domain.calculations.registry import (
     BindingId,
-    CasillaDefinition,
     CasillaId,
     InputKind,
     RegistrySnapshot,
@@ -72,6 +71,7 @@ from ....domain.period import calculation_filing_date
 from ._engine import build_export_plan
 from ._errors import CalcSheetsParityError
 from ._layout import plan_layout
+from ._parity_comparison import CasillaParity, collect_parity_rows, resolve_parity_verdict
 from ._records import (
     OperatorInput,
     OperatorInputs,
@@ -93,22 +93,6 @@ class _SheetsDiscoveryBuilder(Protocol):
         credentials: object,
         cache_discovery: bool,
     ) -> SheetsResource: ...
-
-
-class CasillaParity(BaseModel):
-    """Per-casilla parity verdict across three calculation surfaces."""
-
-    model_config = _STRICT_FROZEN
-
-    casilla_id: CasillaId
-    display_number: str
-    label: str
-    local: Decimal | None = None
-    sheets: Decimal | None = None
-    aeat: Decimal | None = None
-    sheets_vs_local: bool | None = None
-    local_vs_aeat: bool | None = None
-    sheets_vs_aeat: bool | None = None
 
 
 class ParityReport(BaseModel):
@@ -470,14 +454,14 @@ def verify_modelo_parity(
     local_values = _compute_local(snapshot, inputs_by_id, scenario)
 
     aeat_present = bool(scenario.expected_by_casilla_id)
-    casillas, divergences = _collect_parity_rows(
-        snapshot=snapshot,
-        scenario=scenario,
+    casillas, divergences = collect_parity_rows(
+        casillas=snapshot.revision.casillas,
         local_values=local_values,
         sheets_values=sheets_values,
+        aeat_values=scenario.expected_by_casilla_id,
         inputs_by_id=inputs_by_id,
     )
-    verdict = _resolve_parity_verdict(divergences=divergences, aeat_present=aeat_present)
+    verdict = resolve_parity_verdict(divergences=divergences, aeat_present=aeat_present)
 
     return ParityReport(
         modelo_id=snapshot.modelo.id,
@@ -493,88 +477,7 @@ def verify_modelo_parity(
     )
 
 
-def _collect_parity_rows(
-    *,
-    snapshot: RegistrySnapshot,
-    scenario: OperatorInputScenario,
-    local_values: Mapping[CasillaId, Decimal],
-    sheets_values: Mapping[CasillaId, Decimal],
-    inputs_by_id: Mapping[CasillaId, Decimal],
-) -> tuple[list[CasillaParity], list[CasillaParity]]:
-    """Build (every-casilla parity row list, divergent-only sublist) for the three-way comparison."""
-    casillas: list[CasillaParity] = []
-    divergences: list[CasillaParity] = []
-    for casilla in snapshot.revision.casillas:
-        if casilla.input_kind != InputKind.COMPUTED:
-            continue
-        local = local_values.get(casilla.id)
-        sheets_v = sheets_values.get(casilla.id)
-        aeat_v = scenario.expected_by_casilla_id.get(casilla.id)
-        row = _build_casilla_parity_row(casilla, local=local, sheets_v=sheets_v, aeat_v=aeat_v)
-        casillas.append(row)
-        if _is_parity_divergent(row, sheets_v=sheets_v, local=local, inputs_by_id=inputs_by_id):
-            divergences.append(row)
-    return casillas, divergences
-
-
-def _build_casilla_parity_row(
-    casilla: CasillaDefinition,
-    *,
-    local: Decimal | None,
-    sheets_v: Decimal | None,
-    aeat_v: Decimal | None,
-) -> CasillaParity:
-    """Build one ``CasillaParity`` row with the three pairwise-equality booleans pre-resolved."""
-    sheets_vs_local = sheets_v == local if sheets_v is not None and local is not None else None
-    local_vs_aeat = local == aeat_v if aeat_v is not None and local is not None else None
-    sheets_vs_aeat = sheets_v == aeat_v if aeat_v is not None and sheets_v is not None else None
-    return CasillaParity(
-        casilla_id=casilla.id,
-        display_number=casilla.number,
-        label=casilla.label,
-        local=local,
-        sheets=sheets_v,
-        aeat=aeat_v,
-        sheets_vs_local=sheets_vs_local,
-        local_vs_aeat=local_vs_aeat,
-        sheets_vs_aeat=sheets_vs_aeat,
-    )
-
-
-def _is_parity_divergent(
-    row: CasillaParity,
-    *,
-    sheets_v: Decimal | None,
-    local: Decimal | None,
-    inputs_by_id: Mapping[CasillaId, Decimal],
-) -> bool:
-    """A parity row is divergent if any pairwise comparison failed, or Sheets failed to compute.
-
-    The two divergence rules: (a) any pairwise comparison evaluated to
-    False; (b) the Sheets cell is blank for a non-input casilla while
-    the local engine produced a value (a Sheets formula failure the
-    operator must investigate).
-    """
-    if sheets_v is None and local is not None and row.casilla_id not in inputs_by_id:
-        return True
-    return False in (row.sheets_vs_local, row.local_vs_aeat, row.sheets_vs_aeat)
-
-
-def _resolve_parity_verdict(
-    *,
-    divergences: list[CasillaParity],
-    aeat_present: bool,
-) -> Literal["all_match", "divergence", "inconclusive"]:
-    """Resolve the top-level verdict from the divergences list and AEAT-oracle presence."""
-    if divergences:
-        return "divergence"
-    if aeat_present:
-        return "all_match"
-    return "inconclusive"
-
-
 __all__ = [
-    "CasillaParity",
     "OperatorInputScenario",
     "ParityReport",
     "verify_modelo_parity",

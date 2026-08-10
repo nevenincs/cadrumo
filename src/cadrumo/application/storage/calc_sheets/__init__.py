@@ -49,6 +49,7 @@ from ._engine import CALC_SHEETS_ENGINE_VERSION, build_export_plan, collect_row_
 from ._errors import CalcSheetsEngineError, CalcSheetsParityError, CalcSheetsRecordError
 from ._evidence import sheet_evidence_from_ledger_filing
 from ._layout import BracketRanges, SheetLayout, plan_layout
+from ._parity_comparison import CasillaParity, collect_parity_rows, resolve_parity_verdict
 from ._parity_harness import OperatorInputScenario, verify_modelo_parity
 from ._records import (
     OperatorInput,
@@ -112,6 +113,7 @@ __all__ = [
     "CalcSheetsEngineError",
     "CalcSheetsParityError",
     "CalcSheetsRecordError",
+    "CasillaParity",
     "OfflineWorkbookEvidenceSidecar",
     "OfflineWorkbookExportResult",
     "OperatorInput",
@@ -151,6 +153,7 @@ __all__ = [
     "build_evidence_sidecar",
     "build_export_plan",
     "build_offline_workbook",
+    "collect_parity_rows",
     "collect_row_sets",
     "column_letters_to_index",
     "evidence_table",
@@ -158,6 +161,7 @@ __all__ = [
     "hex_to_rgb_floats",
     "plan_layout",
     "registry_sha",
+    "resolve_parity_verdict",
     "serialize_evidence_sidecar",
     "serialize_offline_export",
     "serialize_offline_workbook",
