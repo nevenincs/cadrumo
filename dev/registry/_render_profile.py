@@ -15,15 +15,15 @@ from pathlib import Path
 from typing import Annotated, Final, Literal
 
 import rtoml
-from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from cadrumo.core import is_link_like
 from cadrumo.domain.calculations.registry import (
     ExportValuePolicy,
     ModeloId,
     RegistryValidationError,
+    RequiredExportValuePolicyValue,
     SourceRefId,
-    coerce_export_value_policy,
 )
 
 from ._record_design_ir import RecordDesignIntermediateField
@@ -176,23 +176,6 @@ class Width17MembershipRule(_StrictModel):
         return self
 
 
-type SingletonValuePolicy = Annotated[
-    Literal[
-        "unsigned-integer",
-        "implied-decimal",
-        "yyyymmdd",
-        "enumerated-digits",
-        "digit-string",
-        "identifier-digits",
-        "four-digit-year",
-        "two-digit-month",
-        "two-digit-day",
-    ]
-    | ExportValuePolicy,
-    BeforeValidator(coerce_export_value_policy),
-]
-
-
 class SingletonNumericRule(_StrictModel):
     """One reviewed smaller numeric field; grouping is deliberately impossible."""
 
@@ -212,7 +195,7 @@ class SingletonNumericRule(_StrictModel):
         "month_mm",
         "day_dd",
     ]
-    value_policy: SingletonValuePolicy
+    value_policy: RequiredExportValuePolicyValue
     integer_digits: int = Field(ge=0)
     decimal_digits: int = Field(ge=0)
     sign_policy: Literal["unsigned"]
@@ -224,26 +207,32 @@ class SingletonNumericRule(_StrictModel):
     def _require_kind_specific_declaration(self) -> SingletonNumericRule:
         if self.semantic_kind in {"enumeration", "checkbox"}:
             if not self.allowed_values or any(
-                not item or not item.isascii() or not item.isdigit() for item in self.allowed_values
+                not item
+                or not item.isascii()
+                or not item.isdigit()
+                or str(int(item)) != item
+                for item in self.allowed_values
             ):
-                raise ValueError(f"{self.semantic_kind} rules require explicit non-empty ASCII-digit allowed_values")
+                raise ValueError(
+                    f"{self.semantic_kind} rules require explicit canonical ASCII-integer allowed_values",
+                )
             if len(set(self.allowed_values)) != len(self.allowed_values):
                 raise ValueError("enumeration allowed_values must be unique")
         elif self.allowed_values:
             raise ValueError("allowed_values must be explicitly empty outside an enumeration rule")
         required_policy = {
-            "integer": "unsigned-integer",
-            "decimal": "implied-decimal",
-            "percentage_decimal": "implied-decimal",
-            "date_yyyymmdd": "yyyymmdd",
-            "enumeration": "enumerated-digits",
-            "digit_string": "digit-string",
-            "identifier_digits": "identifier-digits",
+            "integer": ExportValuePolicy.UNSIGNED_INTEGER,
+            "decimal": ExportValuePolicy.IMPLIED_DECIMAL,
+            "percentage_decimal": ExportValuePolicy.IMPLIED_DECIMAL,
+            "date_yyyymmdd": ExportValuePolicy.YYYYMMDD,
+            "enumeration": ExportValuePolicy.ENUMERATED_DIGITS,
+            "digit_string": ExportValuePolicy.DIGIT_STRING,
+            "identifier_digits": ExportValuePolicy.IDENTIFIER_DIGITS,
             "checkbox": ExportValuePolicy.SELECTED_1_UNSELECTED_0,
-            "year_yyyy": "four-digit-year",
+            "year_yyyy": ExportValuePolicy.FOUR_DIGIT_YEAR,
             "year_last_two_digits": ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS,
-            "month_mm": "two-digit-month",
-            "day_dd": "two-digit-day",
+            "month_mm": ExportValuePolicy.TWO_DIGIT_MONTH,
+            "day_dd": ExportValuePolicy.TWO_DIGIT_DAY,
         }[self.semantic_kind]
         if self.value_policy != required_policy:
             raise ValueError(f"{self.semantic_kind} requires value_policy {required_policy!r}")
@@ -261,6 +250,10 @@ class SingletonNumericRule(_StrictModel):
             raise ValueError(f"{self.semantic_kind} requires positive integer digits and 0 decimal digits")
         if self.semantic_kind == "enumeration" and self.decimal_digits != 0:
             raise ValueError("enumeration requires 0 decimal digits")
+        if self.semantic_kind == "enumeration" and any(
+            len(item) > self.integer_digits for item in self.allowed_values
+        ):
+            raise ValueError("enumeration allowed_values must fit the declared integer width")
         exact_shapes = {
             "checkbox": (1, 0),
             "year_yyyy": (4, 0),
@@ -492,7 +485,7 @@ def validate_render_profile_authority(
             raise RegistryValidationError(
                 f"smaller singleton representation width conflicts with official length at {rule.anchor!r}",
             )
-        if any(len(item) != field.length for item in rule.allowed_values):
+        if any(len(item) > field.length for item in rule.allowed_values):
             raise RegistryValidationError(
                 f"enumeration value width conflicts with official length at {rule.anchor!r}",
             )

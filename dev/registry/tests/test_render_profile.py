@@ -361,6 +361,15 @@ def test_profile_models_refuse_implicit_defaults_selectors_and_sign_conflicts() 
     with pytest.raises(ValidationError, match="semantic_kind"):
         SingletonNumericRule.model_validate(singleton_payload)
 
+    singleton_payload = _singleton(_anchor(12)).model_dump(mode="python")
+    del singleton_payload["value_policy"]
+    with pytest.raises(ValidationError, match="value_policy"):
+        SingletonNumericRule.model_validate(singleton_payload)
+
+    singleton_payload["value_policy"] = None
+    with pytest.raises(ValidationError, match="value_policy"):
+        SingletonNumericRule.model_validate(singleton_payload)
+
     selector_payload = _singleton(_anchor(12)).model_dump(mode="python") | {"selector": "Num:2"}
     with pytest.raises(ValidationError, match="selector"):
         SingletonNumericRule.model_validate(selector_payload)
@@ -407,7 +416,7 @@ def test_profile_models_refuse_implicit_defaults_selectors_and_sign_conflicts() 
         ("percentage_decimal", "implied-decimal", 0, 2, (), "positive integer and decimal digits"),
         ("digit_string", "digit-string", 1, 1, (), "0 decimal digits"),
         ("identifier_digits", "identifier-digits", 1, 1, (), "0 decimal digits"),
-        ("enumeration", "enumerated-digits", 1, 1, ("01", "02"), "0 decimal digits"),
+        ("enumeration", "enumerated-digits", 1, 1, ("1", "2"), "0 decimal digits"),
     ),
 )
 def test_singleton_schema_refuses_semantic_kind_wire_contradictions(
@@ -429,6 +438,102 @@ def test_singleton_schema_refuses_semantic_kind_wire_contradictions(
     )
     with pytest.raises(ValidationError, match=error):
         SingletonNumericRule.model_validate(payload)
+
+
+def test_enumeration_domain_uses_semantic_integers_not_padded_wire_spellings() -> None:
+    payload = _singleton(_anchor(12)).model_dump(mode="python")
+    payload.update(
+        semantic_kind="enumeration",
+        value_policy=ExportValuePolicy.ENUMERATED_DIGITS,
+        integer_digits=2,
+        decimal_digits=0,
+        allowed_values=("1", "3"),
+    )
+
+    rule = SingletonNumericRule.model_validate(payload)
+    assert rule.allowed_values == ("1", "3")
+
+    payload["allowed_values"] = ("01", "03")
+    with pytest.raises(ValidationError, match="canonical ASCII-integer"):
+        SingletonNumericRule.model_validate(payload)
+
+
+@pytest.mark.parametrize(
+    (
+        "semantic_kind",
+        "policy",
+        "integer_digits",
+        "decimal_digits",
+        "allowed_values",
+        "data_type",
+        "padding",
+        "date_format",
+    ),
+    (
+        ("checkbox", ExportValuePolicy.SELECTED_1_UNSELECTED_0, 1, 0, ("0", "1"), "integer", "left_zero", None),
+        (
+            "year_last_two_digits",
+            ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS,
+            2,
+            0,
+            (),
+            "integer",
+            "left_zero",
+            None,
+        ),
+        ("integer", ExportValuePolicy.UNSIGNED_INTEGER, 2, 0, (), "integer", "left_zero", None),
+        ("percentage_decimal", ExportValuePolicy.IMPLIED_DECIMAL, 3, 2, (), "decimal", "left_zero", None),
+        ("date_yyyymmdd", ExportValuePolicy.YYYYMMDD, 8, 0, (), "date", "none", "aaaammdd"),
+        ("enumeration", ExportValuePolicy.ENUMERATED_DIGITS, 2, 0, ("1", "3"), "integer", "left_zero", None),
+        ("digit_string", ExportValuePolicy.DIGIT_STRING, 4, 0, (), "text", "none", None),
+        ("identifier_digits", ExportValuePolicy.IDENTIFIER_DIGITS, 13, 0, (), "text", "none", None),
+        ("year_yyyy", ExportValuePolicy.FOUR_DIGIT_YEAR, 4, 0, (), "integer", "left_zero", None),
+        ("month_mm", ExportValuePolicy.TWO_DIGIT_MONTH, 2, 0, (), "integer", "left_zero", None),
+        ("day_dd", ExportValuePolicy.TWO_DIGIT_DAY, 2, 0, (), "integer", "left_zero", None),
+    ),
+)
+def test_singleton_mapper_projects_every_public_policy_to_an_exact_schema_shape(
+    semantic_kind: str,
+    policy: ExportValuePolicy,
+    integer_digits: int,
+    decimal_digits: int,
+    allowed_values: tuple[str, ...],
+    data_type: str,
+    padding: str,
+    date_format: str | None,
+) -> None:
+    width = integer_digits + decimal_digits
+    joined = _joined(_intermediate(smaller_length=width)).fields[2]
+    joined = JoinedRecordDesignField(
+        parser_field=joined.parser_field,
+        semantic_entry=joined.semantic_entry.model_copy(
+            update={"kind": CasillaFieldKind.HEADER, "header_key": "filing_year"},
+        ),
+    )
+    rule = SingletonNumericRule.model_validate(
+        _singleton(_anchor(12)).model_dump(mode="python")
+        | {
+            "semantic_kind": semantic_kind,
+            "value_policy": policy,
+            "integer_digits": integer_digits,
+            "decimal_digits": decimal_digits,
+            "allowed_values": allowed_values,
+        },
+    )
+
+    derivation = _export_tree._profile_singleton_derivation(
+        joined,
+        rule,
+        export_record_id="reviewed-record",
+    )
+
+    assert derivation.field.value_policy is policy
+    assert derivation.field.data_type == data_type
+    assert derivation.field.padding == padding
+    assert derivation.field.date_format == date_format
+    expected_allowed_values = allowed_values or None if policy is ExportValuePolicy.ENUMERATED_DIGITS else None
+    assert derivation.field.allowed_values == expected_allowed_values
+    assert set(_export_tree._SINGLETON_POLICY_SHAPES) == set(ExportValuePolicy)
 
 
 def test_fragment_loader_compiles_by_filename_and_refuses_fragment_identity_drift(tmp_path: Path) -> None:
