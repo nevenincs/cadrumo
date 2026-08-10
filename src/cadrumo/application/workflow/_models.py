@@ -3,8 +3,10 @@
 Every boundary-crossing type in :mod:`cadrumo.application.workflow` is
 defined here as a frozen, strict, ``extra="forbid"``
 :class:`pydantic.BaseModel` or as an :class:`enum.StrEnum` for closed
-enumerations. :attr:`WorkflowStep.details` is reserved for string-valued
-diagnostics emitted by workflow diagnostics. Some helpers accept an
+enumerations. Persisted workflow presentation carries abstract locale keys,
+never rendered prose. :attr:`WorkflowStep.details` is a closed record of
+locale-neutral facts, while :attr:`WorkflowStep.precondition_verdict` carries
+the canonical application-owned refusal outcome. Some helpers accept an
 optional :class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository` so
 callers can supply a custom storage backend without going through the runtime
 default. The
@@ -46,17 +48,18 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from datetime import datetime
+import re
+from datetime import date, datetime
 from enum import StrEnum
-from typing import TYPE_CHECKING, Annotated, cast
+from typing import TYPE_CHECKING, Annotated, Literal
 
-from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, model_validator
+from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_validator
 
 from ...core import (
     STRICT_FROZEN_CONFIG as _STRICT_FROZEN,
 )
 from ...core import (
+    AuthProviderKind,
     Modelo,
     Period,
 )
@@ -68,6 +71,7 @@ from ...core import (
 )
 from ...core.config import override_settings
 from ...core.hashing import sha256_hex
+from ...core.i18n import Translatable
 from ...core.logging import get_logger
 from ...core.time import now as utc_now
 from ...domain.submission import ModeloDraftStatus
@@ -77,6 +81,8 @@ from .._workflow_review_models import (
     LedgerReviewRecord,
     WorkflowEvent,
 )
+from ..operator_actions import PreconditionVerdict
+from ._engine_helpers import CertificateSeverityValue, DeadlineRole, FilingWindowState
 from ._profile_bucket_models import ProfileBucketPointer as ProfileBucketPointer
 from ._profile_bucket_scan import resolve_profile_bucket
 from ._workflow_abort import WorkflowAbortReason as WorkflowAbortReason
@@ -389,83 +395,230 @@ class SiteHealthAlert(BaseModel):
     run_id: str = Field(min_length=1, max_length=128)
 
 
-class WorkflowStepDetails(BaseModel):
-    """Operator-visible details attached to a workflow step.
+class WorkflowDiagnosticSkipReason(StrEnum):
+    """Closed reasons a non-applicable workflow diagnostic was skipped."""
 
-    Carries arbitrary string-keyed diagnostic values emitted by the
-    workflow engine. The model is intentionally permissive
-    (``extra='allow'``) so existing call sites can continue to pass
-    free-form dicts; the boundary is now a typed pydantic record
-    instead of an opaque ``dict[str, str]``, so a future PR can
-    promote specific step kinds into a discriminated union without
-    breaking the field type on :class:`WorkflowStep`.
+    NOT_WIRED = "not_wired"
 
-    Per-stage key catalogue (the documented contract external tools
-    consuming ``WorkflowResult.steps`` may rely on):
 
-    * Deadline checks: ``{"modelo", "period", "closes_on"}``.
-    * Draft / snapshot mismatch: ``{"draft_id", "modelo", "period",
-      "profile_tax_id", "schema_version"}``.
-    * Calculation validation failure: ``{"error_count"}`` and any
-      issue-specific keys.
-    * AEAT certificate health: ``{"provider_kind",
-      "provider_operator_impact", "cert_not_after", "cert_severity",
-      "cert_days_until_expiry"}``.
-    * Site-health alerts: ``{"status", "run_id"}``.
+class _WorkflowStepDetail(BaseModel):
+    """Frozen base for one closed, locale-neutral workflow detail shape."""
 
-    New keys may be added by the engine without bumping the workflow
-    schema version. Removal or rename is a breaking change and must
-    be paired with a workflow schema-version bump.
+    model_config = _STRICT_FROZEN
 
-    Implements ``__getitem__``, ``__contains__``, and ``get`` so
-    existing read-side code that treats ``step.details`` like a
-    ``Mapping[str, str]`` keeps working without per-call-site
-    migration; the typed model now anchors the storage shape.
 
-    Frozen and strict on the inner values to preserve the
-    boundary-strictness guarantee on workflow diagnostics.
+class WorkflowDeadlineContextDetails(_WorkflowStepDetail):
+    """The one of the closed deadline contexts a workflow step can carry."""
+
+    kind: Literal["deadline_context"]
+    modelo: Modelo
+    period: Period
+    opens_on: date | None = None
+    closes_on: date | None = None
+    filing_window: FilingWindowState | None = None
+    deadline_role: DeadlineRole | None = None
+    overdue: bool | None = None
+    extemporanea: bool | None = None
+
+    @model_validator(mode="after")
+    def _validate_context(self) -> WorkflowDeadlineContextDetails:
+        """Keep deadline metadata internally coherent rather than loosely optional."""
+        if self.overdue is not None or self.extemporanea is not None:
+            if self.overdue is not True or self.extemporanea is not True:
+                raise ValueError("overdue deadline context requires overdue and extemporanea to be true")
+            if self.closes_on is None or self.opens_on is not None:
+                raise ValueError("overdue deadline context requires only closes_on")
+            if self.filing_window is not None or self.deadline_role is not None:
+                raise ValueError("overdue deadline context cannot carry filing-window metadata")
+            return self
+
+        if (self.filing_window is None) != (self.deadline_role is None):
+            raise ValueError("deadline_role and filing_window must be declared together")
+        if self.deadline_role is None:
+            if self.opens_on is None and self.closes_on is None:
+                raise ValueError("deadline context requires at least one boundary date")
+            return self
+
+        if self.deadline_role is DeadlineRole.BINDING:
+            if self.filing_window is not FilingWindowState.FUTURE:
+                raise ValueError("binding deadline context requires a future filing window")
+            if self.opens_on is None or self.closes_on is None:
+                raise ValueError("binding deadline context requires opens_on and closes_on")
+            return self
+
+        if self.filing_window is FilingWindowState.ABSENT:
+            if self.opens_on is not None or self.closes_on is not None:
+                raise ValueError("absent informational windows cannot carry boundary dates")
+            return self
+        if self.opens_on is None or self.closes_on is None:
+            raise ValueError("dated informational windows require opens_on and closes_on")
+        return self
+
+
+class WorkflowInboxSkippedDetails(_WorkflowStepDetail):
+    """An inbox step intentionally skipped because its adapter is not wired."""
+
+    kind: Literal["inbox_skipped"]
+    skip_reason: Literal[WorkflowDiagnosticSkipReason.NOT_WIRED]
+
+
+class WorkflowInboxBlockedDetails(_WorkflowStepDetail):
+    """A workflow inbox failure with a bounded, machine-readable first item."""
+
+    kind: Literal["inbox_blocked"]
+    blocker_count: int = Field(ge=1)
+    first_notificacion_id: str = Field(min_length=1, max_length=256)
+
+
+class WorkflowDraftBuiltDetails(_WorkflowStepDetail):
+    """The durable identity of a successfully built draft."""
+
+    kind: Literal["draft_built"]
+    draft_id: str = Field(min_length=1, max_length=256)
+
+
+class WorkflowAlreadyFiledDetails(_WorkflowStepDetail):
+    """The model and period already evidenced as filed."""
+
+    kind: Literal["already_filed"]
+    modelo: Modelo
+    period: Period
+    expediente_count: int = Field(ge=1)
+
+
+class WorkflowDraftNotReadyDetails(_WorkflowStepDetail):
+    """A built draft whose lifecycle status does not permit filing."""
+
+    kind: Literal["draft_not_ready"]
+    draft_id: str = Field(min_length=1, max_length=256)
+    draft_status: ModeloDraftStatus
+    blocking_finding_codes: tuple[str, ...] = Field(default_factory=tuple)
+
+    @field_validator("blocking_finding_codes")
+    @classmethod
+    def _finding_codes_are_stable(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        """Require deterministic non-prose finding identities."""
+        if len(set(value)) != len(value):
+            raise ValueError("blocking finding codes must be unique")
+        if any(not code or code != code.strip() or any(character.isspace() for character in code) for code in value):
+            raise ValueError("blocking finding codes must be stable non-prose identities")
+        return tuple(sorted(value))
+
+
+class WorkflowDraftMismatchDetails(_WorkflowStepDetail):
+    """A draft that cannot be used for the target obligation.
+
+    The mismatching facts themselves are condition evidence on the paired
+    :class:`PreconditionVerdict`, not a second free-form detail map.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="allow")
-
-    def __getitem__(self, key: str) -> object:
-        """Return the diagnostic value stored under ``key``."""
-        return self.__pydantic_extra__[key] if self.__pydantic_extra__ else self.__dict__[key]
-
-    def __contains__(self, key: object) -> bool:
-        """Return ``True`` if ``key`` is present in the step's diagnostic payload."""
-        extra = self.__pydantic_extra__ or {}
-        return key in extra or key in self.__dict__
-
-    def get(self, key: str, default: object = None) -> object:
-        """Return the diagnostic value for ``key``, or ``default`` if absent."""
-        if self.__pydantic_extra__ and key in self.__pydantic_extra__:
-            return self.__pydantic_extra__[key]
-        return self.__dict__.get(key, default)
-
-    def items(self) -> Mapping[str, object]:
-        """Return all extra diagnostic key-value pairs as a ``Mapping``."""
-        merged: dict[str, object] = dict(self.__pydantic_extra__ or {})
-        return merged
+    kind: Literal["draft_mismatch"]
+    draft_id: str = Field(min_length=1, max_length=256)
 
 
-def _coerce_workflow_step_details(value: object) -> object:
-    """BeforeValidator coercion: ``Mapping`` → ``WorkflowStepDetails``.
+class WorkflowValidationFailedDetails(_WorkflowStepDetail):
+    """The number of blocking validation findings on one draft."""
 
-    Pydantic calls this before the ``WorkflowStep.details`` field is
-    validated. ``None`` and already-typed instances pass through unchanged;
-    a ``Mapping`` is coerced into a :class:`WorkflowStepDetails` so the
-    stored shape is always the typed record.
-    """
-    if value is None or isinstance(value, WorkflowStepDetails):
-        return value
-    if isinstance(value, Mapping):
-        # CAST-RATIONALE-WORKFLOW-STEP-DETAILS-RAW-MAPPING: isinstance narrows
-        # to Mapping but not its type parameters; model_validate below
-        # re-validates the actual field shapes.
-        # nosemgrep: no-cast-in-domain-application
-        return WorkflowStepDetails.model_validate(dict(cast(Mapping[str, object], value)))
-    return value
+    kind: Literal["validation_failed"]
+    error_count: int = Field(ge=1)
+
+
+class WorkflowAuthCheckDetails(_WorkflowStepDetail):
+    """Closed certificate/provider readiness facts for preflight."""
+
+    kind: Literal["auth_check"]
+    provider_kind: AuthProviderKind | None = None
+    provider_check_skipped: bool = False
+    skip_reason: Literal[WorkflowDiagnosticSkipReason.NOT_WIRED] | None = None
+    cert_not_after: date | None = None
+    cert_severity: CertificateSeverityValue | None = None
+    cert_days_until_expiry: int | None = None
+
+    @model_validator(mode="after")
+    def _validate_provider_shape(self) -> WorkflowAuthCheckDetails:
+        """Make configured and skipped provider observations disjoint shapes."""
+        if self.provider_check_skipped:
+            if self.skip_reason is not WorkflowDiagnosticSkipReason.NOT_WIRED:
+                raise ValueError("skipped provider checks require the not_wired reason")
+            if any(
+                value is not None
+                for value in (
+                    self.provider_kind,
+                    self.cert_not_after,
+                    self.cert_severity,
+                    self.cert_days_until_expiry,
+                )
+            ):
+                raise ValueError("skipped provider checks cannot carry certificate facts")
+            return self
+
+        if self.provider_kind is None or self.skip_reason is not None:
+            raise ValueError("configured provider checks require provider_kind and no skip reason")
+        certificate_values = (self.cert_not_after, self.cert_severity, self.cert_days_until_expiry)
+        if any(value is not None for value in certificate_values) and any(
+            value is None for value in certificate_values
+        ):
+            raise ValueError("certificate expiry facts must be provided together")
+        return self
+
+
+class WorkflowPreflightFailedDetails(_WorkflowStepDetail):
+    """A preflight failure identified by a stable application error code."""
+
+    kind: Literal["preflight_failed"]
+    error_code: str = Field(
+        pattern=r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$",
+        min_length=3,
+        max_length=160,
+    )
+    auth_check: WorkflowAuthCheckDetails | None = None
+
+
+class WorkflowFailureDetails(_WorkflowStepDetail):
+    """A non-precondition workflow failure represented without exception prose."""
+
+    kind: Literal["workflow_failure"]
+    error_code: str = Field(
+        pattern=r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$",
+        min_length=3,
+        max_length=160,
+    )
+
+
+type WorkflowStepDetails = Annotated[
+    WorkflowDeadlineContextDetails
+    | WorkflowInboxSkippedDetails
+    | WorkflowInboxBlockedDetails
+    | WorkflowDraftBuiltDetails
+    | WorkflowAlreadyFiledDetails
+    | WorkflowDraftNotReadyDetails
+    | WorkflowDraftMismatchDetails
+    | WorkflowValidationFailedDetails
+    | WorkflowAuthCheckDetails
+    | WorkflowPreflightFailedDetails
+    | WorkflowFailureDetails,
+    Field(discriminator="kind"),
+]
+
+_PRECONDITION_DETAIL_TYPES = (
+    WorkflowInboxBlockedDetails,
+    WorkflowAlreadyFiledDetails,
+    WorkflowDraftNotReadyDetails,
+    WorkflowDraftMismatchDetails,
+    WorkflowValidationFailedDetails,
+)
+
+
+def _parse_workflow_locale_key(value: object) -> Translatable:
+    """Return one stable abstract locale identity, never rendered prose."""
+    if not isinstance(value, str):
+        raise ValueError("workflow summary locale key must be a string")
+    if not re.fullmatch(r"[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+", value):
+        raise ValueError("workflow summary must carry a stable dotted locale key")
+    return Translatable(value)
+
+
+WorkflowLocaleKey = Annotated[Translatable, BeforeValidator(_parse_workflow_locale_key)]
 
 
 class WorkflowStep(BaseModel):
@@ -477,18 +630,9 @@ class WorkflowStep(BaseModel):
     started_at: datetime
     ended_at: datetime | None = None
     success: bool | None = None
-    summary: str
-    details: Annotated[
-        # The Mapping branch is intentionally typed ``str -> object`` rather
-        # than ``str -> str`` because :class:`WorkflowStepDetails` carries
-        # ``extra="allow"`` and stores diagnostic values heterogeneously
-        # (engine call sites stringify by convention but the storage shape
-        # is not constrained). The BeforeValidator coerces a Mapping to a
-        # WorkflowStepDetails so downstream readers always see the typed
-        # record.
-        WorkflowStepDetails | Mapping[str, object] | None,
-        BeforeValidator(_coerce_workflow_step_details),
-    ] = None
+    summary_locale_key: WorkflowLocaleKey
+    details: WorkflowStepDetails | None = None
+    precondition_verdict: PreconditionVerdict | None = None
     site_health_alert: SiteHealthAlert | None = None
 
     @model_validator(mode="after")
@@ -497,6 +641,17 @@ class WorkflowStep(BaseModel):
             raise ValueError(f"ended_at ({self.ended_at}) precedes started_at ({self.started_at})")
         if self.ended_at is not None and self.success is None:
             raise ValueError("completed steps must set success explicitly")
+        if self.precondition_verdict is not None and self.success is not False:
+            raise ValueError("precondition verdicts belong only to explicitly failed workflow steps")
+        if isinstance(self.details, _PRECONDITION_DETAIL_TYPES) and self.precondition_verdict is None:
+            raise ValueError("refusal detail records require a typed precondition verdict")
+        if self.precondition_verdict is not None:
+            for evidence in self.precondition_verdict.evidence:
+                if any(
+                    isinstance(value, str) and any(character.isspace() for character in value)
+                    for value in evidence.values.values()
+                ):
+                    raise ValueError("workflow precondition evidence cannot persist rendered or exception prose")
         return self
 
 
@@ -514,7 +669,8 @@ class WorkflowResult(BaseModel):
     draft_id: str | None = None
     submission_id: str | None = None
     steps: tuple[WorkflowStep, ...]
-    summary: str
+    summary_locale_key: WorkflowLocaleKey
+    summary_details: WorkflowStepDetails | None = None
     resumed_from: str | None = None
 
     @model_validator(mode="after")
@@ -527,6 +683,10 @@ class WorkflowResult(BaseModel):
             raise ValueError("ABORTED results must carry an aborted_reason")
         if self.final_stage is WorkflowStage.DONE and self.aborted_reason is not None:
             raise ValueError("DONE results must not carry an aborted_reason")
+        if self.final_stage is WorkflowStage.ABORTED and (not self.steps or self.steps[-1].success is not False):
+            raise ValueError("ABORTED results must end with an explicitly failed workflow step")
+        if self.final_stage is WorkflowStage.ABORTED and self.steps[-1].precondition_verdict is None:
+            raise ValueError("ABORTED results must end with a typed precondition verdict")
         return self
 
 
