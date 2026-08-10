@@ -20,6 +20,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
 from ...core.hashing import canonical_json_bytes, content_hash_hex
+from ...core.identity import ContentDigest
 from ...core.identity import ProfileId as _ProfileId
 from ...core.parsing import parse_bool, parse_iso8601_date
 from ...core.time import UtcInstant
@@ -258,8 +259,7 @@ def _validate_payload_schema_identity(schema_id: str, schema_version: int, *, su
         )
     if schema_version != schema.version:
         raise UserProfileValidationError(
-            f"{surface}: schema_version {schema_version} is not the canonical "
-            f"profile schema version {schema.version}",
+            f"{surface}: schema_version {schema_version} is not the canonical profile schema version {schema.version}",
         )
 
 
@@ -372,7 +372,7 @@ class UserProfileSnapshot(BaseModel):
     schema_version: int = Field(ge=1)
     created_at: UtcInstant = Field(default_factory=utc_now)
     facts: tuple[UserProfileFact, ...]
-    canonical_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
+    canonical_hash: ContentDigest
 
     @model_validator(mode="after")
     def _validate_payload_schema(self) -> UserProfileSnapshot:

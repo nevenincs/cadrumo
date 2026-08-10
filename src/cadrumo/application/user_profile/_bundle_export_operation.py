@@ -33,10 +33,11 @@ from pathlib import Path
 from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import exclusive_file_lock
+from ...core import Hex64Str, exclusive_file_lock
 from ...core.config import Settings
 from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
+from ...core.identity import ContentDigest
 from ...core.paths import effective_storage_root
 from ...core.time import validate_utc_aware
 from .._journal_repository import JournalRepositoryBase
@@ -110,14 +111,14 @@ class ProfileBundleExportOperation(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    operation_id: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
+    operation_id: Hex64Str
     status: ProfileBundleExportOperationStatus
     profile_id: str = Field(min_length=1)
     display_name: str
     target_identity: str = Field(min_length=1)
     destination: str = Field(min_length=1)
     staged_path: str = Field(min_length=1)
-    content_sha256: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
+    content_sha256: ContentDigest
     purpose: ProfileBundleExportPurpose
     transport: ProfileBundleExportTransport
     bundle_schema_version: int = Field(ge=1)

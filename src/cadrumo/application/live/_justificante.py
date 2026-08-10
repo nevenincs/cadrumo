@@ -71,7 +71,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import content_hash_hex, sha256_hex
-from ...core.identity import BucketId
+from ...core.identity import BucketId, ContentDigest
 from ..calculations import ObservationSourceKind
 from ._errors import LiveApplicationInputError
 from ._snapshot_base import (
@@ -115,7 +115,7 @@ class JustificanteCaptureSnapshot(BaseModel):
     period: Period
     expediente_id: str = Field(min_length=12, max_length=32)
     csv: str = Field(min_length=8, max_length=32)
-    pdf_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    pdf_sha256: ContentDigest
     pdf_base64: str = Field(min_length=1)
     source_kind: ObservationSourceKind = Field(default=JUSTIFICANTE_CAPTURE_SOURCE_KIND)
 

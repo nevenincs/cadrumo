@@ -57,7 +57,7 @@ from ..adapters.persistence.storage import (
 from ..adapters.persistence.storage.sql.secure_objects import (
     SecureObjectDecryptabilityRow,
 )
-from ..core import STRICT_FROZEN_CONFIG
+from ..core import STRICT_FROZEN_CONFIG, Hex64Str
 from ..core.errors import CoreError
 from ..core.hashing import content_hash_hex
 from ..core.logging import get_logger
@@ -422,7 +422,7 @@ class RepairRemediationDecision(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    decision_id: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
+    decision_id: Hex64Str
     target_namespace: str = Field(min_length=1)
     target_object_key_digest: str | None = Field(default=None, min_length=1)
     outcome: _RepairDecisionOutcome

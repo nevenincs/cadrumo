@@ -25,7 +25,7 @@ from pydantic import BaseModel, Field
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core import CasillaId, Modelo
-from ....core.identity import AeatCsv
+from ....core.identity import AeatCsv, ContentDigest
 from ..pdf import ExtractedCasilla
 
 
@@ -131,7 +131,7 @@ class InboundBorradorObservation(BaseModel):
     registry_extraction_profile_id: str | None = None
     extraction_coverage: Decimal | None = None
     source_pdf_path: Path
-    source_pdf_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    source_pdf_sha256: ContentDigest
     parsed_at: datetime
     csv: AeatCsv | None = None
     warnings: tuple[str, ...] = ()

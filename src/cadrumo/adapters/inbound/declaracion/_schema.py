@@ -24,6 +24,7 @@ from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core import CasillaId, Period, PeriodError
+from ....core.identity import ContentDigest
 from ....domain.calculations.registry import RegistrySnapshotRef
 from ..pdf import ExtractedCasilla
 
@@ -131,7 +132,7 @@ class InboundDeclaracionObservation(BaseModel):
     extraction_profile_id: str = Field(min_length=1, max_length=128)
     extraction_profile_provisional: bool = False
     source_pdf_path: Path
-    source_pdf_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    source_pdf_sha256: ContentDigest
     parsed_at: datetime
 
     @field_validator("period", mode="before")
