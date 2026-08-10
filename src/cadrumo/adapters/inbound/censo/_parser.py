@@ -29,17 +29,15 @@ def parse_certificado_censal_bytes(data: bytes) -> CertificadoSituacionCensal:
         CertificadoCensalParseError: Always, today. A non-PDF payload is
             refused as an unrecognised document; a PDF payload is refused
             because the issued-certificate layout extraction is unpinned
-            pending a real specimen. Both refusals name the operator-manual
-            enrolment route so the flow degrades honestly.
+            pending a real specimen. Both refusals carry a distinct locale key
+            so the flow degrades honestly.
     """
     if not data.startswith(_PDF_MAGIC):
         raise CertificadoCensalParseError(
             translated_message="errors.censo.certificado_not_a_pdf",
-            suggestion="aeat config profile edit",
         )
     raise CertificadoCensalParseError(
         translated_message="errors.censo.certificado_extraction_unpinned",
-        suggestion="aeat config profile edit",
     )
 
 
