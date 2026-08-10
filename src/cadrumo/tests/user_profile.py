@@ -171,7 +171,12 @@ def register_minimal_profile(
         return register_active_profile(
             state,
             profile_id=profile_id,
-            display_name=display_name or profile_id,
+            # Derived, never the bare id. ProfileLabel refuses a UUID-shaped
+            # label so an operator label can never be read as a machine
+            # identity, and test profile ids are UUIDs — so falling back to the
+            # id made this one helper the single root cause of that refusal
+            # across every suite that registers a profile.
+            display_name=display_name or f"profile-{profile_id}",
             facts=facts,
             secure_objects=secure_objects,
             enforce_unique_tax_id=enforce_unique_tax_id,
