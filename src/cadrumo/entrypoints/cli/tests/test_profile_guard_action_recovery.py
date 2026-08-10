@@ -17,7 +17,7 @@ from ....tests.cli_runner import invoke_cached_cli, semantic_cli_output
 from ....tests.secure_sql import isolated_profile_storage_root
 from ...mcp import build_verb_input_schemas, cli_argv_for
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _ORIGINAL_ARGUMENTS = (
     "app",

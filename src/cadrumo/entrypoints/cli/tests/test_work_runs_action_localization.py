@@ -49,7 +49,7 @@ from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from .._common import resolve_cli_precondition_action
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _T = datetime(2026, 4, 12, 9, 0, tzinfo=UTC)
 _PROFILE_ID = "22222222-2222-4222-8222-222222222222"

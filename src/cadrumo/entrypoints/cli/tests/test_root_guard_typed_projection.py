@@ -27,7 +27,7 @@ from .._common import (
 )
 from .._errors import CliRefusedBoundaryError, error_boundary_under_test
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 def _resolve_real_leaf(*tokens: str) -> RequestedCliLeaf:
