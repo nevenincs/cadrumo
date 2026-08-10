@@ -670,7 +670,30 @@ def _require_field_derivations_match_layout(
 
 
 def _write_canonical_manifest_atomically(path: Path, payload: bytes) -> None:
-    """Make the sibling evidence all-or-nothing without publishing its tree."""
+    """Make the sibling evidence all-or-nothing without publishing its tree.
+
+    Deliberately NOT delegated to
+    :func:`~cadrumo.core.atomic_write.atomic_write_hardened_bytes`,
+    despite duplicating its stage-fsync-replace mechanics. This writer carries a
+    guarantee no core tier offers: it refuses a pre-existing **target**. The
+    hardened tier's ``O_EXCL`` applies to the staging tempfile, not to the
+    destination, and it publishes with :func:`os.replace`, which overwrites an
+    existing target by definition -- that is precisely what separates
+    :func:`os.replace` from :func:`os.rename`. Delegating here would therefore
+    delete the refusal rather than relocate it, and would do so silently.
+
+    The check is deliberately best-effort rather than atomic. A genuinely atomic
+    publish-once is :func:`os.link`, which fails with ``FileExistsError`` in a
+    single uninterruptible step; it needs hardlink support this project's
+    network-share working tree does not reliably provide. Re-checking
+    immediately before the replace is the narrowest window available without
+    it -- the caller's earlier guard cannot substitute, because a whole export
+    tree is walked and hashed between that check and this one.
+
+    If hardlink support ever becomes dependable, the correct change is
+    :func:`os.link` here (or a publish-once tier in core built on it), not a
+    delegation to the clobbering tier.
+    """
     if not path.parent.is_dir():
         raise RegistryValidationError(f"export provenance manifest parent is missing: {path.parent}")
     descriptor, temporary_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
