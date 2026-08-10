@@ -1755,6 +1755,35 @@ application:
       state_unreadable: No s'ha pogut llegir l'estat de configuració local.
       state_write_invalid_payload: 'No s''ha pogut desar l''estat del flux de treball:
         càrrega útil no vàlida.'
+    results:
+      aborted: El flux de treball s'ha aturat abans de completar-se.
+      completed: Flux de treball completat.
+    steps:
+      already_filed: Aquesta declaració ja consta com a presentada.
+      auth_certificate_invalid: El certificat digital no és vàlid.
+      auth_certificate_load_failed: No s'ha pogut carregar el certificat digital.
+      auth_provider_unavailable: El proveïdor d'autenticació seleccionat no està disponible.
+      deadline_absent: No hi ha cap termini de presentació disponible.
+      deadline_closed: El termini de presentació és tancat.
+      deadline_future: El termini de presentació encara no s'ha obert.
+      deadline_informational: S'ha registrat la informació sobre el termini.
+      deadline_missing: El termini de presentació no està disponible.
+      deadline_open: El termini de presentació és obert.
+      deadline_overdue: El termini de presentació ha vençut.
+      draft_build_failed: No s'ha pogut preparar l'esborrany.
+      draft_built: Esborrany preparat.
+      draft_identity_mismatch: L'esborrany no correspon a la declaració seleccionada.
+      draft_not_ready: L'esborrany no està preparat per presentar-lo.
+      inbox_blocked: La bústia conté elements que bloquegen.
+      inbox_clear: La bústia no té bloquejos.
+      inbox_skipped: La comprovació de la bústia no està disponible.
+      preflight_completed: S'han completat les comprovacions prèvies a la presentació.
+      preflight_failed: No s'han pogut completar les comprovacions prèvies a la presentació.
+      profile_loaded: S'ha carregat el perfil actiu.
+      site_unavailable: El servei de presentació no està disponible.
+      validation_clean: La validació s'ha completat sense incidències bloquejants.
+      validation_failed: La validació ha detectat incidències que bloquegen.
+      workflow_failure: No s'ha pogut completar el flux de treball.
 auth:
   catalogue:
     certificate_description: Autenticació basada en certificat X.509 (FNMT-RCM o una
@@ -3443,13 +3472,6 @@ cli:
           %{period}` i torna a consultar-la amb `aeat app modelo work revision %{revision_id}`.'
         work_unit_id_help: Identificador estable (SHA-256 de 64 caràcters) de la unitat
           de treball
-        workflow_draft_build_refused_next_action: Repareu l'entrada de l'esborrany
-          indicada i torneu a executar %{command}.
-        workflow_draft_build_refused_summary: 'S''ha rebutjat la generació de l''esborrany:
-          %{error_message}. Repareu l''entrada de l''esborrany indicada i torneu a
-          calcular.'
-        workflow_review_verification_report_next_action: 'Reviseu l''informe de verificació:
-          %{command}'
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
         year_out_of_range: L'exercici fiscal %{year} està fora de rang; indiqueu un
           any entre %{minimum} i %{maximum}.
@@ -7446,6 +7468,7 @@ flows:
       working: S'està executant {action}...
     actions:
       section: Accions
+    choice_unavailable: Opció no disponible
     column:
       field: Camp
       state: Estat
@@ -7455,7 +7478,6 @@ flows:
       clear: Esborra
       masked_kept: Aquest valor està ocult, per això el camp comença buit. Deixa'l
         buit per conservar el valor desat o escriu-ne un de nou per substituir-lo.
-      path: 'Identificador intern: %{path}'
       refused:
         boolean: '''%{value}'' no és una resposta de sí o no. Respon Sí o No.'
         date: '''%{value}'' no és una data. Fes servir el format AAAA-MM-DD - per
@@ -7477,12 +7499,14 @@ flows:
       write_failed: No s'ha pogut desar el camp. Torna-ho a provar.
       write_in_flight: S'està desant el camp anterior. Espera que acabi i torna-ho
         a provar.
+    field_unavailable: Camp de perfil no disponible
     language:
       unavailable: Aquest perfil no ofereix cap configuració d'idioma.
+    namespace_detail: detall {number}
     recovery_boundary: 'La creació i la rotació del codi de recuperació només es fan
       des del terminal: aeat config recovery create / aeat config recovery rotate.
       Les 24 paraules es mostren una sola vegada i no es poden tornar a mostrar.'
-    required_complete: Hi és tota la informació del perfil requerida per l'esquema.
+    required_field_unavailable: Camp obligatori del perfil
     section_title: '{title} - {present}/{total}'
     title: 'Perfil: {profile}'
   progress:
@@ -7535,10 +7559,13 @@ flows:
     header: Revisió - {answered} preguntes respostes.
     header_tui: 'Revisió - {answered} respostes, {remaining} obligatòries pendents,
       a punt per enviar: {eligible}'
+    mode_create: mode de creació
+    mode_modify: mode de modificació
     orphan_marker: (ja no es pregunta)
     page_deferred: 'La pregunta %{page_key} està ajornada: decideix abans de presentar.'
     page_invalid: La pregunta %{page_key} té una resposta no vàlida.
     page_stale: 'Revisa la pregunta %{page_key}: ha canviat una resposta anterior.'
+    question_unavailable: La pregunta ja no està disponible
     required_unanswered: La pregunta obligatòria %{page_key} està sense respondre.
     reset_stale_confirm: La pregunta {page_key} ja no es planteja. Vols esborrar-ne
       la resposta desada?
@@ -7547,6 +7574,7 @@ flows:
     row: '{number}. {page_key} - estat: {status}'
     save_unavailable: Desar i sortir no està disponible en el mode {mode}; completa
       el flux d'una sola vegada.
+    section_unavailable: Secció no disponible
   status:
     auth:
       absolute_deadline: Límit absolut de la sessió
@@ -7556,6 +7584,7 @@ flows:
       login_ready: a punt
       provider: Proveïdor
       provider_none: sense configurar
+      provider_unknown: Proveïdor desconegut
       status: Accés
       subject: Titular
     binding_quit: Surt
@@ -7564,7 +7593,10 @@ flows:
       column:
         field: Camp
         value: Valor
+      field_unavailable: Camp no disponible
       none: No hi ha cap perfil actiu.
+      repeated_field: '{label} (element {row})'
+      value_unavailable: Valor no disponible
     profiles:
       column:
         active: Actiu
@@ -7575,6 +7607,7 @@ flows:
         active: actiu
         setup_incomplete: configuració incompleta
         tombstoned: eliminat
+        unknown: desconegut
     recovery:
       commands_title: Accions (copiar i executar)
       enrolled: activat
@@ -7599,6 +7632,7 @@ flows:
     button_back: Enrere
     button_next: Següent
     button_review: Revisió
+    choice_unavailable: Opció no disponible
     confirm_restart:
       cancel: Cancel·lar
       confirm: Reiniciar
@@ -7606,6 +7640,7 @@ flows:
         pàgina. No es pot desfer.
       title: Reiniciar tot el procés?
     header: '{flow} - pregunta {position} de {total}, secció {section}'
+    section_unavailable: Secció no disponible
 live:
   errors:
     expediente_not_found: No s'ha trobat l'expedient sol.licitat a l'AEAT.

@@ -1767,6 +1767,36 @@ application:
       state_unreadable: No se pudo leer el estado de configuración local.
       state_write_invalid_payload: 'No se pudo guardar el estado del flujo de trabajo:
         carga útil no válida.'
+    results:
+      aborted: El flujo de trabajo se detuvo antes de completarse.
+      completed: Flujo de trabajo completado.
+    steps:
+      already_filed: Esta declaración ya consta como presentada.
+      auth_certificate_invalid: El certificado digital no es válido.
+      auth_certificate_load_failed: No se pudo cargar el certificado digital.
+      auth_provider_unavailable: El proveedor de autenticación seleccionado no está
+        disponible.
+      deadline_absent: No hay plazo de presentación disponible.
+      deadline_closed: El plazo de presentación está cerrado.
+      deadline_future: El plazo de presentación aún no se ha abierto.
+      deadline_informational: Información sobre el plazo registrada.
+      deadline_missing: El plazo de presentación no está disponible.
+      deadline_open: El plazo de presentación está abierto.
+      deadline_overdue: El plazo de presentación ha vencido.
+      draft_build_failed: No se pudo preparar el borrador.
+      draft_built: Borrador preparado.
+      draft_identity_mismatch: El borrador no corresponde a la declaración seleccionada.
+      draft_not_ready: El borrador no está listo para su presentación.
+      inbox_blocked: El buzón contiene elementos bloqueantes.
+      inbox_clear: El buzón está libre de bloqueos.
+      inbox_skipped: La comprobación del buzón no está disponible.
+      preflight_completed: Se completaron las comprobaciones previas a la presentación.
+      preflight_failed: No se pudieron completar las comprobaciones previas a la presentación.
+      profile_loaded: Perfil activo cargado.
+      site_unavailable: El servicio de presentación no está disponible.
+      validation_clean: La validación se completó sin incidencias bloqueantes.
+      validation_failed: La validación detectó incidencias bloqueantes.
+      workflow_failure: No se pudo completar el flujo de trabajo.
 auth:
   catalogue:
     certificate_description: Autenticación basada en un certificado X.509 (FNMT-RCM
@@ -3469,12 +3499,6 @@ cli:
           work revision %{revision_id}`.'
         work_unit_id_help: Identificador estable (SHA-256 de 64 caracteres) de la
           unidad de trabajo
-        workflow_draft_build_refused_next_action: Corrija la entrada de borrador indicada
-          y vuelva a ejecutar %{command}.
-        workflow_draft_build_refused_summary: 'Se rechazó la generación del borrador:
-          %{error_message}. Corrija la entrada de borrador indicada y vuelva a calcular.'
-        workflow_review_verification_report_next_action: 'Revise el informe de verificación:
-          %{command}'
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
         year_out_of_range: El ejercicio fiscal %{year} está fuera de rango; indique
           un año entre %{minimum} y %{maximum}.
@@ -7496,6 +7520,7 @@ flows:
       working: Ejecutando {action}...
     actions:
       section: Acciones
+    choice_unavailable: Opción no disponible
     column:
       field: Campo
       state: Estado
@@ -7505,7 +7530,6 @@ flows:
       clear: Borrar
       masked_kept: Este valor está oculto, por eso el campo empieza vacío. Déjalo
         vacío para conservar el valor guardado o escribe uno nuevo para sustituirlo.
-      path: 'Identificador interno: %{path}'
       refused:
         boolean: '''%{value}'' no es una respuesta de sí o no. Responde Sí o No.'
         date: '''%{value}'' no es una fecha. Usa el formato AAAA-MM-DD - por ejemplo
@@ -7527,13 +7551,14 @@ flows:
       write_failed: No se ha podido guardar el campo. Vuelve a intentarlo.
       write_in_flight: Se está guardando el campo anterior. Espera a que termine y
         vuelve a intentarlo.
+    field_unavailable: Campo de perfil no disponible
     language:
       unavailable: Este perfil no ofrece un ajuste de idioma.
+    namespace_detail: detalle {number}
     recovery_boundary: 'El código de recuperación se crea y se rota solo desde la
       terminal: aeat config recovery create / aeat config recovery rotate. Las 24
       palabras se muestran una sola vez y no se pueden volver a mostrar.'
-    required_complete: Está presente toda la información del perfil requerida por
-      el esquema.
+    required_field_unavailable: Campo obligatorio del perfil
     section_title: '{title} - {present}/{total}'
     title: 'Perfil: {profile}'
   progress:
@@ -7586,10 +7611,13 @@ flows:
     header: Revisión - {answered} preguntas respondidas.
     header_tui: 'Revisión - {answered} respondidas, {remaining} obligatorias pendientes,
       listo para enviar: {eligible}'
+    mode_create: creación del perfil
+    mode_modify: edición del perfil
     orphan_marker: (ya no se pregunta)
     page_deferred: 'La pregunta %{page_key} está aplazada: decide antes de presentar.'
     page_invalid: La pregunta %{page_key} tiene una respuesta no válida.
     page_stale: 'Revisa la pregunta %{page_key}: cambió una respuesta anterior.'
+    question_unavailable: Pregunta ya no disponible
     required_unanswered: La pregunta obligatoria %{page_key} está sin responder.
     reset_stale_confirm: La pregunta {page_key} ya no se plantea. ¿Borrar su respuesta
       guardada?
@@ -7598,6 +7626,7 @@ flows:
     row: '{number}. {page_key} - estado: {status}'
     save_unavailable: Guardar y salir no está disponible en el modo {mode}; completa
       el flujo de una sola vez.
+    section_unavailable: Sección no disponible
   status:
     auth:
       absolute_deadline: Límite absoluto de la sesión
@@ -7607,6 +7636,7 @@ flows:
       login_ready: listo
       provider: Proveedor
       provider_none: sin configurar
+      provider_unknown: Proveedor desconocido
       status: Acceso
       subject: Titular
     binding_quit: Salir
@@ -7615,7 +7645,10 @@ flows:
       column:
         field: Campo
         value: Valor
+      field_unavailable: Campo no disponible
       none: No hay ningún perfil activo.
+      repeated_field: '{label} (elemento {row})'
+      value_unavailable: Valor no disponible
     profiles:
       column:
         active: Activo
@@ -7626,6 +7659,7 @@ flows:
         active: activo
         setup_incomplete: configuración incompleta
         tombstoned: eliminado
+        unknown: desconocido
     recovery:
       commands_title: Acciones (copiar y ejecutar)
       enrolled: activado
@@ -7650,6 +7684,7 @@ flows:
     button_back: Atrás
     button_next: Siguiente
     button_review: Revisión
+    choice_unavailable: Opción no disponible
     confirm_restart:
       cancel: Cancelar
       confirm: Reiniciar
@@ -7657,6 +7692,7 @@ flows:
         página. No se puede deshacer.
       title: ¿Reiniciar todo el proceso?
     header: '{flow} - pregunta {position} de {total}, sección {section}'
+    section_unavailable: Sección no disponible
 live:
   errors:
     expediente_not_found: No se encontró el expediente solicitado en la AEAT.

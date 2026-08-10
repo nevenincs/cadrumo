@@ -1685,6 +1685,36 @@ application:
       state_unreadable: A helyi konfigurációs állapot nem olvasható.
       state_write_invalid_payload: 'A munkafolyamat-állapot nem menthető: érvénytelen
         adattartalom.'
+    results:
+      aborted: A munkafolyamat a befejezés előtt leállt.
+      completed: A munkafolyamat befejeződött.
+    steps:
+      already_filed: Ez a bevallás már benyújtottként szerepel.
+      auth_certificate_invalid: A digitális tanúsítvány nem érvényes.
+      auth_certificate_load_failed: A digitális tanúsítvány betöltése nem sikerült.
+      auth_provider_unavailable: A kiválasztott hitelesítési szolgáltató nem érhető
+        el.
+      deadline_absent: Nem áll rendelkezésre benyújtási határidő.
+      deadline_closed: A benyújtási időszak lezárult.
+      deadline_future: A benyújtási időszak még nem nyílt meg.
+      deadline_informational: A határidővel kapcsolatos információ rögzítve.
+      deadline_missing: A benyújtási határidő nem érhető el.
+      deadline_open: A benyújtási időszak nyitva van.
+      deadline_overdue: A benyújtási határidő lejárt.
+      draft_build_failed: A tervezetet nem sikerült elkészíteni.
+      draft_built: A tervezet elkészült.
+      draft_identity_mismatch: A tervezet nem egyezik a kiválasztott bevallással.
+      draft_not_ready: A tervezet nem áll készen a benyújtásra.
+      inbox_blocked: A beérkezett üzenetek között blokkoló elemek vannak.
+      inbox_clear: A beérkezett üzenetek között nincs akadály.
+      inbox_skipped: A beérkezett üzenetek ellenőrzése nem érhető el.
+      preflight_completed: A benyújtás előtti ellenőrzések befejeződtek.
+      preflight_failed: A benyújtás előtti ellenőrzéseket nem sikerült elvégezni.
+      profile_loaded: Az aktív profil betöltve.
+      site_unavailable: A benyújtási szolgáltatás nem érhető el.
+      validation_clean: Az ellenőrzés blokkoló problémák nélkül befejeződött.
+      validation_failed: Az ellenőrzés blokkoló problémákat talált.
+      workflow_failure: A munkafolyamatot nem sikerült befejezni.
 auth:
   catalogue:
     certificate_description: X.509 ügyféltanúsítvány-alapú hitelesítés (FNMT-RCM vagy
@@ -3384,13 +3414,6 @@ cli:
           `aeat app modelo work revisions --modelo %{modelo} --year %{year} --period
           %{period}`, ennek újravizsgálata: `aeat app modelo work revision %{revision_id}`.'
         work_unit_id_help: A munkaegység stabil 64 karakteres SHA-256 azonosítója.
-        workflow_draft_build_refused_next_action: 'Javítsa ki a hivatkozott piszkozatbemenetet,
-          majd futtassa újra: %{command}.'
-        workflow_draft_build_refused_summary: 'A piszkozat összeállítása sikertelen:
-          %{error_message}. Javítsa ki a hivatkozott piszkozatbemenetet, majd számítsa
-          újra.'
-        workflow_review_verification_report_next_action: 'Tekintse meg az ellenőrzési
-          jelentést: %{command}'
         year_help: A munkaegység adóéve (pl. 2026).
         year_out_of_range: A(z) %{year} benyújtási év kívül esik a tartományon; adjon
           meg évet %{minimum} és %{maximum} között.
@@ -7322,6 +7345,7 @@ flows:
       working: '{action} folyamatban...'
     actions:
       section: Műveletek
+    choice_unavailable: Nem elérhető választási lehetőség
     column:
       field: Mező
       state: Állapot
@@ -7331,7 +7355,6 @@ flows:
       clear: Törlés
       masked_kept: Ez az érték rejtett, ezért a mező üresen indul. Hagyd üresen a
         megőrzéshez, vagy írj be egy újat a cseréhez.
-      path: 'Belső azonosító: %{path}'
       refused:
         boolean: A(z) '%{value}' nem igen vagy nem válasz. Válaszolj Igen vagy Nem
           értékkel.
@@ -7353,12 +7376,14 @@ flows:
       write_failed: A mezőt nem sikerült menteni. Próbáld újra.
       write_in_flight: Az előző mező mentése folyamatban. Várd meg, amíg befejeződik,
         majd próbáld újra.
+    field_unavailable: Nem elérhető profilmező
     language:
       unavailable: Ez a profil nem kínál nyelvi beállítást.
+    namespace_detail: '{number}. részlet'
     recovery_boundary: 'A helyreállítási kód létrehozása és megújítása kizárólag a
       terminálról történik: aeat config recovery create / aeat config recovery rotate.
       A 24 szó egyszer jelenik meg, és nem jeleníthető meg újra.'
-    required_complete: A séma által megkövetelt összes profiladat rendelkezésre áll.
+    required_field_unavailable: Kötelező profilmező
     section_title: '{title} - {present}/{total}'
     title: 'Profil: {profile}'
   progress:
@@ -7412,11 +7437,14 @@ flows:
     header: Áttekintés - {answered} megválaszolt kérdés.
     header_tui: 'Áttekintés - {answered} megválaszolva, {remaining} kötelező még nyitva,
       beküldésre kész: {eligible}'
+    mode_create: létrehozási mód
+    mode_modify: módosítási mód
     orphan_marker: (már nem kérdezzük)
     page_deferred: A %{page_key} kérdés elhalasztva - döntés szükséges a beküldés
       előtt.
     page_invalid: A %{page_key} kérdés válasza érvénytelen.
     page_stale: Nézd át a %{page_key} kérdést - egy korábbi válasz megváltozott.
+    question_unavailable: A kérdés már nem érhető el
     required_unanswered: A kötelező %{page_key} kérdés megválaszolatlan.
     reset_stale_confirm: A(z) {page_key} kérdést már nem tesszük fel. Törlöd a hozzá
       tárolt választ?
@@ -7425,6 +7453,7 @@ flows:
     row: '{number}. {page_key} - állapot: {status}'
     save_unavailable: A mentés és kilépés nem érhető el {mode} módban; fejezd be a
       folyamatot egy ülésben.
+    section_unavailable: Nem elérhető szakasz
   status:
     auth:
       absolute_deadline: A munkamenet abszolút határideje
@@ -7434,6 +7463,7 @@ flows:
       login_ready: kész
       provider: Szolgáltató
       provider_none: nincs beállítva
+      provider_unknown: Ismeretlen szolgáltató
       status: Hozzáférés
       subject: Alany
     binding_quit: Kilépés
@@ -7442,7 +7472,10 @@ flows:
       column:
         field: Mező
         value: Érték
+      field_unavailable: Nem elérhető mező
       none: Nincs aktív profil.
+      repeated_field: '{label} ({row}. elem)'
+      value_unavailable: Nem elérhető érték
     profiles:
       column:
         active: Aktív
@@ -7453,6 +7486,7 @@ flows:
         active: aktív
         setup_incomplete: beállítás befejezetlen
         tombstoned: törölve
+        unknown: ismeretlen
     recovery:
       commands_title: Műveletek (másold és futtasd)
       enrolled: aktiválva
@@ -7477,6 +7511,7 @@ flows:
     button_back: Vissza
     button_next: Tovább
     button_review: Áttekintés
+    choice_unavailable: Nem elérhető választási lehetőség
     confirm_restart:
       cancel: Mégse
       confirm: Újraindítás
@@ -7484,6 +7519,7 @@ flows:
         Ez nem vonható vissza.
       title: Újraindítja a teljes folyamatot?
     header: '{flow} - {position}. kérdés a(z) {total} közül, {section} szakasz'
+    section_unavailable: Nem elérhető szakasz
 live:
   errors:
     expediente_not_found: Az AEAT nyilatkozat-nyilvántartás nem adta vissza a kért

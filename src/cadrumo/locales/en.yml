@@ -1615,6 +1615,35 @@ application:
       run_not_found: 'Workflow run not found: {run_id}.'
       state_unreadable: Local configuration state could not be read.
       state_write_invalid_payload: 'Workflow state could not be saved: invalid payload.'
+    results:
+      aborted: Workflow stopped before completion.
+      completed: Workflow completed.
+    steps:
+      already_filed: This filing is already recorded as submitted.
+      auth_certificate_invalid: Digital certificate is not valid.
+      auth_certificate_load_failed: Digital certificate could not be loaded.
+      auth_provider_unavailable: Selected authentication provider is unavailable.
+      deadline_absent: No filing deadline is available.
+      deadline_closed: Filing window is closed.
+      deadline_future: Filing window has not opened yet.
+      deadline_informational: Deadline information recorded.
+      deadline_missing: Filing deadline is unavailable.
+      deadline_open: Filing window is open.
+      deadline_overdue: Filing deadline has passed.
+      draft_build_failed: Draft could not be prepared.
+      draft_built: Draft prepared.
+      draft_identity_mismatch: Draft does not match the selected filing.
+      draft_not_ready: Draft is not ready for filing.
+      inbox_blocked: Inbox has blocking items.
+      inbox_clear: Inbox is clear.
+      inbox_skipped: Inbox check is not available.
+      preflight_completed: Filing checks completed.
+      preflight_failed: Filing checks could not be completed.
+      profile_loaded: Active profile loaded.
+      site_unavailable: The filing service is unavailable.
+      validation_clean: Validation completed without blocking issues.
+      validation_failed: Validation found blocking issues.
+      workflow_failure: Workflow could not be completed.
 auth:
   catalogue:
     certificate_description: X.509 client certificate authentication (FNMT-RCM or
@@ -3205,12 +3234,6 @@ cli:
           `aeat app modelo work revisions --modelo %{modelo} --year %{year} --period
           %{period}` and re-inspect this one with `aeat app modelo work revision %{revision_id}`.'
         work_unit_id_help: Stable 64-character SHA-256 identifier of the work unit
-        workflow_draft_build_refused_next_action: Repair the cited draft input and
-          rerun %{command}.
-        workflow_draft_build_refused_summary: 'Draft build refused: %{error_message}.
-          Repair the cited draft input and recalculate.'
-        workflow_review_verification_report_next_action: 'Review the verification
-          report: %{command}'
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between
           %{minimum} and %{maximum}.
@@ -6980,6 +7003,7 @@ flows:
       working: Running {action}...
     actions:
       section: Actions
+    choice_unavailable: Unavailable choice
     column:
       field: Field
       state: State
@@ -6989,7 +7013,6 @@ flows:
       clear: Clear
       masked_kept: This value is hidden, so the box starts empty. Leave it empty to
         keep the value on record, or type a new one to replace it.
-      path: 'Internal identifier: %{path}'
       refused:
         boolean: '''%{value}'' is not a yes or no answer. Answer Yes or No.'
         date: '''%{value}'' is not a date. Use the format YYYY-MM-DD - for example
@@ -7010,12 +7033,14 @@ flows:
       write_failed: The field could not be saved. Try again.
       write_in_flight: Saving the previous field. Wait for it to finish, then try
         again.
+    field_unavailable: Unavailable profile field
     language:
       unavailable: This profile does not offer a language setting.
+    namespace_detail: detail {number}
     recovery_boundary: 'Recovery-code creation and rotation are terminal-only: aeat
       config recovery create / aeat config recovery rotate. The 24 words are shown
       once and cannot be shown again.'
-    required_complete: All schema-required profile information is present.
+    required_field_unavailable: Required profile field
     section_title: '{title} - {present}/{total}'
     title: 'Profile: {profile}'
   progress:
@@ -7068,10 +7093,13 @@ flows:
     header: Review - {answered} questions answered.
     header_tui: 'Review - {answered} answered, {remaining} required still open, ready
       to submit: {eligible}'
+    mode_create: profile creation
+    mode_modify: profile editing
     orphan_marker: (no longer asked)
     page_deferred: Question %{page_key} is deferred - decide before submitting.
     page_invalid: Question %{page_key} has an invalid answer.
     page_stale: Question %{page_key} needs revisiting - an earlier answer changed.
+    question_unavailable: Question no longer available
     required_unanswered: Required question %{page_key} is unanswered.
     reset_stale_confirm: Question {page_key} is no longer asked. Clear its stored
       answer?
@@ -7080,6 +7108,7 @@ flows:
     row: '{number}. {page_key} - status: {status}'
     save_unavailable: Save and exit is not available in mode {mode}; finish the flow
       in one sitting.
+    section_unavailable: Unavailable section
   status:
     auth:
       absolute_deadline: Session absolute deadline
@@ -7089,6 +7118,7 @@ flows:
       login_ready: ready
       provider: Provider
       provider_none: not configured
+      provider_unknown: Unknown provider
       status: Access
       subject: Subject
     binding_quit: Quit
@@ -7097,7 +7127,10 @@ flows:
       column:
         field: Field
         value: Value
+      field_unavailable: Profile field unavailable in this version
       none: No active profile.
+      repeated_field: '{label} — entry {row}'
+      value_unavailable: Unavailable value
     profiles:
       column:
         active: Active
@@ -7108,6 +7141,7 @@ flows:
         active: active
         setup_incomplete: setup incomplete
         tombstoned: deleted
+        unknown: Unknown
     recovery:
       commands_title: Actions (copy and run)
       enrolled: enrolled
@@ -7132,6 +7166,7 @@ flows:
     button_back: Back
     button_next: Next
     button_review: Review
+    choice_unavailable: Unavailable choice
     confirm_restart:
       cancel: Cancel
       confirm: Restart
@@ -7139,6 +7174,7 @@ flows:
         This cannot be undone.
       title: Restart the whole flow?
     header: '{flow} - question {position} of {total}, section {section}'
+    section_unavailable: Unavailable section
 live:
   errors:
     expediente_not_found: AEAT declaration register did not return the requested expediente.
