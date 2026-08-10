@@ -92,6 +92,16 @@ family) do not consume this alias; they are referential identities outside
 the content-addressed-hex family.
 """
 
+InvoiceId = _Hex64Str
+"""Hex-64 content-addressed invoice identity.
+
+Minted by the invoice domain when an invoice is persisted. Declared here
+rather than in that domain because the identity is consumed across package
+boundaries — the ledger application surface and the CLI payload layer both
+hold one — and because it adds no constraint beyond :data:`Hex64Str`, which
+is the discipline every hex-64 identity concept in this codebase follows.
+"""
+
 TransactionId = _Hex64Str
 """Hex-64 content-addressed ledger-transaction identity.
 
@@ -149,6 +159,7 @@ __all__ = [
     "IdentifierNamespace",
     "IdentityDocument",
     "IdentityError",
+    "InvoiceId",
     "NifIvaFormatSpec",
     "NifIvaPrefix",
     "ProfileId",

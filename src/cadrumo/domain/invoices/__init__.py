@@ -112,7 +112,6 @@ from ._decomposition import (
     decompose_invoice,
     partition_invoices,
 )
-from ._ids import InvoiceId
 from ._protocols import InvoiceCatalogueRepositoryProtocol
 from ._service import (
     LinkInconsistency,
@@ -138,7 +137,6 @@ __all__ = [
     "InvoiceDecompositionDefect",
     "InvoiceDecompositionPartition",
     "InvoiceError",
-    "InvoiceId",
     "InvoiceLegalMention",
     "InvoiceLine",
     "InvoiceLinkError",
