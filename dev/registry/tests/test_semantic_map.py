@@ -73,6 +73,14 @@ def test_semantic_map_retains_a_complete_workbook_anchor_and_canonical_grounding
         {
             "modelo": "303",
             "design_epoch": "2026",
+            "records": (
+                {
+                    "sheet": "Registro tipo 1",
+                    "record_identity": "registro-tipo-1",
+                    "export_record_id": "registro-tipo-1",
+                    "record_type": "declaracion",
+                },
+            ),
             "entries": (_entry_payload("casilla", casilla_id="casilla.03"),),
         },
     )
@@ -80,6 +88,8 @@ def test_semantic_map_retains_a_complete_workbook_anchor_and_canonical_grounding
     entry = semantic_map.entries[0]
     assert semantic_map.modelo == "303"
     assert semantic_map.design_epoch == "2026"
+    assert semantic_map.records[0].export_record_id == "registro-tipo-1"
+    assert semantic_map.records[0].record_type == "declaracion"
     assert entry.anchor.sheet == "Registro tipo 1"
     assert entry.anchor.source_row == 14
     assert entry.anchor.source_cell == "A14"

@@ -88,6 +88,14 @@ def _semantic_map(*, entries: tuple[dict[str, object], ...]) -> SemanticMap:
         {
             "modelo": "200",
             "design_epoch": "2025",
+            "records": (
+                {
+                    "sheet": "Registro tipo 1",
+                    "record_identity": "registro-tipo-1",
+                    "export_record_id": "registro-tipo-1",
+                    "record_type": "declaracion",
+                },
+            ),
             "entries": entries,
         },
     )
@@ -106,6 +114,7 @@ def test_join_preserves_parser_coordinates_and_source_order_with_reviewed_meanin
     joined = join_record_design_semantics(semantic_map, intermediate, _m200_snapshot)
 
     assert joined.source == intermediate.source
+    assert joined.records[0].semantic_record.export_record_id == "registro-tipo-1"
     assert tuple(
         (field.parser_field.offset, field.parser_field.length, field.semantic_entry.export_field_id)
         for field in joined.fields

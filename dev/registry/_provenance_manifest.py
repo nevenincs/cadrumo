@@ -48,7 +48,7 @@ __all__ = [
 EXPORT_FRAGMENT_PROVENANCE_SCHEMA_VERSION: Final[int] = 1
 """Current wire schema for the adjacent non-loader provenance manifest."""
 
-EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION: Final[int] = 1
+EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION: Final[int] = 2
 """Current generator contract recorded by every provenance manifest."""
 
 _LOADER_SEMANTIC_SCHEMA_VERSION: Final[int] = 1
@@ -56,7 +56,10 @@ _SHA256_PATTERN: Final[str] = r"^[0-9a-f]{64}$"
 EXPORT_FRAGMENT_PROVENANCE_FILENAME: Final[str] = "export.provenance.json"
 """Sibling filename for an export directory's non-loader provenance manifest."""
 
-_SEMANTIC_MAP_KEYS: Final[frozenset[str]] = frozenset({"modelo", "design_epoch", "entries"})
+_SEMANTIC_MAP_KEYS: Final[frozenset[str]] = frozenset({"modelo", "design_epoch", "records", "entries"})
+_SEMANTIC_MAP_RECORD_KEYS: Final[frozenset[str]] = frozenset(
+    {"sheet", "record_identity", "export_record_id", "record_type"},
+)
 _SEMANTIC_MAP_ENTRY_KEYS: Final[frozenset[str]] = frozenset(
     {
         "anchor",
@@ -221,10 +224,14 @@ def semantic_map_digest(semantic_map: SemanticMap) -> str:
     entries = _as_object_list(payload["entries"], subject="semantic-map entries")
     normalised_entries = [_normalise_semantic_map_entry(entry) for entry in entries]
     normalised_entries.sort(key=_semantic_entry_sort_key)
+    records = _as_object_list(payload["records"], subject="semantic-map records")
+    normalised_records = [_normalise_semantic_map_record(record) for record in records]
+    normalised_records.sort(key=_semantic_record_sort_key)
     return content_hash_hex(
         {
             "modelo": payload["modelo"],
             "design_epoch": payload["design_epoch"],
+            "records": normalised_records,
             "entries": normalised_entries,
         },
     )
@@ -409,11 +416,35 @@ def _semantic_entry_sort_key(payload: Mapping[str, object]) -> tuple[str, int, s
     )
 
 
+def _normalise_semantic_map_record(payload: Mapping[str, object]) -> dict[str, object]:
+    _require_exact_keys(payload, _SEMANTIC_MAP_RECORD_KEYS, subject="semantic-map record")
+    return {
+        "sheet": _as_string(payload["sheet"], subject="semantic-map record sheet"),
+        "record_identity": _as_string(
+            payload["record_identity"],
+            subject="semantic-map record record_identity",
+        ),
+        "export_record_id": _as_string(
+            payload["export_record_id"],
+            subject="semantic-map record export_record_id",
+        ),
+        "record_type": _as_string(payload["record_type"], subject="semantic-map record record_type"),
+    }
+
+
+def _semantic_record_sort_key(payload: Mapping[str, object]) -> tuple[str, str, str, str]:
+    return (
+        _as_string(payload["sheet"], subject="semantic-map record sheet"),
+        _as_string(payload["record_identity"], subject="semantic-map record record_identity"),
+        _as_string(payload["export_record_id"], subject="semantic-map record export_record_id"),
+        _as_string(payload["record_type"], subject="semantic-map record record_type"),
+    )
+
+
 def _normalise_loader_record(payload: Mapping[str, object]) -> dict[str, object]:
     _require_exact_keys(payload, _RECORD_KEYS, subject="loader export record")
     fields = [
-        _normalise_loader_field(item)
-        for item in _as_object_list(payload["fields"], subject="loader record fields")
+        _normalise_loader_field(item) for item in _as_object_list(payload["fields"], subject="loader record fields")
     ]
     fields.sort(key=_loader_field_sort_key)
     row_fields = _as_object(payload["row_field_casilla_ids"], subject="loader row-field casilla ids")
