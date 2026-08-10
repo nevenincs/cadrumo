@@ -26,7 +26,7 @@ def lookup_rate(
     """Return the :class:`cadrumo.domain.iva.IvaRateRecord` matching the supplied query.
 
     Iterates the rates registered for ``member_state`` in
-    :data:`cadrumo.domain.iva.IVA_RATE_TABLE` and returns the first record whose
+    :func:`cadrumo.domain.iva.load_iva_rate_table` and returns the first record whose
     :attr:`cadrumo.domain.iva.IvaRateRecord.kind` matches ``kind`` and whose
     effective window covers ``on_date``.
 

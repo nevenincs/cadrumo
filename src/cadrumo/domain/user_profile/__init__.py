@@ -21,7 +21,7 @@ bundle composes four heavy domain types
 calculation registry; eagerly re-exporting it at this boundary would drag the
 full registry into every consumer that touches the package surface, including
 the state-free CLI surfaces enforced by
-:mod:`entrypoints.cli.test_lazy_command_tree`. :class:`CarriedSecureObject`
+:mod:`entrypoints.cli.tests.test_lazy_command_tree`. :class:`CarriedSecureObject`
 and :class:`CoverageManifest` are declared in the same
 ``_portable_export`` module and share the same lazy-resolution path so
 importing either does not trigger the same cascade. Every other

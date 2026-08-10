@@ -35,7 +35,7 @@ as always wrong, which holds for every operation this codebase can currently
 record. Autoconsumo (LIVA art. 9) is the one family where a taxpayer documents
 an operation directed at themselves, and it has no
 :class:`~domain.iva.IvaCategory` member here -- the only trace is the
-:attr:`~core.SELF_SUPPLY_ART_9_1_D` prorrata exclusion, which is declared
+:attr:`~core.Art104TresExclusion.SELF_SUPPLY_ART_9_1_D` prorrata exclusion, which is declared
 "auto-derived from the IVA category" against a category that does not exist. If
 autoconsumo invoicing is ever modelled, THIS is the predicate that must learn
 about it; until then a self-naming counterparty is a misread, not a self-supply.

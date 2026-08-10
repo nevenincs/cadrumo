@@ -1,10 +1,10 @@
 """Producer-side lazy-import boundary probe for ``cadrumo.domain.user_profile``.
 
 The CLI-side gate at
-:mod:`cadrumo.entrypoints.cli.test_lazy_command_tree` enforces that the
+:mod:`cadrumo.entrypoints.cli.tests.test_lazy_command_tree` enforces that the
 state-free CLI surfaces do not transitively load the calculation
 registry. The application-side mirror at
-:mod:`cadrumo.application.user_profile.test_lazy_boundary` pins the same
+:mod:`cadrumo.application.user_profile.tests.test_lazy_boundary` pins the same
 contract one layer up. This module pins it at the *domain*-package
 boundary: importing :mod:`cadrumo.domain.user_profile` alone, in a fresh
 interpreter, MUST NOT place any ``cadrumo.domain.calculations.registry*``

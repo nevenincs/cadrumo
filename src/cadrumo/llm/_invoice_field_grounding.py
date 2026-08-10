@@ -353,7 +353,7 @@ def _grounded_date(raw: str | None) -> str | None:
     printed value itself. Only these two real, registered
     :data:`~core.parsing._dates._DateFmt` members are ever passed -- an invented
     format string silently degrades to one of the two delegates
-    (:func:`~core.parsing._parse_date` has no third branch), which would
+    (:func:`~core.parsing._dates._parse_date` has no third branch), which would
     make a "fallback" attempt a silent no-op duplicate.
     """
     if raw is None:

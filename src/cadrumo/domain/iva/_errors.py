@@ -21,7 +21,7 @@ class IvaRateNotFoundError(IvaError):
     """Raised when :func:`cadrumo.domain.iva.lookup_rate` cannot resolve a rate.
 
     The lookup fails either because the requested member state is absent from
-    :data:`cadrumo.domain.iva.IVA_RATE_TABLE`, because no rate of the requested
+    :func:`cadrumo.domain.iva.load_iva_rate_table`, because no rate of the requested
     :class:`cadrumo.domain.iva.IvaRateKind` is registered for that member state,
     or because every registered rate's effective window excludes the
     requested date.
@@ -40,7 +40,7 @@ class IvaRateOverlapError(IvaError):
     """Raised when two :class:`cadrumo.domain.iva.IvaRateRecord` records share a window.
 
     The substrate enforces that for every ``(member_state, kind)`` partition
-    of :data:`cadrumo.domain.iva.IVA_RATE_TABLE` no two records have overlapping
+    of :func:`cadrumo.domain.iva.load_iva_rate_table` no two records have overlapping
     ``effective_from`` / ``effective_until`` ranges. Adding a new record that
     violates this invariant raises this error at module import time so the
     regression surfaces in CI rather than silently affecting
