@@ -17,7 +17,6 @@ and uniform :class:`~cadrumo.core.json_contract.Notice` rows into
 
 from __future__ import annotations
 
-import json
 import re as _re
 from collections.abc import Sequence
 from typing import TYPE_CHECKING
@@ -38,6 +37,7 @@ from ...domain.modelos import (
     ModeloVerificationFinding,
     VerificationReport,
 )
+from ._action_rendering import resolved_precondition_action_json_cell
 from ._common import resolve_cli_precondition_action
 from ._modelo_payloads import (
     BindingEncodedOptionPayload,
@@ -1031,10 +1031,6 @@ def verification_report_lines(
     return lines
 
 
-def _verification_finding_action_text(action: ResolvedPreconditionAction | None) -> str:
-    """Render the exact typed finding recovery as a deterministic table cell."""
-    value = None if action is None else action.model_dump(mode="json")
-    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
 
 def _render_verification_finding_message(finding: ModeloVerificationFinding) -> str:

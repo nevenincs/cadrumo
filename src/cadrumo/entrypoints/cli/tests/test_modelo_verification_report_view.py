@@ -113,6 +113,7 @@ def test_verification_report_payload_resolves_the_exact_registry_recovery_verdic
         VerificationReport,
         derive_verification_report_id,
     )
+    from .._action_rendering import resolved_precondition_action_json_cell
     from .._modelo_rendering import (
         verification_report_lines as _verification_report_lines,
     )
@@ -175,6 +176,7 @@ def test_verification_report_payload_resolves_the_exact_registry_recovery_verdic
 
     lines = _verification_report_lines(report, finding_actions=(action,))
     finding_line = next(line for line in lines if line.startswith("finding\t"))
+    assert finding_line.rsplit("\t", 1)[-1] == resolved_precondition_action_json_cell(action)
     assert '"action_id":"operator.registry.verify"' in finding_line
     assert '"conditionality":"immediate"' in finding_line
     assert "aeat app " not in finding_line

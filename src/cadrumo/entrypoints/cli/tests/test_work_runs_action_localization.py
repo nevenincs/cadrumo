@@ -47,7 +47,9 @@ from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
+from .._action_rendering import resolved_precondition_action_json_cell
 from .._common import resolve_cli_precondition_action
+from .._modelo_work_runs_cli import _workflow_run_payload, _workflow_run_tab_line
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -340,6 +342,16 @@ def test_workflow_action_projection_rejects_binding_provenance_outside_the_catal
         resolve_cli_precondition_action(verdict)
 
 
+def test_workflow_run_text_projects_the_same_canonical_typed_action_dto() -> None:
+    """The run table is a text view of the resolved action DTO, not a command rebuild."""
+    payload = _workflow_run_payload(_actionable_run())
+
+    assert payload.action is not None
+    assert _workflow_run_tab_line(payload).rsplit("\t", 1)[-1] == resolved_precondition_action_json_cell(
+        payload.action,
+    )
+
+
 def test_work_run_renderer_has_no_prose_or_legacy_action_authority() -> None:
     """AST guard the complete workflow-run payload and renderer boundary."""
     cli_root = Path(__file__).parents[1]
@@ -347,7 +359,6 @@ def test_work_run_renderer_has_no_prose_or_legacy_action_authority() -> None:
         cli_root / "_modelo_work_runs_cli.py": {
             "_render_workflow_step_summary",
             "_workflow_run_payload",
-            "_workflow_run_action_text",
             "_workflow_run_tab_line",
             "register_work_run_commands",
         },
@@ -408,3 +419,32 @@ def test_work_run_renderer_has_no_prose_or_legacy_action_authority() -> None:
                         violations.append(f"{path.name}:{node.lineno}:raw CLI command")
 
     assert violations == []
+
+    canonical_path = cli_root / "_action_rendering.py"
+    canonical_tree = ast.parse(canonical_path.read_text(encoding="utf-8"), filename=str(canonical_path))
+    canonical_functions = tuple(node for node in canonical_tree.body if isinstance(node, ast.FunctionDef))
+    assert [node.name for node in canonical_functions] == ["resolved_precondition_action_json_cell"]
+    canonical_body = ast.dump(
+        ast.Module(body=canonical_functions[0].body, type_ignores=[]),
+        include_attributes=False,
+    )
+
+    action_renderers = {
+        cli_root / "_modelo_work_runs_cli.py": "_workflow_run_tab_line",
+        cli_root / "_modelo_rendering.py": "verification_report_lines",
+    }
+    retired_helpers = {"_workflow_run_action_text", "_verification_finding_action_text"}
+    for path, renderer_name in action_renderers.items():
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        functions = tuple(node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef))
+        assert retired_helpers.isdisjoint(function.name for function in functions)
+        renderer = next(function for function in functions if function.name == renderer_name)
+        assert any(
+            isinstance(call.func, ast.Name) and call.func.id == "resolved_precondition_action_json_cell"
+            for call in ast.walk(renderer)
+            if isinstance(call, ast.Call)
+        )
+        assert all(
+            ast.dump(ast.Module(body=function.body, type_ignores=[]), include_attributes=False) != canonical_body
+            for function in functions
+        )
