@@ -1694,6 +1694,7 @@ def _emit_save_exit_notice(profile_name: str, *, message: str | None = None) -> 
 
     from ...core.click_context import json_output_requested
     from ...core.json_contract import Notice, NoticeSeverity
+    from ...core.output_rendering import render_command_output
     from ..operator_output import emit_operator_json_success, sandbox_banner_line, sandbox_notice_for_active_bucket
     from ._results import ConfigProfileCreateResult, ProfileWizardStatus
 
@@ -1705,17 +1706,18 @@ def _emit_save_exit_notice(profile_name: str, *, message: str | None = None) -> 
         code=_SAVE_EXIT_RESUME_CODE,
         message=message,
     )
+    # A save-and-exit leaves the profile SETUP_INCOMPLETE (never
+    # created/active), but it still emits under the "config.profile.create"
+    # command path, so the result is the SAME registered
+    # ConfigProfileCreateResult shape with a "saved" status and no
+    # active_profile — never a bespoke dict. Both arms render the same payload,
+    # so it is built once above the branch.
+    result = ConfigProfileCreateResult(
+        profile_name=profile_name,
+        status=ProfileWizardStatus.SAVED,
+        active_profile=None,
+    )
     if json_output_requested():
-        # A save-and-exit leaves the profile SETUP_INCOMPLETE (never
-        # created/active), but it still emits under the "config.profile.create"
-        # command path, so the result is the SAME registered
-        # ConfigProfileCreateResult shape with a "saved" status and no
-        # active_profile — never a bespoke dict.
-        result = ConfigProfileCreateResult(
-            profile_name=profile_name,
-            status=ProfileWizardStatus.SAVED,
-            active_profile=None,
-        )
         # emit_operator_json_success is the one sanctioned direct route to
         # the envelope — see _emit_wizard_success.
         emit_operator_json_success(
@@ -1725,10 +1727,17 @@ def _emit_save_exit_notice(profile_name: str, *, message: str | None = None) -> 
             active_profile=None,
         )
         return
+    # Same funnel as _echo_wizard_success_text: this payload interpolates
+    # profile_name into both the disclosure and the resume command, so it is
+    # identifier-bearing and must reach the operator through the shared
+    # renderer rather than a raw echo. Two channels emitting the same
+    # identifier under different redaction states is the drift being closed.
+    lines = [f"{message}\t{resume_command}"]
     sandbox_notice = sandbox_notice_for_active_bucket()
     if sandbox_notice is not None:
-        _typer.echo(sandbox_banner_line(sandbox_notice))
-    _typer.echo(f"{message}\t{resume_command}")
+        lines.insert(0, sandbox_banner_line(sandbox_notice))
+    rendered = render_command_output(format_name="text", payload=result, lines=lines)
+    _typer.echo(rendered.text)
 
 
 def _execute_wizard_command(

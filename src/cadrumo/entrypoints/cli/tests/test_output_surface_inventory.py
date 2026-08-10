@@ -104,12 +104,14 @@ _ALLOWED_DIRECT_OUTPUTS: dict[tuple[str, str, str], str] = {
         "material. Revisit if that sink grows a caller carrying identity data."
     ),
     ("application/wizard/_commands.py", "_emit_save_exit_notice", "typer.echo"): (
-        "Save-and-exit text notice on stdout, not routed through "
-        "render_command_output. Tolerated rather than clean: it emits a profile "
-        "NAME and a resume command, and the CLI policy redacts opaque profile "
-        "IDs rather than operator-chosen names, so funnelling it is a no-op on "
-        "today's content. Its sibling _echo_wizard_success_text in this module "
-        "does funnel, so this is an inconsistency to close, not a design."
+        "IS a funnel: echoes render_command_output()'s text arm for the "
+        "save-and-exit surface, matching its sibling _echo_wizard_success_text. "
+        "The prior entry tolerated a raw echo here on the argument that the CLI "
+        "policy redacts opaque profile IDs rather than operator-chosen names, so "
+        "funnelling was a no-op on today's content. That reasoning is why the "
+        "drift survived: it made the fix look optional while leaving two "
+        "channels in one module free to diverge the moment the payload or the "
+        "policy changed."
     ),
     ("entrypoints/cli/_config/_secure_input.py", "write_to_controlling_terminal", "write"): (
         "Recovery-code display writes directly to the controlling terminal "
