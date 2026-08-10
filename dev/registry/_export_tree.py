@@ -11,12 +11,13 @@ from __future__ import annotations
 import re
 from collections.abc import Iterable, Mapping
 from pathlib import Path
-from typing import Final, Literal
+from typing import Final, Literal, cast
 
 import rtoml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from cadrumo.domain.calculations.registry import (
+    ENCODING_ALIAS_MAP,
     CasillaFieldKind,
     ExportFieldDefinition,
     ExportLayoutDefinition,
@@ -27,7 +28,6 @@ from cadrumo.domain.calculations.registry import (
     RevisionId,
     SourceRefId,
 )
-from cadrumo.domain.calculations.registry._record_spec import ENCODING_ALIAS_MAP
 
 from ._provenance_manifest import (
     EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION,
@@ -60,6 +60,12 @@ _INTEGER_CONTENT_RE: Final[re.Pattern[str]] = re.compile(r"^(?P<whole>\d+)\s*ent
 _DATE_CONTENT: Final[str] = "aaaammdd"
 _TEXT_TYPES: Final[frozenset[str]] = frozenset({"a", "an"})
 _NUMERIC_TYPES: Final[frozenset[str]] = frozenset({"n", "num"})
+_OFFICIAL_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
+    r"^\s*constante(?:\s+n[uú]mero)?\s+(?P<quote>['\"])(?P<literal>[^'\"]*)(?P=quote)\.?\s*$",
+    re.IGNORECASE,
+)
+_MAX_FRAGMENT_LINES: Final[int] = 1_399
+_MAX_FRAGMENT_LINE_CHARS: Final[int] = 519
 
 
 class _StrictModel(BaseModel):
@@ -113,15 +119,12 @@ def render_complete_export_tree(
     responsibilities deliberately remain later generator steps.
     """
     if joined.variable_envelopes:
-        identities = ", ".join(
-            repr(envelope.record_identity) for envelope in joined.variable_envelopes
-        )
+        identities = ", ".join(repr(envelope.record_identity) for envelope in joined.variable_envelopes)
         raise RegistryValidationError(
             "fixed-width export generation refuses variable envelopes without a separately typed and proven "
             f"composition contract: {identities}",
         )
     _validate_profile(joined, profile)
-    _prepare_target(target_export_dir)
     records, derivations = _render_records(joined.records, profile)
     layout = ExportLayoutDefinition.model_validate(
         {
@@ -134,11 +137,12 @@ def render_complete_export_tree(
             "records": tuple(record.model_dump(mode="python", exclude_none=True) for record in records),
         },
     )
-    _write_tree(target_export_dir, revision_id=revision_id, layout=layout)
-    output_files = (
-        "0000-export-layout.toml",
-        *tuple(_record_relative_path(index, record.id) for index, record in enumerate(layout.records, start=1)),
-    )
+    _require_semantic_map_attestation(joined, semantic_map)
+    rendered_files = _render_tree_files(revision_id=revision_id, layout=layout)
+    _prepare_target(target_export_dir)
+    for relative_path, payload in rendered_files:
+        (target_export_dir / relative_path).write_bytes(payload)
+    output_files = tuple(relative_path for relative_path, _payload in rendered_files)
     provenance_manifest = emit_export_fragment_provenance_manifest(
         joined=joined,
         semantic_map=semantic_map,
@@ -320,12 +324,31 @@ def _literal_derivation(
     literal = joined_field.semantic_entry.literal
     if literal is None:
         raise RegistryValidationError(f"literal field {joined_field.semantic_entry.export_field_id!r} has no literal")
+    official_content = parser_field.content
+    if official_content is None:
+        raise RegistryValidationError(
+            f"literal field {joined_field.semantic_entry.export_field_id!r} has no exact official constant content",
+        )
+    match = _OFFICIAL_LITERAL_RE.fullmatch(official_content)
+    if match is None:
+        raise RegistryValidationError(
+            f"literal field {joined_field.semantic_entry.export_field_id!r} has ambiguous official constant "
+            f"content {official_content!r}",
+        )
+    official_literal = match.group("literal")
     try:
-        literal_length = len(literal.encode(profile.encoding))
+        literal_bytes = literal.encode(profile.encoding)
+        official_literal_bytes = official_literal.encode(profile.encoding)
     except UnicodeEncodeError as exc:
         raise RegistryValidationError(
             f"literal field {joined_field.semantic_entry.export_field_id!r} cannot encode as {profile.encoding!r}",
         ) from exc
+    if literal_bytes != official_literal_bytes:
+        raise RegistryValidationError(
+            f"literal field {joined_field.semantic_entry.export_field_id!r} value does not agree byte-for-byte "
+            "with the exact official constant content",
+        )
+    literal_length = len(literal_bytes)
     if literal_length != parser_field.length:
         raise RegistryValidationError(
             f"literal field {joined_field.semantic_entry.export_field_id!r} has {literal_length} encoded bytes, "
@@ -466,52 +489,157 @@ def _is_required(validation: str | None) -> bool:
     return validation is not None and validation.strip().casefold() == "obligatorio"
 
 
-def _write_tree(target_export_dir: Path, *, revision_id: RevisionId, layout: ExportLayoutDefinition) -> None:
+def _render_tree_files(
+    *,
+    revision_id: RevisionId,
+    layout: ExportLayoutDefinition,
+) -> tuple[tuple[str, bytes], ...]:
     layout_payload = layout.model_dump(mode="json", exclude_none=True)
     records = tuple(layout_payload.pop("records"))
     metadata_payload = {"revisions": {str(revision_id): {"export_layouts": [layout_payload]}}}
-    _write_toml(target_export_dir / "0000-export-layout.toml", metadata_payload)
-    written_paths = {"0000-export-layout.toml"}
+    metadata_bytes = _render_toml_bytes("0000-export-layout.toml", metadata_payload)
+    _require_reviewable_fragment("0000-export-layout.toml", metadata_bytes)
+    rendered_files = [("0000-export-layout.toml", metadata_bytes)]
+    planned_paths = {"0000-export-layout.toml"}
     for index, record in enumerate(records, start=1):
         record_id = record.get("id")
         if not isinstance(record_id, str):
             raise RegistryValidationError("validated generated export record has no string id")
-        relative_path = _record_relative_path(index, record_id)
-        if relative_path in written_paths:
-            raise RegistryValidationError(f"generated export path collision at {relative_path!r}")
-        written_paths.add(relative_path)
-        _write_toml(
-            target_export_dir / relative_path,
-            {
-                "revisions": {
-                    str(revision_id): {
-                        "export_layouts": [
-                            {
-                                "id": layout.id,
-                                "records": [record],
-                            },
-                        ],
-                    },
+        record_parts = _render_record_parts(revision_id=revision_id, layout_id=layout.id, record=record)
+        for part, fragment_bytes in enumerate(record_parts, start=1):
+            relative_path = _record_relative_path(index, part, record_id)
+            if relative_path in planned_paths:
+                raise RegistryValidationError(f"generated export path collision at {relative_path!r}")
+            planned_paths.add(relative_path)
+            rendered_files.append((relative_path, fragment_bytes))
+    return tuple(rendered_files)
+
+
+def _render_record_parts(
+    *,
+    revision_id: RevisionId,
+    layout_id: object,
+    record: Mapping[str, object],
+) -> tuple[bytes, ...]:
+    raw_fields = record.get("fields")
+    if not isinstance(raw_fields, list) or not raw_fields:
+        raise RegistryValidationError(f"validated generated export record {record.get('id')!r} has no fields")
+    fields: list[Mapping[str, object]] = []
+    for field in cast(list[object], raw_fields):
+        if not isinstance(field, Mapping):
+            raise RegistryValidationError(
+                f"validated generated export record {record.get('id')!r} contains a non-table field",
+            )
+        fields.append(cast(Mapping[str, object], field))
+    record_without_fields = {key: value for key, value in record.items() if key != "fields"}
+    rendered_parts: list[bytes] = []
+    current_fields: list[Mapping[str, object]] = []
+    for field in fields:
+        candidate_fields = [*current_fields, field]
+        candidate = _render_record_fragment(
+            revision_id=revision_id,
+            layout_id=layout_id,
+            record={**record_without_fields, "fields": candidate_fields},
+        )
+        if _is_reviewable_fragment(candidate):
+            current_fields = candidate_fields
+            continue
+        if not current_fields:
+            field_id = field.get("id")
+            raise RegistryValidationError(
+                f"generated export field {field_id!r} cannot fit the repository TOML reviewability baseline",
+            )
+        rendered_parts.append(
+            _render_record_fragment(
+                revision_id=revision_id,
+                layout_id=layout_id,
+                record={**record_without_fields, "fields": current_fields},
+            ),
+        )
+        current_fields = [field]
+        candidate = _render_record_fragment(
+            revision_id=revision_id,
+            layout_id=layout_id,
+            record={**record_without_fields, "fields": current_fields},
+        )
+        if not _is_reviewable_fragment(candidate):
+            field_id = field.get("id")
+            raise RegistryValidationError(
+                f"generated export field {field_id!r} cannot fit the repository TOML reviewability baseline",
+            )
+    rendered_parts.append(
+        _render_record_fragment(
+            revision_id=revision_id,
+            layout_id=layout_id,
+            record={**record_without_fields, "fields": current_fields},
+        ),
+    )
+    return tuple(rendered_parts)
+
+
+def _render_record_fragment(
+    *,
+    revision_id: RevisionId,
+    layout_id: object,
+    record: Mapping[str, object],
+) -> bytes:
+    return _render_toml_bytes(
+        str(record.get("id", "record")),
+        {
+            "revisions": {
+                str(revision_id): {
+                    "export_layouts": [
+                        {
+                            "id": layout_id,
+                            "records": [record],
+                        },
+                    ],
                 },
             },
-        )
+        },
+    )
 
 
-def _write_toml(path: Path, payload: Mapping[str, object]) -> None:
+def _render_toml_bytes(relative_path: str, payload: Mapping[str, object]) -> bytes:
     try:
         rendered = rtoml.dumps(payload, pretty=True, none_value=None)
     except (TypeError, ValueError) as exc:
-        raise RegistryValidationError(f"cannot serialize generated export TOML {path.name!r}: {exc}") from exc
-    path.write_bytes(rendered.encode("utf-8"))
+        raise RegistryValidationError(
+            f"cannot serialize generated export TOML {relative_path!r}: {exc}",
+        ) from exc
+    return rendered.encode("utf-8")
 
 
-def _record_relative_path(index: int, record_id: object) -> str:
+def _is_reviewable_fragment(payload: bytes) -> bool:
+    lines = payload.decode("utf-8").splitlines()
+    return (
+        len(lines) <= _MAX_FRAGMENT_LINES and max((len(line) for line in lines), default=0) <= _MAX_FRAGMENT_LINE_CHARS
+    )
+
+
+def _require_reviewable_fragment(relative_path: str, payload: bytes) -> None:
+    if not _is_reviewable_fragment(payload):
+        raise RegistryValidationError(
+            f"generated export TOML {relative_path!r} exceeds the repository reviewability baseline",
+        )
+
+
+def _record_relative_path(index: int, part: int, record_id: object) -> str:
     raw_record_id = str(record_id)
     _require_safe_identifier(raw_record_id, subject="export record id")
     slug = _SLUG_RE.sub("-", raw_record_id.casefold()).strip("-")
     if not slug:
         raise RegistryValidationError(f"export record id {raw_record_id!r} cannot form a stable output slug")
-    return f"{index:04d}-record-{slug}.toml"
+    return f"{index:04d}-record-{slug}-part-{part:03d}.toml"
+
+
+def _require_semantic_map_attestation(joined: JoinedRecordDesign, semantic_map: SemanticMap) -> None:
+    joined_entries = frozenset(field.semantic_entry for field in joined.fields)
+    if len(joined_entries) != len(joined.fields) or joined_entries != frozenset(semantic_map.entries):
+        raise RegistryValidationError("joined fields do not attest the supplied complete semantic map")
+    joined_records = frozenset(record.semantic_record for record in joined.records)
+    if len(joined_records) != len(joined.records) or joined_records != frozenset(semantic_map.records):
+        raise RegistryValidationError("joined records do not attest the supplied complete semantic map")
 
 
 def _require_safe_identifier(value: str, *, subject: str) -> None:

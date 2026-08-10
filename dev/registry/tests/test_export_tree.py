@@ -11,8 +11,12 @@ from shutil import copy2
 import pytest
 
 from cadrumo.core.resources import bundled_path
-from cadrumo.domain.calculations.registry import RegistryError, RegistryValidationError, bundled_authority
-from cadrumo.domain.calculations.registry._loader import load_modelo_directory
+from cadrumo.domain.calculations.registry import (
+    RegistryError,
+    RegistryValidationError,
+    bundled_authority,
+    load_modelo_directory,
+)
 
 from .. import _export_tree
 from .._export_tree import ExportRenderProfile, RenderedExportTree, render_complete_export_tree
@@ -210,6 +214,101 @@ def _profile() -> ExportRenderProfile:
 
 def _joined(snapshot, *, numeric_content: str | None = "2 enteros y 2 decimales"):
     return join_record_design_semantics(_semantic_map(), _intermediate(numeric_content=numeric_content), snapshot)
+
+
+def _oversized_authorities(snapshot, *, field_count: int = 245) -> tuple[SemanticMap, JoinedRecordDesign]:
+    fields = tuple(
+        {
+            "sheet": "Oversized record",
+            "record_identity": "oversized-record",
+            "source_row": 14 + index,
+            "source_cell": f"A{14 + index}",
+            "ordinal": index + 1,
+            "offset": index + 1,
+            "length": 1,
+            "aeat_type": "An",
+            "normalized_description": f"Reviewed filler {index + 1}",
+        }
+        for index in range(field_count)
+    )
+    intermediate = RecordDesignIntermediate.model_validate(
+        {
+            "source": {
+                "source_ref": "aeat-dr-200-2025",
+                "source_sha256": "a4506d24b7973a745d1225d59147078e03f14a30791a229d852b37f757442505",
+                "workbook_format": RecordDesignWorkbookFormat.XLSX,
+                "design_epoch": "2025",
+            },
+            "sheets": (
+                {
+                    "sheet": "Oversized record",
+                    "record_identity": "oversized-record",
+                    "declared_total": field_count,
+                    "fields": fields,
+                },
+                {
+                    "sheet": "Trailing record",
+                    "record_identity": "trailing-record",
+                    "declared_total": 1,
+                    "fields": (
+                        {
+                            "sheet": "Trailing record",
+                            "record_identity": "trailing-record",
+                            "source_row": 14,
+                            "source_cell": "A14",
+                            "ordinal": 1,
+                            "offset": 1,
+                            "length": 1,
+                            "aeat_type": "An",
+                            "normalized_description": "Reviewed trailing filler",
+                        },
+                    ),
+                },
+            ),
+        },
+    )
+    semantic_map = SemanticMap.model_validate(
+        {
+            "modelo": "200",
+            "design_epoch": "2025",
+            "records": (
+                {
+                    "sheet": "Oversized record",
+                    "record_identity": "oversized-record",
+                    "export_record_id": "generated-oversized-record",
+                    "record_type": "detalle",
+                },
+                {
+                    "sheet": "Trailing record",
+                    "record_identity": "trailing-record",
+                    "export_record_id": "generated-trailing-record",
+                    "record_type": "pie",
+                },
+            ),
+            "entries": (
+                *(
+                    _entry(
+                        "Oversized record",
+                        "oversized-record",
+                        14 + index,
+                        index + 1,
+                        f"generated.oversized.field-{index + 1:03d}",
+                        "filler",
+                    )
+                    for index in range(field_count)
+                ),
+                _entry(
+                    "Trailing record",
+                    "trailing-record",
+                    14,
+                    1,
+                    "generated.trailing.field",
+                    "filler",
+                ),
+            ),
+        },
+    )
+    return semantic_map, join_record_design_semantics(semantic_map, intermediate, snapshot)
 
 
 def _write_modelo_shell(modelo_dir: Path) -> Path:
@@ -566,8 +665,8 @@ def test_renderer_writes_stable_complete_tree_that_real_directory_loader_merges(
 
     assert first.output_files == (
         "0000-export-layout.toml",
-        "0001-record-generated-registro-tipo-1.toml",
-        "0002-record-generated-registro-tipo-2.toml",
+        "0001-record-generated-registro-tipo-1-part-001.toml",
+        "0002-record-generated-registro-tipo-2-part-001.toml",
     )
     assert first.field_derivations[-1].derivation_code == "numeric-decimal-v1"
     assert first.layout == second.layout
@@ -596,16 +695,7 @@ def test_renderer_writes_stable_complete_tree_that_real_directory_loader_merges(
         )
         == first.provenance_manifest
     )
-    assert tuple(record.id for record in layout.records) == (
-        "generated-registro-tipo-1",
-        "generated-registro-tipo-2",
-    )
-    assert tuple(
-        (field.offset, field.length, field.data_type, field.decimals) for field in layout.records[1].fields
-    ) == (
-        (1, 1, "text", None),
-        (2, 4, "decimal", 2),
-    )
+    assert layout == first.layout
 
 
 def test_renderer_manifest_refuses_file_tampering_derivation_drift_and_partial_field_evidence(
@@ -624,7 +714,7 @@ def test_renderer_manifest_refuses_file_tampering_derivation_drift_and_partial_f
     layout = load_modelo_directory(tmp_path / "modelos" / "200").revisions["2025"].export_layouts[0]
     export_root = revision_dir / "export"
     manifest_path = revision_dir / "export" / EXPORT_FRAGMENT_PROVENANCE_FILENAME
-    original_fragment = export_root / "0001-record-generated-registro-tipo-1.toml"
+    original_fragment = export_root / "0001-record-generated-registro-tipo-1-part-001.toml"
     original_bytes = original_fragment.read_bytes()
 
     original_fragment.write_bytes(original_bytes + b"# tampered\n")
@@ -757,8 +847,7 @@ def test_renderer_refuses_unmeasured_numeric_form_without_emitting_a_partial_fra
             profile=_profile(),
         )
 
-    assert target.is_dir()
-    assert not tuple(target.iterdir())
+    assert not target.exists()
 
 
 @pytest.mark.parametrize(
@@ -794,8 +883,7 @@ def test_renderer_refuses_missing_or_noncontiguous_official_record_geometry(
             profile=_profile(),
         )
 
-    assert target.is_dir()
-    assert not tuple(target.iterdir())
+    assert not target.exists()
 
 
 def test_renderer_refuses_profile_hash_drift_literal_extent_and_nonempty_target(_m200_snapshot, tmp_path) -> None:
@@ -818,14 +906,26 @@ def test_renderer_refuses_profile_hash_drift_literal_extent_and_nonempty_target(
             ),
         },
     )
+    intermediate = _intermediate()
+    first_sheet = intermediate.sheets[0]
+    oversized_literal = first_sheet.fields[0].model_copy(update={"content": 'Constante "TOO LONG"'})
+    intermediate = intermediate.model_copy(
+        update={
+            "sheets": (
+                first_sheet.model_copy(update={"fields": (oversized_literal, *first_sheet.fields[1:])}),
+                *intermediate.sheets[1:],
+            ),
+        },
+    )
     with pytest.raises(RegistryValidationError, match="encoded bytes"):
         render_complete_export_tree(
             tmp_path / "second" / "export",
             revision_id="2025",
-            joined=join_record_design_semantics(literal_map, _intermediate(), _m200_snapshot),
+            joined=join_record_design_semantics(literal_map, intermediate, _m200_snapshot),
             semantic_map=literal_map,
             profile=_profile(),
         )
+    assert not (tmp_path / "second" / "export").exists()
 
     occupied = tmp_path / "occupied" / "export"
     occupied.mkdir(parents=True)
@@ -840,6 +940,121 @@ def test_renderer_refuses_profile_hash_drift_literal_extent_and_nonempty_target(
         )
 
 
+@pytest.mark.parametrize("official_content", (None, 'Constante "<T" o "ZZ"'))
+def test_renderer_refuses_missing_or_ambiguous_official_literal_without_output(
+    _m200_snapshot,
+    tmp_path,
+    official_content: str | None,
+) -> None:
+    """Literal meaning never substitutes for absent or ambiguous official constant bytes."""
+    intermediate = _intermediate()
+    first_sheet = intermediate.sheets[0]
+    first_field = first_sheet.fields[0].model_copy(update={"content": official_content})
+    intermediate = intermediate.model_copy(
+        update={
+            "sheets": (
+                first_sheet.model_copy(update={"fields": (first_field, *first_sheet.fields[1:])}),
+                *intermediate.sheets[1:],
+            ),
+        },
+    )
+    semantic_map = _semantic_map()
+    target = tmp_path / "export"
+
+    with pytest.raises(RegistryValidationError, match="official constant"):
+        render_complete_export_tree(
+            target,
+            revision_id="2025",
+            joined=join_record_design_semantics(semantic_map, intermediate, _m200_snapshot),
+            semantic_map=semantic_map,
+            profile=_profile(),
+        )
+
+    assert not target.exists()
+
+
+def test_renderer_refuses_wrong_same_width_literal_without_output(_m200_snapshot, tmp_path) -> None:
+    """A reviewed literal with the right width still cannot override different official bytes."""
+    semantic_map = _semantic_map().model_copy(
+        update={
+            "entries": (
+                _semantic_map().entries[0].model_copy(update={"literal": "ZZ"}),
+                *_semantic_map().entries[1:],
+            ),
+        },
+    )
+    target = tmp_path / "export"
+
+    with pytest.raises(RegistryValidationError, match="byte-for-byte"):
+        render_complete_export_tree(
+            target,
+            revision_id="2025",
+            joined=join_record_design_semantics(semantic_map, _intermediate(), _m200_snapshot),
+            semantic_map=semantic_map,
+            profile=_profile(),
+        )
+
+    assert not target.exists()
+
+
+def test_renderer_partitions_oversized_record_deterministically_and_loader_merges_exactly(
+    _m200_snapshot,
+    tmp_path,
+) -> None:
+    """A real-shaped 245-field record stays reviewable and roundtrips exactly once in source order."""
+    semantic_map, joined = _oversized_authorities(_m200_snapshot)
+    first_revision = _write_modelo_shell(tmp_path / "first" / "modelos" / "200")
+    second_revision = _write_modelo_shell(tmp_path / "second" / "modelos" / "200")
+    first = render_complete_export_tree(
+        first_revision / "export",
+        revision_id="2025",
+        joined=joined,
+        semantic_map=semantic_map,
+        profile=_profile(),
+    )
+    second = render_complete_export_tree(
+        second_revision / "export",
+        revision_id="2025",
+        joined=joined,
+        semantic_map=semantic_map,
+        profile=_profile(),
+    )
+    compact_map, compact_joined = _oversized_authorities(_m200_snapshot, field_count=20)
+    compact_revision = _write_modelo_shell(tmp_path / "compact" / "modelos" / "200")
+    compact = render_complete_export_tree(
+        compact_revision / "export",
+        revision_id="2025",
+        joined=compact_joined,
+        semantic_map=compact_map,
+        profile=_profile(),
+    )
+
+    oversized_parts = tuple(path for path in first.output_files if path.startswith("0001-record-"))
+    compact_parts = tuple(path for path in compact.output_files if path.startswith("0001-record-"))
+    assert len(oversized_parts) > 1
+    assert oversized_parts == tuple(
+        f"0001-record-generated-oversized-record-part-{part:03d}.toml" for part in range(1, len(oversized_parts) + 1)
+    )
+    assert len(oversized_parts) > len(compact_parts)
+    assert compact_parts[0] == oversized_parts[0]
+    assert first.output_files[-1] == "0002-record-generated-trailing-record-part-001.toml"
+    assert compact.output_files[-1] == first.output_files[-1]
+    assert first.output_files == second.output_files
+    assert {path.name: path.read_bytes() for path in sorted((first_revision / "export").iterdir())} == {
+        path.name: path.read_bytes() for path in sorted((second_revision / "export").iterdir())
+    }
+    for relative_path in first.output_files:
+        lines = (first_revision / "export" / relative_path).read_text(encoding="utf-8").splitlines()
+        assert len(lines) < 1_400
+        assert max(map(len, lines), default=0) < 520
+
+    loaded_layout = load_modelo_directory(tmp_path / "first" / "modelos" / "200").revisions["2025"].export_layouts[0]
+    assert loaded_layout == first.layout
+    emitted_ids = tuple(str(field.id) for field in loaded_layout.records[0].fields)
+    assert emitted_ids == tuple(f"generated.oversized.field-{index:03d}" for index in range(1, 246))
+    assert len(emitted_ids) == len(set(emitted_ids)) == 245
+
+
 def test_renderer_module_has_no_old_tree_or_approximate_admission_surface() -> None:
     """The renderer must fail closed instead of importing an older output as guidance."""
     module = ast.parse(inspect.getsource(_export_tree))
@@ -852,6 +1067,7 @@ def test_renderer_module_has_no_old_tree_or_approximate_admission_surface() -> N
     )
     source = inspect.getsource(_export_tree).casefold()
 
+    assert "cadrumo.domain.calculations.registry._record_spec" not in imported_modules
     assert "resolve_export_layout" not in referenced_names
     assert "bundled_authority" not in referenced_names
     assert "cadrumo.domain.calculations.registry._export" not in imported_modules

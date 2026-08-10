@@ -387,6 +387,7 @@ from ._record_design import (
     extract_record_design_pdf_bytes,
     extract_record_design_workbook,
 )
+from ._record_spec import ENCODING_ALIAS_MAP
 from ._relation_aggregation import relation_aggregation_op
 from ._handoffs import (
     RegistryRelationHandoffApplicabilityAudit,
@@ -678,6 +679,7 @@ __all__ = [
     "CENSO_MODELO_ERROR_CODES",
     "CENSO_MODELO_EVENT_KINDS",
     "CENSO_MODELO_SERVICE_OWNER",
+    "ENCODING_ALIAS_MAP",
     "GROI_ORACLE_ID",
     "INVOICE_BINDING_SOURCE_KINDS",
     "KNOWN_PROFILE_FLAG_ADVISORY_FIELDS",
