@@ -211,9 +211,6 @@ from ._certificate_secret_backend import (
 from ._certificate_sources import (
     CertificateSourceNoActiveBucketError,
 )
-from ._certificate_sources import (
-    CertificateSourceNotFoundError as StateCertificateSourceNotFoundError,
-)
 from ._certificate_sources_operator import (
     certificate_source_tax_id,
     check_operator_certificate_sources,
@@ -371,7 +368,6 @@ __all__ = [
     "ProviderProbeResult",
     "SecureStorageCertificateSecretBackend",
     "SessionDeserializationError",
-    "StateCertificateSourceNotFoundError",
     "StorageStatePaths",
     "acquire_auth_acquisition_lock",
     "active_auth_projection_span",

@@ -54,9 +54,6 @@ from ._certificate_secret_backend import (
     SecureStorageCertificateSecretBackend,
 )
 from ._certificate_sources import (
-    CertificateSourceNotFoundError as _StateCertificateSourceNotFoundError,
-)
-from ._certificate_sources import (
     active_certificate_source as _active_certificate_source,
 )
 from ._certificate_sources import (
@@ -289,19 +286,13 @@ def select_operator_certificate_source(*, name: str) -> CertificateSourceMutatio
                 translated_message="application.auth.operator.errors.certificate_source_not_found",
                 context={"name": normalized_name},
             )
-        try:
-            next_state = _persist_with_event(
-                active_bucket_id=active_bucket_id,
-                transform=lambda state: select_certificate_source(state, name=normalized_name),
-                event_type=BucketEventType.AUTH_CERTIFICATE_SOURCE_SELECTED,
-                object_id=normalized_name,
-                payload={"name": normalized_name, "certificate_path": record.certificate_path},
-            )
-        except _StateCertificateSourceNotFoundError as exc:
-            raise CertificateSourceNotFoundError(
-                translated_message="application.auth.operator.errors.certificate_source_not_found",
-                context={"name": normalized_name},
-            ) from exc
+        next_state = _persist_with_event(
+            active_bucket_id=active_bucket_id,
+            transform=lambda state: select_certificate_source(state, name=normalized_name),
+            event_type=BucketEventType.AUTH_CERTIFICATE_SOURCE_SELECTED,
+            object_id=normalized_name,
+            payload={"name": normalized_name, "certificate_path": record.certificate_path},
+        )
         record = next_state.auth.certificate_sources[normalized_name]
     return CertificateSourceMutationResult(
         name=name.strip(),

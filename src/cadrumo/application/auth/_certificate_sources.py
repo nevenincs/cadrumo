@@ -40,6 +40,7 @@ from typing import TYPE_CHECKING, ClassVar
 
 from ...core.time import now
 from .._workflow_auth_models import AuthState, CertificateSourceRecord
+from ._operator_results import CertificateSourceNotFoundError
 
 if TYPE_CHECKING:
     from ..workflow import WorkflowState
@@ -50,14 +51,6 @@ class CertificateSourceNoActiveBucketError(Exception):
 
     __bare_base_rationale__: ClassVar[str] = (
         "certificate-source mutation precondition signal for an uninitialised local profile bucket"
-    )
-
-
-class CertificateSourceNotFoundError(KeyError):
-    """Raised when a requested certificate source name is not registered."""
-
-    __bare_base_rationale__: ClassVar[str] = (
-        "mapping-style certificate-source lookup miss; inherits KeyError so callers can preserve key semantics"
     )
 
 
@@ -145,7 +138,10 @@ def select_certificate_source(state: WorkflowState, *, name: str) -> WorkflowSta
     normalized_name = name.strip()
     record = auth.certificate_sources.get(normalized_name)
     if record is None:
-        raise CertificateSourceNotFoundError(normalized_name)
+        raise CertificateSourceNotFoundError(
+            translated_message="application.auth.operator.errors.certificate_source_not_found",
+            context={"name": normalized_name},
+        )
     updated_auth = auth.model_copy(
         update={
             "active_certificate_source": normalized_name,
@@ -181,7 +177,6 @@ def remove_certificate_source(state: WorkflowState, *, name: str) -> tuple[Workf
 
 __all__ = [
     "CertificateSourceNoActiveBucketError",
-    "CertificateSourceNotFoundError",
     "active_certificate_source",
     "auth_state",
     "list_certificate_sources",
