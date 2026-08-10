@@ -15,7 +15,11 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....core.resources import resources
-from ....domain.calculations.registry import KNOWN_VERIFICATION_PREDICATE_OPERATORS, CasillaId
+from ....domain.calculations.registry import (
+    KNOWN_VERIFICATION_PREDICATE_OPERATORS,
+    CasillaId,
+    parse_verification_predicate_expression,
+)
 from ....domain.modelos import (
     CalculationRevision,
     ModeloValidationError,
@@ -146,7 +150,7 @@ def test_m130_casilla_02_gastos_is_ledger_bound_not_manual_blocking(repos: _Repo
     assert not casilla_02_missing, "bound casilla 02 must not produce a MISSING_REQUIRED_CASILLA finding"
 
 
-def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
+def test_domain_predicate_parser_recognises_every_known_predicate_operator() -> None:
     """The canonical predicate-operator set MUST be runtime-evaluable.
 
     The single source of truth lives at
@@ -165,8 +169,6 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
     removes that regex without updating the canonical set, this
     test fires.
     """
-    from .. import _verification_predicates
-
     probe_expressions: dict[str, str] = {
         "all_nonzero": 'all_nonzero(["01", "02"])',
         "any_nonzero": 'any_nonzero(["01", "02"])',
@@ -223,22 +225,11 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
         "extend probe_expressions and regex_attr_names when adding a new operator to the canonical set"
     )
 
-    for operator_name in KNOWN_VERIFICATION_PREDICATE_OPERATORS:
-        regex_attr = regex_attr_names[operator_name]
-        regex = getattr(_verification_predicates, regex_attr, None)
-        assert regex is not None, (
-            f"Runtime evaluator missing regex {regex_attr!r} for known operator "
-            f"{operator_name!r}; the canonical set "
-            "(registry.KNOWN_VERIFICATION_PREDICATE_OPERATORS) and the runtime "
-            "evaluator's regex set must stay in sync"
-        )
+    for operator_name in regex_attr_names:
         probe = probe_expressions[operator_name]
-        assert regex.match(probe) is not None, (
-            f"Runtime evaluator regex {regex_attr!r} does not match the canonical "
-            f"probe expression for {operator_name!r}: probe={probe!r}; pattern="
-            f"{regex.pattern!r}. A probe-shape change elsewhere "
-            "must be reflected here so the gate catches the next drift."
-        )
+        parsed = parse_verification_predicate_expression(probe)
+        assert parsed is not None, f"schema parser did not recognise {operator_name!r}: {probe!r}"
+        assert parsed.operator.value == operator_name
 
 
 def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c14(repos: _Repos) -> None:
@@ -333,10 +324,15 @@ def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
     )
 
     blocking_findings = [f for f in report.findings if f.kind is ModeloVerificationFindingKind.BLOCKING_RULE]
-    cap_findings = [f for f in blocking_findings if "modelo-130-c15-cap-by-c14" in f.message]
+    cap_findings = [
+        f
+        for f in blocking_findings
+        if f.message_locale_key == "application.modelo.findings.cross_casilla_invariant_violated"
+        and dict(f.message_facts) == {"predicate_id": "modelo-130-c15-cap-by-c14"}
+    ]
     assert cap_findings, (
         "M130 C15-cap-by-C14 predicate must fire when carry-forward exceeds positive C14; "
-        f"got blocking findings: {[f.message for f in blocking_findings]}"
+        f"got blocking findings: {blocking_findings}"
     )
     assert report.granted_verificado_completo is False
 
@@ -404,10 +400,15 @@ def test_m131_c11_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
     )
 
     blocking = [f for f in report.findings if f.kind is ModeloVerificationFindingKind.BLOCKING_RULE]
-    cap_findings = [f for f in blocking if "modelo-131-2026-c11-cap-by-c10" in f.message]
+    cap_findings = [
+        f
+        for f in blocking
+        if f.message_locale_key == "application.modelo.findings.cross_casilla_invariant_violated"
+        and dict(f.message_facts) == {"predicate_id": "modelo-131-2026-c11-cap-by-c10"}
+    ]
     assert cap_findings, (
         "M131 C11-cap-by-C10 predicate must fire when carry-forward exceeds positive C10; "
-        f"got blocking findings: {[f.message for f in blocking]}"
+        f"got blocking findings: {blocking}"
     )
     assert report.granted_verificado_completo is False
 
@@ -533,7 +534,7 @@ def test_missing_required_casilla_finding_carries_registry_provenance() -> None:
     assert expected_legal_refs, "registry casilla 02 must declare legal_refs (oracle precondition)"
     assert expected_source_refs, "registry casilla 02 must declare source_refs (oracle precondition)"
 
-    finding = missing_required_casilla_finding(_CASILLA_02, "wu-test-id", casilla_def=casilla_02)
+    finding = missing_required_casilla_finding(_CASILLA_02, casilla_def=casilla_02)
 
     assert finding.kind is ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA
     assert finding.casilla_id == _CASILLA_02
@@ -551,4 +552,4 @@ def test_missing_casilla_finding_refuses_absent_registry_definition() -> None:
     from .._verification_actions import missing_required_casilla_finding
 
     with pytest.raises(ModeloValidationError, match="requires registry casilla definition provenance"):
-        missing_required_casilla_finding(_ABSENT_REGISTRY_CASILLA, "wu-test-id", casilla_def=None)
+        missing_required_casilla_finding(_ABSENT_REGISTRY_CASILLA, casilla_def=None)

@@ -541,5 +541,5 @@ def test_validator_rejects_advisory_when_ratio_ge_wrong_arity() -> None:
         update={"verification_predicates": (*revision.verification_predicates, predicate)},
     )
 
-    with pytest.raises(RegistryValidationError, match="must name exactly three tokens"):
+    with pytest.raises(RegistryValidationError, match="advisory_when_ratio_ge expression.*is malformed"):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))

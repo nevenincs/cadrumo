@@ -46,10 +46,12 @@ floor at each call site, where the three could quietly disagree.
 
 from __future__ import annotations
 
+import re as _re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
+from types import MappingProxyType
 from typing import Annotated, Literal
 
 from pydantic import BeforeValidator, Field, field_validator, model_validator
@@ -63,10 +65,17 @@ __all__ = [
     "KNOWN_PROFILE_FLAG_ADVISORY_FIELDS",
     "KNOWN_VERIFICATION_PREDICATE_OPERATORS",
     "RegistryVerificationPolicy",
+    "ParsedVerificationPredicate",
+    "VERIFICATION_PREDICATE_SPECIFICATIONS",
     "VerificationDiscrepancyCause",
     "VerificationExpectationDefinition",
+    "VerificationPredicateOperator",
     "VerificationPredicateDefinition",
+    "VerificationPredicateSpecification",
+    "VerificationPredicateSyntax",
     "VerificationRoundingCode",
+    "parse_verification_predicate_expression",
+    "verification_predicate_operator_name",
 ]
 
 
@@ -385,6 +394,305 @@ KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
         "roll_forward_balances",
     },
 )
+
+
+class VerificationPredicateOperator(StrEnum):
+    """The closed registry-authored verification-predicate operator vocabulary."""
+
+    ADVISORY_WHEN_POSITIVE = "advisory_when_positive"
+    ADVISORY_WHEN_RATIO_GE = "advisory_when_ratio_ge"
+    ALL_NONZERO = "all_nonzero"
+    AT_MOST_ONE_POSITIVE = "at_most_one_positive"
+    ANY_NONZERO = "any_nonzero"
+    CAP_LE_WHEN_POSITIVE = "cap_le_when_positive"
+    CASILLA_EQUALS_IMPLIES_DIVERGES = "casilla_equals_implies_diverges"
+    CASILLA_EQUALS_IMPLIES_NONZERO = "casilla_equals_implies_nonzero"
+    CASILLA_EQUALS_IMPLIES_PROFILE_FLAG = "casilla_equals_implies_profile_flag"
+    DEDUCCION_REQUIRES_ADQUISICION_BEFORE = "deduccion_requires_adquisicion_before"
+    ADVISORY_WHEN_COMPUTED_DIVERGES = "advisory_when_computed_diverges"
+    EQUALS = "equals"
+    IMPLIES_ANY_NONZERO = "implies_any_nonzero"
+    IMPLIES_NONZERO = "implies_nonzero"
+    PROFILE_FIELD_REQUIRED = "profile_field_required"
+    PROFILE_FLAG_ENABLED = "profile_flag_enabled"
+    ROLL_FORWARD_BALANCES = "roll_forward_balances"
+
+
+class VerificationPredicateSyntax(StrEnum):
+    """The syntax families accepted by the verification-predicate DSL."""
+
+    CASILLA_LIST = "casilla_list"
+    RATIO = "ratio"
+    PROFILE_FIELD_REQUIRED = "profile_field_required"
+    PROFILE_FLAG_ENABLED = "profile_flag_enabled"
+    CASILLA_LITERAL_CASILLA = "casilla_literal_casilla"
+    CASILLA_LITERAL_PROFILE_FIELD = "casilla_literal_profile_field"
+    CASILLA_LITERAL_CASILLA_PAIR = "casilla_literal_casilla_pair"
+    CASILLA_TRIPLE_CUTOFF = "casilla_triple_cutoff"
+
+
+@dataclass(frozen=True, slots=True)
+class VerificationPredicateSpecification:
+    """The grammar and casilla-arity contract of one predicate operator."""
+
+    operator: VerificationPredicateOperator
+    syntax: VerificationPredicateSyntax
+    minimum_casilla_ids: int = 0
+    maximum_casilla_ids: int | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ParsedVerificationPredicate:
+    """A syntax-checked verification-predicate expression and its captures.
+
+    Casilla references remain raw text until registry validation resolves them
+    against a revision or the runtime validates its hostile-string boundary.
+    """
+
+    operator: VerificationPredicateOperator
+    arguments: tuple[str, ...]
+    casilla_ids: tuple[str, ...] = ()
+    literal: str = ""
+    threshold: str = ""
+    profile_field: str = ""
+    applicability_filter: str = ""
+    cutoff: str = ""
+
+
+def _predicate_specification(
+    operator: VerificationPredicateOperator,
+    syntax: VerificationPredicateSyntax,
+    *,
+    minimum_casilla_ids: int = 0,
+    maximum_casilla_ids: int | None = None,
+) -> VerificationPredicateSpecification:
+    return VerificationPredicateSpecification(
+        operator=operator,
+        syntax=syntax,
+        minimum_casilla_ids=minimum_casilla_ids,
+        maximum_casilla_ids=maximum_casilla_ids,
+    )
+
+
+VERIFICATION_PREDICATE_SPECIFICATIONS: Mapping[
+    VerificationPredicateOperator,
+    VerificationPredicateSpecification,
+] = MappingProxyType(
+    {
+        VerificationPredicateOperator.ADVISORY_WHEN_POSITIVE: _predicate_specification(
+            VerificationPredicateOperator.ADVISORY_WHEN_POSITIVE,
+            VerificationPredicateSyntax.CASILLA_LIST,
+            minimum_casilla_ids=1,
+            maximum_casilla_ids=1,
+        ),
+        VerificationPredicateOperator.ADVISORY_WHEN_RATIO_GE: _predicate_specification(
+            VerificationPredicateOperator.ADVISORY_WHEN_RATIO_GE,
+            VerificationPredicateSyntax.RATIO,
+            minimum_casilla_ids=2,
+            maximum_casilla_ids=2,
+        ),
+        VerificationPredicateOperator.ALL_NONZERO: _predicate_specification(
+            VerificationPredicateOperator.ALL_NONZERO,
+            VerificationPredicateSyntax.CASILLA_LIST,
+            minimum_casilla_ids=1,
+        ),
+        VerificationPredicateOperator.AT_MOST_ONE_POSITIVE: _predicate_specification(
+            VerificationPredicateOperator.AT_MOST_ONE_POSITIVE,
+            VerificationPredicateSyntax.CASILLA_LIST,
+            minimum_casilla_ids=2,
+        ),
+        VerificationPredicateOperator.ANY_NONZERO: _predicate_specification(
+            VerificationPredicateOperator.ANY_NONZERO,
+            VerificationPredicateSyntax.CASILLA_LIST,
+            minimum_casilla_ids=1,
+        ),
+        VerificationPredicateOperator.CAP_LE_WHEN_POSITIVE: _predicate_specification(
+            VerificationPredicateOperator.CAP_LE_WHEN_POSITIVE,
+            VerificationPredicateSyntax.CASILLA_LIST,
+            minimum_casilla_ids=2,
+            maximum_casilla_ids=2,
+        ),
+        VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_DIVERGES: _predicate_specification(
+            VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_DIVERGES,
+            VerificationPredicateSyntax.CASILLA_LITERAL_CASILLA_PAIR,
+            minimum_casilla_ids=3,
+            maximum_casilla_ids=3,
+        ),
+        VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_NONZERO: _predicate_specification(
+            VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_NONZERO,
+            VerificationPredicateSyntax.CASILLA_LITERAL_CASILLA,
+            minimum_casilla_ids=2,
+            maximum_casilla_ids=2,
+        ),
+        VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_PROFILE_FLAG: _predicate_specification(
+            VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_PROFILE_FLAG,
+            VerificationPredicateSyntax.CASILLA_LITERAL_PROFILE_FIELD,
+            minimum_casilla_ids=1,
+            maximum_casilla_ids=1,
+        ),
+        VerificationPredicateOperator.DEDUCCION_REQUIRES_ADQUISICION_BEFORE: _predicate_specification(
+            VerificationPredicateOperator.DEDUCCION_REQUIRES_ADQUISICION_BEFORE,
+            VerificationPredicateSyntax.CASILLA_TRIPLE_CUTOFF,
+            minimum_casilla_ids=3,
+            maximum_casilla_ids=3,
+        ),
+        VerificationPredicateOperator.ADVISORY_WHEN_COMPUTED_DIVERGES: _predicate_specification(
+            VerificationPredicateOperator.ADVISORY_WHEN_COMPUTED_DIVERGES,
+            VerificationPredicateSyntax.CASILLA_LIST,
+            minimum_casilla_ids=2,
+            maximum_casilla_ids=2,
+        ),
+        VerificationPredicateOperator.EQUALS: _predicate_specification(
+            VerificationPredicateOperator.EQUALS,
+            VerificationPredicateSyntax.CASILLA_LIST,
+            minimum_casilla_ids=2,
+            maximum_casilla_ids=2,
+        ),
+        VerificationPredicateOperator.IMPLIES_ANY_NONZERO: _predicate_specification(
+            VerificationPredicateOperator.IMPLIES_ANY_NONZERO,
+            VerificationPredicateSyntax.CASILLA_LIST,
+            minimum_casilla_ids=2,
+        ),
+        VerificationPredicateOperator.IMPLIES_NONZERO: _predicate_specification(
+            VerificationPredicateOperator.IMPLIES_NONZERO,
+            VerificationPredicateSyntax.CASILLA_LIST,
+            minimum_casilla_ids=2,
+            maximum_casilla_ids=2,
+        ),
+        VerificationPredicateOperator.PROFILE_FIELD_REQUIRED: _predicate_specification(
+            VerificationPredicateOperator.PROFILE_FIELD_REQUIRED,
+            VerificationPredicateSyntax.PROFILE_FIELD_REQUIRED,
+        ),
+        VerificationPredicateOperator.PROFILE_FLAG_ENABLED: _predicate_specification(
+            VerificationPredicateOperator.PROFILE_FLAG_ENABLED,
+            VerificationPredicateSyntax.PROFILE_FLAG_ENABLED,
+        ),
+        VerificationPredicateOperator.ROLL_FORWARD_BALANCES: _predicate_specification(
+            VerificationPredicateOperator.ROLL_FORWARD_BALANCES,
+            VerificationPredicateSyntax.CASILLA_LIST,
+            minimum_casilla_ids=4,
+            maximum_casilla_ids=4,
+        ),
+    },
+)
+
+
+_PREDICATE_LIST_PATTERN = _re.compile(r"^(?P<operator>[a-z_]+)\(\[(?P<arguments>[^\]]*)\]\)$")
+_RATIO_PATTERN = _re.compile(
+    r'^\w+\(\["(?P<numerator>[^"]+)",\s*"(?P<denominator>[^"]+)",\s*"(?P<threshold>[^"]+)"\]\)$',
+)
+_PROFILE_FIELD_REQUIRED_PATTERN = _re.compile(r'^\w+\("(?P<field>[^"]+)", "(?P<filter>[^"]+)"\)$')
+_PROFILE_FLAG_ENABLED_PATTERN = _re.compile(r'^\w+\("(?P<field>[^"]+)"\)$')
+
+
+def verification_predicate_operator_name(expression: str) -> str | None:
+    """Return the leading DSL operator name, or ``None`` when no call begins."""
+    stripped = expression.strip()
+    paren_idx = stripped.find("(")
+    if paren_idx <= 0:
+        return None
+    return stripped[:paren_idx]
+
+
+def _predicate_argument_tokens(arguments: str) -> tuple[str, ...]:
+    return tuple(token.strip().strip('"').strip("'") for token in arguments.split(",") if token.strip())
+
+
+def parse_verification_predicate_expression(expression: str) -> ParsedVerificationPredicate | None:
+    """Parse one runtime-supported verification-predicate DSL expression.
+
+    ``None`` means the expression is unknown or malformed. Registry validation
+    turns that state into an authoring-time refusal; the runtime retains its
+    defensive fallback for anything that bypasses registry validation.
+    """
+    operator_name = verification_predicate_operator_name(expression)
+    if operator_name is None:
+        return None
+    try:
+        operator = VerificationPredicateOperator(operator_name)
+    except ValueError:
+        return None
+    specification = VERIFICATION_PREDICATE_SPECIFICATIONS[operator]
+    stripped = expression.strip()
+    if specification.syntax is VerificationPredicateSyntax.CASILLA_LIST:
+        match = _PREDICATE_LIST_PATTERN.match(stripped)
+        if match is None:
+            return None
+        arguments = _predicate_argument_tokens(match.group("arguments"))
+        return ParsedVerificationPredicate(operator=operator, arguments=arguments, casilla_ids=arguments)
+    if specification.syntax is VerificationPredicateSyntax.RATIO:
+        match = _RATIO_PATTERN.match(stripped)
+        if match is None:
+            return None
+        numerator = match.group("numerator")
+        denominator = match.group("denominator")
+        threshold = match.group("threshold")
+        return ParsedVerificationPredicate(
+            operator=operator,
+            arguments=(numerator, denominator, threshold),
+            casilla_ids=(numerator, denominator),
+            threshold=threshold,
+        )
+    if specification.syntax is VerificationPredicateSyntax.PROFILE_FIELD_REQUIRED:
+        match = _PROFILE_FIELD_REQUIRED_PATTERN.match(stripped)
+        if match is None:
+            return None
+        field = match.group("field")
+        applicability_filter = match.group("filter")
+        return ParsedVerificationPredicate(
+            operator=operator,
+            arguments=(field, applicability_filter),
+            profile_field=field,
+            applicability_filter=applicability_filter,
+        )
+    if specification.syntax is VerificationPredicateSyntax.PROFILE_FLAG_ENABLED:
+        match = _PROFILE_FLAG_ENABLED_PATTERN.match(stripped)
+        if match is None:
+            return None
+        field = match.group("field")
+        return ParsedVerificationPredicate(operator=operator, arguments=(field,), profile_field=field)
+    match = _PREDICATE_LIST_PATTERN.match(stripped)
+    if match is None:
+        return None
+    arguments = _predicate_argument_tokens(match.group("arguments"))
+    if specification.syntax is VerificationPredicateSyntax.CASILLA_LITERAL_CASILLA:
+        if len(arguments) != 3:
+            return ParsedVerificationPredicate(operator=operator, arguments=arguments)
+        return ParsedVerificationPredicate(
+            operator=operator,
+            arguments=arguments,
+            casilla_ids=(arguments[0], arguments[2]),
+            literal=arguments[1],
+        )
+    if specification.syntax is VerificationPredicateSyntax.CASILLA_LITERAL_PROFILE_FIELD:
+        if len(arguments) != 3:
+            return ParsedVerificationPredicate(operator=operator, arguments=arguments)
+        return ParsedVerificationPredicate(
+            operator=operator,
+            arguments=arguments,
+            casilla_ids=(arguments[0],),
+            literal=arguments[1],
+            profile_field=arguments[2],
+        )
+    if specification.syntax is VerificationPredicateSyntax.CASILLA_LITERAL_CASILLA_PAIR:
+        if len(arguments) != 4:
+            return ParsedVerificationPredicate(operator=operator, arguments=arguments)
+        return ParsedVerificationPredicate(
+            operator=operator,
+            arguments=arguments,
+            casilla_ids=(arguments[0], arguments[2], arguments[3]),
+            literal=arguments[1],
+        )
+    if specification.syntax is VerificationPredicateSyntax.CASILLA_TRIPLE_CUTOFF:
+        if len(arguments) != 4:
+            return ParsedVerificationPredicate(operator=operator, arguments=arguments)
+        return ParsedVerificationPredicate(
+            operator=operator,
+            arguments=arguments,
+            casilla_ids=arguments[:3],
+            cutoff=arguments[3],
+        )
+    raise AssertionError(f"unsupported verification predicate syntax {specification.syntax!r}")
 
 
 class VerificationPredicateDefinition(RegistryModel):

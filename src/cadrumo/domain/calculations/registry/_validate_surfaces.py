@@ -11,7 +11,7 @@ from collections.abc import Mapping
 
 from ._ids import CasillaId
 from ._schema import LegalReference, ModeloRevision, SourceReference
-from ._schema_verification import KNOWN_VERIFICATION_PREDICATE_OPERATORS
+from ._schema_verification import KNOWN_VERIFICATION_PREDICATE_OPERATORS, verification_predicate_operator_name
 from ._validate_evidence import EvidenceValidator
 from ._validate_helpers import missing_refs as _missing_refs
 from ._validate_verification_predicates import (
@@ -22,9 +22,8 @@ from ._validate_verification_predicates import (
     _casilla_equals_implies_profile_flag_predicate_failures,
     _casilla_list_predicate_failures,
     _deduccion_requires_adquisicion_before_predicate_failures,
-    _predicate_operator_name,
+    _profile_field_required_predicate_failures,
     _profile_flag_enabled_predicate_failures,
-    _roll_forward_balances_predicate_arity_failures,
 )
 
 
@@ -186,7 +185,7 @@ def validate_verification_expectation_section(
     for predicate in revision.verification_predicates:
         owner = f"verification predicate {predicate.predicate_id}"
         failures.extend(_missing_refs(prefix, owner, predicate.legal_refs, legal_refs, "legal"))
-        op_name = _predicate_operator_name(predicate.expression)
+        op_name = verification_predicate_operator_name(predicate.expression)
         if op_name is None:
             failures.append(
                 f"{prefix}: {owner} expression {predicate.expression!r} is not a recognised "
@@ -209,14 +208,6 @@ def validate_verification_expectation_section(
                     operator_name=op_name,
                     casillas=casillas,
                 ),
-            )
-        elif op_name == "roll_forward_balances":
-            # roll_forward_balances(["closing", "opening", "applied", "base"]) is a
-            # four-casilla continuity check; reject a malformed arity or unknown
-            # casilla id at authoring time rather than letting the runtime
-            # evaluator's bad-arity branch silently hold / never fire.
-            failures.extend(
-                _roll_forward_balances_predicate_arity_failures(prefix, owner, predicate.expression, casillas),
             )
         elif op_name == "casilla_equals_implies_nonzero":
             # casilla_equals_implies_nonzero(["antecedent_id", "literal",
@@ -279,6 +270,8 @@ def validate_verification_expectation_section(
             )
         elif op_name == "profile_flag_enabled":
             failures.extend(_profile_flag_enabled_predicate_failures(prefix, owner, predicate.expression))
+        elif op_name == "profile_field_required":
+            failures.extend(_profile_field_required_predicate_failures(prefix, owner, predicate.expression))
         elif op_name == "advisory_when_ratio_ge":
             # advisory_when_ratio_ge(["num_id", "den_id", "threshold"]) carries a
             # numeric literal as its third token, so it cannot route through the
