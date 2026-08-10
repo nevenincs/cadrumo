@@ -6920,19 +6920,13 @@ flows:
       add_row_required: This is required; the row cannot be added without it.
       add_row_section: Which section to add to
       auth_clave_incomplete: Cl@ve still needs %{missing}. Nothing was saved.
-      auth_clave_movil_route: Cl@ve Móvil route
       auth_clave_movil_route_app_request: Request in app
       auth_clave_movil_route_qr: QR code
       auth_contraste_missing: 'Cl@ve Móvil Request in app needs one document contrast:
         %{nie_field} for a NIE, or %{dni_field} for a DNI. Open Identification, fill
         the applicable field, and retry sync.'
-      auth_dni_nie: DNI or NIE you identify with
-      auth_fecha_validez: Validity date on the document, YYYY-MM-DD (DNI holders)
       auth_fecha_validez_invalid: Enter the validity date as YYYY-MM-DD, for example
         1990-01-31.
-      auth_numero_soporte: Support number printed on the document
-      auth_provider: How you identify to AEAT
-      auth_tax_id: Your tax identity (NIF or NIE)
       auth_tax_id_invalid: That is not a valid NIF or NIE. Check the letter at the
         end and enter it as it appears on your document, for example 12345678Z.
       busy: Another operation is still running. Wait for it to finish.

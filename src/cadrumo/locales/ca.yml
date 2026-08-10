@@ -7385,20 +7385,14 @@ flows:
       add_row_required: És obligatori; la fila no es pot afegir sense aquesta dada.
       add_row_section: A quina secció s'afegeix
       auth_clave_incomplete: A Cl@ve encara li falta %{missing}. No s'ha desat res.
-      auth_clave_movil_route: Ruta de Cl@ve Mòbil
       auth_clave_movil_route_app_request: Sol·licitud a l'aplicació
       auth_clave_movil_route_qr: Codi QR
       auth_contraste_missing: 'La sol·licitud a l''aplicació de Cl@ve Mòbil necessita
         una dada de contrast del document: %{nie_field} per a un NIE o %{dni_field}
         per a un DNI. Obriu Identificació, empleneu el camp aplicable i torneu a intentar
         la sincronització.'
-      auth_dni_nie: DNI o NIE amb què us identifiqueu
-      auth_fecha_validez: Data de validesa del document, AAAA-MM-DD (per a DNI)
       auth_fecha_validez_invalid: Introduïu la data de validesa com a AAAA-MM-DD,
         per exemple 1990-01-31.
-      auth_numero_soporte: Número de suport del document
-      auth_provider: Forma d'identificació davant l'AEAT
-      auth_tax_id: La vostra identitat fiscal (NIF o NIE)
       auth_tax_id_invalid: Aquest NIF o NIE no és vàlid. Comproveu la lletra final
         i introduïu-lo tal com figura al vostre document, per exemple 12345678Z.
       busy: Encara hi ha una altra operació en curs. Espera que acabi.

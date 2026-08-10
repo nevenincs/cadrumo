@@ -7262,19 +7262,13 @@ flows:
       add_row_section: Melyik szakaszhoz
       auth_clave_incomplete: 'A Cl@ve még ezt igényli: %{missing}. Semmi sem lett
         elmentve.'
-      auth_clave_movil_route: Cl@ve Móvil útvonal
       auth_clave_movil_route_app_request: Kérés az alkalmazásban
       auth_clave_movil_route_qr: QR-kód
       auth_contraste_missing: 'A Cl@ve Móvil alkalmazáskéréséhez egy okmány-ellenőrző
         adat szükséges: NIE esetén %{nie_field}, DNI esetén %{dni_field}. Nyissa meg
         az Azonosítás részt, töltse ki a megfelelő mezőt, majd próbálja újra a szinkronizálást.'
-      auth_dni_nie: DNI vagy NIE, amellyel azonosítja magát
-      auth_fecha_validez: A dokumentum érvényességi dátuma, ÉÉÉÉ-HH-NN (DNI esetén)
       auth_fecha_validez_invalid: Az érvényességi dátumot ÉÉÉÉ-HH-NN alakban adja
         meg, például 1990-01-31.
-      auth_numero_soporte: A dokumentumon szereplő támogatási szám
-      auth_provider: Azonosítás módja az AEAT felé
-      auth_tax_id: Az Ön adóazonosítója (NIF vagy NIE)
       auth_tax_id_invalid: Ez a NIF vagy NIE nem érvényes. Ellenőrizze a záró betűt,
         és úgy adja meg, ahogy az okmányán szerepel, például 12345678Z.
       busy: Egy másik művelet még mindig fut. Várja meg, amíg befejeződik.
