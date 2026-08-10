@@ -104,7 +104,6 @@ class CadrumoError(Exception):
         message: str | None = None,
         *,
         context: Mapping[str, object] | None = None,
-        suggestion: str | None = None,
         translated_message: str | None = None,
     ) -> None:
         """Construct a domain error with optional structured metadata.
@@ -136,7 +135,6 @@ class CadrumoError(Exception):
             message: Optional human-readable message override.
             context: Optional structured context that can be redacted and
                 emitted in the JSON envelope.
-            suggestion: Optional copy-paste recovery command override.
             translated_message: Optional multilingual message override.
         """
         text = message or translated_message
@@ -145,7 +143,6 @@ class CadrumoError(Exception):
         else:
             super().__init__()
         self.context: dict[str, object] | None = dict(context) if context is not None else None
-        self.suggestion: str | None = suggestion
         self.translated_message: str | None = translated_message
 
 
@@ -275,9 +272,6 @@ class ActiveProfilePointerError(CoreError):
             f"invalid active-profile pointer at {path}; refusing root storage fallback",
             translated_message="errors.integrity.integrity_active_profile_pointer",
             context={"path": str(path)},
-            suggestion=(
-                "aeat config repair profile # language fallback=es until the active-profile pointer is readable"
-            ),
         )
 
 

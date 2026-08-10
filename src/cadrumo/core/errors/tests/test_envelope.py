@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 import json
 
 import pytest
@@ -21,7 +22,14 @@ from ...json_contract import (
     ResolvedPreconditionAction,
 )
 from ...locks_errors import LockAcquisitionError
-from .. import ActiveProfilePointerError, ErrorEnvelope, build_error_envelope, render_error_json, render_error_text
+from .. import (
+    ActiveProfilePointerError,
+    CadrumoError,
+    ErrorEnvelope,
+    build_error_envelope,
+    render_error_json,
+    render_error_text,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -115,13 +123,17 @@ def test_error_envelope_has_explicit_no_recovery_without_a_typed_action() -> Non
     registered = error.code
 
     assert registered is not None
-    assert error.suggestion is not None
+    assert not hasattr(error, "suggestion")
     envelope = build_error_envelope(error)
     rendered = render_error_text(error)
 
     assert envelope.action is None
     assert "suggestion" not in envelope.model_dump()
-    assert error.suggestion not in rendered
+    assert "aeat config repair" not in rendered
+
+
+def test_cadrumo_error_does_not_expose_retired_suggestion_parameter() -> None:
+    assert "suggestion" not in inspect.signature(CadrumoError).parameters
 
 
 def test_error_envelope_rejects_retired_suggestion_field() -> None:
