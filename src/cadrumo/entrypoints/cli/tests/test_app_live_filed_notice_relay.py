@@ -257,3 +257,140 @@ def test_the_submitted_file_advisory_reaches_every_filed_pull_envelope() -> None
     assert "evidence_notices" not in FiledCaptureSourcesResult.model_fields
     assert "submitted_file_extraction_error" not in FiledCaptureResult.model_fields
     assert "submitted_file_extraction_error" not in FiledCaptureSourcesResult.model_fields
+
+
+# ------------------------------------------------ the sweep that stopped early
+
+_TRUNCATION_CODE = "live.filed.limit_reached"
+
+
+def _sweep(*, reached: int, captured: int) -> FiledHistoryOnboardingRun:
+    """A run that reached ``reached`` declaraciones and wrote ``captured`` of them.
+
+    The two are separately settable because they diverge on the path this notice
+    exists for: a preview reaches declaraciones and writes none.
+    """
+    return FiledHistoryOnboardingRun(
+        pairs=(_answered_pair(),),
+        carries_a_taxpayer_specific_denominator=True,
+        reached_count=reached,
+        captured_count=captured,
+    )
+
+
+def test_a_sweep_that_hit_its_limit_warns_that_the_rest_was_not_walked() -> None:
+    """Truncation is stated, not left for the operator to infer from a count.
+
+    Without it the run reports its pairs and stops, and a pair the sweep never
+    reached is indistinguishable from one AEAT holds nothing for -- which is the
+    reading that turns an interrupted sweep into "nothing was filed".
+    """
+    notices = _filed_pull_all_notices(_sweep(reached=5, captured=5), limit=5)
+
+    truncation = [notice for notice in notices if notice.code == _TRUNCATION_CODE]
+    assert len(truncation) == 1
+    assert truncation[0].severity is NoticeSeverity.WARNING
+    assert truncation[0].context == {"limit": "5", "reached_count": "5"}
+
+
+def test_the_truncation_warning_leads_the_channel() -> None:
+    """It precedes the advisories it qualifies.
+
+    An expected-but-not-found warning about a pair the sweep never walked is an
+    artefact of the truncation, so the truncation has to be readable first.
+    """
+    run = FiledHistoryOnboardingRun(
+        pairs=(_answered_pair(),),
+        carries_a_taxpayer_specific_denominator=False,
+        reached_count=2,
+    )
+
+    codes = [notice.code for notice in _filed_pull_all_notices(run, limit=2)]
+
+    assert codes.index(_TRUNCATION_CODE) == 0
+    # A positive control: the notice it precedes really is on this channel, so
+    # the ordering assertion is over two present codes rather than one.
+    assert "live.filed.pull_all.no_taxpayer_specific_denominator" in codes
+
+
+def test_a_sweep_that_finished_inside_its_limit_stays_silent() -> None:
+    """The success path keeps the channel clean."""
+    notices = _filed_pull_all_notices(_sweep(reached=3, captured=3), limit=10)
+
+    assert _TRUNCATION_CODE not in [notice.code for notice in notices]
+
+
+def test_an_unlimited_sweep_cannot_be_truncated_and_says_nothing() -> None:
+    """No ``--limit`` means no early stop to report, whatever the tally reached."""
+    notices = _filed_pull_all_notices(_sweep(reached=9999, captured=9999), limit=None)
+
+    assert _TRUNCATION_CODE not in [notice.code for notice in notices]
+
+
+def test_the_preview_that_captured_nothing_still_reports_its_truncation() -> None:
+    """The predicate reads the reached tally, never the written one.
+
+    ``captured_count`` is ``len(observation_paths)``, and a preview appends no
+    paths -- so a ``captured_count >= limit`` predicate reads FALSE exactly when a
+    dry run was truncated, staying silent on the one path where the operator has
+    no other way to notice. This drives the preview shape directly.
+    """
+    run = _sweep(reached=4, captured=0)
+    # Guard the shape before asserting on it: if the model ever stopped allowing
+    # a reached-but-uncaptured run, the assertion below would pass while proving
+    # nothing about previews.
+    assert run.captured_count == 0 < run.reached_count, "this is no longer the preview shape"
+
+    codes = [notice.code for notice in _filed_pull_all_notices(run, limit=4)]
+
+    assert _TRUNCATION_CODE in codes
+    # The discarded predicate, evaluated so its silence is on record rather than
+    # only described in prose.
+    truncated_by_the_written_tally = run.captured_count >= 4
+    assert not truncated_by_the_written_tally
+
+
+def test_every_limit_bearing_filed_read_reports_its_own_truncation() -> None:
+    """The sweep is not the only surface that can stop early.
+
+    ``filed pull`` takes the same ``--limit``, and in bulk mode it is the surface
+    that also takes ``--dry-run`` -- the combination where the written tally is
+    zero however much was reached. One builder answers for both, so a fix here
+    cannot hold on one door while the other stays silent.
+    """
+    fields = _capture_report_fields(_submitted_file_notice())
+    bulk = BulkFiledDataCaptureReport(
+        output_root="var/filed",
+        modelos=("303",),
+        year_from=2025,
+        year_to=2025,
+        failed_count=0,
+        **{**fields, "captured_count": 0, "observation_paths": (), "reached_count": 6},
+    )
+    # The preview shape, guarded before it is asserted on.
+    assert bulk.captured_count == 0 < bulk.reached_count
+
+    codes = [notice.code for notice in _filed_capture_notices(bulk, limit=6)]
+
+    assert codes[0] == _TRUNCATION_CODE
+    # The capture's own advisory still rides behind it, unmerged.
+    assert len(codes) == 2
+
+
+def test_a_capture_given_no_limit_keeps_its_notices_untouched() -> None:
+    """Without a ``--limit`` the builder is the identity it was before.
+
+    ``pull-sources`` has no limit option at all, so its call site takes the
+    default -- this pins that the default cannot invent a truncation.
+    """
+    notice = _submitted_file_notice()
+    report = BulkFiledDataCaptureReport(
+        output_root="var/filed",
+        modelos=("303",),
+        year_from=2025,
+        year_to=2025,
+        failed_count=0,
+        **{**_capture_report_fields(notice), "reached_count": 9999},
+    )
+
+    assert _filed_capture_notices(report) == (notice,)

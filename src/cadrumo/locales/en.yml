@@ -2271,6 +2271,10 @@ cli:
           offers, not a confirmed filing history for this NIF. Whether that list is
           scoped to the authenticated NIF is unconfirmed, so it only widens the walk:
           a pair absent from it is no proof that nothing was filed.'
+        limit_reached: The sweep stopped at the --limit of {limit} after reaching
+          {reached} declaration(s); pairs beyond that point were not walked. A missing
+          pair is not evidence that nothing was filed -- re-run with a higher --limit
+          or none.
         list_help: List filed declaration rows without downloading artefacts
         pull_all_help: Pull this taxpayer's AEAT filed-declaration history in one
           sweep and report what it found.

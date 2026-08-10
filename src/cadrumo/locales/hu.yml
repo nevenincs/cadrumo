@@ -2385,6 +2385,10 @@ cli:
           Nincs megerősítve, hogy a lista a hitelesített NIF-re szűkül, ezért csak
           szélesíti a bejárást: egy hiányzó pár nem bizonyítja, hogy semmit sem nyújtottak
           be.'
+        limit_reached: A menet a(z) {limit} értékű --limit elérésekor leállt, miután
+          {reached} bevallást ért el; az azon túli párokat nem járta be. Egy hiányzó
+          pár nem bizonyítja, hogy semmit sem nyújtottak be – futtassa újra magasabb
+          --limit értékkel vagy anélkül.
         list_help: Benyújtott bevallássorok listázása artefaktok letöltése nélkül.
         pull_all_help: Egyetlen menetben letölti az adózó AEAT-nál benyújtott bevallási
           előzményét, és jelenti a találtakat.

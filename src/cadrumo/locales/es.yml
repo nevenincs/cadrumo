@@ -2464,6 +2464,10 @@ cli:
           No está confirmado si esa lista se limita al NIF autenticado, por lo que
           solo amplía el recorrido: un par ausente de ella no prueba que no se presentara
           nada.'
+        limit_reached: 'La pasada se ha detenido en el --limit de {limit} tras alcanzar
+          {reached} declaración(es); los pares posteriores no se han recorrido. La
+          ausencia de un par no prueba que no se presentara nada: vuelva a ejecutar
+          la orden con un --limit mayor o sin él.'
         list_help: Listar declaraciones presentadas sin descargar artefactos
         pull_all_help: Descarga en una sola pasada el historial de declaraciones presentadas
           ante la AEAT y detalla lo encontrado.

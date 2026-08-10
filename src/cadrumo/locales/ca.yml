@@ -2449,6 +2449,10 @@ cli:
           No està confirmat si aquesta llista es limita al NIF autenticat, per la
           qual cosa només amplia el recorregut: un parell absent no prova que no es
           presentés res.'
+        limit_reached: 'La passada s''ha aturat en el --limit de {limit} després d''assolir
+          {reached} declaració(ns); els parells posteriors no s''han recorregut. L''absència
+          d''un parell no prova que no es presentés res: torneu a executar l''ordre
+          amb un --limit més alt o sense.'
         list_help: Llistar declaracions presentades sense descarregar artefactes
         pull_all_help: Baixa en una sola passada l'historial de declaracions presentades
           a l'AEAT i detalla el que ha trobat.
