@@ -62,7 +62,7 @@ from ...core import (
     result_disposition_is_refund,
 )
 from ...core.hashing import sha256_hex
-from ...core.identity import BucketId
+from ...core.identity import BucketId, CalculationRevisionId, WorkUnitId
 from ...core.logging import get_logger
 from ...core.time import now as _utc_now
 from ...domain import filing as filing_domain
@@ -79,14 +79,12 @@ from ...domain.modelos import (
     CalculationRevision,
     CalculationRevisionAmendmentKind,
     CalculationRevisionCatalogueRepositoryProtocol,
-    CalculationRevisionId,
     CalculationRevisionState,
     ModeloError,
     ModeloExportError,
     ModeloRecordCatalogueRepositoryProtocol,
     VerificationReportCatalogueRepositoryProtocol,
     WorkUnit,
-    WorkUnitId,
 )
 from ...domain.period import (
     PeriodValidationError,

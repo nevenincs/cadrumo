@@ -19,16 +19,12 @@ from ...core.external_constants import (
 from ...core.external_constants import (
     DEFAULT_CURRENCY,
 )
-from ...core.identity import BucketId, TransactionId
+from ...core.identity import BucketId, CalculationRevisionId, TransactionId, WorkUnitId
 from ...core.parsing import normalise_iso_3166_alpha2_jurisdiction, normalise_iso_4217_currency
 from ...domain.iva import (
     EUMemberState,
     InputClassification,
     IvaCategory,
-)
-from ...domain.modelos import (
-    CalculationRevisionId,
-    WorkUnitId,
 )
 from ...domain.transactions import (
     BucketTransactionRef,

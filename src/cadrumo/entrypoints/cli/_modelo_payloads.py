@@ -32,7 +32,7 @@ from ...application.aggregation import (
 from ...application.calculations import ObservationSourceKind, PriorDomiciliationElectionProjection
 from ...application.modelo import validate_modelo_work_deadline_posture
 from ...core import BindingSourceKind, PaymentElection, Period, RefundElection, ResultDisposition
-from ...core.identity import BucketId, VerificationReportId
+from ...core.identity import BucketId, CalculationRevisionId, FilingRecordId, VerificationReportId, WorkUnitId
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction, register_schema
 from ...domain.buckets import (
     BucketActorLabel,
@@ -53,14 +53,11 @@ from ...domain.calculations.registry import (
     WithholdingClaveBreakdown,
 )
 from ...domain.modelos import (
-    CalculationRevisionId,
     ExternalEvidenceKind,
-    FilingRecordId,
     ModeloCode,
     ModeloRecordStatus,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
-    WorkUnitId,
 )
 from ._decimal_wire import DecimalWireText
 from ._modelo_aux_payloads import (
