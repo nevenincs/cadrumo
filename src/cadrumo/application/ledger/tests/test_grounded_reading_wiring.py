@@ -40,6 +40,7 @@ from .._grounded_reading import (
     verified_provenance,
 )
 from .._identity_roles import IdentityCandidate, resolve_counterparty_identity
+from .._preconditions import LedgerPreconditionCondition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -337,8 +338,8 @@ def test_the_router_text_path_runs_the_whole_chain() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_an_absent_reader_refuses_and_names_the_provisioning_verb() -> None:
-    """ "No reader" is a gap the operator can close, so the refusal says how.
+def test_an_absent_reader_refuses_with_a_typed_environment_condition() -> None:
+    """A missing reader is a typed refusal, not an inferred recovery command.
 
     The message names ``aeat config provision pull`` rather than reporting a
     bare failure. A refusal that does not say how to fix itself is a dead end,
@@ -350,7 +351,10 @@ def test_an_absent_reader_refuses_and_names_the_provisioning_verb() -> None:
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
         _refuse_a_text_read_with_no_reader(LLMProviderError("no provider reachable"))
 
-    assert raised.value.suggestion == "aeat config provision pull"
+    assert raised.value.terminal_precondition_verdict is not None
+    assert raised.value.terminal_precondition_verdict.failed_condition_id == (
+        LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE.value
+    )
     message = str(raised.value)
     assert "was not read" in message, "the operator must be told nothing was extracted"
     assert "no value was guessed" in message
@@ -391,7 +395,10 @@ def test_a_missing_reader_does_not_fall_through_to_the_vision_engine() -> None:
             settings=load_settings(),
         )
 
-    assert raised.value.suggestion == "aeat config provision pull"
+    assert raised.value.terminal_precondition_verdict is not None
+    assert raised.value.terminal_precondition_verdict.failed_condition_id == (
+        LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE.value
+    )
 
 
 def test_the_routers_fallback_try_wraps_only_the_transcription() -> None:
@@ -447,8 +454,8 @@ def test_the_no_text_layer_case_still_escalates_to_vision() -> None:
     assert "_extract_invoice_fields_via_vision" in source
 
 
-def test_the_refusals_provision_verb_survives_to_the_error_envelope() -> None:
-    """The remedy must reach the operator, not be replaced by the registry default.
+def test_the_reader_refusal_preserves_its_typed_no_recovery_outcome() -> None:
+    """The error boundary keeps the application-owned outcome without prose.
 
     `PurchaseInvoiceEvidenceInputError` is registered with a default suggestion
     of `aeat app ledger evidence list`, which is the right hint for a bad
@@ -468,11 +475,10 @@ def test_the_refusals_provision_verb_survives_to_the_error_envelope() -> None:
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
         _refuse_a_text_read_with_no_reader(LLMProviderError("Ollama is not reachable"))
 
-    # The distinction this test exists to draw is still checkable, because the raise site
-    # still produces the remediation text -- only its delivery was retired. A missing
-    # reader must be answered by PROVISIONING one; "list the evidence" is the
-    # plausible-looking wrong answer on this path, and the two differ by one verb.
-    assert raised.value.suggestion == "aeat config provision pull"
+    assert raised.value.terminal_precondition_verdict is not None
+    assert raised.value.terminal_precondition_verdict.failed_condition_id == (
+        LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE.value
+    )
 
     # Delivery ground truth, so this cannot be read as proving the operator is told it.
     # The resolver that preferred a raised suggestion over the registered default was

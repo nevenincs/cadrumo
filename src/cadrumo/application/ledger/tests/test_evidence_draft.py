@@ -51,6 +51,7 @@ from .._evidence_draft import (
 )
 from .._evidence_input import EvidenceInput
 from .._evidence_textlayer import transcribe_text_layer
+from .._preconditions import LedgerPreconditionCondition
 from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import isolated_settings as isolated_settings
 from ._evidence_test_support import runtime_profile as runtime_profile
@@ -429,7 +430,10 @@ class TestExtractInvoiceDraftFromEvidenceVisionFallback:
                 settings=isolated_settings,
             )
         assert "vision" in str(raised.value).lower()
-        assert "llm_vision on" in (raised.value.suggestion or "")
+        assert raised.value.terminal_precondition_verdict is not None
+        assert raised.value.terminal_precondition_verdict.failed_condition_id == (
+            LedgerPreconditionCondition.EVIDENCE_VISION_CAPABILITY_ENABLED.value
+        )
 
 
 class TestConfirmInvoiceDraftFromEvidence:

@@ -26,6 +26,7 @@ from ...core import LOCAL_TRANSPORT_LABEL, PDF_CONTAINER_SHAPES, FieldOrigin
 from ._document_transcription import DocumentTranscription, TranscriberIdentity
 from ._evidence import PurchaseInvoiceEvidenceInputError
 from ._evidence_input import EvidenceInput
+from ._preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 
 __all__ = [
     "TEXT_LAYER_TRANSCRIBER_NAME",
@@ -89,7 +90,10 @@ def extract_evidence_pages(evidence: EvidenceInput) -> tuple[str, ...]:
     if evidence.document_shape not in PDF_CONTAINER_SHAPES:
         raise PurchaseInvoiceEvidenceInputError(
             "evidence has no text layer (not a PDF); use the on-host vision reader",
-            suggestion="aeat app ledger evidence list",
+            precondition_verdict=ledger_no_recovery_verdict(
+                LedgerPreconditionCondition.EVIDENCE_TEXT_LAYER_AVAILABLE,
+                facts={"pdf_layer_present": False},
+            ),
         )
     return extract_pages_text_from_bytes(
         evidence.data,

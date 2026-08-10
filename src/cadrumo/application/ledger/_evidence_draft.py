@@ -169,6 +169,7 @@ from ._evidence_reference import (
     refuse_unresolved_evidence_reference,
 )
 from ._evidence_textlayer import transcribe_text_layer
+from ._preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 
 if TYPE_CHECKING:
     from ...llm import EvidenceConsentToken, LLMProvider
@@ -791,7 +792,10 @@ def extract_invoice_draft_from_evidence(
     if (evidence_id is None) == (attachment_id is None):
         raise PurchaseInvoiceEvidenceInputError(
             "exactly one of evidence_id or attachment_id must be supplied",
-            suggestion="aeat app ledger evidence list",
+            precondition_verdict=ledger_no_recovery_verdict(
+                LedgerPreconditionCondition.EVIDENCE_ATTACHMENT_SELECTION_VALID,
+                facts={"exactly_one_evidence_source_supplied": False},
+            ),
         )
 
     resolved_settings = settings or _load_settings()
@@ -906,7 +910,10 @@ def _refuse_a_text_read_with_no_reader(exc: Exception) -> NoReturn:
         "this document was transcribed successfully, but the semantic reader that turns that text "
         f"into fields could not be run ({exc}). The document was not read, and no value was guessed "
         "from it. Provision an on-host reading model, then extract again.",
-        suggestion="aeat config provision pull",
+        precondition_verdict=ledger_no_recovery_verdict(
+            LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE,
+            facts={"semantic_reader_available": False},
+        ),
     ) from exc
 
 
@@ -1082,7 +1089,10 @@ def _refuse_an_unrecognised_xml_document(evidence: EvidenceInput) -> None:
         "this XML document carries no invoice record in a syntax this reader knows. Recognised "
         "structured syntaxes are Facturae 3.2.x, EN16931 Cross Industry Invoice (CII) and EN16931 "
         "UBL. AEAT SII and VERI*FACTU submission records are not read as invoice evidence.",
-        suggestion="aeat app ledger evidence list",
+        precondition_verdict=ledger_no_recovery_verdict(
+            LedgerPreconditionCondition.EVIDENCE_XML_INVOICE_SUPPORTED,
+            facts={"xml_invoice_syntax_recognized": False},
+        ),
     )
 
 
@@ -1428,7 +1438,10 @@ def _extract_invoice_fields_via_vision(
         raise PurchaseInvoiceEvidenceInputError(
             "on-host LLM vision reading is disabled for this profile; enable it to read a scan-only "
             "PDF or image evidence",
-            suggestion="aeat config profile capabilities set llm_vision on",
+            precondition_verdict=ledger_no_recovery_verdict(
+                LedgerPreconditionCondition.EVIDENCE_VISION_CAPABILITY_ENABLED,
+                facts={"llm_vision_enabled": False},
+            ),
         )
 
     try:
@@ -1485,15 +1498,20 @@ def _extract_invoice_fields_via_vision(
         # sends the operator to restart a daemon that was never the fault.
         raise PurchaseInvoiceEvidenceInputError(
             f"on-host vision reading is unavailable: {exc}",
-            suggestion=exc.install_hint,
+            precondition_verdict=ledger_no_recovery_verdict(
+                LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE,
+                facts={"vision_reader_dependency_available": False},
+            ),
         ) from exc
     except (httpx.HTTPError, LLMProviderError, LLMPdfRasterisationError) as exc:
         status = probe_ollama_vision(settings)
-        fix = status.remediation or "ensure the local Ollama vision model is reachable"
         detail = status.detail if not status.available else str(exc)
         raise PurchaseInvoiceEvidenceInputError(
-            f"on-host vision reading failed: {detail}. Fix: {fix}",
-            suggestion=fix,
+            f"on-host vision reading failed: {detail}",
+            precondition_verdict=ledger_no_recovery_verdict(
+                LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE,
+                facts={"vision_reader_available": False},
+            ),
         ) from exc
 
     # OUTSIDE the try, deliberately, and for the same reason the text lane's
@@ -1818,7 +1836,10 @@ def _agreed_counterparty_tax_id(*, supplied: str | None, extracted: str | None) 
             "cannot confirm an invoice: the counterparty_tax_id supplied does not match the one "
             "extracted from the document. Check the tax id printed on the invoice; re-run the "
             "extract to see what was read, or correct the evidence record.",
-            suggestion="aeat app ledger evidence extract --evidence-id <id>",
+            precondition_verdict=ledger_no_recovery_verdict(
+                LedgerPreconditionCondition.EVIDENCE_COUNTERPARTY_VALID,
+                facts={"counterparty_tax_id_matches_document": False},
+            ),
         )
     return supplied
 
@@ -1871,7 +1892,10 @@ def _refuse_a_counterparty_that_is_the_filer(counterparty_tax_id: str) -> None:
         "from the document is this profile's own, which usually means the document is an invoice "
         "YOU issued and the reader picked up your identifier from the letterhead instead of the "
         "customer's. Supply the other party's tax id with --counterparty-nif.",
-        suggestion="aeat app ledger evidence confirm --counterparty-nif <the other party's tax id>",
+        precondition_verdict=ledger_no_recovery_verdict(
+            LedgerPreconditionCondition.EVIDENCE_COUNTERPARTY_VALID,
+            facts={"counterparty_is_filer": True},
+        ),
     )
 
 
@@ -1880,9 +1904,9 @@ def _require_confirmed_field(value: Decimal | str | None, *, field: str) -> Deci
         raise PurchaseInvoiceEvidenceInputError(
             f"cannot confirm an invoice: {field} could not be extracted and no --{field.replace('_', '-')} "
             "override was supplied",
-            suggestion=(
-                "aeat app ledger evidence extract --evidence-id <id>  # review the draft, then re-run confirm "
-                f"with an explicit --{field.replace('_', '-')} override"
+            precondition_verdict=ledger_no_recovery_verdict(
+                LedgerPreconditionCondition.EVIDENCE_REQUIRED_FIELD_AVAILABLE,
+                facts={"required_field_available": False},
             ),
         )
     return value
@@ -2366,7 +2390,10 @@ def confirm_invoice_draft_from_evidence(
         raise PurchaseInvoiceEvidenceInputError(
             "cannot confirm an invoice: the document states no counterparty name and no "
             "--counterparty-name override was supplied",
-            suggestion="aeat app ledger evidence extract --evidence-id <id>",
+            precondition_verdict=ledger_no_recovery_verdict(
+                LedgerPreconditionCondition.EVIDENCE_REQUIRED_FIELD_AVAILABLE,
+                facts={"counterparty_name_available": False},
+            ),
         )
 
     # A PRINTED cuota is evidence and outranks a recomputed one. When the
@@ -2785,7 +2812,10 @@ def _resolve_confirmed_invoice_date(invoice_date: date | None, draft: InvoiceDra
             return parsed
     raise PurchaseInvoiceEvidenceInputError(
         "cannot confirm an invoice: invoice_date could not be extracted and no --invoice-date override was supplied",
-        suggestion="aeat app ledger evidence extract --evidence-id <id>",
+        precondition_verdict=ledger_no_recovery_verdict(
+            LedgerPreconditionCondition.EVIDENCE_INVOICE_DATE_AVAILABLE,
+            facts={"invoice_date_available": False},
+        ),
     )
 
 

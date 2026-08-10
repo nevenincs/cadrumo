@@ -31,6 +31,7 @@ from .._evidence_input import (
     resolve_attachment_evidence_input,
     resolve_purchase_invoice_evidence_input,
 )
+from .._preconditions import LedgerPreconditionCondition
 from ._evidence_input_test_support import _BUCKET_ID, _PDF_BYTES, _added_record, _make_svc
 from ._evidence_input_test_support import isolated_settings as isolated_settings
 from ._evidence_input_test_support import pdf_file as pdf_file
@@ -74,11 +75,11 @@ def test_add_with_nonexistent_path_refuses_with_path_oriented_guidance(
         svc.add(bucket_id=_BUCKET_ID, source_path=bogus)
 
     error = exc_info.value
-    # The suggestion addresses the path, not the (irrelevant) list verb.
-    assert error.suggestion is not None
-    assert "evidence list" not in error.suggestion
-    assert "path" in error.suggestion.lower()
-    assert "aeat app ledger evidence add" in error.suggestion
+    assert error.terminal_precondition_verdict is not None
+    assert error.terminal_precondition_verdict.failed_condition_id == (
+        LedgerPreconditionCondition.EVIDENCE_FILE_READABLE.value
+    )
+    assert error.terminal_precondition_verdict.evidence[0].values == {"source_file_readable": False}
     # The offending path is named in structured context for the operator.
     assert error.context is not None
     assert str(bogus) == error.context["source_path"]

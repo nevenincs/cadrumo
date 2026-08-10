@@ -45,6 +45,7 @@ from ._evidence import (
     PurchaseInvoiceEvidenceInputError,
     PurchaseInvoiceEvidenceNotFoundError,
 )
+from ._preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 
 __all__ = [
     "ACCEPTABLE_EVIDENCE_REFERENCE_OUTCOMES",
@@ -231,9 +232,9 @@ def refuse_reference_without_document_bytes(evidence_id: str) -> PurchaseInvoice
         "document bytes to read; an imported catalogue-invoice id is a valid evidence reference but "
         "holds fiscal totals rather than a document",
         context={"evidence_id": evidence_id},
-        suggestion=(
-            "register the document with `aeat app ledger evidence add INVOICE.pdf`, or attach it "
-            "to the row with `aeat app ledger attach`, then retry"
+        precondition_verdict=ledger_no_recovery_verdict(
+            LedgerPreconditionCondition.EVIDENCE_DOCUMENT_BYTES_AVAILABLE,
+            facts={"document_bytes_available": False},
         ),
     )
 
@@ -255,5 +256,8 @@ def refuse_unresolved_evidence_reference(evidence_id: str) -> PurchaseInvoiceEvi
     return PurchaseInvoiceEvidenceNotFoundError(
         f"no purchase invoice evidence record or received catalogue invoice with id {evidence_id!r}",
         context={"evidence_id": evidence_id},
-        suggestion="aeat app ledger evidence list",
+        precondition_verdict=ledger_no_recovery_verdict(
+            LedgerPreconditionCondition.EVIDENCE_REFERENCE_RESOLVES,
+            facts={"evidence_reference_resolves": False},
+        ),
     )
