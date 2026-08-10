@@ -59,9 +59,8 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG, Period
-from ...domain.deadlines import ModeloDeadline
 from ._errors import WorkflowError
-from ._models import WorkflowAbortReason, WorkflowResult, WorkflowStage
+from ._models import WorkflowAbortReason, WorkflowObligationFacts, WorkflowResult, WorkflowStage
 from ._persistence import list_runs, load_run
 
 if TYPE_CHECKING:
@@ -161,7 +160,7 @@ class WorkflowResumeContext(BaseModel):
     resumed_from_run_id: str = Field(min_length=16, max_length=16)
     modelo: str = Field(min_length=1, max_length=8)
     period: Period
-    obligation: ModeloDeadline
+    obligation: WorkflowObligationFacts
     aborted_reason: WorkflowAbortReason
 
 

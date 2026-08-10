@@ -15,13 +15,13 @@ Safety invariants enforced by this module:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date, datetime
 from typing import NoReturn
 
 from ...core import Modelo, Period
 from ...core.config import Settings
 from ...core.errors import BaseSeverity, SiteHealthError
-from ...core.i18n import describe_auth_provider_operator_impact
 from ...core.logging import get_logger
 from ...core.time import now as _utcnow
 from ...core.time import today_madrid
@@ -33,6 +33,16 @@ from ...domain.deadlines import (
 from ...domain.filing import ModeloBuilderError
 from ...domain.submission import ModeloDraftStatus, SubmissionPreflightError
 from ..filing.runtime import build_runtime_schema_provider
+from ..operator_actions import (
+    ActionArgumentBinding,
+    ActionArgumentStatus,
+    ActionConditionality,
+    ActionReference,
+    ConditionEvidence,
+    ConditionEvidenceProvenance,
+    NoRecoveryOutcome,
+    PreconditionVerdict,
+)
 from ._deadline_stage import abort_missing_deadline_obligation, resolve_deadline_stage_obligation
 from ._engine_helpers import (
     DeadlineRole,
@@ -42,25 +52,32 @@ from ._engine_helpers import (
     classify_cert_expiry as _classify_cert_expiry,
 )
 from ._engine_helpers import (
-    draft_blocking_finding_descriptions as _draft_blocking_finding_descriptions,
-)
-from ._engine_helpers import (
     enum_value as _enum_value,
 )
 from ._engine_helpers import (
     registry_filing_year as _registry_filing_year,
 )
-from ._engine_helpers import (
-    summary_text as _summary_text,
-)
 from ._engine_recording import record_site_unavailable, record_unhandled
 from ._errors import WorkflowAbortSignalError, WorkflowError, WorkflowInputMismatchError
 from ._models import (
     WorkflowAbortReason,
+    WorkflowAlreadyFiledDetails,
+    WorkflowAuthCheckDetails,
+    WorkflowDeadlineContextDetails,
+    WorkflowDiagnosticSkipReason,
+    WorkflowDraftBuiltDetails,
+    WorkflowDraftMismatchDetails,
+    WorkflowDraftNotReadyDetails,
+    WorkflowFailureDetails,
+    WorkflowInboxBlockedDetails,
+    WorkflowInboxSkippedDetails,
+    WorkflowObligationFacts,
+    WorkflowPreflightFailedDetails,
     WorkflowPurpose,
     WorkflowResult,
     WorkflowStage,
     WorkflowStep,
+    WorkflowValidationFailedDetails,
     compute_run_id,
     declaration_key,
 )
@@ -77,12 +94,73 @@ from ._protocols import (
 )
 
 _logger = get_logger(__name__)
-_DRAFT_RECALCULATE_COMMAND = "aeat app modelo work calculate"
-_VERIFICATION_REPORT_LIST_COMMAND = (
-    "aeat app modelo verification-report list --calculation-revision-id <calculation_revision_id>"
-)
-_DRAFT_BUILD_REFUSED_NEXT_ACTION = f"Repair the cited draft input and rerun {_DRAFT_RECALCULATE_COMMAND}."
-_VERIFICATION_REPORT_NEXT_ACTION = f"Run: {_VERIFICATION_REPORT_LIST_COMMAND}"
+
+type WorkflowDeadlineTarget = ModeloDeadline | WorkflowObligationFacts
+
+
+def _no_recovery_verdict(
+    *,
+    condition_id: str,
+    evidence_id: str,
+    provenance: ConditionEvidenceProvenance,
+    values: Mapping[str, str | int | bool],
+    outcome: NoRecoveryOutcome,
+) -> PreconditionVerdict:
+    """Build one closed non-actionable workflow precondition outcome."""
+    return PreconditionVerdict(
+        failed_condition_id=condition_id,
+        evidence=(
+            ConditionEvidence(
+                condition_id=condition_id,
+                evidence_id=evidence_id,
+                provenance=provenance,
+                values=values,
+            ),
+        ),
+        conditionality=ActionConditionality.NOT_APPLICABLE,
+        no_recovery_outcome=outcome,
+    )
+
+
+def _conditional_action_verdict(
+    *,
+    condition_id: str,
+    evidence_id: str,
+    provenance: ConditionEvidenceProvenance,
+    values: Mapping[str, str | int | bool],
+    action_id: str,
+    missing_argument_names: tuple[str, ...],
+) -> PreconditionVerdict:
+    """Build one typed next action whose missing address is explicit."""
+    return PreconditionVerdict(
+        failed_condition_id=condition_id,
+        evidence=(
+            ConditionEvidence(
+                condition_id=condition_id,
+                evidence_id=evidence_id,
+                provenance=provenance,
+                values=values,
+            ),
+        ),
+        action=ActionReference(action_id=action_id),
+        argument_bindings=tuple(
+            ActionArgumentBinding(argument_name=name, status=ActionArgumentStatus.MISSING)
+            for name in missing_argument_names
+        ),
+        missing_argument_names=missing_argument_names,
+        conditionality=ActionConditionality.REQUIRES_ARGUMENTS,
+    )
+
+
+def _draft_blocking_finding_codes(draft: object) -> tuple[str, ...]:
+    """Return stable finding identifiers without retaining rendered descriptions."""
+    codes: set[str] = set()
+    for finding in getattr(draft, "findings", ()) or ():
+        severity = _enum_value(getattr(finding, "severity", None))
+        code = _enum_value(getattr(finding, "code", None))
+        if severity in {"error", "warning"} and code and not any(character.isspace() for character in code):
+            codes.add(code)
+    return tuple(sorted(codes))
 
 
 class WorkflowEngine:
@@ -150,7 +228,7 @@ class WorkflowEngine:
         self._run_started_at: datetime | None = None
         self._run_target_modelo: str | None = None
         self._run_target_period: Period | None = None
-        self._run_obligation: ModeloDeadline | None = None
+        self._run_obligation: WorkflowDeadlineTarget | None = None
 
     # ------------------------------------------------------------------ public
 
@@ -262,11 +340,10 @@ class WorkflowEngine:
         self._run_obligation = None
 
         steps: list[WorkflowStep] = []
-        obligation: ModeloDeadline | None = None
+        obligation: WorkflowDeadlineTarget | None = None
         draft: RegistryModeloDraftProtocol | None = None
         final_stage: WorkflowStage = WorkflowStage.ABORTED
         aborted_reason: WorkflowAbortReason | None = None
-        abort_summary: str | None = None
 
         try:
             self._stage_loading_profile(profile, steps)
@@ -300,7 +377,6 @@ class WorkflowEngine:
             final_stage = WorkflowStage.DONE
         except WorkflowAbortSignalError as abort:
             aborted_reason = abort.reason
-            abort_summary = abort.summary
             _abort_stage = steps[-1].stage if steps else "?"
             if abort.reason is WorkflowAbortReason.UNHANDLED_EXCEPTION:
                 _logger.error(
@@ -336,7 +412,6 @@ class WorkflowEngine:
         self._run_obligation = None
         modelo_for_hash = target_modelo or (obligation.modelo if obligation is not None else "-")
         period_for_hash: Period | None = target_period or (obligation.period if obligation is not None else None)
-        period_for_summary = str(period_for_hash) if period_for_hash is not None else "-"
         run_id = compute_run_id(
             tax_id=profile.tax_id,
             modelo=modelo_for_hash,
@@ -344,14 +419,12 @@ class WorkflowEngine:
             started_at=started_at,
         )
 
-        summary: str
+        summary_locale_key: str
+        summary_details = steps[-1].details if steps else None
         if final_stage is WorkflowStage.DONE:
-            summary = _summary_text(f"Workflow completed: modelo={modelo_for_hash} period={period_for_summary}")
-        elif abort_summary is not None:
-            summary = abort_summary
+            summary_locale_key = "application.workflow.results.completed"
         else:
-            reason_text = aborted_reason.value if aborted_reason is not None else "unknown"
-            summary = _summary_text(f"Workflow aborted: {reason_text}")
+            summary_locale_key = "application.workflow.results.aborted"
 
         return WorkflowResult(
             run_id=run_id,
@@ -359,11 +432,12 @@ class WorkflowEngine:
             ended_at=ended_at,
             final_stage=final_stage,
             aborted_reason=aborted_reason,
-            obligation=obligation,
+            obligation=_persisted_obligation(obligation),
             draft_id=draft.draft_id if draft is not None else None,
             submission_id=None,
             steps=tuple(steps),
-            summary=summary,
+            summary_locale_key=summary_locale_key,
+            summary_details=summary_details,
             resumed_from=resumed_from,
         )
 
@@ -387,7 +461,7 @@ class WorkflowEngine:
                 started_at=started,
                 ended_at=_utcnow(),
                 success=True,
-                summary=_summary_text(f"Loaded profile tax_id={profile.tax_id}"),
+                summary_locale_key="application.workflow.steps.profile_loaded",
             ),
         )
 
@@ -400,7 +474,7 @@ class WorkflowEngine:
         today: date,
         steps: list[WorkflowStep],
         purpose: WorkflowPurpose = WorkflowPurpose.FILE,
-    ) -> ModeloDeadline:
+    ) -> WorkflowDeadlineTarget:
         """Stage 3 — compute the target obligation.
 
         The schedule is computed through
@@ -464,85 +538,89 @@ class WorkflowEngine:
             abort_missing_deadline_obligation(started=started, steps=steps)
 
         if obligation.opens_on > today:
-            future_summary = _summary_text(
-                f"Filing obligation for modelo={obligation.modelo} "
-                f"period={obligation.period} opens on {obligation.opens_on.isoformat()}; "
-                "the AEAT filing-obligation window is not open yet. Filing-to-fichero does "
-                "not require this step: export the verified-complete revision with "
-                "'aeat app modelo export' — that is the local finish line. 'work file' "
-                "is the optional internal mark-as-filed step for when the obligation window is open.",
-            )
             steps.append(
                 WorkflowStep(
                     stage=WorkflowStage.COMPUTING_DEADLINES,
                     started_at=started,
                     ended_at=_utcnow(),
                     success=False,
-                    summary=future_summary,
-                    details={
-                        "modelo": obligation.modelo,
-                        "period": str(obligation.period),
-                        "opens_on": obligation.opens_on.isoformat(),
-                        "closes_on": obligation.closes_on.isoformat(),
-                        "filing_window": FilingWindowState.FUTURE,
-                        "deadline_role": DeadlineRole.BINDING,
-                    },
+                    summary_locale_key="application.workflow.steps.deadline_future",
+                    details=WorkflowDeadlineContextDetails(
+                        kind="deadline_context",
+                        modelo=obligation.modelo,
+                        period=obligation.period,
+                        opens_on=obligation.opens_on,
+                        closes_on=obligation.closes_on,
+                        filing_window=FilingWindowState.FUTURE,
+                        deadline_role=DeadlineRole.BINDING,
+                    ),
+                    precondition_verdict=_no_recovery_verdict(
+                        condition_id="workflow.deadline.filing_window_open",
+                        evidence_id="workflow.deadline.window",
+                        provenance=ConditionEvidenceProvenance.DOMAIN_EVALUATION,
+                        values={
+                            "filing_window": FilingWindowState.FUTURE.value,
+                            "modelo": obligation.modelo.value,
+                            "filing_year": obligation.period.filing_year,
+                            "period_code": obligation.period.registry_token,
+                        },
+                        outcome=NoRecoveryOutcome.TERMINAL,
+                    ),
                 ),
             )
-            raise WorkflowAbortSignalError(
-                reason=WorkflowAbortReason.NO_PENDING_OBLIGATION,
-                summary=future_summary,
-            )
+            raise WorkflowAbortSignalError(reason=WorkflowAbortReason.NO_PENDING_OBLIGATION)
 
         if obligation.closes_on < today:
             if target_modelo is not None and target_period is not None:
                 # A targeted but closed-window obligation that genuinely
                 # existed is filed locally and late (extemporánea, con recargo)
                 # rather than refused; `work file` contacts AEAT zero times.
-                overdue_summary = _summary_text(
-                    f"Obligation modelo={obligation.modelo} "
-                    f"period={obligation.period} closed on {obligation.closes_on.isoformat()}; "
-                    "recording a late local filing (extemporánea, con recargo).",
-                )
                 steps.append(
                     WorkflowStep(
                         stage=WorkflowStage.COMPUTING_DEADLINES,
                         started_at=started,
                         ended_at=_utcnow(),
                         success=True,
-                        summary=overdue_summary,
-                        details={
-                            "modelo": obligation.modelo,
-                            "period": str(obligation.period),
-                            "closes_on": obligation.closes_on.isoformat(),
-                            "overdue": "true",
-                            "extemporanea": "true",
-                        },
+                        summary_locale_key="application.workflow.steps.deadline_overdue",
+                        details=WorkflowDeadlineContextDetails(
+                            kind="deadline_context",
+                            modelo=obligation.modelo,
+                            period=obligation.period,
+                            closes_on=obligation.closes_on,
+                            overdue=True,
+                            extemporanea=True,
+                        ),
                     ),
                 )
                 return obligation
-            closed_summary = _summary_text(
-                f"Deadline for modelo={obligation.modelo} "
-                f"period={obligation.period} closed on {obligation.closes_on.isoformat()}",
-            )
             steps.append(
                 WorkflowStep(
                     stage=WorkflowStage.COMPUTING_DEADLINES,
                     started_at=started,
                     ended_at=_utcnow(),
                     success=False,
-                    summary=closed_summary,
-                    details={
-                        "modelo": obligation.modelo,
-                        "period": str(obligation.period),
-                        "closes_on": obligation.closes_on.isoformat(),
-                    },
+                    summary_locale_key="application.workflow.steps.deadline_closed",
+                    details=WorkflowDeadlineContextDetails(
+                        kind="deadline_context",
+                        modelo=obligation.modelo,
+                        period=obligation.period,
+                        closes_on=obligation.closes_on,
+                    ),
+                    precondition_verdict=_no_recovery_verdict(
+                        condition_id="workflow.deadline.filing_window_open",
+                        evidence_id="workflow.deadline.window",
+                        provenance=ConditionEvidenceProvenance.DOMAIN_EVALUATION,
+                        values={
+                            "filing_window": FilingWindowState.CLOSED.value,
+                            "modelo": obligation.modelo.value,
+                            "filing_year": obligation.period.filing_year,
+                            "period_code": obligation.period.registry_token,
+                        },
+                        outcome=NoRecoveryOutcome.TERMINAL,
+                    ),
                 ),
             )
-            raise WorkflowAbortSignalError(
-                reason=WorkflowAbortReason.DEADLINE_PASSED,
-                summary=closed_summary,
-            )
+            raise WorkflowAbortSignalError(reason=WorkflowAbortReason.DEADLINE_PASSED)
 
         steps.append(
             WorkflowStep(
@@ -550,16 +628,14 @@ class WorkflowEngine:
                 started_at=started,
                 ended_at=_utcnow(),
                 success=True,
-                summary=_summary_text(
-                    f"Next obligation modelo={obligation.modelo} "
-                    f"period={obligation.period} closes_on={obligation.closes_on.isoformat()}",
+                summary_locale_key="application.workflow.steps.deadline_open",
+                details=WorkflowDeadlineContextDetails(
+                    kind="deadline_context",
+                    modelo=obligation.modelo,
+                    period=obligation.period,
+                    opens_on=obligation.opens_on,
+                    closes_on=obligation.closes_on,
                 ),
-                details={
-                    "modelo": obligation.modelo,
-                    "period": str(obligation.period),
-                    "opens_on": obligation.opens_on.isoformat(),
-                    "closes_on": obligation.closes_on.isoformat(),
-                },
             ),
         )
         return obligation
@@ -573,7 +649,7 @@ class WorkflowEngine:
         today: date,
         started: datetime,
         steps: list[WorkflowStep],
-    ) -> ModeloDeadline:
+    ) -> WorkflowDeadlineTarget:
         """Record the filing-window state for a verify run without aborting.
 
         Verification of a calculation is independent of the AEAT filing
@@ -603,20 +679,16 @@ class WorkflowEngine:
                     started_at=started,
                     ended_at=_utcnow(),
                     success=True,
-                    summary=_summary_text(
-                        f"Filing window for modelo={obligation.modelo} "
-                        f"period={obligation.period} {window_state} "
-                        f"(closes_on={obligation.closes_on.isoformat()}); "
-                        "informational only — verification does not depend on it",
+                    summary_locale_key="application.workflow.steps.deadline_informational",
+                    details=WorkflowDeadlineContextDetails(
+                        kind="deadline_context",
+                        modelo=obligation.modelo,
+                        period=obligation.period,
+                        opens_on=obligation.opens_on,
+                        closes_on=obligation.closes_on,
+                        filing_window=window_state,
+                        deadline_role=DeadlineRole.INFORMATIONAL,
                     ),
-                    details={
-                        "modelo": obligation.modelo,
-                        "period": str(obligation.period),
-                        "opens_on": obligation.opens_on.isoformat(),
-                        "closes_on": obligation.closes_on.isoformat(),
-                        "filing_window": window_state,
-                        "deadline_role": DeadlineRole.INFORMATIONAL,
-                    },
                 ),
             )
             return obligation
@@ -625,17 +697,12 @@ class WorkflowEngine:
             raise WorkflowError(
                 "verify workflow requires an explicit (modelo, period) target",
             )
-        synthetic = ModeloDeadline(
+        synthetic = WorkflowObligationFacts(
             modelo=Modelo(target_modelo),
             period=target_period,
             opens_on=today,
             closes_on=today,
             status=ObligationStatus.NOT_APPLICABLE,
-            applies_because=(
-                "Verification context only: no AEAT filing window is "
-                "open for this period. Verifying a calculation does not "
-                "depend on the filing calendar."
-            ),
         )
         steps.append(
             WorkflowStep(
@@ -643,17 +710,14 @@ class WorkflowEngine:
                 started_at=started,
                 ended_at=_utcnow(),
                 success=True,
-                summary=_summary_text(
-                    f"No open filing window for modelo={target_modelo} "
-                    f"period={target_period}; informational only — "
-                    "verification does not depend on it",
+                summary_locale_key="application.workflow.steps.deadline_absent",
+                details=WorkflowDeadlineContextDetails(
+                    kind="deadline_context",
+                    modelo=Modelo(target_modelo),
+                    period=target_period,
+                    filing_window=FilingWindowState.ABSENT,
+                    deadline_role=DeadlineRole.INFORMATIONAL,
                 ),
-                details={
-                    "modelo": target_modelo,
-                    "period": str(target_period),
-                    "filing_window": FilingWindowState.ABSENT,
-                    "deadline_role": "informational",
-                },
             ),
         )
         return synthetic
@@ -662,7 +726,7 @@ class WorkflowEngine:
         self,
         *,
         profile: TaxpayerProfile,
-        obligation: ModeloDeadline,
+        obligation: WorkflowDeadlineTarget,
         steps: list[WorkflowStep],
     ) -> None:
         """Stage 4 — probe the notifications inbox for blocking requerimientos.
@@ -681,8 +745,11 @@ class WorkflowEngine:
                     started_at=started,
                     ended_at=_utcnow(),
                     success=True,
-                    summary=_summary_text("Inbox skipped (not wired)"),
-                    details={"skipped": "not_wired"},
+                    summary_locale_key="application.workflow.steps.inbox_skipped",
+                    details=WorkflowInboxSkippedDetails(
+                        kind="inbox_skipped",
+                        skip_reason=WorkflowDiagnosticSkipReason.NOT_WIRED,
+                    ),
                 ),
             )
             return
@@ -704,34 +771,35 @@ class WorkflowEngine:
             )
         blockers = tuple(n for n in snapshot.rows if n.tipo == "notificacion" and n.leida is not True)
         if blockers:
-            blocked_summary = _summary_text(
-                f"Inbox has {len(blockers)} blocking requerimiento(s) for modelo={obligation.modelo}",
-            )
             steps.append(
                 WorkflowStep(
                     stage=WorkflowStage.CHECKING_INBOX,
                     started_at=started,
                     ended_at=_utcnow(),
                     success=False,
-                    summary=blocked_summary,
-                    details={
-                        "blocker_count": str(len(blockers)),
-                        "first_notificacion_id": blockers[0].certificado_id,
-                        "first_concepto": blockers[0].concepto,
-                    },
+                    summary_locale_key="application.workflow.steps.inbox_blocked",
+                    details=WorkflowInboxBlockedDetails(
+                        kind="inbox_blocked",
+                        blocker_count=len(blockers),
+                        first_notificacion_id=blockers[0].certificado_id,
+                    ),
+                    precondition_verdict=_no_recovery_verdict(
+                        condition_id="workflow.inbox.clear",
+                        evidence_id="workflow.inbox.blockers",
+                        provenance=ConditionEvidenceProvenance.RUNTIME_OBSERVATION,
+                        values={"blocker_count": len(blockers), "inbox_clear": False},
+                        outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+                    ),
                 ),
             )
-            raise WorkflowAbortSignalError(
-                reason=WorkflowAbortReason.INBOX_BLOCKING_REQUERIMIENTO,
-                summary=blocked_summary,
-            )
+            raise WorkflowAbortSignalError(reason=WorkflowAbortReason.INBOX_BLOCKING_REQUERIMIENTO)
         steps.append(
             WorkflowStep(
                 stage=WorkflowStage.CHECKING_INBOX,
                 started_at=started,
                 ended_at=_utcnow(),
                 success=True,
-                summary=_summary_text("Inbox clear"),
+                summary_locale_key="application.workflow.steps.inbox_clear",
             ),
         )
 
@@ -739,7 +807,7 @@ class WorkflowEngine:
         self,
         *,
         profile: TaxpayerProfile,
-        obligation: ModeloDeadline,
+        obligation: WorkflowDeadlineTarget,
         fail_on_warning: bool,
         steps: list[WorkflowStep],
     ) -> RegistryModeloDraftProtocol:
@@ -775,8 +843,8 @@ class WorkflowEngine:
                 started_at=started,
                 ended_at=_utcnow(),
                 success=True,
-                summary=_summary_text(f"Draft built draft_id={draft.draft_id}"),
-                details={"draft_id": draft.draft_id},
+                summary_locale_key="application.workflow.steps.draft_built",
+                details=WorkflowDraftBuiltDetails(kind="draft_built", draft_id=draft.draft_id),
             ),
         )
         return draft
@@ -784,7 +852,7 @@ class WorkflowEngine:
     async def _abort_if_already_filed(
         self,
         *,
-        obligation: ModeloDeadline,
+        obligation: WorkflowDeadlineTarget,
         started: datetime,
         steps: list[WorkflowStep],
     ) -> None:
@@ -815,31 +883,41 @@ class WorkflowEngine:
                     obligation.period,
                     len(already),
                 )
-                already_summary = _summary_text(f"Already filed: modelo={obligation.modelo} period={obligation.period}")
                 steps.append(
                     WorkflowStep(
                         stage=WorkflowStage.BUILDING_DRAFT,
                         started_at=started,
                         ended_at=_utcnow(),
                         success=False,
-                        summary=already_summary,
-                        details={
-                            "modelo": obligation.modelo,
-                            "period": str(obligation.period),
-                            "expediente_count": str(len(already)),
-                        },
+                        summary_locale_key="application.workflow.steps.already_filed",
+                        details=WorkflowAlreadyFiledDetails(
+                            kind="already_filed",
+                            modelo=obligation.modelo,
+                            period=obligation.period,
+                            expediente_count=len(already),
+                        ),
+                        precondition_verdict=_no_recovery_verdict(
+                            condition_id="workflow.obligation.unfiled",
+                            evidence_id="workflow.obligation.filing_state",
+                            provenance=ConditionEvidenceProvenance.RUNTIME_OBSERVATION,
+                            values={
+                                "expediente_count": len(already),
+                                "modelo": obligation.modelo.value,
+                                "filing_year": obligation.period.filing_year,
+                                "period_code": obligation.period.registry_token,
+                                "unfiled": False,
+                            },
+                            outcome=NoRecoveryOutcome.TERMINAL,
+                        ),
                     ),
                 )
-                raise WorkflowAbortSignalError(
-                    reason=WorkflowAbortReason.ALREADY_FILED,
-                    summary=already_summary,
-                )
+                raise WorkflowAbortSignalError(reason=WorkflowAbortReason.ALREADY_FILED)
 
     def _load_and_build_draft(
         self,
         *,
         profile: TaxpayerProfile,
-        obligation: ModeloDeadline,
+        obligation: WorkflowDeadlineTarget,
         fail_on_warning: bool,
         started: datetime,
         steps: list[WorkflowStep],
@@ -886,27 +964,28 @@ class WorkflowEngine:
                 steps=steps,
             )
         except ModeloBuilderError as exc:
-            draft_error_summary = _summary_text(
-                f"Draft build refused: {exc}. Repair the cited draft input and recalculate.",
-            )
             steps.append(
                 WorkflowStep(
                     stage=WorkflowStage.BUILDING_DRAFT,
                     started_at=started,
                     ended_at=_utcnow(),
                     success=False,
-                    summary=draft_error_summary,
-                    details={
-                        "error_type": type(exc).__name__,
-                        "error_message": str(exc),
-                        "next_action": _DRAFT_BUILD_REFUSED_NEXT_ACTION,
-                    },
+                    summary_locale_key="application.workflow.steps.draft_build_failed",
+                    details=WorkflowFailureDetails(
+                        kind="workflow_failure",
+                        error_code="workflow.draft.build_failure",
+                    ),
+                    precondition_verdict=_conditional_action_verdict(
+                        condition_id="workflow.draft.buildable",
+                        evidence_id="workflow.draft.build_failure",
+                        provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+                        values={"buildable": False},
+                        action_id="operator.modelo.work.calculate",
+                        missing_argument_names=("work_unit_id",),
+                    ),
                 ),
             )
-            raise WorkflowAbortSignalError(
-                reason=WorkflowAbortReason.DRAFT_HAS_ERRORS,
-                summary=draft_error_summary,
-            ) from exc
+            raise WorkflowAbortSignalError(reason=WorkflowAbortReason.DRAFT_HAS_ERRORS) from exc
         except Exception as exc:
             self._record_unhandled(
                 stage=WorkflowStage.BUILDING_DRAFT,
@@ -930,74 +1009,78 @@ class WorkflowEngine:
         }
         if _enum_value(draft.status) not in ready_statuses:
             status_value = _enum_value(draft.status)
-            blocking_findings = _draft_blocking_finding_descriptions(draft)
-            findings_clause = f"; blocking findings: {'; '.join(blocking_findings)}" if blocking_findings else ""
-            status_summary = _summary_text(
-                f"Draft {draft.draft_id} not ready: status={status_value}{findings_clause}",
-            )
+            blocking_finding_codes = _draft_blocking_finding_codes(draft)
             steps.append(
                 WorkflowStep(
                     stage=WorkflowStage.BUILDING_DRAFT,
                     started_at=started,
                     ended_at=_utcnow(),
                     success=False,
-                    summary=status_summary,
-                    details={
-                        "draft_id": draft.draft_id,
-                        "status": status_value,
-                        "blocking_findings": "; ".join(blocking_findings) if blocking_findings else "",
-                        "next_action": _VERIFICATION_REPORT_NEXT_ACTION,
-                    },
+                    summary_locale_key="application.workflow.steps.draft_not_ready",
+                    details=WorkflowDraftNotReadyDetails(
+                        kind="draft_not_ready",
+                        draft_id=draft.draft_id,
+                        draft_status=ModeloDraftStatus(status_value),
+                        blocking_finding_codes=blocking_finding_codes,
+                    ),
+                    precondition_verdict=_conditional_action_verdict(
+                        condition_id="workflow.draft.ready",
+                        evidence_id="workflow.draft.status",
+                        provenance=ConditionEvidenceProvenance.PERSISTED_STATE,
+                        values={"draft_id": draft.draft_id, "draft_status": status_value, "ready": False},
+                        action_id="operator.modelo.verification_report.list",
+                        missing_argument_names=("calculation_revision_id",),
+                    ),
                 ),
             )
-            raise WorkflowAbortSignalError(
-                reason=WorkflowAbortReason.DRAFT_HAS_ERRORS,
-                summary=status_summary,
-            )
+            raise WorkflowAbortSignalError(reason=WorkflowAbortReason.DRAFT_HAS_ERRORS)
 
     def _require_registry_draft_for_obligation(
         self,
         *,
         draft: RegistryModeloDraftProtocol,
-        obligation: ModeloDeadline,
+        obligation: WorkflowDeadlineTarget,
         profile: TaxpayerProfile,
         started: datetime,
         steps: list[WorkflowStep],
     ) -> None:
-        mismatches: dict[str, str] = {}
-        if draft.modelo != obligation.modelo:
-            mismatches["modelo"] = f"{draft.modelo} != {obligation.modelo}"
-        if draft.period != obligation.period:
-            mismatches["period"] = f"{draft.period} != {obligation.period}"
-        if draft.profile_tax_id != profile.tax_id:
-            mismatches["profile_tax_id"] = f"{draft.profile_tax_id} != {profile.tax_id}"
+        identity_evidence: dict[str, str | bool] = {
+            "draft_id": draft.draft_id,
+            "modelo_matches": draft.modelo == obligation.modelo,
+            "period_matches": draft.period == obligation.period,
+            "profile_tax_id_matches": draft.profile_tax_id == profile.tax_id,
+        }
         try:
             expected_schema_version = self._active_registry_schema_version(obligation)
         except (ModeloBuilderError, ValueError) as exc:
-            mismatches["schema_version"] = f"{draft.schema_version}; active registry schema unavailable: {exc}"
+            del exc
+            identity_evidence["registry_schema_resolved"] = False
         else:
-            if draft.schema_version != expected_schema_version:
-                mismatches["schema_version"] = f"{draft.schema_version} != {expected_schema_version}"
-        if not mismatches:
+            identity_evidence["registry_schema_resolved"] = True
+            identity_evidence["schema_version_matches"] = draft.schema_version == expected_schema_version
+        if all(value is not False for value in identity_evidence.values()):
             return
 
-        summary = _summary_text(f"Draft {draft.draft_id} does not match registry-backed workflow obligation")
         steps.append(
             WorkflowStep(
                 stage=WorkflowStage.BUILDING_DRAFT,
                 started_at=started,
                 ended_at=_utcnow(),
                 success=False,
-                summary=summary,
-                details={"draft_id": draft.draft_id, **mismatches},
+                summary_locale_key="application.workflow.steps.draft_identity_mismatch",
+                details=WorkflowDraftMismatchDetails(kind="draft_mismatch", draft_id=draft.draft_id),
+                precondition_verdict=_no_recovery_verdict(
+                    condition_id="workflow.draft.identity_matches",
+                    evidence_id="workflow.draft.identity",
+                    provenance=ConditionEvidenceProvenance.REGISTRY_RECORD,
+                    values=identity_evidence,
+                    outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+                ),
             ),
         )
-        raise WorkflowAbortSignalError(
-            reason=WorkflowAbortReason.DRAFT_HAS_ERRORS,
-            summary=summary,
-        )
+        raise WorkflowAbortSignalError(reason=WorkflowAbortReason.DRAFT_HAS_ERRORS)
 
-    def _active_registry_schema_version(self, obligation: ModeloDeadline) -> str:
+    def _active_registry_schema_version(self, obligation: WorkflowDeadlineTarget) -> str:
         provider = build_runtime_schema_provider(
             filing_year=obligation.period.filing_year,
             period=obligation.period,
@@ -1017,35 +1100,35 @@ class WorkflowEngine:
             f for f in draft.findings if _enum_value(getattr(f, "severity", None)) == BaseSeverity.ERROR
         )
         if error_findings:
-            descriptions = _draft_blocking_finding_descriptions(draft)
-            errors_summary = _summary_text(
-                f"Draft {draft.draft_id} has {len(error_findings)} ERROR finding(s): "
-                + ("; ".join(descriptions) if descriptions else "see verification report")
-            )
             steps.append(
                 WorkflowStep(
                     stage=WorkflowStage.VALIDATING_DRAFT,
                     started_at=started,
                     ended_at=_utcnow(),
                     success=False,
-                    summary=errors_summary,
-                    details={
-                        "error_count": str(len(error_findings)),
-                        "next_action": _VERIFICATION_REPORT_NEXT_ACTION,
-                    },
+                    summary_locale_key="application.workflow.steps.validation_failed",
+                    details=WorkflowValidationFailedDetails(
+                        kind="validation_failed",
+                        error_count=len(error_findings),
+                    ),
+                    precondition_verdict=_conditional_action_verdict(
+                        condition_id="workflow.draft.validation_clean",
+                        evidence_id="workflow.draft.validation",
+                        provenance=ConditionEvidenceProvenance.PERSISTED_STATE,
+                        values={"error_count": len(error_findings), "validation_clean": False},
+                        action_id="operator.modelo.verification_report.list",
+                        missing_argument_names=("calculation_revision_id",),
+                    ),
                 ),
             )
-            raise WorkflowAbortSignalError(
-                reason=WorkflowAbortReason.DRAFT_HAS_ERRORS,
-                summary=errors_summary,
-            )
+            raise WorkflowAbortSignalError(reason=WorkflowAbortReason.DRAFT_HAS_ERRORS)
         steps.append(
             WorkflowStep(
                 stage=WorkflowStage.VALIDATING_DRAFT,
                 started_at=started,
                 ended_at=_utcnow(),
                 success=True,
-                summary=_summary_text("Draft validation clean"),
+                summary_locale_key="application.workflow.steps.validation_clean",
             ),
         )
 
@@ -1072,53 +1155,62 @@ class WorkflowEngine:
         refused.
         """
         started = _utcnow()
-        cert_details: dict[str, str]
+        cert_details: WorkflowAuthCheckDetails
         if self._certificate_bundle is not None:
             try:
                 certificate = self._certificate_bundle.describe()
             except Exception as exc:
-                cert_summary = _summary_text(f"Certificate load failed: {type(exc).__name__}")
                 steps.append(
                     WorkflowStep(
                         stage=WorkflowStage.RUNNING_PREFLIGHT,
                         started_at=started,
                         ended_at=_utcnow(),
                         success=False,
-                        summary=cert_summary,
-                        details={
-                            "error_type": type(exc).__name__,
-                            "error_message": str(exc),
-                        },
+                        summary_locale_key="application.workflow.steps.auth_certificate_load_failed",
+                        details=WorkflowFailureDetails(
+                            kind="workflow_failure",
+                            error_code="workflow.auth.certificate_load_failed",
+                        ),
+                        precondition_verdict=_no_recovery_verdict(
+                            condition_id="workflow.execution.completed",
+                            evidence_id="workflow.execution.error_code",
+                            provenance=ConditionEvidenceProvenance.RUNTIME_OBSERVATION,
+                            values={
+                                "completed": False,
+                                "error_code": "workflow.auth.certificate_load_failed",
+                            },
+                            outcome=NoRecoveryOutcome.TERMINAL,
+                        ),
                     ),
                 )
-                raise WorkflowAbortSignalError(
-                    reason=WorkflowAbortReason.CERT_INVALID,
-                    summary=cert_summary,
-                ) from exc
-            cert_details = {
-                "provider_kind": certificate.kind.value,
-                "provider_operator_impact": describe_auth_provider_operator_impact(certificate),
-            }
+                raise WorkflowAbortSignalError(reason=WorkflowAbortReason.CERT_INVALID) from exc
+            cert_details = WorkflowAuthCheckDetails(
+                kind="auth_check",
+                provider_kind=certificate.kind,
+            )
             if not certificate.configured or not certificate.available:
-                provider_summary = _summary_text(
-                    f"Auth provider unavailable: kind={certificate.kind.value} "
-                    f"configured={certificate.configured} available={certificate.available}. "
-                    f"{describe_auth_provider_operator_impact(certificate)}",
-                )
                 steps.append(
                     WorkflowStep(
                         stage=WorkflowStage.RUNNING_PREFLIGHT,
                         started_at=started,
                         ended_at=_utcnow(),
                         success=False,
-                        summary=provider_summary,
+                        summary_locale_key="application.workflow.steps.auth_provider_unavailable",
                         details=cert_details,
+                        precondition_verdict=_no_recovery_verdict(
+                            condition_id="workflow.auth.provider_available",
+                            evidence_id="workflow.auth.provider_state",
+                            provenance=ConditionEvidenceProvenance.RUNTIME_OBSERVATION,
+                            values={
+                                "available": certificate.available,
+                                "configured": certificate.configured,
+                                "provider_kind": certificate.kind.value,
+                            },
+                            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+                        ),
                     ),
                 )
-                raise WorkflowAbortSignalError(
-                    reason=WorkflowAbortReason.CERT_INVALID,
-                    summary=provider_summary,
-                )
+                raise WorkflowAbortSignalError(reason=WorkflowAbortReason.CERT_INVALID)
             if certificate.expires_on is not None:
                 cert_severity, days_until_expiry = _classify_cert_expiry(
                     not_after=certificate.expires_on,
@@ -1126,9 +1218,13 @@ class WorkflowEngine:
                     warn_days=self._settings.cadrumo_cert_warn_days,
                     critical_days=self._settings.cadrumo_cert_critical_days,
                 )
-                cert_details["cert_not_after"] = certificate.expires_on.isoformat()
-                cert_details["cert_severity"] = cert_severity
-                cert_details["cert_days_until_expiry"] = str(days_until_expiry)
+                cert_details = WorkflowAuthCheckDetails(
+                    kind="auth_check",
+                    provider_kind=certificate.kind,
+                    cert_not_after=certificate.expires_on,
+                    cert_severity=cert_severity,
+                    cert_days_until_expiry=days_until_expiry,
+                )
             else:
                 cert_severity = None
                 days_until_expiry = None
@@ -1136,25 +1232,28 @@ class WorkflowEngine:
                 "EXPIRED",
                 "CRITICAL",
             ):
-                expiry_summary = _summary_text(
-                    f"Certificate pre-expiry gate: severity={cert_severity} "
-                    f"days_until_expiry={days_until_expiry} "
-                    f"kind={certificate.kind.value}",
-                )
                 steps.append(
                     WorkflowStep(
                         stage=WorkflowStage.RUNNING_PREFLIGHT,
                         started_at=started,
                         ended_at=_utcnow(),
                         success=False,
-                        summary=expiry_summary,
+                        summary_locale_key="application.workflow.steps.auth_certificate_invalid",
                         details=cert_details,
+                        precondition_verdict=_no_recovery_verdict(
+                            condition_id="workflow.auth.certificate_valid",
+                            evidence_id="workflow.auth.certificate_state",
+                            provenance=ConditionEvidenceProvenance.RUNTIME_OBSERVATION,
+                            values={
+                                "certificate_valid": False,
+                                "cert_severity": cert_severity,
+                                "provider_kind": certificate.kind.value,
+                            },
+                            outcome=NoRecoveryOutcome.SAFETY,
+                        ),
                     ),
                 )
-                raise WorkflowAbortSignalError(
-                    reason=WorkflowAbortReason.CERT_INVALID,
-                    summary=expiry_summary,
-                )
+                raise WorkflowAbortSignalError(reason=WorkflowAbortReason.CERT_INVALID)
             if cert_severity == "WARN":
                 _logger.warning(
                     "workflow: certificate nearing expiry kind=%s days=%d",
@@ -1162,7 +1261,11 @@ class WorkflowEngine:
                     days_until_expiry,
                 )
         else:
-            cert_details = {"cert_skipped": "not_wired"}
+            cert_details = WorkflowAuthCheckDetails(
+                kind="auth_check",
+                provider_check_skipped=True,
+                skip_reason=WorkflowDiagnosticSkipReason.NOT_WIRED,
+            )
 
         try:
             # The AEAT filing-window preflight gate is skipped for BOTH local
@@ -1196,21 +1299,28 @@ class WorkflowEngine:
                 steps=steps,
             )
         except SubmissionPreflightError as exc:
-            preflight_summary = _summary_text(f"Preflight failed: {exc}")
             steps.append(
                 WorkflowStep(
                     stage=WorkflowStage.RUNNING_PREFLIGHT,
                     started_at=started,
                     ended_at=_utcnow(),
                     success=False,
-                    summary=preflight_summary,
-                    details={**cert_details, "error_message": str(exc)},
+                    summary_locale_key="application.workflow.steps.preflight_failed",
+                    details=WorkflowPreflightFailedDetails(
+                        kind="preflight_failed",
+                        error_code="workflow.submission.preflight_refused",
+                        auth_check=cert_details,
+                    ),
+                    precondition_verdict=_no_recovery_verdict(
+                        condition_id="workflow.submission.safe",
+                        evidence_id="workflow.submission.safety_state",
+                        provenance=ConditionEvidenceProvenance.DOMAIN_EVALUATION,
+                        values={"submission_safe": False},
+                        outcome=NoRecoveryOutcome.SAFETY,
+                    ),
                 ),
             )
-            raise WorkflowAbortSignalError(
-                reason=WorkflowAbortReason.PREFLIGHT_FAILED,
-                summary=preflight_summary,
-            ) from exc
+            raise WorkflowAbortSignalError(reason=WorkflowAbortReason.PREFLIGHT_FAILED) from exc
         except Exception as exc:
             self._record_unhandled(
                 stage=WorkflowStage.RUNNING_PREFLIGHT,
@@ -1225,7 +1335,7 @@ class WorkflowEngine:
                 started_at=started,
                 ended_at=_utcnow(),
                 success=True,
-                summary=_summary_text("Preflight OK"),
+                summary_locale_key="application.workflow.steps.preflight_completed",
                 details=cert_details,
             ),
         )
@@ -1278,6 +1388,13 @@ class WorkflowEngine:
             steps=steps,
             current_run_id=self._compute_current_run_id,
         )
+
+
+def _persisted_obligation(obligation: WorkflowDeadlineTarget | None) -> WorkflowObligationFacts | None:
+    """Return the locale-neutral durable projection for an in-flight deadline."""
+    if obligation is None or isinstance(obligation, WorkflowObligationFacts):
+        return obligation
+    return WorkflowObligationFacts.from_deadline(obligation)
 
 
 __all__ = [

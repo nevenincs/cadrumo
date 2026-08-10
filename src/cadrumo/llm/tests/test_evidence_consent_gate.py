@@ -18,16 +18,12 @@ from __future__ import annotations
 import ast
 import asyncio
 import inspect
-import json
 import textwrap
-import threading
 from collections.abc import Iterator
 from contextlib import contextmanager
 from http import HTTPStatus
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from queue import Queue
-from typing import override
 
 import pytest
 from pydantic import BaseModel, SecretStr, ValidationError
@@ -38,6 +34,12 @@ from ...application.ledger import DocumentTranscription, TranscriberIdentity
 from ...core import LOCAL_TRANSPORT_LABEL, FieldOrigin
 from ...core.config import LLMProvider, override_settings
 from ...tests.fixtures.settings import EnvFileFreeSettings
+from ...tests.loopback_llm import (
+    SilentLoopbackHandler,
+    openai_chat_reply,
+    serving_loopback,
+    write_json_response,
+)
 from .. import (
     EvidenceConsentToken,
     LLMClient,
@@ -124,39 +126,21 @@ def _serve_openai() -> Iterator[tuple[str, Queue[str]]]:
     """
     bodies: Queue[str] = Queue()
 
-    class _Endpoint(BaseHTTPRequestHandler):
+    class _Endpoint(SilentLoopbackHandler):
         def do_POST(self) -> None:
             raw = self.rfile.read(int(self.headers.get("content-length", "0")))
             bodies.put(raw.decode("utf-8"))
-            payload = {
-                "id": "chatcmpl-loopback",
-                "model": "gpt-4.1",
+            write_json_response(
+                self,
                 # A parsable empty extraction object, so a case that runs the full
                 # reader does not fail on the stub's reply shape instead of on the
                 # boundary it is testing.
-                "choices": [{"message": {"content": "{}"}}],
-                "usage": {"prompt_tokens": 11, "completion_tokens": 3},
-            }
-            encoded = json.dumps(payload).encode("utf-8")
-            self.send_response(HTTPStatus.OK)
-            self.send_header("content-type", "application/json")
-            self.send_header("content-length", str(len(encoded)))
-            self.end_headers()
-            self.wfile.write(encoded)
+                openai_chat_reply("{}", prompt_tokens=11),
+                status=HTTPStatus.OK,
+            )
 
-        @override
-        def log_message(self, format: str, *args: object) -> None:
-            """Silence stdlib request logging during tests."""
-
-    server = ThreadingHTTPServer(("127.0.0.1", 0), _Endpoint)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    try:
-        yield f"http://127.0.0.1:{server.server_port}/v1/chat/completions", bodies
-    finally:
-        server.shutdown()
-        server.server_close()
-        thread.join(timeout=3)
+    with serving_loopback(_Endpoint, path="/v1/chat/completions") as endpoint:
+        yield endpoint, bodies
 
 
 def _evidence_request(*, token: EvidenceConsentToken | None = None) -> LLMRequest:

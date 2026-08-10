@@ -323,7 +323,7 @@ def test_evidence_step_does_not_count_incoming_business_income_as_expense(
 def test_invoices_step_reflects_period_scoped_invoice_catalogue(
     _tx_repository: TransactionCatalogueRepository,
 ) -> None:
-    catalogue = InvoiceCatalogue.model_validate({_invoice().invoice_id: _invoice()})
+    catalogue = InvoiceCatalogue.from_invoices((_invoice(),))
 
     walkthrough = _walkthrough(_tx_repository, invoice_catalogue=catalogue)
     invoices_step = next(s for s in walkthrough.steps if s.step_id is DataPrepStepId.REGISTER_INVOICES)
@@ -356,7 +356,7 @@ def test_ready_for_calculation_true_only_when_every_step_is_done(
         purchase_invoice_evidence_id="ev-001",
     )
     _tx_repository.save(TransactionCatalogue.from_transactions((fully_ready_row,)))
-    catalogue = InvoiceCatalogue.model_validate({_invoice().invoice_id: _invoice()})
+    catalogue = InvoiceCatalogue.from_invoices((_invoice(),))
 
     not_ready = _walkthrough(_tx_repository, invoice_catalogue=catalogue, evidence_records=(_evidence(),))
     assert not_ready.ready_for_calculation is False  # no matching work unit yet

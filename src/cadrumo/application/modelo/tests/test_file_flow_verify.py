@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ....domain.calculations.registry import CasillaId
+from ...workflow import WorkflowDeadlineContextDetails
 from ._file_flow_support import (
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,
@@ -283,8 +284,9 @@ def test_verify_records_deadline_state_as_informational_not_abort(repos: Repos) 
     assert len(deadline_steps) == 1
     deadline_step = deadline_steps[0]
     assert deadline_step.success is True
-    assert deadline_step.details is not None
-    assert deadline_step.details["deadline_role"] == "informational"
+    assert isinstance(deadline_step.details, WorkflowDeadlineContextDetails)
+    assert deadline_step.details.deadline_role is not None
+    assert deadline_step.details.deadline_role.value == "informational"
 
 
 def test_get_calculation_revision_raises_on_missing_id(repos: Repos) -> None:

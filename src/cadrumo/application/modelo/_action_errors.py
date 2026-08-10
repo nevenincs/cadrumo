@@ -7,8 +7,8 @@ external-import, and workflow-gate services. They all inherit from
 boundaries can route them through the central error-code registry without
 depending on the implementation module that raised them.
 
-Most classes are deliberately thin taxonomy markers whose operator-facing code,
-message key, and suggestion live in :mod:`cadrumo.core.errors.registry`. The richer
+Most classes are deliberately thin taxonomy markers whose operator-facing code
+and message key live in :mod:`cadrumo.core.errors.registry`. The richer
 contracts are kept here when the exception must preserve domain context without
 leaking it into rendered error payloads, as with
 :class:`ModeloWorkflowGateError` and its private
@@ -18,7 +18,7 @@ See Also:
     :mod:`cadrumo.application.modelo`:
         Public package facade for these action errors.
     :mod:`cadrumo.core.errors.registry`:
-        Maps these exception classes to stable error codes and suggestions.
+        Maps these exception classes to stable error codes and message keys.
     :mod:`cadrumo.application.modelo._workflow_gate`:
         Raises :class:`ModeloWorkflowGateError` after persisting an aborted
         workflow run.
@@ -31,7 +31,7 @@ from __future__ import annotations
 
 from ...core.errors import CoreNotFoundError
 from ...domain.modelos import ModeloError
-from ..workflow import WorkflowAbortReason, WorkflowResult
+from ..workflow import WorkflowResult
 
 WORKFLOW_GATE_LEGAL_REFS: tuple[str, ...] = (
     "ley-58-2003:art-119",
@@ -151,19 +151,12 @@ class ModeloWorkflowGateError(ModeloError):
     def __init__(self, result: WorkflowResult) -> None:
         self._result = result
         reason = result.aborted_reason.value if result.aborted_reason is not None else "unknown"
-        summary = result.summary.strip() or "the workflow gate aborted this transition"
-        message = summary
-        suggestion: str | None = None
-        if result.aborted_reason is WorkflowAbortReason.NO_PENDING_OBLIGATION:
-            message = None
-            suggestion = "aeat app modelo export <work-unit-id> --output <path>"
         super().__init__(
-            message,
+            translated_message=str(result.summary_locale_key),
             context={
                 "abort_code": reason,
                 "stage": result.final_stage.value,
             },
-            suggestion=suggestion,
         )
 
     @property

@@ -9,9 +9,23 @@ from typing import NoReturn
 from ...core.errors import SiteHealthError, build_error_envelope
 from ...core.logging import get_logger
 from ...core.time import now as _utcnow
-from ._engine_helpers import summary_text as _summary_text
+from ..operator_actions import (
+    ActionConditionality,
+    ConditionEvidence,
+    ConditionEvidenceProvenance,
+    NoRecoveryOutcome,
+    PreconditionVerdict,
+)
 from ._errors import UnhandledWorkflowError, WorkflowAbortSignalError
-from ._models import SiteHealthAlert, SiteHealthStatus, WorkflowAbortReason, WorkflowStage, WorkflowStep
+from ._models import (
+    SiteHealthAlert,
+    SiteHealthStatus,
+    WorkflowAbortReason,
+    WorkflowFailureDetails,
+    WorkflowSiteHealthFacts,
+    WorkflowStage,
+    WorkflowStep,
+)
 
 _logger = get_logger(__name__)
 
@@ -29,7 +43,6 @@ def record_unhandled(
         stage.value,
         exc_info=(type(exc), exc, exc.__traceback__),
     )
-    unhandled_summary = _summary_text(f"Unhandled {type(exc).__name__} at stage={stage.value}: {exc}")
     synthetic = UnhandledWorkflowError(
         f"{stage.value} raised {type(exc).__name__}: {exc}",
         context={
@@ -46,17 +59,15 @@ def record_unhandled(
             started_at=started,
             ended_at=_utcnow(),
             success=False,
-            summary=unhandled_summary,
-            details={
-                "error_type": type(exc).__name__,
-                "error_message": str(exc),
-            },
+            summary_locale_key="application.workflow.steps.workflow_failure",
+            details=WorkflowFailureDetails(
+                kind="workflow_failure",
+                error_code="workflow.execution.unhandled_exception",
+            ),
+            precondition_verdict=_execution_failure_verdict("workflow.execution.unhandled_exception"),
         ),
     )
-    raise WorkflowAbortSignalError(
-        reason=WorkflowAbortReason.UNHANDLED_EXCEPTION,
-        summary=unhandled_summary,
-    ) from synthetic
+    raise WorkflowAbortSignalError(reason=WorkflowAbortReason.UNHANDLED_EXCEPTION) from synthetic
 
 
 def record_site_unavailable(
@@ -70,25 +81,44 @@ def record_site_unavailable(
     """Record a site-health failure and abort with ``SITE_UNAVAILABLE``."""
     status = SiteHealthStatus.model_validate(exc.status, from_attributes=True)
     alert_run_id = current_run_id() or "-"
-    summary = _summary_text(f"AEAT site unavailable at stage={stage.value}: {status.state.value}")
     steps.append(
         WorkflowStep(
             stage=stage,
             started_at=started,
             ended_at=_utcnow(),
             success=False,
-            summary=summary,
+            summary_locale_key="application.workflow.steps.site_unavailable",
+            details=WorkflowFailureDetails(
+                kind="workflow_failure",
+                error_code="workflow.site.unavailable",
+            ),
+            precondition_verdict=_execution_failure_verdict("workflow.site.unavailable"),
             site_health_alert=SiteHealthAlert(
                 stage=stage,
-                status=status,
+                status=WorkflowSiteHealthFacts.from_status(status),
                 run_id=alert_run_id,
             ),
         ),
     )
-    raise WorkflowAbortSignalError(
-        reason=WorkflowAbortReason.SITE_UNAVAILABLE,
-        summary=summary,
-    ) from exc
+    raise WorkflowAbortSignalError(reason=WorkflowAbortReason.SITE_UNAVAILABLE) from exc
+
+
+def _execution_failure_verdict(error_code: str) -> PreconditionVerdict:
+    """Return the terminal verdict for an operational workflow failure."""
+    condition_id = "workflow.execution.completed"
+    return PreconditionVerdict(
+        failed_condition_id=condition_id,
+        evidence=(
+            ConditionEvidence(
+                condition_id=condition_id,
+                evidence_id="workflow.execution.error_code",
+                provenance=ConditionEvidenceProvenance.RUNTIME_OBSERVATION,
+                values={"completed": False, "error_code": error_code},
+            ),
+        ),
+        conditionality=ActionConditionality.NOT_APPLICABLE,
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+    )
 
 
 __all__ = ["record_site_unavailable", "record_unhandled"]

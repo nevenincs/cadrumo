@@ -50,10 +50,11 @@ from __future__ import annotations
 
 import re
 from datetime import date, datetime
+from decimal import Decimal
 from enum import StrEnum
 from typing import TYPE_CHECKING, Annotated, Literal
 
-from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_validator
+from pydantic import AwareDatetime, BaseModel, BeforeValidator, Field, field_validator, model_validator
 
 from ...core import (
     STRICT_FROZEN_CONFIG as _STRICT_FROZEN,
@@ -71,7 +72,6 @@ from ...core import (
 )
 from ...core.config import override_settings
 from ...core.hashing import sha256_hex
-from ...core.i18n import Translatable
 from ...core.logging import get_logger
 from ...core.time import now as utc_now
 from ...domain.submission import ModeloDraftStatus
@@ -93,6 +93,25 @@ if TYPE_CHECKING:
     from ...domain.user_profile import ProfileSchemaDefinition, UserProfileRecord
 
 _log = get_logger(__name__)
+
+_WORKFLOW_PROSE_EVIDENCE_KEY_TOKENS = frozenset(
+    {
+        "description",
+        "detail",
+        "exception",
+        "message",
+        "prose",
+        "reason",
+        "summary",
+        "text",
+        "traceback",
+    },
+)
+_WORKFLOW_EXCEPTION_TEXT_PATTERN = re.compile(
+    r"^[a-z_][a-z0-9_.]*(?:error|exception):",
+    flags=re.IGNORECASE,
+)
+_WORKFLOW_STABLE_FACT_ID_PATTERN = re.compile(r"^[a-z0-9][a-z0-9_.:-]*$")
 
 
 class WorkflowStage(StrEnum):
@@ -375,12 +394,56 @@ def update_declaration_pointer(
 # already present in sys.modules['cadrumo.application.workflow._models'].
 # ---------------------------------------------------------------------------
 
-from ...adapters.outbound.aeat.browser import SiteHealthStatus
-from ...domain.deadlines import ModeloDeadline
+from ...adapters.outbound.aeat.browser import SiteHealthState, SiteHealthStatus
+from ...domain.deadlines import ModeloDeadline, ObligationStatus
+
+
+class WorkflowSiteHealthFacts(BaseModel):
+    """Locale-neutral persisted projection of one site-health observation.
+
+    Adapter evidence may include a probe URL, source-language marker text, and
+    a redacted HTML fragment.  Those transient diagnostics never cross the
+    workflow-run persistence boundary.  The projection retains only closed
+    state, stable identity, timestamp, numeric status, retry timing, and count
+    facts needed by renderers and operators.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    alert_code: str = Field(
+        pattern=r"^workflow\.site\.[a-z][a-z0-9_]*$",
+        min_length=3,
+        max_length=96,
+    )
+    state: SiteHealthState
+    observed_at: AwareDatetime
+    http_status: int = Field(ge=100, le=599)
+    retry_after_seconds: int | None = Field(default=None, ge=1)
+    detected_marker_count: int = Field(ge=0)
+
+    @model_validator(mode="after")
+    def _validate_alert_identity(self) -> WorkflowSiteHealthFacts:
+        """Bind the persisted alert code to the canonical closed state."""
+        expected = f"workflow.site.{self.state.value}"
+        if self.alert_code != expected:
+            raise ValueError("workflow site-health alert code must match its canonical state")
+        return self
+
+    @classmethod
+    def from_status(cls, status: SiteHealthStatus) -> WorkflowSiteHealthFacts:
+        """Project adapter status without URL, marker text, or HTML evidence."""
+        return cls(
+            alert_code=f"workflow.site.{status.state.value}",
+            state=status.state,
+            observed_at=status.observed_at,
+            http_status=status.evidence.http_status,
+            retry_after_seconds=status.retry_after_seconds,
+            detected_marker_count=len(status.evidence.detected_markers),
+        )
 
 
 class SiteHealthAlert(BaseModel):
-    """Workflow-side alert wrapping a ``SiteHealthStatus`` observation.
+    """Workflow-side alert carrying only stable site-health facts.
 
     Attached to a :class:`WorkflowStep` when the AEAT browser health-check
     adapter reports a non-nominal site status during a workflow run. ``stage``
@@ -391,8 +454,107 @@ class SiteHealthAlert(BaseModel):
     model_config = _STRICT_FROZEN
 
     stage: WorkflowStage
-    status: SiteHealthStatus
+    status: WorkflowSiteHealthFacts
     run_id: str = Field(min_length=1, max_length=128)
+
+
+class WorkflowDeadlineRecoveryFacts(BaseModel):
+    """Locale-neutral legal and amount facts for an overdue obligation.
+
+    The domain recovery record also carries an operator command.  Workflow-run
+    persistence deliberately excludes that presentation-owned string and keeps
+    only registry identities and evaluated recargo facts.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    still_filable: bool
+    recargo_band_id: str = Field(min_length=1, max_length=64)
+    min_completed_months: int = Field(ge=0)
+    max_completed_months: int | None = Field(default=None, ge=0)
+    surcharge_pct: Decimal = Field(ge=0)
+    interest_applies: bool
+    legal_ref: str = Field(min_length=1, max_length=128)
+
+    @model_validator(mode="after")
+    def _validate_stable_facts(self) -> WorkflowDeadlineRecoveryFacts:
+        """Reject prose-shaped identifiers and an inverted month range."""
+        if _WORKFLOW_STABLE_FACT_ID_PATTERN.fullmatch(self.recargo_band_id) is None:
+            raise ValueError("recargo band id must be a stable locale-neutral identity")
+        if _WORKFLOW_STABLE_FACT_ID_PATTERN.fullmatch(self.legal_ref) is None:
+            raise ValueError("recargo legal reference must be a stable locale-neutral identity")
+        if self.max_completed_months is not None and self.max_completed_months < self.min_completed_months:
+            raise ValueError("recargo maximum completed months cannot precede the minimum")
+        return self
+
+
+class WorkflowObligationFacts(BaseModel):
+    """Strict persisted projection of one domain filing obligation.
+
+    ``ModeloDeadline`` contains source-language applicability prose and a raw
+    recovery command.  Neither belongs in a durable workflow record.  This
+    projection retains the canonical address, dates, status, legal identities,
+    and typed overdue facts needed by resume and rendering consumers.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    modelo: Modelo
+    period: Period
+    opens_on: date
+    closes_on: date
+    payment_cutoff_on: date | None = None
+    status: ObligationStatus
+    boe_references: tuple[str, ...] = ()
+    recovery: WorkflowDeadlineRecoveryFacts | None = None
+
+    @field_validator("boe_references")
+    @classmethod
+    def _legal_references_are_stable(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        """Keep only unique registry identities, never rendered citations."""
+        if len(set(value)) != len(value):
+            raise ValueError("workflow obligation legal references must be unique")
+        if any(_WORKFLOW_STABLE_FACT_ID_PATTERN.fullmatch(item) is None for item in value):
+            raise ValueError("workflow obligation legal references must be stable locale-neutral identities")
+        return tuple(sorted(value))
+
+    @model_validator(mode="after")
+    def _validate_window(self) -> WorkflowObligationFacts:
+        """Retain the domain window and overdue-recovery coherence."""
+        if self.opens_on > self.closes_on:
+            raise ValueError("workflow obligation opens_on cannot follow closes_on")
+        if self.payment_cutoff_on is not None and self.payment_cutoff_on > self.closes_on:
+            raise ValueError("workflow obligation payment cutoff cannot follow closes_on")
+        if self.recovery is not None and self.status is not ObligationStatus.OVERDUE:
+            raise ValueError("workflow obligation recovery facts require overdue status")
+        return self
+
+    @classmethod
+    def from_deadline(cls, obligation: ModeloDeadline) -> WorkflowObligationFacts:
+        """Project one domain deadline without its prose or raw command fields."""
+        recovery = obligation.recovery
+        recovery_facts = None
+        if recovery is not None:
+            band = recovery.recargo_band
+            recovery_facts = WorkflowDeadlineRecoveryFacts(
+                still_filable=recovery.still_filable,
+                recargo_band_id=band.id,
+                min_completed_months=band.min_completed_months,
+                max_completed_months=band.max_completed_months,
+                surcharge_pct=band.surcharge_pct,
+                interest_applies=band.interest_applies,
+                legal_ref=band.legal_ref,
+            )
+        return cls(
+            modelo=obligation.modelo,
+            period=obligation.period,
+            opens_on=obligation.opens_on,
+            closes_on=obligation.closes_on,
+            payment_cutoff_on=obligation.payment_cutoff_on,
+            status=obligation.status,
+            boe_references=obligation.boe_references,
+            recovery=recovery_facts,
+        )
 
 
 class WorkflowDiagnosticSkipReason(StrEnum):
@@ -609,16 +771,56 @@ _PRECONDITION_DETAIL_TYPES = (
 )
 
 
-def _parse_workflow_locale_key(value: object) -> Translatable:
+WORKFLOW_SUMMARY_LOCALE_KEYS: tuple[str, ...] = (
+    "application.workflow.results.aborted",
+    "application.workflow.results.completed",
+    "application.workflow.steps.already_filed",
+    "application.workflow.steps.auth_certificate_invalid",
+    "application.workflow.steps.auth_certificate_load_failed",
+    "application.workflow.steps.auth_provider_unavailable",
+    "application.workflow.steps.deadline_absent",
+    "application.workflow.steps.deadline_closed",
+    "application.workflow.steps.deadline_future",
+    "application.workflow.steps.deadline_informational",
+    "application.workflow.steps.deadline_missing",
+    "application.workflow.steps.deadline_open",
+    "application.workflow.steps.deadline_overdue",
+    "application.workflow.steps.draft_build_failed",
+    "application.workflow.steps.draft_built",
+    "application.workflow.steps.draft_identity_mismatch",
+    "application.workflow.steps.draft_not_ready",
+    "application.workflow.steps.inbox_blocked",
+    "application.workflow.steps.inbox_clear",
+    "application.workflow.steps.inbox_skipped",
+    "application.workflow.steps.preflight_completed",
+    "application.workflow.steps.preflight_failed",
+    "application.workflow.steps.profile_loaded",
+    "application.workflow.steps.site_unavailable",
+    "application.workflow.steps.validation_clean",
+    "application.workflow.steps.validation_failed",
+    "application.workflow.steps.workflow_failure",
+)
+"""Every persisted workflow summary locale identity emitted by engine producers.
+
+The ``_LOCALE_KEYS`` suffix makes this closed producer set visible to the
+static locale scanner even though a persisted result selects one key at
+runtime. Keep it synchronized with the workflow engine, deadline stage, and
+recording failure producers.
+"""
+
+
+def _parse_workflow_locale_key(value: object) -> str:
     """Return one stable abstract locale identity, never rendered prose."""
     if not isinstance(value, str):
         raise ValueError("workflow summary locale key must be a string")
     if not re.fullmatch(r"[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+", value):
         raise ValueError("workflow summary must carry a stable dotted locale key")
-    return Translatable(value)
+    if value not in WORKFLOW_SUMMARY_LOCALE_KEYS:
+        raise ValueError("workflow summary locale key must be one of the closed workflow producer keys")
+    return value
 
 
-WorkflowLocaleKey = Annotated[Translatable, BeforeValidator(_parse_workflow_locale_key)]
+WorkflowLocaleKey = Annotated[str, BeforeValidator(_parse_workflow_locale_key)]
 
 
 class WorkflowStep(BaseModel):
@@ -647,9 +849,12 @@ class WorkflowStep(BaseModel):
             raise ValueError("refusal detail records require a typed precondition verdict")
         if self.precondition_verdict is not None:
             for evidence in self.precondition_verdict.evidence:
-                if any(
-                    isinstance(value, str) and any(character.isspace() for character in value)
-                    for value in evidence.values.values()
+                evidence_key_tokens = {token for key in evidence.values for token in re.split(r"[._]", key)}
+                string_values = tuple(value for value in evidence.values.values() if isinstance(value, str))
+                if evidence_key_tokens & _WORKFLOW_PROSE_EVIDENCE_KEY_TOKENS or any(
+                    any(character.isspace() for character in value)
+                    or _WORKFLOW_EXCEPTION_TEXT_PATTERN.match(value) is not None
+                    for value in string_values
                 ):
                     raise ValueError("workflow precondition evidence cannot persist rendered or exception prose")
         return self
@@ -665,7 +870,7 @@ class WorkflowResult(BaseModel):
     ended_at: datetime
     final_stage: WorkflowStage
     aborted_reason: WorkflowAbortReason | None = None
-    obligation: ModeloDeadline | None = None
+    obligation: WorkflowObligationFacts | None = None
     draft_id: str | None = None
     submission_id: str | None = None
     steps: tuple[WorkflowStep, ...]
@@ -685,6 +890,8 @@ class WorkflowResult(BaseModel):
             raise ValueError("DONE results must not carry an aborted_reason")
         if self.final_stage is WorkflowStage.ABORTED and (not self.steps or self.steps[-1].success is not False):
             raise ValueError("ABORTED results must end with an explicitly failed workflow step")
+        if self.final_stage is WorkflowStage.ABORTED and self.steps[-1].precondition_verdict is None:
+            raise ValueError("ABORTED results must end with a typed precondition verdict")
         return self
 
 

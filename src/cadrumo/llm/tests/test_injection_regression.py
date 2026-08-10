@@ -46,15 +46,12 @@ from __future__ import annotations
 
 import asyncio
 import json
-import threading
 from collections.abc import Iterator
 from contextlib import contextmanager
 from decimal import Decimal
 from hashlib import sha256
 from http import HTTPStatus
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import override
 
 import pytest
 
@@ -71,6 +68,13 @@ from ...application.ledger import (
 from ...core import LOCAL_TRANSPORT_LABEL, FieldGroundingOutcome, FieldOrigin
 from ...core.config import LLMProvider, override_settings
 from ...tests.fixtures.settings import EnvFileFreeSettings
+from ...tests.loopback_llm import (
+    SilentLoopbackHandler,
+    ollama_chat_reply,
+    read_json_body,
+    serving_loopback,
+    write_json_response,
+)
 from .. import LLMClient, LLMRequest
 from .._invoice_field_contract import anchor_key_for_field
 from .._invoice_field_grounding import parse_invoice_extraction_response
@@ -143,35 +147,17 @@ def _serve_authored_reply(reply: str) -> Iterator[str]:
     transport: the hostile content genuinely crosses the client path.
     """
 
-    class _Endpoint(BaseHTTPRequestHandler):
+    class _Endpoint(SilentLoopbackHandler):
         def do_POST(self) -> None:
-            self.rfile.read(int(self.headers.get("content-length", "0")))
-            payload = {
-                "model": "gpt-oss",
-                "message": {"content": reply},
-                "prompt_eval_count": 8,
-                "eval_count": 4,
-            }
-            encoded = json.dumps(payload).encode("utf-8")
-            self.send_response(HTTPStatus.OK)
-            self.send_header("content-type", "application/json")
-            self.send_header("content-length", str(len(encoded)))
-            self.end_headers()
-            self.wfile.write(encoded)
+            read_json_body(self)
+            write_json_response(
+                self,
+                ollama_chat_reply(reply, prompt_eval_count=8),
+                status=HTTPStatus.OK,
+            )
 
-        @override
-        def log_message(self, format: str, *args: object) -> None:
-            """Silence stdlib request logging during tests."""
-
-    server = ThreadingHTTPServer(("127.0.0.1", 0), _Endpoint)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    try:
-        yield f"http://127.0.0.1:{server.server_port}/api/chat"
-    finally:
-        server.shutdown()
-        server.server_close()
-        thread.join(timeout=3)
+    with serving_loopback(_Endpoint, path="/api/chat") as endpoint:
+        yield endpoint
 
 
 def _complete_over_loopback(reply: str, tmp_path: Path) -> str:

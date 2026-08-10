@@ -87,7 +87,7 @@ def _invoice(
 
 
 def _catalogue(*invoices: Invoice) -> InvoiceCatalogue:
-    return InvoiceCatalogue.model_validate({invoice.invoice_id: invoice for invoice in invoices})
+    return InvoiceCatalogue.from_invoices(invoices)
 
 
 def _classify(evidence_id: str, *, records: tuple[PurchaseInvoiceEvidence, ...], invoices: InvoiceCatalogue):

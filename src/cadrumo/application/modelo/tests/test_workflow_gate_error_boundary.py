@@ -10,9 +10,9 @@ repr — ``datetime.datetime(...)`` constructors, ``<WorkflowStage.X>``
 enum reprs, nested ``WorkflowStep(...)`` tuples — straight at a
 non-technical taxpayer.
 
-These tests pin the boundary: the rendered text must carry the clean
-refusal summary, the next-step hint, and stable primitive machine codes
-only — never a raw object dump.
+These tests pin the boundary: the error carries the engine-owned locale identity
+and stable primitive machine codes only — never a raw object dump or locally
+authored command guidance.
 """
 
 from __future__ import annotations
@@ -23,6 +23,13 @@ import pytest
 
 from ....core.config import override_settings
 from ....core.errors import render_error_json, render_error_text
+from ...operator_actions import (
+    ActionConditionality,
+    ConditionEvidence,
+    ConditionEvidenceProvenance,
+    NoRecoveryOutcome,
+    PreconditionVerdict,
+)
 from ...workflow import (
     WorkflowAbortReason,
     WorkflowResult,
@@ -36,7 +43,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def _aborted_result(
     *,
-    summary: str = "No pending filing obligation for this profile",
+    summary_locale_key: str = "application.workflow.steps.deadline_missing",
     reason: WorkflowAbortReason = WorkflowAbortReason.NO_PENDING_OBLIGATION,
 ) -> WorkflowResult:
     """Build a realistic ABORTED workflow result with nested steps."""
@@ -58,17 +65,30 @@ def _aborted_result(
                 started_at=started,
                 ended_at=ended,
                 success=True,
-                summary="Loaded profile tax_id=00000000T",
+                summary_locale_key="application.workflow.steps.profile_loaded",
             ),
             WorkflowStep(
                 stage=WorkflowStage.COMPUTING_DEADLINES,
                 started_at=started,
                 ended_at=ended,
-                success=True,
-                summary="No pending filing obligation for this profile",
+                success=False,
+                summary_locale_key=summary_locale_key,
+                precondition_verdict=PreconditionVerdict(
+                    failed_condition_id="workflow.deadline.filing_window_open",
+                    evidence=(
+                        ConditionEvidence(
+                            condition_id="workflow.deadline.filing_window_open",
+                            evidence_id="workflow.deadline.window",
+                            provenance=ConditionEvidenceProvenance.DOMAIN_EVALUATION,
+                            values={"filing_window_open": False},
+                        ),
+                    ),
+                    conditionality=ActionConditionality.NOT_APPLICABLE,
+                    no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+                ),
             ),
         ),
-        summary=summary,
+        summary_locale_key=summary_locale_key,
     )
 
 
@@ -85,15 +105,8 @@ def test_gate_error_text_carries_no_raw_python_repr() -> None:
         error = ModeloWorkflowGateError(_aborted_result())
         rendered = render_error_text(error)
 
-    # The clean operator refusal and next-step hint survive. For a
-    # NO_PENDING_OBLIGATION abort the next-step hint signposts the local
-    # finish line — the real verb `aeat app modelo export` (a sibling of `work`,
-    # NOT a `work` subcommand) rather than the generic `work list` — so a
-    # newcomer who cannot file a verified-complete revision is told how to
-    # finish locally instead of dead-ending on a non-existent command.
-    assert "Refused. No pending filing obligation for this profile" in rendered
-    assert "aeat app modelo export" in rendered
-    assert "aeat app modelo work export" not in rendered
+    assert error.translated_message == "application.workflow.steps.deadline_missing"
+    assert "aeat app modelo export" not in rendered
 
     # No raw Python object repr of any shape reaches the operator.
     for leak in (
@@ -118,42 +131,27 @@ def test_gate_error_context_exposes_stable_primitive_machine_codes() -> None:
     assert "stage: ABORTED" in rendered
 
 
-@pytest.mark.parametrize(
-    ("language", "expected"),
-    (
-        ("es", "No hay ninguna obligación de presentación pendiente"),
-        ("ca", "No hi ha cap obligació de presentació pendent"),
-        ("hu", "Nincs függőben lévő benyújtási kötelezettség"),
-    ),
-)
-def test_no_pending_obligation_gate_message_uses_output_language(language: str, expected: str) -> None:
-    """The operator refusal localises while machine codes stay raw."""
+def test_gate_error_keeps_the_persisted_summary_as_a_locale_identity() -> None:
+    """Application code forwards the engine-owned locale key without rendering it."""
 
-    with override_settings(cadrumo_output_language=language):
-        rendered = render_error_text(ModeloWorkflowGateError(_aborted_result()))
+    error = ModeloWorkflowGateError(_aborted_result())
 
-    assert expected in rendered
-    assert "No pending filing obligation for this profile" not in rendered
-    assert "abort_code: NO_PENDING_OBLIGATION" in rendered
-    assert "stage: ABORTED" in rendered
+    assert error.translated_message == "application.workflow.steps.deadline_missing"
+    assert error.context == {"abort_code": "NO_PENDING_OBLIGATION", "stage": "ABORTED"}
 
 
-def test_other_gate_abort_reasons_keep_their_workflow_summary() -> None:
-    """Only the no-pending-obligation refusal switches to the locale catalogue."""
+def test_other_gate_abort_reasons_keep_their_workflow_locale_identity() -> None:
+    """The error boundary does not substitute a prose fallback for another abort."""
 
-    summary = "The filing deadline passed for Modelo 130 2025 1T"
-    with override_settings(cadrumo_output_language="ca"):
-        rendered = render_error_text(
-            ModeloWorkflowGateError(
-                _aborted_result(
-                    summary=summary,
-                    reason=WorkflowAbortReason.DEADLINE_PASSED,
-                ),
-            ),
+    error = ModeloWorkflowGateError(
+        _aborted_result(
+            summary_locale_key="application.workflow.steps.deadline_closed",
+            reason=WorkflowAbortReason.DEADLINE_PASSED,
         )
+    )
+    rendered = render_error_text(error)
 
-    assert summary in rendered
-    assert "No hi ha cap obligació de presentació pendent" not in rendered
+    assert error.translated_message == "application.workflow.steps.deadline_closed"
     assert "abort_code: DEADLINE_PASSED" in rendered
     assert "stage: ABORTED" in rendered
 

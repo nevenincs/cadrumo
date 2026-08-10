@@ -11,10 +11,10 @@ import pytest
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import Period
+from ....core import Modelo, Period
 from ....core.errors import resolve_error_message
 from ....domain.calculations.registry import CasillaId, CasillaObservation, validated_casilla_id
-from ....domain.deadlines import ModeloDeadline, ObligationStatus
+from ....domain.deadlines import ObligationStatus
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
@@ -31,10 +31,18 @@ from ...modelo import (
     create_work_unit,
     workflow_period_for_work_unit,
 )
+from ...operator_actions import (
+    ActionConditionality,
+    ConditionEvidence,
+    ConditionEvidenceProvenance,
+    NoRecoveryOutcome,
+    PreconditionVerdict,
+)
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     WorkflowAbortReason,
     WorkflowError,
+    WorkflowObligationFacts,
     WorkflowResult,
     WorkflowResumeContext,
     WorkflowResumeRefusedError,
@@ -104,15 +112,46 @@ def _period(year: int, code: str) -> Period:
     return Period.from_year_and_code(year, code)
 
 
-def _obligation(modelo: str = "130", period: Period | None = None) -> ModeloDeadline:
+def _obligation(modelo: str = "130", period: Period | None = None) -> WorkflowObligationFacts:
     period = period or _period(2026, "1T")
-    return ModeloDeadline(
-        modelo=modelo,
+    return WorkflowObligationFacts(
+        modelo=Modelo(modelo),
         period=period,
         opens_on=date(2026, 4, 1),
         closes_on=date(2026, 4, 20),
         status=ObligationStatus.UPCOMING,
-        applies_because="economic activity",
+    )
+
+
+def _abort_verdict(reason: WorkflowAbortReason) -> PreconditionVerdict:
+    """Build the closed terminal state represented by a persisted resume fixture."""
+    if reason in {WorkflowAbortReason.NO_PENDING_OBLIGATION, WorkflowAbortReason.DEADLINE_PASSED}:
+        condition_id = "workflow.deadline.filing_window_open"
+        evidence_id = "workflow.deadline.window"
+        provenance = ConditionEvidenceProvenance.DOMAIN_EVALUATION
+        values: dict[str, str | bool] = {"filing_window_open": False}
+    elif reason is WorkflowAbortReason.ALREADY_FILED:
+        condition_id = "workflow.obligation.unfiled"
+        evidence_id = "workflow.obligation.filing_state"
+        provenance = ConditionEvidenceProvenance.RUNTIME_OBSERVATION
+        values = {"unfiled": False}
+    else:
+        condition_id = "workflow.execution.completed"
+        evidence_id = "workflow.execution.error_code"
+        provenance = ConditionEvidenceProvenance.RUNTIME_OBSERVATION
+        values = {"completed": False, "error_code": f"workflow.execution.{reason.value.lower()}"}
+    return PreconditionVerdict(
+        failed_condition_id=condition_id,
+        evidence=(
+            ConditionEvidence(
+                condition_id=condition_id,
+                evidence_id=evidence_id,
+                provenance=provenance,
+                values=values,
+            ),
+        ),
+        conditionality=ActionConditionality.NOT_APPLICABLE,
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
     )
 
 
@@ -120,14 +159,16 @@ def _aborted_result(
     *,
     run_id: str,
     reason: WorkflowAbortReason,
-    obligation: ModeloDeadline | None,
+    obligation: WorkflowObligationFacts | None,
 ) -> WorkflowResult:
+    verdict = _abort_verdict(reason)
     step = WorkflowStep(
         stage=WorkflowStage.BUILDING_DRAFT,
         started_at=_T,
         ended_at=_T,
         success=False,
-        summary="aborted",
+        summary_locale_key="application.workflow.steps.workflow_failure",
+        precondition_verdict=verdict,
     )
     return WorkflowResult(
         run_id=run_id,
@@ -137,7 +178,7 @@ def _aborted_result(
         aborted_reason=reason,
         obligation=obligation,
         steps=(step,),
-        summary="aborted run for resume tests",
+        summary_locale_key="application.workflow.results.aborted",
     )
 
 
@@ -147,7 +188,7 @@ def _done_result(run_id: str) -> WorkflowResult:
         started_at=_T,
         ended_at=_T,
         success=True,
-        summary="done",
+        summary_locale_key="application.workflow.steps.profile_loaded",
     )
     return WorkflowResult(
         run_id=run_id,
@@ -157,7 +198,7 @@ def _done_result(run_id: str) -> WorkflowResult:
         aborted_reason=None,
         obligation=_obligation(),
         steps=(step,),
-        summary="done run",
+        summary_locale_key="application.workflow.results.completed",
     )
 
 
@@ -305,10 +346,10 @@ def test_resume_context_run_id_satisfies_engine_resumed_from_contract(tmp_path: 
                 started_at=_T,
                 ended_at=_T,
                 success=True,
-                summary="resumed",
+                summary_locale_key="application.workflow.steps.profile_loaded",
             ),
         ),
-        summary="resumed completion",
+        summary_locale_key="application.workflow.results.completed",
         resumed_from=forwarded,
     )
     assert chained.resumed_from == run_id
