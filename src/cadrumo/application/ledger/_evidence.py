@@ -67,7 +67,7 @@ from ...core.config import Settings
 from ...core.errors import CadrumoError
 from ...core.external_constants import PDF_EXTENSION, PDF_MIME_TYPE, XML_MIME_TYPE
 from ...core.hashing import content_hash_hex
-from ...core.identity import BucketId
+from ...core.identity import BucketId, ContentDigest
 from ...core.time import now as _utc_now
 from ...domain import canonical_decimal_string
 from ...domain.attachments import AttachmentKind, AttachmentSource, add_attachment
@@ -142,7 +142,7 @@ class PurchaseInvoiceEvidence(BaseModel):
     evidence_id: str = Field(min_length=1, max_length=64)
     bucket_id: BucketId
     source_path: str = Field(min_length=1)
-    source_sha256: str = Field(min_length=64, max_length=64)
+    source_sha256: ContentDigest
     # In-store byte home: the bytes live encrypted in the AttachmentStore under this
     # content-addressed id. Required, because a record whose bytes are not in secure
     # storage is not evidence -- `source_path` is a provenance breadcrumb only and is

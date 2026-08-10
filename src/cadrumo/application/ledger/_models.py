@@ -19,7 +19,7 @@ from ...core.external_constants import (
 from ...core.external_constants import (
     DEFAULT_CURRENCY,
 )
-from ...core.identity import BucketId, CalculationRevisionId, TransactionId, WorkUnitId
+from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, TransactionId, WorkUnitId
 from ...core.parsing import normalise_iso_3166_alpha2_jurisdiction, normalise_iso_4217_currency
 from ...domain.iva import (
     EUMemberState,
@@ -900,7 +900,7 @@ class LedgerExportResult(BaseModel):
     filename_extension: str = Field(min_length=1)
     row_count: int = Field(ge=0)
     byte_size: int = Field(ge=0)
-    sha256: str = Field(min_length=64, max_length=64)
+    sha256: ContentDigest
     fieldnames: tuple[str, ...]
     rows: tuple[LedgerExportRow, ...]
     payload: bytes

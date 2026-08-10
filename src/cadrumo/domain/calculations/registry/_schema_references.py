@@ -14,6 +14,7 @@ from ....core.external_constants import (
     XLSM_EXTENSION,
     XLSX_EXTENSION,
 )
+from ....core.identity import ContentDigest
 from ._errors import RegistryValidationError
 from ._ids import LegalRefId, ModeloId, ParameterId, RevisionId, SourceRefId
 from ._schema_base import DateAxis, EvidenceTier, LegalRefs, RegistryModel, ReviewStatus
@@ -169,7 +170,7 @@ class SourceReference(RegistryModel):
         "suppression_notice",
     ]
     corpus_path: str
-    sha256: str = Field(min_length=64, max_length=64)
+    sha256: ContentDigest
     bytes: int = Field(gt=0)
     retrieved_at: date
     published_at: date | None = None

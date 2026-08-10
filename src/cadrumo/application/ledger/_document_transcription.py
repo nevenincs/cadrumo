@@ -39,6 +39,7 @@ from typing import Never, Self, SupportsIndex, override
 from pydantic import BaseModel, Field, model_serializer, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG, FieldOrigin
+from ...core.identity import ContentDigest
 from ...core.time import UtcInstant, now
 
 __all__ = [
@@ -165,7 +166,7 @@ class DocumentTranscription(BaseModel):
 
     text: str = Field(min_length=1, repr=False)
     page_count: int = Field(ge=1)
-    source_content_sha256: str = Field(min_length=64, max_length=64)
+    source_content_sha256: ContentDigest
     transcriber: TranscriberIdentity
 
     @property
@@ -253,7 +254,7 @@ class TranscriptionCacheEntry(BaseModel):
 
     text: str = Field(min_length=1, repr=False)
     page_count: int = Field(ge=1)
-    source_content_sha256: str = Field(min_length=64, max_length=64)
+    source_content_sha256: ContentDigest
     transcriber: TranscriberIdentity
     cached_at: UtcInstant
 

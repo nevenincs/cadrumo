@@ -28,6 +28,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from ..core import ImageMediaType
 from ..core.config import LLMProvider
 from ..core.hashing import sha256_hex
+from ..core.identity import ContentDigest
 from ._consent import EvidenceConsentToken
 from ._errors import LLMValidationError
 
@@ -54,9 +55,7 @@ class MultimodalImageInput(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True)
 
-    content_sha256: str = Field(
-        min_length=64,
-        max_length=64,
+    content_sha256: ContentDigest = Field(
         description="Lowercase hex SHA-256 content address of the source evidence bytes.",
     )
     base64_data: str = Field(

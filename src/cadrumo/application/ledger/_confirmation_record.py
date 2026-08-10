@@ -45,6 +45,7 @@ from ...adapters.persistence.storage import (
 from ...core import STRICT_FROZEN_CONFIG, FieldGroundingOutcome, FieldOrigin
 from ...core.config import Settings
 from ...core.hashing import content_hash_hex
+from ...core.identity import ContentDigest
 from ...core.time import UtcInstant, now
 from ._confirmation_gate import ConfirmationBlocker, FindingResolution
 from ._deterministic_findings import deterministic_check_names
@@ -168,8 +169,8 @@ class InvoiceConfirmationRecord(BaseModel):
     bucket_id: str = Field(min_length=1)
     invoice_id: str = Field(min_length=1)
     evidence_reference: str = Field(min_length=1)
-    evidence_sha256: str | None = Field(default=None, min_length=64, max_length=64)
-    transcription_sha256: str | None = Field(default=None, min_length=64, max_length=64)
+    evidence_sha256: ContentDigest | None = None
+    transcription_sha256: ContentDigest | None = None
     extractor: str = Field(min_length=1)
     confirmed_by: str = Field(min_length=1)
     confirmed_at: UtcInstant

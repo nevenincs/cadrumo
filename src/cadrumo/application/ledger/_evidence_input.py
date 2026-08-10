@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field, model_serializer, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG, DocumentShape
 from ...core.hashing import sha256_hex
+from ...core.identity import ContentDigest
 from ...domain.attachments import AttachmentStoreProtocol
 from ._evidence import PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceInputError
 from ._preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
@@ -65,7 +66,7 @@ class EvidenceInput(BaseModel):
 
     mime_type: str = Field(min_length=1)
     data: bytes = Field(repr=False)
-    content_sha256: str = Field(min_length=64, max_length=64)
+    content_sha256: ContentDigest
     evidence_id: str | None = None
     attachment_id: str | None = None
 

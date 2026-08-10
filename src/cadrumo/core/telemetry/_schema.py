@@ -32,6 +32,7 @@ from types import MappingProxyType
 from pydantic import BaseModel, Field
 
 from .._models import STRICT_FROZEN_CONFIG
+from ..identity import ContentDigest
 from ._errors import TelemetrySchemaError
 
 __all__ = [
@@ -127,7 +128,7 @@ class TelemetryEventPayload(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     schema_version: int = Field(default=_SCHEMA_VERSION, ge=1)
-    workspace_hash: str = Field(min_length=64, max_length=64)
+    workspace_hash: ContentDigest
     command: str = Field(min_length=1)
     counters: Mapping[str, int] = Field(default_factory=dict)
     timings_ms: Mapping[str, int] = Field(default_factory=dict)

@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field, field_serializer, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CoreValidationError
+from ...core.identity import ContentDigest
 from ...core.parsing import normalise_iso_4217_currency
 from ...core.time import validate_utc_aware
 from ._errors import TransactionValidationError
@@ -67,7 +68,7 @@ class RawProvenance(BaseModel):
     model_config = _STRICT_FROZEN
 
     source_path: Path
-    source_sha256: str = Field(min_length=64, max_length=64)
+    source_sha256: ContentDigest
     source_row_index: int = Field(ge=1)
     source_format: SourceFormat
     ingested_at: datetime

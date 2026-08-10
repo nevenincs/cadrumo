@@ -17,7 +17,7 @@ from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, field_serializer
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CoreValidationError
-from ...core.identity import BucketId
+from ...core.identity import BucketId, ContentDigest
 from ...core.time import parse_iso_datetime, validate_utc_aware
 from ._enums import AttachmentKind, AttachmentSource
 from ._errors import AttachmentValidationError
@@ -134,7 +134,7 @@ class Attachment(BaseModel):
     kind: AttachmentKind
     source: AttachmentSource
     source_reference: str = Field(min_length=1)
-    sha256: str = Field(min_length=64, max_length=64)
+    sha256: ContentDigest
     mime_type: str = Field(min_length=1)
     bytes_size: int = Field(ge=0)
     captured_at: datetime
