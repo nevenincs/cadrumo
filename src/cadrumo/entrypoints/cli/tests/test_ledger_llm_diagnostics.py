@@ -44,7 +44,7 @@ from ....tests.user_profile import register_minimal_profile
 from .._ledger_rule_payloads import (
     LedgerLlmDiagnosticsResult,
     LlmConfidenceProviderPayload,
-    LlmUsageProviderPayload,
+    LlmUsageCostProviderPayload,
 )
 from .envelope_helpers import unwrap_cli_result as _json_result
 from .envelope_helpers import unwrap_envelope_notices
@@ -273,11 +273,11 @@ def test_llm_diagnostics_payloads_mirror_their_canonical_bounds() -> None:
     }
 
     for label, model, base, override in (
-        ("empty usage provider", LlmUsageProviderPayload, usage_base, {"provider": ""}),
-        ("negative calls", LlmUsageProviderPayload, usage_base, {"calls": -1}),
-        ("negative cache hits", LlmUsageProviderPayload, usage_base, {"cache_hits": -1}),
-        ("negative total tokens", LlmUsageProviderPayload, usage_base, {"total_tokens": -1}),
-        ("non-decimal cost", LlmUsageProviderPayload, usage_base, {"cost_estimate_usd": "bogus"}),
+        ("empty usage provider", LlmUsageCostProviderPayload, usage_base, {"provider": ""}),
+        ("negative calls", LlmUsageCostProviderPayload, usage_base, {"calls": -1}),
+        ("negative cache hits", LlmUsageCostProviderPayload, usage_base, {"cache_hits": -1}),
+        ("negative total tokens", LlmUsageCostProviderPayload, usage_base, {"total_tokens": -1}),
+        ("non-decimal cost", LlmUsageCostProviderPayload, usage_base, {"cost_estimate_usd": "bogus"}),
         ("empty confidence provider", LlmConfidenceProviderPayload, confidence_base, {"provider": ""}),
         ("negative classified", LlmConfidenceProviderPayload, confidence_base, {"classified_count": -1}),
         ("negative low confidence", LlmConfidenceProviderPayload, confidence_base, {"low_confidence_count": -1}),
@@ -291,7 +291,7 @@ def test_llm_diagnostics_payloads_mirror_their_canonical_bounds() -> None:
         pytest.fail(f"{label} was accepted by the transport row")
 
     # Decimal magnitudes stay unbounded, matching the canonical models.
-    LlmUsageProviderPayload.model_validate(usage_base | {"cost_estimate_usd": "-1.00"})
+    LlmUsageCostProviderPayload.model_validate(usage_base | {"cost_estimate_usd": "-1.00"})
     LlmConfidenceProviderPayload.model_validate(confidence_base | {"mean_confidence": "-1"})
 
 
