@@ -16,7 +16,7 @@ related:
   - '[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-reference]]'
   - '[[2026-07-07-prorrata-sectores-diferenciados-adr]]'
 modified: '2026-08-10'
-body_hash: 'sha256:2ca631d8ca7d09a93ef47dda09066144721cbefe03519eb56af56d9f3fdac295'
+body_hash: 'sha256:12031d79eb34f4db70e03f2914127316976ddaa6e49f1a97d0b28ed0b4f2ec7b'
 ---
 # `m303-form-vs-semantic-casilla-dual-keying` adr: `M303 semantic homes and exact fixed-slot official projection` | (**status:** `accepted`)
 
@@ -67,6 +67,10 @@ Nonnumbered producer fields require the same single-home discipline. A raw expor
 - An unimplemented S47-S51 producer remains an explicit gap that refuses before target creation or byte emission. It cannot be admitted temporarily, supplied as a raw string, or reclassified as filler, literal, blank, or zero.
 - Renderer input is one immutable `FilingProducerSnapshot`, not `Mapping[str, str]`. Presenter identity has no taxpayer fallback; taxpayer names have distinct typed facts and cannot be recovered through operator-name helpers or an ambiguous `name` key.
 - M202 refuses at snapshot construction while its exact producer-gap inventory is nonempty. M303 proceeds only when every applicable producer, source, and applicability axis is admitted.
+- An export layout is one atomic filing-grade unit. It remains active only when every field has an admitted exact payload axis and the complete layout passes producer, source, applicability, and renderability checks.
+- A layout containing any unsupported or deferred producer is physically withdrawn with a grounded support-removal decision. The withdrawal cascades through casilla export-field references, construct layout membership, and orphan export application links, schedules, and paths so the registry remains closed and no capability surface redeclares the withdrawn export.
+- Support-removal records are the sole non-active lifecycle representation. A retained inactive or legacy-shaped layout representation is forbidden because it would fork authority and could be reactivated accidentally.
+- Withdrawing an export layout does not withdraw its calculation casillas, formulas, bindings, legal sources, or official artefacts. Those remain canonical evidence and calculation authority unless independently removed by a grounded decision.
 
 ## Implementation
 
@@ -125,6 +129,7 @@ Keeping the proposed simplified-regime record separate avoids converting an unac
 - Historical header spellings, normalization helpers, aliases, operator-name fallback, taxpayer-as-presenter fallback, and internal filing-id receipt projection become hard failures rather than tolerated inputs.
 - Source and transport facts remain outside the producer vocabulary; unsupported future producer gaps remain explicit refusals until their owning steps land.
 - M202 cannot create an export artifact while its snapshot is incomplete, and M303 cannot render a layout whose producer/source/applicability inventory is incomplete.
+- Mixed unsupported layouts are withdrawn atomically with their complete dependency cascade; no partial layout or unsupported field survives as a filler, literal, blank, zero, or compatibility path.
 - The semantic map remains meaning-only, the casilla classifier remains declaration-only, and export completeness remains the value-arrival authority.
 - The proposed simplified-regime ADR remains non-governing and separate; casilla 48 remains manual until a later accepted completeness decision.
 - S45-S52 remain required implementation and proof work and may not be short-circuited by this architectural decision.
