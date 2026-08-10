@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -15,6 +16,7 @@ from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..diagnostics_run_health import (
     ErrorsBreakdownReport,
     LatencyReport,
+    LlmRunHealthProviderMetrics,
     LlmUsageReport,
     RunHealthReport,
     build_error_breakdown,
@@ -23,6 +25,7 @@ from ..diagnostics_run_health import (
     build_run_health_report,
     list_recent_runs,
 )
+from ..ledger import LlmUsageCostProviderMetrics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -487,6 +490,29 @@ def test_build_llm_usage_report_empty_store_reports_no_run_data(profile: TestRun
     assert report.by_provider == ()
     assert report.total_runs == 0
     assert report.overall_success_rate == Decimal("0")
+
+
+def test_llm_provider_metric_authorities_have_no_retired_or_split_public_identity() -> None:
+    """The two providers' metric shapes retain distinct canonical homes."""
+    assert LlmRunHealthProviderMetrics.__module__ == "cadrumo.application.diagnostics_run_health"
+    assert LlmUsageCostProviderMetrics.__module__ == "cadrumo.application.ledger._llm_diagnostics"
+
+    source_root = Path(__file__).parents[2]
+    owners = {
+        "LlmRunHealthProviderMetrics": Path("application/diagnostics_run_health.py"),
+        "LlmUsageCostProviderMetrics": Path("application/ledger/_llm_diagnostics.py"),
+    }
+    retired_public_name = "LlmUsage" + "ProviderMetrics"
+    declarations: dict[str, set[Path]] = {name: set() for name in owners}
+    for source_path in source_root.rglob("*.py"):
+        source = source_path.read_text(encoding="utf-8")
+        assert retired_public_name not in source
+        for node in ast.walk(ast.parse(source, filename=str(source_path))):
+            if isinstance(node, ast.ClassDef) and node.name in declarations:
+                declarations[node.name].add(source_path.relative_to(source_root))
+
+    for name, owner in owners.items():
+        assert declarations[name] == {owner}
 
 
 class TestReportWindowInvariant:

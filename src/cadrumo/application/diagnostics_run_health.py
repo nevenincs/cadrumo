@@ -77,9 +77,9 @@ __all__ = [
     "ErrorsBreakdownReport",
     "LatencyPercentiles",
     "LatencyReport",
+    "LlmRunHealthProviderMetrics",
     "LlmRunProviderMetrics",
     "LlmUsageModelMetrics",
-    "LlmUsageProviderMetrics",
     "LlmUsageReport",
     "RunHealthReport",
     "RunRecordView",
@@ -515,7 +515,7 @@ class LlmUsageModelMetrics(BaseModel):
 
     Aggregated from :class:`~adapters.outbound.llm.LLMRunRecord` rows
     sharing a single provider (recorded on the owning
-    :class:`LlmUsageProviderMetrics`) AND :attr:`model`. Carries only
+    :class:`LlmRunHealthProviderMetrics`) AND :attr:`model`. Carries only
     run-count, duration, and outcome metadata -- :class:`LLMRunRecord` records
     no token counts, so this is a run/timing/success-rate summary, not a
     token-usage summary.
@@ -540,7 +540,7 @@ class LlmUsageModelMetrics(BaseModel):
         return (Decimal(self.succeeded) / Decimal(self.runs)).quantize(Decimal("0.0001"))
 
 
-class LlmUsageProviderMetrics(BaseModel):
+class LlmRunHealthProviderMetrics(BaseModel):
     """One provider's aggregate of recent local LLM run telemetry, plus its per-model rows.
 
     :attr:`models` breaks the same provider-scoped records down further by
@@ -575,7 +575,7 @@ class LlmUsageReport(BaseModel):
     :class:`~adapters.outbound.llm.LLMRunRecord` rows
     :func:`build_run_health_report` reads by provider (:attr:`by_provider`),
     each provider row carrying its own per-model breakdown
-    (:attr:`~LlmUsageProviderMetrics.models`). :attr:`has_run_data` is
+    (:attr:`~LlmRunHealthProviderMetrics.models`). :attr:`has_run_data` is
     ``False`` when no LLM run telemetry has been recorded yet.
     """
 
@@ -583,7 +583,7 @@ class LlmUsageReport(BaseModel):
 
     since: date | None = None
     until: date | None = None
-    by_provider: tuple[LlmUsageProviderMetrics, ...] = ()
+    by_provider: tuple[LlmRunHealthProviderMetrics, ...] = ()
     total_runs: int = Field(default=0, ge=0)
     total_succeeded: int = Field(default=0, ge=0)
     total_failed: int = Field(default=0, ge=0)
@@ -666,14 +666,14 @@ def build_llm_usage_report(
     for record in records:
         by_provider_model.setdefault(record.provider, {}).setdefault(record.model, []).append(record)
 
-    provider_rows: list[LlmUsageProviderMetrics] = []
+    provider_rows: list[LlmRunHealthProviderMetrics] = []
     for provider_name in sorted(by_provider_model):
         model_groups = by_provider_model[provider_name]
         model_rows = tuple(_usage_model_metrics(model_groups[model_name]) for model_name in sorted(model_groups))
         provider_items = [item for items in model_groups.values() for item in items]
         durations = [Decimal(item.duration_ms) for item in provider_items]
         provider_rows.append(
-            LlmUsageProviderMetrics(
+            LlmRunHealthProviderMetrics(
                 provider=provider_name,
                 runs=len(provider_items),
                 succeeded=sum(1 for item in provider_items if item.succeeded),
