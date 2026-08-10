@@ -5,7 +5,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:76921e3b660c0b5f4cb24b223adbf2d99f1760f58a82492893e34c2e3aad95cc'
+body_hash: 'sha256:5d244713d61e6df200f27b0c820b6460b91994d156967ed896a095f960a5b3b1'
 related:
   - "[[2026-07-09-compatibility-lifecycle-adr]]"
   - "[[2026-05-06-secure-persistence-enforcement-adr]]"
@@ -175,4 +175,149 @@ form that failure takes is silent.
   them onto one authority is a larger decision that was not taken here, and a
   later reader should treat the four as an open question rather than as a settled
   arrangement this record ratified.
+
+
+## Amendment (2026-08-10): the M303 disposition screen has no boundary to sit on
+
+### What is withdrawn
+
+Implementation states: "The Modelo 303 observation boundary refuses a write whose
+resolved typed result disposition is absent." That ruling was implemented twice,
+on two different predicates, and removed twice -- the second removal at
+`e593649b4f`. Both attempts broke roughly thirty-seven to forty legitimate
+callers.
+
+**The intent survives and the LOCATION is withdrawn.** An official, carry-capable
+Modelo 303 observation persisted with no resolved disposition is still
+under-declaration. What this record got wrong is that it named a boundary, and
+the thing it named is not one.
+
+### An earlier version of this amendment was itself wrong, and the reason is the finding
+
+The first correction offered here was that the requirement is already enforced at
+the only production routes that write M303 observations, so only a future bypass
+remained. **That is true and it is irrelevant, and it is withdrawn rather than
+amended.** The interesting callers of the normalisation path are not writers.
+
+The reason the first census missed them is worth stating, because a later reader
+will otherwise assume it was careless. It was not. It searched for
+`normalize_m303_carry=` -- the persistence door's FLAG. Every caller that passes
+the flag reaches the transform through the door; every caller that calls the
+transform directly does not. The search was therefore structurally incapable of
+returning a non-flag caller, it returned only writers, and "the callers are
+writers" was read off it. **A pattern whose form encoded its own answer.** It was
+precise, and it answered a question nobody had asked.
+
+### The measured population, confirmed independently at HEAD
+
+Searching for the transform functions rather than the flag:
+
+| role | site |
+| --- | --- |
+| produces, through the door's flag | `live/_filed_observation_persistence.py` |
+| produces, through the door's flag | `modelo/_filed_revision_observation.py` |
+| asserts it was already produced | `calculations/_iva_compensation_history.py` |
+| asserts it was already produced | `calculations/_iva_compensation_annual_partition.py`, two sites |
+| asserts it was already produced | `modelo/_iva_wallet_gate.py` |
+
+Four assert-sites across three modules, against two producers. **Readers and a
+gate outnumber writers on that path.** One candidate fifth direct caller was
+checked and dismissed: the `normalize` call inside
+`calculations/_observations_repository.py` IS the door's own implementation of
+its flag, not a caller bypassing it.
+
+### The assert side uses normalisation as an oracle, and consumes nothing
+
+`validate_normalized_m303_carry_observation_envelope` recomputes the normalised
+envelope, compares it against the one it was handed, raises on difference, and
+returns **the original**. It is a fixed-point assertion over the transform. None
+of the four assert-sites consumes a normalised value, so the assert side needs no
+normalisation capability at all -- it needs a guarantee about what it was given.
+
+### Both candidate homes are now measured out
+
+- **The wide persistence door** is a shared primitive with fourteen direct call
+  sites: every modelo, every source kind, and the fixtures that need an
+  observation to exist. A roundtrip test uses it to prove a record survives; a
+  parity test to seed readers contracted to agree. Neither is filing anything.
+- **The gated ingress**, one layer in, is a shared NORMALISATION path that two
+  writers, three readers and a gate all pass through. Moving the screen there
+  repeats the move that failed, one layer deeper.
+
+So the amendment does not relocate the screen. **Placement is the open question**,
+and these are the two excluded candidates with the evidence that excludes them.
+
+### The invariant that explains both failures
+
+The first attempt keyed on the resolved disposition, the second on the
+declaration-type header. Neither separates a filing from a persistence proof,
+**because the payloads are identical -- the difference is why the caller is
+writing.** The distinguishing fact is a property of the CALLER, not of the
+payload, so no predicate at either boundary could ever have separated them.
+
+That now has three independent demonstrations rather than one: test scaffolding
+at the wide door, a production READ path at the ingress, and a gate. The second
+and third are stronger than the first, because they are production.
+
+### Root cause of the over-scope
+
+`M303_COMPENSATION_RESULTADO_CASILLA` resolves to `iva.resultado`, the ordinary
+statutory Modelo 303 result box. A frozenset of four Spanish domain nouns read as
+a narrow "carry casilla" set and meant "is an M303 observation" from the moment it
+was written. Two rounds of narrowing then reasoned inside a scope that was never
+narrow.
+
+### Constraints on any eventual gate
+
+**Do not key it on Modelo 303 by name.** A requirement correct for filings and
+wrong for readers is a PLACEMENT error, and naming the modelo hides that. Write
+the property -- a production caller of the shared door either does not write
+official-source-kind observations or passes the ingress -- and let M303 fall out.
+If M303-only is the right scope, that must be a measured conclusion rather than
+the starting shape.
+
+**A clarification that keeps this constraint from being misread.**
+`validate_normalized_m303_carry_observation_envelope` refuses a non-M303 envelope
+at its own boundary, so it is keyed on M303 by name today. That is correct: it is
+a carry-specific transform and the modelo is its subject. The constraint binds the
+GATE being designed, never this function. Without the distinction a later reader
+would take the constraint as condemning code that is right.
+
+**Re-check the sibling repositories rather than inheriting their exclusion.**
+Retenciones and percepciones were out of scope for the M303 question. They have
+their own `save_observation`, their own payload models, and a `source_kind`
+documented as capture provenance -- a free-form ingestion-path name -- rather than
+the official/unofficial taxonomy. That is a stated reason and it holds; it is
+recorded here so the exclusion does not survive by having survived a previous
+question.
+
+### The residual exposure, and why it needs a row rather than a sentence
+
+Nothing stops a NEW production caller using the wide door without the ingress, and
+nobody would notice. That is a future bypass, not a live hole. **Recording
+"already enforced" without opening the row that keeps it enforced would turn this
+amendment into an argument for doing nothing about a gap that reappears the first
+time someone adds a caller.** The mechanism is static rather than runtime, because
+"is this a filing path" is available at the CALL SITE where it was never available
+in the payload -- so the gate constrains authors, not payloads, and costs the test
+corpus nothing. That inversion is what both runtime attempts were missing.
+
+### A separate defect surfaced by this work, recorded rather than folded in
+
+`modelo/_iva_wallet_gate.py` catches the carry-ingress refusal and returns `None`.
+Three of the four assert-sites propagate it; this one does not. A carry envelope
+this build cannot interpret therefore reaches that gate as ABSENT EVIDENCE rather
+than as a refusal, on the compensación path, where the visible consequence is a
+taxpayer's carried credit silently going unseen. It is not caused by this
+amendment and is not fixed by it. It needs its own owner.
+
+### Implementing rows
+
+This amendment rules on code and is not self-executing. The campaign plan's `S27`
+carries the red prorrata test with its close condition set to this amendment
+landing, and `S28` carries the normalisation-path characterisation with the direct
+callers named. Two rows open with this amendment: one to place the static
+author-facing gate once placement is decided, and one to own the wallet-gate
+swallow above. Neither may be closed by asserting that this record says the gate
+exists.
 
