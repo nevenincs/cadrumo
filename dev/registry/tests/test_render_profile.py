@@ -21,10 +21,13 @@ from .._render_profile import (
     RenderProfileAnchor,
     RenderProfileDesignIdentity,
     RenderProfileFragment,
+    RenderProfileSourceEvidence,
+    RenderProfileSourceEvidenceEntry,
     ReviewedEvidence,
     SingletonNumericRule,
     Width17MembershipRule,
     load_and_validate_render_profile,
+    project_render_profile_eligibility,
     validate_render_profile,
 )
 from .._semantic_map import SemanticMap
@@ -167,7 +170,7 @@ def _width_rule(aeat_type: str, anchor: RenderProfileAnchor) -> Width17Membershi
         "evidence": {
             "source_sheet": "DP200001",
             "source_cell": "A121",
-            "statement": "The official source states the amount digit allocation here.",
+            "expected_normalized_statement": "The official source states the amount digit allocation here.",
             "justification": "The reviewed membership explicitly identifies this amount anchor.",
         },
     }
@@ -187,7 +190,7 @@ def _singleton(anchor: RenderProfileAnchor) -> SingletonNumericRule:
         evidence=ReviewedEvidence(
             source_sheet=anchor.sheet,
             source_cell=anchor.source_cell or "",
-            statement="Independent review identifies this exact field as a two-digit string.",
+            expected_normalized_statement="Independent review identifies this exact field as a two-digit string.",
             justification="Leading zeroes are semantically significant for this exact anchor.",
         ),
     )
@@ -203,6 +206,24 @@ def _profile() -> RenderProfile:
             _width_rule("N", _anchor(11)),
         ),
         singleton_rules=(_singleton(_anchor(12)),),
+    )
+
+
+def _source_evidence() -> RenderProfileSourceEvidence:
+    return RenderProfileSourceEvidence(
+        design_identity=_design_identity(),
+        entries=(
+            RenderProfileSourceEvidenceEntry(
+                sheet="DP200001",
+                cell="A121",
+                normalized_statement="The official source states the amount digit allocation here.",
+            ),
+            RenderProfileSourceEvidenceEntry(
+                sheet="DP200001",
+                cell="A12",
+                normalized_statement="Independent review identifies this exact field as a two-digit string.",
+            ),
+        ),
     )
 
 
@@ -226,7 +247,7 @@ def _fragment_toml(fragment: RenderProfileFragment) -> str:
 def test_complete_profile_covers_only_blank_fixed_numeric_fields_and_preserves_num_n_policy() -> None:
     """The production validator accepts exact membership, not a type/width default."""
     profile = _profile()
-    validate_render_profile(profile, _joined())
+    validate_render_profile(profile, _joined(), _source_evidence())
 
     assert profile.width_17_rules[0].sign_policy == "unsigned"
     assert profile.width_17_rules[1].sign_policy == "n-prefix-negative-blank-nonnegative"
@@ -264,24 +285,51 @@ def test_profile_refuses_identity_missing_overlap_present_content_and_modelo_dri
 ) -> None:
     """Plausible authority mutations refuse the entire design."""
     with pytest.raises(RegistryValidationError, match=error):
-        validate_render_profile(profile, joined)
+        validate_render_profile(profile, joined, _source_evidence())
 
 
-def test_profile_refuses_width_membership_evidence_outside_the_bound_design() -> None:
-    """A profile cannot borrow a convention from an unrelated workbook sheet."""
+@pytest.mark.parametrize(
+    ("source_sheet", "source_cell", "statement", "error"),
+    (
+        ("DP200001", "Z999", "The official source states the amount digit allocation here.", "does not exist"),
+        ("DP200001", "A121", "Different source text", "does not match verified source"),
+    ),
+)
+def test_profile_refuses_nonexistent_or_mismatched_source_evidence(
+    source_sheet: str,
+    source_cell: str,
+    statement: str,
+    error: str,
+) -> None:
+    """A profile-authored claim must resolve exactly against separate verified source evidence."""
     profile = _profile()
     width_rule = profile.width_17_rules[0]
-    unbound_rule = width_rule.model_copy(
+    contradicted_rule = width_rule.model_copy(
         update={
-            "evidence": width_rule.evidence.model_copy(update={"source_sheet": "DP999999"}),
+            "evidence": width_rule.evidence.model_copy(
+                update={
+                    "source_sheet": source_sheet,
+                    "source_cell": source_cell,
+                    "expected_normalized_statement": statement,
+                },
+            ),
         },
     )
-    unbound_profile = profile.model_copy(
-        update={"width_17_rules": (unbound_rule, profile.width_17_rules[1])},
+    contradicted_profile = profile.model_copy(
+        update={"width_17_rules": (contradicted_rule, profile.width_17_rules[1])},
     )
 
-    with pytest.raises(RegistryValidationError, match="fixed-record source sheet"):
-        validate_render_profile(unbound_profile, _joined())
+    with pytest.raises(RegistryValidationError, match=error):
+        validate_render_profile(contradicted_profile, _joined(), _source_evidence())
+
+
+def test_profile_refuses_source_evidence_sha_drift() -> None:
+    """Exact cell text from a different source digest is inapplicable authority."""
+    drifted = _source_evidence().model_copy(
+        update={"design_identity": _design_identity(sha256="b" * 64)},
+    )
+    with pytest.raises(RegistryValidationError, match=r"source evidence.*identity"):
+        validate_render_profile(_profile(), _joined(), drifted)
 
 
 def test_profile_models_refuse_implicit_defaults_selectors_and_sign_conflicts() -> None:
@@ -367,13 +415,13 @@ def test_fragment_loader_compiles_by_filename_and_refuses_fragment_identity_drif
     (tmp_path / "0200-signed.toml").write_text(_fragment_toml(signed), encoding="utf-8")
     (tmp_path / "0100-unsigned.toml").write_text(_fragment_toml(unsigned), encoding="utf-8")
 
-    compiled = load_and_validate_render_profile(tmp_path, _joined())
+    compiled = load_and_validate_render_profile(tmp_path, _joined(), _source_evidence())
     assert compiled.fragment_ids == ("width-17-num", "width-17-n", "smaller-field")
 
     drifted = smaller.model_copy(update={"design_identity": _design_identity(sha256="b" * 64)})
     (tmp_path / "0300-smaller.toml").write_text(_fragment_toml(drifted), encoding="utf-8")
     with pytest.raises(RegistryValidationError, match="inapplicable design identities"):
-        load_and_validate_render_profile(tmp_path, _joined())
+        load_and_validate_render_profile(tmp_path, _joined(), _source_evidence())
 
 
 def test_real_m200_ir_refuses_absent_authority_and_excludes_variable_envelope() -> None:
@@ -387,16 +435,14 @@ def test_real_m200_ir_refuses_absent_authority_and_excludes_variable_envelope() 
         filing_year=2025,
         design_epoch="2025",
     )
-    eligible = tuple(
-        field
-        for sheet in intermediate.sheets
-        for field in sheet.fields
-        if field.aeat_type in {"Num", "N"} and (field.content is None or not field.content.strip())
+    eligibility = project_render_profile_eligibility(
+        field for sheet in intermediate.sheets for field in sheet.fields
     )
-    smaller = tuple(field for field in eligible if field.length != 17)
-    assert len(smaller) == 126
+    assert eligibility.smaller_fields
+    assert set(eligibility.all_fields) == set(eligibility.width_17_fields) | set(eligibility.smaller_fields)
+    assert not set(eligibility.width_17_fields).intersection(eligibility.smaller_fields)
     assert intermediate.variable_envelopes
-    assert not any(field.sheet == "DP200000" for field in eligible)
+    assert not any(field.sheet == "DP200000" for field in eligibility.all_fields)
 
     profile_directory = Path(__file__).parents[1] / "render_profiles" / "modelo_200" / "2025"
     assert not profile_directory.exists()

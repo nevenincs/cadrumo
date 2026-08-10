@@ -26,11 +26,15 @@ __all__ = [
     "RenderProfile",
     "RenderProfileAnchor",
     "RenderProfileDesignIdentity",
+    "RenderProfileEligibility",
     "RenderProfileFragment",
+    "RenderProfileSourceEvidence",
+    "RenderProfileSourceEvidenceEntry",
     "ReviewedEvidence",
     "SingletonNumericRule",
     "Width17MembershipRule",
     "load_and_validate_render_profile",
+    "project_render_profile_eligibility",
     "validate_render_profile",
 ]
 
@@ -68,14 +72,51 @@ class ReviewedEvidence(_StrictModel):
 
     source_sheet: str = Field(min_length=1)
     source_cell: str = Field(pattern=r"^[A-Z]+[1-9][0-9]*$")
-    statement: str = Field(min_length=1)
+    expected_normalized_statement: str = Field(min_length=1)
     justification: str = Field(min_length=1)
 
     @model_validator(mode="after")
     def _reject_whitespace_only_review_text(self) -> ReviewedEvidence:
-        if not self.statement.strip() or not self.justification.strip():
+        if not self.expected_normalized_statement.strip() or not self.justification.strip():
             raise ValueError("reviewed evidence and justification must contain non-whitespace text")
         return self
+
+
+class RenderProfileSourceEvidenceEntry(_StrictModel):
+    """Actual normalized text read from one exact cell in the verified source."""
+
+    sheet: str = Field(min_length=1)
+    cell: str = Field(pattern=r"^[A-Z]+[1-9][0-9]*$")
+    normalized_statement: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _reject_whitespace_only_statement(self) -> RenderProfileSourceEvidenceEntry:
+        if not self.normalized_statement.strip():
+            raise ValueError("source evidence statement must contain non-whitespace text")
+        return self
+
+
+class RenderProfileSourceEvidence(_StrictModel):
+    """Independent exact-cell evidence extracted from one verified official design."""
+
+    design_identity: RenderProfileDesignIdentity
+    entries: tuple[RenderProfileSourceEvidenceEntry, ...] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _require_unique_locators(self) -> RenderProfileSourceEvidence:
+        locators = tuple((entry.sheet, entry.cell) for entry in self.entries)
+        duplicates = _duplicates(locators)
+        if duplicates:
+            raise ValueError(f"source evidence contains duplicate exact locators: {duplicates!r}")
+        return self
+
+
+class RenderProfileEligibility(_StrictModel):
+    """Production-owned partition of otherwise-unrenderable fixed numeric fields."""
+
+    all_fields: tuple[RecordDesignIntermediateField, ...]
+    width_17_fields: tuple[RecordDesignIntermediateField, ...]
+    smaller_fields: tuple[RecordDesignIntermediateField, ...]
 
 
 class Width17MembershipRule(_StrictModel):
@@ -184,6 +225,7 @@ class RenderProfile(_StrictModel):
 def load_and_validate_render_profile(
     profile_directory: Path,
     joined: JoinedRecordDesign,
+    source_evidence: RenderProfileSourceEvidence,
 ) -> RenderProfile:
     """Load sorted TOML fragments and validate exact coverage against parser IR."""
     if not profile_directory.is_dir() or profile_directory.is_symlink() or profile_directory.is_junction():
@@ -200,13 +242,14 @@ def load_and_validate_render_profile(
         except (OSError, ValueError, TypeError) as exc:
             raise RegistryValidationError(f"invalid render profile fragment {path.name!r}: {exc}") from exc
     profile = _compile_fragments(fragments)
-    validate_render_profile(profile, joined)
+    validate_render_profile(profile, joined, source_evidence)
     return profile
 
 
 def validate_render_profile(
     profile: RenderProfile,
     joined: JoinedRecordDesign,
+    source_evidence: RenderProfileSourceEvidence,
 ) -> None:
     """Refuse every identity, membership, coverage, and representation conflict."""
     expected_identity = RenderProfileDesignIdentity(
@@ -220,15 +263,16 @@ def validate_render_profile(
             f"render profile identity {profile.design_identity!r} does not match exact official design "
             f"{expected_identity!r}",
         )
+    if source_evidence.design_identity != expected_identity:
+        raise RegistryValidationError(
+            "render profile source evidence does not match the exact official design identity",
+        )
+    _validate_reviewed_evidence(profile, source_evidence)
 
-    fields_by_anchor = {
-        _field_anchor(joined_field.parser_field): joined_field.parser_field for joined_field in joined.fields
-    }
-    eligible = {
-        anchor: field
-        for anchor, field in fields_by_anchor.items()
-        if field.aeat_type in {"Num", "N"} and (field.content is None or not field.content.strip())
-    }
+    eligibility = project_render_profile_eligibility(
+        joined_field.parser_field for joined_field in joined.fields
+    )
+    eligible = {_field_anchor(field): field for field in eligibility.all_fields}
     governed = tuple(anchor for rule in profile.width_17_rules for anchor in rule.anchors) + tuple(
         rule.anchor for rule in profile.singleton_rules
     )
@@ -252,19 +296,13 @@ def validate_render_profile(
             "render profile splits one width-17 AEAT type across multiple membership rules: "
             f"{duplicate_width_17_types!r}",
         )
-    eligible_width_17_types = {field.aeat_type for field in eligible.values() if field.length == 17}
+    eligible_width_17_types = {field.aeat_type for field in eligibility.width_17_fields}
     if set(width_17_types) != eligible_width_17_types:
         raise RegistryValidationError(
             "render profile must declare one explicit width-17 membership rule for each eligible AEAT type",
         )
 
-    known_sheets = {record.parser_sheet.sheet for record in joined.records}
     for rule in profile.width_17_rules:
-        if rule.evidence.source_sheet not in known_sheets:
-            raise RegistryValidationError(
-                "width-17 membership evidence must resolve to a fixed-record source sheet in the bound design; "
-                f"got {rule.evidence.source_sheet!r}",
-            )
         for anchor in rule.anchors:
             field = eligible[anchor]
             if field.length != 17 or field.aeat_type != rule.aeat_type:
@@ -282,6 +320,43 @@ def validate_render_profile(
         if any(len(item) != field.length for item in rule.allowed_values):
             raise RegistryValidationError(
                 f"enumeration value width conflicts with official length at {rule.anchor!r}",
+            )
+
+
+def project_render_profile_eligibility(
+    fixed_fields: Iterable[RecordDesignIntermediateField],
+) -> RenderProfileEligibility:
+    """Partition fixed joined fields eligible for reviewed absent-wire authority."""
+    eligible = tuple(
+        field
+        for field in fixed_fields
+        if field.aeat_type in {"Num", "N"} and (field.content is None or not field.content.strip())
+    )
+    return RenderProfileEligibility(
+        all_fields=eligible,
+        width_17_fields=tuple(field for field in eligible if field.length == 17),
+        smaller_fields=tuple(field for field in eligible if field.length != 17),
+    )
+
+
+def _validate_reviewed_evidence(
+    profile: RenderProfile,
+    source_evidence: RenderProfileSourceEvidence,
+) -> None:
+    actual_by_locator = {
+        (entry.sheet, entry.cell): entry.normalized_statement for entry in source_evidence.entries
+    }
+    reviewed = tuple(rule.evidence for rule in profile.width_17_rules) + tuple(
+        rule.evidence for rule in profile.singleton_rules
+    )
+    for evidence in reviewed:
+        locator = evidence.source_sheet, evidence.source_cell
+        actual_statement = actual_by_locator.get(locator)
+        if actual_statement is None:
+            raise RegistryValidationError(f"render profile evidence locator does not exist: {locator!r}")
+        if actual_statement != evidence.expected_normalized_statement:
+            raise RegistryValidationError(
+                f"render profile evidence statement does not match verified source at {locator!r}",
             )
 
 
