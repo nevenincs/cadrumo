@@ -146,9 +146,11 @@ _RECARGO_FIELDS = {
 @pytest.fixture(autouse=True)
 def _loopback_reader() -> Iterator[None]:
     """Serve a real reading endpoint on a loopback port for the duration of a test."""
-    with serving_loopback(_LoopbackRequestHandler, path="/api/chat") as chat_url:
-        with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
-            yield
+    with (
+        serving_loopback(_LoopbackRequestHandler, path="/api/chat") as chat_url,
+        override_settings(cadrumo_llm_ollama_chat_url=chat_url),
+    ):
+        yield
 
 
 def _text_pdf_bytes(lines: tuple[str, ...]) -> bytes:
