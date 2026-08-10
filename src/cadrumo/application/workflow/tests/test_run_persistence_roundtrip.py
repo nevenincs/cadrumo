@@ -167,7 +167,7 @@ def _populated_run() -> WorkflowResult:
 
 
 def _operationally_aborted_run() -> WorkflowResult:
-    """An operational abort with an explicit terminal no-recovery verdict."""
+    """An operational abort with the resumable closed operator-decision verdict."""
     terminal_verdict = PreconditionVerdict(
         failed_condition_id="workflow.execution.completed",
         evidence=(
@@ -179,7 +179,7 @@ def _operationally_aborted_run() -> WorkflowResult:
             ),
         ),
         conditionality=ActionConditionality.NOT_APPLICABLE,
-        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+        no_recovery_outcome=NoRecoveryOutcome.OPERATOR_DECISION,
     )
     return WorkflowResult(
         run_id="o" * 16,
@@ -431,8 +431,8 @@ def test_workflow_run_aborted_reason_drift_surfaces_at_load(
             load_run(original.run_id)
 
 
-def test_operationally_aborted_run_roundtrips_with_terminal_no_recovery_verdict(tmp_path: Path) -> None:
-    """Operational aborts preserve an explicit canonical terminal outcome."""
+def test_operationally_aborted_run_roundtrips_with_resumable_no_recovery_verdict(tmp_path: Path) -> None:
+    """Operational aborts preserve the explicit non-terminal operator decision."""
     with isolated_runtime_profile(tmp_path=tmp_path):
         original = _operationally_aborted_run()
         save_run(original)
@@ -440,7 +440,7 @@ def test_operationally_aborted_run_roundtrips_with_terminal_no_recovery_verdict(
         loaded = load_run(original.run_id)
         assert loaded == original
         assert loaded.steps[-1].precondition_verdict is not None
-        assert loaded.steps[-1].precondition_verdict.no_recovery_outcome is NoRecoveryOutcome.TERMINAL
+        assert loaded.steps[-1].precondition_verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
 
 
 def test_workflow_run_v2_is_refused_before_locale_neutral_v3_hydration(tmp_path: Path) -> None:

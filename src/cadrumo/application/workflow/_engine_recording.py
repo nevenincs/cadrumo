@@ -104,7 +104,13 @@ def record_site_unavailable(
 
 
 def _execution_failure_verdict(error_code: str) -> PreconditionVerdict:
-    """Return the terminal verdict for an operational workflow failure."""
+    """Return the closed operator-decision verdict for an operational failure.
+
+    Site-health and unhandled-exception aborts retain a persisted obligation and
+    are accepted by the workflow resume authority.  They therefore cannot claim
+    a terminal no-recovery outcome merely because no fully bound retry action is
+    available at the recording point.
+    """
     condition_id = "workflow.execution.completed"
     return PreconditionVerdict(
         failed_condition_id=condition_id,
@@ -117,7 +123,7 @@ def _execution_failure_verdict(error_code: str) -> PreconditionVerdict:
             ),
         ),
         conditionality=ActionConditionality.NOT_APPLICABLE,
-        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+        no_recovery_outcome=NoRecoveryOutcome.OPERATOR_DECISION,
     )
 
 

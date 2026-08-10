@@ -9,10 +9,12 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.outbound.aeat.browser import SiteHealthEvidence, SiteHealthState, SiteHealthStatus
+from ....adapters.outbound.aeat.browser._site_health import _URL_ADAPTER
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Modelo, Period
-from ....core.errors import resolve_error_message
+from ....core.errors import SiteHealthError, resolve_error_message
 from ....domain.calculations.registry import CasillaId, CasillaObservation, validated_casilla_id
 from ....domain.deadlines import ObligationStatus
 from ....domain.modelos import (
@@ -23,6 +25,7 @@ from ....domain.modelos import (
     upsert_work_unit,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.aeat_literal_fixtures import aeat_url
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo import (
     ModeloCalculationRevisionSelector,
@@ -51,6 +54,7 @@ from .. import (
     WorkflowStep,
     find_latest_run_for_period,
     find_unique_run_for_period,
+    load_run,
     resolve_modelo_exact_workflow_run_for_resume,
     resolve_modelo_visible_workflow_run_for_resume,
     resolve_modelo_workflow_resume_target,
@@ -58,6 +62,8 @@ from .. import (
     resume_modelo_workflow,
     save_run,
 )
+from .._engine_recording import record_site_unavailable, record_unhandled
+from .._errors import WorkflowAbortSignalError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -140,6 +146,11 @@ def _abort_verdict(reason: WorkflowAbortReason) -> PreconditionVerdict:
         evidence_id = "workflow.execution.error_code"
         provenance = ConditionEvidenceProvenance.RUNTIME_OBSERVATION
         values = {"completed": False, "error_code": f"workflow.execution.{reason.value.lower()}"}
+    outcome = (
+        NoRecoveryOutcome.OPERATOR_DECISION
+        if reason in {WorkflowAbortReason.SITE_UNAVAILABLE, WorkflowAbortReason.UNHANDLED_EXCEPTION}
+        else NoRecoveryOutcome.TERMINAL
+    )
     return PreconditionVerdict(
         failed_condition_id=condition_id,
         evidence=(
@@ -151,7 +162,7 @@ def _abort_verdict(reason: WorkflowAbortReason) -> PreconditionVerdict:
             ),
         ),
         conditionality=ActionConditionality.NOT_APPLICABLE,
-        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+        no_recovery_outcome=outcome,
     )
 
 
@@ -180,6 +191,103 @@ def _aborted_result(
         steps=(step,),
         summary_locale_key="application.workflow.results.aborted",
     )
+
+
+def _recorded_operational_result(
+    *,
+    run_id: str,
+    reason: WorkflowAbortReason,
+    steps: list[WorkflowStep],
+) -> WorkflowResult:
+    """Materialize the real recorder output as one persisted aborted workflow run."""
+    terminal = steps[-1]
+    assert terminal.details is not None
+    return WorkflowResult(
+        run_id=run_id,
+        started_at=_T,
+        ended_at=terminal.ended_at,
+        final_stage=WorkflowStage.ABORTED,
+        aborted_reason=reason,
+        obligation=_obligation(),
+        steps=tuple(steps),
+        summary_locale_key="application.workflow.results.aborted",
+        summary_details=terminal.details,
+    )
+
+
+def test_site_unavailable_recorder_persists_a_resumable_operator_decision() -> None:
+    """The real site-health recorder stays consistent with the resume authority."""
+    run_id = "7" * 16
+    status = SiteHealthStatus(
+        state=SiteHealthState.MANTENIMIENTO,
+        evidence=SiteHealthEvidence(
+            url=_URL_ADAPTER.validate_python(aeat_url("sede", "/")),
+            http_status=503,
+            html_fragment="<html>servicio temporalmente no disponible</html>",
+            detected_markers=("servicio temporalmente no disponible",),
+        ),
+        observed_at=_T,
+    )
+    steps: list[WorkflowStep] = []
+
+    def current_run_id() -> str:
+        return run_id
+
+    with pytest.raises(WorkflowAbortSignalError) as raised:
+        record_site_unavailable(
+            stage=WorkflowStage.RUNNING_PREFLIGHT,
+            started=_T,
+            exc=SiteHealthError(status=status),
+            steps=steps,
+            current_run_id=current_run_id,
+        )
+
+    assert raised.value.reason is WorkflowAbortReason.SITE_UNAVAILABLE
+    persisted = _recorded_operational_result(
+        run_id=run_id,
+        reason=raised.value.reason,
+        steps=steps,
+    )
+    save_run(persisted)
+    loaded = load_run(run_id)
+    verdict = loaded.steps[-1].precondition_verdict
+    assert verdict is not None
+    assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
+    assert loaded.steps[-1].site_health_alert is not None
+
+    resumed = resume_modelo_workflow(run_id)
+    assert resumed.resumed_from_run_id == run_id
+    assert resumed.aborted_reason is WorkflowAbortReason.SITE_UNAVAILABLE
+
+
+def test_unhandled_recorder_persists_a_resumable_operator_decision() -> None:
+    """The real unhandled recorder shares the operational resume outcome."""
+    run_id = "8" * 16
+    steps: list[WorkflowStep] = []
+
+    with pytest.raises(WorkflowAbortSignalError) as raised:
+        record_unhandled(
+            stage=WorkflowStage.RUNNING_PREFLIGHT,
+            started=_T,
+            exc=RuntimeError("workflow preflight failed"),
+            steps=steps,
+        )
+
+    assert raised.value.reason is WorkflowAbortReason.UNHANDLED_EXCEPTION
+    persisted = _recorded_operational_result(
+        run_id=run_id,
+        reason=raised.value.reason,
+        steps=steps,
+    )
+    save_run(persisted)
+    loaded = load_run(run_id)
+    verdict = loaded.steps[-1].precondition_verdict
+    assert verdict is not None
+    assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
+
+    resumed = resume_modelo_workflow(run_id)
+    assert resumed.resumed_from_run_id == run_id
+    assert resumed.aborted_reason is WorkflowAbortReason.UNHANDLED_EXCEPTION
 
 
 def _done_result(run_id: str) -> WorkflowResult:

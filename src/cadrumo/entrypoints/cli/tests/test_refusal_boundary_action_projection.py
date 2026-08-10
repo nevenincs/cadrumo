@@ -3,20 +3,103 @@
 from __future__ import annotations
 
 import json
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import cast
 
 import pytest
 import typer
 
+from ....application.modelo import ModeloWorkflowGateError
+from ....application.operator_actions import (
+    ActionArgumentBinding,
+    ActionArgumentStatus,
+    ActionConditionality,
+    ActionReference,
+    ConditionEvidence,
+    ConditionEvidenceProvenance,
+    PreconditionVerdict,
+)
+from ....application.workflow import (
+    WorkflowAbortReason,
+    WorkflowResult,
+    WorkflowStage,
+    WorkflowStep,
+)
 from ....core.config import override_settings
 from ....core.errors import ErrorCategory, get_error_exit_code
-from ....tests.cli_runner import invoke_cached_cli, semantic_cli_output
+from ....tests.cli_runner import invoke_cached_cli, invoke_typer_app, semantic_cli_output
 from ....tests.secure_sql import isolated_profile_storage_root
 from .._common import CliPolicyRefusalProjection, attach_cli_policy_refusal_projection
 from .._errors import CliRefusedBoundaryError, command_error_boundary
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+def _persisted_builder_refusal_result() -> WorkflowResult:
+    """Build the persisted terminal shape emitted for a real builder refusal."""
+    started = datetime(2026, 4, 12, 9, 0, tzinfo=UTC)
+    terminal = WorkflowStep(
+        stage=WorkflowStage.BUILDING_DRAFT,
+        started_at=started,
+        ended_at=started,
+        success=False,
+        summary_locale_key="application.workflow.steps.draft_build_failed",
+        precondition_verdict=PreconditionVerdict(
+            failed_condition_id="workflow.draft.buildable",
+            evidence=(
+                ConditionEvidence(
+                    condition_id="workflow.draft.buildable",
+                    evidence_id="workflow.draft.build_failure",
+                    provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+                    values={"buildable": False},
+                ),
+            ),
+            action=ActionReference(action_id="operator.modelo.work.calculate"),
+            argument_bindings=(
+                ActionArgumentBinding(
+                    argument_name="work_unit_id",
+                    status=ActionArgumentStatus.MISSING,
+                ),
+            ),
+            missing_argument_names=("work_unit_id",),
+            conditionality=ActionConditionality.REQUIRES_ARGUMENTS,
+        ),
+    )
+    return WorkflowResult(
+        run_id="9" * 16,
+        started_at=started,
+        ended_at=started,
+        final_stage=WorkflowStage.ABORTED,
+        aborted_reason=WorkflowAbortReason.DRAFT_HAS_ERRORS,
+        steps=(terminal,),
+        summary_locale_key="application.workflow.results.aborted",
+    )
+
+
+def test_workflow_gate_refusal_projects_its_persisted_action_to_json() -> None:
+    """The registered CLI boundary resolves the gate's exact terminal verdict."""
+    workflow_app = typer.Typer()
+
+    @workflow_app.command()
+    @command_error_boundary
+    def workflow_gate(json_out: bool = typer.Option(False, "--json")) -> None:
+        del json_out
+        raise ModeloWorkflowGateError(_persisted_builder_refusal_result())
+
+    result = invoke_typer_app(workflow_app, ["--json"], catch_exceptions=False)
+
+    assert result.exit_code == get_error_exit_code(ErrorCategory.REFUSED), result.output
+    document = json.loads(result.stderr)
+    action = document["error"]["action"]
+    assert action["action"] == {
+        "action_id": "operator.modelo.work.calculate",
+        "target_command_key": "modelo.work.calculate",
+        "cli_path": ["app", "modelo", "work", "calculate"],
+    }
+    assert action["conditionality"] == "requires_arguments"
+    assert action["missing_argument_names"] == ["work_unit_id"]
+    assert action["argument_bindings"][0]["status"] == "missing"
 
 
 def test_real_root_refusal_projects_exact_leaf_and_action_to_json(tmp_path: Path) -> None:
@@ -48,6 +131,7 @@ def test_real_root_refusal_projects_exact_leaf_and_action_to_json(tmp_path: Path
         "action": {
             "action_id": "operator.profile.create",
             "target_command_key": "config.profile.create",
+            "cli_path": ["config", "profile", "create"],
         },
         "argument_bindings": [
             {
@@ -80,7 +164,8 @@ def test_real_root_refusal_derives_text_from_the_same_action_projection(tmp_path
     assert '  action.failed_condition_id: "profile.active.available"' in output
     assert '"evidence_id":"profile.active.state"' in output
     assert (
-        '  action.action: {"action_id":"operator.profile.create","target_command_key":"config.profile.create"}'
+        '  action.action: {"action_id":"operator.profile.create","cli_path":["config","profile","create"],'
+        '"target_command_key":"config.profile.create"}'
     ) in output
     assert '"argument_name":"profile_name"' in output
     assert '  action.missing_argument_names: ["profile_name"]' in output

@@ -12,7 +12,10 @@ from click.testing import Result
 
 from ....application.modelo import create_work_unit, workflow_period_for_work_unit
 from ....application.operator_actions import (
+    ActionArgumentBinding,
+    ActionArgumentStatus,
     ActionConditionality,
+    ActionReference,
     ConditionEvidence,
     ConditionEvidenceProvenance,
     NoRecoveryOutcome,
@@ -162,7 +165,7 @@ def _done_run(run_id: str) -> WorkflowResult:
 
 
 def _builder_refused_run(run_id: str) -> WorkflowResult:
-    """Build one persisted builder refusal without recovering a command from prose."""
+    """Build the persisted shape the real builder-refusal producer records."""
     step = WorkflowStep(
         stage=WorkflowStage.BUILDING_DRAFT,
         started_at=_T,
@@ -183,8 +186,15 @@ def _builder_refused_run(run_id: str) -> WorkflowResult:
                     values={"buildable": False},
                 ),
             ),
-            conditionality=ActionConditionality.NOT_APPLICABLE,
-            no_recovery_outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+            action=ActionReference(action_id="operator.modelo.work.calculate"),
+            argument_bindings=(
+                ActionArgumentBinding(
+                    argument_name="work_unit_id",
+                    status=ActionArgumentStatus.MISSING,
+                ),
+            ),
+            missing_argument_names=("work_unit_id",),
+            conditionality=ActionConditionality.REQUIRES_ARGUMENTS,
         ),
     )
     return WorkflowResult(
@@ -286,15 +296,19 @@ def test_work_runs_projects_a_typed_builder_refusal_without_reconstructing_a_com
         error_code="workflow.draft.build_failure",
     )
     assert terminal.precondition_verdict is not None
-    assert terminal.precondition_verdict.action is None
-    assert terminal.precondition_verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
+    assert terminal.precondition_verdict.action is not None
+    assert terminal.precondition_verdict.action.action_id == "operator.modelo.work.calculate"
+    assert terminal.precondition_verdict.missing_argument_names == ("work_unit_id",)
 
     text_result = _invoke_work(["runs"])
     assert text_result.exit_code == 0, text_result.output
-    assert "run_id\tmodelo\tperiod\tfinal_stage\taborted_reason\tstarted_at\tsummary" in text_result.output
+    assert "run_id\tmodelo\tperiod\tfinal_stage\taborted_reason\tstarted_at\tsummary\taction" in text_result.output
     assert "next_action" not in text_result.output
     assert "aeat app modelo work calculate" not in text_result.output
     assert "application.workflow.steps.draft_build_failed" not in text_result.output
+    assert '"action_id":"operator.modelo.work.calculate"' in text_result.output
+    assert '"missing_argument_names":["work_unit_id"]' in text_result.output
+    assert '"conditionality":"requires_arguments"' in text_result.output
 
     json_result = invoke_cached_cli(["--format", "json", "app", "modelo", "work", "runs"])
     assert json_result.exit_code == 0, json_result.output
@@ -304,6 +318,35 @@ def test_work_runs_projects_a_typed_builder_refusal_without_reconstructing_a_com
     assert rendered["aborted_reason"] == WorkflowAbortReason.DRAFT_HAS_ERRORS.value
     assert rendered["summary"]
     assert "next_action" not in rendered
+    assert rendered["action"] == {
+        "failed_condition_id": "workflow.draft.buildable",
+        "evidence": [
+            {
+                "condition_id": "workflow.draft.buildable",
+                "evidence_id": "workflow.draft.build_failure",
+                "provenance": "application_state",
+                "values": {"buildable": False},
+            },
+        ],
+        "action": {
+            "action_id": "operator.modelo.work.calculate",
+            "target_command_key": "modelo.work.calculate",
+            "cli_path": ["app", "modelo", "work", "calculate"],
+        },
+        "argument_bindings": [
+            {
+                "argument_name": "work_unit_id",
+                "status": "missing",
+                "value": None,
+                "source": None,
+                "source_key": None,
+                "source_evidence_id": None,
+            },
+        ],
+        "missing_argument_names": ["work_unit_id"],
+        "conditionality": "requires_arguments",
+        "no_recovery_outcome": None,
+    }
 
     assert load_run(run.run_id) == stored_before
     assert [candidate.run_id for candidate in list_runs()] == [run.run_id]
