@@ -6,7 +6,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:77dd53da383504fe5b7fdf04f8a234583a3b4451e7285bde4809f9c5241d1f8e'
+body_hash: 'sha256:796591797945a4165d77422810ca092f027c4fbeefa606f1236122704cdf4274'
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P01-S01]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P01-S02]]'
@@ -14,6 +14,7 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P02-S04]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P02-S05]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P02-S06]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-W02-P03-S07]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-s01-source-catalogue-audit]]'
@@ -22,6 +23,7 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-s04-semantic-map-schema-audit]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-s05-semantic-map-validation-audit]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-s06-provenance-contract-audit]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-s07-exact-join-audit]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-source-authority-research]]'
 ---
 
@@ -43,6 +45,7 @@ Auto-generated index of all documents tagged with `#aeat-export-fragment-generat
 - `2026-08-10-aeat-export-fragment-generator-authority-s04-semantic-map-schema-audit` - `aeat-export-fragment-generator-authority` audit: `S04 semantic-map schema`
 - `2026-08-10-aeat-export-fragment-generator-authority-s05-semantic-map-validation-audit` - `aeat-export-fragment-generator-authority` audit: `S05 semantic-map validation review`
 - `2026-08-10-aeat-export-fragment-generator-authority-s06-provenance-contract-audit` - `aeat-export-fragment-generator-authority` audit: `s06 provenance contract`
+- `2026-08-10-aeat-export-fragment-generator-authority-s07-exact-join-audit` - `aeat-export-fragment-generator-authority` audit: `s07 exact join`
 
 ### exec
 
@@ -52,6 +55,7 @@ Auto-generated index of all documents tagged with `#aeat-export-fragment-generat
 - `2026-08-10-aeat-export-fragment-generator-authority-W01-P02-S04` - Define the per-modelo per-design semantic-map schema keyed by exact parser anchors
 - `2026-08-10-aeat-export-fragment-generator-authority-W01-P02-S05` - Validate mapping bijection and require canonical identifiers, legal references, and source references to resolve through existing registry catalogues while constraining typed anomaly exceptions
 - `2026-08-10-aeat-export-fragment-generator-authority-W01-P02-S06` - Define the adjacent non-loader provenance manifest and normalized loader-semantic digest
+- `2026-08-10-aeat-export-fragment-generator-authority-W02-P03-S07` - Implement fail-closed parser-to-semantic-map joining without fuzzy or positional matching
 
 ### plan
 
