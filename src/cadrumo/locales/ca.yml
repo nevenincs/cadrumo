@@ -3176,6 +3176,7 @@ cli:
           de treball
         history_next_action: Revisa l'estat actual d'aquesta unitat de treball amb
           `aeat app modelo work status`.
+        history_next_action_summary: Revisa l'estat actual d'aquesta unitat de treball.
         history_work_unit_id_help: Id d'unitat de treball el cicle de vida de la qual
           vols veure
         id_is_work_unit_not_calc_revision_natural: Aquest id és un id d'unitat de
@@ -3198,6 +3199,8 @@ cli:
           un de: {choices}.'
         invalid_work_unit_id: work_unit_id ha de ser una cadena hex en minúscules
           de 64 caràcters (resum SHA-256)
+        invalid_work_unit_lookup_id: work_unit_id ha de ser un identificador SHA-256
+          hexadecimal en minúscules o un prefix inequívoc
         kv_empty_key_error: La clau de {flag} no pot estar buida; s'ha rebut {spec}.
         kv_format_error: '{flag} s''ha d''escriure com {key_label}={value_label}.
           És una entrada clau-valor: posa el nom del camp a l''esquerra d''un únic
@@ -3207,6 +3210,8 @@ cli:
         list_next_action: Inspecciona l'estat complet d'una unitat de treball amb
           `aeat app modelo work status` i després crea o recalcula l'esborrany amb
           `aeat app modelo work calculate`.
+        list_next_action_summary: Inspecciona l'estat complet d'una unitat de treball
+          abans de crear o recalcular-ne l'esborrany.
         m184_socio_handoff_message: 'Règim d''atribució de rendes: el soci %{nif}
           (%{nombre}) rep una base atribuïda de %{importe} EUR (participació del %{porcentaje}%).
           En el seu propi espai de treball, el soci l''ha de registrar com a fets
@@ -3413,15 +3418,21 @@ cli:
         status_help: Mostrar les metadades d'una unitat de treball
         status_next_action: Crea o recalcula aquesta unitat amb `aeat app modelo work
           calculate` i després verifica l'esborrany amb `aeat app modelo work verify`.
+        status_next_action_summary: Crea o recalcula aquesta unitat de treball i després
+          verifica l'esborrany resultant.
         verify_help: Verificar una revisió draft contra el contracte verified-complete
         verify_idempotent_noop: 'Operació idempotent sense efecte: la revisió de càlcul
           %{calculation_revision_id} ja està verificada; s''ha retornat l''informe
           de verificació existent sense canvis.'
         verify_next_action_granted: La verificació s'ha superat. Exporta l'artefacte
           de presentació amb `aeat app modelo export`.
+        verify_next_action_granted_summary: La verificació s'ha superat. Exporta l'artefacte
+          de presentació.
         verify_next_action_incomplete: La verificació ha trobat elements bloquejadors
           (consulta els avisos anteriors). Resol-los, recalcula amb `aeat app modelo
           work calculate` i torna a executar `aeat app modelo work verify`.
+        verify_next_action_incomplete_summary: La verificació ha trobat elements bloquejadors.
+          Resol-los, recalcula i torna a executar la verificació.
         verify_selector_help: Selector de revisió esborrany (current, latest-draft
           o explícit).
         wizard_help: Guia pas a pas per les caselles manuals pendents de la unitat
@@ -5009,6 +5020,7 @@ cli:
       parent_id: id_pare
       pending: Pendents de revisió
       period: Període
+      profile: Perfil
       purchase_invoice_evidence_id: Evidència de factura de compra
       readiness_issues: Incidències de preparació
       ready: Preparat
@@ -5440,6 +5452,8 @@ cli:
     calendar_local_modelo_events_unavailable: L'evidència local d'esdeveniments de
       modelo no està disponible per a aquesta fila del calendari.
     coverage:
+      incomplete_summary: 'No s''han pogut determinar amb certesa %{count} obligació(ns)
+        de presentació per a aquest perfil i podrien quedar sense declarar: %{modelos}.'
       investigate: 'No s''han pogut determinar amb certesa %{count} obligació(ns)
         de presentació per a aquest perfil i podrien quedar sense declarar: %{modelos}.
         Investigueu cadascuna amb ''aeat app overview explain <modelo>''.'
@@ -5477,6 +5491,8 @@ cli:
     post_filing:
       pending: '%{count} esdeveniment(s) posteriors a la presentació d''AEAT requereixen
         atenció: %{kinds}. Revisa''ls amb ''aeat app live notifications list''.'
+      pending_summary: '%{count} esdeveniment(s) posteriors a la presentació d''AEAT
+        requereixen atenció: %{kinds}.'
     prepare:
       help: 'Recorre els passos de preparació de dades per a un model/període en ordre:
         importar transaccions, classificar-les, adjuntar justificants de factures
@@ -5526,6 +5542,8 @@ cli:
       next_modelo_work_command: '  aeat app modelo work create - iniciar una declaració
         de model a partir de les dades del teu llibre.'
       next_review_command: '  aeat app ledger review - revisar files importades.'
+      next_step_available: Hi ha un pas següent recomanat disponible a la sortida
+        del resum.
       next_work_calculate_command: '  aeat app modelo work list - reprendre una unitat
         de treball de model en curs.'
       next_work_create_command: '  aeat app modelo work create - iniciar una unitat

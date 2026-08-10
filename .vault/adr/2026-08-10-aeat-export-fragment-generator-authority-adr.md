@@ -4,65 +4,79 @@ tags:
   - "#aeat-export-fragment-generator-authority"
 date: '2026-08-10'
 related:
-  - "[[2026-08-08-aeat-design-relayout-boundary-export-fragment-generator-adr]]"
-  - "[[2026-08-09-aeat-design-relayout-boundary-modelo-200-fragment-tree-provenance-research]]"
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-source-authority-research]]"
+  - '[[2026-08-08-aeat-design-relayout-boundary-export-fragment-generator-adr]]'
+  - '[[2026-08-09-aeat-design-relayout-boundary-modelo-200-fragment-tree-provenance-research]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-source-authority-research]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-s08-authority-gap-research]]'
 supersedes:
   - '2026-08-08-aeat-design-relayout-boundary-export-fragment-generator-adr'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:d262ba1dcb18aaf679879470e9ff95b7c768f69da3fe0b88c3fc03d74d3b8e42'
+body_hash: 'sha256:a5c0ca83480ef9f5b1ae749db21012c0ec21ff61d260144370aa8941e38d5d52'
 ---
-# `aeat-export-fragment-generator-authority` adr: `official-binary coordinates and explicit semantic maps generate export fragments` | (**status:** `accepted`)
+# `aeat-export-fragment-generator-authority` adr: `official-binary coordinates, reviewed render profiles, and semantic maps generate export fragments` | (**status:** `accepted`)
 
 ## Problem Statement
 
-The accepted re-coordination decision cannot establish AEAT correctness because its source tree is unverified and most fields cannot be paired unambiguously to the official design. The relayout campaign therefore needs a replacement authority model before it can generate revision-specific export trees.
+The accepted official-binary and semantic-map split leaves some wire facts unauthorised when the exact workbook field anchor carries no usable content, and it does not classify variable composition wrappers. The generator needs one exhaustive reviewed authority for those absent wire facts and an explicit boundary between fixed-width records and variable envelopes before real-target generation can resume.
 
 ## Considerations
 
-- The provenance and match-rate boundary is established by `2026-08-09-aeat-design-relayout-boundary-modelo-200-fragment-tree-provenance-research` and W01.P02.S77.
-- The official binary supplies layout coordinates but not Cadrumo registry semantics, as grounded by `2026-08-10-aeat-export-fragment-generator-authority-source-authority-research`.
-- Export fragments are filing-correctness inputs, so partial or guessed output is unacceptable.
+- The original coordinate-versus-meaning authority split is grounded by `2026-08-10-aeat-export-fragment-generator-authority-source-authority-research`.
+- The unresolved fixed-width totals, absent wire facts, and variable-wrapper boundary are grounded by `2026-08-10-aeat-export-fragment-generator-authority-s08-authority-gap-research`.
+- The real-target completeness and refusal requirements are recorded by `2026-08-10-aeat-export-fragment-generator-authority-s08-independent-review-audit`.
+- Export fragments are filing-correctness inputs, so partial coverage, implicit defaults, conflicting authorities, and guessed output are unacceptable.
 - Revision selection and applicability remain authored registry decisions governed by the parent relayout ADR; this decision does not infer revision boundaries.
 
 ## Considered options
 
-- **Re-coordinate a neighbouring or existing tree. Rejected.** It preserves an unverified semantic-to-coordinate mapping and is blocked by measured ambiguity.
-- **Generate directly from the official design alone. Rejected.** The design lacks registry semantics and legal/canonical identities.
-- **Official binary plus explicit semantic map. Chosen.** It gives each authority only the facts it can establish and makes the join reviewable and fail-closed.
-- **Hand-author generated TOML or permit positional exceptions. Rejected.** Both recreate unauditable transcription and silent drift.
+- **Keep refusing every design with absent field-level wire facts. Rejected as the permanent model.** It is safe but prevents reviewed source-scoped conventions from completing an otherwise authoritative design.
+- **Put wire formatting in the semantic map. Rejected.** It mixes registry meaning with source wire representation and creates a second coordinate-adjacent authority.
+- **Infer formats from AEAT type and width or from a neighbouring tree. Rejected.** Defaults and legacy-tree oracles turn incomplete evidence into silent filing behavior.
+- **Use an exhaustive source-SHA-pinned per-design render profile. Chosen.** It provides one reviewed home for wire facts absent at exact workbook field anchors while leaving official coordinates and registry meaning in their existing authorities.
+- **Treat variable wrappers as fixed records with inferred totals. Rejected.** It truncates composition semantics and falsely converts a variable envelope into a fixed-width record.
 
 ## Constraints
 
 - The exact bundled official binary, selected through the source catalogue and verified by SHA-256, is the sole coordinate input.
 - The shipped typed record-design parser output is consumed directly; derived extraction files are never inputs.
-- A separate per-modelo, per-design semantic map supplies only registry meaning and is keyed by exact source anchors. The join is bijective and refuses the entire design on missing, duplicate, fuzzy, or ambiguous matches.
-- Neighbouring fragment trees are neither inputs nor correctness oracles. Legacy trees are explicitly unverified bootstrap evidence.
+- The parser may recover official integer totals expressed by the source's `Total:` label and must prove them against terminal extent. It never invents a total, content value, coordinate, or wire interpretation.
+- A separate per-modelo, per-design semantic map supplies only registry meaning and is keyed by exact source anchors. Renderer formatting and transport interpretation never enter semantic-map entries. The join is bijective and refuses the entire design on missing, duplicate, fuzzy, or ambiguous matches.
+- One exhaustive per-design render profile, bound to the exact source SHA-256, is the sole reviewed authority for wire facts absent at their exact workbook field anchors. It may not override or conflict with wire facts present in the official source.
+- Every profile rule resolves to exact source anchors. Coverage must be complete for every otherwise-unrenderable field, including all smaller-width fields; group conventions require an explicit reviewed membership set rather than type-and-width inference.
+- Profiles distinguish unsigned `Num` handling from signed `N` handling and define the sign representation explicitly. No numeric, decimal, date, flag, identifier, digit-string, or literal default is implicit.
+- Missing anchors, uncovered fields, duplicate or overlapping rules, conflicts with official content, inapplicable design identity, or source-hash drift refuse the whole design before output.
+- `DP200000` is a typed variable envelope and composition wrapper outside fixed-width record generation. It is never truncated to its fixed prefix, assigned an inferred fixed total, or emitted as a fixed record; its envelope and composition behavior must be modeled separately and proven before any generation for that design.
+- Neighbouring fragment trees are neither inputs nor correctness oracles. Legacy trees are explicitly unverified bootstrap evidence and may not supply profile rules or defaults.
 - Generated replacements are a hard cutover: superseded manual fragment trees, single-file/direct-revision compatibility loaders, derivative record-design fallbacks, and print-only unmeasured paths are deleted. No legacy fallback, migration support, or silent green result remains.
-- Typed, hash-pinned exceptions may describe parser or source anomalies but may never supply coordinates or bypass mapping bijection.
+- Typed, hash-pinned exceptions may describe parser or source anomalies but may never supply coordinates, bypass mapping bijection, override official content, or substitute for exhaustive render-profile coverage.
 - Generated TOML and provenance are CLI-owned and never hand-edited.
 - One invocation targets one authored revision/design pair; revision splitting, renames, and migration remain explicit outside the generator.
 
 ## Implementation
 
-Build a development-only generator under `dev/registry/`. It parses the selected official binary into an intermediate representation retaining source reference and hash, workbook format, sheet, source row or cell anchor, ordinal, record identity, offset, length, AEAT type, normalized description, validation/content metadata, and declared total.
+Build the development-only generator under `dev/registry/`. It parses the selected official binary into an intermediate representation retaining source reference and hash, workbook format, sheet, source row or cell anchor, ordinal, record identity, offset, length, AEAT type, normalized description, validation/content metadata, declared total, and typed record kind.
 
-Join that representation to the reviewed semantic map, validate source applicability and complete bijection, then generate the entire target revision's `export/` tree plus an adjacent non-loader provenance manifest. The manifest records source and map digests, parser/generator schema versions, target revision, normalized loader-semantic digest, and file digests.
+Normalize official `Total:` integers without synthesizing absent values. Represent variable envelopes separately from fixed-width records, and block target generation until their composition contract has passed dedicated structural and byte-level proof.
 
-Generate into a temporary target, load and validate it completely, compare the normalized semantics and provenance, and swap atomically. `--check` regenerates independently and refuses semantic or exact generated/provenance drift.
+Join fixed-width source fields to the reviewed semantic map, then resolve only absent wire facts through the exhaustive render profile for the exact design and source hash. Validate source applicability, complete semantic bijection, exact-anchor profile coverage, rule consistency, explicit `Num` and signed-`N` behavior, and agreement with every present official content value before rendering.
 
-The gate suite covers parser completeness, canonical-reference validity, mapping bijection, applicability, deterministic double generation, mutation failures, extent/overlap, complete registry load, repository drift, and real emitted bytes across representative revision boundaries.
+Generate the entire target revision's `export/` tree plus an adjacent non-loader provenance manifest. The manifest records source, semantic-map, and render-profile digests; parser, profile, and generator schema versions; target revision; normalized loader-semantic digest; and file digests.
+
+Generate into a temporary target, load and validate it completely, compare normalized semantics and provenance, and swap atomically. `--check` regenerates independently and refuses semantic, profile, provenance, or exact generated drift.
+
+The gate suite covers parser completeness, official-total recovery, fixed-record geometry, variable-envelope classification and composition, canonical-reference validity, mapping bijection, exhaustive profile coverage, `Num` versus signed-`N` encoding, all smaller-field rules, applicability, deterministic double generation, mutation failures, extent and overlap, complete registry load, repository drift, and real emitted bytes across representative revision boundaries.
 
 ## Rationale
 
-This split follows the decisive evidence in `2026-08-10-aeat-export-fragment-generator-authority-source-authority-research`: official designs can author coordinates, while registry semantics require an explicit human-reviewed authority. Making their join exact and fail-closed removes both the unverified-tree oracle and the temptation to guess from position.
+The chosen profile is the narrowest extension that preserves the decisive split in `2026-08-10-aeat-export-fragment-generator-authority-source-authority-research`: the official design owns coordinates and present wire facts, the semantic map owns registry meaning, and a reviewed source-bound profile owns only wire facts the exact anchors omit. The authority gaps and variable-envelope classification in `2026-08-10-aeat-export-fragment-generator-authority-s08-authority-gap-research` rule out parser invention, type-and-width defaults, semantic-map expansion, and fixed-record truncation.
 
 ## Consequences
 
-- `2026-08-08-aeat-design-relayout-boundary-export-fragment-generator-adr` is superseded.
-- The generator becomes a prerequisite to relayout steps that promise parsed, non-transcribed export trees; existing manual trees remain unverified until regenerated and proven.
-- Every semantic-map change is reviewable independently from parser and coordinate changes.
-- Source/parser corrections can produce large generated diffs, but provenance and deterministic checks make that drift explicit.
-- The campaign gains a correctness proof against official designs, not merely regression agreement with current behavior.
-- Tests fail if generator validation or generation reads legacy layout membership, if a required official design is unparseable or unmeasured, or if deleted compatibility surfaces reappear.
+- `2026-08-08-aeat-design-relayout-boundary-export-fragment-generator-adr` remains superseded; this accepted record remains the single governing generator-authority decision.
+- The generator remains a prerequisite to relayout steps that promise parsed, non-transcribed export trees; existing manual trees remain unverified until regenerated and proven.
+- Render-profile changes become independently reviewable wire-authority changes and their digest becomes part of provenance and drift detection.
+- Semantic maps remain reviewable meaning-only artifacts.
+- Designs containing a variable envelope cannot generate fixed-width output until the separate envelope contract and composition proof pass.
+- Source, parser, or profile corrections can produce large generated diffs, but exhaustive validation and deterministic checks make that drift explicit.
+- Tests fail if generation reads legacy layout membership, applies a default to an uncovered anchor, conflates `Num` with signed `N`, leaves a smaller field ungrounded, accepts profile conflict or hash drift, truncates a variable envelope, or permits deleted compatibility surfaces to reappear.
