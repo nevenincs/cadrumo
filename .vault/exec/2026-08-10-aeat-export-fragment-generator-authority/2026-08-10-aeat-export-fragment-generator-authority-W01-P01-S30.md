@@ -5,7 +5,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:e968aee3028789ba2dae8b83bdc14946a2f90737a1d546cf8de7783e8ac67637'
+body_hash: 'sha256:b3958b3c2ec7ffe364fd6b589ea55f9ccd16abf573c5e9db58bfa5133f92af26'
 step_id: 'S30'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
@@ -35,4 +35,4 @@ Focused parser, IR, source-boundary, and semantic-map consumer verification pass
 
 ## Notes
 
-A shared-branch commit race landed the implementation across peer broad commits while gates were running. Commit `0316ec8f58` contains the parser, schema, facade, IR, initial real-source tests, and IR tests. Commit `38d9447750` contains the strict official-label and positive-integer regression. The final scoped S30 remainder commit contains the strengthened lossless metadata projection, malformed-composition refusal, source-boundary contract update, Step Record, and CLI-authored plan closure. History was not rewritten or amended.
+A shared-branch commit race landed the implementation across peer broad commits while gates were running. Commit `0316ec8f58` contains the parser, schema, facade, IR, initial real-source tests, and IR tests. Commit `38d9447750` contains the strict official-label and positive-integer regression. Commit `4aafa285c1` swept the initial source-boundary refactor and CLI scaffold into unrelated peer work. Scoped commit `e2b4ecf15a` contains the lossless metadata projection, malformed-composition refusal, strengthened source-boundary contract, completed Step Record, and CLI-authored plan closure. History was not rewritten or amended.
