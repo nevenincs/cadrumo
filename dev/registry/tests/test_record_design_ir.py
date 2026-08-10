@@ -2,15 +2,20 @@
 
 from __future__ import annotations
 
+import ast
+import inspect
+
 import pytest
 
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import (
+    RegistryValidationError,
     extract_record_design,
     load_catalogue_file,
     resolve_record_design_binary,
 )
 
+from .. import _record_design_ir
 from .._record_design_ir import (
     RecordDesignWorkbookFormat,
     load_record_design_intermediate,
@@ -19,8 +24,8 @@ from .._record_design_ir import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-def test_intermediate_retains_the_verified_binary_and_shipped_parser_coordinates() -> None:
-    """The M200/2025 IR is a direct typed projection of the official workbook parser."""
+def test_intermediate_is_a_complete_total_preserving_projection_of_the_verified_workbook() -> None:
+    """Every parsed record and official total reaches the generator IR unchanged."""
     source_root = bundled_path()
     catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "is.toml"))
     resolved = resolve_record_design_binary(
@@ -45,37 +50,112 @@ def test_intermediate_retains_the_verified_binary_and_shipped_parser_coordinates
     assert intermediate.source.design_epoch == resolved.source.record_design_epoch
     assert intermediate.source.workbook_format is RecordDesignWorkbookFormat.XLSX
     fixed_parser_sheets = tuple(sheet for sheet in parsed_sheets if sheet.variable_envelope is None)
-    assert len(intermediate.sheets) == len(fixed_parser_sheets)
-    assert {sheet.sheet for sheet in intermediate.sheets} == {sheet.name for sheet in fixed_parser_sheets}
-    assert "DP200000" not in {sheet.sheet for sheet in intermediate.sheets}
+    assert tuple(sheet.sheet for sheet in intermediate.sheets) == tuple(sheet.name for sheet in fixed_parser_sheets)
+    assert tuple(envelope.sheet for envelope in intermediate.variable_envelopes) == tuple(
+        sheet.name for sheet in parsed_sheets if sheet.variable_envelope is not None
+    )
 
-    parser_sheet = fixed_parser_sheets[0]
-    intermediate_sheet = intermediate.sheets[0]
-    assert intermediate_sheet.sheet == parser_sheet.name
-    assert intermediate_sheet.record_identity == parser_sheet.name
-    assert intermediate_sheet.declared_total == parser_sheet.total_positions
-    assert len(intermediate_sheet.fields) == len(parser_sheet.fields)
+    for parser_sheet, intermediate_sheet in zip(fixed_parser_sheets, intermediate.sheets, strict=True):
+        assert intermediate_sheet.sheet == parser_sheet.name
+        assert intermediate_sheet.record_identity == parser_sheet.name
+        assert intermediate_sheet.declared_total == parser_sheet.total_positions
+        assert intermediate_sheet.declared_total is not None
+        assert (
+            max(field.offset + field.length - 1 for field in parser_sheet.fields) == intermediate_sheet.declared_total
+        )
+        assert tuple(
+            (
+                field.sheet,
+                field.record_identity,
+                field.source_row,
+                field.source_cell,
+                field.ordinal,
+                field.offset,
+                field.length,
+                field.aeat_type,
+                field.normalized_description,
+                field.validation,
+                field.content,
+            )
+            for field in intermediate_sheet.fields
+        ) == tuple(
+            (
+                field.sheet,
+                parser_sheet.name,
+                field.row,
+                f"A{field.row}",
+                field.ordinal,
+                field.offset,
+                field.length,
+                field.type_code,
+                field.description,
+                field.validation,
+                field.content,
+            )
+            for field in parser_sheet.fields
+        )
 
-    parser_field = parser_sheet.fields[0]
-    intermediate_field = intermediate_sheet.fields[0]
-    assert intermediate_field.sheet == parser_field.sheet
-    assert intermediate_field.record_identity == parser_sheet.name
-    assert intermediate_field.source_row == parser_field.row
-    assert intermediate_field.source_cell == f"A{parser_field.row}"
-    assert intermediate_field.ordinal == parser_field.ordinal
-    assert intermediate_field.offset == parser_field.offset
-    assert intermediate_field.length == parser_field.length
-    assert intermediate_field.aeat_type == parser_field.type_code
-    assert intermediate_field.normalized_description == parser_field.description
-    assert intermediate_field.validation == parser_field.validation
-    assert intermediate_field.content == parser_field.content
-
-    assert len(intermediate.variable_envelopes) == 1
-    envelope = intermediate.variable_envelopes[0]
+    envelope = next(envelope for envelope in intermediate.variable_envelopes if envelope.sheet == "DP200000")
+    parser_envelope = next(
+        sheet.variable_envelope for sheet in parsed_sheets if sheet.name == envelope.sheet
+    )
+    assert parser_envelope is not None
     assert envelope.sheet == "DP200000"
     assert envelope.record_identity == "DP200000"
+    assert tuple(
+        (
+            field.sheet,
+            field.record_identity,
+            field.source_row,
+            field.source_cell,
+            field.ordinal,
+            field.offset,
+            field.length,
+            field.aeat_type,
+            field.normalized_description,
+            field.validation,
+            field.content,
+        )
+        for field in envelope.prefix_fields
+    ) == tuple(
+        (
+            field.sheet,
+            parser_envelope.name,
+            field.row,
+            f"A{field.row}",
+            field.ordinal,
+            field.offset,
+            field.length,
+            field.type_code,
+            field.description,
+            field.validation,
+            field.content,
+        )
+        for field in parser_envelope.prefix_fields
+    )
     assert envelope.prefix_extent == 328
     assert max(field.offset + field.length - 1 for field in envelope.prefix_fields) == 328
+    assert (
+        envelope.body_source_row,
+        envelope.body_source_cell,
+        envelope.body_ordinal,
+        envelope.body_offset,
+        envelope.body_length,
+        envelope.body_aeat_type,
+        envelope.body_normalized_description,
+        envelope.body_validation,
+        envelope.body_content,
+    ) == (
+        parser_envelope.body.row,
+        f"A{parser_envelope.body.row}",
+        parser_envelope.body.ordinal,
+        parser_envelope.body.offset,
+        parser_envelope.body.length,
+        parser_envelope.body.type_code,
+        parser_envelope.body.description,
+        parser_envelope.body.validation,
+        parser_envelope.body.content,
+    )
     assert (envelope.body_source_cell, envelope.body_offset, envelope.body_length) == (
         "A14",
         329,
@@ -86,6 +166,27 @@ def test_intermediate_retains_the_verified_binary_and_shipped_parser_coordinates
     assert envelope.body_validation is None
     assert envelope.body_content is None
     assert (
+        envelope.closing_source_row,
+        envelope.closing_source_cell,
+        envelope.closing_ordinal,
+        envelope.closing_offset,
+        envelope.closing_length,
+        envelope.closing_aeat_type,
+        envelope.closing_normalized_description,
+        envelope.closing_validation,
+        envelope.closing_content,
+    ) == (
+        parser_envelope.closing_suffix.row,
+        f"A{parser_envelope.closing_suffix.row}",
+        parser_envelope.closing_suffix.ordinal,
+        parser_envelope.closing_suffix.offset,
+        parser_envelope.closing_suffix.length,
+        parser_envelope.closing_suffix.type_code,
+        parser_envelope.closing_suffix.description,
+        parser_envelope.closing_suffix.validation,
+        parser_envelope.closing_suffix.content,
+    )
+    assert (
         envelope.closing_source_cell,
         envelope.closing_offset,
         envelope.closing_length,
@@ -95,7 +196,77 @@ def test_intermediate_retains_the_verified_binary_and_shipped_parser_coordinates
     assert envelope.closing_validation is None
     assert envelope.closing_content == '"</T200020250A0000>"'
     assert (
+        envelope.total_source_row,
+        envelope.total_source_cell,
+        envelope.total_label,
+        envelope.total_length,
+    ) == (
+        parser_envelope.variable_total.row,
+        f"A{parser_envelope.variable_total.row}",
+        parser_envelope.variable_total.label,
+        parser_envelope.variable_total.length,
+    )
+    assert (
         envelope.total_source_cell,
         envelope.total_label,
         envelope.total_length,
     ) == ("A16", "total", "Variable")
+
+
+@pytest.mark.parametrize(
+    ("source_ref", "filing_year", "design_epoch", "message"),
+    (
+        ("aeat-dr-200-2024", 2025, "2024", "does not apply to filing year 2025"),
+        ("aeat-dr-200-2025", 2025, "2024", "declares design epoch '2025', not requested '2024'"),
+    ),
+)
+def test_intermediate_refuses_an_inapplicable_or_wrong_epoch_source_before_parsing(
+    source_ref: str,
+    filing_year: int,
+    design_epoch: str,
+    message: str,
+) -> None:
+    """The generator cannot parse a source which registry authority did not select."""
+    source_root = bundled_path()
+    catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "is.toml"))
+
+    with pytest.raises(RegistryValidationError, match=message):
+        load_record_design_intermediate(
+            source_root,
+            catalogues.sources,
+            source_ref=source_ref,
+            filing_year=filing_year,
+            design_epoch=design_epoch,
+        )
+
+
+def test_intermediate_refuses_a_hash_drifting_source_before_parser_projection() -> None:
+    """A changed catalogue digest blocks the real workbook before parser output exists."""
+    source_root = bundled_path()
+    catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "is.toml"))
+    source = catalogues.sources["aeat-dr-200-2025"]
+    drifting_source = source.model_copy(update={"sha256": "0" * 64})
+
+    with pytest.raises(RegistryValidationError, match="sha256 mismatch"):
+        load_record_design_intermediate(
+            source_root,
+            {str(drifting_source.id): drifting_source},
+            source_ref="aeat-dr-200-2025",
+            filing_year=2025,
+            design_epoch="2025",
+        )
+
+
+def test_intermediate_loader_has_no_derivative_or_legacy_fallback_access_path() -> None:
+    """The loader stays a two-authority handoff: catalogue selection then shipped parser."""
+    module = ast.parse(inspect.getsource(_record_design_ir))
+    loader = next(
+        node
+        for node in module.body
+        if isinstance(node, ast.FunctionDef) and node.name == "load_record_design_intermediate"
+    )
+    call_names = {
+        node.func.id for node in ast.walk(loader) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+    }
+
+    assert call_names == {"_build_record_design_intermediate", "extract_record_design", "resolve_record_design_binary"}
