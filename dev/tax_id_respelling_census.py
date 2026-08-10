@@ -36,9 +36,22 @@ twice the residue was exactly the sites that spanned an assignment. This
 walker follows local bindings within a function, so binding to a name no
 longer hides the site.
 
-It still cannot see a normalisation that crosses a function boundary, and it
-does not pretend to: such a site is invisible here and the closing report must
-say so rather than claim completeness the instrument cannot support.
+**Two blind spots, both proven against this tree rather than hypothesised.**
+
+It cannot see a normalisation that crosses a function boundary: normalise in
+one function, compare in another, and neither half looks like a respelling
+here.
+
+And it cannot see one whose expression text carries no tax-identifier word,
+because the tax-id filter reads that text. The live witness is
+``adapters/outbound/aeat/sede/_adapter_utils.py:644`` --
+``sorted(str(key).strip().upper() for key in expected)`` -- which normalises
+NIFs through a variable named ``key``. It is a genuine member of this class
+and this census does not report it.
+
+So the number this prints is a FLOOR with two named leaks, never a
+denominator. A closing report must say what was measured and by what
+instrument; "the last" is the claim that has already been wrong twice here.
 """
 
 from __future__ import annotations
@@ -221,6 +234,32 @@ def _scan_module(path: pathlib.Path, source: str) -> list[Finding]:
                 findings.append(
                     Finding(rel, line, name, "unclassified", scan._snippet(line)),
                 )
+
+    # Every remaining tax-id-shaped chain, wherever it sits.
+    #
+    # The visitors above only reach a chain that is ASSIGNED to a local, or
+    # that appears as a comparison operand, a subscript, an f-string slot or a
+    # key-named argument. A chain passed straight into a call --
+    # ``member_tax_id=str(row["nif"]).strip().upper()`` -- matches none of
+    # those and was counted nowhere, so the census reported only the subset it
+    # happened to have a visitor for. That is the same blindness the grep
+    # floor had, in a different place, and it understated the population by
+    # more than the visitors found. This sweep is the denominator: it counts
+    # every chain, and the visitors above only refine HOW each is classified.
+    for node in ast.walk(tree):
+        if not _is_normalising_chain(node):
+            continue
+        base = _base_text(node)
+        if not base or not _looks_like_a_tax_id(base):
+            continue
+        line = getattr(node, "lineno", 0)
+        if any(f.line == line for f in findings):
+            continue
+        if (line, "free_standing") in seen_lines:
+            continue
+        seen_lines.add((line, "free_standing"))
+        snippet = lines[line - 1].strip() if 0 < line <= len(lines) else ""
+        findings.append(Finding(rel, line, base, "free_standing", snippet))
     return findings
 
 
@@ -239,7 +278,7 @@ def main(argv: list[str] | None = None) -> int:
     """Print the respelling census for one pinned revision."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("revision", help="Pinned git revision to scan, e.g. HEAD")
-    parser.add_argument("--kind", choices=("comparison", "keying", "unclassified"))
+    parser.add_argument("--kind", choices=("comparison", "keying", "unclassified", "free_standing"))
     args = parser.parse_args(argv)
 
     findings = census(args.revision)
@@ -252,7 +291,7 @@ def main(argv: list[str] | None = None) -> int:
     for finding in findings:
         tally[finding.kind] += 1
     print()
-    for kind in ("comparison", "keying", "unclassified"):
+    for kind in ("comparison", "keying", "unclassified", "free_standing"):
         print(f"{kind}: {tally[kind]}")
     print(f"total: {len(findings)}")
     return 0
