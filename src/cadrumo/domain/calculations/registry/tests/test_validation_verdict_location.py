@@ -19,7 +19,7 @@ from .....core.config import override_settings
 from .....core.resources import bundled_path
 from .._validate_verdict import (
     VERDICT_OUTCOME_GREEN,
-    ValidationVerdict,
+    RegistryValidationVerdict,
     bundled_verdict_path,
     certify_registry_validation,
     compute_verdict_key,
@@ -76,7 +76,11 @@ def test_bundled_verdict_path_is_none_for_a_mutable_authoring_tree(tmp_path: Pat
 
 def test_write_read_roundtrip_preserves_the_verdict(tmp_path: Path) -> None:
     path = tmp_path / "verdict.json"
-    verdict = ValidationVerdict(verdict_key="abc123", package_version="9.9.9", outcome=VERDICT_OUTCOME_GREEN)
+    verdict = RegistryValidationVerdict(
+        verdict_key="abc123",
+        package_version="9.9.9",
+        outcome=VERDICT_OUTCOME_GREEN,
+    )
     write_verdict(path, verdict)
     assert path.is_file()
     assert read_verdict(path) == verdict

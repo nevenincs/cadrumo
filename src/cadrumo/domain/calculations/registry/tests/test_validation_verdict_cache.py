@@ -32,7 +32,7 @@ from .._loader import _load_registry_tree_cached, clear_fingerprint_cache, load_
 from .._validate import RegistryValidator
 from .._validate_verdict import (
     VERDICT_OUTCOME_GREEN,
-    ValidationVerdict,
+    RegistryValidationVerdict,
     read_verdict,
     verdict_cache_path,
     write_verdict,
@@ -120,7 +120,7 @@ def test_fingerprint_mismatch_deletes_the_stale_verdict_and_revalidates(tmp_path
         verdict_path = verdict_cache_path(root)
         write_verdict(
             verdict_path,
-            ValidationVerdict(
+            RegistryValidationVerdict(
                 verdict_key="superseded-fingerprint", package_version="0.0.0", outcome=VERDICT_OUTCOME_GREEN
             ),
         )

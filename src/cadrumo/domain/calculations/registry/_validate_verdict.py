@@ -46,7 +46,7 @@ _ROOT_HASH_LEN = 16
 _LOGGER = logging.getLogger(__name__)
 
 
-class ValidationVerdict(BaseModel):
+class RegistryValidationVerdict(BaseModel):
     """A persisted proof that a registry tree validated green.
 
     ``verdict_key`` folds the fingerprint tuples and the package version into
@@ -134,7 +134,7 @@ def stamp_bundled_verdict(
     registry_root: Path,
     output_path: Path,
     package_version: str = __version__,
-) -> ValidationVerdict:
+) -> RegistryValidationVerdict:
     """Write the install-stable bundled-tree verdict at ``output_path``.
 
     Called by the release build against the tree it is packaging so the first
@@ -142,14 +142,18 @@ def stamp_bundled_verdict(
     fingerprints so this module adds no loader import edge.
 
     Returns:
-        The written :class:`ValidationVerdict`.
+        The written :class:`RegistryValidationVerdict`.
     """
     key = compute_bundled_verdict_key(
         registry_fingerprints=registry_fingerprints,
         registry_root=registry_root,
         package_version=package_version,
     )
-    verdict = ValidationVerdict(verdict_key=key, package_version=package_version, outcome=VERDICT_OUTCOME_GREEN)
+    verdict = RegistryValidationVerdict(
+        verdict_key=key,
+        package_version=package_version,
+        outcome=VERDICT_OUTCOME_GREEN,
+    )
     write_verdict(output_path, verdict)
     return verdict
 
@@ -201,23 +205,23 @@ def bundled_verdict_path(root: Path) -> Path | None:
     return shipped_verdict_location(root)
 
 
-def read_verdict(path: Path) -> ValidationVerdict | None:
+def read_verdict(path: Path) -> RegistryValidationVerdict | None:
     """Read and strict-parse a verdict, or ``None`` if absent/unreadable/foreign.
 
     Returns:
-        The parsed :class:`ValidationVerdict`, or ``None`` on any read failure.
+        The parsed :class:`RegistryValidationVerdict`, or ``None`` on any read failure.
     """
     if not path.is_file():
         return None
     try:
         raw = json.loads(path.read_text(encoding=UTF_8_ENCODING))
-        return ValidationVerdict.model_validate(raw)
+        return RegistryValidationVerdict.model_validate(raw)
     except Exception:
         _LOGGER.debug("Ignoring unreadable or foreign validation verdict at %s; recomputing", path, exc_info=True)
         return None
 
 
-def write_verdict(path: Path, verdict: ValidationVerdict) -> None:
+def write_verdict(path: Path, verdict: RegistryValidationVerdict) -> None:
     """Persist ``verdict`` to ``path`` atomically via a sibling temp file."""
     try:
         atomic_write_best_effort_text(path, verdict.model_dump_json(), encoding=UTF_8_ENCODING)
@@ -284,10 +288,14 @@ def certify_registry_validation(
     path = verdict_cache_path(root)
     write_verdict(
         path,
-        ValidationVerdict(verdict_key=verdict_key, package_version=package_version, outcome=VERDICT_OUTCOME_GREEN),
+        RegistryValidationVerdict(
+            verdict_key=verdict_key,
+            package_version=package_version,
+            outcome=VERDICT_OUTCOME_GREEN,
+        ),
     )
     return path
 
 
-def _verdict_matches(verdict: ValidationVerdict, verdict_key: str) -> bool:
+def _verdict_matches(verdict: RegistryValidationVerdict, verdict_key: str) -> bool:
     return verdict.outcome == VERDICT_OUTCOME_GREEN and verdict.verdict_key == verdict_key

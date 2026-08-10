@@ -758,7 +758,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.period.PeriodError",
+        "cadrumo.domain.period.RegistryPeriodError",
         ErrorCode(
             code="ERROR_PERIOD",
             category=ErrorCategory.ERROR,

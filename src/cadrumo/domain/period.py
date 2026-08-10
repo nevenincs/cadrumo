@@ -33,11 +33,11 @@ from ..core import PeriodError as CorePeriodError
 from ..core.errors import CadrumoError
 
 
-class PeriodError(CadrumoError):
-    """Base class for errors raised by this registry-token helper module."""
+class RegistryPeriodError(CadrumoError):
+    """Base class for errors raised by this bare registry-token helper module."""
 
 
-class PeriodValidationError(PeriodError, ValueError):
+class PeriodValidationError(RegistryPeriodError, ValueError):
     """Raised when a bare registry token cannot be mapped to helper dates."""
 
 
@@ -147,8 +147,8 @@ def _period_from_registry_token(filing_year: int, registry_period: str) -> Perio
 
 
 __all__ = [
-    "PeriodError",
     "PeriodValidationError",
+    "RegistryPeriodError",
     "calculation_filing_date",
     "period_end_date",
     "period_start_date",
