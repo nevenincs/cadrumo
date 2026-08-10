@@ -145,6 +145,7 @@ from ._source_mesh import (
     out_of_window_summary_source_diagnostic,
     storage_degradation_resolution,
 )
+from ._undeclared_activity_advisory import undeclared_activity_income_advisory_observations
 
 _STORAGE_DEGRADATION_ERRORS = (
     ClassificationError,
@@ -652,6 +653,17 @@ class LedgerRentaIncomeAggregationSourceResolver:
             + inferred_actividad_retencion_rate_advisory_observations(
                 aggregation.observations,
                 bucket_id=context.bucket_id,
+                resolver_id=self.resolver_id,
+            )
+            # Fourth screen, and the only one that can speak when there are NO
+            # observations at all. Every screen above reasons about rows that
+            # reached the aggregation; an activity-narrowed projection whose rows
+            # were all excluded produces an empty set, so each of them is silent
+            # by construction and their silence must not read as confirmation
+            # that the casilla is legitimately zero.
+            + undeclared_activity_income_advisory_observations(
+                aggregation,
+                context.revision,
                 resolver_id=self.resolver_id,
             ),
             provenance=tuple(

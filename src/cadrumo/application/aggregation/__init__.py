@@ -179,6 +179,7 @@ from ._percepciones_observations_repository import (
 )
 from ._renta_income_ledger import (
     RentaIncomeObservation,
+    UnadmittedActivityIncome,
     aggregate_renta_income_ledger,
     aggregate_renta_m100_income_ledger,
     aggregate_renta_m131_agrario_income_ledger,
@@ -247,6 +248,10 @@ from ._source_mesh import (
     storage_degradation_resolution,
 )
 from ._source_profile import ProfileSourceResolver
+from ._undeclared_activity_advisory import (
+    UNDECLARED_ACTIVITY_INCOME_SOURCE_KIND,
+    undeclared_activity_income_advisory_observations,
+)
 from ._withholding_source import WithholdingSourceResolver
 
 __all__ = [
@@ -261,6 +266,7 @@ __all__ = [
     "IVA_LEDGER_MISSING_FACT_REASONS",
     "MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND",
     "RESERVED_SOURCE_KINDS",
+    "UNDECLARED_ACTIVITY_INCOME_SOURCE_KIND",
     "AggregationCategoryCoverageError",
     "AggregationConfigError",
     "AggregationError",
@@ -333,6 +339,7 @@ __all__ = [
     "RetencionesAggregationSourceResolver",
     "RetencionesTotalsParity",
     "SourceMeshError",
+    "UnadmittedActivityIncome",
     "WithholdingObservation",
     "WithholdingSourceResolver",
     "administrador_retencion_rate_advisory_observations",
@@ -394,6 +401,7 @@ __all__ = [
     "row_fingerprint",
     "stale_filed_revisions",
     "storage_degradation_resolution",
+    "undeclared_activity_income_advisory_observations",
     "validate_iva_ledger_counterparty_category",
     "validate_iva_ledger_observation",
     "validate_iva_ledger_observations",

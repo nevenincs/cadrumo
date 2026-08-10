@@ -44,4 +44,5 @@ Submodules
    cadrumo.application.aggregation._shared_issue_reasons
    cadrumo.application.aggregation._source_mesh
    cadrumo.application.aggregation._source_profile
+   cadrumo.application.aggregation._undeclared_activity_advisory
    cadrumo.application.aggregation._withholding_source

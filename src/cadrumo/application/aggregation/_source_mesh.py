@@ -196,6 +196,16 @@ CalculationSourceDiagnosticReason = Literal[
     # remedy is a ledger edit rather than a registry or resolver gap, and the one
     # the export gate later refuses on.
     "rate_boxes_underaccount_total",
+    # A casilla whose aggregation resolved to ZERO over a NON-EMPTY income set,
+    # because every contributing row was excluded by an activity narrowing the
+    # operator has no channel to satisfy. The exclusion itself is correct and is
+    # NOT what this reports -- admitting an undeclared row would route a
+    # non-agrarian filer's income into an agrarian box, the over-declaration
+    # error. What it reports is that the box is empty for a reason invisible from
+    # the box: income exists in the period and no activity is declared for it.
+    # Deliberately makes no claim ABOUT the income's activity, because nothing in
+    # the ledger establishes one -- that absence is the finding.
+    "aggregation_activity_undeclared",
     # An operator-supplied casilla value that REPLACED a value the resolvers
     # computed for the same casilla, where the two differ. Not an error: the
     # operator wins by design, because the facts behind a regularizacion may
@@ -499,6 +509,24 @@ class CalculationSourceDiagnostic(BaseModel):
     binding_id: BindingId | None = None
     relation_id: RelationId | None = None
     casilla_id: CasillaId | None = None
+    legal_refs: tuple[LegalRefId, ...] = ()
+    """Registry legal references grounding the subject this advisory speaks about.
+
+    Empty on an advisory whose subject is a mechanism rather than a regulated
+    value -- a degraded store, a duplicate owner -- and populated by READING the
+    grounding off the registry definitions the advisory already resolved, never
+    by restating an article in this layer. An advisory about a casilla carries
+    that casilla's own refs (and its binding's, where a binding is the subject),
+    at parity with the provenance channel beside it: an operator asked to act on
+    a regulated figure needs the provision that establishes it, and prose in
+    ``message`` is not a field a machine consumer can route on.
+    """
+    source_refs: tuple[SourceRefId, ...] = ()
+    """Official AEAT source references grounding this advisory's subject.
+
+    The ``source_refs`` half of the pair above, carried for the same reason and
+    populated from the same registry definitions.
+    """
     out_of_window_count: int | None = Field(default=None, ge=1)
     out_of_window_min_filing_date: date | None = None
     out_of_window_max_filing_date: date | None = None

@@ -303,6 +303,42 @@ class RentaIncomeObservation(BaseModel):
         return self
 
 
+class UnadmittedActivityIncome(BaseModel):
+    """Eligible income an activity narrowing kept out of the target casilla.
+
+    The measurable half of a silence. A casilla fed by an activity-narrowed
+    aggregation resolves to zero in two indistinguishable situations: the
+    taxpayer genuinely earned nothing that the casilla covers, and the taxpayer
+    earned something whose activity nobody ever declared. The computed value is
+    the same zero in both, so the difference has to be carried alongside it.
+
+    ``any_activity_declared`` is what separates them, and it is a PREDICATE over
+    the excluded rows rather than a copy of any activity code: a row asserting
+    some other activity is a positive answer -- the box is correctly empty and
+    the operator has spoken -- while a row asserting none leaves the question
+    open. Deliberately not a code, both because no code would be the right one to
+    name and because the activity type has exactly one stored home.
+
+    ``income_total`` is measured with :func:`_computable_income_amount`, the same
+    fact the admitted rows fold through, so the figure an advisory quotes is on
+    the same footing as the figure in the box it is quoted against.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    target_casilla_id: CasillaId
+    """The casilla the narrowing was guarding, named even when nothing was excluded.
+
+    Carried here rather than recovered from the fold, because the fold is EMPTY
+    in exactly the situation that matters: a casilla that admitted nothing has no
+    key in ``casilla_values``, so a consumer reading the fold alone cannot name
+    the box it is reasoning about.
+    """
+    row_count: int = Field(default=0, ge=0)
+    income_total: Decimal = Field(default=Decimal("0"), ge=Decimal("0"))
+    any_activity_declared: bool = False
+
+
 class RentaIncomeLedgerAggregation(
     LedgerAggregationResultBase[RentaIncomeObservation, RentaIncomeLedgerAggregationIssue],
 ):
@@ -311,9 +347,17 @@ class RentaIncomeLedgerAggregation(
     ``out_of_window_summary`` is populated by repository-backed date partitions.
     Full-catalogue aggregation keeps row-level issues because every transaction
     is already loaded for classification.
+
+    ``unadmitted_activity_income`` is populated only by a projection that
+    NARROWS rows by activity -- today the Modelo 131 agrarian volumen. ``None``
+    on the Modelo 130 and Modelo 100 paths states that no narrowing ran, which is
+    not the same claim as a narrowing that excluded nothing, and the two must
+    stay distinguishable: the second is a fact about this taxpayer's ledger, the
+    first is a fact about which projection was asked for.
     """
 
     out_of_window_summary: OutOfWindowTransactionSummary | None = None
+    unadmitted_activity_income: UnadmittedActivityIncome | None = None
 
 
 def _load_income_invoices(
@@ -671,14 +715,68 @@ def aggregate_renta_m131_agrario_income_ledger(
             period=period,
             amount_fn=_computable_income_amount,
         ),
+        unadmitted_activity_income=_unadmitted_activity_income(
+            transactions,
+            projected.unadmitted,
+            target_casilla_id=_TARGET_CASILLA_M131_AGRARIO,
+        ),
+    )
+
+
+def _unadmitted_activity_income(
+    transactions: TransactionCatalogue,
+    unadmitted: Sequence[RentaIncomeObservation],
+    *,
+    target_casilla_id: CasillaId,
+) -> UnadmittedActivityIncome:
+    """Measure the income the art. 110.1.c) activity narrowing kept out.
+
+    Always returns a value, including the all-zero one. An empty census is a
+    positive statement -- the narrowing ran and excluded nothing -- and a
+    consumer that had to read ``None`` for it could not tell that apart from a
+    projection where no narrowing ran at all.
+
+    The declared-activity predicate reads each excluded row back off the
+    catalogue rather than off the observation, because the observation carries no
+    activity and must not start to: the activity type has one stored home, and a
+    second copy on an aggregation row would be the drift that placement exists to
+    avoid. Reading it here is a function-local question about a row already in
+    hand, not a new home for the fact.
+    """
+    if not unadmitted:
+        return UnadmittedActivityIncome(target_casilla_id=target_casilla_id)
+    by_id = {transaction.transaction_id: transaction for transaction in transactions.values()}
+    return UnadmittedActivityIncome(
+        target_casilla_id=target_casilla_id,
+        row_count=len(unadmitted),
+        income_total=sum(
+            (_computable_income_amount(observation) for observation in unadmitted),
+            start=Decimal("0"),
+        ),
+        # Indexed rather than searched, and unguarded on purpose: every
+        # unadmitted observation was built from a row of this catalogue, so a
+        # missing key is a broken invariant worth raising rather than a state to
+        # absorb into a quiet ``False``.
+        any_activity_declared=any(
+            by_id[observation.transaction_id].tipo_actividad is not None for observation in unadmitted
+        ),
     )
 
 
 class _ProjectedIncome(NamedTuple):
-    """Observations and issues from one pass over a catalogue."""
+    """Observations and issues from one pass over a catalogue.
+
+    ``unadmitted`` carries the observations an ``admits`` narrowing kept OUT.
+    They are eligible income by every other rule the pipeline applies -- same
+    classifier, same window -- and were excluded solely by the row filter, which
+    is what makes them the honest denominator for "this period carries income the
+    target casilla did not admit". Empty whenever ``admits`` is ``None``, so the
+    Modelo 100 and Modelo 130 paths carry nothing extra.
+    """
 
     observations: tuple[RentaIncomeObservation, ...]
     issues: tuple[RentaIncomeLedgerAggregationIssue, ...]
+    unadmitted: tuple[RentaIncomeObservation, ...] = ()
 
 
 def _project_income_onto_casilla(
@@ -707,19 +805,23 @@ def _project_income_onto_casilla(
         window_start: First day the classifier treats as in-window.
         window_end: Last day the classifier treats as in-window.
         target_casilla_id: The casilla every eligible observation is re-targeted to.
-        admits: Optional row filter applied BEFORE classification. ``None`` admits
-            every active row, which is what the M100 and M130 paths want.
+        admits: Optional row filter deciding which rows reach the casilla.
+            ``None`` admits every active row, which is what the M100 and M130
+            paths want. A rejected row is still CLASSIFIED, so its income can be
+            counted, but it contributes to ``unadmitted`` rather than to
+            ``observations``.
 
     Returns:
-        The projected observations and the issues raised along the way.
+        The projected observations, the issues raised along the way, and the
+        eligible income the ``admits`` narrowing kept out.
     """
     observations: list[RentaIncomeObservation] = []
     issues: list[RentaIncomeLedgerAggregationIssue] = []
+    unadmitted: list[RentaIncomeObservation] = []
     for transaction in transactions.values():
         if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
             continue
-        if admits is not None and not admits(transaction):
-            continue
+        admitted = admits is None or admits(transaction)
         outcome = _classify_income_transaction(
             transaction,
             invoices=invoices,
@@ -730,10 +832,18 @@ def _project_income_onto_casilla(
         if outcome is None:
             continue
         if isinstance(outcome, RentaIncomeLedgerAggregationIssue):
-            issues.append(outcome)
-        else:
-            observations.append(outcome.model_copy(update={"target_casilla_id": target_casilla_id}))
-    return _ProjectedIncome(tuple(observations), tuple(issues))
+            # A rejected row's issues are DISCARDED rather than reported. An
+            # issue is a traceable exclusion from the casilla this pass feeds,
+            # and a row the narrowing already excluded was never a candidate for
+            # it -- reporting why it also failed a currency or window gate would
+            # describe an exclusion that did not happen. The narrowing's own
+            # consequence is reported once, in aggregate, off ``unadmitted``.
+            if admitted:
+                issues.append(outcome)
+            continue
+        retargeted = outcome.model_copy(update={"target_casilla_id": target_casilla_id})
+        (observations if admitted else unadmitted).append(retargeted)
+    return _ProjectedIncome(tuple(observations), tuple(issues), tuple(unadmitted))
 
 
 def _classify_income_transaction(
@@ -1068,6 +1178,7 @@ __all__ = [
     "RentaIncomeLedgerAggregationIssueReason",
     "RentaIncomeObservation",
     "SalesInvoiceEvidenceRefusal",
+    "UnadmittedActivityIncome",
     "aggregate_renta_income_ledger",
     "aggregate_renta_income_ledger_from_repositories",
     "aggregate_renta_m100_income_ledger",
