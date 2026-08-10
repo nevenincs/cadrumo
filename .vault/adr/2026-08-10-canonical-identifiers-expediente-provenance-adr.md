@@ -5,7 +5,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:0d7b7a78d8cdeaff4159b39a800ac9edf925aec8d7c375b5b7dcbb9e28c3b9c0'
+body_hash: 'sha256:9c98872bd134ed2f0751bca7cc9495d8ad3f8fc8038b3dc5bbbd54f5c7539912'
 related:
   - "[[2026-08-07-canonical-identifiers-adr]]"
   - "[[2026-08-07-canonical-identifiers-reference]]"
@@ -209,3 +209,110 @@ where the key grammar does fold the expediente.
 recurs on any other model was not swept - the grounding is scoped to this one
 field. And the claim that the four minted values are not AEAT-issued rests on
 their construction sites rather than on an AEAT publication of what it issues.
+
+
+## Amendment (2026-08-10): a prior provenance taxonomy exists, and `status` already leaks into it
+
+Caught by the implementing lead's discovery pass **before any code was written**,
+which is the only reason this is cheap. Three things needed ruling and this
+record answers all three, because a ruling that answers only the obvious one
+creates the duplicate it was meant to close.
+
+### What the original record missed
+
+Neither this record nor its grounding reference mentions
+`ObservationSourceKind`, a five-member `StrEnum` at
+`application/calculations/_observations_repository.py` carrying `APP_FILING`,
+`OPERATOR_MANUAL`, `AEAT_SEDE_JUSTIFICANTE`, `AEAT_SEDE_LIVE_CAPTURE` and
+`AEAT_CSV_REGISTER`, plus an `is_official_aeat` property that decides
+filing-grade authority. Both documents were grepped and it appears in neither.
+
+Worse, the grounding reference already recorded that `status` is "a third
+partial encoding of the same axis" and did not follow it one step further. It
+is not a partial encoding. **The local-filing path stamps
+`APP_FILING_SOURCE_KIND` into `status`, which is literally
+`ObservationSourceKind.APP_FILING`** — so that taxonomy is already being written
+into this model, through a field this record proposed to leave alone.
+
+### Ruling 1 — the two taxonomies COEXIST, and here are the grounds
+
+Coexistence is defensible on subject grounds and indefensible if nobody states
+them, because a later reader finding two provenance enums with no recorded
+reason will merge them or add a third. So the grounds are recorded rather than
+assumed:
+
+- **Different subjects.** `ObservationSourceKind`'s own docstring says it
+  classifies the origin of a persisted calculation OBSERVATION.
+  `IvaCompensationPeriodState` is not an observation; it is a derived
+  per-period compensation row.
+- **One member has no counterpart.** `CASILLA_RECONSTRUCTION` builds a state
+  from casilla values with no observation at all, and that site documents
+  itself as computational scaffold that is never persisted.
+- **One distinction is destroyed by the alternative.** `OPERATOR_SEED` and
+  `OPERATOR_CORRECTION` are separate paths; `ObservationSourceKind` has a
+  single `OPERATOR_MANUAL`. The current `status` field already destroys this
+  distinction by writing the same literal for both, which is evidence for
+  keeping it rather than against.
+- **Reuse would import a filing-authority predicate.** `is_official_aeat`
+  decides which provenances establish filing-grade cross-period readiness. A
+  compensation row must never confer filing authority, and the standing rule
+  keeping `app_filing` out of the official set exists precisely because that
+  confusion is available. Importing a taxonomy whose property *decides*
+  officialness onto this model invites it.
+
+### Ruling 2 — `status` is NOT left untouched, and this is the larger half
+
+Adding a provenance field beside a `status` that already holds `app_filing` on
+one path would leave the model **self-contradicting by construction on four of
+five paths**: two fields answering "where did this row come from", disagreeing
+structurally. That ruling would have created the duplicate rather than closed
+it.
+
+Measured, `status` currently carries three incompatible subjects:
+
+| path | `status` written | subject |
+| --- | --- | --- |
+| AEAT capture | the captured register status | an AEAT-printed external fact |
+| local filing | `APP_FILING_SOURCE_KIND` | provenance, from the other taxonomy |
+| casilla reconstruction | a `"filed"` literal | app lifecycle, on a never-persisted row |
+| operator seed | the seeded literal | app lifecycle |
+| operator correction | **the same** seeded literal | app lifecycle, indistinguishable from seed |
+
+`status` cannot simply be deleted: the domain lot builder branches on the
+seeded literal to surface a seeded opening balance as an available lot even at
+zero generated amount, and the wallet CLI emits `status` to the operator in both
+its JSON and its text form. So the operator today sees a register status, a
+source-kind token and two app literals in one field, and cannot tell an operator
+seed from an operator correction at all.
+
+**Ruling:** once the provenance field exists, `status` narrows to `str | None`
+carrying ONLY the AEAT-printed register status, `None` on every other path. The
+seeded-literal branch re-expresses against the provenance member, which is what
+it was really asking. The reconstruction path's literal disappears with it — that
+row is never persisted and the literal never meant anything. The operator surface
+emits provenance and register status as separate fields.
+
+**This lands in the SAME commit as the provenance field.** Split across two, the
+tree carries a model with two disagreeing provenance carriers, which is the
+state this amendment exists to prevent.
+
+### Ruling 3 — the population control was satisfiable against the wrong field
+
+`W02.P02.S65` was written as a population measurement so it could not pass
+vacuously. With `status` still carrying provenance, an implementer could satisfy
+its disconfirming clause by reading provenance off `status` — **a control that
+can pass against the wrong field is vacuous in a way its author cannot see**, and
+this author did not see it.
+
+The control now asserts against the new field AND asserts that `status` is `None`
+on every non-AEAT path. That second half is a claim only the ruled design can
+satisfy, so the control cannot be met by the shape it exists to reject.
+
+### Unchanged, and load-bearing for all three rulings
+
+Two of the five provenances reach the model through the conduit pair, which takes
+a bare `str`, so they are indistinguishable where the model is built. **Whichever
+enum wins, the conduit signature must carry the provenance**, or two of five
+members are unassignable at the only place they could be set. That was the
+original record's finding and no part of this amendment relaxes it.
+
