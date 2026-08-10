@@ -66,6 +66,7 @@ Submodules
    cadrumo.application.modelo._operator_override_advisory
    cadrumo.application.modelo._participation_index_rebuild
    cadrumo.application.modelo._ports
+   cadrumo.application.modelo._prior_domiciliation
    cadrumo.application.modelo._prior_payment_advisory
    cadrumo.application.modelo._profile_binding
    cadrumo.application.modelo._profile_export_binding
@@ -76,6 +77,7 @@ Submodules
    cadrumo.application.modelo._rate_box_advisory
    cadrumo.application.modelo._reconcile
    cadrumo.application.modelo._reconcile_casilla
+   cadrumo.application.modelo._reconcile_population
    cadrumo.application.modelo._reconciliation_records
    cadrumo.application.modelo._registry_discovery
    cadrumo.application.modelo._registry_helpers
