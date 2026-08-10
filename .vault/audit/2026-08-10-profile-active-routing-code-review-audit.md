@@ -5,7 +5,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:182535c7f27a9f06b5d4e263ad47379bbd40b4f0ced57f17b90c6a68575621a6'
+body_hash: 'sha256:28175f56a239693570d1bdebaea76ea8766ea613048bb4d55f8fe5731259c0bc'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
 ---
@@ -66,6 +66,11 @@ never mistaken for positional targets. Because the scanner maintains its own
 option catalogue, a later option addition could silently turn an active-profile
 read into a self-scoped bypass.
 
+Resolved in the same campaign: direct tests now import the production scanner
+and cover separated and `=` option values, global `--profile`, every history
+filter family, and positional targets following options. The focused test lane
+passes all twelve cases.
+
 ### interactive-edit-proof | low | Successful cross-profile manager handover is not end-to-end proven
 
 The edit-routing tests use real registered profiles and prove that omitted and
@@ -94,10 +99,8 @@ logic into the CLI.
   shared tracked files. Inspect with `git diff`/`git show`, preserve peer WIP,
   and only remove an index lock after identifying the owning process and
   proving it has exited; coordinate any exceptional recovery explicitly.
-- For `explicit-target-parser-coverage`, add focused real-CLI cases for each
-  value-taking option and `--option=value` form around unnamed `validate` and
-  `history`, including global `--profile`, so the root scanner cannot regress
-  into treating an option value as a positional subject.
+- `explicit-target-parser-coverage` is closed by the direct production-parser
+  regression matrix added during this review.
 - For `interactive-edit-proof`, retain the current fail-closed tests and add a
   real terminal-capable journey when the test harness can host the full-screen
   login flow. This is a validation enhancement, not a release-blocking code
