@@ -219,8 +219,20 @@ class UserProfileFact(BaseModel):
         return self
 
 
+def _canonical_payload_schema_version() -> int:
+    """Return the version the loaded user-profile schema declares.
+
+    Read through the loader on every call rather than captured at import,
+    for the same reason :func:`declared_provenance_sources` is: the schema
+    is the authority for its own version, and a module-level copy would be
+    a second one that goes stale the moment the schema advances. The loader
+    owns the caching, keyed on the schema file's stat fingerprint.
+    """
+    return load_user_profile_schema().version
+
+
 def _validate_payload_schema_identity(schema_id: str, schema_version: int, *, surface: str) -> None:
-    """Refuse payload schema metadata the loaded schema does not sanction.
+    """Refuse payload schema metadata that is not exactly the current schema.
 
     ``schema_id`` and ``schema_version`` name the authority a persisted
     payload claims to have been written under, and both were free: any
@@ -229,20 +241,24 @@ def _validate_payload_schema_identity(schema_id: str, schema_version: int, *, su
     unknown authority is not a value with a typo in it -- it is a record
     asserting a contract nothing in this codebase defines.
 
-    The version is bounded above rather than pinned. Pinning would refuse the
-    defaulted records this codebase actually writes, and the loaded schema's
-    version is the highest this code can be said to understand: a payload
-    claiming a FUTURE version was written by something newer, so reading it as
-    current is the failure worth closing.
+    Both halves are pinned to exactly what the loaded schema declares, so the
+    two failure directions refuse alike. A FUTURE version was written by
+    something newer than this code, so reading it as current understates what
+    the payload means. A PRE-CURRENT version was written under a contract this
+    code no longer implements, and accepting it silently is read-tolerance for
+    a shape nothing here is entitled to interpret -- the more dangerous of the
+    two, because it produces a plausible profile rather than an error. Neither
+    is repaired on the read path: the refusal names the claimed version and the
+    canonical one so the payload can be rewritten under the current schema.
     """
     schema = load_user_profile_schema()
     if schema_id != schema.id:
         raise UserProfileValidationError(
             f"{surface}: schema_id {schema_id!r} is not the canonical profile schema {schema.id!r}",
         )
-    if schema_version > schema.version:
+    if schema_version != schema.version:
         raise UserProfileValidationError(
-            f"{surface}: schema_version {schema_version} is newer than the canonical "
+            f"{surface}: schema_version {schema_version} is not the canonical "
             f"profile schema version {schema.version}",
         )
 
@@ -253,7 +269,11 @@ class UserProfileRecord(BaseModel):
     model_config = _STRICT_FROZEN
 
     schema_id: str = "cadrumo.user_profile"
-    schema_version: int = Field(default=1, ge=1)
+    # Read from the loaded schema rather than pinned to a literal. A literal
+    # default is a second authority for the schema's own version, and the
+    # moment it falls behind, every record written without an explicit version
+    # is itself a pre-current payload the identity guard has to refuse.
+    schema_version: int = Field(default_factory=_canonical_payload_schema_version, ge=1)
     profile_id: _ProfileId
     display_name: _DisplayName
     status: UserProfileStatus = UserProfileStatus.ACTIVE
