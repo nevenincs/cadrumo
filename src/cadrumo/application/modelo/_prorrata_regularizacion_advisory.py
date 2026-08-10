@@ -74,7 +74,7 @@ from ..calculations import (
     derive_prorrata_applicability,
 )
 from ..prorrata_register import ProrrataRegisterRepository
-from ._semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_revision_semantic_role
+from ._semantic_role_resolution import casilla_id_for_unambiguous_revision_semantic_role
 
 __all__ = ["collect_prorrata_regularizacion_diagnostics"]
 
@@ -96,13 +96,6 @@ _PENDING_PROVISIONAL_SOURCE_KIND = "prorrata_regularizacion_provisional_pending"
 #: (``prorrata_especial_obligatoria`` vs ``prorrata_especial_check_unavailable``)
 #: rides alongside on ``Notice.context`` at the CLI projection.
 _ESPECIAL_MANDATORY_SOURCE_KIND = "prorrata_especial_mandatory"
-
-
-def _casilla_id_for_role(revision: ModeloRevision, semantic_role: str, *, modelo_id: str) -> CasillaId | None:
-    try:
-        return casilla_id_for_unique_revision_semantic_role(revision, semantic_role, modelo_id=modelo_id)
-    except AmbiguousSemanticRoleCasillaError:
-        return None
 
 
 def _prior_year_definitiva_pct(
@@ -216,10 +209,26 @@ def collect_prorrata_regularizacion_diagnostics(
         bucket_id=bucket_id,
     )
 
-    volumen_total_id = _casilla_id_for_role(revision, _VOLUMEN_TOTAL_SEMANTIC_ROLE, modelo_id=modelo)
-    volumen_con_derecho_id = _casilla_id_for_role(revision, _VOLUMEN_CON_DERECHO_SEMANTIC_ROLE, modelo_id=modelo)
-    porcentaje_id = _casilla_id_for_role(revision, _PORCENTAJE_SEMANTIC_ROLE, modelo_id=modelo)
-    cuota_deducible_id = _casilla_id_for_role(revision, _CUOTA_DEDUCIBLE_TOTAL_SEMANTIC_ROLE, modelo_id=modelo)
+    volumen_total_id = casilla_id_for_unambiguous_revision_semantic_role(
+        revision,
+        _VOLUMEN_TOTAL_SEMANTIC_ROLE,
+        modelo_id=modelo,
+    )
+    volumen_con_derecho_id = casilla_id_for_unambiguous_revision_semantic_role(
+        revision,
+        _VOLUMEN_CON_DERECHO_SEMANTIC_ROLE,
+        modelo_id=modelo,
+    )
+    porcentaje_id = casilla_id_for_unambiguous_revision_semantic_role(
+        revision,
+        _PORCENTAJE_SEMANTIC_ROLE,
+        modelo_id=modelo,
+    )
+    cuota_deducible_id = casilla_id_for_unambiguous_revision_semantic_role(
+        revision,
+        _CUOTA_DEDUCIBLE_TOTAL_SEMANTIC_ROLE,
+        modelo_id=modelo,
+    )
     if volumen_total_id is None or volumen_con_derecho_id is None:
         return especial_diagnostics
     if porcentaje_id is None or cuota_deducible_id is None:
@@ -356,8 +365,16 @@ def _missing_carry_diagnostics(
     if bucket_id is None:
         return ()
 
-    volumen_total_id = _casilla_id_for_role(revision, _VOLUMEN_TOTAL_SEMANTIC_ROLE, modelo_id=modelo)
-    volumen_con_derecho_id = _casilla_id_for_role(revision, _VOLUMEN_CON_DERECHO_SEMANTIC_ROLE, modelo_id=modelo)
+    volumen_total_id = casilla_id_for_unambiguous_revision_semantic_role(
+        revision,
+        _VOLUMEN_TOTAL_SEMANTIC_ROLE,
+        modelo_id=modelo,
+    )
+    volumen_con_derecho_id = casilla_id_for_unambiguous_revision_semantic_role(
+        revision,
+        _VOLUMEN_CON_DERECHO_SEMANTIC_ROLE,
+        modelo_id=modelo,
+    )
     declared_volume_total = casilla_values.get(volumen_total_id) if volumen_total_id is not None else None
     declared_volume_con_derecho = (
         casilla_values.get(volumen_con_derecho_id) if volumen_con_derecho_id is not None else None

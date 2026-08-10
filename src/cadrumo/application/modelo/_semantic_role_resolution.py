@@ -133,6 +133,31 @@ def casilla_id_for_unique_revision_semantic_role(
     return None
 
 
+def casilla_id_for_unambiguous_revision_semantic_role(
+    revision: object,
+    semantic_role: str,
+    *,
+    modelo_id: str | None = None,
+) -> CasillaId | None:
+    """Return the casilla id only when ``semantic_role`` resolves unambiguously.
+
+    The sibling above raises on ambiguity so a caller that must not proceed on a
+    guess gets an instructive refusal. An advisory has the opposite need: it is
+    a non-blocking diagnostic, so a revision it cannot address unambiguously is
+    a revision it declines to speak about, and ``None`` already means "no
+    casilla to address" for the absent case. This collapses both to that one
+    answer.
+
+    Two returns share it, and they are not the same fact: an absent role and an
+    ambiguous one. A caller that needs to tell them apart must use the raising
+    sibling, because this function deliberately cannot.
+    """
+    try:
+        return casilla_id_for_unique_revision_semantic_role(revision, semantic_role, modelo_id=modelo_id)
+    except AmbiguousSemanticRoleCasillaError:
+        return None
+
+
 def _casilla_ids_for_semantic_role(casillas: Iterable[object], semantic_role: str) -> tuple[CasillaId, ...]:
     resolved: list[CasillaId] = []
     for casilla in casillas:
@@ -156,6 +181,7 @@ def _optional_str(value: object) -> str | None:
 __all__ = [
     "AmbiguousSemanticRoleCasillaError",
     "SemanticRoleCasillaAmbiguity",
+    "casilla_id_for_unambiguous_revision_semantic_role",
     "casilla_id_for_unique_revision_semantic_role",
     "casilla_id_for_unique_semantic_role",
 ]

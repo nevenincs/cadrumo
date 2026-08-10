@@ -42,7 +42,7 @@ from ...domain.calculations.registry import CasillaId, ModeloRevision
 from ...domain.contribuyente import DescendantInfo, RentaFamilyProfile, descendant_list_from_facts
 from ...domain.user_profile import ProfileNotFoundError
 from ..aggregation import CalculationSourceDiagnostic
-from ._semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_revision_semantic_role
+from ._semantic_role_resolution import casilla_id_for_unambiguous_revision_semantic_role
 
 __all__ = [
     "collect_descendientes_count_desync_diagnostics",
@@ -115,13 +115,6 @@ def _has_descendiente_facts(bucket_id: str) -> bool:
     )
 
 
-def _casilla_id_for_role(revision: ModeloRevision, semantic_role: str, *, modelo_id: str) -> CasillaId | None:
-    try:
-        return casilla_id_for_unique_revision_semantic_role(revision, semantic_role, modelo_id=modelo_id)
-    except AmbiguousSemanticRoleCasillaError:
-        return None
-
-
 def collect_minimo_descendientes_undeclared_diagnostics(
     revision: ModeloRevision,
     casilla_values: Mapping[CasillaId, Decimal],
@@ -146,7 +139,11 @@ def collect_minimo_descendientes_undeclared_diagnostics(
     """
     if modelo != Modelo.M100.value:
         return ()
-    estatal_id = _casilla_id_for_role(revision, _MINIMO_ESTATAL_SEMANTIC_ROLE, modelo_id=modelo)
+    estatal_id = casilla_id_for_unambiguous_revision_semantic_role(
+        revision,
+        _MINIMO_ESTATAL_SEMANTIC_ROLE,
+        modelo_id=modelo,
+    )
     if estatal_id is None:
         return ()
     estatal_value = casilla_values.get(estatal_id, Decimal(0))
@@ -235,7 +232,11 @@ def collect_minimo_descendientes_prorrata_inferred_diagnostics(
     """
     if modelo != Modelo.M100.value:
         return ()
-    estatal_id = _casilla_id_for_role(revision, _MINIMO_ESTATAL_SEMANTIC_ROLE, modelo_id=modelo)
+    estatal_id = casilla_id_for_unambiguous_revision_semantic_role(
+        revision,
+        _MINIMO_ESTATAL_SEMANTIC_ROLE,
+        modelo_id=modelo,
+    )
     if estatal_id is None:
         return ()
     if casilla_values.get(estatal_id, Decimal(0)) == Decimal(0):
@@ -573,7 +574,11 @@ def collect_minimo_descendientes_rentas_undeclared_diagnostics(
     """
     if modelo != Modelo.M100.value:
         return ()
-    estatal_id = _casilla_id_for_role(revision, _MINIMO_ESTATAL_SEMANTIC_ROLE, modelo_id=modelo)
+    estatal_id = casilla_id_for_unambiguous_revision_semantic_role(
+        revision,
+        _MINIMO_ESTATAL_SEMANTIC_ROLE,
+        modelo_id=modelo,
+    )
     if estatal_id is None:
         return ()
     if casilla_values.get(estatal_id, Decimal(0)) == Decimal(0):
@@ -647,7 +652,11 @@ def collect_minimo_descendientes_entry_date_missing_diagnostics(
     """
     if modelo != Modelo.M100.value:
         return ()
-    estatal_id = _casilla_id_for_role(revision, _MINIMO_ESTATAL_SEMANTIC_ROLE, modelo_id=modelo)
+    estatal_id = casilla_id_for_unambiguous_revision_semantic_role(
+        revision,
+        _MINIMO_ESTATAL_SEMANTIC_ROLE,
+        modelo_id=modelo,
+    )
     if estatal_id is None:
         return ()
     if revision.valid_to is None:
@@ -709,7 +718,11 @@ def collect_guarderia_spend_shape_diagnostics(
     """
     if modelo != Modelo.M100.value:
         return ()
-    casilla_id = _casilla_id_for_role(revision, _INCREMENTO_GUARDERIA_SEMANTIC_ROLE, modelo_id=modelo)
+    casilla_id = casilla_id_for_unambiguous_revision_semantic_role(
+        revision,
+        _INCREMENTO_GUARDERIA_SEMANTIC_ROLE,
+        modelo_id=modelo,
+    )
     if casilla_id is None:
         return ()
     if revision.valid_to is None:
@@ -753,7 +766,11 @@ def _guarderia_descendants(revision: ModeloRevision, *, modelo: str, bucket_id: 
     """
     if modelo != Modelo.M100.value:
         return None
-    casilla_id = _casilla_id_for_role(revision, _INCREMENTO_GUARDERIA_SEMANTIC_ROLE, modelo_id=modelo)
+    casilla_id = casilla_id_for_unambiguous_revision_semantic_role(
+        revision,
+        _INCREMENTO_GUARDERIA_SEMANTIC_ROLE,
+        modelo_id=modelo,
+    )
     if casilla_id is None:
         return None
     if revision.valid_to is None:
@@ -861,7 +878,11 @@ def collect_minimo_descendientes_dependencia_diagnostics(
     """
     if modelo != Modelo.M100.value:
         return ()
-    estatal_id = _casilla_id_for_role(revision, _MINIMO_ESTATAL_SEMANTIC_ROLE, modelo_id=modelo)
+    estatal_id = casilla_id_for_unambiguous_revision_semantic_role(
+        revision,
+        _MINIMO_ESTATAL_SEMANTIC_ROLE,
+        modelo_id=modelo,
+    )
     if estatal_id is None or revision.valid_to is None:
         return ()
     facts = _profile_fact_strings(bucket_id)
