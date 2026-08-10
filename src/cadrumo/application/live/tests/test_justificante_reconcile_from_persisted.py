@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from pathlib import Path
+from typing import NamedTuple
 
 import pytest
 
@@ -70,18 +71,147 @@ def test_reconcile_from_persisted_capture_writes_nothing_to_disk(tmp_path: Path)
 
     assert report.verdict is ModeloReconciliationVerdict.MATCHES
     assert report.source_path == f"secure-object://{JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE}/{snapshot.snapshot_id}"
-    assert _files_containing_bytes(tmp_path, pdf_bytes) == ()
+
+    scan = _scan_for_plaintext(tmp_path, pdf_bytes)
+
+    # An empty match set means "no plaintext copy" only if the scan actually
+    # looked. Both other outcomes below produce the same empty set, and neither
+    # is evidence of anything.
+    assert scan.scanned, "the scan reached no files at all, so an empty match set below proves nothing"
+    assert not scan.unreadable, (
+        f"the scan could not read {len(scan.unreadable)} file(s), so they were never checked for the "
+        f"plaintext they might hold: {scan.unreadable}"
+    )
+    assert scan.matches == ()
 
 
-def _files_containing_bytes(root: Path, needle: bytes) -> tuple[Path, ...]:
+class _PlaintextScan(NamedTuple):
+    """What a plaintext sweep found, and what it was unable to look at.
+
+    ``unreadable`` exists because the previous form of this scan swallowed
+    :exc:`OSError` and continued. A file it could not open was silently dropped
+    from the sweep and the caller received the same empty tuple it receives for
+    a genuinely clean tree -- so "no plaintext leaked" and "could not look"
+    were one value. This share's defining property is that it fails under
+    concurrent I/O, which makes that the likely reading rather than the
+    paranoid one, and the failure is invisible in the direction that reassures.
+
+    ``scanned`` is carried for the same reason one step earlier: a sweep over
+    an empty tree also returns no matches.
+    """
+
+    matches: tuple[Path, ...]
+    unreadable: tuple[Path, ...]
+    scanned: int
+
+
+def _cannot_carry(path: Path, needle: bytes) -> bool:
+    """Whether ``path`` is physically too small to contain ``needle``.
+
+    The one sanctioned reason to stop caring that a file could not be read.
+    It is a SIZE fact rather than a name rule, and that distinction is the
+    whole point: the file this exists for is the profile lock the test process
+    itself holds open, which cannot be opened for reading while held. Excusing
+    it as ``active-profile.lock`` would be a filename allowlist, and a filename
+    allowlist is the swallow rebuilt one level up -- the next unreadable file
+    with a different name gets excused by whoever extends the list.
+
+    A file shorter than the needle cannot contain it, whatever it is called.
+    A file that cannot even be measured is NOT excused: an unknown size clears
+    nothing, and this must fail toward reporting rather than toward silence.
+    """
+    try:
+        return path.stat().st_size < len(needle)
+    except OSError:
+        return False
+
+
+def _scan_for_plaintext(root: Path, needle: bytes) -> _PlaintextScan:
+    """Search every readable file under ``root`` for ``needle``.
+
+    Reports what it could not read instead of skipping it, so the caller can
+    tell a clean sweep from a blind one.
+    """
     matches: list[Path] = []
+    unreadable: list[Path] = []
+    scanned = 0
     for path in sorted(item for item in root.rglob("*") if item.is_file()):
         try:
-            if needle in path.read_bytes():
-                matches.append(path.relative_to(root))
+            body = path.read_bytes()
         except OSError:
+            if not _cannot_carry(path, needle):
+                unreadable.append(path.relative_to(root))
             continue
-    return tuple(matches)
+        scanned += 1
+        if needle in body:
+            matches.append(path.relative_to(root))
+    return _PlaintextScan(tuple(matches), tuple(unreadable), scanned)
+
+
+def test_an_unreadable_file_is_excused_only_when_it_is_too_small_to_carry_the_needle(
+    tmp_path: Path,
+) -> None:
+    """The carve-out that keeps the sibling guard from firing on a held lock.
+
+    The guard above refuses a sweep that could not read something. On its first
+    real outing it fired on ``cadrumo-storage/active-profile.lock`` -- held open
+    by the profile lock for the duration of the test, so genuinely unreadable
+    and genuinely incapable of hiding a PDF. A guard that reds on a legitimate
+    case trains people to weaken it, so the carve-out is stated rather than
+    left to a filename.
+
+    This pins the predicate at its boundary, because a size test is exactly the
+    kind that is written with the wrong comparison and never noticed: a file one
+    byte short of the needle is excused, a file the same length is not. The
+    equal-length case is the one that matters -- it is the smallest file that
+    could still BE the needle.
+    """
+    needle = b"0123456789"
+    (tmp_path / "shorter").write_bytes(b"012345678")
+    (tmp_path / "exact").write_bytes(b"0123456789")
+    (tmp_path / "longer").write_bytes(b"0123456789abc")
+
+    assert _cannot_carry(tmp_path / "shorter", needle)
+    assert not _cannot_carry(tmp_path / "exact", needle)
+    assert not _cannot_carry(tmp_path / "longer", needle)
+
+    # A file that cannot even be measured clears nothing. Unknown size must
+    # fail toward reporting, which is the direction every blind instrument in
+    # this tree has failed the other way.
+    assert not _cannot_carry(tmp_path / "does-not-exist", needle)
+
+
+def test_the_plaintext_scan_finds_a_planted_copy_so_its_silence_can_be_trusted(tmp_path: Path) -> None:
+    """Positive control for the ``scan.matches == ()`` assertion above.
+
+    That assertion passes for three reasons it cannot tell apart: because no
+    plaintext copy was written, because the sweep reached no files, or because
+    every file it wanted to read raised and was dropped. Only the first is the
+    guarantee the test claims, and all three render as an empty tuple.
+
+    So the predicate is driven against a copy planted where a real regression
+    would put one -- a plain file on disk under the isolated storage root,
+    which is exactly the shape ``sensitive-financial-data-secure-storage-only``
+    forbids -- and required to name it. The sibling's silence is then measured
+    reach rather than an untested expression that would stay quiet however the
+    reconcile path changed.
+
+    Nested one directory down deliberately: the sweep is recursive and a
+    top-level-only regression in it would otherwise pass this control.
+    """
+    needle = b"%PDF-1.4\nplanted-plaintext-justificante-canary\n%%EOF\n"
+    leaked_copy = tmp_path / "live" / "justificante" / "leaked.pdf"
+    leaked_copy.parent.mkdir(parents=True, exist_ok=True)
+    leaked_copy.write_bytes(needle)
+
+    scan = _scan_for_plaintext(tmp_path, needle)
+
+    assert scan.matches == (Path("live") / "justificante" / "leaked.pdf",), (
+        "the plaintext scan did not find a file it was pointed straight at, so its silence in the "
+        "sibling test above is evidence of nothing"
+    )
+    assert not scan.unreadable
+    assert scan.scanned
 
 
 def test_reconcile_from_persisted_capture_mismatches_on_modelo() -> None:

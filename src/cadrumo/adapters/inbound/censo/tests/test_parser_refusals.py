@@ -14,7 +14,6 @@ def test_non_pdf_bytes_refuse_as_unrecognised_document() -> None:
     with pytest.raises(CertificadoCensalParseError) as excinfo:
         parse_certificado_censal_bytes(b"not a certificate")
     assert excinfo.value.translated_message == "errors.censo.certificado_not_a_pdf"
-    assert excinfo.value.suggestion == "aeat config profile edit"
 
 
 def test_pdf_bytes_refuse_while_extraction_is_unpinned() -> None:
@@ -27,4 +26,3 @@ def test_pdf_bytes_refuse_while_extraction_is_unpinned() -> None:
     with pytest.raises(CertificadoCensalParseError) as excinfo:
         parse_certificado_censal_bytes(b"%PDF-1.7 minimal")
     assert excinfo.value.translated_message == "errors.censo.certificado_extraction_unpinned"
-    assert excinfo.value.suggestion == "aeat config profile edit"

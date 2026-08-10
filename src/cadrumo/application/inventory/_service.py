@@ -225,7 +225,6 @@ class InventoryService:
                 f"invalid valuation_method {valuation_method!r}",
                 translated_message="application.inventory.service.errors.invalid_valuation_method",
                 context={"valuation_method": valuation_method},
-                suggestion="aeat app ledger inventory create --valuation-method fifo|pmp",
             ) from exc
         repository = self._repository_for(bucket_id)
         document = repository.load()
@@ -234,7 +233,6 @@ class InventoryService:
                 f"inventory ledger already exists for actividad={actividad_id!r} year={year}",
                 translated_message="application.inventory.service.errors.actividad_conflict",
                 context={"actividad_id": actividad_id, "year": str(year)},
-                suggestion="aeat app ledger inventory list",
             )
         ledger = InventoryLedger(
             actividad_id=actividad_id,
@@ -288,7 +286,6 @@ class InventoryService:
                 f"no inventory ledger for actividad={actividad_id!r} year={year}",
                 translated_message="application.inventory.service.errors.actividad_not_found",
                 context={"actividad_id": actividad_id, "year": str(year)},
-                suggestion="aeat app ledger inventory list",
             )
         return ledger
 
@@ -314,7 +311,6 @@ class InventoryService:
                 f"movement_id {movement.movement_id!r} already present in ledger",
                 translated_message="application.inventory.service.errors.duplicate_movement_id",
                 context={"movement_id": movement.movement_id},
-                suggestion="aeat app ledger inventory list",
             )
         record = MovementRecord(
             movement_id=movement.movement_id,
@@ -408,7 +404,6 @@ class InventoryService:
                 f"no inventory ledger for actividad={actividad_id!r} year={year}",
                 translated_message="application.inventory.service.errors.actividad_not_found",
                 context={"actividad_id": actividad_id, "year": str(year)},
-                suggestion="aeat app ledger inventory list",
             )
         document = InventoryLedgerDocument(
             ledgers=tuple(
