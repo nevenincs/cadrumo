@@ -16,7 +16,6 @@ from ...application.ledger import (
     confirm_invoice_draft_from_evidence,
     extract_invoice_draft_from_evidence,
 )
-from ...application.operator_actions import next_action
 from ...application.user_profile import cloud_evidence_upload_eligible_for_active_profile
 from ...core import IntracomOperationType
 from ...core.config import load_settings
@@ -864,7 +863,6 @@ def _run_evidence_confirm(
     else:
         notices.append(
             Notice(
-                action=next_action("operator.ledger.link"),
                 severity=NoticeSeverity.INFO,
                 code="ledger.evidence.confirm.linked_transaction_hint",
                 message=tr(
