@@ -407,6 +407,19 @@ def _install_run_context_record_factory() -> None:
     imported lazily inside the closure so this function never triggers
     a partial import of :mod:`cadrumo.core.observability` (which would create a
     cycle through :mod:`cadrumo.core.config` → :mod:`cadrumo.adapters.outbound.aeat.auth` → this module).
+
+    Both fields are EXPECTED to be empty strings on every record a normal CLI
+    invocation emits, and that is the accepted design rather than a gap. Wrapping
+    commands in run-trace context was deliberately retired from the CLI: material
+    state-transition audit is owned by bucket event history and evidence replay by
+    the evidence bundle, so a generic command-wrapper trace would be a parallel
+    audit vocabulary over the same events. Nothing in a production path enters a
+    run context, so nothing populates these.
+
+    They are populated for the surfaces that do enter one — replay and
+    golden-output capture, where the run-trace subsystem is the record/replay
+    foundation. This note exists because an always-empty ``run_id`` on every log
+    line reads as unwired plumbing, and has twice been reported as one.
     """
     global _FACTORY_INSTALLED
     if _FACTORY_INSTALLED:

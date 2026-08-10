@@ -60,9 +60,9 @@ itself does not drag the domain portable-export / registry / service
 module surfaces into ``sys.modules``. The state-free CLI surfaces
 (``aeat``, ``aeat --version``, ``aeat --help``) must not pay the
 registry cost via this boundary, which the
-:mod:`entrypoints.cli.test_lazy_command_tree` gate and the
+:mod:`entrypoints.cli.tests.test_lazy_command_tree` gate and the
 producer-side probe in
-:mod:`application.user_profile.test_lazy_boundary` both enforce.
+:mod:`application.user_profile.tests.test_lazy_boundary` both enforce.
 
 See Also:
     :mod:`domain.user_profile`

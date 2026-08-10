@@ -17,8 +17,9 @@ from pathlib import Path
 import pytest
 
 from ....core import CasillaId, Period, validated_casilla_id
+from ....domain.filing import ModeloInputs
 from ....domain.submission import ModeloDraftStatus
-from .. import ModeloInputs, build_draft, build_runtime_schema_provider, export_draft
+from .. import build_draft, build_runtime_schema_provider, export_draft
 from ..runtime import ModeloOperatorProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

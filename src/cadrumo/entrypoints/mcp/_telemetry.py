@@ -10,7 +10,7 @@ themselves: a tool result carries the taxpayer's figures, and
 anywhere outside encrypted secure storage. A hash lets two records be compared
 for identity (the flywheel's dedup needs that) without storing a single
 figure; the full payloads exist only inside the eval harness's own in-memory
-:class:`~agent.eval.LiveTrajectory` during a measurement run.
+in-memory trajectory record during a measurement run.
 
 Records append as JSON lines to ``<cadrumo_local_storage_root>/telemetry/
 <session_id>.jsonl``, following the same state-root derivation the diagnostic

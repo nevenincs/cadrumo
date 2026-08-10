@@ -18,9 +18,10 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import CasillaId
+from .....core import validated_casilla_id
 from .._errors import RegistryValidationError
 from .._schema_verification import (
+    VerificationDiscrepancyCause,
     VerificationExpectationDefinition,
     fold_reconciliation_total_casilla_ids,
 )
@@ -40,14 +41,15 @@ def _expectation(
     """Build one expectation declaring ``totals``; only that axis varies."""
     return VerificationExpectationDefinition(
         id=identifier,
-        computed_casilla_ids=tuple(CasillaId(value) for value in computed),
+        computed_casilla_ids=tuple(validated_casilla_id(value, surface="computed_casilla_ids") for value in computed),
         reconciliation_total_casilla_ids={
-            kind: CasillaId(value)  # type: ignore[misc]
+            kind: validated_casilla_id(value, surface="reconciliation_total_casilla_ids")
             for kind, value in totals.items()
         },
         tolerance="0.01",
         rounding="money-2",
         min_coverage="1",
+        discrepancy_causes=(VerificationDiscrepancyCause.ROUNDING,),
         legal_refs=_LEGAL,
         source_refs=_SOURCE,
     )

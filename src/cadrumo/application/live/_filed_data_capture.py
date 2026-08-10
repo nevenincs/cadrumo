@@ -654,6 +654,70 @@ async def capture_filed_data(
     )
 
 
+def _declarations_within_limit(
+    declarations: tuple[Declaracion, ...],
+    *,
+    limit: int | None,
+    reached_count: int,
+) -> tuple[Declaracion, ...] | None:
+    """Narrow one batch to what remains under the cap, or ``None`` once it is met.
+
+    ``None`` means the sweep is finished rather than that this batch is empty:
+    an already-met cap stops the walk, so the caller breaks rather than skipping
+    to the next modelo/year pair.
+    """
+    if limit is None:
+        return declarations
+    remaining = limit - reached_count
+    if remaining <= 0:
+        return None
+    return declarations[:remaining]
+
+
+async def _absorb_declarations(
+    declarations: tuple[Declaracion, ...],
+    *,
+    opened_register: DeclaracionesRegisterSession,
+    accumulator: _CaptureAccumulator,
+    store: FiledDeclaracionObservationStore,
+    bucket_id: str,
+    output_root: Path,
+    dry_run: bool,
+    modelo: str,
+    year: int,
+    failures: list[FiledDataCaptureFailureRow],
+) -> None:
+    """Capture and absorb one batch, recording a per-declaration failure as a row.
+
+    One declaration's capture failure is absorbed into ``failures`` and the walk
+    continues: a single unreadable expediente must not abandon the rest of the
+    sweep.
+    """
+    for declaration in declarations:
+        try:
+            observation = await opened_register.capture_observation(
+                declaration,
+                artefact_sink=store.persist_artefact,
+            )
+        except Exception as exc:
+            failures.append(
+                filed_data_capture_failure_row(
+                    modelo=modelo,
+                    year=year,
+                    declaration=declaration,
+                    error=exc,
+                ),
+            )
+            continue
+        accumulator.absorb(
+            observation,
+            store=store,
+            bucket_id=bucket_id,
+            output_root=output_root,
+            dry_run=dry_run,
+        )
+
+
 async def capture_filed_data_bulk(
     *,
     year_from: int,
@@ -736,41 +800,32 @@ async def capture_filed_data_bulk(
             )
             if declarations is None:
                 continue
-            if limit is not None:
-                # The reached tally, not len(observation_paths): the paths list
-                # is appended only on the write path, so a preview left it empty
-                # and this residual never shrank -- every batch took a full
-                # `limit` slice instead of what remained. The accumulator's own
-                # docstring already says the paths cannot serve as the tally for
-                # exactly this reason; the outer break below reads it correctly
-                # and this site did not.
-                remaining = limit - accumulator.reached_count
-                if remaining <= 0:
-                    break
-                declarations = declarations[:remaining]
-            for declaration in declarations:
-                try:
-                    observation = await opened_register.capture_observation(
-                        declaration,
-                        artefact_sink=store.persist_artefact,
-                    )
-                except Exception as exc:
-                    failures.append(
-                        filed_data_capture_failure_row(
-                            modelo=code,
-                            year=year,
-                            declaration=declaration,
-                            error=exc,
-                        ),
-                    )
-                    continue
-                accumulator.absorb(
-                    observation,
-                    store=store,
-                    bucket_id=bucket_id,
-                    output_root=output_root,
-                    dry_run=dry_run,
-                )
+            # The reached tally, not len(observation_paths): the paths list
+            # is appended only on the write path, so a preview left it empty
+            # and this residual never shrank -- every batch took a full
+            # `limit` slice instead of what remained. The accumulator's own
+            # docstring already says the paths cannot serve as the tally for
+            # exactly this reason; the outer break below reads it correctly
+            # and this site did not.
+            within_limit = _declarations_within_limit(
+                declarations,
+                limit=limit,
+                reached_count=accumulator.reached_count,
+            )
+            if within_limit is None:
+                break
+            await _absorb_declarations(
+                within_limit,
+                opened_register=opened_register,
+                accumulator=accumulator,
+                store=store,
+                bucket_id=bucket_id,
+                output_root=output_root,
+                dry_run=dry_run,
+                modelo=code,
+                year=year,
+                failures=failures,
+            )
             if limit is not None and accumulator.reached_count >= limit:
                 break
 

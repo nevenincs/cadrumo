@@ -94,6 +94,7 @@ ALWAYS_REDACT_KEY_TERMS: frozenset[str] = frozenset(
         "nie",
         "nif",
         "passphrase",
+        "password",
         "pkcs12",
         "secret",
         "tax_id",
@@ -106,10 +107,17 @@ as sensitive, regardless of the domain the predicate otherwise scopes to.
 This module owns the SHAPE-based redaction rules (:func:`redact_for_log`,
 :func:`default_rules_for_class`); it also owns this minimal NAME-based base
 because a key-name predicate is a second, complementary layer over shape-based
-redaction wherever one exists (see :mod:`cadrumo.core.logging` and
-:mod:`cadrumo.application.live._remote_state_outcomes`), and a base that lives
-in only one of those consuming sites is a base only until someone edits the
-other one.
+redaction wherever one exists (see :mod:`cadrumo.core.logging`,
+:mod:`cadrumo.application.live._remote_state_outcomes` and
+:mod:`cadrumo.application.user_profile`), and a base that lives in only one of
+those consuming sites is a base only until someone edits the other one.
+
+``password`` sits here rather than in any one consumer because it is a generic
+credential name with no domain scope. It was previously declared by the profile
+overview alone, so the two other predicates — which redact a NIF, a bearer token
+and a PKCS#12 blob — did not treat a key named ``password`` as sensitive at all.
+That asymmetry is the exact failure the paragraph below describes, and it
+survived because nothing enumerated the third consumer.
 
 Each consuming predicate composes its own set as ``ALWAYS_REDACT_KEY_TERMS |
 {domain-specific-additions}`` — never redeclares an overlapping term

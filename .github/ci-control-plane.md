@@ -111,7 +111,20 @@ the GROI oracle), `code-health-report.yml` (informational dashboard).
 
 - **push to `main`** — the primary discipline surface (development is
   direct-push by coordinated agents). Runs T1 always, T2 when the paths match.
-  Push runs auto-supersede (`cancel-in-progress: true`).
+  Push runs QUEUE rather than supersede
+  (`cancel-in-progress: ${{ github.event_name == 'pull_request' }}`, so push
+  runs finish and pull-request runs supersede). They superseded until
+  2026-08-11, and at this repository's direct-push commit rate that meant each
+  push cancelled the run the previous push started: the last 100 runs were 99
+  cancelled, 1 in flight, 0 success, and the last green run of any age was
+  2026-07-24 — eighteen days. Nothing surfaced it, because a cancelled run is
+  not a red one and `main` carries no required checks. Superseding bought no
+  saving to weigh against that: without `cancel-in-progress` only ONE run may be
+  pending in a group and a newly queued run cancels the previously pending one,
+  so both settings cap the lane at one in flight and one waiting, differing only
+  in whether the in-flight run is allowed to finish. The runners are self-hosted
+  and consume no Actions minutes. The real cost is latency — a completed verdict
+  may name a sha several commits old — which is strictly better than no verdict.
 
   **A path filter is evaluated over the PUSH, not per commit.** GitHub takes the
   union of every file changed across every commit in the push, so a push that

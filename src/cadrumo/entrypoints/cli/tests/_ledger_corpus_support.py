@@ -13,8 +13,8 @@ from click.testing import Result
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
+from ....core import CasillaId, validated_casilla_id
 from ....core.config import override_settings
-
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.ledger_cli import list_ledger_rows_via_cli
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -109,7 +109,7 @@ def _set_group(tx_id: str, label: str) -> None:
 
 def _active_repo() -> Any:
     from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-    from ....core import CasillaId, resolve_active_bucket_id, validated_casilla_id
+    from ....core import resolve_active_bucket_id
 
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None

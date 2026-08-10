@@ -58,7 +58,16 @@ class ActividadLocalCertificada(BaseModel):
 
 
 class CertificadoSituacionCensal(BaseModel):
-    """The six certified fields of a G313 censal certificate."""
+    """The six axes AEAT states a G313 censal certificate certifies.
+
+    This is the model's scope, not an inventory of the document. AEAT's
+    "¿Qué certifica?" enumerates what the certificate ATTESTS; whether the
+    issued artefact also carries an issue date, a CSV or header furniture
+    is unestablished, because no issued-certificate specimen exists in this
+    tree. Read the absence of a temporal field as unmeasured, never as
+    evidence the document has none -- and in particular do not derive an
+    obligation start year from that absence.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 

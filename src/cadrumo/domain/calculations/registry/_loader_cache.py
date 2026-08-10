@@ -13,7 +13,7 @@ See Also:
         Registry TOML loader that consumes these TTL and disk-cache predicates.
     :func:`~core.resources.bundled_path`
         Resource boundary used to identify the package-bundled registry root.
-    :func:`~domain.calculations.registry.tests.test_loader_cache_isolation.test_registry_disk_cache_disabled_under_pytest`
+    :func:`~domain.calculations.registry.tests.test_loader_cache_isolation.test_registry_disk_cache_disabled_under_pytest_for_a_mutable_root`
         Real-behavior gate for the pytest disk-cache refusal path.
     :func:`~domain.calculations.registry.tests.test_loader_cache_isolation.test_is_bundled_registry_root_rejects_a_mutable_authoring_tree`
         Coverage for bundled-root versus mutable-authoring-tree separation.

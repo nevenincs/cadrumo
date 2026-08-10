@@ -6,7 +6,7 @@ that captures the operator's persisted business / personal split coefficients
 ``cadrumo.domain.deductibility`` to look up an override before falling back to
 the statutory :attr:`domain.categories.ProportionalityRule.default_ratio`.
 The eligibility set :data:`ELIGIBLE_USAGE_RATIO_CATEGORIES` is derived once at
-import time from :data:`domain.categories.CATEGORY_PROFILES_2025`.
+import time from :func:`domain.categories.resolve_category_profiles`.
 """
 
 from __future__ import annotations
@@ -76,7 +76,7 @@ def _eligible_categories() -> frozenset[SpendingCategory]:
 ELIGIBLE_USAGE_RATIO_CATEGORIES: frozenset[SpendingCategory] = _eligible_categories()
 """Categories for which a :class:`UsageRatioProfile` may carry an override.
 
-Derived from :data:`domain.categories.CATEGORY_PROFILES_2025` at import
+Derived from :func:`domain.categories.resolve_category_profiles` at import
 time: a category is eligible iff its
 :attr:`domain.categories.ProportionalityRule.kind` is
 :attr:`domain.categories.ProportionalityKind.USAGE_RATIO_HOME_AREA` or

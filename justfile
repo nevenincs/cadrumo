@@ -530,10 +530,34 @@ test-dev-tooling:
 # carries real install/harness tests that legitimately run 300-900 s, so this
 # raises the per-test ceiling above the product suite's 300 s ini default
 # (slowest product test: 58.7 s measured); 900 s still kills a wedge in minutes.
+#
+# `dev/docs/apidocs/tests` is here because it is the ONLY gate whose subject is
+# the production MODULE TREE, and the module tree is changed by exactly the
+# pushes that could not reach it. It was previously selected only by
+# `docs-check`, which runs in docs.yml -- path-scoped to docs/, dev/docs/ and the
+# terminology data, so NO `src/cadrumo/**/*.py` change fires it -- and in the
+# dispatch-only full lane. So a module add, rename or delete, the only thing that
+# drifts the autodoc stubs, produced no verdict on any push.
+#
+# Both of its failure modes land on someone else. A deleted or renamed module
+# leaves an orphan stub whose autodoc import hard-crashes the next nitpicky
+# build, surfacing on an unrelated docs-path push in a file that author never
+# touched. An added module has no stub and SILENTLY drops out of the published
+# documentation -- no error anywhere, and that is the more common half.
+#
+# Deliberately this recipe and not a widened docs.yml trigger: this lane already
+# fires on `src/**` per-push, while widening docs.yml would pay a Playwright
+# provision and a full Sphinx build on every Python push (the ten-minute wall,
+# operator directive 2026-07-20) and would duplicate the docstring cross-link
+# gate the unit lane already runs. The path is also still named by `docs-check`;
+# that overlap is intended, because the two lanes answer to different triggers.
+# Its tests are `unit`-marked, so the marker expression below selects them --
+# checked rather than assumed, since a `docs`-only marker would have been
+# deselected here and still exited zero.
 [doc('Run the dev-tree workflow/tooling conformance gates that CI runs per-push.')]
 [group('testing')]
 test-dev-ci:
-    @uv run --no-sync pytest -q -n 8 --timeout=900 -m "unit or (integration and not serial)" dev/ci/tests dev/packaging/tests dev/quality/tests dev/release/tests
+    @uv run --no-sync pytest -q -n 8 --timeout=900 -m "unit or (integration and not serial)" dev/ci/tests dev/packaging/tests dev/quality/tests dev/release/tests dev/docs/apidocs/tests
 
 # Enrol the tests that query the resident vaultspec-rag search service. Held out
 # of every other lane by the `resident_service` marker, because the service is a

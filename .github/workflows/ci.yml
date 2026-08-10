@@ -60,9 +60,39 @@ on:
       - "frontend/**"
       - "**.md"
 
+# Push runs QUEUE; pull-request runs supersede. The two events want opposite
+# semantics and previously shared one.
+#
+# THIS LANE HAD NOT PRODUCED A GREEN VERDICT IN EIGHTEEN DAYS. Measured: the last
+# 100 ci.yml runs were 99 cancelled, 1 in flight, 0 success; the last successful
+# run of any age was 2026-07-24. Every push to `main` shares `github.ref`, so with
+# `cancel-in-progress: true` each push killed the run the previous push started,
+# and at this repository's commit rate (development is direct-push by coordinated
+# agents, fifteen commits in one session) no run ever outlived the interval to the
+# next push. `main` carries no branch protection and no required checks, so
+# nothing surfaced it: a cancelled run is not a red one.
+#
+# THE CANCELLATION BOUGHT NOTHING IT WAS PROTECTING. Verified against the Actions
+# concurrency reference rather than assumed: with `cancel-in-progress` absent,
+# only ONE run may be pending in a group, and a newly queued run cancels the
+# previously PENDING one. So both settings cap this lane at exactly one run in
+# flight and one waiting. They differ only in whether the in-flight run is killed
+# or allowed to finish. There was no machine-occupancy saving to preserve, and no
+# billing one either -- these are self-hosted runners, which consume no Actions
+# minutes. (`queue: max` would allow up to 100 pending and cannot be combined with
+# `cancel-in-progress`; it is not wanted here, because a backlog of stale verdicts
+# is worse than one fresh pending run.)
+#
+# THE COST THAT IS REAL, stated rather than hidden: a completed verdict may name a
+# sha that is already several commits old. That is a latency cost, and it is
+# strictly better than the alternative this replaces, which was no verdict at all.
+#
+# Pull requests keep superseding, which is correct there: a PR branch's older run
+# describes a revision the author has already replaced, and PR runs do not share a
+# ref across authors.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read

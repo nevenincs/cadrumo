@@ -47,6 +47,21 @@ _FACTS = (
 )
 
 
+def _leaked_header_keys(metadata: dict[str, str]) -> list[str]:
+    """Name every metadata key that carries a header fact's key.
+
+    Containment rather than equality, because the projection NAMESPACES every
+    key it writes -- ``aeat_register_status``, ``aeat_expediente_id``,
+    ``aeat_tipo_solicitud``. A flattening regression would follow that same
+    convention and write ``aeat_declaration_type``, which an equality test
+    would not reach while still passing, because no key in this projection ever
+    equals a bare header key. The sibling assertion in the sede adapter tests
+    compares casilla ids against RAW header keys and is exact for the same
+    reason inverted: there both sides share one namespace.
+    """
+    return sorted(key for key in metadata if any(fact.header_key in key for fact in _FACTS))
+
+
 def test_captured_header_facts_are_readable_back_out_of_storage(tmp_path: Path) -> None:
     """The end the bug was at: persisted, then read back, with provenance intact."""
     from ...live import persist_filed_calculation_observation
@@ -101,5 +116,16 @@ def test_the_metadata_projection_still_does_not_carry_headers(tmp_path: Path) ->
     metadata = _filed_observation_source_metadata(observation)
 
     assert metadata, "the projection returned nothing, so the absence below is meaningless"
-    leaked = sorted(key for key in metadata if any(fact.header_key in key for fact in _FACTS))
+
+    # The projection being non-empty proves the subject exists; it does not
+    # prove the leak predicate can FIRE. Feed it the shape a real flattening
+    # regression would take -- the namespaced key, not the bare one -- so that
+    # the silence asserted below is measured reach rather than an untested
+    # expression that would stay quiet however the projection changed.
+    planted = f"aeat_{_FACTS[0].header_key}"
+    assert _leaked_header_keys({planted: _FACTS[0].value}) == [planted], (
+        "the leak predicate did not fire on a planted header key, so its silence below proves nothing"
+    )
+
+    leaked = _leaked_header_keys(metadata)
     assert not leaked, f"a header fact was flattened into the metadata map: {leaked}"

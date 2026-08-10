@@ -6,7 +6,7 @@ matching application link, and that link combination rules are satisfied before
 the revision is accepted by the registry validator.
 
 See Also:
-    :func:`cadrumo.domain.calculations.registry._validate_revision_closure.validate_revision_closure`
+    :func:`cadrumo.domain.calculations.registry._validate_revision_closure._validate_revision_closure_sections`
         Revision-level closure runner that invokes these application-link
         checks.
     :func:`cadrumo.domain.calculations.registry._validate_surfaces.validate_application_link_section`

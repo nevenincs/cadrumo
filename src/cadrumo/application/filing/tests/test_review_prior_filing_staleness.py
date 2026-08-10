@@ -37,13 +37,12 @@ from ....domain.calculations.registry import (
     CasillaObservation,
     RegistryModeloObservation,
 )
+from ....domain.filing import CasillaSchemaProvider, ModeloDraft
 from ....domain.submission import ModeloDraftStatus
 from ....tests.secure_sql import TestRuntimeProfile
 from ...calculations import CalculationObservationRepository
 from .. import (
-    CasillaSchemaProvider,
     ModeloApprovalStaleReason,
-    ModeloDraft,
     approval_stale_reasons,
     approve_draft,
     build_draft,

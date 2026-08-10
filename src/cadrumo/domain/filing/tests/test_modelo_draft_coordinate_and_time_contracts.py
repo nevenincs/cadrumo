@@ -33,10 +33,10 @@ from ...calculations.registry import RegistrySnapshotRef
 from .. import (
     ModeloBindingValue,
     ModeloDraft,
-    ModeloDraftStatus,
     ModeloValue,
     ModeloValueKind,
 )
+from ...submission import ModeloDraftStatus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

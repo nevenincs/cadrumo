@@ -80,7 +80,7 @@ class ReviewOnlyWorkspace(BaseModel):
     persisted state by itself -- opening a workspace is a pure in-memory
     projection, not a write to any repository; a caller that wants an audit
     trail of the open composes
-    :func:`~application.modelo.emit_collab_workspace_opened_event`
+    :func:`~application.modelo.emit_collab_review_only_workspace_opened_event`
     around this constructor).
     """
 

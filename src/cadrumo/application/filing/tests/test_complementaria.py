@@ -15,6 +15,7 @@ from ....domain.filing import (
     ModeloAmendmentError,
     ModeloBuilderError,
     ModeloDraft,
+    ModeloInputs,
     ModeloValue,
     ModeloValueKind,
     compute_modelo_draft_id,
@@ -28,7 +29,6 @@ from ....domain.submission import (
     make_submission_id,
 )
 from .. import (
-    ModeloInputs,
     build_complementaria,
     build_draft,
     build_runtime_schema_provider,
