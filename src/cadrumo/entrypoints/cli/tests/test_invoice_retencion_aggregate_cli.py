@@ -26,7 +26,7 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....application.aggregation import AggregationValidationError, RetencionObservationRepository
-from ....application.invoices import create_catalogue_invoice
+from ....application.invoices import build_catalogue_invoice, create_catalogue_invoice
 from ....application.modelo import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics, create_work_unit
 from ....application.user_profile import UserProfileLifecycleRepository
 from ....core import Period
@@ -250,19 +250,21 @@ def _producer_created_invoice(
     something this test's producer is responsible for.
     """
     result = create_catalogue_invoice(
-        bucket_id=_BUCKET_ID,
-        kind=InvoiceKind.RECEIVED,
-        counterparty_name="Asesoría Profesional SL",
-        counterparty_tax_id="B12345674",
-        counterparty_country="ES",
-        invoice_number=number,
-        issued_at=date(2026, 3, 15),
-        taxable_base=Decimal("1000.00"),
-        iva_rate=Decimal("21"),
-        currency="EUR",
-        iva_category=IvaCategory.DOMESTIC_GENERAL,
-        retention_rate=retention_rate,
-        retention_amount=retention_amount,
+        invoice=build_catalogue_invoice(
+            bucket_id=_BUCKET_ID,
+            kind=InvoiceKind.RECEIVED,
+            counterparty_name="Asesoría Profesional SL",
+            counterparty_tax_id="B12345674",
+            counterparty_country="ES",
+            invoice_number=number,
+            issued_at=date(2026, 3, 15),
+            taxable_base=Decimal("1000.00"),
+            iva_rate=Decimal("21"),
+            currency="EUR",
+            iva_category=IvaCategory.DOMESTIC_GENERAL,
+            retention_rate=retention_rate,
+            retention_amount=retention_amount,
+        ),
         repository=InvoiceCatalogueRepository(objects=objects),
     )
     return result.invoice

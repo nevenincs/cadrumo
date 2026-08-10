@@ -661,18 +661,7 @@ def import_invoices_from_rows(
             continue
 
         result = create_catalogue_invoice(
-            bucket_id=bucket_id,
-            kind=kind,
-            counterparty_name=parsed.counterparty_name,
-            counterparty_tax_id=parsed.counterparty_nif,
-            counterparty_country=parsed.country_code,
-            invoice_number=parsed.invoice_number,
-            issued_at=parsed.invoice_date,
-            taxable_base=parsed.taxable_base,
-            iva_rate=parsed.iva_rate,
-            retention_amount=parsed.retencion_amount,
-            currency=parsed.currency,
-            notes=parsed.notes,
+            invoice=candidate,
             repository=repo,
         )
         existing_ids.add(result.invoice.invoice_id)

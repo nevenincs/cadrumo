@@ -536,22 +536,7 @@ def create_invoice_via_wizard(
         return InvoiceWizardResult(invoice=existing, already_existed=True)
 
     result = create_catalogue_invoice(
-        bucket_id=bucket_id,
-        kind=kind,
-        counterparty_name=resolved_name,
-        counterparty_tax_id=resolved_nif,
-        counterparty_country=resolved_country,
-        invoice_number=resolved_number,
-        issued_at=resolved_date,
-        taxable_base=resolved_base,
-        iva_rate=resolved_rate,
-        currency=resolved_currency,
-        notes=notes,
-        iva_category=effective_category,
-        operation_type=operation_type,
-        operation_date=resolved_operation_date,
-        retention_rate=resolved_retention_rate,
-        retention_amount=resolved_retention_amount,
+        invoice=candidate,
         repository=repo,
     )
     return InvoiceWizardResult(invoice=result.invoice, already_existed=False)

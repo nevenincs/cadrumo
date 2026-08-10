@@ -2571,29 +2571,8 @@ def confirm_invoice_draft_from_evidence(
         )
 
     result = create_catalogue_invoice(
-        bucket_id=bucket_id,
-        kind=kind,
-        counterparty_name=resolved_counterparty_name,
-        counterparty_tax_id=resolved_counterparty_tax_id,
-        counterparty_country=counterparty_country,
-        invoice_number=resolved_invoice_number,
-        issued_at=resolved_invoice_date,
-        taxable_base=resolved_taxable_base,
-        iva_rate=resolved_iva_rate,
-        currency=resolved_currency,
-        notes=notes,
-        iva_category=resolved_iva_category,
-        operation_type=operation_type,
-        operation_date=operation_date,
-        retention_rate=retention_rate,
-        retention_amount=retention_amount,
-        recargo_amount=resolved_recargo_amount,
-        invoice_class=invoice_class,
-        series=series,
-        rectifies_invoice_number=rectifies_invoice_number,
-        lines=confirmed_lines,
+        invoice=candidate,
         repository=repository,
-        rate_provider=rate_provider,
     )
     # Auto-link the source evidence/attachment to the newly minted invoice, closing
     # the provenance loop: the invoice is now discoverable from the evidence
