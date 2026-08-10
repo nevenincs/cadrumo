@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#aeat-design-relayout-boundary'
 date: '2026-08-08'
-modified: '2026-08-09'
-body_hash: 'sha256:cba1624091b2ce7d8239ff7c8a3958c99dfed97adc8b33150361c36968455aa2'
+modified: '2026-08-10'
+body_hash: 'sha256:fabc5e5c8ada334d758d44ca5e1b15bcca527ff86f0baea85f13954f45a626d7'
 tier: L3
 related:
   - '[[2026-08-07-aeat-design-relayout-boundary-adr]]'
@@ -102,7 +102,7 @@ Author the five revisions covering the five design epochs the current open-ended
 - [ ] `W02.P04.S18` - Author the Modelo 303 revision covering filing year 2025, with its own export fragment tree from the bundled 2025 design and source_refs naming that design, noting that its sheet grew relative to the 2024 design in unnumbered fields that no box-number signal reports; `src/cadrumo/_data/registry/aeat/modelos/303/revisions/`.
 - [ ] `W02.P04.S19` - Author the open-ended Modelo 303 revision covering 2026 onward, with its own export fragment tree from the bundled 2026 design encoding the relocated positions for the 127 boxes that moved and the four fixed slots whose declared meaning changed at unchanged offset and length; `src/cadrumo/_data/registry/aeat/modelos/303/revisions/`.
 - [ ] `W02.P04.S20` - Confine the transitional rate rungs pinned to 2024 to the two 2024-covering revisions only, rather than copying them into every post-split revision, per the sub-year record's explicit ruling that the copy is the obvious and wrong resolution; `src/cadrumo/_data/registry/aeat/modelos/303/revisions/`.
-- [ ] `W02.P04.S21` - Retire the spanning open-ended Modelo 303 revision directory outright once its successors carry every period it claimed, deleting rather than bridging since no released data depends on the old identifier; `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/`.
+- [ ] `W02.P04.S21` - FALSIFIED BY A CORRECT CHANGE ELSEWHERE, verified 2026-08-10. The named target is gone. This row asks to retire the spanning open-ended Modelo 303 revision directory 2023-y-siguientes once its successors carry every period it claimed. That directory does not exist and its successors do, so the retirement it asks for has already happened through someone else's work and nobody updated this row. Confirm at HEAD before acting, because a stale row reads exactly like a fresh one. What is NOT settled and must not be silently inherited as closed: two other spanning open-ended directories survive, 2009-y-siguientes and 2026-y-siguientes, and this row's reasoning about deleting rather than bridging may or may not apply to them. Decide whether the row closes as delivered-by-another-change or is rewritten against a target that still exists, and record which. Do not widen it to those two by assumption; `src/cadrumo/_data/registry/aeat/modelos/303/revisions/`.
 - [ ] `W02.P04.S64` - Re-derive each Modelo 303 revision's total-formula operand lists from its own bundled design rather than copying the newest expression backwards, since casilla 27 gains operands 167 and 170 and casilla 69 gains operand 108 at the mid-2024 boundary while casilla 71 gains a subtracted operand 112 at the 2025 to 2026 boundary, so a copied expression sums boxes the earlier design has no room for; `src/cadrumo/_data/registry/aeat/modelos/303/revisions/`.
 - [ ] `W02.P04.S67` - Decide and apply the naming of the two modulos-engine formula ids that embed a bare year, modelo-303-2023-modulos-iva-cuota-devengada and its cuota-derivada sibling, since under one open-ended revision 2023 was merely the opening year while after the split the id reads as scoped to filing year 2023 despite being inherited by every successor epoch, and either carry it unchanged with the mismatch recorded or re-derive it across every referencing fragment in the same commit; `src/cadrumo/_data/registry/aeat/modelos/303/revisions/`.
 
