@@ -1,0 +1,189 @@
+"""Typed development-only intermediate representation of AEAT record designs.
+
+The official record-design binary remains the coordinate authority.  This
+module selects that binary through the registry catalogue and projects the
+shipped parser output into a frozen, source-anchored representation for the
+export-fragment generator.  It does not read extracted derivatives or parse
+the source independently.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from enum import StrEnum
+from pathlib import Path
+
+from pydantic import BaseModel, ConfigDict, Field
+
+from cadrumo.domain.calculations.registry import (
+    RecordDesignSheet,
+    RegistryValidationError,
+    ResolvedRecordDesignBinary,
+    SourceReference,
+    SourceRefId,
+    extract_record_design,
+    resolve_record_design_binary,
+)
+
+__all__ = [
+    "RecordDesignIntermediate",
+    "RecordDesignIntermediateField",
+    "RecordDesignIntermediateSheet",
+    "RecordDesignIntermediateSource",
+    "RecordDesignWorkbookFormat",
+    "load_record_design_intermediate",
+]
+
+
+class _StrictModel(BaseModel):
+    """Frozen development-tool boundary model with no untyped extras."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
+
+
+class RecordDesignWorkbookFormat(StrEnum):
+    """Exact official binary formats the shipped parser supports."""
+
+    PDF = "pdf"
+    XLS = "xls"
+    XLSM = "xlsm"
+    XLSX = "xlsx"
+
+
+class RecordDesignIntermediateSource(_StrictModel):
+    """Verified official binary authority for one parsed design epoch."""
+
+    source_ref: SourceRefId
+    source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    workbook_format: RecordDesignWorkbookFormat
+    design_epoch: str = Field(min_length=1)
+
+
+class RecordDesignIntermediateField(_StrictModel):
+    """One parser-derived field with its exact official source anchor."""
+
+    sheet: str = Field(min_length=1)
+    record_identity: str = Field(min_length=1)
+    source_row: int = Field(gt=0)
+    source_cell: str | None = Field(default=None, pattern=r"^[A-Z]+[1-9][0-9]*$")
+    ordinal: int = Field(gt=0)
+    offset: int = Field(gt=0)
+    length: int = Field(gt=0)
+    aeat_type: str = Field(min_length=1)
+    normalized_description: str = Field(min_length=1)
+    validation: str | None = None
+    content: str | None = None
+
+
+class RecordDesignIntermediateSheet(_StrictModel):
+    """One exact record identity and its parser-derived fields."""
+
+    sheet: str = Field(min_length=1)
+    record_identity: str = Field(min_length=1)
+    declared_total: int | None = Field(default=None, gt=0)
+    fields: tuple[RecordDesignIntermediateField, ...] = Field(min_length=1)
+
+
+class RecordDesignIntermediate(_StrictModel):
+    """Verified source metadata plus the shipped parser's complete output."""
+
+    source: RecordDesignIntermediateSource
+    sheets: tuple[RecordDesignIntermediateSheet, ...] = Field(min_length=1)
+
+
+def load_record_design_intermediate(
+    root: Path,
+    sources: Mapping[str, SourceReference],
+    *,
+    source_ref: str,
+    filing_year: int,
+    design_epoch: str,
+) -> RecordDesignIntermediate:
+    """Load one hash-verified official design through the shipped parser only."""
+    resolved = resolve_record_design_binary(
+        root,
+        sources,
+        source_ref=source_ref,
+        filing_year=filing_year,
+        design_epoch=design_epoch,
+    )
+    return _build_record_design_intermediate(resolved, extract_record_design(resolved.path))
+
+
+def _build_record_design_intermediate(
+    resolved: ResolvedRecordDesignBinary,
+    parsed_sheets: tuple[RecordDesignSheet, ...],
+) -> RecordDesignIntermediate:
+    """Project already-parsed official fields without reinterpreting coordinates."""
+    source = resolved.source
+    if source.kind != "record_design":
+        raise RegistryValidationError(f"source {source.id!r} is not a record-design binary")
+    if source.record_design_epoch is None:
+        raise RegistryValidationError(f"record-design source {source.id!r} does not declare a design epoch")
+    if not resolved.path.is_file():
+        raise RegistryValidationError(f"record-design source {source.id!r} has no readable binary")
+    if not parsed_sheets:
+        raise RegistryValidationError(f"record-design source {source.id!r} produced no parsed sheets")
+    if len({sheet.name for sheet in parsed_sheets}) != len(parsed_sheets):
+        raise RegistryValidationError(f"record-design source {source.id!r} produced duplicate sheet identities")
+
+    workbook_format = _workbook_format(resolved.path)
+    source_anchor = RecordDesignIntermediateSource(
+        source_ref=str(source.id),
+        source_sha256=source.sha256,
+        workbook_format=workbook_format,
+        design_epoch=source.record_design_epoch,
+    )
+    sheets = tuple(
+        _intermediate_sheet(sheet, workbook_format=workbook_format)
+        for sheet in parsed_sheets
+    )
+    return RecordDesignIntermediate(source=source_anchor, sheets=sheets)
+
+
+def _workbook_format(path: Path) -> RecordDesignWorkbookFormat:
+    try:
+        return RecordDesignWorkbookFormat(path.suffix.lower().removeprefix("."))
+    except ValueError as exc:
+        raise RegistryValidationError(f"unsupported record-design source extension: {path.suffix}") from exc
+
+
+def _intermediate_sheet(
+    sheet: RecordDesignSheet,
+    *,
+    workbook_format: RecordDesignWorkbookFormat,
+) -> RecordDesignIntermediateSheet:
+    if not sheet.fields:
+        raise RegistryValidationError(f"record-design sheet {sheet.name!r} contains no parsed fields")
+    return RecordDesignIntermediateSheet(
+        sheet=sheet.name,
+        record_identity=sheet.name,
+        declared_total=sheet.total_positions,
+        fields=tuple(
+            RecordDesignIntermediateField(
+                sheet=sheet.name,
+                record_identity=sheet.name,
+                source_row=field.row,
+                source_cell=_source_cell(field.row, workbook_format),
+                ordinal=field.ordinal,
+                offset=field.offset,
+                length=field.length,
+                aeat_type=field.type_code,
+                normalized_description=field.description,
+                validation=field.validation,
+                content=field.content,
+            )
+            for field in sheet.fields
+        ),
+    )
+
+
+def _source_cell(row: int, workbook_format: RecordDesignWorkbookFormat) -> str | None:
+    """Return the parser's ordinal-column anchor where the binary is a workbook."""
+    if workbook_format in {
+        RecordDesignWorkbookFormat.XLS,
+        RecordDesignWorkbookFormat.XLSM,
+        RecordDesignWorkbookFormat.XLSX,
+    }:
+        return f"A{row}"
+    return None

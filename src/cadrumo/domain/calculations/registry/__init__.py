@@ -246,6 +246,8 @@ from ._convenio import (
     load_convenio_authority,
 )
 from ._corpus_catalogue import (
+    ResolvedRecordDesignBinary,
+    resolve_record_design_binary,
     verify_source_catalogue,
     verify_source_file,
 )
@@ -937,6 +939,7 @@ __all__ = [
     "ResolvedConstruct",
     "ResolvedConstructMember",
     "ResolvedExportLayout",
+    "ResolvedRecordDesignBinary",
     "RevisionCapabilityProbe",
     "RevisionExternalGroundingRow",
     "RevisionId",
@@ -1130,6 +1133,7 @@ __all__ = [
     "resolve_observed_requirement_value",
     "resolve_parameter",
     "resolve_previous_filing_binding_values",
+    "resolve_record_design_binary",
     "resolve_refund_binding_row_values",
     "resolve_related_party_binding_row_values",
     "resolve_relation_values",
