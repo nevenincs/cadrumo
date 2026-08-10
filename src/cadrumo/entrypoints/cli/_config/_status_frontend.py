@@ -286,7 +286,7 @@ def _no_aeat_history_notice() -> Notice | None:
         observations = tuple(CalculationObservationRepository().iter_records())
     except _guarded_read_errors():
         return None
-    notice = no_aeat_history_notice(observations)
+    notice = no_aeat_history_notice(tuple(payload.source_kind for payload in observations))
     if notice is None:
         return None
     return notice.model_copy(

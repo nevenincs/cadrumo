@@ -41,7 +41,7 @@ from ...core import Period as _Period
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.modelos import is_justificante_backed_external_evidence
-from ..calculations import is_official_aeat_observation_source
+from ..calculations import ObservationSourceKind, is_official_aeat_observation_source
 from ._calendar_models import (
     OverviewAeatSubmissionState,
     OverviewCalendarEvent,
@@ -97,7 +97,7 @@ NO_AEAT_HISTORY_NOTICE_CODE = "overview.no_aeat_history"
 """Notice code for a workable profile carrying no official AEAT observation."""
 
 
-def no_aeat_history_notice(calculation_observations: tuple[object, ...]) -> Notice | None:
+def no_aeat_history_notice(observation_source_kinds: tuple[ObservationSourceKind, ...]) -> Notice | None:
     """Point a workable profile with no AEAT-sourced history at the history pull.
 
     Fires only when NOT ONE persisted calculation observation carries an official
@@ -114,10 +114,20 @@ def no_aeat_history_notice(calculation_observations: tuple[object, ...]) -> Noti
 
     Returns ``None`` when any official observation exists, so an onboarded
     profile stays quiet.
+
+    **Takes the source kinds, not the observations, and the narrowing is the
+    point.** Reading ``source_kind`` off an untyped payload classified EVIDENCE
+    AUTHORITY by attribute NAME, and that name is not unique to this axis: the
+    aggregation observation envelopes carry a field spelled identically that
+    means CAPTURE PROVENANCE -- which ingestion path wrote a row -- and answers
+    to a different closed set. Nothing in a duck-typed read distinguishes them,
+    so widening this function's input was a one-line change away from grading
+    capture provenance as AEAT confirmation. Asking for the enum makes the two
+    axes non-interchangeable at the call site, where the caller holds the
+    payload and knows which one it has.
     """
-    for payload in calculation_observations:
-        if is_official_aeat_observation_source(str(getattr(payload, "source_kind", ""))):
-            return None
+    if any(source_kind.is_official_aeat for source_kind in observation_source_kinds):
+        return None
     return Notice(
         action=next_action("operator.live.filed.pull_all"),
         severity=NoticeSeverity.INFO,
@@ -129,7 +139,7 @@ def no_aeat_history_notice(calculation_observations: tuple[object, ...]) -> Noti
                 "history AEAT holds for it."
             ),
         ),
-        context={"observation_count": str(len(calculation_observations))},
+        context={"observation_count": str(len(observation_source_kinds))},
     )
 
 
