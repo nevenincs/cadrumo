@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#ci-lane-deconflation'
 date: '2026-08-05'
-modified: '2026-08-06'
-body_hash: 'sha256:566bf4c0c407b08d1fb2e5da2234d82e6f5da4560d1a604bdf1ade4ec8489428'
+modified: '2026-08-10'
+body_hash: 'sha256:7e6720a1b476ecf321b85a5b16fbc41d779044ff385159e6d9f2067905897b28'
 tier: L2
 related:
   - '[[2026-07-21-ci-discipline-adr]]'
@@ -52,6 +52,9 @@ Enrolling the integration suite and the dev tooling gates exposed accumulated ro
 - [ ] `P02.S10` - Flip continue-on-error off the integration serial step once one runner execution is observed, its build branch producing three wheels and three sdists has never been watched; `.github/workflows/ci-full.yml`.
 - [x] `P02.S22` - Author the ADR reshaping the overview.calendar payload, the resource_link remedy the gate names cannot apply to a computed verb with no persisted record and the irreducible floor leaves only 622 characters of headroom; `src/cadrumo/entrypoints/mcp`.
 - [x] `P02.S23` - Fix thin_output_schema growing the schemas it thins, its oneOf inline-or-linked shape duplicates the property body so thinning a shared-defs verb enlarges it; `src/cadrumo/entrypoints/mcp`.
+- [ ] `P02.S28` - Convert the two wall-clock budgets guarding the integration serial step so that a process CPU-time bound becomes the failure condition while the wall-clock threshold is retained as a loud advisory, because the budgets were measured on a box shared with the dev machine and the agent fleet and flake under load regardless of code quality, and because a straight conversion would delete the only bound that catches a genuine share hang given that a test blocked on I/O burns almost no CPU, applying the repository control-plane invariant that perf gates assert process CPU-time with wall advisory only rather than inventing a remedy, noting the perf marker is not available as an escape because it is absent from _CI_INCAPABLE_MARKERS and the perf lane is path-scoped to dev/packaging, and covering the two named budgets only while inheriting the load stamp owned by the pytest ceiling row; `the two integration serial budget tests and .github/workflows/ci-full.yml`.
+- [ ] `P02.S29` - Convert the pytest per-test timeout ceiling from a wall-clock bound to a process CPU-time failure condition with the wall threshold retained as a loud advisory, and stamp the host load reading at fire time into the failure output, because pytest-timeout kills the case and prints a stack dump of wherever the interpreter happened to be so a legitimately slow test under host saturation reads as a deadlock in the code under test and reaches a lead ledger as a plausible fictitious defect with a traceback attached, which is the more dangerous surface since the integration serial budgets merely misreport a number, and because nothing in a timeout traceback records host load so a red read tomorrow cannot be re-triaged, owning the load stamp for both surfaces because one harness implementation serves both, and excluding the two integration serial budgets; `pyproject.toml and the pytest timeout configuration surface`.
+- [x] `P02.S30` - Give the operator surface contract suite one execution-scope marker by relocating its single integration test to a sibling live module, because the module carried seventeen function-level unit decorators alongside one integration test so hoisting unit to module level would have given that test two execution markers, and the taxonomy allows exactly one per module just as firmly as it forbids none, and the resulting red was unowned while blocking every lead from reading a clean ratchet; `src/cadrumo/application/operator_surface/tests/test_contract.py, src/cadrumo/application/operator_surface/tests/test_contract_live.py`.
 
 ### Phase `P03` - Registry and core follow-through
 
@@ -93,6 +96,17 @@ P02 is partly gated by P01. S09 depends on S06 closing the backlog it measures.
 S10 depends on S03, because the serial pass has never been observed on a runner
 and flipping it on local evidence alone is the failure this plan exists to
 avoid. S07 and S08 are independent and can be worked immediately.
+
+S10 additionally depends on S28, and this is the harder half of the row. An
+observed green runner execution is necessary and not sufficient: the serial
+step's two remaining failures are wall-clock budgets measured on a box shared
+with the dev machine and the agent fleet, so a run that passes because the box
+happened to be quiet proves nothing about the code. Flipping the flag on that
+evidence is precisely the failure this plan exists to prevent, so S28 converts
+the budgets to a process CPU-time failure condition first. S29 is a sibling
+surface of the same class and S10 does not depend on it. S30 is independent of
+everything here and was worked immediately, because the red it closes was
+unowned and blocked every lead from reading a clean ratchet.
 
 ## Verification
 
