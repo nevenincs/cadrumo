@@ -255,13 +255,24 @@ _DOTTED_ROLE = re.compile(r":(?:class|func|meth|attr|data|exc|obj|mod):`~?([A-Za
 #                aimed seventeen roles at ``application.state_projection``, which
 #                exports several repositories and owns none of them.
 #
-# The 18 that remain are NOT a backlog: each names a symbol defined in MORE THAN
-# ONE module, across 14 symbols. Ambiguous ownership is an architectural question
-# -- either one module is the owner and the others hold copies, which is a
-# duplication finding in its own right, or the name is reused for two concepts.
-# Neither is resolvable by picking the shortest path, so they are left for a
-# decision rather than guessed at.
-_UNRESOLVED_DOTTED_REFERENCE_CEILING = 18
+# 18 -> 2 was 16 real repoints, not a detector change. The earlier note here said
+# all 18 named a symbol defined in more than one module; that was wrong and is
+# corrected by measurement. Only four did, and the true causes were mundane: three
+# citations dropped the ``tests`` package segment, and ten named a symbol that
+# exists nowhere in the tree -- a truncated test-function name, an enum member cited
+# without its class, and prose surviving the rename of the thing it described
+# (``IVA_RATE_TABLE`` and ``CATEGORY_PROFILES_2025`` are both loader functions now).
+#
+# The recurring shape is worth naming, because five of the sixteen were instances of
+# it: A CITATION AND ITS INVERSE ARE WRITTEN AS A PAIR, AND ONLY ONE HALF IS KEPT
+# CORRECT. Each of those five sat one or two lines from a sibling role that had the
+# module path right.
+#
+# The 2 that remain are one symbol, ``PeriodCode``, whose owning package publishes
+# its sibling ``PeriodSelector`` but not it. The fix is promotion to the registry
+# facade rather than a repoint at the private module that defines it -- deferred
+# only because it is a facade edit, not because the answer is unclear.
+_UNRESOLVED_DOTTED_REFERENCE_CEILING = 2
 
 # A derived scan selecting nothing satisfies the ceiling assertion perfectly.
 # These floors sit far below the real figures so ordinary churn never moves them.
