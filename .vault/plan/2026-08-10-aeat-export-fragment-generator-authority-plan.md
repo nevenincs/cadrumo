@@ -4,7 +4,7 @@ tags:
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
 modified: '2026-08-10'
-body_hash: 'sha256:cc5e45c9a35ca438df91dc4bd4e9c3c7d5bb1a0aa93a042769dca93558b2afa4'
+body_hash: 'sha256:9476c614d802589f69ef9d65833705a0b05b2837cb2dda2f8996eab0a3de7de7'
 tier: L3
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
@@ -43,7 +43,7 @@ Separate authored registry meaning from official coordinates and make their join
 - [x] `W01.P02.S04` - Define the per-modelo per-design semantic-map schema keyed by exact parser anchors; `dev/registry/`.
 - [x] `W01.P02.S05` - Validate mapping bijection and require canonical identifiers, legal references, and source references to resolve through existing registry catalogues while constraining typed anomaly exceptions; `dev/registry/`.
 - [x] `W01.P02.S06` - Define the adjacent non-loader provenance manifest and normalized loader-semantic digest; `dev/registry/`.
-- [ ] `W01.P02.S31` - Define and validate the exhaustive per-modelo, per-design, source-SHA-pinned render-profile authority with exact-anchor coverage, explicit unsigned Num versus signed N handling, individually grounded rules for all 126 smaller fields, and no legacy-tree oracle or implicit defaults; `dev/registry/`.
+- [x] `W01.P02.S31` - Define and validate the exhaustive per-modelo, per-design, source-SHA-pinned render-profile authority with exact-anchor coverage, explicit unsigned Num versus signed N handling, individually grounded rules for all 126 smaller fields, and no legacy-tree oracle or implicit defaults; `dev/registry/`.
 
 ## Wave `W02` - deterministic atomic generator
 
