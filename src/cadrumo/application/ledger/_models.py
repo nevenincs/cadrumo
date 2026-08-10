@@ -5,9 +5,9 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
-from typing import Self
+from typing import Annotated, Self
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import AfterValidator, BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Art104TresExclusion, Hex64Str, Period
@@ -80,10 +80,51 @@ def _validate_iso_3166_jurisdiction(value: str | None) -> str | None:
     return normalise_iso_3166_alpha2_jurisdiction(value)
 
 
-class ManualLedgerTransactionCommand(BaseModel):
-    """Backend command for creating or updating one manual ledger transaction."""
+def _normalise_optional_ledger_text(value: str | None) -> str | None:
+    """Strip an optional ledger input, collapsing blanks to an absent value."""
+    if value is None:
+        return None
+    trimmed = value.strip()
+    return trimmed or None
+
+
+_LedgerOptionalText = Annotated[str | None, AfterValidator(_normalise_optional_ledger_text)]
+
+
+class _LedgerCountryCodeModel(BaseModel):
+    """Canonical ISO-country normalization for ledger command and read models."""
 
     model_config = _STRICT_FROZEN
+
+    @field_validator("source_jurisdiction", "counterparty_country", check_fields=False)
+    @classmethod
+    def _normalise_country_codes(cls, value: str | None) -> str | None:
+        return _validate_iso_3166_jurisdiction(value)
+
+
+class _ManualLedgerTransactionInput(_LedgerCountryCodeModel):
+    """Canonical input normalization shared by manual-ledger create and patch DTOs."""
+
+    @field_validator("currency", mode="before", check_fields=False)
+    @classmethod
+    def _normalise_currency(cls, value: object) -> object:
+        if value is None:
+            return None
+        return normalise_iso_4217_currency(value)
+
+    @field_validator("attachment_ids", check_fields=False)
+    @classmethod
+    def _normalise_identifier_tuple(cls, value: tuple[str, ...] | None) -> tuple[str, ...] | None:
+        if value is None:
+            return None
+        normalised = tuple(item.strip() for item in value if item.strip())
+        if len(set(normalised)) != len(normalised):
+            raise ValueError("identifier tuple must not contain duplicates")
+        return normalised
+
+
+class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):
+    """Backend command for creating or updating one manual ledger transaction."""
 
     bucket_id: BucketId
     booked_date: date
@@ -91,20 +132,20 @@ class ManualLedgerTransactionCommand(BaseModel):
     amount: Decimal
     currency: str = Field(default=DEFAULT_CURRENCY, min_length=3)
     direction: TransactionDirection
-    counterparty: str | None = None
+    counterparty: _LedgerOptionalText = None
     description: str = Field(min_length=1)
     business_classification: BusinessClassification = BusinessClassification.NOT_YET_PROCESSED
     business_pct: Decimal | None = None
-    category_id: str | None = None
+    category_id: _LedgerOptionalText = None
     taxable_base: Decimal | None = None
     iva_rate: Decimal | None = None
     iva_amount: Decimal | None = None
     recargo_amount: Decimal | None = None
-    irpf_category: str | None = None
+    irpf_category: _LedgerOptionalText = None
     m210_income_classification: M210IncomeClassification | None = None
-    usage_ratio_id: str | None = None
-    prorrata_reference: str | None = None
-    purchase_invoice_evidence_id: str | None = None
+    usage_ratio_id: _LedgerOptionalText = None
+    prorrata_reference: _LedgerOptionalText = None
+    purchase_invoice_evidence_id: _LedgerOptionalText = None
     attachment_ids: tuple[str, ...] = ()
     notes: str = ""
     iva_category: IvaCategory | None = None
@@ -115,15 +156,10 @@ class ManualLedgerTransactionCommand(BaseModel):
     prorrata_sector_id: str | None = Field(default=None, min_length=1, max_length=64)
     actor: str = Field(default="operator", min_length=1)
     source_command: str = Field(default="aeat app ledger add", min_length=1)
-    idempotency_key: str | None = None
-    classified_by_override: str | None = None
+    idempotency_key: _LedgerOptionalText = None
+    classified_by_override: _LedgerOptionalText = None
     source_jurisdiction: str | None = None
     group_label: str | None = Field(default=None, max_length=64)
-
-    @field_validator("source_jurisdiction", "counterparty_country")
-    @classmethod
-    def _validate_source_jurisdiction(cls, value: str | None) -> str | None:
-        return _validate_iso_3166_jurisdiction(value)
 
     @field_validator(
         "bucket_id",
@@ -137,36 +173,6 @@ class ManualLedgerTransactionCommand(BaseModel):
         if not trimmed:
             raise ValueError("field must not be blank")
         return trimmed
-
-    @field_validator(
-        "counterparty",
-        "category_id",
-        "irpf_category",
-        "usage_ratio_id",
-        "prorrata_reference",
-        "purchase_invoice_evidence_id",
-        "idempotency_key",
-        "classified_by_override",
-    )
-    @classmethod
-    def _trim_optional_text(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-        trimmed = value.strip()
-        return trimmed or None
-
-    @field_validator("currency", mode="before")
-    @classmethod
-    def _normalise_currency(cls, value: object) -> str:
-        return normalise_iso_4217_currency(value)
-
-    @field_validator("attachment_ids")
-    @classmethod
-    def _normalise_identifier_tuple(cls, value: tuple[str, ...]) -> tuple[str, ...]:
-        normalised = tuple(item.strip() for item in value if item.strip())
-        if len(set(normalised)) != len(normalised):
-            raise ValueError("identifier tuple must not contain duplicates")
-        return normalised
 
     @field_validator("notes")
     @classmethod
@@ -226,78 +232,35 @@ class ManualLedgerTransactionCommand(BaseModel):
             joined = ", ".join(populated)
             raise TransactionValidationError(f"INTERNAL_TRANSFER rows must not carry tax or evidence fields: {joined}")
 
-    normalise_currency = _normalise_currency
-    normalise_identifier_tuple = _normalise_identifier_tuple
-
-
-class ManualLedgerTransactionPatch(BaseModel):
+class ManualLedgerTransactionPatch(_ManualLedgerTransactionInput):
     """Typed partial update for one bucket-scoped ledger transaction."""
-
-    model_config = _STRICT_FROZEN
 
     booked_date: date | None = None
     value_date: date | None = None
     amount: Decimal | None = None
     currency: str | None = None
     direction: TransactionDirection | None = None
-    counterparty: str | None = None
-    description: str | None = None
+    counterparty: _LedgerOptionalText = None
+    description: _LedgerOptionalText = None
     business_classification: BusinessClassification | None = None
     business_pct: Decimal | None = None
-    category_id: str | None = None
+    category_id: _LedgerOptionalText = None
     taxable_base: Decimal | None = None
     iva_rate: Decimal | None = None
     iva_amount: Decimal | None = None
     recargo_amount: Decimal | None = None
-    irpf_category: str | None = None
+    irpf_category: _LedgerOptionalText = None
     m210_income_classification: M210IncomeClassification | None = None
-    usage_ratio_id: str | None = None
-    prorrata_reference: str | None = None
-    purchase_invoice_evidence_id: str | None = None
+    usage_ratio_id: _LedgerOptionalText = None
+    prorrata_reference: _LedgerOptionalText = None
+    purchase_invoice_evidence_id: _LedgerOptionalText = None
     attachment_ids: tuple[str, ...] | None = None
-    notes: str | None = None
+    notes: _LedgerOptionalText = None
     iva_category: IvaCategory | None = None
     counterparty_country: str | None = None
     counterparty_identification_state: EUMemberState | None = None
     source_jurisdiction: str | None = None
-    group_label: str | None = None
-
-    @field_validator("source_jurisdiction", "counterparty_country")
-    @classmethod
-    def _validate_source_jurisdiction(cls, value: str | None) -> str | None:
-        return _validate_iso_3166_jurisdiction(value)
-
-    @field_validator(
-        "counterparty",
-        "description",
-        "category_id",
-        "irpf_category",
-        "usage_ratio_id",
-        "prorrata_reference",
-        "purchase_invoice_evidence_id",
-        "notes",
-        "group_label",
-    )
-    @classmethod
-    def _trim_optional_text(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-        trimmed = value.strip()
-        return trimmed or None
-
-    @field_validator("currency", mode="before")
-    @classmethod
-    def _normalise_optional_currency(cls, value: object) -> str | None:
-        if value is None:
-            return None
-        return ManualLedgerTransactionCommand.normalise_currency(value)
-
-    @field_validator("attachment_ids")
-    @classmethod
-    def _normalise_optional_identifier_tuple(cls, value: tuple[str, ...] | None) -> tuple[str, ...] | None:
-        if value is None:
-            return None
-        return ManualLedgerTransactionCommand.normalise_identifier_tuple(value)
+    group_label: _LedgerOptionalText = None
 
     @model_validator(mode="after")
     def _require_change(self) -> Self:
@@ -325,10 +288,8 @@ class ManualLedgerTransactionResult(BaseModel):
     stale_finalized_revisions: tuple[LedgerRemovalBlocker, ...] = ()
 
 
-class LedgerTransactionPayload(BaseModel):
+class LedgerTransactionPayload(_LedgerCountryCodeModel):
     """Canonical read projection for one ledger transaction."""
-
-    model_config = _STRICT_FROZEN
 
     transaction_id: TransactionId
     date: str = Field(min_length=10, max_length=10)
@@ -373,12 +334,6 @@ class LedgerTransactionPayload(BaseModel):
     # rendered as ISO-8601 strings.
     created_at: str
     modified_at: str
-
-    @field_validator("source_jurisdiction", "counterparty_country")
-    @classmethod
-    def _validate_source_jurisdiction(cls, value: str | None) -> str | None:
-        return _validate_iso_3166_jurisdiction(value)
-
 
 class LedgerTransactionReviewPayload(LedgerTransactionPayload):
     """Canonical read projection for one ledger transaction plus review status.
