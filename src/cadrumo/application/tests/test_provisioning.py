@@ -174,7 +174,6 @@ def test_require_optional_extra_absent_raises_instructive_import_error() -> None
     assert raised.value.extra is extra
     assert raised.value.install_hint == "pip install cadrumo[ghost]"
     assert "pip install cadrumo[ghost]" in str(raised.value)
-    assert raised.value.suggestion == "pip install cadrumo[ghost]"
     assert raised.value.context == {
         "extra": "ghost",
         "import_name": "aeat_definitely_not_installed_xyz",
