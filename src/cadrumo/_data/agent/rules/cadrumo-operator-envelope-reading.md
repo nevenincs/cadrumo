@@ -25,7 +25,7 @@ The exit-code table is meaningful, and the load-bearing distinction is:
   findings, fix, and re-run.
 - `2` REFUSED, `3` AUTH, `4` INTEGRITY, `5` FAIL, `7` LOCKED_BY_DESIGN,
   `8` LOCKED_BY_CONCURRENCY, `10` NO_NETWORK, `20` USAGE — each names a specific,
-  recoverable condition; read the `error.suggestion`.
+  recoverable condition; read the `error.code` and the `error.message`.
 - `6` INTERNAL is reserved for a genuine crash. Only a `6` is an abort-and-report.
 
 ## Recover from a mis-call using the instructive surface

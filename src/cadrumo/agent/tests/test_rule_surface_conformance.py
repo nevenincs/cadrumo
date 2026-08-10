@@ -275,7 +275,12 @@ def test_cited_envelope_spine_fields_still_exist() -> None:
     for spine_field in ("schema_version", "command", "status", "result", "notices"):
         if spine_field not in _ENVELOPE_FIELDS:
             failures.append(f"envelope spine field '{spine_field}' no longer on SchemaEnvelope")
-    for notice_field in ("severity", "code", "message", "suggestion", "context"):
+    # ``suggestion`` is deliberately absent. It was not merely dropped from
+    # ``Notice`` — it is listed in ``_RESERVED_ACTION_CONTEXT_KEYS``, i.e.
+    # proscribed, per the CLI contract's bar on a bespoke advisory field.
+    # Asserting it here made this gate assert a stale contract rather than
+    # catch one, which is the opposite of what it exists for.
+    for notice_field in ("severity", "code", "message", "action", "context"):
         if notice_field not in _NOTICE_FIELDS:
             failures.append(f"notice field '{notice_field}' no longer on Notice")
     assert not failures, "\n".join(failures)

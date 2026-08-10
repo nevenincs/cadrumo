@@ -23,7 +23,7 @@ you find yourself doing arithmetic on a tax figure, stop — call the CLI instea
 ## Never fabricate a tool result
 
 If a command fails, is refused, or you are uncertain, report the actual envelope
-(`status`, the `error.code`, the `error.suggestion`). Do not invent a plausible
+(`status`, the `error.code`, the `error.message`). Do not invent a plausible
 success payload. A fabricated tool output is the most dangerous failure mode in
 regulated work.
 
