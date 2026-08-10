@@ -4,7 +4,7 @@ tags:
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
 modified: '2026-08-10'
-body_hash: 'sha256:5b8f4f8eb26e81a36280b12f069d0b3940801aee3fa4ec0afc6e11bce60569ca'
+body_hash: 'sha256:804d431c56586e78485b1d7b027c5b389414a0668b7544a0c445f781a59943fe'
 tier: L3
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
@@ -75,7 +75,7 @@ Demonstrate that plausible coordinate, mapping, provenance, and publication defe
 Cover every authority boundary with positive and negative real-behavior tests.
 
 - [x] `W03.P05.S13` - Prove parser completeness, declared totals, source applicability, and source-hash enforcement; `dev/registry/tests/`.
-- [ ] `W03.P05.S14` - Prove missing, duplicate, ambiguous, fuzzy, and illegal-exception mappings refuse the whole design; `dev/registry/tests/`.
+- [x] `W03.P05.S14` - Prove missing, duplicate, ambiguous, fuzzy, and illegal-exception mappings refuse the whole design; `dev/registry/tests/`.
 - [ ] `W03.P05.S15` - Prove offset, length, source-anchor, target-revision, and generated-file mutations are detected; `dev/registry/tests/`.
 - [ ] `W03.P05.S33` - Prove refusal for missing, duplicate, overlapping, conflicting, unknown-anchor, inapplicable, defaulted, legacy-derived, or source-hash-drifting profile authority, plus official Total: recovery, Num and signed-N behavior, and non-truncation of DP200000; `dev/registry/tests/`.
 

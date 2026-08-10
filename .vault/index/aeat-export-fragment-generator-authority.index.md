@@ -6,7 +6,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:5697afebb07011142e1ca1590746889b2172150fc7ff2e8f7fb7d64b918d42ce'
+body_hash: 'sha256:7b62a6301ea8a0c24bd313e8fc4ec93cb3a047275cc6a7fdaf9ddab9808bfa28'
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P01-S01]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P01-S02]]'
@@ -22,6 +22,7 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W02-P04-S11]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W02-P04-S12]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W03-P05-S13]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-W03-P05-S14]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-s01-source-catalogue-audit]]'
@@ -39,6 +40,7 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-s11-atomic-publication-audit]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-s12-check-mode-audit]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-s13-parser-completeness-audit]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-s14-mapping-refusal-audit]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-s30-variable-envelope-code-review-audit]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-source-authority-research]]'
 ---
@@ -69,6 +71,7 @@ Auto-generated index of all documents tagged with `#aeat-export-fragment-generat
 - `2026-08-10-aeat-export-fragment-generator-authority-s11-atomic-publication-audit` - `aeat-export-fragment-generator-authority` audit: `S11 atomic export publication code review`
 - `2026-08-10-aeat-export-fragment-generator-authority-s12-check-mode-audit` - `aeat-export-fragment-generator-authority` audit: `S12 read-only generated export check`
 - `2026-08-10-aeat-export-fragment-generator-authority-s13-parser-completeness-audit` - `aeat-export-fragment-generator-authority` audit: `S13 parser completeness review`
+- `2026-08-10-aeat-export-fragment-generator-authority-s14-mapping-refusal-audit` - `aeat-export-fragment-generator-authority` audit: `s14 mapping refusal`
 - `2026-08-10-aeat-export-fragment-generator-authority-s30-variable-envelope-code-review-audit` - `aeat-export-fragment-generator-authority` audit: `S30 variable envelope code review`
 
 ### exec
@@ -87,6 +90,7 @@ Auto-generated index of all documents tagged with `#aeat-export-fragment-generat
 - `2026-08-10-aeat-export-fragment-generator-authority-W02-P04-S11` - Publish complete generated trees and provenance atomically from an isolated temporary target
 - `2026-08-10-aeat-export-fragment-generator-authority-W02-P04-S12` - Implement check mode that independently regenerates and rejects semantic, provenance, or byte drift
 - `2026-08-10-aeat-export-fragment-generator-authority-W03-P05-S13` - Prove parser completeness, declared totals, source applicability, and source-hash enforcement
+- `2026-08-10-aeat-export-fragment-generator-authority-W03-P05-S14` - Prove missing, duplicate, ambiguous, fuzzy, and illegal-exception mappings refuse the whole design
 
 ### plan
 
