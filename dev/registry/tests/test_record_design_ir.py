@@ -81,11 +81,19 @@ def test_intermediate_retains_the_verified_binary_and_shipped_parser_coordinates
         329,
         "Variable",
     )
+    assert envelope.body_aeat_type == "An"
+    assert envelope.body_normalized_description.startswith("Contenido del fichero")
+    assert envelope.body_validation is None
+    assert envelope.body_content is None
     assert (
         envelope.closing_source_cell,
         envelope.closing_offset,
         envelope.closing_length,
     ) == ("A15", "***", 18)
+    assert envelope.closing_aeat_type == "An"
+    assert envelope.closing_normalized_description.startswith("Constante. </T")
+    assert envelope.closing_validation is None
+    assert envelope.closing_content == '"</T200020250A0000>"'
     assert (
         envelope.total_source_cell,
         envelope.total_label,

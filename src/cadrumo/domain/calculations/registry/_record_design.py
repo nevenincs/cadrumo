@@ -331,11 +331,24 @@ def _extract_sheet_rows(
         total_label_index = _total_label_index(values)
         if total_label_index is not None:
             row_total = _positive_integer_after(values, total_label_index)
-            if row_total is not None:
-                total_positions = row_total
-            elif sheet_name == "DP200000" and any(
+            has_variable_total = any(
                 _optional_text(candidate) == "Variable" for candidate in values[total_label_index + 1 :]
-            ):
+            )
+            if sheet_name == "DP200000" and row_total is not None and has_variable_total:
+                raise RegistryValidationError(
+                    f"record-design sheet {sheet_name!r} mixes fixed and variable totals in row {row_number}",
+                )
+            if row_total is not None:
+                if total_positions is not None:
+                    raise RegistryValidationError(
+                        f"record-design sheet {sheet_name!r} declares duplicate fixed totals",
+                    )
+                total_positions = row_total
+            elif sheet_name == "DP200000" and has_variable_total:
+                if variable_total is not None:
+                    raise RegistryValidationError(
+                        f"record-design sheet {sheet_name!r} declares duplicate variable totals",
+                    )
                 variable_total = RecordDesignVariableTotalMarker(
                     sheet=sheet_name,
                     row=row_number,
@@ -349,6 +362,10 @@ def _extract_sheet_rows(
         raw_offset = _optional_text(_cell(values, header.offset_index))
         raw_length = _optional_text(_cell(values, header.length_index))
         if sheet_name == "DP200000" and ordinal is not None and offset is not None and raw_length == "Variable":
+            if variable_body is not None:
+                raise RegistryValidationError(
+                    f"record-design sheet {sheet_name!r} declares duplicate variable-body markers",
+                )
             variable_body = RecordDesignVariableBodyMarker(
                 sheet=sheet_name,
                 row=row_number,
@@ -368,6 +385,10 @@ def _extract_sheet_rows(
             )
             continue
         if sheet_name == "DP200000" and ordinal is not None and raw_offset == "***" and length is not None:
+            if closing_suffix is not None:
+                raise RegistryValidationError(
+                    f"record-design sheet {sheet_name!r} declares duplicate relative closing suffixes",
+                )
             closing_suffix = RecordDesignRelativeSuffixMarker(
                 sheet=sheet_name,
                 row=row_number,
@@ -437,6 +458,13 @@ def _extract_sheet_rows(
             raise RegistryValidationError(
                 f"record-design sheet {sheet_name!r} variable body starts at {variable_body.offset} "
                 f"after fixed prefix extent {terminal_extent}",
+            )
+        if not (
+            max(item.row for item in fields) < variable_body.row < closing_suffix.row < variable_total.row
+            and max(item.ordinal for item in fields) < variable_body.ordinal < closing_suffix.ordinal
+        ):
+            raise RegistryValidationError(
+                f"record-design sheet {sheet_name!r} has misordered variable-envelope composition markers",
             )
         variable_envelope = RecordDesignVariableEnvelope(
             name=sheet_name,

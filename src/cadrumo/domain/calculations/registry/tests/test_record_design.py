@@ -111,6 +111,27 @@ def test_workbook_total_recovery_accepts_only_official_labels_and_positive_integ
     }
 
 
+def test_variable_envelope_rejects_duplicate_composition_markers(tmp_path: Path) -> None:
+    """Ambiguous relative suffixes cannot be collapsed into one envelope."""
+    from openpyxl import Workbook
+
+    path = tmp_path / "ambiguous-envelope.xlsx"
+    workbook = Workbook()
+    worksheet = workbook.active
+    worksheet.title = "DP200000"
+    worksheet.append(("Nº", "Posic.", "Lon", "Tipo", "Descripción", "Validación", "Contenido"))
+    worksheet.append((1, 1, 328, "An", "Fixed prefix", None, None))
+    worksheet.append((2, 329, "Variable", "An", "Variable body", None, None))
+    worksheet.append((3, "***", 18, "An", "Closing suffix", None, '"</T200>"'))
+    worksheet.append((4, "***", 2, "An", "Second suffix", None, "CRLF"))
+    worksheet.append(("Total", None, "Variable", None, None, None, None))
+    workbook.save(path)
+    workbook.close()
+
+    with pytest.raises(RegistryValidationError, match="duplicate relative closing suffixes"):
+        extract_record_design(path)
+
+
 def _official_total_rows(
     workbook_path: Path,
 ) -> tuple[dict[str, int], dict[str, tuple[str, str, str, int]]]:

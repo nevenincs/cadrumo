@@ -109,11 +109,18 @@ class RecordDesignIntermediateVariableEnvelope(_StrictModel):
     body_ordinal: int = Field(gt=0)
     body_offset: int = Field(gt=0)
     body_length: Literal["Variable"]
+    body_aeat_type: str = Field(min_length=1)
+    body_normalized_description: str = Field(min_length=1)
+    body_validation: str | None = None
+    body_content: str | None = None
     closing_source_row: int = Field(gt=0)
     closing_source_cell: str | None = Field(default=None, pattern=r"^[A-Z]+[1-9][0-9]*$")
     closing_ordinal: int = Field(gt=0)
     closing_offset: Literal["***"]
     closing_length: int = Field(gt=0)
+    closing_aeat_type: str = Field(min_length=1)
+    closing_normalized_description: str = Field(min_length=1)
+    closing_validation: str | None = None
     closing_content: str | None = None
     total_source_row: int = Field(gt=0)
     total_source_cell: str | None = Field(default=None, pattern=r"^[A-Z]+[1-9][0-9]*$")
@@ -267,11 +274,18 @@ def _intermediate_variable_envelope(
         body_ordinal=envelope.body.ordinal,
         body_offset=envelope.body.offset,
         body_length=envelope.body.length,
+        body_aeat_type=envelope.body.type_code,
+        body_normalized_description=envelope.body.description,
+        body_validation=envelope.body.validation,
+        body_content=envelope.body.content,
         closing_source_row=envelope.closing_suffix.row,
         closing_source_cell=_source_cell(envelope.closing_suffix.row, workbook_format),
         closing_ordinal=envelope.closing_suffix.ordinal,
         closing_offset=envelope.closing_suffix.offset,
         closing_length=envelope.closing_suffix.length,
+        closing_aeat_type=envelope.closing_suffix.type_code,
+        closing_normalized_description=envelope.closing_suffix.description,
+        closing_validation=envelope.closing_suffix.validation,
         closing_content=envelope.closing_suffix.content,
         total_source_row=envelope.variable_total.row,
         total_source_cell=_source_cell(envelope.variable_total.row, workbook_format),

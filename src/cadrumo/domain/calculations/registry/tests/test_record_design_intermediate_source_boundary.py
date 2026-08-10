@@ -134,12 +134,33 @@ def _assert_complete_parser_projection(
         assert intermediate_envelope.record_identity == parsed_envelope.name
         assert intermediate_envelope.prefix_extent == parsed_envelope.prefix_extent
         assert len(intermediate_envelope.prefix_fields) == len(parsed_envelope.prefix_fields)
+        for intermediate_field, parsed_field in zip(
+            intermediate_envelope.prefix_fields,
+            parsed_envelope.prefix_fields,
+            strict=True,
+        ):
+            assert intermediate_field.source_row == parsed_field.row
+            assert intermediate_field.ordinal == parsed_field.ordinal
+            assert intermediate_field.offset == parsed_field.offset
+            assert intermediate_field.length == parsed_field.length
+            assert intermediate_field.aeat_type == parsed_field.type_code
+            assert intermediate_field.normalized_description == parsed_field.description
+            assert intermediate_field.validation == parsed_field.validation
+            assert intermediate_field.content == parsed_field.content
         assert intermediate_envelope.body_source_row == parsed_envelope.body.row
         assert intermediate_envelope.body_offset == parsed_envelope.body.offset
         assert intermediate_envelope.body_length == parsed_envelope.body.length
+        assert intermediate_envelope.body_aeat_type == parsed_envelope.body.type_code
+        assert intermediate_envelope.body_normalized_description == parsed_envelope.body.description
+        assert intermediate_envelope.body_validation == parsed_envelope.body.validation
+        assert intermediate_envelope.body_content == parsed_envelope.body.content
         assert intermediate_envelope.closing_source_row == parsed_envelope.closing_suffix.row
         assert intermediate_envelope.closing_offset == parsed_envelope.closing_suffix.offset
         assert intermediate_envelope.closing_length == parsed_envelope.closing_suffix.length
+        assert intermediate_envelope.closing_aeat_type == parsed_envelope.closing_suffix.type_code
+        assert intermediate_envelope.closing_normalized_description == parsed_envelope.closing_suffix.description
+        assert intermediate_envelope.closing_validation == parsed_envelope.closing_suffix.validation
+        assert intermediate_envelope.closing_content == parsed_envelope.closing_suffix.content
         assert intermediate_envelope.total_source_row == parsed_envelope.variable_total.row
         assert intermediate_envelope.total_label == parsed_envelope.variable_total.label
         assert intermediate_envelope.total_length == parsed_envelope.variable_total.length
