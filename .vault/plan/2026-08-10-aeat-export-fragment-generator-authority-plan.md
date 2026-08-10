@@ -4,7 +4,7 @@ tags:
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
 modified: '2026-08-10'
-body_hash: 'sha256:4f8ad1f299a92a72723d5cfbf9674fd0a78918c406969c2d2fc8af655965d186'
+body_hash: 'sha256:712fe368df2256e8af6612e1374796ba3913fb640647e9fc30d7236f61946a29'
 tier: L3
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
@@ -59,6 +59,7 @@ Join exact parser anchors to reviewed semantics and render a complete target rev
 - [x] `W02.P03.S37` - Add explicit reviewed value-policy semantics for selected-1-unselected-0 numeric checkboxes and four-digit-year-final-two-digits fields to the export schema, filing writer, parser, verifier, and registry record renderer, with strict invalid-value refusal and real emitted-byte tests; `src/cadrumo/domain/calculations/registry/; src/cadrumo/application/filing/; src/cadrumo/adapters/outbound/aeat/export/; dev/registry/`.
 - [x] `W02.P03.S38` - Consolidate strict fixed-width integer, money, boolean, padding, and sign coercion behind canonical public domain policies consumed by the filing writer, parser, verifier, and outbound registry renderer, deleting redeclared normalization behavior, rejecting lossy truncation and silent zero-or-blank substitution, and proving both production routes emit and refuse identically; `src/cadrumo/core/decimal/; src/cadrumo/domain/calculations/registry/; src/cadrumo/application/filing/; src/cadrumo/adapters/outbound/aeat/export/`.
 - [ ] `W02.P03.S40` - Add a canonical exact allowed-values constraint for reviewed fixed-width integer enumerations to the export schema and sole registry codec, reject incompatible or noncanonical domains, enforce render and parse symmetrically, and carry the constraint through loader-semantic provenance without a second value-policy taxonomy; `src/cadrumo/domain/calculations/registry/; dev/registry/`.
+- [ ] `W02.P03.S41` - Promote every reviewed singleton numeric value-policy token to the canonical public export policy axis and enforce exact integer, implied-decimal, date, enumeration, digit-string, identifier, four-digit-year, month, and day semantics through the sole fixed-width codec, deleting the development-only literal taxonomy and refusing silent generic mappings; `src/cadrumo/domain/calculations/registry/; dev/registry/`.
 - [ ] `W02.P03.S32` - Resolve only absent exact-anchor wire facts through the validated render profile, refuse official-content conflicts and uncovered or hash-drifting profiles, keep variable envelopes outside fixed-width output, and add the canonical profile digest and schema version to provenance; `dev/registry/`.
 
 ### Phase `W02.P04` - publication and check mode
