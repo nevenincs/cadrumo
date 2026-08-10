@@ -9,6 +9,7 @@ import pytest
 from pydantic import BaseModel, ValidationError
 
 from ....core import (
+    ActionArgumentResolution,
     ActionArgumentSource,
     ActionArgumentStatus,
     ActionConditionality,
@@ -97,6 +98,15 @@ def test_application_and_wire_action_models_share_the_core_enum_objects_and_sche
         title: {name for name, definition in definitions.items() if definition.get("title") == title}
         for title in expected_definitions
     } == {title: {title} for title in expected_definitions}
+
+
+def test_application_and_wire_action_argument_models_share_one_core_resolution_implementation() -> None:
+    """Both layer DTOs inherit the sole core-owned resolution invariant."""
+    assert ActionArgumentBinding.__bases__ == (ActionArgumentResolution,)
+    assert ResolvedActionArgument.__bases__ == (ActionArgumentResolution,)
+    assert "_validate_resolution" in ActionArgumentResolution.__dict__
+    assert "_validate_resolution" not in ActionArgumentBinding.__dict__
+    assert "_validate_resolution" not in ResolvedActionArgument.__dict__
 
 
 def test_immediate_verdict_is_immutable_and_serializes_evidence_deterministically() -> None:

@@ -80,6 +80,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ._action_argument_resolution import ActionArgumentResolution
 from ._aeat_csv import (
     AEAT_CSV_MAX_LENGTH,
     AEAT_CSV_MIN_LENGTH,
@@ -443,6 +444,7 @@ __all__: list[str] = [
     "STRUCTURED_DOCUMENT_SHAPES",
     "UNMODELED_OBLIGATIONS",
     "AcceleratorKind",
+    "ActionArgumentResolution",
     "ActionArgumentSource",
     "ActionArgumentStatus",
     "ActionConditionality",
