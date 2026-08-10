@@ -445,6 +445,38 @@ so the registry stays the single source of truth for ledger readiness.
 """
 
 
+OBSERVATION_BACKED_BINDING_SOURCE_KINDS: Final[frozenset[BindingSourceKind]] = frozenset(
+    {
+        BindingSourceKind.PREVIOUS_FILING,
+        BindingSourceKind.RELATION_PREFILL,
+    },
+)
+"""Binding source kinds whose value is read back from a prior-filed observation.
+
+Both name a figure the taxpayer already declared — a direct same-modelo carry,
+or a cross-modelo fold-in materialised into a relation-prefill slot — rather than
+a value this application derives. Consumers that must not treat such a value as
+independent evidence, or that must not compare it against the observation store
+it came from, route through this frozenset.
+
+MEMBERSHIP IS SEMANTIC, NOT LEXICAL, and this is the one per-family collection
+that cannot be derived by construction the way
+:data:`LEDGER_BINDING_SOURCE_KINDS` is from the ``ledger_`` namespace: the two
+members share no naming property, only the behaviour of reading the observation
+store. So adding a source kind here is a judgement, and the question to ask is
+whether its resolver reads a prior-filed observation — not whether its token
+looks like these two. That is stated rather than papered over, because a
+hand-listed set that claims to be derived is worse than one that admits it is
+not.
+
+DO NOT WIDEN THIS TO THE CARRY-FORWARD OVERRIDE TIER. The caller-override
+precedence ladder declares a superset that additionally carries the IVA
+compensación annual partition and the prorrata regularización. That is a
+different concept — which values an operator override may displace — and folding
+it in here silently widens two registry validation guards.
+"""
+
+
 class BindingTypedEnumKind(StrEnum):
     """The closed set of substrate enum-class names a binding value bridges.
 

@@ -352,7 +352,11 @@ if TYPE_CHECKING:
     from ._fsync import fsync_parent_dir
     from ._lockfile_unlink import LOCKFILE_UNLINK_RETRY_SECONDS, unlink_lockfile
     from ._pid_liveness import pid_is_alive
-    from .aggregation import BindingSourceKind, IntracomOperationType
+    from .aggregation import (
+        OBSERVATION_BACKED_BINDING_SOURCE_KINDS,
+        BindingSourceKind,
+        IntracomOperationType,
+    )
     from .locks import exclusive_file_lock
 
 __all__: list[str] = [
@@ -402,6 +406,7 @@ __all__: list[str] = [
     "NIST_PASSPHRASE_MIN_LENGTH",
     "NON_IAE_SUBJECT_TIPOS_ACTIVIDAD",
     "NON_REGISTRY_MODELOS",
+    "OBSERVATION_BACKED_BINDING_SOURCE_KINDS",
     "OFFICIAL_M210_TIPO_RENTA_CODES",
     "OFX_EXTRA",
     "OPTIONAL_EXTRAS",
@@ -610,6 +615,10 @@ __all__: list[str] = [
 
 
 def __getattr__(name: str) -> object:
+    if name == "OBSERVATION_BACKED_BINDING_SOURCE_KINDS":
+        from .aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS
+
+        return OBSERVATION_BACKED_BINDING_SOURCE_KINDS
     if name == "BindingSourceKind":
         from .aggregation import BindingSourceKind
 

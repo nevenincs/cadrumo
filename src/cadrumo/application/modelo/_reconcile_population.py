@@ -55,7 +55,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import BindingSourceKind
+from ...core import OBSERVATION_BACKED_BINDING_SOURCE_KINDS, BindingSourceKind
 from ...domain.calculations.registry import (
     BindingId,
     CasillaId,
@@ -74,13 +74,9 @@ if TYPE_CHECKING:
 
 #: Binding sources whose value is read back from the filed-observation store.
 #: Never population evidence: a scope satisfied by these would be satisfied by
-#: the same figures the comparison places on its filed side.
-_CARRY_SOURCE_KINDS = frozenset(
-    {
-        BindingSourceKind.PREVIOUS_FILING,
-        BindingSourceKind.RELATION_PREFILL,
-    },
-)
+#: the same figures the comparison places on its filed side. The canonical set
+#: lives in ``core``; this module names it locally only for that reason.
+_CARRY_SOURCE_KINDS = OBSERVATION_BACKED_BINDING_SOURCE_KINDS
 
 
 class CasillaPopulationScope(BaseModel):

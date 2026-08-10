@@ -25,7 +25,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 from ...core import Modelo
-from ...core.aggregation import BindingSourceKind
+from ...core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS, BindingSourceKind
 from ...core.resources import resources
 from ...domain import canonical_decimal_string
 from ...domain import filing as filing_domain
@@ -208,7 +208,7 @@ def _has_observation_backed_binding(
 ) -> bool:
     return any(
         (binding := bindings_by_id.get(binding_id)) is not None
-        and binding.source in {BindingSourceKind.PREVIOUS_FILING, BindingSourceKind.RELATION_PREFILL}
+        and binding.source in OBSERVATION_BACKED_BINDING_SOURCE_KINDS
         for binding_id in binding_ids
     )
 

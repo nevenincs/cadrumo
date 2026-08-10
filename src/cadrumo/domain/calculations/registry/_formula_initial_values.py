@@ -24,7 +24,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from ....core import BindingSourceKind
+from ....core import OBSERVATION_BACKED_BINDING_SOURCE_KINDS, BindingSourceKind
 from ._binding_selector_utils import selector_as_dict as _binding_selector_as_dict
 from ._bindings import CasillaObservation, bound_casilla_binding_ids, resolve_bound_casilla_binding_value
 from ._bindings_previous_filing import PreviousModeloSelector
@@ -208,7 +208,11 @@ def _reject_computed_inputs(
 # cross-modelo fold-ins, the relation prefill resolver). Both feed the bound
 # casilla through the binding_values channel and obey the same
 # source-of-truth / projection-consistency invariants below.
-_OBSERVATION_BACKED_SLOT_SOURCES: frozenset[str] = frozenset({"previous_filing", "relation_prefill"})
+#
+# The set itself is the canonical one in ``core``. It was previously restated
+# here as raw strings, which compared through a ``str()`` coercion and would
+# have survived a token rename silently.
+_OBSERVATION_BACKED_SLOT_SOURCES = OBSERVATION_BACKED_BINDING_SOURCE_KINDS
 
 
 def _observation_backed_bindings_for_bound_casilla(
@@ -222,7 +226,7 @@ def _observation_backed_bindings_for_bound_casilla(
         binding
         for binding_id in bound_casilla_binding_ids(casilla)
         if (binding := bindings_by_id.get(binding_id)) is not None
-        and str(binding.source) in _OBSERVATION_BACKED_SLOT_SOURCES
+        and binding.source in _OBSERVATION_BACKED_SLOT_SOURCES
     )
 
 
