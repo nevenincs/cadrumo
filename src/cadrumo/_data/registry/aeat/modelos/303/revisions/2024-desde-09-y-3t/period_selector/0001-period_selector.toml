@@ -1,0 +1,6 @@
+[revisions.2024-desde-09-y-3t.period_selector]
+year_from = 2024
+year_to = 2024
+# Quarterly periods for standard autoliquidacion; monthly periods for
+# monthly IVA-liquidation taxpayers (REDEME or large-company status).
+periods = ["3T", "4T", "09", "10", "11", "12"]

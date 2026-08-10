@@ -1,0 +1,24 @@
+# Calculation verification for Modelo 303 (IVA autoliquidacion, Ley 37/1992):
+# the always-present total cuota boxes. The M303 2023 revision projects the
+# official Diseno-de-Registros numbered boxes as computed formulas; casilla 27
+# (total cuota devengada, art. 88/90/91) and casilla 45 (total a deducir,
+# art. 92/94/95) are the aggregate totals reported in every filed declaration,
+# so min_coverage = 1 holds without flipping a legitimate filing to NEEDS_REVIEW.
+# The per-rate constituent cuota boxes (03/06/09/11/13, 29/33/37) are situational
+# (present per operations) and stay excluded, as does the rate prorrata-porcentaje
+# and the situational autoconsumo-promotor cuota. Grounded in the AEAT DR
+# source_refs.
+[[revisions."2023".verification_expectations]]
+id = "modelo-303-total-cuota-verification"
+computed_casilla_ids = ["27", "45"]
+tolerance = "0.01"
+rounding = "money-2"
+min_coverage = "1"
+discrepancy_causes = [
+    "extraction_unreliable",
+    "unmodelled_rule",
+    "rounding",
+    "correctness_divergence",
+]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-92", "ley-37-1992:art-94"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
