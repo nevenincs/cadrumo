@@ -57,7 +57,6 @@ class StorageReclaimRefusedError(StorageManagementError):
                 "entry_count": str(entry_count),
                 "reason": display_reason,
             },
-            suggestion="aeat config storage list",
         )
         self.area = area
         self.entry_count = entry_count
@@ -88,7 +87,6 @@ class StorageReclaimUnconfirmedError(StorageManagementError):
                 "area": area.value,
                 "entry_count": str(entry_count),
             },
-            suggestion="aeat config storage reclaim --yes",
         )
         self.area = area
         self.entry_count = entry_count
