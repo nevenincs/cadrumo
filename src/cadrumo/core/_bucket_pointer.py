@@ -28,11 +28,21 @@ module owns strict validation and deterministic serialisation only.
 from __future__ import annotations
 
 import tomllib
+from typing import Final, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .identity import BucketId
+
+#: Current on-disk schema version of the active-profile pointer document.
+#:
+#: Declared as a named constant so a reader has a name for the version the
+#: format sits at. The model below pins the same number as a ``Literal``,
+#: which is what actually refuses a foreign version at parse; a test asserts
+#: the two agree, so the constant cannot drift away from the constraint it
+#: describes.
+POINTER_SCHEMA_VERSION: Final[int] = 1
 
 
 class BucketPointer(BaseModel):
@@ -43,15 +53,24 @@ class BucketPointer(BaseModel):
     those operations belong to :func:`read_pointer`, :func:`write_pointer`, and
     :func:`resolve_active_bucket_id`.
 
+    ``schema_version`` is required and pinned, not bounded. A pointer claiming
+    a version this code does not implement -- older or newer -- names a
+    document format that is not this one, and the pointer is the file that
+    decides which encrypted bucket every subsequent read and write lands in, so
+    guessing at it is the failure worth refusing. Omitting the key is refused
+    for the same reason: a document that makes no version claim is not entitled
+    to be read as the current one, and every writer in the tree states it.
+
     Attributes:
         bucket_id: Encrypted profile bucket id selected by the pointer.
-        schema_version: Pointer document schema version. Values start at ``1``.
+        schema_version: Pointer document schema version, exactly
+            :data:`POINTER_SCHEMA_VERSION`.
     """
 
     model_config = _STRICT_FROZEN
 
     bucket_id: BucketId
-    schema_version: int = Field(ge=1)
+    schema_version: Literal[1]
 
     def to_toml(self) -> str:
         """Serialise the pointer to its single-document TOML representation.
@@ -71,8 +90,9 @@ class BucketPointer(BaseModel):
         """Parse the single-document TOML representation back into a record.
 
         The parser accepts the exact schema emitted by :meth:`to_toml` and then
-        delegates to pydantic validation, so unknown keys, blank bucket ids, and
-        invalid schema versions fail before pointer IO can accept the file.
+        delegates to pydantic validation, so unknown keys, blank bucket ids, a
+        schema version that is not the current one, and a document omitting the
+        version outright all fail before pointer IO can accept the file.
 
         Args:
             text: Raw TOML string to parse, expected to carry
@@ -90,4 +110,4 @@ class BucketPointer(BaseModel):
         return cls.model_validate(payload)
 
 
-__all__ = ["BucketPointer"]
+__all__ = ["POINTER_SCHEMA_VERSION", "BucketPointer"]
