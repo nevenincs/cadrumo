@@ -15,6 +15,7 @@ from typing import Literal, Protocol
 from pydantic import AnyUrl, BaseModel, Field, field_validator
 
 from ....core import STRICT_FROZEN_CONFIG
+from ....core.identity import tax_id_identity_token
 from ._errors import RegistryValidationError
 from ._ids import OracleId
 from ._live_parity import (
@@ -229,7 +230,7 @@ def normalize_verdict_mapping(values: Mapping[str, str], *, blank_message: str) 
     """Normalize identifier/verdict mappings and reject blank entries."""
     cleaned: dict[str, str] = {}
     for identifier, verdict in values.items():
-        normalized_identifier = identifier.strip().upper()
+        normalized_identifier = tax_id_identity_token(identifier)
         normalized_verdict = verdict.strip().lower()
         if not normalized_identifier or not normalized_verdict:
             raise RegistryValidationError(blank_message)
@@ -241,7 +242,7 @@ def normalize_expected_verdicts(expected: Mapping[str, object], *, blank_message
     """Normalize expected identifier/verdict mappings and reject blank entries."""
     values: dict[str, str] = {}
     for identifier, verdict in expected.items():
-        normalized_identifier = str(identifier).strip().upper()
+        normalized_identifier = tax_id_identity_token(str(identifier))
         normalized_verdict = str(verdict).strip().lower()
         if not normalized_identifier or not normalized_verdict:
             raise RegistryValidationError(blank_message)
