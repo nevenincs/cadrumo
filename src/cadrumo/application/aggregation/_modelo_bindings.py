@@ -113,6 +113,7 @@ from ._iva_ledger import (
     aggregate_iva_ledger_observations_from_repositories,
     resolve_iva_ledger_binding_values,
 )
+from ._preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
 from ._renta_gasto_ledger import aggregate_renta_gasto_ledger_from_repositories
 from ._renta_income_ledger import (
     RentaIncomeObservation,
@@ -1308,9 +1309,16 @@ def _raise_if_invoice_iva_would_be_silent(
             "invoice_ids": tuple(sorted(screened.invoice_ids)[:_M303_INVOICE_EVIDENCE_SAMPLE_LIMIT]),
             "invoice_count": str(len(screened.invoice_ids)),
         },
-        suggestion=(
-            "Link and classify the domestic IVA invoices into the transaction ledger "
-            "before calculating Modelo 303; invoice-only IVA evidence is not a Modelo 303 filing source."
+        precondition_verdict=aggregation_no_recovery_verdict(
+            AggregationPreconditionCondition.INVOICE_LEDGER_COMPLETE,
+            facts={
+                "modelo": str(context.modelo),
+                "filing_year": str(context.filing_year),
+                "period": context.period.registry_token,
+                "source_kind": "ledger_iva_aggregation",
+                "invoice_count": len(screened.invoice_ids),
+                "missing_binding_count": len(missing_binding_values),
+            },
         ),
     )
 
@@ -2284,19 +2292,6 @@ class RetencionesAggregationSourceResolver:
                 error=exc,
             )
         if not observations:
-            suggestion = (
-                "Supply the per-perceptor retención observations "
-                "(`aeat app modelo aggregate --retencion-observation`) before calculating."
-            )
-            if str(context.modelo) == Modelo.M111.value:
-                suggestion = (
-                    "Supply the per-perceptor retención observations "
-                    "(`aeat app modelo aggregate --retencion-observation`) if any renta subject to "
-                    "retención or ingreso a cuenta was paid. If none was paid, do not file an all-blank "
-                    "Modelo 111; record the no-obligation period with "
-                    f"`aeat config profile edit PROFILE --quiet --modelo-111-no-retenciones-periods "
-                    f"{context.filing_year}:{context.period.registry_token}` before verifying M190."
-                )
             raise AggregationValidationError(
                 t("aggregation.retenciones.errors.perceptor_observations_missing"),
                 context={
@@ -2305,7 +2300,15 @@ class RetencionesAggregationSourceResolver:
                     "period": context.period.registry_token,
                     "source_kind": "retenciones_aggregation",
                 },
-                suggestion=suggestion,
+                precondition_verdict=aggregation_no_recovery_verdict(
+                    AggregationPreconditionCondition.RETENCIONES_OBSERVATIONS_PRESENT,
+                    facts={
+                        "modelo": str(context.modelo),
+                        "filing_year": str(context.filing_year),
+                        "period": context.period.registry_token,
+                        "source_kind": "retenciones_aggregation",
+                    },
+                ),
             )
         aggregation = self.aggregate(str(context.modelo), tuple(observations), period=context.period)
         return CalculationSourceResolution(

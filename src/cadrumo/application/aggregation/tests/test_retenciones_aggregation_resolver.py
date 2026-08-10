@@ -23,8 +23,10 @@ from ....core import BindingSourceKind, Period
 from ....core.resources import resources
 from ....domain.calculations.registry import ModeloRevision, RegistrySnapshot
 from ....tests.secure_sql import isolated_runtime_profile
+from ...operator_actions import NoRecoveryOutcome
 from .._errors import AggregationValidationError
 from .._modelo_bindings import RetencionesAggregationSourceResolver
+from .._preconditions import AggregationPreconditionCondition
 from .._retencion_observations_repository import RetencionObservationRepository
 from .._retenciones import RetencionObservation, RetencionScheme
 from .._source_mesh import CalculationSourceContext
@@ -244,7 +246,12 @@ def test_resolver_empty_modelo_115_store_fails_before_silent_zero(tmp_path: Path
     context = exc_info.value.context or {}
     assert context["modelo"] == "115"
     assert context["period"] == "1T"
-    assert "--retencion-observation" in (exc_info.value.suggestion or "")
+    verdict = exc_info.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == AggregationPreconditionCondition.RETENCIONES_OBSERVATIONS_PRESENT.value
+    assert verdict.action is None
+    assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
+    assert verdict.evidence[0].values["modelo"] == "115"
 
 
 def test_resolver_empty_store_fails_before_silent_zero(tmp_path: Path) -> None:
@@ -259,7 +266,12 @@ def test_resolver_empty_store_fails_before_silent_zero(tmp_path: Path) -> None:
     context = exc_info.value.context or {}
     assert context["modelo"] == "180"
     assert context["period"] == "0A"
-    assert "--retencion-observation" in (exc_info.value.suggestion or "")
+    verdict = exc_info.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == AggregationPreconditionCondition.RETENCIONES_OBSERVATIONS_PRESENT.value
+    assert verdict.action is None
+    assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
+    assert verdict.evidence[0].values["modelo"] == "180"
 
 
 def test_resolver_is_silent_when_revision_declares_no_retenciones_binding(tmp_path: Path) -> None:

@@ -13,6 +13,7 @@ from collections.abc import Mapping
 
 from ...core.errors import CadrumoError, CoreError, CoreValidationError
 from ...core.i18n import Translatable as tr
+from ..operator_actions import PreconditionVerdict
 
 
 class AggregationConfigError(CoreError, ValueError):
@@ -43,14 +44,19 @@ class AggregationError(CadrumoError):
         message: tr,
         *,
         context: Mapping[str, object] | None = None,
-        suggestion: str | None = None,
+        precondition_verdict: PreconditionVerdict | None = None,
     ) -> None:
         super().__init__(
             str(message),
             translated_message=message,
             context=context,
-            suggestion=suggestion,
         )
+        self._terminal_precondition_verdict = precondition_verdict
+
+    @property
+    def terminal_precondition_verdict(self) -> PreconditionVerdict | None:
+        """Return the exact aggregation refusal for later boundary projection."""
+        return self._terminal_precondition_verdict
 
 
 class AggregationPeriodError(AggregationError):

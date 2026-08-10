@@ -18,8 +18,10 @@ from ....core import Period
 from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry import DataBindingDefinition, ModeloRevision, PeriodSelector
 from ....tests.secure_sql import isolated_runtime_profile
+from ...operator_actions import NoRecoveryOutcome
 from .._errors import AggregationValidationError
 from .._modelo_bindings import RetencionesAggregationSourceResolver
+from .._preconditions import AggregationPreconditionCondition
 from .._source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -87,4 +89,9 @@ def test_real_resolver_empty_store_fails_before_silent_zero(tmp_path: Path) -> N
         "period": "0A",
         "source_kind": "retenciones_aggregation",
     }
-    assert "--retencion-observation" in (exc_info.value.suggestion or "")
+    verdict = exc_info.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == AggregationPreconditionCondition.RETENCIONES_OBSERVATIONS_PRESENT.value
+    assert verdict.action is None
+    assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
+    assert verdict.evidence[0].values["modelo"] == "180"
