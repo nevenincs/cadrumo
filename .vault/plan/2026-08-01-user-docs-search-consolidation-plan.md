@@ -4,7 +4,7 @@ tags:
   - '#user-docs-search-consolidation'
 date: '2026-08-01'
 modified: '2026-08-10'
-body_hash: 'sha256:ea52388b71e4cda60e33daa33d6ba3687440afd0c3f2bbf005e1c091bd53021e'
+body_hash: 'sha256:b20ce42b17c976784c19360938c6256d96c9d1fc601358de6fe4383943a3cd91'
 tier: L2
 related:
   - '[[2026-07-13-docs-terminology-search-research]]'
@@ -29,7 +29,7 @@ Amend the licence rule at its source per ruling R5 and gate rung-2 dispatch on t
 
 - [x] `P01.S01` - Amend the shipped-search-licence-clean rule source to the licence-and-provenance-scoped form ruled in R5 and propagate it with vaultspec-core sync in a coordinated quiet window; `.vaultspec/rules/shipped-search-licence-clean.md`.
 - [x] `P01.S02` - Confirm the semantic-search-precompile-boundary plan is closed through its honesty review and record that confirmation before any rung-2 step is dispatched; `.vault/plan/2026-07-31-semantic-search-precompile-boundary-plan.md`.
-- [ ] `P01.S38` - Record in the licence rule source that the narrow embedding exception has no consumer at HEAD pending the Rung-2 ruling, rather than re-narrowing it, because a permission that oscillates is worse than one that is documented and re-narrowing would have to be reversed under the recovery branch, editing the vaultspec rules source and propagating with vaultspec-core sync in a coordinated quiet window, never hand-editing a generated provider copy and never authoring a new rule file for it; `.vaultspec/rules/aeat-documentation.md`.
+- [x] `P01.S38` - Record in the licence rule source that the narrow embedding exception has no consumer at HEAD pending the Rung-2 ruling, rather than re-narrowing it, because a permission that oscillates is worse than one that is documented and re-narrowing would have to be reversed under the recovery branch, editing the vaultspec rules source and propagating with vaultspec-core sync in a coordinated quiet window, never hand-editing a generated provider copy and never authoring a new rule file for it; `.vaultspec/rules/aeat-documentation.md`.
 
 ### Phase `P02` - Rung-2 semantic layer delivery
 

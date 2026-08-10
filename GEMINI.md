@@ -737,6 +737,15 @@ licence over project-authored or project-bundled vocabulary. Its provenance stam
 must name the model, exact revision, licence, vocabulary fingerprint and
 serialized size, and it must be no larger than 3 MB.
 
+**That exception currently has NO consumer.** The tree carries no
+term-embedding matrix, no compiler for one, and no client tier that would read
+one — they were removed, and whether that removal stands is an open ruling. The
+permission is kept open rather than re-narrowed because a permission that
+oscillates is worse than one that is documented. So read it as a door that is
+deliberately unlocked and presently unused: shipping a matrix through it is not
+"already sanctioned practice", it is the first use, and it needs the ruling
+first.
+
 **Commit only the LIGHT precompiled data** — the laundered relevance mapping,
 synonym candidates, held-out queries, the Handbook fragments, and any qualifying
 matrix. **Never commit the HEAVY generated search index**, which is gitignored
