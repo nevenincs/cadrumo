@@ -34,6 +34,7 @@ from ...core import (
     StorageNodeKind,
     StorageScope,
     bucket_scoped_storage_path,
+    is_link_like,
     resolve_active_bucket_id,
     storage_location,
     storage_path,
@@ -365,7 +366,7 @@ def _validate_reclaim_target(area: StorageArea, target: Path, storage_root: Path
     target independently at the destructive boundary and refuse link-like
     targets even when they redirect to another location beneath the root.
     """
-    if target.is_symlink() or target.is_junction():
+    if is_link_like(target):
         raise StorageReclaimRefusedError(
             area,
             entry_count=0,

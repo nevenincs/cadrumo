@@ -28,6 +28,7 @@ from ...adapters.persistence.storage.bucket import (
     bucket_paths,
     read_manifest,
 )
+from ...core import is_link_like
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import content_hash_hex, hash_file, sha256_hex
 from ._contracts import BucketDeletionFingerprint
@@ -75,7 +76,7 @@ def compute_bucket_deletion_fingerprint(
     entries: list[dict[str, str | int]] = []
     total_bytes = 0
     for path in sorted(paths.bucket_dir.rglob("*"), key=lambda candidate: candidate.as_posix()):
-        if path.is_symlink() or path.is_junction():
+        if is_link_like(path):
             raise ValueError(f"bucket deletion fingerprint refuses linked path: {path}")
         if not path.is_file() or _is_transient_bucket_file(path):
             continue
@@ -116,7 +117,7 @@ def validated_bucket_deletion_paths(*, root: Path, bucket_id: str) -> BucketPath
     directory.
     """
     paths = bucket_paths(root, bucket_id)
-    if paths.bucket_dir.is_symlink() or paths.bucket_dir.is_junction():
+    if is_link_like(paths.bucket_dir):
         raise ValueError(f"bucket deletion refuses linked bucket root: {paths.bucket_dir}")
     if not paths.bucket_dir.is_dir():
         raise FileNotFoundError(paths.bucket_dir)

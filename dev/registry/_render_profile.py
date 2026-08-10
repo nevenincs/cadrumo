@@ -17,6 +17,7 @@ from typing import Annotated, Final, Literal
 import rtoml
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, model_validator
 
+from cadrumo.core import is_link_like
 from cadrumo.domain.calculations.registry import (
     ExportValuePolicy,
     ModeloId,
@@ -323,7 +324,7 @@ def load_and_validate_render_profile(
 
 def load_render_profile(profile_directory: Path) -> RenderProfile:
     """Load sorted TOML fragments without weakening their strict authored schema."""
-    if not profile_directory.is_dir() or profile_directory.is_symlink() or profile_directory.is_junction():
+    if not profile_directory.is_dir() or is_link_like(profile_directory):
         raise RegistryValidationError(f"render profile path must be a real directory: {profile_directory}")
     try:
         paths = tuple(sorted(profile_directory.iterdir(), key=lambda path: path.name))
@@ -334,7 +335,7 @@ def load_render_profile(profile_directory: Path) -> RenderProfile:
     non_fragments = tuple(
         path.name
         for path in paths
-        if path.suffix.casefold() != ".toml" or path.is_symlink() or path.is_junction() or not path.is_file()
+        if path.suffix.casefold() != ".toml" or is_link_like(path) or not path.is_file()
     )
     if non_fragments:
         raise RegistryValidationError(
@@ -343,7 +344,7 @@ def load_render_profile(profile_directory: Path) -> RenderProfile:
         )
     fragments: list[RenderProfileFragment] = []
     for path in paths:
-        if path.is_symlink() or path.is_junction() or not path.is_file():
+        if is_link_like(path) or not path.is_file():
             raise RegistryValidationError(f"render profile fragment must be a regular file: {path}")
         try:
             fragments.append(RenderProfileFragment.model_validate_json(json.dumps(rtoml.load(path))))

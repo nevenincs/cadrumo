@@ -359,6 +359,7 @@ if TYPE_CHECKING:
         foreign_asset_obligation_group,
     )
     from ._fsync import fsync_parent_dir
+    from ._link_safety import is_link_like
     from ._lockfile_unlink import LOCKFILE_UNLINK_RETRY_SECONDS, unlink_lockfile
     from ._pid_liveness import pid_is_alive
     from .aggregation import (
@@ -579,6 +580,7 @@ __all__: list[str] = [
     "iban_mod_97",
     "is_administrative_period_token",
     "is_aeat_csv",
+    "is_link_like",
     "lineage_obligations",
     "live_state_root_inputs",
     "misclassified_floor_keys",
@@ -651,6 +653,10 @@ def __getattr__(name: str) -> object:
         from ._fsync import fsync_parent_dir
 
         return fsync_parent_dir
+    if name == "is_link_like":
+        from ._link_safety import is_link_like
+
+        return is_link_like
     if name == "pid_is_alive":
         from ._pid_liveness import pid_is_alive
 
