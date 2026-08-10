@@ -18,6 +18,7 @@ from ...domain.modelos import (
     WorkUnit,
 )
 from ..calculations import (
+    M303_DECLARATION_TYPE_HEADER_KEY,
     CalculationObservationRepository,
     PriorDomiciliationElectionProjection,
 )
@@ -26,7 +27,7 @@ from ._action_errors import ModeloPriorDomiciliationElectionRefusedError
 
 def resolve_prior_domiciliation_election(
     *,
-    election: PriorDomiciliationElection,
+    election: object,
     work_unit: WorkUnit,
     revision: CalculationRevision,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol,
@@ -96,14 +97,42 @@ def resolve_prior_domiciliation_election(
             "official baseline observation does not match the baseline evidence reference",
             context={"baseline_filing_record_id": baseline_id},
         )
+    declaration_type_headers = tuple(
+        header
+        for header in observation.source_headers
+        if header.header_key == M303_DECLARATION_TYPE_HEADER_KEY
+    )
+    if len(declaration_type_headers) != 1:
+        raise ModeloPriorDomiciliationElectionRefusedError(
+            "prior domiciliation cancellation/modification requires exactly one submitted-file "
+            "baseline declaration type header",
+            context={
+                "baseline_filing_record_id": baseline_id,
+                "header_key": M303_DECLARATION_TYPE_HEADER_KEY,
+                "header_count": str(len(declaration_type_headers)),
+            },
+        )
+    declaration_type_header = declaration_type_headers[0]
+    if declaration_type_header.value != ResultDisposition.DOMICILIACION.value:
+        raise ModeloPriorDomiciliationElectionRefusedError(
+            "prior domiciliation cancellation/modification requires submitted-file baseline declaration type U",
+            context={
+                "baseline_filing_record_id": baseline_id,
+                "header_key": M303_DECLARATION_TYPE_HEADER_KEY,
+                "header_value": declaration_type_header.value,
+            },
+        )
+
     disposition = observation.result_disposition
     if (
         disposition is None
         or disposition.provenance_kind != "source_header"
         or disposition.disposition is not ResultDisposition.DOMICILIACION
+        or disposition.provenance_locator != declaration_type_header.source_locator
     ):
         raise ModeloPriorDomiciliationElectionRefusedError(
-            "prior domiciliation cancellation/modification requires official baseline disposition U evidence",
+            "prior domiciliation cancellation/modification requires a matching submitted-file "
+            "baseline disposition U projection",
             context={"baseline_filing_record_id": baseline_id},
         )
     return PriorDomiciliationElectionProjection(

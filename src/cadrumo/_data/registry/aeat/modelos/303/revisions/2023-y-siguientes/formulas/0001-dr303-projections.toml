@@ -64,7 +64,7 @@ casilla_id = "iva.repercutido.super-reducido"
 id = "modelo-303-dr303-155-projection"
 target_casilla_id = "155"
 rounding = "money-2"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2023-y-siguientes.formulas.source_citations]]
@@ -78,7 +78,7 @@ casilla_id = "iva.repercutido.reducido.transitorio"
 id = "modelo-303-dr303-167-projection"
 target_casilla_id = "167"
 rounding = "money-2"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2023-y-siguientes.formulas.source_citations]]

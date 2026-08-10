@@ -63,7 +63,12 @@ from __future__ import annotations
 from collections.abc import Sequence
 from decimal import Decimal
 
-from ...core import ExportLayoutFormat, ResultDisposition, result_disposition_requires_bank_account
+from ...core import (
+    ExportLayoutFormat,
+    PriorDomiciliationElection,
+    ResultDisposition,
+    result_disposition_requires_bank_account,
+)
 from ...domain.calculations.registry import (
     CalculationCompletenessManifest,
     CasillaId,
@@ -72,6 +77,7 @@ from ...domain.calculations.registry import (
     RateBoxPartition,
     fixed_width_record_casilla_ids,
     rate_box_coverage_shortfalls,
+    validated_casilla_id,
     xml_dictionary_entries,
 )
 from ...domain.filing import CasillaCollection, FilingExportError, ModeloDraft
@@ -86,48 +92,87 @@ from .runtime import CasillaRecordMetadata, RegistrySchemaAccessor
 #: domiciliación filing needs this page for its IBAN alone, and suppressing it
 #: there filed a direct-debit election with no account for AEAT to charge.
 _DID_PAGE_RECORD_TYPE = "page_did"
+_M303_CASILLA_111: CasillaId = validated_casilla_id("111", surface="M303 Nota 3 DID predicate")
+_M303_RECTIFICATIVA_HEADER = "autoliq_rectificativa"
 
 
-def _did_page_suppressed(record: ExportRecordDefinition, *, headers: dict[str, str]) -> bool:
-    """Return whether a DID (bank-account) page record must be suppressed.
+def _m303_nota_three_requires_bank_account(
+    *,
+    draft: ModeloDraft,
+    headers: dict[str, str],
+    prior_domiciliation_election: PriorDomiciliationElection,
+) -> bool:
+    """Return whether M303 Nota 3 independently requires the DID page.
 
-    The page is emitted when the determined disposition (carried on the
-    ``declaration_type`` header) requires a bank account: the three refund codes
-    (``D`` / ``V`` / ``X``, AEAT pays in) and ``U``, domiciliación del ingreso
-    (AEAT charges). Every other disposition suppresses it rather than emitting an
-    empty account block. Non-DID records are never suppressed by this guard.
-
-    Keyed on :func:`~core.result_disposition_requires_bank_account` rather than on
-    refund-ness, and the distinction is load-bearing: refund-ness also drives the
-    compensación carry decision, so reusing it here made "does AEAT need an
-    account" and "does this period carry forward" one answer to two questions.
-    ``U`` is where they diverge, and it diverged silently in the direction of
-    omitting required data.
-
-    ``G`` (cuenta corriente tributaria) is NOT emitted, and that is an unsettled
-    question rather than a ruling -- see the predicate's own note.
-
-    This is the single disposition predicate shared by the renderer (which skips
-    the record) and this module's parity assertions (which must not require a
-    casilla the disposition never files), so the two cannot disagree about what
-    reaches disk. Any future input this predicate needs -- Nota 3's rectificativa
-    case wants casilla 111 and the page-3 domiciliación-cancellation marker,
-    neither of which is in scope here -- must reach BOTH sides for that reason.
+    Casilla 111 is semantically present when it has a value, including zero;
+    truthiness would incorrectly collapse a stated zero into an absent field.
+    The typed cancellation election alone disables this Nota-3 requirement.
     """
-    if record.record_type != _DID_PAGE_RECORD_TYPE:
-        return False
+    return (
+        draft.modelo == "303"
+        and headers.get(_M303_RECTIFICATIVA_HEADER) == "1"
+        and prior_domiciliation_election is PriorDomiciliationElection.KEEP
+        and any(
+            value.casilla_id == _M303_CASILLA_111 and value.value is not None
+            for value in draft.values
+        )
+    )
+
+
+def _did_page_required(
+    *,
+    draft: ModeloDraft,
+    headers: dict[str, str],
+    prior_domiciliation_election: PriorDomiciliationElection,
+) -> bool:
+    """Return whether this filing must include the DID bank-account page."""
     declaration_type = headers.get("declaration_type", "")
     try:
         disposition = ResultDisposition(declaration_type)
     except ValueError:
-        return True
-    return not result_disposition_requires_bank_account(disposition)
+        disposition_requires_bank_account = False
+    else:
+        disposition_requires_bank_account = result_disposition_requires_bank_account(disposition)
+    return disposition_requires_bank_account or _m303_nota_three_requires_bank_account(
+        draft=draft,
+        headers=headers,
+        prior_domiciliation_election=prior_domiciliation_election,
+    )
+
+
+def _did_page_suppressed(
+    record: ExportRecordDefinition,
+    *,
+    draft: ModeloDraft,
+    headers: dict[str, str],
+    prior_domiciliation_election: PriorDomiciliationElection,
+) -> bool:
+    """Return whether a DID (bank-account) page record must be suppressed.
+
+    The sole DID predicate is ``disposition_requires_bank_account OR Nota 3``.
+    Nota 3 means an M303 rectificativa with casilla 111 semantically present and
+    a ``KEEP`` prior-domiciliation election. It is independent of the current
+    disposition, while a selected ``CANCEL_OR_MODIFY`` disables only that added
+    path, never a DID page required by the current disposition.
+
+    This function is shared by the renderer and parity derivations so they
+    cannot disagree about which official record reaches disk.
+    """
+    if record.record_type != _DID_PAGE_RECORD_TYPE:
+        return False
+    return not _did_page_required(
+        draft=draft,
+        headers=headers,
+        prior_domiciliation_election=prior_domiciliation_election,
+    )
 
 
 def boe_representable_casilla_ids(
     layout: ExportLayoutDefinition,
     *,
+    draft: ModeloDraft,
     headers: dict[str, str],
+    prior_domiciliation_election: PriorDomiciliationElection,
     schema_provider: RegistrySchemaAccessor,
 ) -> frozenset[CasillaId]:
     """Return the casillas the ``.boe`` layout files a slot for, for this disposition.
@@ -162,7 +207,16 @@ def boe_representable_casilla_ids(
         return frozenset(entry.casilla_id for entry in entries if entry.casilla_id is not None)
     normalized_headers = {key.lower(): value for key, value in headers.items()}
     return fixed_width_record_casilla_ids(
-        tuple(record for record in layout.records if not _did_page_suppressed(record, headers=normalized_headers)),
+        tuple(
+            record
+            for record in layout.records
+            if not _did_page_suppressed(
+                record,
+                draft=draft,
+                headers=normalized_headers,
+                prior_domiciliation_election=prior_domiciliation_election,
+            )
+        ),
     )
 
 
@@ -171,6 +225,7 @@ def rendered_casilla_ids(
     *,
     draft: ModeloDraft,
     headers: dict[str, str],
+    prior_domiciliation_election: PriorDomiciliationElection,
     schema_provider: RegistrySchemaAccessor,
 ) -> frozenset[CasillaId]:
     """Return the representable casillas whose value actually reaches disk.
@@ -188,7 +243,14 @@ def rendered_casilla_ids(
     # render as a blank slot. Filter to real values (value is None iff EMPTY).
     valued_casillas = {value.casilla_id for value in draft.values if value.value is not None}
     return frozenset(
-        boe_representable_casilla_ids(layout, headers=headers, schema_provider=schema_provider) & valued_casillas
+        boe_representable_casilla_ids(
+            layout,
+            draft=draft,
+            headers=headers,
+            prior_domiciliation_election=prior_domiciliation_election,
+            schema_provider=schema_provider,
+        )
+        & valued_casillas
     )
 
 
@@ -254,6 +316,7 @@ def assert_export_mirrors_manifest(
     *,
     draft: ModeloDraft,
     headers: dict[str, str],
+    prior_domiciliation_election: PriorDomiciliationElection,
     schema_provider: RegistrySchemaAccessor,
     manifest: CalculationCompletenessManifest,
     casilla_metadata: tuple[CasillaRecordMetadata, ...],
@@ -305,15 +368,33 @@ def assert_export_mirrors_manifest(
     """
     if layout.format is not ExportLayoutFormat.FIXED_WIDTH:
         return
-    _assert_record_order_fidelity(modelo=draft.modelo, layout=layout, headers=headers)
-    representable = boe_representable_casilla_ids(layout, headers=headers, schema_provider=schema_provider)
+    _assert_record_order_fidelity(
+        modelo=draft.modelo,
+        layout=layout,
+        draft=draft,
+        headers=headers,
+        prior_domiciliation_election=prior_domiciliation_election,
+    )
+    representable = boe_representable_casilla_ids(
+        layout,
+        draft=draft,
+        headers=headers,
+        prior_domiciliation_election=prior_domiciliation_election,
+        schema_provider=schema_provider,
+    )
     _assert_casilla_metadata_fidelity(
         modelo=draft.modelo,
         manifest=manifest,
         representable=representable,
         casilla_metadata=casilla_metadata,
     )
-    rendered = rendered_casilla_ids(layout, draft=draft, headers=headers, schema_provider=schema_provider)
+    rendered = rendered_casilla_ids(
+        layout,
+        draft=draft,
+        headers=headers,
+        prior_domiciliation_election=prior_domiciliation_election,
+        schema_provider=schema_provider,
+    )
     # Require a value on disk only for calculation RESULTS (casillas declaring a
     # formula) and schema-required casillas. Optional operator inputs -- retenciones,
     # prior payments, deductions the taxpayer may legitimately not have -- render a
@@ -412,7 +493,9 @@ def _assert_record_order_fidelity(
     *,
     modelo: str,
     layout: ExportLayoutDefinition,
+    draft: ModeloDraft,
     headers: dict[str, str],
+    prior_domiciliation_election: PriorDomiciliationElection,
 ) -> None:
     """Panic if the rendered record order drifts from the registry declaration order.
 
@@ -430,7 +513,14 @@ def _assert_record_order_fidelity(
     """
     normalized_headers = {key.lower(): value for key, value in headers.items()}
     declared = tuple(
-        record for record in layout.records if not _did_page_suppressed(record, headers=normalized_headers)
+        record
+        for record in layout.records
+        if not _did_page_suppressed(
+            record,
+            draft=draft,
+            headers=normalized_headers,
+            prior_domiciliation_election=prior_domiciliation_election,
+        )
     )
     orders = [record.order for record in declared]
     duplicate_orders = sorted({order for order in orders if orders.count(order) > 1})
@@ -514,6 +604,7 @@ def _format_missing_casilla(casilla_id: CasillaId, metadata: tuple[str, str | No
     return f"{casilla_id} (casilla {number})"
 
 
+did_page_required = _did_page_required
 did_page_suppressed = _did_page_suppressed
 
 
@@ -573,6 +664,7 @@ __all__ = [
     "assert_rate_boxes_account_for_total",
     "assert_xml_declaration_aux_declared",
     "boe_representable_casilla_ids",
+    "did_page_required",
     "did_page_suppressed",
     "rendered_casilla_ids",
     "required_applicable_casilla_ids",

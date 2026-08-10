@@ -35,6 +35,7 @@ import pytest
 from ......core import Modelo, Period
 from ......core.errors import get_error_suggestion
 from ......domain.calculations.registry import bundled_authority, resolve_export_layout, validated_casilla_id
+from .._declarations import _record_submitted_file_extraction_error
 from .._declarations_observations import _observed_casillas_from_submitted_file
 from .._declarations_schema import Declaracion
 from .._errors import SedeParseError
@@ -225,6 +226,26 @@ def test_a_payload_the_layout_cannot_read_is_refused_rather_than_guessed(
     assert "modelo-303-" in reason, f"the refusal names no layout element it failed on: {reason!r}"
     assert reason in str(error), "the message drops the reason the context carries"
     assert "could not be read through its export layout" in str(error)
+
+
+def test_a_refusal_is_recorded_before_the_declaration_pdf_fallback_is_considered() -> None:
+    """The adapter retains its own parser reason and leaves fallback ordering intact."""
+    filing_year = 2025
+    _, payload = _exported_draft_and_payload(filing_year=filing_year, declaration_type="C")
+    with pytest.raises(SedeParseError) as caught:
+        _project(payload[: len(payload) // 2], filing_year=filing_year)
+
+    metadata = {"tipo_solicitud": "", "observaciones": ""}
+    _record_submitted_file_extraction_error(metadata, caught.value)
+    assert metadata["submitted_file_extraction_error"] == str(caught.value)
+    assert "modelo-303-" in metadata["submitted_file_extraction_error"]
+
+    from .. import _declarations as module
+
+    source = Path(module.__file__).read_text(encoding="utf-8")
+    recorded_at = source.index("_record_submitted_file_extraction_error(metadata, exc)")
+    fallback_at = source.index("if not casillas and declaration_pdf_body is not None:")
+    assert recorded_at < fallback_at, "the layout refusal must be recorded before the PDF fallback is evaluated"
 
 
 @pytest.mark.parametrize(("revision_id", "filing_year"), sorted(_YEARS_BY_REVISION.items()))

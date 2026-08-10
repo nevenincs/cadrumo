@@ -360,6 +360,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo._action_errors.ModeloPriorDomiciliationElectionRefusedError",
+        ErrorCode(
+            code="REFUSED_MODELO_PRIOR_DOMICILIATION_ELECTION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_prior_domiciliation_election",
+            default_suggestion="choose --prior-domiciliation-election keep or import the accepted U baseline",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo._action_errors.ModeloRefundAccountMissingError",
         ErrorCode(
             code="REFUSED_MODELO_REFUND_ACCOUNT_MISSING",

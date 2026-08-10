@@ -65,11 +65,6 @@ _PRIOR_FILING_RECORD_ID = "a" * 64
 # 1..11 of the page-3 record.
 _PAGE_03_MARKER = b"<T30303000>"
 
-# 1-based offset of the ``autoliq_rectificativa`` header field within page 3
-# (Modelo 303 2023-y-siguientes diseño de registros, aeat-dr-303-2025).
-_AUTOLIQ_RECTIFICATIVA_OFFSET = 392
-
-
 def _seed_amendment_revision(
     *,
     bucket_id: str,
@@ -297,6 +292,16 @@ def test_rectificativa_indicator_renders_in_fichero_page_3(isolated_backend: Non
     export_draft(draft, output_path=output_path, headers=headers, schema_provider=provider)
     payload = output_path.read_bytes()
 
+    layout = provider.get_subview("303").export_layouts[0]
+    rectificativa_field = next(
+        field
+        for record in layout.records
+        for field in record.fields
+        if field.header_key == "autoliq_rectificativa"
+    )
+    assert rectificativa_field.offset is not None
+    assert rectificativa_field.length == 1
+
     page_start = payload.index(_PAGE_03_MARKER)
-    indicator_pos = page_start + _AUTOLIQ_RECTIFICATIVA_OFFSET - 1
+    indicator_pos = page_start + rectificativa_field.offset - 1
     assert payload[indicator_pos : indicator_pos + 1] == b"1"

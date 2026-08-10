@@ -19,8 +19,6 @@ legal_refs = [
     # RDL 20/2022 art. 72 opens the 2023 window for the [154]/[166] transitional
     # rungs; RDL 4/2024 art. 1 carries the 10/4T-2024 flip. Both rate formulas
     # cite the pair, so the construct must cover both.
-    "real-decreto-ley-20-2022:art-72",
-    "real-decreto-ley-4-2024:art-1",
     "ley-37-1992:art-92",
     "ley-37-1992:art-94",
     "ley-37-1992:art-95",
@@ -54,8 +52,6 @@ source_refs = [
     "aeat-dr-303-2025",
     "aeat-modelo-303-procedure",
     "boe-modelo-303-2008-form",
-    "aeat-calendario-contribuyente-2026-hasta-2-marzo",
-    "aeat-calendario-contribuyente-2026-domiciliacion",
     "boe-orden-hac-1347-2024-iva-authority",
 ]
 casilla_ids = [
@@ -191,27 +187,12 @@ deadline_windows = [
     "modelo-303-2025-2t",
     "modelo-303-2025-3t",
     "modelo-303-2025-4t",
-    "modelo-303-2026-1t",
-    "modelo-303-2026-2t",
-    "modelo-303-2026-3t",
-    "modelo-303-2026-4t",
     "modelo-303-2024-01-mensual",
     "modelo-303-2024-06-mensual",
     "modelo-303-2024-12-mensual",
     "modelo-303-2025-01-mensual",
     "modelo-303-2025-06-mensual",
     "modelo-303-2025-12-mensual",
-    "modelo-303-2026-01-mensual",
-    "modelo-303-2026-02-mensual",
-    "modelo-303-2026-03-mensual",
-    "modelo-303-2026-04-mensual",
-    "modelo-303-2026-05-mensual",
-    "modelo-303-2026-06-mensual",
-    "modelo-303-2026-07-mensual",
-    "modelo-303-2026-08-mensual",
-    "modelo-303-2026-09-mensual",
-    "modelo-303-2026-10-mensual",
-    "modelo-303-2026-11-mensual",
 ]
 
 # The completeness_manifest section lives in the completeness_manifest/ fragment

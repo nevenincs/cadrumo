@@ -26,10 +26,19 @@ import pytest
 from .. import CasillaId, validated_casilla_id
 from ..json_contract import (
     ENVELOPE_SCHEMA_VERSION,
+    ActionArgumentSource,
+    ActionArgumentStatus,
+    ActionConditionEvidence,
+    ActionConditionality,
+    ActionEvidenceProvenance,
     EnvelopeStatus,
+    NoRecoveryOutcome,
     Notice,
     NoticeSeverity,
     OutputSchema,
+    ResolvedActionArgument,
+    ResolvedActionReference,
+    ResolvedPreconditionAction,
     SchemaEnvelope,
     emit_json_document,
     emit_json_success,
@@ -285,3 +294,134 @@ def test_schema_envelope_rejects_unknown_outer_keys() -> None:
                 "metadata": {"hidden": "extra"},  # not in the envelope schema
             },
         )
+
+
+def test_notice_projects_resolved_precondition_action_canonically() -> None:
+    """A success notice carries only the already-resolved action projection."""
+    notice = Notice(
+        severity=NoticeSeverity.WARNING,
+        code="profile.active.required",
+        message="An active profile is required.",
+        context={"source_kind": "profile_store", "reason": "no_active_profile"},
+        action=ResolvedPreconditionAction(
+            failed_condition_id="profile.active.required",
+            evidence=(
+                ActionConditionEvidence(
+                    condition_id="profile.active.required",
+                    evidence_id="profile.request",
+                    provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                    values={"profile_name": "Ada"},
+                ),
+                ActionConditionEvidence(
+                    condition_id="profile.active.required",
+                    evidence_id="profile.state",
+                    provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                    values={"profile_status": "absent", "profile_name": "Ada"},
+                ),
+            ),
+            action=ResolvedActionReference(
+                action_id="profile.create",
+                target_command_key="config.profile.create",
+            ),
+            argument_bindings=(
+                ResolvedActionArgument(
+                    argument_name="profile_name",
+                    status=ActionArgumentStatus.RESOLVED,
+                    value="Ada",
+                    source=ActionArgumentSource.CONDITION_EVIDENCE,
+                    source_key="profile_name",
+                    source_evidence_id="profile.state",
+                ),
+                ResolvedActionArgument(
+                    argument_name="display_name",
+                    status=ActionArgumentStatus.RESOLVED,
+                    value="Ada",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="profile_name",
+                ),
+            ),
+            conditionality=ActionConditionality.IMMEDIATE,
+        ),
+    )
+
+    rendered = notice.model_dump(mode="json")
+
+    assert [item["evidence_id"] for item in rendered["action"]["evidence"]] == [
+        "profile.request",
+        "profile.state",
+    ]
+    assert [item["argument_name"] for item in rendered["action"]["argument_bindings"]] == [
+        "display_name",
+        "profile_name",
+    ]
+    assert rendered["context"] == {"reason": "no_active_profile", "source_kind": "profile_store"}
+    assert rendered["action"]["action"] == {
+        "action_id": "profile.create",
+        "target_command_key": "config.profile.create",
+    }
+    assert "suggestion" not in rendered
+
+
+def test_notice_rejects_hidden_free_form_action_authority() -> None:
+    """Commands cannot re-enter a notice as suggestion, prose, or context."""
+    from pydantic import ValidationError as PydanticValidationError
+
+    with pytest.raises(PydanticValidationError):
+        Notice.model_validate(
+            {
+                "severity": "info",
+                "code": "profile.active.required",
+                "message": "An active profile is required.",
+                "suggestion": "aeat config profile create Ada",
+            },
+        )
+    with pytest.raises(PydanticValidationError):
+        Notice(
+            severity=NoticeSeverity.INFO,
+            code="profile.active.required",
+            message="Run aeat config profile create Ada",
+        )
+    with pytest.raises(PydanticValidationError):
+        Notice(
+            severity=NoticeSeverity.INFO,
+            code="profile.active.required",
+            message="An active profile is required.",
+            context={"next_command": "config.profile.create"},
+        )
+
+
+def test_precondition_projection_rejects_presentation_evidence_and_models_no_recovery() -> None:
+    """Evidence remains factual and terminal outcomes explicitly close recovery."""
+    from pydantic import ValidationError as PydanticValidationError
+
+    with pytest.raises(PydanticValidationError):
+        ActionConditionEvidence(
+            condition_id="profile.active.required",
+            evidence_id="profile.state",
+            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+            values={"action.message": "create a profile"},
+        )
+
+    notice = Notice(
+        severity=NoticeSeverity.WARNING,
+        code="submission.period.closed",
+        message="The submission period is closed.",
+        action=ResolvedPreconditionAction(
+            failed_condition_id="submission.period.closed",
+            evidence=(
+                ActionConditionEvidence(
+                    condition_id="submission.period.closed",
+                    evidence_id="submission.period",
+                    provenance=ActionEvidenceProvenance.REGISTRY_RECORD,
+                    values={"period_status": "closed"},
+                ),
+            ),
+            conditionality=ActionConditionality.NOT_APPLICABLE,
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+        ),
+    )
+
+    rendered = notice.model_dump(mode="json")
+    assert rendered["action"]["action"] is None
+    assert rendered["action"]["no_recovery_outcome"] == NoRecoveryOutcome.TERMINAL.value
+    assert rendered["action"]["conditionality"] == ActionConditionality.NOT_APPLICABLE.value

@@ -49,10 +49,15 @@ def _exported_fichero(tmp_path: Path, *, declaration_type: str) -> bytes:
     )
     from ....domain.calculations.registry import validated_casilla_id
 
-    provider = build_runtime_schema_provider(modelos=("303",))
+    period = Period.from_year_and_code(2025, "1T")
+    provider = build_runtime_schema_provider(
+        modelos=("303",),
+        filing_year=period.filing_year,
+        period=period,
+    )
     draft = build_draft(
         modelo="303",
-        period=Period.from_year_and_code(2025, "1T"),
+        period=period,
         profile=ModeloOperatorProfile(tax_id="12345678Z", display_name="M303 ingress probe"),
         inputs={
             validated_casilla_id("07", surface="M303 ingress probe"): Decimal("10000.00"),

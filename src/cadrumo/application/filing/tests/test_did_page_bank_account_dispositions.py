@@ -20,15 +20,61 @@ is exactly "just add U to the refund set".
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+from decimal import Decimal
+
 import pytest
 
-from ....core import ResultDisposition, result_disposition_is_refund, result_disposition_requires_bank_account
+from ....core import (
+    Period,
+    PriorDomiciliationElection,
+    ResultDisposition,
+    result_disposition_is_refund,
+    result_disposition_requires_bank_account,
+)
+from ....domain.calculations.registry import RegistrySnapshotRef
+from ....domain.filing import ModeloDraft, ModeloValue, ModeloValueKind
+from ....domain.submission import ModeloDraftStatus
 from .._export_parity import _did_page_suppressed
 from ._export_support import _schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _DID_PAGE_RECORD_TYPE = "page_did"
+
+
+def _approved_m303_draft(*, casilla_111: Decimal | None = None) -> ModeloDraft:
+    provider = _schema_provider(modelos=("303",))
+    subview = provider.get_subview("303")
+    period = Period.from_year_and_code(2026, "1T")
+    timestamp = datetime(2026, 5, 21, 12, 3, tzinfo=UTC)
+    return ModeloDraft(
+        draft_id="d" + "0" * 63,
+        modelo="303",
+        period=period,
+        profile_tax_id="X1234567L",
+        subject_tax_id="X1234567L",
+        snapshot_ref=RegistrySnapshotRef(
+            modelo="303",
+            revision_id=subview.revision_id,
+            modelo_year=period.filing_year,
+            period=period.registry_token,
+        ),
+        status=ModeloDraftStatus.APROBADO,
+        values=(
+            ModeloValue(
+                casilla_id="111",
+                value=casilla_111,
+                kind=ModeloValueKind.LITERAL,
+                source="operator-declared Nota 3 amount",
+            ),
+        )
+        if casilla_111 is not None
+        else (),
+        created_at=timestamp,
+        updated_at=timestamp,
+        schema_version=subview.schema_version,
+    )
 
 
 def _modelo_303_did_record():
@@ -56,7 +102,12 @@ def _modelo_303_did_record():
 )
 def test_the_account_page_reaches_disk_for_every_account_bearing_disposition(code: str) -> None:
     """``U`` is in this list, and its absence was the defect."""
-    assert not _did_page_suppressed(_modelo_303_did_record(), headers={"declaration_type": code})
+    assert not _did_page_suppressed(
+        _modelo_303_did_record(),
+        draft=_approved_m303_draft(),
+        headers={"declaration_type": code},
+        prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+    )
 
 
 @pytest.mark.parametrize(
@@ -73,7 +124,12 @@ def test_the_account_page_stays_suppressed_where_no_account_is_needed(code: str)
     A fix that emitted the page unconditionally would satisfy the test above and
     write the empty 823-byte account record the guard exists to prevent.
     """
-    assert _did_page_suppressed(_modelo_303_did_record(), headers={"declaration_type": code})
+    assert _did_page_suppressed(
+        _modelo_303_did_record(),
+        draft=_approved_m303_draft(),
+        headers={"declaration_type": code},
+        prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+    )
 
 
 def test_cuenta_corriente_ingreso_stays_suppressed_as_an_unsettled_question() -> None:
@@ -86,14 +142,26 @@ def test_cuenta_corriente_ingreso_stays_suppressed_as_an_unsettled_question() ->
     """
     assert _did_page_suppressed(
         _modelo_303_did_record(),
+        draft=_approved_m303_draft(),
         headers={"declaration_type": ResultDisposition.CUENTA_CORRIENTE_INGRESO.value},
+        prior_domiciliation_election=PriorDomiciliationElection.KEEP,
     )
 
 
 def test_an_unparseable_disposition_suppresses_rather_than_guessing() -> None:
     """An unreadable header must not emit an account page on speculation."""
-    assert _did_page_suppressed(_modelo_303_did_record(), headers={"declaration_type": "?"})
-    assert _did_page_suppressed(_modelo_303_did_record(), headers={})
+    assert _did_page_suppressed(
+        _modelo_303_did_record(),
+        draft=_approved_m303_draft(),
+        headers={"declaration_type": "?"},
+        prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+    )
+    assert _did_page_suppressed(
+        _modelo_303_did_record(),
+        draft=_approved_m303_draft(),
+        headers={},
+        prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+    )
 
 
 def test_domiciliacion_needs_the_page_without_being_a_refund() -> None:
@@ -110,5 +178,42 @@ def test_domiciliacion_needs_the_page_without_being_a_refund() -> None:
     )
     assert not _did_page_suppressed(
         _modelo_303_did_record(),
+        draft=_approved_m303_draft(),
         headers={"declaration_type": ResultDisposition.DOMICILIACION.value},
+        prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+    )
+
+
+@pytest.mark.parametrize(
+    "disposition",
+    [
+        ResultDisposition.DEVOLUCION,
+        ResultDisposition.CUENTA_CORRIENTE_DEVOLUCION,
+        ResultDisposition.DEVOLUCION_TRANSFERENCIA_EXTRANJERO,
+        ResultDisposition.DOMICILIACION,
+    ],
+)
+def test_prior_domiciliation_x_never_suppresses_a_currently_account_bearing_disposition(
+    disposition: ResultDisposition,
+) -> None:
+    """X removes only the Nota-3 route; D/V/X/U retain their own DID requirement."""
+    assert not _did_page_suppressed(
+        _modelo_303_did_record(),
+        draft=_approved_m303_draft(casilla_111=Decimal("0")),
+        headers={
+            "declaration_type": disposition.value,
+            "autoliq_rectificativa": "1",
+            "prior_domiciliation_action": "X",
+        },
+        prior_domiciliation_election=PriorDomiciliationElection.CANCEL_OR_MODIFY,
+    )
+
+
+def test_casilla_111_without_a_rectificativa_leaves_an_ordinary_c_filing_unchanged() -> None:
+    """Nota 3 has no effect on an ordinary filing even when c111 carries zero."""
+    assert _did_page_suppressed(
+        _modelo_303_did_record(),
+        draft=_approved_m303_draft(casilla_111=Decimal("0")),
+        headers={"declaration_type": ResultDisposition.COMPENSACION.value},
+        prior_domiciliation_election=PriorDomiciliationElection.KEEP,
     )

@@ -208,7 +208,6 @@ from ._optional_extras import (
     require_optional_extra,
 )
 from ._payment_election import PaymentElection
-from ._prior_domiciliation_election import PriorDomiciliationElection
 from ._period import (
     FilingPeriodCode,
     Period,
@@ -230,6 +229,7 @@ from ._post_filing_event import (
     classify_post_filing_event_kind,
     post_filing_event_is_actionable,
 )
+from ._prior_domiciliation_election import PriorDomiciliationElection
 from ._profile_session import ProfileSessionRefusalReason
 from ._prorrata_exclusions import (
     ART_104_TRES_AUTO_DERIVED_EXCLUSIONS,
@@ -488,12 +488,12 @@ __all__: list[str] = [
     "OptionalExtra",
     "PassphraseStrength",
     "PaymentElection",
-    "PriorDomiciliationElection",
     "Period",
     "PeriodError",
     "PeriodKind",
     "PersistedFormatClass",
     "PostFilingEventKind",
+    "PriorDomiciliationElection",
     "ProductIdentity",
     "ProfileSessionRefusalReason",
     "ProrrataProvisionalProvenance",

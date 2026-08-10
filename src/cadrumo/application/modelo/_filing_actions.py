@@ -83,10 +83,10 @@ from ._iva_wallet_gate import (
     require_persisted_iva_compensation_decision_matches_revision as _require_iva_compensation_revision_match,
 )
 from ._ledger_evidence_gate import raise_if_deductible_vat_evidence_missing
+from ._prior_domiciliation import resolve_prior_domiciliation_election
 from ._required_binding_gate import (
     require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
 )
-from ._prior_domiciliation import resolve_prior_domiciliation_election
 from ._result_disposition_resolution import resolve_modelo_result_disposition
 from ._revision_persistence import persist_filed_revision
 from ._verification_actions import (
@@ -130,7 +130,7 @@ def file_modelo_revision(
     notes: str | None = None,
     refund_election: RefundElection = RefundElection.COMPENSAR,
     payment_election: PaymentElection = PaymentElection.INGRESO,
-    prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP,
+    prior_domiciliation_election: object = PriorDomiciliationElection.KEEP,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
@@ -192,6 +192,9 @@ def file_modelo_revision(
             ``INGRESO`` is the default, ``DOMICILIACION`` is available only for
             Modelo 303, and ``CUENTA_CORRIENTE`` remains explicitly refused
             until its AEAT capability is grounded.
+        prior_domiciliation_election: Whether to preserve the prior direct debit
+            or request its cancellation/modification. The latter is accepted
+            only for an M303 rectificativa with the official baseline-U proof.
         work_unit_repository: Optional work-unit catalogue repository override.
         calculation_repository: Optional calculation-revision catalogue
             repository override.
@@ -264,6 +267,12 @@ def file_modelo_revision(
             translated_message="application.modelo.errors.calculation_revision_not_found",
             context={"calculation_revision_id": calculation_revision_id},
         )
+    work_units = wu_repo.load()
+    work_unit = work_units.get(target.work_unit_id)
+    if work_unit is None:
+        raise WorkUnitNotFoundError(
+            f"calculation revision {calculation_revision_id!r} references missing work_unit_id={target.work_unit_id!r}",
+        )
     if target.state is CalculationRevisionState.PRESENTADO:
         # Idempotent re-file: this revision is already the current filed answer.
         # A retry of a completed single-subject file returns the existing VIGENTE
@@ -276,6 +285,16 @@ def file_modelo_revision(
         # hard refusal below rather than fabricating a record.
         existing = _existing_vigente_filing_record(fr_repo.load(), calculation_revision_id)
         if existing is not None:
+            # An idempotent retry remains subject to the same fail-closed typed
+            # election boundary: an unproven ``X`` request cannot hide behind
+            # a prior local filing no-op.
+            resolve_prior_domiciliation_election(
+                election=prior_domiciliation_election,
+                work_unit=work_unit,
+                revision=target,
+                filing_repository=fr_repo,
+                observation_repository=obs_repo,
+            )
             return existing
     if target.state is not CalculationRevisionState.VERIFICADO_COMPLETO:
         raise CalculationRevisionStateError(
@@ -283,12 +302,6 @@ def file_modelo_revision(
             f"{target.state.value!r}; only VERIFICADO_COMPLETO revisions can be filed",
         )
 
-    work_units = wu_repo.load()
-    work_unit = work_units.get(target.work_unit_id)
-    if work_unit is None:
-        raise WorkUnitNotFoundError(
-            f"calculation revision {calculation_revision_id!r} references missing work_unit_id={target.work_unit_id!r}",
-        )
     _require_filing_preconditions(
         work_unit=work_unit,
         target=target,

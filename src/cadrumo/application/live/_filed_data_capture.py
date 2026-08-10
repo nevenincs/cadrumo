@@ -286,6 +286,52 @@ async def _walk_or_failure_row(
         return None
 
 
+FILED_SUBMITTED_FILE_EXTRACTION_NOTICE_CODE = "live.filed.pull.submitted_file_extraction_failed"
+_SUBMITTED_FILE_EXTRACTION_ERROR_METADATA_KEY = "submitted_file_extraction_error"
+
+
+def submitted_file_extraction_notices(observation: FiledDeclaracionObservation) -> tuple[Notice, ...]:
+    """Project a recorded submitted-file layout refusal onto the notice channel.
+
+    The Sede adapter is the authority for both parsing and the persisted error
+    text. It records a refusal under ``submitted_file_extraction_error`` and
+    preserves its declaration-PDF fallback without trying to reinterpret either
+    one here. This projection only makes that already-recorded fact visible to
+    the operator, retaining the parser's own reason and the filed record that
+    needs follow-up. A clean capture has no metadata key and therefore no
+    advisory.
+    """
+    reason = observation.metadata.get(_SUBMITTED_FILE_EXTRACTION_ERROR_METADATA_KEY, "").strip()
+    if not reason:
+        return ()
+    return (
+        Notice(
+            severity=NoticeSeverity.WARNING,
+            code=FILED_SUBMITTED_FILE_EXTRACTION_NOTICE_CODE,
+            message=tr(
+                "live.filed.pull.submitted_file_extraction_failed",
+                default=(
+                    "Modelo {modelo} filing {period} {ejercicio} (expediente {expediente_id}) could not be "
+                    "read through its submitted-file layout. The declaration-PDF fallback, if AEAT provided it, "
+                    "remains the only extraction path. Parser reason: {reason}"
+                ),
+                modelo=observation.modelo,
+                period=observation.period.registry_token,
+                ejercicio=observation.ejercicio,
+                expediente_id=observation.expediente_id,
+                reason=reason,
+            ),
+            context={
+                "modelo": observation.modelo,
+                "filing_year": str(observation.ejercicio),
+                "period": observation.period.registry_token,
+                "expediente_id": observation.expediente_id,
+                "reason": reason,
+            },
+        ),
+    )
+
+
 class _CaptureReportFields(TypedDict):
     """Deduped report fields shared by every filed-declaration capture report."""
 
@@ -298,6 +344,7 @@ class _CaptureReportFields(TypedDict):
     filing_record_ids: tuple[str, ...]
     filing_evidence_conflict_count: int
     filing_evidence_conflict_record_ids: tuple[str, ...]
+    evidence_notices: tuple[Notice, ...]
     casilla_count: int
 
 
@@ -342,6 +389,12 @@ class _CaptureAccumulator:
         # any production path, so a corrected filing silently overwrote the
         # previously observed values and the operator was never told.
         self.recapture_notices.extend(recapture_divergence_notices((observation,)))
+        # The Sede capture deliberately preserves a submitted-file layout
+        # refusal as observation metadata and then keeps the declaration-PDF
+        # fallback available. Metadata alone is not an operator surface,
+        # though: fold the recorded refusal into the one capture advisory lane
+        # before persistence so every capture mode can forward it verbatim.
+        self.evidence_notices.extend(submitted_file_extraction_notices(observation))
         manifest_path = store.persist_observation(observation)
         self.observation_paths.append(capture_report_path(manifest_path, output_root=output_root))
         self.artefact_refs.extend(
@@ -379,6 +432,7 @@ class _CaptureAccumulator:
             "filing_record_ids": tuple(dict.fromkeys(self.filing_record_ids)),
             "filing_evidence_conflict_count": len(tuple(dict.fromkeys(self.conflicting_filing_record_ids))),
             "filing_evidence_conflict_record_ids": tuple(dict.fromkeys(self.conflicting_filing_record_ids)),
+            "evidence_notices": tuple(self.evidence_notices),
             "casilla_count": self.casilla_count,
         }
 
@@ -675,7 +729,6 @@ async def capture_filed_data_bulk(
         calculation_observation_keys=tuple(calculation_observation_keys),
         failures=tuple(failures),
         skipped_casillas=finalization.skipped_casillas,
-        evidence_notices=tuple(accumulator.evidence_notices),
         recapture_notices=tuple(accumulator.recapture_notices),
     )
 
@@ -1719,4 +1772,5 @@ __all__ = [
     "list_filed_data_bulk",
     "pull_filed_history",
     "recapture_divergence_notices",
+    "submitted_file_extraction_notices",
 ]

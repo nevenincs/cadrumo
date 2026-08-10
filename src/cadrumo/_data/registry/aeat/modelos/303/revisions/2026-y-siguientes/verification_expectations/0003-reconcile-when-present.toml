@@ -1,0 +1,84 @@
+# Exhaustive reconcile-when-present verification for Modelo 303
+# revision 2026-y-siguientes: every computed casilla not enrolled in the
+# coverage-gated contract is value-reconciled against the engine WHEN
+# the filing prints it (a filed-vs-computed divergence surfaces a
+# discrepancy), but is EXCLUDED from the coverage denominator, so
+# enrolling a situational casilla never lowers coverage or flips a
+# legitimate filing's verdict (min_coverage = 0). Grounded in the
+# revision's AEAT DR / framework-law refs (reused from modelo-303-iva-chain-verification).
+[[revisions."2026-y-siguientes".verification_expectations]]
+id = "modelo-303-2026-y-siguientes-reconcile-when-present"
+computed_casilla_ids = []
+reconcile_when_present_casilla_ids = [
+    "03",
+    "06",
+    "09",
+    "11",
+    "13",
+    "29",
+    "33",
+    "37",
+    # Situational boxes, added to close the enrolment gate's exhaustive
+    # invariant. Each is export required=true, so the FICHERO always carries a
+    # zero for it; the printed declaracion leaves it BLANK when the activity is
+    # absent (measured: the annex quarters print box numbers "153 154 155" and
+    # "165 166 167" with no values). Reconcile-when-present is the class the
+    # enrolment gate names for exactly this shape -- "coverage-gated if it is an
+    # always-present final, reconcile-when-present otherwise".
+    #
+    # HONEST NOW, NOT COMPLETE. Reconcile-when-present never surfaces
+    # MISSING_IN_FILED. Today that costs nothing because no extraction profile
+    # targets these ids, so neither side ever carries them and nothing is
+    # checked either way. IF A PROFILE LATER TARGETS THEM, an omission INSIDE
+    # the transitional window -- where the box should carry a value -- will read
+    # as legitimately absent rather than under-declared. That is the silent
+    # direction, and whoever adds the extraction coverage owns the question.
+    "10",
+    "154",
+    "155",
+    "166",
+    "167",
+    "iva.autoconsumo.promotor.cuota",
+    "iva.prorrata-porcentaje",
+    "modulos-iva-cuota-derivada",
+    "modulos-iva-cuota-devengada",
+]
+tolerance = "0.01"
+rounding = "money-2"
+min_coverage = "0"
+discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "ley-37-1992:art-104", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2026", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+# Five of the reconciled leaves are additionally grounded against an independent
+# AEAT authority: the Manual practico IVA 2024, Cap. 9 "Liquidacion primer
+# trimestre" solucion (pag. 293-294) prints each as its own euro figure - "Total
+# IVA devengado en Ventas interiores y servicios prestados (83.000 x 21%):
+# 17.430 euros" (09), "Adquisiciones intracomunitarias: [(18.000(2) +
+# 3.000(4))] x 21%: 4.410 euros" (11), "Total cuotas soportadas en operaciones
+# interiores: 9.870 euros" (29), "Por cuotas satisfechas en importaciones:
+# (12.000(6) x 21%): 2.520 euros" (33) and "En adquisiciones intracomunitarias:
+# [18.000(2) + 3.000(4)) x 21%]: 4.410 euros" (37). Grounding the leaves and not
+# only the totals on the sibling chain contract closes the compensating-error
+# gap: two offsetting mistakes inside the devengado or deducible sum leave both
+# printed totals correct, so a totals-only oracle stays green while the
+# individual boxes the operator files are wrong. See
+# test_m303_2024_regimen_general_manual_worked_example.py and
+# corpus/manual_oracles/modelo-303-2024-regimen-general-recargo-intracomunitaria-importacion.json.
+#
+# A sixth leaf, iva.prorrata-porcentaje, is grounded against a second bundled
+# AEAT authority: the Manual practico IVA 2025, Cap. 5 "Deducciones y
+# devoluciones", apartado "Prorrata general" (pag. 137-138), whose alquiler de
+# viviendas y locales example states the definitive percentage outright — "(25.000
+# / 45.000) x 100 = 55,5555%. Se redondea en exceso = 56%". The bundled payload
+# corpus/manual_oracles/modelo-303-2025-prorrata-general-regularizacion.json
+# carries that 56 as its only expected value, and the engine reproduces it from
+# the manual's own annual volume givens. Until now the figure was evidence the
+# honesty relation saw but no revision claimed, so nothing enforced it; declaring
+# it here turns the manual's number into a checked independent oracle. The
+# percentage is a deduction-rate leaf that multiplies into every cuota deducible,
+# so a wrong rate silently rescales the whole deducible side while the totals it
+# feeds stay internally consistent — the same compensating-error gap the five
+# leaves above close for the devengado and deducible sums. Grounded on THIS
+# revision only: no bundled oracle covers a filing year that resolves to
+# 2009-y-siguientes, so declaring it there would be a claim without evidence.
+externally_grounded_casilla_ids = ["09", "11", "29", "33", "37", "iva.prorrata-porcentaje"]

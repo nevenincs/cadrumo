@@ -50,6 +50,13 @@ class FiledCaptureEvidenceTally(BaseModel):
     filing_record_ids: tuple[str, ...] = ()
     filing_evidence_conflict_count: int = 0
     filing_evidence_conflict_record_ids: tuple[str, ...] = ()
+    #: Per-observation capture advisories, each retaining the concrete cause.
+    #:
+    #: These are internal capture-report transport, not a command result
+    #: payload: CLI entrypoints forward them on the shared envelope ``notices``
+    #: channel. Keeping the lane on the shared tally means single, bulk, and
+    #: source capture cannot silently diverge.
+    evidence_notices: tuple[Notice, ...] = ()
     casilla_count: int
     calculation_observation_count: int
     calculation_observation_keys: tuple[str, ...]
@@ -112,25 +119,9 @@ class BulkFiledDataCaptureReport(FiledCaptureEvidenceTally):
     failed_count: int
     failures: tuple[FiledDataCaptureFailureRow, ...] = ()
     skipped_casillas: tuple[FiledCasillaSkipRow, ...] = ()
-    evidence_notices: tuple[Notice, ...] = ()
     #: One advisory per re-captured filing whose casilla values this sweep
     #: changed, read before each upsert while the prior values still existed.
     recapture_notices: tuple[Notice, ...] = ()
-    """Per-artefact evidence advisories raised while enrolling justificantes.
-
-    Additive and defaulted, so every existing caller is unchanged. These are the
-    typed WARNINGs the justificante enrolment already produced -- one per stored
-    artefact that yielded no evidence, each naming its own reason -- which the
-    sweep was discarding. That discard is what let a capture extract casillas and
-    report zero justificante evidence with no visible cause.
-
-    They ride here rather than on a CLI result payload: the envelope's ``notices``
-    channel is the only sanctioned diagnostic surface, and a caller folds these
-    into it verbatim. Never merge two reasons into one notice -- the reasons exist
-    precisely because six distinct dead ends previously shared one shape.
-    """
-
-
 class ExpedientesBulkCaptureFailureRow(BaseModel):
     """One failed expedientes register walk in a bulk run."""
 

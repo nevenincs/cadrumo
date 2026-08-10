@@ -37,7 +37,7 @@ def _render_domiciliacion_did(charge_block: dict[str, str]) -> str:
         subject_tax_id="X1234567L",
         snapshot_ref=RegistrySnapshotRef(
             modelo="303",
-            revision_id="2023-y-siguientes",
+            revision_id="2026-y-siguientes",
             modelo_year=2026,
             period="02",
         ),
