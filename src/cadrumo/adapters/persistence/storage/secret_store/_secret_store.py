@@ -185,13 +185,18 @@ class _SecretIndex(BaseModel):
 
     Attributes:
         schema_version: Format version of the index file, gated against
-            :data:`SECRET_INDEX_SCHEMA_VERSION` on every read.
+            :data:`SECRET_INDEX_SCHEMA_VERSION` on every read. Required and
+            stamped explicitly, never defaulted: a default equal to the current
+            version makes an index file that omits the key hydrate AS current,
+            so the gate below reads a value the writer never wrote and passes.
+            Every mutation rewrites the whole index, so that misread would then
+            be written back over the file it misread.
         entries: Map of digest hex string to :class:`_SecretIndexEntry`.
     """
 
     model_config = ConfigDict(strict=True, extra="forbid")
 
-    schema_version: int = Field(default=SECRET_INDEX_SCHEMA_VERSION, ge=1)
+    schema_version: int = Field(ge=1)
     entries: dict[str, _SecretIndexEntry] = Field(default_factory=dict)
 
 
@@ -292,7 +297,13 @@ class SecretStore:
         """
         index_path = self._index_path()
         if not index_path.exists():
-            return _SecretIndex()
+            # Create-on-first-access: an absent file is a store that has never
+            # been written, not a document to interpret, so a fresh index at
+            # the current version is materialised exactly as before. The
+            # version is stamped here rather than defaulted on the field so
+            # that this ONE legitimate source of an unstamped index stays
+            # explicit, while a FILE that omits the marker still refuses.
+            return _SecretIndex(schema_version=SECRET_INDEX_SCHEMA_VERSION)
         try:
             index = _SecretIndex.model_validate_json(index_path.read_text(encoding=UTF_8_ENCODING))
         except (OSError, ValidationError, ValueError) as exc:
