@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:4223e92b4d24a6e63113f537a4bcd37a959c09437429eb03c3dc48a507b325fd'
+body_hash: 'sha256:2c0b539572d829e90786dd99ca4e294aa1a4a90c74ac35f27b433895bd629806'
 step_id: 'S38'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
@@ -74,7 +74,17 @@ This was measured, not inferred: two successive hardened writes to one path leav
 
 The rejected delegation's cost was a widened window rather than mere inelegance. Two exists-checks guard this path. The outer one runs before the manifest is built, and building walks and hashes the entire export tree. The inner one runs immediately before the replace. The core helper's write-and-replace is a single opaque call with nowhere to interpose, so delegation could only have kept the outer check, widening the window from microseconds to a full tree walk plus hash.
 
-Adding a `must_not_exist` option to the core tier was considered and rejected. Check-then-replace is best-effort under a platform constraint, so core would have absorbed a compromise rather than gained a primitive, and a canonical home shipping a best-effort guard teaches every later caller that the guarantee is real when it is not. `os.link` is the primitive that refuses atomically in one uninterruptible step; it needs hardlink support this project's network-share working tree does not reliably provide. The docstring names it so the correct fix stays discoverable if that changes.
+## Retraction
+
+**This Step's conclusion is withdrawn. Documenting the duplicate was the wrong outcome, and the reasoning that produced it rested on a claim never tested.**
+
+The record above argued that adding a publish-once option to the core tier would make it absorb a compromise rather than gain a primitive, because the only atomic alternative, `os.link`, "needs hardlink support this project's network-share working tree does not reliably provide". **That claim was asserted, never measured, and it is false.** Measured on this working tree: `os.link` links, and a second link to an existing target raises `FileExistsError` atomically.
+
+So the compromise was never forced. Core could gain a genuine publish-once primitive all along, which means the correct outcome was consolidation and not annotation. Leaving a hand-rolled stage-fsync-publish sequence in place with a docstring explaining why is still a parallel write path, and the architecture boundary forbids re-implementing a write path rather than delegating to the single-writer primitive. A prose justification does not convert a duplicate into a design.
+
+The irony is exact and worth keeping: this Step exists because an untested claim in a docstring produced a wrong ruling, and its own conclusion then rested on an untested claim about a filesystem. Proving the clobber by execution was right; not applying the same standard to the constraint that justified leaving the duplicate was the failure.
+
+`core.atomic_write.atomic_write_publish_once_bytes` now carries the guarantee, published with `os.link`. The delegation of this site, and the deletion of its hand-rolled writer, remain outstanding.
 
 ## Notes
 
