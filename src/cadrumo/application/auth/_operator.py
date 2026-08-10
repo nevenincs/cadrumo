@@ -193,6 +193,7 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
                     raise AuthConfigureDanglingActiveProfileError(
                         translated_message="application.auth.operator.errors.dangling_active_profile",
                         context={"active_profile": active_bucket_id},
+                        precondition_verdict=profile_health.precondition_verdict,
                     )
                 if profile_health.status in {"missing_profile_record", "profile_record_unreadable"}:
                     raise AuthConfigureDanglingActiveProfileError(
@@ -200,8 +201,8 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
                         context={
                             "active_profile": active_bucket_id,
                             "status": profile_health.status,
-                            "next_action": profile_health.next_action,
                         },
+                        precondition_verdict=profile_health.precondition_verdict,
                     )
                 next_state = _append_bucket_event(
                     update_auth(
@@ -281,7 +282,7 @@ def _auth_status_from_projection(projection: OperatorStateProjection) -> AuthSta
         active_profile_status=active.health_status,
         active_profile_registered=active.registered_bucket,
         active_profile_record_present=active.record_present,
-        active_profile_next_action=active.next_action,
+        active_profile_precondition_verdict=active.precondition_verdict,
         backend_configured=auth.configured,
         backend_available=auth.available,
         certificate_path=auth.certificate_path,

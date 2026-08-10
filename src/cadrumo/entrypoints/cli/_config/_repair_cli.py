@@ -32,12 +32,13 @@ from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....core.i18n import tr
 from ....core.json_contract import strict_round_trip
 from ....core.logging import default_log_file_path as _default_log_file_path
-from .._common import _emit_envelope
+from .._common import _emit_envelope, resolve_cli_precondition_action
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 
 if TYPE_CHECKING:
+    from ....application.diagnostics import ConfigRepairReport
     from ....application.workflow import WorkflowStateResetFingerprint
-    from .._config_payloads import WorkflowFingerprintPayload
+    from .._config_payloads import ConfigRepairResult, WorkflowFingerprintPayload
 
 
 def _workflow_fingerprint_payload(fingerprint: WorkflowStateResetFingerprint) -> WorkflowFingerprintPayload:
@@ -50,6 +51,77 @@ def _workflow_fingerprint_payload(fingerprint: WorkflowStateResetFingerprint) ->
         byte_length=fingerprint.byte_length,
         reason_class=fingerprint.reason_class,
         recovered_bucket_id=fingerprint.recovered_bucket_id or None,
+    )
+
+
+def _config_repair_result(report: ConfigRepairReport) -> ConfigRepairResult:
+    """Project diagnostics through the one CLI action resolver before emitting.
+
+    Diagnostics preserve application-owned precondition verdicts.  This is the
+    CLI boundary where those records become schema-resolved wire actions; the
+    application renderer never reconstructs command prose from them.
+    """
+    from .._config_payloads import (
+        ConfigRepairCheckPayload,
+        ConfigRepairFindingPayload,
+        ConfigRepairNamespacePayload,
+        ConfigRepairRegistryPayload,
+        ConfigRepairResult,
+        ConfigRepairSecureObjectsPayload,
+        ConfigRepairSetupPayload,
+    )
+
+    checks = [
+        ConfigRepairCheckPayload(
+            name=check.name,
+            status=check.status,
+            summary=check.summary,
+            detail=check.detail,
+            next_action=check.next_action,
+            precondition_action=(
+                resolve_cli_precondition_action(check.precondition_verdict)
+                if check.precondition_verdict is not None
+                else None
+            ),
+            dead_end=check.dead_end,
+            audience=check.audience,
+            findings=[
+                ConfigRepairFindingPayload(
+                    summary=finding.summary,
+                    detail=finding.detail,
+                    next_action=finding.next_action,
+                    requirement=finding.requirement,
+                )
+                for finding in check.findings
+            ],
+        )
+        for check in report.checks
+    ]
+    return ConfigRepairResult(
+        overall=report.overall,
+        package_name=report.package_name,
+        package_version=report.package_version,
+        python_version=report.python_version,
+        log_file=report.log_file,
+        registry=ConfigRepairRegistryPayload.model_validate(report.registry.model_dump(mode="json")),
+        setup=(
+            ConfigRepairSetupPayload.model_validate(report.setup.model_dump(mode="json"))
+            if report.setup is not None
+            else None
+        ),
+        secure_objects=ConfigRepairSecureObjectsPayload(
+            namespaces=[
+                ConfigRepairNamespacePayload(
+                    namespace=item.namespace,
+                    readable=item.readable,
+                    unreadable=item.unreadable,
+                )
+                for item in report.secure_objects.namespaces
+            ],
+            readable_total=report.secure_objects.readable_total,
+            unreadable_total=report.secure_objects.unreadable_total,
+        ),
+        checks=checks,
     )
 
 
@@ -72,7 +144,7 @@ def _register_repair_root_callback(repair_app: typer.Typer) -> None:
         from .._config_payloads import ConfigRepairResult
 
         report = _build_config_repair_report()
-        result = strict_round_trip(ConfigRepairResult, report)
+        result = strict_round_trip(ConfigRepairResult, _config_repair_result(report))
         _emit_envelope(
             ctx,
             command="config.repair",

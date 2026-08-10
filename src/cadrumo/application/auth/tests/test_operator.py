@@ -83,6 +83,20 @@ def test_test_operator_auth_reports_the_active_profile() -> None:
     assert result.active_profile_status
 
 
+def test_auth_status_preserves_the_active_profile_typed_verdict() -> None:
+    """Auth status forwards the state projection verdict without recovery prose."""
+
+    result = inspect_operator_auth("certificate")
+
+    assert not hasattr(result, "active_profile_next_action")
+    verdict = result.active_profile_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == "profile.active.pointer_registered"
+    assert verdict.action is None
+    assert verdict.no_recovery_outcome is not None
+    assert verdict.no_recovery_outcome.value == "operator_decision"
+
+
 def test_auth_status_is_not_blocked_by_unreadable_workspace_drafts() -> None:
     """Auth readiness is local-auth state, not a workspace-wide integrity scan.
 

@@ -241,6 +241,7 @@ class ConfigRepairCheckPayload(OutputSchema):
     summary: str
     detail: str | None = None
     next_action: str | None = None
+    precondition_action: ResolvedPreconditionAction | None = None
     dead_end: str | None = None
     audience: Literal["operator", "internal"]
     findings: list[ConfigRepairFindingPayload]

@@ -118,7 +118,7 @@ _DIAGNOSTIC_CHECK_INVALID_CASES: tuple[tuple[str, dict[str, object], str], ...] 
             "next_action": "aeat config repair",
             "dead_end": "terminal",
         },
-        "at most one of",
+        "at most one recovery outcome",
     ),
     (
         "ok-with-next-action",
@@ -171,6 +171,22 @@ def test_diagnostic_check_model_dump_surfaces_both_recovery_fields() -> None:
     assert "dead_end" in dumped
     assert dumped["next_action"] == "aeat config repair reset-progress --yes"
     assert dumped["dead_end"] is None
+
+
+def test_config_repair_preserves_the_active_profile_typed_verdict() -> None:
+    """Cold-profile repair rows carry the health authority, never command prose."""
+
+    report = build_config_repair_report()
+    profile_check = next(check for check in report.checks if check.name == "profile.readiness")
+
+    assert profile_check.status == "warn"
+    assert profile_check.next_action is None
+    verdict = profile_check.precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == "profile.active.available"
+    assert verdict.action is not None
+    assert verdict.action.action_id == "operator.profile.create"
+    assert verdict.missing_argument_names == ("profile_name",)
 
 
 def test_config_repair_report_contains_registry_and_setup_checks(config_repair_report: ConfigRepairReport) -> None:

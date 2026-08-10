@@ -22,10 +22,13 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CadrumoError
+from ..operator_actions import PreconditionVerdict
 from ._catalogue import AuthProviderListing
 from ._probe_result import ProviderProbeResult
 
@@ -40,6 +43,31 @@ class AuthConfigureNoActiveBucketError(CadrumoError):
 
 class AuthConfigureDanglingActiveProfileError(CadrumoError, ValueError):
     """Raised when the active-profile pointer does not resolve to a registered bucket."""
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        precondition_verdict: PreconditionVerdict | None,
+        context: Mapping[str, object] | None = None,
+        suggestion: str | None = None,
+        translated_message: str | None = None,
+    ) -> None:
+        """Retain the application-owned refusal for generic CLI projection."""
+        if not isinstance(precondition_verdict, PreconditionVerdict):
+            raise TypeError("active-profile auth refusal requires a typed precondition verdict")
+        super().__init__(
+            message,
+            context=context,
+            suggestion=suggestion,
+            translated_message=translated_message,
+        )
+        self._precondition_verdict = precondition_verdict
+
+    @property
+    def terminal_precondition_verdict(self) -> PreconditionVerdict:
+        """Return the exact health refusal without placing action data in context."""
+        return self._precondition_verdict
 
 
 class AuthLoginNotEnabledError(CadrumoError):
@@ -108,7 +136,7 @@ class AuthStatusResult(BaseModel):
     active_profile_status: str = ""
     active_profile_registered: bool = False
     active_profile_record_present: bool = False
-    active_profile_next_action: str = ""
+    active_profile_precondition_verdict: PreconditionVerdict | None = None
     backend_configured: bool = False
     backend_available: bool = False
     certificate_path: str = ""

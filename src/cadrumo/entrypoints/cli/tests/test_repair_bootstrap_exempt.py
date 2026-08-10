@@ -19,6 +19,7 @@ same harness every other CLI test uses.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -87,10 +88,20 @@ def test_bare_repair_runs_clean_without_session_on_fresh_root(_fresh_storage_roo
     """
 
     result = invoke_cached_cli(["config", "repair"])
+    json_result = invoke_cached_cli(["--format", "json", "config", "repair"])
 
     assert result.exit_code == 0, result.output
+    assert json_result.exit_code == 0, json_result.output
     assert "NoActiveBucketSession" not in result.output
     assert "Traceback" not in result.output
+
+    payload = json.loads(json_result.output)
+    profile_check = next(check for check in payload["result"]["checks"] if check["name"] == "profile.readiness")
+    assert profile_check["next_action"] is None
+    assert profile_check["precondition_action"]["failed_condition_id"] == "profile.active.available"
+    assert profile_check["precondition_action"]["action"]["action_id"] == "operator.profile.create"
+    assert profile_check["precondition_action"]["missing_argument_names"] == ["profile_name"]
+    assert "aeat " not in json.dumps(profile_check).lower()
 
 
 def test_integrity_registry_runs_clean_without_session_on_fresh_root(_fresh_storage_root: Path) -> None:

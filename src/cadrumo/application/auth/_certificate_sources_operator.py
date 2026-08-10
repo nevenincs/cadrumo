@@ -127,6 +127,7 @@ def _gate_active_bucket() -> str:
         raise AuthConfigureDanglingActiveProfileError(
             translated_message="application.auth.operator.errors.dangling_active_profile",
             context={"active_profile": active_bucket_id},
+            precondition_verdict=profile_health.precondition_verdict,
         )
     if profile_health.status in {"missing_profile_record", "profile_record_unreadable"}:
         raise AuthConfigureDanglingActiveProfileError(
@@ -134,8 +135,8 @@ def _gate_active_bucket() -> str:
             context={
                 "active_profile": active_bucket_id,
                 "status": profile_health.status,
-                "next_action": profile_health.next_action,
             },
+            precondition_verdict=profile_health.precondition_verdict,
         )
     return active_bucket_id
 
