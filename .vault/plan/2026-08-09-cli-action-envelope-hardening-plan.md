@@ -4,7 +4,7 @@ tags:
   - '#cli-action-envelope-hardening'
 date: '2026-08-09'
 modified: '2026-08-10'
-body_hash: 'sha256:3f702a0b94f4e15048893e47b71dfc313a5d321e7c111d3d81e6bf8245d25741'
+body_hash: 'sha256:45ca2f708c0885e7c2c5aa8572633948247bf661e7bacbbbc3272e18288b87a1'
 tier: L3
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
@@ -203,7 +203,7 @@ Require zero unclassified sites and exact declared-observed reconciliation befor
 - [ ] `W06.P12.S46` - Require a complete semantic and mechanical pass with no newly discovered action site or alias; `dev/cli_action_census.py`.
 - [ ] `W06.P12.S47` - Fail closure on unclassified sites unresolved actions insufficient bindings missing proofs or ungrounded exclusions; `src/cadrumo/entrypoints/cli/tests/test_action_coverage_closure.py`.
 - [ ] `W06.P12.S48` - Publish the final reconciliation and fresh-context honesty findings; `.vault/audit/2026-08-09-cli-action-envelope-hardening-audit.md`.
-- [ ] `W06.P12.S95` - Rule what the recoverable-refusal path tells an autonomous operator now that the dead suggestion instruction is struck, stating both branches rather than either, because the strike was correct and landed while its consequence has no row, and the path that used to carry an actionable next command now carries none, so either the replacement is the action field once the migration has progressed far enough that it is not None for most codes, or the path carries no guidance by design and that is a deliberate reduction in what the harness can tell an agent which must be recorded as such rather than left as an accident, and because an operator here is frequently an autonomous agent holding only the envelope and the harness text so a refusal without a next step is not a smaller message but an unrecoverable one; `src/cadrumo/_data/agent/ and the recoverable-refusal envelope surface`.
+- [ ] `W06.P12.S95` - Rule what the recoverable-refusal path tells an autonomous operator now that the dead suggestion instruction is struck, stating both branches rather than either, because the strike was correct and landed while its consequence has no row, and what went missing is narrower than silence since both rules now point at the code and the message which the envelope does emit, so the agent can classify a refusal but cannot be told what to run to fix it, which is neither self-remediating nor undiagnosable, and either the replacement is the action field once the migration has advanced far enough that it is not None for most codes, or the path carries no guidance by design and the honest cost is that an autonomous operator must infer the remedy from the code rather than be handed it, a real reduction and a defensible one that must be recorded as a decision rather than left as an accident; `src/cadrumo/_data/agent/ and the recoverable-refusal envelope surface`.
 
 ## Parallelization
 
