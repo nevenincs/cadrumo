@@ -6,7 +6,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:a35bb07aaae32042b52463c8e776524655634442cfa375f3ed697cfd43790a36'
+body_hash: 'sha256:d17d5832bdd6c23be0bef80b572a9ea84a81bb21f3a79408a0b9ec307f2a5e9e'
 related:
   - '[[2026-08-04-minimo-descendientes-eligibility-P01-S01]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P01-S02]]'
@@ -68,6 +68,7 @@ related:
   - '[[2026-08-05-minimo-descendientes-eligibility-diagnostic-message-headroom-census-research]]'
   - '[[2026-08-05-minimo-descendientes-eligibility-semantic-overlap-census-audit]]'
   - '[[2026-08-08-minimo-descendientes-eligibility-guarderia-cotizaciones-ceiling-adr]]'
+  - '[[2026-08-10-minimo-descendientes-eligibility-art-81-live-cross-check-audit]]'
 ---
 
 # `minimo-descendientes-eligibility` feature index
@@ -88,6 +89,7 @@ Auto-generated index of all documents tagged with `#minimo-descendientes-eligibi
 - `2026-08-04-minimo-descendientes-eligibility-vaultspec-plan-exec-feature-tag-bind-audit` - `minimo-descendientes-eligibility` audit: `A topic-infixed ADR can never get its own plan with exec records`
 - `2026-08-05-minimo-descendientes-eligibility-art-81-maternidad-connect-review-audit` - `minimo-descendientes-eligibility` audit: `Art. 81.1 maternidad connect review: two confirmed over-grants`
 - `2026-08-05-minimo-descendientes-eligibility-semantic-overlap-census-audit` - `minimo-descendientes-eligibility` audit: `Semantic-overlap census: one confirmed duplicate, six cleared, and the drift source`
+- `2026-08-10-minimo-descendientes-eligibility-art-81-live-cross-check-audit` - `minimo-descendientes-eligibility` audit: `LIRPF art. 81 excerpt live cross-check`
 
 ### exec
 
