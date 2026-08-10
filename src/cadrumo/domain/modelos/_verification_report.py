@@ -29,11 +29,10 @@ from pydantic import BaseModel, Field, StringConstraints, field_validator, model
 
 from ...core import STRICT_FROZEN_CONFIG, ElidedProse
 from ...core.hashing import content_hash_hex
-from ...core.identity import VerificationReportId
+from ...core.identity import CalculationRevisionId, VerificationReportId
 from ...core.time import validate_utc_aware
 from ..calculations.registry import CasillaId, LegalRefId, SourceRefId, VerificationExpectationId
 from ._errors import ModeloValidationError
-from ._ids import CalculationRevisionId
 
 ModeloActorLabel = Annotated[
     str,

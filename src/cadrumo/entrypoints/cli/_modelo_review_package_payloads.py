@@ -31,9 +31,9 @@ from datetime import datetime
 from pydantic import Field
 
 from ...core import HEX_PATTERN_64, Period
-from ...core.identity import BucketId
+from ...core.identity import BucketId, CalculationRevisionId
 from ...core.json_contract import OutputSchema, register_schema
-from ...domain.modelos import CalculationRevisionId, WorkUnitId
+from ...domain.modelos import WorkUnitId
 
 
 @register_schema("modelo.review_package.build")

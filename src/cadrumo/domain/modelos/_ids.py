@@ -36,13 +36,4 @@ WorkUnitId = Annotated[
 ]
 """Hex-64 identity of a modelo work unit. Minted via ``new_work_unit_id()``."""
 
-CalculationRevisionId = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=64, max_length=64, pattern=_HEX_64_PATTERN),
-]
-"""Hex-64 identity of one calculation revision under a work unit."""
-
-__all__ = (
-    "CalculationRevisionId",
-    "WorkUnitId",
-)
+__all__ = ("WorkUnitId",)
