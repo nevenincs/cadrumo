@@ -52,6 +52,7 @@ from decimal import Decimal
 from hashlib import sha256
 from http import HTTPStatus
 from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -148,6 +149,7 @@ def _serve_authored_reply(reply: str) -> Iterator[str]:
     """
 
     class _Endpoint(SilentLoopbackHandler):
+        @override
         def do_POST(self) -> None:
             read_json_body(self)
             write_json_response(

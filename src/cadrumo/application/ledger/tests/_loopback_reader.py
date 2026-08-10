@@ -36,7 +36,7 @@ import json
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from http import HTTPStatus
-from typing import ClassVar
+from typing import ClassVar, override
 
 from ....core.config import override_settings
 from ....tests.loopback_llm import (
@@ -74,6 +74,7 @@ class _LoopbackRequestHandler(SilentLoopbackHandler):
                 return fields
         return self.fallback
 
+    @override
     def do_POST(self) -> None:
         prompt = json.dumps(read_json_body(self)["messages"])
         write_json_response(

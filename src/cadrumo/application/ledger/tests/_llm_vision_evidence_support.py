@@ -9,7 +9,7 @@ from http import HTTPStatus
 from io import BytesIO
 from pathlib import Path
 from queue import Queue
-from typing import ClassVar
+from typing import ClassVar, override
 
 import pytest
 from PIL import Image
@@ -115,6 +115,7 @@ class _ObservedOllamaRequest(SilentLoopbackHandler):
     events: ClassVar[Queue[dict[str, object]]]
     content: ClassVar[str]
 
+    @override
     def do_POST(self) -> None:
         self.events.put({"body": read_json_body(self)})
         write_json_response(
