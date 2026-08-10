@@ -573,7 +573,12 @@ class FileFallbackMasterKeyProvider:
         try:
             preview = _KdfVersionEnvelope.model_validate_json(raw_text)
         except ValidationError as exc:
-            raise _master_key_unavailable_error("master.kdf must be a JSON object.") from exc
+            # Covers both ways the preview can fail: bytes that are not a JSON
+            # object at all, and an object that declares no version. The second
+            # used to pass, because the preview field defaulted to absent.
+            raise _master_key_unavailable_error(
+                "master.kdf must be a JSON object declaring its version.",
+            ) from exc
         on_disk_version = preview.version
         if on_disk_version != KDF_PARAMS_VERSION:
             raise MasterKeyKdfVersionError(

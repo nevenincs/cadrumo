@@ -84,6 +84,7 @@ from ._remote_state_models import (
     BulkFiledDataCaptureReport,
     FiledDataCaptureFailureRow,
     FiledDataCaptureReport,
+    FiledRecaptureDivergence,
     SourceFiledDataCaptureReport,
 )
 from ._remote_state_outcomes import bounded_context_text
@@ -370,8 +371,15 @@ class _CaptureAccumulator:
     #: Recapture-divergence advisories, one per re-captured filing whose casilla
     #: values this sweep changed. Read before each upsert, never after.
     recapture_notices: list[Notice] = field(default_factory=list)
+    #: The same divergences as typed records, for callers that must act on
+    #: them rather than read them.
+    recapture_divergences: list[FiledRecaptureDivergence] = field(default_factory=list)
     justificante_csvs_by_observation: dict[tuple[str, int, str, str], tuple[str, ...]] = field(default_factory=dict)
     casilla_count: int = 0
+    #: Observations folded in, counted in every mode. ``observation_paths``
+    #: cannot serve as the tally because a preview persists nothing and would
+    #: leave it empty, which would silently uncap a limited sweep.
+    absorbed_count: int = 0
 
     def absorb(
         self,
@@ -380,8 +388,16 @@ class _CaptureAccumulator:
         store: FiledDeclaracionObservationStore,
         bucket_id: str,
         output_root: Path,
+        dry_run: bool = False,
     ) -> None:
-        """Persist one captured observation and fold its artefacts into the run."""
+        """Persist one captured observation and fold its artefacts into the run.
+
+        With ``dry_run`` the divergence read still happens and every write is
+        skipped: no observation is persisted, no justificante evidence is
+        enrolled, and nothing is queued for the calculation-observation write
+        downstream. The preview therefore runs the real funnel minus its
+        writes, rather than a parallel implementation that could drift from it.
+        """
         # Read the recapture divergence BEFORE the upsert, because a re-capture
         # is an unconditional upsert and afterwards the prior values are gone.
         # This is the only ordering that can answer "what did this sweep change";
@@ -389,12 +405,18 @@ class _CaptureAccumulator:
         # any production path, so a corrected filing silently overwrote the
         # previously observed values and the operator was never told.
         self.recapture_notices.extend(recapture_divergence_notices((observation,)))
+        self.recapture_divergences.extend(recapture_divergences((observation,)))
         # The Sede capture deliberately preserves a submitted-file layout
         # refusal as observation metadata and then keeps the declaration-PDF
         # fallback available. Metadata alone is not an operator surface,
         # though: fold the recorded refusal into the one capture advisory lane
         # before persistence so every capture mode can forward it verbatim.
         self.evidence_notices.extend(submitted_file_extraction_notices(observation))
+        self.absorbed_count += 1
+        if dry_run:
+            # Everything past this point writes. The divergence read above is
+            # the preview's whole answer and it has already happened.
+            return
         manifest_path = store.persist_observation(observation)
         self.observation_paths.append(capture_report_path(manifest_path, output_root=output_root))
         self.artefact_refs.extend(
@@ -619,6 +641,7 @@ async def capture_filed_data_bulk(
     modelos: tuple[str, ...] | None = None,
     limit: int | None = None,
     register: DeclaracionesRegisterSession | None = None,
+    dry_run: bool = False,
 ) -> BulkFiledDataCaptureReport:
     """Capture filed declarations across a year range and return a :class:`BulkFiledDataCaptureReport`.
 
@@ -636,6 +659,11 @@ async def capture_filed_data_bulk(
         register: An already-open register to walk instead of resolving a session,
             per :func:`_resolved_declarations_register`. Omitted by every
             production caller, which keeps the session-resolving path.
+        dry_run: Preview the sweep. AEAT is still read and the divergence set
+            the upsert would introduce is still computed, but nothing is
+            written: no observation persisted, no justificante evidence
+            enrolled, no calculation observation finalized. The report carries
+            ``dry_run=True`` and the divergences as its primary result.
     """
     if year_from > year_to:
         raise LiveApplicationInputError(
@@ -707,9 +735,36 @@ async def capture_filed_data_bulk(
                         ),
                     )
                     continue
-                accumulator.absorb(observation, store=store, bucket_id=bucket_id, output_root=output_root)
-            if limit is not None and len(accumulator.observation_paths) >= limit:
+                accumulator.absorb(
+                    observation,
+                    store=store,
+                    bucket_id=bucket_id,
+                    output_root=output_root,
+                    dry_run=dry_run,
+                )
+            if limit is not None and accumulator.absorbed_count >= limit:
                 break
+
+    # finalize_filed_capture WRITES the calculation observations, so a preview
+    # must not reach it. A dry run leaves observations_for_calculation empty
+    # too, so this is belt and braces rather than the only guard -- deliberately,
+    # because the cost of the guard is one branch and the cost of missing it is
+    # a preview that persists.
+    if dry_run:
+        return BulkFiledDataCaptureReport(
+            output_root=str(output_root),
+            modelos=tuple(resolved_modelos),
+            year_from=year_from,
+            year_to=year_to,
+            failed_count=len(failures),
+            **accumulator.capture_report_fields(),
+            calculation_observation_count=0,
+            calculation_observation_keys=(),
+            failures=tuple(failures),
+            recapture_notices=tuple(accumulator.recapture_notices),
+            dry_run=True,
+            recapture_divergences=tuple(accumulator.recapture_divergences),
+        )
 
     finalization = finalize_filed_capture(
         tuple(accumulator.observations_for_calculation),
@@ -730,6 +785,7 @@ async def capture_filed_data_bulk(
         failures=tuple(failures),
         skipped_casillas=finalization.skipped_casillas,
         recapture_notices=tuple(accumulator.recapture_notices),
+        recapture_divergences=tuple(accumulator.recapture_divergences),
     )
 
 
@@ -1521,6 +1577,43 @@ def found_more_than_expected_notices(run: FiledHistoryOnboardingRun) -> tuple[No
     )
 
 
+def recapture_divergences(
+    captured: tuple[FiledDeclaracionObservation, ...],
+    *,
+    repository: CalculationObservationRepository | None = None,
+) -> tuple[FiledRecaptureDivergence, ...]:
+    """Return what re-capturing ``captured`` would change, per filing.
+
+    The single traversal behind both the typed divergence set and the operator
+    advisory. They are two projections of one comparison, so they cannot
+    disagree about what changed; a second loop could, and a preview that
+    disagreed with the run it previews is worse than no preview.
+
+    Read BEFORE the capture is persisted; afterwards the prior values are gone.
+    """
+    from ..calculations import CalculationObservationRepository as _Repository
+
+    repo = repository if repository is not None else _Repository()
+    divergences: list[FiledRecaptureDivergence] = []
+    for observation in captured:
+        stored = repo.load_observation(observation.modelo, observation.period)
+        if stored is None:
+            continue
+        changed = casillas_a_recapture_would_change(observation, stored.observation)
+        if not changed:
+            continue
+        divergences.append(
+            FiledRecaptureDivergence(
+                modelo=observation.modelo,
+                ejercicio=observation.ejercicio,
+                period=observation.period,
+                expediente_id=observation.expediente_id,
+                changed_casillas=tuple(changed),
+            ),
+        )
+    return tuple(divergences)
+
+
 def recapture_divergence_notices(
     captured: tuple[FiledDeclaracionObservation, ...],
     *,
@@ -1534,19 +1627,14 @@ def recapture_divergence_notices(
     AEAT legitimately permits a complementaria — so this mirrors the shipped
     censo-divergence shape: a standing advisory, never a silent auto-resolve.
 
+    Projects :func:`recapture_divergences` onto the notices channel; the
+    comparison itself lives there and is not repeated here.
+
     Read BEFORE the capture is persisted; afterwards the prior values are gone.
     """
-    from ..calculations import CalculationObservationRepository as _Repository
-
-    repo = repository if repository is not None else _Repository()
     notices: list[Notice] = []
-    for observation in captured:
-        stored = repo.load_observation(observation.modelo, observation.period)
-        if stored is None:
-            continue
-        changed = casillas_a_recapture_would_change(observation, stored.observation)
-        if not changed:
-            continue
+    for divergence in recapture_divergences(captured, repository=repository):
+        changed = divergence.changed_casillas
         named = ", ".join(changed)
         notices.append(
             Notice(
@@ -1558,18 +1646,18 @@ def recapture_divergence_notices(
                         "Re-capturing modelo {modelo} {period} {ejercicio} changed {count} previously "
                         "observed casilla value(s): {casillas}. AEAT may hold a corrected filing."
                     ),
-                    modelo=observation.modelo,
-                    period=observation.period.registry_token,
-                    ejercicio=observation.ejercicio,
+                    modelo=divergence.modelo,
+                    period=divergence.period.registry_token,
+                    ejercicio=divergence.ejercicio,
                     count=len(changed),
                     casillas=named,
                 ),
                 context={
-                    "modelo": observation.modelo,
-                    "ejercicio": str(observation.ejercicio),
-                    "period": observation.period.registry_token,
+                    "modelo": divergence.modelo,
+                    "ejercicio": str(divergence.ejercicio),
+                    "period": divergence.period.registry_token,
                     "changed_casillas": named,
-                    "expediente_id": observation.expediente_id,
+                    "expediente_id": divergence.expediente_id,
                 },
             ),
         )

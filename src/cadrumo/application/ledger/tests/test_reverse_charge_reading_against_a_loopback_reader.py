@@ -32,14 +32,12 @@ from __future__ import annotations
 
 import hashlib
 import json
-import threading
 from collections.abc import Iterator
 from decimal import Decimal
 from http import HTTPStatus
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from queue import Queue
-from typing import ClassVar, override
+from typing import ClassVar
 
 import pytest
 
@@ -50,11 +48,19 @@ from ....domain.iva import (
     LegendDerivationOutcome,
     derive_category_from_regime_legend,
 )
+from ....tests.loopback_llm import (
+    SilentLoopbackHandler,
+    ollama_chat_reply,
+    read_json_body,
+    serving_loopback,
+    write_json_response,
+)
 from .._classification_assembly import _RELIEF_ON_AN_ESTABLISHMENT_PREMISE
 from .._evidence_draft import _read_transcription_semantically
 from .._evidence_input import EvidenceInput
 from .._evidence_textlayer import transcribe_text_layer
 from .._regime_contradiction import draft_prints_a_repercutido_line, regime_contradiction_finding
+from ._loopback_reader import READING_RUNTIME_MODEL
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -98,33 +104,24 @@ _RETENCION_REPLY = _LAWFUL_REPLY | {
 }
 
 
-class _LoopbackRequestHandler(BaseHTTPRequestHandler):
+class _LoopbackRequestHandler(SilentLoopbackHandler):
     """A real endpoint speaking the runtime's ``/api/chat`` shape."""
 
     reply: ClassVar[str]
     requests: ClassVar[Queue[dict[str, object]]]
 
-    @override
     def do_POST(self) -> None:
-        body = self.rfile.read(int(self.headers.get("content-length", "0")))
-        self.requests.put(json.loads(body.decode("utf-8")))
-        payload = json.dumps(
-            {
-                "model": "qwen2.5:7b",
-                "message": {"role": "assistant", "content": self.reply},
-                "prompt_eval_count": 100,
-                "eval_count": 50,
-            },
-        ).encode("utf-8")
-        self.send_response(HTTPStatus.OK)
-        self.send_header("content-type", "application/json")
-        self.send_header("content-length", str(len(payload)))
-        self.end_headers()
-        self.wfile.write(payload)
-
-    @override
-    def log_message(self, format: str, *args: object) -> None:
-        """Silence the handler's stderr access log."""
+        self.requests.put(dict(read_json_body(self)))
+        write_json_response(
+            self,
+            ollama_chat_reply(
+                self.reply,
+                model=READING_RUNTIME_MODEL,
+                prompt_eval_count=100,
+                eval_count=50,
+            ),
+            status=HTTPStatus.OK,
+        )
 
 
 @pytest.fixture
@@ -138,35 +135,28 @@ def serve(secure_objects: object) -> Iterator[object]:
     """
     requests: Queue[dict[str, object]] = Queue()
     _LoopbackRequestHandler.requests = requests
-    server = ThreadingHTTPServer(("127.0.0.1", 0), _LoopbackRequestHandler)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    url = f"http://127.0.0.1:{server.server_port}/api/chat"
+    with serving_loopback(_LoopbackRequestHandler, path="/api/chat") as url:
 
-    def read(document: Path, reply: dict[str, str | None]):
-        _LoopbackRequestHandler.reply = json.dumps(reply)
-        payload = document.read_bytes()
-        evidence = EvidenceInput(
-            mime_type="application/pdf",
-            data=payload,
-            content_sha256=hashlib.sha256(payload).hexdigest(),
-            attachment_id="c" * 64,
-        )
-        with override_settings(cadrumo_llm_ollama_chat_url=url):
-            # ``settings`` is required rather than resolved internally, so the
-            # override reaches the read instead of being silently bypassed.
-            return _read_transcription_semantically(
-                evidence,
-                transcribe_text_layer(evidence),
-                settings=load_settings(),
+        def read(document: Path, reply: dict[str, str | None]):
+            _LoopbackRequestHandler.reply = json.dumps(reply)
+            payload = document.read_bytes()
+            evidence = EvidenceInput(
+                mime_type="application/pdf",
+                data=payload,
+                content_sha256=hashlib.sha256(payload).hexdigest(),
+                attachment_id="c" * 64,
             )
+            with override_settings(cadrumo_llm_ollama_chat_url=url):
+                # ``settings`` is required rather than resolved internally, so
+                # the override reaches the read instead of being silently
+                # bypassed.
+                return _read_transcription_semantically(
+                    evidence,
+                    transcribe_text_layer(evidence),
+                    settings=load_settings(),
+                )
 
-    try:
         yield read
-    finally:
-        server.shutdown()
-        server.server_close()
-        thread.join(timeout=5)
 
 
 def test_both_documents_print_the_mention_the_legend_table_matches() -> None:

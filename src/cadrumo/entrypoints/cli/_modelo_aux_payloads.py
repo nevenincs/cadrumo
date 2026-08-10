@@ -21,10 +21,16 @@ from typing import Annotated
 from pydantic import Field
 
 from ...application.evidence import BundleId, BundleVerificationState
+from ...application.workflow import (
+    SiteHealthAlert,
+    WorkflowObligationFacts,
+    WorkflowStage,
+    WorkflowStepDetails,
+)
 from ...core import Period
 from ...core.aggregation import RetencionClave
 from ...core.identity import BucketId, ContentDigest
-from ...core.json_contract import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema, ResolvedPreconditionAction, register_schema
 from ...domain.buckets import (
     BucketActorLabel,
     BucketEventId,
@@ -149,7 +155,13 @@ class WorkHistoryResult(OutputSchema):
 
 
 class WorkflowRunPayload(OutputSchema):
-    """One :class:`WorkflowResult` row in the runs listing."""
+    """One localized view of a locale-neutral persisted workflow run.
+
+    The human summary is derived only at this transport boundary. Its stable
+    source key and closed typed facts remain visible beside the canonical
+    schema-resolved action DTO; no persisted prose or free-form recovery
+    instruction crosses into this payload.
+    """
 
     run_id: str
     modelo: str | None
@@ -157,12 +169,22 @@ class WorkflowRunPayload(OutputSchema):
     final_stage: str
     aborted_reason: str | None
     started_at: str
+    obligation: WorkflowObligationFacts | None
+    summary_stage: WorkflowStage | None
+    summary_locale_key: str = Field(
+        pattern=r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$",
+        min_length=3,
+        max_length=160,
+    )
+    summary_details: WorkflowStepDetails | None = None
+    site_health_alert: SiteHealthAlert | None = None
     summary: str
+    action: ResolvedPreconditionAction | None = None
 
 
 @register_schema("modelo.work.runs")
 class WorkRunsResult(OutputSchema):
-    """Workflow run listing returned by ``aeat app modelo work runs``.
+    """Workflow run listing returned by the ``modelo.work.runs`` leaf.
 
     Rows mirror persisted :class:`WorkflowResult` records discovered through
     :func:`list_runs`.

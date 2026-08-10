@@ -186,6 +186,7 @@ def test_gate_error_retains_result_for_internal_telemetry() -> None:
 
     assert error.result is result
     assert error.result.final_stage is WorkflowStage.ABORTED
+    assert error.terminal_precondition_verdict is result.steps[-1].precondition_verdict
     # ``result`` is a property, not an instance attribute, so it never
     # appears in ``vars`` — the merge surface the error boundary walks.
     assert "result" not in vars(error)

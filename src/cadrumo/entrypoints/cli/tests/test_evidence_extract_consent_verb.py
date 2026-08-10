@@ -25,15 +25,11 @@ No model runs. The endpoint is loopback and nothing leaves the machine.
 
 from __future__ import annotations
 
-import json
-import threading
 from collections.abc import Iterator
 from contextlib import contextmanager
 from http import HTTPStatus
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from queue import Queue
-from typing import override
 
 import pytest
 from pydantic import SecretStr
@@ -50,6 +46,13 @@ from ....llm import (
     mint_evidence_consent_token,
 )
 from ....tests.fixtures.settings import EnvFileFreeSettings
+from ....tests.loopback_llm import (
+    SilentLoopbackHandler,
+    openai_chat_reply,
+    read_text_body,
+    serving_loopback,
+    write_json_response,
+)
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 # INTEGRATION, not unit, and the reason is a production guard rather than a
@@ -108,38 +111,21 @@ def _serve_openai() -> Iterator[tuple[str, Queue[str]]]:
     """
     bodies: Queue[str] = Queue()
 
-    class _Endpoint(BaseHTTPRequestHandler):
-        @override
+    class _Endpoint(SilentLoopbackHandler):
         def do_POST(self) -> None:
-            raw = self.rfile.read(int(self.headers.get("content-length", "0")))
-            bodies.put(raw.decode("utf-8"))
-            payload = json.dumps(
-                {
-                    "id": "chatcmpl-loopback",
-                    "model": "gpt-4.1",
-                    "choices": [{"message": {"content": '{"taxable_base": "100,00"}'}}],
-                    "usage": {"prompt_tokens": 1, "completion_tokens": 1},
-                },
-            ).encode("utf-8")
-            self.send_response(HTTPStatus.OK)
-            self.send_header("content-type", "application/json")
-            self.send_header("content-length", str(len(payload)))
-            self.end_headers()
-            self.wfile.write(payload)
+            bodies.put(read_text_body(self))
+            write_json_response(
+                self,
+                openai_chat_reply(
+                    '{"taxable_base": "100,00"}',
+                    prompt_tokens=1,
+                    completion_tokens=1,
+                ),
+                status=HTTPStatus.OK,
+            )
 
-        @override
-        def log_message(self, format: str, *args: object) -> None:
-            return
-
-    server = ThreadingHTTPServer(("127.0.0.1", 0), _Endpoint)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    try:
-        yield f"http://127.0.0.1:{server.server_port}/v1/chat/completions", bodies
-    finally:
-        server.shutdown()
-        server.server_close()
-        thread.join(timeout=5)
+    with serving_loopback(_Endpoint, path="/v1/chat/completions") as endpoint:
+        yield endpoint, bodies
 
 
 def _transcription() -> DocumentTranscription:

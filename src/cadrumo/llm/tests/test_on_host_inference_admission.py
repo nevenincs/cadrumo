@@ -16,21 +16,25 @@ from __future__ import annotations
 
 import asyncio
 import contextvars
-import json
 import threading
 from collections.abc import Iterator
 from contextlib import contextmanager
 from http import HTTPStatus
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from queue import Queue
-from typing import override
 
 import pytest
 
 from ...adapters.outbound.llm import LLMCache, LLMRunTelemetryRecorder, UsageRecorder
 from ...core.config import LLMProvider, override_settings
 from ...tests.fixtures.settings import EnvFileFreeSettings
+from ...tests.loopback_llm import (
+    SilentLoopbackHandler,
+    ollama_chat_reply,
+    read_json_body,
+    serving_loopback,
+    write_json_response,
+)
 from .. import LLMBusyError, LLMClient, LLMProviderError, LLMRequest
 from .._client import reset_on_host_inference_arena
 
@@ -89,45 +93,33 @@ class _HeldRuntime:
 def _serve_held_ollama(runtime: _HeldRuntime) -> Iterator[str]:
     """Serve ``/api/chat`` on loopback, blocking every request until released."""
 
-    class _Endpoint(BaseHTTPRequestHandler):
+    class _Endpoint(SilentLoopbackHandler):
         def do_POST(self) -> None:
-            body = json.loads(self.rfile.read(int(self.headers.get("content-length", "0"))).decode("utf-8"))
-            runtime.arrived.put(str(body["messages"][-1]["content"]))
+            body = read_json_body(self)
+            messages = body["messages"]
+            assert isinstance(messages, list)
+            runtime.arrived.put(str(messages[-1]["content"]))
             # The whole point of the case: the first request must still be
             # in-flight, holding its slot, when the second one is admitted or
             # refused. Blocking inside the handler is what makes that ordering
             # a fact rather than a hope about scheduling.
             runtime.release.wait(_SERVER_WAIT_S)
-            if runtime.status is HTTPStatus.OK:
-                payload: dict[str, object] = {
-                    "model": "gpt-oss",
-                    "message": {"content": " local completion "},
-                    "prompt_eval_count": 12,
-                    "eval_count": 4,
-                }
-            else:
-                payload = {"error": runtime.status.phrase}
-            encoded = json.dumps(payload).encode("utf-8")
-            self.send_response(runtime.status)
-            self.send_header("content-type", "application/json")
-            self.send_header("content-length", str(len(encoded)))
-            self.end_headers()
-            self.wfile.write(encoded)
+            payload = (
+                ollama_chat_reply(" local completion ")
+                if runtime.status is HTTPStatus.OK
+                else {"error": runtime.status.phrase}
+            )
+            write_json_response(self, payload, status=runtime.status)
 
-        @override
-        def log_message(self, format: str, *args: object) -> None:
-            """Silence stdlib request logging during tests."""
-
-    server = ThreadingHTTPServer(("127.0.0.1", 0), _Endpoint)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    try:
-        yield f"http://127.0.0.1:{server.server_port}/api/chat"
-    finally:
-        runtime.release.set()
-        server.shutdown()
-        server.server_close()
-        thread.join(timeout=3)
+    with serving_loopback(_Endpoint, path="/api/chat") as endpoint:
+        try:
+            yield endpoint
+        finally:
+            # Released BEFORE the shared teardown shuts the server down: a
+            # handler still blocked on this event would otherwise hold the
+            # serve thread past its join budget and surface as a hang here
+            # rather than in the case that left a request in flight.
+            runtime.release.set()
 
 
 def _run_in_thread(client: LLMClient, prompt: str) -> tuple[threading.Thread, list[object]]:

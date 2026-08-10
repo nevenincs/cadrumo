@@ -41,8 +41,10 @@ __all__ = [
     "ollama_tags_reply",
     "openai_chat_reply",
     "read_json_body",
+    "read_text_body",
     "serving_loopback",
     "write_json_response",
+    "write_raw_response",
 ]
 
 #: The shutdown join budget. Generous enough that a loaded CI box does not trip
@@ -65,11 +67,27 @@ class SilentLoopbackHandler(BaseHTTPRequestHandler):
         """Silence the stdlib per-request access log."""
 
 
-def read_json_body(handler: BaseHTTPRequestHandler) -> Mapping[str, object]:
-    """Return the handler's request body, parsed as JSON.
+def read_text_body(handler: BaseHTTPRequestHandler) -> str:
+    """Return the handler's request body, decoded but not parsed.
 
     Reads exactly ``content-length`` bytes, which is what makes the connection
     reusable for the next request rather than leaving unread bytes in the socket.
+
+    The undecoded sibling of :func:`read_json_body`, for the suites that record
+    what arrived verbatim: their evidence is the transmitted text itself, and a
+    parse-then-reserialise round trip would record a body the client never sent.
+
+    Args:
+        handler: The handler serving the request.
+
+    Returns:
+        The request body as text.
+    """
+    return handler.rfile.read(int(handler.headers.get("content-length", "0"))).decode("utf-8")
+
+
+def read_json_body(handler: BaseHTTPRequestHandler) -> Mapping[str, object]:
+    """Return the handler's request body, parsed as JSON.
 
     Args:
         handler: The handler serving the request.
@@ -77,8 +95,7 @@ def read_json_body(handler: BaseHTTPRequestHandler) -> Mapping[str, object]:
     Returns:
         The decoded JSON object.
     """
-    raw = handler.rfile.read(int(handler.headers.get("content-length", "0")))
-    parsed: Mapping[str, object] = json.loads(raw.decode("utf-8"))
+    parsed: Mapping[str, object] = json.loads(read_text_body(handler))
     return parsed
 
 
@@ -103,14 +120,41 @@ def write_json_response(
         status: The HTTP status to send.
         extra_headers: Additional headers, such as ``retry-after`` on a 429.
     """
-    encoded = json.dumps(payload).encode("utf-8")
+    write_raw_response(handler, json.dumps(payload).encode("utf-8"), status=status, extra_headers=extra_headers)
+
+
+def write_raw_response(
+    handler: BaseHTTPRequestHandler,
+    body: bytes,
+    *,
+    status: int,
+    content_type: str = "application/json",
+    extra_headers: Mapping[str, str] | None = None,
+) -> None:
+    """Write ``body`` verbatim as a complete response.
+
+    The escape hatch beneath :func:`write_json_response`, for the suite that
+    needs to send a body which is NOT valid JSON while still claiming a JSON
+    content type -- the "2xx whose payload does not match the provider schema"
+    failure is a real wire shape, and a helper that could only serialise a
+    mapping would force that suite to keep its own copy of the header plumbing.
+    Both paths derive ``content-length`` from the same bytes here, so the one
+    defect that hangs a client cannot be reintroduced on either.
+
+    Args:
+        handler: The handler serving the request.
+        body: The exact bytes to send.
+        status: The HTTP status to send.
+        content_type: The declared content type.
+        extra_headers: Additional headers, such as ``retry-after`` on a 429.
+    """
     handler.send_response(status)
     for name, value in (extra_headers or {}).items():
         handler.send_header(name, value)
-    handler.send_header("content-type", "application/json")
-    handler.send_header("content-length", str(len(encoded)))
+    handler.send_header("content-type", content_type)
+    handler.send_header("content-length", str(len(body)))
     handler.end_headers()
-    handler.wfile.write(encoded)
+    handler.wfile.write(body)
 
 
 def ollama_chat_reply(
@@ -121,6 +165,10 @@ def ollama_chat_reply(
     eval_count: int = 4,
 ) -> Mapping[str, object]:
     """Return a well-formed Ollama ``/api/chat`` completion envelope.
+
+    The ``role`` is carried because the real runtime always sends it; a builder
+    that omitted it would be describing a wire shape nothing on the other end
+    ever produces.
 
     Args:
         content: The assistant message content the caller wants echoed back.
@@ -133,7 +181,7 @@ def ollama_chat_reply(
     """
     return {
         "model": model,
-        "message": {"content": content},
+        "message": {"role": "assistant", "content": content},
         "prompt_eval_count": prompt_eval_count,
         "eval_count": eval_count,
     }
@@ -145,6 +193,7 @@ def openai_chat_reply(
     model: str = "gpt-4.1",
     prompt_tokens: int = 9,
     completion_tokens: int = 3,
+    response_id: str = "chatcmpl-loopback",
 ) -> Mapping[str, object]:
     """Return a well-formed OpenAI ``/v1/chat/completions`` envelope.
 
@@ -159,12 +208,13 @@ def openai_chat_reply(
         model: The model name the vendor would report.
         prompt_tokens: Prompt tokens the vendor would report.
         completion_tokens: Completion tokens the vendor would report.
+        response_id: The completion id the vendor would report.
 
     Returns:
         The reply object, shaped as the vendor shapes it.
     """
     return {
-        "id": "chatcmpl-loopback",
+        "id": response_id,
         "model": model,
         "choices": [{"message": {"content": content}}],
         "usage": {"prompt_tokens": prompt_tokens, "completion_tokens": completion_tokens},

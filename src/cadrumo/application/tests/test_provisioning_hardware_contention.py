@@ -17,17 +17,20 @@ through the same call, so a refusal cannot pass for the wrong reason.
 
 from __future__ import annotations
 
-import json
-import threading
 from http import HTTPStatus
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from queue import Queue
-from typing import ClassVar, override
+from typing import ClassVar
 
 import pytest
 
 from ...core import AcceleratorKind, ContentionCause, ModelRole
 from ...core.config import override_settings
+from ...tests.loopback_llm import (
+    SilentLoopbackHandler,
+    read_json_body,
+    serving_loopback,
+    write_json_response,
+)
 from ..provisioning import (
     AcceleratorDevice,
     AcceleratorReading,
@@ -402,32 +405,24 @@ def test_the_motivating_machine_state_refuses() -> None:
 # ---------------------------------------------------------------------------
 
 
-class _RuntimeLoopbackHandler(BaseHTTPRequestHandler):
-    """A real local endpoint speaking the model runtime's ``/api/ps`` and release wire shape."""
+class _RuntimeLoopbackHandler(SilentLoopbackHandler):
+    """A real local endpoint speaking the model runtime's ``/api/ps`` and release wire shape.
+
+    ``/api/ps`` reports RESIDENCY -- what is loaded on the device right now --
+    which is a management fact rather than an inference reply, so the bodies
+    stay local here while the plumbing is shared.
+    """
 
     residents: ClassVar[list[dict[str, object]]] = []
     events: ClassVar[Queue[dict[str, object]]]
 
-    def _respond(self, payload: dict[str, object]) -> None:
-        encoded = json.dumps(payload).encode("utf-8")
-        self.send_response(HTTPStatus.OK)
-        self.send_header("content-type", "application/json")
-        self.send_header("content-length", str(len(encoded)))
-        self.end_headers()
-        self.wfile.write(encoded)
-
     def do_GET(self) -> None:
         self.events.put({"method": "GET", "path": self.path})
-        self._respond({"models": list(self.residents)})
+        write_json_response(self, {"models": list(self.residents)}, status=HTTPStatus.OK)
 
     def do_POST(self) -> None:
-        body = self.rfile.read(int(self.headers.get("content-length", "0")))
-        self.events.put({"method": "POST", "path": self.path, "body": json.loads(body.decode("utf-8"))})
-        self._respond({"done": True})
-
-    @override
-    def log_message(self, format: str, *args: object) -> None:
-        """Silence the handler's stderr access log."""
+        self.events.put({"method": "POST", "path": self.path, "body": dict(read_json_body(self))})
+        write_json_response(self, {"done": True}, status=HTTPStatus.OK)
 
 
 @pytest.fixture
@@ -436,15 +431,8 @@ def runtime() -> object:
     events: Queue[dict[str, object]] = Queue()
     _RuntimeLoopbackHandler.events = events
     _RuntimeLoopbackHandler.residents = []
-    server = ThreadingHTTPServer(("127.0.0.1", 0), _RuntimeLoopbackHandler)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    try:
-        yield (f"http://127.0.0.1:{server.server_port}/api/chat", events)
-    finally:
-        server.shutdown()
-        server.server_close()
-        thread.join(timeout=5)
+    with serving_loopback(_RuntimeLoopbackHandler, path="/api/chat") as chat_url:
+        yield (chat_url, events)
 
 
 def test_resident_set_is_read_from_the_runtime_ps_endpoint(runtime: tuple[str, Queue[dict[str, object]]]) -> None:

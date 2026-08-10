@@ -67,7 +67,17 @@ def _create_profile() -> None:
     assert result.exit_code == 0, result.output
 
 
-def _create_work_unit(*, modelo: str, year: int, period: str, revision: str) -> dict[str, object]:
+def _create_work_unit(*, modelo: str, year: int, period: str) -> dict[str, object]:
+    """Create a work unit and let the registry authority pick the revision.
+
+    No ``--revision`` is injected. AEAT binds each ``(modelo, filing_year,
+    period)`` triple to exactly one revision by published orden, so the
+    revision is a derived fact and creation accepts an explicit id only when
+    it equals that resolution. Pinning a literal here buys nothing and goes
+    stale the moment a new revision opens: these fixtures previously pinned
+    M303 to ``2023-y-siguientes`` for 2026, which began refusing outright
+    once the 2026 revision shipped and capped that window at 2025-12-31.
+    """
     result = invoke_cached_cli(
         [
             "--format",
@@ -82,8 +92,6 @@ def _create_work_unit(*, modelo: str, year: int, period: str, revision: str) -> 
             str(year),
             "--period",
             period,
-            "--revision",
-            revision,
         ],
     )
     assert result.exit_code == 0, result.output
@@ -91,19 +99,19 @@ def _create_work_unit(*, modelo: str, year: int, period: str, revision: str) -> 
 
 
 def _create_303_work_unit() -> dict[str, object]:
-    return _create_work_unit(modelo="303", year=2026, period="1T", revision="2023-y-siguientes")
+    return _create_work_unit(modelo="303", year=2026, period="1T")
 
 
 def _create_115_work_unit() -> dict[str, object]:
-    return _create_work_unit(modelo="115", year=2026, period="1T", revision="2019-y-siguientes")
+    return _create_work_unit(modelo="115", year=2026, period="1T")
 
 
 def _create_111_work_unit() -> dict[str, object]:
-    return _create_work_unit(modelo="111", year=2025, period="2T", revision="2019-y-siguientes")
+    return _create_work_unit(modelo="111", year=2025, period="2T")
 
 
 def _create_180_work_unit() -> dict[str, object]:
-    return _create_work_unit(modelo="180", year=2026, period="0A", revision="2023-y-siguientes")
+    return _create_work_unit(modelo="180", year=2026, period="0A")
 
 
 def _raw_transaction(

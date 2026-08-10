@@ -138,6 +138,7 @@ from ._filed_data_capture import (
     list_filed_data_bulk,
     pull_filed_history,
     recapture_divergence_notices,
+    recapture_divergences,
 )
 from ._filed_observation_persistence import (
     FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE,
@@ -182,6 +183,7 @@ from ._remote_state_models import (
     ExpedientesBulkCaptureFailureRow,
     ExpedientesBulkCaptureReport,
     FiledCasillaSkipRow,
+    FiledRecaptureDivergence,
     FiledDataCaptureFailureRow,
     FiledDataCaptureReport,
     IvaCompensationCarryForwardLotRow,
@@ -586,6 +588,7 @@ __all__ = [
     "FiledJustificanteMetadataResult",
     "FiledJustificanteUnreachedReason",
     "FiledPeriodSelectionRow",
+    "FiledRecaptureDivergence",
     "IvaCompensationCarryForwardLotRow",
     "IvaCompensationHistoryCaptureReport",
     "IvaCompensationHistoryReport",
@@ -670,6 +673,7 @@ __all__ = [
     "pull_censal_datos",
     "pull_filed_history",
     "recapture_divergence_notices",
+    "recapture_divergences",
     "reconcile_capture",
     "register_capture_as_filing_evidence",
     "register_capture_justificante_metadata",

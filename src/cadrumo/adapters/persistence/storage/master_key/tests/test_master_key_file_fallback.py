@@ -723,6 +723,66 @@ class TestFileFallbackProvider:
         envelope = build_error_envelope(excinfo.value)
         assert str(tmp_path) not in envelope.model_dump_json()
 
+    def test_kdf_file_omitting_the_version_is_refused(self, tmp_path: Path) -> None:
+        """Anti-tautology proof: strip the marker the preflight exists to read.
+
+        The preview model is what establishes which format the file claims to
+        be, ahead of strict parsing. While its version defaulted to absent, a
+        marker-less file satisfied the preview and reached the comparison with
+        nothing standing behind the claim, so the one document the preflight
+        exists to catch was the one it could not.
+
+        No legitimate file reaches this state: every writer serialises the
+        parameter record with its defaults included, so a real ``master.kdf``
+        always carries the key. It is removed here deliberately.
+        """
+        provider = FileFallbackMasterKeyProvider(
+            store_dir=tmp_path / "fallback-store",
+            passphrase_callback=lambda: "test-passphrase",
+        )
+        provider.provision_master_key()
+        kdf_path = tmp_path / "fallback-store" / "master.kdf"
+
+        document = json.loads(kdf_path.read_text(encoding=UTF_8_ENCODING))
+        assert "version" in document, "the writer must stamp version for this proof to be meaningful"
+        del document["version"]
+        kdf_path.write_text(json.dumps(document), encoding=UTF_8_ENCODING)
+
+        with pytest.raises(MasterKeyUnavailableError) as excinfo:
+            FileFallbackMasterKeyProvider(
+                store_dir=tmp_path / "fallback-store",
+                passphrase_callback=lambda: "test-passphrase",
+            ).get_master_key()
+
+        assert excinfo.value.translated_message == "errors.auth.auth_storage_master_key_unavailable"
+        assert str(tmp_path) not in str(excinfo.value)
+        envelope = build_error_envelope(excinfo.value)
+        assert str(tmp_path) not in envelope.model_dump_json()
+
+    def test_a_version_bearing_kdf_file_still_unlocks(self, tmp_path: Path) -> None:
+        """Positive control: the untouched file the writer produced still opens.
+
+        Without this the refusal above could pass against a store that never
+        worked, and the tightening would look proven while having broken the
+        ordinary path.
+        """
+        provider = FileFallbackMasterKeyProvider(
+            store_dir=tmp_path / "fallback-store",
+            passphrase_callback=lambda: "test-passphrase",
+        )
+        minted = provider.provision_master_key()
+
+        document = json.loads(
+            (tmp_path / "fallback-store" / "master.kdf").read_text(encoding=UTF_8_ENCODING),
+        )
+        assert document["version"] == _KdfParameters.model_fields["version"].default
+
+        reopened = FileFallbackMasterKeyProvider(
+            store_dir=tmp_path / "fallback-store",
+            passphrase_callback=lambda: "test-passphrase",
+        ).get_master_key()
+        assert reopened == minted
+
     def test_malformed_kdf_file_raises_localized_without_path(self, tmp_path: Path) -> None:
         provider = FileFallbackMasterKeyProvider(
             store_dir=tmp_path / "fallback-store",

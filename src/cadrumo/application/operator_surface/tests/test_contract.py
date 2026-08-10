@@ -265,7 +265,15 @@ def test_help_documents_are_backend_owned_and_current_surface_only() -> None:
     config_text = render_help_text(config)
     app_text = render_help_text(app)
 
-    assert "The CLI has exactly two roots: config and app." in root.paragraphs
+    # The two-root contract is asserted from the contract, not from a sentence
+    # about it. This line used to pin a full English paragraph, which made a
+    # locale catalogue the test's real authority: rewording the help in the
+    # catalogue reddened this gate without changing any behaviour it guards.
+    assert frozenset(surface.name for surface in get_operator_surface_contract().roots) == {
+        RootSurfaceName.CONFIG,
+        RootSurfaceName.APP,
+    }
+    assert root.paragraphs, "the root help document rendered no prose at all"
     assert "aeat config profile create NAME" in root_text
     assert "CADRUMO_LOCAL_STORAGE_ROOT" in root_text
     assert "CADRUMO_SECRET_STORE_DIR" in root_text

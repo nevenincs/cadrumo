@@ -31,6 +31,7 @@ from __future__ import annotations
 
 from ...core.errors import CoreNotFoundError
 from ...domain.modelos import ModeloError
+from ..operator_actions import PreconditionVerdict
 from ..workflow import WorkflowResult
 
 WORKFLOW_GATE_LEGAL_REFS: tuple[str, ...] = (
@@ -163,6 +164,20 @@ class ModeloWorkflowGateError(ModeloError):
     def result(self) -> WorkflowResult:
         """Return the live :class:`~cadrumo.application.workflow.WorkflowResult` that triggered the abort."""
         return self._result
+
+    @property
+    def terminal_precondition_verdict(self) -> PreconditionVerdict:
+        """Return the persisted terminal verdict without exposing the live run.
+
+        The workflow-result model requires every aborted run to end in a failed
+        step carrying this verdict.  Keeping the result private avoids a raw
+        persistence-object leak through generic error context, while the CLI
+        boundary can schema-resolve this exact application-owned decision.
+        """
+        verdict = self._result.steps[-1].precondition_verdict
+        if verdict is None:  # defensive: WorkflowResult normally rejects this shape
+            raise ValueError("aborted workflow gate result has no terminal precondition verdict")
+        return verdict
 
 
 class AmendmentOverrideCasillaError(ModeloError):

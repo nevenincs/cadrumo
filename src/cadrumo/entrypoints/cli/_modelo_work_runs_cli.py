@@ -24,6 +24,7 @@ See Also:
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable
 from typing import Annotated
 
@@ -43,7 +44,8 @@ from ...application.workflow import (
 from ...core import Period
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
-from ._common import _emit_envelope
+from ...core.json_contract import ResolvedPreconditionAction
+from ._common import _emit_envelope, resolve_cli_precondition_action
 from ._modelo_cli_support import (
     OutputLanguageOpt,
     parse_revision_selector,
@@ -75,6 +77,7 @@ def _workflow_run_payload(run: WorkflowResult) -> WorkflowRunPayload:
     final_step = run.steps[-1] if run.steps else None
     summary_locale_key = final_step.summary_locale_key if final_step is not None else run.summary_locale_key
     summary_details = final_step.details if final_step is not None else run.summary_details
+    terminal_verdict = final_step.precondition_verdict if final_step is not None else None
     return WorkflowRunPayload(
         run_id=run.run_id,
         modelo=run.obligation.modelo if run.obligation is not None else None,
@@ -82,11 +85,23 @@ def _workflow_run_payload(run: WorkflowResult) -> WorkflowRunPayload:
         final_stage=run.final_stage.value,
         aborted_reason=run.aborted_reason.value if run.aborted_reason is not None else None,
         started_at=run.started_at.isoformat(),
+        obligation=run.obligation,
+        summary_stage=final_step.stage if final_step is not None else None,
+        summary_locale_key=summary_locale_key,
+        summary_details=summary_details,
+        site_health_alert=final_step.site_health_alert if final_step is not None else None,
         summary=_render_workflow_step_summary(
             summary_locale_key,
             summary_details,
         ),
+        action=(resolve_cli_precondition_action(terminal_verdict) if terminal_verdict is not None else None),
     )
+
+
+def _workflow_run_action_text(action: ResolvedPreconditionAction | None) -> str:
+    """Render the exact action DTO as a deterministic text-table field."""
+    value = None if action is None else action.model_dump(mode="json")
+    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
 
 def _workflow_run_tab_line(run: WorkflowRunPayload) -> str:
@@ -100,6 +115,7 @@ def _workflow_run_tab_line(run: WorkflowRunPayload) -> str:
             run.aborted_reason or "-",
             run.started_at,
             run.summary,
+            _workflow_run_action_text(run.action),
         ),
     )
 
@@ -120,14 +136,7 @@ def register_work_run_commands(
 
     @work_app.command(
         "runs",
-        help=tr(
-            "cli.app.modelo.work.runs_help",
-            default=(
-                "List persisted workflow runs with their run ids, newest first. "
-                "Use a run id with `aeat app modelo work resume`. Local-only: "
-                "never contacts AEAT."
-            ),
-        ),
+        help=tr("cli.app.modelo.work.runs_help"),
     )
     def work_runs(
         ctx: typer.Context,
@@ -142,36 +151,21 @@ def register_work_run_commands(
         lines = [
             "operation\tmodelo.work.runs",
             f"run_count\t{len(runs)}",
-            "run_id\tmodelo\tperiod\tfinal_stage\taborted_reason\tstarted_at\tsummary",
+            "run_id\tmodelo\tperiod\tfinal_stage\taborted_reason\tstarted_at\tsummary\taction",
         ]
         lines.extend(_workflow_run_tab_line(run) for run in run_payloads)
         _emit_envelope(ctx, command="modelo.work.runs", result=result, lines=lines)
 
     @work_app.command(
         "resume",
-        help=tr(
-            "cli.app.modelo.work.resume_help",
-            default=(
-                "Validate that an aborted workflow run may be retried. Emits the "
-                "(modelo, period, obligation) context the engine would consume to "
-                "drive a fresh attempt. Use --modelo --year --period for the "
-                "normal path; exact ids remain advanced escape hatches. Local-only: "
-                "never contacts AEAT."
-            ),
-        ),
+        help=tr("cli.app.modelo.work.resume_help"),
     )
     def work_resume(
         ctx: typer.Context,
         target: Annotated[
             str | None,
             typer.Argument(
-                help=tr(
-                    "cli.app.modelo.work.resume_target_help",
-                    default=(
-                        "Optional 16-character workflow run id or 64-character "
-                        "work-unit id. Prefer --modelo --year --period."
-                    ),
-                ),
+                help=tr("cli.app.modelo.work.resume_target_help"),
             ),
         ] = None,
         modelo: _ModeloOpt = None,

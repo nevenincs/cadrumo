@@ -94,7 +94,7 @@ from ...domain.prorrata_register import (
     ProrrataRegisterRepositoryProtocol,
 )
 from ..calculations import CalculationObservationRepository, PriorDomiciliationElectionProjection
-from ._filed_revision_observation import persist_filed_revision_observation
+from ._filed_revision_observation import persist_filed_revision_observation, require_filing_result_disposition
 
 if TYPE_CHECKING:  # pragma: no cover - typing-only storage boundary import
     from ...adapters.persistence.storage import SecureObjectWrite
@@ -647,6 +647,17 @@ def persist_filed_revision(
     in the same secure-object save as the filing catalogue and filed
     calculation revision.
     """
+    # Ahead of every write in this transition, not merely ahead of the
+    # observation it guards. The same requirement is enforced again at the
+    # observation write, which other callers reach directly, but that position
+    # is downstream of the filing catalogue, the advanced WorkUnit pointer, the
+    # participation index, any prorrata writeback and the MODELO_FILED events --
+    # all of which have already landed by then. A filing refused there would be
+    # refused after being filed. Conditioned on the observation repository being
+    # supplied so the set of filings that must carry a disposition is unchanged;
+    # only when the refusal happens moves.
+    if calculation_observation_repository is not None:
+        require_filing_result_disposition(work_unit=work_unit, result_disposition=result_disposition)
     calculation_revision_id = target.calculation_revision_id
     new_filing_id = derive_filing_record_id(
         work_unit_id=target.work_unit_id,

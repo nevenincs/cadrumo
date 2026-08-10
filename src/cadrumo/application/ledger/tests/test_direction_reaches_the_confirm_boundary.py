@@ -18,10 +18,8 @@ this is executable on a machine with no accelerator.
 from __future__ import annotations
 
 import json
-import threading
 from collections.abc import Iterator
 from http import HTTPStatus
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from io import BytesIO
 from pathlib import Path
 from typing import ClassVar
@@ -36,6 +34,13 @@ from ....core.config import load_settings, override_settings
 from ....domain.iva import InvoiceKind
 from ....domain.user_profile import UserProfileFact
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.loopback_llm import (
+    SilentLoopbackHandler,
+    ollama_chat_reply,
+    read_json_body,
+    serving_loopback,
+    write_json_response,
+)
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from .._confirmation_gate import ConfirmationBlockedError, confirmation_blockers
@@ -45,6 +50,7 @@ from .._evidence_draft import (
     extract_invoice_draft_from_evidence,
 )
 from .._filer_establishment import FILER_TAX_ID_FACT_PATH
+from ._loopback_reader import READING_RUNTIME_MODEL
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -129,42 +135,29 @@ _COMMON_READ = {
 }
 
 
-class _ReaderEndpoint(BaseHTTPRequestHandler):
+class _ReaderEndpoint(SilentLoopbackHandler):
     """A real local endpoint speaking the runtime's ``/api/chat`` wire shape."""
 
     reply: ClassVar[str] = ""
 
     def do_POST(self) -> None:
-        self.rfile.read(int(self.headers.get("content-length", "0")))
-        payload = json.dumps(
-            {
-                "model": "qwen2.5:7b",
-                "message": {"role": "assistant", "content": self.reply},
-                "prompt_eval_count": 100,
-                "eval_count": 50,
-            },
-        ).encode("utf-8")
-        self.send_response(HTTPStatus.OK)
-        self.send_header("content-type", "application/json")
-        self.send_header("content-length", str(len(payload)))
-        self.end_headers()
-        self.wfile.write(payload)
-
-    def log_message(self, format: str, *args: object) -> None:
-        """Silence the handler's stderr access log."""
+        read_json_body(self)
+        write_json_response(
+            self,
+            ollama_chat_reply(
+                self.reply,
+                model=READING_RUNTIME_MODEL,
+                prompt_eval_count=100,
+                eval_count=50,
+            ),
+            status=HTTPStatus.OK,
+        )
 
 
 @pytest.fixture
 def reader_url() -> Iterator[str]:
-    server = ThreadingHTTPServer(("127.0.0.1", 0), _ReaderEndpoint)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    try:
-        yield f"http://127.0.0.1:{server.server_port}/api/chat"
-    finally:
-        server.shutdown()
-        server.server_close()
-        thread.join(timeout=5)
+    with serving_loopback(_ReaderEndpoint, path="/api/chat") as chat_url:
+        yield chat_url
 
 
 def _text_pdf(lines: tuple[str, ...]) -> bytes:

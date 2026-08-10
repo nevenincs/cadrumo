@@ -9,9 +9,10 @@ CI.
 
 This is not a mock and not a patch: nothing in the code under test is
 substituted. The REPLY is supplied, exactly as a reply from a real runtime would
-be, and everything downstream of the socket is production code. The pattern is
-adopted from ``application/tests/test_provisioning_hardware_contention.py``
-rather than authored fresh, so there is one loopback shape in the tree.
+be, and everything downstream of the socket is production code. The
+bind-thread-shutdown plumbing and the wire envelope come from the shared
+loopback home, so there is one loopback shape in the tree; only the
+request-recording behaviour is declared here.
 
 What it exists to prove is the thing no unit suite could: that a document
 entering `extract_invoice_draft_from_evidence` comes out the other side with
@@ -24,21 +25,27 @@ from __future__ import annotations
 
 import hashlib
 import json
-import threading
 from collections.abc import Iterator
 from http import HTTPStatus
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from queue import Queue
-from typing import ClassVar, override
+from typing import ClassVar
 
 import pytest
 
 from ....core import DraftDiscrepancyKind, FieldGroundingOutcome
 from ....core.config import load_settings, override_settings
+from ....tests.loopback_llm import (
+    SilentLoopbackHandler,
+    ollama_chat_reply,
+    read_json_body,
+    serving_loopback,
+    write_json_response,
+)
 from .._evidence_draft import _read_transcription_semantically
 from .._evidence_input import EvidenceInput
 from .._evidence_textlayer import transcribe_text_layer
+from ._loopback_reader import READING_RUNTIME_MODEL
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -69,32 +76,24 @@ _READER_REPLY: dict[str, str | None] = {
 }
 
 
-class _LoopbackRequestHandler(BaseHTTPRequestHandler):
+class _LoopbackRequestHandler(SilentLoopbackHandler):
     """A real local endpoint speaking the runtime's ``/api/chat`` wire shape."""
 
     reply: ClassVar[str] = ""
     requests: ClassVar[Queue[dict[str, object]]]
 
     def do_POST(self) -> None:
-        body = self.rfile.read(int(self.headers.get("content-length", "0")))
-        self.requests.put(json.loads(body.decode("utf-8")))
-        payload = json.dumps(
-            {
-                "model": "qwen2.5:7b",
-                "message": {"role": "assistant", "content": self.reply},
-                "prompt_eval_count": 100,
-                "eval_count": 50,
-            },
-        ).encode("utf-8")
-        self.send_response(HTTPStatus.OK)
-        self.send_header("content-type", "application/json")
-        self.send_header("content-length", str(len(payload)))
-        self.end_headers()
-        self.wfile.write(payload)
-
-    @override
-    def log_message(self, format: str, *args: object) -> None:
-        """Silence the handler's stderr access log."""
+        self.requests.put(dict(read_json_body(self)))
+        write_json_response(
+            self,
+            ollama_chat_reply(
+                self.reply,
+                model=READING_RUNTIME_MODEL,
+                prompt_eval_count=100,
+                eval_count=50,
+            ),
+            status=HTTPStatus.OK,
+        )
 
 
 @pytest.fixture
@@ -110,15 +109,8 @@ def reader(secure_objects: object) -> Iterator[tuple[str, Queue[dict[str, object
     requests: Queue[dict[str, object]] = Queue()
     _LoopbackRequestHandler.requests = requests
     _LoopbackRequestHandler.reply = json.dumps(_READER_REPLY)
-    server = ThreadingHTTPServer(("127.0.0.1", 0), _LoopbackRequestHandler)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    try:
-        yield (f"http://127.0.0.1:{server.server_port}/api/chat", requests)
-    finally:
-        server.shutdown()
-        server.server_close()
-        thread.join(timeout=5)
+    with serving_loopback(_LoopbackRequestHandler, path="/api/chat") as chat_url:
+        yield (chat_url, requests)
 
 
 def _control_evidence() -> EvidenceInput:

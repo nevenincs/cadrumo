@@ -22,10 +22,8 @@ from __future__ import annotations
 
 import json
 import sys
-import threading
 from collections.abc import Iterator, Sequence
 from http import HTTPStatus
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from importlib.abc import MetaPathFinder
 from importlib.machinery import ModuleSpec
 from queue import Queue
@@ -36,6 +34,12 @@ import pytest
 
 from ...core import LLM_EXTRA
 from ...core.config import override_settings
+from ...tests.loopback_llm import (
+    SilentLoopbackHandler,
+    read_text_body,
+    serving_loopback,
+    write_json_response,
+)
 from ..provisioning import (
     LOCAL_MODEL_PROVISIONING_SERVICE,
     InstalledModel,
@@ -53,12 +57,16 @@ TEXT = "qwen2.5:3b"
 MAPPING = "qwen2.5:1.5b"
 
 
-class _ModelStoreLoopbackHandler(BaseHTTPRequestHandler):
+class _ModelStoreLoopbackHandler(SilentLoopbackHandler):
     """A real endpoint speaking the runtime's ``/api/tags`` and ``/api/delete`` wire shape.
 
     ``models`` is the store, and ``do_DELETE`` removes from it. That mutation is
     what makes the production re-read meaningful: a handler answering the same
     inventory twice would let a removal that changed nothing report as confirmed.
+
+    The inventory rows carry a ``size`` the shared well-formed tags envelope does
+    not model, and ``/api/delete`` is a management verb rather than an inference
+    one, so the bodies stay local here while the plumbing is shared.
     """
 
     models: ClassVar[list[dict[str, object]]] = []
@@ -67,33 +75,21 @@ class _ModelStoreLoopbackHandler(BaseHTTPRequestHandler):
     #: When true, the delete is accepted but the store is left untouched.
     delete_is_a_lie: ClassVar[bool] = False
 
-    def _respond(self, payload: dict[str, object], status: HTTPStatus = HTTPStatus.OK) -> None:
-        encoded = json.dumps(payload).encode("utf-8")
-        self.send_response(status)
-        self.send_header("content-type", "application/json")
-        self.send_header("content-length", str(len(encoded)))
-        self.end_headers()
-        self.wfile.write(encoded)
-
     def do_GET(self) -> None:
         self.events.put({"method": "GET", "path": self.path})
-        self._respond({"models": list(self.models)})
+        write_json_response(self, {"models": list(self.models)}, status=HTTPStatus.OK)
 
     def do_DELETE(self) -> None:
-        body = self.rfile.read(int(self.headers.get("content-length", "0")))
-        payload = json.loads(body.decode("utf-8")) if body else {}
+        raw = read_text_body(self)
+        payload: dict[str, object] = json.loads(raw) if raw else {}
         self.events.put({"method": "DELETE", "path": self.path, "body": payload})
         if self.delete_status is not HTTPStatus.OK:
-            self._respond({"error": "refused"}, self.delete_status)
+            write_json_response(self, {"error": "refused"}, status=self.delete_status)
             return
         if not self.delete_is_a_lie:
             target = payload.get("model")
             type(self).models = [row for row in self.models if row.get("name") != target]
-        self._respond({"done": True})
-
-    @override
-    def log_message(self, format: str, *args: object) -> None:
-        """Silence the handler's stderr access log."""
+        write_json_response(self, {"done": True}, status=HTTPStatus.OK)
 
 
 @pytest.fixture
@@ -104,15 +100,8 @@ def store() -> Iterator[tuple[str, Queue[dict[str, object]]]]:
     _ModelStoreLoopbackHandler.models = []
     _ModelStoreLoopbackHandler.delete_status = HTTPStatus.OK
     _ModelStoreLoopbackHandler.delete_is_a_lie = False
-    server = ThreadingHTTPServer(("127.0.0.1", 0), _ModelStoreLoopbackHandler)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    try:
-        yield (f"http://127.0.0.1:{server.server_port}/api/chat", events)
-    finally:
-        server.shutdown()
-        server.server_close()
-        thread.join(timeout=5)
+    with serving_loopback(_ModelStoreLoopbackHandler, path="/api/chat") as chat_url:
+        yield (chat_url, events)
 
 
 def _selected(chat_url: str) -> dict[str, str]:

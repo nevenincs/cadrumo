@@ -203,13 +203,24 @@ def attach_cli_policy_refusal_projection[ExceptionT: Exception](
 
 
 def cli_policy_refusal_projection(error: BaseException) -> CliPolicyRefusalProjection | None:
-    """Read the typed policy handoff that S18 will teach the boundary to emit."""
+    """Read a directly attached or workflow-terminal typed policy handoff."""
     value = getattr(error, _CLI_POLICY_REFUSAL_PROJECTION_ATTRIBUTE, None)
-    if value is None:
+    if value is not None:
+        if not isinstance(value, CliPolicyRefusalProjection):
+            raise TypeError("CLI policy refusal contains an invalid typed projection")
+        return value
+
+    terminal_verdict = getattr(error, "terminal_precondition_verdict", None)
+    if terminal_verdict is None:
         return None
-    if not isinstance(value, CliPolicyRefusalProjection):
-        raise TypeError("CLI policy refusal contains an invalid typed projection")
-    return value
+    from ...application.operator_actions import PreconditionVerdict
+
+    if not isinstance(terminal_verdict, PreconditionVerdict):
+        raise TypeError("workflow gate error contains an invalid terminal precondition verdict")
+    return project_cli_policy_refusal(
+        requested_leaf=current_requested_cli_leaf(),
+        verdict=terminal_verdict,
+    )
 
 
 def cli_policy_refusal_context(projection: CliPolicyRefusalProjection) -> dict[str, object] | None:
@@ -283,7 +294,26 @@ def project_cli_policy_refusal(
     verdict: PreconditionVerdict,
 ) -> CliPolicyRefusalProjection:
     """Project one application verdict without teaching the CLI applicability."""
-    from ...application.operator_actions import ActionArgumentStatus, lookup_action
+    return CliPolicyRefusalProjection(
+        requested_leaf=requested_leaf,
+        precondition_action=resolve_cli_precondition_action(verdict),
+    )
+
+
+def resolve_cli_precondition_action(verdict: PreconditionVerdict) -> ResolvedPreconditionAction:
+    """Schema-resolve one application verdict against the live action catalogue.
+
+    This is the sole CLI adapter from application-owned verdict facts into the
+    strict wire DTO.  Both immediate refusal envelopes and persisted workflow
+    history use it, so neither path can reconstruct recovery prose or disagree
+    about missing bindings.
+    """
+    from ...application.operator_actions import (
+        OPERATOR_ACTION_CATALOGUE,
+        ActionArgumentBindingSpecification,
+        ActionArgumentStatus,
+    )
+    from ...application.operator_surface import resolve_catalogue_action
     from ...core.json_contract import (
         ActionArgumentSource as WireArgumentSource,
     )
@@ -305,26 +335,41 @@ def project_cli_policy_refusal(
 
     resolved_action: ResolvedActionReference | None = None
     if verdict.action is not None:
-        declaration = lookup_action(verdict.action.action_id)
-        declared_arguments = {item.argument_name: item for item in declaration.argument_specifications}
+        resolution = resolve_catalogue_action(
+            action=verdict.action,
+            catalogue=OPERATOR_ACTION_CATALOGUE,
+            reconciliation=_current_operator_surface_reconciliation(),
+        )
+        declaration = resolution.declaration
+        input_schema = resolution.target_leaf.input_schema
+        if input_schema is None:
+            raise ValueError(
+                f"CLI policy action target has no live input schema: {declaration.target_command_key}",
+            )
+        specifications_by_name: dict[str, list[ActionArgumentBindingSpecification]] = {}
+        for specification in declaration.argument_specifications:
+            specifications_by_name.setdefault(specification.argument_name, []).append(specification)
         observed_arguments = {item.argument_name: item for item in verdict.argument_bindings}
-        if set(observed_arguments) != set(declared_arguments):
+        if set(observed_arguments) != set(specifications_by_name):
             raise ValueError(
                 f"CLI policy action arguments do not match catalogue declaration: {verdict.action.action_id}"
             )
         for name, argument in observed_arguments.items():
             if argument.status is ActionArgumentStatus.MISSING:
                 continue
-            specification = declared_arguments[name]
-            if (
-                argument.source is not specification.source
-                or argument.source_key != specification.source_key
-                or argument.source_evidence_id != specification.source_evidence_id
-            ):
+            matching_specifications = tuple(
+                specification
+                for specification in specifications_by_name[name]
+                if argument.source is specification.source
+                and argument.source_key == specification.source_key
+                and argument.source_evidence_id == specification.source_evidence_id
+            )
+            if len(matching_specifications) != 1:
                 raise ValueError(f"CLI policy action argument source contradicts catalogue: {name}")
         resolved_action = ResolvedActionReference(
             action_id=declaration.action_id,
             target_command_key=declaration.target_command_key,
+            cli_path=resolution.target_leaf.live_leaf.canonical_cli_path,
         )
 
     projected = ResolvedPreconditionAction(
@@ -358,10 +403,7 @@ def project_cli_policy_refusal(
             else None
         ),
     )
-    return CliPolicyRefusalProjection(
-        requested_leaf=requested_leaf,
-        precondition_action=projected,
-    )
+    return projected
 
 
 def attach_cli_policy_verdict[ExceptionT: Exception](
