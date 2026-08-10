@@ -6,18 +6,38 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
-from ....application.invoices import build_catalogue_invoice
+from ....application.invoices import (
+    CatalogueInvoiceCreateResult,
+    CatalogueInvoiceRemoveResult,
+    CatalogueInvoiceUpdateResult,
+    build_catalogue_invoice,
+)
+from ....core.json_contract import SCHEMA_REGISTRY
 from ....domain.iva import InvoiceKind
 from .._ledger_business_invoice_cli import _catalogue_invoice_payload
 from .._ledger_catalogue_invoice_payloads import (
     BulkInvoiceImportRowFailurePayload,
+    CatalogueInvoiceCreatePayload,
     CatalogueInvoiceImportResult,
     CatalogueInvoiceRecordPayload,
+    CatalogueInvoiceRemovePayload,
+    CatalogueInvoiceUpdatePayload,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+
+class _InvoiceMutationContractComposition(BaseModel):
+    """Compose application results with their CLI transport projections."""
+
+    create_result: CatalogueInvoiceCreateResult
+    create_payload: CatalogueInvoiceCreatePayload
+    update_result: CatalogueInvoiceUpdateResult
+    update_payload: CatalogueInvoiceUpdatePayload
+    remove_result: CatalogueInvoiceRemoveResult
+    remove_payload: CatalogueInvoiceRemovePayload
 
 
 def _canonical_invoice_payload() -> dict[str, object]:
@@ -34,6 +54,43 @@ def _canonical_invoice_payload() -> dict[str, object]:
         currency="EUR",
     )
     return _catalogue_invoice_payload(invoice)
+
+
+def test_invoice_mutation_results_and_cli_payloads_have_distinct_schema_identities() -> None:
+    """Application results and transport payloads compose without definition collisions."""
+    application_results = (
+        CatalogueInvoiceCreateResult,
+        CatalogueInvoiceUpdateResult,
+        CatalogueInvoiceRemoveResult,
+    )
+    cli_payloads = (
+        CatalogueInvoiceCreatePayload,
+        CatalogueInvoiceUpdatePayload,
+        CatalogueInvoiceRemovePayload,
+    )
+
+    assert {result.__name__ for result in application_results}.isdisjoint(
+        {payload.__name__ for payload in cli_payloads},
+    )
+
+    definitions = _InvoiceMutationContractComposition.model_json_schema()["$defs"]
+    expected_titles = {model.__name__ for model in (*application_results, *cli_payloads)}
+    assert {
+        title: {name for name, definition in definitions.items() if definition.get("title") == title}
+        for title in expected_titles
+    } == {title: {title} for title in expected_titles}
+    assert {
+        command: SCHEMA_REGISTRY[command]
+        for command in (
+            "ledger.invoice.add",
+            "ledger.invoice.update",
+            "ledger.invoice.remove",
+        )
+    } == {
+        "ledger.invoice.add": CatalogueInvoiceCreatePayload,
+        "ledger.invoice.update": CatalogueInvoiceUpdatePayload,
+        "ledger.invoice.remove": CatalogueInvoiceRemovePayload,
+    }
 
 
 def test_catalogue_invoice_record_projects_a_canonical_invoice() -> None:

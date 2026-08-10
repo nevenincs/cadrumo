@@ -35,9 +35,9 @@ class CatalogueInvoiceRecordPayload(OutputSchema):
     """One rich catalogue invoice projected for the operator surface.
 
     Nested in
-    :class:`CatalogueInvoiceCreateResult`,
+    :class:`CatalogueInvoiceCreatePayload`,
     :class:`CatalogueInvoiceViewResult`,
-    :class:`CatalogueInvoiceRemoveResult`,
+    :class:`CatalogueInvoiceRemovePayload`,
     and
     :class:`CatalogueInvoiceListResult`.
     Carries the content-addressed
@@ -96,7 +96,7 @@ class CatalogueInvoiceRecordPayload(OutputSchema):
 
 
 @register_schema("ledger.invoice.add")
-class CatalogueInvoiceCreateResult(CatalogueInvoiceRecordPayload):
+class CatalogueInvoiceCreatePayload(CatalogueInvoiceRecordPayload):
     """JSON envelope for ``aeat app ledger invoice add``.
 
     Mirrors the ``invoice`` inside the application-layer create result returned
@@ -127,7 +127,7 @@ class CatalogueInvoiceViewResult(CatalogueInvoiceRecordPayload):
 
 
 @register_schema("ledger.invoice.update")
-class CatalogueInvoiceUpdateResult(CatalogueInvoiceRecordPayload):
+class CatalogueInvoiceUpdatePayload(CatalogueInvoiceRecordPayload):
     """JSON envelope for ``aeat app ledger invoice update``.
 
     Projects the re-validated :class:`Invoice` returned by
@@ -144,7 +144,7 @@ class CatalogueInvoiceUpdateResult(CatalogueInvoiceRecordPayload):
 
 
 @register_schema("ledger.invoice.remove")
-class CatalogueInvoiceRemoveResult(CatalogueInvoiceRecordPayload):
+class CatalogueInvoiceRemovePayload(CatalogueInvoiceRecordPayload):
     """JSON envelope for ``aeat app ledger invoice remove``.
 
     Reports the deleted rich :class:`Invoice` returned by
@@ -200,12 +200,12 @@ class CatalogueInvoiceImportResult(OutputSchema):
 
 __all__ = [
     "BulkInvoiceImportRowFailurePayload",
-    "CatalogueInvoiceCreateResult",
+    "CatalogueInvoiceCreatePayload",
     "CatalogueInvoiceImportResult",
     "CatalogueInvoiceListResult",
     "CatalogueInvoiceRecordPayload",
-    "CatalogueInvoiceRemoveResult",
-    "CatalogueInvoiceUpdateResult",
+    "CatalogueInvoiceRemovePayload",
+    "CatalogueInvoiceUpdatePayload",
     "CatalogueInvoiceViewResult",
     "CatalogueInvoiceWizardResult",
 ]

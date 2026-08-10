@@ -48,11 +48,11 @@ from ._common import (
     active_bucket_id_or_refuse as _business_invoice_bucket_id,
 )
 from ._ledger_catalogue_invoice_payloads import (
-    CatalogueInvoiceCreateResult,
+    CatalogueInvoiceCreatePayload,
     CatalogueInvoiceImportResult,
     CatalogueInvoiceListResult,
-    CatalogueInvoiceRemoveResult,
-    CatalogueInvoiceUpdateResult,
+    CatalogueInvoiceRemovePayload,
+    CatalogueInvoiceUpdatePayload,
     CatalogueInvoiceViewResult,
     CatalogueInvoiceWizardResult,
 )
@@ -524,7 +524,7 @@ def invoice_add(
     _emit_envelope(
         ctx,
         command="ledger.invoice.add",
-        result=CatalogueInvoiceCreateResult.model_validate(_catalogue_invoice_payload(result.invoice)),
+        result=CatalogueInvoiceCreatePayload.model_validate(_catalogue_invoice_payload(result.invoice)),
         lines=_catalogue_invoice_lines(result.invoice),
         notices=_simplificada_tax_id_notices(result.invoice),
     )
@@ -968,7 +968,7 @@ def invoice_remove(
     _emit_envelope(
         ctx,
         command="ledger.invoice.remove",
-        result=CatalogueInvoiceRemoveResult.model_validate(_catalogue_invoice_payload(result.invoice)),
+        result=CatalogueInvoiceRemovePayload.model_validate(_catalogue_invoice_payload(result.invoice)),
         lines=_catalogue_invoice_lines(result.invoice),
     )
 
@@ -1033,6 +1033,6 @@ def invoice_update(
     _emit_envelope(
         ctx,
         command="ledger.invoice.update",
-        result=CatalogueInvoiceUpdateResult.model_validate(payload),
+        result=CatalogueInvoiceUpdatePayload.model_validate(payload),
         lines=lines,
     )
