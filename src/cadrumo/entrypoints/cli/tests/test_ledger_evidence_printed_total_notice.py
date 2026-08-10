@@ -29,7 +29,7 @@ from collections.abc import Iterator
 from http import HTTPStatus
 from io import BytesIO
 from pathlib import Path
-from typing import Any
+from typing import Any, override
 
 import pytest
 
@@ -99,6 +99,7 @@ _RECARGO_INVOICE_LINES = (
 class _LoopbackRequestHandler(SilentLoopbackHandler):
     """A real local endpoint speaking the reading runtime's ``/api/chat`` shape."""
 
+    @override
     def do_POST(self) -> None:
         prompt = json.dumps(read_json_body(self)["messages"])
         fields = _RECARGO_FIELDS if "2026-0199" in prompt else _COHERENT_FIELDS
