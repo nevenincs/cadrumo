@@ -4,7 +4,7 @@ tags:
   - '#current-schema-only-purge'
 date: '2026-08-10'
 modified: '2026-08-10'
-body_hash: 'sha256:1b917ab89d9c910b78634a4cc42b5200035f7fc06885f30634446b63c9cc01e7'
+body_hash: 'sha256:97b1e421bad5b97caaf82e55b27ed81bbe950b8d671455a0398f08f8c826dd47'
 tier: L3
 related:
   - '[[2026-07-09-compatibility-lifecycle-adr]]'
@@ -30,6 +30,18 @@ checks, or future-version refusal scaffolds because they read no obsolete shape.
 does not reinterpret AEAT regulatory revisions or external-source variability as
 application legacy. Workflow action-detail compatibility remains exclusively owned by
 the CLI action-envelope plan and is not duplicated here.
+
+Version numbers appearing in this plan's Phase headings and Step rows are the
+values the canonical schemas declared when the plan was authored. They are a
+record of intent, not an assertion about HEAD, and must never be read as
+evidence that the tree already carries them. At authoring time the profile
+record in fact defaulted to schema version 1 while the canonical user-profile
+schema declared 4, and the identity check was a ceiling that accepted every
+pre-current value; the gap between the plan's stated version and the tree's
+actual one was the defect, not a typo in the plan. Each implementing change
+therefore reads the current version from its schema authority rather than
+inlining the literal at the call site, so a later schema advance moves the
+behaviour without a sweep through this document.
 
 ## Steps
 
