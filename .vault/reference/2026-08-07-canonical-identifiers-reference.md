@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:46bac9099232ca0cdc7506220312262ecfad5386f0953ad8800ef6667866e30c'
+body_hash: 'sha256:b7863870b62525d94918df7c43f903d0c780f322231fce34179297ce727585c6'
 related:
   - "[[2026-08-07-justificante-identity-matching-adr]]"
 ---
@@ -249,6 +249,51 @@ in chat, not independently re-derived by an AST tool in this session. A
 plan Step consuming this table must still enumerate the exact files it
 touches in its own execution record — this table bounds the SET of names
 and approximate sizes, not a byte-exact per-file manifest.
+
+**Addition (2026-08-10): the floor is now MEASURED, and it had a second breach
+nobody had found.** The decision record establishes that the 589-field count is a
+floor rather than a ceiling, and names one proof: `clave_liquidacion` is an
+AEAT-issued identifier that does not appear in the 589 at all, because the
+generating heuristic matched identifier SUFFIXES (`_id`, `_ref`, `_code`,
+`_key`, `_number`, `_csv`) and a plain Spanish noun carries none.
+
+A suffix-independent sweep now exists (`dev/identifier_noun_census.py`), reading
+a field's DOCUMENTATION rather than its name and marking every record with
+whether the original heuristic would also have caught it. Against the pinned
+tree:
+
+| measure | count |
+| --- | --- |
+| fields documented as an identifier | 162 |
+| of those, annotated bare `str` | 103 |
+| **invisible to the suffix heuristic** | **101** |
+| invisible AND bare `str` | 69 |
+
+**The second breach.** The AEAT verification-code fields are also invisible to
+the original sweep, and for the same class of reason: the field is named exactly
+`csv`, and that name does not END in the `_csv` suffix the heuristic matched. So
+the generating census missed TWO of the four AEAT-issued concepts this campaign
+enrolls by name, not one. This was previously unobserved by any pass.
+
+**No implementation debt follows from it, and that is worth stating explicitly
+rather than leaving a reader to assume otherwise.** Both missed concepts were
+nevertheless enrolled, because this document's own AEAT-issued taxonomy was
+built by reading the surfaces rather than by consuming the suffix census. The
+second breach therefore falsifies nothing about the enrollment set and opens no
+new row; it sharpens the claim about the INSTRUMENT. The lesson is that the fix
+for an instrument-shaped blind spot is a differently-shaped instrument, never a
+more careful application of the same one.
+
+**What the 101 is not.** It is a CANDIDATE set carrying a material and named
+false-positive rate, not 101 missing enrollments. The Spanish authentication
+provider's name matches the *clave* vocabulary; delegated-access prose matches
+*identity*; an encryption-algorithm field matches *identifier* incidentally.
+Wherever this figure is quoted it travels with the word *candidate*, because
+"invisible to the heuristic" reads as "missing" the moment the qualifier is one
+document away. Triage to a per-record disposition is a separate plan row and is
+deliberately not performed inside the scanner, so that the scanner cannot make
+its own false positives invisible.
+
 
 ## The conflation: three call sites, one wrong contract
 
