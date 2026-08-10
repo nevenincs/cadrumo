@@ -54,6 +54,7 @@ from ...core import (
 from ...core.errors import CadrumoError
 from ...core.hashing import content_hash_hex
 from ._evidence_draft import FieldAmbiguityCandidate, InvoiceDraft
+from ._preconditions import LedgerPreconditionCondition, LedgerPreconditionErrorMixin, ledger_no_recovery_verdict
 
 __all__ = [
     "BLOCKING_REASON_BY_DISCREPANCY_KIND",
@@ -110,7 +111,7 @@ drives deductibility --- so it blocks and the name does not.
 """
 
 
-class ConfirmationBlockedError(CadrumoError):
+class ConfirmationBlockedError(LedgerPreconditionErrorMixin, CadrumoError):
     """Raised when a confirm is attempted with an unresolved blocking finding."""
 
 
@@ -348,13 +349,19 @@ def resolved_blockers(
                 f"resolution names {resolution.blocker_id!r}, which is not a finding this document raises; "
                 f"findings on this document: {known}",
                 context={"blocker_id": resolution.blocker_id},
-                suggestion="aeat app ledger evidence review show <reference>",
+                precondition_verdict=ledger_no_recovery_verdict(
+                    LedgerPreconditionCondition.CONFIRMATION_BLOCKERS_RESOLVED,
+                    facts={"resolution_addresses_known_blocker": False},
+                ),
             )
         if resolution.blocker_id in answered:
             raise ConfirmationBlockedError(
                 f"finding {resolution.blocker_id!r} carries two resolutions; one finding takes one answer",
                 context={"blocker_id": resolution.blocker_id},
-                suggestion="aeat app ledger evidence review show <reference>",
+                precondition_verdict=ledger_no_recovery_verdict(
+                    LedgerPreconditionCondition.CONFIRMATION_BLOCKERS_RESOLVED,
+                    facts={"one_resolution_per_blocker": False},
+                ),
             )
         answered[resolution.blocker_id] = resolution
 
@@ -373,7 +380,10 @@ def resolved_blockers(
                 f"candidates read from the document: {offered}. Naming a reading the document does not "
                 f"state is an assertion, not a choice",
                 context={"blocker_id": blocker_id},
-                suggestion="aeat app ledger evidence review show <reference>",
+                precondition_verdict=ledger_no_recovery_verdict(
+                    LedgerPreconditionCondition.CONFIRMATION_BLOCKERS_RESOLVED,
+                    facts={"chosen_candidate_offered_by_document": False},
+                ),
             )
 
     unresolved = tuple(blocker for blocker in blockers if blocker.blocker_id not in answered)
@@ -382,7 +392,10 @@ def resolved_blockers(
         raise ConfirmationBlockedError(
             f"this document cannot be confirmed until every finding is answered individually. Unresolved: {named}",
             context={"unresolved_blocker_ids": ",".join(blocker.blocker_id for blocker in unresolved)},
-            suggestion="aeat app ledger evidence review show <reference>",
+            precondition_verdict=ledger_no_recovery_verdict(
+                LedgerPreconditionCondition.CONFIRMATION_BLOCKERS_RESOLVED,
+                facts={"all_blockers_resolved": False},
+            ),
         )
 
     return blockers

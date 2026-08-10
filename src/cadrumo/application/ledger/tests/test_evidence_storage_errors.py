@@ -13,6 +13,7 @@ from .._evidence import (
     PurchaseInvoiceEvidenceNotFoundError,
     PurchaseInvoiceEvidencePatch,
 )
+from .._preconditions import LedgerPreconditionCondition
 from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import isolated_settings as isolated_settings
 from ._evidence_test_support import pdf_file as pdf_file
@@ -50,9 +51,10 @@ class TestEvidenceErrorPaths:
         svc = _make_svc(isolated_settings, secure_objects)
         with pytest.raises(PurchaseInvoiceEvidenceInputError, match="does not resolve to a readable file") as exc_info:
             svc.add(bucket_id=_BUCKET_ID, source_path=tmp_path / "ghost.pdf")
-        assert exc_info.value.suggestion is not None
-        assert "evidence list" not in exc_info.value.suggestion
-        assert "path" in exc_info.value.suggestion.lower()
+        assert exc_info.value.terminal_precondition_verdict is not None
+        assert exc_info.value.terminal_precondition_verdict.failed_condition_id == (
+            LedgerPreconditionCondition.EVIDENCE_FILE_READABLE.value
+        )
 
     def test_add_rejects_unsupported_extension(
         self,

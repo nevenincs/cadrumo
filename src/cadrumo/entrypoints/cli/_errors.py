@@ -45,7 +45,8 @@ import click
 import typer
 from pydantic import BaseModel, ValidationError
 
-from ...core import PRODUCT_IDENTITY, FormerProductStateError
+from ...application.operator_actions import PreconditionVerdict
+from ...core import FormerProductStateError
 from ...core.click_context import json_output_requested
 from ...core.errors import (
     CadrumoError,
@@ -69,14 +70,6 @@ _UNDER_TEST: ContextVar[bool] = ContextVar("cadrumo_cli_error_boundary_under_tes
 #: resolves — an argv parse failure — so the field is honestly null there.
 _ACTIVE_COMMAND_ID: ContextVar[str | None] = ContextVar("cadrumo_cli_active_command_id", default=None)
 _WRAPPED_CALLBACKS: dict[int, Callable[..., object]] = {}
-
-#: Remedy offered when a REQUIRED dependency is missing at import time. A
-#: required package is absent only when the installed distribution is
-#: incomplete, so the honest fix is to reinstall it rather than to install an
-#: extra (which would not carry the package) or to run ``config repair`` (which
-#: diagnoses local profile state, never the Python environment).
-_REINSTALL_SUGGESTION: str = f"pip install --force-reinstall {PRODUCT_IDENTITY.distribution}"
-
 
 class _ReconfigurableTextIO(Protocol):
     """Structural type for a text stream that supports ``reconfigure``."""
@@ -140,7 +133,6 @@ class CliValidationBoundaryError(CadrumoError):
         super().__init__(
             translated_message="errors.refused.refused_cli_validation_boundary",
             context=internal_record_fault_context(error),
-            suggestion="aeat --help",
         )
         self.original_exception: ValidationError = error
 
@@ -165,20 +157,11 @@ class CliUnexpectedBoundaryError(CadrumoError):
             error: The unexpected exception raised inside the Typer
                 callback.
         """
-        # An unexpected exception here is almost always a code/environment
-        # fault (an import error, a logic bug), NOT corrupted stored state.
-        # Suggesting `config repair integrity` was misleading: it implies
-        # storage corruption and points at a mutating repair that cannot fix a
-        # code fault. Point instead at the read-only diagnostic log inspection,
-        # where the actual traceback is echoed back — the honest recovery for an
-        # internal error. (Mirrors the reasoning `CliValidationBoundaryError`
-        # already applies to input-time failures.)
+        # An unexpected exception is a code or environment fault, not a storage
+        # repair instruction. The error envelope records an explicit
+        # no-recovery outcome at emission time.
         super().__init__(
             translated_message="errors.internal.internal_cli_unexpected_boundary",
-            context={
-                "recovery": "aeat config repair logs",
-            },
-            suggestion="aeat config repair logs",
         )
         self.original_exception: Exception = error
 
@@ -211,10 +194,6 @@ class CliStoredDataValidationBoundaryError(CadrumoError):
         """
         super().__init__(
             translated_message="errors.storage.stored_data_validation_boundary",
-            context={
-                "recovery": "aeat config repair --help",
-            },
-            suggestion="aeat config repair --help",
         )
         self.original_exception: ValidationError = error
 
@@ -430,7 +409,6 @@ class CliOutboundPayloadBoundaryError(CadrumoError):
         super().__init__(
             translated_message="errors.internal.cli_outbound_payload_boundary",
             context=internal_record_fault_context(error, record=record),
-            suggestion=None,
         )
         self.original_exception: ValidationError = error
 
@@ -465,7 +443,6 @@ class CliCommandGroupUnavailableError(CadrumoError):
         super().__init__(
             translated_message="errors.fail.fail_cli_command_group_unavailable",
             context={"group": group, "module": module},
-            suggestion=_REINSTALL_SUGGESTION,
         )
         self.group = group
         self.module = module
@@ -777,6 +754,37 @@ def _resolve_active_command_id(*values: object) -> str | None:
     return _command_identifier_from_path(command_path) if command_path is not None else None
 
 
+def _boundary_no_recovery_verdict(error: CadrumoError) -> PreconditionVerdict | None:
+    """Classify a boundary failure that arrived without a typed projection."""
+    from ...application.cli_exception_preconditions import (
+        CliExceptionPrecondition,
+        cli_exception_no_recovery_verdict,
+    )
+    from ._config._errors import ConfigBoundaryError
+    from ._tty import NonTtyRefusedError
+
+    if isinstance(error, CliValidationBoundaryError):
+        condition = CliExceptionPrecondition.VALIDATION_BOUNDARY
+    elif isinstance(error, CliUnexpectedBoundaryError):
+        condition = CliExceptionPrecondition.UNEXPECTED_BOUNDARY
+    elif isinstance(error, CliStoredDataValidationBoundaryError):
+        condition = CliExceptionPrecondition.STORED_DATA_VALID
+    elif isinstance(error, CliCommandGroupUnavailableError):
+        condition = CliExceptionPrecondition.COMMAND_GROUP_AVAILABLE
+    elif isinstance(error, ConfigBoundaryError):
+        condition = CliExceptionPrecondition.CONFIG_BOUNDARY
+    elif isinstance(error, NonTtyRefusedError):
+        condition = CliExceptionPrecondition.STDIN_INTERACTIVE
+    elif isinstance(error, CliRefusedBoundaryError):
+        condition = CliExceptionPrecondition.REFUSAL_RETRIED
+    else:
+        return None
+    return cli_exception_no_recovery_verdict(
+        condition,
+        facts={"boundary_error_type": type(error).__name__},
+    )
+
+
 def _emit_error_and_exit(error: CadrumoError) -> Never:
     """Render ``error`` to stderr and terminate with its registered exit code.
 
@@ -790,9 +798,13 @@ def _emit_error_and_exit(error: CadrumoError) -> Never:
     error document; the sandbox indicator rides both output modes via
     :func:`render_error_payload`.
     """
-    from ._common import cli_policy_refusal_projection
+    from ._common import cli_policy_refusal_projection, project_cli_policy_refusal
 
     projection = cli_policy_refusal_projection(error)
+    if projection is None:
+        verdict = _boundary_no_recovery_verdict(error)
+        if verdict is not None:
+            projection = project_cli_policy_refusal(requested_leaf=None, verdict=verdict)
     command = _active_command_identifier()
     action: ResolvedPreconditionAction | None = None
     if projection is not None:
@@ -970,7 +982,13 @@ def _project_stored_data_drift(error: Exception, callback: Callable[..., object]
 
 def _project_former_product_state(error: Exception, callback: Callable[..., object]) -> CadrumoError:
     """Emit a former-product-state refusal as stderr-only output."""
-    return CliRefusedBoundaryError(str(error), suggestion="aeat config repair --help")
+    from ...application.profile_preconditions import FormerProductDetectionScope, former_product_state_verdict
+    from ._common import attach_cli_policy_verdict
+
+    return attach_cli_policy_verdict(
+        CliRefusedBoundaryError(str(error)),
+        verdict=former_product_state_verdict(FormerProductDetectionScope.STARTUP),
+    )
 
 
 def _project_cadrumo_error(error: Exception, callback: Callable[..., object]) -> CadrumoError:

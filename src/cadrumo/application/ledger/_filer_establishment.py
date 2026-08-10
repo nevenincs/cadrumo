@@ -46,6 +46,7 @@ from typing import TYPE_CHECKING, Final
 
 from ...domain.iva import IvaTerritorialScope, territorial_scope_for_spanish_postal_code
 from ._evidence_draft import PurchaseInvoiceEvidenceInputError
+from ._preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 
 if TYPE_CHECKING:
     from ...domain.user_profile import UserProfileRecord
@@ -85,9 +86,6 @@ authority's ``domicilio_fiscal``, which is why the recovery the refusal names is
 a censal read rather than a hand-entered value.
 """
 
-_SUPPLYING_VERB: Final[str] = "aeat config profile censo pull --apply"
-
-
 def resolve_filer_territorial_scope(
     *,
     profile_record: UserProfileRecord | None,
@@ -119,7 +117,10 @@ def resolve_filer_territorial_scope(
             f"({FILER_POSTCODE_FACT_PATH}), so the taxpayer's own IVA territory "
             "cannot be established; it separates the peninsula from Canarias and "
             "from Ceuta y Melilla and is never read off an invoice",
-            suggestion=_SUPPLYING_VERB,
+            precondition_verdict=ledger_no_recovery_verdict(
+                LedgerPreconditionCondition.FILER_POSTCODE_VALID,
+                facts={"filer_postcode_present": False},
+            ),
         )
 
     scope = territorial_scope_for_spanish_postal_code(declared)
@@ -128,7 +129,10 @@ def resolve_filer_territorial_scope(
             f"the fiscal-address postcode this profile declares ({declared!r}) is "
             f"not a readable Spanish postal code, so the taxpayer's own IVA "
             f"territory cannot be established from {FILER_POSTCODE_FACT_PATH}",
-            suggestion=_SUPPLYING_VERB,
+            precondition_verdict=ledger_no_recovery_verdict(
+                LedgerPreconditionCondition.FILER_POSTCODE_VALID,
+                facts={"filer_postcode_readable": False},
+            ),
         )
     return scope
 

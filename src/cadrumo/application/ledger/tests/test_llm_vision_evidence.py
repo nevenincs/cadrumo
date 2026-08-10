@@ -22,6 +22,7 @@ from ....core.config import Settings
 from ....tests.secure_sql import TestRuntimeProfile
 from .._evidence import PurchaseInvoiceEvidenceInputError
 from .._llm_classification import _resolve_evidence
+from .._preconditions import LedgerPreconditionCondition
 from ._llm_vision_evidence_support import (
     _add_evidence,
     _png_image,
@@ -130,4 +131,7 @@ def test_llm_vision_off_refuses_both_on_host_read_modes(
             settings=profile.settings,
         )
     assert "vision" in str(raised.value).lower()
-    assert "llm_vision on" in (raised.value.suggestion or "")
+    assert raised.value.terminal_precondition_verdict is not None
+    assert raised.value.terminal_precondition_verdict.failed_condition_id == (
+        LedgerPreconditionCondition.EVIDENCE_VISION_CAPABILITY_ENABLED.value
+    )

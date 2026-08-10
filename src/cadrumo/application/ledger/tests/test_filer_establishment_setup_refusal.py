@@ -35,6 +35,7 @@ from ....domain.iva import IvaTerritorialScope
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from .._evidence_draft import PurchaseInvoiceEvidenceInputError
 from .._filer_establishment import FILER_POSTCODE_FACT_PATH, resolve_filer_territorial_scope
+from .._preconditions import LedgerPreconditionCondition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -136,8 +137,11 @@ class TestTheRefusalIsActionable:
         with pytest.raises(PurchaseInvoiceEvidenceInputError) as caught:
             resolve_filer_territorial_scope(profile_record=_profile(None))
 
-        suggestion = caught.value.suggestion or ""
-        assert "aeat config profile censo" in suggestion, suggestion
+        assert caught.value.terminal_precondition_verdict is not None
+        assert caught.value.terminal_precondition_verdict.failed_condition_id == (
+            LedgerPreconditionCondition.FILER_POSTCODE_VALID.value
+        )
+        assert caught.value.terminal_precondition_verdict.evidence[0].values == {"filer_postcode_present": False}
 
     def test_an_unreadable_value_says_so_rather_than_reporting_it_absent(self) -> None:
         """Two different gaps that a single message would make indistinguishable.

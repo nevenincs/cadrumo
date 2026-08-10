@@ -24,6 +24,7 @@ from ...core import STRICT_FROZEN_CONFIG, DocumentShape
 from ...core.hashing import sha256_hex
 from ...domain.attachments import AttachmentStoreProtocol
 from ._evidence import PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceInputError
+from ._preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 
 __all__ = [
     "EvidenceInput",
@@ -154,7 +155,10 @@ def _reject_unreadable_bytes(data: bytes, *, mime_type: str) -> None:
         raise PurchaseInvoiceEvidenceInputError(
             f"evidence bytes (stored as {mime_type!r}) match no readable document shape; "
             "only PDF, structured XML and image evidence can be read",
-            suggestion="aeat app ledger evidence list",
+            precondition_verdict=ledger_no_recovery_verdict(
+                LedgerPreconditionCondition.EVIDENCE_BYTES_READABLE,
+                facts={"document_shape_recognized": False},
+            ),
         )
 
 

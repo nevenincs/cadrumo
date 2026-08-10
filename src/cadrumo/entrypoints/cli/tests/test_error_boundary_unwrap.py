@@ -140,24 +140,16 @@ def test_cli_unexpected_boundary_error_is_cadrumo_error() -> None:
     assert issubclass(CliUnexpectedBoundaryError, CadrumoError)
 
 
-def test_unexpected_boundary_suggests_log_inspection_not_integrity_repair() -> None:
-    """The unexpected boundary must point at the read-only log inspection.
-
-    An unexpected exception is a code/environment fault, not corrupted stored
-    state, so suggesting ``config repair integrity`` (which implies storage
-    corruption and points at a mutating repair) is misleading and could send an
-    operator to a pointless or mutating action. The honest recovery is the
-    read-only ``config repair logs``, where the traceback is echoed back.
-    """
+def test_unexpected_boundary_does_not_smuggle_a_recovery_command() -> None:
+    """An internal fault reports diagnostics without claiming a CLI remedy."""
     boundary = CliUnexpectedBoundaryError(RuntimeError("an import error, say"))
 
     rendered = render_error_text(boundary)
-    assert "aeat config repair logs" in rendered, rendered
+    assert "aeat config repair logs" not in rendered, rendered
     assert "repair integrity" not in rendered, rendered
 
     envelope = build_error_envelope(boundary)
-    assert envelope.suggestion == "aeat config repair logs"
-    assert "integrity" not in (envelope.suggestion or "")
+    assert "suggestion" not in envelope.model_dump(mode="json")
 
 
 def test_terminal_boundary_logs_the_traceback_for_a_genuine_crash(

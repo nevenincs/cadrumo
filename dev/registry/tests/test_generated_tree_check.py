@@ -133,7 +133,7 @@ def test_check_refuses_drift_without_changing_published_hashes(m200_snapshot, tm
     elif defect == "profile":
         profile = profile.model_copy(update={"source_sha256": "b" * 64})
     elif defect == "output-byte":
-        output = target_export_root / "0001-record-generated-registro-tipo-1.toml"
+        output = target_export_root / "0001-record-generated-registro-tipo-1-part-001.toml"
         output.write_bytes(output.read_bytes() + b"# drift\n")
     elif defect == "manifest-authority":
         manifest_path = target_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME
@@ -152,7 +152,7 @@ def test_check_refuses_drift_without_changing_published_hashes(m200_snapshot, tm
             ),
         )
     elif defect == "missing-output":
-        (target_export_root / "0002-record-generated-registro-tipo-2.toml").unlink()
+        (target_export_root / "0002-record-generated-registro-tipo-2-part-001.toml").unlink()
     elif defect == "extra-output":
         (target_export_root / "0003-unreviewed.toml").write_text("unreviewed = true\n", encoding="utf-8")
     elif defect == "obsolete-sibling":

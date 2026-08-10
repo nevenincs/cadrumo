@@ -174,8 +174,8 @@
         "reason": "flat guard/dispatch chain, max nesting depth 1; long but linear, never regressed from baseline",
         "score": 11
       },
-      "src/cadrumo/application/modelo/_iva_wallet_gate.py::_validated_observation_envelope_local_iva_compensation_recurrence": {
-        "reason": "flat guard/dispatch chain, max nesting depth 1; long but linear, never regressed from baseline",
+      "src/cadrumo/application/modelo/_iva_wallet_gate.py::_prior_period_carry_evidence": {
+        "reason": "flat guard chain, max nesting depth 1; each arm returns whether a prior-period observation was stored alongside whether it could be used, so the caller can tell a genuine absence from evidence it failed to read; the arms are the same guards as before the rename, returning a two-field record instead of an optional",
         "score": 13
       },
       "src/cadrumo/application/modelo/_minimo_descendientes_advisory.py::collect_guarderia_spend_shape_diagnostics": {

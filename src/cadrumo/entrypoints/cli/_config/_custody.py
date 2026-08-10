@@ -151,14 +151,24 @@ def _login_through_the_screen(*, name: str | None) -> ProfileLoginOutcome:
     the screen opens, so a mistyped label can never quietly become a
     login to whichever profile happened to sort first.
     """
+    from ....application.cli_exception_preconditions import (
+        CliExceptionPrecondition,
+        cli_exception_no_recovery_verdict,
+    )
+    from .._common import attach_cli_policy_verdict
     from .._errors import CliRefusedBoundaryError
     from ._login_frontend import preselected_profile_id, present_login
 
     outcome = present_login(preselected=preselected_profile_id(name))
     if outcome is None:
-        raise CliRefusedBoundaryError(
-            translated_message="cli.config.login.refusal.abandoned",
-            suggestion="aeat config login",
+        raise attach_cli_policy_verdict(
+            CliRefusedBoundaryError(
+                translated_message="cli.config.login.refusal.abandoned",
+            ),
+            verdict=cli_exception_no_recovery_verdict(
+                CliExceptionPrecondition.LOGIN_COMPLETED,
+                facts={"login_completed": False},
+            ),
         )
     return outcome
 

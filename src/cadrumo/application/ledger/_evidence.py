@@ -79,6 +79,7 @@ from ...domain.buckets import (
     append_bucket_event,
     derive_bucket_event_id,
 )
+from ._preconditions import LedgerPreconditionCondition, LedgerPreconditionErrorMixin, ledger_no_recovery_verdict
 
 _PDF_EXTENSIONS = frozenset({PDF_EXTENSION})
 _IMAGE_EXTENSIONS = frozenset({".png", ".jpg", ".jpeg", ".tif", ".tiff", ".webp", ".heic", ".heif"})
@@ -125,11 +126,11 @@ class MediaKind(StrEnum):
     IMAGE = "image"
 
 
-class PurchaseInvoiceEvidenceInputError(CadrumoError):
+class PurchaseInvoiceEvidenceInputError(LedgerPreconditionErrorMixin, CadrumoError):
     """Raised when a CLI-supplied evidence input violates the typed contract."""
 
 
-class PurchaseInvoiceEvidenceNotFoundError(CadrumoError):
+class PurchaseInvoiceEvidenceNotFoundError(LedgerPreconditionErrorMixin, CadrumoError):
     """Raised when a CLI lookup targets a missing evidence record."""
 
 
@@ -372,7 +373,10 @@ def _resolve_media_kind(source_path: Path) -> MediaKind:
     accepted = ", ".join(sorted(_PDF_EXTENSIONS | _STRUCTURED_EXTENSIONS | _IMAGE_EXTENSIONS))
     raise PurchaseInvoiceEvidenceInputError(
         f"source path {source_path!s} has unsupported extension {suffix!r}; accepted extensions are: {accepted}",
-        suggestion="aeat app ledger evidence list",
+        precondition_verdict=ledger_no_recovery_verdict(
+            LedgerPreconditionCondition.EVIDENCE_FILE_EXTENSION_SUPPORTED,
+            facts={"extension_supported": False},
+        ),
     )
 
 
@@ -581,9 +585,9 @@ class PurchaseInvoiceEvidenceService:
             raise PurchaseInvoiceEvidenceInputError(
                 f"source path {source_path!s} does not resolve to a readable file (resolved to {resolved!s})",
                 context={"source_path": str(source_path), "resolved_path": str(resolved)},
-                suggestion=(
-                    "check the --file path: confirm the file exists, the path is spelled correctly, "
-                    "and the file is readable, then re-run `aeat app ledger evidence add`"
+                precondition_verdict=ledger_no_recovery_verdict(
+                    LedgerPreconditionCondition.EVIDENCE_FILE_READABLE,
+                    facts={"source_file_readable": False},
                 ),
             )
         media_kind = _resolve_media_kind(resolved)
@@ -631,7 +635,10 @@ class PurchaseInvoiceEvidenceService:
                         f"idempotency key {idempotency_key!r} already names evidence {keyed_id} whose "
                         f"content differs on: {', '.join(divergent)}. Re-adding the same key with "
                         "different content would silently drop the new values.",
-                        suggestion="use a fresh idempotency key, or re-add without one to append a distinct record",
+                        precondition_verdict=ledger_no_recovery_verdict(
+                            LedgerPreconditionCondition.EVIDENCE_IDEMPOTENCY_KEY_UNIQUE,
+                            facts={"idempotency_key_matches_existing_record": False},
+                        ),
                     )
                 # Guarded no-op: the existing record, no second bucket event, no
                 # re-stamped timestamp. The empty event tuple is the signal that
@@ -711,7 +718,10 @@ class PurchaseInvoiceEvidenceService:
                 return record
         raise PurchaseInvoiceEvidenceNotFoundError(
             f"no purchase invoice evidence record with id {evidence_id!r} in bucket {bucket_id!r}",
-            suggestion="aeat app ledger evidence list",
+            precondition_verdict=ledger_no_recovery_verdict(
+                LedgerPreconditionCondition.EVIDENCE_REFERENCE_RESOLVES,
+                facts={"evidence_record_present": False},
+            ),
         )
 
     def list_all(self, *, bucket_id: str) -> tuple[PurchaseInvoiceEvidence, ...]:
@@ -781,7 +791,10 @@ class PurchaseInvoiceEvidenceService:
             return PurchaseInvoiceEvidenceResult(record=updated, bucket_event_ids=(event_id,))
         raise PurchaseInvoiceEvidenceNotFoundError(
             f"no purchase invoice evidence record with id {evidence_id!r} in bucket {bucket_id!r}",
-            suggestion="aeat app ledger evidence list",
+            precondition_verdict=ledger_no_recovery_verdict(
+                LedgerPreconditionCondition.EVIDENCE_REFERENCE_RESOLVES,
+                facts={"evidence_record_present": False},
+            ),
         )
 
     def remove(
@@ -829,7 +842,10 @@ class PurchaseInvoiceEvidenceService:
                 return PurchaseInvoiceEvidenceResult(record=removed, bucket_event_ids=(event_id,))
         raise PurchaseInvoiceEvidenceNotFoundError(
             f"no purchase invoice evidence record with id {evidence_id!r} in bucket {bucket_id!r}",
-            suggestion="aeat app ledger evidence list",
+            precondition_verdict=ledger_no_recovery_verdict(
+                LedgerPreconditionCondition.EVIDENCE_REFERENCE_RESOLVES,
+                facts={"evidence_record_present": False},
+            ),
         )
 
     def _event_repository_for_bucket(self, bucket_id: str) -> BucketEventHistoryRepositoryProtocol:

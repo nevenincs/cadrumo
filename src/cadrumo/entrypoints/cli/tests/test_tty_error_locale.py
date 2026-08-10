@@ -27,29 +27,18 @@ def test_non_tty_refused_error_has_no_positional_args() -> None:
     """NonTtyRefusedError must carry no positional args so the CLI renderer
     falls through to the registry message_key for locale resolution."""
 
-    exc = NonTtyRefusedError("Run it in an interactive terminal.")
+    exc = NonTtyRefusedError()
     assert exc.args == (), (
         f"NonTtyRefusedError.args must be empty so the error registry "
         f"message_key is used for locale resolution; got {exc.args!r}"
     )
 
 
-def test_non_tty_refused_error_suggestion_is_accessible() -> None:
-    """The suggestion kwarg is stored on the instance for the renderer."""
+def test_non_tty_refused_error_has_no_recovery_transport_attribute() -> None:
+    """The renderer receives a typed verdict, never a copied command string."""
 
-    hint = "Run: aeat app wizard setup --profile myprofile"
-    exc = NonTtyRefusedError(hint)
-    assert exc.suggestion == hint
-
-
-def test_non_tty_refused_error_blank_suggestion_stripped() -> None:
-    """A blank suggestion is stripped to empty string on the instance."""
-
-    exc = NonTtyRefusedError("   ")
-    # suggestion attr stores the original; CadrumoError(suggestion=...) receives None
-    assert exc.suggestion == "   "
-    # CadrumoError.suggestion kwarg carries the stripped value or None
-    assert exc.args == ()
+    exc = NonTtyRefusedError()
+    assert exc.suggestion is None
 
 
 # ---------------------------------------------------------------------------

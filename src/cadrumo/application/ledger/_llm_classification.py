@@ -117,6 +117,7 @@ from ._evidence_reference import (
 from ._evidence_split import derive_child_amounts
 from ._evidence_textlayer import extract_evidence_text
 from ._models import ManualLedgerTransactionPatch, ManualLedgerTransactionResult, SplitChildCommand
+from ._preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 
 _logger = get_logger(__name__)
 
@@ -298,7 +299,10 @@ def _resolve_evidence(
     if not resolve_active_capability(ServiceCapability.LLM_VISION, settings=settings).enabled:
         raise PurchaseInvoiceEvidenceInputError(
             "on-host LLM vision reading is disabled for this profile; enable it to read scanned or image evidence",
-            suggestion="aeat config profile capabilities set llm_vision on",
+            precondition_verdict=ledger_no_recovery_verdict(
+                LedgerPreconditionCondition.EVIDENCE_VISION_CAPABILITY_ENABLED,
+                facts={"llm_vision_enabled": False},
+            ),
         )
     return _ResolvedEvidence(reference=reference, text=None, images=images)
 
