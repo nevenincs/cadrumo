@@ -37,6 +37,7 @@ from ._counterpart import (
 from ._errors import AggregationConfigError, AggregationUnsupportedModeloError, t
 from ._foreign_assets import ForeignAssetIngestObservation, ForeignAssetsAggregation, aggregate_foreign_assets_720
 from ._modelo_bindings import RetencionesAggregationSourceResolver
+from ._preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
 from ._retenciones import RetencionesAggregation, RetencionObservation
 
 LOGGER = get_logger(__name__)
@@ -73,6 +74,9 @@ AggregationErrorCodes: tuple[str, ...] = (
 _RETENCIONES_MODELOS = RETENCIONES_MODELOS
 _COUNTERPART_MODELOS = COUNTERPART_MODELOS
 _FOREIGN_ASSET_MODELOS = FOREIGN_ASSET_MODELOS
+_SUPPORTED_PER_MODELO_MODELOS = tuple(
+    sorted((*_RETENCIONES_MODELOS, *_COUNTERPART_MODELOS, *_FOREIGN_ASSET_MODELOS))
+)
 
 
 class PerModeloAggregationContributorContract(BaseModel):
@@ -332,7 +336,10 @@ def provider_for_modelo(modelo: str) -> PerModeloAggregationContributor:
         raise AggregationUnsupportedModeloError(
             t("aggregation.per_modelo.errors.unsupported_modelo"),
             context={"modelo": modelo},
-            suggestion="use one of 111, 115, 123, 180, 190, 193, 347, 349, 720",
+            precondition_verdict=aggregation_no_recovery_verdict(
+                AggregationPreconditionCondition.PER_MODELO_MODELO_SUPPORTED,
+                facts={"modelo": modelo, "supported_modelos": "|".join(_SUPPORTED_PER_MODELO_MODELOS)},
+            ),
         )
     if modelo in _RETENCIONES_MODELOS:
         return PerModeloAggregationContributor.RETENCIONES
@@ -343,7 +350,10 @@ def provider_for_modelo(modelo: str) -> PerModeloAggregationContributor:
     raise AggregationUnsupportedModeloError(
         t("aggregation.per_modelo.errors.unsupported_modelo"),
         context={"modelo": modelo},
-        suggestion="use one of 111, 115, 123, 180, 190, 193, 347, 349, 720",
+        precondition_verdict=aggregation_no_recovery_verdict(
+            AggregationPreconditionCondition.PER_MODELO_MODELO_SUPPORTED,
+            facts={"modelo": modelo, "supported_modelos": "|".join(_SUPPORTED_PER_MODELO_MODELOS)},
+        ),
     )
 
 

@@ -501,9 +501,8 @@ class CalculationSourceDiagnostic(BaseModel):
     variable half, so the filers with the most at stake were the ones whose
     remedy got cut.
 
-    Projected onto :attr:`~core.json_contract.Notice.suggestion` at the CLI
-    boundary, which is that channel's documented purpose. ``None`` where the
-    advisory discloses a state with no action attached to it."""
+    Projected as the advisory's operator remedy at the CLI boundary. ``None``
+    where the advisory discloses a state with no action attached to it."""
     resolver_id: str | None = Field(default=None, min_length=1, max_length=128)
     source_ref: str | None = Field(default=None, min_length=1, max_length=256)
     binding_id: BindingId | None = None

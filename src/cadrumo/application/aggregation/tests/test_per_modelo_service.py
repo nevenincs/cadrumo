@@ -34,6 +34,7 @@ from ....core.resources import resources
 from ....domain.calculations.registry import (
     resolve_foreign_asset_binding_row_values,
 )
+from ...operator_actions import NoRecoveryOutcome
 from .. import (
     ACCEPTED_SOURCE_KINDS,
     AggregationErrorCodes,
@@ -71,6 +72,7 @@ from .._foreign_assets import (
     aggregate_foreign_assets_720,
 )
 from .._modelo_bindings import RetencionesAggregationSourceResolver
+from .._preconditions import AggregationPreconditionCondition
 from .._source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -467,7 +469,12 @@ def test_unsupported_modelo_uses_registered_aggregation_error() -> None:
         PerModeloAggregationCommand(modelo="999", period=_P_2025_ANNUAL)
 
     error = exc_info.value
-    assert error.suggestion == "use one of 111, 115, 123, 180, 190, 193, 347, 349, 720"
+    verdict = error.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == AggregationPreconditionCondition.PER_MODELO_MODELO_SUPPORTED.value
+    assert verdict.action is None
+    assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
+    assert verdict.evidence[0].values["modelo"] == "999"
     assert get_registered_error_code(error).code == "REFUSED_FINANCIAL_AGGREGATION_UNSUPPORTED_MODELO"
 
 

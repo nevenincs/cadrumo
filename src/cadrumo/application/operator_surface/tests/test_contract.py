@@ -275,13 +275,17 @@ def test_help_documents_are_backend_owned_and_current_surface_only() -> None:
     }
     assert root.paragraphs, "the root help document rendered no prose at all"
     assert "aeat config profile create NAME" in root_text
-    # The isolated-blank-state variables are asserted on the CONFIG document,
-    # which is where they are now documented. They were pinned to the root
-    # text until the root landing was shortened to point at `--help`, and the
-    # three move together because they are one sentence: splitting them across
-    # documents would assert a shape the help has never had.
+    # Asserted on BOTH documents, and the root half is the load-bearing one.
+    # These are live, settings-bound, operator-settable variables, so an
+    # operator who never reaches `config --help` must still be able to find
+    # them: discoverability of a settable knob is part of the surface, not
+    # decoration on it. This assertion was briefly moved to config-only after
+    # the root landing was shortened, which made this test pass over a real
+    # regression -- following content to where it went, without asking whether
+    # it was entitled to go there.
+    assert "CADRUMO_LOCAL_STORAGE_ROOT" in root_text
+    assert "CADRUMO_SECRET_STORE_DIR" in root_text
     assert "CADRUMO_LOCAL_STORAGE_ROOT" in config_text
-    assert "CADRUMO_SECRET_STORE_DIR" in config_text
     assert "CADRUMO_SECRET_PASSPHRASE" in config_text
     assert ("aeat config " + "init") not in root_text
     assert "aeat app ledger import" in root_text

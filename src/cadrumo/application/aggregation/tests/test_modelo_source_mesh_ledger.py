@@ -54,6 +54,7 @@ from ....domain.transactions import (
     TransactionDirection,
 )
 from ....tests.secure_sql import isolated_runtime_profile
+from ...operator_actions import NoRecoveryOutcome
 from .. import (
     AggregationValidationError,
     CalculationSourceContext,
@@ -66,6 +67,7 @@ from .. import (
     aggregate_oss_ioss_bindings,
     merge_source_resolutions,
 )
+from .._preconditions import AggregationPreconditionCondition
 from .._source_mesh import CalculationSourceResolution
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -408,6 +410,12 @@ def test_iva_source_mesh_resolver_refuses_m303_invoice_domestic_iva_without_tran
     assert exc_info.value.context is not None
     assert exc_info.value.context["reason"] == "invoice_domestic_iva_not_in_transaction_ledger"
     assert exc_info.value.context["period"] == "1T"
+    verdict = exc_info.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == AggregationPreconditionCondition.INVOICE_LEDGER_COMPLETE.value
+    assert verdict.action is None
+    assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
+    assert verdict.evidence[0].values["invoice_count"] == 1
 
 
 def test_iva_source_mesh_resolver_attributes_a_q1_operation_invoiced_in_q2_to_q1(
