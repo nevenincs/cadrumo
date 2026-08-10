@@ -73,7 +73,6 @@ class CitationLookup:
             raise CorpusSearchInputError(
                 "unknown citation id",
                 context={"citation_id": citation_id},
-                suggestion="List resolvable ids via CitationLookup.citation_ids.",
             )
         path_part, _, anchor_part = reference.corpus_ref.partition("#")
         anchor = anchor_part or None
