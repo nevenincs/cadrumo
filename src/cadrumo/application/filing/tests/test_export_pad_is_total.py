@@ -30,19 +30,27 @@ schema objects and the real renderer. No mocks, stubs, skips or xfail.
 
 from __future__ import annotations
 
-from typing import Literal
-
 import pytest
 
-from ....domain.calculations.registry import ExportFieldDefinition, ExportRecordDefinition
-from .._export import _pad, _RecordRenderRow, _render_record
+from ....domain.calculations.registry import (
+    ExportFieldDefinition,
+    ExportJustification,
+    ExportPadding,
+    ExportRecordDefinition,
+    pad_fixed_width_text,
+)
+from .._export import _RecordRenderRow, _render_record
 from ._export_support import _approved_registry_draft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_ExportPadding = Literal["left_zero", "left_space", "right_space", "none"]
-
-_PADDING_MODES: tuple[_ExportPadding, ...] = ("left_zero", "left_space", "right_space", "none")
+_PADDING_MODES = tuple(ExportPadding)
+_JUSTIFICATION_BY_PADDING = {
+    ExportPadding.LEFT_ZERO: ExportJustification.RIGHT,
+    ExportPadding.LEFT_SPACE: ExportJustification.RIGHT,
+    ExportPadding.RIGHT_SPACE: ExportJustification.LEFT,
+    ExportPadding.NONE: ExportJustification.NONE,
+}
 
 
 def _field(
@@ -50,7 +58,7 @@ def _field(
     *,
     offset: int | None,
     length: int,
-    padding: _ExportPadding,
+    padding: ExportPadding,
     literal: str,
 ) -> ExportFieldDefinition:
     """Build one literal-valued export field at the given padding mode."""
@@ -63,7 +71,7 @@ def _field(
         data_type="text",
         required=False,
         padding=padding,
-        justification="none",
+        justification=_JUSTIFICATION_BY_PADDING[padding],
         signed=False,
         legal_refs=("ley-27-2014:art-40",),
         source_refs=("aeat-dr-232-2018",),
@@ -93,11 +101,14 @@ def _render(fields: tuple[ExportFieldDefinition, ...]) -> str:
 
 
 @pytest.mark.parametrize("padding", _PADDING_MODES)
-def test_pad_fills_the_declared_width_in_every_padding_mode(padding: _ExportPadding) -> None:
+def test_pad_fills_the_declared_width_in_every_padding_mode(padding: ExportPadding) -> None:
     """Every padding mode returns exactly ``field.length`` characters."""
-    field = _field("probe", offset=1, length=10, padding=padding, literal="AB")
-
-    rendered = _pad("AB", field)
+    rendered = pad_fixed_width_text(
+        "AB",
+        length=10,
+        padding=padding,
+        justification=_JUSTIFICATION_BY_PADDING[padding],
+    )
 
     assert len(rendered) == 10, f"padding={padding!r} returned {rendered!r}"
     assert rendered.strip("0 ") == "AB"

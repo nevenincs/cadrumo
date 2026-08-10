@@ -190,10 +190,13 @@ def test_runtime_policy_tokens_have_one_production_owner_and_consumers_import_th
     }
     assert redeclarations == {}
 
+    codec = src_root / "domain/calculations/registry/_fixed_width_codec.py"
+    assert "project_export_value" in codec.read_text(encoding="utf-8")
+
     for consumer in (
         src_root / "application/filing/_export.py",
         src_root / "adapters/outbound/aeat/export/_registry_record_renderer.py",
     ):
         source = consumer.read_text(encoding="utf-8")
-        assert "project_export_value" in source
+        assert "render_fixed_width_export_field" in source
         assert "._export_value_policy" not in source

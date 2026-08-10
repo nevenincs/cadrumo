@@ -46,8 +46,8 @@ from ....core import Modelo
 from ....domain.calculations.registry import (
     ExportFieldDefinition,
     bundled_authority,
+    parse_fixed_width_export_field,
 )
-from ....domain.calculations.registry._export_parse import _parse_decimal
 from .._export import _format_field
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -161,7 +161,7 @@ def test_implicit_decimal_slots_survive_a_write_read_cycle(field_id: str, value:
 
     rendered = _format_field(field, value)
 
-    assert _parse_decimal(rendered, field) == value
+    assert parse_fixed_width_export_field(field, rendered) == value
 
 
 def test_every_shipped_decimal_slot_declares_its_scale() -> None:

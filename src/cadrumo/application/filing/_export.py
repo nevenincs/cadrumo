@@ -47,7 +47,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
 
@@ -63,7 +63,6 @@ from ...core.atomic_write import atomic_write_bytes
 from ...core.decimal import coerce_decimal
 from ...core.hashing import hash_file, sha256_file, sha256_hex
 from ...core.logging import get_logger
-from ...core.money import round_to_cents
 from ...core.time import now
 from ...domain.calculations.registry import (
     BindingId,
@@ -75,7 +74,7 @@ from ...domain.calculations.registry import (
     RegistryValidationError,
     export_fields_overlap,
     parse_export_payload,
-    project_export_value,
+    render_fixed_width_export_field,
     xml_dictionary_entries,
 )
 from ...domain.filing import (
@@ -927,92 +926,10 @@ def _draft_value(field: ExportFieldDefinition, draft: ModeloDraft) -> str:
 
 
 def _format_field(field: ExportFieldDefinition, value: object) -> str:
-    if field.length is None:
-        raise FilingExportValidationError(f"export field {field.id!r} must declare length")
-    if field.kind == CasillaFieldKind.FILLER:
-        return " " * field.length
     try:
-        value = project_export_value(field.value_policy, value)
+        return render_fixed_width_export_field(field, value)
     except RegistryValidationError as exc:
-        raise FilingExportValidationError(f"export field {field.id!r} has an invalid value_policy input") from exc
-    if field.data_type == "money":
-        rendered = _format_money(value, length=field.length, signed=field.signed)
-    elif field.data_type == "integer":
-        rendered = _format_integer(value, length=field.length)
-    elif field.data_type == "decimal":
-        rendered = _format_decimal(value, field=field)
-    elif field.data_type == "boolean":
-        rendered = "X" if value is True else ""
-    else:
-        rendered = "" if value is None else str(value)
-    if len(rendered) > field.length:
-        raise FilingExportValidationError(f"export field {field.id!r} value exceeds length {field.length}")
-    return _pad(rendered, field)
-
-
-def _format_money(value: object, *, length: int, signed: bool) -> str:
-    if isinstance(value, bool):
-        raise FilingExportValidationError("money export fields cannot render boolean values")
-    amount = coerce_decimal(value, default=Decimal("0")) or Decimal("0")
-    cents = int((round_to_cents(abs(amount)) * 100).to_integral_value())
-    if amount < 0:
-        if not signed:
-            raise FilingExportValidationError("unsigned money export field cannot render a negative value")
-        return "N" + str(cents).zfill(length - 1)
-    if signed:
-        return " " + str(cents).zfill(length - 1)
-    return str(cents).zfill(length)
-
-
-def _format_decimal(value: object, *, field: ExportFieldDefinition) -> str:
-    """Render a decimal slot as implicit-decimal digits, never with a separator.
-
-    The diseño de registro sizes these slots as "N enteros y M decimales"
-    summing to the full length, so a written decimal point would consume a byte
-    the layout does not have.  The scale varies per field, which is why it is
-    read from the field rather than fixed at two the way money is.
-    """
-    if field.decimals is None:
-        raise FilingExportValidationError(f"decimal export field {field.id!r} must declare decimals")
-    if isinstance(value, bool):
-        raise FilingExportValidationError("decimal export fields cannot render boolean values")
-    if value is None or value == "":
-        return ""
-    coerced = coerce_decimal(value)
-    if coerced is None:
-        raise FilingExportValidationError(f"decimal export field {field.id!r} cannot coerce {value!r} to Decimal")
-    if coerced < 0:
-        raise FilingExportValidationError(f"decimal export field {field.id!r} cannot render a negative value")
-    scaled = (coerced * (10**field.decimals)).to_integral_value(rounding=ROUND_HALF_UP)
-    return str(int(scaled))
-
-
-def _format_integer(value: object, *, length: int) -> str:
-    if value is None or value == "":
-        return "0".zfill(length)
-    if isinstance(value, bool):
-        raise FilingExportValidationError("integer export fields cannot render boolean values")
-    coerced = coerce_decimal(value)
-    if coerced is None:
-        raise FilingExportValidationError(f"integer export field cannot coerce {value!r} to Decimal")
-    return str(int(coerced)).zfill(length)
-
-
-def _pad(value: str, field: ExportFieldDefinition) -> str:
-    if field.length is None:
-        raise FilingExportValidationError(f"export field {field.id!r} must declare length")
-    if field.padding == "left_zero":
-        return value.rjust(field.length, "0")
-    if field.padding == "left_space":
-        return value.rjust(field.length, " ")
-    if field.padding == "right_space":
-        return value.ljust(field.length, " ")
-    # ``padding = "none"`` still owes the slot its full width. A short return
-    # here is invisible on the positioned path, where the caller's
-    # space-prefilled buffer happens to backfill the remainder, but it shortens
-    # the record on the unpositioned path that concatenates rendered fields.
-    # Correctness must not rest on which assembly path a record takes.
-    return value.ljust(field.length, " ")
+        raise FilingExportValidationError(f"export field {field.id!r} cannot render its fixed-width value") from exc
 
 
 def _mismatched_casilla_ids(
@@ -1023,9 +940,7 @@ def _mismatched_casilla_ids(
     schema_provider: RegistrySchemaAccessor,
 ) -> tuple[tuple[CasillaId, ...], tuple[CasillaId, ...]]:
     values = {value.casilla_id: value.value for value in draft.values}
-    policies_by_field_identity = {
-        (record.id, field.id): field.value_policy for record in layout.records for field in record.fields
-    }
+    fields_by_identity = {(record.id, field.id): field for record in layout.records for field in record.fields}
     mismatched: list[CasillaId] = []
     checked: list[CasillaId] = []
     for parsed in parse_export_payload(
@@ -1037,28 +952,15 @@ def _mismatched_casilla_ids(
         if parsed.casilla_id is None:
             continue
         checked.append(parsed.casilla_id)
-        # A casilla the draft does not carry is compared as zero, but only when it
-        # is genuinely absent. Coalescing on falsiness instead swallowed a value
-        # the draft really holds: a boolean casilla set to false became a zero and
-        # then disagreed with the false read back from the file, so a marker the
-        # taxpayer had deliberately left unset reported drift on a matching file.
         expected = values.get(parsed.casilla_id)
-        if expected is None:
-            expected = Decimal("0")
         try:
-            expected = project_export_value(
-                policies_by_field_identity[(parsed.record_id, parsed.field_id)],
-                expected,
-            )
+            field = fields_by_identity[(parsed.record_id, parsed.field_id)]
+            expected_wire = render_fixed_width_export_field(field, expected)
         except (KeyError, RegistryValidationError) as exc:
             raise FilingExportValidationError(
-                f"export field {parsed.field_id!r} could not project its expected verification value",
+                f"export field {parsed.field_id!r} could not render its expected verification value",
             ) from exc
-        if isinstance(parsed.value, Decimal):
-            expected_decimal = coerce_decimal(expected, default=Decimal("0")) or Decimal("0")
-            if round_to_cents(expected_decimal) != round_to_cents(parsed.value):
-                mismatched.append(parsed.casilla_id)
-        elif str(expected) != str(parsed.value):
+        if expected_wire != parsed.raw:
             mismatched.append(parsed.casilla_id)
     return tuple(dict.fromkeys(mismatched)), tuple(dict.fromkeys(checked))
 

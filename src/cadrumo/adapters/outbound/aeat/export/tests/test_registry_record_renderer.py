@@ -189,15 +189,12 @@ def test_a_shorter_text_value_pads_to_the_declared_width() -> None:
     assert _slice(body, _MONEY_OFFSET, _MONEY_LENGTH) == b"0" * (_MONEY_LENGTH - 5) + b"12345"
 
 
-def test_an_omitted_money_value_renders_as_zero_not_blank() -> None:
-    """A casilla the operator left blank is a declared zero, never a hole."""
-    body = RegistryFixedWidthRecordRenderer().render_record_body(
-        _full_record(),
-        field_values={"01": _NIF, "02": "7"},
-    )
-
-    assert _slice(body, _MONEY_OFFSET, _MONEY_LENGTH) == b"0" * _MONEY_LENGTH
-    assert len(body) == _TOTAL_LENGTH
+def test_an_omitted_money_value_is_not_silently_substituted_with_zero() -> None:
+    with pytest.raises(ModeloExportError, match="invalid fixed-width value"):
+        RegistryFixedWidthRecordRenderer().render_record_body(
+            _full_record(),
+            field_values={"01": _NIF, "02": "7"},
+        )
 
 
 def test_declaration_order_does_not_change_the_wire_layout() -> None:
@@ -237,7 +234,7 @@ def test_an_unparseable_money_value_is_refused_and_named() -> None:
         )
 
     context = _error_context(caught.value)
-    assert context["reason"] == "money_value"
+    assert context["reason"] == "fixed_width_value"
     assert context["export_field_id"] == "money"
     assert RegistryFixedWidthRecordRenderer().render_record_body(_full_record(), field_values=_VALUES)
 
@@ -251,13 +248,12 @@ def test_an_unparseable_integer_value_is_refused_and_named() -> None:
         )
 
     context = _error_context(caught.value)
-    assert context["reason"] == "integer_value"
+    assert context["reason"] == "fixed_width_value"
     assert context["export_field_id"] == "count"
 
 
-def test_an_unsupported_data_type_is_refused_and_named() -> None:
-    """A data_type this encoder cannot place must refuse, naming the type."""
-    broken = _record(
+def test_a_textual_date_uses_the_same_canonical_field_codec() -> None:
+    record = _record(
         _literal_field(),
         _nif_field(),
         _count_field(),
@@ -272,12 +268,9 @@ def test_an_unsupported_data_type_is_refused_and_named() -> None:
         _filler_field(),
     )
 
-    with pytest.raises(ModeloExportError) as caught:
-        RegistryFixedWidthRecordRenderer().render_record_body(broken, field_values=_VALUES)
+    body = RegistryFixedWidthRecordRenderer().render_record_body(record, field_values=_VALUES)
 
-    context = _error_context(caught.value)
-    assert context["reason"] == "data_type"
-    assert context["data_type"] == "date"
+    assert _slice(body, _MONEY_OFFSET, _MONEY_LENGTH) == b"123.45" + b" " * (_MONEY_LENGTH - 6)
 
 
 def test_a_field_kind_this_renderer_cannot_place_is_refused() -> None:
@@ -388,4 +381,4 @@ def test_registry_renderer_refuses_invalid_policy_inputs(
     with pytest.raises(ModeloExportError) as caught:
         RegistryFixedWidthRecordRenderer().render_record_body(_record(field), field_values={"01": raw})
 
-    assert _error_context(caught.value)["reason"] == "value_policy"
+    assert _error_context(caught.value)["reason"] == "fixed_width_value"
