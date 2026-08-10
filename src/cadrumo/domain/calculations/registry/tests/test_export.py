@@ -20,10 +20,10 @@ from typing import Any, get_args
 import pytest
 from pydantic import ValidationError
 
-from .....adapters.outbound.aeat.export import RecordFieldSpec
 from .....core import BindingSourceKind
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....core.resources import bundled_path
+from .. import ExportJustification, ExportPadding
 from .._binding_selector_utils import (
     BindingExportDataType,
     BindingFixedExportSelector,
@@ -31,8 +31,6 @@ from .._binding_selector_utils import (
     binding_export_selector,
 )
 from .._export import (
-    _ExportJustification,
-    _ExportPadding,
     _justification_for_binding_data_type,
     _padding_for_binding_data_type,
     export_fields_overlap,
@@ -237,16 +235,6 @@ def test_every_fixed_width_export_surface_refuses_zero_offset() -> None:
         _field(offset=0, length=1)
     with pytest.raises(ValidationError):
         BindingFixedExportSelector(record="DPA", offset=0, length=1, data_type="text")
-    with pytest.raises(ValidationError):
-        RecordFieldSpec.model_validate(
-            {
-                "offset": 0,
-                "length": 1,
-                "field_id": "field",
-                "kind": "alphanumeric",
-                "justification": "left",
-            },
-        )
 
 
 def test_binding_export_selector_accepts_fixed_field_shape() -> None:
@@ -353,7 +341,7 @@ def test_binding_export_selector_rejects_non_integer_offset() -> None:
         pytest.param("boolean", "right_space", id="boolean"),
     ),
 )
-def test_padding_for_binding_data_type(data_type: BindingExportDataType, padding: _ExportPadding) -> None:
+def test_padding_for_binding_data_type(data_type: BindingExportDataType, padding: ExportPadding) -> None:
     """Numeric fixed-width export fields pad with leading zeros so the
     parser can recover the magnitude unambiguously."""
     assert _padding_for_binding_data_type(data_type) == padding
@@ -377,7 +365,7 @@ def test_padding_for_binding_data_type(data_type: BindingExportDataType, padding
 )
 def test_justification_for_binding_data_type(
     data_type: BindingExportDataType,
-    justification: _ExportJustification,
+    justification: ExportJustification,
 ) -> None:
     assert _justification_for_binding_data_type(data_type) == justification
 

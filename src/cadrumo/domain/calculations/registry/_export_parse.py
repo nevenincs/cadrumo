@@ -15,10 +15,9 @@ from defusedxml import ElementTree
 from ....core import ExportLayoutFormat
 from ....core.decimal import normalize_decimal_separators
 from ....core.external_constants import LATIN_1_ENCODING as _LATIN_1_ENCODING
-from ....core.parsing import parse_bool as _core_parse_bool
 from ....core.paths import path_stat_fingerprint
 from ._errors import RegistryValidationError
-from ._export_value_policy import validate_export_wire_value
+from ._fixed_width_codec import parse_fixed_width_export_field
 from ._ids import BindingId, CasillaId, ExportFieldId, ExportLayoutId, RecordId, validated_casilla_id
 from ._schema import (
     CasillaFieldKind,
@@ -29,7 +28,6 @@ from ._schema import (
     SourceReference,
 )
 
-_MONEY_SCALE = Decimal("100")
 # The dictionary's two boolean row types. ``LGC`` resolves to the XSD's
 # ``tipo_logico`` (``0``/``1``) and ``S_N`` to ``tipo_SINO_Exclusivo``
 # (``NO``/``SI``); the tokens differ but both rows carry a boolean. Named as a set
@@ -299,7 +297,7 @@ def _parse_xml_dictionary_value(data_type: str, raw: str) -> Decimal | str | boo
     if normalized.startswith(("N", "P")):
         return _parse_xml_decimal(raw)
     if normalized in _BOOLEAN_DICTIONARY_TYPES:
-        return _parse_boolean(raw)
+        return _parse_xml_boolean(normalized, raw)
     return raw
 
 
@@ -419,92 +417,30 @@ def _parse_record_fields(
 
 
 def _parse_field_value(field: ExportFieldDefinition, raw: str) -> Decimal | str | bool | None:
-    validate_export_wire_value(field.value_policy, raw)
-    if field.kind == CasillaFieldKind.FILLER:
-        return None
-    if field.data_type == "money":
-        return _parse_money(field, raw)
-    if field.data_type == "integer":
-        return _parse_integer(field, raw)
-    if field.data_type == "decimal":
-        return _parse_decimal(raw, field)
-    if field.data_type == "boolean":
-        return _parse_boolean(raw)
-    value = raw.strip()
-    return value if value else None
+    return parse_fixed_width_export_field(field, raw)
 
 
-def _parse_money(field: ExportFieldDefinition, raw: str) -> Decimal:
-    negative = raw.startswith("N")
-    if negative and not field.signed:
-        raise RegistryValidationError(f"unsigned export field {field.id!r} contains a negative amount")
-    digits = raw[1:] if negative else raw
-    digits = digits.strip()
-    if not digits:
-        return Decimal("0")
-    if not digits.isdigit():
-        raise RegistryValidationError(f"money export field {field.id!r} contains non-digit data")
-    amount = Decimal(int(digits)) / _MONEY_SCALE
-    return -amount if negative else amount
+_XML_BOOLEAN_TOKENS = {
+    "LGC": {"1": True, "0": False},
+    "S_N": {"si": True, "no": False},
+}
 
 
-def _parse_integer(field: ExportFieldDefinition, raw: str) -> Decimal:
-    text = raw.strip()
-    if not text:
-        return Decimal("0")
-    if not text.isdigit():
-        raise RegistryValidationError(f"integer export field {field.id!r} contains non-digit data")
-    return Decimal(int(text))
-
-
-def _parse_decimal(raw: str, field: ExportFieldDefinition) -> Decimal:
-    """Read an implicit-decimal slot back at the scale the field declares.
-
-    The counterpart of the writer: the slot carries digits only, so the decimal
-    point is restored by shifting rather than read from the payload.
-    """
-    if field.decimals is None:
-        raise RegistryValidationError(f"decimal export field {field.id!r} must declare decimals")
-    text = raw.strip()
-    if not text:
-        return Decimal("0")
-    if not text.isdigit():
-        raise RegistryValidationError(f"decimal export field {field.id!r} contains non-digit data")
-    try:
-        return Decimal(int(text)).scaleb(-field.decimals)
-    except InvalidOperation as exc:
-        raise RegistryValidationError(f"decimal export field {field.id!r} contains invalid decimal data") from exc
-
-
-_REGISTRY_TRUTHY = frozenset({"x", "1", "s", "si", "true"})
-_REGISTRY_FALSY = frozenset({"0", "n", "no", "false"})
-
-
-def _parse_boolean(raw: str) -> bool | None:
-    """Thin wrapper around :func:`cadrumo.core.parsing.parse_bool`.
-
-    The registry export format uses uppercase affirmative tokens ("X", "S",
-    "SI") that extend the core truthy set.  This wrapper normalises the raw
-    string to lowercase before delegating so the core helper can match them.
-    The local registry-specific sets are passed implicitly through the
-    module-level constants; the core helper's generic sets are bypassed in
-    favour of these registry-aware ones so that unrecognised tokens raise a
-    typed :class:`RegistryValidationError` rather than silently returning
-    ``None``.
-    """
+def _parse_xml_boolean(data_type: str, raw: str) -> bool | None:
+    """Parse the official XML-dictionary boolean vocabulary only."""
     if not raw or not raw.strip():
         return None
+    normalized = data_type.upper()
+    tokens = _XML_BOOLEAN_TOKENS.get(normalized)
+    if tokens is None:
+        raise RegistryValidationError(f"unsupported XML dictionary boolean data type {data_type!r}")
     token = raw.strip().lower()
-    if token in _REGISTRY_TRUTHY:
-        return True
-    if token in _REGISTRY_FALSY:
-        return False
-    # Delegate to core for any token the registry sets don't cover so the
-    # core helper's debug logging fires before we raise.
-    result = _core_parse_bool(raw)
-    if result is not None:
-        return result
-    raise RegistryValidationError("boolean export field contains invalid data")
+    try:
+        return tokens[token]
+    except KeyError as exc:
+        raise RegistryValidationError(
+            f"XML dictionary boolean field {normalized!r} contains invalid data",
+        ) from exc
 
 
 def _line_ending_bytes(line_ending: str) -> bytes:

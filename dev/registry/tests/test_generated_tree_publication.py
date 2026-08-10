@@ -10,8 +10,11 @@ from shutil import rmtree
 
 import pytest
 
-from cadrumo.domain.calculations.registry import RegistryValidationError, bundled_authority
-from cadrumo.domain.calculations.registry._loader import load_modelo_directory
+from cadrumo.domain.calculations.registry import (
+    RegistryValidationError,
+    bundled_authority,
+    load_modelo_directory,
+)
 
 from .. import _generated_tree_publication
 from .._generated_tree_publication import (

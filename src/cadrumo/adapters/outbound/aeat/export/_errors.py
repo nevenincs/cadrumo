@@ -28,9 +28,8 @@ class AeatExportFormatError(ExportError, ValueError):
     value-related failures.
 
     See Also:
-        :mod:`adapters.outbound.aeat.export._formats`
-            Fixed-width record-spec, serialisation, and deserialisation
-            helpers that raise this error for layout or value violations.
+        :mod:`domain.calculations.registry`
+            Canonical fixed-width semantics translated by outbound adapters.
         :class:`~domain.submission.SubmissionPreflightError`
             Domain-level refusal raised before a local submission
             lifecycle transition is allowed.

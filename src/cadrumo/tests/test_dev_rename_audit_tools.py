@@ -48,13 +48,13 @@ def test_complexity_baseline_keys_use_only_current_product_paths() -> None:
 
 
 def test_semantic_leak_classifier_uses_cadrumo_paths_and_keeps_aeat_as_authority() -> None:
-    """Product roots move while the outbound AEAT adapter remains correctly named."""
-    verified_authority_adapter = "src/cadrumo/adapters/outbound/aeat/export/_formats/_record_spec.py"
+    """Fixed-width coercion has no adapter-side semantic-leak exception."""
+    canonical_codec = "src/cadrumo/domain/calculations/registry/_fixed_width_codec.py"
 
-    assert semantic.is_violation(verified_authority_adapter) is False
+    assert semantic.is_violation(canonical_codec) is False
     assert semantic.is_violation("src/cadrumo/adapters/outbound/google/_rounding_copy.py") is True
     assert semantic.is_violation("src/cadrumo/domain/money.py") is False
-    assert all(path.startswith("src/cadrumo/adapters/outbound/aeat/") for path in semantic._VERIFIED_NON_LEAK_PATHS)
+    assert frozenset() == semantic._VERIFIED_NON_LEAK_PATHS
 
 
 def test_evidence_builder_targets_the_live_cadrumo_fixture_corpus() -> None:

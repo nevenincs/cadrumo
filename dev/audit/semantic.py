@@ -52,19 +52,9 @@ def run_search(query: str) -> list[dict]:
         return []
 
 
-# Files that score highly on a core-concept query by adjacency but are verified
-# non-leaks. The fichero export format layer performs wire-format currency
-# ENCODING / DECODING (zero-padded implicit-decimal cents) — an outbound-adapter
-# responsibility under the hexagonal split — and delegates the actual rounding to
-# the canonical ``cadrumo.core.money.round_to_cents`` (imported as ``_round_to_cents``
-# in both files). The high "currency rounding" score is concept-adjacency, not
-# duplicated domain rounding logic, so flagging them is a false positive.
-_VERIFIED_NON_LEAK_PATHS: frozenset[str] = frozenset(
-    {
-        "src/cadrumo/adapters/outbound/aeat/export/_formats/_record_spec.py",
-        "src/cadrumo/adapters/outbound/aeat/export/_formats/_deserialise.py",
-    }
-)
+# No adapter owns or is allowlisted for filing-value coercion. Fixed-width
+# numeric and padding semantics live in the registry domain codec.
+_VERIFIED_NON_LEAK_PATHS: frozenset[str] = frozenset()
 
 
 def is_violation(path: str) -> bool:

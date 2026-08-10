@@ -14,6 +14,12 @@ from ....core.aggregation import RelationAggregation
 from .._export_field_kind import CasillaFieldKind, CasillaFieldKindValue
 from ._errors import RegistryValidationError
 from ._export_value_policy import ExportValuePolicyValue, export_value_policy_wire_length
+from ._fixed_width_codec import (
+    ExportEncodingValue,
+    ExportJustificationValue,
+    ExportPaddingValue,
+    validate_fixed_width_shape,
+)
 from ._ids import (
     BindingId,
     CasillaId,
@@ -698,8 +704,8 @@ class ExportFieldDefinition(RegistryModel):
     computed_key: Literal["envelope_closing_tag"] | None = None
     data_type: Literal["text", "integer", "decimal", "money", "date", "boolean"]
     required: bool
-    padding: Literal["left_zero", "left_space", "right_space", "none"]
-    justification: Literal["left", "right", "none"]
+    padding: ExportPaddingValue
+    justification: ExportJustificationValue
     date_format: str | None = None
     decimals: int | None = Field(default=None, ge=0)
     signed: bool
@@ -724,6 +730,7 @@ class ExportFieldDefinition(RegistryModel):
         if self.kind == CasillaFieldKind.FILLER and self.length is None:
             raise RegistryValidationError(f"export field {self.id!r} filler must declare length")
         self._validate_decimals()
+        validate_fixed_width_shape(self)
         self._validate_value_policy()
         return self
 
@@ -798,7 +805,7 @@ class ExportRecordDefinition(RegistryModel):
     id: RecordId
     record_type: str
     order: int = Field(ge=0)
-    encoding: str
+    encoding: ExportEncodingValue
     line_ending: Literal["crlf", "lf", "none"]
     required: bool = True
     repeat: Literal["binding_rows"] | None = None

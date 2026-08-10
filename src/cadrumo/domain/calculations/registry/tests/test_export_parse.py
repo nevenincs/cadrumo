@@ -18,16 +18,15 @@ from decimal import Decimal
 
 import pytest
 
+from .. import ExportFieldDefinition, parse_fixed_width_export_field
 from .._errors import RegistryValidationError
 from .._export_parse import (
     _local_name,
-    _parse_boolean,
-    _parse_decimal,
     _parse_dictionary_casilla_id,
+    _parse_xml_boolean,
     _parse_xml_decimal,
     _parse_xml_dictionary_value,
 )
-from .._schema import ExportFieldDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -99,38 +98,31 @@ def test_parse_xml_decimal_malformed_raises_registry_validation_error() -> None:
 
 
 # ---------------------------------------------------------------------------
-# _parse_boolean
+# _parse_xml_boolean
 # ---------------------------------------------------------------------------
 
 
-def test_parse_boolean_returns_none_for_empty_input() -> None:
-    assert _parse_boolean("") is None
-    assert _parse_boolean("   ") is None
+def test_parse_xml_boolean_returns_none_for_empty_input() -> None:
+    assert _parse_xml_boolean("LGC", "") is None
+    assert _parse_xml_boolean("S_N", "   ") is None
 
 
-def test_parse_boolean_accepts_canonical_truthy_tokens() -> None:
-    """AEAT dictionaries use 'X' or 'S/SI' to mark a checked flag."""
-    for raw in ("X", "1", "S", "SI", "TRUE", "x", "true", "  X  "):
-        assert _parse_boolean(raw) is True, raw
+def test_parse_xml_boolean_accepts_declared_dictionary_truthy_tokens() -> None:
+    assert _parse_xml_boolean("LGC", "1") is True
+    assert _parse_xml_boolean("S_N", "SI") is True
+    assert _parse_xml_boolean("s_n", "  si  ") is True
 
 
-def test_parse_boolean_accepts_canonical_falsy_tokens() -> None:
-    for raw in ("0", "N", "NO", "FALSE", "no", "false"):
-        assert _parse_boolean(raw) is False, raw
+def test_parse_xml_boolean_accepts_declared_dictionary_falsy_tokens() -> None:
+    assert _parse_xml_boolean("LGC", "0") is False
+    assert _parse_xml_boolean("S_N", "NO") is False
+    assert _parse_xml_boolean("s_n", "  no  ") is False
 
 
-def test_parse_boolean_raises_on_unrecognised_token() -> None:
-    with pytest.raises(RegistryValidationError, match="boolean export field"):
-        _parse_boolean("maybe")
-
-
-def test_parse_boolean_delegates_to_core_parse_bool() -> None:
-    """The wrapper must call _core_parse_bool; tokens that overlap with the
-    core truthy set ("1", "true") must still resolve through the wrapper."""
-    # "1" is in both the registry and core truthy sets — must be True.
-    assert _parse_boolean("1") is True
-    # "no" is in core falsy set and registry falsy set — must be False.
-    assert _parse_boolean("no") is False
+@pytest.mark.parametrize(("data_type", "raw"), (("LGC", "X"), ("LGC", "SI"), ("S_N", "1"), ("S_N", "false")))
+def test_parse_xml_boolean_raises_on_wrong_or_unrecognised_vocabulary(data_type: str, raw: str) -> None:
+    with pytest.raises(RegistryValidationError, match="XML dictionary boolean field"):
+        _parse_xml_boolean(data_type, raw)
 
 
 # ---------------------------------------------------------------------------
@@ -173,7 +165,7 @@ def test_parse_xml_dictionary_value_dispatches_by_declared_data_type() -> None:
 
 
 # ---------------------------------------------------------------------------
-# _parse_decimal argument-order regression
+# canonical fixed-width decimal parser
 # ---------------------------------------------------------------------------
 
 
@@ -181,18 +173,18 @@ def _decimal_field(field_id: str = "casilla.0501") -> ExportFieldDefinition:
     return ExportFieldDefinition.model_validate(
         {
             "id": field_id,
-            "offset": None,
-            "length": None,
-            "kind": "literal",
-            "literal": "0",
+            "offset": 1,
+            "length": 6,
+            "kind": "casilla",
+            "casilla_id": "0501",
             "data_type": "decimal",
             # A decimal slot carries digits only and declares the scale the
             # reader shifts by; a field omitting it cannot be rendered and is
             # refused at validation.
             "decimals": 2,
             "required": False,
-            "padding": "right_space",
-            "justification": "left",
+            "padding": "left_zero",
+            "justification": "right",
             "signed": False,
             "legal_refs": ("ley-37-1992:art-1",),
             "source_refs": ("aeat-dr-303-2025",),
@@ -200,8 +192,8 @@ def _decimal_field(field_id: str = "casilla.0501") -> ExportFieldDefinition:
     )
 
 
-def test_parse_decimal_raw_first_yields_correct_value() -> None:
-    """_parse_decimal(raw, field) reads an implicit-decimal slot at the declared scale.
+def test_parse_fixed_width_decimal_yields_correct_value() -> None:
+    """The public codec reads an implicit-decimal slot at the declared scale.
 
     Verifies that raw is treated as the numeric string and field is used only
     for error context.  The canonical argument order is (raw, field).
@@ -214,11 +206,11 @@ def test_parse_decimal_raw_first_yields_correct_value() -> None:
     behaviour the format does not have.
     """
     field = _decimal_field()
-    assert _parse_decimal("300506", field) == Decimal("3005.06")
+    assert parse_fixed_width_export_field(field, "300506") == Decimal("3005.06")
 
 
-def test_parse_decimal_invalid_raw_includes_field_id_in_error() -> None:
-    """_parse_decimal raises RegistryValidationError with the field id in the message.
+def test_parse_fixed_width_decimal_invalid_raw_includes_field_id_in_error() -> None:
+    """The public codec includes the field id in invalid-input errors.
 
     Proves that field is passed as the ExportFieldDefinition (not as raw),
     so the error message correctly names the field id rather than trying to
@@ -226,4 +218,4 @@ def test_parse_decimal_invalid_raw_includes_field_id_in_error() -> None:
     """
     field = _decimal_field("casilla.0501")
     with pytest.raises(RegistryValidationError, match=r"casilla\.0501"):
-        _parse_decimal("invalid", field)
+        parse_fixed_width_export_field(field, "invalid")

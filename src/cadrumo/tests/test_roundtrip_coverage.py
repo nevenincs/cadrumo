@@ -12,7 +12,7 @@ least one roundtrip test (per aeat-quality-gates.md).
       -> src/cadrumo/core/observability/test_sink_redaction.py
       -> src/cadrumo/core/observability/test_sink.py
   - AEAT fichero-BOE export bytes
-      -> src/cadrumo/adapters/outbound/aeat/export/_formats/test_fichero_boe_roundtrip.py
+      -> src/cadrumo/application/filing/tests/test_fixed_width_codec_conformance.py
   - Session store (AEAT auth)
       -> src/cadrumo/adapters/outbound/aeat/auth/test_session_store_roundtrip.py
   - Google session store
@@ -77,7 +77,7 @@ _BOUNDARY_ROUNDTRIP_INVENTORY: tuple[tuple[str, str], ...] = (
     ),
     (
         "AEAT fichero-BOE export bytes",
-        "src/cadrumo/adapters/outbound/aeat/export/_formats/tests/test_fichero_boe_roundtrip.py",
+        "src/cadrumo/application/filing/tests/test_fixed_width_codec_conformance.py",
     ),
     (
         "AEAT auth session store",

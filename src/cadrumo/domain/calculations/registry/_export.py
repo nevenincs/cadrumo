@@ -8,7 +8,6 @@ them against a :class:`RegistrySnapshot`. The resolved layout is a
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from typing import Literal
 
 from ....core.aggregation import BindingAggregationOp
 from ._binding_aggregation import binding_aggregation_op
@@ -21,6 +20,7 @@ from ._binding_selector_utils import (
 )
 from ._casilla_membership import casillas_by_id
 from ._errors import RegistryValidationError
+from ._fixed_width_codec import ExportJustification, ExportPadding
 from ._ids import CasillaId, ExportFieldId
 from ._schema import (
     CasillaFieldKind,
@@ -33,8 +33,6 @@ from ._schema import (
     RegistrySnapshot,
 )
 
-_ExportPadding = Literal["left_zero", "left_space", "right_space", "none"]
-_ExportJustification = Literal["left", "right", "none"]
 _BindingExportMember = tuple[DataBindingDefinition, BindingExportSelector]
 
 
@@ -306,16 +304,16 @@ def _export_field_from_binding(
     )
 
 
-def _padding_for_binding_data_type(data_type: BindingExportDataType) -> _ExportPadding:
+def _padding_for_binding_data_type(data_type: BindingExportDataType) -> ExportPadding:
     if data_type in {"money", "integer", "decimal"}:
-        return "left_zero"
-    return "right_space"
+        return ExportPadding.LEFT_ZERO
+    return ExportPadding.RIGHT_SPACE
 
 
-def _justification_for_binding_data_type(data_type: BindingExportDataType) -> _ExportJustification:
+def _justification_for_binding_data_type(data_type: BindingExportDataType) -> ExportJustification:
     if data_type in {"money", "integer", "decimal"}:
-        return "right"
-    return "left"
+        return ExportJustification.RIGHT
+    return ExportJustification.LEFT
 
 
 def export_fields_for_casilla(
