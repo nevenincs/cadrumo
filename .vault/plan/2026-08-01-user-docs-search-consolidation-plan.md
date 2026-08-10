@@ -4,7 +4,7 @@ tags:
   - '#user-docs-search-consolidation'
 date: '2026-08-01'
 modified: '2026-08-10'
-body_hash: 'sha256:b20ce42b17c976784c19360938c6256d96c9d1fc601358de6fe4383943a3cd91'
+body_hash: 'sha256:e7df0532488777fd78781c4d06b004a229ad316ba845cf957f3fdeb7f1eb7735'
 tier: L2
 related:
   - '[[2026-07-13-docs-terminology-search-research]]'
@@ -39,7 +39,7 @@ Deliver the fired rung-2 verdict: a pinned licence-clean static-embedding model 
 - [ ] `P02.S04` - Build the dev-side matrix compiler that embeds the closed vocabulary and its token inventory with the pinned model and emits the bounded int8 matrix as committed, reviewable, provenance-stamped data; `dev/docs/`.
 - [ ] `P02.S05` - Add the client-side cosine tier over the shipped matrix to the shared search controller so both the palette host and the search-page host rank through it inside the existing compose ladder; `docs/_static/cadrumo-docs.js`.
 - [ ] `P02.S06` - Extend the licence gate to validate the shipped matrix's provenance stamp, model licence, and size bound while keeping every oracle-output and NC-ND bar intact; `dev/docs/tests/`.
-- [ ] `P02.S07` - Re-run the held-out miss-rate measurement over the rung-2-enabled ladder and commit the report as the new standing baseline beside the 0.1875 pre-rung-2 figure; `src/cadrumo/_data/terminology/evaluation/`.
+- [ ] `P02.S07` - Re-run the held-out miss-rate measurement over the rung-2-enabled ladder and commit the report as the new standing baseline beside the 0.1875 pre-rung-2 figure; `dev/docs/terminology/evaluation/`.
 - [x] `P02.S25` - Establish a shared canonical JSON byte contract or equivalent artifact evidence so the browser can fail closed on nested matrix, manifest, bridge, target-list, and bundle self-attestation hashes before Rung-2 artifact acceptance; `dev/docs/terminology/ and docs/_static/cadrumo-docs.js`.
 - [x] `P02.S26` - Define and implement independent provider-package/model and tokenizer-content verification from an ADR-ratified byte-manifest contract before Rung-2 matrix compilation or artifact acceptance; `dev/docs/terminology/_model2vec_provider.py and the accepted ADR/schema`.
 - [ ] `P02.S31` - Capture the real Pagefind lexical observations for the held-out corpus through the browser controller, reconcile the composed-ladder drop against the semantic evaluator, and preserve any failed gate as evidence; `dev/docs/terminology/ and docs/_static/cadrumo-docs.js`.
