@@ -492,7 +492,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.setup_answers.ProfileRegistrationError",
+        "cadrumo.core.setup_answers.ProjectAnswersRegistrationError",
         ErrorCode(
             code="INTERNAL_PROFILE_REGISTRATION",
             category=ErrorCategory.INTERNAL,
