@@ -36,9 +36,28 @@ def is_aeat_csv(value: str) -> bool:
     return bool(AEAT_CSV_PATTERN.fullmatch(value))
 
 
+def normalise_aeat_csv(value: str) -> str:
+    """Return the canonical comparison form of an AEAT CSV.
+
+    A normal form has to satisfy the contract it normalises toward, and this
+    one is uppercase alphanumeric, so the normal form is uppercase. That rules
+    out :meth:`str.casefold`, which two call sites reached for independently:
+    it produces lowercase, which fails :data:`AEAT_CSV_PATTERN` outright, and
+    it TRANSLITERATES — fatal for a value that must round-trip to AEAT's
+    cotejo endpoint byte-for-byte to re-serve a document.
+
+    This is the one comparison form. A call site that lowercases, casefolds or
+    strips differently is not being lenient, it is minting a second key for one
+    identifier, which is how the same receipt fails to match itself across two
+    surfaces.
+    """
+    return value.strip().upper()
+
+
 __all__ = [
     "AEAT_CSV_MAX_LENGTH",
     "AEAT_CSV_MIN_LENGTH",
     "AEAT_CSV_PATTERN",
     "is_aeat_csv",
+    "normalise_aeat_csv",
 ]
