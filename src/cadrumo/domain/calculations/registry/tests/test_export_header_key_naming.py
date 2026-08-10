@@ -1,0 +1,169 @@
+"""One AEAT concept, one ``header_key`` spelling — and it is the Spanish one.
+
+The standing naming rule assigns Spanish stems to domain concepts that map to
+AEAT surfaces (``nif``, ``iva``, ``modelo``, ``casilla``). Export header keys
+are such concepts: each names a fact AEAT prints in a fixed-width envelope
+header. When one fact acquires two spellings, every consumer that reads the
+corpus must know both, and the second spelling is invisible to anything
+searching for the first.
+
+**The case this gate was built from, and the evidence.** ``presenter_nif`` and
+``presenter_tax_id`` name the same fact, established by two measurements rather
+than by similarity:
+
+* every occurrence of both, at HEAD, declares ``offset = 101`` and
+  ``length = 9`` with ``kind = "header"``, ``data_type = "text"``,
+  ``required = false``, ``padding = "right_space"`` and
+  ``justification = "left"`` -- byte-identical field geometry, differing only
+  in the token and its id slug;
+* **no layout declares both.** That is the observation that could have
+  falsified the conclusion: a single layout carrying both would prove they mark
+  different facts by construction, whatever their geometry. The two are
+  disjoint by modelo -- ``presenter_nif`` in 111/130/200/202/232/303/390,
+  ``presenter_tax_id`` in 115/123 -- so this is one concept spelled two ways
+  across modelo families, not a distinction the registry is drawing.
+
+**Why this reads the committed fragments and not the enum.** The corpus is the
+thing the loader consumes and the thing an author edits; an enum is a
+downstream projection that can be relocated, renamed or deleted while the
+fragments stay exactly as they are. A gate pinned to a symbol goes quiet the
+moment that symbol moves, and reports its silence as a pass -- which is
+precisely what a migration does to a symbol. Reading the fragments keeps the
+gate meaningful across a rename of everything above them.
+
+**Why the property, and not a token list.** An enumerated list of offending
+tokens encodes the corpus on the day it was written and detects nothing
+afterwards; the next English-stemmed key lands green. The property asserted
+here is: *no ``header_key`` may carry an English stem for a concept whose
+Spanish-stemmed spelling is also present in the corpus.* The stem pairs come
+from the naming rule, not from tonight's findings, so a new offender in an
+already-known concept is caught without touching this file.
+
+**Why it is scoped to ``header_key`` and must stay that way.**
+``presenter_tax_id`` also appears once as ``key = "presenter_tax_id"`` in
+``registry/cadrumo/user_profile/schema.toml`` -- a **profile field name, in a
+different namespace, on a surface this rule does not govern**. Widening the
+scan to every ``key =`` in the registry would rule on that profile schema and
+demand a rename the naming rule never asked for. If you are here to broaden
+this gate, that is the thing to check first.
+"""
+
+from __future__ import annotations
+
+import re
+import subprocess
+from pathlib import Path
+from typing import Final
+
+import pytest
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+#: Spanish stem -> the English stem that must not stand in for it.
+#:
+#: Derived from the naming rule's Spanish-stem mandate, NOT from the corpus, so
+#: the gate keeps working as the corpus changes. A pair belongs here when the
+#: Spanish stem is the canonical AEAT vocabulary for the concept.
+STEM_PAIRS: Final[tuple[tuple[str, str], ...]] = (
+    ("nif", "tax_id"),
+    ("nif", "taxid"),
+)
+
+_HEADER_KEY = re.compile(r'^\s*header_key\s*=\s*"([^"]+)"', re.MULTILINE)
+
+
+def _repository_root() -> Path:
+    return Path(__file__).resolve().parents[6]
+
+
+def header_keys_at_revision(revision: str) -> frozenset[str]:
+    """Return every ``header_key`` token in the registry at *revision*.
+
+    Reads the git object store rather than the working tree, so the verdict is
+    about a named commit and not about whatever a dozen agents have left on
+    disk. Naming the tree a reading belongs to is the discipline this file is
+    downstream of: the same measurement run against the worktree and reported
+    as a fact about HEAD produced a confidently wrong finding earlier in this
+    corpus's history.
+    """
+    listing = subprocess.run(  # noqa: S603 - fixed executable and arguments
+        ["git", "grep", "-h", "header_key", revision, "--", "src/cadrumo/_data/registry"],  # noqa: S607
+        capture_output=True,
+        text=True,
+        check=False,
+        cwd=_repository_root(),
+    ).stdout
+    return frozenset(_HEADER_KEY.findall(listing))
+
+
+def english_stem_offenders(tokens: frozenset[str]) -> tuple[tuple[str, str], ...]:
+    """Return ``(offending token, canonical token)`` for every dual spelling.
+
+    A token offends only when substituting the Spanish stem yields a token the
+    corpus ALSO carries. An English-stemmed key with no Spanish sibling is left
+    alone deliberately: it may be the only spelling of a concept nobody has
+    given a Spanish name yet, and refusing it here would be a naming ruling
+    this gate has no evidence for.
+    """
+    offenders: list[tuple[str, str]] = []
+    for token in sorted(tokens):
+        for spanish, english in STEM_PAIRS:
+            if not token.endswith(f"_{english}"):
+                continue
+            canonical = f"{token[: -len(english)]}{spanish}"
+            if canonical in tokens:
+                offenders.append((token, canonical))
+    return tuple(offenders)
+
+
+@pytest.fixture(scope="module")
+def head_tokens() -> frozenset[str]:
+    """Every ``header_key`` token committed at HEAD."""
+    return header_keys_at_revision("HEAD")
+
+
+def test_the_scan_reaches_a_real_population(head_tokens: frozenset[str]) -> None:
+    """Fail on an empty scan before any verdict below is allowed to stand.
+
+    A scan that returns nothing because the path moved, the pattern broke or
+    the subprocess failed is indistinguishable from a corpus with no header
+    keys at all -- and it would make every assertion here pass.
+    """
+    assert len(head_tokens) > 20, (
+        f"the header_key scan found {len(head_tokens)} tokens at HEAD; that is not a corpus, it is a broken scan"
+    )
+
+
+def test_the_gate_detects_a_known_dual_spelling() -> None:
+    """Validate against a case whose answer is already known.
+
+    A watchdog checked only against unknown states cannot be told apart from a
+    broken one, so this pins the verdict on a hand-built corpus: the pair is a
+    dual spelling, the lone English key is not, and the Spanish key is not.
+    """
+    corpus = frozenset({"presenter_nif", "presenter_tax_id", "orphan_tax_id", "declarante_nif"})
+    assert english_stem_offenders(corpus) == (("presenter_tax_id", "presenter_nif"),)
+
+    control = frozenset({"presenter_nif", "declarante_nif", "orphan_tax_id"})
+    assert english_stem_offenders(control) == (), "the control corpus must PASS or the mutation proves nothing"
+
+
+def test_no_header_key_spells_a_spanish_concept_in_english(head_tokens: frozenset[str]) -> None:
+    """The gate proper. RED at HEAD by design -- see below.
+
+    ``presenter_tax_id`` is in the committed corpus right now, so this fails,
+    and that failure IS the gate reading the fragments. If it ever passes
+    without those three occurrences having been renamed, the scan has gone
+    blind rather than the corpus clean.
+
+    The remedy is a registry data change: rename the ``presenter_tax_id``
+    header keys in modelos 115 and 123 to ``presenter_nif``. It is deliberately
+    not done here -- the registry data is frozen under a large uncommitted
+    migration, and a rename landed into that would collide with it.
+    """
+    offenders = english_stem_offenders(head_tokens)
+    rendered = "\n".join(f"  {token}  ->  {canonical}" for token, canonical in offenders)
+    assert not offenders, (
+        "a header_key spells an AEAT concept in English while the corpus also "
+        f"carries its Spanish spelling:\n{rendered}"
+    )
