@@ -7,8 +7,9 @@ party operates under a German VAT identification, and — the reader's inference
 that the party is in Germany. Only the first is evidence.
 
 **Registration IS the identification fact, so a printed prefix is decisive
-here.** Where :func:`._establishment.territorial_scope_for_printed_tax_identifier`
-treats the same prefix as a weak signal about place, this module treats it as
+here.** Where :mod:`._establishment` refuses to let the same prefix settle a
+place on its own -- the establishment ladder reaches a territory only once a
+printed country name or postal code corroborates one -- this module treats it as
 what it actually is: the Member State under whose identification the party
 operates, stated by the party itself on its own invoice. There is nothing to
 corroborate, because nothing further is being claimed.

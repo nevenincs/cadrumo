@@ -100,7 +100,6 @@ from ._establishment import (
     stated_country_code_status,
     territorial_scope_for_country,
     territorial_scope_for_printed_country_name,
-    territorial_scope_for_printed_tax_identifier,
     territorial_scope_for_spanish_postal_code,
 )
 from ._flow import (
@@ -382,7 +381,6 @@ __all__ = [
     "supply_nature_is_required",
     "territorial_scope_for_country",
     "territorial_scope_for_printed_country_name",
-    "territorial_scope_for_printed_tax_identifier",
     "territorial_scope_for_spanish_postal_code",
     "validate_prorrata_reference",
     "vat_identification_state_for_printed_tax_identifier",
