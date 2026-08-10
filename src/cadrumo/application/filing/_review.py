@@ -30,10 +30,10 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from datetime import datetime
 from enum import StrEnum
-from typing import Protocol
+from typing import Final, Protocol
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core.hashing import sha256_hex as _sha256_hex
@@ -245,6 +245,36 @@ def compute_review_checksum(approval_basis: ModeloApprovalBasis) -> str:
     return _sha256_payload(approval_basis.model_dump(mode="json"))
 
 
+#: Every approval-basis axis, paired with the stale reason a change to it
+#: raises, in the order the reasons are reported. Declared as data rather than a
+#: comparison chain so the correspondence is readable in one place, and reached
+#: through an accessor rather than a field-name string so that renaming a basis
+#: field breaks the type check instead of silently comparing nothing.
+#:
+#: A basis field with no row here stops invalidating approvals silently, which is
+#: the failure mode to watch when the basis gains an axis: enrol it here in the
+#: same change that declares it.
+_APPROVAL_BASIS_STALE_REASONS: Final[
+    tuple[tuple[Callable[[ModeloApprovalBasis], object], ModeloApprovalStaleReason], ...]
+] = (
+    (lambda basis: basis.version, ModeloApprovalStaleReason.APPROVAL_BASIS_VERSION_CHANGED),
+    (lambda basis: basis.draft_payload_fingerprint, ModeloApprovalStaleReason.DRAFT_PAYLOAD_CHANGED),
+    (lambda basis: basis.draft_review_fingerprint, ModeloApprovalStaleReason.DRAFT_REVIEW_CHANGED),
+    (
+        lambda basis: basis.transaction_catalogue_fingerprint,
+        ModeloApprovalStaleReason.TRANSACTION_CATALOGUE_CHANGED,
+    ),
+    (lambda basis: basis.invoice_catalogue_fingerprint, ModeloApprovalStaleReason.INVOICE_CATALOGUE_CHANGED),
+    (
+        lambda basis: basis.prior_filing_observations_fingerprint,
+        ModeloApprovalStaleReason.PRIOR_FILING_OBSERVATIONS_CHANGED,
+    ),
+    (lambda basis: basis.profile_activity_fingerprint, ModeloApprovalStaleReason.PROFILE_ACTIVITY_CHANGED),
+    (lambda basis: basis.category_profiles_fingerprint, ModeloApprovalStaleReason.CATEGORY_PROFILES_CHANGED),
+    (lambda basis: basis.schema_formula_fingerprint, ModeloApprovalStaleReason.SCHEMA_FORMULA_CHANGED),
+)
+
+
 def approval_stale_reasons(
     draft: ModeloDraft,
     *,
@@ -303,26 +333,7 @@ def approval_stale_reasons(
         profile_activity_fingerprint=profile_activity_fingerprint,
         category_profiles=category_profiles,
     )
-    reasons: list[ModeloApprovalStaleReason] = []
-    if stored_basis.version != current_basis.version:
-        reasons.append(ModeloApprovalStaleReason.APPROVAL_BASIS_VERSION_CHANGED)
-    if stored_basis.draft_payload_fingerprint != current_basis.draft_payload_fingerprint:
-        reasons.append(ModeloApprovalStaleReason.DRAFT_PAYLOAD_CHANGED)
-    if stored_basis.draft_review_fingerprint != current_basis.draft_review_fingerprint:
-        reasons.append(ModeloApprovalStaleReason.DRAFT_REVIEW_CHANGED)
-    if stored_basis.transaction_catalogue_fingerprint != current_basis.transaction_catalogue_fingerprint:
-        reasons.append(ModeloApprovalStaleReason.TRANSACTION_CATALOGUE_CHANGED)
-    if stored_basis.invoice_catalogue_fingerprint != current_basis.invoice_catalogue_fingerprint:
-        reasons.append(ModeloApprovalStaleReason.INVOICE_CATALOGUE_CHANGED)
-    if stored_basis.prior_filing_observations_fingerprint != current_basis.prior_filing_observations_fingerprint:
-        reasons.append(ModeloApprovalStaleReason.PRIOR_FILING_OBSERVATIONS_CHANGED)
-    if stored_basis.profile_activity_fingerprint != current_basis.profile_activity_fingerprint:
-        reasons.append(ModeloApprovalStaleReason.PROFILE_ACTIVITY_CHANGED)
-    if stored_basis.category_profiles_fingerprint != current_basis.category_profiles_fingerprint:
-        reasons.append(ModeloApprovalStaleReason.CATEGORY_PROFILES_CHANGED)
-    if stored_basis.schema_formula_fingerprint != current_basis.schema_formula_fingerprint:
-        reasons.append(ModeloApprovalStaleReason.SCHEMA_FORMULA_CHANGED)
-    return tuple(reasons)
+    return tuple(reason for axis, reason in _APPROVAL_BASIS_STALE_REASONS if axis(stored_basis) != axis(current_basis))
 
 
 def approve_draft(

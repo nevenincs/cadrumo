@@ -105,7 +105,7 @@ def _full_m100_profile() -> UserProfileRecord:
             # 0008 renta-2025-profile-tax-residence-ccaa (profile_model form)
             UserProfileFact(path="tax_residence.ccaa", value="cataluna"),
             # 0009 renta-2025-profile-declaration-type
-            UserProfileFact(path="filing_export.declaration_type", value="1"),
+            UserProfileFact(path="renta_filing.declaration_type", value="1"),
             # 0010 renta-2025-profile-taxpayer-sex
             UserProfileFact(path="renta_taxpayer.sex", value="H"),
             # 0011 renta-2025-profile-marital-status
@@ -258,7 +258,7 @@ def test_unmarried_profile_resolves_neutral_marriage_facts_without_marriage_date
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="filing_export.declaration_type", value="1"),
+            UserProfileFact(path="renta_filing.declaration_type", value="1"),
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(1985, 6, 15)),
             UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
             UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
@@ -298,7 +298,7 @@ def test_pareja_hecho_status_does_not_feed_official_ecivil_channels() -> None:
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="filing_export.declaration_type", value="1"),
+            UserProfileFact(path="renta_filing.declaration_type", value="1"),
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(1985, 6, 15)),
             UserProfileFact(path="renta_taxpayer.marital_status", value="5"),
             UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
@@ -326,7 +326,7 @@ def test_married_profile_without_marriage_date_keeps_marriage_facts_unresolved()
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="filing_export.declaration_type", value="1"),
+            UserProfileFact(path="renta_filing.declaration_type", value="1"),
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(1985, 6, 15)),
             UserProfileFact(path="renta_taxpayer.marital_status", value="2"),
             UserProfileFact(path="renta_family.minor_children_in_unit", value=False),

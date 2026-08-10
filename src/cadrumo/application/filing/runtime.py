@@ -86,6 +86,7 @@ from ...domain.calculations.registry import (
     clear_fingerprint_cache as _clear_loader_fingerprint_cache,
 )
 from ...domain.filing import CasillaCollection, CasillaSchema, ModeloBuilderError, registry_schema_version
+from ...domain.calculations.registry import RevisionId
 
 
 def _empty_source_references() -> dict[SourceRefId, SourceReference]:
@@ -234,7 +235,7 @@ class RegistryModeloSubview:
     """Snapshot-backed filing details for one modelo revision."""
 
     modelo_id: str
-    revision_id: str
+    revision_id: RevisionId
     schema_version: str
     cadence: str
     period_selector_periods: tuple[str, ...]

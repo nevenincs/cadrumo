@@ -658,7 +658,7 @@ def _second_entitled_filer_indicated(fact_index: Mapping[str, UserProfileFactVal
     correctable rather than silent.
     """
     marital_status = str(fact_index.get("renta_taxpayer.marital_status", "")).strip().lower()
-    declaration_type = str(fact_index.get("filing_export.declaration_type", "")).strip()
+    declaration_type = str(fact_index.get("renta_filing.declaration_type", "")).strip()
     if declaration_type == _CONJUNTA_DECLARATION_TYPE:
         # Only marriage puts the other progenitor inside this same unit.
         return marital_status in _PARTNERED_STATUS_TOKENS - _MARRIED_STATUS_TOKENS
@@ -912,7 +912,7 @@ def _is_indeterminate_unidad_familiar(fact_index: Mapping[str, UserProfileFactVa
     unidad-familiar 61.860 € límite). Shared with the verify-path D4 eligibility
     advisory so both surfaces agree on exactly which units are indeterminate.
     """
-    declaration_type = str(fact_index.get("filing_export.declaration_type", "")).strip()
+    declaration_type = str(fact_index.get("renta_filing.declaration_type", "")).strip()
     if declaration_type == _CONJUNTA_DECLARATION_TYPE:
         return True
     marital_status = str(fact_index.get("renta_taxpayer.marital_status", "")).strip().lower()

@@ -260,7 +260,7 @@ application_links = [
     "modelo-232-reconciliation",
     "modelo-232-workflow",
 ]
-export_layouts = ["modelo-232-2018-fichero-aeat"]
+support_removal_decisions = ["modelo-232-2018-fichero-aeat-support-removal"]
 filing_schedules = ["modelo-232-anual"]
 deadline_windows = [
     "modelo-232-2018-0a",

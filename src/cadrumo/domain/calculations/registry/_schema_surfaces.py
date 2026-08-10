@@ -9,17 +9,13 @@ from typing import Annotated, Literal
 
 from pydantic import BeforeValidator, Field, field_validator, model_validator
 
-from ....core import CasillaId, DeclaracionIdioma, ExportLayoutFormat
+from ....core import CasillaId, DeclaracionIdioma, ExportLayoutFormat, FilingProducerKey
 from ....core.aggregation import RelationAggregation
 from .._export_field_kind import CasillaFieldKind, CasillaFieldKindValue
 from ._errors import RegistryValidationError
 from ._export_semantics import (
     ExportComputedKey,
-    ExportComputedKeyValue,
     ExportDraftAttribute,
-    ExportDraftAttributeValue,
-    ExportHeaderKey,
-    ExportHeaderKeyValue,
     ExportSemanticPayloadAxis,
     export_semantic_payload_axis,
 )
@@ -60,12 +56,8 @@ __all__ = [
     "CasillaDefinition",
     "DeclaracionIdiomaValue",
     "ExportComputedKey",
-    "ExportComputedKeyValue",
     "ExportDraftAttribute",
-    "ExportDraftAttributeValue",
     "ExportFieldDefinition",
-    "ExportHeaderKey",
-    "ExportHeaderKeyValue",
     "ExportLayoutDefinition",
     "ExportLayoutFormatValue",
     "ExportRecordDefinition",
@@ -766,9 +758,9 @@ class ExportFieldDefinition(RegistryModel):
     casilla_id: CasillaId | None = None
     binding: BindingId | None = None
     literal: str | None = None
-    header_key: ExportHeaderKeyValue | None = None
-    draft_attribute: ExportDraftAttributeValue | None = None
-    computed_key: ExportComputedKeyValue | None = None
+    producer_key: FilingProducerKey | None = None
+    draft_attribute: ExportDraftAttribute | None = None
+    computed_key: ExportComputedKey | None = None
     data_type: Literal["text", "integer", "decimal", "money", "date", "boolean"]
     required: bool
     padding: ExportPaddingValue
@@ -792,7 +784,7 @@ class ExportFieldDefinition(RegistryModel):
             ExportSemanticPayloadAxis.CASILLA_ID: self.casilla_id,
             ExportSemanticPayloadAxis.BINDING: self.binding,
             ExportSemanticPayloadAxis.LITERAL: self.literal,
-            ExportSemanticPayloadAxis.HEADER_KEY: self.header_key,
+            ExportSemanticPayloadAxis.PRODUCER_KEY: self.producer_key,
             ExportSemanticPayloadAxis.DRAFT_ATTRIBUTE: self.draft_attribute,
             ExportSemanticPayloadAxis.COMPUTED_KEY: self.computed_key,
         }

@@ -103,7 +103,7 @@ def test_spouse_tax_id_is_conditionally_required_for_joint_taxation() -> None:
 
     entry = get_profile_key("renta_spouse.tax_id")
     assert entry.requirement is ProfileKeyRequirement.OPTIONAL
-    assert entry.required_when_key == "filing_export.declaration_type"
+    assert entry.required_when_key == "renta_filing.declaration_type"
     assert entry.required_when_value == "2"
 
 

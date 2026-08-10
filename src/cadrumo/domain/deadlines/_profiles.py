@@ -27,7 +27,6 @@ from ...core.parsing import parse_date as _parse_date_canonical
 from ...core.setup_answers import project_setup_answers
 from ._errors import ProfileError
 from ._models import (
-    ChargeAccount,
     CrossPeriodGroupMemberRoster,
     EntityType,
     FiscalResidency,
@@ -36,7 +35,6 @@ from ._models import (
     IVARegime,
     ModeloEnrollment,
     ModeloIVAProfile,
-    RefundAccount,
     TaxpayerProfile,
 )
 
@@ -103,8 +101,6 @@ def taxpayer_profile_from_mapping(
             sii_enrolled=typed.iva_sii_enrolled,
             redeme_enrolled=typed.iva_redeme_enrolled,
             intracommunity_operations_exceed_50000_eur=typed.iva_intracommunity_operations_exceed_50000_eur,
-            refund_account=_refund_account_from_profile_values(canonical),
-            charge_account=_charge_account_from_profile_values(canonical),
         ),
         cross_period_group_member_rosters=_parse_cross_period_group_member_rosters(canonical),
         enrollment=ModeloEnrollment(
@@ -159,40 +155,6 @@ def taxpayer_profile_from_mapping(
         irpf_pagadores_secondary_income=_parse_decimal(canonical.get("irpf.pagadores_secondary_income")),
         irpf_pagadores_total_work_income=_parse_decimal(canonical.get("irpf.pagadores_total_work_income")),
     )
-
-
-def _refund_account_from_profile_values(values: Mapping[str, str]) -> RefundAccount | None:
-    """Build the refund-only account from its encrypted canonical profile facts.
-
-    The foreign-bank fields belong solely to a refund disposition.  Keeping
-    their reconstruction here makes the profile projection the one authority
-    for the profile's financial facts, while the U branch reads only the
-    distinct :class:`ChargeAccount` below.
-    """
-    iban = values.get("filing_export.iban") or None
-    swift_bic = values.get("filing_export.swift_bic") or ""
-    bank_name = values.get("filing_export.bank_name") or ""
-    bank_address = values.get("filing_export.bank_address") or ""
-    bank_city = values.get("filing_export.bank_city") or ""
-    bank_country_code = values.get("filing_export.bank_country_code") or ""
-    if not any((iban, swift_bic, bank_name, bank_address, bank_city, bank_country_code)):
-        return None
-    return RefundAccount(
-        iban=iban,
-        swift_bic=swift_bic,
-        bank_name=bank_name,
-        bank_address=bank_address,
-        bank_city=bank_city,
-        bank_country_code=bank_country_code,
-    )
-
-
-def _charge_account_from_profile_values(values: Mapping[str, str]) -> ChargeAccount | None:
-    """Build an affirmative debit authority from the separate charge-IBAN fact."""
-    iban = values.get("filing_export.charge_iban", "")
-    if not iban:
-        return None
-    return ChargeAccount(iban=iban)
 
 
 def _canonicalize_and_pad(

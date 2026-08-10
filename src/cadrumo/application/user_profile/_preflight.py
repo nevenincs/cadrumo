@@ -13,7 +13,6 @@ from typing import TYPE_CHECKING
 
 from ...core import Period
 from ...domain.calculations.registry import (
-    CasillaFieldKind,
     ProfileKeyGrounding,
     ValidatedRegistryAuthority,
     build_profile_grounding_index,
@@ -285,7 +284,6 @@ class ProfilePreflightService:
                         grounding_index=grounding_index,
                     ),
                 )
-        missing.extend(self._missing_export_identity_requirements(values, revision, grounding_index))
         missing.extend(self._missing_conditional_profile_requirements(values, missing, grounding_index))
         return ProfilePreflightReport(
             profile_id=record.profile_id,
@@ -311,59 +309,6 @@ class ProfilePreflightService:
     @staticmethod
     def _has_value(values: dict[str, str], path: str) -> bool:
         return bool((values.get(path) or "").strip())
-
-    def _missing_export_identity_requirements(
-        self,
-        values: dict[str, str],
-        revision: ModeloRevision | None,
-        grounding_index: Mapping[str, ProfileKeyGrounding],
-    ) -> list[ProfilePreflightRequirement]:
-        if revision is None:
-            return []
-        required_headers = {
-            field.header_key.lower()
-            for layout in revision.export_layouts
-            for record in layout.records
-            for field in record.fields
-            if field.kind is CasillaFieldKind.HEADER and field.required and field.header_key is not None
-        }
-        legal_name_headers = {"full_name", "legal_name", "name", "first_name", "surnames"}
-        if required_headers.isdisjoint(legal_name_headers):
-            return []
-        if (values.get(_PROFILE_ENTITY_TYPE_PATH) or "").strip() == _LEGAL_ENTITY_TYPE:
-            if self._has_value(values, _PROFILE_LEGAL_NAME_PATH):
-                return []
-            return [
-                build_profile_preflight_requirement(
-                    "identity.legal_name",
-                    schema=self._schema,
-                    selector="export.header.legal_name",
-                    grounding_index=grounding_index,
-                ),
-            ]
-        # Natural-person export service composes declarant identity as the complete
-        # name pair, so any required legal-name header makes both facts required
-        # before filing-grade work starts.
-        required_identity_fields = {"name", "surnames"}
-        missing: list[ProfilePreflightRequirement] = []
-        for section in self._schema.sections:
-            if section.key != "identity":
-                continue
-            for field in section.fields:
-                if field.key not in required_identity_fields:
-                    continue
-                candidate_path = f"{section.key}.{field.key}"
-                if self._has_value(values, candidate_path):
-                    continue
-                missing.append(
-                    build_profile_preflight_requirement(
-                        f"{section.key}.{field.key}",
-                        schema=self._schema,
-                        selector="export.header.full_name",
-                        grounding_index=grounding_index,
-                    ),
-                )
-        return missing
 
     def _missing_conditional_profile_requirements(
         self,

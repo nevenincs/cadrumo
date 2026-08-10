@@ -8,13 +8,13 @@ file reads or environment lookups during construction.
 
 from __future__ import annotations
 
+from ...core import RentaDeclaracionType
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from ...core.i18n import Translatable as tr
 from ...core.setup_answers import SetupAnswers
 from ...core.wizard_catalogue import register_wizard_catalogue
 from ...domain.contribuyente import (
     CCAA,
-    RentaDeclaracionType,
     RentaDisabilityGrade,
     RentaMaritalStatus,
     RentaSexCode,
@@ -624,23 +624,6 @@ _IVA_SECTION = WizardSection(
 )
 
 
-_FILING_EXPORT_SECTION = WizardSection(
-    id="filing-export",
-    title=tr("wizard.setup.filing-export.title"),
-    questions=(
-        WizardQuestion(
-            id="charge-iban",
-            profile_key="filing_export.charge_iban",
-            widget=WizardWidget.TEXT,
-            prompt=tr("wizard.setup.filing-export.charge-iban.prompt"),
-            help=tr("wizard.setup.filing-export.charge-iban.help"),
-            required=False,
-            answer_type=str,
-        ),
-    ),
-)
-
-
 _ENROLLMENT_SECTION = WizardSection(
     id="enrollment",
     title=tr("wizard.setup.enrollment.title"),
@@ -661,7 +644,7 @@ _FAMILIA_SECTION = WizardSection(
     questions=(
         WizardQuestion(
             id="taxation-type",
-            profile_key="filing_export.declaration_type",
+            profile_key="renta_filing.declaration_type",
             widget=WizardWidget.TEXT,
             prompt=tr("wizard.setup.profile.taxation-type.prompt"),
             choices=_DECLARATION_TYPE_CHOICES,
@@ -1045,7 +1028,6 @@ SETUP_FLOW = WizardFlow(
         _RESIDENCE_SECTION,
         _ACTIVIDAD_SECTION,
         _IVA_SECTION,
-        _FILING_EXPORT_SECTION,
         _ENROLLMENT_SECTION,
         _FAMILIA_SECTION,
         _OBLIGATIONS_SECTION,

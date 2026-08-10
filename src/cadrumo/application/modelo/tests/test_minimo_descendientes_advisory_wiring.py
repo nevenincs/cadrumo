@@ -88,7 +88,7 @@ def _write(
     if marital_status is not None:
         facts.append(UserProfileFact(path="renta_taxpayer.marital_status", value=marital_status))
     if declaration_type is not None:
-        facts.append(UserProfileFact(path="filing_export.declaration_type", value=declaration_type))
+        facts.append(UserProfileFact(path="renta_filing.declaration_type", value=declaration_type))
     if descendientes_count is not None:
         # Overwrite the aggregate the projection just derived, which is how the
         # profile manager desyncs it: the count renders as an editable row while

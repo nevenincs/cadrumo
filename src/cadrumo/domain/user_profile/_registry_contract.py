@@ -54,7 +54,6 @@ class UserProfileSelectorIndex(BaseModel):
 
     profile_selectors: frozenset[str]
     schedule_predicates: frozenset[str]
-    export_headers: frozenset[str]
     field_paths: frozenset[str]
     #: Namespaces the engine owns and computes. Kept as typed models rather
     #: than folded into ``profile_selectors`` because a pattern carrying a
@@ -98,16 +97,13 @@ def build_user_profile_selector_index(schema: ProfileSchemaDefinition) -> UserPr
     """
     profile_selectors: set[str] = set(schema.field_paths)
     schedule_predicates: set[str] = set()
-    export_headers: set[str] = set()
     for section in schema.sections:
         for field in section.fields:
             profile_selectors.update(field.model_selectors)
             schedule_predicates.update(field.schedule_predicates)
-            export_headers.update(field.export_headers)
     return UserProfileSelectorIndex(
         profile_selectors=frozenset(profile_selectors),
         schedule_predicates=frozenset(schedule_predicates),
-        export_headers=frozenset(export_headers),
         field_paths=frozenset(schema.field_paths),
         derived_selectors=schema.derived_selectors,
     )
@@ -278,44 +274,11 @@ def _export_issues(
     revision: ModeloRevision,
     index: UserProfileSelectorIndex,
 ) -> tuple[UserProfileRegistryContractIssue, ...]:
-    # Function-local import keeps ``cadrumo.domain.user_profile`` free of an
-    # eager calculation-registry load at package import (the lazy-boundary
-    # contract); this validator is the only runtime consumer of the enum.
-    from ..calculations.registry import CasillaFieldKind, ExportDraftAttribute
-
-    issues: list[UserProfileRegistryContractIssue] = []
-    for layout in revision.export_layouts:
-        for record in layout.records:
-            for field in record.fields:
-                if (
-                    field.kind == CasillaFieldKind.DRAFT
-                    and field.draft_attribute is ExportDraftAttribute.PROFILE_TAX_ID
-                    and "profile_tax_id" not in index.export_headers
-                ):
-                    issues.append(
-                        _issue(
-                            severity=BaseSeverity.ERROR,
-                            modelo_id=modelo_id,
-                            revision_id=revision.id,
-                            surface="export_layout",
-                            construct_id=f"{layout.id}.{record.id}.{field.id}",
-                            selector="profile_tax_id",
-                            message="profile_tax_id draft attribute is not declared by user-profile schema",
-                        ),
-                    )
-                if field.kind == CasillaFieldKind.HEADER and field.header_key not in index.export_headers:
-                    issues.append(
-                        _issue(
-                            severity=BaseSeverity.WARNING,
-                            modelo_id=modelo_id,
-                            revision_id=revision.id,
-                            surface="export_layout",
-                            construct_id=f"{layout.id}.{record.id}.{field.id}",
-                            selector=field.header_key or "<missing>",
-                            message="export header is not yet classified by user-profile schema",
-                        ),
-                    )
-    return tuple(issues)
+    # Producer fields are resolved by the typed application snapshot, not by
+    # profile-schema export declarations.  Keeping a second profile export
+    # vocabulary would reintroduce the retired raw-header authority.
+    del modelo_id, revision, index
+    return ()
 
 
 def profile_binding_selectors(selector: Mapping[str, object] | BaseModel) -> tuple[str, ...]:

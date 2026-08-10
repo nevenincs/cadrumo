@@ -16,7 +16,7 @@ remove_policy = "live_profile_tombstone_retain_snapshots"
 # `descendientes_minimos_aggregate_{filing_year}` cannot swallow the longer
 # `descendientes_minimos_aggregate_autonomico_{filing_year}` paths.
 #
-# `cotizaciones_ss_madre_2024` and `filing_export.rental_reduccion_art_23_2_tier_2024`
+# `cotizaciones_ss_madre_2024` and `renta_rental.reduccion_art_23_2_tier_2024`
 # are deliberately absent: they are genuine operator input, not derived.
 
 [[derived_selectors]]
@@ -81,7 +81,6 @@ required = true
 sensitivity = "identity"
 description = "NIF/NIE/CIF used as filing identity."
 model_selectors = ["tax.id", "modelo_100"]
-export_headers = ["profile_tax_id"]
 legal_refs = ["orden-hac-242-2025:art-3", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
@@ -91,7 +90,6 @@ required = false
 sensitivity = "identity"
 description = "Declarant given name or display name."
 model_selectors = ["name", "modelo_100"]
-export_headers = ["name", "first_name"]
 legal_refs = ["orden-hac-242-2025:art-3", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
@@ -101,7 +99,6 @@ required = false
 sensitivity = "identity"
 description = "Declarant surnames for person filings."
 model_selectors = ["surnames", "modelo_100"]
-export_headers = ["surnames"]
 legal_refs = ["orden-hac-242-2025:art-3", "orden-hac-277-2026:art-3"]
 
 [[sections.fields]]
@@ -110,7 +107,6 @@ type = "string"
 required = false
 sensitivity = "identity"
 description = "Legal or company name for entity-style export headers."
-export_headers = ["legal_name"]
 
 [[sections.fields]]
 key = "email"
@@ -824,7 +820,6 @@ required = false
 sensitivity = "identity"
 effective_dated = true
 description = "CNAE activity code where applicable."
-export_headers = ["cnae"]
 
 [[sections.fields]]
 key = "iae_epigraph"
@@ -1249,7 +1244,6 @@ effective_dated = true
 description = "Whether the taxpayer is registered in REDEME (Registro de Devolucion Mensual del IVA). REDEME registration switches the IVA self-assessment period to monthly and is one of the mandatory-SII triggers."
 model_selectors = ["iva.redeme_enrolled"]
 schedule_predicates = ["iva.redeme_enrolled"]
-export_headers = ["redeme"]
 legal_refs = ["rd-1624-1992:art-30"]
 
 [[sections.fields]]
@@ -1298,8 +1292,8 @@ model_selectors = ["monedas_virtuales_extranjero_above_threshold"]
 schedule_predicates = ["monedas_virtuales_extranjero_above_threshold"]
 
 [[sections]]
-key = "filing_export"
-title = "Filing and export context"
+key = "renta_filing"
+title = "Renta filing context"
 sensitivity = "financial"
 effective_dated = false
 
@@ -1308,131 +1302,25 @@ key = "declaration_type"
 type = "string"
 required = false
 sensitivity = "financial"
-description = "Declaration type used by export layouts and Modelo 100."
+description = "Modelo 100 declaration type."
 model_selectors = ["declaration.type", "modelo_100"]
-export_headers = ["declaration_type", "complementaria", "complementaria_page", "page_complementaria"]
 legal_refs = ["orden-hac-242-2025:art-3", "orden-hac-277-2026:art-3"]
 
+[[sections]]
+key = "renta_rental"
+title = "Renta rental context"
+sensitivity = "financial"
+effective_dated = false
+
 [[sections.fields]]
-key = "rental_reduccion_art_23_2_tier_2024"
+key = "reduccion_art_23_2_tier_2024"
 type = "enum"
 required = false
 sensitivity = "financial"
 description = "Modelo 100 de 2024, art. 23.2: porcentaje de reducción por alquiler de vivienda entre los tramos legales del 50, 60, 70 o 90 %. Sin este dato no puede calcularse la casilla 0150 únicamente a partir de la condición de elegibilidad."
 enum_values = ["tier-50", "tier-60", "tier-70", "tier-90"]
-model_selectors = ["renta.rental_reduccion_art_23_2_tier_2024", "modelo_100"]
+model_selectors = ["renta_rental.reduccion_art_23_2_tier_2024", "modelo_100"]
 legal_refs = ["ley-35-2006:art-23"]
-
-[[sections.fields]]
-key = "previous_receipt"
-type = "string"
-required = false
-sensitivity = "financial"
-description = "Previous receipt or justificante reference for complementary filings."
-export_headers = ["previous_receipt", "previous_justificante", "justificante_anterior"]
-
-[[sections.fields]]
-key = "period_start_date"
-type = "date"
-required = false
-sensitivity = "financial"
-description = "Filing period start date where export layouts require a header value."
-export_headers = ["fecha_inicio_periodo", "devengo_start_date"]
-
-[[sections.fields]]
-key = "period_end_date"
-type = "date"
-required = false
-sensitivity = "financial"
-description = "Filing period end date where export layouts require a header value."
-export_headers = ["fecha_fin_periodo"]
-
-[[sections.fields]]
-key = "program_version"
-type = "string"
-required = false
-sensitivity = "audit"
-description = "Program version header supplied by export context."
-export_headers = ["program_version"]
-
-[[sections.fields]]
-key = "presenter_tax_id"
-type = "string"
-required = false
-sensitivity = "audit"
-description = "Developer NIF/CIF header supplied by export context."
-export_headers = ["presenter_nif", "presenter_tax_id"]
-
-[[sections.fields]]
-key = "iban"
-type = "string"
-required = false
-sensitivity = "financial"
-description = "Refund-account IBAN. AEAT pays Modelo 303 refunds INTO this account. It is not debit authority and is never reused for domiciliacion del ingreso; record a separate charge IBAN for that election. Read transiently at export from encrypted secure storage; never logged."
-export_headers = ["iban"]
-
-[[sections.fields]]
-key = "charge_iban"
-type = "string"
-required = false
-sensitivity = "financial"
-description = "IBAN AEAT may debit only when a Modelo 303 filing elects domiciliacion del ingreso. This affirmative debit authority is distinct from the refund-account IBAN; the U DID page carries this IBAN alone, never refund-only SWIFT, foreign-bank, or SEPA-mark fields. Read transiently at export from encrypted secure storage; never logged."
-
-[[sections.fields]]
-key = "swift_bic"
-type = "string"
-required = false
-sensitivity = "financial"
-description = "SWIFT-BIC of the refund account's bank for a non-SEPA cuenta-devolucion. Emitted on the Modelo 303 DID refund-account page (DR303 position 12). Read transiently at export from encrypted secure storage; never logged."
-export_headers = ["swift_bic"]
-
-[[sections.fields]]
-key = "bank_name"
-type = "string"
-required = false
-sensitivity = "financial"
-description = "Bank name for a non-SEPA refund account (Marca SEPA 3 Resto Paises). Emitted on the Modelo 303 DID refund-account page (DR303 position 57). Read transiently at export from encrypted secure storage; never logged."
-export_headers = ["bank_name"]
-
-[[sections.fields]]
-key = "bank_address"
-type = "string"
-required = false
-sensitivity = "financial"
-description = "Bank address for a non-SEPA refund account (Marca SEPA 3 Resto Paises). Emitted on the Modelo 303 DID refund-account page (DR303 position 127). Read transiently at export from encrypted secure storage; never logged."
-export_headers = ["bank_address"]
-
-[[sections.fields]]
-key = "bank_city"
-type = "string"
-required = false
-sensitivity = "financial"
-description = "Bank city for a non-SEPA refund account (Marca SEPA 3 Resto Paises). Emitted on the Modelo 303 DID refund-account page (DR303 position 162). Read transiently at export from encrypted secure storage; never logged."
-export_headers = ["bank_city"]
-
-[[sections.fields]]
-key = "bank_country_code"
-type = "string"
-required = false
-sensitivity = "financial"
-description = "ISO 3166-1 alpha-2 country code of the bank for a non-SEPA refund account (Marca SEPA 3 Resto Paises). Emitted on the Modelo 303 DID refund-account page (DR303 position 192). Read transiently at export from encrypted secure storage; never logged."
-export_headers = ["bank_country_code"]
-
-[[sections.fields]]
-key = "sepa_marca"
-type = "string"
-required = false
-sensitivity = "financial"
-description = "Marca SEPA derived from the refund account country (1 Cuenta Espana / 2 UE SEPA / 3 Resto Paises). Emitted on the Modelo 303 DID refund-account page (DR303 position 194). Read transiently at export from encrypted secure storage; never logged."
-export_headers = ["sepa_marca"]
-
-[[sections.fields]]
-key = "aeat_seal"
-type = "string"
-required = false
-sensitivity = "audit"
-description = "AEAT seal header when an export layout requires it."
-export_headers = ["aeat_seal"]
 
 [[sections]]
 key = "renta_taxpayer"

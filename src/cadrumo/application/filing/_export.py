@@ -57,6 +57,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import (
     CasillaId,
     ExportLayoutFormat,
+    FilingProducerKey,
     Period,
     PriorDomiciliationElection,
 )
@@ -71,7 +72,6 @@ from ...domain.calculations.registry import (
     ExportComputedKey,
     ExportDraftAttribute,
     ExportFieldDefinition,
-    ExportHeaderKey,
     ExportLayoutDefinition,
     ExportRecordDefinition,
     RegistryValidationError,
@@ -80,12 +80,14 @@ from ...domain.calculations.registry import (
     render_fixed_width_export_field,
     xml_dictionary_entries,
 )
+from ...domain.deadlines import ModeloIVAProfile
 from ...domain.filing import (
     FilingExportError,
     FilingExportValidationError,
     ModeloCasillaProvenance,
     ModeloDraft,
 )
+from ...domain.iva import derive_sepa_marca
 from ...domain.submission import ModeloDraftStatus
 from ._export_parity import (
     assert_export_mirrors_manifest,
@@ -97,6 +99,12 @@ from ._export_xml_dictionary import (
     expected_xml_dictionary_root_identity,
     read_xml_dictionary_root_identity,
     render_xml_dictionary_layout,
+)
+from ._producer_snapshot import (
+    ChargeAccountSelection,
+    FilingProducerSnapshot,
+    Modelo111ProfileFacts,
+    RefundAccountSelection,
 )
 from .runtime import RegistrySchemaAccessor, build_runtime_schema_provider
 
@@ -297,11 +305,61 @@ class DeclaracionVerifyResult(BaseModel):
         return value
 
 
+def _filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProducerKey, object]:
+    """Resolve every canonical producer identity from one immutable snapshot."""
+    identity = snapshot.taxpayer_identity
+    amendment = snapshot.amendment_evidence
+    values: dict[FilingProducerKey, object] = {
+        FilingProducerKey.PRESENTER_TAX_ID: str(snapshot.presenter.tax_id),
+        FilingProducerKey.FILING_RESULT_DISPOSITION: snapshot.elections.result_disposition.value,
+        FilingProducerKey.TAXPAYER_LEGAL_NAME: identity.legal_name,
+        FilingProducerKey.TAXPAYER_GIVEN_NAME: identity.given_name,
+        FilingProducerKey.TAXPAYER_SURNAMES: identity.surnames,
+        FilingProducerKey.TAXPAYER_FULL_NAME: identity.full_name,
+        FilingProducerKey.AMENDMENT_IS_RECTIFICATIVA: amendment.is_rectificativa if amendment else None,
+        FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA: amendment.is_complementaria if amendment else None,
+        FilingProducerKey.AMENDMENT_ORIGINAL_AEAT_RECEIPT: amendment.original_aeat_receipt if amendment else None,
+        FilingProducerKey.SELECTED_ACCOUNT_IBAN: None,
+        FilingProducerKey.SELECTED_ACCOUNT_SWIFT_BIC: None,
+        FilingProducerKey.SELECTED_ACCOUNT_BANK_NAME: None,
+        FilingProducerKey.SELECTED_ACCOUNT_BANK_ADDRESS: None,
+        FilingProducerKey.SELECTED_ACCOUNT_BANK_CITY: None,
+        FilingProducerKey.SELECTED_ACCOUNT_BANK_COUNTRY_CODE: None,
+        FilingProducerKey.PRIOR_DOMICILIATION_ACTION: (
+            "X" if snapshot.elections.prior_domiciliation is PriorDomiciliationElection.CANCEL_OR_MODIFY else None
+        ),
+        FilingProducerKey.M303_REDEME_ENROLLED: (
+            snapshot.model_profile.redeme_enrolled if isinstance(snapshot.model_profile, ModeloIVAProfile) else None
+        ),
+        FilingProducerKey.M111_COLEGIO_CONCERTADO: (
+            snapshot.model_profile.colegio_concertado
+            if isinstance(snapshot.model_profile, Modelo111ProfileFacts)
+            else None
+        ),
+    }
+    selected = snapshot.selected_account
+    if isinstance(selected, (ChargeAccountSelection, RefundAccountSelection)):
+        values[FilingProducerKey.SELECTED_ACCOUNT_IBAN] = selected.account.iban
+    if isinstance(selected, RefundAccountSelection):
+        values.update(
+            {
+                FilingProducerKey.SELECTED_ACCOUNT_SWIFT_BIC: selected.account.swift_bic,
+                FilingProducerKey.SELECTED_ACCOUNT_BANK_NAME: selected.account.bank_name,
+                FilingProducerKey.SELECTED_ACCOUNT_BANK_ADDRESS: selected.account.bank_address,
+                FilingProducerKey.SELECTED_ACCOUNT_BANK_CITY: selected.account.bank_city,
+                FilingProducerKey.SELECTED_ACCOUNT_BANK_COUNTRY_CODE: selected.account.bank_country_code,
+            },
+        )
+    if set(values) != set(FilingProducerKey):
+        raise FilingExportValidationError("filing producer resolver is not exhaustive")
+    return values
+
+
 def export_draft(
     draft: ModeloDraft,
     *,
     output_path: Path,
-    headers: Mapping[str, str],
+    producer_snapshot: FilingProducerSnapshot,
     dictionary_values: Mapping[str, object] | None = None,
     prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP,
     schema_provider: RegistrySchemaAccessor | None = None,
@@ -317,7 +375,7 @@ def export_draft(
     Args:
         draft: The :class:`ModeloDraft` to export; must be in ``APROBADO`` status.
         output_path: Destination path for the fichero-BOE bytes.
-        headers: Registry header fields (NIF, ejercicio, etc.) embedded in the file.
+        producer_snapshot: Complete typed filing facts consumed by registry producers.
         dictionary_values: Optional values addressed by the dictionary field id
             AEAT declares for them, each still carrying its own Python type.
             Read only by the ``xml_dictionary`` renderer, which is the only
@@ -351,10 +409,14 @@ def export_draft(
         raise FilingExportError(_missing_export_layout_message(draft.modelo))
     layout = subview.export_layouts[0]
     _raise_if_export_layout_not_renderable(draft.modelo, layout)
+    if producer_snapshot.modelo.value != draft.modelo:
+        raise FilingExportValidationError("filing producer snapshot modelo does not match draft")
+    producer_values = _filing_producer_values(producer_snapshot)
     payload = _render_export_layout(
         layout,
         draft=draft,
-        headers=headers,
+        headers=producer_values,
+        producer_snapshot=producer_snapshot,
         dictionary_values=dictionary_values,
         prior_domiciliation_election=prior_domiciliation_election,
         schema_provider=provider,
@@ -375,7 +437,7 @@ def export_draft(
         assert_export_mirrors_manifest(
             layout,
             draft=draft,
-            headers=headers,
+            headers=producer_values,
             prior_domiciliation_election=prior_domiciliation_election,
             schema_provider=provider,
             manifest=subview.completeness_manifest,
@@ -615,7 +677,8 @@ def _render_export_layout(
     layout: ExportLayoutDefinition,
     *,
     draft: ModeloDraft,
-    headers: Mapping[str, str],
+    headers: Mapping[FilingProducerKey, object],
+    producer_snapshot: FilingProducerSnapshot,
     dictionary_values: Mapping[str, object] | None,
     prior_domiciliation_election: PriorDomiciliationElection,
     schema_provider: RegistrySchemaAccessor,
@@ -632,6 +695,7 @@ def _render_export_layout(
         layout,
         draft=draft,
         headers=headers,
+        producer_snapshot=producer_snapshot,
         prior_domiciliation_election=prior_domiciliation_election,
     )
 
@@ -640,11 +704,11 @@ def _render_layout(
     layout: ExportLayoutDefinition,
     *,
     draft: ModeloDraft,
-    headers: Mapping[str, str],
+    headers: Mapping[FilingProducerKey, object],
+    producer_snapshot: FilingProducerSnapshot,
     prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP,
 ) -> bytes:
     chunks: list[bytes] = []
-    normalized_headers = _normalise_export_headers(headers)
     casilla_values: dict[CasillaId, object] = {value.casilla_id: value.value for value in draft.values}
     binding_values: dict[tuple[BindingId, int | None], object] = {
         (value.binding_id, value.row_index): value.value for value in draft.binding_values
@@ -653,7 +717,7 @@ def _render_layout(
         if did_page_suppressed(
             record,
             draft=draft,
-            headers=normalized_headers,
+            headers=headers,
             prior_domiciliation_election=prior_domiciliation_election,
         ):
             continue
@@ -662,7 +726,8 @@ def _render_layout(
             text = _render_record(
                 record,
                 draft=draft,
-                headers=normalized_headers,
+                producer_values=headers,
+                producer_snapshot=producer_snapshot,
                 casilla_values=casilla_values,
                 binding_values=binding_values,
                 row=row,
@@ -675,22 +740,21 @@ def _render_layout(
     return b"".join(chunks)
 
 
-render_layout = _render_layout
-
-
-def _normalise_export_headers(headers: Mapping[str, str]) -> dict[ExportHeaderKey, str]:
-    """Hydrate the public boundary to the one closed header-key vocabulary."""
-    normalized: dict[ExportHeaderKey, str] = {}
-    for key, value in headers.items():
-        try:
-            member = ExportHeaderKey(key)
-        except ValueError:
-            raise FilingExportValidationError(
-                f"export header key {key!r} is not recognised; expected one of "
-                f"{[candidate.value for candidate in ExportHeaderKey]}",
-            ) from None
-        normalized[member] = value
-    return normalized
+def render_layout(
+    layout: ExportLayoutDefinition,
+    *,
+    draft: ModeloDraft,
+    producer_snapshot: FilingProducerSnapshot,
+    prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP,
+) -> bytes:
+    """Render a layout from one complete typed filing-producer snapshot."""
+    return _render_layout(
+        layout,
+        draft=draft,
+        headers=_filing_producer_values(producer_snapshot),
+        producer_snapshot=producer_snapshot,
+        prior_domiciliation_election=prior_domiciliation_election,
+    )
 
 
 def _record_render_rows(
@@ -777,7 +841,8 @@ def _render_record(
     record: ExportRecordDefinition,
     *,
     draft: ModeloDraft,
-    headers: Mapping[ExportHeaderKey, str],
+    producer_values: Mapping[FilingProducerKey, object],
+    producer_snapshot: FilingProducerSnapshot,
     casilla_values: dict[CasillaId, object],
     binding_values: dict[tuple[BindingId, int | None], object],
     row: _RecordRenderRow,
@@ -788,7 +853,8 @@ def _render_record(
             _render_field(
                 field,
                 draft=draft,
-                headers=headers,
+                headers=producer_values,
+                producer_snapshot=producer_snapshot,
                 casilla_values=casilla_values,
                 binding_values=binding_values,
                 row_index=row.row_index,
@@ -806,7 +872,8 @@ def _render_record(
         rendered = _render_field(
             field,
             draft=draft,
-            headers=headers,
+            headers=producer_values,
+            producer_snapshot=producer_snapshot,
             casilla_values=casilla_values,
             binding_values=binding_values,
             row_index=row.row_index,
@@ -831,7 +898,8 @@ def _render_field(
     field: ExportFieldDefinition,
     *,
     draft: ModeloDraft,
-    headers: Mapping[ExportHeaderKey, str],
+    headers: Mapping[FilingProducerKey, object],
+    producer_snapshot: FilingProducerSnapshot,
     casilla_values: dict[CasillaId, object],
     binding_values: dict[tuple[BindingId, int | None], object],
     row_index: int | None,
@@ -842,6 +910,7 @@ def _render_field(
         field,
         draft=draft,
         headers=headers,
+        producer_snapshot=producer_snapshot,
         casilla_values=casilla_values,
         binding_values=binding_values,
         row_index=row_index,
@@ -853,7 +922,8 @@ def _field_value(
     field: ExportFieldDefinition,
     *,
     draft: ModeloDraft,
-    headers: Mapping[ExportHeaderKey, str],
+    headers: Mapping[FilingProducerKey, object],
+    producer_snapshot: FilingProducerSnapshot,
     casilla_values: dict[CasillaId, object],
     binding_values: dict[tuple[BindingId, int | None], object],
     row_index: int | None,
@@ -872,7 +942,7 @@ def _field_value(
         case CasillaFieldKind.DRAFT:
             return _draft_value(field, draft)
         case CasillaFieldKind.COMPUTED:
-            return _computed_field_value(field, draft)
+            return _computed_field_value(field, draft, producer_snapshot)
         case _:
             raise FilingExportError(f"unsupported export field kind {field.kind!r}")
 
@@ -893,45 +963,20 @@ def _binding_field_value(
     return binding_values.get((field.binding, row_index))
 
 
-def _header_field_value(field: ExportFieldDefinition, headers: Mapping[ExportHeaderKey, str]) -> str:
-    if field.header_key is None:
-        raise FilingExportValidationError(f"export field {field.id!r} must declare header_key")
-    value = headers.get(field.header_key)
-    if field.required and (value is None or not value.strip()) and not _required_header_allows_blank(field, headers):
-        raise FilingExportValidationError(f"export header {field.header_key!r} is required")
-    return value.strip() if value else ""
+def _header_field_value(field: ExportFieldDefinition, headers: Mapping[FilingProducerKey, object]) -> object:
+    if field.producer_key is None:
+        raise FilingExportValidationError(f"export field {field.id!r} must declare producer_key")
+    value = headers.get(field.producer_key)
+    if field.required and (value is None or (isinstance(value, str) and not value.strip())):
+        raise FilingExportValidationError(f"export producer {field.producer_key!r} is required")
+    return value.strip() if isinstance(value, str) else value
 
 
-_M202_LEGAL_ENTITY_BLANK_NAME_FIELD_IDS: frozenset[str] = frozenset(
-    {
-        "modelo-202-2019-2022-page-01-header-name-pos-83",
-        "modelo-202-2023-2024-page-01-header-name-pos-83",
-        "modelo-202-page-01-header-name-pos-83",
-    },
-)
-
-
-def _required_header_allows_blank(
-    field: ExportFieldDefinition,
-    headers: Mapping[ExportHeaderKey, str],
-) -> bool:
-    """Allow only Modelo 202's individual-name slot to blank for legal entities."""
-    return (
-        str(field.id) in _M202_LEGAL_ENTITY_BLANK_NAME_FIELD_IDS
-        and field.header_key is ExportHeaderKey.NAME
-        and (headers.get(ExportHeaderKey.ENTITY_TYPE) or "").strip() == "legal_entity"
-        and bool((headers.get(ExportHeaderKey.SURNAMES) or "").strip())
-    )
-
-
-def _envelope_closing_tag(draft: ModeloDraft) -> str:
+def _envelope_closing_tag(draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str:
+    del snapshot
     year = str(draft.period.filing_year)
     period_code = draft.period.registry_token
     return f"</T{draft.modelo}0{year}{period_code}0000>"
-
-
-def _draft_profile_tax_id(draft: ModeloDraft) -> str:
-    return draft.profile_tax_id
 
 
 def _draft_filing_year(draft: ModeloDraft) -> str:
@@ -942,21 +987,51 @@ def _draft_period_code(draft: ModeloDraft) -> str:
     return draft.period.registry_token
 
 
-_COMPUTED_VALUE_PRODUCERS: Mapping[ExportComputedKey, Callable[[ModeloDraft], str]] = {
+def _draft_period_start_date(draft: ModeloDraft) -> str:
+    return draft.period.start_date.strftime("%d%m%Y")
+
+
+def _draft_period_end_date(draft: ModeloDraft) -> str:
+    return draft.period.end_date.strftime("%d%m%Y")
+
+
+def _sepa_marca(draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str | None:
+    del draft
+    selected = snapshot.selected_account
+    if isinstance(selected, ChargeAccountSelection):
+        return None
+    if not isinstance(selected, RefundAccountSelection):
+        raise FilingExportValidationError("SEPA marker requires a selected refund account")
+    return derive_sepa_marca(
+        iban=selected.account.iban,
+        bank_country_code=selected.account.bank_country_code,
+    ).value
+
+
+_COMPUTED_VALUE_PRODUCERS: Mapping[
+    ExportComputedKey,
+    Callable[[ModeloDraft, FilingProducerSnapshot], str | None],
+] = {
     ExportComputedKey.ENVELOPE_CLOSING_TAG: _envelope_closing_tag,
+    ExportComputedKey.SEPA_MARCA: _sepa_marca,
 }
 
 _DRAFT_VALUE_PRODUCERS: Mapping[ExportDraftAttribute, Callable[[ModeloDraft], str]] = {
-    ExportDraftAttribute.PROFILE_TAX_ID: _draft_profile_tax_id,
     ExportDraftAttribute.FILING_YEAR: _draft_filing_year,
     ExportDraftAttribute.PERIOD_CODE: _draft_period_code,
+    ExportDraftAttribute.PERIOD_START_DATE: _draft_period_start_date,
+    ExportDraftAttribute.PERIOD_END_DATE: _draft_period_end_date,
 }
 
 
-def _computed_field_value(field: ExportFieldDefinition, draft: ModeloDraft) -> str:
+def _computed_field_value(
+    field: ExportFieldDefinition,
+    draft: ModeloDraft,
+    producer_snapshot: FilingProducerSnapshot,
+) -> str | None:
     if field.computed_key is None:
         raise FilingExportValidationError(f"export field {field.id!r} must declare computed_key")
-    return _COMPUTED_VALUE_PRODUCERS[field.computed_key](draft)
+    return _COMPUTED_VALUE_PRODUCERS[field.computed_key](draft, producer_snapshot)
 
 
 def _draft_value(field: ExportFieldDefinition, draft: ModeloDraft) -> str:
@@ -1019,7 +1094,7 @@ def _mismatched_root_fields(
     rather than vacuously true.
 
     The expected values are rebuilt through the same
-    :func:`~application.filing._export_xml_dictionary.xml_dictionary_root_identity`
+    :func:`~application.filing._export_xml_dictionary.expected_xml_dictionary_root_identity`
     contract the writer uses, so a future attribute added to the root is
     compared automatically instead of silently going unchecked.
     """
