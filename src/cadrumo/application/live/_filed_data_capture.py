@@ -56,6 +56,7 @@ from ...adapters.outbound.aeat.sede import (
 )
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import (
+    CasillaId,
     CasillaValueKind,
     FiledHistoryDiscoverySignal,
     Period,
@@ -1294,7 +1295,7 @@ def filed_period_selection_rows(
 def casillas_a_recapture_would_change(
     fresh: FiledDeclaracionObservation,
     stored: RegistryModeloObservation,
-) -> tuple[str, ...]:
+) -> tuple[CasillaId, ...]:
     """Return every casilla whose freshly captured value disagrees with the stored one.
 
     Derived from the observed casilla set rather than from a hand-listed field
@@ -1324,10 +1325,12 @@ def casillas_a_recapture_would_change(
     Returns:
         The changed casilla ids, sorted, so the notice text is deterministic.
     """
-    stored_values = {str(observation.casilla_id): observation.value for observation in stored.observations}
-    changed: set[str] = set()
+    # Both sides already carry the typed CasillaId, so neither is stringified:
+    # erasing the alias at this boundary was drift, not normalisation.
+    stored_values = {observation.casilla_id: observation.value for observation in stored.observations}
+    changed: set[CasillaId] = set()
     for observed in fresh.casillas:
-        casilla_id = str(observed.casilla_id)
+        casilla_id = observed.casilla_id
         if casilla_id not in stored_values:
             continue
         if observed.value_kind is not CasillaValueKind.NUMERIC:
