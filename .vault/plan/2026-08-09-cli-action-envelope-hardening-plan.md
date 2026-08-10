@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#cli-action-envelope-hardening'
 date: '2026-08-09'
-modified: '2026-08-09'
-body_hash: 'sha256:c7690d10429950fbc5ce3b24efa634981e47bd75401059c076cd5a417f7a9f4f'
+modified: '2026-08-10'
+body_hash: 'sha256:b4a5284b54d9b9cacabc0e0da5f7215b03b1ef48ce6370d876ea950695aa4d12'
 tier: L3
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
@@ -35,18 +35,18 @@ Create the executable candidate ledger and exact live-surface denominator that e
 Build the AST-backed candidate census, fixed-point alias expansion, and disposition contract.
 
 - [x] `W01.P01.S01` - Add an AST-backed census emitting stable candidate records keyed by path, enclosing symbol, role, alias, and action identity; `dev/cli_action_census.py`.
-- [ ] `W01.P01.S02` - Add fixed-point vocabulary expansion and fail a closing pass that discovers a new semantic cluster; `dev/cli_action_census.py`.
-- [ ] `W01.P01.S03` - Add the adjudicated disposition model with stale-exclusion detection and symbol-scoped reasons; `dev/cli_action_census_dispositions.py`.
-- [ ] `W01.P01.S04` - Require every census candidate to carry exactly one current disposition; `src/cadrumo/entrypoints/cli/tests/test_suggestion_command_conformance.py`.
+- [x] `W01.P01.S02` - Add fixed-point vocabulary expansion and fail a closing pass that discovers a new semantic cluster; `dev/cli_action_census.py`.
+- [x] `W01.P01.S03` - Add the adjudicated disposition model with stale-exclusion detection and symbol-scoped reasons; `dev/cli_action_census_dispositions.py`.
+- [x] `W01.P01.S04` - Require every census candidate to carry exactly one current disposition; `src/cadrumo/entrypoints/cli/tests/test_suggestion_command_conformance.py`.
 - [ ] `W01.P01.S49` - Expand migration Phases through the plan CLI with one exclusive Step per adjudicated producer cluster before execution; `.vault/plan/2026-08-09-cli-action-envelope-hardening-plan.md`.
 
 ### Phase `W01.P02` - Live surface reconciliation
 
 Join callable leaves to schemas, manifest capabilities, policies, MCP exposure, and explicit exclusions by identity.
 
-- [ ] `W01.P02.S05` - Expose live Click leaf identity and complete required-input metadata for action binding validation; `src/cadrumo/entrypoints/mcp/_input_schema.py`.
-- [ ] `W01.P02.S06` - Build the identity reconciliation across leaves, schemas, manifest declarations, policies, and MCP exposure; `src/cadrumo/application/operator_surface/_manifest.py`.
-- [ ] `W01.P02.S07` - Prove identity joins for callbacks, aliases, exclusions, and policy-filtered MCP leaves; `src/cadrumo/application/operator_surface/tests/test_contract.py`.
+- [x] `W01.P02.S05` - Expose live Click leaf identity and complete required-input metadata for action binding validation; `src/cadrumo/entrypoints/mcp/_input_schema.py`.
+- [x] `W01.P02.S06` - Build the identity reconciliation across leaves, schemas, manifest declarations, policies, and MCP exposure; `src/cadrumo/application/operator_surface/_manifest.py`.
+- [x] `W01.P02.S07` - Prove identity joins for callbacks, aliases, exclusions, and policy-filtered MCP leaves; `src/cadrumo/application/operator_surface/tests/test_contract.py`.
 
 ## Wave `W02` - Create the canonical action and precondition contract
 
@@ -56,9 +56,9 @@ Introduce application-owned verdicts and catalogue-backed action references befo
 
 Define strict condition, evidence, action, binding, conditionality, and no-recovery models and their catalogue.
 
-- [ ] `W02.P03.S08` - Define immutable action references, bindings, precondition verdicts, evidence, conditionality, and no-recovery records; `src/cadrumo/application/operator_actions/_models.py`.
-- [ ] `W02.P03.S09` - Define the canonical action catalogue without duplicating application guard predicates; `src/cadrumo/application/operator_actions/_catalogue.py`.
-- [ ] `W02.P03.S10` - Prove strict action-model validation, catalogue uniqueness, binding sufficiency, and terminal outcomes; `src/cadrumo/application/operator_actions/tests/test_models.py`.
+- [x] `W02.P03.S08` - Define immutable action references, bindings, precondition verdicts, evidence, conditionality, and no-recovery records; `src/cadrumo/application/operator_actions/_models.py`.
+- [x] `W02.P03.S09` - Define the canonical action catalogue without duplicating application guard predicates; `src/cadrumo/application/operator_actions/_catalogue.py`.
+- [x] `W02.P03.S10` - Prove strict action-model validation, catalogue uniqueness, binding sufficiency, and terminal outcomes; `src/cadrumo/application/operator_actions/tests/test_models.py`.
 
 ### Phase `W02.P04` - Schema-resolved envelope projection
 

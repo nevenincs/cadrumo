@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#m303-carry-reconciliation'
-date: '2026-08-09'
-modified: '2026-08-09'
+date: '2026-08-10'
+modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:c4ddd331e00ccb1c1122e7b46894efa8b899f5aa5f9169c07d73e59da6796ce5'
+body_hash: 'sha256:d2b369d74bba968b29801a7aaeead891d85a64d01c28639e80c64af0bd0b0d59'
 related:
   - '[[2026-06-21-m303-carry-reconciliation-adr]]'
   - '[[2026-08-07-m303-carry-reconciliation-S01]]'
@@ -21,19 +21,29 @@ related:
   - '[[2026-08-07-m303-carry-reconciliation-S10]]'
   - '[[2026-08-07-m303-carry-reconciliation-S11]]'
   - '[[2026-08-07-m303-carry-reconciliation-S12]]'
+  - '[[2026-08-07-m303-carry-reconciliation-S13]]'
   - '[[2026-08-07-m303-carry-reconciliation-S14]]'
   - '[[2026-08-07-m303-carry-reconciliation-S15]]'
+  - '[[2026-08-07-m303-carry-reconciliation-S16]]'
   - '[[2026-08-07-m303-carry-reconciliation-S17]]'
   - '[[2026-08-07-m303-carry-reconciliation-S18]]'
+  - '[[2026-08-07-m303-carry-reconciliation-S19]]'
   - '[[2026-08-07-m303-carry-reconciliation-S20]]'
+  - '[[2026-08-07-m303-carry-reconciliation-S21]]'
   - '[[2026-08-07-m303-carry-reconciliation-plan]]'
   - '[[2026-08-09-m303-carry-reconciliation-did-page-s17-audit]]'
   - '[[2026-08-09-m303-carry-reconciliation-payment-election-s20-audit]]'
+  - '[[2026-08-09-m303-carry-reconciliation-prior-domiciliation-s21-audit]]'
+  - '[[2026-08-09-m303-carry-reconciliation-prior-domiciliation-s21-reference]]'
   - '[[2026-08-09-m303-carry-reconciliation-s05-code-review-audit]]'
   - '[[2026-08-09-m303-carry-reconciliation-s06-code-review-audit]]'
   - '[[2026-08-09-m303-carry-reconciliation-s07-code-review-audit]]'
   - '[[2026-08-09-m303-carry-reconciliation-s08-code-review-audit]]'
   - '[[2026-08-09-m303-carry-reconciliation-s18-code-review-audit]]'
+  - '[[2026-08-10-m303-carry-reconciliation-s13-filed-population-measurement-blocker-audit]]'
+  - '[[2026-08-10-m303-carry-reconciliation-s16-submitted-file-notice-route-audit]]'
+  - '[[2026-08-10-m303-carry-reconciliation-s16-submitted-file-notice-route-reference]]'
+  - '[[2026-08-10-m303-carry-reconciliation-s19-code-review-audit]]'
 ---
 
 # `m303-carry-reconciliation` feature index
@@ -50,11 +60,15 @@ Auto-generated index of all documents tagged with `#m303-carry-reconciliation`.
 
 - `2026-08-09-m303-carry-reconciliation-did-page-s17-audit` - 2026-08-09-m303-carry-reconciliation-did-page-s17-audit
 - `2026-08-09-m303-carry-reconciliation-payment-election-s20-audit` - 2026-08-09-m303-carry-reconciliation-payment-election-s20-audit
+- `2026-08-09-m303-carry-reconciliation-prior-domiciliation-s21-audit` - `m303-carry-reconciliation` audit: `S21 prior-domiciliation election code review`
 - `2026-08-09-m303-carry-reconciliation-s05-code-review-audit` - `m303-carry-reconciliation` audit: `S05 code review`
 - `2026-08-09-m303-carry-reconciliation-s06-code-review-audit` - `m303-carry-reconciliation` audit: `M303 carry reconciliation S06 code review`
 - `2026-08-09-m303-carry-reconciliation-s07-code-review-audit` - `m303-carry-reconciliation` audit: `M303 carry reconciliation S07 code review`
 - `2026-08-09-m303-carry-reconciliation-s08-code-review-audit` - `m303-carry-reconciliation` audit: `M303 carry reconciliation S08 code review`
 - `2026-08-09-m303-carry-reconciliation-s18-code-review-audit` - `m303-carry-reconciliation` audit: `M303 S18 charge-account export review`
+- `2026-08-10-m303-carry-reconciliation-s13-filed-population-measurement-blocker-audit` - `m303-carry-reconciliation` audit: `M303 S13 filed-population measurement blocker`
+- `2026-08-10-m303-carry-reconciliation-s16-submitted-file-notice-route-audit` - `m303-carry-reconciliation` audit: `M303 S16 submitted-file Notice route`
+- `2026-08-10-m303-carry-reconciliation-s19-code-review-audit` - `m303-carry-reconciliation` audit: `M303 S19 Nota 3 DID export review`
 
 ### exec
 
@@ -75,7 +89,16 @@ Auto-generated index of all documents tagged with `#m303-carry-reconciliation`.
 - `2026-08-07-m303-carry-reconciliation-S17` - S17 account-bearing DID export verification
 - `2026-08-07-m303-carry-reconciliation-S18` - S18 charge-account public export verification
 - `2026-08-07-m303-carry-reconciliation-S20` - S20 payment-election implementation
+- `2026-08-07-m303-carry-reconciliation-S21` - Model the prior-domiciliation KEEP versus CANCEL_OR_MODIFY filing election with baseline-U provenance, split the M303 2023-2025 and 2026 registry layouts at their official page-3 offsets, and thread the safe semantic election through public filing surfaces so S19 can apply Nota 3 without inference
+- `2026-08-07-m303-carry-reconciliation-S13` - Recover the filed disposition from the printed declaracion render ONLY for a filing where no submitted_file artefact exists, and establish first whether that population is non-empty, because if the pull stores a submitted file for every filed modelo 303 this row has no subject and should be closed rather than built. Blocked on S12. Where the fichero is held the disposition is a direct read of the tipo de declaracion byte and no render parsing is warranted. IF the render path is taken, RECOVERY KEYS ON WHICH SLOT CARRIES A VALUE, NEVER ON A PRINTED LETTER. The C, I and D letters beside those sections are pre-printed form furniture present on all four bundled AEAT facsimiles including the two that elected ingreso, so a pattern matching the letter reports the same disposition for every filing while appearing to read the form. The pair needing separation is COMPENSACION versus DEVOLUCION, since the sign of casilla 71 already separates NEGATIVA from both through derive_result_disposition. Counts to state precisely rather than repeat: ResultDisposition declares TEN members, of which AEAT's modelo 303 diseño admits EIGHT, and the two the enum adds belong to other modelos. Unproven on evidence and not to be asserted otherwise: no bundled facsimile elected devolucion and none filed sin actividad, so box 73 and the sin-actividad flag have proven slots and unexercised values
+- `2026-08-07-m303-carry-reconciliation-S16` - Surface a recorded submitted-file layout refusal to the operator through the Notice channel, completing the fail-hard-and-loud directive rather than enhancing it. The refusal itself now raises with modelo, resolved revision, ejercicio, period, expediente id, artefact digest and the parser's own reason. Its single production consumer catches it and writes metadata submitted_file_extraction_error, then degrades to the declaration-PDF path. Measured. Nothing in the codebase reads that metadata key. No Notice, no CLI field, no operator surface. So the capture is strictly louder than the silent positional fallback it replaced, which produced silence plus fabricated values plus a fabricated 1.0 extraction coverage that passed the coverage gate, and it is still not loud where the operator is. Notices are the only sanctioned diagnostic channel, so the advisory belongs there and MUST NOT be a bespoke advisory or next field inside a result payload. Gate. A capture whose submitted-file layout parse fails emits an advisory Notice naming the modelo and the failed record, proven by a test that makes the parse fail and asserts the Notice reaches the envelope, with a positive control proving a successful capture emits no such Notice
+- `2026-08-07-m303-carry-reconciliation-S19` - Express Nota 3, the rectificativa case the account-page guard structurally cannot see. CAPABILITY gap in the predicate's inputs, NOT a threshold to widen, and it MUST NOT be fixed by adding dispositions to the account-bearing set because the rule is not about the disposition at all. Nota 3 of the bundled diseno states that a rectificativa whose casilla 111 has content must carry bank data even when the payment form is not devolucion, except where the page-3 domiciliacion-cancellation field is marked. The guard reads only the declaration_type header, so it sees neither casilla 111 nor that marker and cannot express the rule in any form. Threading already established, so this does not need discovery. Both production call sites hold a draft. rendered_casilla_ids and assert_export_mirrors_manifest each take draft, and the renderer builds casilla_values from draft.values two lines above its suppression call. What needs widening is boe_representable_casilla_ids, which takes only layout, headers and schema_provider, plus roughly thirteen test call sites. The inputs MUST reach BOTH sides rather than the renderer alone, because the shared predicate exists so the renderer and the parity assertions cannot disagree about what reaches disk, and fixing one side reintroduces exactly that class of defect. Gate. A rectificativa with casilla 111 populated and the cancellation marker unset carries the account page on a non-devolucion payment form, the same filing with the marker set does not, an ordinary non-rectificativa filing is unchanged, and the renderer and the parity derivation agree on all three
 
 ### plan
 
 - `2026-08-07-m303-carry-reconciliation-plan` - `m303-carry-reconciliation` plan
+
+### reference
+
+- `2026-08-09-m303-carry-reconciliation-prior-domiciliation-s21-reference` - `m303-carry-reconciliation` reference: `S21 prior-domiciliation election implementation reference`
+- `2026-08-10-m303-carry-reconciliation-s16-submitted-file-notice-route-reference` - `m303-carry-reconciliation` reference: `M303 S16 submitted-file extraction Notice route`
