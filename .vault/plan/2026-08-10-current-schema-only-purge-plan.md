@@ -4,7 +4,7 @@ tags:
   - '#current-schema-only-purge'
 date: '2026-08-10'
 modified: '2026-08-10'
-body_hash: 'sha256:bc5a89803f98c17d0d2a2a754315d88a072311becbd08862734d527dcd248b22'
+body_hash: 'sha256:568d488c8499092a88349a61a2c3f2a70f6bfa60c24c959dd746f177b41ecaea'
 tier: L3
 related:
   - '[[2026-07-09-compatibility-lifecycle-adr]]'
@@ -83,10 +83,10 @@ use without changing forward-only lineage machinery.
 
 Make all encrypted wrapper format claims explicit and exact before key access.
 
-- [ ] `W02.P05.S08` - Require and explicitly write the exact current CipherEnvelope marker; `src/cadrumo/adapters/persistence/storage/envelope/_envelope.py`.
-- [ ] `W02.P05.S09` - Prove CipherEnvelope marker refusal occurs before master-key access; `src/cadrumo/adapters/persistence/storage/envelope/tests/test_cipher_envelope_version_gate.py`.
-- [ ] `W02.P05.S10` - Require and preflight the exact current WrappedMasterKey marker before decryption; `src/cadrumo/adapters/persistence/storage/master_key/_recovery.py`.
-- [ ] `W02.P05.S11` - Prove wrapped-master-key marker refusal precedes real unwrap; `src/cadrumo/adapters/persistence/storage/master_key/tests/test_recovery.py`.
+- [x] `W02.P05.S08` - Require and explicitly write the exact current CipherEnvelope marker; `src/cadrumo/adapters/persistence/storage/envelope/_envelope.py`.
+- [x] `W02.P05.S09` - Prove CipherEnvelope marker refusal occurs before master-key access; `src/cadrumo/adapters/persistence/storage/envelope/tests/test_cipher_envelope_version_gate.py`.
+- [x] `W02.P05.S10` - Require and preflight the exact current WrappedMasterKey marker before decryption; `src/cadrumo/adapters/persistence/storage/master_key/_recovery.py`.
+- [x] `W02.P05.S11` - Prove wrapped-master-key marker refusal precedes real unwrap; `src/cadrumo/adapters/persistence/storage/master_key/tests/test_recovery.py`.
 - [ ] `W02.P05.S12` - Require explicit current encrypted-bundle envelope payload and KDF markers; `src/cadrumo/application/user_profile/_bundle_encryption.py`.
 - [ ] `W02.P05.S13` - Prove encrypted-bundle marker refusal and current passphrase round trip; `src/cadrumo/application/user_profile/tests/test_bundle_export.py`.
 
