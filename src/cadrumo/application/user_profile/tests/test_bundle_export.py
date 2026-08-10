@@ -9,13 +9,14 @@ metadata.
 
 from __future__ import annotations
 
+import json
 import sqlite3
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
-from pydantic import SecretStr
+from pydantic import SecretStr, ValidationError
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.storage.bucket import bucket_paths
@@ -30,6 +31,7 @@ from ....domain.user_profile import (
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from .. import (
+    EncryptedProfileBundleError,
     EncryptedProfileBundleExport,
     ProfileBundleExportPurpose,
     ProfileBundleExportRequest,
@@ -282,6 +284,100 @@ def test_encrypted_transport_decrypts_to_the_canonical_cleartext_bundle(tmp_path
         decrypted = decrypt_profile_bundle_with_passphrase(envelope, passphrase=_PASSPHRASE)
         assert decrypted.model_copy(update={"exported_at": cleartext.exported_at}) == cleartext
         assert b"12345678Z" not in encrypted_path.read_bytes()
+
+        # Every marker the read path compares is stamped by the writer rather
+        # than supplied by a default. The record carries no defaultable field
+        # at all, so this covers its whole shape across the real
+        # encrypt-serialise-parse-decrypt cycle.
+        document = json.loads(encrypted_path.read_text(encoding="utf-8"))
+        for marker in ("encrypted_bundle_schema_version", "payload_model", "kdf", "kdf_version"):
+            assert marker in document, f"the writer must stamp {marker} explicitly"
+        assert envelope.payload_model == "UserProfilePortableExport"
+        assert envelope.kdf == "argon2id"
+        assert envelope.payload_schema_version == cleartext.bundle_schema_version
+        assert envelope.salt_b64 and envelope.ciphertext_b64
+        assert envelope.memory_cost > 0 and envelope.time_cost > 0 and envelope.parallelism > 0
+
+
+def _encrypted_envelope(tmp_path: Path) -> tuple[Path, EncryptedProfileBundleExport]:
+    """Export one real passphrase-encrypted bundle and return its path and envelope."""
+    encrypted_path = tmp_path / "profile.aeat-profile"
+    export_profile_bundle(
+        _request(
+            encrypted_path,
+            purpose=ProfileBundleExportPurpose.PORTABLE_TRANSFER,
+            transport=ProfileBundleExportTransport.PASSPHRASE_ENCRYPTED,
+        ),
+    )
+    return encrypted_path, EncryptedProfileBundleExport.model_validate_json(
+        encrypted_path.read_text(encoding="utf-8"),
+    )
+
+
+@pytest.mark.parametrize("marker", ["encrypted_bundle_schema_version", "payload_model", "kdf"])
+def test_encrypted_transport_refuses_an_envelope_omitting_a_routing_marker(tmp_path: Path, marker: str) -> None:
+    """Anti-tautology proof: strip a marker on disk and re-read the real file.
+
+    Each of these three is compared for equality on the read path, and each
+    previously carried a default equal to the value that comparison accepts.
+    A stored envelope missing the key hydrated AS the accepted value, so the
+    comparison passed on a claim the writer had never made -- the exact payload
+    the check exists to catch was the one it could not see.
+    """
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _create_profile()
+        encrypted_path, _ = _encrypted_envelope(tmp_path)
+
+        document = json.loads(encrypted_path.read_text(encoding="utf-8"))
+        del document[marker]
+        assert marker not in document, "the fixture must actually remove the marker"
+        encrypted_path.write_text(json.dumps(document), encoding="utf-8")
+
+        with pytest.raises(ValidationError):
+            EncryptedProfileBundleExport.model_validate_json(encrypted_path.read_text(encoding="utf-8"))
+
+
+def test_encrypted_transport_refuses_a_pre_current_envelope_schema_version(tmp_path: Path) -> None:
+    """The transport gate is exact, not a ceiling that admits everything older.
+
+    The pre-current value is reached by constructing it directly rather than by
+    writing it to disk: the current envelope version is also the field's lower
+    bound, so no pre-current value survives parsing, and the stored-file route
+    could only ever exercise the future direction. Under the previous ceiling
+    this envelope was accepted and decryption proceeded; the refusal is what
+    distinguishes equality from the ceiling it replaced.
+    """
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _create_profile()
+        _, envelope = _encrypted_envelope(tmp_path)
+        pre_current = envelope.model_copy(update={"encrypted_bundle_schema_version": 0})
+
+        with pytest.raises(EncryptedProfileBundleError, match="this application reads"):
+            decrypt_profile_bundle_with_passphrase(pre_current, passphrase=_PASSPHRASE)
+
+
+def test_encrypted_transport_refuses_a_future_envelope_schema_version(tmp_path: Path) -> None:
+    """The forward direction the ceiling already refused stays refused."""
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _create_profile()
+        _, envelope = _encrypted_envelope(tmp_path)
+        future = envelope.model_copy(
+            update={"encrypted_bundle_schema_version": envelope.encrypted_bundle_schema_version + 1},
+        )
+
+        with pytest.raises(EncryptedProfileBundleError, match="this application reads"):
+            decrypt_profile_bundle_with_passphrase(future, passphrase=_PASSPHRASE)
+
+
+def test_the_current_encrypted_envelope_round_trips_under_its_passphrase(tmp_path: Path) -> None:
+    """The positive control the refusals above need to mean anything."""
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _create_profile()
+        _, envelope = _encrypted_envelope(tmp_path)
+
+        recovered = decrypt_profile_bundle_with_passphrase(envelope, passphrase=_PASSPHRASE)
+
+        assert recovered.bundle_schema_version == envelope.payload_schema_version
 
 
 def test_event_failure_keeps_target_published_and_reconcile_emits_pending_event(tmp_path: Path) -> None:
