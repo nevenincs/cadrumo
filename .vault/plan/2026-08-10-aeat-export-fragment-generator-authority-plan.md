@@ -4,7 +4,7 @@ tags:
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
 modified: '2026-08-10'
-body_hash: 'sha256:18c56363c1bcb7d0312b4a21b07cff17b6134f21193141c09ad05398544dabdc'
+body_hash: 'sha256:c68a26fadb4cba344a73d964d8ea7bf1ed168f2bef6fa8db86d33e6f8499d086'
 tier: L3
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
@@ -40,7 +40,7 @@ Make the exact binary and typed parser output the complete coordinate authority.
 Separate authored registry meaning from official coordinates and make their join auditable.
 
 - [x] `W01.P02.S04` - Define the per-modelo per-design semantic-map schema keyed by exact parser anchors; `dev/registry/`.
-- [ ] `W01.P02.S05` - Validate mapping bijection and require canonical identifiers, legal references, and source references to resolve through existing registry catalogues while constraining typed anomaly exceptions; `dev/registry/`.
+- [x] `W01.P02.S05` - Validate mapping bijection and require canonical identifiers, legal references, and source references to resolve through existing registry catalogues while constraining typed anomaly exceptions; `dev/registry/`.
 - [ ] `W01.P02.S06` - Define the adjacent non-loader provenance manifest and normalized loader-semantic digest; `dev/registry/`.
 
 ## Wave `W02` - deterministic atomic generator
