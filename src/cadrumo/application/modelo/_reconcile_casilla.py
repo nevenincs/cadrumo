@@ -95,7 +95,7 @@ def detect_casilla_divergences(
     computed: Mapping[CasillaId, Decimal],
     filed: Mapping[CasillaId, Decimal],
     scope: Mapping[CasillaId, object] | None = None,
-    tolerance: Decimal = Decimal("0.01"),
+    tolerance: Decimal = Decimal("0"),
 ) -> tuple[CasillaDivergence, ...]:
     """Classify every casilla-level disagreement between ``computed`` and ``filed``.
 
@@ -114,8 +114,16 @@ def detect_casilla_divergences(
             When omitted, every casilla id present on either side is compared
             (the union of both key sets).
         tolerance: Maximum absolute delta (in the modelo's currency, typically
-            EUR) that does not surface a ``VALUE_MISMATCH``. Defaults to one
-            cent, matching the registry's typical rounding tolerance.
+            EUR) that does not surface a ``VALUE_MISMATCH``. THE REGISTRY IS THE
+            AUTHORITY FOR THIS VALUE and publishes it per revision: resolve it
+            with ``snapshot.verification_policy().tolerance`` and pass it. The
+            default is exact equality rather than a cent because the registry's
+            own schema default is ``0.00`` and its policy fold takes the
+            STRICTEST tolerance across a revision's expectations — so a caller
+            that omits this argument gets the strictest reading rather than a
+            more permissive one it never chose. A revision genuinely rounding to
+            the cent declares that, and passing its published value is what
+            honours it.
 
     Returns:
         A tuple of :class:`CasillaDivergence` rows, one per casilla id that
