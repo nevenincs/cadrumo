@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-10'
-body_hash: 'sha256:67cc01e1612afe32370e8f9daa7c0d7d3f96545abc19abe2dcc7a95ae9e2487b'
+body_hash: 'sha256:30fe43303ab9f5533f679be62248f4f686cf385004e1e53d61c4c9f945edcd33'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -34,6 +34,14 @@ Grounding against HEAD at authoring time, so no Step re-plans landed work: the c
 Measurement discipline, carried from the ADR D9: the corpus at `Y:\code\llm-invoice-smoke\corpus` is external, read-only and not a git repository. Every measured result names key sha256 `e2db6a499f6f0ffafa4cf44084f433962dd3f8a0f6f0a65facaf7df07bb38593` (never the key's stale internal schema_version), and the corrected denominators are 48 stage1_reference_text transcriptions, 7 twin pairs, 130 vision-path documents, and 59 category-scorable documents. In-repo CI gates run only deterministic stages on bundled licence-clean fixtures with provenance sidecars, no mocks, no skips, and no model in CI. The measured harness lane owns every model-bearing figure, via the gated cloud route or a quiesced local run.
 
 Explicitly deferred, carried from the ADR rather than dropped, and none planned here: handwriting recognition, multi-document scan bundles, counterparty resolution against the censo, bank-statement auto-detection redesign beyond the W03 fallback enrolment, eml ingestion, acquisition of real rendered Spanish documents and the hand transcription of the twelve real photographs (corpus work outside this repository), sanitizer wiring (peer-owned), and the reconciliation ADR's two open operator rulings (the domestic discriminator and the transcribed taxable base).
+
+**Read every remaining row as STALE until you have re-measured its premise.** At 82% completion, eight of roughly eighteen rows examined in one working session were premise-false or already delivered at HEAD, and that is the dominant condition of this plan rather than noise in it. The cause is structural and is a side effect of a discipline this campaign is otherwise right to keep: rows here record findings in great detail, with measurements, file locators and reasoning, and a detailed row reads as authoritative long after it has stopped being true. A row saying "zero occurrences in the e-invoice parser" was accurate when written and false two days later; a row recording 176 red key-echoes was accurate when written and the backlog was drained by another lane the same week.
+
+Two of those eight would have caused ACTIVE HARM if executed as written rather than merely wasted effort, which is why this is a correctness note and not a housekeeping one. One would have nulled Spanish casilla labels to satisfy an honesty gate that was already green, breaking the mandatory-Spanish-source contract in the process — the row described that conversion as "mechanical and honest", and it was mechanical. Another would have sent a lane to the taxonomy owner to add an enum member that already existed, because the note it was correcting described a missing PRODUCER in words that read as a missing member.
+
+So premise verification is the FIRST action on a row, not a preliminary to it: re-measure the claim against HEAD before planning the change, and prefer the shipped predicate over a simplification of it — a locale probe using plain equality under-counts against a gate that also folds trailing punctuation. Two further traps have bitten here specifically. A row's prose names a file as a HINT, never as the concept's home: one row was called open after searching the file its text named, while the implementation sat complete in a sibling module. And an agent's notes about a mutation experiment read exactly like a description of shipped state, so "the folding restored" in an execution record was a description of a probe rather than of the tree.
+
+A falsified premise is a RESULT worth recording, not a failed row. Where one is found, the row is closed with its evidence and an execution record naming what the original scope asked for that the correction excludes, so that a row which quietly became smaller stays distinguishable from one delivered in full.
 
 ## Steps
 
