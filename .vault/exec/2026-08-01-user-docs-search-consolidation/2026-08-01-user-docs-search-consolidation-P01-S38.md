@@ -5,7 +5,7 @@ tags:
 date: '2026-08-01'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:be811dd3413d6967039c3d0fd3b916f27ace6d65c91081f82ccc15a46164e61e'
+body_hash: 'sha256:9c67c72203d5e9a3e65b40e506df242a47df29dfa44a314a38e24b1f64b40f59'
 step_id: 'S38'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -42,7 +42,6 @@ The rule sources and every generated copy were confirmed clean immediately befor
 
 No tests, gates or linters were run. This fleet has a single test-run authority.
 
-
 ### Follow-on: the retired slug is now greppable from the rules side
 
 The locating trap recorded above was closed at its source rather than only here. The merged licence section now spells out the retired slug `shipped-search-licence-clean` in its own text, with a sentence explaining that no file of that name exists or should exist, because merging the mandate into the nearest existing rule beats shipping a file that taxes every session forever.
@@ -50,4 +49,3 @@ The locating trap recorded above was closed at its source rather than only here.
 Recording the trap in an execution record helps only a reader who already found this record. The person who needs it is the one grepping the rules directory for a slug that returns nothing and concluding the amendment never landed, and that person is not reading the vault. Putting the string where the failed search happens is what actually closes it.
 
 Propagated by the same sync path, four generated provider copies and the aggregated Gemini surface, with every rule source and generated copy confirmed clean immediately beforehand so the output is purely this change.
-

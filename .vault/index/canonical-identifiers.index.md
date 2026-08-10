@@ -6,7 +6,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:4bc948e094a00f60dee73e7d4ca83871910ec30f99193dc249f5771413ba973e'
+body_hash: 'sha256:202080146be0b7d04347ba9b31b928c46a34661310388f69302741b10ef1b628'
 related:
   - '[[2026-08-07-canonical-identifiers-W01-P01-S03]]'
   - '[[2026-08-07-canonical-identifiers-W02-P02-S05]]'
@@ -33,7 +33,7 @@ Auto-generated index of all documents tagged with `#canonical-identifiers`.
 ### adr
 
 - `2026-08-07-canonical-identifiers-adr` - `canonical-identifiers` adr: `Canonical AEAT document-identifier taxonomy` | (**status:** `accepted`)
-- `2026-08-10-canonical-identifiers-expediente-provenance-adr` - `canonical-identifiers` adr: `IVA compensation expediente provenance` | (**status:** `proposed`)
+- `2026-08-10-canonical-identifiers-expediente-provenance-adr` - `canonical-identifiers` adr: `IVA compensation expediente provenance` | (**status:** `accepted`)
 
 ### exec
 

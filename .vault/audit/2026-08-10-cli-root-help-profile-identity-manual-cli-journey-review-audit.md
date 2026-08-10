@@ -5,29 +5,10 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:80fddeb22fb56989f64b78ba99f04010a8a581a0bda325869ae807e302c27a43'
+body_hash: 'sha256:37e068f09eb5bfcc2b3c3f51bad4acc34ff17bc2d594cd82d0aa664fa1ba9722'
 related:
   - "[[2026-08-10-cli-root-help-profile-identity-audit]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace cli-root-help-profile-identity with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `cli-root-help-profile-identity` audit: `Manual installed CLI journey implementation review`
 
@@ -131,15 +112,6 @@ rerun and diff check pass. Together with the already passing root and auth
 assertions, all recorded findings are resolved in the final reviewed tree.
 
 ## Findings
-
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
-
-       ### Manual installed CLI journey implementation review | {level} | {summary}
-
-     followed by a paragraph carrying the detail. Manual installed CLI journey implementation review is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
 
 ### storage-reclaim-target-redirection | high | Reclaim follows a redirected declared target outside the storage root
 
@@ -268,10 +240,6 @@ safe machine data and its catalogue target, required binding, provenance, and li
 projection.
 
 ## Recommendations
-
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->
 
 1. For `storage-reclaim-target-redirection`, reject selected targets that are
    symlinks or Windows reparse-point redirects before counting or traversing them,

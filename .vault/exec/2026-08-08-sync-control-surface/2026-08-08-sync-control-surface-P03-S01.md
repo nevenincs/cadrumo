@@ -5,44 +5,11 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:a24409fc56b1f0d77ffc4cd22d528031de109221ccf7c68ff79617ccbd08d8d7'
+body_hash: 'sha256:82fb3bbeb5c6f05fa231e7798ceb975a556a920007b80abe32b889aaa74c5a9d'
 step_id: 'S01'
 related:
   - "[[2026-08-08-sync-control-surface-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace sync-control-surface with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S01 and 2026-08-08-sync-control-surface-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Define the typed sync-run record carrying surface, resolved scope, completion instant, unit counts and divergence count. SCOPE CORRECTION, one finding rather than three notes. This row's scope clause was authored against an ASSUMED layout and is wrong in three places, so a builder following it lands in an illegal home. The surface axis is a new closed value set, so it is a StrEnum in core rather than a Literal local to the storage package. The atomicity the sibling row requires reaches the secure-object batch writer under adapters persistence, so the record model may live in application while the co-write cannot. And application storage is a namespace container whose own facade states it re-exports nothing by design because exporting there would couple callers to the internal subpackage layout, so a private module directly under it admits only a cross-package private import or a re-export its docstring forbids. The record therefore lives in an application storage subpackage with its own public facade, matching the calc sheets sibling. Two model decisions carry reasons rather than conventions. The success flag is not redundant against the divergence count and inferring either from the other inverts both cases, because a run can finish cleanly having found divergences and can fail partway having found none precisely because it never got far enough to look. And the divergence count is refused at construction when it exceeds the unit count, because a unit the run never reached cannot have been found to diverge. Both counts describe what the run REACHED and never what it intended to reach and ## Scope
-
-- `src/cadrumo/core and src/cadrumo/application/storage/sync_runs and src/cadrumo/adapters/persistence/storage` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Define the typed sync-run record carrying surface, resolved scope, completion instant, unit counts and divergence count. SCOPE CORRECTION, one finding rather than three notes. This row's scope clause was authored against an ASSUMED layout and is wrong in three places, so a builder following it lands in an illegal home. The surface axis is a new closed value set, so it is a StrEnum in core rather than a Literal local to the storage package. The atomicity the sibling row requires reaches the secure-object batch writer under adapters persistence, so the record model may live in application while the co-write cannot. And application storage is a namespace container whose own facade states it re-exports nothing by design because exporting there would couple callers to the internal subpackage layout, so a private module directly under it admits only a cross-package private import or a re-export its docstring forbids. The record therefore lives in an application storage subpackage with its own public facade, matching the calc sheets sibling. Two model decisions carry reasons rather than conventions. The success flag is not redundant against the divergence count and inferring either from the other inverts both cases, because a run can finish cleanly having found divergences and can fail partway having found none precisely because it never got far enough to look. And the divergence count is refused at construction when it exceeds the unit count, because a unit the run never reached cannot have been found to diverge. Both counts describe what the run REACHED and never what it intended to reach
 
@@ -64,7 +31,6 @@ related:
 - Wired the filed-declaration surface at its real-path return, with the preview branch returning above it.
 - Landed seven tests on the real stack, three of them the anti-vacuity half.
 
-
 ## Outcome
 
 Delivered for one of the two surfaces. Verified by the single test authority at 7 collected, 7 passed, on the third attempt — the first two carried harness signature errors and are recorded below rather than smoothed over.
@@ -81,7 +47,6 @@ The scope description summarises rather than truncates. A truncated enumeration 
 
 A dry run writes no record, and that absence is DECLARED in the docstring rather than left to inference, so a reader finding no provenance after a preview sees the contract instead of a gap. It is enforced by position: the preview branch returns above the write, and a branch that returns earlier cannot be reached, which is stronger than a flag that can be misread.
 
-
 ## Notes
 
 **THE ROW FAMILY'S SCOPE CLAUSE WAS AUTHORED AGAINST AN ASSUMED ARCHITECTURE AND IS WRONG IN FOUR PLACES.** Filed as one finding rather than four notes, because one reads as bad luck and four read as a row written without tracing either surface's completion point.
@@ -95,4 +60,3 @@ The atomicity the persistence row requires reaches the secure-object batch write
 **Three harness signature errors across three rounds, none of them visible to reading** — including two rounds of the author's own resolution and one independent pre-check. All three shared one axis: inference from a NAME or SHAPE instead of resolving it. An enumeration of every borrowed CALL SITE was complete over the wrong axis, since a call that exists and is reachable reads as resolved while its keywords are wrong. The instrument that would have caught all three in one pass walks every keyword passed to every borrowed call, parses each target signature, and diffs in BOTH directions — unknown keywords passed, and required parameters omitted.
 
 **One incident, recorded because the archaeology should land somewhere true.** An earlier commit in this delivery carries two facade lines belonging to another agent's uncommitted work. The apply-cached drive was run correctly and the staged set verified as own-only, then the commit was made with a pathspec, which takes working-tree content for the named paths and discarded that staging. The peer's lines landed intact and correct; only the attribution is wrong. Nothing was unwound, because undoing needs a prohibited operation and this is the recoverable half. The swept lines were uncommitted, so no owner is recoverable from the history.
-

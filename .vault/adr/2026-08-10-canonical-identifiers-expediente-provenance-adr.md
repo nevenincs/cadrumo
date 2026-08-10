@@ -5,7 +5,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:9c98872bd134ed2f0751bca7cc9495d8ad3f8fc8038b3dc5bbbd54f5c7539912'
+body_hash: 'sha256:89d9c26b268c33fcac7d480080c02a3e5bd3979e5779d60c2fc38a58fb5ebb99'
 related:
   - "[[2026-08-07-canonical-identifiers-adr]]"
   - "[[2026-08-07-canonical-identifiers-reference]]"
@@ -210,7 +210,6 @@ recurs on any other model was not swept - the grounding is scoped to this one
 field. And the claim that the four minted values are not AEAT-issued rests on
 their construction sites rather than on an AEAT publication of what it issues.
 
-
 ## Amendment (2026-08-10): a prior provenance taxonomy exists, and `status` already leaks into it
 
 Caught by the implementing lead's discovery pass **before any code was written**,
@@ -315,4 +314,3 @@ a bare `str`, so they are indistinguishable where the model is built. **Whicheve
 enum wins, the conduit signature must carry the provenance**, or two of five
 members are unassignable at the only place they could be set. That was the
 original record's finding and no part of this amendment relaxes it.
-

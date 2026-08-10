@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:65d74df72625434b1b6eb4ca9f775e969eaae72b98cb31013c5a3e4bebda79c9'
+body_hash: 'sha256:cc567fb690d61f8d558a5f4acf33bb6e841ba8d3309a6d27f39f5bc2692af85a'
 related:
   - "[[2026-08-07-canonical-identifiers-reference]]"
   - "[[2026-08-07-justificante-identity-matching-adr]]"
@@ -619,7 +619,6 @@ assumed complete.
   gate itself still gates on the property, not a count, per the original
   Implementation.
 
-
 ## Amendment (2026-08-10): the CSV half of Option 3's rejection rests on a falsified premise
 
 ### What was claimed, and what is actually true
@@ -770,7 +769,6 @@ from": that sentence asserts the ownership this amendment overturns, and
 leaving it standing over a retyped alias would reproduce the defect at source
 level, where the next reader meets it first.
 
-
 ## Amendment (2026-08-10): the sibling-ADR citation is wrong, and the namespace marker has no target
 
 ### The citation, and what the sibling actually says
@@ -881,4 +879,3 @@ amendment, with the reason recorded rather than silently dropped. `S24` and
 `S25` are re-scoped behind ruling 3 and do not execute until a deciding Step
 names a consumer or rules the resolver out. That deciding Step is added to
 `W03.P04`.
-

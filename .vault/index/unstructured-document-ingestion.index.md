@@ -6,7 +6,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:cac7f7434e265f90e49dae844e8f8ba65277987a0d5a4cad4a4dea0312a9523f'
+body_hash: 'sha256:13a9fbf7da824626890967c071d57b7e319331a0485cb36fce4e4b57cdfae095'
 related:
   - '[[2026-08-07-unstructured-document-ingestion-W01-P01-S01]]'
   - '[[2026-08-07-unstructured-document-ingestion-W01-P01-S02]]'
@@ -202,6 +202,7 @@ related:
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S257]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S258]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S259]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S261]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S264]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S265]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S268]]'
@@ -216,12 +217,24 @@ related:
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S285]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S293]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S297]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S298]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S300]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S302]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S306]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S310]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S311]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S315]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S316]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S318]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S319]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S320]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S66]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S67]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S68]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S69]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S70]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S89]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S93]]'
   - '[[2026-08-07-unstructured-document-ingestion-W10-P18-S283]]'
   - '[[2026-08-07-unstructured-document-ingestion-W10-P18-S289]]'
   - '[[2026-08-07-unstructured-document-ingestion-W10-P18-S71]]'
@@ -476,9 +489,22 @@ Auto-generated index of all documents tagged with `#unstructured-document-ingest
 - `2026-08-07-unstructured-document-ingestion-W09-P17-S128` - Correct the prose claiming the place-of-supply articles are unbundled
 - `2026-08-07-unstructured-document-ingestion-W09-P17-S149` - The exact-structured origin note: premise false, and no live surface carries it
 - `2026-08-07-unstructured-document-ingestion-W09-P17-S187` - Delete the registration-to-establishment inference
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S261` - Rule the two empty-container surfaces, and open what the ruling creates
 - `2026-08-07-unstructured-document-ingestion-W09-P17-S285` - The key-echo ratchet: ruled, and already closed by an admission gate
 - `2026-08-07-unstructured-document-ingestion-W09-P17-S293` - The M390 casilla echoes: drained by authoring, not by nulling
 - `2026-08-07-unstructured-document-ingestion-W09-P17-S297` - The prefixed-identifier parametrisation: already at HEAD
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S298` - Advise when an activity narrowing empties the agrarian casilla
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S300` - The foreign-asset observations are populable, by a shipped operator surface
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S302` - Delete the tags-reply helper its only consumers cannot use
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S306` - Correct the infectious claim about the M720 advisory
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S310` - Route the ledger evidence batch streamed progress line through the shared CLI redaction funnel, so text mode cannot emit a document name the same command's envelope arms redact
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S311` - Gate the redaction funnel by property rather than by path, asserting no operator-facing emit primitive in the CLI package reaches stdout without passing a redacting renderer, with a positive control proving the detector fires
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S315` - Determine whether package docstring examples are collected as doctests anywhere in the suite, and record the answer, so a shipped example that raises is either caught by a gate or knowingly ungated
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S316` - Sweep the remaining stale outbound LLM cross-references by asking the live module whether each named symbol is exported, never by matching the reference string, since more than a third of the population is valid
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S318` - Funnel the wizard save-exit notice through the shared output boundary, matching the sibling emitter in the same module that already does
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S319` - Establish whether the integration lane is executed by any blocking check and plan against the population rather than the known-failure count, since that count is a floor over modules that have never been executed
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S320` - Correct the overstated redaction rationale carried in the streamed-progress fix, which claims the funnel masks filesystem paths when it masks only embedded identifiers
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S93` - Consolidate the loopback servers, and gate the singularity
 
 ### plan
 

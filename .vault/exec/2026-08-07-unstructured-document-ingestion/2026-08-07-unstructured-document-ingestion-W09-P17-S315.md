@@ -5,44 +5,11 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:ed8ef9aed761c9e6e10b7ca9c5bdef32a9a236d0b45d09555c7272c234da1c18'
+body_hash: 'sha256:d1e01e863570f3a69991c45001a76e787832f209a1adc734c4ba03bad4d9c74d'
 step_id: 'S315'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S315 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Determine whether package docstring examples are collected as doctests anywhere in the suite, and record the answer, so a shipped example that raises is either caught by a gate or knowingly ungated and ## Scope
-
-- `dev/docs` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Determine whether package docstring examples are collected as doctests anywhere in the suite, and record the answer, so a shipped example that raises is either caught by a gate or knowingly ungated
 
@@ -74,4 +41,3 @@ The absence is over the surfaces named above. A collection hook in a location no
 ## Notes
 
 **A negative from a search is only as wide as the search.** This one is stated with its surfaces enumerated so the claim can be re-tested rather than re-believed.
-

@@ -97,4 +97,3 @@ rather than a count, because a count would pass against a guard that silently
 dropped the row, and it forces the generator since the refusal surfaces only on
 iteration. Each is guarded by a positive control asserting the writer stamped the
 marker first, so no fixture can pass vacuously.
-

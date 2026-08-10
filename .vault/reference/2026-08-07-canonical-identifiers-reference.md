@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:39f93de954a11c6453608ee5e77cfb9c772e75c0be5d4f89ccd5ba24605ff8c0'
+body_hash: 'sha256:8c7025e6f334c8e084de782fc2489a7f624dcc3f29d598e5cc0a33087ac9ecd2'
 related:
   - "[[2026-08-07-justificante-identity-matching-adr]]"
 ---
@@ -125,7 +125,6 @@ you the rows are done. Re-running the measurement the work was premised on
 tells you whether the goal is met, and those are different questions that look
 identical from a green board.
 
-
 ## The AEAT-issued taxonomy: four identifiers, three typed today, one absent
 
 AEAT issues (at minimum) four distinct identifier concepts across the
@@ -221,7 +220,6 @@ AEAT never issues another shape. What makes the tighter bound safe is the
 margin and the risk asymmetry, not the sample size - every observed value
 sits at sixteen characters, mid-window. Anyone revisiting this decision must
 weigh that sentence rather than the count of supporting values.
-
 
 ## Classification census: AEAT-issued and app-derived membership
 
@@ -337,7 +335,6 @@ Wherever this figure is quoted it travels with the word *candidate*, because
 document away. Triage to a per-record disposition is a separate plan row and is
 deliberately not performed inside the scanner, so that the scanner cannot make
 its own false positives invisible.
-
 
 ## The conflation: three call sites, one wrong contract
 

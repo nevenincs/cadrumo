@@ -5,44 +5,11 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:38de3e682756e4dc64674b57f21fd0dc5ef69f68403caa37183069f93a3e9b0f'
+body_hash: 'sha256:656eab0efe01eb5e3182d3c9d83fcf72f4e8c9e9d8ee181031a01cb46016124b'
 step_id: 'S318'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S318 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Funnel the wizard save-exit notice through the shared output boundary, matching the sibling emitter in the same module that already does and ## Scope
-
-- `src/cadrumo/application/wizard` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Funnel the wizard save-exit notice through the shared output boundary, matching the sibling emitter in the same module that already does
 
@@ -78,4 +45,3 @@ Both now delegate to one writer. The module holds one renderer call and one echo
 **The allow-list shrank from two entries to one**, which is the structural result: the property is now enforced by there being a single writer rather than by two audited exceptions.
 
 **One process defect, disclosed.** The first consolidation attempt removed the wrong import block — the new helper's own imports rather than the now-dead sibling ones — leaving four undefined names. The lint gate caught it immediately and it never reached a commit. The cause was a byte-level pattern matched against a file with mixed line endings, where the two candidate blocks differ only in their surrounding context.
-

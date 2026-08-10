@@ -6,7 +6,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:95bf01fd1379a0fdc23043f5700d9e6079daca2e78fb44d283db19909ffef3cc'
+body_hash: 'sha256:4b4e2396c07d60fac83279987f818bddc7807ff60020db7fb7303a4e6d20d875'
 related:
   - '[[2026-08-08-synced-history-consumption-P01-S01]]'
   - '[[2026-08-08-synced-history-consumption-P01-S02]]'
@@ -17,6 +17,8 @@ related:
   - '[[2026-08-08-synced-history-consumption-P01-S08]]'
   - '[[2026-08-08-synced-history-consumption-P01-S09]]'
   - '[[2026-08-08-synced-history-consumption-P01-S10]]'
+  - '[[2026-08-08-synced-history-consumption-P01-S12]]'
+  - '[[2026-08-08-synced-history-consumption-P01-S15]]'
   - '[[2026-08-08-synced-history-consumption-P01-S21]]'
   - '[[2026-08-08-synced-history-consumption-P01-S22]]'
   - '[[2026-08-08-synced-history-consumption-P01-S24]]'
@@ -64,6 +66,8 @@ Auto-generated index of all documents tagged with `#synced-history-consumption`.
 - `2026-08-08-synced-history-consumption-P02-S07` - Author the decision record ruling which pulled facts are calculation inputs, which are reconciliation targets and which stay display only, plus the mechanism each wired channel uses from the existing one-mechanism-per-calculation-type taxonomy, amending that taxonomy in the same change if no row covers a needed channel. Open every implementing row in the SAME action as the ruling, because a decision record ruling on code is not self-executing and the debt it creates otherwise has no owner while every later reader sees the ruling as in force. Gate: the record cites the census denominator and every ruling maps to an opened row id
 - `2026-08-08-synced-history-consumption-P02-S17` - Make the declared factual_evidence treatment actually gate consumption, since the registry draws the line and the resolver does not stand on it. classification.treatment is read at exactly one production site on the resolution path and folded into a requirement grouping key, so it discriminates bucketing and gates nothing, and a factual_evidence Modelo 193 retencion the taxpayer SUFFERED reaches the annual return by the identical path a direct_annual_settlement Modelo 130 pago fraccionado does. Per the ruling a factual_evidence carry is a reconciliation target and must not silently settle a casilla. The remedy must NOT be to blank the value, because a taxpayer is entitled to the retencion and a silent drop is the over-declaration direction this campaign already found unwatched. Surface it as a prefilled reconciliation value carrying its provenance and its treatment, distinguishable by a consumer from a settled figure. Gate: a factual_evidence carry and a direct_annual_settlement carry are distinguishable at the point a casilla value is produced, no value a taxpayer is entitled to is removed by the change, and a test drives one of each through the live calculate and asserts they are not interchangeable
 - `2026-08-08-synced-history-consumption-P02-S18` - Declare a treatment for the seventeen carries that have none, because an undeclared treatment cannot later be cited as authority for having consumed the value. Fifteen previous_filing bindings and both iva_compensation_annual_partition bindings are governed by no dependency classification at all, spanning Modelo 100 negative-base carry, Modelo 130 prior pagos and negative results, Modelo 131 negative results across four revisions, Modelo 353 prior Modelo 322 figures, Modelo 720 prior-year valuation baselines and Modelo 390's two compensacion partition slots. Each declaration is grounded in that row's own provisions and never by analogy to a sibling modelo, since AEAT surfaces do not transfer between modelos and a Modelo 720 valuation baseline and a Modelo 130 negative result are not the same kind of carry. Gate: every one of the seventeen carries a declared treatment with its own legal refs and source refs resolving in the legal catalogue, no two are justified by the same transferred rationale, and the registry loads clean
+- `2026-08-08-synced-history-consumption-P01-S12` - Wire the pulled filed observation to the divergence primitive
+- `2026-08-08-synced-history-consumption-P01-S15` - Stop the filed-capture refusal asserting an AEAT fact it cannot know
 - `2026-08-08-synced-history-consumption-P02-S20` - Establish the populated-enough scoping condition
 
 ### plan

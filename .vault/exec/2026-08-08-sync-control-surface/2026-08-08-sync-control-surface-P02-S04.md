@@ -5,6 +5,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
+body_hash: 'sha256:3af5e97d5d85e3b2f8970bae1fbc782754b1884ce213c01948cdb4f7fd4d55cb'
 step_id: 'S04'
 related:
   - "[[2026-08-08-sync-control-surface-plan]]"

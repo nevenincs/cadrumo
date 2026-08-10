@@ -5,7 +5,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:d2cd63ad27e3f158f724cf0646685673862c3f141a2a442f49ef81a7cce82194'
+body_hash: 'sha256:cfba34b246f1e436853ea031c3daad46124fe78c7bf6e7fdab625514ffeb1a50'
 related:
   - "[[2026-07-09-compatibility-lifecycle-adr]]"
   - "[[2026-05-06-secure-persistence-enforcement-adr]]"
@@ -36,7 +36,6 @@ bootstrap is a regression that looks like progress, and on the key-management
 boundary it can strand encrypted data outright. An implementation plan for this
 purge exists and is in flight; it was authored without this record, which is
 the defect this ADR closes rather than a formality it satisfies.
-
 
 ## Considerations
 
@@ -175,7 +174,6 @@ form that failure takes is silent.
   them onto one authority is a larger decision that was not taken here, and a
   later reader should treat the four as an open question rather than as a settled
   arrangement this record ratified.
-
 
 ## Amendment (2026-08-10): the M303 disposition screen has no boundary to sit on
 
@@ -321,7 +319,6 @@ author-facing gate once placement is decided, and one to own the wallet-gate
 swallow above. Neither may be closed by asserting that this record says the gate
 exists.
 
-
 ### Correction to this amendment: the gate cuts a live defect's supply, not a future bypass
 
 The section above frames the residual exposure as a FUTURE bypass, which made the
@@ -368,4 +365,3 @@ stated rather than implied:** the wallet gate's swallow is not fixed by any gate
 built under `S30`, because cutting off new non-canonical envelopes does nothing
 about the ones a taxpayer's profile may already hold. `W03.P07.S31` owns that end
 and the two must close together or the story stays half told.
-

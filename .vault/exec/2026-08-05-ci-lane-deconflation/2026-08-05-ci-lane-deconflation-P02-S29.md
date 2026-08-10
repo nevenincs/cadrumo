@@ -5,44 +5,11 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:325a49088333b436f4f09583084eb2b905f347d698e02f876bca521617d22977'
+body_hash: 'sha256:e8e42dabd8b806160085569581e7eb4a55f4881bffd85edd6fd99045d747d069'
 step_id: 'S29'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace ci-lane-deconflation with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S29 and 2026-08-05-ci-lane-deconflation-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Stamp the host load reading at fire time into the pytest timeout failure output, and do NOT convert that ceiling to process CPU-time, because pytest-timeout offers only signal and thread methods and has no CPU notion at all so the conversion is not expressible in configuration, and more importantly because a wall-clock bound is the CORRECT instrument here rather than a tolerated one, since the thing this ceiling exists to kill is a wedged or deadlocked test and a deadlocked process burns almost no CPU so a CPU-time bound would never fire on the exact failure the ceiling was added for, which is the same share-hang argument that saved the wall threshold on the integration budgets except stronger because here wall is the only instrument that works, leaving the real defect as interpretability rather than instrument choice since nothing in a timeout traceback records host load so a legitimately slow test under saturation is indistinguishable from a genuine hang and reaches a lead ledger as a plausible fictitious defect with a traceback attached and ## Scope
-
-- `the pytest timeout failure-reporting hook and pyproject.toml` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Stamp the host load reading at fire time into the pytest timeout failure output, and do NOT convert that ceiling to process CPU-time, because pytest-timeout offers only signal and thread methods and has no CPU notion at all so the conversion is not expressible in configuration, and more importantly because a wall-clock bound is the CORRECT instrument here rather than a tolerated one, since the thing this ceiling exists to kill is a wedged or deadlocked test and a deadlocked process burns almost no CPU so a CPU-time bound would never fire on the exact failure the ceiling was added for, which is the same share-hang argument that saved the wall threshold on the integration budgets except stronger because here wall is the only instrument that works, leaving the real defect as interpretability rather than instrument choice since nothing in a timeout traceback records host load so a legitimately slow test under saturation is indistinguishable from a genuine hang and reaches a lead ledger as a plausible fictitious defect with a traceback attached
 
@@ -61,7 +28,6 @@ related:
 - Delegated the hooks from the repo-root conftest to a shared module, matching the marker, worker-count and deselection hooks already hosted there.
 - Landed a matched pair of real-subprocess cases as the gate.
 
-
 ## Outcome
 
 Delivered as specified, verified green by the single test authority: 2 collected, 2 passed, 8.03 seconds, with both file mtimes predating the run so the reading is not a photograph of a state that has since moved.
@@ -74,7 +40,6 @@ What the stamp claims is stated in the module rather than only here: the reading
 
 One limitation is stated and not covered. The gate proves the thread method on this host. It says nothing about the signal method, which is what macOS and Linux take, and no Windows green can speak to that branch.
 
-
 ## Notes
 
 The row has now attracted **three** remedies that would have passed review and done nothing, and that history is recorded in the module itself rather than only here, because the module outlives the row: a CPU-time bound that cannot fire on a wedge, a report hook that cannot fire on the platform whose saturation it measures, and a raw descriptor write that the exit discards. A future author changing this mechanism should first ask on which platform and on which failure the replacement actually executes.
@@ -84,4 +49,3 @@ The change was parked outside the repository three separate times while waiting 
 One process failure, mine. Cleared to land, the change was unparked without first reading that the same clearance placed it third in the queue, behind two other batches that would then have run through an unverified root conftest. That is the exact harm the parking existed to prevent. It was caught, reported against my own interest rather than absorbed, and the decision to re-park was handed to the party who was not motivated by wanting the row to move.
 
 The predicted wall time was 15 to 25 seconds against an actual 8.03. The estimate was written before the probe ceiling was set to 4 seconds and never recomputed against that constant; 4 seconds of ceiling plus two subprocess boots is the designed cost. A re-measurement with per-test durations was offered and declined, on the ground that it could only confirm what the stamp assertion already establishes rather than falsify it.
-

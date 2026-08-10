@@ -4,7 +4,7 @@ tags:
   - '#aeat-liabilities-sanciones'
 date: '2026-08-07'
 modified: '2026-08-10'
-body_hash: 'sha256:592691079e64aab5990d469d4b1b6c24d42154e5869fa1cc565827746d3cf380'
+body_hash: 'sha256:fc9f1599ab5e0f7323eab8d3a68a0de9413faff6e4a3b02b84da5a48ab12a496'
 tier: L2
 related:
   - '[[2026-08-07-aeat-liabilities-sanciones-adr]]'
@@ -62,7 +62,6 @@ and live-cross-checked against BOE before a human review is even possible.
 Divergence reconciliation against filed declarations (the ADR's rejected
 option 2) is out of scope for this plan and requires its own ADR once P05
 ships and a real specimen exists to validate a comparison against.
-
 
 **Correction (2026-08-10): the deeper half of the P06 block is discharged.**
 The paragraph above states that none of LGT arts. 28, 65, 82, 163, 167-173 or

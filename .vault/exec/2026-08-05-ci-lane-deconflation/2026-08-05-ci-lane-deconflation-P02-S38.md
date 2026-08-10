@@ -5,45 +5,11 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:2c0b539572d829e90786dd99ca4e294aa1a4a90c74ac35f27b433895bd629806'
+body_hash: 'sha256:7353974cde42ba492d7f7c1788f2afda1e0e6db428ac895ba87b542b14f8197c'
 step_id: 'S38'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace ci-lane-deconflation with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S38 and 2026-08-05-ci-lane-deconflation-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The export provenance writer recorded as a deliberate superset and ## Scope
-
-- `dev/registry/_provenance_manifest.py`
-- `dev/registry/tests/test_export_tree.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # export provenance writer recorded as a deliberate superset
 
@@ -53,8 +19,6 @@ related:
 - `dev/registry/tests/test_export_tree.py`
 
 ## Description
-
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
 
 - Falsify the row's own premise before making the first edit.
 - Prove the core hardened tier clobbers an existing target, by execution rather than by reading its docstring.
@@ -87,8 +51,6 @@ The irony is exact and worth keeping: this Step exists because an untested claim
 `core.atomic_write.atomic_write_publish_once_bytes` now carries the guarantee, published with `os.link`. The delegation of this site, and the deletion of its hand-rolled writer, remain outstanding.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 The refusal was previously exercised by necessity and asserted by nothing. The emit-level test must unlink the manifest before it can call emit at all, because the render has already written one, so removing the guard would have gone green. The new test uses its first write as a positive control, so a writer that refused unconditionally, or never wrote, cannot pass it, and it also asserts the refused write neither replaced the target nor left its staging tempfile behind.
 

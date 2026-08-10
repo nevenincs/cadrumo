@@ -5,44 +5,11 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:c9a849369f2ddf5361077118fa5a254b675143f33671a78df663b3193ce0e798'
+body_hash: 'sha256:a1e75ac7e4a60babfd2c86a1c56cb925dcfc8ce2cc3c790b92a98b4fd1d20971'
 step_id: 'S316'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S316 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Sweep the remaining stale outbound LLM cross-references by asking the live module whether each named symbol is exported, never by matching the reference string, since more than a third of the population is valid and ## Scope
-
-- `src/cadrumo/llm` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Sweep the remaining stale outbound LLM cross-references by asking the live module whether each named symbol is exported, never by matching the reference string, since more than a third of the population is valid
 
@@ -82,4 +49,3 @@ Re-measured at HEAD after the final commit, by the same membership check.
 **One counting trap worth carrying.** A rewriter that skips selectively cannot report its own count from the regular-expression engine: the substitution helper counts matches, including the ones the callback deliberately left alone. The commit statistics are the honest instrument.
 
 **Unverified, and it is the only outstanding risk on this row.** No documentation build was run, so that the repointed anchors resolve under the strict build is unproven by anyone. A convention matching the already-landed commits is a consistency argument, not a resolution proof, and anchor resolution is the entire point of the change.
-

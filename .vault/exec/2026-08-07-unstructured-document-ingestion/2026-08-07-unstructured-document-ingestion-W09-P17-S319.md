@@ -5,44 +5,11 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:95731f4b4e500921e6e37764fbc97c9919d034c983c2098faf9258e52fc2d30c'
+body_hash: 'sha256:58e73a700b92605b901281b2a3de278b700c2a44660b499e74fca9ca46b0c985'
 step_id: 'S319'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S319 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Establish whether the integration lane is executed by any blocking check and plan against the population rather than the known-failure count, since that count is a floor over modules that have never been executed and ## Scope
-
-- `dev/ci` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Establish whether the integration lane is executed by any blocking check and plan against the population rather than the known-failure count, since that count is a floor over modules that have never been executed
 
@@ -79,4 +46,3 @@ The count of marked modules is a property of the tree at the time of reading and
 **A per-file remedy exists and is narrower than it first appears.** One module in that lane was moved into the default lane on a convention argument: it is a source-tree syntax scan with no fixture, subprocess or network dependency, and five sibling scans of the same kind already carry the default marker. **That does not generalise to the whole population** — most of those modules presumably do need the lane — but it establishes that the population contains outliers movable without a policy decision, which makes the remaining set smaller and better justified.
 
 **Not planned here.** Sizing the enforcement change is a cost decision that belongs with whoever owns the lane.
-
