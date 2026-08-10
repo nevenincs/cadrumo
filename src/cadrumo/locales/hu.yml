@@ -1992,8 +1992,8 @@ cli:
         confirm_invoice_number_help: Felülírja a kinyert számlaszámot.
         confirm_iva_rate_help: Felülírja a kinyert ÁFA-kulcsot (hagyja ki a kinyert
           érték megtartásához).
-        confirm_link_hint_message: Kapcsold össze ezt a számlát egy könyvelési tétellel
-          a `aeat app ledger link` paranccsal.
+        confirm_link_hint_message: Ez a számla még nincs összekapcsolva könyvelési
+          tétellel.
         confirm_operation_type_help: 'A 349-es modell kulcsa kozossegen beluli termekertekesiteshez.
           Kotelezo, ha a dokumentum kozossegen beluli ertekesitest jelol: a kategoria
           nem mondja meg, hogy adomentes behozatalt kovetett-e.'
@@ -2445,8 +2445,7 @@ cli:
         kiírt exportok pedig megkapták a hiányzó naplóbejegyzésüket.'
       reconcile_failures_warning: '{count} félbemaradt profilcsomag-exportot nem sikerült
         kitakarítani, ezért későbbi újrapróbálkozásra megmaradtak. Mindegyikhez maradhat
-        a lemezen egy titkosítatlan ideiglenes fájl. Futtasd újra az ''aeat app maintenance
-        reconcile'' parancsot, ha az ok elhárult.'
+        a lemezen egy titkosítatlan ideiglenes fájl.'
       reconcile_help: Kitakarítja az összeomlás miatt félbemaradt profilcsomag-exportokat,
         eltávolítva a visszamaradt titkosítatlan ideiglenes fájlokat és rögzítve az
         elmaradt naplóbejegyzéseket.
@@ -3803,8 +3802,7 @@ cli:
           és a bevallási előzményeken kívül tartalmazza a bizonylatok byte-jait, az
           auditnaplót és az időszakok közötti számítási bemeneteket is. Ha --recovery-wrap-passphrase
           opcióval exportálod, ez a profilcsomagok titkosított, gépek közötti átviteli
-          útja. Tárold biztonságos helyen; a ''aeat config profile archive import''
-          paranccsal állítsd vissza.'
+          útja.'
         export_help: Lezárt, AEAD-titkosított teljes biztonsági mentés írása az ÚTVONAL
           helyre; e-mailes vagy gépek közötti átvitel előtt add meg a --recovery-wrap-passphrase
           opciót.
@@ -3814,9 +3812,8 @@ cli:
           aktív bucket-kulcs helyett; kötelező, ha az archívum elhagyja ezt a gépet.
         help: Profil biztonsági mentése és visszaállítása lezárt, AEAD-titkosított
           archívumként (a teljes körű helyreállítási átvitel).
-        import_active_switch_info: 'A visszaállított {name} profil mostantól az AKTÍV
-          profil; a további parancsok ezen működnek. Az aktív profil módosításához
-          futtassa: ''aeat config login <name>''.'
+        import_active_switch_info: A visszaállított {name} profil mostantól az AKTÍV
+          profil; a további parancsok ezen működnek.
         import_force_help: Felülírja a meglévő profilt, amely megosztja az archívum
           bucket-azonosítóját.
         import_help: Profil visszaállítása egy lezárt, titkosított archívumból az
@@ -3891,9 +3888,10 @@ cli:
         show_help: Az AEAT által legutóbb jelentett nyilvántartás megjelenítése erre
           a profilra.
         snapshot_id_help: Konkrét pillanatkép-azonosító (előtagok elfogadva).
-      create_epilog: 'Minimális önálló vállalkozói profil: --entity-type natural_person
-        --tax-id <DNI/NIE/NIF> --irpf-income-categories actividad_economica --quiet
-        --accept-defaults'
+      create_epilog: 'Minimális önálló vállalkozói profil: aeat config profile create
+        PROFILE --entity-type natural_person --tax-id <DNI/NIE/NIF> --name <NAME>
+        --surnames <SURNAMES> --activity <ACTIVITY> --irpf-income-categories actividad_economica
+        --quiet --accept-defaults'
       create_help: Új aktív profil inicializálása.
       delete_active_cleared: A törölt profil volt az aktív; az aktív profil mutató
         törölve lett. Futtassa az aeat config login NÉV vagy az aeat config profile
@@ -3938,10 +3936,9 @@ cli:
       export_encrypt_help: A csomag AEAD-titkosítása átvitelhez; a jelmondatot rejtett
         kérdés vagy a --secrets-stdin adja meg, soha nem argv.
       export_encrypted_info: 'Ez a profilcsomag ide íródott: {out}, AEAD jelmondatos
-        titkosítással. Importáld az ''aeat config profile import ÚTVONAL'' paranccsal;
-        a jelmondatot rejtett kérdés vagy a --secrets-stdin adja meg. Csak a strukturált
-        profilcsomagot tartalmazza; teljes biztonsági mentéshez a titkosított helyreállítási
-        archívumot használd a csatolt bizonyítékokkal és az auditnaplóval.'
+        titkosítással. Csak a strukturált profilcsomagot tartalmazza; teljes biztonsági
+        mentéshez a titkosított helyreállítási archívumot használd a csatolt bizonyítékokkal
+        és az auditnaplóval.'
       export_help: Passphrase alatt titkosított hordozható profilcsomag írása ÚTVONALRA;
         a titkosítatlan JSON-hoz --cleartext-local kell, és csak helyi/SAR célra való.
       export_name_help: 'Az exportálandó profil; alapértelmezés: az aktív profil.'
@@ -3953,8 +3950,7 @@ cli:
         legyen.
       export_reconcile_incomplete_warning: Egy korábbi futásból {count} félbemaradt
         profilcsomag-exportot nem sikerült kitakarítani. Mindegyikhez maradhat a lemezen
-        egy titkosítatlan ideiglenes fájl. Futtasd az 'aeat app maintenance reconcile'
-        parancsot, ha az ok elhárult.
+        egy titkosítatlan ideiglenes fájl.
       export_requires_destination: Add meg a --to ÚTVONAL célhelyet a csomagnak, vagy
         futtasd interaktív terminálban, és a program bekéri.
       export_requires_transport: Használd az --encrypt kapcsolót titkosított átviteli
@@ -3963,9 +3959,7 @@ cli:
         adatokat tartalmaz: a nyers adóazonosítót (kitakarás nélkül), nevet és vezetékneveket,
         a teljes főkönyvet, a számítási revíziókat és a benyújtási rekordokat. Ide
         íródott: {out}. Csak helyi/SAR kezelésre használd; ne küldd e-mailben, ne
-        szinkronizáld és ne továbbítsd. Töröld, amint a helyi/SAR kezelés befejeződött.
-        AEAD-titkosított, strukturált átviteli csomaghoz használd az ''aeat config
-        profile export --encrypt'' parancsot.'
+        szinkronizáld és ne továbbítsd. Töröld, amint a helyi/SAR kezelés befejeződött.'
       export_transport_conflict: A --encrypt és a --cleartext-local közül csak az
         egyiket add meg.
       help: Aktív profilkonfigurációs értékek kezelése.
@@ -3988,9 +3982,8 @@ cli:
         korábbi eseményekre (pl. 2026-04-01T00:00:00+00:00).
       history_until_help: Az előzmények szűrése ennél az ISO-8601 időbélyegnél nem
         újabb eseményekre (pl. 2026-04-30T23:59:59+00:00).
-      import_active_switch_info: 'Az importált {name} profil mostantól az AKTÍV profil;
-        a további parancsok ezen működnek. Az aktív profil módosításához futtassa:
-        ''aeat config login <name>''.'
+      import_active_switch_info: Az importált {name} profil mostantól az AKTÍV profil;
+        a további parancsok ezen működnek.
       import_encrypted_bundle_invalid: A titkosított profilcsomag nem fejthető vissza
         vagy nem validálható. Ellenőrizd a passphrase értéket és a fájlt.
       import_help: Hordozható profilcsomag regisztrálása fájlból.
@@ -4064,8 +4057,8 @@ cli:
         archive_name_help: A sandbox neve (előtag nélkül).
         archive_requires_yes: 'A sandbox archiválása állapotátmenet. Futtasd újra:
           ''aeat config profile sandbox archive %{name} --yes'' a megerősítéshez.'
-        archive_restorable_info: A sandbox most nyugalmi állapotban van; futtasd a
-          'aeat config profile sandbox restore %{name}' parancsot a visszaállításához.
+        archive_restorable_info: A(z) %{name} sandbox most nyugalmi állapotban van,
+          és visszaállítható.
         archive_yes_help: Megerősíti az archiválást.
         create_active_info: A sandbox most már az AKTÍV profil; minden parancs erre
           fut, amíg át nem vált vagy el nem dobja.
@@ -4099,9 +4092,8 @@ cli:
         prune_help: Az összes sandbox egyszerre törlése.
         prune_requires_yes: 'Az összes sandbox törlése visszavonhatatlan. Futtasd
           újra: ''aeat config profile sandbox prune --yes'' a megerősítéshez.'
-        prune_skipped_active_info: 'Kihagyva az aktív sandbox %{names}; válts másik
-          profilra, majd futtasd újra: ''aeat config profile sandbox prune --yes''
-          a törléshez.'
+        prune_skipped_active_info: Kihagyva az aktív sandbox %{names}; a törléshez
+          válts másik profilra.
         prune_yes_help: Az összes sandbox törlésének megerősítése.
         restore_help: Visszaállít egy archivált sandboxot aktív állapotba.
         restore_name_help: A sandbox neve (előtag nélkül).
@@ -4282,31 +4274,30 @@ cli:
         mode_unenforced: Ez a platform nem valósítja meg a POSIX jogosultsági biteket,
           ezért a gyökér jogosultságait nem ellenőriztük.
       errors:
-        reclaim_refused: '%{category} felszabadítása elutasítva: %{reason}. A(z) %{path}
-          %{entries} bejegyzést tartalmaz, és egyet sem távolítottunk el.'
-        reclaim_unconfirmed: '%{category} felszabadítása %{entries} bejegyzést töröl
-          a(z) %{path} alatt, és kifejezett megerősítést igényel.'
+        reclaim_area_refused: 'A(z) %{area} felszabadítása elutasítva: %{reason}.
+          %{entries} bejegyzés érintetlen maradt.'
+        reclaim_area_unconfirmed: A(z) %{area} felszabadítása %{entries} bejegyzést
+          töröl, és kifejezett megerősítést igényel.
       help: A helyi tárolófa vizsgálata és karbantartása
       init:
         already_materialised: Minden deklarált könyvtár már létezett; egyet sem hoztunk
           létre.
         help: Létrehozza az összes deklarált könyvtárat, megőrizve a meglévő tartalmat
       list:
-        help: Megjeleníti minden tárolókategória útvonalát és azt, hogy tartalmaz-e
-          valamit
+        area_help: Megjeleníti minden tárolóterület összesített foglaltságát és méretét
         relocation_is_manual: A fa áthelyezéséhez állítsd le az alkalmazást, másold
           át magad, majd irányítsd a(z) %{variable} változót az új helyre. Egyetlen
           parancs sem helyezi át, mert az a másolat, amely a rekordokra befejeződik,
           a kulcsanyagra viszont nem, mindkettőt használhatatlanná teszi.
       reclaim:
-        category_help: A felszabadítandó tárolókategória
-        help: Törli egy tárolókategória újratermelhető tartalmát
+        area_argument_help: A felszabadítandó tárolóterület
+        area_help: Egy tárolóterület újratermelhető tartalmának törlése
         incomplete: Néhány bejegyzést nem sikerült eltávolítani, és még mindig a lemezen
           vannak.
         yes_help: Megerősíti a törlést; enélkül a parancs elutasít
       show:
-        category_help: A megjelenítendő tárolókategória
-        help: Egy tárolókategória teljes megjelenítése
+        area_argument_help: A megjelenítendő tárolóterület
+        area_help: Egy tárolóterület teljes megjelenítése
     unset:
       help: Egy konfigurációs kulcs értékének törlése.
       key_help: A törlendő kulcs.
@@ -5020,8 +5011,7 @@ cli:
       note_help: Minden letöltött mellékleten rögzített opcionális megjegyzés.
       notices:
         files_refused: Ebben a mappában %{refused_count} fájlt nem sikerült letölteni
-          a drive.file hatókörben; töltsd le őket kézzel, és csatold a 'aeat app ledger
-          attach --attachment-id ...' paranccsal.
+          a drive.file hatókörben; töltsd le őket kézzel, és csatold őket.
     remove:
       actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
       dry_run_help: Az eltávolítás hatásainak jelentése a főkönyvi tranzakció törlése
@@ -5063,7 +5053,7 @@ cli:
         esetén; a darabszámnak egyeznie kell a --child-amount értékekkel.
       classification_dropped: A szülő %{classification} besorolása nem öröklődött
         át a felosztás gyermekeire; minden gyermek NOT_YET_PROCESSED állapotú, és
-        újra kell osztályozni a 'aeat app ledger classify' paranccsal.
+        újra kell osztályozni.
       errors:
         child_args_mismatch: A ledger split parancshoz ugyanannyi --child-amount és
           --child-description argumentum szükséges.
@@ -5245,46 +5235,60 @@ cli:
         storage_reclaim: Helyet szabadít fel egy újraépíthető kategória törlésével
         storage_show: Egy tárolókategória részletes megtekintése
       root:
-        diagnostics_live_filed: Rögzített benyújtott bevallás-megfigyelések listázása.
-        diagnostics_overview: Az aktív munkaterület készültségének összefoglalása.
-        diagnostics_registry_inspect: Nyilvántartási metaadatok vizsgálata.
-        diagnostics_repair: Helyi konfiguráció és tár állapotának diagnosztikája.
-        diagnostics_review_queue: Függőben lévő felülvizsgálati munka listázása.
-        footer: 'Az alparancsokért futtassa: aeat config --help vagy aeat app --help.'
-        heading: CADRUMO - helyi-alapú spanyol adóügyi munkafolyamat az AEAT hatósággal
-        ledger_allocate: Üzleti célú vagy adóelosztási metaadatok hozzárendelése.
-        ledger_archive: Főkönyvi tranzakció archiválása az előzmények törlése nélkül.
-        ledger_attach: Bizonyíték csatolása egy főkönyvi tranzakcióhoz.
-        ledger_classify: Importált sorok besorolása.
-        ledger_export: Főkönyvi adatok exportálása.
-        ledger_import: Banki vagy könyvelési tranzakciók importálása.
-        ledger_list: Importált tranzakciók listázása.
-        ledger_remove: Tranzakció eltávolítása megerősítéssel.
-        ledger_reset: Főkönyvi adatok törlése megerősítéssel.
-        ledger_review: Importált sorok felülvizsgálata.
-        ledger_stash: Egy sor kiemelése az aktív felülvizsgálatból.
-        ledger_status: A főkönyv állapotának és számláinak megjelenítése.
-        ledger_update: Főkönyvi tranzakció frissítése.
-        ledger_view: Egyetlen tranzakció megtekintése.
-        modelo_bindings_list: Nyilvántartási kötésfedettség listázása.
-        modelo_list: Támogatott nyomtatványok listázása.
-        modelo_work: Nyomtatványhoz tartozó munkaegységek létrehozása és kezelése.
-        paragraph_storage_isolation: Elszigetelt üres állapothoz állítsa be ezeket
-          az env változókat; CADRUMO_LOCAL_STORAGE_ROOT, CADRUMO_SECRET_STORE_BACKEND=file,
-          CADRUMO_SECRET_STORE_DIR és CADRUMO_SECRET_PASSPHRASE; a naplók alapértelmezés
-          szerint ezen tárhelygyökér alatt vannak.
-        paragraph_two_roots: 'A CLI-nek pontosan két gyökere van: config és app.'
-        paragraph_type_help: A config parancsot helyi állapothoz, az app parancsot
-          adóügyi munkához használja.
-        section_daily_ledger: Napi főkönyvi munka
+        diagnostics_logs: A napló útvonalának és legutóbbi sorainak megjelenítése.
+        diagnostics_overview_verbose: Az általános állapot részletes megjelenítése.
+        diagnostics_repair_json: A teljes helyi állapotjelentés visszaadása JSON-ként.
+        diagnostics_version: A csomag és a nyilvántartás ujjlenyomatának megjelenítése.
+        family_app: A profilhoz kötött adózási parancsok megnyitása.
+        family_config: Profil-, munkamenet-, tár- és javítási parancsok megnyitása.
+        footer: 'Részletek: --help. Töröld az érzékeny adatokat, majd jelentsd: github.com/nevenincs/cadrumo/issues.'
+        heading: CADRUMO - helyi munkafolyamat a spanyol adóhatósággal (AEAT)
+        paragraph_app_root: Az app gyökér kezeli a profiláttekintést, főkönyvet, modelo-munkát,
+          felülvizsgálatot, nyilvántartást és hitelesített AEAT-lekérdezéseket.
+        paragraph_config_root: A config gyökér kezeli a profilokat, a titkosított
+          helyi adatokat, a helyreállítási kulcsokat, a munkameneteket, az AEAT-hitelesítést
+          és a javítást.
+        paragraph_local_first: A CADRUMO helyben tartja az adózói adatokat, és pontosan
+          két parancsgyökeret kínál.
+        paragraph_privacy: A profilcímkék láthatók. Az adóazonosítók, hitelesítő adatok,
+          tárolóazonosítók, objektumkulcsok és érzékeny webcímrészek védettek.
+        paragraph_profile_terms: A profil egy adózó helyi tényeit és beállításait
+          tárolja. Az aktív profil a kijelölt adózói környezet. A profilmunkamenet
+          folytatható hozzáférést ad a titkosított adatokhoz.
+        paragraph_review_terms: A felülvizsgálati sor kezelői beavatkozást igénylő
+          megállapításokat tartalmaz. A nyilvántartás ellenőrzött, verziózott adószabályokat
+          és forrásokat tartalmaz; nem tárol adózói adatot és nem küld be bevallást.
+        paragraph_tax_terms: A főkönyv importált pénzmozgásokat tartalmaz. A modelo
+          hivatalos AEAT-bevallási űrlap, amely nem azonos a helyi munkaegységgel
+          vagy exporttal.
+        recovery_login: Hiányzó, lezárt vagy lejárt profilmunkamenet indítása vagy
+          megújítása.
+        recovery_passphrase: A fájlos titoktár helyreállítása a regisztrált helyreállítási
+          kóddal.
+        recovery_profile: Jelzett aktívprofil-mutató hiba vizsgálata.
+        recovery_repair: Adatmódosítás előtt futtasd ezt a csak olvasható állapotjelentést.
+        section_command_families: Parancscsaládok
         section_diagnostics: Diagnosztika
-        section_modelo_lifecycle: Nyomtatvány életciklusa
-        section_setup: Beállítás
-        setup_configure_auth: AEAT-hitelesítés konfigurálása.
-        setup_create_profile: Profil létrehozása.
-        setup_inspect_profile: Profilparancsok vizsgálata.
+        section_recovery: Folytatás vagy helyreállítás
+        section_start_resume: Kezdés vagy folytatás
+        section_workflow: Alapvető munkafolyamat
+        start_create: Az első helyi adózói profil létrehozása.
+        start_edit: Hiányos profil befejezése vagy javítása.
+        start_list: A regisztrált profilok és az aktív profil megjelenítése.
+        start_login: Profil kiválasztása, munkamenetének indítása vagy megújítása.
+        start_status: A profil készültségének és hiteles következő lépésének ellenőrzése.
+        workflow_import: Banki vagy könyvelési tranzakciók importálása.
+        workflow_ledger_review: Figyelmet igénylő importált sorok felülvizsgálata.
+        workflow_modelo: Modelo-munkaegységek létrehozása vagy kezelése.
+        workflow_overview: A profil- és munkaállapot összegzése.
+        workflow_profile_status: A profil készültségének megjelenítése.
+        workflow_registry: Ellenőrzött nyilvántartási metaadatok és források vizsgálata.
+        workflow_review_queue: Kezelői felülvizsgálatra váró profilelemek megjelenítése.
+        workflow_verification: Mentett bevallás-ellenőrzési jelentések listázása.
     landing:
       active_profile_message: 'Az aktív profil: %{profile}.'
+      active_profile_unavailable_message: Van kijelölt aktív profil, de a megjelenítési
+        címkéje nem érhető el.
       no_active_profile_message: Nincs aktív profil beállítva.
       text_template: '%{message} Következő: %{command}'
   overview:
@@ -5455,9 +5459,6 @@ cli:
     year_help: Bevallási év a --period kapcsolóhoz (pl. 2024).
   registry:
     app_help: Adónyomtatvány-nyilvántartás kezelése.
-    audit_oracles_environment_help: Az élő paritási katalógus környezete az audit
-      elvégzéséhez (production, test_environment vagy both).
-    audit_oracles_help: Élő paritási orákulumkötés-eltérések felszínre hozása indításkor.
     casilla_help: Az összehasonlítandó mező azonosítója; ismételje meg az alapértelmezett
       számított mezők felülbírálásához.
     citations:
@@ -5499,26 +5500,17 @@ cli:
       view_help: Egy kézikönyv szerkezetének és opcionálisan egy szakaszának megjelenítése.
       year_help: A kézikönyv adóéve (pl. 2024).
     metrics:
-      applicability_declaration_count: Alkalmazhatósági nyilatkozatok száma
       application_link_count: Alkalmazási hivatkozások száma
       application_link_surfaces: Alkalmazási hivatkozási felületek
       artefact_refs: Artefakt-hivatkozások
-      backend_exists: Tár létezik
       captured_count: Rögzített elemek száma
       casilla_count: Mezők száma
       compared_casillas: Összehasonlított mezők
-      comparison_count: Összehasonlítások száma
       cross_reference_count: Kereszthivatkozások száma
-      difference_count: Eltérések száma
-      differences: Eltérések
       drift_count: Eltolódások száma
-      environment: Környezet
       extraction_profile_count: Kinyerési profilok száma
-      failed_count: Sikertelenek száma
       failed_declaration_count: Sikertelen bevallások száma
-      failure_count: Hibák száma
       formula_count: Képletek száma
-      formula_workbook_count: Képlet-munkafüzetek száma
       legal_reference_count: Jogszabályi hivatkozások száma
       missing_filed_casillas: Hiányzó benyújtott mezők
       missing_local_casillas: Hiányzó helyi mezők
@@ -5526,48 +5518,22 @@ cli:
       modelo_count: Nyomtatványok száma
       modelos: Nyomtatványok
       observation_paths: Megfigyelési útvonalak
-      orphan_oracle_ids: Árva orákulum-azonosítók
-      passed: Sikeres
-      registered_oracle_ids: Regisztrált orákulum-azonosítók
       revision: Revízió
       revision_count: Revíziók száma
       row_count: Sorok száma
-      runner_detail: Futtató részletei
-      runner_status: Futtató állapota
-      scanned_count: Átvizsgált elemek száma
-      scenario_id: Forgatókönyv-azonosító
       source_reference_count: Forráshivatkozások száma
       status: Állapot
-      tape_path: Szalag elérési útja
-      unsupported_xls_count: Nem támogatott XLS-ek száma
       verification_expectation_count: Ellenőrzési elvárások száma
       verified: Ellenőrzött
-      workbook_count: Munkafüzetek száma
       workbook_parity_ref_count: Munkafüzet paritás-hivatkozások száma
-      workbook_path: Munkafüzet elérési útja
     observation_help: A titkosított benyújtott bevallás megfigyelési manifesztje az
       ellenőrzéshez.
-    parity_app_help: Forgatókönyv- és szalag-paritásfuttató a kézi számítások ellenőrzéséhez.
-    parity_output_help: A generált paritási szalag célpontja (JSON-fájl).
-    parity_replay_help: Egy archivált paritási szalag visszajátszása az aktuális nyilvántartási
-      futásidővel szemben.
-    parity_run_help: Egy tárolt paritási forgatókönyv futtatása és az eredmény archiválása.
-    parity_scenario_help: Egy paritási forgatókönyv JSON-fájljának elérési útja.
-    parity_store_root_help: A generált paritási szalagok tárolásához használt gyökérkönyvtár.
-    parity_tape_help: Egy tárolt paritási szalag JSON-fájljának elérési útja.
     source_observation_help: A korábbi benyújtási kötések vagy kapcsolatok által megkövetelt
       titkosított forrásmegfigyelési manifeszt.
     verify_filed_state_help: A helyi nyilvántartási számítás kimenetének összehasonlítása
       a rögzített benyújtott AEAT-állapottal.
     verify_help: A helyi nyilvántartás integritásának ellenőrzése.
     verify_source_root_help: Az ellenőrzendő forráskönyvtár elérési útja.
-    workbooks_app_help: Nyilvántartási munkafüzetek kezelése.
-    workbooks_limit_help: A fordítandó munkafüzetek számbeli korlátja.
-    workbooks_output_help: A fordított munkafüzetek kimeneti könyvtára.
-    workbooks_resume_help: A munkafüzetek fordításának folytatása az utolsó ponttól.
-    workbooks_root_help: A munkafüzetdefiníciókat tartalmazó gyökérkönyvtár.
-    workbooks_timeout_help: A fordítás maximális időkorlátja (másodpercekben).
-    workbooks_verify_help: A generált munkafüzetek integritásának ellenőrzése.
   review:
     app_help: 'Üzemeltetői felülvizsgálati sor: főkönyvi tranzakciók, vásárlási bizonylatok
       és nyomtatvány-megállapítások osztályozása.'
@@ -5611,24 +5577,34 @@ cli:
     format_help: 'Kimeneti formátum: text, json.'
     help_help: Súgó megjelenítése.
     landing:
+      context_heading: Aktuális környezet
       headline: CADRUMO Adóasszisztens
       help_line: 'További súgó: `aeat --help`, `aeat config --help` vagy `aeat app
-        --help`. A globális kapcsolókat (`--format json`, `--language hu`, `--profile
-        NÉV`, `--quiet`, `--verbose`, `--debug`) az alparancs ELÉ kell helyezni, pl.
-        `aeat --format json app ledger list` (nem `aeat app ledger list --format json`).'
+        --help`. A globális kapcsolók: `--format json`, `--language hu`, `--profile
+        NÉV`, `--quiet`, `--verbose` és `--debug`. Ezeket az alparancs elé írd. Például:
+        `aeat --format json app ledger list`, nem `aeat app ledger list --format json`.'
+      privacy_line: 'Adatvédelem: a profilcímkék láthatók; az adózói adatok és tár-azonosítók
+        védettek.'
+      profile_repair_command: 'Profilállapot javítása: `aeat config repair profile`.'
       quick_start_heading: Gyors kezdés
-      quick_start_import: '  3. `aeat app ledger import <bankikivonás.csv> --provider
-        csv` - banki tranzakciók hozzáadása.'
-      quick_start_repair: '  5. `aeat config repair` - konfiguráció, tár és helyi
-        állapot diagnosztikája.'
+      quick_start_import: '  3. `aeat app ledger import --file kivonat.csv --provider
+        csv` - tranzakciók importálása.'
+      quick_start_modelo: '  5. `aeat app modelo work --help` - sorold fel a létrehozási,
+        számítási, ellenőrzési és exportálási műveleteket.'
+      quick_start_queue: '  6. `aeat app review queue` - figyelmet igénylő profilelemek
+        keresése.'
+      quick_start_repair: '  7. `aeat config repair` - konfiguráció, tár és helyi
+        állapot vizsgálata.'
       quick_start_review: '  4. `aeat app ledger review` - importált sorok ellenőrzése
         és besorolása.'
-      quick_start_setup_done: '  1. `aeat config profile status` - az aktív profil
-        ellenőrzése az üzemelési munka előtt.'
-      quick_start_setup_needed: '  1. `aeat config profile create NÉV` - először hozza
-        létre a helyi adóprofilt.'
-      quick_start_status: '  2. `aeat app overview status` - az aktuális munkaterület
-        állapota és diagnosztika.'
+      quick_start_setup_done: '  1. `aeat config profile status` - készültség és hiteles
+        következő lépés ellenőrzése.'
+      quick_start_setup_needed: '  1. `aeat config profile create NAME` - helyi adózói
+        profil létrehozása.'
+      quick_start_setup_repair: '  1. `aeat config repair profile` - vizsgáld meg
+        és javítsd a kijelölt profilt.'
+      quick_start_status: '  2. `aeat app overview status` - a profil és a munka állapotának
+        összegzése.'
       section_config: '  config - profilbeállítás, hitelesítés, diagnosztika'
       section_ledger: '  app ledger - banki importok és tranzakció-felülvizsgálat'
       section_modelo: '  app modelo - adónyomtatvány-katalógus és munkacsomagok'
@@ -5636,9 +5612,17 @@ cli:
       section_registry: '  app registry - helyi AEAT nyilvántartási adatok'
       section_review: '  app review - üzemeltetői figyelmet igénylő elemek'
       sections_heading: Fő szakaszok
-      tagline: Helyi-alapú spanyol adózási munkafolyamat önálló vállalkozóknak.
-      welcome_no_profile: Üdvözöljük! Nincs aktív profil konfigurálva; kezdje a beállítással.
-      welcome_profile: 'Üdvözöljük újra! Az aktív profil: `%{profile}`.'
+      session_login_command: 'Profilmunka indítása vagy megújítása: `aeat config login
+        [NAME]`.'
+      session_status_command: 'Készültség ellenőrzése: `aeat config profile status`.'
+      session_unchecked: A munkamenet és készültség nem következik a kiválasztott
+        profilból.
+      tagline: Helyi munkafolyamat a spanyol adóhatósággal (AEAT) adózóknak és tanácsadóknak.
+      welcome_no_profile: 'Aktív profil: nincs. A profilhoz kötött munka előtt hozz
+        létre egyet.'
+      welcome_profile: 'Aktív profil: `%{profile}`.'
+      welcome_profile_unavailable: 'Aktív profil: nem érhető el. Javítsd a kijelölt
+        profilt a profilhoz kötött munka előtt.'
     language_help: A kimenet és a súgószöveg nyelve (en, es, ca, hu).
     profile_help: Az aktív profil neve.
     quiet_help: Csak a hibák megjelenítése.
@@ -7455,6 +7439,11 @@ live:
     year_range_invalid: A kezdő évnek kisebbnek vagy egyenlőnek kell lennie a záró
       évvel.
   filed:
+    pull:
+      submitted_file_extraction_failed: 'A(z) {modelo} modell {period} {ejercicio}
+        bevallása (ügyiratszám: {expediente_id}) nem volt olvasható a benyújtott fájl
+        elrendezésén keresztül. A bevallás PDF-je, ha az AEAT biztosította, továbbra
+        is az egyetlen kinyerési út. Az elemző oka: {reason}'
     pull_all:
       denominator_note_profile: A mérés alapja {expected} pár, amelyet az adózó saját
         bevallott adatai várnak. További {offered_only} pár kizárólag az AEAT felkínált
@@ -66612,395 +66601,527 @@ modelo:
         2026-y-siguientes:
           casilla:
             '01':
-              help: null
-              label: null
+              help: '01. mező: keletkezett ÁFA adóalapja az általános rendszer szupercsökkentett
+                4%-os kulcsán.'
+              label: Keletkezett ÁFA, általános rendszer szupercsökkentett 4%-os kulcs
+                - adóalap
             '02':
-              help: null
-              label: null
+              help: '02. mező: keletkezett ÁFA kulcsának százaléka az általános rendszer
+                szupercsökkentett 4%-os kulcsán.'
+              label: Keletkezett ÁFA, általános rendszer szupercsökkentett 4%-os kulcs
+                - kulcs százaléka
             '03':
-              help: null
-              label: null
+              help: '03. mező: keletkezett ÁFA összege az általános rendszer szupercsökkentett
+                4%-os kulcsán.'
+              label: Keletkezett ÁFA, általános rendszer szupercsökkentett 4%-os kulcs
+                - ÁFA összeg
             '04':
-              help: null
-              label: null
+              help: '04. mező: keletkezett ÁFA adóalapja az általános rendszer csökkentett
+                10%-os kulcsán.'
+              label: Keletkezett ÁFA, általános rendszer csökkentett 10%-os kulcs
+                - adóalap
             '05':
-              help: null
-              label: null
+              help: '05. mező: keletkezett ÁFA kulcsának százaléka az általános rendszer
+                csökkentett 10%-os kulcsán.'
+              label: Keletkezett ÁFA, általános rendszer csökkentett 10%-os kulcs
+                - kulcs százaléka
             '06':
-              help: null
-              label: null
+              help: '06. mező: keletkezett ÁFA összege az általános rendszer csökkentett
+                10%-os kulcsán.'
+              label: Keletkezett ÁFA, általános rendszer csökkentett 10%-os kulcs
+                - ÁFA összeg
             '07':
-              help: null
-              label: null
+              help: '07. mező: keletkezett ÁFA adóalapja az általános rendszer 21%-os
+                általános kulcsán.'
+              label: Keletkezett ÁFA, általános rendszer 21%-os általános kulcs -
+                adóalap
             08:
-              help: null
-              label: null
+              help: '08. mező: keletkezett ÁFA kulcsának százaléka az általános rendszer
+                21%-os általános kulcsán.'
+              label: Keletkezett ÁFA, általános rendszer 21%-os általános kulcs -
+                kulcs százaléka
             09:
-              help: null
-              label: null
+              help: '09. mező: keletkezett ÁFA összege az általános rendszer 21%-os
+                általános kulcsán.'
+              label: Keletkezett ÁFA, általános rendszer 21%-os általános kulcs -
+                ÁFA összeg
             '10':
-              help: null
-              label: null
+              help: '10. mező: Közösségen belüli termék- és szolgáltatásbeszerzések
+                után keletkezett ÁFA alapja.'
+              label: Közösségen belüli termék- és szolgáltatásbeszerzések után keletkezett
+                ÁFA - alap
             '108':
-              help: null
-              label: null
+              help: '108. mező: helyesbítő bevallás egyéb korrekciói a közigazgatási
+                állásponttal való eltérés meghatározott eseteiben.'
+              label: Helyesbítő bevallás - egyéb korrekciók közigazgatási állásponttal
+                való eltérés meghatározott eseteiben
             '109':
-              help: null
-              label: null
+              help: '109. mező: AEAT által jóváhagyott visszatérítések ugyanazon év
+                és időszak korábbi önbevallásaihoz kapcsolódóan.'
+              label: Eredmény - AEAT által jóváhagyott visszatérítések ugyanazon év
+                és időszak korábbi önbevallásaiból
             '11':
-              help: null
-              label: null
+              help: '11. mező: Közösségen belüli termék- és szolgáltatásbeszerzések
+                után keletkezett ÁFA összege.'
+              label: Közösségen belüli termék- és szolgáltatásbeszerzések után keletkezett
+                ÁFA - összeg
             '111':
-              help: null
-              label: null
+              help: '111. mező: helyesbítő bevallásban szereplő helyesbítés összege.'
+              label: Helyesbítő bevallás - helyesbítés összege
             '112':
               help: null
               label: null
             '12':
-              help: null
-              label: null
+              help: '12. mező: Közösségen belüli ügyleteken kívüli egyéb fordított
+                adózású ügyletek után keletkezett ÁFA alapja.'
+              label: Egyéb fordított adózású ügyletek után keletkezett ÁFA, Közösségen
+                belüliek nélkül - alap
             '120':
-              help: null
-              label: null
+              help: '120. mező: kiegészítő információ teljesítési hely szabályai miatt
+                nem adóköteles ügyletekről, a 123. mező kivételével.'
+              label: Kiegészítő információ - teljesítési hely szabályai miatt nem
+                adóköteles ügyletek, a 123. mező kivételével
             '122':
-              help: null
-              label: null
+              help: '122. mező: kiegészítő információ fordított adózás alá tartozó
+                ügyletekről.'
+              label: Kiegészítő információ - fordított adózás alá tartozó ügyletek
             '123':
-              help: null
-              label: null
+              help: '123. mező: kiegészítő információ egyablakos különös rendszerek
+                teljesítési hely szabályai szerint nem adóköteles ügyletekről.'
+              label: Kiegészítő információ - egyablakos különös rendszerek teljesítési
+                hely szabályai szerint nem adóköteles ügyletek
             '124':
-              help: null
-              label: null
+              help: '124. mező: kiegészítő információ egyablakos különös rendszerek
+                alá tartozó adóköteles ügyletekről.'
+              label: Kiegészítő információ - egyablakos különös rendszerek alá tartozó
+                adóköteles ügyletek
             '13':
-              help: null
-              label: null
+              help: '13. mező: Közösségen belüli ügyleteken kívüli egyéb fordított
+                adózású ügyletek után keletkezett ÁFA összege.'
+              label: Egyéb fordított adózású ügyletek után keletkezett ÁFA, Közösségen
+                belüliek nélkül - összeg
             '14':
-              help: null
-              label: null
+              help: '14. mező: keletkezett ÁFA alapjainak és összegeinek módosításához
+                tartozó adóalap.'
+              label: Keletkezett ÁFA alapjainak és összegeinek módosítása - adóalap
             '15':
-              help: null
-              label: null
+              help: '15. mező: keletkezett ÁFA alapjainak és összegeinek módosításához
+                tartozó ÁFA összeg.'
+              label: Keletkezett ÁFA alapjainak és összegeinek módosítása - összeg
             '150':
-              help: null
-              label: null
+              help: '150. mező: keletkezett ÁFA adóalapja az általános rendszer új
+                kulcsának 1. sávjában.'
+              label: Keletkezett ÁFA, általános rendszer új kulcs 1. sáv - adóalap
             '151':
-              help: null
-              label: null
+              help: '151. mező: keletkezett ÁFA kulcsának százaléka az általános rendszer
+                új kulcsának 1. sávjában.'
+              label: Keletkezett ÁFA, általános rendszer új kulcs 1. sáv - kulcs százaléka
             '152':
-              help: null
-              label: null
+              help: '152. mező: keletkezett ÁFA összege az általános rendszer új kulcsának
+                1. sávjában.'
+              label: Keletkezett ÁFA, általános rendszer új kulcs 1. sáv - ÁFA összeg
             '153':
-              help: null
-              label: null
+              help: '153. mező: keletkezett ÁFA adóalapja az általános rendszer új
+                kulcsának 2. sávjában.'
+              label: Keletkezett ÁFA, általános rendszer új kulcs 2. sáv - adóalap
             '154':
-              help: null
-              label: null
+              help: '154. mező: keletkezett ÁFA kulcsának százaléka az általános rendszer
+                új kulcsának 2. sávjában.'
+              label: Keletkezett ÁFA, általános rendszer új kulcs 2. sáv - kulcs százaléka
             '155':
-              help: null
-              label: null
+              help: '155. mező: keletkezett ÁFA összege az általános rendszer új kulcsának
+                2. sávjában.'
+              label: Keletkezett ÁFA, általános rendszer új kulcs 2. sáv - ÁFA összeg
             '156':
-              help: null
-              label: null
+              help: '156. mező: a 0,5%-os egyenértékűségi felár adóalapja.'
+              label: Egyenértékűségi felár 0,5% - adóalap
             '157':
-              help: null
-              label: null
+              help: '157. mező: a 0,5%-os egyenértékűségi felár kulcsának százaléka.'
+              label: Egyenértékűségi felár 0,5% - kulcs százaléka
             '158':
-              help: null
-              label: null
+              help: '158. mező: a 0,5%-os egyenértékűségi felár összege.'
+              label: Egyenértékűségi felár 0,5% - felár összege
             '16':
-              help: null
-              label: null
+              help: '16. mező: az 1,0%-os egyenértékűségi felár adóalapja.'
+              label: Egyenértékűségi felár 1,0% - adóalap
             '165':
-              help: null
-              label: null
+              help: '165. mező: keletkezett ÁFA adóalapja az általános rendszer 2024-től
+                alkalmazandó 2%-os kulcsán.'
+              label: Keletkezett ÁFA, általános rendszer 2%-os kulcs 2024-től - adóalap
             '166':
-              help: null
-              label: null
+              help: '166. mező: keletkezett ÁFA kulcsának százaléka az általános rendszer
+                2024-től alkalmazandó 2%-os kulcsán.'
+              label: Keletkezett ÁFA, általános rendszer 2%-os kulcs 2024-től - kulcs
+                százaléka
             '167':
-              help: null
-              label: null
+              help: '167. mező: keletkezett ÁFA összege az általános rendszer 2024-től
+                alkalmazandó 2%-os kulcsán.'
+              label: Keletkezett ÁFA, általános rendszer 2%-os kulcs 2024-től - ÁFA
+                összeg
             '168':
-              help: null
-              label: null
+              help: '168. mező: a 2024-től alkalmazandó új egyenértékűségi felárkulcs
+                adóalapja.'
+              label: Új egyenértékűségi felárkulcs 2024-től - adóalap
             '169':
-              help: null
-              label: null
+              help: '169. mező: a 2024-től alkalmazandó új egyenértékűségi felárkulcs
+                százaléka.'
+              label: Új egyenértékűségi felárkulcs 2024-től - kulcs százaléka
             '17':
-              help: null
-              label: null
+              help: '17. mező: az 1,0%-os egyenértékűségi felár kulcsának százaléka.'
+              label: Egyenértékűségi felár 1,0% - kulcs százaléka
             '170':
-              help: null
-              label: null
+              help: '170. mező: a 2024-től alkalmazandó új egyenértékűségi felár összege.'
+              label: Új egyenértékűségi felárkulcs 2024-től - felár összege
             '18':
-              help: null
-              label: null
+              help: '18. mező: az 1,0%-os egyenértékűségi felár összege.'
+              label: Egyenértékűségi felár 1,0% - felár összege
             '19':
-              help: null
-              label: null
+              help: '19. mező: az 1,4%-os egyenértékűségi felár adóalapja.'
+              label: Egyenértékűségi felár 1,4% - adóalap
             '20':
-              help: null
-              label: null
+              help: '20. mező: az 1,4%-os egyenértékűségi felár kulcsának százaléka.'
+              label: Egyenértékűségi felár 1,4% - kulcs százaléka
             '21':
-              help: null
-              label: null
+              help: '21. mező: az 1,4%-os egyenértékűségi felár összege.'
+              label: Egyenértékűségi felár 1,4% - felár összege
             '22':
-              help: null
-              label: null
+              help: '22. mező: az 5,2%-os egyenértékűségi felár adóalapja.'
+              label: Egyenértékűségi felár 5,2% - adóalap
             '23':
-              help: null
-              label: null
+              help: '23. mező: az 5,2%-os egyenértékűségi felár kulcsának százaléka.'
+              label: Egyenértékűségi felár 5,2% - kulcs százaléka
             '24':
-              help: null
-              label: null
+              help: '24. mező: az 5,2%-os egyenértékűségi felár összege.'
+              label: Egyenértékűségi felár 5,2% - felár összege
             '25':
-              help: null
-              label: null
+              help: '25. mező: az egyenértékűségi felár alapjainak és összegeinek
+                módosításához tartozó adóalap.'
+              label: Egyenértékűségi felár alapjainak és összegeinek módosítása -
+                adóalap
             '26':
-              help: null
-              label: null
+              help: '26. mező: az egyenértékűségi felár alapjainak és összegeinek
+                módosításához tartozó felár összege.'
+              label: Egyenértékűségi felár alapjainak és összegeinek módosítása -
+                felár összege
             '27':
-              help: null
-              label: null
+              help: '27. mező: összes keletkezett ÁFA összeg.'
+              label: Összes keletkezett ÁFA összeg
             '28':
-              help: null
-              label: null
+              help: '28. mező: belföldi folyó ügyleteken levonható ÁFA alapja.'
+              label: Levonható ÁFA belföldi folyó ügyleteken - alap
             '29':
-              help: null
-              label: null
+              help: '29. mező: belföldi folyó ügyleteken levonható ÁFA összege.'
+              label: Levonható ÁFA belföldi folyó ügyleteken - összeg
             '30':
-              help: null
-              label: null
+              help: '30. mező: belföldi beruházási javakon levonható ÁFA alapja.'
+              label: Levonható ÁFA belföldi beruházási javakon - alap
             '31':
-              help: null
-              label: null
+              help: '31. mező: belföldi beruházási javakon levonható ÁFA összege.'
+              label: Levonható ÁFA belföldi beruházási javakon - összeg
             '32':
-              help: null
-              label: null
+              help: '32. mező: folyó áruk importján levonható ÁFA alapja.'
+              label: Levonható ÁFA folyó áruk importján - alap
             '33':
-              help: null
-              label: null
+              help: '33. mező: folyó áruk importján levonható ÁFA összege.'
+              label: Levonható ÁFA folyó áruk importján - összeg
             '34':
-              help: null
-              label: null
+              help: '34. mező: beruházási javak importján levonható ÁFA alapja.'
+              label: Levonható ÁFA beruházási javak importján - alap
             '35':
-              help: null
-              label: null
+              help: '35. mező: beruházási javak importján levonható ÁFA összege.'
+              label: Levonható ÁFA beruházási javak importján - összeg
             '36':
-              help: null
-              label: null
+              help: '36. mező: Közösségen belüli folyó beszerzéseken levonható ÁFA
+                alapja.'
+              label: Levonható ÁFA Közösségen belüli folyó beszerzéseken - alap
             '37':
-              help: null
-              label: null
+              help: '37. mező: Közösségen belüli folyó beszerzéseken levonható ÁFA
+                összege.'
+              label: Levonható ÁFA Közösségen belüli folyó beszerzéseken - összeg
             '38':
-              help: null
-              label: null
+              help: '38. mező: Közösségen belüli beruházási javak beszerzésén levonható
+                ÁFA alapja.'
+              label: Levonható ÁFA Közösségen belüli beruházási javak beszerzésén
+                - alap
             '39':
-              help: null
-              label: null
+              help: '39. mező: Közösségen belüli beruházási javak beszerzésén levonható
+                ÁFA összege.'
+              label: Levonható ÁFA Közösségen belüli beruházási javak beszerzésén
+                - összeg
             '40':
-              help: null
-              label: null
+              help: '40. mező: levonások helyesbítésének alapja.'
+              label: Levonások helyesbítése - alap
             '41':
-              help: null
-              label: null
+              help: '41. mező: levonások helyesbítésének ÁFA összege.'
+              label: Levonások helyesbítése - összeg
             '42':
-              help: null
-              label: null
+              help: '42. mező: mezőgazdasági, állattenyésztési és halászati különös
+                rendszer szerinti kompenzáció összege.'
+              label: Mezőgazdasági, állattenyésztési és halászati különös rendszer
+                kompenzációi - összeg
             '43':
-              help: null
-              label: null
+              help: '43. mező: beruházási javak korrekciójának ÁFA összege.'
+              label: Beruházási javak korrekciója - összeg
             '44':
-              help: null
-              label: null
+              help: '44. mező: levonási hányad végleges százalék alapján végzett korrekciójának
+                ÁFA összege.'
+              label: Levonási hányad korrekciója végleges százalék alapján - összeg
             '45':
-              help: null
-              label: null
+              help: '45. mező: összes levonható ÁFA összeg.'
+              label: Összes levonható összeg
             '47':
-              help: null
-              label: null
+              help: '47. mező: egyszerűsített rendszerben az összes tevékenység előlegfizetéseinek
+                összege az 1T, 2T vagy 3T időszakban.'
+              label: Egyszerűsített rendszer, 1T-2T-3T - minden tevékenység előlegfizetéseinek
+                összege
             '48':
-              help: null
-              label: null
+              help: '48. mező: egyszerűsített rendszerben az összes tevékenységből
+                származó összegek összege a 4T időszakban.'
+              label: Egyszerűsített rendszer, 4T - minden tevékenység származtatott
+                összegeinek összege
             '49':
-              help: null
-              label: null
+              help: '49. mező: egyszerűsített rendszerben az év során teljesített
+                előlegfizetések összege a 4T időszakban.'
+              label: Egyszerűsített rendszer, 4T - az év során teljesített előlegfizetések
+                összege
             '50':
-              help: null
-              label: null
+              help: '50. mező: egyszerűsített rendszer 4T eredménye, a 48. mező mínusz
+                a 49. mező.'
+              label: Egyszerűsített rendszer, 4T - eredmény ([48] - [49])
             '51':
-              help: null
-              label: null
+              help: '51. mező: egyszerűsített rendszerben Közösségen belüli termékbeszerzések
+                után keletkezett ÁFA.'
+              label: Egyszerűsített rendszer - Közösségen belüli termékbeszerzések
+                után keletkezett ÁFA
             '52':
-              help: null
-              label: null
+              help: '52. mező: egyszerűsített rendszerben tárgyi eszközök értékesítése
+                után keletkezett ÁFA.'
+              label: Egyszerűsített rendszer - tárgyi eszközök értékesítése után keletkezett
+                ÁFA
             '53':
-              help: null
-              label: null
+              help: '53. mező: egyszerűsített rendszerben fordított adózás alá tartozó
+                ügyletekből keletkezett ÁFA.'
+              label: Egyszerűsített rendszer - fordított adózású ügyletekből keletkezett
+                ÁFA
             '54':
-              help: null
-              label: null
+              help: '54. mező: egyszerűsített rendszer szerinti teljes eredményösszeg.'
+              label: Egyszerűsített rendszer - teljes eredményösszeg
             '55':
-              help: null
-              label: null
+              help: '55. mező: egyszerűsített rendszerben tárgyi eszköz beszerzésén
+                vagy importján levonható ÁFA.'
+              label: Egyszerűsített rendszer - tárgyi eszköz beszerzésén vagy importján
+                levonható ÁFA
             '56':
-              help: null
-              label: null
+              help: '56. mező: egyszerűsített rendszerben beruházási javak korrekciójából
+                levonható ÁFA.'
+              label: Egyszerűsített rendszer - beruházási javak korrekciójából levonható
+                ÁFA
             '57':
-              help: null
-              label: null
+              help: '57. mező: egyszerűsített rendszerben összes levonható ÁFA, az
+                55. mező és az 56. mező összegeként számítva.'
+              label: Egyszerűsített rendszer - összes levonható ÁFA ([55] + [56])
             '58':
-              help: null
-              label: null
+              help: '58. mező: egyszerűsített rendszer eredménye, az 54. mező mínusz
+                az 57. mező.'
+              label: Egyszerűsített rendszer eredménye ([54] - [57])
             '59':
-              help: null
-              label: null
+              help: '59. mező: kiegészítő információ Közösségen belüli termék- és
+                szolgáltatásértékesítésekről.'
+              label: Kiegészítő információ - Közösségen belüli termék- és szolgáltatásértékesítések
             '60':
-              help: null
-              label: null
+              help: '60. mező: kiegészítő információ exportokról és azokkal egy tekintet
+                alá eső ügyletekről.'
+              label: Kiegészítő információ - exportok és azokkal egy tekintet alá
+                eső ügyletek
             '62':
-              help: null
-              label: null
+              help: '62. mező: LIVA 75. cikk szerint keletkezett pénzforgalmi szemléletű
+                teljesítések adóalapja.'
+              label: Kiegészítő információ - pénzforgalmi szemléletű, LIVA 75. cikk
+                szerinti teljesítések - adóalap
             '63':
-              help: null
-              label: null
+              help: '63. mező: LIVA 75. cikk szerint keletkezett pénzforgalmi szemléletű
+                teljesítések ÁFA összege.'
+              label: Kiegészítő információ - pénzforgalmi szemléletű, LIVA 75. cikk
+                szerinti teljesítések - ÁFA összeg
             '64':
-              help: null
-              label: null
+              help: '64. mező: eredmények összege, a 46., 58. és 76. mező összegeként
+                számítva.'
+              label: Eredmény - eredmények összege ([46] + [58] + [76])
             '65':
-              help: null
-              label: null
+              help: '65. mező: az eredmény Állami Adóigazgatásnak tulajdonítható százaléka.'
+              label: Eredmény - az Állami Adóigazgatásnak tulajdonítható százalék
             '66':
-              help: null
-              label: null
+              help: '66. mező: az Állami Adóigazgatásnak tulajdonítható összeg, a
+                64. mező szorozva a 65. mezővel, osztva 100-zal.'
+              label: Eredmény - az Állami Adóigazgatásnak tulajdonítható összeg ([64]
+                x [65] / 100)
             '68':
-              help: null
-              label: null
+              help: '68. mező: közös adózás éves korrekciós eredménye.'
+              label: Eredmény - közös adózás éves korrekciós eredménye
             '70':
-              help: null
-              label: null
+              help: '70. mező: ugyanazon év és időszak korábbi önbevallásaiból fizetendő
+                összegek.'
+              label: Eredmény - ugyanazon év és időszak korábbi önbevallásaiból fizetendő
+                eredmények
             '71':
-              help: null
-              label: null
+              help: '71. mező: végső eredmény, a 69. mező mínusz a 70. mező plusz
+                a 109. mező.'
+              label: Végső eredmény ([69] - [70] + [109])
             '74':
-              help: null
-              label: null
+              help: '74. mező: pénzforgalmi szemléletű beszerzések adóalapja.'
+              label: Kiegészítő információ - pénzforgalmi szemléletű beszerzések -
+                adóalap
             '75':
-              help: null
-              label: null
+              help: '75. mező: pénzforgalmi szemléletű beszerzések ÁFA összege.'
+              label: Kiegészítő információ - pénzforgalmi szemléletű beszerzések -
+                ÁFA összeg
             '76':
-              help: null
-              label: null
+              help: '76. mező: eredménykorrekció a LIVA 80. cikk ötödik bekezdés 5a
+                pontja szerint.'
+              label: Eredmény - LIVA 80. cikk ötödik bekezdés 5a pont szerinti korrekció
             '77':
-              help: null
-              label: null
+              help: '77. mező: a Vámhatóság által megállapított, befizetésre váró
+                import ÁFA.'
+              label: Eredmény - Vámhatóság által megállapított, befizetésre váró import
+                ÁFA
             modulos-iva-1-unidades:
               help: null
-              label: null
+              label: '1. modul (Alkalmazott személyzet): egységek száma'
             modulos-iva-2-unidades:
               help: null
-              label: null
+              label: '2. modul (tevékenységspecifikus egység: megtett távolság, járművek
+                raksúlya vagy a helyiség alapterülete): egységek száma'
             modulos-iva-3-unidades:
               help: null
-              label: null
+              label: '3. modul (tevékenységspecifikus egység: villamosenergia- vagy
+                egyéb energiafogyasztás): egységek száma'
             modulos-iva-cuota-derivada:
               help: null
-              label: null
+              label: Az egyszerűsített rendszerből eredő adó (a levonhatókkal/átalánnyal
+                csökkentett nettó keletkezett ÁFA, vagy a minimális adó közül a nagyobb)
             modulos-iva-cuota-devengada:
               help: null
-              label: null
+              label: Folyó ügyletek után keletkezett ÁFA (Σ modulegységek × egységenkénti
+                éves keletkezett ÁFA)
             modulos-iva-epigrafe:
               help: null
-              label: null
+              label: A tevékenység IAE-tételszáma az ÁFA egyszerűsített rendszerében
+                (modulok)
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
-              label: null
+              help: Az az adóév, amelyre az önbevallás vonatkozik.
+              label: Az önbevallás adóéve
             x-chim6r1ee1in4qbfchng:
-              help: null
-              label: null
+              help: 'Az önbevallás negyedéves időszaka: 1T, 2T, 3T vagy 4T.'
+              label: Negyedéves időszak
             x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushec9gn6p8:
-              help: null
-              label: null
+              help: Az ingatlanfejlesztő saját felhasználásának adóalapja, az építési
+                költség alapján.
+              label: Ingatlanfejlesztő saját felhasználásának adóalapja
             x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushecdqmut31:
-              help: null
-              label: null
+              help: Az ingatlanfejlesztő saját felhasználásának ÁFA összege, az adóalap
+                21%-aként számítva.
+              label: Ingatlanfejlesztő saját felhasználásának ÁFA összege
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
-              help: null
-              label: null
+              help: Fordított adózás alá tartozó belföldi ügyleteknél levonható önadózott
+                ÁFA.
+              label: Levonható fordított adózású ÁFA belföldi ügyleteknél
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
-              help: null
-              label: null
+              help: Fordított adózás alá tartozó belföldi ügyleteknél keletkezett
+                önadózott ÁFA.
+              label: Keletkezett fordított adózású ÁFA belföldi ügyleteknél
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
-              help: null
-              label: null
+              help: Fordított adózás keretében önadózott ÁFA összeg Közösségen belüli
+                beszerzéseknél.
+              label: Fordított adózású ÁFA összeg Közösségen belüli beszerzéseknél
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
-              help: null
-              label: null
+              help: Közösségen belüli termék- és szolgáltatásbeszerzéseknél levonható
+                önadózott ÁFA.
+              label: Levonható fordított adózású ÁFA Közösségen belüli beszerzéseknél
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
-              help: null
-              label: null
+              help: Közösségen belüli termék- és szolgáltatásbeszerzéseknél keletkezett
+                önadózott ÁFA.
+              label: Keletkezett fordított adózású ÁFA Közösségen belüli beszerzéseknél
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
-              help: null
-              label: null
+              help: Adja össze a Közösségen belüli beszerzések után önszámlázással
+                keletkezett adóalapot.
+              label: Keletkezett fordított adózású ÁFA adóalapja Közösségen belüli
+                beszerzéseknél
             x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
-              help: null
-              label: null
+              help: Korábbi időszakokból fennmaradó ÁFA összegek, amelyeket ebben
+                az időszakban alkalmaznak.
+              label: Ebben az időszakban alkalmazott korábbi időszaki beszámítások
             x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
-              help: null
-              label: null
+              help: Későbbi időszakokra átvihető, az időszak végén rendelkezésre álló
+                ÁFA beszámítási egyenleg.
+              label: Időszak végén rendelkezésre álló beszámítási egyenleg
             x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
-              help: null
-              label: null
+              help: Az adott időszak önbevallása által keletkeztetett ÁFA beszámítási
+                egyenleg.
+              label: Ebben az időszakban keletkezett beszámítási egyenleg
             x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
-              help: null
-              label: null
+              help: Korábbi időszakokból fennmaradó, beszámításra váró ÁFA összegek.
+              label: Korábbi időszakokból fennmaradó beszámítandó összegek
             x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
-              help: null
-              label: null
+              help: Korábbi időszaki ÁFA beszámítások, amelyek későbbi időszakokra
+                fennmaradnak.
+              label: Későbbi időszakokra fennmaradó korábbi beszámítások
             x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
-              help: null
-              label: null
+              help: Összes levonható ÁFA összeg, beleértve a belföldi előzetesen felszámított
+                ÁFÁ-t és a levonható fordított adózású ÁFÁ-t.
+              label: Összes levonható ÁFA összeg
             x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
-              help: null
-              label: null
+              help: Összes keletkezett ÁFA összeg, beleértve a felszámított ÁFÁ-t
+                és az alkalmazandó fordított adózású ÁFÁ-t.
+              label: Összes keletkezett ÁFA összeg
             x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
-              help: null
-              label: null
+              help: Az általános levonási hányad százaléka, a levonási jogot keletkeztető
+                volumen és a teljes volumen alapján.
+              label: Általános levonási hányad százaléka
             x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
-              help: null
-              label: null
+              help: Az éves ügyletvolumen, amely ÁFA-levonási jogot keletkeztet.
+              label: Levonási jogot keletkeztető éves ügyletvolumen
             x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
-              help: null
-              label: null
+              help: Az általános levonási hányad számításához használt teljes éves
+                ügyletvolumen.
+              label: Teljes éves ügyletvolumen
             x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
-              help: null
-              label: null
+              help: Beruházási javakhoz kapcsolódó ÁFA-korrekció.
+              label: Beruházási javak korrekciója
             x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
-              help: null
-              label: null
+              help: Az általános 21%-os kulccsal kiszámított teljes felszámított ÁFA.
+              label: Felszámított ÁFA összeg általános kulccsal (21%)
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
-              help: null
-              label: null
+              help: A 10%-os csökkentett kulccsal kiszámított teljes felszámított
+                ÁFA.
+              label: Felszámított ÁFA összeg csökkentett kulccsal (10%)
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
-              help: null
-              label: null
+              help: A 4/2024. sz. spanyol királyi törvényerejű rendelet átmeneti tétele
+                a csökkentett kulcshoz, amely a rendes 10%-os csökkentett kulccsal
+                együtt létezik.
+              label: Felszámított ÁFA összeg átmeneti csökkentett kulccsal (5%/7,5%)
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
-              help: null
-              label: null
+              help: A 4%-os szupercsökkentett kulccsal kiszámított teljes felszámított
+                ÁFA.
+              label: Felszámított ÁFA összeg szupercsökkentett kulccsal (4%)
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
-              help: null
-              label: null
+              help: A 4/2024. sz. spanyol királyi törvényerejű rendelet átmeneti tétele
+                a szupercsökkentett kulcshoz, amely a rendes 4%-os szupercsökkentett
+                kulccsal együtt létezik.
+              label: Felszámított ÁFA összeg átmeneti szupercsökkentett kulccsal (2%)
             x-d5r62bjiclpnar3kc5i6u:
-              help: null
-              label: null
+              help: Az önbevallás eredménye a Modelo 303 korrekciós képlete után.
+              label: Önbevallás eredménye
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
-              help: null
-              label: null
+              help: Az általános rendszer eredménye, a keletkezett ÁFA és a levonható
+                ÁFA különbségeként számítva.
+              label: Általános rendszer eredménye
             x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
-              help: null
-              label: null
+              help: Folyó áruk importján előzetesen felszámított levonható ÁFA.
+              label: Levonható előzetesen felszámított ÁFA folyó áruk importján
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
-              help: null
-              label: null
+              help: A belföldi termékbeszerzések és szolgáltatásigénybevételek után
+                fizetett, levonható ÁFA.
+              label: Levonható ÁFA összeg belföldi folyó ügyletek után
           construct:
             modelo-303-iva-autoliquidacion:
               field:
@@ -68591,8 +68712,7 @@ modelo:
           field:
             label: null
 overview:
-  no_aeat_history: Ehhez a profilhoz nincs az AEAT által megerősített benyújtás. Futtassa
-    az `aeat app live filed pull-all` parancsot az AEAT által őrzött előzmények lekéréséhez.
+  no_aeat_history: Ehhez a profilhoz nincs az AEAT által megerősített benyújtás.
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: 50%-os arányosítás alkalmazva (LIRPF 61.
