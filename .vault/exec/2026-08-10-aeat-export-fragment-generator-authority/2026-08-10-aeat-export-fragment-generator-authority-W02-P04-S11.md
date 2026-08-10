@@ -5,7 +5,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:9fd3d2b47548d484531aff3c4b0b8e9fe480232446ef0a9854938779b02cad3e'
+body_hash: 'sha256:7cf3e8a460d1e72ed2da5dfcd20ace9a829c64da843a45a9c60930a0b85d009d'
 step_id: 'S11'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
@@ -33,5 +33,5 @@ related:
 
 ## Notes
 
-- Focused S10/S11 proof: 27 passed. Full `dev/registry/tests` proof: 80 passed before the final recovery additions; the final focused recovery gate passed after them.
+- Focused S10/S11 proof: 27 passed. Final full `dev/registry/tests` proof: 82 passed after recovery and review corrections.
 - Scoped Ruff, Ruff format, and basedpyright were clean. No shipped registry tree was mutated.
