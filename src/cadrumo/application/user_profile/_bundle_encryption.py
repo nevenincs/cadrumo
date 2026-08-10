@@ -7,6 +7,7 @@ from typing import Final
 
 from pydantic import BaseModel, Field
 
+from ...adapters.persistence.storage import ARGON2_VERSION
 from ...adapters.persistence.storage.crypto import EncryptedBlob, decrypt_record, encrypt_record
 from ...adapters.persistence.storage.master_key import KdfParams, derive_kek_with_params
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -31,10 +32,10 @@ class EncryptedProfileBundleExport(BaseModel):
     The envelope schema is transport metadata only; after decryption, callers
     still validate the original bundle model and its ``bundle_schema_version``.
 
-    The three markers that route how the ciphertext is interpreted --
-    ``encrypted_bundle_schema_version``, ``payload_model`` and ``kdf`` -- are
-    required and carry no default. Each is compared for equality on the read
-    path, and a default equal to the accepted value makes that comparison
+    Every marker that routes how the ciphertext is interpreted --
+    ``encrypted_bundle_schema_version``, ``payload_model``, ``kdf`` and
+    ``kdf_version`` -- is required and compared for equality on the read path.
+    The first three carry no default, and a default equal to the accepted value makes that comparison
     blind to the one payload it exists to catch: a stored envelope omitting
     the key hydrates AS the accepted value and passes a check the writer never
     actually made. Every field on this record is stamped explicitly by
@@ -132,6 +133,22 @@ def decrypt_profile_bundle_with_passphrase(
     if envelope.kdf != _ENCRYPTED_BUNDLE_KDF:
         raise EncryptedProfileBundleError(
             "encrypted profile-bundle envelope declares an unsupported KDF",
+        )
+    # Gated against the Argon2 ALGORITHM version the writer stamps, which is
+    # what ``KdfParams.default()`` carries -- deliberately not against the
+    # file-backed provider's ``KDF_PARAMS_VERSION``, a different concept naming
+    # the master.kdf record SHAPE. The two are unequal, so confusing them would
+    # refuse every bundle this build writes.
+    #
+    # ``ARGON2_VERSION`` is a sound target rather than merely the nearest one:
+    # its module declares the number ONCE as ``Argon2Version = Literal[19]`` and
+    # reads the constant back out of that annotation, so the value this compares
+    # against and the type the parameter record validates under cannot drift
+    # apart.
+    if envelope.kdf_version != ARGON2_VERSION:
+        raise EncryptedProfileBundleError(
+            f"encrypted profile-bundle envelope declares KDF version {envelope.kdf_version}; "
+            f"this application derives under {ARGON2_VERSION}",
         )
     try:
         salt = base64.b64decode(envelope.salt_b64.encode("ascii"), validate=True)
