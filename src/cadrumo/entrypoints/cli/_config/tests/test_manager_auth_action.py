@@ -522,6 +522,7 @@ def test_a_stored_date_seeds_the_page_as_text_the_operator_can_resubmit() -> Non
     _commit_auth_choice(
         {
             _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
+            _AUTH_CLAVE_MOVIL_ROUTE_PATH: ClaveMovilRoute.APP_REQUEST.value,
             _AUTH_DNI_NIE_PATH: "00000000T",
             _AUTH_SOPORTE_PATH: "",
             _AUTH_FECHA_VALIDEZ_PATH: "1990-01-01",
@@ -562,6 +563,7 @@ def test_a_blank_credential_clears_its_fact_rather_than_storing_an_empty_string(
     _commit_auth_choice(
         {
             _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
+            _AUTH_CLAVE_MOVIL_ROUTE_PATH: ClaveMovilRoute.APP_REQUEST.value,
             _AUTH_DNI_NIE_PATH: "00000000T",
             _AUTH_SOPORTE_PATH: "ABC123456",
             _AUTH_FECHA_VALIDEZ_PATH: "1990-01-01",
@@ -652,6 +654,7 @@ def test_a_value_the_record_rejects_leaves_no_partial_write() -> None:
         _commit_auth_choice(
             {
                 _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
+                _AUTH_CLAVE_MOVIL_ROUTE_PATH: ClaveMovilRoute.APP_REQUEST.value,
                 _AUTH_DNI_NIE_PATH: "00000000T",
                 _AUTH_SOPORTE_PATH: "ABC123456",
                 # The form the document prints, which the schema refuses.
@@ -858,6 +861,7 @@ def test_committing_a_fiscal_identity_writes_it_to_the_identity_section() -> Non
     _commit_auth_choice(
         {
             _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
+            _AUTH_CLAVE_MOVIL_ROUTE_PATH: ClaveMovilRoute.QR.value,
             _IDENTITY_TAX_ID_PATH: "00000000T",
             _AUTH_DNI_NIE_PATH: "00000000T",
         },

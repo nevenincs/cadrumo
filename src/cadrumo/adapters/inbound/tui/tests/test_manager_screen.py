@@ -450,9 +450,11 @@ async def test_censal_sync_projects_a_missing_route_as_actionable_schema_copy(tm
     from .....core.config import override_settings
     from .....domain.user_profile import load_user_profile_schema, profile_field_label
     from .....entrypoints.cli._config._manager_actions import (
-        _AUTH_DNI_NIE_PATH,
         _AUTH_CLAVE_MOVIL_ROUTE_PATH,
+        _AUTH_DNI_NIE_PATH,
+        _AUTH_FECHA_VALIDEZ_PATH,
         _AUTH_PROVIDER_PATH,
+        _AUTH_SOPORTE_PATH,
         _commit_auth_choice,
         censal_pull_action,
     )

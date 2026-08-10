@@ -87,12 +87,13 @@ def test_settings_remain_the_identity_fallback_when_the_profile_carries_the_requ
         bound, expected_identity = _prepare_clave_auth(settings, AuthProviderKind.CLAVE_MOVIL)
 
     assert expected_identity == _TAX_ID
-    assert bound is settings
+    assert bound.cadrumo_clave_movil_dni_nie == settings.cadrumo_clave_movil_dni_nie
+    assert bound.cadrumo_clave_prefer_non_qr is False
 
 
 def test_missing_profile_route_refuses_even_when_environment_selects_qr() -> None:
     """The route has one authority: the encrypted profile field."""
-    _register_profile(**{"auth.dni_nie": _TAX_ID})
+    _register_profile(**{"auth.dni_nie": _TAX_ID, "auth.clave_movil_route": ClaveMovilRoute.QR.value})
     with (
         override_settings(
             cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID),
