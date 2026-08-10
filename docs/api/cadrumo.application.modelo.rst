@@ -73,6 +73,7 @@ Submodules
    cadrumo.application.modelo._profile_readiness_gate
    cadrumo.application.modelo._projection
    cadrumo.application.modelo._prorrata_regularizacion_advisory
+   cadrumo.application.modelo._pulled_filing_reconcile
    cadrumo.application.modelo._quickfile
    cadrumo.application.modelo._rate_box_advisory
    cadrumo.application.modelo._reconcile
