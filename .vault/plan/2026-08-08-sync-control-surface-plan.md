@@ -4,7 +4,7 @@ tags:
   - '#sync-control-surface'
 date: '2026-08-08'
 modified: '2026-08-10'
-body_hash: 'sha256:4ba719565843cc268b6ed503e4eef0bae806a34f80718de5b8ddc8ad4b889609'
+body_hash: 'sha256:f4107ff4d4fdfd3e5cb6b0b0c15fbae31082627011360f4390855007a69eaaa5'
 tier: L2
 related:
   - '[[2026-08-08-sync-control-surface-adr]]'
@@ -42,7 +42,7 @@ An interruption between the batch clear and the batch update empties the operato
 
 One flag spelled the same way on both mutating verbs, with the preview payload declared per write shape: cell-level for the Sheets overwrite, record-level for the filed upsert.
 
-- [ ] `P02.S01` - relocate the recapture divergence computation to run BEFORE the upsert instead of after it, preserving the existing notice; `src/cadrumo/application/live/_filed_data_capture.py`.
+- [x] `P02.S01` - relocate the recapture divergence computation to run BEFORE the upsert instead of after it, preserving the existing notice; `src/cadrumo/application/live/_filed_data_capture.py`.
 - [ ] `P02.S02` - add the dry-run short-circuit to the filed sweep, returning the divergence set the upsert would introduce without writing; `src/cadrumo/application/live/_filed_data_capture.py`.
 - [ ] `P02.S03` - expose the filed sweep dry-run flag and carry its state as primary result data on the envelope, never as a notice; `src/cadrumo/entrypoints/cli/_app_live.py`.
 - [x] `P02.S04` - reuse the verify parity comparison to build the export preview, rather than growing a second differ; `src/cadrumo/application/storage/calc_sheets/_parity_harness.py`.
