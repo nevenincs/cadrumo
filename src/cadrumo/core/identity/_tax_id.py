@@ -134,12 +134,15 @@ def validate_spanish_tax_id(value: str) -> str:
         value: Raw tax identifier to validate.
 
     Returns:
-        The uppercased, whitespace-trimmed identifier.
+        The identifier in the package's separator-stripped normal form --
+        :func:`~core.identity.normalise_nif_iva`, the same form
+        :func:`same_tax_identifier` compares on, so a printed ``B-1234567-4``
+        and a stored ``B12345674`` validate to one string rather than two.
 
     Raises:
         IdentityError: If the identifier is malformed or the checksum fails.
     """
-    normalized = value.strip().upper().replace(" ", "").replace("-", "").replace(".", "")
+    normalized = normalise_nif_iva(value)
     if not normalized:
         raise IdentityError(
             "tax identifier is empty",
