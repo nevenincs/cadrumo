@@ -222,9 +222,8 @@ class ProfileManagerApp(App[None]):
         BASE_CSS
         + NOTICE_BAND_CSS
         + """
-    #manager-header { dock: top; width: 100%; height: auto; background: $surface; }
-    #manager-header > PinnedStatusBar { dock: none; border-bottom: none; }
-    #manager-advisories { width: 100%; height: auto; padding: 0 2; border-bottom: solid $primary; }
+    #manager-context { width: 100%; height: auto; }
+    #manager-requirements { width: 100%; height: auto; }
     .manager-section DataTable { height: auto; width: 100%; background: $surface; }
     #manager-actions { height: auto; width: 100%; }
     #manager-actions Button { width: 100%; margin: 0 0 1 0; }
@@ -323,10 +322,9 @@ class ProfileManagerApp(App[None]):
     @override
     def compose(self) -> ComposeResult:
         yield Static(id="manager-banner", classes="cadrumo-banner")
-        with Vertical(id="manager-header"):
-            yield PinnedStatusBar(id="manager-status")
-            yield Vertical(id="manager-advisories")
+        yield PinnedStatusBar(id="manager-status")
         with ContentScroll(id="manager-body", classes="cadrumo-scroll"), Vertical(classes="cadrumo-column"):
+            yield Vertical(id="manager-context")
             if self._actions:
                 with Vertical(id="manager-actions-panel", classes="cadrumo-panel"):
                     with Vertical(id="manager-actions"):
@@ -345,14 +343,14 @@ class ProfileManagerApp(App[None]):
                 yield Static(id=f"section-{section.key}", classes="manager-section cadrumo-panel")
         yield Footer()
 
-    def on_mount(self) -> None:
+    async def on_mount(self) -> None:
         install_cadrumo_themes(self)
-        self._render()
+        await self._render()
 
     # ── rendering ───────────────────────────────────────────────────────
 
-    def _render(self) -> None:
-        """Rebuild the pinned profile context and every schema section table.
+    async def _render(self) -> None:
+        """Rebuild the profile context and every schema section table.
 
         This is the wholesale redraw: it destroys and remounts every table.
         It is what ``on_mount`` needs, and what an action returning a fresh
@@ -363,16 +361,16 @@ class ProfileManagerApp(App[None]):
         """
         self._render_chrome()
         self._clear_notice()
-        self._render_profile_context()
+        await self._render_profile_context()
         self._field_by_key.clear()
         self._table_by_section.clear()
         self._columns_by_section.clear()
         for section in self.overview.sections:
             panel = self.query_one(f"#section-{section.key}", Static)
             panel.border_title = self._section_title(section)
-            panel.remove_children()
+            await panel.remove_children()
             table: DataTable[str] = DataTable(cursor_type="row", zebra_stripes=True)
-            panel.mount(table)
+            await panel.mount(table)
             self._table_by_section[section.key] = table
             self._columns_by_section[section.key] = [
                 table.add_column(tr("flows.manager.column.state")),
@@ -388,7 +386,7 @@ class ProfileManagerApp(App[None]):
                 # ``_FIELD_COLUMN_WIDTH``.
                 table.add_row(*self._rendered_row(field), key=key, height=None)
 
-    def _apply_overview(self, updated: ProfileOverview) -> None:
+    async def _apply_overview(self, updated: ProfileOverview) -> None:
         """Show ``updated`` by repainting only what differs from the page on screen.
 
         Most edits leave the row SET alone: the overview is projected by
@@ -412,19 +410,19 @@ class ProfileManagerApp(App[None]):
         previous = self.overview
         self.overview = updated
         if self._shape_of(previous) != self._shape_of(updated):
-            self._render()
+            await self._render()
             return
 
         self._render_chrome()
         self._clear_notice()
-        self._render_profile_context()
+        await self._render_profile_context()
         for was, now in zip(previous.sections, updated.sections, strict=True):
             table = self._table_by_section.get(now.key)
             columns = self._columns_by_section.get(now.key)
             if table is None or columns is None:
                 # The page was never fully rendered, so there are no cells to
                 # address. Build it rather than silently dropping the update.
-                self._render()
+                await self._render()
                 return
             if (was.present_count, was.total_count) != (now.present_count, now.total_count):
                 self.query_one(f"#section-{now.key}", Static).border_title = self._section_title(now)
@@ -442,27 +440,35 @@ class ProfileManagerApp(App[None]):
                         # equivalent for a cell written in place.
                         table.update_cell(after.path, column, new_cell, update_width=True)
 
-    def _render_profile_context(self) -> None:
-        """Render requirements from the schema and advisories from Notices."""
+    async def _render_profile_context(self) -> None:
+        """Render actionable profile context in the scrollable page body.
+
+        An idle operation bar has nothing to report. Schema gaps and profile
+        advisories describe the profile rather than a running operation, so
+        they live with the profile content and disappear entirely when there
+        is no gap or advisory to show.
+        """
         missing_fields = self.overview.missing_required_fields
         resolved_paths = {field.path for field in missing_fields}
         missing_labels = [field.label for field in missing_fields]
         missing_labels.extend(path for path in self.overview.missing_required if path not in resolved_paths)
-        summary = (
+        requirements = (
             tr(
                 "cli.diagnostics.summary.profile_missing_fields",
                 count=len(self.overview.missing_required),
                 fields=", ".join(missing_labels),
             )
             if self.overview.missing_required
-            else tr("flows.manager.required_complete")
+            else ""
         )
-        self.query_one("#manager-status", PinnedStatusBar).set_summary(summary)
-
-        advisories = self.query_one("#manager-advisories", Vertical)
-        advisories.remove_children()
+        context = self.query_one("#manager-context", Vertical)
+        await context.remove_children()
+        if requirements:
+            await context.mount(
+                Static(requirements, id="manager-requirements", classes="cadrumo-note", markup=False),
+            )
         if self.overview.notices:
-            advisories.mount(NoticeBand(self.overview.notices, id="manager-notice-band"))
+            await context.mount(NoticeBand(self.overview.notices, id="manager-notice-band"))
 
     @staticmethod
     def _section_title(section: ProfileSectionView) -> str:
@@ -709,7 +715,7 @@ class ProfileManagerApp(App[None]):
             thread=True,
         )
 
-    def on_worker_state_changed(self, event: Worker.StateChanged) -> None:
+    async def on_worker_state_changed(self, event: Worker.StateChanged) -> None:
         """Land one finished worker back on Textual's UI task.
 
         Widgets are only safe to touch from this task, so every repaint
@@ -722,12 +728,12 @@ class ProfileManagerApp(App[None]):
             return
         event_worker = cast("Worker[object]", event.worker)
         if self._pending_write is not None and event_worker is self._pending_write:
-            self._settle_write(self._pending_write)
+            await self._settle_write(self._pending_write)
             return
         if self._pending_action is not None and event_worker is self._pending_action:
-            self._settle_action(self._pending_action)
+            await self._settle_action(self._pending_action)
 
-    def _settle_write(self, worker: Worker[ProfileOverview]) -> None:
+    async def _settle_write(self, worker: Worker[ProfileOverview]) -> None:
         """Show what storage made of one finished field write."""
         self._pending_write = None
         written_path = self._pending_write_path
@@ -741,16 +747,16 @@ class ProfileManagerApp(App[None]):
                 # chrome rather than cells. Rebuilding is the only redraw
                 # that reaches all of it.
                 self.overview = worker.result
-                self._render()
+                await self._render()
                 return
-            self._apply_overview(worker.result)
+            await self._apply_overview(worker.result)
             return
         # A refusal reaches the operator as itself. A cancelled or
         # result-less worker would otherwise leave the page looking as
         # though nothing had been asked of it.
         self._refuse_worker(worker.error, message_key="flows.manager.edit.write_failed")
 
-    def _settle_action(self, worker: Worker[ManagerActionOutcome]) -> None:
+    async def _settle_action(self, worker: Worker[ManagerActionOutcome]) -> None:
         """Report one finished action and adopt any profile it handed back.
 
         A failure is reported rather than raised for the reason the old
@@ -778,7 +784,7 @@ class ProfileManagerApp(App[None]):
             # A full redraw, not a cell diff: an action can change the
             # profile's shape, which is exactly what the diff cannot do.
             self.overview = outcome.overview
-            self._render()
+            await self._render()
         # After the redraw, which clears the channel: reporting first would
         # write the outcome and then immediately wipe it.
         match outcome.disposition:

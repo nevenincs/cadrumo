@@ -17,6 +17,9 @@ REPRESENTANTE_FISCAL_NOMBRE_PATH = "taxpayer_type.representante_fiscal_nombre"
 ENTITY_TYPE_PATH = "taxpayer_type.entity_type"
 IRPF_INCOME_CATEGORIES_PATH = "taxpayer_type.irpf_income_categories"
 IVA_REGIME_PATH = "iva.regime"
+AUTH_PROVIDER_PATH = "auth.provider"
+CLAVE_MOVIL_ROUTE_PATH = "auth.clave_movil_route"
+CLAVE_MOVIL_PROVIDER = "clave_movil"
 
 ATRIBUCION_SOCIOS_SECTION = "attribution_entity_socios"
 PARTICIPE_CLAVE_FIELD = "participe_clave"
@@ -40,14 +43,18 @@ def conditional_profile_required_paths(values: Mapping[str, object]) -> tuple[st
     non-EU/EEA IRNR residents must also declare both fiscal representative
     fields before any filing/modelo work can treat the profile as ready.
     """
+    required: list[str] = []
+    if _token(values.get(AUTH_PROVIDER_PATH)).lower() == CLAVE_MOVIL_PROVIDER:
+        required.append(CLAVE_MOVIL_ROUTE_PATH)
+
     if _token(values.get(FISCAL_RESIDENCY_PATH)).lower() != FiscalResidency.NON_RESIDENT_IRNR.value:
-        return ()
+        return tuple(required)
 
     country = _token(values.get(COUNTRY_OF_FISCAL_RESIDENCE_PATH)).upper()
     if not country:
-        return (COUNTRY_OF_FISCAL_RESIDENCE_PATH,)
+        return (*required, COUNTRY_OF_FISCAL_RESIDENCE_PATH)
 
-    required = [COUNTRY_OF_FISCAL_RESIDENCE_PATH]
+    required.append(COUNTRY_OF_FISCAL_RESIDENCE_PATH)
     if irnr_representante_fiscal_required(country):
         required.extend((REPRESENTANTE_FISCAL_NIF_PATH, REPRESENTANTE_FISCAL_NOMBRE_PATH))
     return tuple(required)
@@ -253,6 +260,9 @@ def _token(value: object) -> str:
 
 
 __all__ = [
+    "AUTH_PROVIDER_PATH",
+    "CLAVE_MOVIL_PROVIDER",
+    "CLAVE_MOVIL_ROUTE_PATH",
     "COUNTRY_OF_FISCAL_RESIDENCE_PATH",
     "ENTITY_TYPE_PATH",
     "FISCAL_RESIDENCY_PATH",

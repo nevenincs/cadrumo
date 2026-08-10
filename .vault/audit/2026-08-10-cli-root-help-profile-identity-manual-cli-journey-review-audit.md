@@ -5,7 +5,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:b91f00eb6ec1c6ec5519461e9132696c0ba9816438685ac13e7ec12aae0ea78a'
+body_hash: 'sha256:80fddeb22fb56989f64b78ba99f04010a8a581a0bda325869ae807e302c27a43'
 related:
   - "[[2026-08-10-cli-root-help-profile-identity-audit]]"
 ---
@@ -65,6 +65,70 @@ than as a finding. The message-level calculate deduplication is reviewed below
 rather than treated as complete. Storage localization/containment work remained in
 flight, so the containment finding records the reproduced behavior and the exact
 contract the pending fix must satisfy.
+
+Post-fix verification re-read the live shared tree after the remediation settled.
+Both high findings and all four medium findings are resolved. Storage reclaim now
+validates each selected target before traversal at
+`src/cadrumo/application/storage_management/_service.py:283-287` and rejects a
+symlink, junction, or resolved escape at
+`src/cadrumo/application/storage_management/_service.py:359-387`. Calculation
+remedies are retained as structured context and text at
+`src/cadrumo/entrypoints/cli/_modelo_rendering.py:191-239`, while structured notice
+identity and presentation-line identity are deduplicated separately at
+`src/cadrumo/entrypoints/cli/_modelo_work_calculate_cli.py:618-638`. Work-unit input
+is limited to 12 or 64 hexadecimal characters at
+`src/cadrumo/application/modelo/_selectors.py:54-64`, ambiguity now names the
+supplied id and directs the operator to the full id, and the candidate heading at
+`src/cadrumo/entrypoints/cli/_modelo_cli_support.py:664` is truthful. The pinned TUI
+sink redacts both summary and message values at
+`src/cadrumo/adapters/inbound/tui/_status_bar.py:85-168`.
+
+Profile/action parity is also resolved. The centralized bridge unwraps
+`ResolvedNoticeAction`, validates catalogue target and live argument names, joins
+the live `cli_path`, and renders argv from the live schema at
+`src/cadrumo/entrypoints/cli/_common.py:417-478`; the sandbox banner composes with,
+rather than replaces, derived actions at
+`src/cadrumo/entrypoints/cli/_common.py:555-561`. Modelo list projects an action
+only for exactly one work unit, status binds the full id for calculate, and both
+text paths show the canonical profile label once at
+`src/cadrumo/entrypoints/cli/_modelo_work_lifecycle_cli.py:453-547`. Logged-out
+recovery binds the operator profile label rather than the storage UUID at
+`src/cadrumo/entrypoints/cli/__init__.py:655-665`. Installed normal and sandbox
+`app modelo work list` / `status` replays exited 0 with executable derived actions;
+the isolated logged-out replay carried `operator-manual` consistently in the
+active-profile projection and login binding.
+
+The final bounded lanes were `64 passed` for storage, diagnostic, selector, TUI,
+notice-action resolution, and envelope unit tests; `5 passed` for real CLI
+zero/one/many list, status, sandbox composition, and login-binding integration;
+and one pass each for auth active-profile projection, degraded root landing, legacy
+notice-transport conformance, and calculate idempotency. A mistyped integration
+node that collected zero tests is not counted. The low finding is only partially
+resolved: both stale assertions now pass, but targeted Ruff still reports six
+deterministic errors from unused, misordered `next_action` imports at
+`src/cadrumo/entrypoints/cli/_config/_repair_profile.py:9` and
+`src/cadrumo/entrypoints/cli/_modelo_work_runs_cli.py:27`, including the resulting
+name redefinitions at lines 89 and 107.
+
+A final adversarial review of the newly centralized action-text bridge qualifies
+the disposition above: the seven original findings have the statuses recorded,
+but one new medium action-quoting finding remains open. The catalogue, provenance,
+required-input, and live-`cli_path` joins are sound; only the conversion of a
+resolved argument value into pasteable shell text is unsafe.
+
+That final medium was resolved in flight before closeout. The bridge now emits
+unsafe values as PowerShell literal single-quoted tokens and doubles embedded
+apostrophes. The exact adversarial resolver probe now renders
+`'C:\tmp\$(Write-Output PWN)\bundle.aeat'`; the real-shell/common-action lane
+passes all 13 cases, including `$()`, `$env:`, spaces, quotes, apostrophes,
+backticks, and backslashes, and focused Ruff is clean for the bridge and its test.
+
+The remaining low gate debt was also resolved before closeout. The obsolete
+`next_action` imports were removed from
+`src/cadrumo/entrypoints/cli/_config/_repair_profile.py` and
+`src/cadrumo/entrypoints/cli/_modelo_work_runs_cli.py`; an exact two-file Ruff
+rerun and diff check pass. Together with the already passing root and auth
+assertions, all recorded findings are resolved in the final reviewed tree.
 
 ## Findings
 
@@ -186,6 +250,23 @@ reports ten unsorted/unused import and shadowing errors in
 priority than runtime defects, but this slice cannot honestly be called green; a
 zero-collected or deselected invocation is not a pass.
 
+### resolved-action-shell-quoting | medium | JSON quoting leaves PowerShell expressions executable in derived commands
+
+`src/cadrumo/entrypoints/cli/_common.py:454-478` treats a token outside
+`_SAFE_ACTION_TOKEN` as safe command text after `json.dumps(token)`. JSON string
+escaping is not PowerShell argument escaping: PowerShell expands `$variable` and
+`$(...)` inside the emitted double quotes. This bridge is generic and already
+renders operator-controlled profile names and export paths, while `ProfileName` at
+`src/cadrumo/domain/contribuyente/_constants.py:26-29` deliberately constrains only
+whitespace and length. A real resolver probe for `operator.profile.import` with the
+path `C:\tmp\$(Write-Output PWN)\bundle.aeat` emitted
+`next_action aeat config profile import "C:\\tmp\\$(Write-Output PWN)\\bundle.aeat"`.
+Copying that advertised command into PowerShell evaluates the parenthesized
+expression rather than passing the literal path. The typed action itself remains
+safe machine data and its catalogue target, required binding, provenance, and live
+`cli_path` all resolved correctly; the defect is confined to the human text
+projection.
+
 ## Recommendations
 
 <!-- Actionable recommendations, each tied to a finding above. An
@@ -225,3 +306,52 @@ zero-collected or deselected invocation is not a pass.
    or correctly use the in-flight action imports without shadowing, then rerun the
    exact integration markers, focused unit selectors, targeted Ruff, and installed
    console commands. Report each lane's real collection and result separately.
+8. For `resolved-action-shell-quoting`, do not use JSON serialization as shell
+   escaping. Either render a shell-neutral structured argv representation that is
+   explicitly not advertised as pasteable, or use a platform-correct argument
+   quoting authority for the supported console. Add real bridge tests with `$()`,
+   `$env:NAME`, spaces, quotes, backticks, and backslashes, and prove the dispatched
+   argument remains byte-for-byte data rather than executable shell syntax.
+
+### Post-fix disposition
+
+- `storage-reclaim-target-redirection` is resolved. The service rejects a selected
+  target redirect before counting or deletion, proves resolved containment, and
+  the real-filesystem test creates links or a Windows junction without swallowing
+  setup failure.
+- `calculation-remedy-projection` is resolved. Non-command remedies survive in
+  structured context and text; executable repair remains reserved for typed
+  actions. The idempotency selector confirms repeating identical calculate input
+  does not persist another revision.
+- `calculation-message-deduplication` is resolved. Full notice identity preserves
+  distinct provenance, while separately deduplicated text avoids repeated operator
+  prose.
+- `modelo-short-id-selector` is resolved. One-character aliases are refused, the
+  accepted displayed form has 12 hexadecimal characters, collisions refuse with
+  id-specific guidance, and the candidate table exposes the full work-unit id.
+- `tui-failure-redaction` is resolved at the common pinned-status sink. Every
+  summary and message crosses the canonical redactor immediately before storage
+  and widget presentation.
+- `modelo-profile-and-action-text-parity` is resolved. Text and JSON share the same
+  typed action, profile text uses the canonical label once, bucket ids stay out of
+  the text surface, zero/multiple lists do not invent a target, and sandbox
+  presentation preserves the derived command.
+- `focused-verification-red` remains open at low severity only for the six Ruff
+  errors named above. Its two stale behavior assertions are resolved and pass.
+- The central action-resolution architecture is accepted for this remediation.
+  Producers provide only catalogue identity and provenance-bearing values;
+  application resolution refuses undeclared, unresolved, or missing required
+  bindings; the CLI adds the reconciled live path and uses `cli_argv_for` plus
+  `PRODUCT_IDENTITY` for presentation. No notice body hardcodes these executable
+  commands, and informational prose is not forced to invent an action.
+- Subsequent adversarial review leaves `resolved-action-shell-quoting` open at
+  medium severity. It does not invalidate the typed action wire contract, but the
+  generic human command renderer must not describe JSON-quoted PowerShell-active
+  data as executable argv.
+- `resolved-action-shell-quoting` was then resolved in flight. The live renderer
+  uses PowerShell literal quoting, preserves the structured binding unchanged, and
+  passed 13 focused real-shell and action-resolution tests. No high or medium
+  finding remains open at closeout.
+- `focused-verification-red` was finally resolved by removing the two obsolete
+  imports. Exact Ruff and diff checks for both files pass, so no low finding remains
+  open either.

@@ -630,6 +630,9 @@ application:
         clave_identity_profile_mismatch: La identitat de Cl@ve Móvil no coincideix
           amb la identitat fiscal del perfil actiu; canvia al perfil que coincideixi
           o actualitza el perfil abans de l'autenticació AEAT en directe.
+        clave_route_missing: L'autenticació en directe amb Cl@ve Mòbil requereix %{route_field}.
+          Obriu Identificació al gestor del perfil, trieu Codi QR o Sol·licitud a
+          l'aplicació, deseu-ho i torneu-ho a provar.
         corrupt_session: La sessió d autenticació desada està malmesa i no es pot
           llegir. Executa `aeat config auth logout` i després `aeat config auth test`.
         no_session: No hi ha sessió AEAT activa; executa `aeat config auth test` abans

@@ -434,8 +434,43 @@ class TestFailClosedRefusals:
         assert result.exit_code != 0
         assert "aeat config login" in semantic_cli_output(result)
 
-    def test_absent_session_root_refusal_carries_the_login_action(self) -> None:
+    def test_absent_session_login_action_keeps_the_executable_profile_label(self) -> None:
+        """The typed login action carries the public label, never the bucket UUID."""
         bucket_id = _create_profile()
+        close_active_bucket_session()
+
+        json_result = _invoke_decrypting_verb_without_the_secret_channel()
+        assert json_result.exit_code != 0
+        json_text = semantic_cli_output(json_result)
+        document = json.loads(json_text)
+        action = document["error"]["action"]
+        assert document["active_profile"] == _LABEL
+        assert action["action"]["action_id"] == "operator.profile.login"
+        assert action["evidence"][0]["values"]["profile_name"] == _LABEL
+        assert action["argument_bindings"] == [
+            {
+                "argument_name": "name",
+                "status": "resolved",
+                "value": _LABEL,
+                "source": "operator_action.verdict_context",
+                "source_key": "name",
+                "source_evidence_id": None,
+            },
+        ]
+        assert bucket_id not in json_text
+
+        with override_settings(cadrumo_secret_passphrase=None):
+            text_result = invoke_cached_cli(["app", "ledger", "list"])
+        assert text_result.exit_code != 0
+        text = semantic_cli_output(text_result)
+        assert f'"value":"{_LABEL}"' in text
+        assert bucket_id not in text
+
+        dispatched = invoke_cached_cli(["config", "login", _LABEL])
+        assert dispatched.exit_code == 0, dispatched.output
+
+    def test_absent_session_root_refusal_carries_the_login_action(self) -> None:
+        _create_profile()
         close_active_bucket_session()
 
         with (
@@ -456,7 +491,7 @@ class TestFailClosedRefusals:
         assert projection.precondition_action.failed_condition_id == "profile.session.logged_in"
         assert projection.precondition_action.action is not None
         assert projection.precondition_action.action.action_id == "operator.profile.login"
-        assert projection.precondition_action.argument_bindings[0].value == bucket_id
+        assert projection.precondition_action.argument_bindings[0].value == _LABEL
 
     def test_idle_expiry_refuses(self, _isolated_root: Path) -> None:
         bucket_id, dek = self._aged_session_material(storage_root=_isolated_root, minutes=20)

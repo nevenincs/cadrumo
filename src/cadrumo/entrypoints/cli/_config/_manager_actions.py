@@ -971,9 +971,12 @@ def _clave_refusal(collected: Mapping[str, str]) -> str | None:
         )
     if credentials.provider_kind is not AuthProviderKind.CLAVE_MOVIL:
         return None
-    route = facts.clave_movil_route or (
-        ClaveMovilRoute.APP_REQUEST if settings.cadrumo_clave_prefer_non_qr else ClaveMovilRoute.QR
-    )
+    route = facts.clave_movil_route
+    if route is None:
+        return tr(
+            "flows.manager.action.auth_clave_incomplete",
+            missing=_auth_field_label(_AUTH_CLAVE_MOVIL_ROUTE_PATH),
+        )
     if route is ClaveMovilRoute.QR:
         return None
     if not credentials.contraste:

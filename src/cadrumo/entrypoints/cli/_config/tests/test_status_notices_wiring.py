@@ -58,6 +58,7 @@ def test_a_fresh_profile_with_no_aeat_history_raises_a_real_info_notice(tmp_path
         assert notice.action is not None
         assert notice.action.action.action_id == "operator.live.filed.pull_all"
         assert notice.action.action.target_command_key == "app.live.filed.pull_all"
+        assert notice.action.action.cli_path == ("app", "live", "filed", "pull-all")
         assert notice.action.argument_bindings == ()
 
 
@@ -95,11 +96,13 @@ async def test_the_real_notice_actually_paints_on_the_running_status_surface(tmp
         expected_message = data.notices[0].message
         notice_action = data.notices[0].action
         assert notice_action is not None
-        expected_action_target = notice_action.action.target_command_key
+        cli_path = notice_action.action.cli_path
+        assert cli_path is not None
+        expected_action_target = "aeat " + " ".join(cli_path)
 
         app = StatusApp(data)
         async with app.run_test(size=_TERMINAL_SIZE):
             rendered_message = str(app.query_one("#notice-0", Static).content)
             assert expected_message in rendered_message
             rendered_action = str(app.query_one("#notice-0-action", Static).content)
-            assert expected_action_target in rendered_action
+            assert rendered_action == expected_action_target

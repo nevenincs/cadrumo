@@ -1,10 +1,11 @@
-"""A permanent two-line channel for TUI state and diagnostics.
+"""A transient pinned channel for TUI operation state and diagnostics.
 
 The body of a screen scrolls because its content can grow. Progress and
 failure messages must not scroll with it: they describe the operation the
 operator is waiting on and are the only explanation when that operation
-cannot finish. This widget therefore owns its space at the top of the screen
-and keeps the durable summary separate from the transient message below it.
+cannot finish. The widget therefore stays pinned while it has something to
+say and collapses completely when both its optional summary and message are
+empty.
 
 Both lines are plain text. Operator-controlled values and exception messages
 may contain Rich markup characters, so enabling markup here would turn data
@@ -48,21 +49,23 @@ class PinnedStatusBar(Vertical):
         dock: top;
         width: 100%;
         height: auto;
-        min-height: 3;
         padding: 0 2;
         background: $surface;
         border-bottom: solid $primary;
     }
 
+    PinnedStatusBar.empty { display: none; }
+
     PinnedStatusBar > .status-summary {
         width: 100%;
-        height: 1;
+        height: auto;
     }
+
+    PinnedStatusBar > .status-summary.empty { display: none; }
 
     PinnedStatusBar > .status-message {
         width: 100%;
         height: auto;
-        min-height: 1;
     }
 
     PinnedStatusBar > .status-summary {
@@ -88,6 +91,7 @@ class PinnedStatusBar(Vertical):
         self._countdown_deadline: float | None = None
         self._countdown_timer: Timer | None = None
         self.add_class("tone-idle")
+        self.set_class(not self._summary, "empty")
 
     @staticmethod
     def _require_text(value: object, *, field: str) -> str:
@@ -112,10 +116,13 @@ class PinnedStatusBar(Vertical):
     def set_summary(self, summary: str) -> None:
         """Replace the durable first line without changing message state."""
         self._summary = redact_for_cli_output(self._require_text(summary, field="summary"))
-        self.query_one(".status-summary", Static).update(self._summary)
+        summary_line = self.query_one(".status-summary", Static)
+        summary_line.update(self._summary)
+        summary_line.set_class(not self._summary, "empty")
+        self._sync_visibility()
 
     def clear_message(self) -> None:
-        """Return the message line to idle while preserving its reserved row."""
+        """Return the message line to idle and collapse an empty channel."""
         self._cancel_countdown()
         self._set_message("idle", "")
 
@@ -172,6 +179,11 @@ class PinnedStatusBar(Vertical):
         self.add_class(f"tone-{tone}")
         line = "" if not rendered else f"{_GLYPH[tone]} {rendered}"
         self.query_one(".status-message", Static).update(line)
+        self._sync_visibility()
+
+    def _sync_visibility(self) -> None:
+        """Consume screen space only while summary or operation state exists."""
+        self.set_class(not (self._summary or self._message), "empty")
 
 
 __all__ = ["PinnedStatusBar", "StatusTone"]

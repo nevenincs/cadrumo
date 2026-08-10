@@ -111,24 +111,178 @@ def test_workbook_total_recovery_accepts_only_official_labels_and_positive_integ
     }
 
 
-def test_variable_envelope_rejects_duplicate_composition_markers(tmp_path: Path) -> None:
-    """Ambiguous relative suffixes cannot be collapsed into one envelope."""
+@pytest.mark.parametrize(
+    ("rows", "message"),
+    (
+        (
+            (
+                (1, 1, 328, "An", "Fixed prefix", None, None),
+                (2, 329, "Variable", "An", "Variable body", None, None),
+                (3, 330, "Variable", "An", "Second body", None, None),
+                (4, "***", 18, "An", "Closing suffix", None, '"</T200>"'),
+                ("Total", None, "Variable", None, None, None, None),
+            ),
+            "duplicate variable-body markers",
+        ),
+        (
+            (
+                (1, 1, 328, "An", "Fixed prefix", None, None),
+                (2, 329, "Variable", "An", "Variable body", None, None),
+                (3, "***", 18, "An", "Closing suffix", None, '"</T200>"'),
+                (4, "***", 2, "An", "Second suffix", None, "CRLF"),
+                ("Total", None, "Variable", None, None, None, None),
+            ),
+            "duplicate relative closing suffixes",
+        ),
+        (
+            (
+                (1, 1, 328, "An", "Fixed prefix", None, None),
+                (2, 329, "Variable", "An", "Variable body", None, None),
+                (3, "***", 18, "An", "Closing suffix", None, '"</T200>"'),
+                ("Total", None, "Variable", None, None, None, None),
+                ("Total", None, "Variable", None, None, None, None),
+            ),
+            "duplicate variable totals",
+        ),
+        (
+            (
+                (1, 1, 328, "An", "Fixed prefix", None, None),
+                ("Total", None, 328, None, None, None, None),
+                ("Total", None, 328, None, None, None, None),
+            ),
+            "duplicate fixed totals",
+        ),
+        (
+            (
+                (1, 1, 328, "An", "Fixed prefix", None, None),
+                (2, 329, "Variable", "An", "Variable body", None, None),
+                (3, "***", 18, "An", "Closing suffix", None, '"</T200>"'),
+                ("Total", 328, "Variable", None, None, None, None),
+            ),
+            "mixes fixed and variable totals",
+        ),
+        (
+            (
+                (1, 1, 328, "An", "Fixed prefix", None, None),
+                (2, 329, "Variable", "An", "Variable body", None, None),
+                (3, "***", 18, "An", "Closing suffix", None, '"</T200>"'),
+                ("Total", None, 328, None, None, None, None),
+                ("Total", None, "Variable", None, None, None, None),
+            ),
+            "mixes fixed-total and variable-envelope geometry",
+        ),
+        (
+            (
+                (1, 1, 328, "An", "Fixed prefix", None, None),
+                (2, 329, "Variable", "An", "Variable body", None, None),
+                ("Total", None, "Variable", None, None, None, None),
+            ),
+            "incomplete variable-envelope composition",
+        ),
+        (
+            (
+                (1, 1, 328, "An", "Fixed prefix", None, None),
+                (2, 330, "Variable", "An", "Variable body", None, None),
+                (3, "***", 18, "An", "Closing suffix", None, '"</T200>"'),
+                ("Total", None, "Variable", None, None, None, None),
+            ),
+            "variable body starts at 330 after fixed prefix extent 328",
+        ),
+        (
+            (
+                (1, 1, 328, "An", "Fixed prefix", None, None),
+                (3, "***", 18, "An", "Closing suffix", None, '"</T200>"'),
+                (2, 329, "Variable", "An", "Variable body", None, None),
+                ("Total", None, "Variable", None, None, None, None),
+            ),
+            "misordered variable-envelope composition markers",
+        ),
+    ),
+)
+def test_variable_envelope_rejects_malformed_composition(
+    tmp_path: Path,
+    rows: tuple[tuple[object, ...], ...],
+    message: str,
+) -> None:
+    """Malformed composition markers refuse through the production workbook parser."""
     from openpyxl import Workbook
 
-    path = tmp_path / "ambiguous-envelope.xlsx"
+    path = tmp_path / "malformed-envelope.xlsx"
     workbook = Workbook()
     worksheet = workbook.active
     worksheet.title = "DP200000"
     worksheet.append(("Nº", "Posic.", "Lon", "Tipo", "Descripción", "Validación", "Contenido"))
-    worksheet.append((1, 1, 328, "An", "Fixed prefix", None, None))
-    worksheet.append((2, 329, "Variable", "An", "Variable body", None, None))
-    worksheet.append((3, "***", 18, "An", "Closing suffix", None, '"</T200>"'))
-    worksheet.append((4, "***", 2, "An", "Second suffix", None, "CRLF"))
-    worksheet.append(("Total", None, "Variable", None, None, None, None))
+    for row in rows:
+        worksheet.append(row)
     workbook.save(path)
     workbook.close()
 
-    with pytest.raises(RegistryValidationError, match="duplicate relative closing suffixes"):
+    with pytest.raises(RegistryValidationError, match=message):
+        extract_record_design(path)
+
+
+@pytest.mark.parametrize(
+    ("sheet_name", "rows", "message"),
+    (
+        (
+            "FixedStartsLate",
+            ((1, 2, 2, "An", "First"), ("Total", None, 3, None, None)),
+            "has a gap before field at row 2: expected offset 1, got 2",
+        ),
+        (
+            "FixedGap",
+            ((1, 1, 2, "An", "First"), (2, 4, 2, "An", "Second"), ("Total", None, 5, None, None)),
+            "has a gap before field at row 3: expected offset 3, got 4",
+        ),
+        (
+            "FixedOverlap",
+            ((1, 1, 3, "An", "First"), (2, 3, 2, "An", "Second"), ("Total", None, 4, None, None)),
+            "has an overlap before field at row 3: expected offset 4, got 3",
+        ),
+        (
+            "DP200000",
+            (
+                (1, 1, 200, "An", "Prefix one"),
+                (2, 200, 129, "An", "Overlapping prefix"),
+                (3, 329, "Variable", "An", "Variable body"),
+                (4, "***", 18, "An", "Closing suffix"),
+                ("Total", None, "Variable", None, None),
+            ),
+            "has an overlap before field at row 3: expected offset 201, got 200",
+        ),
+        (
+            "DP200000",
+            (
+                (1, 1, 199, "An", "Prefix one"),
+                (2, 201, 128, "An", "Discontinuous prefix"),
+                (3, 329, "Variable", "An", "Variable body"),
+                (4, "***", 18, "An", "Closing suffix"),
+                ("Total", None, "Variable", None, None),
+            ),
+            "has a gap before field at row 3: expected offset 200, got 201",
+        ),
+    ),
+)
+def test_workbook_refuses_noncontiguous_fixed_and_variable_prefix_geometry(
+    tmp_path: Path,
+    sheet_name: str,
+    rows: tuple[tuple[object, ...], ...],
+    message: str,
+) -> None:
+    """Fixed sheets and envelope prefixes require exact source-order geometry."""
+    from openpyxl import Workbook
+
+    path = tmp_path / f"{sheet_name}.xlsx"
+    workbook = Workbook()
+    worksheet = workbook.active
+    worksheet.title = sheet_name
+    worksheet.append(("Nº", "Posic.", "Lon", "Tipo", "Descripción"))
+    for row in rows:
+        worksheet.append(row)
+    workbook.save(path)
+    workbook.close()
+
+    with pytest.raises(RegistryValidationError, match=message):
         extract_record_design(path)
 
 

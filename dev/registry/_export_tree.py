@@ -112,6 +112,14 @@ def render_complete_export_tree(
     function does not validate or publish a surrounding revision; those
     responsibilities deliberately remain later generator steps.
     """
+    if joined.variable_envelopes:
+        identities = ", ".join(
+            repr(envelope.record_identity) for envelope in joined.variable_envelopes
+        )
+        raise RegistryValidationError(
+            "fixed-width export generation refuses variable envelopes without a separately typed and proven "
+            f"composition contract: {identities}",
+        )
     _validate_profile(joined, profile)
     _prepare_target(target_export_dir)
     records, derivations = _render_records(joined.records, profile)

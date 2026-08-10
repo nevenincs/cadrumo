@@ -17,6 +17,7 @@ from ._record_design_ir import (
     RecordDesignIntermediateField,
     RecordDesignIntermediateSheet,
     RecordDesignIntermediateSource,
+    RecordDesignIntermediateVariableEnvelope,
 )
 from ._semantic_map import SemanticMap, SemanticMapAnchor, SemanticMapEntry, SemanticMapRecord
 from ._semantic_map_validation import SemanticMapAnomalyException, validate_semantic_map
@@ -77,6 +78,18 @@ class JoinedRecordDesign(_StrictModel):
     source: RecordDesignIntermediateSource
     records: tuple[JoinedRecordDesignRecord, ...] = Field(min_length=1)
     fields: tuple[JoinedRecordDesignField, ...] = Field(min_length=1)
+    variable_envelopes: tuple[RecordDesignIntermediateVariableEnvelope, ...] = ()
+
+    @model_validator(mode="after")
+    def _require_complete_joined_state(self) -> JoinedRecordDesign:
+        record_fields = tuple(field for record in self.records for field in record.fields)
+        if self.fields != record_fields:
+            raise ValueError("joined record-design fields must exactly flatten its records")
+        fixed_keys = {(record.parser_sheet.sheet, record.parser_sheet.record_identity) for record in self.records}
+        envelope_keys = {(envelope.sheet, envelope.record_identity) for envelope in self.variable_envelopes}
+        if fixed_keys.intersection(envelope_keys):
+            raise ValueError("joined record design cannot classify one identity as fixed and variable")
+        return self
 
 
 def join_record_design_semantics(
@@ -119,6 +132,7 @@ def join_record_design_semantics(
         source=intermediate.source,
         records=joined_records,
         fields=tuple(field for record in joined_records for field in record.fields),
+        variable_envelopes=intermediate.variable_envelopes,
     )
 
 

@@ -23,7 +23,6 @@ as ``aeat --version``.
 
 from __future__ import annotations
 
-import json
 import re
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextvars import ContextVar
@@ -132,9 +131,9 @@ if TYPE_CHECKING:
     from ...application.auth import AuthProviderListing
     from ...application.operator_actions import ActionReference, PreconditionVerdict
     from ...application.operator_surface import OperatorSurfaceReconciliation
+    from ...application.workflow import WorkflowState
     from ...core import Period
     from ...core.json_contract import Notice, ResolvedActionArgument, ResolvedActionReference, ResolvedNoticeAction
-    from ...application.workflow import WorkflowState
     from ...domain.deadlines import TaxpayerProfile
     from ...domain.filing import ModeloDraft
     from ...domain.invoices import InvoiceCatalogue
@@ -454,6 +453,19 @@ def _resolve_notice_actions(notices: Sequence[Notice] | None) -> tuple[Notice, .
 _SAFE_ACTION_TOKEN = re.compile(r"^[A-Za-z0-9._:/=@+-]+$")
 
 
+def _powershell_action_token(token: str) -> str:
+    """Render one argv token as a PowerShell literal without enabling expansion.
+
+    PowerShell expands ``$()``, ``$env:...`` and backticks inside double-quoted
+    strings, so JSON string quoting is not a safe copy/paste representation on
+    the supported Windows shell. Single-quoted strings are literal there; an
+    embedded apostrophe is represented by two apostrophes.
+    """
+    if _SAFE_ACTION_TOKEN.fullmatch(token):
+        return token
+    return "'" + token.replace("'", "''") + "'"
+
+
 def _action_text_lines(notices: Sequence[Notice]) -> tuple[str, ...]:
     """Derive executable text commands from the same resolved action DTOs as JSON."""
     from ...core.json_contract import ResolvedNoticeAction
@@ -473,7 +485,7 @@ def _action_text_lines(notices: Sequence[Notice]) -> tuple[str, ...]:
             binding.argument_name: binding.value for binding in notice_action.argument_bindings
         }
         argv = cli_argv_for(schema, arguments)[2:]
-        rendered = " ".join(token if _SAFE_ACTION_TOKEN.fullmatch(token) else json.dumps(token) for token in argv)
+        rendered = " ".join(_powershell_action_token(token) for token in argv)
         lines.append(f"next_action\t{PRODUCT_IDENTITY.cli_executable} {rendered}")
     return tuple(lines)
 

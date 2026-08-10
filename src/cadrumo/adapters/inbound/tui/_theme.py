@@ -260,15 +260,18 @@ _NOTICE_GLYPH: Final[dict[NoticeSeverity, str]] = {
 
 
 def _notice_action_target(notice: Notice) -> str | None:
-    """Return the already-resolved action target the read-only TUI may show.
+    """Return the executable CLI path the read-only TUI may show.
 
     Notice producers resolve executable actions against the live operator
     surface before emission.  This adapter therefore projects only that typed
-    target and never recreates a shell command; notices intentionally carrying
-    no action remain a single message line.
+    target and never guesses from the dotted machine identity. Notices whose
+    entrypoint has not supplied a canonical CLI path remain a single message
+    line rather than exposing an internal command key to an operator.
     """
     action = notice.action
-    return None if action is None else action.action.target_command_key
+    if action is None or action.action.cli_path is None or action.argument_bindings:
+        return None
+    return "aeat " + " ".join(action.action.cli_path)
 
 
 class NoticeBand(Vertical, can_focus=False):

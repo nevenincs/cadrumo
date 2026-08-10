@@ -4,7 +4,7 @@ tags:
   - '#cli-action-envelope-hardening'
 date: '2026-08-09'
 modified: '2026-08-10'
-body_hash: 'sha256:d258adaed0b5768e31d60fcb652eb30b81502aec15ee5d599e6261d413634a43'
+body_hash: 'sha256:023b70b402d7c8ecb0c3165558f19c9cc77f07dee5bc513185dccdfbb514ce17'
 tier: L3
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
@@ -83,7 +83,7 @@ Replace root recovery prose, preserve leaf identity through pre-dispatch guards,
 - [x] `W03.P05.S17` - Preserve requested live leaf identity before root guards and migrate every profile and taxpayer policy refusal in the shared CLI boundary to typed verdicts; `src/cadrumo/entrypoints/cli/_common.py`.
 - [x] `W03.P05.S18` - Carry guarded command identity and verdict through the refusal boundary; `src/cadrumo/entrypoints/cli/_errors.py`.
 - [x] `W03.P05.S19` - Prove every storage policy condition identity evidence action status and binding set; `src/cadrumo/application/tests/test_storage_write_policy.py`.
-- [ ] `W03.P05.S20` - Prove clean-root refusal recovery and retry through real CLI dispatch; `src/cadrumo/entrypoints/cli/tests/test_profile_guard_action_recovery.py`.
+- [x] `W03.P05.S20` - Prove clean-root refusal recovery and retry through real CLI dispatch; `src/cadrumo/entrypoints/cli/tests/test_profile_guard_action_recovery.py`.
 
 ## Wave `W04` - Migrate workflow and modelo action chains
 

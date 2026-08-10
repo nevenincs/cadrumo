@@ -171,9 +171,18 @@ def _require_isolated_target_context(
         subject="generated modelo revisions directory",
     )
     _require_directory(revision_root, subject="generated target revision directory")
-    for name in ("revision.toml", "export", EXPORT_FRAGMENT_PROVENANCE_FILENAME):
+    for name in ("revision.toml", "export"):
         _require_existing_non_link(revision_root / name, subject=f"generated target revision member {name!r}")
+    stale_sibling_manifest = revision_root / "export.provenance.json"
+    if stale_sibling_manifest.exists() or stale_sibling_manifest.is_symlink() or stale_sibling_manifest.is_junction():
+        raise RegistryValidationError(
+            f"generated target revision refuses stale sibling export provenance manifest: {stale_sibling_manifest}",
+        )
     export_root = _require_directory(revision_root / "export", subject="generated export directory")
+    _require_existing_non_link(
+        export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME,
+        subject="generated export provenance manifest",
+    )
     return modelo_root, revision_root, export_root
 
 
@@ -193,11 +202,17 @@ def _require_exact_generated_outputs(export_root: Path, output_files: tuple[str,
     expected_directories = {
         parent.as_posix() for path in expected_files for parent in path.parents if parent != PurePosixPath(".")
     }
-    if actual_files != expected_files or actual_directories != expected_directories:
+    manifest_path = PurePosixPath(EXPORT_FRAGMENT_PROVENANCE_FILENAME)
+    actual_toml_files = actual_files - {manifest_path}
+    if (
+        actual_toml_files != expected_files
+        or manifest_path not in actual_files
+        or actual_directories != expected_directories
+    ):
         raise RegistryValidationError(
             "generated export directory must contain exactly the current rendered outputs; "
             f"expected_files={sorted(path.as_posix() for path in expected_files)!r}, "
-            f"actual_files={sorted(path.as_posix() for path in actual_files)!r}, "
+            f"actual_files={sorted(path.as_posix() for path in actual_toml_files)!r}, "
             f"expected_directories={sorted(expected_directories)!r}, "
             f"actual_directories={sorted(actual_directories)!r}",
         )

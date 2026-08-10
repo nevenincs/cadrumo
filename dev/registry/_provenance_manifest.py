@@ -17,6 +17,7 @@ from typing import Final, Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
+from cadrumo.core import fsync_parent_dir
 from cadrumo.core.hashing import canonical_json_bytes, content_hash_hex, hash_file
 from cadrumo.domain.calculations.registry import (
     ExportFieldDefinition,
@@ -58,7 +59,7 @@ __all__ = [
 
 
 EXPORT_FRAGMENT_PROVENANCE_SCHEMA_VERSION: Final[int] = 1
-"""Current wire schema for the adjacent non-loader provenance manifest."""
+"""Current wire schema for the internal non-loader provenance manifest."""
 
 EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION: Final[int] = 2
 """Current generator contract recorded by every provenance manifest."""
@@ -68,8 +69,10 @@ EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION: Final[int] = 1
 
 _LOADER_SEMANTIC_SCHEMA_VERSION: Final[int] = 1
 _SHA256_PATTERN: Final[str] = r"^[0-9a-f]{64}$"
-EXPORT_FRAGMENT_PROVENANCE_FILENAME: Final[str] = "export.provenance.json"
-"""Sibling filename for an export directory's non-loader provenance manifest."""
+EXPORT_FRAGMENT_PROVENANCE_FILENAME: Final[str] = "_generation.provenance.json"
+"""Internal JSON member ignored by the TOML-only registry loader."""
+
+_LEGACY_EXPORT_FRAGMENT_PROVENANCE_FILENAME: Final[str] = "export.provenance.json"
 
 _SEMANTIC_MAP_KEYS: Final[frozenset[str]] = frozenset({"modelo", "design_epoch", "records", "entries"})
 _SEMANTIC_MAP_RECORD_KEYS: Final[frozenset[str]] = frozenset(
@@ -305,8 +308,8 @@ class ExportFragmentProvenanceManifest(_StrictModel):
 
 
 def export_fragment_provenance_path(export_directory: Path) -> Path:
-    """Return the manifest sibling path; it is intentionally outside loader input."""
-    return export_directory.parent / EXPORT_FRAGMENT_PROVENANCE_FILENAME
+    """Return the internal JSON attestation the TOML-only loader never consumes."""
+    return export_directory / EXPORT_FRAGMENT_PROVENANCE_FILENAME
 
 
 def semantic_map_digest(semantic_map: SemanticMap) -> str:
@@ -384,6 +387,12 @@ def collect_export_fragment_output_digests(export_root: Path) -> tuple[ExportFra
         if not candidate.is_file():
             continue
         relative_path = PurePosixPath(*candidate.relative_to(export_root).parts).as_posix()
+        if candidate == export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME:
+            continue
+        if candidate.name == _LEGACY_EXPORT_FRAGMENT_PROVENANCE_FILENAME:
+            raise RegistryValidationError(
+                f"export provenance refuses stale sibling-era manifest under generated export root: {relative_path}",
+            )
         if candidate.suffix != ".toml":
             raise RegistryValidationError(
                 f"export provenance refuses non-TOML output under generated export root: {relative_path}",
@@ -634,13 +643,9 @@ def _require_field_derivations_match_layout(
     loaded_layout: ExportLayoutDefinition,
 ) -> None:
     layout_fields = {
-        (str(record.id), str(field.id)): field
-        for record in loaded_layout.records
-        for field in record.fields
+        (str(record.id), str(field.id)): field for record in loaded_layout.records for field in record.fields
     }
-    derivation_fields = {
-        (item.export_record_id, str(item.field.id)): item.field for item in field_derivations
-    }
+    derivation_fields = {(item.export_record_id, str(item.field.id)): item.field for item in field_derivations}
     if len(layout_fields) != len(tuple(field for record in loaded_layout.records for field in record.fields)):
         raise RegistryValidationError("loader export layout contains duplicate record and field identities")
     if len(derivation_fields) != len(field_derivations):
@@ -677,6 +682,7 @@ def _write_canonical_manifest_atomically(path: Path, payload: bytes) -> None:
         if path.exists():
             raise RegistryValidationError(f"export provenance manifest already exists: {path}")
         os.replace(temporary_path, path)
+        fsync_parent_dir(path)
     except OSError as exc:
         raise RegistryValidationError(f"cannot write export provenance manifest {path}: {exc}") from exc
     finally:

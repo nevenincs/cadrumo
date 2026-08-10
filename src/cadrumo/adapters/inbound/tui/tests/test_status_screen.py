@@ -24,7 +24,15 @@ import yaml
 from textual.widgets import DataTable, Static
 
 from .....core.i18n import SUPPORTED_OUTPUT_LANGUAGES
-from .....core.json_contract import Notice, NoticeSeverity, ResolvedActionReference, ResolvedNoticeAction
+from .....core.json_contract import (
+    ActionArgumentSource,
+    ActionArgumentStatus,
+    Notice,
+    NoticeSeverity,
+    ResolvedActionArgument,
+    ResolvedActionReference,
+    ResolvedNoticeAction,
+)
 from .....tests.locales_root_fixture import locales_root_scope
 from .. import (
     StatusApp,
@@ -261,6 +269,28 @@ async def test_a_notice_paints_its_severity_glyph_message_and_resolved_action() 
                     action=ResolvedActionReference(
                         action_id="operator.profile.status",
                         target_command_key="config.profile.status",
+                        cli_path=("config", "profile", "status"),
+                    ),
+                ),
+            ),
+            Notice(
+                severity=NoticeSeverity.INFO,
+                code="test.bound-action",
+                message="BOUND-ACTION-MESSAGE",
+                action=ResolvedNoticeAction(
+                    action=ResolvedActionReference(
+                        action_id="operator.profile.create",
+                        target_command_key="config.profile.create",
+                        cli_path=("config", "profile", "create"),
+                    ),
+                    argument_bindings=(
+                        ResolvedActionArgument(
+                            argument_name="profile_name",
+                            status=ActionArgumentStatus.RESOLVED,
+                            value="Taxpayer One",
+                            source=ActionArgumentSource.REQUEST_CONTEXT,
+                            source_key="profile_name",
+                        ),
                     ),
                 ),
             ),
@@ -280,7 +310,10 @@ async def test_a_notice_paints_its_severity_glyph_message_and_resolved_action() 
         assert "WARNING-MESSAGE" in str(warning_line.content)
         assert "warning" in str(warning_line.classes)
         action_line = app.query_one("#notice-1-action", Static)
-        assert "config.profile.status" in str(action_line.content)
+        assert str(action_line.content) == "aeat config profile status"
+        assert not app.query("#notice-2-action"), (
+            "an argument-bearing action must stay hidden until the canonical argv renderer can include its values"
+        )
 
         # The class name alone is not the claim: the CSS the class selects
         # must actually resolve to two DIFFERENT colours, or "severity

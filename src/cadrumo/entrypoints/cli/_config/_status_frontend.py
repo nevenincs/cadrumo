@@ -266,7 +266,7 @@ def _no_aeat_history_notice() -> Notice | None:
     from ....application.calculations import CalculationObservationRepository
     from ....application.operator_actions import ActionReference
     from ....application.overview import no_aeat_history_notice
-    from .._common import resolve_notice_action
+    from .._common import _resolve_notice_actions, resolve_notice_action
 
     try:
         observations = tuple(CalculationObservationRepository().iter_records())
@@ -275,13 +275,14 @@ def _no_aeat_history_notice() -> Notice | None:
     notice = no_aeat_history_notice(observations)
     if notice is None:
         return None
-    return notice.model_copy(
+    resolved_notice = notice.model_copy(
         update={
             "action": resolve_notice_action(
                 action=ActionReference(action_id="operator.live.filed.pull_all"),
             ),
         },
     )
+    return _resolve_notice_actions((resolved_notice,))[0]
 
 
 def _build_fact_rows(

@@ -568,6 +568,9 @@ application:
         clave_identity_profile_mismatch: Cl@ve Móvil identity does not match the active
           profile tax identity; switch to the matching profile or update the profile
           before live AEAT auth.
+        clave_route_missing: Cl@ve Móvil live authentication requires %{route_field}.
+          Open Identification in the profile manager, choose QR code or Request in
+          app, save it, and retry.
         corrupt_session: Your saved authentication session is damaged and cannot be
           read. Run `aeat config auth logout` and then `aeat config auth test`.
         no_session: No active AEAT session; run `aeat config auth test` before reading

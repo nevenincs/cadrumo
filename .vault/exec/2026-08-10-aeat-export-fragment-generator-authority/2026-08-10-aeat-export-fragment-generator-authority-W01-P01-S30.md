@@ -5,7 +5,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:b3958b3c2ec7ffe364fd6b589ea55f9ccd16abf573c5e9db58bfa5133f92af26'
+body_hash: 'sha256:d222ada24799337d1e4065404df26bf6fce0dbce8bd298ecd640ffc1236547d7'
 step_id: 'S30'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
@@ -20,19 +20,23 @@ related:
 ## Description
 
 - Recover only cached positive integers following normalized `Total` or `Total:` labels.
-- Reject fixed-sheet declared totals that differ from terminal parsed extent without synthesizing missing totals.
+- Require every workbook fixed-field sequence and variable-envelope prefix to start at offset 1 and remain exactly contiguous in source order; reject gaps and overlaps before terminal-total or composition validation.
 - Preserve `DP200000` as one typed variable envelope with fixed prefix, variable body, relative closing suffix, and variable-total anchors.
-- Split fixed-record IR from variable-envelope IR and advance the intermediate schema version.
-- Preserve complete prefix, body, suffix, and total source metadata through parser-to-IR projection.
-- Reject duplicate, mixed, incomplete, geometrically invalid, or misordered envelope composition markers.
-- Prove the contract from the hash-pinned Modelo 200/2025 formula and cached workbook views.
+- Carry typed variable-envelope state through semantic validation and `JoinedRecordDesign` without mapping it as a fixed record.
+- Refuse fixed-width tree rendering unconditionally before target creation whenever a joined design contains any variable envelope; defer the separately typed composition proof and byte proof to `S34`.
+- Reject duplicate, mixed, incomplete, discontinuous, or misordered envelope composition markers through the production workbook parser.
+- Keep the provenance fixture on parser intermediate schema version 2 and prove version 1 is rejected as drift.
 
 ## Outcome
 
-The source-derived total mapping is nonempty and measures 76 fixed sheets. Representative anchors retain `DP200001!A119:C119 = 627` and `DP200DID!A49:C49 = 774`; every recovered total equals terminal parsed extent. `DP200000` remains total-free, retains prefix extent 328, body anchor `A14` at offset 329 with length `Variable`, closing anchor `A15` at relative offset `***` with length 18, and variable-total anchor `A16`. The fixed-generation IR contains 76 records, excludes `DP200000`, and exposes exactly one lossless variable envelope.
+The source-derived total mapping remains nonempty and measures 76 fixed sheets. Representative anchors retain `DP200001!A119:C119 = 627` and `DP200DID!A49:C49 = 774`; every recovered total equals terminal parsed extent. `DP200000` remains total-free, retains prefix extent 328, body anchor `A14` at offset 329 with length `Variable`, closing anchor `A15` at relative offset `***` with length 18, and variable-total anchor `A16`.
 
-Focused parser, IR, source-boundary, and semantic-map consumer verification passed with 34 tests. Scoped Ruff passed. Scoped BasedPyright passed with zero errors, warnings, or notes. Independent review found no remaining CRITICAL or HIGH issue; its only residual LOW notes that not every malformed-envelope refusal branch has its own negative test.
+The reopened review findings are remediated. Workbook fixed sheets and the variable prefix now require first offset 1 and exact contiguity. The semantic validator rejects duplicate envelope identities and fixed/envelope identity collisions. The join retains the exact parser-owned envelope tuple. Fixed-width rendering refuses before profile validation or output-directory creation. A focused real-source test parses the hash-pinned Modelo 200/2025 workbook, retains its real `DP200000` envelope through the production IR and semantic join, and proves rendering produces no output.
+
+Focused parser, IR, semantic validation/join, provenance, and variable-envelope generation-gate verification passed with 50 tests and two upstream `openpyxl` warnings. The existing renderer compatibility suite passed with 18 tests without modifying its peer-owned test file. Scoped Ruff passed. Scoped BasedPyright passed with zero errors, warnings, or notes.
 
 ## Notes
 
-A shared-branch commit race landed the implementation across peer broad commits while gates were running. Commit `0316ec8f58` contains the parser, schema, facade, IR, initial real-source tests, and IR tests. Commit `38d9447750` contains the strict official-label and positive-integer regression. Commit `4aafa285c1` swept the initial source-boundary refactor and CLI scaffold into unrelated peer work. Scoped commit `e2b4ecf15a` contains the lossless metadata projection, malformed-composition refusal, strengthened source-boundary contract, completed Step Record, and CLI-authored plan closure. History was not rewritten or amended.
+The original implementation landed across commits `0316ec8f58`, `38d9447750`, `4aafa285c1`, and `e2b4ecf15a`; commit `727cff8e85` recorded the original split evidence, and `e3f6f68fcb` reopened the step after formal review. This correction remains one scoped commit over the owned files; its final commit identity is verified with post-commit `git show --numstat` because a commit cannot contain its own content hash.
+
+A trial extension of exact contiguity to all PDF parser output exposed six pre-existing PDF segmentation and sparse visual-chart behaviors outside the amended Modelo 200 workbook boundary. That trial was removed before final verification; no PDF behavior changed. No peer-owned provenance implementation or renderer test file was edited.

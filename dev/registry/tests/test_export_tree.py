@@ -450,6 +450,23 @@ def test_generated_tree_validation_refuses_direct_revision_legacy_and_loader_bre
         )
 
 
+def test_generated_tree_validation_refuses_stale_sibling_provenance(_m200_snapshot, tmp_path) -> None:
+    """The former outside-export attestation path cannot survive the hard cutover."""
+    context, joined, semantic_map, rendered, export_root = _write_isolated_generated_authority_tree(
+        tmp_path,
+        _m200_snapshot,
+    )
+    (export_root.parent / "export.provenance.json").write_text("{}\n", encoding="utf-8")
+
+    with pytest.raises(RegistryValidationError, match="stale sibling export provenance"):
+        validate_generated_export_tree(
+            context=context,
+            joined=joined,
+            semantic_map=semantic_map,
+            rendered=rendered,
+        )
+
+
 def test_generated_tree_validation_refuses_wrong_period_and_provenance_drift(_m200_snapshot, tmp_path) -> None:
     """The exact target must apply to its filing context and retain current authority evidence."""
     context, joined, semantic_map, rendered, _export_root = _write_isolated_generated_authority_tree(
@@ -488,7 +505,13 @@ def test_generated_tree_validation_refuses_wrong_period_and_provenance_drift(_m2
         )
 
     manifest_path = (
-        context.registry_root / "modelos" / "200" / "revisions" / "2025" / EXPORT_FRAGMENT_PROVENANCE_FILENAME
+        context.registry_root
+        / "modelos"
+        / "200"
+        / "revisions"
+        / "2025"
+        / "export"
+        / EXPORT_FRAGMENT_PROVENANCE_FILENAME
     )
     manifest = load_export_fragment_provenance_manifest(manifest_path.read_bytes())
     manifest_path.write_bytes(
@@ -558,7 +581,7 @@ def test_renderer_writes_stable_complete_tree_that_real_directory_loader_merges(
 
     loaded = load_modelo_directory(tmp_path / "modelos" / "200")
     layout = loaded.revisions["2025"].export_layouts[0]
-    manifest_path = revision_dir / EXPORT_FRAGMENT_PROVENANCE_FILENAME
+    manifest_path = revision_dir / "export" / EXPORT_FRAGMENT_PROVENANCE_FILENAME
     assert manifest_path.is_file()
     assert manifest_path.name not in first.output_files
     assert load_export_fragment_provenance_manifest(manifest_path.read_bytes()) == first.provenance_manifest
@@ -600,7 +623,7 @@ def test_renderer_manifest_refuses_file_tampering_derivation_drift_and_partial_f
     )
     layout = load_modelo_directory(tmp_path / "modelos" / "200").revisions["2025"].export_layouts[0]
     export_root = revision_dir / "export"
-    manifest_path = revision_dir / EXPORT_FRAGMENT_PROVENANCE_FILENAME
+    manifest_path = revision_dir / "export" / EXPORT_FRAGMENT_PROVENANCE_FILENAME
     original_fragment = export_root / "0001-record-generated-registro-tipo-1.toml"
     original_bytes = original_fragment.read_bytes()
 
@@ -670,7 +693,7 @@ def test_direct_manifest_emission_and_real_loader_verification(_m200_snapshot, t
         profile=_profile(),
     )
     layout = load_modelo_directory(tmp_path / "modelos" / "200").revisions["2025"].export_layouts[0]
-    manifest_path = revision_dir / EXPORT_FRAGMENT_PROVENANCE_FILENAME
+    manifest_path = revision_dir / "export" / EXPORT_FRAGMENT_PROVENANCE_FILENAME
     manifest_path.unlink()
 
     emitted = emit_export_fragment_provenance_manifest(
@@ -718,7 +741,7 @@ def test_renderer_refuses_mismatched_map_without_emitting_a_manifest(_m200_snaps
             profile=_profile(),
         )
 
-    assert not (revision_dir / EXPORT_FRAGMENT_PROVENANCE_FILENAME).exists()
+    assert not (revision_dir / "export" / EXPORT_FRAGMENT_PROVENANCE_FILENAME).exists()
 
 
 def test_renderer_refuses_unmeasured_numeric_form_without_emitting_a_partial_fragment(_m200_snapshot, tmp_path) -> None:

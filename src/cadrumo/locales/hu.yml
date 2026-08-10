@@ -594,6 +594,9 @@ application:
         clave_identity_profile_mismatch: A Cl@ve Móvil azonossága nem egyezik az aktív
           profil adóazonosítójával; váltson az egyező profilra, vagy frissítse a profil
           adóazonosítóját.
+        clave_route_missing: 'A Cl@ve Móvil élő hitelesítéséhez szükséges: %{route_field}.
+          Nyissa meg a profilkezelő Azonosítás részét, válassza a QR-kód vagy a Kérés
+          az alkalmazásban lehetőséget, mentse, majd próbálja újra.'
         corrupt_session: A mentett hitelesítési munkamenet sérült és nem olvasható.
           Futtassa az `aeat config auth logout`, majd az `aeat config auth test` parancsot.
         no_session: Nincs aktív AEAT munkamenet; futtassa a `aeat config auth test`

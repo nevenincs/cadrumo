@@ -24,7 +24,11 @@ from .._provenance_manifest import (
     load_export_fragment_provenance_manifest,
     loader_semantic_digest,
 )
-from .._record_design_ir import RecordDesignIntermediate, RecordDesignWorkbookFormat
+from .._record_design_ir import (
+    RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION,
+    RecordDesignIntermediate,
+    RecordDesignWorkbookFormat,
+)
 from .._semantic_map import SemanticMap
 from .._semantic_map_join import JoinedRecordDesign, JoinedRecordDesignField, JoinedRecordDesignRecord
 
@@ -232,7 +236,7 @@ def _manifest() -> ExportFragmentProvenanceManifest:
         manifest_schema_version=EXPORT_FRAGMENT_PROVENANCE_SCHEMA_VERSION,
         source_ref="aeat-dr-200-2025",
         source_sha256="a" * 64,
-        parser_schema_version=1,
+        parser_schema_version=RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION,
         generator_schema_version=EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION,
         semantic_map_sha256="b" * 64,
         modelo="200",
@@ -299,7 +303,7 @@ def test_manifest_refuses_legacy_shapes_schema_drift_duplicate_outputs_and_unsaf
             **(manifest.model_dump() | {"output_files": manifest.output_files + manifest.output_files}),
         )
     with pytest.raises(ValidationError, match="parser schema drift"):
-        ExportFragmentProvenanceManifest(**(manifest.model_dump() | {"parser_schema_version": 2}))
+        ExportFragmentProvenanceManifest(**(manifest.model_dump() | {"parser_schema_version": 1}))
     with pytest.raises(RegistryValidationError, match="duplicate object key"):
         load_export_fragment_provenance_manifest(
             canonical_json_bytes(manifest.model_dump(mode="json"))[:-1] + b',"modelo":"200"}',

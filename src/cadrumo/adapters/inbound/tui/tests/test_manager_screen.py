@@ -116,9 +116,9 @@ async def test_the_page_shows_every_declared_field_including_the_empty_ones(tmp_
 
 
 @pytest.mark.asyncio
-async def test_header_names_schema_required_information_instead_of_reposting_completion_counts(tmp_path) -> None:
-    """The pinned context answers what is missing using schema-owned labels."""
-    from .. import PinnedStatusBar
+async def test_profile_context_names_missing_requirements_but_has_no_healthy_placeholder(tmp_path) -> None:
+    """Only an actionable schema gap earns durable space in the profile body."""
+    from textual.css.query import NoMatches
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
@@ -127,20 +127,27 @@ async def test_header_names_schema_required_information_instead_of_reposting_com
         app = ProfileManagerApp(overview, persist=_persist)
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
-            summary = app.query_one("#manager-status", PinnedStatusBar).summary
-            assert summary == tr(
+            requirements = str(app.query_one("#manager-requirements", Static).content)
+            assert requirements == tr(
                 "cli.diagnostics.summary.profile_missing_fields",
                 count=len(overview.missing_required),
                 fields=", ".join(field.label for field in overview.missing_required_fields),
             )
-            assert str(overview.present_count) + " of " + str(overview.total_count) not in summary
+            assert str(overview.present_count) + " of " + str(overview.total_count) not in requirements
+
+            app.overview = overview.model_copy(update={"missing_required": (), "missing_required_fields": ()})
+            await app._render_profile_context()
+            await pilot.pause()
+            with pytest.raises(NoMatches):
+                app.query_one("#manager-requirements")
             app.exit(None)
 
 
 @pytest.mark.asyncio
-async def test_header_renders_the_profile_envelopes_typed_advisories(tmp_path) -> None:
-    """The manager consumes Notice directly instead of inventing advisory text."""
+async def test_profile_body_renders_the_envelopes_typed_advisories(tmp_path) -> None:
+    """The manager consumes Notice in scrollable context, not permanent chrome."""
     from .....core.json_contract import Notice, NoticeSeverity
+    from .. import PinnedStatusBar
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
@@ -161,7 +168,8 @@ async def test_header_renders_the_profile_envelopes_typed_advisories(tmp_path) -
             await pilot.pause()
             rendered = str(app.query_one("#manager-notice-band #notice-0", Static).content)
             assert "SCHEMA-ENVELOPE-ADVISORY" in rendered
-            assert app.query_one("#manager-header", Widget).region.y < app.query_one("#manager-body", Widget).region.y
+            assert app.query_one("#manager-context", Widget).region.y >= app.query_one("#manager-body", Widget).region.y
+            assert not app.query_one("#manager-status", PinnedStatusBar).display
             app.exit(None)
 
 
@@ -223,9 +231,7 @@ async def test_editing_one_field_repaints_that_row_without_rebuilding_the_tables
             before = _rows(app)
             assert before[_EDITED_PATH][2] == "", "the fixture must start blank, or the glyph cannot flip"
             tables = list(app.query(DataTable))
-            from .. import PinnedStatusBar
-
-            required_context = app.query_one("#manager-status", PinnedStatusBar).summary
+            required_context = str(app.query_one("#manager-requirements", Static).content)
             untouched = {path: cells for path, cells in before.items() if path != _EDITED_PATH}
 
             field = app._field_by_key[_EDITED_PATH]
@@ -247,7 +253,7 @@ async def test_editing_one_field_repaints_that_row_without_rebuilding_the_tables
             assert [id(table) for table in app.query(DataTable)] == [id(table) for table in tables], (
                 "the tables must survive the edit; remounting them is the full rebuild this replaced"
             )
-            assert app.query_one("#manager-status", PinnedStatusBar).summary == required_context, (
+            assert str(app.query_one("#manager-requirements", Static).content) == required_context, (
                 "editing an optional field must not change the schema-required information"
             )
             app.exit(None)
@@ -384,7 +390,7 @@ async def test_aeat_progress_replaces_the_inherited_stderr_sink_with_the_pinned_
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             status = app.query_one("#manager-status", PinnedStatusBar)
-            assert status.region.height >= 3, "the idle header must reserve permanent visible space"
+            assert not status.display, "an idle operation channel must consume no persistent header space"
 
             await pilot.click("#action-sync")
             for _ in range(40):
@@ -395,6 +401,7 @@ async def test_aeat_progress_replaces_the_inherited_stderr_sink_with_the_pinned_
             assert "TUI-CODE" in status.message, "the actionable AEAT verification code never reached the TUI"
             assert "Time remaining" in status.message, "the typed countdown was not rendered"
             assert status.tone == "progress"
+            assert status.display
 
             release.set()
             await wait_until_settled(app, pilot)

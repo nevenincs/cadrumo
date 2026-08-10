@@ -434,7 +434,7 @@ def _extract_sheet_rows(
                 content=content,
             ),
         )
-    terminal_extent = max((item.offset + item.length - 1 for item in fields), default=None)
+    terminal_extent = _require_contiguous_field_geometry(sheet_name, fields)
     if total_positions is not None and terminal_extent != total_positions:
         raise RegistryValidationError(
             f"record-design sheet {sheet_name!r} declares {total_positions} total positions "
@@ -480,6 +480,23 @@ def _extract_sheet_rows(
         total_positions=total_positions,
         variable_envelope=variable_envelope,
     )
+
+
+def _require_contiguous_field_geometry(
+    sheet_name: str,
+    fields: list[RecordDesignField],
+) -> int | None:
+    """Return the exact terminal extent after proving source-order geometry."""
+    expected_offset = 1
+    for parsed_field in fields:
+        if parsed_field.offset != expected_offset:
+            defect = "an overlap" if parsed_field.offset < expected_offset else "a gap"
+            raise RegistryValidationError(
+                f"record-design sheet {sheet_name!r} has {defect} before field at row {parsed_field.row}: "
+                f"expected offset {expected_offset}, got {parsed_field.offset}",
+            )
+        expected_offset = parsed_field.offset + parsed_field.length
+    return expected_offset - 1 if fields else None
 
 
 def _is_blank_row(values: tuple[object, ...]) -> bool:

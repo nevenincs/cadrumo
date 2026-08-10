@@ -1,4 +1,4 @@
-"""Pilot-driven proofs for the permanent TUI status channel."""
+"""Pilot-driven proofs for the transient pinned TUI status channel."""
 
 from __future__ import annotations
 
@@ -60,7 +60,7 @@ async def test_status_bar_stays_pinned_and_preserves_plain_multiline_diagnostics
 
 
 @pytest.mark.asyncio
-async def test_status_bar_exposes_each_closed_tone_and_clear_keeps_reserved_space() -> None:
+async def test_status_bar_exposes_each_closed_tone_and_keeps_a_supplied_summary() -> None:
     app = _StatusBarHarness()
     async with app.run_test(size=_TERMINAL_SIZE) as pilot:
         bar = app.query_one("#status", PinnedStatusBar)
@@ -82,6 +82,30 @@ async def test_status_bar_exposes_each_closed_tone_and_clear_keeps_reserved_spac
         assert bar.tone == "idle"
         assert bar.message == ""
         assert bar.region.height >= height
+
+
+@pytest.mark.asyncio
+async def test_status_bar_without_a_summary_collapses_when_idle() -> None:
+    """A screen with no operation under way must not carry an empty header row."""
+
+    class _TransientHarness(App[None]):
+        def compose(self) -> ComposeResult:
+            yield PinnedStatusBar(id="status")
+            yield Static("body", id="body")
+
+    app = _TransientHarness()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        bar = app.query_one("#status", PinnedStatusBar)
+        assert not bar.display
+
+        bar.show_progress("Working")
+        await pilot.pause()
+        assert bar.display
+        assert bar.region.height > 0
+
+        bar.clear_message()
+        await pilot.pause()
+        assert not bar.display
 
 
 @pytest.mark.asyncio

@@ -838,6 +838,31 @@ def test_sandbox_banner_preserves_resolved_modelo_next_action() -> None:
     assert "sandbox:bakeoff" in output_lines[0]
     assert f"next_action\taeat app modelo work calculate {work_unit_id}" in output_lines
 
+    status_json = _invoke(("--format", "json", "app", "modelo", "work", "status", work_unit_id[-12:]))
+    assert status_json.exit_code == 0, status_json.output
+    notice = next(
+        item
+        for item in unwrap_envelope_notices(status_json.output)
+        if item["code"] == "modelo.work.status.next_action"
+    )
+    assert notice["action"] == {
+        "action": {
+            "action_id": "operator.modelo.work.calculate",
+            "target_command_key": "modelo.work.calculate",
+            "cli_path": ["app", "modelo", "work", "calculate"],
+        },
+        "argument_bindings": [
+            {
+                "argument_name": "work_unit_id",
+                "status": "resolved",
+                "value": work_unit_id,
+                "source": "operator_action.verdict_context",
+                "source_key": "work_unit_id",
+                "source_evidence_id": None,
+            },
+        ],
+    }
+
 
 def test_sandbox_active_indicator_absent_for_a_real_profile() -> None:
     """A command run against a real (non-sandbox) profile carries no sandbox indicator."""

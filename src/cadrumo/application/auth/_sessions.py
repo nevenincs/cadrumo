@@ -659,6 +659,14 @@ def _prepare_clave_auth(
     if credentials is None:
         _assert_profile_identity_available_for_deferred_check(facts)
         return settings, facts.tax_id or None
+    if provider_kind is AuthProviderKind.CLAVE_MOVIL and facts.clave_movil_route is None:
+        raise ClaveCredentialsIncompleteError(
+            translated_message="application.auth.sessions.errors.clave_route_missing",
+            context={
+                "provider": provider_kind.value,
+                "route_field": _profile_field_label(_CLAVE_MOVIL_ROUTE_PATH),
+            },
+        )
     bound_settings = _bind_clave_credentials_to_settings(
         settings,
         credentials,
@@ -731,6 +739,7 @@ def resolve_clave_credentials(
 
 
 _CLAVE_DNI_NIE_PATH = "auth.dni_nie"
+_CLAVE_MOVIL_ROUTE_PATH = "auth.clave_movil_route"
 _CLAVE_NUMERO_SOPORTE_PATH = "auth.numero_soporte"
 _CLAVE_FECHA_VALIDEZ_PATH = "auth.fecha_validez"
 

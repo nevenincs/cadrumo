@@ -655,7 +655,14 @@ def _resume_profile_session_or_refuse(ctx: typer.Context, bucket_id: str) -> Non
         return
     if _authenticated_at_the_gate(ctx, bucket_id=bucket_id):
         return
-    verdict = profile_session_failure_verdict(refusal, profile_name=bucket_id)
+    # Session state is keyed by the opaque bucket UUID, but the recovery
+    # command is addressed by the operator-facing profile label.  Keep those
+    # identities separate: projecting the storage UUID as ``config login``'s
+    # argument makes the typed action both privacy-redacted and non-executable.
+    verdict = profile_session_failure_verdict(
+        refusal,
+        profile_name=active_profile_label() or bucket_id,
+    )
     if refusal in _LOGGED_OUT_REFUSALS:
         error = CliRefusedBoundaryError(
             translated_message="cli.config.errors.profile_session_absent",

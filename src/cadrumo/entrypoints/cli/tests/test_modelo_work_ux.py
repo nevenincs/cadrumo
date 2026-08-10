@@ -166,8 +166,10 @@ def test_work_list_surfaces_revision_pointer_fields(_isolated_cli_backend: Path)
     assert unit["filed_calculation_revision_id"] is None
 
 
-def test_work_list_projects_next_step_as_typed_action(_isolated_cli_backend: Path) -> None:
-    """The real work-list command must not put executable prose in a notice."""
+def test_work_list_without_a_selected_unit_does_not_claim_an_executable_action(
+    _isolated_cli_backend: Path,
+) -> None:
+    """The list cannot bind one target until the operator selects a work unit."""
     _create_profile()
 
     result = _invoke(["--format", "json", "app", "modelo", "work", "list"])
@@ -175,11 +177,8 @@ def test_work_list_projects_next_step_as_typed_action(_isolated_cli_backend: Pat
     assert result.exit_code == 0, result.output
     notice = next(item for item in _notices(result.output) if item["code"] == "modelo.work.list.next_action")
     assert "aeat " not in notice["message"].lower()
-    assert notice["action"] == {
-        "action_id": "operator.modelo.work.status",
-        "target_command_key": "modelo.work.status",
-        "cli_path": ["app", "modelo", "work", "status"],
-    }
+    assert notice["action"] is None
+    assert notice["context"] == {"work_unit_count": "0"}
 
 
 def test_work_list_and_status_text_name_profile_once_without_bucket_placeholders(
@@ -201,7 +200,32 @@ def test_work_list_and_status_text_name_profile_once_without_bucket_placeholders
         assert "<bucket-id>" not in result.output
     short_work_unit_id = work_unit_id[-12:]
     assert f"next_action\taeat app modelo work status {short_work_unit_id}" in listed.output
-    assert f"next_action\taeat app modelo work calculate {short_work_unit_id}" in status.output
+    assert f"next_action\taeat app modelo work calculate {work_unit_id}" in status.output
+
+    list_json = _invoke(["--format", "json", "app", "modelo", "work", "list"])
+    assert list_json.exit_code == 0, list_json.output
+    list_action = next(
+        item["action"]
+        for item in _notices(list_json.output)
+        if item["code"] == "modelo.work.list.next_action"
+    )
+    assert list_action == {
+        "action": {
+            "action_id": "operator.modelo.work.status",
+            "target_command_key": "modelo.work.status",
+            "cli_path": ["app", "modelo", "work", "status"],
+        },
+        "argument_bindings": [
+            {
+                "argument_name": "work_unit_id",
+                "status": "resolved",
+                "value": short_work_unit_id,
+                "source": "operator_action.verdict_context",
+                "source_key": "work_unit_id",
+                "source_evidence_id": None,
+            },
+        ],
+    }
 
     status_json = _invoke(["--format", "json", "app", "modelo", "work", "status", short_work_unit_id])
     assert status_json.exit_code == 0, status_json.output
@@ -211,11 +235,64 @@ def test_work_list_and_status_text_name_profile_once_without_bucket_placeholders
         if item["code"] == "modelo.work.status.next_action"
     )
     assert action == {
-        "action_id": "operator.modelo.work.calculate",
-        "target_command_key": "modelo.work.calculate",
-        "cli_path": ["app", "modelo", "work", "calculate"],
-        "arguments": {"work_unit_id": short_work_unit_id},
+        "action": {
+            "action_id": "operator.modelo.work.calculate",
+            "target_command_key": "modelo.work.calculate",
+            "cli_path": ["app", "modelo", "work", "calculate"],
+        },
+        "argument_bindings": [
+            {
+                "argument_name": "work_unit_id",
+                "status": "resolved",
+                "value": work_unit_id,
+                "source": "operator_action.verdict_context",
+                "source_key": "work_unit_id",
+                "source_evidence_id": None,
+            },
+        ],
     }
+
+
+def test_work_list_with_multiple_units_requires_an_explicit_selection(
+    _isolated_cli_backend: Path,
+) -> None:
+    """A multi-row list never projects an action with an invented target."""
+    _create_profile()
+    _create_m130_work_unit()
+    second = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "create",
+            "--modelo",
+            "130",
+            "--year",
+            "2025",
+            "--period",
+            "2T",
+            "--revision",
+            "2019-y-siguientes",
+        ],
+    )
+    assert second.exit_code == 0, second.output
+
+    listed = _invoke(["app", "modelo", "work", "list"])
+    assert listed.exit_code == 0, listed.output
+    assert "work_unit_count\t2" in listed.output
+    assert "next_action\t" not in listed.output
+
+    listed_json = _invoke(["--format", "json", "app", "modelo", "work", "list"])
+    assert listed_json.exit_code == 0, listed_json.output
+    notice = next(
+        item
+        for item in _notices(listed_json.output)
+        if item["code"] == "modelo.work.list.next_action"
+    )
+    assert notice["action"] is None
+    assert notice["context"] == {"work_unit_count": "2"}
 
 
 def test_work_status_and_list_show_presentado_after_file(_isolated_cli_backend: Path) -> None:

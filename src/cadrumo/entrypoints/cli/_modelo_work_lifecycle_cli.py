@@ -52,6 +52,7 @@ from ._modelo_payloads import (
 )
 from ._modelo_rendering import (
     advisory_notice,
+    short_id,
     work_unit_lines,
     work_unit_list_lines,
     work_unit_payload,
@@ -460,16 +461,33 @@ def _register_work_list_command(work_app: typer.Typer, deps: _LifecycleDeps) -> 
             f"active_profile\t{active_profile_label() or ''}",
             *work_unit_list_lines(units, include_discarded=include_discarded),
         ]
-        no_single_follow_up = Notice(
+        selected_action = None
+        if len(units) == 1:
+            selected_id = short_id(units[0].work_unit_id)
+            assert selected_id is not None
+            selected_action = resolve_notice_action(
+                action=ActionReference(action_id="operator.modelo.work.status"),
+                argument_bindings=(
+                    ResolvedActionArgument(
+                        argument_name="work_unit_id",
+                        status=ActionArgumentStatus.RESOLVED,
+                        value=selected_id,
+                        source=ActionArgumentSource.VERDICT_CONTEXT,
+                        source_key="work_unit_id",
+                    ),
+                ),
+            )
+        follow_up = Notice(
             severity=NoticeSeverity.INFO,
             code="modelo.work.list.next_action",
             message=tr(
                 "cli.app.modelo.work.list_next_action_summary",
                 default=("The list can contain multiple work units. Choose one concrete work unit before continuing."),
             ),
+            action=selected_action,
             context={"work_unit_count": str(len(units))},
         )
-        _emit_envelope(ctx, command="modelo.work.list", result=result, lines=lines, notices=[no_single_follow_up])
+        _emit_envelope(ctx, command="modelo.work.list", result=result, lines=lines, notices=[follow_up])
 
 
 def _register_work_status_command(work_app: typer.Typer, deps: _LifecycleDeps) -> None:
