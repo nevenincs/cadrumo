@@ -304,6 +304,61 @@ def test_modelo_303_reconciliation_auto_zeroes_from_positive_prior_local_filing(
     }
 
 
+def test_disabled_generic_recurrence_producer_contributes_nothing_to_the_returned_report(
+    tmp_path: Path,
+) -> None:
+    """A producer the caller switched off must not shape the artefact it receives.
+
+    The seeded history below is exactly what the sibling test above proves the
+    generic reconstruction DOES find and DOES publish on the returned
+    ``prefill_report``. A caller that disables it — because it supplies a
+    stricter recurrence the generic path would undercut — must therefore get an
+    empty report, not the same one with only the amount ignored.
+
+    The two producers are not substitutable, so the selection must happen before
+    the work rather than after it. Running the generic reconstruction regardless
+    and discarding only its recurrence left its report reaching the caller, and
+    spent a repository read plus a full history reconstruction on the one path
+    that had just declared the producer must have no authority.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        IvaCompensationHistoryRepository().save_period(
+            IvaCompensationPeriodState(
+                taxpayer_nif=_TAXPAYER_REF,
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "2T"),
+                expediente_id="30320262T0000000000",
+                status="app_filing",
+                presented_at=datetime(2026, 7, 15, 10, 0, tzinfo=UTC),
+                prior_pending_amount=Decimal("0"),
+                applied_amount=Decimal("0"),
+                pending_for_later_amount=Decimal("0"),
+                period_result_amount=Decimal("399"),
+                final_result_amount=Decimal("399"),
+                generated_amount=Decimal("0"),
+                available_end_amount=Decimal("0"),
+                source_observation_key="303:2026:2T:positive-local-filing",
+            ),
+        )
+        snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="3T")
+
+        report = reconcile_modelo_303_iva_compensation(
+            snapshot,
+            taxpayer_nif=_TAXPAYER_REF,
+            wallet=None,
+            repository=CalculationObservationRepository(),
+            decided_at=_NOW,
+            use_repository_local_recurrence=False,
+        )
+
+    assert dict(report.prefill_report.binding_values) == {}, (
+        "the generic recurrence producer was switched off and still published binding values on the "
+        "returned report, so the caller receives an artefact shaped by a producer it disabled"
+    )
+    assert report.prefill_report.prefilled == ()
+    assert report.prefill_report.unsatisfied == ()
+
+
 def test_modelo_303_reconciliation_refuses_explicit_decision_repository_from_foreign_encrypted_bucket(
     tmp_path: Path,
 ) -> None:
