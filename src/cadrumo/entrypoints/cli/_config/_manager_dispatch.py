@@ -48,7 +48,7 @@ from ....core.json_contract import NoticeSeverity as _NoticeSeverity
 from ....core.wizard_catalogue import get_setup_flow as _get_setup_flow
 from .._command_suggestions import LazySubcommand as _LazySubcommand
 from .._command_suggestions import register_lazy_subcommand as _register_lazy_subcommand
-from .._common import _emit_envelope
+from .._common import _emit_envelope, active_profile_label
 from .._errors import command_error_boundary as _command_error_boundary
 from .._errors import decorate_typer_app as _decorate_typer_app
 
@@ -130,7 +130,10 @@ def with_manager_frontend(wizard_command, *, mode: WizardPersistMode):
 
         open_the_edit_target_or_refuse(ctx, kwargs.get("profile_name"))
         present_profile_manager()
-        emit_manager_closed(ctx, active_profile_label(), created=False)
+        label = active_profile_label()
+        if label is None:
+            raise RuntimeError("active profile label unavailable after profile manager session")
+        emit_manager_closed(ctx, label, created=False)
         return None
 
     return _dispatch
@@ -198,14 +201,6 @@ def open_the_edit_target_or_refuse(ctx: _TyperClickContext, supplied: object) ->
             profile_name=target.label,
         ),
     )
-
-
-def active_profile_label() -> str:
-    """The active profile's operator-facing label, for the closing envelope."""
-    from ....application.user_profile import ProfileRepository
-    from ....core import require_active_bucket_id
-
-    return ProfileRepository().load(require_active_bucket_id()).label
 
 
 def emit_registration_abandoned(ctx: _TyperClickContext) -> None:

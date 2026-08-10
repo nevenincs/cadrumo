@@ -20,11 +20,16 @@ concrete profiles the pointer names.
 
 from __future__ import annotations
 
+import ast
+import inspect
+
 import pytest
 import typer
 from typer.core import TyperCommand
 
 from .....tests.secure_sql import isolated_profile_storage_root
+from ... import _common
+from .. import _manager_dispatch
 from .._manager_dispatch import open_the_edit_target_or_refuse
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -41,6 +46,19 @@ def _context() -> typer.Context:
 #: which would make a two-profile test fail in setup for a reason that has
 #: nothing to do with what it is checking.
 _OPERATOR_SECRET = "manager-edit-target-operator-secret"  # noqa: S105 - synthetic test fixture
+
+
+def test_manager_uses_the_canonical_cli_active_profile_label_resolver() -> None:
+    """The manager must not redeclare the CLI identity projection."""
+    tree = ast.parse(inspect.getsource(_manager_dispatch))
+    declarations = [
+        node
+        for node in tree.body
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
+        and node.name == "active_profile_label"
+    ]
+    assert declarations == []
+    assert _manager_dispatch.active_profile_label is _common.active_profile_label
 
 
 def _register(label: str) -> str:
