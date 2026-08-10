@@ -247,7 +247,8 @@ def _register_iva_wallet_seed_command(iva_wallet_app: typer.Typer, *, active_buc
             period=state.period,
             taxpayer_nif=state.taxpayer_nif,
             amount=str(state.available_end_amount),
-            status=str(state.status),
+            provenance=state.provenance,
+            register_status=state.status,
         )
         lines = [
             "operation\tmodelo.iva-wallet.seed",
@@ -255,7 +256,8 @@ def _register_iva_wallet_seed_command(iva_wallet_app: typer.Typer, *, active_buc
             f"period\t{state.period.registry_token}",
             f"taxpayer_nif\t{state.taxpayer_nif}",
             f"amount\t{state.available_end_amount}",
-            f"status\t{state.status}",
+            f"provenance\t{state.provenance.value}",
+            f"register_status\t{state.status or ''}",
         ]
         _emit_envelope(ctx, command="modelo.iva_wallet.seed", result=seed_result, lines=lines)
 
@@ -415,7 +417,8 @@ def _register_iva_wallet_correct_command(iva_wallet_app: typer.Typer, *, active_
             taxpayer_nif=state.taxpayer_nif,
             previous_amount=str(previous_state.available_end_amount) if previous_state is not None else "",
             amount=str(state.available_end_amount),
-            status=str(state.status),
+            provenance=state.provenance,
+            register_status=state.status,
             reason=clean_reason,
         )
         lines = [
@@ -425,7 +428,8 @@ def _register_iva_wallet_correct_command(iva_wallet_app: typer.Typer, *, active_
             f"taxpayer_nif\t{state.taxpayer_nif}",
             f"previous_amount\t{previous_state.available_end_amount if previous_state is not None else ''}",
             f"amount\t{state.available_end_amount}",
-            f"status\t{state.status}",
+            f"provenance\t{state.provenance.value}",
+            f"register_status\t{state.status or ''}",
             f"reason\t{clean_reason}",
         ]
         _emit_envelope(ctx, command="modelo.iva_wallet.correct", result=correct_result, lines=lines)

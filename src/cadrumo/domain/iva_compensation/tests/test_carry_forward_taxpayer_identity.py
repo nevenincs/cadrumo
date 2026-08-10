@@ -23,7 +23,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core import Period
+from ....core import IvaCompensationStateProvenance, Period
 from .._carry_forward import (
     IvaCompensationCarryForwardLot,
     IvaCompensationExpiryReviewState,
@@ -42,6 +42,7 @@ _PRESENTED_AT = datetime(2025, 4, 20, tzinfo=UTC)
 def _period_state(taxpayer_nif: str) -> IvaCompensationPeriodState:
     return IvaCompensationPeriodState(
         taxpayer_nif=taxpayer_nif,
+        provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
         filing_year=2025,
         period=Period.from_year_and_code(2025, "1T"),
         expediente_id="202530300000001Z",
@@ -102,10 +103,9 @@ def test_period_state_allows_an_explicitly_undeclared_subject() -> None:
     """
     state = IvaCompensationPeriodState(
         taxpayer_nif=None,
+        provenance=IvaCompensationStateProvenance.CASILLA_RECONSTRUCTION,
         filing_year=2025,
         period=Period.from_year_and_code(2025, "1T"),
-        expediente_id="obs-2025-1T",
-        status="filed",
         presented_at=_PRESENTED_AT,
         generated_amount=Decimal("100.00"),
         available_end_amount=Decimal("100.00"),

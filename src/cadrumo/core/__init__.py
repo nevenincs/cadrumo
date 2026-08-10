@@ -169,6 +169,7 @@ from ._irnr import (
     project_m210_tipo_renta_code,
 )
 from ._iva_category_resolution import IvaCategoryOutcome
+from ._iva_compensation_provenance import IvaCompensationStateProvenance
 from ._ledger_sort import LedgerSortField, LedgerSortOrder
 from ._model_catalogue import (
     ANTHROPIC_COMMERCIAL_TERMS,
@@ -202,11 +203,6 @@ from ._operator_action_enums import (
     ActionConditionality,
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
-)
-from ._precondition_action_invariants import (
-    PreconditionActionIdentity,
-    PreconditionEvidence,
-    PreconditionOutcomeInvariant,
 )
 from ._operator_progress import OperatorProgress
 from ._optional_extras import (
@@ -243,6 +239,11 @@ from ._post_filing_event import (
     PostFilingEventKind,
     classify_post_filing_event_kind,
     post_filing_event_is_actionable,
+)
+from ._precondition_action_invariants import (
+    PreconditionActionIdentity,
+    PreconditionEvidence,
+    PreconditionOutcomeInvariant,
 )
 from ._prior_domiciliation_election import PriorDomiciliationElection
 from ._profile_session import ProfileSessionRefusalReason
@@ -458,12 +459,12 @@ __all__: list[str] = [
     "ActionArgumentStatus",
     "ActionConditionality",
     "ActionEvidenceProvenance",
+    "AggregationCaptureKind",
     "AmendmentKindRegime",
     "AmendmentLiabilityDirection",
     "Art104TresExclusion",
     "AuthProviderDescription",
     "AuthProviderKind",
-    "AggregationCaptureKind",
     "BindingSourceKind",
     "BucketPointer",
     "CasillaId",
@@ -507,6 +508,7 @@ __all__: list[str] = [
     "ImageMediaType",
     "IntracomOperationType",
     "IvaCategoryOutcome",
+    "IvaCompensationStateProvenance",
     "LedgerSortField",
     "LedgerSortOrder",
     "LicenceVerification",
@@ -536,11 +538,11 @@ __all__: list[str] = [
     "PeriodKind",
     "PersistedFormatClass",
     "PostFilingEventKind",
-    "PriorDomiciliationElection",
-    "ProductIdentity",
     "PreconditionActionIdentity",
     "PreconditionEvidence",
     "PreconditionOutcomeInvariant",
+    "PriorDomiciliationElection",
+    "ProductIdentity",
     "ProfileSessionRefusalReason",
     "ProrrataProvisionalProvenance",
     "ProrrataRegisterRegime",

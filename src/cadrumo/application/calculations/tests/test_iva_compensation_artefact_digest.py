@@ -23,7 +23,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core import Period
+from ....core import IvaCompensationStateProvenance, Period
 from ....domain.iva_compensation import IvaCompensationPeriodState
 from .._iva_compensation_history import IvaCompensationAnnualSummary
 
@@ -52,6 +52,7 @@ def _annual_summary(digest: str | None) -> IvaCompensationAnnualSummary:
 
 def _period_state(digest: str | None) -> IvaCompensationPeriodState:
     return IvaCompensationPeriodState(
+        provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
         taxpayer_nif=_VALID_NIF,
         filing_year=2025,
         period=Period.from_year_and_code(2025, "1T"),
@@ -151,6 +152,7 @@ def _annual_summary_with_nif(nif: str) -> IvaCompensationAnnualSummary:
 
 def _period_state_with_nif(nif: str) -> IvaCompensationPeriodState:
     return IvaCompensationPeriodState(
+        provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
         taxpayer_nif=nif,
         filing_year=2025,
         period=Period.from_year_and_code(2025, "1T"),

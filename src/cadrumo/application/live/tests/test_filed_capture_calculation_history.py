@@ -21,7 +21,7 @@ from ....adapters.outbound.aeat.sede import (
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from ....core import CasillaValueKind, Period, validated_casilla_id
+from ....core import CasillaValueKind, IvaCompensationStateProvenance, Period, validated_casilla_id
 from ....core.config import Settings
 from ....core.json_contract import NoticeSeverity
 from ....domain.buckets import BucketEventType
@@ -318,6 +318,7 @@ def test_binding_prefill_uses_profile_secure_iva_compensation_history(tmp_path: 
         history_repository = IvaCompensationHistoryRepository()
         history_repository.save_period(
             IvaCompensationPeriodState(
+                provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
                 taxpayer_nif=_SYNTHETIC_PROFILE_ID,
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "1T"),
@@ -1523,21 +1524,23 @@ def test_fixture_csv_constants_still_match_the_receipts() -> None:
 def test_binding_prefill_refuses_incomplete_prior_filing_observation(tmp_path: Path) -> None:
     with _secure_backend(tmp_path):
         repository = CalculationObservationRepository()
-        repository.save(repository.prepare_observation_envelope(
-            RegistryModeloObservation(
-                modelo="303",
-                filing_year=2026,
-                period="1T",
-                observations=registry_grounded_observations(
+        repository.save(
+            repository.prepare_observation_envelope(
+                RegistryModeloObservation(
                     modelo="303",
                     filing_year=2026,
                     period="1T",
-                    casilla_values={_M303_POSTERIOR_CASILLA: Decimal("1200.00")},
+                    observations=registry_grounded_observations(
+                        modelo="303",
+                        filing_year=2026,
+                        period="1T",
+                        casilla_values={_M303_POSTERIOR_CASILLA: Decimal("1200.00")},
+                    ),
                 ),
-            ),
-            source_kind="aeat_sede_justificante",
-            captured_at=_CAPTURED_AT,
-        ))
+                source_kind="aeat_sede_justificante",
+                captured_at=_CAPTURED_AT,
+            )
+        )
 
         target_snapshot = _registry_snapshot("303", 2026, "2T")
 

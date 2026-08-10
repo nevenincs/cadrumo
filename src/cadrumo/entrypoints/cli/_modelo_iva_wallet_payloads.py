@@ -29,7 +29,7 @@ from __future__ import annotations
 
 from pydantic import Field, field_validator
 
-from ...core import Period
+from ...core import IvaCompensationStateProvenance, Period
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.json_contract import OutputSchema, register_schema
 
@@ -83,7 +83,8 @@ class IvaWalletSeedResult(OutputSchema):
     period: Period
     taxpayer_nif: str
     amount: str
-    status: str
+    provenance: IvaCompensationStateProvenance
+    register_status: str | None = None
 
 
 @register_schema("modelo.iva_wallet.override")

@@ -15,7 +15,7 @@ from decimal import Decimal
 from typing import Final
 
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
-from ...core import BindingSourceKind, CasillaId, Modelo, Period
+from ...core import BindingSourceKind, CasillaId, IvaCompensationStateProvenance, Modelo, Period
 from ...core.logging import get_logger
 from ...core.time import now
 from ...domain.calculations.registry import (
@@ -139,10 +139,9 @@ def _period_state_from_303_envelope(envelope: ObservationEnvelopePayload) -> Iva
         # persisted, never shown. Declaring no subject is honest; a synthetic
         # label in the identity field reads downstream as if it named one.
         taxpayer_nif=None,
+        provenance=IvaCompensationStateProvenance.CASILLA_RECONSTRUCTION,
         filing_year=observation.filing_year,
         period=period,
-        expediente_id=f"obs-{observation.filing_year}-{observation.period}",
-        status="filed",
         presented_at=now(),
         prior_pending_amount=None,
         applied_amount=applied,

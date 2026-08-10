@@ -14,7 +14,7 @@ from ....adapters.outbound.aeat.sede import (
     IvaCompensationWalletObservation,
     IvaCompensationWalletRow,
 )
-from ....core import BindingSourceKind, Period
+from ....core import BindingSourceKind, IvaCompensationStateProvenance, Period
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
 from ....core.resources import resources
 from ....domain.iva_compensation import (
@@ -266,11 +266,10 @@ def test_modelo_303_reconciliation_auto_zeroes_from_positive_prior_local_filing(
     with isolated_runtime_profile(tmp_path=tmp_path):
         IvaCompensationHistoryRepository().save_period(
             IvaCompensationPeriodState(
+                provenance=IvaCompensationStateProvenance.APP_FILING,
                 taxpayer_nif=_TAXPAYER_REF,
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "2T"),
-                expediente_id="30320262T0000000000",
-                status="app_filing",
                 presented_at=datetime(2026, 7, 15, 10, 0, tzinfo=UTC),
                 prior_pending_amount=Decimal("0"),
                 applied_amount=Decimal("0"),
@@ -324,11 +323,10 @@ def test_disabled_generic_recurrence_producer_contributes_nothing_to_the_returne
     with isolated_runtime_profile(tmp_path=tmp_path):
         IvaCompensationHistoryRepository().save_period(
             IvaCompensationPeriodState(
+                provenance=IvaCompensationStateProvenance.APP_FILING,
                 taxpayer_nif=_TAXPAYER_REF,
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "2T"),
-                expediente_id="30320262T0000000000",
-                status="app_filing",
                 presented_at=datetime(2026, 7, 15, 10, 0, tzinfo=UTC),
                 prior_pending_amount=Decimal("0"),
                 applied_amount=Decimal("0"),

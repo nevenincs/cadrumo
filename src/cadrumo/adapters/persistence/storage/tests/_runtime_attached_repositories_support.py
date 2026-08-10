@@ -54,7 +54,7 @@ from .....application.workflow import (
     WorkflowStateRepository,
     WorkflowStep,
 )
-from .....core import CasillaId, validated_casilla_id
+from .....core import CasillaId, IvaCompensationStateProvenance, validated_casilla_id
 from .....core import Period as _Period
 from .....core.config import override_settings
 from .....domain import ModeloIdentifier
@@ -667,6 +667,7 @@ def _history(label: str) -> ModeloHistory:
 def _iva_state(label: str) -> IvaCompensationPeriodState:
     period = "1T" if label.endswith("a") else "2T"
     return IvaCompensationPeriodState(
+        provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
         taxpayer_nif="00000000T",
         filing_year=2026,
         period=_Period.from_year_and_code(2026, period),

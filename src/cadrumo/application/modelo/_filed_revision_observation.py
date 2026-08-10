@@ -52,7 +52,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Final
 
-from ...core import Modelo, ResultDisposition
+from ...core import IvaCompensationStateProvenance, Modelo, ResultDisposition
 from ...domain.calculations.registry import RegistryModeloObservation
 from ...domain.modelos import CalculationRevision, WorkUnit
 from ..calculations import (
@@ -72,11 +72,6 @@ APP_FILING_SOURCE_KIND: Final = ObservationSourceKind.APP_FILING
 Deliberately not official AEAT evidence: a locally-filed value must never
 satisfy the cross-period clean-state filing gate.
 """
-
-
-def _local_iva_history_expediente_id(filing_ref: str) -> str:
-    """Derive the non-AEAT expediente marker stored for local IVA history rows."""
-    return f"local-{filing_ref[:26]}"
 
 
 def _history_repository_in_observation_context(
@@ -272,8 +267,7 @@ def persist_filed_revision_observation(
             history_repository=history_repo,
             envelope=payload,
             taxpayer_nif=taxpayer_nif.strip(),
-            expediente_id=_local_iva_history_expediente_id(filing_ref),
-            status=APP_FILING_SOURCE_KIND,
+            provenance=IvaCompensationStateProvenance.APP_FILING,
             source_observation_key=f"{key}:local:{filing_ref[:64]}",
         )
     else:

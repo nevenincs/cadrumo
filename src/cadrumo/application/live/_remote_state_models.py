@@ -19,7 +19,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict
 
-from ...core import Period
+from ...core import IvaCompensationStateProvenance, Period
 from ...core.json_contract import Notice
 from ._errors import LiveIvaAcquisitionFailureMode
 
@@ -193,7 +193,8 @@ class IvaCompensationHistoryRow(BaseModel):
 
     year: int
     period: Period
-    status: str
+    provenance: IvaCompensationStateProvenance
+    register_status: str | None
     presented_at: datetime
     prior_pending_amount: str | None
     applied_amount: str | None

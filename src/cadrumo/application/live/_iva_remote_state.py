@@ -388,7 +388,8 @@ def _history_row(state: _IvaCompensationPeriodState) -> IvaCompensationHistoryRo
     return IvaCompensationHistoryRow(
         year=state.filing_year,
         period=state.period,
-        status=state.status,
+        provenance=state.provenance,
+        register_status=state.status,
         presented_at=state.presented_at,
         prior_pending_amount=_decimal_text(state.prior_pending_amount),
         applied_amount=_decimal_text(state.applied_amount),
@@ -690,9 +691,7 @@ async def _capture_iva_compensation_wallet_with_session(
         settings=settings,
     )
     store_root = (
-        output_root
-        if output_root is not None
-        else settings.cadrumo_live_state_dir / _LIVE_STATE_IVA_WALLET_DIRNAME
+        output_root if output_root is not None else settings.cadrumo_live_state_dir / _LIVE_STATE_IVA_WALLET_DIRNAME
     )
     return persist_and_reconcile_iva_compensation_wallet(observation, output_root=store_root)
 
