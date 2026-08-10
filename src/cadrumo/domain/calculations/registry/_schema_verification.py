@@ -47,7 +47,7 @@ floor at each call site, where the three could quietly disagree.
 from __future__ import annotations
 
 import re as _re
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
@@ -74,6 +74,7 @@ __all__ = [
     "VerificationPredicateSpecification",
     "VerificationPredicateSyntax",
     "VerificationRoundingCode",
+    "fold_reconciliation_total_casilla_ids",
     "parse_verification_predicate_expression",
     "verification_predicate_operator_name",
 ]
@@ -200,6 +201,42 @@ class VerificationExpectationDefinition(RegistryModel):
         return self
 
 
+def fold_reconciliation_total_casilla_ids(
+    expectations: Iterable[VerificationExpectationDefinition],
+) -> Mapping[Literal["ingresar", "devolver"], CasillaId]:
+    """Fold every expectation's reconciliation-total casillas into one mapping.
+
+    The canonical fold for this axis. Three surfaces need it -- the verification
+    policy, the filing subview and the result summary -- and each previously
+    open-coded its own loop with a different tie-break, so the same revision
+    could in principle name one casilla as the ``ingresar`` total on one surface
+    and a different one on another.
+
+    AMBIGUITY IS REFUSED RATHER THAN RESOLVED. The other folded axes have a
+    defensible ordering -- union for a set, strictest for a tolerance -- but
+    there is no "stricter" of two casilla ids, so any tie-break here would be an
+    invention rather than a rule, and whichever surface adopted it first would
+    silently become the authority. Two expectations naming DIFFERENT casillas
+    for one kind is a registry-authoring fault, so it raises; naming the same
+    casilla twice is harmless and folds to one entry.
+
+    Raises:
+        RegistryValidationError: When two expectations declare different casilla
+            ids for the same reconciliation kind.
+    """
+    folded: dict[Literal["ingresar", "devolver"], CasillaId] = {}
+    for expectation in expectations:
+        for kind, casilla_id in expectation.reconciliation_total_casilla_ids.items():
+            existing = folded.get(kind)
+            if existing is not None and existing != casilla_id:
+                raise RegistryValidationError(
+                    f"verification expectations declare conflicting reconciliation totals for {kind!r}: "
+                    f"{existing!r} and {casilla_id!r}",
+                )
+            folded[kind] = casilla_id
+    return dict(sorted(folded.items()))
+
+
 @dataclass(frozen=True, slots=True)
 class RegistryVerificationPolicy:
     """Folded verification policy across a snapshot's verification expectations.
@@ -224,6 +261,10 @@ class RegistryVerificationPolicy:
     """
 
     expectation_ids: tuple[VerificationExpectationId, ...]
+    #: The folded reconciliation-total casillas, from
+    #: :func:`fold_reconciliation_total_casilla_ids`. Carried on the policy so a
+    #: consumer that already holds one does not re-derive the fold.
+    reconciliation_total_casilla_ids: Mapping[Literal["ingresar", "devolver"], CasillaId]
     computed_casilla_ids: frozenset[CasillaId]
     reconcile_when_present_casilla_ids: frozenset[CasillaId]
     externally_grounded_casilla_ids: frozenset[CasillaId]

@@ -135,6 +135,7 @@ from ._schema_verification import (
     RegistryVerificationPolicy,
     VerificationExpectationDefinition,
     VerificationPredicateDefinition,
+    fold_reconciliation_total_casilla_ids,
 )
 from ._toml_helpers import as_toml_table as _as_toml_table
 
@@ -1511,6 +1512,7 @@ class RegistrySnapshot(RegistryModel):
             externally_grounded_casilla_ids=frozenset(
                 casilla_id for expectation in expectations for casilla_id in expectation.externally_grounded_casilla_ids
             ),
+            reconciliation_total_casilla_ids=fold_reconciliation_total_casilla_ids(expectations),
             tolerance=min(expectation.tolerance for expectation in expectations),
             min_coverage=max(expectation.min_coverage for expectation in expectations),
             rounding_codes=frozenset(expectation.rounding for expectation in expectations),

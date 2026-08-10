@@ -517,6 +517,7 @@ from ._schema_verification import (
     VerificationPredicateOperator,
     VerificationPredicateSpecification,
     VerificationPredicateSyntax,
+    fold_reconciliation_total_casilla_ids,
     parse_verification_predicate_expression,
     verification_predicate_operator_name,
 )
@@ -1035,6 +1036,7 @@ __all__ = [
     "expression_relation_refs",
     "extract_record_design",
     "extract_record_design_pdf",
+    "fold_reconciliation_total_casilla_ids",
     "extract_record_design_pdf_bytes",
     "extract_record_design_workbook",
     "fixed_width_record_casilla_ids",

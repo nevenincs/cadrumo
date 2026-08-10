@@ -19,6 +19,29 @@ The three surfaces are named from the parity use — ``local``, ``sheets``,
 "what the spreadsheet currently holds", and "absent". A divergent row is then
 precisely a cell whose value would change.
 
+COMPARISON IS EXACT, AND THAT IS THE CONTRACT RATHER THAN AN OVERSIGHT. The
+reconcile surfaces compare filed against computed at the tolerance the registry
+publishes per verification expectation, and it would be natural to assume this
+module simply forgot to. It did not, for three reasons, and the first is
+decisive: THE REGISTRY PUBLISHES NO TOLERANCE FOR THIS AXIS. Its tolerance is
+declared on verification expectations, which govern filed-versus-computed
+reconciliation -- a legal question about whether a taxpayer's return agrees with
+the authority. Engine-versus-spreadsheet is not that question, so adopting that
+tolerance here would apply a legal allowance to an axis no law governs.
+
+Second, the preview consumer asks "would this cell's value change", and any
+difference is a write. A tolerance would make the preview UNDER-report cells the
+apply would overwrite, which is the one error a dry run must not make. Third,
+the parity consumer asks whether the spreadsheet reproduces the engine, and a
+cent of slack there would hide exactly the formula transcription error the
+harness exists to catch.
+
+So a future reader reconciling this module against the reconcile surfaces should
+not fold it onto ``verification_policy().tolerance``. If a real rounding
+difference is ever observed between the Decimal runtime and a spreadsheet
+formula, the fix is to quantize both sides to the modelo's money scale before
+comparison, not to widen the comparison.
+
 See Also:
     :func:`~application.storage.calc_sheets.verify_modelo_parity`
         The three-way harness that acquires the values and calls this.

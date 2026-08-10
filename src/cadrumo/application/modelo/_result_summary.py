@@ -43,6 +43,7 @@ from ...core.errors import CadrumoError
 from ...core.i18n import output_language
 from ...core.logging import get_logger
 from ...domain.calculations.registry import CasillaId
+from ...domain.calculations.registry import fold_reconciliation_total_casilla_ids
 from ...domain.modelos import CalculationRevision, WorkUnit
 from ._calculation_helpers import resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit
 from ._work_lifecycle import get_work_unit
@@ -148,10 +149,10 @@ def calculation_result_summary(
     casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
     result_roles: dict[CasillaId, ResultSummaryRole] = {}
     key_figures: list[CasillaId] = []
+    for kind, casilla_id in fold_reconciliation_total_casilla_ids(snapshot.revision.verification_expectations).items():
+        role = ResultSummaryRole.RESULT_INGRESAR if kind == "ingresar" else ResultSummaryRole.RESULT_DEVOLVER
+        result_roles.setdefault(casilla_id, role)
     for expectation in snapshot.revision.verification_expectations:
-        for kind, casilla_id in expectation.reconciliation_total_casilla_ids.items():
-            role = ResultSummaryRole.RESULT_INGRESAR if kind == "ingresar" else ResultSummaryRole.RESULT_DEVOLVER
-            result_roles.setdefault(casilla_id, role)
         for casilla_id in expectation.computed_casilla_ids:
             if casilla_id not in key_figures:
                 key_figures.append(casilla_id)
