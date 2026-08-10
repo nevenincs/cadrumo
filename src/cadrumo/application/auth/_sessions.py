@@ -30,7 +30,7 @@ from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, SkipValidation, TypeAdapter, ValidationError
 
-from ...core import STRICT_FROZEN_CONFIG, AuthProviderKind
+from ...core import STRICT_FROZEN_CONFIG, AuthProviderKind, ClaveMovilRoute
 from ...core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from ...core.errors import CadrumoError
 from ...core.identity import IdentityError, validate_spanish_tax_id
@@ -659,9 +659,14 @@ def _prepare_clave_auth(
     if credentials is None:
         _assert_profile_identity_available_for_deferred_check(facts)
         return settings, facts.tax_id or None
-    _require_clave_credentials(settings, credentials)
+    bound_settings = _bind_clave_credentials_to_settings(
+        settings,
+        credentials,
+        route=facts.clave_movil_route,
+    )
+    _require_clave_credentials(bound_settings, credentials)
     expected_identity = _assert_active_profile_identity_matches_provider(credentials)
-    return _bind_clave_credentials_to_settings(settings, credentials), expected_identity
+    return bound_settings, expected_identity
 
 
 def _resolve_clave_credentials(
@@ -896,6 +901,8 @@ def _assert_active_profile_identity_matches_provider(
 def _bind_clave_credentials_to_settings(
     settings: Settings,
     credentials: ClaveCredentials,
+    *,
+    route: ClaveMovilRoute | None,
 ) -> Settings:
     """Return settings carrying the profile's Cl@ve credentials.
 
@@ -913,6 +920,8 @@ def _bind_clave_credentials_to_settings(
         )
         overrides[field] = SecretStr(credentials.profile_dni_nie)
     if credentials.provider_kind is AuthProviderKind.CLAVE_MOVIL:
+        if route is not None:
+            overrides["cadrumo_clave_prefer_non_qr"] = route is ClaveMovilRoute.APP_REQUEST
         if credentials.profile_numero_soporte:
             overrides["cadrumo_clave_movil_nie_soporte"] = SecretStr(credentials.profile_numero_soporte)
         if credentials.profile_fecha_validez:
@@ -944,6 +953,7 @@ class ClaveAuthFacts(BaseModel):
     dni_nie: str = ""
     numero_soporte: str = ""
     fecha_validez: str = ""
+    clave_movil_route: ClaveMovilRoute | None = None
     profile_status: UserProfileStatus | None = None
 
 
@@ -970,6 +980,11 @@ def clave_auth_facts_from_profile_values(
         dni_nie=_normalise_tax_identity(values.get("auth.dni_nie")),
         numero_soporte=_normalise_credential(values.get("auth.numero_soporte")),
         fecha_validez=_normalise_credential(values.get("auth.fecha_validez")),
+        clave_movil_route=(
+            ClaveMovilRoute(route)
+            if (route := _normalise_credential(values.get("auth.clave_movil_route")))
+            else None
+        ),
         profile_status=profile_status,
     )
 

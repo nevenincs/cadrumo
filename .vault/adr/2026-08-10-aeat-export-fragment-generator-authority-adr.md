@@ -12,7 +12,7 @@ supersedes:
   - '2026-08-08-aeat-design-relayout-boundary-export-fragment-generator-adr'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:a5c0ca83480ef9f5b1ae749db21012c0ec21ff61d260144370aa8941e38d5d52'
+body_hash: 'sha256:df91ac1a2d6515d8e44766c72c33084866728e21bf01cdb4ad5c6a9f174a739b'
 ---
 # `aeat-export-fragment-generator-authority` adr: `official-binary coordinates, reviewed render profiles, and semantic maps generate export fragments` | (**status:** `accepted`)
 
@@ -43,7 +43,7 @@ The accepted official-binary and semantic-map split leaves some wire facts unaut
 - The parser may recover official integer totals expressed by the source's `Total:` label and must prove them against terminal extent. It never invents a total, content value, coordinate, or wire interpretation.
 - A separate per-modelo, per-design semantic map supplies only registry meaning and is keyed by exact source anchors. Renderer formatting and transport interpretation never enter semantic-map entries. The join is bijective and refuses the entire design on missing, duplicate, fuzzy, or ambiguous matches.
 - One exhaustive per-design render profile, bound to the exact source SHA-256, is the sole reviewed authority for wire facts absent at their exact workbook field anchors. It may not override or conflict with wire facts present in the official source.
-- Every profile rule resolves to exact source anchors. Coverage must be complete for every otherwise-unrenderable field, including all smaller-width fields; group conventions require an explicit reviewed membership set rather than type-and-width inference.
+- Every profile rule resolves to exact source anchors. Coverage must be complete for every otherwise-unrenderable field, including all 126 smaller-width fields; group conventions require an explicit reviewed membership set rather than type-and-width inference.
 - Profiles distinguish unsigned `Num` handling from signed `N` handling and define the sign representation explicitly. No numeric, decimal, date, flag, identifier, digit-string, or literal default is implicit.
 - Missing anchors, uncovered fields, duplicate or overlapping rules, conflicts with official content, inapplicable design identity, or source-hash drift refuse the whole design before output.
 - `DP200000` is a typed variable envelope and composition wrapper outside fixed-width record generation. It is never truncated to its fixed prefix, assigned an inferred fixed total, or emitted as a fixed record; its envelope and composition behavior must be modeled separately and proven before any generation for that design.
@@ -65,7 +65,7 @@ Generate the entire target revision's `export/` tree plus an adjacent non-loader
 
 Generate into a temporary target, load and validate it completely, compare normalized semantics and provenance, and swap atomically. `--check` regenerates independently and refuses semantic, profile, provenance, or exact generated drift.
 
-The gate suite covers parser completeness, official-total recovery, fixed-record geometry, variable-envelope classification and composition, canonical-reference validity, mapping bijection, exhaustive profile coverage, `Num` versus signed-`N` encoding, all smaller-field rules, applicability, deterministic double generation, mutation failures, extent and overlap, complete registry load, repository drift, and real emitted bytes across representative revision boundaries.
+The gate suite covers parser completeness, official-total recovery, fixed-record geometry, variable-envelope classification and composition, canonical-reference validity, mapping bijection, exhaustive profile coverage, `Num` versus signed-`N` encoding, all 126 smaller-field rules, applicability, deterministic double generation, mutation failures, extent and overlap, complete registry load, repository drift, and real emitted bytes across representative revision boundaries.
 
 ## Rationale
 

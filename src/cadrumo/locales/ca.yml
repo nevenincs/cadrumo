@@ -3174,8 +3174,6 @@ cli:
           viu)
         history_help: Mostra tots els esdeveniments del cicle de vida d'una unitat
           de treball
-        history_next_action: Revisa l'estat actual d'aquesta unitat de treball amb
-          `aeat app modelo work status`.
         history_next_action_summary: Revisa l'estat actual d'aquesta unitat de treball.
         history_work_unit_id_help: Id d'unitat de treball el cicle de vida de la qual
           vols veure
@@ -3207,9 +3205,6 @@ cli:
           signe igual i el valor a la dreta. S''ha rebut {spec}.'
         list_help: Llistar les unitats de treball registrades, opcionalment filtrades
           per perfil
-        list_next_action: Inspecciona l'estat complet d'una unitat de treball amb
-          `aeat app modelo work status` i després crea o recalcula l'esborrany amb
-          `aeat app modelo work calculate`.
         list_next_action_summary: Inspecciona l'estat complet d'una unitat de treball
           abans de crear o recalcular-ne l'esborrany.
         m184_socio_handoff_message: 'Règim d''atribució de rendes: el soci %{nif}
@@ -3416,21 +3411,14 @@ cli:
         state_label_presentado_supersedido: Presentació substituïda
         state_label_verificado_completo: Verificat complet
         status_help: Mostrar les metadades d'una unitat de treball
-        status_next_action: Crea o recalcula aquesta unitat amb `aeat app modelo work
-          calculate` i després verifica l'esborrany amb `aeat app modelo work verify`.
         status_next_action_summary: Crea o recalcula aquesta unitat de treball i després
           verifica l'esborrany resultant.
         verify_help: Verificar una revisió draft contra el contracte verified-complete
         verify_idempotent_noop: 'Operació idempotent sense efecte: la revisió de càlcul
           %{calculation_revision_id} ja està verificada; s''ha retornat l''informe
           de verificació existent sense canvis.'
-        verify_next_action_granted: La verificació s'ha superat. Exporta l'artefacte
-          de presentació amb `aeat app modelo export`.
         verify_next_action_granted_summary: La verificació s'ha superat. Exporta l'artefacte
           de presentació.
-        verify_next_action_incomplete: La verificació ha trobat elements bloquejadors
-          (consulta els avisos anteriors). Resol-los, recalcula amb `aeat app modelo
-          work calculate` i torna a executar `aeat app modelo work verify`.
         verify_next_action_incomplete_summary: La verificació ha trobat elements bloquejadors.
           Resol-los, recalcula i torna a executar la verificació.
         verify_selector_help: Selector de revisió esborrany (current, latest-draft
@@ -5454,9 +5442,6 @@ cli:
     coverage:
       incomplete_summary: 'No s''han pogut determinar amb certesa %{count} obligació(ns)
         de presentació per a aquest perfil i podrien quedar sense declarar: %{modelos}.'
-      investigate: 'No s''han pogut determinar amb certesa %{count} obligació(ns)
-        de presentació per a aquest perfil i podrien quedar sense declarar: %{modelos}.
-        Investigueu cadascuna amb ''aeat app overview explain <modelo>''.'
     drafts: Esborranys
     explain:
       help: Descompon l'aplicabilitat d'un modelo davant del perfil actiu. Mostra
@@ -5489,8 +5474,6 @@ cli:
         0A (anual), 01-12 (mesos). Combina''l amb --year per triar l''any.'
       year_help: Any de declaració (p. ex. 2026).
     post_filing:
-      pending: '%{count} esdeveniment(s) posteriors a la presentació d''AEAT requereixen
-        atenció: %{kinds}. Revisa''ls amb ''aeat app live notifications list''.'
       pending_summary: '%{count} esdeveniment(s) posteriors a la presentació d''AEAT
         requereixen atenció: %{kinds}.'
     prepare:
@@ -5739,8 +5722,6 @@ cli:
       session_unchecked: La sessió i la preparació no s'infereixen del perfil seleccionat.
       tagline: Flux local amb l'Agència Estatal d'Administració Tributària (AEAT)
         per a contribuents i assessors.
-      welcome_no_profile: 'Perfil actiu: cap. Crea''n un abans del treball vinculat
-        al perfil.'
       welcome_profile: 'Perfil actiu: `%{profile}`.'
       welcome_profile_unavailable: 'Perfil actiu: no disponible. Repara el perfil
         seleccionat abans del treball vinculat al perfil.'
@@ -7496,7 +7477,6 @@ flows:
         a provar.
     language:
       unavailable: Aquest perfil no ofereix cap configuració d'idioma.
-    progress: '{present} de {total} camps emplenats, en falten {missing} per presentar'
     recovery_boundary: 'La creació i la rotació del codi de recuperació només es fan
       des del terminal: aeat config recovery create / aeat config recovery rotate.
       Les 24 paraules es mostren una sola vegada i no es poden tornar a mostrar.'

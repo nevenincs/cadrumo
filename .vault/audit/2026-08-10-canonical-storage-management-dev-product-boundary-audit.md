@@ -5,7 +5,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:ff9204c9ab81ca8d4a55c2a249f8c7c9e221c86adb1a614929dadba081c2abb4'
+body_hash: 'sha256:3a25686a1e458c98dc3f3f0a26b8460b55fa85ba0c39bb86aa30fab7548291c8'
 related:
   - "[[2026-08-03-canonical-storage-management-adr]]"
   - "[[2026-08-03-canonical-storage-management-research]]"
@@ -81,3 +81,13 @@ A focused run spanning storage CLI and services, the operator CRUD catalogue, co
 ## Re-review recommendation
 
 Keep `StorageArea`'s canonical wire and argument tokens stable, but introduce localized text-mode display values for the four areas and use them in list, show, and storage-specific refusal prose. Route the storage refusal heading, reason, and human-facing context labels through the selected locale as well. Extend the Spanish real-CLI test to cover every area display value plus both durable and unconfirmed reclaim refusals; the current two-negative-string assertion is too narrow to establish one coherent output language.
+
+## Final localization resolution
+
+### storage-text-localization | resolved | Spanish text is coherent while contract tokens stay stable
+
+The exact Spanish list command now renders `estado`, `registros`, `cachÃ©`, and `exportaciones` as text-mode area display values, alongside localized headings, lifecycle and occupancy values, Boolean labels, and the `InformaciÃ³n:` notice prefix. The exact durable-state refusal renders `Rechazado.`, `el Ã¡rea contiene estado duradero`, and the localized context labels `Ã¡rea`, `nÃºmero de entradas`, and `motivo`; the unconfirmed-cache refusal likewise renders `Rechazado.`, `cachÃ©`, and localized context labels with no English refusal residue.
+
+The localization is presentation-only. `config storage show --help` still advertises the exact stable argument set `state|logs|cache|exports`, and Spanish JSON output retains those same area tokens plus the unchanged lifecycle and occupancy wire values. The integration suite now asserts every Spanish area display value and both refusal paths, including positive localized text and negative English-residue checks; all 18 focused storage CLI integration tests pass.
+
+No open finding remains in the R24-R30 storage localization and dev/product-boundary review scope.

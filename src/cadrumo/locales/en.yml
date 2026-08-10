@@ -6936,6 +6936,8 @@ flows:
       add_row_required: This is required; the row cannot be added without it.
       add_row_section: Which section to add to
       auth_clave_incomplete: Cl@ve still needs %{missing}. Nothing was saved.
+      auth_clave_movil_route: Cl@ve Móvil confirmation route
+      auth_clave_movil_route_qr: QR code in a visible browser
       auth_contraste_missing: 'Cl@ve Móvil without QR needs the contraste from your
         document: the support number for a NIE, or the validity date for a DNI. Nothing
         was saved.'
@@ -7028,7 +7030,6 @@ flows:
         again.
     language:
       unavailable: This profile does not offer a language setting.
-    progress: '{present} of {total} fields filled in, {missing} still needed for filing'
     recovery_boundary: 'Recovery-code creation and rotation are terminal-only: aeat
       config recovery create / aeat config recovery rotate. The 24 words are shown
       once and cannot be shown again.'

@@ -225,7 +225,7 @@ async def test_editing_one_field_repaints_that_row_without_rebuilding_the_tables
             tables = list(app.query(DataTable))
             from .. import PinnedStatusBar
 
-            progress = app.query_one("#manager-status", PinnedStatusBar).summary
+            required_context = app.query_one("#manager-status", PinnedStatusBar).summary
             untouched = {path: cells for path, cells in before.items() if path != _EDITED_PATH}
 
             field = app._field_by_key[_EDITED_PATH]
@@ -247,7 +247,7 @@ async def test_editing_one_field_repaints_that_row_without_rebuilding_the_tables
             assert [id(table) for table in app.query(DataTable)] == [id(table) for table in tables], (
                 "the tables must survive the edit; remounting them is the full rebuild this replaced"
             )
-            assert app.query_one("#manager-status", PinnedStatusBar).summary == progress, (
+            assert app.query_one("#manager-status", PinnedStatusBar).summary == required_context, (
                 "editing an optional field must not change the schema-required information"
             )
             app.exit(None)
@@ -352,16 +352,17 @@ async def test_a_masked_field_opens_empty_rather_than_prefilled(tmp_path) -> Non
 @pytest.mark.asyncio
 async def test_aeat_progress_replaces_the_inherited_stderr_sink_with_the_pinned_header(tmp_path) -> None:
     """Cl@ve verification progress must be visible before the pull finishes."""
-    from .....adapters.outbound.aeat import emit_operator_progress, operator_progress_sink
+    from .....adapters.outbound.aeat import OperatorProgress, emit_operator_progress, operator_progress_sink
     from .. import ManagerAction, ManagerActionOutcome, PinnedStatusBar
 
     release = threading.Event()
 
     def _run() -> ManagerActionOutcome:
         emit_operator_progress(
-            "AEAT Cl@ve Movil login\n"
-            "AEAT page verification code: TUI-CODE\n"
-            "Waiting up to 2m 00s for AEAT to complete auth...",
+            OperatorProgress(
+                message="Cl@ve Movil: verify that code TUI-CODE matches in both places.",
+                timeout_seconds=120,
+            ),
         )
         release.wait(timeout=5)
         return ManagerActionOutcome(message="SYNC-COMPLETE")
@@ -392,7 +393,7 @@ async def test_aeat_progress_replaces_the_inherited_stderr_sink_with_the_pinned_
                     break
 
             assert "TUI-CODE" in status.message, "the actionable AEAT verification code never reached the TUI"
-            assert "Waiting up to" in status.message, "the multi-line progress banner was truncated"
+            assert "Time remaining" in status.message, "the typed countdown was not rendered"
             assert status.tone == "progress"
 
             release.set()

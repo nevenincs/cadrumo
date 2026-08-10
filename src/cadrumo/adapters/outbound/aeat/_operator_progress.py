@@ -11,23 +11,7 @@ from __future__ import annotations
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
-from dataclasses import dataclass
-
-
-@dataclass(frozen=True, slots=True)
-class OperatorProgress:
-    """Actionable progress text plus an optional live countdown duration."""
-
-    message: str
-    timeout_seconds: int | None = None
-
-    def render(self, *, remaining_seconds: int | None = None) -> str:
-        """Render the update for a frontend that cannot animate a timer."""
-        seconds = self.timeout_seconds if remaining_seconds is None else remaining_seconds
-        if seconds is None:
-            return self.message
-        minutes, remainder = divmod(max(0, seconds), 60)
-        return f"{self.message} Time remaining {minutes}:{remainder:02d}."
+from ....core import OperatorProgress
 
 
 _OPERATOR_PROGRESS_SINK: ContextVar[Callable[[OperatorProgress], None] | None] = ContextVar(

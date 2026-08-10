@@ -5,7 +5,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:7c165ff9546cedf3ccddc73478d9ce08940ca9ef6c003334dd4d53c9ea65a3b0'
+body_hash: 'sha256:52bd07f346bf2f62bcb532d8809597194a0bb69cfde52acfded032dd7e380523'
 step_id: 'S18'
 related:
   - "[[2026-08-09-cli-action-envelope-hardening-plan]]"
@@ -95,3 +95,4 @@ During verification, peer checkpoint commit `04c3de99cf` captured the two S18
 implementation files together with unrelated shared-worktree changes. This
 executor performed no staging or commit and did not touch the Git lock. The
 current HEAD was re-read and all proofs were rerun against the captured bytes.
+

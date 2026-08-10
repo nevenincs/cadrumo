@@ -13,8 +13,8 @@ rather than one. A field the operator has not filled in is a visible empty
 row, because "what is still blank" is the
 question this page exists to answer. Selecting any row edits it in place
 and writes immediately; there is no submit step, no final commit, and no
-ordering. Completeness is shown as a count and a list of what filing will
-eventually need — never as a gate on viewing or editing.
+ordering. Completeness names the schema-required information still missing
+— never arithmetic and never a gate on viewing or editing.
 
 The screen owns no profile logic. The page content is
 :func:`~cadrumo.application.user_profile.build_profile_overview`, and an
@@ -42,6 +42,7 @@ from textual.containers import Vertical
 from textual.widgets import Button, DataTable, Footer, LoadingIndicator, Static
 from textual.worker import Worker, WorkerState
 
+from ....core import OperatorProgress
 from ....core.i18n import tr
 from ._field_edit_screen import FieldEditScreen
 from ._form_screen import FormScreen, presenting_forms_through
@@ -61,7 +62,6 @@ if TYPE_CHECKING:
     from textual.widgets.data_table import ColumnKey
 
     from ....application.user_profile import ProfileFieldView, ProfileOverview, ProfileSectionView
-    from ....adapters.outbound.aeat import OperatorProgress
     from ._form_screen import FormPage
 
 
@@ -352,7 +352,7 @@ class ProfileManagerApp(App[None]):
     # ── rendering ───────────────────────────────────────────────────────
 
     def _render(self) -> None:
-        """Rebuild the progress line and every section table from the overview.
+        """Rebuild the pinned profile context and every schema section table.
 
         This is the wholesale redraw: it destroys and remounts every table.
         It is what ``on_mount`` needs, and what an action returning a fresh
@@ -915,7 +915,7 @@ class ProfileManagerApp(App[None]):
             thread=True,
         )
         self._set_busy(True)
-        self._progress(tr("flows.manager.action.working", action=self._action_label(action)))
+        self._progress(OperatorProgress(message=tr("flows.manager.action.working", action=self._action_label(action))))
 
     def _present_form_here(
         self,
