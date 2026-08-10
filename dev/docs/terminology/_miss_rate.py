@@ -1,10 +1,16 @@
 """Held-out miss-rate evaluation for the compiled terminology relevance map.
 
-The evaluator is the deferral gate for a possible rung-2 static
-term-embedding matrix. It measures the committed, laundered mapping exactly as
-the offline docs build will consume it. A high miss-rate only justifies rung-2
-work when the input sweep is not already marked degraded; a saturated RAG run
-must be refreshed first, not disguised as a semantic retrieval failure.
+The evaluator measures the committed, laundered mapping exactly as the offline
+docs build will consume it, and it carries the ratified materiality line for a
+static term-embedding tier: a high miss-rate only justifies that work when the
+input sweep is not already marked degraded, because a saturated RAG run must be
+refreshed first, not disguised as a semantic retrieval failure.
+
+No static term-embedding tier exists in this tree. The matrix, its compiler and
+the browser's cosine pass were all removed, so what this evaluator measures
+today is the shipped lexical ladder alone. Read its figure as the honest recall
+statement for that ladder, not as a baseline awaiting a semantic tier that is
+partly built.
 """
 
 from __future__ import annotations

@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#user-docs-search-consolidation'
 date: '2026-08-01'
-modified: '2026-08-07'
-body_hash: 'sha256:fdf05574f4a16190da12babad2f2c4d89474efaaab9506051991cbc93157fec8'
+modified: '2026-08-10'
+body_hash: 'sha256:ea52388b71e4cda60e33daa33d6ba3687440afd0c3f2bbf005e1c091bd53021e'
 tier: L2
 related:
   - '[[2026-07-13-docs-terminology-search-research]]'
@@ -29,6 +29,7 @@ Amend the licence rule at its source per ruling R5 and gate rung-2 dispatch on t
 
 - [x] `P01.S01` - Amend the shipped-search-licence-clean rule source to the licence-and-provenance-scoped form ruled in R5 and propagate it with vaultspec-core sync in a coordinated quiet window; `.vaultspec/rules/shipped-search-licence-clean.md`.
 - [x] `P01.S02` - Confirm the semantic-search-precompile-boundary plan is closed through its honesty review and record that confirmation before any rung-2 step is dispatched; `.vault/plan/2026-07-31-semantic-search-precompile-boundary-plan.md`.
+- [ ] `P01.S38` - Record in the licence rule source that the narrow embedding exception has no consumer at HEAD pending the Rung-2 ruling, rather than re-narrowing it, because a permission that oscillates is worse than one that is documented and re-narrowing would have to be reversed under the recovery branch, editing the vaultspec rules source and propagating with vaultspec-core sync in a coordinated quiet window, never hand-editing a generated provider copy and never authoring a new rule file for it; `.vaultspec/rules/aeat-documentation.md`.
 
 ### Phase `P02` - Rung-2 semantic layer delivery
 
@@ -44,6 +45,9 @@ Deliver the fired rung-2 verdict: a pinned licence-clean static-embedding model 
 - [ ] `P02.S31` - Capture the real Pagefind lexical observations for the held-out corpus through the browser controller, reconcile the composed-ladder drop against the semantic evaluator, and preserve any failed gate as evidence; `dev/docs/terminology/ and docs/_static/cadrumo-docs.js`.
 - [ ] `P02.S32` - Introduce an independent versioned query and alias authority from RAG-grounded project vocabulary, bind its provenance into Rung-2 inputs, and recompile and remeasure without using held-out terms; `src/cadrumo/_data/terminology/ and dev/docs/terminology/`.
 - [x] `P02.S33` - Propagate the nested query-alias authority provenance through the Rung-2 bundle and browser validator, rejecting the pre-amendment shape; `dev/docs/terminology/_rung2_bridge.py, docs/_static/cadrumo-docs.js, and dev/docs/terminology/tests/`.
+- [x] `P02.S35` - Correct the two prose sites asserting a Rung-2 mechanism the tree no longer has, the miss-rate evaluator docstring still calling itself the deferral gate for a possible rung-2 static term-embedding matrix and the injector comment naming a Rung-2 bridge module deleted at a3376362ef, both of which are dead references under either branch of the Rung-2 ruling so this row is gated on nothing and executes immediately; `dev/docs/terminology/_miss_rate.py, dev/docs/pagefind_inject.py`.
+- [ ] `P02.S36` - Delete or re-home the three orphaned Rung-2 build-time modules that survive at HEAD with zero consumers, the canonical JSON byte contract and its golden vector corpus and the raw-byte content manifest, each self-describing in its own docstring as Rung-2 machinery and each exported from the terminology package facade, the FINDING being unconditional while the REMEDY is gated on the Rung-2 ruling, deletion under no-legacy-compatibility if the removal is ruled intended and re-homing against the recovered consumers if it is ruled unintended, and nothing is deleted before that ruling because under the recovery branch these modules regain their consumers and deleting them now would compound the loss the recovery exists to reverse; `dev/docs/terminology/_jcs.py, dev/docs/terminology/jcs_vectors/, dev/docs/terminology/_content_manifest.py, dev/docs/terminology/__init__.py`.
+- [ ] `P02.S37` - Resolve the zero-entry query alias authority that ships inside the wheel, which sits under the packaged data root and reaches a reader disk while carrying zero entries by its own execution record and zero consumers at HEAD, making it the only one of the four residue findings that reaches a user, the FINDING being unconditional while the REMEDY is gated on the Rung-2 ruling, removal from the shipped data root if the removal is ruled intended and restoration of its entries and consumers if it is ruled unintended; `src/cadrumo/_data/terminology/rung2/query-alias-authority.json, dev/docs/terminology/_query_aliases.py`.
 
 ### Phase `P03` - Verification and honest close
 
