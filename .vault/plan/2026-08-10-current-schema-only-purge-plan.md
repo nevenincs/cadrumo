@@ -4,7 +4,7 @@ tags:
   - '#current-schema-only-purge'
 date: '2026-08-10'
 modified: '2026-08-10'
-body_hash: 'sha256:56b3c5125ef3ab684dacf29f2dc2cbe5908822eb0acb2634f5a52216e2d5c7db'
+body_hash: 'sha256:0f31be202466b2641ecbb651d53220cfe57f38acaf599cb997832fc62c405894'
 tier: L3
 related:
   - '[[2026-07-09-compatibility-lifecycle-adr]]'
@@ -96,13 +96,14 @@ Make all encrypted wrapper format claims explicit and exact before key access.
 Require current index KDF and key-schedule markers on every local custody read and
 write.
 
-- [ ] `W02.P06.S14` - Require and explicitly write the exact current SecretIndex marker; `src/cadrumo/adapters/persistence/storage/secret_store/_secret_store.py`.
-- [ ] `W02.P06.S15` - Prove missing and non-current secret-index markers refuse real store operations; `src/cadrumo/adapters/persistence/storage/secret_store/tests/test_secret_index_version_gate.py`.
+- [x] `W02.P06.S14` - Require and explicitly write the exact current SecretIndex marker; `src/cadrumo/adapters/persistence/storage/secret_store/_secret_store.py`.
+- [x] `W02.P06.S15` - Prove missing and non-current secret-index markers refuse real store operations; `src/cadrumo/adapters/persistence/storage/secret_store/tests/test_secret_index_version_gate.py`.
 - [ ] `W02.P06.S16` - Require the exact current KdfParameters version marker; `src/cadrumo/adapters/persistence/storage/master_key/_master_key_records.py`.
 - [ ] `W02.P06.S17` - Stamp current KDF markers during key mint and recovery; `src/cadrumo/adapters/persistence/storage/master_key/_master_key.py`.
 - [ ] `W02.P06.S18` - Prove file-fallback key loading refuses missing and non-current KDF markers; `src/cadrumo/adapters/persistence/storage/master_key/tests/test_master_key_file_fallback.py`.
 - [ ] `W02.P06.S19` - Make BucketManifest key_schedule mandatory; `src/cadrumo/adapters/persistence/storage/bucket/_manifest.py`.
 - [ ] `W02.P06.S20` - Prove real manifest reads require and preserve the current key schedule; `src/cadrumo/adapters/persistence/storage/bucket/tests/test_manifest_io.py`.
+- [ ] `W02.P06.S26` - Make the master-key KDF preflight model require a real version, replacing the optional-and-defaulting-to-absent field that lets a marker-less file pass the check the preflight exists to perform; `src/cadrumo/adapters/persistence/storage/master_key/_master_key_records.py preflight model and its single read call site, with no writer or derivation path touched`.
 
 ## Wave `W03` - Close the Modelo 303 observation write boundary
 
