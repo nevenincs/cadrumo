@@ -28,6 +28,7 @@ See Also:
 
 from __future__ import annotations
 
+from decimal import Decimal
 from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel
@@ -37,7 +38,6 @@ from ....domain.calculations.registry import CasillaId, InputKind
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
-    from decimal import Decimal
 
     from ....domain.calculations.registry import CasillaDefinition
 
@@ -49,6 +49,15 @@ class CasillaParity(BaseModel):
     no value, so "not compared" stays distinguishable from "compared and
     disagreed" — collapsing them to ``False`` would report a missing oracle as
     a divergence.
+
+    ``Decimal`` is imported at module scope rather than under ``TYPE_CHECKING``
+    because pydantic resolves this model's field annotations at RUNTIME, and
+    ``from __future__ import annotations`` has already turned them into strings.
+    A type-checking-only import leaves the class undefined and fails on first
+    instantiation — while the module still imports, still collects, and still
+    satisfies the linter that recommends the narrower form. Only the fields
+    below need this; the type-checking block keeps everything used solely in
+    function signatures.
     """
 
     model_config = _STRICT_FROZEN
