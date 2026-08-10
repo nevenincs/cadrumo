@@ -922,15 +922,16 @@ def test_direct_manifest_emission_and_real_loader_verification(_m200_snapshot, t
 
 
 def test_manifest_writer_refuses_a_target_that_already_exists(tmp_path) -> None:
-    """Pin the refusal that makes this writer a superset of the core hardened tier.
+    """Pin the refusal this writer delegates to the core publish-once tier.
 
-    ``atomic_write_hardened_bytes`` publishes with :func:`os.replace`, which
-    overwrites an existing target; its ``O_EXCL`` guards only the staging
-    tempfile. This writer refuses instead, and that difference is the entire
-    reason it is not delegated. Nothing else asserted it: the emit-level test
-    must ``unlink()`` the manifest before it can call emit at all, so the
-    behaviour was exercised by necessity and would have survived its own
-    deletion in green.
+    ``atomic_write_publish_once_bytes`` publishes with :func:`os.link`, which
+    fails with :exc:`FileExistsError` in one uninterruptible step rather than
+    overwriting. This test pins the refusal at THIS boundary anyway, because the
+    writer translates that failure into a registry error and a delegation that
+    dropped the translation would still be a defect here. Nothing else asserted
+    it: the emit-level test must ``unlink()`` the manifest before it can call
+    emit at all, so the behaviour was exercised by necessity and would have
+    survived its own deletion in green.
 
     The first write is the positive control -- without it a refusal that fired
     unconditionally, or a writer that never wrote at all, would pass too.

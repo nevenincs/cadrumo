@@ -9,15 +9,13 @@ layout after the future publication step has validated the generated tree.
 from __future__ import annotations
 
 import json
-import os
-import tempfile
 from collections.abc import Mapping
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Final, Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
-from cadrumo.core import fsync_parent_dir
+from cadrumo.core.atomic_write import atomic_write_publish_once_bytes
 from cadrumo.core.hashing import canonical_json_bytes, content_hash_hex, hash_file
 from cadrumo.domain.calculations.registry import (
     ExportFieldDefinition,
@@ -718,48 +716,41 @@ def _require_field_derivations_match_layout(
 
 
 def _write_canonical_manifest_atomically(path: Path, payload: bytes) -> None:
-    """Make the sibling evidence all-or-nothing without publishing its tree.
+    """Publish the sibling evidence write-once, refusing a pre-existing target.
 
-    Deliberately NOT delegated to
-    :func:`~cadrumo.core.atomic_write.atomic_write_hardened_bytes`,
-    despite duplicating its stage-fsync-replace mechanics. This writer carries a
-    guarantee no core tier offers: it refuses a pre-existing **target**. The
-    hardened tier's ``O_EXCL`` applies to the staging tempfile, not to the
-    destination, and it publishes with :func:`os.replace`, which overwrites an
-    existing target by definition -- that is precisely what separates
-    :func:`os.replace` from :func:`os.rename`. Delegating here would therefore
-    delete the refusal rather than relocate it, and would do so silently.
+    Delegates to :func:`~cadrumo.core.atomic_write.atomic_write_publish_once_bytes`.
+    The guarantee this writer needs -- a manifest that already exists means a
+    second write, which is a bug rather than an update -- is that tier's
+    contract: it publishes with :func:`os.link`, which fails with
+    :exc:`FileExistsError` in one uninterruptible step instead of overwriting.
 
-    The check is deliberately best-effort rather than atomic. A genuinely atomic
-    publish-once is :func:`os.link`, which fails with ``FileExistsError`` in a
-    single uninterruptible step; it needs hardlink support this project's
-    network-share working tree does not reliably provide. Re-checking
-    immediately before the replace is the narrowest window available without
-    it -- the caller's earlier guard cannot substitute, because a whole export
-    tree is walked and hashed between that check and this one.
+    An earlier revision open-coded the stage-fsync-replace sequence here and
+    documented the duplication as deliberate, on two grounds: that no core tier
+    refused an existing target, and that the atomic form needed hardlink support
+    this project's network-share working tree could not provide. The second was
+    asserted rather than measured, and is false. With it goes the first -- the
+    core tier now exists and is built on exactly that primitive -- so what stood
+    here was a parallel write path rather than a superset, and re-implementing a
+    write path instead of delegating to the single-writer primitive is precisely
+    what the architecture boundary forbids.
 
-    If hardlink support ever becomes dependable, the correct change is
-    :func:`os.link` here (or a publish-once tier in core built on it), not a
-    delegation to the clobbering tier.
+    The parent-directory precondition stays, because it is this module's
+    contract rather than the writer's: a missing parent means the export tree
+    was never built, which is a registry error, and the core tier would create
+    the directory and mask it.
+
+    Raises:
+        RegistryValidationError: When the parent directory is missing, when the
+            target already exists, or when the write otherwise fails.
     """
     if not path.parent.is_dir():
         raise RegistryValidationError(f"export provenance manifest parent is missing: {path.parent}")
-    descriptor, temporary_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
-    temporary_path = Path(temporary_name)
     try:
-        with os.fdopen(descriptor, "wb") as stream:
-            stream.write(payload)
-            stream.flush()
-            os.fsync(stream.fileno())
-        if path.exists():
-            raise RegistryValidationError(f"export provenance manifest already exists: {path}")
-        os.replace(temporary_path, path)
-        fsync_parent_dir(path)
+        atomic_write_publish_once_bytes(path, payload)
+    except FileExistsError as exc:
+        raise RegistryValidationError(f"export provenance manifest already exists: {path}") from exc
     except OSError as exc:
         raise RegistryValidationError(f"cannot write export provenance manifest {path}: {exc}") from exc
-    finally:
-        if temporary_path.exists():
-            temporary_path.unlink()
 
 
 def _normalise_semantic_map_entry(payload: Mapping[str, object]) -> dict[str, object]:
