@@ -22,17 +22,20 @@ from ....adapters.outbound.aeat.browser import (
     SiteHealthStatus,
 )
 from ....adapters.outbound.aeat.browser._site_health import _URL_ADAPTER
-from ....core import Modelo, Period
+from ....core import (
+    ActionArgumentStatus,
+    ActionConditionality,
+    ActionEvidenceProvenance,
+    Modelo,
+    NoRecoveryOutcome,
+    Period,
+)
 from ....domain.deadlines import ModeloDeadline, ObligationStatus, RecargoBand, Recovery
 from ....tests.aeat_literal_fixtures import aeat_url
 from ...operator_actions import (
     ActionArgumentBinding,
-    ActionArgumentStatus,
-    ActionConditionality,
     ActionReference,
     ConditionEvidence,
-    ConditionEvidenceProvenance,
-    NoRecoveryOutcome,
     PreconditionVerdict,
 )
 from .. import (
@@ -184,7 +187,7 @@ class TestWorkflowStepValidation:
                 ConditionEvidence(
                     condition_id="workflow.draft.ready",
                     evidence_id="workflow.draft.status",
-                    provenance=ConditionEvidenceProvenance.PERSISTED_STATE,
+                    provenance=ActionEvidenceProvenance.PERSISTED_STATE,
                     values={"draft_id": "draft-303", "draft_status": "BORRADOR"},
                 ),
             ),
@@ -237,7 +240,7 @@ class TestWorkflowStepValidation:
                 ConditionEvidence(
                     condition_id="workflow.draft.ready",
                     evidence_id="workflow.draft.failure",
-                    provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+                    provenance=ActionEvidenceProvenance.APPLICATION_STATE,
                     values={evidence_key: evidence_value},
                 ),
             ),
@@ -277,7 +280,7 @@ class TestWorkflowStepValidation:
                 ConditionEvidence(
                     condition_id="workflow.submission.safe",
                     evidence_id="workflow.submission.safety_state",
-                    provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+                    provenance=ActionEvidenceProvenance.APPLICATION_STATE,
                     values={"safe": False},
                 ),
             ),

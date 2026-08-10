@@ -15,13 +15,8 @@ import pytest
 from ....adapters.outbound.aeat.browser import SiteHealthState
 from ....application.operator_actions import (
     ActionArgumentBinding,
-    ActionArgumentSource,
-    ActionArgumentStatus,
-    ActionConditionality,
     ActionReference,
     ConditionEvidence,
-    ConditionEvidenceProvenance,
-    NoRecoveryOutcome,
     PreconditionVerdict,
 )
 from ....application.user_profile import UserProfileLifecycleRepository, profile_create_storage_span
@@ -37,7 +32,15 @@ from ....application.workflow import (
     save_run,
     workflow_state_repository,
 )
-from ....core import Modelo, Period
+from ....core import (
+    ActionArgumentSource,
+    ActionArgumentStatus,
+    ActionConditionality,
+    ActionEvidenceProvenance,
+    Modelo,
+    NoRecoveryOutcome,
+    Period,
+)
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from ....domain.deadlines import ObligationStatus
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
@@ -109,7 +112,7 @@ def _actionable_run() -> WorkflowResult:
             ConditionEvidence(
                 condition_id="workflow.draft.buildable",
                 evidence_id="workflow.draft.build_failure",
-                provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
                 values={"buildable": False},
             ),
         ),
@@ -155,7 +158,7 @@ def _site_health_run() -> WorkflowResult:
             ConditionEvidence(
                 condition_id="workflow.site.available",
                 evidence_id="workflow.site.health",
-                provenance=ConditionEvidenceProvenance.RUNTIME_OBSERVATION,
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
                 values={"site_available": False},
             ),
         ),
@@ -285,7 +288,7 @@ def test_workflow_action_projection_fails_closed_on_dead_or_insufficient_declara
         ConditionEvidence(
             condition_id="workflow.draft.buildable",
             evidence_id="workflow.draft.build_failure",
-            provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
             values={"buildable": False},
         ),
     )
@@ -317,7 +320,7 @@ def test_workflow_action_projection_rejects_binding_provenance_outside_the_catal
             ConditionEvidence(
                 condition_id="workflow.draft.buildable",
                 evidence_id="workflow.draft.build_failure",
-                provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
                 values={"buildable": False},
             ),
         ),

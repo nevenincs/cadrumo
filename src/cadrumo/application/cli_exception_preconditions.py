@@ -11,11 +11,13 @@ from __future__ import annotations
 from collections.abc import Mapping
 from enum import StrEnum
 
-from .operator_actions import (
+from ..core import (
     ActionConditionality,
-    ConditionEvidence,
-    ConditionEvidenceProvenance,
+    ActionEvidenceProvenance,
     NoRecoveryOutcome,
+)
+from .operator_actions import (
+    ConditionEvidence,
     PreconditionVerdict,
 )
 
@@ -56,7 +58,7 @@ def cli_exception_no_recovery_verdict(
             ConditionEvidence(
                 condition_id=condition_id,
                 evidence_id=f"{condition_id}.observation",
-                provenance=ConditionEvidenceProvenance.RUNTIME_OBSERVATION,
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
                 values=facts,
             ),
         ),

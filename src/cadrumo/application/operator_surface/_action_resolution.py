@@ -8,8 +8,8 @@ authorities before projecting a next action onto a successful notice.
 
 from __future__ import annotations
 
+from ...core import ActionArgumentStatus
 from ...core.json_contract import (
-    ActionArgumentStatus,
     ResolvedActionArgument,
     ResolvedActionReference,
     ResolvedNoticeAction,

@@ -312,26 +312,13 @@ def resolve_cli_precondition_action(verdict: PreconditionVerdict) -> ResolvedPre
     from ...application.operator_actions import (
         OPERATOR_ACTION_CATALOGUE,
         ActionArgumentBindingSpecification,
-        ActionArgumentStatus,
     )
     from ...application.operator_surface import resolve_catalogue_action
-    from ...core.json_contract import (
-        ActionArgumentSource as WireArgumentSource,
-    )
-    from ...core.json_contract import (
-        ActionArgumentStatus as WireArgumentStatus,
-    )
-    from ...core.json_contract import (
-        ActionConditionality as WireConditionality,
-    )
+    from ...core import ActionArgumentStatus
     from ...core.json_contract import (
         ActionConditionEvidence,
-        ActionEvidenceProvenance,
         ResolvedActionArgument,
         ResolvedActionReference,
-    )
-    from ...core.json_contract import (
-        NoRecoveryOutcome as WireNoRecoveryOutcome,
     )
 
     resolved_action: ResolvedActionReference | None = None
@@ -379,7 +366,7 @@ def resolve_cli_precondition_action(verdict: PreconditionVerdict) -> ResolvedPre
             ActionConditionEvidence(
                 condition_id=item.condition_id,
                 evidence_id=item.evidence_id,
-                provenance=ActionEvidenceProvenance(item.provenance.value),
+                provenance=item.provenance,
                 values=item.values,
             )
             for item in verdict.evidence
@@ -388,21 +375,17 @@ def resolve_cli_precondition_action(verdict: PreconditionVerdict) -> ResolvedPre
         argument_bindings=tuple(
             ResolvedActionArgument(
                 argument_name=item.argument_name,
-                status=WireArgumentStatus(item.status.value),
+                status=item.status,
                 value=item.value,
-                source=WireArgumentSource(item.source.value) if item.source is not None else None,
+                source=item.source,
                 source_key=item.source_key,
                 source_evidence_id=item.source_evidence_id,
             )
             for item in verdict.argument_bindings
         ),
         missing_argument_names=verdict.missing_argument_names,
-        conditionality=WireConditionality(verdict.conditionality.value),
-        no_recovery_outcome=(
-            WireNoRecoveryOutcome(verdict.no_recovery_outcome.value)
-            if verdict.no_recovery_outcome is not None
-            else None
-        ),
+        conditionality=verdict.conditionality,
+        no_recovery_outcome=verdict.no_recovery_outcome,
     )
     return projected
 

@@ -32,19 +32,21 @@ from pydantic import BaseModel, PrivateAttr, ValidationError
 
 from ...adapters.persistence.storage import StorageValidationError
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import resolve_active_bucket_id
+from ...core import (
+    ActionArgumentSource,
+    ActionArgumentStatus,
+    ActionConditionality,
+    ActionEvidenceProvenance,
+    NoRecoveryOutcome,
+    resolve_active_bucket_id,
+)
 from ...core.config import load_settings, override_settings
 from ...core.errors import CadrumoError
 from ...core.logging import get_logger
 from ..operator_actions import (
     ActionArgumentBinding,
-    ActionArgumentSource,
-    ActionArgumentStatus,
-    ActionConditionality,
     ActionReference,
     ConditionEvidence,
-    ConditionEvidenceProvenance,
-    NoRecoveryOutcome,
     PreconditionVerdict,
 )
 from ..profile_preconditions import inspect_active_profile_precondition
@@ -272,7 +274,7 @@ def _health_evidence(
     return ConditionEvidence(
         condition_id=condition_id,
         evidence_id=evidence_id,
-        provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
         values={
             "health_status": status,
             "profile_present_keys": profile_present_keys,
@@ -530,7 +532,7 @@ def assess_active_profile_health_with_session() -> ActiveProfileHealth:
                     evidence=ConditionEvidence(
                         condition_id="profile.secret_store.available",
                         evidence_id="profile.secret_store.access",
-                        provenance=ConditionEvidenceProvenance.RUNTIME_OBSERVATION,
+                        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
                         values={
                             "profile_record_present": before.profile_record_present,
                             "profile_source": before.source,

@@ -17,7 +17,7 @@ from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterR
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage import TRANSACTION_CATALOGUE_NAMESPACE
 from ....adapters.persistence.storage.sql import SecureObjectRepository, session_scope
-from ....core import BindingSourceKind, Period, ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from ....core import BindingSourceKind, NoRecoveryOutcome, Period, ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ....core.classification import SensitivityClass
 from ....core.resources import resources
 from ....domain.calculations.registry import ModeloRevision
@@ -54,7 +54,6 @@ from ....domain.transactions import (
     TransactionDirection,
 )
 from ....tests.secure_sql import isolated_runtime_profile
-from ...operator_actions import NoRecoveryOutcome
 from .. import (
     AggregationValidationError,
     CalculationSourceContext,

@@ -32,7 +32,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict
 
-from ...core import AuthProviderKind
+from ...core import (
+    ActionConditionality,
+    ActionEvidenceProvenance,
+    AuthProviderKind,
+    NoRecoveryOutcome,
+)
 from ...core.config import Settings, load_settings
 from ...core.i18n import tr
 from ...core.time import now
@@ -45,10 +50,7 @@ from .._workflow_auth_models import (
 )
 from ..auth_credentials import ActiveCertificateCredentials
 from ..operator_actions import (
-    ActionConditionality,
     ConditionEvidence,
-    ConditionEvidenceProvenance,
-    NoRecoveryOutcome,
     PreconditionVerdict,
 )
 from ._acquisition_lock import (
@@ -377,7 +379,7 @@ def _incomplete_auth_configuration_verdict(
         evidence = ConditionEvidence(
             condition_id=condition_id,
             evidence_id="auth.configure.certificate.file_readiness",
-            provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
             values={
                 "certificate_file_provided": certificate_path is not None,
                 "certificate_file_resolves": False,
@@ -389,7 +391,7 @@ def _incomplete_auth_configuration_verdict(
         evidence = ConditionEvidence(
             condition_id=condition_id,
             evidence_id="auth.configure.clave_movil.identity_alignment",
-            provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
             values={
                 "identity_alignment": identity_alignment,
                 "profile_tax_id_present": profile_tax_id_present,

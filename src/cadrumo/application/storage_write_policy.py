@@ -38,7 +38,15 @@ from enum import StrEnum
 
 from pydantic import BaseModel, model_validator
 
-from ..core import STORAGE_ROOT_SETTINGS_FIELD, Modelo, read_pointer
+from ..core import (
+    STORAGE_ROOT_SETTINGS_FIELD,
+    ActionArgumentStatus,
+    ActionConditionality,
+    ActionEvidenceProvenance,
+    Modelo,
+    NoRecoveryOutcome,
+    read_pointer,
+)
 from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..core.config import (
     Settings,
@@ -51,12 +59,8 @@ from ..core.config import (
 from ..core.i18n import tr
 from .operator_actions import (
     ActionArgumentBinding,
-    ActionArgumentStatus,
-    ActionConditionality,
     ActionReference,
     ConditionEvidence,
-    ConditionEvidenceProvenance,
-    NoRecoveryOutcome,
     PreconditionVerdict,
 )
 
@@ -401,7 +405,7 @@ def _missing_active_profile_verdict(route: StorageRouteClassification) -> Precon
             ConditionEvidence(
                 condition_id=condition_id,
                 evidence_id=evidence_id,
-                provenance=ConditionEvidenceProvenance.RUNTIME_OBSERVATION,
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
                 values={
                     "active_bucket_attached": False,
                     "active_profile_present": False,
@@ -430,7 +434,7 @@ def _explicit_database_route_verdict(route: StorageRouteClassification) -> Preco
             ConditionEvidence(
                 condition_id=condition_id,
                 evidence_id=StorageWritePolicyEvidence.ACTIVE_BUCKET_ROUTE_CLASSIFICATION.value,
-                provenance=ConditionEvidenceProvenance.RUNTIME_OBSERVATION,
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
                 values={
                     "active_bucket_attached": False,
                     "database_url_explicit": True,

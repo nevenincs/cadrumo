@@ -7,7 +7,11 @@ import inspect
 
 import pytest
 
-from ....core.json_contract import ActionArgumentSource, ActionArgumentStatus, ResolvedActionArgument
+from ....core import (
+    ActionArgumentSource,
+    ActionArgumentStatus,
+)
+from ....core.json_contract import ResolvedActionArgument
 from ...operator_actions import (
     OPERATOR_ACTION_CATALOGUE,
     ActionCatalogue,

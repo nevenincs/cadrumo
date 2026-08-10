@@ -4,13 +4,15 @@ from __future__ import annotations
 
 import pytest
 
+from ....core import (
+    ActionArgumentSource,
+    NoRecoveryOutcome,
+)
 from ...operator_actions import (
     ActionArgumentBindingSpecification,
-    ActionArgumentSource,
     ActionCatalogue,
     ActionCatalogueEntry,
     ActionReference,
-    NoRecoveryOutcome,
 )
 from .. import ManifestActionProfile
 from .._manifest import (

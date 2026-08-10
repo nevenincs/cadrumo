@@ -13,6 +13,7 @@ from ....core import DeclaracionIdioma, ExportLayoutFormat
 from ....core.aggregation import RelationAggregation
 from .._export_field_kind import CasillaFieldKind, CasillaFieldKindValue
 from ._errors import RegistryValidationError
+from ._export_value_policy import ExportValuePolicyValue, export_value_policy_wire_length
 from ._ids import (
     BindingId,
     CasillaId,
@@ -47,6 +48,7 @@ __all__ = [
     "ExportLayoutDefinition",
     "ExportLayoutFormatValue",
     "ExportRecordDefinition",
+    "ExportValuePolicyValue",
     "OneBasedExportOffset",
     "RecordDiscriminator",
     "RelationDefinition",
@@ -701,6 +703,7 @@ class ExportFieldDefinition(RegistryModel):
     date_format: str | None = None
     decimals: int | None = Field(default=None, ge=0)
     signed: bool
+    value_policy: ExportValuePolicyValue = None
     legal_refs: LegalRefs
     source_refs: SourceRefs
 
@@ -721,7 +724,34 @@ class ExportFieldDefinition(RegistryModel):
         if self.kind == CasillaFieldKind.FILLER and self.length is None:
             raise RegistryValidationError(f"export field {self.id!r} filler must declare length")
         self._validate_decimals()
+        self._validate_value_policy()
         return self
+
+    def _validate_value_policy(self) -> None:
+        """Require each explicit policy to match its complete fixed-width shape."""
+        if self.value_policy is None:
+            return
+        if self.kind in {CasillaFieldKind.FILLER, CasillaFieldKind.LITERAL, CasillaFieldKind.CHECKSUM}:
+            raise RegistryValidationError(
+                f"export field {self.id!r} cannot declare value_policy on kind {self.kind!r}",
+            )
+        if (
+            self.data_type != "integer"
+            or self.signed
+            or self.padding != "left_zero"
+            or self.justification != "right"
+            or self.decimals is not None
+            or self.date_format is not None
+        ):
+            raise RegistryValidationError(
+                f"export field {self.id!r} value_policy requires an unsigned right-justified "
+                "left-zero-padded integer with no decimals or date_format",
+            )
+        expected_length = export_value_policy_wire_length(self.value_policy)
+        if self.length != expected_length:
+            raise RegistryValidationError(
+                f"export field {self.id!r} value_policy {self.value_policy!r} requires length {expected_length}",
+            )
 
     def _validate_decimals(self) -> None:
         """Require an explicit scale on every decimal field.

@@ -13,13 +13,8 @@ from ._catalogue import (
 )
 from ._models import (
     ActionArgumentBinding,
-    ActionArgumentSource,
-    ActionArgumentStatus,
-    ActionConditionality,
     ActionReference,
     ConditionEvidence,
-    ConditionEvidenceProvenance,
-    NoRecoveryOutcome,
     PreconditionVerdict,
 )
 
@@ -27,15 +22,10 @@ __all__ = [
     "OPERATOR_ACTION_CATALOGUE",
     "ActionArgumentBinding",
     "ActionArgumentBindingSpecification",
-    "ActionArgumentSource",
-    "ActionArgumentStatus",
     "ActionCatalogue",
     "ActionCatalogueEntry",
-    "ActionConditionality",
     "ActionReference",
     "ConditionEvidence",
-    "ConditionEvidenceProvenance",
-    "NoRecoveryOutcome",
     "PreconditionVerdict",
     "build_action_catalogue",
     "lookup_action",

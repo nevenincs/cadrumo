@@ -11,6 +11,7 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import cast
 
+from ...core import ActionEvidenceProvenance
 from ...domain.iva import (
     EVIDENCE_EXEMPT_IVA_CATEGORIES,
     InvoiceKind,
@@ -26,7 +27,6 @@ from ...domain.transactions import (
     TransactionLifecycleState,
 )
 from ..aggregation import invoice_kind_for_direction
-from ..operator_actions import ConditionEvidenceProvenance
 from ._preconditions import build_modelo_precondition_failure
 
 _EVIDENCE_EXPECTING_BUSINESS_STATES: frozenset[BusinessClassification] = frozenset(
@@ -181,7 +181,7 @@ def raise_if_deductible_vat_evidence_missing(
                 "transaction_count": len(transaction_ids),
                 "transaction_ids": "|".join(transaction_ids),
             },
-            provenance=ConditionEvidenceProvenance.PERSISTED_STATE,
+            provenance=ActionEvidenceProvenance.PERSISTED_STATE,
         ),
     )
 

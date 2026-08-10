@@ -72,7 +72,7 @@ def _parse_optional_bool_token(value: object, *, field_name: str) -> object:
 # ---------------------------------------------------------------------------
 
 
-class ProfileRegistrationError(CoreError):
+class ProjectAnswersRegistrationError(CoreError):
     """Raised when :func:`register_project_answers` is called a second time with a different callable.
 
     A double-registration with the same callable is a safe no-op; a double-registration
@@ -119,14 +119,14 @@ def register_project_answers(fn: ProjectAnswersFn) -> None:
     Call exactly once at application startup (e.g. in
     ``cadrumo.application.wizard._persistence`` module body after the function is
     defined). A second call with an identical callable is a no-op; a second
-    call with a different callable raises :class:`ProfileRegistrationError`.
+    call with a different callable raises :class:`ProjectAnswersRegistrationError`.
     Domain code should depend on :func:`project_answers`, not on the
     application-layer implementation object registered here.
     """
     if _PROJECT_ANSWERS_SLOT:
         if _PROJECT_ANSWERS_SLOT[0] is fn:
             return
-        raise ProfileRegistrationError(
+        raise ProjectAnswersRegistrationError(
             translated_message="core.profile.errors.registration_duplicate_callable",
         )
     _PROJECT_ANSWERS_SLOT.append(fn)
@@ -976,6 +976,7 @@ __all__ = [
     "ProfileAnswerTypeError",
     "ProjectAnswersFn",
     "ProjectAnswersNotRegisteredError",
+    "ProjectAnswersRegistrationError",
     "SetupAnswers",
     "SetupFieldSpec",
     "get_project_answers",

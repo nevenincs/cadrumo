@@ -13,11 +13,8 @@ import typer
 from ....application.modelo import ModeloWorkflowGateError
 from ....application.operator_actions import (
     ActionArgumentBinding,
-    ActionArgumentStatus,
-    ActionConditionality,
     ActionReference,
     ConditionEvidence,
-    ConditionEvidenceProvenance,
     PreconditionVerdict,
 )
 from ....application.workflow import (
@@ -25,6 +22,11 @@ from ....application.workflow import (
     WorkflowResult,
     WorkflowStage,
     WorkflowStep,
+)
+from ....core import (
+    ActionArgumentStatus,
+    ActionConditionality,
+    ActionEvidenceProvenance,
 )
 from ....core.config import override_settings
 from ....core.errors import ErrorCategory, get_error_exit_code
@@ -51,7 +53,7 @@ def _persisted_builder_refusal_result() -> WorkflowResult:
                 ConditionEvidence(
                     condition_id="workflow.draft.buildable",
                     evidence_id="workflow.draft.build_failure",
-                    provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+                    provenance=ActionEvidenceProvenance.APPLICATION_STATE,
                     values={"buildable": False},
                 ),
             ),

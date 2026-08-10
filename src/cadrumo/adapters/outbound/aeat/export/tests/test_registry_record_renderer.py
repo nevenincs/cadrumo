@@ -24,6 +24,7 @@ from ......domain.calculations.registry import (
     CasillaFieldKind,
     ExportFieldDefinition,
     ExportRecordDefinition,
+    ExportValuePolicy,
 )
 from ......domain.modelos import ModeloExportError
 from .._registry_record_renderer import RegistryFixedWidthRecordRenderer
@@ -54,6 +55,7 @@ def _field(
     padding: Literal["left_zero", "left_space", "right_space", "none"] = "right_space",
     justification: Literal["left", "right", "none"] = "left",
     signed: bool = False,
+    value_policy: ExportValuePolicy | None = None,
 ) -> ExportFieldDefinition:
     return ExportFieldDefinition(
         id=field_id,
@@ -68,6 +70,7 @@ def _field(
         padding=padding,
         justification=justification,
         signed=signed,
+        value_policy=value_policy,
         # The schema requires every export field to carry grounding; these are
         # the Modelo 145 communication's own basis, so the fixtures are shaped
         # like real declarations rather than passing an empty tuple the model
@@ -319,3 +322,70 @@ def test_the_renderer_refuses_a_record_with_no_renderable_fields() -> None:
         RegistryFixedWidthRecordRenderer().render_record_body(_record(), field_values={})
 
     assert _error_context(caught.value)["reason"] == "empty_record"
+
+
+@pytest.mark.parametrize(
+    ("policy", "length", "raw", "expected"),
+    [
+        (ExportValuePolicy.SELECTED_1_UNSELECTED_0, 1, "", b"0"),
+        (ExportValuePolicy.SELECTED_1_UNSELECTED_0, 1, "1", b"1"),
+        (ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS, 2, "2026", b"26"),
+    ],
+)
+def test_registry_renderer_reuses_the_canonical_value_policy_projector(
+    policy: ExportValuePolicy,
+    length: int,
+    raw: str,
+    expected: bytes,
+) -> None:
+    field = _field(
+        "policy",
+        offset=1,
+        length=length,
+        kind=CasillaFieldKind.CASILLA,
+        casilla_id="01",
+        data_type="integer",
+        padding="left_zero",
+        justification="right",
+        value_policy=policy,
+    )
+
+    assert (
+        RegistryFixedWidthRecordRenderer().render_record_body(
+            _record(field),
+            field_values={"01": raw},
+        )
+        == expected
+    )
+
+
+@pytest.mark.parametrize(
+    ("policy", "length", "raw"),
+    [
+        (ExportValuePolicy.SELECTED_1_UNSELECTED_0, 1, "X"),
+        (ExportValuePolicy.SELECTED_1_UNSELECTED_0, 1, "2"),
+        (ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS, 2, "26"),
+        (ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS, 2, " 2026"),
+    ],
+)
+def test_registry_renderer_refuses_invalid_policy_inputs(
+    policy: ExportValuePolicy,
+    length: int,
+    raw: str,
+) -> None:
+    field = _field(
+        "policy",
+        offset=1,
+        length=length,
+        kind=CasillaFieldKind.CASILLA,
+        casilla_id="01",
+        data_type="integer",
+        padding="left_zero",
+        justification="right",
+        value_policy=policy,
+    )
+
+    with pytest.raises(ModeloExportError) as caught:
+        RegistryFixedWidthRecordRenderer().render_record_body(_record(field), field_values={"01": raw})
+
+    assert _error_context(caught.value)["reason"] == "value_policy"

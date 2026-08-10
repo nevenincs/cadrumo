@@ -11,11 +11,14 @@ from ...application.state_projection import (
     ModeloReadinessRequest,
     build_operator_state_projection,
 )
-from ...core import Period, PeriodError
-from ...core.i18n import tr
-from ...core.json_contract import (
+from ...core import (
     ActionArgumentSource,
     ActionArgumentStatus,
+    Period,
+    PeriodError,
+)
+from ...core.i18n import tr
+from ...core.json_contract import (
     Notice,
     NoticeSeverity,
     ResolvedActionArgument,

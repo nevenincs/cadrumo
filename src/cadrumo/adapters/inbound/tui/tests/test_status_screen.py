@@ -23,10 +23,12 @@ import pytest
 import yaml
 from textual.widgets import DataTable, Static
 
-from .....core.i18n import SUPPORTED_OUTPUT_LANGUAGES
-from .....core.json_contract import (
+from .....core import (
     ActionArgumentSource,
     ActionArgumentStatus,
+)
+from .....core.i18n import SUPPORTED_OUTPUT_LANGUAGES
+from .....core.json_contract import (
     Notice,
     NoticeSeverity,
     ResolvedActionArgument,

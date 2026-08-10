@@ -72,7 +72,7 @@ def test_verification_report_payload_resolves_the_exact_registry_recovery_verdic
         VerificationFindingPreconditionProjection,
         build_verification_precondition_failure,
     )
-    from ....application.operator_actions import ConditionEvidenceProvenance
+    from ....core import ActionEvidenceProvenance
     from ....domain.modelos import (
         ModeloVerificationFinding,
         ModeloVerificationFindingKind,
@@ -119,7 +119,7 @@ def test_verification_report_payload_resolves_the_exact_registry_recovery_verdic
         scenario_id="modelo.work.verify.registry_snapshot.unavailable",
         evidence_id="modelo.work.verify.registry_snapshot",
         evidence_values={"modelo": "999"},
-        provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
         action_id="operator.registry.verify",
     )
     projection = VerificationFindingPreconditionProjection(

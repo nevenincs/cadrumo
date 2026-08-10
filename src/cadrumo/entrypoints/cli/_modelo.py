@@ -884,9 +884,11 @@ def work_history(
     )
     history = assemble_work_unit_history(unit.work_unit_id)
     from ...application.operator_actions import ActionReference
-    from ...core.json_contract import (
+    from ...core import (
         ActionArgumentSource,
         ActionArgumentStatus,
+    )
+    from ...core.json_contract import (
         Notice,
         NoticeSeverity,
         ResolvedActionArgument,

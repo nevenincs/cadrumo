@@ -12,10 +12,9 @@ depending on broad exception swallowing.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, cast
+from typing import cast
 
 import pytest
 from cryptography import x509
@@ -23,7 +22,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
-from pydantic import BaseModel, SecretStr
+from pydantic import SecretStr
 
 from ...core import BindingSourceKind
 from ...core.errors import (
@@ -57,31 +56,9 @@ def _assert_registered_and_roundtrip(cls: type) -> None:
 
 
 def test_profile_registration_error_is_registered_and_roundtrips() -> None:
-    from ...core.setup_answers import ProfileRegistrationError
+    from ..user_profile import ProfileRegistrationError
 
     _assert_registered_and_roundtrip(ProfileRegistrationError)
-
-
-def test_profile_registration_error_raised_on_double_register() -> None:
-    """register_project_answers raises ProfileRegistrationError on a second distinct callable."""
-    from ...core.setup_answers import _PROJECT_ANSWERS_SLOT, ProfileRegistrationError, register_project_answers
-
-    original = list(_PROJECT_ANSWERS_SLOT)
-
-    def _answers_factory_a(flow: Any, values: Mapping[str, str]) -> BaseModel:  # pragma: no cover
-        return BaseModel()
-
-    def _answers_factory_b(flow: Any, values: Mapping[str, str]) -> BaseModel:  # pragma: no cover
-        return BaseModel()
-
-    try:
-        _PROJECT_ANSWERS_SLOT.clear()
-        _PROJECT_ANSWERS_SLOT.append(_answers_factory_a)
-        with pytest.raises(ProfileRegistrationError):
-            register_project_answers(_answers_factory_b)
-    finally:
-        _PROJECT_ANSWERS_SLOT.clear()
-        _PROJECT_ANSWERS_SLOT.extend(original)
 
 
 # ---------------------------------------------------------------------------

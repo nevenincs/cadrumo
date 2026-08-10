@@ -25,7 +25,12 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import NoReturn
 
-from ...core import Period
+from ...core import (
+    ActionConditionality,
+    ActionEvidenceProvenance,
+    NoRecoveryOutcome,
+    Period,
+)
 from ...core.time import now as _utcnow
 from ...domain.deadlines import (
     ModeloDeadline,
@@ -36,10 +41,7 @@ from ...domain.deadlines import (
     next_deadline,
 )
 from ..operator_actions import (
-    ActionConditionality,
     ConditionEvidence,
-    ConditionEvidenceProvenance,
-    NoRecoveryOutcome,
     PreconditionVerdict,
 )
 from ._errors import WorkflowAbortSignalError
@@ -105,7 +107,7 @@ def abort_missing_deadline_obligation(
                     ConditionEvidence(
                         condition_id="workflow.deadline.filing_window_open",
                         evidence_id="workflow.deadline.window",
-                        provenance=ConditionEvidenceProvenance.DOMAIN_EVALUATION,
+                        provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
                         values={"filing_window_open": False},
                     ),
                 ),

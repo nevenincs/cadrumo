@@ -15,9 +15,15 @@ from pathlib import Path
 from typing import Annotated, Final, Literal
 
 import rtoml
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, model_validator
 
-from cadrumo.domain.calculations.registry import ModeloId, RegistryValidationError, SourceRefId
+from cadrumo.domain.calculations.registry import (
+    ExportValuePolicy,
+    ModeloId,
+    RegistryValidationError,
+    SourceRefId,
+    coerce_export_value_policy,
+)
 
 from ._record_design_ir import RecordDesignIntermediateField
 from ._semantic_map_join import JoinedRecordDesign
@@ -169,6 +175,23 @@ class Width17MembershipRule(_StrictModel):
         return self
 
 
+type SingletonValuePolicy = Annotated[
+    Literal[
+        "unsigned-integer",
+        "implied-decimal",
+        "yyyymmdd",
+        "enumerated-digits",
+        "digit-string",
+        "identifier-digits",
+        "four-digit-year",
+        "two-digit-month",
+        "two-digit-day",
+    ]
+    | ExportValuePolicy,
+    BeforeValidator(coerce_export_value_policy),
+]
+
+
 class SingletonNumericRule(_StrictModel):
     """One reviewed smaller numeric field; grouping is deliberately impossible."""
 
@@ -188,19 +211,7 @@ class SingletonNumericRule(_StrictModel):
         "month_mm",
         "day_dd",
     ]
-    value_policy: Literal[
-        "unsigned-integer",
-        "implied-decimal",
-        "yyyymmdd",
-        "enumerated-digits",
-        "digit-string",
-        "identifier-digits",
-        "selected-1-unselected-0",
-        "four-digit-year",
-        "four-digit-year-final-two-digits",
-        "two-digit-month",
-        "two-digit-day",
-    ]
+    value_policy: SingletonValuePolicy
     integer_digits: int = Field(ge=0)
     decimal_digits: int = Field(ge=0)
     sign_policy: Literal["unsigned"]
@@ -227,9 +238,9 @@ class SingletonNumericRule(_StrictModel):
             "enumeration": "enumerated-digits",
             "digit_string": "digit-string",
             "identifier_digits": "identifier-digits",
-            "checkbox": "selected-1-unselected-0",
+            "checkbox": ExportValuePolicy.SELECTED_1_UNSELECTED_0,
             "year_yyyy": "four-digit-year",
-            "year_last_two_digits": "four-digit-year-final-two-digits",
+            "year_last_two_digits": ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS,
             "month_mm": "two-digit-month",
             "day_dd": "two-digit-day",
         }[self.semantic_kind]
@@ -413,9 +424,7 @@ def validate_render_profile(
         source_ref=joined.source.source_ref,
         source_sha256=joined.source.source_sha256,
     )
-    eligibility = project_render_profile_eligibility(
-        joined_field.parser_field for joined_field in joined.fields
-    )
+    eligibility = project_render_profile_eligibility(joined_field.parser_field for joined_field in joined.fields)
     validate_render_profile_authority(profile, expected_identity, eligibility, source_evidence)
 
 
@@ -508,9 +517,7 @@ def _validate_reviewed_evidence(
     profile: RenderProfile,
     source_evidence: RenderProfileSourceEvidence,
 ) -> None:
-    actual_by_locator = {
-        (entry.sheet, entry.cell): entry.normalized_statement for entry in source_evidence.entries
-    }
+    actual_by_locator = {(entry.sheet, entry.cell): entry.normalized_statement for entry in source_evidence.entries}
     reviewed = tuple(rule.evidence for rule in profile.width_17_rules) + tuple(
         rule.evidence for rule in profile.singleton_rules
     )

@@ -15,7 +15,6 @@ from ....domain.modelos import (
     VerificationReport,
     derive_verification_report_id,
 )
-from ...operator_actions import ActionConditionality, ConditionEvidenceProvenance, NoRecoveryOutcome
 from .._verification_preconditions import (
     ModeloVerificationResult,
     VerificationFindingPreconditionProjection,
@@ -69,7 +68,7 @@ def test_registry_snapshot_failure_is_exactly_linked_to_the_canonical_action() -
         scenario_id="modelo.work.verify.registry_snapshot.unavailable",
         evidence_id="modelo.work.verify.registry_snapshot",
         evidence_values={"modelo": "303", "year": 2026, "period": "1T"},
-        provenance=ConditionEvidenceProvenance.REGISTRY_RECORD,
+        provenance=ActionEvidenceProvenance.REGISTRY_RECORD,
         action_id="operator.registry.verify",
     )
 
@@ -98,7 +97,7 @@ def test_operator_decision_failure_preserves_branch_identity_and_typed_facts() -
         scenario_id="modelo.work.verify.registry_predicate.failed",
         evidence_id="modelo.work.verify.registry_predicate",
         evidence_values={"predicate_id": "m303-base-cuota-consistent"},
-        provenance=ConditionEvidenceProvenance.REGISTRY_RECORD,
+        provenance=ActionEvidenceProvenance.REGISTRY_RECORD,
     )
 
     assert failure.verdict.action is None
@@ -117,7 +116,7 @@ def test_warning_cannot_receive_a_failed_precondition() -> None:
         scenario_id="modelo.work.verify.ledger_snapshot.drift_detected",
         evidence_id="modelo.work.verify.ledger_snapshot",
         evidence_values={"snapshot_anchored": False},
-        provenance=ConditionEvidenceProvenance.PERSISTED_STATE,
+        provenance=ActionEvidenceProvenance.PERSISTED_STATE,
     )
 
     assert VerificationFindingPreconditionProjection(finding=blocking, precondition_failure=failure)
@@ -135,7 +134,7 @@ def test_application_result_requires_exact_ordered_finding_projection() -> None:
         scenario_id="modelo.work.verify.oss_evidence.missing",
         evidence_id="modelo.work.verify.oss_evidence",
         evidence_values={"source_ref_count": 0},
-        provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
     )
     projections = project_verification_findings(
         (blocking, warning),

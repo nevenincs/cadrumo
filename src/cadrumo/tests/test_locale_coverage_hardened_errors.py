@@ -26,7 +26,7 @@ _HARDENED_ERROR_KEYS: frozenset[str] = frozenset(
         "application.auth.errors.session_field_not_datetime",
         # AuthProviderReservedError (_operator.py)
         "application.auth.errors.provider_reserved",
-        # ProfileRegistrationError (core/profile.py)
+        # ProjectAnswersRegistrationError (core/setup_answers.py)
         "core.profile.errors.registration_duplicate_callable",
         # ProfileLabelAmbiguousError (_profile_bucket_scan.py)
         "application.workflow.errors.profile_label_ambiguous",

@@ -34,14 +34,16 @@ from ....application.cli_exception_preconditions import (
     cli_exception_no_recovery_verdict,
 )
 from ....application.operator_actions import ActionReference
-from ....core import NIST_PASSPHRASE_MIN_LENGTH
+from ....core import (
+    NIST_PASSPHRASE_MIN_LENGTH,
+    ActionArgumentSource,
+    ActionArgumentStatus,
+)
 from ....core.errors import CadrumoError as _CadrumoError
 from ....core.errors import resolve_error_message as _resolve_error_message
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from ....core.json_contract import (
-    ActionArgumentSource,
-    ActionArgumentStatus,
     Notice,
     NoticeSeverity,
     ResolvedActionArgument,

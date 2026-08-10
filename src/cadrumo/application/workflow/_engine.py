@@ -19,7 +19,14 @@ from collections.abc import Mapping
 from datetime import date, datetime
 from typing import NoReturn
 
-from ...core import Modelo, Period
+from ...core import (
+    ActionArgumentStatus,
+    ActionConditionality,
+    ActionEvidenceProvenance,
+    Modelo,
+    NoRecoveryOutcome,
+    Period,
+)
 from ...core.config import Settings
 from ...core.errors import BaseSeverity, SiteHealthError
 from ...core.logging import get_logger
@@ -35,12 +42,8 @@ from ...domain.submission import ModeloDraftStatus, SubmissionPreflightError
 from ..filing.runtime import build_runtime_schema_provider
 from ..operator_actions import (
     ActionArgumentBinding,
-    ActionArgumentStatus,
-    ActionConditionality,
     ActionReference,
     ConditionEvidence,
-    ConditionEvidenceProvenance,
-    NoRecoveryOutcome,
     PreconditionVerdict,
 )
 from ._deadline_stage import abort_missing_deadline_obligation, resolve_deadline_stage_obligation
@@ -102,7 +105,7 @@ def _no_recovery_verdict(
     *,
     condition_id: str,
     evidence_id: str,
-    provenance: ConditionEvidenceProvenance,
+    provenance: ActionEvidenceProvenance,
     values: Mapping[str, str | int | bool],
     outcome: NoRecoveryOutcome,
 ) -> PreconditionVerdict:
@@ -126,7 +129,7 @@ def _conditional_action_verdict(
     *,
     condition_id: str,
     evidence_id: str,
-    provenance: ConditionEvidenceProvenance,
+    provenance: ActionEvidenceProvenance,
     values: Mapping[str, str | int | bool],
     action_id: str,
     missing_argument_names: tuple[str, ...],
@@ -557,7 +560,7 @@ class WorkflowEngine:
                     precondition_verdict=_no_recovery_verdict(
                         condition_id="workflow.deadline.filing_window_open",
                         evidence_id="workflow.deadline.window",
-                        provenance=ConditionEvidenceProvenance.DOMAIN_EVALUATION,
+                        provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
                         values={
                             "filing_window": FilingWindowState.FUTURE.value,
                             "modelo": obligation.modelo.value,
@@ -609,7 +612,7 @@ class WorkflowEngine:
                     precondition_verdict=_no_recovery_verdict(
                         condition_id="workflow.deadline.filing_window_open",
                         evidence_id="workflow.deadline.window",
-                        provenance=ConditionEvidenceProvenance.DOMAIN_EVALUATION,
+                        provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
                         values={
                             "filing_window": FilingWindowState.CLOSED.value,
                             "modelo": obligation.modelo.value,
@@ -786,7 +789,7 @@ class WorkflowEngine:
                     precondition_verdict=_no_recovery_verdict(
                         condition_id="workflow.inbox.clear",
                         evidence_id="workflow.inbox.blockers",
-                        provenance=ConditionEvidenceProvenance.RUNTIME_OBSERVATION,
+                        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
                         values={"blocker_count": len(blockers), "inbox_clear": False},
                         outcome=NoRecoveryOutcome.OPERATOR_DECISION,
                     ),
@@ -899,7 +902,7 @@ class WorkflowEngine:
                         precondition_verdict=_no_recovery_verdict(
                             condition_id="workflow.obligation.unfiled",
                             evidence_id="workflow.obligation.filing_state",
-                            provenance=ConditionEvidenceProvenance.RUNTIME_OBSERVATION,
+                            provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
                             values={
                                 "expediente_count": len(already),
                                 "modelo": obligation.modelo.value,
@@ -978,7 +981,7 @@ class WorkflowEngine:
                     precondition_verdict=_conditional_action_verdict(
                         condition_id="workflow.draft.buildable",
                         evidence_id="workflow.draft.build_failure",
-                        provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+                        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
                         values={"buildable": False},
                         action_id="operator.modelo.work.calculate",
                         missing_argument_names=("work_unit_id",),
@@ -1026,7 +1029,7 @@ class WorkflowEngine:
                     precondition_verdict=_conditional_action_verdict(
                         condition_id="workflow.draft.ready",
                         evidence_id="workflow.draft.status",
-                        provenance=ConditionEvidenceProvenance.PERSISTED_STATE,
+                        provenance=ActionEvidenceProvenance.PERSISTED_STATE,
                         values={"draft_id": draft.draft_id, "draft_status": status_value, "ready": False},
                         action_id="operator.modelo.verification_report.list",
                         missing_argument_names=("calculation_revision_id",),
@@ -1072,7 +1075,7 @@ class WorkflowEngine:
                 precondition_verdict=_no_recovery_verdict(
                     condition_id="workflow.draft.identity_matches",
                     evidence_id="workflow.draft.identity",
-                    provenance=ConditionEvidenceProvenance.REGISTRY_RECORD,
+                    provenance=ActionEvidenceProvenance.REGISTRY_RECORD,
                     values=identity_evidence,
                     outcome=NoRecoveryOutcome.OPERATOR_DECISION,
                 ),
@@ -1114,7 +1117,7 @@ class WorkflowEngine:
                     precondition_verdict=_conditional_action_verdict(
                         condition_id="workflow.draft.validation_clean",
                         evidence_id="workflow.draft.validation",
-                        provenance=ConditionEvidenceProvenance.PERSISTED_STATE,
+                        provenance=ActionEvidenceProvenance.PERSISTED_STATE,
                         values={"error_count": len(error_findings), "validation_clean": False},
                         action_id="operator.modelo.verification_report.list",
                         missing_argument_names=("calculation_revision_id",),
@@ -1174,7 +1177,7 @@ class WorkflowEngine:
                         precondition_verdict=_no_recovery_verdict(
                             condition_id="workflow.execution.completed",
                             evidence_id="workflow.execution.error_code",
-                            provenance=ConditionEvidenceProvenance.RUNTIME_OBSERVATION,
+                            provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
                             values={
                                 "completed": False,
                                 "error_code": "workflow.auth.certificate_load_failed",
@@ -1200,7 +1203,7 @@ class WorkflowEngine:
                         precondition_verdict=_no_recovery_verdict(
                             condition_id="workflow.auth.provider_available",
                             evidence_id="workflow.auth.provider_state",
-                            provenance=ConditionEvidenceProvenance.RUNTIME_OBSERVATION,
+                            provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
                             values={
                                 "available": certificate.available,
                                 "configured": certificate.configured,
@@ -1243,7 +1246,7 @@ class WorkflowEngine:
                         precondition_verdict=_no_recovery_verdict(
                             condition_id="workflow.auth.certificate_valid",
                             evidence_id="workflow.auth.certificate_state",
-                            provenance=ConditionEvidenceProvenance.RUNTIME_OBSERVATION,
+                            provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
                             values={
                                 "certificate_valid": False,
                                 "cert_severity": cert_severity,
@@ -1314,7 +1317,7 @@ class WorkflowEngine:
                     precondition_verdict=_no_recovery_verdict(
                         condition_id="workflow.submission.safe",
                         evidence_id="workflow.submission.safety_state",
-                        provenance=ConditionEvidenceProvenance.DOMAIN_EVALUATION,
+                        provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
                         values={"submission_safe": False},
                         outcome=NoRecoveryOutcome.SAFETY,
                     ),

@@ -27,7 +27,9 @@ See Also:
 
 from __future__ import annotations
 
+import ast
 import importlib
+from pathlib import Path
 
 import pytest
 
@@ -66,6 +68,28 @@ def test_setup_answers_catalogue_uses_core_class() -> None:
     assert setup_flow.answers_model is SetupAnswers, (
         f"SETUP_FLOW.answers_model is {setup_flow.answers_model!r}; expected cadrumo.core.setup_answers.SetupAnswers"
     )
+
+
+def test_profile_registration_error_names_have_distinct_canonical_declarations() -> None:
+    """The callback-registration and taxpayer-registration refusals cannot share a class name."""
+    source_root = Path(__file__).parents[2]
+    declarations: dict[str, set[Path]] = {
+        "ProfileRegistrationError": set(),
+        "ProjectAnswersRegistrationError": set(),
+    }
+    for path in source_root.rglob("*.py"):
+        module = ast.parse(path.read_text(encoding="utf-8"))
+        for node in ast.walk(module):
+            if isinstance(node, ast.ClassDef) and node.name in declarations:
+                declarations[node.name].add(path.relative_to(source_root))
+
+    assert declarations["ProfileRegistrationError"] == {Path("application/user_profile/_registration.py")}
+    assert declarations["ProjectAnswersRegistrationError"] == {Path("core/setup_answers.py")}
+
+    from .. import setup_answers
+
+    assert "ProfileRegistrationError" not in setup_answers.__all__
+    assert "ProjectAnswersRegistrationError" in setup_answers.__all__
 
 
 # ---------------------------------------------------------------------------
@@ -150,6 +174,52 @@ def test_project_answers_raises_before_registration() -> None:
     )
     assert result.returncode == 0, (
         f"Subprocess raised unexpected error.\nstdout: {result.stdout}\nstderr: {result.stderr}"
+    )
+
+
+def test_project_answers_refuses_distinct_second_projector() -> None:
+    """The core slot rejects a replacement projector through its exact registered error."""
+    import subprocess
+    import sys
+    import textwrap
+
+    script = textwrap.dedent("""\
+        from collections.abc import Mapping
+        from typing import Any
+
+        from pydantic import BaseModel
+
+        from cadrumo.core.errors import build_error_envelope, get_registered_error_code
+        from cadrumo.core.setup_answers import (
+            ProjectAnswersRegistrationError,
+            register_project_answers,
+        )
+
+        def initial_projector(flow: Any, values: Mapping[str, str]) -> BaseModel:
+            del flow, values
+            return BaseModel()
+
+        def replacement_projector(flow: Any, values: Mapping[str, str]) -> BaseModel:
+            del flow, values
+            return BaseModel()
+
+        register_project_answers(initial_projector)
+        try:
+            register_project_answers(replacement_projector)
+        except ProjectAnswersRegistrationError as refusal:
+            assert get_registered_error_code(refusal).code == "INTERNAL_PROFILE_REGISTRATION"
+            assert build_error_envelope(refusal).code == "INTERNAL_PROFILE_REGISTRATION"
+        else:
+            raise AssertionError("the second project_answers registration was accepted")
+    """)
+    result = subprocess.run(
+        [sys.executable, "-c", script],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert result.returncode == 0, (
+        f"Second-projector refusal check failed.\nstdout: {result.stdout}\nstderr: {result.stderr}"
     )
 
 

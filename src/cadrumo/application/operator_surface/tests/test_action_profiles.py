@@ -5,7 +5,8 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ...operator_actions import ActionReference, NoRecoveryOutcome
+from ....core import NoRecoveryOutcome
+from ...operator_actions import ActionReference
 from .. import ManifestActionProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

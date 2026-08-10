@@ -13,7 +13,13 @@ from ....adapters.outbound.aeat.browser import SiteHealthEvidence, SiteHealthSta
 from ....adapters.outbound.aeat.browser._site_health import _URL_ADAPTER
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import Modelo, Period
+from ....core import (
+    ActionConditionality,
+    ActionEvidenceProvenance,
+    Modelo,
+    NoRecoveryOutcome,
+    Period,
+)
 from ....core.errors import SiteHealthError, resolve_error_message
 from ....domain.calculations.registry import CasillaId, CasillaObservation, validated_casilla_id
 from ....domain.deadlines import ObligationStatus
@@ -35,10 +41,7 @@ from ...modelo import (
     workflow_period_for_work_unit,
 )
 from ...operator_actions import (
-    ActionConditionality,
     ConditionEvidence,
-    ConditionEvidenceProvenance,
-    NoRecoveryOutcome,
     PreconditionVerdict,
 )
 from ...user_profile import UserProfileLifecycleRepository
@@ -134,17 +137,17 @@ def _abort_verdict(reason: WorkflowAbortReason) -> PreconditionVerdict:
     if reason in {WorkflowAbortReason.NO_PENDING_OBLIGATION, WorkflowAbortReason.DEADLINE_PASSED}:
         condition_id = "workflow.deadline.filing_window_open"
         evidence_id = "workflow.deadline.window"
-        provenance = ConditionEvidenceProvenance.DOMAIN_EVALUATION
+        provenance = ActionEvidenceProvenance.DOMAIN_EVALUATION
         values: dict[str, str | bool] = {"filing_window_open": False}
     elif reason is WorkflowAbortReason.ALREADY_FILED:
         condition_id = "workflow.obligation.unfiled"
         evidence_id = "workflow.obligation.filing_state"
-        provenance = ConditionEvidenceProvenance.RUNTIME_OBSERVATION
+        provenance = ActionEvidenceProvenance.RUNTIME_OBSERVATION
         values = {"unfiled": False}
     else:
         condition_id = "workflow.execution.completed"
         evidence_id = "workflow.execution.error_code"
-        provenance = ConditionEvidenceProvenance.RUNTIME_OBSERVATION
+        provenance = ActionEvidenceProvenance.RUNTIME_OBSERVATION
         values = {"completed": False, "error_code": f"workflow.execution.{reason.value.lower()}"}
     outcome = (
         NoRecoveryOutcome.OPERATOR_DECISION

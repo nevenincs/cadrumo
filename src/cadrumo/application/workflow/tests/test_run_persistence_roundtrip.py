@@ -24,7 +24,16 @@ from pydantic import ValidationError
 
 from ....adapters.outbound.aeat.browser import SiteHealthState
 from ....adapters.persistence.storage import ClassificationError, Envelope, EnvelopeVersionError, SensitivityClass
-from ....core import Modelo, Period, StorageCategory, storage_path
+from ....core import (
+    ActionArgumentStatus,
+    ActionConditionality,
+    ActionEvidenceProvenance,
+    Modelo,
+    NoRecoveryOutcome,
+    Period,
+    StorageCategory,
+    storage_path,
+)
 from ....core.config import override_settings
 from ....core.external_constants import OutputLanguage
 from ....domain.deadlines import ObligationStatus
@@ -32,12 +41,8 @@ from ....domain.submission import ModeloDraftStatus
 from ....tests.secure_sql import isolated_runtime_profile
 from ...operator_actions import (
     ActionArgumentBinding,
-    ActionArgumentStatus,
-    ActionConditionality,
     ActionReference,
     ConditionEvidence,
-    ConditionEvidenceProvenance,
-    NoRecoveryOutcome,
     PreconditionVerdict,
 )
 from .._errors import WorkflowError
@@ -80,7 +85,7 @@ def _draft_not_ready_verdict() -> PreconditionVerdict:
             ConditionEvidence(
                 condition_id="workflow.draft.ready",
                 evidence_id="workflow.draft.status",
-                provenance=ConditionEvidenceProvenance.PERSISTED_STATE,
+                provenance=ActionEvidenceProvenance.PERSISTED_STATE,
                 values={"draft_id": "d" * 64, "draft_status": "BORRADOR"},
             ),
         ),
@@ -174,7 +179,7 @@ def _operationally_aborted_run() -> WorkflowResult:
             ConditionEvidence(
                 condition_id="workflow.execution.completed",
                 evidence_id="workflow.execution.error_code",
-                provenance=ConditionEvidenceProvenance.RUNTIME_OBSERVATION,
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
                 values={"error_code": "workflow.runtime.failure"},
             ),
         ),

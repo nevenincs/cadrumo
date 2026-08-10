@@ -47,6 +47,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ._aeat_hosts import REMOTE_READ_SCHEME, canonical_remote_hostname
+from ._export_value_policy import (
+    ExportValuePolicy,
+    ExportValuePolicyValue,
+    coerce_export_value_policy,
+    project_export_value,
+    validate_export_wire_value,
+)
 from ._ids import (
     ApplicationLinkId,
     BindingId,
@@ -762,6 +769,8 @@ __all__ = [
     "ExportLayoutDefinition",
     "ExportLayoutId",
     "ExportRecordDefinition",
+    "ExportValuePolicy",
+    "ExportValuePolicyValue",
     "ExternalGroundingFinding",
     "ExternalGroundingFindingKind",
     "ExternalOracleEvidence",
@@ -969,6 +978,7 @@ __all__ = [
     "censo_modelo_ownership",
     "censo_modelo_ownership_map",
     "clear_fingerprint_cache",
+    "coerce_export_value_policy",
     "collect_applicability_declarations",
     "collect_orphan_oracle_ids",
     "collect_registry_tree_fingerprints",
@@ -1037,6 +1047,7 @@ __all__ = [
     "previous_filing_observation_requirements",
     "previous_filing_source_reference",
     "profile_condition_matches",
+    "project_export_value",
     "rate_box_coverage_shortfalls",
     "rate_box_unscreened_groups",
     "read_parameter",
@@ -1110,6 +1121,7 @@ __all__ = [
     "unsupported_ledger_renta_gastos_estimacion_directa_observations",
     "unsupported_ledger_renta_gastos_pago_fraccionado_observations",
     "unsupported_ledger_renta_income_observations",
+    "validate_export_wire_value",
     "validate_invoice_binding_definition",
     "validate_ledger_impatriado_income_aggregation_binding_definition",
     "validate_ledger_irnr_income_aggregation_binding_definition",

@@ -7,10 +7,19 @@ import subprocess
 
 import pytest
 
-from ....application.operator_actions import ActionReference
-from ....core.json_contract import (
+from ....application.operator_actions import (
+    ActionArgumentBinding,
+    ActionReference,
+    ConditionEvidence,
+    PreconditionVerdict,
+)
+from ....core import (
     ActionArgumentSource,
     ActionArgumentStatus,
+    ActionConditionality,
+    ActionEvidenceProvenance,
+)
+from ....core.json_contract import (
     Notice,
     NoticeSeverity,
     ResolvedActionArgument,
@@ -19,6 +28,7 @@ from .._common import (
     _action_text_lines,
     _powershell_action_token,
     _resolve_notice_actions,
+    resolve_cli_precondition_action,
     resolve_notice_action,
 )
 
@@ -111,6 +121,39 @@ def test_common_action_resolver_materialises_ledger_link_from_the_live_surface()
             source_key="transaction_id",
         ),
     )
+
+
+def test_cli_precondition_projection_preserves_canonical_enum_members_without_value_conversion() -> None:
+    """The application verdict and wire DTO carry the same enum identities."""
+    verdict = PreconditionVerdict(
+        failed_condition_id="profile.active.required",
+        evidence=(
+            ConditionEvidence(
+                condition_id="profile.active.required",
+                evidence_id="profile.active.state",
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                values={"profile_name": "Ada"},
+            ),
+        ),
+        action=ActionReference(action_id="operator.profile.create"),
+        argument_bindings=(
+            ActionArgumentBinding(
+                argument_name="profile_name",
+                status=ActionArgumentStatus.RESOLVED,
+                value="Ada",
+                source=ActionArgumentSource.VERDICT_CONTEXT,
+                source_key="profile_name",
+            ),
+        ),
+        conditionality=ActionConditionality.IMMEDIATE,
+    )
+
+    projected = resolve_cli_precondition_action(verdict)
+
+    assert projected.evidence[0].provenance is verdict.evidence[0].provenance
+    assert projected.argument_bindings[0].status is verdict.argument_bindings[0].status
+    assert projected.argument_bindings[0].source is verdict.argument_bindings[0].source
+    assert projected.conditionality is verdict.conditionality
 
 
 def test_common_action_resolver_accepts_modelo_calculate_verdict_context_binding() -> None:

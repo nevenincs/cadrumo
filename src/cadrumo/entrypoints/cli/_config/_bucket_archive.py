@@ -23,11 +23,13 @@ from typing import TYPE_CHECKING
 import typer
 
 from ....application.operator_actions import ActionReference
+from ....core import (
+    ActionArgumentSource,
+    ActionArgumentStatus,
+)
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from ....core.json_contract import (
-    ActionArgumentSource,
-    ActionArgumentStatus,
     Notice,
     NoticeSeverity,
     ResolvedActionArgument,

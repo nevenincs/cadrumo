@@ -28,12 +28,11 @@ from collections.abc import Iterable, Mapping
 from datetime import date
 from decimal import Decimal
 
-from ...core import Modelo
+from ...core import ActionEvidenceProvenance, Modelo
 from ...core.resources import resources
 from ...domain.calculations.registry import BindingId, ModeloRevision
 from ...domain.modelos import CalculationRevision, WorkUnit
 from ...domain.user_profile import ProfileNotFoundError, load_user_profile_schema
-from ..operator_actions import ConditionEvidenceProvenance
 from ..user_profile import UserProfileLifecycleRepository
 from ._action_errors import ModeloRequiredBindingsMissingError
 from ._preconditions import build_modelo_precondition_failure
@@ -207,7 +206,7 @@ def _raise_required_bindings_missing(
                 "missing_binding_count": len(missing_bindings),
                 "missing_binding_ids": "|".join(str(binding_id) for binding_id in missing_bindings),
             },
-            provenance=ConditionEvidenceProvenance.REGISTRY_RECORD,
+            provenance=ActionEvidenceProvenance.REGISTRY_RECORD,
             action_id="operator.modelo.bindings.list",
             action_argument_values={
                 "modelo": str(work_unit.modelo),

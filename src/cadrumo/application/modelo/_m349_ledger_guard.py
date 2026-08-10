@@ -16,7 +16,6 @@ from ...core import Modelo
 from ...domain.iva import IvaCategory
 from ...domain.modelos import Modelo349OperadorRow, ModeloDetailRow, WorkUnit
 from ...domain.transactions import TransactionCatalogueRepositoryProtocol, TransactionLifecycleState
-from ..operator_actions import ConditionEvidenceProvenance
 from ._action_errors import ModeloAggregationBindingError
 from ._preconditions import build_modelo_precondition_failure
 
@@ -79,7 +78,7 @@ def raise_if_m349_intracom_ledger_rows_need_operator_rows(
                 "transaction_count": len(transaction_ids),
                 "sample_transaction_ids": "|".join(transaction_ids[:3]),
             },
-            provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
         ),
     )
 

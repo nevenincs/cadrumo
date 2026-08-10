@@ -6,11 +6,13 @@ import pytest
 
 from ....application.auth import AuthConfigureResult
 from ....application.operator_actions import (
-    ActionConditionality,
     ConditionEvidence,
-    ConditionEvidenceProvenance,
-    NoRecoveryOutcome,
     PreconditionVerdict,
+)
+from ....core import (
+    ActionConditionality,
+    ActionEvidenceProvenance,
+    NoRecoveryOutcome,
 )
 from .._common import resolve_cli_precondition_action
 from .._config_payloads import AuthConfigurePayload
@@ -26,7 +28,7 @@ def test_auth_configure_result_does_not_duplicate_the_envelope_profile_identity(
             ConditionEvidence(
                 condition_id="auth.clave_movil.identity_aligned",
                 evidence_id="auth.configure.clave_movil.identity_alignment",
-                provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
                 values={
                     "identity_alignment": "clave_identity_missing",
                     "profile_tax_id_present": True,

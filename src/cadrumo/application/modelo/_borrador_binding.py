@@ -35,7 +35,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import BindingSourceKind, Period
+from ...core import ActionEvidenceProvenance, BindingSourceKind, Period
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId
 from ...domain.calculations.registry import BindingId, DataBindingDefinition, RegistrySnapshot
@@ -47,7 +47,6 @@ from ..aggregation import (
     CalculationSourceResolution,
     storage_degradation_resolution,
 )
-from ..operator_actions import ConditionEvidenceProvenance
 from ._action_errors import ModeloPreconditionErrorMixin
 from ._decimal_parsing import decimal_from_string
 from ._preconditions import build_modelo_precondition_failure
@@ -155,7 +154,7 @@ def resolve_modelo_100_borrador_bindings(
                     "year": command.filing_year,
                     "period": command.period.registry_token,
                 },
-                provenance=ConditionEvidenceProvenance.PERSISTED_STATE,
+                provenance=ActionEvidenceProvenance.PERSISTED_STATE,
             ),
         ) from exc
     _assert_same_axis(
@@ -179,7 +178,7 @@ def resolve_modelo_100_borrador_bindings(
                     "period": command.period.registry_token,
                     "lifecycle_state": snapshot.state.value,
                 },
-                provenance=ConditionEvidenceProvenance.PERSISTED_STATE,
+                provenance=ActionEvidenceProvenance.PERSISTED_STATE,
             ),
         )
 

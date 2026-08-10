@@ -31,11 +31,15 @@ from ...application.modelo import (
     registry_support_matrix,
 )
 from ...application.operator_actions import ActionReference
-from ...core import Period, TaxDomain, resolve_active_bucket_id
-from ...core.i18n import tr
-from ...core.json_contract import (
+from ...core import (
     ActionArgumentSource,
     ActionArgumentStatus,
+    Period,
+    TaxDomain,
+    resolve_active_bucket_id,
+)
+from ...core.i18n import tr
+from ...core.json_contract import (
     Notice,
     NoticeSeverity,
     ResolvedActionArgument,

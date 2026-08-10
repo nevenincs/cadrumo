@@ -14,16 +14,18 @@ from __future__ import annotations
 from collections.abc import Mapping
 from enum import StrEnum
 
-from ..core import ProfileSessionRefusalReason
-from .operator_actions import (
-    ActionArgumentBinding,
+from ..core import (
     ActionArgumentSource,
     ActionArgumentStatus,
     ActionConditionality,
+    ActionEvidenceProvenance,
+    NoRecoveryOutcome,
+    ProfileSessionRefusalReason,
+)
+from .operator_actions import (
+    ActionArgumentBinding,
     ActionReference,
     ConditionEvidence,
-    ConditionEvidenceProvenance,
-    NoRecoveryOutcome,
     PreconditionVerdict,
 )
 
@@ -86,7 +88,7 @@ def inspect_active_profile_precondition(
     evidence = _evidence(
         condition_id=condition_id,
         evidence_id=ProfilePreconditionEvidence.ACTIVE_PROFILE_STATE.value,
-        provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
         values={
             "active_profile_present": False,
             "registered_profile_count": registered_profile_count,
@@ -128,7 +130,7 @@ def inspect_filing_taxpayer_identity_precondition(
             _evidence(
                 condition_id=condition_id,
                 evidence_id=ProfilePreconditionEvidence.TAXPAYER_IDENTITY.value,
-                provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
                 values={
                     "declared_tax_id_present": False,
                     "missing_selector": "tax.id",
@@ -171,7 +173,7 @@ def profile_selection_failure_verdict(
     evidence = _evidence(
         condition_id=condition_id,
         evidence_id=ProfilePreconditionEvidence.PROFILE_SELECTION.value,
-        provenance=ConditionEvidenceProvenance.APPLICATION_STATE,
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
         values=values,
     )
 
@@ -234,7 +236,7 @@ def profile_session_failure_verdict(
             _evidence(
                 condition_id=condition_id,
                 evidence_id=ProfilePreconditionEvidence.PROFILE_SESSION.value,
-                provenance=ConditionEvidenceProvenance.PERSISTED_STATE,
+                provenance=ActionEvidenceProvenance.PERSISTED_STATE,
                 values={
                     "profile_name": profile_name,
                     "session_resumed": False,
@@ -265,7 +267,7 @@ def former_product_state_verdict(scope: FormerProductDetectionScope) -> Precondi
             _evidence(
                 condition_id=condition_id,
                 evidence_id=ProfilePreconditionEvidence.FORMER_PRODUCT_STATE.value,
-                provenance=ConditionEvidenceProvenance.RUNTIME_OBSERVATION,
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
                 values={
                     "detection_scope": scope.value,
                     "former_product_state_detected": True,
@@ -300,7 +302,7 @@ def _evidence(
     *,
     condition_id: str,
     evidence_id: str,
-    provenance: ConditionEvidenceProvenance,
+    provenance: ActionEvidenceProvenance,
     values: Mapping[str, str | int | bool],
 ) -> ConditionEvidence:
     return ConditionEvidence(

@@ -49,7 +49,6 @@ from ...domain.modelos import (
     ModeloDetailRow,
     WorkUnit,
 )
-from ..operator_actions import ConditionEvidenceProvenance
 from ._action_errors import ModeloCrossPeriodCleanStateError
 from ._preconditions import build_modelo_precondition_failure
 
@@ -256,7 +255,7 @@ def _raise_if_m390_303_reconciliation_would_save_silent_zero(
                 "target_casilla_ids": "|".join(str(target) for _rel, _binding, target, _annual in missing),
                 "annual_casilla_ids": "|".join(str(annual) for _rel, _binding, _target, annual in missing),
             },
-            provenance=ConditionEvidenceProvenance.DOMAIN_EVALUATION,
+            provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
         ),
     )
 

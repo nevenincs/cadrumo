@@ -28,12 +28,10 @@ from ...application.modelo import (
     resolve_registry_revision_for_work_target,
 )
 from ...application.operator_actions import ActionReference
-from ...core import Modelo, Period
+from ...core import ActionArgumentSource, ActionArgumentStatus, Modelo, Period
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.json_contract import (
-    ActionArgumentSource,
-    ActionArgumentStatus,
     Notice,
     NoticeSeverity,
     ResolvedActionArgument,

@@ -50,8 +50,6 @@ from ....application.operator_actions import ActionReference
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from ....core.json_contract import (
-    ActionArgumentSource,
-    ActionArgumentStatus,
     Notice,
     NoticeSeverity,
     ResolvedActionArgument,
