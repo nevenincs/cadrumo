@@ -1,0 +1,24 @@
+# Enrolls the M303 régimen simplificado de IVA módulos engine casillas and
+# formulas into the existing "modelo-303-iva-autoliquidacion" construct.
+# Fragment merge is by
+# construct id (see cadrumo.domain.calculations.registry._loader); the append
+# arrays (casilla_ids, formulas) accumulate onto the construct declared in
+# revision.toml. legal_refs/source_refs are NOT append arrays (a fragment
+# re-declaring them conflicts with the base construct's non-array field
+# merge), so the required orden-hfp-1359-2023:art-4 /
+# boe-orden-hfp-1359-2023-iva-authority refs are added directly to the base
+# construct declaration in revision.toml instead.
+[[revisions."2024-hasta-08-y-2t".constructs]]
+id = "modelo-303-iva-autoliquidacion"
+casilla_ids = [
+    "modulos-iva-epigrafe",
+    "modulos-iva-1-unidades",
+    "modulos-iva-2-unidades",
+    "modulos-iva-3-unidades",
+    "modulos-iva-cuota-devengada",
+    "modulos-iva-cuota-derivada",
+]
+formulas = [
+    "modelo-303-2024-modulos-iva-cuota-devengada",
+    "modelo-303-2024-modulos-iva-cuota-derivada",
+]

@@ -165,7 +165,7 @@ op = "sum"
 # residual of #15). Like the domestic base, these casillas were input_kind="manual"
 # with no binding, so a ledger-driven 2009-2022 M303 reported zero recargo even when
 # a supplier charged it, and zero intra-community / export base — silent
-# under-declarations. Mirrors the 2023-y-siguientes recargo + intracom/export base
+# under-declarations. Mirrors the later explicit record-design recargo + intracom/export base
 # bindings exactly (same selectors / fact / aggregation). The recargo casillas
 # (21/24/158) gain ley-37-1992:art-161 in their legal_refs so the bound-casilla
 # coverage check holds (the recargo cuota's binding provision), mirroring 2023.

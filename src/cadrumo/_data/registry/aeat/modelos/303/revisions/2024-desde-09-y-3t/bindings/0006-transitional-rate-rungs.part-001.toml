@@ -1,0 +1,136 @@
+# Transitional-rate rungs of the régimen-general devengado block.
+#
+# READ THIS BEFORE SPLITTING THIS REVISION. The rates these bindings pin --
+# 5 %, 7,5 % and 2 % -- are RD-ley 4/2024 transitional rates and are
+# WINDOW-BOUNDED TO 2024. 5 % runs to 30 September 2024; 7,5 % and 2 % run from
+# 1 October to 31 December 2024. From 1 January 2025 the foodstuffs list returns
+# to the ordinary 4 % and 10 % rates, and the 2025 and 2026 designs neutralise
+# the Tipo % constants on [154] and [166] to "00000" accordingly.
+#
+# So when this revision is split per AEAT design, these four bindings and the
+# casillas and formulas that hang off them belong to the revision covering 2024
+# and to NO OTHER. Copying them into a 2025- or 2026-covering revision would
+# leave rungs pinned to rates that cannot legally occur in that span -- dormant
+# at best, and a vehicle for a mis-declaration if anything later populates them.
+#
+# The split does NOT separate 5 % from 7,5 %, and must not be expected to: AEAT
+# reuses the ONE rung across the flip (Nota 8 changes the mandated constant
+# rather than opening a second rung), and the flip falls INSIDE the 2024-late
+# design at the 09/3T -> 10/4T 2024 period boundary. Only a sub-year
+# period-token partition could separate them, and even then the rung's identity
+# is "the transitional reducido rung", not either rate alone.
+#
+# The block is SIX base/Tipo%/cuota triplets, not three. AEAT fixes each rung's
+# rate itself: every Tipo % field in the diseño de registro is a `Constante`, so
+# a rung IS a rate and a row placed on the wrong rung publishes a rate the line
+# never carried. The three rungs bound elsewhere are the ordinary tiers
+# ([01]/[03] at 4 %, [04]/[06] at 10 %, [07]/[09] at 21 %). These two are the
+# RD-ley 4/2024 transitional food rates, which coexist WITH their tier's
+# ordinary rate rather than replacing it -- which is exactly why the tier alone
+# cannot place a row:
+#
+#   [153]/[155]  reducido tier, transitional   Constante "00500", then "00750"
+#                                              from period 10/4T 2024 (Nota 8)
+#   [165]/[167]  super-reducido tier, transit. Constante "00200" (Nota 10),
+#                                              fillable from period 10/4T 2024
+#
+# [153] admits BOTH 5 % and 7,5 % because AEAT reuses the one rung across the
+# flip: Nota 8 changes the mandated constant at the 10/4T 2024 boundary rather
+# than opening a second rung. The two rates therefore never coexist inside a
+# single filing period, and the pair is the rung's identity, not a span
+# artefact -- a per-design revision split would not separate them either, since
+# the flip happens INSIDE the 2024-late design.
+#
+# UNLIKE the Modelo 390 rate-box layer, these do not complement rate-blind
+# siblings: they narrow them. Modelo 390 keeps a rate-blind tier binding feeding
+# the annual total so a rate-unrecorded row is still counted, but Modelo 303 has
+# no such box -- the tier bindings ARE the inputs to total cuota devengada [27],
+# so leaving them rate-blind would double-count every transitional row. Narrowing
+# is safe here only because a domestic régimen-general row on this modelo cannot
+# reach aggregation without a recorded rate: the ledger path gates a missing
+# iva_rate out before classification and derives rate_kind FROM the rate, and the
+# invoice path returns no percentage only for EXEMPT and NOT_SUBJECT, neither of
+# which is a reduced or super-reducido tier. The narrowed sets are exhaustive
+# against the rate table -- {10 %} + {5 %, 7,5 %} is every reduced rate, {4 %} +
+# {2 %} is every super-reducido rate -- so the split loses no row and duplicates
+# none. test_transitional_rate_rung_allocation.py holds both halves.
+
+[[revisions.2024-desde-09-y-3t.bindings]]
+id = "modelo-303-iva-repercutido-reducido-transitorio-base"
+source = "ledger_iva_aggregation"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2024-late", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2024-desde-09-y-3t.bindings.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2024-desde-09-y-3t.bindings.selector]
+categories = ["domestic_reduced"]
+rate_kinds = ["reduced"]
+applied_rates = ["0.05", "0.075"]
+flow_direction = "repercutido"
+fact = "base_amount_sum"
+
+[revisions.2024-desde-09-y-3t.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024-desde-09-y-3t.bindings]]
+id = "modelo-303-iva-repercutido-reducido-transitorio-cuota"
+source = "ledger_iva_aggregation"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2024-late", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2024-desde-09-y-3t.bindings.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2024-desde-09-y-3t.bindings.selector]
+categories = ["domestic_reduced"]
+rate_kinds = ["reduced"]
+applied_rates = ["0.05", "0.075"]
+flow_direction = "repercutido"
+fact = "iva_amount_sum"
+
+[revisions.2024-desde-09-y-3t.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024-desde-09-y-3t.bindings]]
+id = "modelo-303-iva-repercutido-super-reducido-transitorio-base"
+source = "ledger_iva_aggregation"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2024-late", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2024-desde-09-y-3t.bindings.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2024-desde-09-y-3t.bindings.selector]
+categories = ["domestic_super_reduced"]
+rate_kinds = ["super_reduced"]
+applied_rates = ["0.02"]
+flow_direction = "repercutido"
+fact = "base_amount_sum"
+
+[revisions.2024-desde-09-y-3t.bindings.aggregation]
+op = "sum"
+
+[[revisions.2024-desde-09-y-3t.bindings]]
+id = "modelo-303-iva-repercutido-super-reducido-transitorio-cuota"
+source = "ledger_iva_aggregation"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2024-late", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2024-desde-09-y-3t.bindings.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2024-desde-09-y-3t.bindings.selector]
+categories = ["domestic_super_reduced"]
+rate_kinds = ["super_reduced"]
+applied_rates = ["0.02"]
+flow_direction = "repercutido"
+fact = "iva_amount_sum"
+
+[revisions.2024-desde-09-y-3t.bindings.aggregation]
+op = "sum"

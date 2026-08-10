@@ -47,12 +47,12 @@ class _Modelo303CorpusFixture:
       compensacion-generada     = 0                [max(0, -resultado) = 0 when resultado > 0]
       compensacion-disponible   = 0                [pendiente-posteriores + generada = 0]
 
-    ``new_template`` distinguishes the 2023-y-siguientes profile (True) from
+    ``new_template`` distinguishes the post-2022 Modelo 303 profiles (True) from
     the 2009-y-siguientes profile (False, legacy fixtures 2021â€“2022).
     The new closure chain (boxes 64/66/71) applies only for new_template=True.
 
     Registry source:
-      src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/revision.toml
+      src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/revision.toml
       src/cadrumo/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/revision.toml
     """
 
@@ -89,7 +89,7 @@ def _compute_m303_closure(c27: Decimal, c45: Decimal) -> tuple[Decimal, Decimal,
     Returns (c46, c64, c66, c69, c71) all rounded to money-2 (2 decimal places).
 
     Arithmetic grounded in Orden EHA/3786/2008 art. 1 (box 46) and Orden HAC/819/2024
-    art. 1 (boxes 64/66/69/71). Registry formula expressions in 2023-y-siguientes/revision.toml.
+    art. 1 (boxes 64/66/69/71). Registry formula expressions in the explicit post-2022 revisions.
     """
     c46: Decimal = round_to_cents(c27 - c45)
     # Standard single-regime: c58=0, c76=0 â†’ c64 = c46
@@ -211,7 +211,7 @@ _MODELO_303_CORPUS_FIXTURES: tuple[_Modelo303CorpusFixture, ...] = (
         c69=_compute_m303_closure(Decimal("18000.00"), Decimal("11400.00"))[3],
         c71=_compute_m303_closure(Decimal("18000.00"), Decimal("11400.00"))[4],
     ),
-    # --- 2023-y-siguientes (new template) revision: 2023-1T through 2024-4T ---
+    # --- Explicit post-2022 revision family: 2023-1T onward ---
     _Modelo303CorpusFixture(
         filename="303/2023-1T.pdf",
         ejercicio="2023",
@@ -345,7 +345,7 @@ def _draw_modelo_303_corpus(c: canvas.Canvas, fixture: _Modelo303CorpusFixture) 
     extraction profile, so the named_label parser captures the trailing amount.
 
     Two profile variants:
-    - new_template=True (2023-y-siguientes): 12-casilla profile including
+    - new_template=True (post-2022 Modelo 303): 12-casilla profile including
       boxes 27, 29, 37, 45, iva.resultado-regimen-general, 64, 66,
       iva.compensacion-pendiente-periodos-anteriores,
       iva.compensacion-aplicada-periodo,

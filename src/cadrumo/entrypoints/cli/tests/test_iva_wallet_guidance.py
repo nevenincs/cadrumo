@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core.resources import resources
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_runtime_profile
 from ._iva_wallet_inspector_support import (
@@ -16,6 +17,10 @@ from ._iva_wallet_inspector_support import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+def _m303_revision_id(*, filing_year: int, period: str) -> str:
+    return str(resources().modelos.authority.snapshot("303", filing_year=filing_year, period=period).revision.id)
 
 
 def test_m303_fresh_profile_binding_override_surfaces_seed_verb_not_mode_flag(
@@ -42,7 +47,7 @@ def test_m303_fresh_profile_binding_override_surfaces_seed_verb_not_mode_flag(
                 "--period",
                 "2T",
                 "--revision",
-                "2023-y-siguientes",
+                _m303_revision_id(filing_year=2024, period="2T"),
             ],
         )
         assert work_unit_result.exit_code == 0, work_unit_result.output
@@ -93,7 +98,7 @@ def test_m303_in_scope_missing_wallet_surfaces_override_verb_not_seed(
                 "--period",
                 "2T",
                 "--revision",
-                "2023-y-siguientes",
+                _m303_revision_id(filing_year=2024, period="2T"),
             ],
         )
         assert work_unit_result.exit_code == 0, work_unit_result.output
@@ -140,7 +145,7 @@ def test_m303_fresh_profile_calculate_without_binding_override_does_not_raise_wa
                 "--period",
                 "1T",
                 "--revision",
-                "2023-y-siguientes",
+                _m303_revision_id(filing_year=2024, period="1T"),
             ],
         )
         assert work_unit_result.exit_code == 0, work_unit_result.output

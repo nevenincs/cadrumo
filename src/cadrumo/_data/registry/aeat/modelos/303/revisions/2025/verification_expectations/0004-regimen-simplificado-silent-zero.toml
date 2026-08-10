@@ -1,0 +1,52 @@
+# Régimen simplificado silent-under-declaration ADVISORY. The official
+# casillas 47-58 remain operator inputs, while internal support casillas and
+# registry formulas compute a reference cuota for the currently tabled
+# activities. Casilla 48 cannot yet be silently replaced by that reference:
+# real cuotas soportadas and the full activity/year catalogue remain outside
+# the first slice. An
+# estimación-objetiva filer under the régimen simplificado who declares the
+# 1T-3T "ingresos a cuenta" (casilla 47, LIVA art. 123.Cuatro pagos a cuenta
+# trimestrales) but leaves the 4T "cuota derivada del régimen simplificado"
+# (casilla 48, LIVA art. 123.Dos.1 cuota devengada por operaciones corrientes)
+# at zero would file a zero-cuota régimen-simplificado result with no gate —
+# the exact no-silent-under-declaration shape this predicate closes.
+#
+# ADVISORY (non-blocking): casilla 48 is filed only in the 4T autoliquidación
+# (régimen simplificado settles annually), so a 1T-3T filing legitimately
+# carries a positive casilla 47 (pago a cuenta) with casilla 48 still at zero
+# — the predicate must not refuse that quarter. Fires only when BOTH 47 and 48
+# are populated for the same filing and 48 resolves to zero, prompting the
+# operator to complete the off-form módulos worksheet before filing 4T.
+#
+# Once the existing registry-formula path has complete input and authority
+# coverage, it may own casilla 48 directly and this advisory becomes
+# satisfied-by-construction. A parallel source resolver is deliberately not
+# introduced.
+[[revisions.2025.verification_predicates]]
+predicate_id = "modelo-303-regimen-simplificado-cuota-determinada-cuando-ingresos-declarados"
+expression = 'implies_nonzero(["47", "48"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+
+# Table-driven-engine-vs-operator-declared discrepancy (M303 régimen-
+# simplificado de IVA módulos engine). Casilla 48 ("RS - 4T -
+# Suma cuotas derivadas régimen simplificado conjunto actividades") stays a
+# manual operator input; for a tabled IAE activity (see
+# parameters/0001-modulos-coeficientes.toml for the current coverage)
+# the units×coefficient engine now produces a computed reference figure
+# (modulos-iva-cuota-derivada, cuota devengada por operaciones corrientes
+# menos el 1 por ciento de difícil justificación, con el suelo de la cuota
+# mínima). When the engine has coverage (computed casilla > 0) and the
+# operator's declared casilla 48 differs from it by more than one cent, this
+# ADVISORY prompts a review — it does not assume the engine is authoritative
+# over the operator's declared figure (real cuotas soportadas por
+# adquisiciones concretas, which the taxpayer may legitimately claim beyond
+# the 1 por ciento forfait, are intentionally not modelled yet), so it stays
+# a prompt, never a BLOCKING_RULE. Mirrors the M131 estimación-objetiva
+# módulos engine advisory
+# (modelo-131-2025-modulos-computed-diverges-de-c01).
+[[revisions.2025.verification_predicates]]
+predicate_id = "modelo-303-2023-modulos-iva-computed-diverges-de-c48"
+expression = 'advisory_when_computed_diverges(["48", "modulos-iva-cuota-derivada"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-hac-1347-2024:anexo-i-iva-instrucciones"]

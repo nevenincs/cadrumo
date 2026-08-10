@@ -1,9 +1,9 @@
 """Tests for :func:`~cadrumo.application.registry.diff_registry_revisions`.
 
 Grounds the diff against *real* revision pairs shipped in the bundled registry
--- the two Modelo 303 revisions (``2009-y-siguientes`` and
-``2023-y-siguientes``) and, for the legal-grounding dimension, the two Modelo
-180 revisions (``2019-2022`` and ``2023-y-siguientes``). Every expected count
+-- the historical Modelo 303 boundary (``2009-y-siguientes`` and
+``2023``) and, for the legal-grounding dimension, the two Modelo 180 revision
+windows. Every expected count
 and identifier below was read off the registry TOML tree, never hand-computed
 from a synthetic fixture, so the diff is proven against real, known rulebook
 changes rather than values manufactured by the test author.
@@ -61,9 +61,9 @@ from .. import RegistryApplicationInputError, diff_registry_revisions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-# Modelo 303 ships exactly two revisions: "2009-y-siguientes" (covers filing
-# years 2009-2022) and "2023-y-siguientes" (covers 2023 onward). These are the
-# modelo's real, declared revision boundaries -- not synthetic fixtures.
+# Modelo 303 keeps the historical 2009-2022 revision, then explicit annual
+# and mid-year legal windows from 2023 onward. These are the modelo's real,
+# declared revision boundaries -- not synthetic fixtures.
 _M303_PRE_YEAR = 2022
 _M303_POST_YEAR = 2023
 
@@ -136,7 +136,7 @@ def test_diff_registry_revisions_resolves_the_real_m303_revision_boundary() -> N
 
     assert report.same_revision is False
     assert report.from_revision_id == "2009-y-siguientes"
-    assert report.to_revision_id == "2023-y-siguientes"
+    assert report.to_revision_id == "2023"
 
 
 def test_diff_registry_revisions_surfaces_real_added_casillas() -> None:
@@ -344,7 +344,7 @@ def test_diff_registry_revisions_applies_the_canonical_validity_window_and_retai
 
     assert excinfo.value.context is not None
     assert excinfo.value.context["filing_year"] == _M303_POST_YEAR
-    assert excinfo.value.context["available_revisions"] == "2009-y-siguientes, 2023-y-siguientes"
+    assert excinfo.value.context["available_revisions"] == "2009-y-siguientes, 2023, 2024-hasta-08-y-2t, 2024-desde-09-y-3t, 2025, 2026-y-siguientes"
     cause = excinfo.value.__cause__
     assert isinstance(cause, NoRevisionForPeriodError)
     assert cause.period == "year"

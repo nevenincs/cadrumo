@@ -75,7 +75,7 @@ def _create_work_unit(*, modelo: str, year: int, period: str) -> dict[str, objec
     revision is a derived fact and creation accepts an explicit id only when
     it equals that resolution. Pinning a literal here buys nothing and goes
     stale the moment a new revision opens: these fixtures previously pinned
-    M303 to ``2023-y-siguientes`` for 2026, which began refusing outright
+    M303 to an obsolete revision for 2026, which began refusing outright
     once the 2026 revision shipped and capped that window at 2025-12-31.
     """
     result = invoke_cached_cli(

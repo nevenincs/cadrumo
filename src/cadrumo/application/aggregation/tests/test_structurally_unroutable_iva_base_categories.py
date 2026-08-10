@@ -58,11 +58,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _NOW = datetime(2025, 2, 10, 12, 0, tzinfo=UTC)
 _Q1_2025 = Period.from_year_and_code(2025, "1T")
 _BUCKET_ID = "38383838-3838-4838-8838-383838383838"
-_M303_REVISION_ID = "2023-y-siguientes"
 
 
 def _m303_revision() -> ModeloRevision:
-    return resources().modelos.get("303").revisions[_M303_REVISION_ID]
+    return resources().modelos.authority.snapshot("303", filing_year=_Q1_2025.filing_year, period="1T").revision
 
 
 def _domestic_zero_sale() -> Transaction:
@@ -279,7 +278,7 @@ def test_mutation_stripping_the_intra_community_supply_binding_reds_the_negative
         / "modelos"
         / "303"
         / "revisions"
-        / _M303_REVISION_ID
+        / _m303_revision().id
         / "bindings"
         / "0003-intracom-export-base.part-001.toml"
     )
@@ -289,7 +288,7 @@ def test_mutation_stripping_the_intra_community_supply_binding_reds_the_negative
     bindings_path.write_text(mutated, encoding="utf-8")
 
     modelos, _catalogues = load_registry_tree(scratch_root)
-    mutated_revision = next(m for m in modelos if m.id == "303").revisions[_M303_REVISION_ID]
+    mutated_revision = next(m for m in modelos if m.id == "303").revisions[_m303_revision().id]
 
     unroutable = structurally_unroutable_iva_base_categories(mutated_revision)
     assert IvaCategory.INTRA_COMMUNITY_SUPPLY in unroutable, (

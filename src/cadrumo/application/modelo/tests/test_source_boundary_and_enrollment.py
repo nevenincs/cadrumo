@@ -169,7 +169,7 @@ def test_s26_assert_no_novel_source_kinds_accepts_enrolled_revision() -> None:
     """A revision whose bindings use only enrolled/deferred sources passes the gate."""
     # M303 uses ledger_iva_aggregation, borrador, previous_filing, profile, manual_input —
     # all enrolled.  Gate must not raise.
-    revision = _revision("303", "2023-y-siguientes")
+    revision = resources().modelos.authority.snapshot("303", filing_year=2026, period="1T").revision
     assert_no_novel_source_kinds(revision)  # no exception
 
 
@@ -187,7 +187,7 @@ def test_s26_assert_no_novel_source_kinds_rejects_synthetic_novel_source() -> No
     # is not in the accepted set — exactly what the gate should detect and reject.
     from ....domain.calculations.registry import DataBindingDefinition
 
-    revision = _revision("303", "2023-y-siguientes")
+    revision = resources().modelos.authority.snapshot("303", filing_year=2026, period="1T").revision
     # Build a synthetic binding with a novel source kind via model_construct (no validators).
     synthetic_binding = DataBindingDefinition.model_construct(
         id="synthetic-test-binding",

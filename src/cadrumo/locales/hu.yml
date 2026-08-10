@@ -79,13 +79,6 @@ adapters:
         spreadsheet_id_blank: A Google-táblázat azonosítója nem lehet üres.
         workbook_snapshot_mismatch: A Google-táblázat metaadatai nem egyeznek a számítási
           pillanatképpel.
-      suggestions:
-        reexport_then_pull: Exportálja újra a munkafüzetet a `aeat config google sync
-          calc export` paranccsal, majd húzza be újra.
-        reexport_workbook: Exportálja újra a munkafüzetet a `aeat config google sync
-          calc export` paranccsal, hogy az alkalmazás által kezelt metaadatok frissüljenek.
-        verify_exported_workbook: Ellenőrizze, hogy a táblázatot eredetileg a `aeat
-          config google sync calc export` hozta létre ehhez a profilhoz.
     oauth_flow:
       errors:
         browser_launcher_refused: Az operációs rendszer böngészőindítója megtagadta
@@ -111,23 +104,9 @@ adapters:
         unsecured_mode_refused: A Google OAuth megtagadta a hozzáférést, mert a titkos
           tár nem biztonságos módban fut, és az aktív profil valódi spanyol adóazonosítót
           tartalmaz.
-      suggestions:
-        close_loopback_port: Zárja be a szabad visszahurkos portot foglaló alkalmazást,
-          és próbálja újra.
-        open_consent_url_manually: Nyissa meg manuálisan a megjelenített hozzájárulási
-          URL-t a böngészőjében.
-        repair_profile_state: Futtassa a `aeat config profile status` parancsot, majd
-          javítsa ki vagy váltsa át az aktív profilt, mielőtt újrapróbálja a Google-parancsot.
-        run_from_interactive_terminal: Futtassa a 'aeat config google login' parancsot
-          interaktív terminálban, elérhető webböngészővel.
-        use_keyring_or_synthetic: Állítsa be a cadrumo_secret_store_backend=keyring
-          értéket, vagy váltson az aktív profilt szintetikus teszt-adóazonosítóra.
     profile_binding:
       errors:
         no_active_profile: Nincs aktív AEAT-profil kötve a Google OAuth-hoz.
-      suggestions:
-        create_profile: Futtassa a `aeat config profile create NAME --tax-id <NIF/CIF/DNI/NIE>`
-          parancsot, majd próbálja újra a Google-parancsot.
   inbound:
     declaracion:
       errors:
@@ -977,8 +956,15 @@ application:
         a modell számítás nem folytatható.
       calculation_registry_snapshot_unresolved: A(z) %{modelo} modell, %{filing_year}
         bevallási év, %{period} időszak registry-pillanatképe nem oldható fel.
+      calculation_revision_id_is_discarded_work_unit: A megadott számítási revízióazonosító,
+        %{calculation_revision_id}, a selejtezett %{work_unit_id} munkaegységet azonosítja.
+        Nem számítható ki.
+      calculation_revision_id_is_work_unit: A megadott számítási revízióazonosító,
+        %{calculation_revision_id}, a(z) %{work_unit_id} munkaegységet azonosítja.
       calculation_revision_not_found: Nem található számítás-revízió id=%{calculation_revision_id}
         azonosítóval.
+      calculation_revision_parent_work_unit_discarded: A(z) %{calculation_revision_id}
+        számítási revízió a selejtezett %{work_unit_id} munkaegységhez tartozik.
       caller_casilla_source_binding_conflict: 'A hívó casilla bemenetek nem írhatják
         felül a bucket-ből származtatott forráshoz kötött casillákat (forráshoz kötött
         casillák): %{casillas}.'
@@ -1143,12 +1129,12 @@ application:
       work_unit_already_discarded: A munkakérés már el van vetve.
       work_unit_create_discarded: Ezt a bevallasi celt elvetettek. Az ismetelt letrehozas
         ugyanazt az elvetett munkaegyseget adja vissza, igy nem folytathato.
-      work_unit_discarded_cannot_calculate: A(z) %{work_unit_id} munkaegység el lett
-        dobva, nem számítható. Hozz létre új munkaegységet ugyanazon modell, év és
-        időszak alapján a folytatáshoz.
-      work_unit_discarded_cannot_import: A(z) %{work_unit_id} munkaegység el lett
-        dobva, nem importálható. Hozz létre új munkaegységet ugyanazon modell, év
-        és időszak alapján a folytatáshoz.
+      work_unit_discarded_cannot_calculate: A(z) %{work_unit_id} munkaegység állapota
+        %{work_unit_state}, ezért nem számítható.
+      work_unit_discarded_cannot_import: A(z) %{work_unit_id} munkaegység állapota
+        %{work_unit_state}, ezért nem importálható.
+      work_unit_filing_year_period_mismatch: A(z) %{filing_year} adóév nem egyezik
+        a(z) %{period} időszak %{period_year} adóévével.
       work_unit_mutation_refused: A munkaegyseg el van vetve, es ugyanannak a bevallasi
         celnak az ujboli letrehozasa elutasitasra kerul uj egyseg helyett.
       work_unit_not_found: 'Nem található modell munkaegység ezzel az azonosítóval:
@@ -1206,23 +1192,27 @@ application:
       cross_casilla_invariant_next_action: Ellenőrzés előtt győződjön meg arról, hogy
         a(z) %{predicate_id} predikátum által megkövetelt összes casilla nullától
         eltérő.
-      cross_casilla_invariant_violated: 'casillák közötti invariáns megsértve (%{predicate_id}):
-        %{expression}'
+      cross_casilla_invariant_violated: casillák közötti invariáns megsértve (%{predicate_id})
+      cross_period_activity_start_missing: Hiányzik a tevékenység kezdőnapja, amely
+        a(z) %{target_modelo} modell %{target_filing_year}. bevallási évének %{target_period}
+        időszakához tartozó korábbi kötelezettségek elbírálásához szükséges.
       cross_period_dependency_unclean: 'az időszakok közötti függőség nem tiszta:
-        modelo=%{modelo} év=%{year} időszak=%{period} forrás=%{origin} forrásazonosítók=%{origin_ids}
-        blokkolók=%{blockers}'
+        modelo=%{source_modelo} év=%{source_filing_year} időszak=%{source_period}
+        forrás=%{origin_code} forrásazonosítók=%{origin_ids} blokkolók=%{blocker_codes}'
       cross_period_dependency_unclean_evidence_next_action: 'Rögzítse vagy importálja
         a forrásfüggőség AEAT-bizonyítékát. Futtassa a következők egyikét: `%{target_capture}`,
         `%{source_justificante_capture}`, `%{import_official_record}` vagy `%{reconcile_file}`;
         majd futtassa újra az ellenőrzést.'
+      cross_period_first_year_fractional_suppression: A(z) %{source_modelo} modell
+        %{source_filing_year}. bevallási évének %{source_period} időszakára vonatkozó
+        függőség kívül esik a(z) %{activity_start_date} napon kezdődő tevékenységen.
+      cross_period_m111_no_retenciones: A(z) %{source_modelo} modell %{source_filing_year}.
+        bevallási évének %{source_period} időszakára vonatkozó függőséget teljesíti
+        a(z) %{profile_fact_id} levonásmentességi profiladat.
       cross_period_modelo_not_applicable:
         message: 'Azok a keresztidőszaki függőségek, amelyek olyan forrás modellekre
           mutatnak, amelyeket az adózó nem nyújt be, nem alkalmazhatóként ki lettek
-          zárva: {modelos}. Levont adók esetén az igazolás összeget --binding KULCS=ÉRTÉK
-          formában add meg, ne --casilla értékként. A KULCS=ÉRTÉK azt jelenti, hogy
-          a binding azonosítója az egyetlen egyenlőségjel bal oldalán áll, az érték
-          pedig a jobb oldalán. Kölcsönösen kizáró részletfizetési modellek esetén
-          erősítsd meg a profil tevékenységi becslési rendszerét.'
+          zárva: %{source_modelos}.'
         next_action: 'A `aeat app modelo bindings list --missing` paranccsal azonosítsd
           a retenciones bindinget. Ha alkalmazható, add meg az igazolás összeget --binding
           KULCS=ÉRTÉK formában: a binding azonosítója az egyetlen egyenlőségjel bal
@@ -1232,10 +1222,10 @@ application:
       cross_period_non_official_local_chain:
         message: 'az időszakok közötti átvitel egy ugyanabban az adóévben helyileg
           benyújtott korábbi időszakot használt külső AEAT-bizonyíték nélkül: modelo=%{source_modelo}
-          év=%{filing_year} időszak=%{period} forrás=%{origin}. Az adóéven belüli
-          lánc helyi exportálásra elfogadott, de az átvitt érték helyileg igazolt
-          (app_filing), nem az AEAT által igazolt; nyújtsa be minden időszakot az
-          AEAT-nál külsőleg.'
+          év=%{source_filing_year} időszak=%{source_period} forrás=%{origin_code}.
+          Az adóéven belüli lánc helyi exportálásra elfogadott, de az átvitt érték
+          helyileg igazolt (app_filing), nem az AEAT által igazolt; nyújtsa be minden
+          időszakot az AEAT-nál külsőleg.'
         next_action: Exportálja és nyújtsa be minden időszakot az AEAT-nál külsőleg,
           majd frissítse a helyi láncot hivatalos bizonyítékkal; használja a `aeat
           app live justificante pull` parancsot, ha van élő hozzáférés, vagy a `aeat
@@ -1243,13 +1233,19 @@ application:
           --evidence-id CSV --set CASILLA=VALUE` / `aeat app modelo reconcile file
           WORK_UNIT_ID --file PATH` parancsot a már rendelkezésre álló bizonyítékhoz.
       cross_period_operator_declared_suppression: 'az időszakok közötti függőség korábbi
-        kötelezettség hiányában kizárva (tevékenység megkezdése előtt): modelo=%{modelo}
-        év=%{year} időszak=%{period} forrás=%{origin}. Az időszak szigorúan megelőzi
-        a kezelő által megadott %{activity_start_date} tevékenységkezdési dátumot,
-        amelyet még nem erősített meg AEAT-censo pillanatkép.'
+        kötelezettség hiányában kizárva (tevékenység megkezdése előtt): modelo=%{source_modelo}
+        év=%{source_filing_year} időszak=%{source_period} forrás=%{origin_code}. Az
+        időszak szigorúan megelőzi a kezelő által megadott %{activity_start_date}
+        tevékenységkezdési dátumot, amelyet még nem erősített meg AEAT-censo pillanatkép.'
       cross_period_operator_declared_suppression_next_action: Ellenőrizze, hogy a
         rögzített tevékenységkezdési dátum helyes. Amint elérhető az élő AEAT-censo
         lekérdezés, a dátum ellenőrzésre kerül, és ez a figyelmeztetés megszűnik.
+      cross_period_zero_value_previous_filing: A(z) %{source_modelo} modell %{source_filing_year}.
+        bevallási évének %{source_period} időszakára benyújtott nulla értékű korábbi
+        bevallás teljesíti a(z) %{target_modelo} modell %{target_period} időszakának
+        függőségét.
+      cuota_less_ledger_row_base_missing: A(z) %{transaction_id} főkönyvi művelet
+        %{iva_category_code} IVA-kategóriát használ, de nincs adóalapja.
       dt12a_reduccion_antiquity_next_action: Erősítse meg, hogy több mint két év telt
         el a nyugdíjtervhez történő első befizetés óta, kivéve, ha az ellátás rokkantság
         miatt jár (ley-35-2006:dt-12).
@@ -1267,14 +1263,26 @@ application:
         nulla. Ha ez a jövedelem 2006. december 31. előtti hozzájárulásokkal rendelkező
         nyugdíjterv tőke-visszaváltását tartalmazza, a DT 12a LIRPF szerinti 40%-os
         csökkentés alkalmazható lehet.'
+      foreign_asset_redeclaration: A(z) %{modelo_code} modell %{group_code} csoportjának
+        %{position_key} pozíciója %{prior_value_eur} EUR-ról %{current_value_eur}
+        EUR-ra nőtt, és meghaladja az ismételt bevallás %{redeclaration_increase_threshold_eur}
+        EUR összegű növekedési küszöbét.
       iva_wallet_next_action: Ellenőrzés vagy exportálás előtt tekintse át az IVA-tárca
         egyeztetési döntést ehhez a Modelo 303-hoz.
+      iva_wallet_precondition_failed: A(z) %{condition_id} IVA-egyenlegfeltétel nem
+        teljesül a(z) %{scenario_id} esetben.
+      ledger_snapshot_drift: 'A(z) %{modelo} modell %{filing_year}. bevallási évének
+        %{period} időszakához tartozó főkönyvi pillanatkép a számítás után megváltozott:
+        %{changed_count} módosított és %{removed_count} eltávolított sor a(z) %{anchored}
+        rögzített sorból.'
+      m210_agrupacion_renta_invalid: A(z) %{modelo_id} modell jövedelemcsoportosítása
+        érvénytelen a(z) %{period_code} időszakban (%{error_type}).
       m210_baseline_tipo_deferred:
         next_action: 'A csomagolt korpusz nem közöl alapkulcsot ehhez: tipo_renta=%{tipo_renta}.
           Add meg a következőt a vonatkozó egyezményes kulcs érvényesítéséhez: %{requirements},
           vagy várd meg, amíg az alapkorpusz felveszi ezt a sort.'
-      m210_convenio_lob_advisory: 'M210_CONVENIO_LOB_ADVISORY: a Convenio Spanyolország-%{cc}
-        (%{document_id}) egyezményi adókulcs alkalmazásra került a tipo_renta=%{tipo_renta}
+      m210_convenio_lob_advisory: 'M210_CONVENIO_LOB_ADVISORY: a Convenio Spanyolország-%{country_code}
+        (%{document_id}) egyezményi adókulcs alkalmazásra került a tipo_renta=%{tipo_renta_code}
         értékhez. Az egyezményes kedvezmény csak az adott államban illetőséggel rendelkező
         tényleges haszonhúzó számára áll rendelkezésre, aki teljesíti az egyezmény
         kedvezménykorlátozási (LOB) feltételeit; a típus alkalmazása előtt ellenőrizze
@@ -1288,6 +1296,10 @@ application:
         next_action: 'Hozzon létre egy Spanyolország-{cc} egyezményi sort a tipo_renta={tipo_renta}
           értékhez a registry/aeat/treaties/ alatt, vagy törölje a következőt: {requirements},
           hogy visszatérjen a TRLIRNR 25. cikke szerinti baseline-hoz.'
+      m210_rate_unavailable: A Modelo 210 adókulcsa nem oldható fel (%{reason_code}).
+      m303_m349_intracom_reconciliation_mismatch: 'A(z) %{filing_year}. bevallási
+        év %{period_code} időszakának közösségen belüli összegei nem egyeznek: Modelo
+        303=%{m303_total}, Modelo 349=%{m349_total}, eltérés=%{gap}.'
       madrid_nacimiento_adopcion_eligibility_advisory: 'MADRID_NACIMIENTO_ADOPCION_ELIGIBILITY_ADVISORY:
         a(z) %{casilla_id} rovat nulla, de van jogosult leszármazottak (súlyozott
         szám %{weighted_count}) a madridi levonáshoz. Az automatikus kiváltás zárt
@@ -1341,6 +1353,8 @@ application:
       modelo_202_base_imponible_previa_determinada_cuando_resultado_positivo: A számviteli
         eredmény pozitív, de az előzetes adóalap (base imponible previa) nulla; ellenőrizze
         az adóalap meghatározását.
+      modelo_202_modality_incomplete: A Modelo 202 módozata hiányos; a(z) %{profile_fact_id}
+        profiladatot fel kell oldani.
       modelo_210_2025_inmobiliaria_implica_base_imponible: A jövedelem típusa inmobiliaria,
         de az adóalap nulla; ellenőrizze az imputált ingatlanjövedelem adóalapjának
         meghatározását (értékbecslés, együttható, beszámítási napok).
@@ -1367,6 +1381,19 @@ application:
       modelo_714_cuota_integra_implica_total_cuota_integra: A teljes adó (cuota íntegra)
         pozitív, de az összesített teljes adó (total cuota íntegra) nulla; ellenőrizze
         az összesített adó átírását.
+      objective_estimation_exclusion_threshold_exceeded: A(z) %{modelo_id} modell
+        %{filing_year}. bevallási évében a(z) %{profile_field_id} profiladat %{declared}
+        értéke meghaladja a(z) %{parameter_id} paraméter %{threshold} küszöbét.
+      oss_evidence_missing: A Modelo 369 OSS-forrása deklarált, de nem áll rendelkezésre
+        tartós OSS-bizonyíték.
+      oss_source_unrouted: 'OSS-megfigyelések maradtak a számítási hozzárendeléseken
+        kívül: %{source_ref_count} azonosított és %{unidentified_source_count} azonosítatlan
+        forrás.'
+      pulled_filing_casilla_mismatch: 'A benyújtott %{casilla_number} casilla eltér
+        a %{filing_year}. bevallási év %{period_code} időszakára számított értéktől:
+        számított=%{computed_value}, benyújtott=%{filed_value}, típus=%{mismatch_kind}.'
+      registry_advisory_predicate_fired: A(z) %{predicate_id} registry-tájékoztató
+        predikátum erre az ellenőrzésre vonatkozik.
       registry_snapshot_unresolved: 'a registry-pillanatkép nem oldható fel: modelo=%{modelo}
         filing_year=%{filing_year} period=%{period}'
       representante_fiscal_required:
@@ -1374,6 +1401,10 @@ application:
           beállításával: {requirements}, az `aeat config profile edit` paranccsal.
           A TRLIRNR 10. cikke előírja, hogy az EGT-n kívüli IRNR-bevallók képviselőt
           jelöljenek ki az AEAT-tal folytatott kommunikációhoz.'
+      transaction_evidence_missing_deductible: Egy levonható IVA-forrásból hiányzik
+        a szükséges műveleti bizonyíték (forrás=%{source_kind_code}, ok=%{diagnostic_reason_code}).
+      transaction_evidence_missing_output: Egy kimenő IVA-forráshoz nincs műveleti
+        bizonyíték csatolva (forrás=%{source_kind_code}, ok=%{diagnostic_reason_code}).
     iva_wallet:
       correct_no_record: 'Nincs beállított kompenzációs rekord ehhez: %{filing_year}/%{period}.
         Először futtassa a ''aeat app modelo iva-wallet seed'' parancsot; a javítás
@@ -2994,7 +3025,7 @@ cli:
         amend_wizard_kind_help: a complementaria hozzáadódik a korábban bevallott
           adóhoz; a sustitutiva teljesen felváltja a korábbi bevallást; a rectificativa
           az egységesített helyesbítési mechanizmus azoknál a nyomtatványoknál, amelyeknél
-          a rendelet ezt bevezette (pl. 303-as nyomtatvány a 2023-y-siguientes verziótól).
+          a rendelet ezt bevezette (pl. 303-as nyomtatvány a 2023-as adóévtől).
         amend_wizard_kind_prompt: Helyesbítés típusa (%{choices})
         amend_wizard_no_corrections: Egyetlen rovat sem lett javítva; az önellenőrzési
           varázslóhoz legalább egy megváltozott érték szükséges.
@@ -3069,9 +3100,8 @@ cli:
           a munkaegységet, futtassa újra a --allow-not-applicable kapcsolóval.'
         create_quiet_help: Hagyja ki az ember által olvasható megerősítő kimenetet;
           a --format json boríték, az értesítések és a kilépési kód nem változik.
-        create_reused: 'Meglévő munkaegység visszaadva (idempotens nyomtatvány/év/időszak/revízió
-          kombinációra); nem jött létre semmi új. Nevezze át: `aeat app modelo work
-          rename`.'
+        create_reused: Meglévő munkaegység visszaadva (idempotens nyomtatvány/év/időszak/revízió
+          kombinációra); nem jött létre semmi új.
         create_reused_name_match: Meglévő munkaegység visszaadva (idempotens nyomtatvány/év/időszak/revízió
           kombinációra); nem jött létre semmi új. A megadott --name egyezik a tárolt
           névvel.
@@ -3113,6 +3143,7 @@ cli:
           kötelezettség esetén az AEAT Sede felületén kell benyújtani.'
         dependencies_help: Keresztidőszaki bevallástörténeti függőségek és az aktuális
           clean-state blokkolók megjelenítése a célbevalláshoz
+        dependencies_period_requires_modelo: A --period beállításhoz kötelező a --modelo.
         discard_help: Munkaegység eldobottként megjelölése (auditálható állapotváltás).
         discard_requires_yes: 'Az eldobás auditálható állapotváltás. Futtassa újra:
           `aeat app modelo work discard %{work_unit_id} --yes` a megerősítéshez.'
@@ -3122,6 +3153,8 @@ cli:
         file_idempotent_noop: 'Idempotens nincs-művelet: a(z) %{calculation_revision_id}
           számítási revízió már be van nyújtva; a meglévő benyújtási rekord változatlanul
           visszaadva.'
+        file_internal_disambiguation: Ez a benyújtás kizárólag belső, és nem kerül
+          beküldésre az AEAT-hoz.
         formula_operation_calculation: számítás
         formula_operation_clamp: korlátozás
         formula_operation_conditional: feltételes
@@ -3144,31 +3177,24 @@ cli:
           állapotát.
         history_work_unit_id_help: Annak a munkaegységnek az azonosítója, amelynek
           életciklusát meg szeretné tekinteni.
-        id_is_work_unit_not_calc_revision_natural: 'Ez az azonosító munkaegység-azonosító,
-          de a verify/file műveletekhez számítási revízióazonosító kell. A szokásos
-          útvonalhoz futtasd: ''aeat app modelo work calculate --modelo %{modelo}
-          --year %{year} --period %{period}'', majd futtasd újra a verify/file műveletet
-          ugyanarra a modellre/évre/időszakra. A pontos azonosítók továbbra is elérhetők
-          haladó menekülőútként.'
-        id_selector_ambiguous: 'A megjelenített {selector} munkaazonosító egynél több
-          aktív munkaegységre illeszkedik. Használja az alábbi jelöltek egyikének
-          teljes, 64 karakteres munkaegység-azonosítóját.
+        id_selector_ambiguous: 'A megjelenített {selector} munkaazonosító több aktív
+          munkaegységre illeszkedik.
 
           {candidates}'
         include_discarded_help: Eldobott munkaegységek bevonása a listába (alapértelmezés
           szerint kizárva).
         invalid_binding_key: 'A --binding kulcsa nem érvényes BindingId (kisbetűs
           alfanumerikus, plusz . _ : - elválasztók, max. 128 karakter).'
-        invalid_calculation_revision_id: A calculation_revision_id értékének 64 karakteres
-          kisbetűs hex-karakterláncnak kell lennie (SHA-256 kivonat).
+        invalid_calculation_revision_id: 'A calculation_revision_id értékének 64 karakteres
+          kisbetűs hexadecimális SHA-256-kivonatnak kell lennie; kapott: {value}.'
         invalid_casilla_key: 'A --casilla kulcsa nem érvényes CasillaId (alfanumerikus,
           plusz . _ : - elválasztók, max. 64 karakter).'
         invalid_relation_key: A --relation kulcs nem érvényes RelationId. Használjon
           kisbetűs, kötőjeles vagy pontozott relation azonosítót.
-        invalid_revision_selector: 'Ismeretlen revízió választó {value}; válasszon
-          ezek közül: {choices}.'
-        invalid_work_unit_id: A work_unit_id értékének 64 karakteres kisbetűs hex-karakterláncnak
-          kell lennie (SHA-256 kivonat).
+        invalid_revision_selector: 'A(z) {value} revízióválasztó érvénytelen. Engedélyezett
+          értékek: {choices}.'
+        invalid_work_unit_id: 'A work_unit_id értékének 64 karakteres kisbetűs hexadecimális
+          SHA-256-kivonatnak kell lennie; kapott: {value}.'
         invalid_work_unit_lookup_id: A work_unit_id értékének kisbetűs hexadecimális
           SHA-256-azonosítónak vagy egyértelmű előtagnak kell lennie
         kv_empty_key_error: 'A(z) {flag} kulcsa nem lehet üres; kapott: {spec}.'
@@ -3178,8 +3204,10 @@ cli:
           érték: {spec}.'
         list_help: Regisztrált munkaegységek listázása, opcionálisan profil szerint
           szűrve.
-        list_next_action_summary: Tekintse meg egy munkaegység teljes állapotát a
-          vázlat elkészítése vagy újraszámítása előtt.
+        list_no_active_work_summary: Nincs aktív munkaegység, amellyel folytatható
+          a folyamat.
+        list_selection_required_summary: A folytatáshoz válasszon ki egy munkaegységet.
+        list_single_status_summary: Egy munkaegység áll rendelkezésre megtekintésre.
         m184_socio_handoff_message: 'Jövedelem-hozzárendelési rendszer (régimen de
           atribución de rentas): a(z) %{nif} tag (%{nombre}) %{importe} EUR hozzárendelt
           adóalapot kap (%{porcentaje}% részesedés). A tagnak a saját munkaterületén
@@ -3320,8 +3348,9 @@ cli:
         revision_help: 'A célzott nyilvántartási nyomtatvány-revízió stabil azonosítója;
           futtassa: `aeat app modelo describe NYOMTATVÁNY` az elérhető revízióazonosítók
           megtekintéséhez.'
-        revision_selector_ambiguous: Több számítási revízió illeszkedik erre a választóra.
-          Válasszon egyet explicit módon. {candidates}
+        revision_selector_ambiguous: 'Több számítási revízió illeszkedik erre a választóra.
+
+          {candidates}'
         revision_selector_help: Revízió választó.
         revision_show_help: Egy tárolt számítási revízió megőrzött mezőértékeinek
           megjelenítése (újraszámítás nélkül).
@@ -3369,15 +3398,12 @@ cli:
         sal_reserva_not_decimal: 'A --sal-* értékeknek decimális összegeknek kell
           lenniük; kapott érték: {value}. Használjon tizedespontot ezreselválasztó
           nélkül, pl. 1234.56.'
-        selector_ambiguous: Több aktív munkaegység illeszkedik erre a modell/év/időszak
-          párosra. Válasszon nyilvántartási revíziót vagy adjon meg pontos munkaegység-azonosítót.
-          {candidates}
-        selector_not_found: 'Nincs aktív munkaegység ehhez a modell/év/időszak pároshoz.
-          Futtassa először: aeat app modelo work create.'
-        selector_revision_conflict: Ehhez a modell/év/időszak pároshoz már létezik
-          aktív munkaegység {existing_revision} nyilvántartási revízióval; a kért
-          revízió {requested_revision}. Folytassa a meglévő munkaegységet, dobja el
-          explicit módon, vagy adjon meg pontos azonosítót.
+        selector_ambiguous: Több aktív munkaegység illeszkedik erre a modellre, évre
+          és időszakra. {candidates}
+        selector_not_found: Nincs aktív munkaegység ehhez a modellhez, évhez és időszakhoz.
+        selector_revision_conflict: Már létezik aktív munkaegység ehhez a modellhez,
+          évhez és időszakhoz {existing_revision} nyilvántartási revízióval; a kért
+          revízió {requested_revision}.
         set_not_decimal: 'A --set értékének decimálisnak kell lennie; kapott: {value}.'
         set_override_help: Javított mezőérték CASILLA_ID=DECIMAL szintaxissal (ismételhető;
           legalább egy szükséges).
@@ -3386,9 +3412,10 @@ cli:
         state_label_presentado: Beadva
         state_label_presentado_supersedido: Felülírt beadás
         state_label_verificado_completo: Teljesen ellenőrizve
+        status_calculate_summary: Ez az aktív munkaegység kiszámítható.
+        status_discarded_summary: Ez a munkaegység el van vetve, ezért a számítás
+          nem érhető el.
         status_help: Egy munkaegység metaadatainak megjelenítése.
-        status_next_action_summary: Készítse el vagy számolja újra ezt a munkaegységet,
-          majd ellenőrizze az eredményül kapott vázlatot.
         verify_help: Tervezet számítási revízió hitelesítése a hitelesített-teljes
           szerződéssel szemben.
         verify_idempotent_noop: 'Idempotens nincs-művelet: a(z) %{calculation_revision_id}
@@ -7563,10 +7590,6 @@ llm:
         kifejezett hozzájárulás nélkül.'
       mint_refused: 'Elutasítva: az adózó bizonylatainak gépen kívüli olvasása ehhez
         a híváshoz nem engedélyezett.'
-      refused: Olvassa be a dokumentumot ezen a gépen a LOCAL szolgáltatóra irányítva,
-        vagy ha gépen kívüli olvasást szeretne, állítsa be a CADRUMO_EVIDENCE_CLOUD_UPLOAD_PERMITTED=true
-        értéket, és hagyja jóvá ezt a konkrét olvasást. Könyvelőirodai telepítésben
-        (CADRUMO_EVIDENCE_GESTOR_MODE=true) semmilyen jóváhagyás nem lehetséges.
 mcp:
   call:
     timeout: A(z) '{command}' túllépte a(z) {tier} szint időkorlátját ({seconds}s),
@@ -65759,6 +65782,10 @@ modelo:
           iva-resultado-regimen-general:
             help: null
             label: Általános rendszer eredménye
+      construct:
+        modelo-303-iva-autoliquidacion:
+          field:
+            title: null
       field:
         official_name: null
         title: null
@@ -66159,537 +66186,1570 @@ modelo:
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: null
               label: Levonható ÁFA összeg belföldi folyó ügyletek után
-          construct:
-            modelo-303-iva-autoliquidacion:
-              field:
-                title: null
           field:
             label: null
-        2023-y-siguientes:
+        '2023':
           casilla:
             '01':
-              help: '01. mező: keletkezett ÁFA adóalapja az általános rendszer szupercsökkentett
-                4%-os kulcsán.'
-              label: Keletkezett ÁFA, általános rendszer szupercsökkentett 4%-os kulcs
-                - adóalap
+              help: null
+              label: null
             '02':
-              help: '02. mező: keletkezett ÁFA kulcsának százaléka az általános rendszer
-                szupercsökkentett 4%-os kulcsán.'
-              label: Keletkezett ÁFA, általános rendszer szupercsökkentett 4%-os kulcs
-                - kulcs százaléka
+              help: null
+              label: null
             '03':
-              help: '03. mező: keletkezett ÁFA összege az általános rendszer szupercsökkentett
-                4%-os kulcsán.'
-              label: Keletkezett ÁFA, általános rendszer szupercsökkentett 4%-os kulcs
-                - ÁFA összeg
+              help: null
+              label: null
             '04':
-              help: '04. mező: keletkezett ÁFA adóalapja az általános rendszer csökkentett
-                10%-os kulcsán.'
-              label: Keletkezett ÁFA, általános rendszer csökkentett 10%-os kulcs
-                - adóalap
+              help: null
+              label: null
             '05':
-              help: '05. mező: keletkezett ÁFA kulcsának százaléka az általános rendszer
-                csökkentett 10%-os kulcsán.'
-              label: Keletkezett ÁFA, általános rendszer csökkentett 10%-os kulcs
-                - kulcs százaléka
+              help: null
+              label: null
             '06':
-              help: '06. mező: keletkezett ÁFA összege az általános rendszer csökkentett
-                10%-os kulcsán.'
-              label: Keletkezett ÁFA, általános rendszer csökkentett 10%-os kulcs
-                - ÁFA összeg
+              help: null
+              label: null
             '07':
-              help: '07. mező: keletkezett ÁFA adóalapja az általános rendszer 21%-os
-                általános kulcsán.'
-              label: Keletkezett ÁFA, általános rendszer 21%-os általános kulcs -
-                adóalap
+              help: null
+              label: null
             08:
-              help: '08. mező: keletkezett ÁFA kulcsának százaléka az általános rendszer
-                21%-os általános kulcsán.'
-              label: Keletkezett ÁFA, általános rendszer 21%-os általános kulcs -
-                kulcs százaléka
+              help: null
+              label: null
             09:
-              help: '09. mező: keletkezett ÁFA összege az általános rendszer 21%-os
-                általános kulcsán.'
-              label: Keletkezett ÁFA, általános rendszer 21%-os általános kulcs -
-                ÁFA összeg
+              help: null
+              label: null
             '10':
-              help: '10. mező: Közösségen belüli termék- és szolgáltatásbeszerzések
-                után keletkezett ÁFA alapja.'
-              label: Közösségen belüli termék- és szolgáltatásbeszerzések után keletkezett
-                ÁFA - alap
+              help: null
+              label: null
             '108':
-              help: '108. mező: helyesbítő bevallás egyéb korrekciói a közigazgatási
-                állásponttal való eltérés meghatározott eseteiben.'
-              label: Helyesbítő bevallás - egyéb korrekciók közigazgatási állásponttal
-                való eltérés meghatározott eseteiben
+              help: null
+              label: null
             '109':
-              help: '109. mező: AEAT által jóváhagyott visszatérítések ugyanazon év
-                és időszak korábbi önbevallásaihoz kapcsolódóan.'
-              label: Eredmény - AEAT által jóváhagyott visszatérítések ugyanazon év
-                és időszak korábbi önbevallásaiból
+              help: null
+              label: null
             '11':
-              help: '11. mező: Közösségen belüli termék- és szolgáltatásbeszerzések
-                után keletkezett ÁFA összege.'
-              label: Közösségen belüli termék- és szolgáltatásbeszerzések után keletkezett
-                ÁFA - összeg
+              help: null
+              label: null
             '111':
-              help: '111. mező: helyesbítő bevallásban szereplő helyesbítés összege.'
-              label: Helyesbítő bevallás - helyesbítés összege
+              help: null
+              label: null
             '12':
-              help: '12. mező: Közösségen belüli ügyleteken kívüli egyéb fordított
-                adózású ügyletek után keletkezett ÁFA alapja.'
-              label: Egyéb fordított adózású ügyletek után keletkezett ÁFA, Közösségen
-                belüliek nélkül - alap
+              help: null
+              label: null
             '120':
-              help: '120. mező: kiegészítő információ teljesítési hely szabályai miatt
-                nem adóköteles ügyletekről, a 123. mező kivételével.'
-              label: Kiegészítő információ - teljesítési hely szabályai miatt nem
-                adóköteles ügyletek, a 123. mező kivételével
+              help: null
+              label: null
             '122':
-              help: '122. mező: kiegészítő információ fordított adózás alá tartozó
-                ügyletekről.'
-              label: Kiegészítő információ - fordított adózás alá tartozó ügyletek
+              help: null
+              label: null
             '123':
-              help: '123. mező: kiegészítő információ egyablakos különös rendszerek
-                teljesítési hely szabályai szerint nem adóköteles ügyletekről.'
-              label: Kiegészítő információ - egyablakos különös rendszerek teljesítési
-                hely szabályai szerint nem adóköteles ügyletek
+              help: null
+              label: null
             '124':
-              help: '124. mező: kiegészítő információ egyablakos különös rendszerek
-                alá tartozó adóköteles ügyletekről.'
-              label: Kiegészítő információ - egyablakos különös rendszerek alá tartozó
-                adóköteles ügyletek
+              help: null
+              label: null
             '13':
-              help: '13. mező: Közösségen belüli ügyleteken kívüli egyéb fordított
-                adózású ügyletek után keletkezett ÁFA összege.'
-              label: Egyéb fordított adózású ügyletek után keletkezett ÁFA, Közösségen
-                belüliek nélkül - összeg
+              help: null
+              label: null
             '14':
-              help: '14. mező: keletkezett ÁFA alapjainak és összegeinek módosításához
-                tartozó adóalap.'
-              label: Keletkezett ÁFA alapjainak és összegeinek módosítása - adóalap
+              help: null
+              label: null
             '15':
-              help: '15. mező: keletkezett ÁFA alapjainak és összegeinek módosításához
-                tartozó ÁFA összeg.'
-              label: Keletkezett ÁFA alapjainak és összegeinek módosítása - összeg
+              help: null
+              label: null
             '150':
-              help: '150. mező: keletkezett ÁFA adóalapja az általános rendszer új
-                kulcsának 1. sávjában.'
-              label: Keletkezett ÁFA, általános rendszer új kulcs 1. sáv - adóalap
+              help: null
+              label: null
             '151':
-              help: '151. mező: keletkezett ÁFA kulcsának százaléka az általános rendszer
-                új kulcsának 1. sávjában.'
-              label: Keletkezett ÁFA, általános rendszer új kulcs 1. sáv - kulcs százaléka
+              help: null
+              label: null
             '152':
-              help: '152. mező: keletkezett ÁFA összege az általános rendszer új kulcsának
-                1. sávjában.'
-              label: Keletkezett ÁFA, általános rendszer új kulcs 1. sáv - ÁFA összeg
+              help: null
+              label: null
             '153':
-              help: '153. mező: keletkezett ÁFA adóalapja az általános rendszer új
-                kulcsának 2. sávjában.'
-              label: Keletkezett ÁFA, általános rendszer új kulcs 2. sáv - adóalap
+              help: null
+              label: null
             '154':
-              help: '154. mező: keletkezett ÁFA kulcsának százaléka az általános rendszer
-                új kulcsának 2. sávjában.'
-              label: Keletkezett ÁFA, általános rendszer új kulcs 2. sáv - kulcs százaléka
+              help: null
+              label: null
             '155':
-              help: '155. mező: keletkezett ÁFA összege az általános rendszer új kulcsának
-                2. sávjában.'
-              label: Keletkezett ÁFA, általános rendszer új kulcs 2. sáv - ÁFA összeg
+              help: null
+              label: null
             '156':
-              help: '156. mező: a 0,5%-os egyenértékűségi felár adóalapja.'
-              label: Egyenértékűségi felár 0,5% - adóalap
+              help: null
+              label: null
             '157':
-              help: '157. mező: a 0,5%-os egyenértékűségi felár kulcsának százaléka.'
-              label: Egyenértékűségi felár 0,5% - kulcs százaléka
+              help: null
+              label: null
             '158':
-              help: '158. mező: a 0,5%-os egyenértékűségi felár összege.'
-              label: Egyenértékűségi felár 0,5% - felár összege
+              help: null
+              label: null
             '16':
-              help: '16. mező: az 1,0%-os egyenértékűségi felár adóalapja.'
-              label: Egyenértékűségi felár 1,0% - adóalap
+              help: null
+              label: null
             '165':
-              help: '165. mező: keletkezett ÁFA adóalapja az általános rendszer 2024-től
-                alkalmazandó 2%-os kulcsán.'
-              label: Keletkezett ÁFA, általános rendszer 2%-os kulcs 2024-től - adóalap
+              help: null
+              label: null
             '166':
-              help: '166. mező: keletkezett ÁFA kulcsának százaléka az általános rendszer
-                2024-től alkalmazandó 2%-os kulcsán.'
-              label: Keletkezett ÁFA, általános rendszer 2%-os kulcs 2024-től - kulcs
-                százaléka
+              help: null
+              label: null
             '167':
-              help: '167. mező: keletkezett ÁFA összege az általános rendszer 2024-től
-                alkalmazandó 2%-os kulcsán.'
-              label: Keletkezett ÁFA, általános rendszer 2%-os kulcs 2024-től - ÁFA
-                összeg
+              help: null
+              label: null
             '168':
-              help: '168. mező: a 2024-től alkalmazandó új egyenértékűségi felárkulcs
-                adóalapja.'
-              label: Új egyenértékűségi felárkulcs 2024-től - adóalap
+              help: null
+              label: null
             '169':
-              help: '169. mező: a 2024-től alkalmazandó új egyenértékűségi felárkulcs
-                százaléka.'
-              label: Új egyenértékűségi felárkulcs 2024-től - kulcs százaléka
+              help: null
+              label: null
             '17':
-              help: '17. mező: az 1,0%-os egyenértékűségi felár kulcsának százaléka.'
-              label: Egyenértékűségi felár 1,0% - kulcs százaléka
+              help: null
+              label: null
             '170':
-              help: '170. mező: a 2024-től alkalmazandó új egyenértékűségi felár összege.'
-              label: Új egyenértékűségi felárkulcs 2024-től - felár összege
+              help: null
+              label: null
             '18':
-              help: '18. mező: az 1,0%-os egyenértékűségi felár összege.'
-              label: Egyenértékűségi felár 1,0% - felár összege
+              help: null
+              label: null
             '19':
-              help: '19. mező: az 1,4%-os egyenértékűségi felár adóalapja.'
-              label: Egyenértékűségi felár 1,4% - adóalap
+              help: null
+              label: null
             '20':
-              help: '20. mező: az 1,4%-os egyenértékűségi felár kulcsának százaléka.'
-              label: Egyenértékűségi felár 1,4% - kulcs százaléka
+              help: null
+              label: null
             '21':
-              help: '21. mező: az 1,4%-os egyenértékűségi felár összege.'
-              label: Egyenértékűségi felár 1,4% - felár összege
+              help: null
+              label: null
             '22':
-              help: '22. mező: az 5,2%-os egyenértékűségi felár adóalapja.'
-              label: Egyenértékűségi felár 5,2% - adóalap
+              help: null
+              label: null
             '23':
-              help: '23. mező: az 5,2%-os egyenértékűségi felár kulcsának százaléka.'
-              label: Egyenértékűségi felár 5,2% - kulcs százaléka
+              help: null
+              label: null
             '24':
-              help: '24. mező: az 5,2%-os egyenértékűségi felár összege.'
-              label: Egyenértékűségi felár 5,2% - felár összege
+              help: null
+              label: null
             '25':
-              help: '25. mező: az egyenértékűségi felár alapjainak és összegeinek
-                módosításához tartozó adóalap.'
-              label: Egyenértékűségi felár alapjainak és összegeinek módosítása -
-                adóalap
+              help: null
+              label: null
             '26':
-              help: '26. mező: az egyenértékűségi felár alapjainak és összegeinek
-                módosításához tartozó felár összege.'
-              label: Egyenértékűségi felár alapjainak és összegeinek módosítása -
-                felár összege
+              help: null
+              label: null
             '27':
-              help: '27. mező: összes keletkezett ÁFA összeg.'
-              label: Összes keletkezett ÁFA összeg
+              help: null
+              label: null
             '28':
-              help: '28. mező: belföldi folyó ügyleteken levonható ÁFA alapja.'
-              label: Levonható ÁFA belföldi folyó ügyleteken - alap
+              help: null
+              label: null
             '29':
-              help: '29. mező: belföldi folyó ügyleteken levonható ÁFA összege.'
-              label: Levonható ÁFA belföldi folyó ügyleteken - összeg
+              help: null
+              label: null
             '30':
-              help: '30. mező: belföldi beruházási javakon levonható ÁFA alapja.'
-              label: Levonható ÁFA belföldi beruházási javakon - alap
+              help: null
+              label: null
             '31':
-              help: '31. mező: belföldi beruházási javakon levonható ÁFA összege.'
-              label: Levonható ÁFA belföldi beruházási javakon - összeg
+              help: null
+              label: null
             '32':
-              help: '32. mező: folyó áruk importján levonható ÁFA alapja.'
-              label: Levonható ÁFA folyó áruk importján - alap
+              help: null
+              label: null
             '33':
-              help: '33. mező: folyó áruk importján levonható ÁFA összege.'
-              label: Levonható ÁFA folyó áruk importján - összeg
+              help: null
+              label: null
             '34':
-              help: '34. mező: beruházási javak importján levonható ÁFA alapja.'
-              label: Levonható ÁFA beruházási javak importján - alap
+              help: null
+              label: null
             '35':
-              help: '35. mező: beruházási javak importján levonható ÁFA összege.'
-              label: Levonható ÁFA beruházási javak importján - összeg
+              help: null
+              label: null
             '36':
-              help: '36. mező: Közösségen belüli folyó beszerzéseken levonható ÁFA
-                alapja.'
-              label: Levonható ÁFA Közösségen belüli folyó beszerzéseken - alap
+              help: null
+              label: null
             '37':
-              help: '37. mező: Közösségen belüli folyó beszerzéseken levonható ÁFA
-                összege.'
-              label: Levonható ÁFA Közösségen belüli folyó beszerzéseken - összeg
+              help: null
+              label: null
             '38':
-              help: '38. mező: Közösségen belüli beruházási javak beszerzésén levonható
-                ÁFA alapja.'
-              label: Levonható ÁFA Közösségen belüli beruházási javak beszerzésén
-                - alap
+              help: null
+              label: null
             '39':
-              help: '39. mező: Közösségen belüli beruházási javak beszerzésén levonható
-                ÁFA összege.'
-              label: Levonható ÁFA Közösségen belüli beruházási javak beszerzésén
-                - összeg
+              help: null
+              label: null
             '40':
-              help: '40. mező: levonások helyesbítésének alapja.'
-              label: Levonások helyesbítése - alap
+              help: null
+              label: null
             '41':
-              help: '41. mező: levonások helyesbítésének ÁFA összege.'
-              label: Levonások helyesbítése - összeg
+              help: null
+              label: null
             '42':
-              help: '42. mező: mezőgazdasági, állattenyésztési és halászati különös
-                rendszer szerinti kompenzáció összege.'
-              label: Mezőgazdasági, állattenyésztési és halászati különös rendszer
-                kompenzációi - összeg
+              help: null
+              label: null
             '43':
-              help: '43. mező: beruházási javak korrekciójának ÁFA összege.'
-              label: Beruházási javak korrekciója - összeg
+              help: null
+              label: null
             '44':
-              help: '44. mező: levonási hányad végleges százalék alapján végzett korrekciójának
-                ÁFA összege.'
-              label: Levonási hányad korrekciója végleges százalék alapján - összeg
+              help: null
+              label: null
             '45':
-              help: '45. mező: összes levonható ÁFA összeg.'
-              label: Összes levonható összeg
+              help: null
+              label: null
             '47':
-              help: '47. mező: egyszerűsített rendszerben az összes tevékenység előlegfizetéseinek
-                összege az 1T, 2T vagy 3T időszakban.'
-              label: Egyszerűsített rendszer, 1T-2T-3T - minden tevékenység előlegfizetéseinek
-                összege
+              help: null
+              label: null
             '48':
-              help: '48. mező: egyszerűsített rendszerben az összes tevékenységből
-                származó összegek összege a 4T időszakban.'
-              label: Egyszerűsített rendszer, 4T - minden tevékenység származtatott
-                összegeinek összege
+              help: null
+              label: null
             '49':
-              help: '49. mező: egyszerűsített rendszerben az év során teljesített
-                előlegfizetések összege a 4T időszakban.'
-              label: Egyszerűsített rendszer, 4T - az év során teljesített előlegfizetések
-                összege
+              help: null
+              label: null
             '50':
-              help: '50. mező: egyszerűsített rendszer 4T eredménye, a 48. mező mínusz
-                a 49. mező.'
-              label: Egyszerűsített rendszer, 4T - eredmény ([48] - [49])
+              help: null
+              label: null
             '51':
-              help: '51. mező: egyszerűsített rendszerben Közösségen belüli termékbeszerzések
-                után keletkezett ÁFA.'
-              label: Egyszerűsített rendszer - Közösségen belüli termékbeszerzések
-                után keletkezett ÁFA
+              help: null
+              label: null
             '52':
-              help: '52. mező: egyszerűsített rendszerben tárgyi eszközök értékesítése
-                után keletkezett ÁFA.'
-              label: Egyszerűsített rendszer - tárgyi eszközök értékesítése után keletkezett
-                ÁFA
+              help: null
+              label: null
             '53':
-              help: '53. mező: egyszerűsített rendszerben fordított adózás alá tartozó
-                ügyletekből keletkezett ÁFA.'
-              label: Egyszerűsített rendszer - fordított adózású ügyletekből keletkezett
-                ÁFA
+              help: null
+              label: null
             '54':
-              help: '54. mező: egyszerűsített rendszer szerinti teljes eredményösszeg.'
-              label: Egyszerűsített rendszer - teljes eredményösszeg
+              help: null
+              label: null
             '55':
-              help: '55. mező: egyszerűsített rendszerben tárgyi eszköz beszerzésén
-                vagy importján levonható ÁFA.'
-              label: Egyszerűsített rendszer - tárgyi eszköz beszerzésén vagy importján
-                levonható ÁFA
+              help: null
+              label: null
             '56':
-              help: '56. mező: egyszerűsített rendszerben beruházási javak korrekciójából
-                levonható ÁFA.'
-              label: Egyszerűsített rendszer - beruházási javak korrekciójából levonható
-                ÁFA
+              help: null
+              label: null
             '57':
-              help: '57. mező: egyszerűsített rendszerben összes levonható ÁFA, az
-                55. mező és az 56. mező összegeként számítva.'
-              label: Egyszerűsített rendszer - összes levonható ÁFA ([55] + [56])
+              help: null
+              label: null
             '58':
-              help: '58. mező: egyszerűsített rendszer eredménye, az 54. mező mínusz
-                az 57. mező.'
-              label: Egyszerűsített rendszer eredménye ([54] - [57])
+              help: null
+              label: null
             '59':
-              help: '59. mező: kiegészítő információ Közösségen belüli termék- és
-                szolgáltatásértékesítésekről.'
-              label: Kiegészítő információ - Közösségen belüli termék- és szolgáltatásértékesítések
+              help: null
+              label: null
             '60':
-              help: '60. mező: kiegészítő információ exportokról és azokkal egy tekintet
-                alá eső ügyletekről.'
-              label: Kiegészítő információ - exportok és azokkal egy tekintet alá
-                eső ügyletek
+              help: null
+              label: null
             '62':
-              help: '62. mező: LIVA 75. cikk szerint keletkezett pénzforgalmi szemléletű
-                teljesítések adóalapja.'
-              label: Kiegészítő információ - pénzforgalmi szemléletű, LIVA 75. cikk
-                szerinti teljesítések - adóalap
+              help: null
+              label: null
             '63':
-              help: '63. mező: LIVA 75. cikk szerint keletkezett pénzforgalmi szemléletű
-                teljesítések ÁFA összege.'
-              label: Kiegészítő információ - pénzforgalmi szemléletű, LIVA 75. cikk
-                szerinti teljesítések - ÁFA összeg
+              help: null
+              label: null
             '64':
-              help: '64. mező: eredmények összege, a 46., 58. és 76. mező összegeként
-                számítva.'
-              label: Eredmény - eredmények összege ([46] + [58] + [76])
+              help: null
+              label: null
             '65':
-              help: '65. mező: az eredmény Állami Adóigazgatásnak tulajdonítható százaléka.'
-              label: Eredmény - az Állami Adóigazgatásnak tulajdonítható százalék
+              help: null
+              label: null
             '66':
-              help: '66. mező: az Állami Adóigazgatásnak tulajdonítható összeg, a
-                64. mező szorozva a 65. mezővel, osztva 100-zal.'
-              label: Eredmény - az Állami Adóigazgatásnak tulajdonítható összeg ([64]
-                x [65] / 100)
+              help: null
+              label: null
             '68':
-              help: '68. mező: közös adózás éves korrekciós eredménye.'
-              label: Eredmény - közös adózás éves korrekciós eredménye
+              help: null
+              label: null
             '70':
-              help: '70. mező: ugyanazon év és időszak korábbi önbevallásaiból fizetendő
-                összegek.'
-              label: Eredmény - ugyanazon év és időszak korábbi önbevallásaiból fizetendő
-                eredmények
+              help: null
+              label: null
             '71':
-              help: '71. mező: végső eredmény, a 69. mező mínusz a 70. mező plusz
-                a 109. mező.'
-              label: Végső eredmény ([69] - [70] + [109])
+              help: null
+              label: null
             '74':
-              help: '74. mező: pénzforgalmi szemléletű beszerzések adóalapja.'
-              label: Kiegészítő információ - pénzforgalmi szemléletű beszerzések -
-                adóalap
+              help: null
+              label: null
             '75':
-              help: '75. mező: pénzforgalmi szemléletű beszerzések ÁFA összege.'
-              label: Kiegészítő információ - pénzforgalmi szemléletű beszerzések -
-                ÁFA összeg
+              help: null
+              label: null
             '76':
-              help: '76. mező: eredménykorrekció a LIVA 80. cikk ötödik bekezdés 5a
-                pontja szerint.'
-              label: Eredmény - LIVA 80. cikk ötödik bekezdés 5a pont szerinti korrekció
+              help: null
+              label: null
             '77':
-              help: '77. mező: a Vámhatóság által megállapított, befizetésre váró
-                import ÁFA.'
-              label: Eredmény - Vámhatóság által megállapított, befizetésre váró import
-                ÁFA
+              help: null
+              label: null
             modulos-iva-1-unidades:
               help: null
-              label: '1. modul (Alkalmazott személyzet): egységek száma'
+              label: null
             modulos-iva-2-unidades:
               help: null
-              label: '2. modul (tevékenységspecifikus egység: megtett távolság, járművek
-                raksúlya vagy a helyiség alapterülete): egységek száma'
+              label: null
             modulos-iva-3-unidades:
               help: null
-              label: '3. modul (tevékenységspecifikus egység: villamosenergia- vagy
-                egyéb energiafogyasztás): egységek száma'
+              label: null
             modulos-iva-cuota-derivada:
               help: null
-              label: Az egyszerűsített rendszerből eredő adó (a levonhatókkal/átalánnyal
-                csökkentett nettó keletkezett ÁFA, vagy a minimális adó közül a nagyobb)
+              label: null
             modulos-iva-cuota-devengada:
               help: null
-              label: Folyó ügyletek után keletkezett ÁFA (Σ modulegységek × egységenkénti
-                éves keletkezett ÁFA)
+              label: null
             modulos-iva-epigrafe:
               help: null
-              label: A tevékenység IAE-tételszáma az ÁFA egyszerűsített rendszerében
-                (modulok)
+              label: null
             x-chim6r1ecll6asj3d5hmiro:
-              help: Az az adóév, amelyre az önbevallás vonatkozik.
-              label: Az önbevallás adóéve
+              help: null
+              label: null
             x-chim6r1ee1in4qbfchng:
-              help: 'Az önbevallás negyedéves időszaka: 1T, 2T, 3T vagy 4T.'
-              label: Negyedéves időszak
+              help: null
+              label: null
             x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushec9gn6p8:
-              help: Az ingatlanfejlesztő saját felhasználásának adóalapja, az építési
-                költség alapján.
-              label: Ingatlanfejlesztő saját felhasználásának adóalapja
+              help: null
+              label: null
             x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushecdqmut31:
-              help: Az ingatlanfejlesztő saját felhasználásának ÁFA összege, az adóalap
-                21%-aként számítva.
-              label: Ingatlanfejlesztő saját felhasználásának ÁFA összege
+              help: null
+              label: null
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
-              help: Fordított adózás alá tartozó belföldi ügyleteknél levonható önadózott
-                ÁFA.
-              label: Levonható fordított adózású ÁFA belföldi ügyleteknél
+              help: null
+              label: null
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
-              help: Fordított adózás alá tartozó belföldi ügyleteknél keletkezett
-                önadózott ÁFA.
-              label: Keletkezett fordított adózású ÁFA belföldi ügyleteknél
+              help: null
+              label: null
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
-              help: Fordított adózás keretében önadózott ÁFA összeg Közösségen belüli
-                beszerzéseknél.
-              label: Fordított adózású ÁFA összeg Közösségen belüli beszerzéseknél
+              help: null
+              label: null
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
-              help: Közösségen belüli termék- és szolgáltatásbeszerzéseknél levonható
-                önadózott ÁFA.
-              label: Levonható fordított adózású ÁFA Közösségen belüli beszerzéseknél
+              help: null
+              label: null
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
-              help: Közösségen belüli termék- és szolgáltatásbeszerzéseknél keletkezett
-                önadózott ÁFA.
-              label: Keletkezett fordított adózású ÁFA Közösségen belüli beszerzéseknél
+              help: null
+              label: null
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
-              help: Adja össze a Közösségen belüli beszerzések után önszámlázással
-                keletkezett adóalapot.
-              label: Keletkezett fordított adózású ÁFA adóalapja Közösségen belüli
-                beszerzéseknél
+              help: null
+              label: null
             x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
-              help: Korábbi időszakokból fennmaradó ÁFA összegek, amelyeket ebben
-                az időszakban alkalmaznak.
-              label: Ebben az időszakban alkalmazott korábbi időszaki beszámítások
+              help: null
+              label: null
             x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
-              help: Későbbi időszakokra átvihető, az időszak végén rendelkezésre álló
-                ÁFA beszámítási egyenleg.
-              label: Időszak végén rendelkezésre álló beszámítási egyenleg
+              help: null
+              label: null
             x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
-              help: Az adott időszak önbevallása által keletkeztetett ÁFA beszámítási
-                egyenleg.
-              label: Ebben az időszakban keletkezett beszámítási egyenleg
+              help: null
+              label: null
             x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
-              help: Korábbi időszakokból fennmaradó, beszámításra váró ÁFA összegek.
-              label: Korábbi időszakokból fennmaradó beszámítandó összegek
+              help: null
+              label: null
             x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
-              help: Korábbi időszaki ÁFA beszámítások, amelyek későbbi időszakokra
-                fennmaradnak.
-              label: Későbbi időszakokra fennmaradó korábbi beszámítások
+              help: null
+              label: null
             x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
-              help: Összes levonható ÁFA összeg, beleértve a belföldi előzetesen felszámított
-                ÁFÁ-t és a levonható fordított adózású ÁFÁ-t.
-              label: Összes levonható ÁFA összeg
+              help: null
+              label: null
             x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
-              help: Összes keletkezett ÁFA összeg, beleértve a felszámított ÁFÁ-t
-                és az alkalmazandó fordított adózású ÁFÁ-t.
-              label: Összes keletkezett ÁFA összeg
+              help: null
+              label: null
             x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
-              help: Az általános levonási hányad százaléka, a levonási jogot keletkeztető
-                volumen és a teljes volumen alapján.
-              label: Általános levonási hányad százaléka
+              help: null
+              label: null
             x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
-              help: Az éves ügyletvolumen, amely ÁFA-levonási jogot keletkeztet.
-              label: Levonási jogot keletkeztető éves ügyletvolumen
+              help: null
+              label: null
             x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
-              help: Az általános levonási hányad számításához használt teljes éves
-                ügyletvolumen.
-              label: Teljes éves ügyletvolumen
+              help: null
+              label: null
             x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
-              help: Beruházási javakhoz kapcsolódó ÁFA-korrekció.
-              label: Beruházási javak korrekciója
+              help: null
+              label: null
             x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
-              help: Az általános 21%-os kulccsal kiszámított teljes felszámított ÁFA.
-              label: Felszámított ÁFA összeg általános kulccsal (21%)
+              help: null
+              label: null
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
-              help: A 10%-os csökkentett kulccsal kiszámított teljes felszámított
-                ÁFA.
-              label: Felszámított ÁFA összeg csökkentett kulccsal (10%)
+              help: null
+              label: null
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
-              help: A 4/2024. sz. spanyol királyi törvényerejű rendelet átmeneti tétele
-                a csökkentett kulcshoz, amely a rendes 10%-os csökkentett kulccsal
-                együtt létezik.
-              label: Felszámított ÁFA összeg átmeneti csökkentett kulccsal (5%/7,5%)
+              help: null
+              label: null
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
-              help: A 4%-os szupercsökkentett kulccsal kiszámított teljes felszámított
-                ÁFA.
-              label: Felszámított ÁFA összeg szupercsökkentett kulccsal (4%)
+              help: null
+              label: null
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
-              help: A 4/2024. sz. spanyol királyi törvényerejű rendelet átmeneti tétele
-                a szupercsökkentett kulcshoz, amely a rendes 4%-os szupercsökkentett
-                kulccsal együtt létezik.
-              label: Felszámított ÁFA összeg átmeneti szupercsökkentett kulccsal (2%)
+              help: null
+              label: null
             x-d5r62bjiclpnar3kc5i6u:
-              help: Az önbevallás eredménye a Modelo 303 korrekciós képlete után.
-              label: Önbevallás eredménye
+              help: null
+              label: null
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
-              help: Az általános rendszer eredménye, a keletkezett ÁFA és a levonható
-                ÁFA különbségeként számítva.
-              label: Általános rendszer eredménye
+              help: null
+              label: null
             x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
-              help: Folyó áruk importján előzetesen felszámított levonható ÁFA.
-              label: Levonható előzetesen felszámított ÁFA folyó áruk importján
+              help: null
+              label: null
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
-              help: A belföldi termékbeszerzések és szolgáltatásigénybevételek után
-                fizetett, levonható ÁFA.
-              label: Levonható ÁFA összeg belföldi folyó ügyletek után
-          construct:
-            modelo-303-iva-autoliquidacion:
-              field:
-                title: null
+              help: null
+              label: null
+          field:
+            label: null
+        2024-desde-09-y-3t:
+          casilla:
+            '01':
+              help: null
+              label: null
+            '02':
+              help: null
+              label: null
+            '03':
+              help: null
+              label: null
+            '04':
+              help: null
+              label: null
+            '05':
+              help: null
+              label: null
+            '06':
+              help: null
+              label: null
+            '07':
+              help: null
+              label: null
+            08:
+              help: null
+              label: null
+            09:
+              help: null
+              label: null
+            '10':
+              help: null
+              label: null
+            '108':
+              help: null
+              label: null
+            '109':
+              help: null
+              label: null
+            '11':
+              help: null
+              label: null
+            '111':
+              help: null
+              label: null
+            '12':
+              help: null
+              label: null
+            '120':
+              help: null
+              label: null
+            '122':
+              help: null
+              label: null
+            '123':
+              help: null
+              label: null
+            '124':
+              help: null
+              label: null
+            '13':
+              help: null
+              label: null
+            '14':
+              help: null
+              label: null
+            '15':
+              help: null
+              label: null
+            '150':
+              help: null
+              label: null
+            '151':
+              help: null
+              label: null
+            '152':
+              help: null
+              label: null
+            '153':
+              help: null
+              label: null
+            '154':
+              help: null
+              label: null
+            '155':
+              help: null
+              label: null
+            '156':
+              help: null
+              label: null
+            '157':
+              help: null
+              label: null
+            '158':
+              help: null
+              label: null
+            '16':
+              help: null
+              label: null
+            '165':
+              help: null
+              label: null
+            '166':
+              help: null
+              label: null
+            '167':
+              help: null
+              label: null
+            '168':
+              help: null
+              label: null
+            '169':
+              help: null
+              label: null
+            '17':
+              help: null
+              label: null
+            '170':
+              help: null
+              label: null
+            '18':
+              help: null
+              label: null
+            '19':
+              help: null
+              label: null
+            '20':
+              help: null
+              label: null
+            '21':
+              help: null
+              label: null
+            '22':
+              help: null
+              label: null
+            '23':
+              help: null
+              label: null
+            '24':
+              help: null
+              label: null
+            '25':
+              help: null
+              label: null
+            '26':
+              help: null
+              label: null
+            '27':
+              help: null
+              label: null
+            '28':
+              help: null
+              label: null
+            '29':
+              help: null
+              label: null
+            '30':
+              help: null
+              label: null
+            '31':
+              help: null
+              label: null
+            '32':
+              help: null
+              label: null
+            '33':
+              help: null
+              label: null
+            '34':
+              help: null
+              label: null
+            '35':
+              help: null
+              label: null
+            '36':
+              help: null
+              label: null
+            '37':
+              help: null
+              label: null
+            '38':
+              help: null
+              label: null
+            '39':
+              help: null
+              label: null
+            '40':
+              help: null
+              label: null
+            '41':
+              help: null
+              label: null
+            '42':
+              help: null
+              label: null
+            '43':
+              help: null
+              label: null
+            '44':
+              help: null
+              label: null
+            '45':
+              help: null
+              label: null
+            '47':
+              help: null
+              label: null
+            '48':
+              help: null
+              label: null
+            '49':
+              help: null
+              label: null
+            '50':
+              help: null
+              label: null
+            '51':
+              help: null
+              label: null
+            '52':
+              help: null
+              label: null
+            '53':
+              help: null
+              label: null
+            '54':
+              help: null
+              label: null
+            '55':
+              help: null
+              label: null
+            '56':
+              help: null
+              label: null
+            '57':
+              help: null
+              label: null
+            '58':
+              help: null
+              label: null
+            '59':
+              help: null
+              label: null
+            '60':
+              help: null
+              label: null
+            '62':
+              help: null
+              label: null
+            '63':
+              help: null
+              label: null
+            '64':
+              help: null
+              label: null
+            '65':
+              help: null
+              label: null
+            '66':
+              help: null
+              label: null
+            '68':
+              help: null
+              label: null
+            '70':
+              help: null
+              label: null
+            '71':
+              help: null
+              label: null
+            '74':
+              help: null
+              label: null
+            '75':
+              help: null
+              label: null
+            '76':
+              help: null
+              label: null
+            '77':
+              help: null
+              label: null
+            modulos-iva-1-unidades:
+              help: null
+              label: null
+            modulos-iva-2-unidades:
+              help: null
+              label: null
+            modulos-iva-3-unidades:
+              help: null
+              label: null
+            modulos-iva-cuota-derivada:
+              help: null
+              label: null
+            modulos-iva-cuota-devengada:
+              help: null
+              label: null
+            modulos-iva-epigrafe:
+              help: null
+              label: null
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: null
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: null
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
+              help: null
+              label: null
+            x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6u:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
+              help: null
+              label: null
+          field:
+            label: null
+        2024-hasta-08-y-2t:
+          casilla:
+            '01':
+              help: null
+              label: null
+            '02':
+              help: null
+              label: null
+            '03':
+              help: null
+              label: null
+            '04':
+              help: null
+              label: null
+            '05':
+              help: null
+              label: null
+            '06':
+              help: null
+              label: null
+            '07':
+              help: null
+              label: null
+            08:
+              help: null
+              label: null
+            09:
+              help: null
+              label: null
+            '10':
+              help: null
+              label: null
+            '108':
+              help: null
+              label: null
+            '109':
+              help: null
+              label: null
+            '11':
+              help: null
+              label: null
+            '111':
+              help: null
+              label: null
+            '12':
+              help: null
+              label: null
+            '120':
+              help: null
+              label: null
+            '122':
+              help: null
+              label: null
+            '123':
+              help: null
+              label: null
+            '124':
+              help: null
+              label: null
+            '13':
+              help: null
+              label: null
+            '14':
+              help: null
+              label: null
+            '15':
+              help: null
+              label: null
+            '150':
+              help: null
+              label: null
+            '151':
+              help: null
+              label: null
+            '152':
+              help: null
+              label: null
+            '153':
+              help: null
+              label: null
+            '154':
+              help: null
+              label: null
+            '155':
+              help: null
+              label: null
+            '156':
+              help: null
+              label: null
+            '157':
+              help: null
+              label: null
+            '158':
+              help: null
+              label: null
+            '16':
+              help: null
+              label: null
+            '165':
+              help: null
+              label: null
+            '166':
+              help: null
+              label: null
+            '167':
+              help: null
+              label: null
+            '168':
+              help: null
+              label: null
+            '169':
+              help: null
+              label: null
+            '17':
+              help: null
+              label: null
+            '170':
+              help: null
+              label: null
+            '18':
+              help: null
+              label: null
+            '19':
+              help: null
+              label: null
+            '20':
+              help: null
+              label: null
+            '21':
+              help: null
+              label: null
+            '22':
+              help: null
+              label: null
+            '23':
+              help: null
+              label: null
+            '24':
+              help: null
+              label: null
+            '25':
+              help: null
+              label: null
+            '26':
+              help: null
+              label: null
+            '27':
+              help: null
+              label: null
+            '28':
+              help: null
+              label: null
+            '29':
+              help: null
+              label: null
+            '30':
+              help: null
+              label: null
+            '31':
+              help: null
+              label: null
+            '32':
+              help: null
+              label: null
+            '33':
+              help: null
+              label: null
+            '34':
+              help: null
+              label: null
+            '35':
+              help: null
+              label: null
+            '36':
+              help: null
+              label: null
+            '37':
+              help: null
+              label: null
+            '38':
+              help: null
+              label: null
+            '39':
+              help: null
+              label: null
+            '40':
+              help: null
+              label: null
+            '41':
+              help: null
+              label: null
+            '42':
+              help: null
+              label: null
+            '43':
+              help: null
+              label: null
+            '44':
+              help: null
+              label: null
+            '45':
+              help: null
+              label: null
+            '47':
+              help: null
+              label: null
+            '48':
+              help: null
+              label: null
+            '49':
+              help: null
+              label: null
+            '50':
+              help: null
+              label: null
+            '51':
+              help: null
+              label: null
+            '52':
+              help: null
+              label: null
+            '53':
+              help: null
+              label: null
+            '54':
+              help: null
+              label: null
+            '55':
+              help: null
+              label: null
+            '56':
+              help: null
+              label: null
+            '57':
+              help: null
+              label: null
+            '58':
+              help: null
+              label: null
+            '59':
+              help: null
+              label: null
+            '60':
+              help: null
+              label: null
+            '62':
+              help: null
+              label: null
+            '63':
+              help: null
+              label: null
+            '64':
+              help: null
+              label: null
+            '65':
+              help: null
+              label: null
+            '66':
+              help: null
+              label: null
+            '68':
+              help: null
+              label: null
+            '70':
+              help: null
+              label: null
+            '71':
+              help: null
+              label: null
+            '74':
+              help: null
+              label: null
+            '75':
+              help: null
+              label: null
+            '76':
+              help: null
+              label: null
+            '77':
+              help: null
+              label: null
+            modulos-iva-1-unidades:
+              help: null
+              label: null
+            modulos-iva-2-unidades:
+              help: null
+              label: null
+            modulos-iva-3-unidades:
+              help: null
+              label: null
+            modulos-iva-cuota-derivada:
+              help: null
+              label: null
+            modulos-iva-cuota-devengada:
+              help: null
+              label: null
+            modulos-iva-epigrafe:
+              help: null
+              label: null
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: null
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: null
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
+              help: null
+              label: null
+            x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6u:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
+              help: null
+              label: null
+          field:
+            label: null
+        '2025':
+          casilla:
+            '01':
+              help: null
+              label: null
+            '02':
+              help: null
+              label: null
+            '03':
+              help: null
+              label: null
+            '04':
+              help: null
+              label: null
+            '05':
+              help: null
+              label: null
+            '06':
+              help: null
+              label: null
+            '07':
+              help: null
+              label: null
+            08:
+              help: null
+              label: null
+            09:
+              help: null
+              label: null
+            '10':
+              help: null
+              label: null
+            '108':
+              help: null
+              label: null
+            '109':
+              help: null
+              label: null
+            '11':
+              help: null
+              label: null
+            '111':
+              help: null
+              label: null
+            '12':
+              help: null
+              label: null
+            '120':
+              help: null
+              label: null
+            '122':
+              help: null
+              label: null
+            '123':
+              help: null
+              label: null
+            '124':
+              help: null
+              label: null
+            '13':
+              help: null
+              label: null
+            '14':
+              help: null
+              label: null
+            '15':
+              help: null
+              label: null
+            '150':
+              help: null
+              label: null
+            '151':
+              help: null
+              label: null
+            '152':
+              help: null
+              label: null
+            '153':
+              help: null
+              label: null
+            '154':
+              help: null
+              label: null
+            '155':
+              help: null
+              label: null
+            '156':
+              help: null
+              label: null
+            '157':
+              help: null
+              label: null
+            '158':
+              help: null
+              label: null
+            '16':
+              help: null
+              label: null
+            '165':
+              help: null
+              label: null
+            '166':
+              help: null
+              label: null
+            '167':
+              help: null
+              label: null
+            '168':
+              help: null
+              label: null
+            '169':
+              help: null
+              label: null
+            '17':
+              help: null
+              label: null
+            '170':
+              help: null
+              label: null
+            '18':
+              help: null
+              label: null
+            '19':
+              help: null
+              label: null
+            '20':
+              help: null
+              label: null
+            '21':
+              help: null
+              label: null
+            '22':
+              help: null
+              label: null
+            '23':
+              help: null
+              label: null
+            '24':
+              help: null
+              label: null
+            '25':
+              help: null
+              label: null
+            '26':
+              help: null
+              label: null
+            '27':
+              help: null
+              label: null
+            '28':
+              help: null
+              label: null
+            '29':
+              help: null
+              label: null
+            '30':
+              help: null
+              label: null
+            '31':
+              help: null
+              label: null
+            '32':
+              help: null
+              label: null
+            '33':
+              help: null
+              label: null
+            '34':
+              help: null
+              label: null
+            '35':
+              help: null
+              label: null
+            '36':
+              help: null
+              label: null
+            '37':
+              help: null
+              label: null
+            '38':
+              help: null
+              label: null
+            '39':
+              help: null
+              label: null
+            '40':
+              help: null
+              label: null
+            '41':
+              help: null
+              label: null
+            '42':
+              help: null
+              label: null
+            '43':
+              help: null
+              label: null
+            '44':
+              help: null
+              label: null
+            '45':
+              help: null
+              label: null
+            '47':
+              help: null
+              label: null
+            '48':
+              help: null
+              label: null
+            '49':
+              help: null
+              label: null
+            '50':
+              help: null
+              label: null
+            '51':
+              help: null
+              label: null
+            '52':
+              help: null
+              label: null
+            '53':
+              help: null
+              label: null
+            '54':
+              help: null
+              label: null
+            '55':
+              help: null
+              label: null
+            '56':
+              help: null
+              label: null
+            '57':
+              help: null
+              label: null
+            '58':
+              help: null
+              label: null
+            '59':
+              help: null
+              label: null
+            '60':
+              help: null
+              label: null
+            '62':
+              help: null
+              label: null
+            '63':
+              help: null
+              label: null
+            '64':
+              help: null
+              label: null
+            '65':
+              help: null
+              label: null
+            '66':
+              help: null
+              label: null
+            '68':
+              help: null
+              label: null
+            '70':
+              help: null
+              label: null
+            '71':
+              help: null
+              label: null
+            '74':
+              help: null
+              label: null
+            '75':
+              help: null
+              label: null
+            '76':
+              help: null
+              label: null
+            '77':
+              help: null
+              label: null
+            modulos-iva-1-unidades:
+              help: null
+              label: null
+            modulos-iva-2-unidades:
+              help: null
+              label: null
+            modulos-iva-3-unidades:
+              help: null
+              label: null
+            modulos-iva-cuota-derivada:
+              help: null
+              label: null
+            modulos-iva-cuota-devengada:
+              help: null
+              label: null
+            modulos-iva-epigrafe:
+              help: null
+              label: null
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: null
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: null
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
+              help: null
+              label: null
+            x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6u:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
+              help: null
+              label: null
           field:
             label: null
         2026-y-siguientes:
@@ -67038,17 +68098,14 @@ modelo:
               label: Kiegészítő információ - pénzforgalmi szemléletű, LIVA 75. cikk
                 szerinti teljesítések - ÁFA összeg
             '64':
-              help: '64. mező: eredmények összege, a 46., 58. és 76. mező összegeként
-                számítva.'
-              label: Eredmény - eredmények összege ([46] + [58] + [76])
+              help: null
+              label: null
             '65':
               help: '65. mező: az eredmény Állami Adóigazgatásnak tulajdonítható százaléka.'
               label: Eredmény - az Állami Adóigazgatásnak tulajdonítható százalék
             '66':
-              help: '66. mező: az Állami Adóigazgatásnak tulajdonítható összeg, a
-                64. mező szorozva a 65. mezővel, osztva 100-zal.'
-              label: Eredmény - az Állami Adóigazgatásnak tulajdonítható összeg ([64]
-                x [65] / 100)
+              help: null
+              label: null
             '68':
               help: '68. mező: közös adózás éves korrekciós eredménye.'
               label: Eredmény - közös adózás éves korrekciós eredménye
@@ -67058,9 +68115,8 @@ modelo:
               label: Eredmény - ugyanazon év és időszak korábbi önbevallásaiból fizetendő
                 eredmények
             '71':
-              help: '71. mező: végső eredmény, a 69. mező mínusz a 70. mező plusz
-                a 109. mező.'
-              label: Végső eredmény ([69] - [70] + [109])
+              help: null
+              label: null
             '74':
               help: '74. mező: pénzforgalmi szemléletű beszerzések adóalapja.'
               label: Kiegészítő információ - pénzforgalmi szemléletű beszerzések -
@@ -67080,27 +68136,22 @@ modelo:
                 ÁFA
             modulos-iva-1-unidades:
               help: null
-              label: '1. modul (Alkalmazott személyzet): egységek száma'
+              label: null
             modulos-iva-2-unidades:
               help: null
-              label: '2. modul (tevékenységspecifikus egység: megtett távolság, járművek
-                raksúlya vagy a helyiség alapterülete): egységek száma'
+              label: null
             modulos-iva-3-unidades:
               help: null
-              label: '3. modul (tevékenységspecifikus egység: villamosenergia- vagy
-                egyéb energiafogyasztás): egységek száma'
+              label: null
             modulos-iva-cuota-derivada:
               help: null
-              label: Az egyszerűsített rendszerből eredő adó (a levonhatókkal/átalánnyal
-                csökkentett nettó keletkezett ÁFA, vagy a minimális adó közül a nagyobb)
+              label: null
             modulos-iva-cuota-devengada:
               help: null
-              label: Folyó ügyletek után keletkezett ÁFA (Σ modulegységek × egységenkénti
-                éves keletkezett ÁFA)
+              label: null
             modulos-iva-epigrafe:
               help: null
-              label: A tevékenység IAE-tételszáma az ÁFA egyszerűsített rendszerében
-                (modulok)
+              label: null
             x-chim6r1ecll6asj3d5hmiro:
               help: Az az adóév, amelyre az önbevallás vonatkozik.
               label: Az önbevallás adóéve
@@ -67108,13 +68159,11 @@ modelo:
               help: 'Az önbevallás negyedéves időszaka: 1T, 2T, 3T vagy 4T.'
               label: Negyedéves időszak
             x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushec9gn6p8:
-              help: Az ingatlanfejlesztő saját felhasználásának adóalapja, az építési
-                költség alapján.
-              label: Ingatlanfejlesztő saját felhasználásának adóalapja
+              help: null
+              label: null
             x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushecdqmut31:
-              help: Az ingatlanfejlesztő saját felhasználásának ÁFA összege, az adóalap
-                21%-aként számítva.
-              label: Ingatlanfejlesztő saját felhasználásának ÁFA összege
+              help: null
+              label: null
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
               help: Fordított adózás alá tartozó belföldi ügyleteknél levonható önadózott
                 ÁFA.
@@ -67203,8 +68252,8 @@ modelo:
                 kulccsal együtt létezik.
               label: Felszámított ÁFA összeg átmeneti szupercsökkentett kulccsal (2%)
             x-d5r62bjiclpnar3kc5i6u:
-              help: Az önbevallás eredménye a Modelo 303 korrekciós képlete után.
-              label: Önbevallás eredménye
+              help: null
+              label: null
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
               help: Az általános rendszer eredménye, a keletkezett ÁFA és a levonható
                 ÁFA különbségeként számítva.
@@ -67216,10 +68265,6 @@ modelo:
               help: A belföldi termékbeszerzések és szolgáltatásigénybevételek után
                 fizetett, levonható ÁFA.
               label: Levonható ÁFA összeg belföldi folyó ügyletek után
-          construct:
-            modelo-303-iva-autoliquidacion:
-              field:
-                title: null
           field:
             label: null
     '308':
