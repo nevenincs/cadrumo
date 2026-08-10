@@ -42,6 +42,10 @@ class FiledCaptureEvidenceTally(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     captured_count: int
+    #: Units REACHED, counted in every mode. ``captured_count`` is the
+    #: persisted-path tally and a preview leaves it at zero, so only this
+    #: one can answer whether a limited sweep was truncated.
+    reached_count: int = 0
     observation_paths: tuple[str, ...]
     artefact_refs: tuple[str, ...]
     justificante_metadata_count: int = 0

@@ -340,6 +340,7 @@ class _CaptureReportFields(TypedDict):
     """Deduped report fields shared by every filed-declaration capture report."""
 
     captured_count: int
+    reached_count: int
     observation_paths: tuple[str, ...]
     artefact_refs: tuple[str, ...]
     justificante_metadata_count: int
@@ -465,6 +466,7 @@ class _CaptureAccumulator:
         """Return the deduped report fields shared by every filed-capture report."""
         return {
             "captured_count": len(self.observation_paths),
+            "reached_count": self.absorbed_count,
             "observation_paths": tuple(self.observation_paths),
             "artefact_refs": tuple(self.artefact_refs),
             "justificante_metadata_count": len(tuple(dict.fromkeys(self.justificante_csvs))),
@@ -702,6 +704,7 @@ async def capture_filed_data_bulk(
             year_from=year_from,
             year_to=year_to,
             captured_count=0,
+            reached_count=0,
             failed_count=len(failures),
             observation_paths=(),
             artefact_refs=(),
@@ -1505,6 +1508,12 @@ class FiledHistoryOnboardingRun(BaseModel):
     pairs: tuple[FiledHistoryPairOutcome, ...] = ()
     selection_rows: tuple[FiledPeriodSelectionRow, ...] = ()
     captured_count: int = Field(default=0, ge=0)
+    #: Units this sweep REACHED, from the accumulator tally counted in every
+    #: mode. Carried separately from ``captured_count`` because that one is
+    #: ``len(observation_paths)``, which a preview leaves empty -- so it
+    #: cannot answer "was this sweep truncated" on the very path where the
+    #: question matters most.
+    reached_count: int = Field(default=0, ge=0)
     scoping_signal: RegisterScopingSignal = RegisterScopingSignal.INCONCLUSIVE
     carries_a_taxpayer_specific_denominator: bool = False
     iva_wallet_status: str = Field(default="not_attempted", min_length=1, max_length=64)
@@ -1847,6 +1856,7 @@ async def pull_filed_history(
     return FiledHistoryOnboardingRun(
         pairs=pairs,
         captured_count=capture.captured_count,
+        reached_count=capture.reached_count,
         scoping_signal=scoping,
         carries_a_taxpayer_specific_denominator=discovery.carries_a_taxpayer_specific_denominator,
         iva_wallet_status=iva_status,
