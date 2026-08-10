@@ -183,7 +183,7 @@ def test_replace_observations_drops_removed_perceptor_no_stale_row(tmp_path: Pat
             filing_year=2024,
             period=period,
             observations=full,
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         assert len({o.perceptor_nif for o in repo.load_observations("180", period)}) == 3
         # Re-pull dropped 33333333P.
@@ -192,7 +192,7 @@ def test_replace_observations_drops_removed_perceptor_no_stale_row(tmp_path: Pat
             filing_year=2024,
             period=period,
             observations=full[:2],
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         loaded = repo.load_observations("180", period)
         assert len(loaded) == 2
@@ -235,7 +235,7 @@ def test_failed_replacement_leaves_the_prior_window_intact(tmp_path: Path) -> No
             filing_year=2024,
             period=period,
             observations=declared,
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
 
         replacement = repo.build_observation_payload(
@@ -247,7 +247,7 @@ def test_failed_replacement_leaves_the_prior_window_intact(tmp_path: Path) -> No
                 scheme=RetencionScheme.ECONOMIC_ACTIVITY,
                 retencion=Decimal("400"),
             ),
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         stale_identifiers = tuple(repo.extract_identifier(row) for row in repo.iter_records())
         with pytest.raises(PathContainmentError):
@@ -276,7 +276,7 @@ def test_replacement_carries_over_a_row_present_in_both_sets(tmp_path: Path) -> 
                 _observation(nif="11111111H", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("100")),
                 _observation(nif="22222222J", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("200")),
             ),
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         carried = _observation(nif="11111111H", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("175"))
         repo.replace_observations(
@@ -284,7 +284,7 @@ def test_replacement_carries_over_a_row_present_in_both_sets(tmp_path: Path) -> 
             filing_year=2024,
             period=period,
             observations=(carried,),
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
 
         assert repo.load_observations("180", period) == (carried,)
@@ -306,7 +306,7 @@ def test_replacement_leaves_other_windows_untouched(tmp_path: Path) -> None:
             filing_year=2023,
             period=neighbour,
             observations=(neighbour_row,),
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         repo.replace_observations(
             modelo="180",
@@ -315,7 +315,7 @@ def test_replacement_leaves_other_windows_untouched(tmp_path: Path) -> None:
             observations=(
                 _observation(nif="11111111H", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("100")),
             ),
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
 
         assert repo.load_observations("180", neighbour) == (neighbour_row,)
@@ -358,7 +358,7 @@ def test_whitespace_variant_nifs_are_one_perceptor_in_store_and_aggregation(tmp_
             filing_year=2024,
             period=period,
             observations=(padded, canonical),
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         stored = repo.load_observations("180", period)
         assert len({o.perceptor_nif for o in stored}) == 1
@@ -393,7 +393,7 @@ def test_window_scan_refuses_a_row_filed_under_another_perceptors_key(tmp_path: 
             filing_year=2024,
             period=period,
             observations=(row_a, row_b),
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         # Positive control: the untouched window projects both rows.
         assert len(repo.load_observations("180", period)) == 2
@@ -405,7 +405,7 @@ def test_window_scan_refuses_a_row_filed_under_another_perceptors_key(tmp_path: 
                 filing_year=2024,
                 period=period,
                 observation=row_a,
-                source_kind="aggregate_pull",
+                source_kind=AggregationCaptureKind.AGGREGATE_PULL,
             ),
         )
         write_b = repo.to_secure_object_write(
@@ -414,7 +414,7 @@ def test_window_scan_refuses_a_row_filed_under_another_perceptors_key(tmp_path: 
                 filing_year=2024,
                 period=period,
                 observation=row_b,
-                source_kind="aggregate_pull",
+                source_kind=AggregationCaptureKind.AGGREGATE_PULL,
             ),
         )
         repo.secure_object_repository.save_with_raw_key(
@@ -459,7 +459,7 @@ def test_envelope_refuses_a_capture_instant_without_utc(captured_at: datetime) -
                 retencion=Decimal("100"),
             ),
             captured_at=captured_at,
-            source_kind="aggregate_pull",
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
 
 
@@ -477,7 +477,7 @@ def test_envelope_accepts_a_utc_capture_instant() -> None:
             retencion=Decimal("100"),
         ),
         captured_at=datetime(2024, 4, 15, 10, 30, tzinfo=UTC),
-        source_kind="aggregate_pull",
+        source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )
 
     assert payload.captured_at.utcoffset() == timedelta(0)
