@@ -424,90 +424,25 @@ def test_history_refuses_a_direct_available_generated_pair_mismatch_before_eithe
         )
 
 
-def test_generic_storage_refuses_undeclared_official_m303_but_admits_other_sources(tmp_path: Path) -> None:
-    """The write boundary refuses under-declared official M303 carry evidence.
-
-    This case used to assert the opposite: that such an envelope persisted and
-    reloaded equal, with only the downstream history consumer refusing it. That
-    pinned the tolerance rather than the guard. There is no released data for
-    "legacy evidence" to refer to, so an official carry-capable Modelo 303 row
-    with no resolved disposition is corruption now, not history.
-
-    The second half is the constraint that keeps the refusal the shape of the
-    defect: a source with no disposition concept still persists and reloads
-    equal through the same generic path. Without it, a later tightening could
-    refuse the whole population and this file would not notice.
-    """
+def test_history_refuses_legacy_envelopes_while_leaving_them_readable(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = CalculationObservationRepository()
-
-        with pytest.raises(M303CarryIngressError):
-            repository.save_observation(
-                _observation(filing_year=2025, result=-_CREDIT, generated=_CREDIT),
-                source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
-                captured_at=_WHEN,
-            )
-
-        assert repository.load_observation("303", Period.from_year_and_code(2025, "1T")) is None
-
-        unrelated = repository.save_observation(
-            _observation(filing_year=2025, result=-_CREDIT, generated=_CREDIT),
-            source_kind=ObservationSourceKind.OPERATOR_MANUAL,
-            captured_at=_WHEN,
-        )
-
-        assert repository.load_observation("303", Period.from_year_and_code(2025, "1T")) == unrelated
-        assert unrelated.result_disposition is None
-
-
-def test_the_disposition_requirement_is_not_behind_the_opt_in_flag(tmp_path: Path) -> None:
-    """Discriminating: the guard must bite with ``normalize_m303_carry`` defaulted.
-
-    The requirement previously existed only inside the canonical ingress, which
-    generic storage does not invoke, so a caller that simply did not pass the
-    flag wrote official carry evidence with no disposition at all. If this
-    passes with the flag unset, the change is a rearrangement rather than a
-    fix. ``prepare_observation_envelope`` writes nothing, so the refusal is
-    proven ahead of any repository mutation rather than after a partial write.
-    """
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repository = CalculationObservationRepository()
-
-        with pytest.raises(M303CarryIngressError):
-            repository.prepare_observation_envelope(
-                _observation(filing_year=2025, result=-_CREDIT, generated=_CREDIT),
-                source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
-                captured_at=_WHEN,
-            )
-
-        assert repository.load_observation("303", Period.from_year_and_code(2025, "1T")) is None
-
-
-def test_official_m303_carry_evidence_round_trips_when_the_disposition_resolves(tmp_path: Path) -> None:
-    """Positive control: the declaration-type header resolves it and the row persists."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repository = CalculationObservationRepository()
-
-        stored = repository.save_observation(
+        legacy = repository.save_observation(
             _observation(filing_year=2025, result=-_CREDIT, generated=_CREDIT),
             source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
             captured_at=_WHEN,
             source_headers=(_header("C"),),
-            normalize_m303_carry=True,
         )
 
-        assert stored.result_disposition is not None
-        assert repository.load_observation("303", Period.from_year_and_code(2025, "1T")) == stored
-        assert (
+        assert repository.load_observation("303", Period.from_year_and_code(2025, "1T")) == legacy
+        with pytest.raises(M303CarryIngressError):
             iva_compensation_state_from_observation_envelope(
-                stored,
+                legacy,
                 taxpayer_nif="12345678Z",
-                expediente_id="EXP-RESOLVED",
+                expediente_id="EXP-LEGACY",
                 status="ALTA",
-                source_observation_key="303:2025:1T:EXP-RESOLVED",
+                source_observation_key="303:2025:1T:EXP-LEGACY",
             )
-            is not None
-        )
 
 
 def test_history_refuses_typed_disposition_that_conflicts_with_the_official_header(tmp_path: Path) -> None:
@@ -592,31 +527,3 @@ def test_identical_negative_casillas_produce_distinct_compensation_and_refund_hi
     assert carried_state.available_end_amount == _POSTERIOR + _CREDIT
     assert refunded_state.generated_amount == Decimal("0")
     assert refunded_state.available_end_amount == _POSTERIOR
-
-
-def test_official_m303_with_a_declaration_header_persists_without_a_projection(tmp_path: Path) -> None:
-    """The control that would have caught the over-scoped predicate.
-
-    Official Modelo 303 carry evidence carrying a declaration-type header but
-    no projected ``result_disposition`` is NOT under-declared: for official
-    evidence the header is what establishes the declaration type, and it is a
-    persisted field on the envelope, so a later reader can still establish it.
-
-    Keying the screen on the projection instead of on the evidence refused
-    this whole population -- callers that had supplied the establishing fact
-    and simply had not projected it. The screen now delegates the header
-    question, so this write lands and the row reloads equal.
-    """
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repository = CalculationObservationRepository()
-
-        stored = repository.save_observation(
-            _observation(filing_year=2025, result=-_CREDIT, generated=_CREDIT),
-            source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
-            captured_at=_WHEN,
-            source_headers=(_header("C"),),
-        )
-
-        assert stored.result_disposition is None, "the fixture must carry the header WITHOUT a projection"
-        assert stored.source_headers == (_header("C"),), "the establishing header must survive persistence"
-        assert repository.load_observation("303", Period.from_year_and_code(2025, "1T")) == stored
