@@ -65,6 +65,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from decimal import Decimal
+from typing import TypedDict
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -91,6 +92,32 @@ __all__ = [
 ]
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True)
+
+
+class _RunTimingMetrics(TypedDict):
+    """Canonical aggregate facts shared by every run-timing projection."""
+
+    runs: int
+    succeeded: int
+    failed: int
+    min_duration_ms: int
+    max_duration_ms: int
+    mean_duration_ms: Decimal
+
+
+def _run_timing_metrics(items: list[LLMRunRecord]) -> _RunTimingMetrics:
+    """Fold one non-empty group of run records into shared timing facts."""
+    durations = [Decimal(item.duration_ms) for item in items]
+    return {
+        "runs": len(items),
+        "succeeded": sum(1 for item in items if item.succeeded),
+        "failed": sum(1 for item in items if not item.succeeded),
+        "min_duration_ms": min(item.duration_ms for item in items),
+        "max_duration_ms": max(item.duration_ms for item in items),
+        "mean_duration_ms": (sum(durations, start=Decimal("0")) / Decimal(len(durations))).quantize(
+            Decimal("0.01"),
+        ),
+    }
 
 
 class LlmRunProviderMetrics(BaseModel):
@@ -671,18 +698,10 @@ def build_llm_usage_report(
         model_groups = by_provider_model[provider_name]
         model_rows = tuple(_usage_model_metrics(model_groups[model_name]) for model_name in sorted(model_groups))
         provider_items = [item for items in model_groups.values() for item in items]
-        durations = [Decimal(item.duration_ms) for item in provider_items]
         provider_rows.append(
             LlmRunHealthProviderMetrics(
                 provider=provider_name,
-                runs=len(provider_items),
-                succeeded=sum(1 for item in provider_items if item.succeeded),
-                failed=sum(1 for item in provider_items if not item.succeeded),
-                min_duration_ms=min(item.duration_ms for item in provider_items),
-                max_duration_ms=max(item.duration_ms for item in provider_items),
-                mean_duration_ms=(sum(durations, start=Decimal("0")) / Decimal(len(durations))).quantize(
-                    Decimal("0.01"),
-                ),
+                **_run_timing_metrics(provider_items),
                 total_duration_ms=sum((item.duration_ms for item in provider_items), start=0),
                 models=model_rows,
             ),
@@ -706,18 +725,10 @@ def _aggregate_runs(records: tuple[LLMRunRecord, ...]) -> tuple[LlmRunProviderMe
     rows: list[LlmRunProviderMetrics] = []
     for provider_name in sorted(by_provider):
         items = by_provider[provider_name]
-        durations = [Decimal(item.duration_ms) for item in items]
         rows.append(
             LlmRunProviderMetrics(
                 provider=provider_name,
-                runs=len(items),
-                succeeded=sum(1 for item in items if item.succeeded),
-                failed=sum(1 for item in items if not item.succeeded),
-                min_duration_ms=min(item.duration_ms for item in items),
-                max_duration_ms=max(item.duration_ms for item in items),
-                mean_duration_ms=(sum(durations, start=Decimal("0")) / Decimal(len(durations))).quantize(
-                    Decimal("0.01"),
-                ),
+                **_run_timing_metrics(items),
             ),
         )
     return tuple(rows)
