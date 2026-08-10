@@ -4,7 +4,7 @@ tags:
   - '#current-schema-only-purge'
 date: '2026-08-10'
 modified: '2026-08-10'
-body_hash: 'sha256:618d1d142c37205adfd295f449fe68a03f08cf58d0684322f56c7e8b9aaf5f12'
+body_hash: 'sha256:37607a900e73b057505e971719e9a88f3dba001a0b52457032fcf6dffeb097c0'
 tier: L3
 related:
   - '[[2026-07-09-compatibility-lifecycle-adr]]'
@@ -123,7 +123,7 @@ Fail official Modelo 303 observation writes before repository mutation when
 - [ ] `W03.P07.S23` - Prove under-declared Modelo 303 observations are refused and current dispositions round trip; `src/cadrumo/application/calculations/tests/test_m303_carry_ingress.py`.
 - [ ] `W03.P07.S27` - Resolve the red prorrata settlement-writeback test, which calls persist_filed_revision directly with an observation repository and no disposition. BLOCKED ON the ADR amendment: it is red for the same root cause the amendment exists to decide, a filing-boundary requirement sitting on a caller that is not filing, and a local repair here would paper over exactly that question; `src/cadrumo/application/calculations/tests/test_prorrata_regularizacion.py and whatever the amendment rules the filing requirement should key on`.
 - [x] `W03.P07.S28` - Establish what the M303 carry normalisation path actually is, given that production READERS call it directly and are then required to supply a fact only a filing produces. The iva compensation history module, the annual partition loader and the iva wallet gate all call the normalise or validate functions without the door opt-in, so the gated ingress is not a filing boundary either and the remedy of moving the screen inside it is not available; `src/cadrumo/application/calculations/_m303_carry_ingress.py and its direct callers in _iva_compensation_history.py, _iva_compensation_annual_partition.py and modelo/_iva_wallet_gate.py`.
-- [ ] `W03.P07.S29` - Make unreadable carry evidence distinguishable from absent carry evidence at the IVA wallet gate, which today catches the carry-ingress refusal and returns nothing, so an envelope this build cannot interpret reaches the compensacion path as no-evidence and a taxpayer's carried credit silently goes unseen. The remedy is NOT pre-decided as propagation. Measure first what the gate's consumers do with the nothing it returns, because a gate that hard-fails on any unreadable historical envelope may be worse than one that degrades. What must change is that the two states stop collapsing to one value for the caller and for the operator; `src/cadrumo/application/modelo/_iva_wallet_gate.py and its consumers, plus a confirmation that the other three assert-cluster callers do not collapse the same distinction by another route`.
+- [ ] `W03.P07.S29` - SEVERITY RAISED BY MEASUREMENT. The IVA wallet gate returns nothing for SIX distinct reasons, one of which is a swallowed carry-ingress refusal, and its single consumer does not branch on that nothing. It passes the value straight through while also passing an activity-start first-period proof, so an envelope this build CANNOT INTERPRET can be converted into a proven first-period zero rather than blocking. That is not a silent absence, it is a silent affirmative zero on a compensacion the taxpayer may be owed. The function docstring claims these cases allow the gate to block, which the first-period path falsifies; `src/cadrumo/application/modelo/_iva_wallet_gate.py at its six nothing-returns, its single consumer, and the docstring whose claim the measurement falsified`.
 
 ## Parallelization
 
