@@ -256,8 +256,7 @@ class _OnHostInferenceArena:
     the queue itself becomes an allocation that grows with load, and it runs
     against headroom that was measured *before* it waited, which is the one
     reading the contention check exists to keep fresh. A refusal is synchronous,
-    typed, and observable at the caller; the caller retries after quiesce, which
-    is the same remediation a contention refusal already names.
+    typed, and observable at the caller; the caller may retry after quiesce.
 
     Loop-agnostic on purpose. A :class:`asyncio.Semaphore` binds to the event
     loop that created it, and this process runs LLM work under several
@@ -598,9 +597,8 @@ class LLMClient:
 
         Raises:
             LLMContentionError: When the measured verdict is not admitted,
-                carrying the snapshot's own detail and its remediation --
-                which names unloading a model Cadrumo selected or closing a
-                peer application, because those are not interchangeable.
+                carrying the authority's typed precondition verdict, model, and
+                causes.
         """
         if provider_reads_off_host(provider):
             return
@@ -621,9 +619,18 @@ class LLMClient:
         )
         if snapshot.admitted:
             return
+        verdict = snapshot.precondition_verdict
+        assert verdict is not None
+        # Keep the message derived from the authority's closed cause vocabulary;
+        # this boundary carries the result without re-deriving the decision.
+        causes = ", ".join(cause.value for cause in snapshot.causes)
         raise LLMContentionError(
-            message=snapshot.detail or f"loading {model!r} was refused: this machine has no measured headroom",
-            context={"model": model, "causes": ", ".join(cause.value for cause in snapshot.causes)},
+            message=(
+                f"loading {model!r} was refused: this machine has no measured headroom"
+                + (f" ({causes})" if causes else "")
+            ),
+            context={"model": model, "causes": causes},
+            precondition_verdict=verdict,
         )
 
     @staticmethod
@@ -946,12 +953,9 @@ class LLMClient:
             # The Anthropic-API provider needs the optional `anthropic` extra. Guard
             # before the lazy import so a missing extra is an instructive
             # LLMConfigError, not a deep ModuleNotFoundError.
-            from ..core import ANTHROPIC_EXTRA, MissingOptionalExtraError, require_optional_extra
+            from ..core import ANTHROPIC_EXTRA, require_optional_extra
 
-            try:
-                require_optional_extra(ANTHROPIC_EXTRA)
-            except MissingOptionalExtraError as exc:
-                raise LLMConfigError(message=str(exc)) from exc
+            require_optional_extra(ANTHROPIC_EXTRA)
             from ._providers.anthropic import AnthropicAdapter
 
             return AnthropicAdapter(

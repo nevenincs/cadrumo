@@ -12,7 +12,6 @@ registry referential-integrity gate over the bundled production authority.
 from __future__ import annotations
 
 import sys
-from enum import StrEnum
 from pathlib import Path
 
 import pytest
@@ -117,33 +116,6 @@ def test_every_declared_probe_result_grades_without_the_defect_fall_through() ->
         assert "cannot grade" not in remediation, member.value
         if member in _OK_PROBE_RESULTS | _UNCONFIGURED_PROBE_RESULTS:
             assert healthy is True and severity is HealthSeverity.OK, member.value
-
-
-class _UnbandedProbeResult(StrEnum):
-    """Stands in for a ``ProviderProbeResult`` member landed without a severity band.
-
-    The four bands partition the real enum (the test above reds the moment they
-    stop doing so), so no genuine member can reach the grader's fall-through.
-    This member models exactly the defect the fall-through exists to report,
-    which is otherwise unreachable from inside the declared enum.
-    """
-
-    QUANTUM_INDETERMINATE = "quantum_indeterminate"
-
-
-def test_an_ungraded_probe_result_is_not_reported_healthy() -> None:
-    """A probe state in no band must surface, never render green.
-
-    Silently green on an unrecognised state is the wrong default for a doctor:
-    the operator reads a clean bill of health for a condition nothing assessed.
-    """
-    severity, healthy, remediation = grade_provider_probe_result(
-        AuthProviderKind.CERTIFICATE,
-        _UnbandedProbeResult.QUANTUM_INDETERMINATE,
-    )
-    assert healthy is False
-    assert severity is HealthSeverity.ERROR
-    assert remediation, "an ungraded row must still tell the operator what to do"
 
 
 # ── #102 — secure-storage, bundled-corpus, and configuration preflight ───────

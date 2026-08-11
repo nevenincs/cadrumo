@@ -42,7 +42,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
-from typing import Final, NamedTuple, Never
+from typing import Final, NamedTuple, Never, override
 
 from ...core import ActionEvidenceProvenance, CasillaId, Modelo
 from ...core import Period as _Period
@@ -103,6 +103,7 @@ class ModeloIvaWalletReconciliationBlockedError(ModeloPreconditionErrorMixin, Mo
         )
 
     @property
+    @override
     def precondition_failure(self) -> ModeloPreconditionFailure:
         """Return the required application-owned IVA-wallet refusal verdict."""
         failure = super().precondition_failure

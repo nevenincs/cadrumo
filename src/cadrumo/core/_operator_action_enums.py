@@ -46,10 +46,28 @@ class NoRecoveryOutcome(StrEnum):
     OPERATOR_DECISION = "operator_decision"
 
 
+class OperatorActionAxis(StrEnum):
+    """Operator action classes shared by blocker-vocabulary projections."""
+
+    SUPPLY_MANUAL_INPUT = "supply_manual_input"
+    IMPORT_LEDGER_DATA = "import_ledger_data"
+    SET_PROFILE_FACT = "set_profile_fact"
+    FILE_PRIOR_PERIOD = "file_prior_period"
+    CAPTURE_EXTERNAL_EVIDENCE = "capture_external_evidence"
+    RESOLVE_VALUE_DIVERGENCE = "resolve_value_divergence"
+    RE_VERIFY = "re_verify"
+    RESOLVE_REVISION_MISMATCH = "resolve_revision_mismatch"
+    CONFIRM_GROUP_MEMBERSHIP = "confirm_group_membership"
+    RESOLVE_IDENTITY = "resolve_identity"
+    COMPLETE_DOCUMENT_EVIDENCE = "complete_document_evidence"
+    REVIEW_ADVISORY = "review_advisory"
+
+
 __all__ = [
     "ActionArgumentSource",
     "ActionArgumentStatus",
     "ActionConditionality",
     "ActionEvidenceProvenance",
     "NoRecoveryOutcome",
+    "OperatorActionAxis",
 ]

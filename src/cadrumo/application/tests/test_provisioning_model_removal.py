@@ -176,7 +176,8 @@ def test_removal_refuses_a_model_cadrumo_did_not_select_and_sends_nothing(
         outcome = remove_runtime_model("llama3:70b")
     assert outcome.removed is False
     assert outcome.freed_bytes is None
-    assert "not a model Cadrumo selected" in outcome.detail
+    assert outcome.facts["selected_by_cadrumo"] is False
+    assert outcome.precondition_verdict is not None
     assert events.empty(), "a refused removal must not reach the runtime at all"
     assert [row["name"] for row in _ModelStoreLoopbackHandler.models] == ["llama3:70b"]
 
@@ -219,7 +220,8 @@ def test_a_delete_the_runtime_accepted_but_did_not_perform_reports_no_freed_byte
     assert outcome.removed is False
     assert outcome.was_installed is True
     assert outcome.freed_bytes is None
-    assert "still installed" in outcome.detail
+    assert outcome.facts["model_installed"] is True
+    assert outcome.precondition_verdict is not None
 
 
 def test_a_runtime_that_refuses_the_delete_reports_no_freed_bytes(
@@ -315,8 +317,8 @@ def test_direction_one_extra_installed_with_no_selected_model_reds_and_names_the
         status = probe_local_model_provisioning(installed=())
     assert status.service == LOCAL_MODEL_PROVISIONING_SERVICE
     assert status.available is False
-    assert status.remediation == "aeat config provision pull"
-    assert status.remediation != LLM_EXTRA.install_hint, "direction one must not prescribe direction two's remedy"
+    assert status.precondition_verdict is not None
+    assert status.precondition_verdict.failed_condition_id == "provisioning.local_model.extra_requires_model"
 
 
 def test_direction_two_models_installed_without_the_extra_reds_and_names_the_install(
@@ -331,11 +333,9 @@ def test_direction_two_models_installed_without_the_extra_reds_and_names_the_ins
         )
     assert status.service == LOCAL_MODEL_PROVISIONING_SERVICE
     assert status.available is False
-    assert LLM_EXTRA.install_hint in status.remediation
-    assert "aeat config provision pull" not in status.remediation, (
-        "direction two must not prescribe direction one's remedy"
-    )
-    assert VISION in status.detail
+    assert status.precondition_verdict is not None
+    assert status.precondition_verdict.failed_condition_id == "provisioning.local_model.model_requires_extra"
+    assert status.facts["present_selected_model_count"] == 1
 
 
 def test_neither_direction_is_satisfiable_by_the_others_evidence(
@@ -352,7 +352,7 @@ def test_neither_direction_is_satisfiable_by_the_others_evidence(
     with override_settings(**_selected(chat_url)):
         status = probe_local_model_provisioning(installed=())
     assert status.available is True
-    assert status.remediation == ""
+    assert status.precondition_verdict is None
 
 
 def test_a_coherent_installed_posture_is_green(store: tuple[str, Queue[dict[str, object]]]) -> None:
@@ -365,7 +365,7 @@ def test_a_coherent_installed_posture_is_green(store: tuple[str, Queue[dict[str,
             installed=(InstalledModel(name=VISION, size_bytes=4 * GIB),),
         )
     assert status.available is True
-    assert status.remediation == ""
+    assert status.precondition_verdict is None
 
 
 def test_a_model_cadrumo_did_not_select_does_not_satisfy_direction_one(
@@ -380,7 +380,8 @@ def test_a_model_cadrumo_did_not_select_does_not_satisfy_direction_one(
             installed=(InstalledModel(name="llama3:70b", size_bytes=40 * GIB),),
         )
     assert status.available is False
-    assert status.remediation == "aeat config provision pull"
+    assert status.precondition_verdict is not None
+    assert status.precondition_verdict.failed_condition_id == "provisioning.local_model.extra_requires_model"
 
 
 def test_an_unreadable_inventory_with_the_extra_present_reds_rather_than_claiming_coherence(
@@ -393,7 +394,8 @@ def test_an_unreadable_inventory_with_the_extra_present_reds_rather_than_claimin
     with override_settings(**_selected(chat_url)):
         status = probe_local_model_provisioning(installed=None, installed_measured=False)
     assert status.available is False
-    assert "could not be read" in status.detail
+    assert status.facts["installed_model_inventory_readable"] is False
+    assert status.precondition_verdict is not None
 
 
 def test_an_unreadable_inventory_without_the_extra_says_what_it_could_not_rule_out(
@@ -405,5 +407,5 @@ def test_an_unreadable_inventory_without_the_extra_says_what_it_could_not_rule_o
     with override_settings(**_selected(chat_url)):
         status = probe_local_model_provisioning(installed=None, installed_measured=False)
     assert status.available is True
-    assert "could not" in status.detail
-    assert "ruled out" in status.detail
+    assert status.facts["installed_model_inventory_readable"] is False
+    assert status.precondition_verdict is None

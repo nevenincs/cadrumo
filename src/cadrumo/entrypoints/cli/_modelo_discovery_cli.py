@@ -636,7 +636,6 @@ def _unresolved_profile_requirements(checklist) -> str:
 
 
 _BINDING_SOURCE_TO_READINESS: dict[str, str] = {
-    "constant_value": "casilla",
     "previous_filing": "prior filed revision",
     "relation_prefill": "relation input",
     "live_observation": "live observation",
@@ -759,9 +758,7 @@ def _binding_list_rows_for_report(
         rows = tuple(
             row
             for row in rows
-            if row.source != "constant_value"
-            and row.binding_id not in profile_resolved
-            and getattr(row, "operator_input_required", True)
+            if row.binding_id not in profile_resolved and getattr(row, "operator_input_required", True)
         )
 
     merged_rows: list[BindingListRowPayload] = []
@@ -920,10 +917,12 @@ def _bindings_list_scope_notices(*, modelo: str | None, year: int | None, period
 def _notice_text_lines(notices: tuple[Notice, ...]) -> list[str]:
     lines: list[str] = []
     for notice in notices:
-        target = notice.action.action.target_command_key if notice.action is not None else "-"
+        notice_action = notice.action
+        action_reference = notice_action.action if notice_action is not None else None
+        target = action_reference.target_command_key if action_reference is not None else "-"
         bindings = (
-            ",".join(f"{binding.argument_name}={binding.value}" for binding in notice.action.argument_bindings)
-            if notice.action is not None
+            ",".join(f"{binding.argument_name}={binding.value}" for binding in notice_action.argument_bindings)
+            if notice_action is not None
             else "-"
         )
         lines.append(

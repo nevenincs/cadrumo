@@ -25,6 +25,7 @@ from pydantic import Field, model_validator
 from ....core import (
     Modelo,
     OrdenAnualIvaActivityTable,
+    OrdenAnualIvaModule,
     extract_orden_anual_iva_tables,
     normalise_corpus_text,
     orden_anual_iva_activity_anchors,
@@ -389,8 +390,6 @@ def _registry_raw_activity(activity: OrdenAnualIvaActivityTable) -> M303AnnualOr
 
 def _shared_activity_table(activity: M303AnnualOrdenRawActivity) -> OrdenAnualIvaActivityTable:
     """Project registry raw IR back into the neutral table shape for shared helpers."""
-    from ....core._orden_anual_html import OrdenAnualIvaModule
-
     return OrdenAnualIvaActivityTable(
         annex_heading=activity.annex_heading,
         activity_name=activity.activity_name,

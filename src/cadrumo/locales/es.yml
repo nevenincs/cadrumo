@@ -2479,7 +2479,7 @@ cli:
           (p. ej. 46)
         help: Listar todas las casillas definidas para la revisión de un modelo específico.
         input_kind_help: Filtrar las casillas por tipo de entrada (manual, bound,
-          computed, informational)
+          computed, informational, projection_only)
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
         number_help: Filtrar casillas por número impreso o id canónico (p. ej. 0596).
         period_help: 'Token de periodo para resolver la revisión del modelo: 0A anual,
@@ -3464,10 +3464,13 @@ cli:
         ''aeat config auth --help'' para ver los identificadores válidos.'
     check:
       available: disponible
+      capability_label: Capacidad
+      dependency_label: Dependencia
       help: Comprueba la disponibilidad de las dependencias externas y las capacidades
         de servicio del perfil activo, con la solución para cada problema.
       issue_label: problema
       missing: ausente
+      preflight_label: Comprobación previa
       profile_label: perfil
     collab:
       help: Gestiona los destinatarios de confianza para la colaboración con paquetes
@@ -7510,6 +7513,10 @@ flows:
     header: '{flow} - pregunta {position} de {total}, sección {section}'
     header_single_section: '{flow} — pregunta {position} de {total}'
     section_unavailable: Sección no disponible
+ledger:
+  evidence:
+    reader:
+      operation_failed: Falló la operación del lector de justificantes
 live:
   errors:
     expediente_not_found: No se encontró el expediente solicitado en la AEAT.

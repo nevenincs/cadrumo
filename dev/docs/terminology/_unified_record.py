@@ -48,7 +48,9 @@ __all__ = [
     "SearchRecord",
     "SearchRecordMetadata",
     "casilla_search_record_id",
+    "contain_boost_in_band",
     "derive_display_class",
+    "display_class_band_ceiling",
     "display_class_base_weight",
     "kind_base_weight",
     "normalise_display_class_weight",
@@ -121,10 +123,56 @@ _KIND_BASE_WEIGHT: dict[SearchRecordKind, float] = {
     kind: _DISPLAY_CLASS_BASE_WEIGHT[display_class] for kind, display_class in _KIND_TO_DISPLAY_CLASS.items()
 }
 
+#: Exclusive upper bound of the highest band. The declared weights are already
+#: normalised to this scale, so the top class floors at the ceiling and has no
+#: headroom to promote within -- see :func:`contain_boost_in_band`.
+_TOP_BAND_CEILING: float = 1.0
+
+#: Fraction of a band's headroom a boost may claim. Strictly below 1 so a
+#: fully-boosted record approaches its band's ceiling without reaching it, and
+#: therefore never ties with, let alone overtakes, the floor of the class above.
+_BAND_HEADROOM_RESERVE: float = 0.9
+
 
 def display_class_base_weight(display_class: ResultDisplayClass) -> float:
     """Return the declared base ranking weight for a display class."""
     return _DISPLAY_CLASS_BASE_WEIGHT[display_class]
+
+
+def display_class_band_ceiling(display_class: ResultDisplayClass) -> float:
+    """Return the exclusive upper bound of a display class's ranking band.
+
+    A class's band runs from its declared weight up to the next-higher class's
+    declared weight; the top class is bounded by 1.0. Derived from the one
+    declared table by sorting it, so a reordered or extended table cannot leave
+    a hand-listed ceiling behind.
+    """
+    floor = _DISPLAY_CLASS_BASE_WEIGHT[display_class]
+    higher = [weight for weight in _DISPLAY_CLASS_BASE_WEIGHT.values() if weight > floor]
+    return min(higher) if higher else _TOP_BAND_CEILING
+
+
+def contain_boost_in_band(display_class: ResultDisplayClass, boost: float) -> float:
+    """Map a committed relevance boost into the class's own band.
+
+    A per-query boost orders records WITHIN a display class; the declared
+    ladder orders classes against each other. Taking the stronger of a boost
+    and the base weight conflated the two, so any record that topped a single
+    query was promoted for every query and outranked whole classes above it.
+
+    The boost is therefore mapped into the interval between the class's floor
+    and the next class's floor, reserving a margin so the result stays strictly
+    below that ceiling. A zero boost yields the floor exactly, preserving the
+    ladder; a full boost approaches but never reaches the class above.
+
+    The top class has no headroom (its floor is the ceiling), so its records
+    sit at the ceiling and order by the engine's own lexical score. That class
+    is already first, so it needs no promotion.
+    """
+    floor = _DISPLAY_CLASS_BASE_WEIGHT[display_class]
+    headroom = display_class_band_ceiling(display_class) - floor
+    clamped = min(1.0, max(0.0, boost))
+    return round(floor + clamped * headroom * _BAND_HEADROOM_RESERVE, 6)
 
 
 def kind_base_weight(kind: SearchRecordKind) -> float:

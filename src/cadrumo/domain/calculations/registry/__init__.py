@@ -300,6 +300,7 @@ from ._period_offset_math import same_ejercicio_prior_quarter_anchors
 from ._period_selector_match import selector_period_matches_request
 from ._export import (
     ResolvedExportLayout,
+    classify_official_boxes,
     derive_export_layouts_from_bindings,
     fixed_width_record_casilla_ids,
     export_fields_for_casilla,
@@ -409,6 +410,7 @@ from ._queries import (
     RegistrySourceInventoryReport,
     RegistrySourceInventoryRow,
     RegistrySourceSite,
+    relations_by_target_binding,
 )
 from ._support_matrix import (
     ModeloEntry,
@@ -457,6 +459,9 @@ from ._handoffs import (
     RelationHandoffRecord,
     audit_registry_relation_handoff_applicability,
     audit_registry_relation_handoffs,
+    relation_consumption_channels,
+    relation_consumption_index,
+    relation_is_consumed,
 )
 from ._handoff_paths import (
     HandoffPathClassification,
@@ -559,6 +564,7 @@ from ._schema_verification import (
     KNOWN_PROFILE_FLAG_ADVISORY_FIELDS,
     KNOWN_VERIFICATION_PREDICATE_OPERATORS,
     VERIFICATION_PREDICATE_SPECIFICATIONS,
+    DiscrepancyCause,
     ParsedVerificationPredicate,
     RegistryVerificationPolicy,
     VerificationExpectationDefinition,
@@ -830,6 +836,7 @@ __all__ = [
     "DependencyClassificationDefinition",
     "DependencyClassificationId",
     "DerivedDisenoCasilla",
+    "DiscrepancyCause",
     "DisenoCoverageReport",
     "DonativoDonorObservation",
     "EvidenceTier",
@@ -1077,6 +1084,7 @@ __all__ = [
     "censo_modelo_ownership",
     "censo_modelo_ownership_map",
     "check_m303_annual_orden_manifest",
+    "classify_official_boxes",
     "clear_fingerprint_cache",
     "coerce_export_value_policy",
     "collect_applicability_declarations",
@@ -1173,7 +1181,11 @@ __all__ = [
     "registry_snapshot_id",
     "registry_snapshot_id_for",
     "relation_aggregation_op",
+    "relation_consumption_channels",
+    "relation_consumption_index",
+    "relation_is_consumed",
     "relation_source_requirements",
+    "relations_by_target_binding",
     "remote_state_policy_from_cross_reference",
     "render_fixed_width_export_field",
     "render_m303_annual_orden_manifest",

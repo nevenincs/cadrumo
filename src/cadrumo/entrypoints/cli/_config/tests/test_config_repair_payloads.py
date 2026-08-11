@@ -64,7 +64,9 @@ def test_config_repair_payload_refuses_retired_recovery_transport(retired_field:
     """The wire contract rejects legacy prose channels instead of emitting nulls."""
 
     payload = _repair_payload()
-    check = payload["checks"][0]
+    checks = payload["checks"]
+    assert isinstance(checks, list)
+    check = checks[0]
     assert isinstance(check, dict)
     check[retired_field] = "legacy transport"
 

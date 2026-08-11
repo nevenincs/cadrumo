@@ -36,7 +36,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextlib import suppress
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, Literal, get_args, override
@@ -46,6 +46,7 @@ from pydantic import BaseModel, Field
 from ...core import LOCAL_TRANSPORT_LABEL, STRICT_FROZEN_CONFIG
 from ...core.identity import ContentDigest
 from ...domain.iva import InvoiceKind
+from ..operator_actions import PreconditionVerdict
 
 if TYPE_CHECKING:
     from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -181,29 +182,23 @@ class UnresolvedBatchSource(BaseModel):
 
 
 class InferencePause(BaseModel):
-    """Why the run's inference lane closed, stated once for the whole run.
+    """The typed refusal that closed the run's inference lane.
 
     One record rather than a refusal stamped on every affected document. Every
     paused item in a run shares one cause — the machine could not admit a model —
     so N copies of it would be N identical messages an operator learns to scroll
     past, which is how a real refusal goes unread.
 
-    Attributes:
-        reason: Machine-readable cause class.
-        detail: What was measured, in operator-facing terms.
-        remediation: What the operator can do about it. Never generic: memory
-            the local runtime holds and memory a peer process holds have
-            different answers, and only one of them is ours to offer.
-        causes: The provisioning snapshot's own cause tokens, carried through
-            rather than flattened, so the distinction above survives to the CLI.
+    ``facts`` and ``precondition_verdict`` are the application-owned provisioning
+    outcome. This record deliberately does not restate a reason, rendered
+    explanation, or recovery command: its consumer must resolve the exact verdict
+    against the live operator surface.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
-    reason: str = Field(min_length=1)
-    detail: str = Field(min_length=1)
-    remediation: str = Field(min_length=1)
-    causes: tuple[str, ...] = ()
+    facts: Mapping[str, str | int | bool] = Field(default_factory=dict)
+    precondition_verdict: PreconditionVerdict
 
 
 class BatchRunResult(BaseModel):
@@ -363,13 +358,6 @@ def _reads_without_a_model(data: bytes) -> bool:
     return probe_document_shape(data) in STRUCTURED_DOCUMENT_SHAPES
 
 
-#: The provisioning verb the extractor's no-reader refusal names. Matching on it
-#: is how the runner tells "this machine has no reader" from "this document is
-#: broken" — the two produce the same exception type and only one is a reason to
-#: stop attempting the rest.
-_NO_READER_SUGGESTION = "aeat config provision pull"
-
-
 class _InferenceLaneState:
     """Whether inference-bearing items may still be attempted in this run.
 
@@ -418,13 +406,8 @@ class _InferenceLaneState:
         """Close the lane when a refusal turns out to be the environment's, not the document's.
 
         Asks the runtime whether a reader is actually there, rather than reading
-        the refusal's own remediation text. Matching on that text was the first
-        attempt and it was wrong twice over: it couples this module to strings
-        another package owns, and it silently HALF-worked — the text reader
-        names a fixed provisioning verb while the vision reader composes its
-        remediation from a probe, so one missing reader closed the lane for
-        text-layer documents and not for scans. A measurement answers the
-        question the same way for both.
+        an error string. A measurement answers the question the same way for
+        every reader path and hands the exact provisioning outcome downstream.
 
         Probed at most once, and only after something has already refused, so a
         healthy run never pays for it.
@@ -437,13 +420,9 @@ class _InferenceLaneState:
         status = probe_ollama_vision(self._settings)
         if status.available:
             return
-        self._pause = InferencePause(
-            reason="no_reader_available",
-            detail=(
-                f"{status.detail or 'no on-host reading model could be run'}; documents needing one "
-                "were not read and no value was guessed from them"
-            ),
-            remediation=status.remediation or _NO_READER_SUGGESTION,
+        self._pause = _inference_pause(
+            facts=status.facts,
+            precondition_verdict=status.precondition_verdict,
         )
 
     def pause(self) -> InferencePause | None:
@@ -458,12 +437,9 @@ def _assess_model_load_contention_once(
 ) -> InferencePause | None:
     """Return the contention pause, or ``None`` when a load may be attempted.
 
-    Provisioning never raises; it returns a snapshot whose ``causes`` are keyed
-    to remediations that are NOT interchangeable — reclaiming memory the local
-    runtime holds is ours to offer, and memory a peer process holds is not. That
-    distinction is carried through verbatim rather than flattened into a generic
-    "unavailable", because it is the whole difference between an action the
-    operator can take here and one they must take elsewhere.
+    Provisioning never raises; it returns a snapshot with exact facts and a
+    failed-condition verdict. This module forwards that typed outcome unchanged
+    instead of constructing an instruction from a contention cause.
 
     A role with no selectable model is deliberately NOT a pause. Nothing is
     unsafe about attempting it, and the extractor's own refusal names the
@@ -484,13 +460,22 @@ def _assess_model_load_contention_once(
             settings=settings,
         )
         if not snapshot.admitted:
-            return InferencePause(
-                reason="model_load_contention",
-                detail=snapshot.detail,
-                remediation=snapshot.remediation,
-                causes=tuple(cause.value for cause in snapshot.causes),
+            return _inference_pause(
+                facts=snapshot.facts,
+                precondition_verdict=snapshot.precondition_verdict,
             )
     return None
+
+
+def _inference_pause(
+    *,
+    facts: Mapping[str, str | int | bool],
+    precondition_verdict: PreconditionVerdict | None,
+) -> InferencePause:
+    """Build a pause only from a producer-owned refusal outcome."""
+    if precondition_verdict is None:
+        raise ValueError("inference_pause_requires_precondition_verdict")
+    return InferencePause(facts=facts, precondition_verdict=precondition_verdict)
 
 
 #: Names the function that produced a batch draft, not the reader that read it.

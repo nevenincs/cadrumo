@@ -83,6 +83,14 @@ _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
     UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
     UserProfileFact(path="activities.description", value="economic activity"),
     UserProfileFact(path="iva.regime", value="GENERAL"),
+    UserProfileFact(path="iva.m303_regime_composition", value="general"),
+    UserProfileFact(path="iva.redeme_enrolled", value="false"),
+    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value="false"),
+    UserProfileFact(path="iva.voluntary_sii_enrolled", value="false"),
+    UserProfileFact(
+        path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled",
+        value="false",
+    ),
     UserProfileFact(path="provenance.source", value="manual_cli"),
     UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
     UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
@@ -207,6 +215,7 @@ def _recorded_operational_result(
     """Materialize the real recorder output as one persisted aborted workflow run."""
     terminal = steps[-1]
     assert terminal.details is not None
+    assert terminal.ended_at is not None
     return WorkflowResult(
         run_id=run_id,
         started_at=_T,
@@ -339,7 +348,7 @@ def _seed_current_revision(work_unit_id: str) -> str:
         ),
         created_at=_T,
         updated_at=_T,
-    filing_instance_evidence=None,
+        filing_instance_evidence=None,
     )
     repository.save(upsert_calculation_revision(repository.load(), revision))
     work_repository = WorkUnitCatalogueRepository()

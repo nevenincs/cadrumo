@@ -34,6 +34,8 @@ class BienInversionRecordPayload(OutputSchema):
     kind: str
     art108_elegible: bool
     asset_record_ref: str | None = None
+    acquisition_ledger_id: str
+    prorrata_sector_id: str | None = None
     disposal: BienInversionDisposalPayload | None = None
     deduccion_efectuada: str
     schema_version: str

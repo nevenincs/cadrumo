@@ -209,12 +209,14 @@ def test_related_party_observation_requires_a_stated_country() -> None:
     with a country stated must construct.
     """
     with pytest.raises(ValidationError, match="country_code"):
-        RelatedPartyOperationObservation(
-            source_id="op1",
-            counterparty_tax_id="A12345674",
-            transaction_date=date(2025, 3, 15),
-            operation_kind_code="01",
-            amount=Decimal("100"),
+        RelatedPartyOperationObservation.model_validate(
+            {
+                "source_id": "op1",
+                "counterparty_tax_id": "A12345674",
+                "transaction_date": date(2025, 3, 15),
+                "operation_kind_code": "01",
+                "amount": Decimal("100"),
+            },
         )
 
 

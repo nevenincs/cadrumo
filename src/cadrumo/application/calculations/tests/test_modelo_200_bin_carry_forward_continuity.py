@@ -166,8 +166,8 @@ def _calculate_200(
         enum_binding_values=_PROFILE_ENUM_BINDINGS,
         relation_values=relation_values,
         date_context={"filing_period": date(filing_year, 7, 25)},
-    m303_regimen_simplificado_scope=None,
-    m303_annual_orden=None,
+        m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
     return result, len(result.values)
 
@@ -278,7 +278,7 @@ def test_modelo_200_bin_over_application_above_cap_is_blocked() -> None:
     findings = _evaluate_verification_predicates((predicate,), casilla_values, _CASILLA_ONLY_PROFILE)
     assert len(findings) == 1
     assert findings[0].kind is ModeloVerificationFindingKind.BLOCKING_RULE
-    assert _BIN_CAP_PREDICATE_ID in findings[0].message
+    assert dict(findings[0].message_facts) == {"predicate_id": _BIN_CAP_PREDICATE_ID}
 
 
 def test_modelo_200_electing_less_than_cap_is_permitted() -> None:

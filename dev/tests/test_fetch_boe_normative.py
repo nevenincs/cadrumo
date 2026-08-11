@@ -23,6 +23,7 @@ import pytest
 
 from dev.corpus.fetch_boe_normative import (
     NormativeAcquisitionError,
+    assert_served_by_the_requested_endpoint,
     assert_serves_the_text_in_force,
     version_selections,
 )
@@ -120,3 +121,72 @@ def test_a_payload_with_no_version_selector_is_refused() -> None:
 
     with pytest.raises(NormativeAcquisitionError, match="no version selector"):
         assert_serves_the_text_in_force(stripped, document_id="BOE-A-1992-28740")
+
+
+# ── the endpoint that answered, which no payload check can establish ────────
+
+
+def test_the_requested_endpoint_serving_its_own_payload_is_accepted() -> None:
+    """The precision half. A query string legitimately differs and must not refuse.
+
+    BOE echoes and reorders parameters, so a comparison including the query
+    would refuse correct responses -- which is how a guard gets switched off
+    rather than fixed.
+    """
+    assert_served_by_the_requested_endpoint(
+        final_url="https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740&tn=1",
+        requested_url="https://www.boe.es/buscar/act.php",
+    )
+
+
+def test_a_redirect_to_the_single_document_view_is_refused() -> None:
+    """The measured case, and the reason this check exists at all.
+
+    A live request to the consolidated ``act.php`` endpoint silently redirected
+    to ``doc.php``, the single-document view, and the identity check PASSED --
+    because ``doc.php`` echoes the requested id in the same form input. An
+    identity check that reads the id back out of a response verifies the
+    REQUEST, never the SOURCE.
+
+    Only the version-selector check refused that payload, and for an unrelated
+    reason: a single-document view offers no versions. It would not have caught
+    a redirect landing on something version-bearing.
+    """
+    with pytest.raises(NormativeAcquisitionError, match="rather than the requested"):
+        assert_served_by_the_requested_endpoint(
+            final_url="https://www.boe.es/buscar/doc.php?id=BOE-A-1992-28740",
+            requested_url="https://www.boe.es/buscar/act.php",
+        )
+
+
+def test_a_different_host_is_refused() -> None:
+    """A mirror or an interception answers the same path over a clean 200."""
+    with pytest.raises(NormativeAcquisitionError):
+        assert_served_by_the_requested_endpoint(
+            final_url="https://mirror.example.org/buscar/act.php?id=BOE-A-1992-28740",
+            requested_url="https://www.boe.es/buscar/act.php",
+        )
+
+
+def test_a_downgraded_scheme_is_refused() -> None:
+    """Legal text acquired over a downgraded scheme is text nobody can vouch for."""
+    with pytest.raises(NormativeAcquisitionError):
+        assert_served_by_the_requested_endpoint(
+            final_url="http://www.boe.es/buscar/act.php",
+            requested_url="https://www.boe.es/buscar/act.php",
+        )
+
+
+def test_the_article_endpoint_accepts_its_own_block_path() -> None:
+    """The article arm carries the block in the PATH, so the check must not over-refuse."""
+    url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-1992-28740/texto/bloque/a90"
+    assert_served_by_the_requested_endpoint(final_url=url, requested_url=url)
+
+
+def test_the_article_endpoint_refuses_a_different_block_path() -> None:
+    """And a redirect that moved the block is a different article, not a detail."""
+    with pytest.raises(NormativeAcquisitionError):
+        assert_served_by_the_requested_endpoint(
+            final_url="https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-1992-28740/texto/bloque/a91",
+            requested_url="https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-1992-28740/texto/bloque/a90",
+        )

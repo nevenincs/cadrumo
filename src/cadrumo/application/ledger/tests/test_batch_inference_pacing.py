@@ -129,7 +129,8 @@ def test_a_contended_machine_parks_the_model_work_and_completes_the_rest(
     assert result.paced == 1
     # Reported once on the run rather than stamped onto an innocent document.
     assert result.inference_pause is not None
-    assert result.inference_pause.reason == "model_load_contention"
+    assert result.inference_pause.precondition_verdict.failed_condition_id == "provisioning.resident_set.readable"
+    assert result.inference_pause.facts["resident_set_readable"] is False
     # Parked, not failed: a re-run costs nothing because completed items are
     # no-ops, so this must not read as a broken document.
     assert result.any_deferred is True

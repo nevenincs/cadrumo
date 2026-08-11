@@ -182,7 +182,9 @@ def test_a_genuine_third_country_still_classifies_as_the_export() -> None:
     assembly = _issued_goods_to("US")
 
     assert assembly.assembled
-    assert classify_from_assembled_criteria(assembly).category is IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED
+    classification = classify_from_assembled_criteria(assembly)
+    assert classification is not None
+    assert classification.category is IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED
 
 
 @pytest.mark.parametrize("code", UNASSIGNED_PROBES)

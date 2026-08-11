@@ -30,8 +30,8 @@ from .._schema import (
     RelationDefinition,
 )
 from .._schema_verification import (
+    DiscrepancyCause,
     RegistryVerificationPolicy,
-    VerificationDiscrepancyCause,
     VerificationExpectationDefinition,
     VerificationRoundingCode,
 )
@@ -588,11 +588,11 @@ class TestVerificationVocabulariesAreClosed:
         with pytest.raises((ValidationError, ValueError)):
             VerificationExpectationDefinition.model_validate(self._fields(discrepancy_causes=(bad,)))
 
-    @pytest.mark.parametrize("cause", [cause.value for cause in VerificationDiscrepancyCause])
+    @pytest.mark.parametrize("cause", [cause.value for cause in DiscrepancyCause])
     def test_every_declared_cause_is_accepted(self, cause: str) -> None:
         expectation = VerificationExpectationDefinition.model_validate(self._fields(discrepancy_causes=(cause,)))
 
-        assert expectation.discrepancy_causes == (VerificationDiscrepancyCause(cause),)
+        assert expectation.discrepancy_causes == (DiscrepancyCause(cause),)
 
     def test_the_policy_fold_carries_the_declarations_it_used_to_drop(self) -> None:
         """The policy is the consumed projection; a dropped field is unreachable."""

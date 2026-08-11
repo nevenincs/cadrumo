@@ -42,7 +42,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
 RECORDED_SEQUENCES = REPOSITORY_ROOT / "docs" / "_sequences"
 
-_FUNNELS: list[Callable[[str], str]] = [redact_for_cli_output, redact_for_log]
+_FUNNELS: tuple[tuple[str, Callable[[str], str]], ...] = (
+    ("redact_for_cli_output", redact_for_cli_output),
+    ("redact_for_log", redact_for_log),
+)
 
 #: A line cannot be touched by any shape-based arm without carrying one of
 #: these. Applied only to keep the sweep cheap: it is a strict superset of what
@@ -113,7 +116,7 @@ def test_no_recorded_operator_line_is_rewritten_unless_it_carries_an_identity() 
     redacted_tokens: set[str] = set()
 
     for line in _recorded_lines():
-        for funnel in _FUNNELS:
+        for funnel_name, funnel in _FUNNELS:
             emitted = funnel(line)
             if emitted == line:
                 continue
@@ -123,7 +126,7 @@ def test_no_recorded_operator_line_is_rewritten_unless_it_carries_an_identity() 
                 if admitted:
                     redacted_tokens |= admitted
                     continue
-                violations.append(f"{funnel.__name__}: {line!r} -> {emitted!r} (hashed {sorted(spans)!r})")
+                violations.append(f"{funnel_name}: {line!r} -> {emitted!r} (hashed {sorted(spans)!r})")
 
     assert not violations, "the funnel rewrote recorded operator output that carries no identity:\n" + "\n".join(
         violations[:20]
@@ -160,5 +163,5 @@ def test_the_work_unit_naming_the_corpus_carries_reaches_the_operator_intact() -
     ]
 
     for name in names:
-        for funnel in _FUNNELS:
+        for _funnel_name, funnel in _FUNNELS:
             assert funnel(name) == name, f"{name!r} was rewritten to {funnel(name)!r}"

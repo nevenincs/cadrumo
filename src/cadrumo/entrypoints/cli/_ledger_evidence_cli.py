@@ -9,7 +9,6 @@ from ...application.ledger import (
     FindingResolution,
     InvoiceConfirmationResult,
     PurchaseInvoiceEvidence,
-    PurchaseInvoiceEvidenceInputError,
     PurchaseInvoiceEvidenceNotFoundError,
     PurchaseInvoiceEvidencePatch,
     PurchaseInvoiceEvidenceService,
@@ -484,16 +483,13 @@ def _register_evidence_extract_command() -> None:
             off_host_provider=off_host_provider,
             acknowledged=acknowledge_off_host,
         )
-        try:
-            draft = extract_invoice_draft_from_evidence(
-                bucket_id=transaction_repository.bucket_id,
-                evidence_id=evidence_id,
-                attachment_id=attachment_id,
-                off_host_provider=off_host_provider,
-                consent_token=consent_token,
-            )
-        except (PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceNotFoundError) as exc:
-            raise _bad(str(exc)) from exc
+        draft = extract_invoice_draft_from_evidence(
+            bucket_id=transaction_repository.bucket_id,
+            evidence_id=evidence_id,
+            attachment_id=attachment_id,
+            off_host_provider=off_host_provider,
+            consent_token=consent_token,
+        )
 
         payload = {
             "bucket_id": transaction_repository.bucket_id,
@@ -771,8 +767,6 @@ def _run_evidence_confirm(
             resolutions=resolutions,
         )
     except ConfirmationBlockedError as exc:
-        raise _bad(str(exc)) from exc
-    except (PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceNotFoundError) as exc:
         raise _bad(str(exc)) from exc
     except InvoiceValidationError as exc:
         raise _bad(str(exc)) from exc

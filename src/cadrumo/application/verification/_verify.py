@@ -28,6 +28,7 @@ from ...core.resources import bundled_path
 from ...core.time import now
 from ...domain.calculations.registry import (
     BindingId,
+    DiscrepancyCause,
     InputKind,
     RegistrySnapshot,
     RegistrySnapshotError,
@@ -43,7 +44,6 @@ from ...domain.period import calculation_filing_date
 from ._errors import VerificationError
 from ._schema import (
     ClassifiedDiscrepancy,
-    DiscrepancyCause,
     VerificationStatus,
     VerificationVerdict,
 )

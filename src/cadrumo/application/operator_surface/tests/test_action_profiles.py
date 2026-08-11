@@ -133,4 +133,4 @@ def test_profile_is_strict_frozen_and_serializes_only_declarative_identities() -
         "no_recovery_outcome": None,
     }
     with pytest.raises(ValidationError, match="frozen_instance"):
-        profile.condition_id = "profile.other"  # type: ignore[misc]
+        profile.__setattr__("condition_id", "profile.other")

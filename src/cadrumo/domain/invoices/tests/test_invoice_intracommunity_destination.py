@@ -39,7 +39,7 @@ from .. import Invoice, InvoiceLine, IvaRate, PaymentStatus
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _BASE = Decimal("1000.00")
-_REFUSAL = "cannot name an acquirer purchasing under a Spanish VAT identification"
+_REFUSAL = "cannot name an acquirer purchasing under a Spanish IVA identification"
 
 
 def _exempt_line() -> InvoiceLine:
@@ -83,7 +83,7 @@ def test_a_genuine_entrega_intracomunitaria_names_a_foreign_identification() -> 
 
 
 def test_an_intracommunity_supply_to_a_spanish_identified_acquirer_is_refused() -> None:
-    """The falsified case: a Spanish VAT identification contradicts the category.
+    """The falsified case: a Spanish IVA identification contradicts the category.
 
     The ESTABLISHMENT is German here, deliberately. The refusal must come from
     the identification alone, otherwise the guard has merely moved the old

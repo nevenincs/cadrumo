@@ -40,7 +40,6 @@ from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.iva import IvaCategory
 from ...domain.transactions import (
     BusinessClassification,
-    LLMClassifierError,
     TransactionCatalogueRepositoryProtocol,
     TransactionValidationError,
 )
@@ -270,18 +269,13 @@ def dispatch_autosplit(
     transaction_repository = _tx_repo(state)
     bucket_id = transaction_repository.bucket_id
     resolved_id = _resolve_id(transaction_repository, transaction_id)
-    try:
-        suggestion = suggest_evidence_split(
-            bucket_id=bucket_id,
-            transaction_id=resolved_id,
-            transaction_repository=transaction_repository,
-            read_evidence=True,
-            vision_model=vision_model,
-        )
-    except LLMClassifierError as exc:
-        raise _bad(
-            tr("cli.ledger.classify.llm_failed", reason=str(exc), default=f"LLM split proposal failed: {exc}"),
-        ) from exc
+    suggestion = suggest_evidence_split(
+        bucket_id=bucket_id,
+        transaction_id=resolved_id,
+        transaction_repository=transaction_repository,
+        read_evidence=True,
+        vision_model=vision_model,
+    )
 
     if reject:
         emit_llm_rejection(
@@ -649,22 +643,13 @@ def _llm_classify_prologue[SuggestionT: (LLMClassificationSuggestion, LLMSaturat
     state = _state()
     transaction_repository = _tx_repo(state)
     resolved_id = _resolve_id(transaction_repository, validated_transaction_id)
-    try:
-        suggestion = suggest_fn(
-            bucket_id=transaction_repository.bucket_id,
-            transaction_id=resolved_id,
-            transaction_repository=transaction_repository,
-            read_evidence=read_evidence,
-            vision_model=vision_model,
-        )
-    except LLMClassifierError as exc:
-        raise _bad(
-            tr(
-                "cli.ledger.classify.llm_failed",
-                reason=str(exc),
-                default=f"LLM classification failed: {exc}",
-            ),
-        ) from exc
+    suggestion = suggest_fn(
+        bucket_id=transaction_repository.bucket_id,
+        transaction_id=resolved_id,
+        transaction_repository=transaction_repository,
+        read_evidence=read_evidence,
+        vision_model=vision_model,
+    )
 
     if reject:
         emit_llm_rejection(

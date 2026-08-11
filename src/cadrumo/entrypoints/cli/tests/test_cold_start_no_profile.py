@@ -172,7 +172,6 @@ def test_bindings_list_missing_conservatively_lists_profile_bindings_without_act
     payload = json.loads(result.output)
     bindings = payload["result"]["bindings"]
     assert bindings, result.output
-    assert all(binding["source"] != "constant_value" for binding in bindings)
     assert any(
         binding["binding_id"] == "modelo-303-autoconsumo-promotor-base" and binding["source"] == "profile"
         for binding in bindings

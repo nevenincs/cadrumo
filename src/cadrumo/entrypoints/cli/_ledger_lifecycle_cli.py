@@ -14,7 +14,6 @@ import typer
 from pydantic import ValidationError
 
 from ...application.ledger import (
-    PurchaseInvoiceEvidenceInputError,
     SplitChildCommand,
     archive_manual_transaction,
     compute_display_id_width,
@@ -34,7 +33,6 @@ from ...core.time import now
 from ...domain.attachments import AttachmentSource, DocumentLinkSource
 from ...domain.transactions import (
     BusinessClassification,
-    LLMClassifierError,
     TransactionValidationError,
     is_classified,
 )
@@ -1076,20 +1074,13 @@ def _ledger_split_llm(
     transaction_repository = _tx_repo(state)
     bucket_id = transaction_repository.bucket_id
     resolved_id = _resolve_id(transaction_repository, transaction_id)
-    try:
-        suggestion = suggest_evidence_split(
-            bucket_id=bucket_id,
-            transaction_id=resolved_id,
-            transaction_repository=transaction_repository,
-            read_evidence=read_evidence,
-            vision_model=vision_model,
-        )
-    except PurchaseInvoiceEvidenceInputError as exc:
-        raise _bad(str(exc)) from exc
-    except LLMClassifierError as exc:
-        raise _bad(
-            tr("cli.ledger.classify.llm_failed", reason=str(exc), default=f"LLM split proposal failed: {exc}"),
-        ) from exc
+    suggestion = suggest_evidence_split(
+        bucket_id=bucket_id,
+        transaction_id=resolved_id,
+        transaction_repository=transaction_repository,
+        read_evidence=read_evidence,
+        vision_model=vision_model,
+    )
 
     proposed_children = _build_split_child_proposals(suggestion)
 

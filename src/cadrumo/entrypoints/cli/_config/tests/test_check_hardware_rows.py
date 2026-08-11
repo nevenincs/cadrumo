@@ -1,14 +1,9 @@
-"""End-to-end CLI tests for the ``aeat config check`` hardware and contention rows.
+"""Real CLI coverage for ``config check`` hardware and contention rows.
 
-Verifies that the workstation doctor surfaces the measured hardware profile and
-the model-load contention verdict as typed dependency rows, that both render
-through the EXISTING ``dependencies`` channel with no payload shape change, and
-that neither changes the command's exit contract. Real CLI surface, real
-measurement of this machine, isolated storage root, no mocks.
-
-Nothing here loads, pulls, or runs a model. The rows are built from readings --
-the hardware profile, the runtime's resident set, the model catalogue -- and a
-reading is not an inference.
+The production provisioning assessor receives injected measurements through its
+public arguments. Each projection assertion therefore consumes a genuine typed
+outcome and verifies that the CLI layer neither recreates a condition nor
+retains a prose compatibility field.
 """
 
 from __future__ import annotations
@@ -19,16 +14,26 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from pydantic import ValidationError
 
-from .....application.provisioning import ContentionSnapshot
+from .....application.provisioning import (
+    AcceleratorDevice,
+    AcceleratorReading,
+    HardwareProfile,
+    SystemMemoryReading,
+    assess_model_load_contention,
+    probe_hardware_profile,
+)
 from .....core import AcceleratorKind, ContentionCause
 from .....core.config import override_settings
 from .....tests.cli_runner import invoke_cached_cli
 from .....tests.secure_sql import isolated_profile_storage_root
 from .._check_hardware_rows import CONTENTION_ROW_ID, contention_row
+from .._check_payloads import CheckDependencyPayload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
+_GIB = 1024**3
 _HARDWARE_ROW_ID = "local-inference-hardware"
 
 
@@ -47,30 +52,35 @@ def _config_check_payload() -> dict[str, Any]:
     return json.loads(result.output)["result"]
 
 
-def _snapshot(
-    *,
-    admitted: bool,
-    causes: tuple[ContentionCause, ...],
-    detail: str = "detail",
-    remediation: str = "remediation",
-) -> ContentionSnapshot:
-    """Build a verdict the application layer could genuinely have produced.
-
-    Constructed rather than measured because the machine's real state cannot be
-    driven to each branch on demand, and the projection under test consumes only
-    the verdict -- it re-derives nothing. The measured path is covered by the
-    end-to-end cases above it.
-    """
-    return ContentionSnapshot(
-        model="test-model:1b",
-        requirement_bytes=1_000_000_000,
-        safety_margin_bytes=500_000_000,
-        accelerator=AcceleratorKind.UNKNOWN,
-        admitted=admitted,
-        causes=causes,
-        detail=detail,
-        remediation=remediation,
+def _profile(*, kind: AcceleratorKind, free_vram_bytes: int | None = None) -> HardwareProfile:
+    """Create a production profile from explicit measured values."""
+    devices = (
+        ()
+        if kind is not AcceleratorKind.NVIDIA_CUDA
+        else (
+            AcceleratorDevice(
+                index=0,
+                name="test-accelerator",
+                total_vram_bytes=16 * _GIB,
+                free_vram_bytes=free_vram_bytes,
+            ),
+        )
     )
+    return probe_hardware_profile(
+        memory=SystemMemoryReading(total_bytes=32 * _GIB, free_bytes=16 * _GIB),
+        accelerator=AcceleratorReading(kind=kind, devices=devices),
+    )
+
+
+def _contention_snapshot(*, kind: AcceleratorKind, free_vram_bytes: int | None, requirement_bytes: int):
+    """Assess the exact production contention branch from injected measurements."""
+    with override_settings(cadrumo_llm_contention_safety_margin_bytes=0):
+        return assess_model_load_contention(
+            "test-model:1b",
+            requirement_bytes,
+            profile=_profile(kind=kind, free_vram_bytes=free_vram_bytes),
+            residents=(),
+        )
 
 
 def test_the_doctor_reports_the_hardware_profile_and_contention_rows() -> None:
@@ -78,102 +88,82 @@ def test_the_doctor_reports_the_hardware_profile_and_contention_rows() -> None:
     payload = _config_check_payload()
     by_id = {row["service"]: row for row in payload["dependencies"]}
 
-    assert _HARDWARE_ROW_ID in by_id, "the measured hardware profile must be reported"
-    assert CONTENTION_ROW_ID in by_id, "the model-load contention verdict must be reported"
-    assert by_id[_HARDWARE_ROW_ID]["detail"], "a hardware row with no detail reports nothing"
+    assert _HARDWARE_ROW_ID in by_id
+    assert CONTENTION_ROW_ID in by_id
+    assert by_id[_HARDWARE_ROW_ID]["facts"]
 
 
-def test_the_new_rows_change_no_payload_shape() -> None:
-    """They are dependency rows, so the envelope gains fields nowhere.
-
-    Asserted because the alternative -- a bespoke ``hardware`` or ``contention``
-    block on the result -- is exactly what the envelope contract forbids, and it
-    is an easy thing to reach for when adding a differently-shaped row.
-    """
+def test_dependency_rows_use_the_typed_outcome_schema() -> None:
+    """The doctor has no bespoke hardware block or legacy text fields."""
     payload = _config_check_payload()
 
     assert set(payload) == {"profile_id", "ok", "capabilities", "dependencies", "preflight", "issues"}
     for row in payload["dependencies"]:
-        assert set(row) == {"service", "available", "detail", "remediation"}
+        assert set(row) == {"service", "available", "facts", "precondition_action"}
+
+    with pytest.raises(ValidationError):
+        CheckDependencyPayload(service="dependency", available=False, detail="legacy")
 
 
 def test_neither_row_flips_the_commands_exit_contract() -> None:
-    """The rows are reported for visibility; capability/dependency pairing owns ``ok``.
-
-    A contended machine is not a misconfigured one. If contention could set
-    ``ok`` false, running the doctor while another application held the GPU
-    would report the profile as broken.
-    """
+    """Capability/dependency pairing owns ``ok``, not diagnostic contention."""
     payload = _config_check_payload()
     by_id = {row["service"]: row for row in payload["dependencies"]}
     contention = by_id[CONTENTION_ROW_ID]
 
     assert not any(CONTENTION_ROW_ID in issue for issue in payload["issues"])
     if not contention["available"]:
-        assert payload["ok"] == (not payload["issues"]), "ok follows issues, never the contention row"
+        assert payload["ok"] == (not payload["issues"])
 
 
-def test_an_unmeasurable_machine_reports_open_rather_than_manufacturing_a_shortfall() -> None:
-    """Reporting fails open where acting fails closed.
+def test_unmeasurable_load_is_reported_open_without_forwarding_a_refusal() -> None:
+    """The report preserves facts but does not turn an observation into a rejection."""
+    snapshot = _contention_snapshot(
+        kind=AcceleratorKind.UNKNOWN,
+        free_vram_bytes=None,
+        requirement_bytes=4 * _GIB,
+    )
+    assert snapshot.causes == (ContentionCause.UNREADABLE,)
+    assert snapshot.precondition_verdict is not None
 
-    An unreadable figure is not evidence of a shortfall. The acting path refuses
-    on exactly this state -- that asymmetry is the point -- but a diagnostic
-    that marked the row unavailable would tell an operator their machine cannot
-    run a model when the truth is only that it could not be measured.
-    """
-    row = contention_row(_snapshot(admitted=False, causes=(ContentionCause.UNREADABLE,)))
+    row = contention_row(snapshot)
 
     assert row.available is True
-    assert "unverified" in row.detail
-    assert row.remediation, "an unmeasurable machine still names how to make it measurable"
+    assert row.facts == snapshot.facts
+    assert row.precondition_verdict is None
 
 
-def test_a_measured_shortfall_reports_closed_with_the_remediation_that_applies() -> None:
-    """A measured shortfall is a real state with a real, and specific, fix.
-
-    The cause travels from the application layer rather than being inferred
-    here, because the remediations are not interchangeable: unloading a model
-    Cadrumo selected is ours to offer, closing a peer application is not.
-    """
-    resident = contention_row(
-        _snapshot(admitted=False, causes=(ContentionCause.RUNTIME_RESIDENT,), remediation="unload the resident"),
+def test_measured_shortfall_preserves_the_exact_typed_refusal() -> None:
+    """The CLI projection must not recreate an instruction from contention causes."""
+    snapshot = _contention_snapshot(
+        kind=AcceleratorKind.NVIDIA_CUDA,
+        free_vram_bytes=_GIB,
+        requirement_bytes=4 * _GIB,
     )
-    peer = contention_row(
-        _snapshot(admitted=False, causes=(ContentionCause.PEER_PROCESS,), remediation="close the other application"),
-    )
+    assert snapshot.causes == (ContentionCause.PEER_PROCESS,)
+    assert snapshot.precondition_verdict is not None
 
-    assert resident.available is False
-    assert peer.available is False
-    assert resident.remediation != peer.remediation, "the two causes must not collapse to one instruction"
-
-
-def test_an_unmeasurable_machine_that_also_measures_short_reports_the_shortfall() -> None:
-    """The more actionable claim wins when both hold.
-
-    Fail-open covers "could not tell" ALONE. A machine that could not read one
-    figure and measured a shortfall in another has a real shortfall, and
-    reporting it as merely unverified would bury the actionable half.
-    """
-    row = contention_row(
-        _snapshot(admitted=False, causes=(ContentionCause.UNREADABLE, ContentionCause.PEER_PROCESS)),
-    )
+    row = contention_row(snapshot)
 
     assert row.available is False
-    assert "unverified" not in row.detail
+    assert row.facts == snapshot.facts
+    assert row.precondition_verdict == snapshot.precondition_verdict
 
 
-def test_an_admitted_load_and_an_unselectable_role_both_report_available() -> None:
-    """The two clean states, distinguished by what they say rather than by the flag.
-
-    A machine with headroom and a machine with no catalogued model both report
-    available -- neither is a fault -- but conflating them would tell an
-    operator with no model that their hardware is fine, which is true and
-    useless.
-    """
-    admitted = contention_row(_snapshot(admitted=True, causes=(), detail="headroom is sufficient"))
-    unselectable = contention_row(None)
+def test_admitted_load_and_no_selected_model_remain_distinct_factual_states() -> None:
+    """Both report available, but their machine facts retain the distinction."""
+    admitted = contention_row(
+        _contention_snapshot(
+            kind=AcceleratorKind.NVIDIA_CUDA,
+            free_vram_bytes=12 * _GIB,
+            requirement_bytes=4 * _GIB,
+        ),
+    )
+    unselected = contention_row(None)
 
     assert admitted.available is True
-    assert unselectable.available is True
-    assert unselectable.remediation == "", "there is no action to name when no model is selected"
-    assert admitted.detail != unselectable.detail
+    assert admitted.precondition_verdict is None
+    assert admitted.facts["shortfall_bytes"] == 0
+    assert unselected.available is True
+    assert unselected.precondition_verdict is None
+    assert unselected.facts == {"model_selected": False}

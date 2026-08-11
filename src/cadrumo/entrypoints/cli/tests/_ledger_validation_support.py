@@ -28,6 +28,23 @@ def _invoke(args: Sequence[str], *, env: Mapping[str, str] | None = None) -> Res
 
 @contextmanager
 def open_bucket_session(tmp_path: Path) -> Iterator[None]:
+    """Open the shared real-CLI ledger session against an isolated storage root.
+
+    The registered profile is minimal PLUS a declared IVA block, and the second
+    half is load-bearing rather than convenience. Every ledger path that
+    resolves an IVA treatment -- add, allocate, split, evidence confirm --
+    consults the deadlines profile, which refuses outright for a taxpayer whose
+    IVA axes were never declared. That refusal is correct in production: an
+    undeclared Modelo 303 composition is not a general one. In this harness it
+    arrives before any behaviour under test, so a suite asserting a
+    non-negative-amount refusal instead reads an incomplete-profile refusal and
+    fails on a message it never mentions.
+
+    Declared HERE rather than per suite because the cause is the harness, not
+    any one file: when the IVA block became mandatory, roughly thirty ledger
+    CLI modules went red on this single reason at once, and a per-suite
+    declaration would have been thirty copies of one fact.
+    """
     dispose_engine()
     with (
         override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
@@ -41,6 +58,7 @@ def open_bucket_session(tmp_path: Path) -> Iterator[None]:
                 display_name=_PROFILE_LABEL,
             ),
         )
+        _declare_general_regime_iva_profile()
         try:
             yield
         finally:
@@ -69,6 +87,44 @@ def _create_profile_and_import(tmp_path: Path) -> str:
 def _set_profile_axis(key: str, value: str) -> None:
     workflow_state_repository().update(
         lambda state: set_active_fields(state, (UserProfileFact(path=key, value=value),)),
+    )
+
+
+#: The IVA axes the deadlines profile demands before it will answer for a
+#: taxpayer, with the values of an ordinary general-regime filer.
+#:
+#: The composition is the one axis with no defensible default -- an undeclared
+#: composition is not a general one -- and the four booleans are opt-in special
+#: regimes this taxpayer is not in. They are declared together because the
+#: profile refuses on the whole set: satisfying one surfaces the next, which
+#: reads as a sequence of unrelated failures rather than one incomplete
+#: profile.
+_GENERAL_REGIME_IVA_AXES: tuple[tuple[str, str | bool], ...] = (
+    ("iva.m303_regime_composition", "general"),
+    ("iva.redeme_enrolled", False),
+    ("iva.cash_accounting_regime_enrolled", False),
+    ("iva.voluntary_sii_enrolled", False),
+    ("iva.hydrocarbon_deposit_advance_payment_deduction_entitled", False),
+)
+
+
+def _declare_general_regime_iva_profile() -> None:
+    """Complete the minimal profile's IVA block for a general-regime filer.
+
+    ``register_minimal_profile`` deliberately registers the smallest profile
+    that can hold a bucket, which does not include the IVA axes. Any CLI path
+    that resolves an IVA treatment -- notably ``evidence confirm`` -- then
+    refuses with an incomplete-profile error before reaching the behaviour
+    under test, so a suite exercising that path must declare them.
+
+    Written in ONE update rather than one per axis, so the profile is never
+    observed half-declared by anything reading between writes.
+    """
+    workflow_state_repository().update(
+        lambda state: set_active_fields(
+            state,
+            tuple(UserProfileFact(path=path, value=value) for path, value in _GENERAL_REGIME_IVA_AXES),
+        ),
     )
 
 

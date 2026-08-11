@@ -1,9 +1,9 @@
-"""Every guarded inference entry point refuses with the install hint, never a traceback.
+"""Every guarded inference entry point preserves the typed optional-extra refusal.
 
 The inference boundary is a claim about what the product SAYS when an operator
 reaches a model-bearing surface without having opted into the model-bearing
-dependencies: one instructive :class:`~core.MissingOptionalExtraError` naming
-``pip install cadrumo[llm]``, never a raw ``ModuleNotFoundError`` and never a
+dependencies: one :class:`~core.MissingOptionalExtraError` carrying registered
+machine facts, never a raw ``ModuleNotFoundError`` and never a
 surface that quietly runs anyway. This module proves that at the source level,
 for every entry point that carries the guard.
 
@@ -134,7 +134,15 @@ def _drive_surfaces(*, block: bool) -> list[dict[str, str]]:
             try:
                 eval(surface["call"])
             except MissingOptionalExtraError as exc:
-                outcomes.append({{"name": surface["name"], "outcome": "refused", "hint": exc.install_hint}})
+                outcomes.append(
+                    {{
+                        "name": surface["name"],
+                        "outcome": "refused",
+                        "extra": exc.extra.extra,
+                        "import_name": exc.extra.import_name,
+                        "feature": exc.extra.feature,
+                    }}
+                )
             except ModuleNotFoundError as exc:
                 outcomes.append({{"name": surface["name"], "outcome": "module-not-found", "hint": str(exc)}})
             except BaseException as exc:
@@ -181,8 +189,8 @@ def test_the_driven_inventory_covers_every_guarded_entry_point() -> None:
     )
 
 
-def test_every_guarded_surface_refuses_with_the_install_command() -> None:
-    """With the extra's probe module absent, each entry point raises the instructive refusal.
+def test_every_guarded_surface_preserves_the_registered_extra_facts() -> None:
+    """With the probe absent, each entry point raises the typed refusal unchanged.
 
     The two outcomes that must never appear are a ``ModuleNotFoundError`` -- the
     raw deep-stack failure the guard exists to convert -- and a successful call,
@@ -193,9 +201,15 @@ def test_every_guarded_surface_refuses_with_the_install_command() -> None:
 
     driven = {entry["name"] for entry in outcomes}
     assert driven == {name for name, _call in _GUARDED_SURFACES}, f"the driver did not reach every surface: {driven!r}"
-    wrong = [entry for entry in outcomes if entry["outcome"] != "refused" or entry["hint"] != LLM_EXTRA.install_hint]
+    expected = {
+        "outcome": "refused",
+        "extra": LLM_EXTRA.extra,
+        "import_name": LLM_EXTRA.import_name,
+        "feature": LLM_EXTRA.feature,
+    }
+    wrong = [entry for entry in outcomes if {key: entry.get(key) for key in expected} != expected]
     assert not wrong, (
-        f"these guarded surfaces did not refuse with {LLM_EXTRA.install_hint!r}: {wrong!r}. A 'module-not-found' "
+        f"these guarded surfaces did not preserve the registered extra facts: {wrong!r}. A 'module-not-found' "
         "outcome is the raw failure the guard exists to convert; a 'succeeded' outcome is a model-bearing "
         "surface running without the model-bearing dependencies."
     )

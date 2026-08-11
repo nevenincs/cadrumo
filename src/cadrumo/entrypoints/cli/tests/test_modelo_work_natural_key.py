@@ -38,6 +38,7 @@ def _create_profile() -> None:
             "--name", "Operator",
             "--surnames", "Natural Key",
             "--activity", "design",
+            "--tax-residence-jurisdiction-scope", "common_regime",
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
@@ -310,6 +311,8 @@ def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_sta
     assert blocking["severity"] == "warning"
     assert blocking["context"]["severity"] == "blocking"
     assert blocking["context"]["kind"] == "cross_period_dependency_unclean"
+    assert blocking["context"]["blocker_codes"]
+    assert all(blocker_code for blocker_code in blocking["context"]["blocker_codes"].split("|"))
     assert blocking["action"] is None
 
 

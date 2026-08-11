@@ -36,6 +36,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from ._ledger_ux_support import _invoke, _open_ledger_ux_session
+from .envelope_helpers import unwrap_schema_envelope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -47,12 +48,11 @@ _CONFIRMED = "es_canarias"
 _EVIDENCED = "es_mainland"
 
 
-def _show(*args: str) -> dict:
+def _show(*args: str) -> dict[str, object]:
     """Run ``counterparty show`` through the real CLI and return its result payload."""
     result = _invoke(["--format", "json", "app", "ledger", "counterparty", "show", *args])
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
-    return payload.get("result", payload)
+    return unwrap_schema_envelope(result.output)
 
 
 def _confirm_canarias() -> None:

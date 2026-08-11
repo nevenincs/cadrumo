@@ -24,6 +24,7 @@ from pydantic import ValidationError
 from ....core.identity import IdentityError
 from ...iva import InvoiceKind
 from .._enums import IvaRate, PaymentStatus
+from .._errors import InvoiceValidationError
 from .._models import Invoice, InvoiceLine, _normalise_invoice_counterparty
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -92,3 +93,62 @@ def test_the_normaliser_forwards_an_unvalidated_tax_id_when_no_country_is_stated
         _normalise_invoice_counterparty(
             {"counterparty_country": "ES", "counterparty_tax_id": " notavalidnif "},
         )
+
+
+# ── which field, not merely which value ────────────────────────────────────
+
+
+def test_a_refused_country_names_the_field_it_judged() -> None:
+    """The half of the projection row the projection could not deliver.
+
+    The normaliser runs inside a model-level before-mode validator, so pydantic
+    has no field location to attach and the error surfaces at ``root`` with the
+    exception class and nothing else. The operator-facing projection reports
+    that faithfully -- it cannot invent a location the raise site never
+    provided. So the fix belongs here, at the one place that still knows which
+    field it is judging.
+    """
+    with pytest.raises(InvoiceValidationError, match="counterparty_country"):
+        _normalise_invoice_counterparty({"counterparty_country": "ZZ9"})
+
+
+def test_a_refused_tax_id_names_the_field_it_judged() -> None:
+    """Both identity arms, because they raise from two different hierarchies."""
+    with pytest.raises(IdentityError, match="counterparty_tax_id"):
+        _normalise_invoice_counterparty({"counterparty_country": "ES", "counterparty_tax_id": "BADID"})
+
+    with pytest.raises(InvoiceValidationError, match="counterparty_tax_id"):
+        _normalise_invoice_counterparty({"counterparty_country": "FR", "counterparty_tax_id": "XX"})
+
+
+def test_naming_the_field_keeps_everything_else_the_error_carried() -> None:
+    """The annotation must not cost the structure, which rebuilding it did.
+
+    Rebuilding the exception as ``type(error)(text)`` looks equivalent and is
+    not: these errors carry attributes their constructor does not take -- a
+    locale key among them -- so a rebuilt instance arrives with a better
+    message and no translation key. A shipped assertion on that key caught it,
+    which is exactly why the assertion exists, and it is pinned again here so
+    the next author reaching for a rebuild is stopped at this file rather than
+    two packages away.
+    """
+    with pytest.raises(IdentityError) as caught:
+        _normalise_invoice_counterparty({"counterparty_country": "ES", "counterparty_tax_id": "BADID"})
+
+    assert "must be exactly 9 characters" in str(caught.value), "the value-level reasoning was lost"
+    assert caught.value.translated_message == "errors.identity.tax_id_invalid_length", (
+        "the translation key did not survive; the exception was rebuilt rather than annotated"
+    )
+    assert caught.value.context == {"candidate": "BADID", "length": 5}, (
+        "the structured context did not survive either"
+    )
+
+
+def test_a_valid_counterparty_passes_through_unwrapped() -> None:
+    """Precision: the wrapper must not touch the path that does not refuse."""
+    normalised = _normalise_invoice_counterparty(
+        {"counterparty_country": "es", "counterparty_tax_id": "b12345674"},
+    )
+
+    assert normalised["counterparty_country"] == "ES"
+    assert normalised["counterparty_tax_id"] == "B12345674"

@@ -60,6 +60,7 @@ from ._classification import (
     classifiable_categories,
     classify_iva,
     domestic_categories_by_rate_kind,
+    domestic_rate_tier_is_required,
     rate_kind_for_domestic_category,
 )
 from ._components import (
@@ -367,6 +368,7 @@ __all__ = [
     "derive_sepa_marca",
     "derive_supply_nature_from_citation",
     "domestic_categories_by_rate_kind",
+    "domestic_rate_tier_is_required",
     "especial_mandatory_rule",
     "identification_state_for_printed_tax_identifier",
     "invoice_line_to_iva_observation",

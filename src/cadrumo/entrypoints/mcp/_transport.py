@@ -107,7 +107,7 @@ def _transport_error_envelope(
     than relay one, this paragraph stops being true and the contract above needs
     redaction behind it.
 
-    :func:`~entrypoints.mcp.tests.test_call_runtime` pins the ``context`` key set
+    :mod:`~entrypoints.mcp.tests.test_call_runtime` pins the ``context`` key set
     of every caller, so widening this surface reds a gate rather than passing
     silently. Adding a key that carries operator- or taxpayer-derived data means
     this docstring is no longer true, and the fix then is redaction, not a wider

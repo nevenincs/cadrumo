@@ -88,6 +88,15 @@ def test_relation_handoff_inventory_is_finite_and_grouped_by_target_revision() -
     assert set(grouped) <= declared_revision_keys
     assert sum(len(rows) for rows in grouped.values()) == audit.relation_count
     assert all(isinstance(record, RelationHandoffRecord) for record in audit.records)
+    assert all(record.consumption_channels for record in audit.records)
+
+    alternate = next(
+        record for record in audit.records if record.relation_id == "renta-2025-rel-193-retenciones-anuales"
+    )
+    assert alternate.consumption_channels == ("alternate_binding",)
+
+    formula = next(record for record in audit.records if record.relation_id == "renta-2024-rel-130-pagos-fraccionados")
+    assert formula.consumption_channels == ("formula_relation",)
 
 
 def test_relation_handoff_applicability_measures_period_and_clean_state_contract() -> None:

@@ -161,8 +161,8 @@ def _calculate_200(
         enum_binding_values=_PROFILE_ENUM_BINDINGS,
         relation_values=relation_values,
         date_context={"filing_period": date(filing_year, 7, 25)},
-    m303_regimen_simplificado_scope=None,
-    m303_annual_orden=None,
+        m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
 
@@ -255,8 +255,8 @@ def test_advisory_fires_when_cumplido_stock_available_but_none_integrated() -> N
     )
     assert len(findings) == 1
     assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY
-    # The finding message humanizes the predicate id (id slug -> spaced title).
-    assert "dotaciones deterioro cumplido disponible integrar" in findings[0].message.casefold()
+    assert findings[0].message_locale_key == "application.modelo.findings.registry_advisory_predicate_fired"
+    assert dict(findings[0].message_facts) == {"predicate_id": _ADVISORY_PREDICATE_ID}
 
 
 def test_advisory_silent_when_some_cumplido_stock_integrated() -> None:

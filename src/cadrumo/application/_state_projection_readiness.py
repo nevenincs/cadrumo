@@ -10,12 +10,6 @@ def one_line_error_message(exc: Exception) -> str:
     return exc.__class__.__name__
 
 
-def binding_source_value(source: object) -> str:
-    """Normalize a typed or plain registry binding source for projection output."""
-    value = getattr(source, "value", source)
-    return str(value)
-
-
 def readiness_binding_input_channel(
     binding_id: str,
     *,

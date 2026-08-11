@@ -11,7 +11,13 @@ validators surface :exc:`~llm.LLMValidationError`.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from typing import TYPE_CHECKING
+
 from ..core.errors import CadrumoError
+
+if TYPE_CHECKING:
+    from ..application.operator_actions import PreconditionVerdict
 
 
 class LLMError(CadrumoError):
@@ -70,6 +76,22 @@ class LLMRateLimitError(LLMProviderError):
 class LLMConfigError(LLMError):
     """Raised when :class:`~llm.LLMClient` configuration is invalid."""
 
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: Mapping[str, object] | None = None,
+        translated_message: str | None = None,
+        precondition_verdict: PreconditionVerdict | None = None,
+    ) -> None:
+        super().__init__(message, context=context, translated_message=translated_message)
+        self._terminal_precondition_verdict = precondition_verdict
+
+    @property
+    def terminal_precondition_verdict(self) -> PreconditionVerdict | None:
+        """Return the exact configuration verdict for boundary projection."""
+        return self._terminal_precondition_verdict
+
 
 class LLMContentionError(LLMError):
     """Raised when this machine has no measured headroom to load the model.
@@ -87,6 +109,26 @@ class LLMContentionError(LLMError):
     the load on the machine changes -- so re-sending on a schedule turns one
     refusal into several while the memory it is waiting for is still held.
     """
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: Mapping[str, object] | None = None,
+        translated_message: str | None = None,
+        precondition_verdict: PreconditionVerdict | None = None,
+    ) -> None:
+        super().__init__(
+            message,
+            context=context,
+            translated_message=translated_message,
+        )
+        self._terminal_precondition_verdict = precondition_verdict
+
+    @property
+    def terminal_precondition_verdict(self) -> PreconditionVerdict | None:
+        """Return the exact provisioning verdict for later boundary projection."""
+        return self._terminal_precondition_verdict
 
 
 class LLMBusyError(LLMError):

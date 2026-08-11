@@ -25,8 +25,8 @@ from ...core.json_contract import Notice, NoticeSeverity
 from ._common import _bad, _emit_envelope, _optional_canonical_period, _state, _tx_repo
 
 if TYPE_CHECKING:
-    from ...adapters.persistence.profile.ledger import TransactionCatalogueRepository
     from ...domain.currency import CurrencyNormalizationService
+    from ...domain.transactions import TransactionCatalogueRepositoryProtocol
 
 
 def _known_import_providers() -> tuple[str, ...]:
@@ -67,7 +67,7 @@ class _ImportBucketContext:
 
     bucket_id: str | None
     actor: str
-    transaction_repository: TransactionCatalogueRepository | None
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -108,7 +108,7 @@ def _imported_files(
     import_paths: list[Path],
     *,
     command: Callable[[Path], LedgerSourceImportCommand],
-    transaction_repository: TransactionCatalogueRepository | None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None,
     currency_normalizer: CurrencyNormalizationService,
 ) -> tuple[list[LedgerSourceImportResult], list[tuple[Path, str]]]:
     """Import each statement file, returning the successes and the refusals apart.

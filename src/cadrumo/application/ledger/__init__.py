@@ -397,6 +397,7 @@ if TYPE_CHECKING:
         resolve_party_attribution_by_colocation,
     )
     from ._preflight import (
+        OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE,
         LedgerPreflightIssue,
         LedgerPreflightIssueReason,
         LedgerPreflightReport,
@@ -667,6 +668,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "FILER_POSTCODE_FACT_PATH": "._filer_establishment",
     "preflight_ledger_tax_readiness": "._preflight",
     "preflight_transaction_catalogue": "._preflight",
+    "OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE": "._preflight",
     "printed_total_discrepancy": "._evidence_draft",
     "query_ledger_review_rows": "._actions_manual",
     "reject_llm_suggestion": "._llm_classification",
@@ -745,6 +747,7 @@ __all__ = [
     "GROUNDABLE_ORIGINS",
     "IDENTITY_FIELDS",
     "MINIMUM_DISPLAY_ID_WIDTH",
+    "OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE",
     "PARTY_ATTRIBUTED_ADDRESS_FIELDS",
     "ROUNDING_ALLOWANCE_PER_TERM",
     "AeatRecordProjectionError",

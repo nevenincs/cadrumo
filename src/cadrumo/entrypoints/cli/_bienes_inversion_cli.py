@@ -92,6 +92,10 @@ def bienes_inversion_declare(
         "--acquisition-year",
         help=tr("cli.app.ledger.bienes_inversion.acquisition_year_help", default="Year the good was acquired."),
     ),
+    acquisition_ledger_id: str = typer.Option(
+        ...,
+        "--acquisition-ledger-id",
+    ),
     cuota_soportada: str = typer.Option(
         ...,
         "--cuota-soportada",
@@ -132,6 +136,10 @@ def bienes_inversion_declare(
             default="Optional cross-reference to an AssetRecord identifier.",
         ),
     ),
+    prorrata_sector_id: str | None = typer.Option(
+        None,
+        "--sector",
+    ),
     disposal_year: int | None = typer.Option(
         None,
         "--disposal-year",
@@ -167,6 +175,8 @@ def bienes_inversion_declare(
         kind=_parse_kind(kind),
         art108_elegible=art108_elegible,
         asset_record_ref=asset_record_ref,
+        acquisition_ledger_id=acquisition_ledger_id,
+        prorrata_sector_id=prorrata_sector_id,
         disposal=disposal,
     )
     register = BienesInversionRegisterService().declare(record)

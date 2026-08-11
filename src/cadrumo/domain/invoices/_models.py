@@ -12,7 +12,7 @@ Counterparty identity validation is delegated to
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from datetime import date, datetime
 from decimal import Decimal
 from types import MappingProxyType
@@ -26,7 +26,13 @@ from ...core.decimal import coerce_decimal
 from ...core.errors import CoreValidationError
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import content_hash_hex
-from ...core.identity import BucketId, InvoiceId, tax_id_identity_token, validate_spanish_tax_id
+from ...core.identity import (
+    BucketId,
+    IdentityError,
+    InvoiceId,
+    tax_id_identity_token,
+    validate_spanish_tax_id,
+)
 from ...core.money import CENT, round_to_cents
 from ...core.parsing import normalise_iso_4217_currency
 from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
@@ -186,16 +192,69 @@ def _normalise_invoice_dates(payload: dict[str, object]) -> dict[str, object]:
     return payload
 
 
+def _judging[T](field: str, judge: Callable[[], T]) -> T:
+    """Run a field validator, and name the field on the way out if it refuses.
+
+    These validators judge a VALUE and say so: "country code must be an
+    ISO-3166 alpha-2 value", "tax identifier must be exactly 9 characters".
+    None of them names the field, because none of them knows it -- the same
+    country validator judges an issuer country elsewhere.
+
+    This normaliser DOES know, and it is the last place that does. It runs
+    inside a model-level before-mode validator, so pydantic has no field
+    location to attach: the error surfaces at ``root`` with the exception class
+    and nothing else, and the operator-facing projection faithfully reports the
+    location the raise site never provided. Naming the field further downstream
+    would mean guessing it back from the message.
+
+    The raised exception is ANNOTATED IN PLACE rather than rebuilt, and that is
+    the load-bearing choice. Rebuilding it as ``type(error)(text)`` looks
+    equivalent and is not: these errors carry structured attributes their
+    constructor does not take -- a locale key among them -- so a rebuilt
+    instance arrives with the message improved and the translation key gone.
+    That was not reasoned out; a shipped assertion on the locale key caught it,
+    which is the whole reason such an assertion exists.
+
+    Only ``args[0]`` is touched, so the type, the translation key, the
+    structured context and the traceback all survive.
+
+    Stated reach, so this is not read as more than it is: the prefix reaches
+    whoever reads the message -- a developer, a log, a traceback, and the CLI
+    boundaries that render ``str(exc)``. A surface rendering the LOCALISED
+    message resolves the translation key instead and is unchanged, so it still
+    does not name the field. Carrying the field there means putting it in the
+    structured context and giving the key a slot for it, which is a change to a
+    localisation contract that is currently mid-migration; nothing here is
+    built against a shape that is still moving.
+    """
+    try:
+        return judge()
+    except (InvoiceValidationError, IdentityError) as error:
+        if error.args and isinstance(error.args[0], str) and not error.args[0].startswith(f"{field}: "):
+            error.args = (f"{field}: {error.args[0]}", *error.args[1:])
+        raise
+
+
 def _normalise_invoice_counterparty(payload: dict[str, object]) -> dict[str, object]:
     if "counterparty_country" in payload and isinstance(payload["counterparty_country"], str):
-        payload["counterparty_country"] = validate_country_code(payload["counterparty_country"])
+        country_raw = payload["counterparty_country"]
+        payload["counterparty_country"] = _judging(
+            "counterparty_country",
+            lambda: validate_country_code(country_raw),
+        )
     if "counterparty_tax_id" in payload and isinstance(payload["counterparty_tax_id"], str):
         tax_id_raw = tax_id_identity_token(payload["counterparty_tax_id"])
         country = payload.get("counterparty_country")
         if isinstance(country, str) and country == "ES":
-            payload["counterparty_tax_id"] = validate_spanish_tax_id(tax_id_raw)
+            payload["counterparty_tax_id"] = _judging(
+                "counterparty_tax_id",
+                lambda: validate_spanish_tax_id(tax_id_raw),
+            )
         elif isinstance(country, str):
-            payload["counterparty_tax_id"] = validate_iva_number(tax_id_raw, country)
+            payload["counterparty_tax_id"] = _judging(
+                "counterparty_tax_id",
+                lambda: validate_iva_number(tax_id_raw, country),
+            )
         else:
             payload["counterparty_tax_id"] = tax_id_raw
     # Every structured creation path -- bulk import, the wizard, the CLI, the

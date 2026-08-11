@@ -198,7 +198,10 @@ def test_a_constrained_machine_refuses_rather_than_naming_a_model_that_cannot_fi
     assert selection.runtime_id is None
     assert selection.tier is HardwareTier.CONSTRAINED
     assert ModelSelectionAdvisory.FIT_EXCEEDS_MEASURED_HEADROOM in selection.advisories
-    assert selection.remediation
+    verdict = selection.precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == "provisioning.selected_model.fits"
+    assert verdict.evidence[0].values == selection.facts
 
 
 def test_the_same_machine_with_headroom_selects_through_the_same_call() -> None:
@@ -229,7 +232,9 @@ def test_an_unmeasurable_machine_selects_but_says_fit_was_not_verified() -> None
     assert selection.tier is HardwareTier.UNMEASURED
     assert selection.binding_free_bytes is None
     assert ModelSelectionAdvisory.FIT_UNVERIFIED in selection.advisories
-    assert selection.remediation
+    assert selection.precondition_verdict is None
+    assert selection.facts["binding_free_measured"] is False
+    assert selection.facts["selected_model_requirement_known"] is True
 
 
 def test_an_override_of_a_licence_barred_model_is_honoured_with_a_visible_advisory() -> None:

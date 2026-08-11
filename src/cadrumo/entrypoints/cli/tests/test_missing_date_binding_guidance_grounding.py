@@ -7,37 +7,54 @@ consumer of that fact and appears nowhere in the profile editor.
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 import pytest
 
 from ....application.modelo import profile_requirements_for_binding
 from ....application.user_profile import build_profile_preflight_requirement
-from ....core import PeriodError
+from ....core import Period, PeriodError
 from ....core.resources import resources
 from ....domain.calculations.registry import (
+    DataBindingDefinition,
     RegistrySnapshotError,
     RegistryValidationError,
+    RevisionId,
     binding_profile_keys,
 )
+from ....domain.modelos import WorkUnit, derive_work_unit_id
 from .._modelo import _date_binding_profile_requirements
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
-class _Unit:
-    """Minimal work-unit stand-in carrying only the addressing the lookup reads.
-
-    Not a test double for behaviour: the resolution under test runs against the
-    real registry authority and the real profile schema. This supplies the
-    three addressing values the production `WorkUnit` would carry.
-    """
-
-    def __init__(self, modelo: str, filing_year: int, period) -> None:
-        self.modelo = modelo
-        self.filing_year = filing_year
-        self.period = period
+_WORK_UNIT_BUCKET_ID = "00000000-0000-4000-8000-000000000042"
+_WORK_UNIT_NAME = "missing-date-binding-guidance"
+_WORK_UNIT_TIMESTAMP = datetime(2026, 1, 1, tzinfo=UTC)
 
 
-def _an_addressable_profile_binding():
+def _work_unit(modelo: str, filing_year: int, period: Period, revision_id: RevisionId) -> WorkUnit:
+    """Build a real deterministic work unit for the address under test."""
+    return WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id=_WORK_UNIT_BUCKET_ID,
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            revision_id=revision_id,
+        ),
+        bucket_id=_WORK_UNIT_BUCKET_ID,
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+        revision_id=revision_id,
+        name=_WORK_UNIT_NAME,
+        created_at=_WORK_UNIT_TIMESTAMP,
+        updated_at=_WORK_UNIT_TIMESTAMP,
+    )
+
+
+def _an_addressable_profile_binding() -> tuple[WorkUnit, DataBindingDefinition]:
     """Return ``(unit, binding)`` for a real committed profile binding.
 
     Searched rather than hand-picked, and validated through the SAME
@@ -49,8 +66,6 @@ def _an_addressable_profile_binding():
     to actually contain the binding, is what makes the returned pair genuinely
     addressable rather than merely plausible.
     """
-    from ....core import Period
-
     authority = resources().modelos.authority
     for model in authority.modelos:
         for revision in model.revisions.values():
@@ -75,7 +90,7 @@ def _an_addressable_profile_binding():
                         continue
                     for binding in candidates:
                         if str(binding.id) in resolved:
-                            return _Unit(str(model.id), filing_year, period), binding
+                            return _work_unit(str(model.id), filing_year, period, snapshot.revision.id), binding
     pytest.fail("no committed profile binding sits under a resolvable revision")
 
 
@@ -85,9 +100,7 @@ def test_an_unresolvable_work_unit_degrades_to_the_binding_id() -> None:
 
 
 def test_a_binding_id_matching_no_row_degrades_to_the_binding_id() -> None:
-    from ....core import Period
-
-    unit = _Unit("303", 2026, Period.from_year_and_code(2026, "1T"))
+    unit = _work_unit("303", 2026, Period.from_year_and_code(2026, "1T"), "test-revision")
 
     assert _date_binding_profile_requirements(unit, "no-such-binding") == "no-such-binding"
 

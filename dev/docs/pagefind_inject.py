@@ -242,14 +242,17 @@ def _require_complete_projection(materialised: _Materialised) -> None:
 def _effective_weight(record: SearchRecord, relevance: dict[str, float]) -> float:
     """Return the record's ranking weight, boosted by relevance when present.
 
-    The relevance weight, when the file supplies one for this record id, is
-    blended into the base weight (taking the stronger of the two, capped at 1)
-    so a sweep-favoured record ranks at least as high as its base tier.
+    The boost orders records WITHIN their display class and is contained in
+    that class's band, so a record that topped one query can no longer outrank
+    the classes above it for every query. A record the relevance file does not
+    name keeps the weight the funnel gave it.
     """
+    from .terminology._unified_record import contain_boost_in_band, derive_display_class
+
     boost = relevance.get(record.id)
     if boost is None:
         return record.ranking_weight
-    return min(1.0, max(record.ranking_weight, boost))
+    return contain_boost_in_band(derive_display_class(record), boost)
 
 
 def _sort_key(weight: float) -> str:

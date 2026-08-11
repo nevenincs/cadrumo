@@ -10,7 +10,12 @@ import pytest
 
 from .....core.aggregation import RelationAggregationOp
 from .....core.resources import bundled_path
-from .. import binding_source_casilla_ids, expression_binding_refs, expression_relation_refs
+from .. import (
+    binding_source_casilla_ids,
+    expression_relation_refs,
+    relation_consumption_index,
+    relation_is_consumed,
+)
 from .._binding_selector_utils import selector_as_dict
 from .._errors import RegistryValidationError
 from .._iva_wallet_relation_targets import is_iva_wallet_owned_relation_target
@@ -45,13 +50,6 @@ def _validated_registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCa
     return modelos, catalogues
 
 
-def _formula_relation_refs(revision: ModeloRevision) -> set[str]:
-    refs: set[str] = set()
-    for formula in revision.formulas:
-        refs.update(expression_relation_refs(formula.expression))
-    return refs
-
-
 def _algorithm_relation_refs(revision: ModeloRevision) -> set[str]:
     relation_ids = {relation.id for relation in revision.relations}
     return {
@@ -62,22 +60,11 @@ def _algorithm_relation_refs(revision: ModeloRevision) -> set[str]:
     }
 
 
-def _formula_binding_refs(revision: ModeloRevision) -> set[str]:
-    refs: set[str] = set()
-    for formula in revision.formulas:
-        refs.update(expression_binding_refs(formula.expression))
-    return refs
-
-
 def _consumed_relation_refs(revision: ModeloRevision) -> set[str]:
-    consumed = _formula_relation_refs(revision) | _algorithm_relation_refs(revision)
-    casilla_bindings = {casilla.binding for casilla in revision.casillas if casilla.binding is not None}
-    formula_bindings = _formula_binding_refs(revision)
-    consumed_bindings = casilla_bindings | formula_bindings
-    for relation in revision.relations:
-        if relation.target_binding in consumed_bindings:
-            consumed.add(relation.id)
-    return consumed
+    index = relation_consumption_index(revision)
+    return _algorithm_relation_refs(revision) | {
+        str(relation.id) for relation in revision.relations if relation_is_consumed(relation, index)
+    }
 
 
 def test_cross_dependency_roles_match_supported_modelo_hierarchy() -> None:

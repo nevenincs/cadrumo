@@ -73,6 +73,7 @@ from ...domain.iva import (
     IvaCategory,
     IvaRateKind,
     IvaTerritorialScope,
+    SupplyNature,
     record_country_code_status,
 )
 from ._classification_assembly import (
@@ -228,6 +229,7 @@ def _declared_facts(
     counterparty: CounterpartyEstablishment,
     filer_scope: IvaTerritorialScope | None,
     stated_category: DeclaredFact[IvaCategory] | None,
+    supply_nature: SupplyNature | None = None,
 ) -> DeclaredFacts:
     """Place each resolved fact on the party it belongs to, by direction.
 
@@ -251,18 +253,33 @@ def _declared_facts(
     filer = (
         None if filer_scope is None else DeclaredFact(value=filer_scope, source=ClassifierInputSource.PROFILE_AUTHORITY)
     )
+    # The operator's own answer, and the ONLY sanctioned source for this axis
+    # besides a printed statutory citation. Stamped OPERATOR_ASSERTION rather
+    # than any evidence provenance: the classifier's inputs stay facts about
+    # who established them, and an operator saying "services" is a different
+    # kind of claim from a document citing art. 69.
+    #
+    # Direction-independent, unlike every other fact here. Goods or services is
+    # a property of the SUPPLY, so it does not swap sides when the filer does.
+    asserted_nature = (
+        None
+        if supply_nature is None
+        else DeclaredFact(value=supply_nature, source=ClassifierInputSource.OPERATOR_ASSERTION)
+    )
     if kind is InvoiceKind.RECEIVED:
         return DeclaredFacts(
             issuer_scope=counterparty_scope,
             customer_scope=filer,
             issuer_identification_state=counterparty_identification,
             stated_category=stated_category,
+            supply_nature=asserted_nature,
         )
     return DeclaredFacts(
         issuer_scope=filer,
         customer_scope=counterparty_scope,
         customer_identification_state=counterparty_identification,
         stated_category=stated_category,
+        supply_nature=asserted_nature,
     )
 
 
@@ -307,6 +324,7 @@ def resolve_confirmed_establishment(
     kind: InvoiceKind,
     invoice_date: date | None = None,
     rate_tier: IvaRateKind | None = None,
+    supply_nature: SupplyNature | None = None,
     repository: ConfirmedCounterpartyFactsRepository | None = None,
 ) -> ConfirmedEstablishment:
     """Resolve both parties' territories for one confirm, and classify the operation.
@@ -333,6 +351,15 @@ def resolve_confirmed_establishment(
             reading stage. Reaches the criteria as the axis rule ``R05``
             consults, which is what makes the rule table -- rather than a
             second copy of its mapping -- produce a domestic category.
+        supply_nature: The operator's own statement of whether the supply is
+            goods or services, when they have made one. It is demanded only on
+            the branches where the law forks on it -- cross-border and reverse
+            charge -- and the ADR sanctions exactly two sources for the axis: a
+            printed statutory citation, which decides by law, and this
+            assertion. It enters stamped as an OPERATOR assertion so the
+            classifier's inputs stay facts about who established them; a
+            document citing art. 69 and an operator saying "services" are
+            different kinds of claim and must not arrive looking alike.
         repository: Injected counterparty-fact store.
 
     Returns:
@@ -370,6 +397,7 @@ def resolve_confirmed_establishment(
         # is a classification question, and a reader answering it was a second
         # authority working from weaker evidence than the rule table.
         stated_category=declared_category_from_document_record(draft.iva_category),
+        supply_nature=supply_nature,
     )
     assembly = assemble_classification_criteria(
         # The operator's override layers over the printed date, parsed through

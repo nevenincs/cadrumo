@@ -18,7 +18,7 @@ from decimal import Decimal
 
 import pytest
 
-from .. import ExportFieldDefinition, parse_fixed_width_export_field
+from .. import ExportFieldDefinition, parse_fixed_width_export_field, xml_dictionary_entries
 from .._errors import RegistryValidationError
 from .._export_parse import (
     _local_name,
@@ -27,6 +27,7 @@ from .._export_parse import (
     _parse_xml_decimal,
     _parse_xml_dictionary_value,
 )
+from ._modelo_100_registry_support import _loaded_registry, _source_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -36,7 +37,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # ---------------------------------------------------------------------------
 
 
-def test_parse_dictionary_casilla_id_returns_digit_string_unchanged() -> None:
+def test_parse_dictionary_casilla_id_accepts_published_numeric_identities() -> None:
     cases = {
         "01": "01",
         "1234": "1234",
@@ -47,12 +48,43 @@ def test_parse_dictionary_casilla_id_returns_digit_string_unchanged() -> None:
         assert _parse_dictionary_casilla_id(raw) == expected, raw
 
 
+def test_parse_dictionary_casilla_id_accepts_grounded_letter_identities_only_when_enabled() -> None:
+    for raw, expected in {"A": "A", "  M  ": "M"}.items():
+        assert _parse_dictionary_casilla_id(raw) is None
+        assert _parse_dictionary_casilla_id(raw, allow_letter_id=True) == expected
+
+
 def test_parse_dictionary_casilla_id_rejects_non_casilla_rows() -> None:
     """AEAT dictionaries use `*` to mark non-casilla rows (notes, separators)."""
-    cases = ("", "   ", "*not-a-casilla", "*01", "abc", "01a", "01.5")
+    cases = ("", "   ", "*not-a-casilla", "*01", "###", "a", "abc", "01a", "01.5")
 
     for raw in cases:
         assert _parse_dictionary_casilla_id(raw) is None, raw
+
+
+@pytest.mark.parametrize(
+    ("filing_year", "field_id", "expected_casilla_id"),
+    (
+        (2024, "VHADQ", "A"),
+        (2025, "MDIC", "I"),
+    ),
+)
+def test_m100_dictionary_preserves_published_letter_casilla_identities(
+    filing_year: int,
+    field_id: str,
+    expected_casilla_id: str,
+) -> None:
+    modelos_by_id, catalogues = _loaded_registry()
+    layout = modelos_by_id["100"].revisions[str(filing_year)].export_layouts[0]
+
+    entries = xml_dictionary_entries(
+        layout,
+        source_root=_source_root(),
+        sources=catalogues.sources,
+    )
+    entry = next(item for item in entries if item.field_id == field_id)
+
+    assert entry.casilla_id == expected_casilla_id
 
 
 # ---------------------------------------------------------------------------

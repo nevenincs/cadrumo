@@ -271,8 +271,13 @@ def test_an_unmeasurable_headroom_and_a_measured_shortfall_are_not_the_same_refu
                 _client(tmp_path / "b", profile=unmeasurable, residents=()).complete(LLMRequest(prompt="hello"))
             )
 
-    assert _causes(shortfall.value) != _causes(unreadable.value)
-    assert str(shortfall.value) != str(unreadable.value)
+    shortfall_verdict = shortfall.value.terminal_precondition_verdict
+    unreadable_verdict = unreadable.value.terminal_precondition_verdict
+    assert shortfall_verdict is not None
+    assert unreadable_verdict is not None
+    assert shortfall_verdict.failed_condition_id == "provisioning.load_capacity.available"
+    assert unreadable_verdict.failed_condition_id == "provisioning.load_headroom.measurable"
+    assert shortfall_verdict.failed_condition_id != unreadable_verdict.failed_condition_id
 
 
 def test_a_contention_refusal_is_sent_once_and_never_retried(tmp_path: Path) -> None:
@@ -302,8 +307,13 @@ def test_a_contention_refusal_is_sent_once_and_never_retried(tmp_path: Path) -> 
         assert arrivals == []
 
 
-def test_the_refusal_carries_the_authority_s_own_detail(tmp_path: Path) -> None:
-    """The error preserves the measured authority's fact without selecting an action."""
+def model_in_refusal(rendered: str) -> bool:
+    """Whether the refusal names the model, which is what makes it actionable."""
+    return _CATALOGUED_MODEL in rendered
+
+
+def test_the_refusal_names_the_authority_s_own_causes(tmp_path: Path) -> None:
+    """The error carries the authority's typed verdict, model, and causes."""
     resident = RuntimeResident(name=_CATALOGUED_MODEL, size_bytes=2 * _GIB, size_vram_bytes=2 * _GIB)
     starved = _profile(free_vram_bytes=256 * 1024**2, free_ram_bytes=48 * _GIB)
     snapshot = assess_model_load_contention(
@@ -321,7 +331,13 @@ def test_the_refusal_carries_the_authority_s_own_detail(tmp_path: Path) -> None:
         asyncio.run(_client(tmp_path, profile=starved, residents=(resident,)).complete(LLMRequest(prompt="hello")))
 
     assert snapshot.admitted is False
-    assert str(refusal.value) == snapshot.detail
+    assert snapshot.precondition_verdict is not None
+    assert refusal.value.terminal_precondition_verdict == snapshot.precondition_verdict
+    assert snapshot.causes, "the authority refused without naming a cause, so there is nothing to carry"
+    rendered = str(refusal.value)
+    for cause in snapshot.causes:
+        assert cause.value in rendered, f"the refusal dropped the authority's cause {cause.value!r}: {rendered}"
+    assert model_in_refusal(rendered), f"the refusal must name the model it refused: {rendered}"
 
 
 def test_an_off_host_dispatch_is_not_headroom_checked(tmp_path: Path) -> None:

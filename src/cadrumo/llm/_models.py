@@ -1,6 +1,9 @@
 """Strict Pydantic models for the LLM package.
 
-The public :mod:`adapters.outbound.llm` facade re-exports these records.
+These records are public through this package's own :mod:`llm` facade. The
+sibling :mod:`adapters.outbound.llm` package does NOT re-export them -- since
+the split its ``__all__`` is four encrypted stores and the two telemetry
+records -- so a consumer reaches them here and never through the adapter.
 :class:`~llm.LLMRequest`,
 :class:`~llm.LLMResponse`, and
 :class:`~llm.LLMProvider` form the

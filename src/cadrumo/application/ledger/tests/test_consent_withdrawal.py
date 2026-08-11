@@ -310,8 +310,8 @@ def test_re_derivation_refuses_a_reader_that_stamps_a_cloud_transport(profile: T
     _seed_cloud_draft(profile)
     _seed_transcription(profile)
 
-    def _cloud_reader(transcribed_text: str, /) -> tuple[InvoiceDraft, str]:
-        assert transcribed_text
+    def _cloud_reader(transcription: DocumentTranscription, /) -> tuple[InvoiceDraft, str]:
+        assert transcription.text
         return InvoiceDraft(), _CLOUD_STAMP
 
     with pytest.raises(ValueError, match="on-host transport"):

@@ -16,12 +16,14 @@ there is no stricter of two casilla ids, so any tie-break would be an invention.
 
 from __future__ import annotations
 
+from typing import Literal
+
 import pytest
 
 from .....core import validated_casilla_id
 from .._errors import RegistryValidationError
 from .._schema_verification import (
-    VerificationDiscrepancyCause,
+    DiscrepancyCause,
     VerificationExpectationDefinition,
     fold_reconciliation_total_casilla_ids,
 )
@@ -34,7 +36,7 @@ _SOURCE = ("aeat-dr-303-2026",)
 
 def _expectation(
     identifier: str,
-    totals: dict[str, str],
+    totals: dict[Literal["ingresar", "devolver"], str],
     *,
     computed: tuple[str, ...] = ("01",),
 ) -> VerificationExpectationDefinition:
@@ -49,7 +51,7 @@ def _expectation(
         tolerance="0.01",
         rounding="money-2",
         min_coverage="1",
-        discrepancy_causes=(VerificationDiscrepancyCause.ROUNDING,),
+        discrepancy_causes=(DiscrepancyCause.ROUNDING,),
         legal_refs=_LEGAL,
         source_refs=_SOURCE,
     )

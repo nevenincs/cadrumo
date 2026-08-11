@@ -186,6 +186,7 @@ class TestEvidenceSurvivesTheWritePath:
             notice = censo_divergence_notice(record)
             assert notice is not None
             assert notice.severity is NoticeSeverity.WARNING
+            assert notice.context is not None
             assert notice.context["count"] == str(len(reloaded))
 
     def test_a_re_cotejo_with_fewer_obligations_clears_the_stale_row(

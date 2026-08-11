@@ -142,6 +142,7 @@ from ._calculation_actions import (
     list_calculation_revisions,
     mark_revision_verificado_completo,
 )
+from ._calculation_resolution import resolve_calculation_binding_channels
 from ._calculation_source_policy import (
     BUCKET_AGGREGATION_LOCK_SOURCES,
     CALLER_OVERRIDABLE_CARRY_SOURCES,
@@ -556,6 +557,7 @@ from ._work_plazo import (
     modelo_work_deadline_posture,
     validate_modelo_work_deadline_posture,
 )
+from ._work_review import ModeloWorkReview, build_modelo_work_review
 from ._workflow_gate import build_revision_deadline_window_checker, workflow_period_for_work_unit
 
 __all__ = [
@@ -715,6 +717,7 @@ __all__ = [
     "ModeloWorkPeriodTokenError",
     "ModeloWorkRegistryYearMismatchError",
     "ModeloWorkResolution",
+    "ModeloWorkReview",
     "ModeloWorkRevisionConflictError",
     "ModeloWorkSelectorContradictionError",
     "ModeloWorkSelectorError",
@@ -796,6 +799,7 @@ __all__ = [
     "build_feedback_package",
     "build_m145_communication_service_contract",
     "build_modelo_precondition_failure",
+    "build_modelo_work_review",
     "build_review_package",
     "build_revision_deadline_window_checker",
     "build_verification_precondition_failure",
@@ -924,6 +928,7 @@ __all__ = [
     "require_profile_ready_for_work_unit",
     "resolve_active_natural_modelo_work_unit",
     "resolve_available_bound_inputs_by_casilla_id",
+    "resolve_calculation_binding_channels",
     "resolve_casilla_population_scope",
     "resolve_exportable_modelo_calculation_revision_address",
     "resolve_fileable_modelo_calculation_revision_address",

@@ -8,8 +8,9 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from .....core import CasillaId, validated_casilla_id
+from .....core import CasillaId, Modelo, validated_casilla_id
 from .....core.resources import resources
+from .. import relations_by_target_binding
 from .._errors import NoRevisionForPeriodError, RegistryValidationError
 from .._queries import (
     BindingSelectorQueryProjection,
@@ -28,6 +29,21 @@ _TARGET_CASILLA: CasillaId = validated_casilla_id("02", surface="_TARGET_CASILLA
 
 def _service() -> RegistryQueryService:
     return RegistryQueryService(resources().modelos.authority)
+
+
+def test_relations_by_target_binding_preserves_real_registry_declaration_order() -> None:
+    snapshot = resources().modelos.authority.snapshot(Modelo.M202.value, filing_year=2025, period="2P")
+
+    grouped = relations_by_target_binding(snapshot.revision)
+
+    assert tuple(relation.id for relation in grouped["modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores"]) == (
+        "modelo-202-2025-y-siguientes-rel-self-pagos-2p",
+        "modelo-202-2025-y-siguientes-rel-self-pagos-3p",
+    )
+    assert tuple(relation.id for relation in grouped["modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior"]) == (
+        "modelo-202-2025-y-siguientes-rel-cuota-base-1p",
+        "modelo-202-2025-y-siguientes-rel-cuota-base-2p-3p",
+    )
 
 
 @pytest.mark.parametrize("period", ("2026Q1", "2026-Q4", "2026-03", "2026"))

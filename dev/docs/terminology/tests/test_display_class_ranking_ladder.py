@@ -3,9 +3,12 @@
 The ratified ranking decision moves the base-weight table
 from per-kind to per-display-class and declares ONE user-first ordering:
 general-fact concept cards (``doc``), then ``modelo``, then ``casilla``, then
-``cli``, then ``technical`` (api / dev machinery) pages last. This gate pins
-that ordering so a future reorder of the declared table fails loudly, and proves
-every display class carries exactly one weight (an unmapped class is a failure).
+``legal``, then ``cli``, then ``technical`` (api / dev machinery) pages last.
+A BOE article or Orden GROUNDS a modelo or casilla surface rather than
+answering the operator's question, so it ranks beneath both while still leading
+the machinery tiers. This gate pins that ordering so a future reorder of the
+declared table fails loudly, and proves every display class carries exactly one
+weight (an unmapped class is a failure).
 
 The expected ordering is derived strictly from the ratified ladder prose, never
 copied from the table under test.
@@ -36,11 +39,12 @@ def test_every_display_class_carries_exactly_one_weight() -> None:
 
 
 def test_weight_table_orders_the_d8_ladder_verbatim() -> None:
-    """The base weights order ``doc > modelo > casilla > cli > technical``.
+    """The base weights order ``doc > modelo > casilla > legal > cli > technical``.
 
     The expected sequence is the ratified user-first ladder prose: general-fact
-    concept cards lead, then modelo document cards, then casilla rows, then CLI
-    records, then technical (api / dev) pages last.
+    concept cards lead, then modelo document cards, then casilla rows, then the
+    legal provisions that ground them, then CLI records, then technical
+    (api / dev) pages last.
     """
     from dev.docs.terminology._search_record import ResultDisplayClass
     from dev.docs.terminology._unified_record import display_class_base_weight
@@ -49,6 +53,7 @@ def test_weight_table_orders_the_d8_ladder_verbatim() -> None:
         ResultDisplayClass.DOC,
         ResultDisplayClass.MODELO,
         ResultDisplayClass.CASILLA,
+        ResultDisplayClass.LEGAL,
         ResultDisplayClass.CLI,
         ResultDisplayClass.TECHNICAL,
     )
@@ -67,11 +72,32 @@ def test_ladder_covers_every_display_class_exactly_once() -> None:
         ResultDisplayClass.DOC,
         ResultDisplayClass.MODELO,
         ResultDisplayClass.CASILLA,
+        ResultDisplayClass.LEGAL,
         ResultDisplayClass.CLI,
         ResultDisplayClass.TECHNICAL,
     )
     assert len(ladder) == len(set(ladder)) == len(ResultDisplayClass)
     assert set(ladder) == set(ResultDisplayClass)
+
+
+def test_legal_ranks_beneath_the_surfaces_it_grounds() -> None:
+    """A legal provision sits below modelo and casilla, above the machinery tiers.
+
+    The corrected ranking: a BOE article or Orden grounds a modelo or casilla
+    surface rather than answering the operator's question. Aliasing it onto the
+    user-documentation class put every provision above the very cards it
+    grounds, so this pins the corrected position from both sides.
+    """
+    from dev.docs.terminology._search_record import ResultDisplayClass
+    from dev.docs.terminology._unified_record import display_class_base_weight
+
+    legal = display_class_base_weight(ResultDisplayClass.LEGAL)
+
+    assert display_class_base_weight(ResultDisplayClass.CASILLA) > legal
+    assert display_class_base_weight(ResultDisplayClass.MODELO) > legal
+    assert display_class_base_weight(ResultDisplayClass.DOC) > legal
+    assert legal > display_class_base_weight(ResultDisplayClass.CLI)
+    assert legal > display_class_base_weight(ResultDisplayClass.TECHNICAL)
 
 
 def test_casilla_outranks_cli_and_technical_ranks_last() -> None:

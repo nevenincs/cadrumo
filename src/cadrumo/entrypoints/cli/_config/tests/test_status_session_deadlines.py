@@ -24,7 +24,7 @@ from .._status_frontend import build_status_page_data
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _LABEL = "Status Session Deadline Subject"
-_PASSWORD = "status-session-deadline-operator-secret"  # noqa: S105 - synthetic test fixture
+_TEST_CREDENTIAL = "status-session-deadline-operator-secret"
 
 _TERMINAL_SIZE = (140, 60)
 
@@ -32,7 +32,7 @@ _TERMINAL_SIZE = (140, 60)
 def test_a_freshly_registered_profile_carries_both_real_deadlines(tmp_path) -> None:
     """Registration unlocks through the real login door, so both deadlines are set."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+        register_profile_with_credentials(label=_LABEL, passphrase=_TEST_CREDENTIAL)
 
         data = build_status_page_data()
 
@@ -55,9 +55,10 @@ def test_no_active_session_reports_no_deadlines(tmp_path) -> None:
 async def test_the_real_deadlines_paint_on_the_running_status_surface(tmp_path) -> None:
     """The last mile: what the real session carries is what the auth panel shows."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)
+        register_profile_with_credentials(label=_LABEL, passphrase=_TEST_CREDENTIAL)
         data = build_status_page_data()
         assert data.auth.idle_deadline is not None, "fixture premise: a live session must be open"
+        assert data.auth.absolute_deadline is not None, "fixture premise: the immutable session cap must be present"
         expected_idle = data.auth.idle_deadline.isoformat(timespec="minutes")
         expected_absolute = data.auth.absolute_deadline.isoformat(timespec="minutes")
 

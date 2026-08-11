@@ -508,9 +508,10 @@ def casillas_by_binding(revision: ModeloRevision) -> Mapping[BindingId, tuple[Ca
     cannot disagree about which pairs exist.
 
     Every consequence is inherited from the forward primitive rather than
-    decided again here: a BOUND
+    decided again here: schema construction refuses a BOUND
     :class:`~domain.calculations.registry.CasillaDefinition` with no binding
-    raises, and a non-BOUND casilla carrying a binding contributes nothing.
+    (and the forward primitive retains the same defensive refusal), while a
+    non-BOUND casilla carrying a binding contributes nothing.
     Casilla ids keep the revision's declaration order and are de-duplicated, so
     a casilla naming one binding as both primary and alternate appears once.
     """

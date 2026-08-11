@@ -34,6 +34,7 @@ tautologies.
 
 from __future__ import annotations
 
+import ast
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -47,8 +48,9 @@ from ....adapters.inbound.declaracion import (
 )
 from ....adapters.inbound.pdf import ExtractedCasilla
 from ....core import CasillaId, Period, validated_casilla_id
-from ....domain.calculations.registry import RegistrySnapshotRef
-from .._schema import DiscrepancyCause, VerificationStatus
+from ....domain.calculations.registry import DiscrepancyCause, RegistrySnapshotRef
+from ... import verification as verification_package
+from .._schema import VerificationStatus
 from .._verify import (
     _classify_discrepancy,
     _compose_narrative,
@@ -60,6 +62,23 @@ from .._verify import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def test_discrepancy_cause_has_one_registry_owner_and_no_application_facade() -> None:
+    source_root = Path(__file__).parents[3]
+    declarations = [
+        path.resolve()
+        for path in source_root.rglob("*.py")
+        if any(
+            isinstance(node, ast.ClassDef) and node.name == "DiscrepancyCause"
+            for node in ast.walk(ast.parse(path.read_text(encoding="utf-8")))
+        )
+    ]
+
+    assert declarations == [source_root / "domain/calculations/registry/_schema_verification.py"]
+    assert DiscrepancyCause.__module__ == "cadrumo.domain.calculations.registry._schema_verification"
+    assert not hasattr(verification_package, "DiscrepancyCause")
+    assert DiscrepancyCause.CORRECTNESS_DIVERGENCE.value == "correctness_divergence"
 
 _DEFAULT_DISCREPANCY_CASILLA: CasillaId = validated_casilla_id("01", surface="_DEFAULT_DISCREPANCY_CASILLA")
 _SECOND_DISCREPANCY_CASILLA: CasillaId = validated_casilla_id("02", surface="_SECOND_DISCREPANCY_CASILLA")

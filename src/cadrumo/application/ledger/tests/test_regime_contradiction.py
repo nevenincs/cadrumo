@@ -41,7 +41,7 @@ from decimal import Decimal
 import pytest
 
 from ....core import ConfirmationBlockReason, DraftDiscrepancyKind
-from ....domain.iva import REGIME_LEGENDS
+from ....domain.iva import REGIME_LEGENDS, RegimeLegend
 from .._confirmation_gate import BLOCKING_REASON_BY_DISCREPANCY_KIND, confirmation_blockers
 from .._evidence_draft import InvoiceDraft
 from .._regime_contradiction import draft_prints_a_repercutido_line, regime_contradiction_finding
@@ -133,10 +133,10 @@ def test_a_zero_rate_beside_the_mention_is_the_ordinary_presentation_not_a_confl
 
 
 @pytest.mark.parametrize("legend", _SILENT, ids=lambda legend: legend.provision)
-def test_a_mention_that_declares_no_category_cannot_contradict(legend: object) -> None:
+def test_a_mention_that_declares_no_category_cannot_contradict(legend: RegimeLegend) -> None:
     """Six mentions are real obligations that fix no category, so there is nothing to conflict with."""
     draft = InvoiceDraft(
-        regime_legend=legend.phrase,  # type: ignore[attr-defined]
+        regime_legend=legend.phrase,
         taxable_base=Decimal("1000.00"),
         iva_rate=Decimal("21"),
         iva_amount=Decimal("210.00"),

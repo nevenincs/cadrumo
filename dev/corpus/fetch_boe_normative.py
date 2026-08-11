@@ -79,6 +79,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
+from urllib.parse import urlsplit
 
 import httpx
 
@@ -157,6 +158,54 @@ def version_selections(payload: str) -> tuple[VersionSelection, ...]:
     return tuple(selections)
 
 
+def assert_served_by_the_requested_endpoint(*, final_url: str, requested_url: str) -> None:
+    """Refuse a payload the requested endpoint did not actually serve.
+
+    Every other check here reads the PAYLOAD, and a payload cannot say which
+    endpoint produced it. That gap is not theoretical: measured on a live
+    probe, a request to the consolidated ``act.php`` endpoint silently
+    redirected to ``doc.php``, the single-document view, and the identity check
+    passed because ``doc.php`` echoes the requested id in the same form input.
+    An identity check that reads the id back out of a response is satisfied by
+    ANY endpoint that echoes it, so it verifies the REQUEST rather than the
+    SOURCE.
+
+    Only the version-selector check refused that payload, and it refused for an
+    unrelated reason -- a single-document view offers no versions. It would NOT
+    have caught a redirect landing on something version-bearing, and this
+    acquirer is the only thing standing between the fleet and hand-fetching.
+
+    The structural fact behind the live case, worth keeping because it explains
+    the shape rather than the incident: BOE holds no consolidated text for
+    bilateral tax conventions at all. Each convention excerpt's own permalink
+    had already recorded that by pointing at ``doc.php`` rather than ``act.php``
+    -- a provenance marker sitting in plain sight, unread because nobody was
+    looking for a SHAPE difference in a URL.
+
+    Compared on scheme, host and path only. The query string legitimately
+    differs -- BOE echoes and reorders parameters -- and a comparison that
+    included it would refuse correct responses, which is how a guard gets
+    switched off.
+
+    Args:
+        final_url: The URL the response actually came from, after redirects.
+        requested_url: The endpoint this acquirer meant to read.
+
+    Raises:
+        NormativeAcquisitionError: If the response came from a different
+            scheme, host or path than the one requested.
+    """
+    served = urlsplit(final_url)
+    wanted = urlsplit(requested_url)
+    if (served.scheme, served.netloc, served.path) != (wanted.scheme, wanted.netloc, wanted.path):
+        raise NormativeAcquisitionError(
+            f"the response came from {served.scheme}://{served.netloc}{served.path} rather than the requested "
+            f"{wanted.scheme}://{wanted.netloc}{wanted.path}; a redirect to a different endpoint can echo the "
+            f"requested id and satisfy every payload check while serving something other than the "
+            f"consolidated text"
+        )
+
+
 def assert_serves_the_text_in_force(payload: str, *, document_id: str) -> tuple[VersionSelection, ...]:
     """Refuse a payload that is not the consolidated text currently in force.
 
@@ -232,6 +281,7 @@ def fetch_normative(
     try:
         response = http.get(_ACT_URL, params={"id": document_id})
         response.raise_for_status()
+        assert_served_by_the_requested_endpoint(final_url=str(response.url), requested_url=_ACT_URL)
         data = response.content
     finally:
         if owned:
@@ -397,11 +447,10 @@ def fetch_article(
         headers={"User-Agent": "cadrumo-corpus-hydration/1.0", **_ARTICLE_HEADERS},
     )
     try:
-        response = http.get(
-            _ARTICLE_URL.format(document_id=document_id, block=block),
-            headers=_ARTICLE_HEADERS,
-        )
+        article_url = _ARTICLE_URL.format(document_id=document_id, block=block)
+        response = http.get(article_url, headers=_ARTICLE_HEADERS)
         response.raise_for_status()
+        assert_served_by_the_requested_endpoint(final_url=str(response.url), requested_url=article_url)
         data = response.content
     finally:
         if owned:

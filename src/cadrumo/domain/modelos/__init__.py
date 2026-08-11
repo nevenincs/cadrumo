@@ -174,6 +174,7 @@ from ._row_models import (
 )
 from ._sal_reserva_especial import compute_sal_reserva_especial_dotacion
 from ._verification_report import (
+    OPERATOR_ACTION_BY_MODELO_VERIFICATION_FINDING_KIND,
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
@@ -187,6 +188,7 @@ from ._work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_
 
 __all__ = (
     "M232_MAX_RELATED_PARTY_ROWS",
+    "OPERATOR_ACTION_BY_MODELO_VERIFICATION_FINDING_KIND",
     "CalculationRevision",
     "CalculationRevisionAmendmentKind",
     "CalculationRevisionCatalogue",

@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from typer._click.core import Context
+import typer
 from typer.main import get_command
 
 from ....adapters.persistence.storage.master_key import close_active_bucket_session
@@ -32,7 +32,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 def _resolve_real_leaf(*tokens: str) -> RequestedCliLeaf:
     root = get_command(app)
-    ctx = Context(root, info_name="aeat")
+    ctx = typer.Context(root, info_name="aeat")
     ctx.meta[INVOCATION_REMAINDER_META_KEY] = list(tokens)
     try:
         leaf = preserve_requested_cli_leaf(ctx)
@@ -81,6 +81,7 @@ def test_root_fallback_verdict_projects_the_catalogue_action_and_missing_input(t
     assert projection.precondition_action.action.model_dump(mode="json") == {
         "action_id": "operator.profile.create",
         "target_command_key": "config.profile.create",
+        "cli_path": ["config", "profile", "create"],
     }
     assert projection.precondition_action.missing_argument_names == ("profile_name",)
     assert projection.precondition_action.argument_bindings[0].model_dump(mode="json") == {
@@ -217,6 +218,8 @@ def test_real_common_guard_projects_login_when_profiles_are_unselected(tmp_path:
                 "Identity",
                 "--activity",
                 "design",
+                "--tax-residence-jurisdiction-scope",
+                "common_regime",
             ]
         )
         assert created.exit_code == 0, created.output

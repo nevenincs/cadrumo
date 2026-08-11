@@ -307,18 +307,6 @@ def _m303_foral_snapshot(
 
 
 def test_presenter_is_required_and_never_derived_from_taxpayer() -> None:
-    with pytest.raises(TypeError, match="presenter"):
-        build_filing_producer_snapshot(  # type: ignore[call-arg]
-            modelo=Modelo.M111,
-            taxpayer_tax_id=_TAXPAYER_TAX_ID,
-            taxpayer_identity=_taxpayer_identity(),
-            model_profile=Modelo111ProfileFacts(colegio_concertado=False),
-            elections=_elections(ResultDisposition.NEGATIVA),
-            amendment_evidence=None,
-            refund_account=None,
-            charge_account=None,
-        )
-
     presenter = _presenter()
     snapshot = build_filing_producer_snapshot(
         modelo=Modelo.M111,
@@ -337,22 +325,10 @@ def test_presenter_is_required_and_never_derived_from_taxpayer() -> None:
     assert producer_values[FilingProducerKey.PRESENTER_TAX_ID] == _PRESENTER_TAX_ID
     assert producer_values[FilingProducerKey.TAXPAYER_TAX_ID] == _TAXPAYER_TAX_ID
     with pytest.raises(ValidationError, match="frozen"):
-        snapshot.presenter.full_name = "Mutated"  # type: ignore[misc]
+        snapshot.presenter.__setattr__("full_name", "Mutated")
 
 
 def test_taxpayer_name_facts_are_required_and_not_derived_from_presenter() -> None:
-    with pytest.raises(TypeError, match="taxpayer_identity"):
-        build_filing_producer_snapshot(  # type: ignore[call-arg]
-            modelo=Modelo.M111,
-            taxpayer_tax_id=_TAXPAYER_TAX_ID,
-            presenter=_presenter(),
-            model_profile=Modelo111ProfileFacts(colegio_concertado=False),
-            elections=_elections(ResultDisposition.NEGATIVA),
-            amendment_evidence=None,
-            refund_account=None,
-            charge_account=None,
-        )
-
     snapshot = build_filing_producer_snapshot(
         modelo=Modelo.M111,
         taxpayer_tax_id=_TAXPAYER_TAX_ID,

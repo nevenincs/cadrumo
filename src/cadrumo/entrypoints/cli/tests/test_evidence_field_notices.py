@@ -9,6 +9,7 @@ verbatim match are never flattened into one.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from decimal import Decimal
 from pathlib import Path
 
@@ -119,7 +120,7 @@ def _anchored() -> FieldProvenance:
     )
 
 
-def _context(notice: Notice) -> dict[str, str]:
+def _context(notice: Notice) -> Mapping[str, str]:
     """Return a degradation notice's context, asserting the channel populated it.
 
     ``Notice.context`` is optional on the envelope model, and every assertion

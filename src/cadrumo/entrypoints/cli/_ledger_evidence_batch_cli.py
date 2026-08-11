@@ -30,6 +30,7 @@ See Also:
 
 from __future__ import annotations
 
+import json
 from typing import TYPE_CHECKING
 
 import typer
@@ -39,7 +40,17 @@ from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedNoticeAction
 from ...core.output_rendering import OutputFormat
 from ...domain.iva import InvoiceKind
-from ._common import _bad, _emit_envelope, _format_of, _state, _tx_repo, emit_progress_line, resolve_notice_action
+from ._common import (
+    _bad,
+    _emit_envelope,
+    _format_of,
+    _state,
+    _tx_repo,
+    emit_progress_line,
+    resolve_cli_precondition_action,
+    resolve_notice_action,
+)
+from ._config._status_rendering import precondition_action_lines
 from ._ledger_evidence_batch_payloads import EvidenceBatchResult
 
 if TYPE_CHECKING:
@@ -149,7 +160,14 @@ def _batch_payload(run: BatchRunResult, *, bucket_id: str, direction: InvoiceKin
             "direction": direction.value,
             "items": [item.model_dump(mode="json") for item in run.items],
             "unresolved": [source.model_dump(mode="json") for source in run.unresolved],
-            "inference_pause": (run.inference_pause.model_dump(mode="json") if run.inference_pause else None),
+            "inference_pause": (
+                {
+                    "facts": run.inference_pause.facts,
+                    "precondition_action": resolve_cli_precondition_action(run.inference_pause.precondition_verdict),
+                }
+                if run.inference_pause
+                else None
+            ),
             "summary": run.summary,
             "deterministic_completed": run.deterministic_completed,
             "paced": run.paced,
@@ -234,12 +252,9 @@ def _run_notices(run: BatchRunResult) -> list[Notice]:
                         "guessed from them and nothing failed; re-run once the cause below is cleared."
                     ),
                 ),
+                action=resolve_cli_precondition_action(pause.precondition_verdict),
                 context={
                     "paused": str(run.count_of("paused")),
-                    "reason": pause.reason,
-                    "detail": pause.detail,
-                    "causes": ",".join(pause.causes) or "-",
-                    "actionability": "runtime_remediation_requires_operator_assessment",
                 },
             ),
         )
@@ -310,9 +325,14 @@ def _batch_text_lines(run: BatchRunResult, *, bucket_id: str, direction: Invoice
         lines.append(f"unreadable\t{source.source_name}\t{source.refusal_code}\t{source.refusal_detail}")
     pause = run.inference_pause
     if pause is not None:
-        lines.append(f"paused_reason\t{pause.reason}")
-        lines.append(f"paused_detail\t{pause.detail}")
-        lines.append(f"paused_causes\t{','.join(pause.causes) or '-'}")
+        lines.extend(
+            f"paused.facts.{key}\t{json.dumps(value, ensure_ascii=False, sort_keys=True)}"
+            for key, value in sorted(pause.facts.items())
+        )
+        lines.extend(
+            f"paused.{line}"
+            for line in precondition_action_lines(resolve_cli_precondition_action(pause.precondition_verdict))
+        )
     lines.append(f"any_failed\t{run.any_failed}")
     lines.append(f"any_deferred\t{run.any_deferred}")
     lines.extend(_notice_line(notice) for notice in _run_notices(run))

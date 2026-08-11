@@ -66,9 +66,9 @@ __all__ = [
     "KNOWN_PROFILE_FLAG_ADVISORY_FIELDS",
     "KNOWN_VERIFICATION_PREDICATE_OPERATORS",
     "VERIFICATION_PREDICATE_SPECIFICATIONS",
+    "DiscrepancyCause",
     "ParsedVerificationPredicate",
     "RegistryVerificationPolicy",
-    "VerificationDiscrepancyCause",
     "VerificationExpectationDefinition",
     "VerificationPredicateDefinition",
     "VerificationPredicateOperator",
@@ -118,7 +118,7 @@ def _coerce_verification_rounding(value: object) -> object:
 VerificationRoundingCodeValue = Annotated[VerificationRoundingCode, BeforeValidator(_coerce_verification_rounding)]
 
 
-class VerificationDiscrepancyCause(StrEnum):
+class DiscrepancyCause(StrEnum):
     """Closed vocabulary of causes a verification discrepancy may be attributed to."""
 
     EXTRACTION_UNRELIABLE = "extraction_unreliable"
@@ -128,14 +128,14 @@ class VerificationDiscrepancyCause(StrEnum):
 
 
 def _coerce_discrepancy_cause(value: object) -> object:
-    """Hydrate a raw TOML cause token into :class:`VerificationDiscrepancyCause`."""
-    if isinstance(value, str) and not isinstance(value, VerificationDiscrepancyCause):
-        return VerificationDiscrepancyCause(value)
+    """Hydrate a raw TOML cause token into :class:`DiscrepancyCause`."""
+    if isinstance(value, str) and not isinstance(value, DiscrepancyCause):
+        return DiscrepancyCause(value)
     return value
 
 
-VerificationDiscrepancyCauseValue = Annotated[
-    VerificationDiscrepancyCause,
+DiscrepancyCauseValue = Annotated[
+    DiscrepancyCause,
     BeforeValidator(_coerce_discrepancy_cause),
 ]
 
@@ -151,7 +151,7 @@ class VerificationExpectationDefinition(RegistryModel):
     tolerance: DecimalValue = Field(ge=Decimal("0"))
     rounding: VerificationRoundingCodeValue
     min_coverage: DecimalValue = Field(ge=Decimal("0"), le=Decimal("1"))
-    discrepancy_causes: tuple[VerificationDiscrepancyCauseValue, ...] = Field(min_length=1)
+    discrepancy_causes: tuple[DiscrepancyCauseValue, ...] = Field(min_length=1)
     legal_refs: LegalRefs
     source_refs: SourceRefs
 
@@ -278,7 +278,7 @@ class RegistryVerificationPolicy:
     rounding_codes: frozenset[VerificationRoundingCode] = frozenset()
     #: The discrepancy causes the folded expectations declare, likewise carried
     #: rather than dropped.
-    discrepancy_causes: frozenset[VerificationDiscrepancyCause] = frozenset()
+    discrepancy_causes: frozenset[DiscrepancyCause] = frozenset()
 
 
 KNOWN_PROFILE_FLAG_ADVISORY_FIELDS: frozenset[str] = frozenset(

@@ -880,7 +880,10 @@ def verification_report_notices(report: VerificationReport) -> list[Notice]:
     ride on the context too, mirroring the regulatory grounding the
     text-mode ``finding_legal_refs`` lines render. Recovery remains only on the
     typed finding action in the command result; a notice never infers an
-    executable action from a finding kind or message.
+    executable action from a finding kind or message. Every validated,
+    locale-neutral ``message_facts`` entry is copied onto the same context as a
+    string so native blocker codes and their coordinates remain machine-readable
+    on the envelope rather than surviving only as interpolation inputs.
 
     A granted (clean) verify carries no findings, so this returns an empty
     list and the envelope stays :attr:`EnvelopeStatus.SUCCESS`.
@@ -899,6 +902,14 @@ def verification_report_notices(report: VerificationReport) -> list[Notice]:
             context["legal_refs"] = ", ".join(finding.legal_refs)
         if finding.source_refs:
             context["source_refs"] = ", ".join(finding.source_refs)
+        for key, value in finding.message_facts.items():
+            rendered_value = str(value)
+            existing_value = context.get(key)
+            if existing_value is not None and existing_value != rendered_value:
+                raise ValueError(
+                    f"verification finding fact {key!r} conflicts with its notice context value",
+                )
+            context[key] = rendered_value
         notices.append(
             Notice(
                 severity=NoticeSeverity.WARNING,

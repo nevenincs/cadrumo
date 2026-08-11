@@ -162,11 +162,13 @@ class _RecordWithAKeyedMapping(BaseModel):
     rows: list[_Row]
 
 
-def _keyed_fault(**kwargs: object) -> dict[str, object]:
+def _keyed_fault(*, record: type[BaseModel] | None = None) -> dict[str, object]:
     try:
-        _RecordWithAKeyedMapping(by_party={_TAXPAYER_VALUE: "x"}, rows=[{"quantity": "y"}])  # type: ignore[list-item]
+        _RecordWithAKeyedMapping.model_validate(
+            {"by_party": {_TAXPAYER_VALUE: "x"}, "rows": [{"quantity": "y"}]},
+        )
     except ValidationError as exc:
-        return internal_record_fault_context(exc, **kwargs)  # type: ignore[arg-type]
+        return internal_record_fault_context(exc, record=record)
     raise AssertionError("the fixture must fail validation, or the case proves nothing")
 
 
@@ -191,7 +193,7 @@ def test_a_mapping_key_does_not_reach_the_context_with_the_model() -> None:
 def test_the_fixture_really_would_have_leaked_through_the_path() -> None:
     """Anti-tautology for the path vector: the key must be in ``loc``."""
     with pytest.raises(ValidationError) as raised:
-        _RecordWithAKeyedMapping(by_party={_TAXPAYER_VALUE: "x"}, rows=[])  # type: ignore[dict-item]
+        _RecordWithAKeyedMapping.model_validate({"by_party": {_TAXPAYER_VALUE: "x"}, "rows": []})
 
     assert any(_TAXPAYER_VALUE in item["loc"] for item in raised.value.errors()), (
         "pydantic no longer reproduces the mapping key in loc; this suite's premise has changed"

@@ -800,9 +800,6 @@ convention = "google"
 # helper use fixed argv built from controlled inputs. S603 ("subprocess
 # without shell=True") is a heuristic ban that does not recognise our
 # controlled-argv pattern; granted per-file.
-# `token` names a search query token (e.g. "prorrata"), not a credential;
-# ruff's S105/S106 heuristic flags the parameter name.
-"dev/docs/terminology/tests/test_static_matrix_contract.py" = ["S105", "S106"]
 "dev/docs/cli_reference.py" = ["S603"]
 "dev/docs/cli_tree.py" = ["S603"]
 "dev/docs/tests/test_cli_tree.py" = ["S603"]

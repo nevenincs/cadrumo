@@ -269,23 +269,16 @@ def test_calculation_closure_bounds_the_full_diseno_coverage() -> None:
             diseno_path=corpus_path,
         )
     )
-    # The closure may legitimately contain app-internal computed casillas
-    # (e.g. the LIS art. 26.1 BIN-compensation ceiling materialised as
-    # ``DP200014:bin-aplicada-maxima``) that AEAT publishes as formulas
-    # rather than as form-record fields. Such casillas declare
-    # ``internal_only = true`` at the registry source and are intentionally
-    # absent from the full Diseño coverage; subtract them from the closure
-    # before asserting the bound, so the gate's claim remains "every
-    # *exported* closure casilla appears in the Diseño" rather than the
-    # over-extended "every closure casilla appears in the Diseño".
     internal_only_metadata = frozenset(
         (casilla.segmento, casilla.number) for casilla in revision.casillas if casilla.internal_only
     )
-    exported_closure = closure - internal_only_metadata
-    closure_only = exported_closure - coverage
-    assert exported_closure <= coverage, (
-        "the calculation-completeness casilla set (minus internal_only ceilings) "
-        "must be a subset of the full-Diseño coverage; closure-only pairs: "
+    assert closure.isdisjoint(internal_only_metadata), (
+        "internal-only calculation nodes must not enter the official manifest denominator"
+    )
+    closure_only = closure - coverage
+    assert closure <= coverage, (
+        "the calculation-completeness casilla set must be a subset of the "
+        "full-Diseño coverage; closure-only pairs: "
         + ", ".join(
             f"({segmento!r}, {number!r})"
             for segmento, number in sorted(closure_only, key=lambda pair: (pair[0] or "", pair[1]))
