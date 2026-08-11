@@ -23,8 +23,9 @@ from ....domain.filing import (
     registry_schema_version,
 )
 from ....domain.submission import ModeloDraftStatus
-from .._export import _mismatched_casilla_ids, _RecordRenderRow, _render_layout, _render_record
+from .._export import _mismatched_casilla_ids, _RecordRenderRow, _render_record, render_layout
 from ..runtime import RegistrySchemaAccessor
+from ._export_support import _typed_producer_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -134,7 +135,8 @@ def _render_one(record: ExportRecordDefinition, value: object) -> str:
     return _render_record(
         record,
         draft=_draft(checkbox=False, year=2026),
-        headers={},
+        producer_values={},
+        producer_snapshot=_typed_producer_snapshot(),
         casilla_values={field.casilla_id: value},
         binding_values={},
         row=_RecordRenderRow(row_index=None, active_binding_ids=frozenset()),
@@ -146,7 +148,14 @@ def _render_one(record: ExportRecordDefinition, value: object) -> str:
     [(False, 2026, b"026"), (True, "2026", b"126"), (None, 2000, b"000")],
 )
 def test_filing_writer_emits_exact_policy_bytes(checkbox: object, year: object, expected: bytes) -> None:
-    assert _render_layout(_two_record_layout(), draft=_draft(checkbox=checkbox, year=year), headers={}) == expected
+    assert (
+        render_layout(
+            _two_record_layout(),
+            draft=_draft(checkbox=checkbox, year=year),
+            producer_snapshot=_typed_producer_snapshot(),
+        )
+        == expected
+    )
 
 
 @pytest.mark.parametrize("invalid", ["yes", 2, " "])
