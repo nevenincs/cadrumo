@@ -188,7 +188,6 @@ def parse_tax_region(raw: str) -> CCAA:
         raise TaxResidenceProfileError(
             f"unknown tax-region {raw!r}; valid CCAA values: {valid}",
             context={"tax_region": raw},
-            suggestion="aeat config profile edit NAME --tax-residence-ccaa <ccaa>",
         ) from exc
 
 

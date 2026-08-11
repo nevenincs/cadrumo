@@ -27,3 +27,11 @@ def test_profile_errors_have_registered_codes() -> None:
 def test_foral_regime_detection(raw: str) -> None:
     with pytest.raises(ForalRegimeError, match="foral regime outside the scope"):
         parse_tax_region(raw)
+
+
+def test_unknown_tax_region_preserves_the_profile_error_contract() -> None:
+    """An unsupported common-regime token remains a typed profile refusal."""
+    with pytest.raises(TaxResidenceProfileError, match="unknown tax-region 'not-a-region'") as raised:
+        parse_tax_region("not-a-region")
+
+    assert raised.value.context == {"tax_region": "not-a-region"}

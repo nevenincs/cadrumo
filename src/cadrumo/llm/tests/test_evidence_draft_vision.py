@@ -323,11 +323,15 @@ class TestLocalVisionDocumentTranscriber:
             return transcribe_document_images(images, source_content_sha256=_SOURCE_SHA, model="qwen-test")
 
         observed, _transcription = _run_against_loopback_ollama(_TRANSCRIBED_PAGE, _call)
-        sent = observed["body"]
+        body = _json_object(observed["body"])
+        messages = _json_array(body["messages"])
+        user_message = _json_object(messages[-1])
+        content = user_message["content"]
+        assert isinstance(content, str)
 
         for field_name in ExtractedInvoiceFields.model_fields:
-            assert field_name not in sent, f"the transcription prompt names the invoice field {field_name!r}"
-        assert anchor_key_for_field("taxable_base") not in sent
+            assert field_name not in content, f"the transcription prompt names the invoice field {field_name!r}"
+        assert anchor_key_for_field("taxable_base") not in content
 
     def test_an_empty_model_reply_refuses_rather_than_reporting_a_blank_document(
         self,

@@ -68,6 +68,7 @@ from typing import cast
 
 import click
 import pytest
+from dev.locales import LocaleManager, LocaleNode
 from dev.quality.cli_action_census import census
 from dev.quality.cli_action_census_dispositions import (
     DEFAULT_DISPOSITIONS_PATH,
@@ -76,7 +77,6 @@ from dev.quality.cli_action_census_dispositions import (
     checked_in_dispositions,
     validate_dispositions,
 )
-from dev.locales import LocaleManager, LocaleNode
 
 from ....application.operator_surface import HelpSurface, build_help_document
 from ....tests.cli_runner import cadrumo_click_command
@@ -564,7 +564,7 @@ def _dotted_name(node: ast.expr) -> tuple[str, ...] | None:
     return None
 
 
-def _canonical_notice_constructor_references(tree: ast.AST) -> tuple[frozenset[str], frozenset[tuple[str, ...]]]:
+def _canonical_notice_constructor_references(tree: ast.Module) -> tuple[frozenset[str], frozenset[tuple[str, ...]]]:
     """Return local and qualified references to the envelope ``Notice`` model.
 
     The boundary is import-derived rather than based on a class name alone:
