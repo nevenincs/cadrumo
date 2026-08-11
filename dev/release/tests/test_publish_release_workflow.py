@@ -260,11 +260,20 @@ def test_dry_run_validates_everything_and_skips_publish() -> None:
 
 
 def test_oidc_and_write_are_confined_to_the_protected_publish_job() -> None:
-    """id-token/contents:write live only on the environment-protected publish job."""
+    """id-token/contents:write live only on the environment-protected publish job.
+
+    Asserted as EQUALITY rather than membership, because the property is a
+    ceiling: a job holding OIDC and contents-write must hold nothing else that
+    was not argued for. ``actions: read`` is in the expected set deliberately —
+    the artifact-return transport pulls the producing runs' artifacts with
+    ``gh run download``, which the releases-API transport it replaced did not
+    need, so the scope grew by one read permission as a consequence of that
+    accepted decision rather than by drift.
+    """
     document = _document()
     publish = document["jobs"]["publish"]
     assert publish["environment"] == "release"
-    assert publish["permissions"] == {"id-token": "write", "contents": "write"}
+    assert publish["permissions"] == {"id-token": "write", "contents": "write", "actions": "read"}
     assert publish["needs"] == "validate"
 
     for name in ("validate",):
@@ -292,8 +301,13 @@ def test_validate_promotes_without_rebuild() -> None:
     # And the authority that asks EVERY destination runs before any write.
     assert "dev.release.version_identity" in surface
     assert surface.index("dev.release.version_identity") > surface.index("--emit-version-only")
-    # Every channel's rows arrive hash-verified from its evidence draft.
-    assert "dev.packaging.evidence_release verify" in surface
+    # Every channel's rows arrive from a run whose identity was pinned first.
+    # This replaced the sealed-manifest verify verb rather than dropping the
+    # check: an artifact cannot be attached to a run that did not produce it,
+    # so asserting the run's workflow path and conclusion against the Actions
+    # API IS the binding the manifest used to reconstruct.
+    assert r'"\(.path)|\(.conclusion)"' in surface
+    assert 'if [ "$identity" != "$2|success" ]; then' in surface
     # No publish verb in the read-only validate gate.
     assert "uv publish" not in surface
     assert "gh release create" not in surface
@@ -314,12 +328,20 @@ def test_validate_aggregates_all_eleven_rows_from_authoritative_sources() -> Non
     validate = _document()["jobs"]["validate"]
     surface = _collapse_spaces(_run_surface(validate))
 
-    # Each channel's rows come verified from its authoritative run's evidence
-    # draft; the tags are DERIVED from the run-id inputs (no free-form evidence
-    # tag input except the operator's claude release, which has no backing run).
-    assert 'verify "evidence-smoke-$PACKAGING_RUN_ID" "$PACKAGING_RUN_ID"' in surface
-    assert 'verify "evidence-scoop-$SCOOP_RUN_ID" "$SCOOP_RUN_ID"' in surface
-    assert 'verify "evidence-homebrew-$HOMEBREW_RUN_ID" "$HOMEBREW_RUN_ID"' in surface
+    # Each channel's rows come from its OWN run, and the run id is PAIRED at
+    # the call site with the workflow path that run is required to have. The
+    # pairing is the property: both tokens appearing somewhere in the surface
+    # would also hold if the ids were crossed, which is the failure this
+    # aggregation exists to prevent.
+    for run_id, workflow in (
+        ("$PACKAGING_RUN_ID", ".github/workflows/packaging-smoke.yml"),
+        ("$SCOOP_RUN_ID", ".github/workflows/packaging-scoop.yml"),
+        ("$HOMEBREW_RUN_ID", ".github/workflows/packaging-homebrew.yml"),
+    ):
+        paired = re.compile(rf'verify "{re.escape(run_id)}"\s*\\?\s*"{re.escape(workflow)}"')
+        assert paired.search(surface), f"{run_id} must be verified against {workflow} at the same call site"
+    # The operator's own evidence release has no backing run, so it stays a
+    # release download rather than a run-artifact download.
     assert 'gh release download "$CLAUDE_EVIDENCE_RELEASE"' in surface
 
     # Trusted-source predicate on the smoke run (ci-speed redesign): a
@@ -498,8 +520,10 @@ def test_acquisition_inputs_are_optional_at_the_form_and_derived_at_the_gate() -
         "optional inputs are only safe because Gate 2 derives which are mandatory; "
         "without this step a claimed channel could be published unproven"
     )
-    # The derivation must run BEFORE the aggregation it authorises.
-    assert surface.index("dev.packaging.publication_inputs") < surface.index("evidence_release verify")
+    # The derivation must run BEFORE the aggregation it authorises. Anchored on
+    # the identity-pinning helper the aggregation is built around, which is what
+    # the retired sealed-manifest verify verb was replaced by.
+    assert surface.index("dev.packaging.publication_inputs") < surface.index("verify() {")
     # And the readiness gate still runs, so the row set is enforced regardless.
     assert "dev.release.readiness" in surface
 
@@ -1101,7 +1125,7 @@ def test_external_pushes_keep_the_token_out_of_the_persisted_remote() -> None:
 def test_leak_sweep_passes_a_non_empty_runner_token_set() -> None:
     """The publication leak-sweep feeds this runner's identity tokens, not an empty set."""
     surface = _run_surface(_document()["jobs"]["publish"])
-    assert "evidence_release leak-sweep" in surface
+    assert "evidence_leak_sweep leak-sweep" in surface
     # Real identity tokens are collected and passed; an empty token would match
     # every byte, so only non-empty ones are forwarded.
     assert "$RUNNER_NAME" in surface
@@ -1118,12 +1142,19 @@ def test_publish_uploads_the_stored_cohort_via_trusted_publishing() -> None:
     assert "uv publish --trusted-publishing always" in surface
     assert "gh release create" in surface
     # It re-downloads and re-verifies the stored cohort rather than rebuilding.
-    assert "dev.packaging.evidence_release verify" in surface
-    assert '--pattern "cadrumo-release-cohort.tar.gz"' in surface
-    # D8: the published release also carries the verified rows and the three
-    # per-lane manifests, so draft GC can never orphan a shipped audit trail.
-    assert "evidence-manifest-$4.json" in surface
+    # The re-verification is the run-identity assertion, pinned here to the
+    # smoke workflow literally rather than through a parameter, because the
+    # cohort has exactly one producing lane.
+    assert '!= ".github/workflows/packaging-smoke.yml|success" ]; then' in surface
+    assert "gh run download \"$PACKAGING_RUN_ID\" --name cadrumo-release-cohort" in surface
+    # D8: the published release is self-evidencing — it carries the verified
+    # rows themselves, so a shipped version's audit trail outlives the
+    # producing runs' artifact retention. The per-lane manifest filenames that
+    # used to be asserted here belonged to the sealed-draft transport and no
+    # step emits them now; the surviving property is that the attach root is
+    # filled from the identity-verified runs.
     assert '"$EVIDENCE_FINAL_DIR/attach"' in surface
+    assert "verify_rows() {" in surface
 
 
 def test_download_latest_payload_is_emitted_swept_and_attached() -> None:
@@ -1139,7 +1170,9 @@ def test_download_latest_payload_is_emitted_swept_and_attached() -> None:
     # Projected from the sealed cohort manifest, not a rebuild.
     assert '--cohort-manifest "$RELEASE_COHORT_DIR/release-cohort.json"' in surface
     # The payload is leak-swept before it is attached.
-    assert surface.count("evidence_release leak-sweep") >= 2
+    assert surface.count("evidence_leak_sweep leak-sweep") >= 2, (
+        "the download-latest payload must pass the same fail-closed sweep the attach roots do"
+    )
     assert '--directory "$DOWNLOAD_LATEST_DIR"' in surface
     # Attached to the release that already exists (emit runs after the create).
     assert 'gh release upload "v$VERSION" "$DOWNLOAD_LATEST_DIR/download-latest.json"' in surface
