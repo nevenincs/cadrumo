@@ -254,6 +254,7 @@ from ._prorrata_exclusions import (
     Art104TresExclusion,
 )
 from ._prorrata_register import (
+    ProrrataActivityRowType,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
@@ -547,6 +548,7 @@ __all__: list[str] = [
     "PriorDomiciliationElection",
     "ProductIdentity",
     "ProfileSessionRefusalReason",
+    "ProrrataActivityRowType",
     "ProrrataProvisionalProvenance",
     "ProrrataRegisterRegime",
     "RefundElection",

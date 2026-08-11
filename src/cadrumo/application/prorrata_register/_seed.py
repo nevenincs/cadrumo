@@ -41,6 +41,7 @@ from ...core import (
 from ...domain.iva import m303_annual_settlement_order_key
 from ...domain.prorrata_register import ProrrataRegisterEntry
 from ..calculations import CalculationObservationRepository, CrossPeriodCleanStateBlocker, revision_carry_outcome
+from ...domain.calculations.registry import RevisionId
 
 _PRORRATA_PORCENTAJE_CASILLA: Final[CasillaId] = validated_casilla_id(
     "iva.prorrata-porcentaje",
@@ -72,7 +73,7 @@ class ProrrataSeedFinding:
     source_filing_year: int
     source_period: str
     stamped_revision_id: str
-    selected_revision_id: str | None
+    selected_revision_id: RevisionId | None
 
     @property
     def advisory(self) -> bool:
@@ -289,7 +290,7 @@ def _selected_revision_id_from_findings(
 def _carried_entry_contradiction_finding(
     seed: ProrrataPriorDefinitivaSeed,
     *,
-    selected_revision_id: str,
+    selected_revision_id: RevisionId,
     detail: str,
 ) -> ProrrataSeedFinding:
     return ProrrataSeedFinding(
@@ -312,7 +313,7 @@ def _regulated_override_difference_finding(
     entry: ProrrataRegisterEntry,
     seed: ProrrataPriorDefinitivaSeed,
     *,
-    selected_revision_id: str,
+    selected_revision_id: RevisionId,
 ) -> ProrrataSeedFinding:
     provenance = entry.provisional_provenance
     assert provenance is not None
@@ -335,7 +336,7 @@ def _regulated_override_difference_finding(
 def _registry_revision_divergence_finding(
     source: _PriorSettlementObservation,
     *,
-    selected_revision_id: str | None,
+    selected_revision_id: RevisionId | None,
     detail: str,
 ) -> ProrrataSeedFinding:
     return ProrrataSeedFinding(

@@ -324,6 +324,11 @@ from ._formula_initial_values import initial_value_casilla_ids
 from ._formula_runtime_ops import resolve_keyed_bracket, resolve_parameter
 from ._formula_text_inputs import validate_text_input_targets, validated_text_input_casilla_ids
 from ._ledger_binding_resolution import screened_quantity_families
+from ._m303_prorrata_activity_projection import (
+    M303ProrrataActivityEndpointValue,
+    M303ProrrataActivityRowProjection,
+    project_m303_prorrata_activity_rows,
+)
 from ._legal import (
     legal_reference_quotes_corpus,
     verify_legal_catalogue,
@@ -837,6 +842,8 @@ __all__ = [
     "Modelo349OperadorClaveTotal",
     "Modelo349OperadorTotalsParity",
     "Modelo720RowObservation",
+    "M303ProrrataActivityEndpointValue",
+    "M303ProrrataActivityRowProjection",
     "ModeloApplicability",
     "ModeloApplicabilityRule",
     "ModeloBindingQueryRow",
@@ -1091,6 +1098,7 @@ __all__ = [
     "previous_filing_source_reference",
     "profile_condition_matches",
     "project_export_value",
+    "project_m303_prorrata_activity_rows",
     "rate_box_coverage_shortfalls",
     "rate_box_unscreened_groups",
     "read_parameter",

@@ -88,6 +88,7 @@ from ...domain.filing import (
     ModeloDraft,
 )
 from ...domain.iva import derive_sepa_marca
+from ...domain.prorrata_register import ProrrataRegister
 from ...domain.submission import ModeloDraftStatus
 from ._export_parity import (
     assert_export_mirrors_manifest,
@@ -100,6 +101,7 @@ from ._export_xml_dictionary import (
     read_xml_dictionary_root_identity,
     render_xml_dictionary_layout,
 )
+from ._m303_prorrata_activity_rows import assert_m303_prorrata_activity_rows_complete
 from ._producer_snapshot import (
     ChargeAccountSelection,
     FilingProducerSnapshot,
@@ -363,6 +365,7 @@ def export_draft(
     dictionary_values: Mapping[str, object] | None = None,
     prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP,
     schema_provider: RegistrySchemaAccessor | None = None,
+    prorrata_register: ProrrataRegister | None = None,
 ) -> DeclaracionExportResult:
     """Write an approved draft to a local fichero-BOE file and return a receipt.
 
@@ -384,6 +387,9 @@ def export_draft(
         prior_domiciliation_election: Typed M303 page-three election used by
             the shared Nota-3 DID page predicate.
         schema_provider: Optional registry schema provider override.
+        prorrata_register: Canonical encrypted prorrata-register view for a
+            Modelo 303 filing.  When supplied, an applicable year must carry
+            all five typed per-activity rows before any layout-target check.
 
     Returns:
         A :class:`DeclaracionExportResult` with the output path, digest,
@@ -405,6 +411,8 @@ def export_draft(
         raise FilingExportError("declaration export requires a draft built from the active registry snapshot")
     if draft.status is not ModeloDraftStatus.APROBADO:
         raise FilingExportError("declaration export requires an approved draft")
+    if draft.modelo == "303" and prorrata_register is not None:
+        assert_m303_prorrata_activity_rows_complete(period=draft.period, register=prorrata_register)
     if not subview.export_layout_ids:
         raise FilingExportError(_missing_export_layout_message(draft.modelo))
     layout = subview.export_layouts[0]
