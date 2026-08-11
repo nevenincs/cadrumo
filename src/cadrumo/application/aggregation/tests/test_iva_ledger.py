@@ -11,7 +11,13 @@ import pytest
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Art104TresExclusion, IvaDeductionEvidenceAuthority, IvaDeductionFactKind, Period
+from ....core import (
+    Art104TresExclusion,
+    IvaDeductionEvidenceAuthority,
+    IvaDeductionFactKind,
+    OperatorActionAxis,
+    Period,
+)
 from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from ....domain.bienes_inversion import (
     BienesInversionIvaRegister,
@@ -44,6 +50,7 @@ from ....domain.transactions import (
     TransactionLifecycleState,
 )
 from ....tests.secure_sql import isolated_runtime_profile
+from ...ledger import OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE
 from .. import (
     AggregationValidationError,
     IvaLedgerAggregation,
@@ -680,6 +687,27 @@ def test_iva_aggregation_buckets_on_value_date_caja_basis_only() -> None:
     assert [issue.transaction_id for issue in result.issues] == [caja_out_of_period.transaction_id]
     assert result.issues[0].reason is IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD
     assert "2026-01-31" in result.issues[0].detail
+
+
+def test_future_out_of_window_row_is_a_nonblocking_review_advisory() -> None:
+    future_row = _transaction(
+        "row-future-outside-period",
+        booked_date=date(2026, 7, 2),
+        value_date=date(2026, 7, 2),
+    )
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((future_row,)),
+        period=_Q2_2026,
+    )
+
+    assert result.observations == ()
+    assert len(result.issues) == 1
+    assert result.issues[0].reason is IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD
+    assert (
+        OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE[result.issues[0].reason]
+        is OperatorActionAxis.REVIEW_ADVISORY
+    )
 
 
 def test_no_devengo_basis_selector_exists_on_iva_aggregation_surface() -> None:
