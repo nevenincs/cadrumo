@@ -258,7 +258,6 @@ def _parse_iso_date(value: str | None, option: str) -> date | None:
         value,
         label=option,
         translation_key="cli.ledger.llm_diagnostics.bad_date",
-        default=f"{option} must be an ISO date (YYYY-MM-DD); got {value!r}.",
     )
 
 

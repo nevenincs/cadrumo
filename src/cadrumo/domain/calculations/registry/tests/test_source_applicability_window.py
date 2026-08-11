@@ -245,6 +245,34 @@ def test_snapshot_refuses_a_source_that_only_applies_after_the_revision_closed()
         )
 
 
+def test_snapshot_refuses_invalid_legal_window_before_invalid_source_window() -> None:
+    """Legal-window refusal remains earlier than source-window refusal."""
+    modelo, catalogues = _modelo_and_catalogues()
+    legal_id = _revision_scoped_legal_id(modelo)
+    source_id = _revision_scoped_source_id(modelo)
+    legal_reference = catalogues.legal[legal_id].model_copy(
+        update={"effective_from": date(2020, 1, 1), "effective_to": date(2024, 12, 31)},
+    )
+    source_reference = catalogues.sources[source_id].model_copy(
+        update={"applies_from": date(2020, 1, 1), "applies_to": date(2024, 12, 31)},
+    )
+    restaged_catalogues = catalogues.model_copy(
+        update={
+            "legal": {**catalogues.legal, legal_id: legal_reference},
+            "sources": {**catalogues.sources, source_id: source_reference},
+        },
+    )
+
+    with pytest.raises(RegistryValidationError, match="outside their effective window"):
+        build_snapshot(
+            modelo,
+            restaged_catalogues,
+            source_root=bundled_path(),
+            filing_year=_FILING_YEAR,
+            period=_PERIOD,
+        )
+
+
 @pytest.mark.parametrize(
     ("applies_from", "applies_to"),
     [

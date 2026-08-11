@@ -5268,11 +5268,13 @@ docs:
       computed: Calculated for you
       informational: Reference only
       manual: You enter this
+      projection_only: Filled from its source row
     input_kind_count:
       bound: filled from your records
       computed: calculated
       informational: reference only
       manual: you enter
+      projection_only: filled from a source row
     legal_kind:
       instruction: AEAT instructions
     length:

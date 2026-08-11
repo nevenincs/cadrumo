@@ -5544,11 +5544,13 @@ docs:
       computed: Automatikusan számítjuk
       informational: Csak tájékoztató
       manual: Ön adja meg
+      projection_only: A forrássorából kitöltve
     input_kind_count:
       bound: a nyilvántartásaiból kitöltve
       computed: számított
       informational: csak tájékoztató
       manual: amelyet Ön ad meg
+      projection_only: a forrássorából kitöltve
     legal_kind:
       instruction: AEAT-útmutató
     length:

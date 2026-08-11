@@ -5617,11 +5617,13 @@ docs:
       computed: Es calcula automàticament
       informational: Només informativa
       manual: Ho introdueix vostè
+      projection_only: S'omple des de la seva fila d'origen
     input_kind_count:
       bound: omplertes des dels seus registres
       computed: calculades
       informational: només informatives
       manual: que introdueix vostè
+      projection_only: omplertes des de la seva fila d'origen
     legal_kind:
       instruction: Instruccions de l'AEAT
     length:

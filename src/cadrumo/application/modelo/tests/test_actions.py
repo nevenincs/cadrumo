@@ -415,6 +415,20 @@ def test_cross_casilla_invariant_finding_is_locale_neutral() -> None:
     assert dict(finding.message_facts) == {"predicate_id": "test-cross-casilla-001"}
 
 
+def test_single_casilla_blocking_predicate_attributes_its_canonical_casilla() -> None:
+    """A firing one-casilla BLOCKING predicate identifies the affected registry casilla."""
+    _predicate, finding = _predicate_finding(
+        predicate_id="test-single-casilla-blocking-001",
+        legal_ref="irpf:art1",
+        expression=f'all_nonzero(["{_PREDICATE_REQUIRED_LEFT_CASILLA}"])',
+        casilla_values={_PREDICATE_REQUIRED_LEFT_CASILLA: Decimal(0)},
+    )
+
+    assert finding.kind == "blocking_rule"
+    assert finding.severity == "blocking"
+    assert finding.casilla_id == _PREDICATE_REQUIRED_LEFT_CASILLA
+
+
 def test_registry_snapshot_unresolved_finding_is_locale_neutral() -> None:
     """_collect_revision_verification_findings produces a localised message when the registry
     snapshot cannot be resolved for a non-existent modelo.

@@ -47,6 +47,81 @@ _REQUIRED_PRODUCTION_FINDING_MODULES = {
     "src/cadrumo/application/modelo/_verification_predicates.py",
 }
 
+_INTENTIONAL_RECORD_LEVEL_FINDING_OWNERS = {
+    (
+        "src/cadrumo/application/modelo/_ledger_drift_gate.py",
+        "_drift_finding",
+    ): "ledger snapshot drift covers the contributing ledger as a whole",
+    (
+        "src/cadrumo/application/modelo/_m210_agrupacion_renta.py",
+        "m210_agrupacion_renta_verification_findings",
+    ): "annual grouped-renta integrity belongs to the detail-row set",
+    (
+        "src/cadrumo/application/modelo/_m303_m349_reconcile.py",
+        "m303_m349_intracom_reconcile_findings",
+    ): "the reconciliation compares several casillas across two modelos",
+    (
+        "src/cadrumo/application/modelo/_objective_estimation_advisory.py",
+        "_objective_estimation_exclusion_advisory_findings",
+    ): "the advisory compares profile facts with legal thresholds",
+    (
+        "src/cadrumo/application/modelo/_verification_actions.py",
+        "_cuota_less_without_base_findings",
+    ): "the finding identifies a contributing transaction row without one canonical target casilla",
+    (
+        "src/cadrumo/application/modelo/_verification_actions.py",
+        "_missing_evidence_findings",
+    ): "the evidence gap is transaction-grain and its diagnostic has no target casilla identity",
+    (
+        "src/cadrumo/application/modelo/_verification_actions.py",
+        "_unrouted_oss_source_finding",
+    ): "an unrouted OSS source reaches no binding or target casilla",
+    (
+        "src/cadrumo/application/modelo/_verification_actions.py",
+        "_missing_oss_evidence_finding",
+    ): "missing OSS evidence spans the revision's OSS bindings rather than one target",
+    (
+        "src/cadrumo/application/modelo/_verification_actions.py",
+        "_collect_revision_verification_findings",
+    ): "snapshot resolution failed before a registry casilla could be named",
+    (
+        "src/cadrumo/application/modelo/_verification_cross_period.py",
+        "_modelo_202_incomplete_modality_finding",
+    ): "Modelo 202 modality is a profile-derived filing-level decision",
+    (
+        "src/cadrumo/application/modelo/_verification_cross_period.py",
+        "_cross_period_clean_state_findings",
+    ): "dependency evidence names upstream casillas and target origins, not one canonical target row",
+    (
+        "src/cadrumo/application/modelo/_verification_cross_period.py",
+        "_cross_period_operator_declared_suppression_advisory_finding",
+    ): "the advisory concerns operator-declared activity-start provenance",
+    (
+        "src/cadrumo/application/modelo/_verification_cross_period.py",
+        "_cross_period_first_year_fractional_suppression_advisory_finding",
+    ): "the advisory concerns first-year filing obligation and modality",
+    (
+        "src/cadrumo/application/modelo/_verification_cross_period.py",
+        "_cross_period_missing_activity_start_finding",
+    ): "the blocker concerns an absent profile fact at work-record grain",
+    (
+        "src/cadrumo/application/modelo/_verification_cross_period.py",
+        "_cross_period_modelo_not_applicable_advisory_finding",
+    ): "the advisory summarizes one or more inapplicable source modelos",
+    (
+        "src/cadrumo/application/modelo/_verification_cross_period.py",
+        "_cross_period_zero_value_previous_filing_advisory_finding",
+    ): "zero-value suppression is dependency evidence without one guaranteed target casilla",
+    (
+        "src/cadrumo/application/modelo/_verification_cross_period.py",
+        "_cross_period_m111_no_retenciones_advisory_finding",
+    ): "the advisory concerns profile-backed no-obligation evidence for a source period",
+    (
+        "src/cadrumo/application/modelo/_verification_cross_period.py",
+        "_cross_period_non_official_local_chain_advisory_finding",
+    ): "the advisory concerns provenance of an admitted local filing chain",
+}
+
 _ACTIVE_GROUPS = {
     ("_borrador_binding.py", "resolve_modelo_100_borrador_bindings"),
     ("_calculation_actions.py", "_reject_caller_overrides_of_source_bindings"),
@@ -605,3 +680,41 @@ def test_every_production_verification_finding_constructor_is_locale_neutral() -
                 for descendant in ast.walk(value)
             ), (relative, call.lineno)
     assert observed_modules >= _REQUIRED_PRODUCTION_FINDING_MODULES
+
+
+def test_intentional_record_level_finding_owners_are_reasoned_and_stale_failing() -> None:
+    """Protect record-level attribution decisions without freezing a constructor tally."""
+    constructors_by_owner: dict[tuple[str, str], list[ast.Call]] = {}
+    for path in (_ROOT / _MODELO_PATH_PREFIX).glob("*.py"):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        parents = {child: parent for parent in ast.walk(tree) for child in ast.iter_child_nodes(parent)}
+        relative = path.relative_to(_ROOT).as_posix()
+        for node in ast.walk(tree):
+            if not (
+                isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Name)
+                and node.func.id == "ModeloVerificationFinding"
+            ):
+                continue
+            enclosing_owner: ast.AST = node
+            while enclosing_owner in parents and not isinstance(
+                enclosing_owner, (ast.FunctionDef, ast.AsyncFunctionDef)
+            ):
+                enclosing_owner = parents[enclosing_owner]
+            assert isinstance(enclosing_owner, (ast.FunctionDef, ast.AsyncFunctionDef)), (relative, node.lineno)
+            constructors_by_owner.setdefault((relative, enclosing_owner.name), []).append(node)
+
+    unexpected_omission_owners: set[tuple[str, str]] = set()
+    for owner, constructors in constructors_by_owner.items():
+        has_omission = any(not any(keyword.arg == "casilla_id" for keyword in call.keywords) for call in constructors)
+        if has_omission and owner not in _INTENTIONAL_RECORD_LEVEL_FINDING_OWNERS:
+            unexpected_omission_owners.add(owner)
+
+    assert not unexpected_omission_owners, sorted(unexpected_omission_owners)
+    for owner, reason in _INTENTIONAL_RECORD_LEVEL_FINDING_OWNERS.items():
+        assert reason.strip(), owner
+        constructors = constructors_by_owner.get(owner)
+        assert constructors is not None, f"stale record-level owner: {owner}; reason={reason}"
+        assert all(not any(keyword.arg == "casilla_id" for keyword in call.keywords) for call in constructors), (
+            f"record-level owner gained casilla attribution: {owner}; reason={reason}"
+        )

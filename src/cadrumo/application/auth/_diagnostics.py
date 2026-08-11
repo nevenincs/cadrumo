@@ -16,6 +16,7 @@ offered only when the browser state cannot determine what happened on the app.
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 from urllib.parse import urlsplit
@@ -162,6 +163,14 @@ class _DiagnosticPayload(BaseModel):
     phone_state: str = ""
     phone_state_source: str = ""
     phone_state_observed_at: str = ""
+
+
+@dataclass(frozen=True)
+class _DiagnosticPhoneStateProjection:
+    state: AuthDiagnosticPhoneState | None
+    source: AuthDiagnosticPhoneStateSource | None
+    observed_at: datetime | None
+    reported_at: datetime | None
 
 
 def list_auth_diagnostics() -> AuthDiagnosticListReport:
@@ -342,18 +351,13 @@ def _validated_phone_state(raw: object) -> AuthDiagnosticPhoneState | None:
         ) from exc
 
 
-def _summary_from_payload(payload: _DiagnosticPayload) -> AuthDiagnosticSummary:
-    captured_at = payload.captured_at
-    if not captured_at:
-        raise AuthDiagnosticPayloadError("auth diagnostic payload is missing captured_at")
-    auth_attempt = payload.auth_attempt
-    operator_report = payload.operator_report
+def _phone_state_projection(payload: _DiagnosticPayload) -> _DiagnosticPhoneStateProjection:
     browser_phone_state = _validated_phone_state(payload.phone_state)
+    operator_report = payload.operator_report
     phone_state_reported_at = None
     raw_reported_at = operator_report.get("reported_at")
     if isinstance(raw_reported_at, str) and raw_reported_at:
         phone_state_reported_at = _validated_utc_instant(raw_reported_at, field="operator_report.reported_at")
-    phone_state_observed_at = None
     if browser_phone_state is not None:
         if payload.phone_state_source != AuthDiagnosticPhoneStateSource.AEAT_AUTHENTICATED_LANDING:
             raise AuthDiagnosticPayloadError(
@@ -363,13 +367,29 @@ def _summary_from_payload(payload: _DiagnosticPayload) -> AuthDiagnosticSummary:
             raise AuthDiagnosticPayloadError(
                 "browser-proven auth diagnostic phone state is missing its observation instant",
             )
-        phone_state_observed_at = _validated_utc_instant(
-            payload.phone_state_observed_at,
-            field="phone_state_observed_at",
+        return _DiagnosticPhoneStateProjection(
+            state=browser_phone_state,
+            source=AuthDiagnosticPhoneStateSource.AEAT_AUTHENTICATED_LANDING,
+            observed_at=_validated_utc_instant(
+                payload.phone_state_observed_at,
+                field="phone_state_observed_at",
+            ),
+            reported_at=None,
         )
-        phone_state_reported_at = None
-    else:
-        phone_state_observed_at = phone_state_reported_at
+    return _DiagnosticPhoneStateProjection(
+        state=_validated_phone_state(operator_report.get("phone_state")),
+        source=(AuthDiagnosticPhoneStateSource.OPERATOR_REPORT if operator_report.get("phone_state") else None),
+        observed_at=phone_state_reported_at,
+        reported_at=phone_state_reported_at,
+    )
+
+
+def _summary_from_payload(payload: _DiagnosticPayload) -> AuthDiagnosticSummary:
+    captured_at = payload.captured_at
+    if not captured_at:
+        raise AuthDiagnosticPayloadError("auth diagnostic payload is missing captured_at")
+    auth_attempt = payload.auth_attempt
+    phone_state = _phone_state_projection(payload)
     raw_headless = auth_attempt.get("headless")
     summary = AuthDiagnosticSummary(
         diagnostic_id=payload.diagnostic_id,
@@ -401,14 +421,10 @@ def _summary_from_payload(payload: _DiagnosticPayload) -> AuthDiagnosticSummary:
         certificate_path_configured=_optional_bool(auth_attempt.get("certificate_path_configured")),
         certificate_password_configured=_optional_bool(auth_attempt.get("certificate_password_configured")),
         certificate_file_present=_optional_bool(auth_attempt.get("certificate_file_present")),
-        phone_state=browser_phone_state or _validated_phone_state(operator_report.get("phone_state")),
-        phone_state_source=(
-            AuthDiagnosticPhoneStateSource.AEAT_AUTHENTICATED_LANDING
-            if browser_phone_state is not None
-            else (AuthDiagnosticPhoneStateSource.OPERATOR_REPORT if operator_report.get("phone_state") else None)
-        ),
-        phone_state_observed_at=phone_state_observed_at,
-        phone_state_reported_at=phone_state_reported_at,
+        phone_state=phone_state.state,
+        phone_state_source=phone_state.source,
+        phone_state_observed_at=phone_state.observed_at,
+        phone_state_reported_at=phone_state.reported_at,
     )
     return summary
 

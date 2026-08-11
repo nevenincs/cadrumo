@@ -4967,10 +4967,6 @@ cli:
         folder_id_unrecognised: La referencia de carpeta de Drive %{reference} no
           contiene un id de carpeta reconocible. Indica una URL de carpeta de Drive
           o su id.
-        folder_refused: 'No se puede listar la carpeta de Drive %{folder_id}%{scope_hint}:
-          la carpeta debe ser accesible bajo el permiso drive.file (creada por la
-          app o elegida explícitamente por el operador), o concede el permiso de Google
-          requerido y vuelve a intentarlo.'
       folder_help: URL de la carpeta de Drive o su id para obtener en bloque las facturas
         PDF/imagen.
       help: Obtiene en lote todas las facturas PDF o imagen de una carpeta de Drive
@@ -5710,11 +5706,13 @@ docs:
       computed: Se calcula automáticamente
       informational: Solo informativa
       manual: Lo introduce usted
+      projection_only: Se rellena desde su fila de origen
     input_kind_count:
       bound: rellenadas desde sus registros
       computed: calculadas
       informational: solo informativas
       manual: que introduce usted
+      projection_only: rellenadas desde su fila de origen
     legal_kind:
       instruction: Instrucciones AEAT
     length:
