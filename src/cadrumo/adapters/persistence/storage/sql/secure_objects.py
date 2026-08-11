@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from datetime import datetime
-from typing import NamedTuple, Protocol, cast
+from typing import Any, NamedTuple, Protocol, cast
 
 from sqlalchemy import Engine, Table, bindparam, delete, insert, inspect, select, text, update
 from sqlalchemy.exc import IntegrityError
@@ -39,7 +39,7 @@ from ..errors import (
     SecureObjectUnreadableError,
     StorageValidationError,
 )
-from . import _orm
+from ._orm import SecureObjectRow
 from ._secure_object_crypto import derive_revision_id
 from ._secure_object_integrity import (
     iter_namespace_decryptability as _iter_namespace_decryptability,
@@ -59,7 +59,7 @@ from ._secure_object_records import (
     SecureObjectNamespaceIntegrity,
     SecureObjectRawRow,
     SecureObjectRecord,
-    SecureObjectUnreadable,  # noqa: F401  # deliberate re-export: consumers import it from this module
+    SecureObjectUnreadable,  # deliberate re-export: consumers import it from this module
 )
 from ._secure_object_row_codec import (
     secure_object_list_item_from_raw_row,
@@ -73,6 +73,8 @@ from ._secure_object_schema import (
 )
 from .engine import get_engine
 from .session import session_scope
+
+__all__ = ["SecureObjectUnreadable"]
 
 _log = get_logger(__name__)
 
@@ -93,7 +95,7 @@ def _secure_objects_table() -> Table:
     its declared type to ``FromClause``, which the ``insert``/``update``
     constructors do not accept. The assertion narrows it for the checker.
     """
-    table = _orm.SecureObjectRow.__table__
+    table = SecureObjectRow.__table__
     assert isinstance(table, Table)
     return table
 
@@ -119,6 +121,15 @@ class _PendingSecureObjectWrite(NamedTuple):
     write_provenance: str
     source_event_id: str | None
     expected_revision_id: str | None
+
+
+class SecureObjectMigrationTarget(NamedTuple):
+    """One explicitly governed row participating in an atomic schema cutover."""
+
+    namespace: str
+    object_key: str
+    expected_class: SensitivityClass
+    current_version: int
 
 
 class _RowcountResult(Protocol):
@@ -148,7 +159,7 @@ class SecureObjectRepository:
         # `.create`). Cast through `Table` so pyrefly resolves the method.
         from sqlalchemy import Table as _Table
 
-        local_table = inspect(_orm.SecureObjectRow).local_table
+        local_table = inspect(SecureObjectRow).local_table
         assert isinstance(local_table, _Table)
         local_table.create(self._engine, checkfirst=True)
 
@@ -360,16 +371,15 @@ class SecureObjectRepository:
         with session_scope(self._engine) as session:
             for start in range(0, len(digests), _OBJECT_KEY_SELECT_CHUNK):
                 rows = session.execute(
-                    select(_orm.SecureObjectRow.object_key).where(
-                        _orm.SecureObjectRow.namespace == namespace,
-                        _orm.SecureObjectRow.object_key.in_(
+                    select(SecureObjectRow.object_key).where(
+                        SecureObjectRow.namespace == namespace,
+                        SecureObjectRow.object_key.in_(
                             digests[start : start + _OBJECT_KEY_SELECT_CHUNK],
                         ),
                     ),
                 ).scalars()
                 for stored in rows:
-                    digest = stored if isinstance(stored, bytes) else bytes(stored)
-                    key = digest_to_key.get(digest)
+                    key = digest_to_key.get(stored)
                     if key is not None:
                         present.add(key)
         return frozenset(present)
@@ -390,9 +400,9 @@ class SecureObjectRepository:
             )
         with session_scope(self._engine) as session:
             row_id = session.execute(
-                select(_orm.SecureObjectRow.id).where(
-                    _orm.SecureObjectRow.namespace == namespace,
-                    _orm.SecureObjectRow.object_key == hashed_object_key,
+                select(SecureObjectRow.id).where(
+                    SecureObjectRow.namespace == namespace,
+                    SecureObjectRow.object_key == hashed_object_key,
                 ),
             ).scalar_one_or_none()
             return row_id is not None
@@ -490,7 +500,7 @@ class SecureObjectRepository:
         with session_scope(self._engine) as session:
             rows = (
                 session.execute(
-                    select(_orm.SecureObjectRow.namespace).distinct().order_by(_orm.SecureObjectRow.namespace),
+                select(SecureObjectRow.namespace).distinct().order_by(SecureObjectRow.namespace),
                 )
                 .scalars()
                 .all()
@@ -567,9 +577,9 @@ class SecureObjectRepository:
         self._check_session_freshness(namespace)
         with session_scope(self._engine) as session:
             rows = session.execute(
-                select(_orm.SecureObjectRow.object_key)
-                .where(_orm.SecureObjectRow.namespace == namespace)
-                .order_by(_orm.SecureObjectRow.object_key),
+                select(SecureObjectRow.object_key)
+                .where(SecureObjectRow.namespace == namespace)
+                .order_by(SecureObjectRow.object_key),
             ).scalars()
             return tuple(bytes(row).hex() for row in rows)
 
@@ -653,6 +663,95 @@ class SecureObjectRepository:
             raise SecureObjectUnreadableError(namespace, item.row_id)
         yield from records
 
+    def migrate_many_atomically(
+        self,
+        namespace: str,
+        object_keys: Iterable[str],
+        *,
+        expected_class: SensitivityClass,
+        current_version: int,
+        validate_upgraded_payloads: Callable[[Mapping[str, bytes]], None],
+        write_provenance: str,
+    ) -> Mapping[str, SecureObjectRecord]:
+        """Validate every upgraded payload, then persist all replacements atomically.
+
+        Older rows are decrypted and chain-upgraded through the normal read
+        policy.  The caller receives the complete natural-keyed payload set in
+        ``validate_upgraded_payloads`` before any replacement is written.  Only
+        after that callback succeeds are all older rows replaced in one
+        compare-and-swap batch, so a malformed sibling or concurrent write
+        leaves every original row intact.
+        """
+        targets = tuple(
+            SecureObjectMigrationTarget(namespace, key, expected_class, current_version)
+            for key in dict.fromkeys(object_keys)
+        )
+        records = self.migrate_targets_atomically(
+            targets,
+            validate_upgraded_payloads=lambda payloads: validate_upgraded_payloads(
+                {key: payload for (_namespace, key), payload in payloads.items()}
+            ),
+            write_provenance=write_provenance,
+        )
+        return {key: record for (_namespace, key), record in records.items()}
+
+    def migrate_targets_atomically(
+        self,
+        targets: Sequence[SecureObjectMigrationTarget],
+        *,
+        validate_upgraded_payloads: Callable[[Mapping[tuple[str, str], bytes]], None],
+        write_provenance: str,
+    ) -> Mapping[tuple[str, str], SecureObjectRecord]:
+        """Validate and CAS-replace an explicit cross-namespace target set once."""
+        unique_targets = tuple(dict.fromkeys(targets))
+        target_by_stored_key = {
+            (target.namespace, secure_object_key_digest(target.object_key)): target
+            for target in unique_targets
+        }
+        stored_versions = {
+            (row.namespace, row.object_key): row.schema_version
+            for row in self.iter_all_records_raw()
+            if (row.namespace, row.object_key) in target_by_stored_key
+        }
+        records: dict[tuple[str, str], SecureObjectRecord] = {}
+        for target in unique_targets:
+            record = self.load(
+                target.namespace,
+                target.object_key,
+                expected_class=target.expected_class,
+                max_supported_version=target.current_version,
+            )
+            if record is not None:
+                records[(target.namespace, target.object_key)] = record
+        old_targets = tuple(
+            target
+            for target in unique_targets
+            if (
+                record := records.get((target.namespace, target.object_key))
+            ) is not None
+            and stored_versions.get((target.namespace, record.object_key), target.current_version)
+            < target.current_version
+        )
+        if not old_targets:
+            return records
+        validate_upgraded_payloads({key: record.payload for key, record in records.items()})
+        self.apply_batch(
+            tuple(
+                SecureObjectWrite(
+                    namespace=target.namespace,
+                    object_key=target.object_key,
+                    classification=target.expected_class,
+                    schema_version=target.current_version,
+                    written_at=_utc_now(),
+                    payload=records[(target.namespace, target.object_key)].payload,
+                    write_provenance=write_provenance,
+                    expected_revision_id=records[(target.namespace, target.object_key)].revision_id,
+                )
+                for target in old_targets
+            )
+        )
+        return records
+
     def iter_many_with_failures(
         self,
         namespace: str,
@@ -693,11 +792,11 @@ class SecureObjectRepository:
                     bindparam("object_keys", value=object_key_digests, expanding=True),
                 )
                 .columns(
-                    id=_orm.SecureObjectRow.__table__.c.id.type,
-                    object_key=_orm.SecureObjectRow.__table__.c.object_key.type,
-                    classification=_orm.SecureObjectRow.__table__.c.classification.type,
-                    schema_version=_orm.SecureObjectRow.__table__.c.schema_version.type,
-                    written_at=_orm.SecureObjectRow.__table__.c.written_at.type,
+                    id=SecureObjectRow.__table__.c.id.type,
+                    object_key=SecureObjectRow.__table__.c.object_key.type,
+                    classification=SecureObjectRow.__table__.c.classification.type,
+                    schema_version=SecureObjectRow.__table__.c.schema_version.type,
+                    written_at=SecureObjectRow.__table__.c.written_at.type,
                 )
             )
             for raw in session.execute(stmt):
@@ -775,11 +874,11 @@ class SecureObjectRepository:
                 )
                 .bindparams(bindparam("namespace", value=namespace))
                 .columns(
-                    id=_orm.SecureObjectRow.__table__.c.id.type,
-                    object_key=_orm.SecureObjectRow.__table__.c.object_key.type,
-                    classification=_orm.SecureObjectRow.__table__.c.classification.type,
-                    schema_version=_orm.SecureObjectRow.__table__.c.schema_version.type,
-                    written_at=_orm.SecureObjectRow.__table__.c.written_at.type,
+                    id=SecureObjectRow.__table__.c.id.type,
+                    object_key=SecureObjectRow.__table__.c.object_key.type,
+                    classification=SecureObjectRow.__table__.c.classification.type,
+                    schema_version=SecureObjectRow.__table__.c.schema_version.type,
+                    written_at=SecureObjectRow.__table__.c.written_at.type,
                 )
                 .execution_options(stream_results=True, yield_per=batch_size)
             )
@@ -838,9 +937,9 @@ class SecureObjectRepository:
         )
         with session_scope(self._engine) as session:
             row = session.execute(
-                select(_orm.SecureObjectRow).where(
-                    _orm.SecureObjectRow.namespace == namespace,
-                    _orm.SecureObjectRow.object_key == object_key,
+                select(SecureObjectRow).where(
+                    SecureObjectRow.namespace == namespace,
+                    SecureObjectRow.object_key == object_key,
                 ),
             ).scalar_one_or_none()
             if row is None:
@@ -924,9 +1023,9 @@ class SecureObjectRepository:
         with session_scope(self._engine) as session:
             rows = session.execute(
                 select(
-                    _orm.SecureObjectRow.object_key,
-                    _orm.SecureObjectRow.payload_hash,
-                ).where(_orm.SecureObjectRow.namespace == namespace),
+                    SecureObjectRow.object_key,
+                    SecureObjectRow.payload_hash,
+                ).where(SecureObjectRow.namespace == namespace),
             ).all()
         hashes: dict[bytes, str | None] = {}
         for object_key, payload_hash in rows:
@@ -982,9 +1081,9 @@ class SecureObjectRepository:
             self._write_pending_in_session(session, pending)
             for removal in deletions:
                 session.execute(
-                    delete(_orm.SecureObjectRow).where(
-                        _orm.SecureObjectRow.namespace == removal.namespace,
-                        _orm.SecureObjectRow.object_key == removal.hashed_object_key,
+                    delete(SecureObjectRow).where(
+                        SecureObjectRow.namespace == removal.namespace,
+                        SecureObjectRow.object_key == removal.hashed_object_key,
                     ),
                 )
 
@@ -1265,14 +1364,14 @@ class SecureObjectRepository:
             for start in range(0, len(digests), _OBJECT_KEY_SELECT_CHUNK):
                 rows = session.execute(
                     select(
-                        _orm.SecureObjectRow.id,
-                        _orm.SecureObjectRow.object_key,
-                        _orm.SecureObjectRow.revision_id,
-                        _orm.SecureObjectRow.revision_ancestor_ids,
-                        _orm.SecureObjectRow.payload_hash,
+                        SecureObjectRow.id,
+                        SecureObjectRow.object_key,
+                        SecureObjectRow.revision_id,
+                        SecureObjectRow.revision_ancestor_ids,
+                        SecureObjectRow.payload_hash,
                     ).where(
-                        _orm.SecureObjectRow.namespace == namespace,
-                        _orm.SecureObjectRow.object_key.in_(
+                        SecureObjectRow.namespace == namespace,
+                        SecureObjectRow.object_key.in_(
                             digests[start : start + _OBJECT_KEY_SELECT_CHUNK],
                         ),
                     ),
@@ -1384,7 +1483,7 @@ class SecureObjectRepository:
         # on id alone matches the retired funnel's behaviour.
         unguarded = [row for row in update_rows if row["b_guard_revision_id"] is None]
         value_names = [name.removeprefix("v_") for name in update_rows[0] if name.startswith("v_")]
-        values = {name: bindparam(f"v_{name}") for name in value_names}
+        values: dict[str, Any] = {name: bindparam(f"v_{name}") for name in value_names}
         if guarded:
             stmt = (
                 update(table)
@@ -1447,8 +1546,8 @@ class SecureObjectRepository:
         row_ids = [cast(int, row["b_id"]) for row in guarded]
         stored: dict[int, str | None] = {}
         for stored_id, stored_revision_id in session.execute(
-            select(_orm.SecureObjectRow.id, _orm.SecureObjectRow.revision_id).where(
-                _orm.SecureObjectRow.id.in_(row_ids),
+            select(SecureObjectRow.id, SecureObjectRow.revision_id).where(
+                SecureObjectRow.id.in_(row_ids),
             ),
         ):
             stored[int(stored_id)] = stored_revision_id
@@ -1509,9 +1608,9 @@ class SecureObjectRepository:
         # the encrypted payload column is not auto-decrypted.
         with session_scope(self._engine) as session:
             row_id = session.execute(
-                select(_orm.SecureObjectRow.id).where(
-                    _orm.SecureObjectRow.namespace == namespace,
-                    _orm.SecureObjectRow.object_key == object_key,
+                select(SecureObjectRow.id).where(
+                    SecureObjectRow.namespace == namespace,
+                    SecureObjectRow.object_key == object_key,
                 ),
             ).scalar_one_or_none()
             if row_id is None:
@@ -1522,9 +1621,9 @@ class SecureObjectRepository:
                 )
                 .bindparams(bindparam("row_id", value=int(row_id)))
                 .columns(
-                    classification=_orm.SecureObjectRow.__table__.c.classification.type,
-                    schema_version=_orm.SecureObjectRow.__table__.c.schema_version.type,
-                    written_at=_orm.SecureObjectRow.__table__.c.written_at.type,
+                    classification=SecureObjectRow.__table__.c.classification.type,
+                    schema_version=SecureObjectRow.__table__.c.schema_version.type,
+                    written_at=SecureObjectRow.__table__.c.written_at.type,
                 )
             )
             raw = session.execute(stmt).one()
@@ -1549,9 +1648,9 @@ class SecureObjectRepository:
             result = cast(
                 _RowcountResult,
                 session.execute(
-                    delete(_orm.SecureObjectRow).where(
-                        _orm.SecureObjectRow.namespace == namespace,
-                        _orm.SecureObjectRow.object_key == object_key,
+                    delete(SecureObjectRow).where(
+                        SecureObjectRow.namespace == namespace,
+                        SecureObjectRow.object_key == object_key,
                     ),
                 ),
             )
@@ -1559,7 +1658,7 @@ class SecureObjectRepository:
 
     def _record_from_row(
         self,
-        row: _orm.SecureObjectRow,
+        row: SecureObjectRow,
         *,
         expected_class: SensitivityClass,
         max_supported_version: int,

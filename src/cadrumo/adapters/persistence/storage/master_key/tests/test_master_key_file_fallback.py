@@ -22,6 +22,7 @@ from ...bucket import BucketKeySchedule
 from ...crypto import KEY_SIZE
 from ...errors import (
     DecryptionError,
+    MasterKeyKdfVersionError,
     MasterKeyMaterialMissingError,
     MasterKeyPassphraseMismatchError,
     MasterKeyUnavailableError,
@@ -40,6 +41,7 @@ from .._active_session import (
 )
 from .._master_key import _b64decode, _KdfParameters
 from .._master_key_bucket_dek import bucket_dek_path as production_bucket_dek_path
+from .._master_key_derivation import KDF_PARAMS_VERSION
 from ._master_key_support import _settings_with_store, _write_registered_bucket
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -732,9 +734,9 @@ class TestFileFallbackProvider:
         nothing standing behind the claim, so the one document the preflight
         exists to catch was the one it could not.
 
-        No legitimate file reaches this state: every writer serialises the
-        parameter record with its defaults included, so a real ``master.kdf``
-        always carries the key. It is removed here deliberately.
+        No legitimate file reaches this state: every writer states the marker
+        explicitly when it constructs the parameter record, so a real
+        ``master.kdf`` always carries the key. It is removed here deliberately.
         """
         provider = FileFallbackMasterKeyProvider(
             store_dir=tmp_path / "fallback-store",
@@ -759,6 +761,50 @@ class TestFileFallbackProvider:
         envelope = build_error_envelope(excinfo.value)
         assert str(tmp_path) not in envelope.model_dump_json()
 
+    def test_kdf_file_declaring_a_non_current_version_is_refused(self, tmp_path: Path) -> None:
+        """The other half of the marker contract: present, but not ours.
+
+        The sibling above strips the marker; this one supplies a real marker
+        that is not this build's. They are different branches of the read path
+        -- absence fails the preview model, a foreign value fails the equality
+        gate after it -- and only this one reaches
+        :class:`MasterKeyKdfVersionError`. That branch had no coverage anywhere
+        in the tree: it is raised at exactly one site, exported, and registered
+        with its own error code, and nothing exercised it.
+
+        Asserted on the SUBCLASS and on its own message key, never on
+        :class:`MasterKeyUnavailableError`. The version error inherits from the
+        unavailable error, so a base-class assertion passes for both branches
+        and could not tell a foreign version from a missing one -- which is the
+        distinction this test exists to make.
+        """
+        provider = FileFallbackMasterKeyProvider(
+            store_dir=tmp_path / "fallback-store",
+            passphrase_callback=lambda: "test-passphrase",
+        )
+        provider.provision_master_key()
+        kdf_path = tmp_path / "fallback-store" / "master.kdf"
+
+        document = json.loads(kdf_path.read_text(encoding=UTF_8_ENCODING))
+        assert document["version"] == KDF_PARAMS_VERSION, (
+            "the writer must stamp the current marker for this proof to be about a FOREIGN one"
+        )
+        foreign_version = KDF_PARAMS_VERSION + 1
+        document["version"] = foreign_version
+        kdf_path.write_text(json.dumps(document), encoding=UTF_8_ENCODING)
+
+        with pytest.raises(MasterKeyKdfVersionError) as excinfo:
+            FileFallbackMasterKeyProvider(
+                store_dir=tmp_path / "fallback-store",
+                passphrase_callback=lambda: "test-passphrase",
+            ).get_master_key()
+
+        assert excinfo.value.translated_message == "errors.auth.auth_storage_master_key_kdf_version"
+        # Both numbers reach the operator: what the file claims and what this
+        # build accepts. A refusal naming neither is not actionable.
+        assert str(foreign_version) in str(excinfo.value)
+        assert str(KDF_PARAMS_VERSION) in str(excinfo.value)
+
     def test_a_version_bearing_kdf_file_still_unlocks(self, tmp_path: Path) -> None:
         """Positive control: the untouched file the writer produced still opens.
 
@@ -775,7 +821,15 @@ class TestFileFallbackProvider:
         document = json.loads(
             (tmp_path / "fallback-store" / "master.kdf").read_text(encoding=UTF_8_ENCODING),
         )
-        assert document["version"] == _KdfParameters.model_fields["version"].default
+        # Asserted against the constant the writer stamps, never against the
+        # model's own field default. Reading the default compared the written
+        # value with the thing that produced it, so a wrong default, a wrong
+        # marker, or the Argon2-version constant substituted for this one all
+        # passed. It also coupled the assertion to the field carrying a default
+        # at all: when the record was tightened to require ``version``, this line
+        # broke on ``PydanticUndefined`` while the behaviour it claims to check
+        # was working correctly.
+        assert document["version"] == KDF_PARAMS_VERSION
 
         reopened = FileFallbackMasterKeyProvider(
             store_dir=tmp_path / "fallback-store",

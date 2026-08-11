@@ -45,6 +45,7 @@ def _populated_register() -> BienesInversionIvaRegister:
         kind=BienInversionKind.MUEBLE,
         art108_elegible=True,
         asset_record_ref="asset-2022-furgoneta",
+        acquisition_ledger_id="ledger-2022-furgoneta",
         disposal=BienInversionDisposal(year=2024, regime=BienInversionDisposalRegime.SUJETA_NO_EXENTA),
     )
     real_estate = BienInversionIvaRecord(
@@ -56,6 +57,7 @@ def _populated_register() -> BienesInversionIvaRegister:
         kind=BienInversionKind.INMUEBLE,
         art108_elegible=False,
         asset_record_ref="asset-2021-local",
+        acquisition_ledger_id="ledger-2021-local",
     )
     return BienesInversionIvaRegister(records=(movable, real_estate))
 

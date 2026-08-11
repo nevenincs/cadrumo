@@ -614,6 +614,7 @@ class FileFallbackMasterKeyProvider:
     def _mint_new(self, passphrase: bytes) -> bytes:
         salt = secrets.token_bytes(SALT_SIZE)
         params = _KdfParameters(
+            version=KDF_PARAMS_VERSION,
             memory_cost=ARGON2_MEMORY_COST_KIB,
             time_cost=ARGON2_TIME_COST,
             parallelism=ARGON2_PARALLELISM,
@@ -676,6 +677,7 @@ class FileFallbackMasterKeyProvider:
         passphrase = self._resolve_passphrase()
         salt = secrets.token_bytes(SALT_SIZE)
         params = _KdfParameters(
+            version=KDF_PARAMS_VERSION,
             memory_cost=ARGON2_MEMORY_COST_KIB,
             time_cost=ARGON2_TIME_COST,
             parallelism=ARGON2_PARALLELISM,

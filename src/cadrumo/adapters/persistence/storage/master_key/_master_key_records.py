@@ -17,7 +17,6 @@ from ._kdf_params import (
     _MIN_PARALLELISM,
     _MIN_TIME_COST,
 )
-from ._master_key_derivation import KDF_PARAMS_VERSION
 
 
 class _EnvelopeFact(BaseModel):
@@ -60,11 +59,21 @@ class _KdfParameters(BaseModel):
     mismatch*, sending the operator to recover a passphrase that was never
     wrong, while a 1-byte salt reached the library and leaked a raw
     ``argon2.exceptions.HashingError``.
+
+    ``version`` is required and carries no default. It once defaulted to the
+    current marker, which made the record silently tolerant: any construction
+    omitting it — including a future consumer parsing a document that declares
+    no version — acquired the current marker as though the document had claimed
+    it. The production read path never reached that default, because the
+    version gate refuses an undeclared document first, so the tolerance was
+    latent rather than live. Requiring the field keeps it that way by
+    construction instead of by the ordering of two modules: every writer states
+    the marker it is stamping.
     """
 
     model_config = _STRICT_FROZEN
 
-    version: int = Field(default=KDF_PARAMS_VERSION)
+    version: int
     algorithm: Literal["argon2id"] = Field(default="argon2id")
     memory_cost: int = Field(ge=_MIN_MEMORY_COST_KIB, le=_MAX_MEMORY_COST_KIB)
     time_cost: int = Field(ge=_MIN_TIME_COST, le=_MAX_TIME_COST)
