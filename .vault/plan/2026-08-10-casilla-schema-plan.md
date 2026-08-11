@@ -4,7 +4,7 @@ tags:
   - '#casilla-schema'
 date: '2026-08-10'
 modified: '2026-08-11'
-body_hash: 'sha256:b255f71260d5a8dc1f0569af03cac79849309255d25633503d1bd51ff0b77e27'
+body_hash: 'sha256:347d9a441020e34ea98ab4b4d8439769a94de702594b4203d82145b0632acf33'
 tier: L3
 related:
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
@@ -137,7 +137,7 @@ Deliver the one assembled review record, its envelope, and the readiness fix. Re
 
 ModeloWorkReview, its producer, its envelope, and the findings attribution sweep.
 
-- [ ] `W03.P07.S22` - promote resolve_calculation_binding_channels to the application modelo facade; `src/cadrumo/application/modelo/__init__.py`.
+- [x] `W03.P07.S22` - promote resolve_calculation_binding_channels to the application modelo facade; `src/cadrumo/application/modelo/__init__.py`.
 - [ ] `W03.P07.S23` - add the frozen ModeloWorkReview model and its single producer build_modelo_work_review, law-resolving the revision and asserting any stored stamp; `src/cadrumo/application/modelo/`.
 - [ ] `W03.P07.S24` - sweep all finding construction sites that leave casilla_id unset (26 sites across 18 files, with _verification_cross_period.py carrying 9 including the never-populating cross-period kind) and populate it wherever a casilla exists to name, recording the grep-derived site list in the exec record; `src/cadrumo/application/modelo/`.
 - [ ] `W03.P07.S25` - implement the owner-ruled progress counts: typed state plus counts against the named manifest denominator, UNDEFINED when no manifest exists, never a bare percentage; `src/cadrumo/application/modelo/`.

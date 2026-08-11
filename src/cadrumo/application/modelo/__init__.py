@@ -142,6 +142,7 @@ from ._calculation_actions import (
     list_calculation_revisions,
     mark_revision_verificado_completo,
 )
+from ._calculation_resolution import resolve_calculation_binding_channels
 from ._calculation_source_policy import (
     BUCKET_AGGREGATION_LOCK_SOURCES,
     CALLER_OVERRIDABLE_CARRY_SOURCES,
@@ -924,6 +925,7 @@ __all__ = [
     "require_profile_ready_for_work_unit",
     "resolve_active_natural_modelo_work_unit",
     "resolve_available_bound_inputs_by_casilla_id",
+    "resolve_calculation_binding_channels",
     "resolve_casilla_population_scope",
     "resolve_exportable_modelo_calculation_revision_address",
     "resolve_fileable_modelo_calculation_revision_address",
