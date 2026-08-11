@@ -15,8 +15,9 @@ related:
   - '[[2026-07-05-cross-period-prorrata-adr]]'
   - '[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-reference]]'
   - '[[2026-07-07-prorrata-sectores-diferenciados-adr]]'
+  - '[[2026-08-11-aeat-export-fragment-generator-authority-s54-sector-source-taxonomy-research]]'
 modified: '2026-08-11'
-body_hash: 'sha256:65119f486878e4b1da9192f513f2c3ebf969acf6737f09da8d11a212c5df2d94'
+body_hash: 'sha256:4ca68918405c02d997835a511e789cca67527dfe716b2fc3d1accbc0c946f836'
 ---
 # `m303-form-vs-semantic-casilla-dual-keying` adr: `M303 semantic homes and exact fixed-slot official projection` | (**status:** `accepted`)
 
@@ -126,6 +127,57 @@ Until then the complete differentiated-sector population refuses before target
 creation. These endpoints cannot become manual or bound scalars, raw mappings,
 label- or slot-inferred categories, blanks, zeros, aliases, legacy selectors, or
 layout fields. The production M303 layout remains withdrawn.
+
+### Canonical differentiated-sector source taxonomy
+
+The S54 grounding in
+`2026-08-11-aeat-export-fragment-generator-authority-s54-sector-source-taxonomy-research`
+closes the prerequisite as follows.
+
+`IvaLedgerInputKind` is deleted and replaced by the core/domain-owned closed
+`IvaDeductionFactKind`: `domestic_current`, `domestic_investment`,
+`import_current`, `import_investment`, `intra_eu_current`,
+`intra_eu_investment`, `reagp_compensation`, `rectification`, and
+`investment_goods_regularisation`. The first eight may occur on canonical ledger
+observations. Investment-goods regularisation is emitted only by its existing
+bienes-inversion owner. Category, flow, rate, and prorrata classification remain
+orthogonal axes, with exhaustive validation of their legal combinations.
+
+Candidates and frozen observations carry the deduction kind plus immutable typed
+classification provenance: authority or source kind, source reference or locator,
+and evidence digest. Freezing copies both losslessly and never derives them from
+amount, category, label, account, slot, or the removed input kind. All old readers
+and writers are deleted atomically; there is no alias, dual read, or dual write.
+
+An investment observation carries a validated `investment_asset_id`. Its canonical
+bienes-inversion record carries the reciprocal stable `acquisition_ledger_id` and,
+in sectorized scope, `prorrata_sector_id`. Freezing and aggregation require exact
+reciprocity, the same secure profile and year, and equal sector identity. Missing,
+duplicate, stale, many-to-one, cross-profile, cross-year, or sector-mismatched links
+refuse. Non-investment observations cannot carry an asset identifier.
+
+Rectification base and cuota remain signed ledger-observation values with evidence
+linking the corrected source fact and are consumed once by the existing resolver.
+Investment-goods regularisation remains calculated by the bienes-inversion service,
+which exposes immutable per-asset contributions grouped by register-owned sector;
+their sum must equal the existing casilla-43 binding result. The aggregate is never
+allocated backward and no projection total is persisted.
+
+The secure ledger and bienes-inversion payloads cut over atomically to the new-only
+schema. Backfill is permitted only where persisted authoritative evidence proves
+the exact deduction kind and reciprocal asset, ledger, and sector links. Otherwise
+migration refuses before commit with an itemized remediation or re-import inventory.
+There is no default `current`, inference, compatibility loader, retained old shape,
+or partial migration. Each secure profile is replaced only after validated post-load.
+
+S54 owns the enum and provenance in core/domain IVA, observation and selector
+validation in the calculation registry, lossless freeze and aggregation routing in
+application aggregation, per-sector regularisation contributions in the asset
+service, and versioned atomic migration in secure adapters. S49 consumes only these
+enriched immutable outputs. Missing classification or provenance, illegal
+combinations, ungrounded signed adjustment, unresolved asset or sector, observation
+reuse, or incomplete migration refuses before calculation, persistence, projection,
+target creation, or bytes. No export registry or layout is changed by S54.
 
 ### Producer vocabulary and resolution
 
