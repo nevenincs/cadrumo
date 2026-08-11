@@ -17,7 +17,7 @@ related:
   - '[[2026-07-07-prorrata-sectores-diferenciados-adr]]'
   - '[[2026-08-11-aeat-export-fragment-generator-authority-s54-sector-source-taxonomy-research]]'
 modified: '2026-08-11'
-body_hash: 'sha256:4ca68918405c02d997835a511e789cca67527dfe716b2fc3d1accbc0c946f836'
+body_hash: 'sha256:fd01b271acf1b931ddabb39f612d7248d1fa5cace9fb9de9a6bcd3c4cdd46fad'
 ---
 # `m303-form-vs-semantic-casilla-dual-keying` adr: `M303 semantic homes and exact fixed-slot official projection` | (**status:** `accepted`)
 
@@ -61,7 +61,7 @@ Nonnumbered producer fields require the same single-home discipline. A raw expor
 - Source-declared literals, reserves, and transport checks remain source/codec facts and never become taxpayer or calculation semantics.
 - No compatibility alias, alternate resolver, export recomputation, header default, plaintext account path, unsupported-as-filler classification, or legacy read tolerance is permitted.
 - The closed producer identity is a public core `StrEnum`. Registry and semantic-map models carry enum members; only canonical TOML loading converts the exact string value. Generic `BeforeValidator` coercion, case folding, normalization, and runtime string hydration are forbidden.
-- `producer_key` is the sole payload axis for a producer-backed field. It replaces `header_key`; a field declares exactly one of casilla, binding, literal, producer, draft, or computed payload according to its kind.
+- `producer_key` is the sole payload axis for a scalar snapshot-backed field and replaces `header_key`. Repeated-row fields use the distinct typed `projection_ref` axis; a field declares exactly one payload according to its kind.
 - Historical header spellings are migration inputs, never aliases or enum members. Multiple official anchors may project one canonical producer, but no historical spelling survives as an alternate producer identity.
 - Filed-artifact observation remains evidence-scoped: `ObservedHeaderFact.header_key` retains constrained raw text and cannot enter the render boundary.
 - A source literal, reserve, seal, marker, program version, closing tag, or checksum is classified through literal, filler, computed, or codec policy, never through the producer enum. An AEAT seal may be blank only when the source-bound record design proves AEAT owns that reserve.
@@ -217,6 +217,10 @@ calculation completeness.
 
 The public core producer enum names semantic facts, not record labels. The registry `producer_key` payload and development semantic-map schema import that enum and require one exact member. Canonical TOML loading is the only string-to-enum boundary. Renderer dispatch is an exhaustive enum-keyed table whose keys equal the enum membership; it receives one `FilingProducerSnapshot` and returns the typed value for the exact official projection.
 
+`producer_key` is restricted to scalar facts resolved from the immutable filing snapshot. Repeated-row ownership is represented by `CasillaFieldKind.PROJECTION`, whose sole payload axis is `projection_ref`. That payload is a strict core-owned discriminated `FilingProjectionRef` union, never a string key. Its family-specific members identify a prorrata activity slot and closed field, a differentiated-sector slot and closed field, a simplified-regime cohort, slot and typed activity, fact, or annual-Orden module address, or an exonerado activity slot and its activity-code or IAE field. Where the official endpoint is numbered, the reference also carries that exact casilla.
+
+The record occurrence supplies the repeated DP30302 context. Descriptions, labels, offsets, neighbouring fields, numeric coincidences, section order, and domain names such as `module1` cannot select semantics. A projection reference points to one existing typed row owner and exact endpoint; it is not a producer, store, calculation path, or compatibility alias. Registry and semantic-map loaders, provenance, generator, renderer dispatch, and every M303 row projector consume the same typed union atomically and reject a reference not admitted exactly once by the selected snapshot.
+
 Presenter tax identity, amendment kind and original AEAT receipt, resolved elections, selected secure account, and stable taxpayer/profile facts resolve only from that snapshot. The snapshot carries distinct taxpayer legal, given, surname, and full-name facts wherever official applicability needs them. Bare `name`, presenter-as-taxpayer, internal filing identifiers as receipt numbers, and operator-profile lookups are not producer fallbacks.
 
 Historical record labels are rewritten at their exact semantic-map or registry anchors. Presenter NIF spellings converge on presenter tax identity; complementaria page and numbered spellings converge on the derived complementaria fact; previous-receipt spellings converge on the validated original AEAT receipt. Name-like anchors are adjudicated individually because legal name, given name, surnames, taxpayer full name, and presenter full name are distinct facts.
@@ -238,7 +242,7 @@ Historical record labels are rewritten at their exact semantic-map or registry a
 
 ### Delivery ownership
 
-S45 owns the core closed producer vocabulary, `producer_key` schema cutover, loader-only TOML conversion, snapshot-only exhaustive resolver, exact-anchor migration, source-fact reclassification, and deletion of aliases and raw mapping surfaces. S45 also closes the S46 taxpayer-name gap atomically in the canonical snapshot owner; any name fact not yet typed remains a refusal. S46 owns the typed profile, filing-instance, presenter, disposition, and secure-account substrate. S47-S50 own the annual-summary, prorrata-activity, differentiated-sector, and simplified-regime projection implementations. S51 owns applicability and whole-export refusal. S52 owns the five-epoch exact-anchor and exactly-once proof, importing `classify_official_boxes` for declaration instead of reproducing it.
+S45 owns the core closed producer vocabulary, `producer_key` schema cutover, loader-only TOML conversion, snapshot-only exhaustive resolver, exact-anchor migration, source-fact reclassification, and deletion of aliases and raw mapping surfaces. S45 also closes the S46 taxpayer-name gap atomically in the canonical snapshot owner; any name fact not yet typed remains a refusal. S46 owns the typed profile, filing-instance, presenter, disposition, and secure-account substrate. S47-S50 own the annual-summary, prorrata-activity, differentiated-sector, and simplified-regime projection implementations. S51 owns applicability and whole-export refusal. S55 adds the missing fail-closed foral and profile scalar owners through the canonical profile, snapshot, and producer vocabulary. S56 adds the one ordered evidence-bearing owner and arrival path for the six exonerado activity-code and IAE pairs. S57 owns the atomic typed projection-reference integration and deletes every regex, slot, section, offset, numeric, or neighbouring-field semantic inference it replaces. S19 may author maps only after S55-S57 land. S52 owns the five-epoch exact-anchor and exactly-once proof, importing `classify_official_boxes` for declaration instead of reproducing it.
 
 These delivery steps own implementation, producer availability, value arrival, and acceptance evidence. This ADR decides semantic homes and projection boundaries; it does not claim those later steps are already complete.
 
@@ -255,6 +259,8 @@ Keeping the proposed simplified-regime record separate avoids converting an unac
 - Five activity rows extend the sole encrypted `ProrrataRegister`, and two differentiated rows reuse its existing sector definitions and entries; no second store or projection carrier is introduced.
 - Missing applicable authority becomes a whole-export refusal rather than silent blank or zero output.
 - The raw `ExportHeaderKey` and `Mapping[str, str]` render boundary are deleted. Producer vocabulary is a core-owned closed enum, and exact TOML strings hydrate only at the canonical loader boundary.
+- Scalar snapshot facts use only `producer_key`; repeated-row fields use only the strict core-owned `projection_ref` union and cannot be re-expressed as scalar producers, strings, literals, filler, or inferred slots.
+- Foral and profile scalars, including DP30301 A16, must arrive from canonical tax-territory and profile authority with no constant or non-foral default. The six exonerado activity-code and IAE pairs must arrive from one typed ordered evidence-bearing row owner rather than raw markers or placeholders.
 - Historical header spellings, normalization helpers, aliases, operator-name fallback, taxpayer-as-presenter fallback, and internal filing-id receipt projection become hard failures rather than tolerated inputs.
 - Source and transport facts remain outside the producer vocabulary; unsupported future producer gaps remain explicit refusals until their owning steps land.
 - M202 cannot create an export artifact while its snapshot is incomplete, and M303 cannot render a layout whose producer/source/applicability inventory is incomplete.
