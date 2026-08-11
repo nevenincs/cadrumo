@@ -91,6 +91,30 @@ So the ordering is: the notice-channel row first, this one after. Recorded as
 a dependency rather than a deferral, because the measurement here is done and
 only the destination is missing.
 
+## Second measurement, after the notice channel landed
+
+The blocker this record named has cleared and a LARGER one was found under it.
+
+The notice channel is built: carried review items now reach the operator, a
+contradiction already has a shipped reason that names exactly this class of
+conflict, and the projector fails loudly on a reason it cannot render. So the
+destination the row was waiting for exists.
+
+What does not exist is the branch. Driving the real assembly and the real rule
+table for a mainland issuer supplying a customer in Canarias or in Ceuta and
+Melilla: the operation does not classify at all. It refuses first for an
+identification, and once that is supplied the table returns unknown and the
+resolution is UNRESOLVED. The only row naming a non-peninsular territory keys
+on the ISSUER being outside the territorio de aplicacion del impuesto, which
+is the inbound direction; the outbound direction has no row.
+
+So the contradiction fixture cannot be written yet, and writing it anyway
+would assert that an unclassifiable operation is unclassifiable. The row is
+re-blocked on the missing branch rather than on the surface, and that branch
+is now rowed with the tax review it needs: these are supplies leaving the TAI,
+the exportacion treatment is the candidate rather than the conclusion, and the
+three territories may not share one answer.
+
 ## Notes
 
 <!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
