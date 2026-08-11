@@ -127,9 +127,20 @@ def _register_active_profile(*, overrides: Mapping[str, str] | None = None) -> s
     """Register and activate a minimal profile; return its bucket id."""
 
     _ensure_operator_storage_span()
+    profile_overrides = {
+        "iva.m303_regime_composition": "general",
+        "iva.redeme_enrolled": "false",
+        "iva.cash_accounting_regime_enrolled": "false",
+        "iva.voluntary_sii_enrolled": "false",
+        "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+    }
+    if overrides:
+        profile_overrides.update(overrides)
     workflow_state_repository().update(
         lambda state: register_minimal_profile(
-            state, profile_id="11111111-1111-4111-8111-111111111111", overrides=overrides
+            state,
+            profile_id="11111111-1111-4111-8111-111111111111",
+            overrides=profile_overrides,
         ),
     )
     bucket_id = workflow_state_repository().load().active_profile_bucket_id()
@@ -299,13 +310,13 @@ def test_surfaces_agree_on_one_projection() -> None:
 
     # auth status and auth test agree on the active profile too.
     assert auth_status.active_profile == auth_test.active_profile
-    assert auth_status.active_profile == bucket_id
+    assert auth_status.active_profile == projection.active_profile.label
 
     # overview status shows the modelo work units from the same
     # projection.
     assert overview.work_units == 2
     assert overview.work_units == projection.workspace.work_units
-    assert overview.active_profile == bucket_id
+    assert overview.active_profile_name == projection.active_profile.label
 
     # modelo readiness is carried in the same projection and is
     # consistent with what a direct readiness query reports.

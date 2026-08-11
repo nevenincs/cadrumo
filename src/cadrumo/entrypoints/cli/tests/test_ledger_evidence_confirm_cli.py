@@ -12,8 +12,24 @@ itself is delegated to the sole sanctioned catalogue-invoice writer
 confirm path never re-implements that write.
 
 Every case drives the real Typer CLI tree, a real encrypted bucket session,
-and a real reportlab-generated text-bearing PDF. No mocks, stubs, or
-monkeypatch.
+and a real bundled document. No mocks, stubs, or monkeypatch.
+
+**The document is STRUCTURED, and that is what makes this file runnable.**
+It previously fed a reportlab-generated text-bearing PDF, whose reading lane
+is the semantic extraction stage -- so every case here failed at extraction on
+a local inference connection failure, before reaching a single line of confirm
+logic, on any machine without a live local model. Seven of the eight cases
+were dead coverage for exactly the people most likely to be working on this
+surface. A Facturae document reads through the deterministic parser instead:
+no model is reached, every re-read resolves the same figures, and the confirm
+behaviour under test is unchanged.
+
+The refusal case survives the switch rather than being traded away for
+runnability, which was the risk in this refit. The bundled document's buyer
+side carries a tax identifier and NO name, so confirming it as ISSUED asks for
+a counterparty the document does not name -- the same situation the reader's
+cross-side fallback used to paper over -- and the refusal is reached without a
+model.
 
 See Also:
     :func:`~entrypoints.cli._ledger_evidence_cli._run_evidence_confirm`
@@ -36,12 +52,12 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Iterator
-from io import BytesIO
 from pathlib import Path
 
 import pytest
 
 from ._ledger_ux_support import _invoke, _open_ledger_ux_session
+from ._ledger_validation_support import _set_profile_axis
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -57,56 +73,52 @@ def _redacted(tax_id: str) -> str:
     return f"sha256:{hashlib.sha256(tax_id.encode('utf-8')).hexdigest()[:8]}"
 
 
+#: The bundled evidence corpus, reached the way the sibling CLI evidence
+#: suites reach it.
+_EVIDENCE_CORPUS = Path(__file__).resolve().parents[3] / "application" / "ledger" / "tests" / "_evidence_corpus"
+
+#: A Facturae 3.2 document, so the reading lane is the deterministic parser.
+_STRUCTURED_INVOICE = _EVIDENCE_CORPUS / "facturae_32_recargo_invoice.xml"
+
+# What the bundled document states. Read off the fixture rather than chosen,
+# so an assertion here cannot drift from the bytes under test.
 _SUPPLIER_CIF = "B12345674"
-
-_FULL_INVOICE_LINES = (
-    "Factura de Acme Suministros SL",
-    f"NIF: {_SUPPLIER_CIF}",
-    "Numero de factura: 2026-0142",
-    "Fecha: 10/03/2026",
-    "Base imponible: 100,00",
-    "IVA 21%",
-    "Cuota IVA: 21,00",
-    "Total factura: 121,00",
-)
-
-_PARTIAL_INVOICE_LINES = (
-    "Factura de Acme Suministros SL",
-    "Base imponible: 250,00",
-    "Total factura: 250,00",
-)
-
-
-def _text_pdf_bytes(lines: tuple[str, ...]) -> bytes:
-    from reportlab.lib.pagesizes import A4
-    from reportlab.pdfgen import canvas
-
-    buf = BytesIO()
-    page = canvas.Canvas(buf, pagesize=A4)
-    y = 760
-    for line in lines:
-        page.drawString(72, y, line)
-        y -= 20
-    page.save()
-    return buf.getvalue()
+_SUPPLIER_NAME = "Mayorista Ejemplo SL"
+_INVOICE_NUMBER = "FAC-2024-0007"
+_ISSUE_DATE = "2024-11-20"
+_TAXABLE_BASE = "100.00"
+#: Base plus the 21% cuota plus the 5.2% recargo de equivalencia the document charges.
+_GRAND_TOTAL = "126.20"
 
 
 @pytest.fixture(autouse=True)
 def _open_bucket_session(tmp_path: Path) -> Iterator[None]:
     with _open_ledger_ux_session(tmp_path):
+        # The confirm path resolves an IVA treatment, and the deadlines profile
+        # refuses to answer for a taxpayer whose Modelo 303 composition was
+        # never declared -- correctly, since an undeclared composition is not a
+        # general one. The minimal profile the shared session registers does not
+        # declare it, so every confirm through this harness refused before
+        # reaching the behaviour under test. Declared as GENERAL, which is what
+        # this taxpayer is: being charged recargo de equivalencia is a fact
+        # about the supplier's obligation towards this buyer, not a fourth
+        # composition -- a recargo retailer still files 303 under the general
+        # composition.
+        _set_profile_axis("iva.m303_regime_composition", "general")
         yield
 
 
-def _add_evidence(tmp_path: Path, lines: tuple[str, ...], *, filename: str = "factura.pdf") -> str:
-    pdf = tmp_path / filename
-    pdf.write_bytes(_text_pdf_bytes(lines))
-    added = _invoke(["--format", "json", "app", "ledger", "evidence", "add", str(pdf), "--supplier", "Acme SL"])
+def _add_evidence(tmp_path: Path, *, filename: str = "factura.xml") -> str:
+    """Store the bundled structured document as real evidence, through the CLI."""
+    source = tmp_path / filename
+    source.write_bytes(_STRUCTURED_INVOICE.read_bytes())
+    added = _invoke(["--format", "json", "app", "ledger", "evidence", "add", str(source), "--supplier", "Acme SL"])
     assert added.exit_code == 0, added.output
     return json.loads(added.output)["result"]["evidence_id"]
 
 
 def test_confirm_by_evidence_id_mints_a_real_catalogue_invoice(tmp_path: Path) -> None:
-    evidence_id = _add_evidence(tmp_path, _FULL_INVOICE_LINES)
+    evidence_id = _add_evidence(tmp_path)
 
     confirmed = _invoke(
         [
@@ -124,10 +136,10 @@ def test_confirm_by_evidence_id_mints_a_real_catalogue_invoice(tmp_path: Path) -
     assert result["kind"] == "received"
     assert result["counterparty_tax_id"] == _redacted(_SUPPLIER_CIF)
     assert result["counterparty_name"] == "Acme Suministros SL"
-    assert result["invoice_number"] == "2026-0142"
-    assert result["issued_at"] == "2026-03-10"
-    assert result["base_total"] == "100.00"
-    assert result["grand_total"] == "121.00"
+    assert result["invoice_number"] == _INVOICE_NUMBER
+    assert result["issued_at"] == _ISSUE_DATE
+    assert result["base_total"] == _TAXABLE_BASE
+    assert result["grand_total"] == _GRAND_TOTAL
     invoice_id = result["invoice_id"]
     assert len(invoice_id) == 64
 
@@ -142,7 +154,7 @@ def test_confirm_by_evidence_id_mints_a_real_catalogue_invoice(tmp_path: Path) -
 
 def test_confirm_is_idempotent_guarded_on_a_second_identical_confirm(tmp_path: Path) -> None:
     """A re-confirm with the same resolved identity is a guarded no-op, not a duplicate."""
-    evidence_id = _add_evidence(tmp_path, _FULL_INVOICE_LINES)
+    evidence_id = _add_evidence(tmp_path)
 
     first = _invoke(
         [
@@ -185,7 +197,7 @@ def test_confirm_is_idempotent_guarded_on_a_second_identical_confirm(tmp_path: P
 
 def test_confirm_honours_an_override_of_an_extracted_field(tmp_path: Path) -> None:
     """A supplied override wins over the best-effort extracted value."""
-    evidence_id = _add_evidence(tmp_path, _FULL_INVOICE_LINES)
+    evidence_id = _add_evidence(tmp_path)
 
     confirmed = _invoke(
         [
@@ -201,12 +213,12 @@ def test_confirm_honours_an_override_of_an_extracted_field(tmp_path: Path) -> No
     assert confirmed.exit_code == 0, confirmed.output
     result = json.loads(confirmed.output)["result"]
 
-    # The override values won, not the extracted "2026-0142" / "100.00".
+    # The override values won, not the values the document states.
     assert result["invoice_number"] == "OVERRIDE-9999"
     assert result["base_total"] == "500.00"
     # Fields not overridden still come from the extracted draft.
     assert result["counterparty_tax_id"] == _redacted(_SUPPLIER_CIF)
-    assert result["issued_at"] == "2026-03-10"
+    assert result["issued_at"] == _ISSUE_DATE
 
 
 def test_confirm_of_a_different_override_refuses_rather_than_duplicating(tmp_path: Path) -> None:
@@ -223,7 +235,7 @@ def test_confirm_of_a_different_override_refuses_rather_than_duplicating(tmp_pat
     depends on it: a corrected number means the stored record is wrong, a
     different total means these are not the same invoice.
     """
-    evidence_id = _add_evidence(tmp_path, _FULL_INVOICE_LINES)
+    evidence_id = _add_evidence(tmp_path)
 
     first = _invoke(
         [
@@ -245,7 +257,7 @@ def test_confirm_of_a_different_override_refuses_rather_than_duplicating(tmp_pat
             "--evidence-id", evidence_id,
             "--kind", "received",
             "--counterparty-name", "Acme Suministros SL",
-            "--invoice-number", "2026-0143",
+            "--invoice-number", "FAC-2024-0008",
         ],
     )  # fmt: skip
     assert second.exit_code != 0, second.output
@@ -257,7 +269,7 @@ def test_confirm_of_a_different_override_refuses_rather_than_duplicating(tmp_pat
 
 
 def test_confirm_by_attachment_id_uses_the_same_in_store_bytes(tmp_path: Path) -> None:
-    evidence_id = _add_evidence(tmp_path, _PARTIAL_INVOICE_LINES)
+    evidence_id = _add_evidence(tmp_path)
 
     viewed = _invoke(["--format", "json", "app", "ledger", "evidence", "view", evidence_id])
     assert viewed.exit_code == 0, viewed.output
@@ -272,19 +284,24 @@ def test_confirm_by_attachment_id_uses_the_same_in_store_bytes(tmp_path: Path) -
             "--kind", "received",
             "--counterparty-name", "Acme Suministros SL",
             "--counterparty-nif", _SUPPLIER_CIF,
-            "--invoice-number", "2026-0200",
-            "--invoice-date", "2026-04-01",
         ],
     )  # fmt: skip
     assert confirmed.exit_code == 0, confirmed.output
     result = json.loads(confirmed.output)["result"]
     assert result["attachment_id"] == attachment_id
-    assert result["base_total"] == "250.00"
+    assert result["base_total"] == _TAXABLE_BASE
 
 
-def test_confirm_missing_required_field_refuses_actionably(tmp_path: Path) -> None:
-    """A field with no extraction heuristic and no override refuses, not fabricates."""
-    evidence_id = _add_evidence(tmp_path, _FULL_INVOICE_LINES)
+def test_confirm_reads_the_counterparty_the_document_names(tmp_path: Path) -> None:
+    """The positive control for the refusal below: a named side needs no override.
+
+    Confirmed as RECEIVED, so the counterparty is the seller, and the document
+    names it. Nothing is supplied on the command line and the value still
+    arrives, which is what makes the refusal in the next case a statement about
+    THIS document's buyer side rather than about the reader being unable to
+    read a party at all.
+    """
+    evidence_id = _add_evidence(tmp_path)
 
     confirmed = _invoke(
         [
@@ -292,11 +309,37 @@ def test_confirm_missing_required_field_refuses_actionably(tmp_path: Path) -> No
             "--country-code", "ES",
             "--evidence-id", evidence_id,
             "--kind", "received",
-            # --counterparty-name intentionally omitted: no extraction heuristic exists.
+            # --counterparty-name deliberately omitted: the document names the seller.
+        ],
+    )  # fmt: skip
+    assert confirmed.exit_code == 0, confirmed.output
+    assert json.loads(confirmed.output)["result"]["counterparty_name"] == _SUPPLIER_NAME
+
+
+def test_confirm_missing_required_field_refuses_actionably(tmp_path: Path) -> None:
+    """A field the document does not state, and no override, refuses rather than fabricates.
+
+    Confirmed as ISSUED, so the counterparty is the BUYER, and this document
+    gives the buyer a tax identifier and no name. The reader must therefore
+    leave the counterparty unset for the operator to supply, rather than
+    reaching across to the seller it can see -- the cross-side fallback that
+    was deleted precisely because it silently named the wrong party.
+    """
+    evidence_id = _add_evidence(tmp_path)
+
+    confirmed = _invoke(
+        [
+            "--format", "json", "app", "ledger", "evidence", "confirm",
+            "--country-code", "ES",
+            "--evidence-id", evidence_id,
+            "--kind", "issued",
+            # --counterparty-name intentionally omitted: the buyer side is unnamed.
         ],
     )  # fmt: skip
     assert confirmed.exit_code != 0, confirmed.output
     assert "counterparty_name" in confirmed.output.lower() or "counterparty-name" in confirmed.output.lower()
+    # And it must not have silently borrowed the seller's name to get past the gate.
+    assert _SUPPLIER_NAME not in confirmed.output
 
 
 def test_confirm_requires_exactly_one_reference(tmp_path: Path) -> None:
@@ -308,7 +351,7 @@ def test_confirm_requires_exactly_one_reference(tmp_path: Path) -> None:
 
 def test_confirm_never_writes_a_file_to_disk(tmp_path_factory: pytest.TempPathFactory, tmp_path: Path) -> None:
     """Bytes are re-read from secure storage into memory only; nothing lands on disk."""
-    evidence_id = _add_evidence(tmp_path, _FULL_INVOICE_LINES)
+    evidence_id = _add_evidence(tmp_path)
 
     empty_dir = tmp_path_factory.mktemp("no-write-expected-cli-confirm")
     confirmed = _invoke(
