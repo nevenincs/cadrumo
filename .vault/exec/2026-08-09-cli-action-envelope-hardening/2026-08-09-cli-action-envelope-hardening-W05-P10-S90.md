@@ -5,7 +5,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:45304647efa0adbf31dc81613fbb03e5bf811eb31eefc0a630bef858bb20ae9f'
+body_hash: 'sha256:441a327f277f458968e0a7eb7daffdf226b05622d92d6f1b3d3abfc06015930c'
 step_id: 'S90'
 related:
   - "[[2026-08-09-cli-action-envelope-hardening-plan]]"
@@ -90,3 +90,14 @@ A token-span, AST-enumerated mechanical rewrite removed exactly those 254 `defau
 Verification: exact AST census reports `LEDGER_TR_DEFAULT_ZERO=True count=0`; Ruff, formatting, compileall, and diff checks pass; direct `aeat --language {ca,en,es,hu} app ledger --help` succeeds in all four locales. The help/conformance integration selection produced 31 passes and three unrelated failures at the pre-existing profile gate requiring `iva.m303_regime_composition`, before the changed operations ran. Locale scaffold remains globally red only on separately owned schema/profile omissions and IVA-wallet extras. BasedPyright remains globally red with 215 pre-existing private-usage, Typer typing, unused-callback, and unknown-type diagnostics; fallback removal introduced no typed construct.
 
 S90 remains open for final independent review.
+## Frozen invalid-date and locale-orphan remediation
+
+The ledger LLM-diagnostics date parser no longer passes an independently authored English `default` through the shared parser. Its `BadParameter` message now resolves exclusively from `cli.ledger.llm_diagnostics.bad_date` with the option and rejected value as interpolation facts.
+
+A source-wide literal-key inventory proved that `cli.ledger.pull_folder.errors.folder_refused` had no Python consumer and was the sole source-orphan `cli.ledger.*` leaf. The Spanish-only leaf was removed through the canonical `dev.locales remove` authority. The surviving `cli.ledger.*` key sets are identical across Catalan, English, Spanish, and Hungarian and every leaf has a source identity.
+
+The S90 conformance corpus now includes every plan-declared module, adding `_ledger_rules_cli.py`, `_ledger_ratios_cli.py`, `_ledger_review_cli.py`, and `_ledger_support.py`. Name resolution walks function-local bindings as well as module bindings, and a separate structural assertion rejects helper-mediated `default=` arguments. These gates inspect syntax and locale ownership only; they do not reproduce ledger business logic.
+
+Verification: the strengthened integration module passes seven tests; the focused helper/default and locale key-set gates pass two tests; the real `llm-diagnostics --since not-a-date` command passes four locale cases against the selected catalogue value. Ruff check and formatting pass. Locale scaffold remains globally red only on separately owned profile-schema, Modelo-work, and IVA-wallet catalogue drift; the S90-scoped parity/orphan gate is clean. Vault execution mapping is clean, with only pre-existing S38 markdown and S56 audit body warnings.
+
+S90 remains open for independent review.
