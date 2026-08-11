@@ -140,6 +140,12 @@ _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
     UserProfileFact(path="activities.description", value="professional services"),
     UserProfileFact(path="tax_residence.ccaa", value="madrid"),
     UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+    UserProfileFact(path="iva.regime", value="GENERAL"),
+    UserProfileFact(path="iva.m303_regime_composition", value="general"),
+    UserProfileFact(path="iva.redeme_enrolled", value=False),
+    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
     UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
     UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
     UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
@@ -247,7 +253,7 @@ def _import_official_filing_evidence(
         repository=wu_repo,
         clock=_CLOCK,
     )
-    evidence_reference_id = f"JUST-{modelo}-{filing_year}-{period}"
+    evidence_reference_id = f"JUST{modelo}{filing_year}{period}"
     persist_justificante_metadata(
         evidence_reference_id,
         modelo=modelo,
