@@ -5,7 +5,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:87d3ab9c65e642be7a15021b533263b513100814db98f2d0c255b21bce1709a1'
+body_hash: 'sha256:be46fb87fd7ad6836b8e2ed0daa75a9c49609f3522c7753b71fde3af35dcd061'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
   - "[[2026-08-08-m200-export-envelope-tag-adr]]"
@@ -26,7 +26,7 @@ Across the five reviewed Modelo 303 sources in `src/cadrumo/_data/registry/aeat/
 
 The official design directly supplies the `<T`, `303`, discriminant `0`, `0000>`, `<AUX>`, three reserved blank spans, and `</AUX>` values; filing year and period are existing draft coordinates. These eleven positions need no new filing producer identity. The body is an ordered composition of generated page records, and the closing tag is a computed function of the same modelo, discriminant, year, and period coordinates; the relative closer and Variable total are codec/composition facts, not business producers.
 
-The remaining four-character "VersiÃ³n del programa" and nine-character "NIF Empresa Desarrollo" slots are not literals. AEAT introduces both with "A cumplimentar por las entidades desarrolladoras (EEDD)", states that the former identifies the version of the software developed by the development entity, and states that the latter is that entity's NIF (`src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/03-303-ejercicio-2023-actualizado-14-12-23-376-kb-xlsx.xlsx.extracted.md:24-27`). The extracted Markdown is only a review locator; the hash-pinned workbook remains the wire authority. The source does not by itself decide whether Cadrumo, a locally authored tool, or another filing product is an EEDD or when non-EEDD producers leave these slots blank.
+The remaining four-character "Versión del programa" and nine-character "NIF Empresa Desarrollo" slots are not literals. AEAT introduces both with "A cumplimentar por las entidades desarrolladoras (EEDD)", states that the former identifies the version of the software developed by the development entity, and states that the latter is that entity's NIF (`src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/03-303-ejercicio-2023-actualizado-14-12-23-376-kb-xlsx.xlsx.extracted.md:24-27`). The extracted Markdown is only a review locator; the hash-pinned workbook remains the wire authority. The source does not by itself decide whether Cadrumo, a locally authored tool, or another filing product is an EEDD or when non-EEDD producers leave these slots blank.
 
 ### Program version has a dormant candidate but no accepted four-byte derivation
 
