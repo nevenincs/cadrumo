@@ -54,12 +54,9 @@ class _AnthropicSdk:
 
 
 def _load_anthropic_sdk() -> _AnthropicSdk:
-    from ...core import ANTHROPIC_EXTRA, MissingOptionalExtraError, require_optional_extra
+    from ...core import ANTHROPIC_EXTRA, require_optional_extra
 
-    try:
-        require_optional_extra(ANTHROPIC_EXTRA)
-    except MissingOptionalExtraError as exc:
-        raise LLMConfigError(message=str(exc)) from exc
+    require_optional_extra(ANTHROPIC_EXTRA)
 
     from anthropic import (
         APIConnectionError,

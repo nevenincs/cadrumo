@@ -76,6 +76,22 @@ class LLMRateLimitError(LLMProviderError):
 class LLMConfigError(LLMError):
     """Raised when :class:`~llm.LLMClient` configuration is invalid."""
 
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: Mapping[str, object] | None = None,
+        translated_message: str | None = None,
+        precondition_verdict: PreconditionVerdict | None = None,
+    ) -> None:
+        super().__init__(message, context=context, translated_message=translated_message)
+        self._terminal_precondition_verdict = precondition_verdict
+
+    @property
+    def terminal_precondition_verdict(self) -> PreconditionVerdict | None:
+        """Return the exact configuration verdict for boundary projection."""
+        return self._terminal_precondition_verdict
+
 
 class LLMContentionError(LLMError):
     """Raised when this machine has no measured headroom to load the model.

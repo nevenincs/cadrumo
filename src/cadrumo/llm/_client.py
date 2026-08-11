@@ -953,12 +953,9 @@ class LLMClient:
             # The Anthropic-API provider needs the optional `anthropic` extra. Guard
             # before the lazy import so a missing extra is an instructive
             # LLMConfigError, not a deep ModuleNotFoundError.
-            from ..core import ANTHROPIC_EXTRA, MissingOptionalExtraError, require_optional_extra
+            from ..core import ANTHROPIC_EXTRA, require_optional_extra
 
-            try:
-                require_optional_extra(ANTHROPIC_EXTRA)
-            except MissingOptionalExtraError as exc:
-                raise LLMConfigError(message=str(exc)) from exc
+            require_optional_extra(ANTHROPIC_EXTRA)
             from ._providers.anthropic import AnthropicAdapter
 
             return AnthropicAdapter(

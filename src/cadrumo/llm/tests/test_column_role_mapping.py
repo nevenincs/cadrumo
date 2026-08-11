@@ -26,8 +26,8 @@ from typing import override
 
 import pytest
 
-from ...application.provisioning import select_model_for_role
-from ...core import FieldRole, ModelRole
+from ...application.provisioning import ProvisioningPreconditionCondition, select_model_for_role
+from ...core import FieldRole, ModelRole, NoRecoveryOutcome
 from ...core.config import LLMProvider, override_settings
 from ...tests.fixtures.settings import EnvFileFreeSettings
 from ...tests.loopback_llm import (
@@ -39,6 +39,7 @@ from ...tests.loopback_llm import (
 )
 from .. import (
     LLMClient,
+    LLMConfigError,
     LLMValidationError,
     SemanticColumnRoleMapper,
     build_column_role_mapping_prompt,
@@ -65,6 +66,23 @@ _LIBRO_REGISTRO_ROLES: dict[str, FieldRole] = {
     "importe_retencion": FieldRole.RETENCION_AMOUNT,
     "total_factura": FieldRole.GRAND_TOTAL,
 }
+
+
+def test_no_candidate_preserves_the_selection_verdict() -> None:
+    """An unsatisfied role selection reaches the error boundary without prose."""
+    settings = EnvFileFreeSettings(cadrumo_llm_ollama_num_ctx=1_000_000)
+
+    with pytest.raises(LLMConfigError) as raised:
+        SemanticColumnRoleMapper(settings=settings)
+
+    verdict = raised.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == ProvisioningPreconditionCondition.SELECTED_MODEL_AVAILABLE.value
+    assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
+    assert verdict.action is None
+    assert verdict.evidence[0].values == raised.value.context
+    assert verdict.evidence[0].values["required_context_tokens"] == 1_000_000
+    assert raised.value.args == ()
 
 
 def _libro_registro_rows() -> list[list[str]]:
