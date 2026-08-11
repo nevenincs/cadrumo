@@ -7,31 +7,21 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from .....core import validated_casilla_id
-from .....core.resources import bundled_path
+from .....core import (
+    M303Exonerado390ActivityField,
+    M303Exonerado390ActivityProjectionRef,
+    M303Exonerado390OperacionesTercerosProjectionRef,
+    validated_casilla_id,
+)
 from ....filing_evidence import FilingEvidenceReference
 from ....modelos import (
     M303Exonerado390ActivityRowEvidence,
     M303Exonerado390EndpointEvidence,
     M303Exonerado390FilingEvidence,
 )
-from .. import (
-    SourceRefId,
-    extract_record_design,
-    load_catalogue_file,
-    project_m303_exonerado_390_activity_rows,
-    resolve_record_design_binary,
-)
+from .. import project_m303_exonerado_390_activity_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-_DESIGNS = (
-    ("aeat-dr-303-2023", 2023, "2023"),
-    ("aeat-dr-303-2024-early", 2024, "2024-early"),
-    ("aeat-dr-303-2024-late", 2024, "2024-late"),
-    ("aeat-dr-303-2025", 2025, "2025"),
-    ("aeat-dr-303-2026", 2026, "2026"),
-)
 
 
 def _reference() -> FilingEvidenceReference:
@@ -64,41 +54,27 @@ def _evidence() -> M303Exonerado390FilingEvidence:
     )
 
 
-@pytest.mark.parametrize(("source_ref", "filing_year", "design_epoch"), _DESIGNS)
-def test_all_six_evidenced_rows_project_to_the_exact_real_dp30304_anchors(
-    source_ref: SourceRefId,
-    filing_year: int,
-    design_epoch: str,
-) -> None:
-    source_root = bundled_path()
-    sources = load_catalogue_file(bundled_path("registry", "aeat", "legal", "iva.toml")).sources
-    resolved = resolve_record_design_binary(
-        source_root,
-        sources,
-        source_ref=source_ref,
-        filing_year=filing_year,
-        design_epoch=design_epoch,
+def _projection_refs() -> tuple[
+    M303Exonerado390ActivityProjectionRef | M303Exonerado390OperacionesTercerosProjectionRef,
+    ...,
+]:
+    return (
+        *(
+            M303Exonerado390ActivityProjectionRef(slot=slot, field=field)
+            for slot in range(1, 7)
+            for field in M303Exonerado390ActivityField
+        ),
+        M303Exonerado390OperacionesTercerosProjectionRef(),
     )
-    sheet = next(item for item in extract_record_design(resolved.path) if item.name == "DP30304")
 
-    projection = project_m303_exonerado_390_activity_rows(sheet, evidence=_evidence())
+
+def test_all_six_evidenced_rows_project_only_through_exact_typed_references() -> None:
+    projection = project_m303_exonerado_390_activity_rows(
+        projection_refs=_projection_refs(),
+        evidence=_evidence(),
+    )
 
     assert projection is not None
-    assert tuple(field.offset for field in projection.fields) == (
-        13,
-        16,
-        20,
-        23,
-        27,
-        30,
-        34,
-        37,
-        41,
-        44,
-        48,
-        51,
-        55,
-    )
     assert tuple(field.value for field in projection.fields) == (
         "A01",
         "4101",
@@ -114,6 +90,7 @@ def test_all_six_evidenced_rows_project_to_the_exact_real_dp30304_anchors(
         "4106",
         "X",
     )
+    assert tuple(field.projection_ref for field in projection.fields) == _projection_refs()
 
 
 def test_applicable_evidence_refuses_noncontiguous_rows_and_an_unreferenced_modelo_347_decision() -> None:

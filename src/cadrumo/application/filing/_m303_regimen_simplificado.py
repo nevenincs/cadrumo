@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
-from ...core import Period
+from ...core import (
+    M303RegimenSimplificadoActivityProjectionRef,
+    M303RegimenSimplificadoFactProjectionRef,
+    M303RegimenSimplificadoModuleProjectionRef,
+    Period,
+)
 from ...domain.calculations.registry import (
     M303RegimenSimplificadoRecordProjection,
     RegistryValidationError,
-    extract_record_design,
     project_m303_regimen_simplificado_rows,
     resolve_record_design_binary,
 )
@@ -21,6 +25,12 @@ def project_m303_regimen_simplificado_value_arrival(
     period: Period,
     schema_provider: RegistrySchemaAccessor,
     evidence: M303RegimenSimplificadoFilingEvidence,
+    projection_refs: tuple[
+        M303RegimenSimplificadoActivityProjectionRef
+        | M303RegimenSimplificadoFactProjectionRef
+        | M303RegimenSimplificadoModuleProjectionRef,
+        ...,
+    ],
 ) -> tuple[M303RegimenSimplificadoRecordProjection, ...]:
     """Project the persisted S58 evidence through its exact S59 source snapshot."""
     if evidence.rows.ejercicio != period.filing_year:
@@ -48,11 +58,10 @@ def project_m303_regimen_simplificado_value_arrival(
         design_epoch=source_epoch,
     )
     try:
-        sheet = next(item for item in extract_record_design(resolved.path) if item.name == "DP30302")
+        if not resolved.path.is_file():
+            raise RegistryValidationError("the resolved regimen-simplificado record design is not a file")
         return project_m303_regimen_simplificado_rows(
-            sheet,
-            design_epoch=source_epoch,
-            expected_design_epoch=authority.record_design.record_design_epoch or "",
+            projection_refs=projection_refs,
             rows=evidence.rows,
             orden=authority.orden.activities,
             applicable=not evidence.scope_decision.is_not_claimed,
@@ -62,7 +71,7 @@ def project_m303_regimen_simplificado_value_arrival(
                 if isinstance(activity, ActividadNoAgricolaSimplificado)
             ),
         )
-    except (StopIteration, RegistryValidationError) as exc:
+    except RegistryValidationError as exc:
         raise FilingExportError(f"modelo 303 regimen simplificado projection refused: {exc}") from exc
 
 

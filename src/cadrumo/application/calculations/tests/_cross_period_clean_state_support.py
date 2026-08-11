@@ -218,6 +218,7 @@ def _seed_member_322_filing(
         verified_by="aeat-import-test",
         filed_at=_CLOCK,
         filed_by="aeat-import-test",
+    filing_instance_evidence=None,
     )
     calculation_repository = CalculationRevisionCatalogueRepository()
     calculation_catalogue = calculation_repository.load()
@@ -470,6 +471,7 @@ def _seed_source_filing_record_without_import_flow(
         verified_by="aeat-import-test",
         filed_at=_CLOCK,
         filed_by="aeat-import-test",
+    filing_instance_evidence=None,
     )
     calculation_repository = CalculationRevisionCatalogueRepository()
     calculation_catalogue = calculation_repository.load()

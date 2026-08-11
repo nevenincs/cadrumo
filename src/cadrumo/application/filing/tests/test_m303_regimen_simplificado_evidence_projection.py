@@ -6,7 +6,15 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import Period
+from ....core import (
+    M303RegimenSimplificadoActivityField,
+    M303RegimenSimplificadoActivityProjectionRef,
+    M303RegimenSimplificadoCohort,
+    M303RegimenSimplificadoFactProjectionRef,
+    M303RegimenSimplificadoModuleProjectionRef,
+    M303RegimenSimplificadoModuleValue,
+    Period,
+)
 from ....core.resources import resources
 from ....domain.calculations.registry import resolve_m303_regimen_simplificado_snapshot
 from ....domain.filing_evidence import FilingEvidenceReference
@@ -79,10 +87,26 @@ def test_simplified_regime_evidence_projects_real_nonnumbered_dp30302_fields() -
         period=period,
         schema_provider=build_runtime_schema_provider(filing_year=2026, period=period, modelos=("303",)),
         evidence=evidence,
+        projection_refs=(
+            M303RegimenSimplificadoActivityProjectionRef(
+                cohort=M303RegimenSimplificadoCohort.NO_AGRICOLA,
+                slot=1,
+                field=M303RegimenSimplificadoActivityField.IAE_EPIGRAFE,
+            ),
+            M303RegimenSimplificadoModuleProjectionRef(
+                slot=1,
+                module_identity=annual_activity.modulos[0].identity,
+                value=M303RegimenSimplificadoModuleValue.DECLARED_QUANTITY,
+            ),
+            M303RegimenSimplificadoFactProjectionRef(
+                cohort=M303RegimenSimplificadoCohort.NO_AGRICOLA,
+                slot=1,
+                fact_identity=annual_activity.applicable_fact_identities[0],
+            ),
+        ),
     )
 
     assert len(projected) == 1
-    assert projected[0].design_epoch == "2026"
     values = tuple(field.value for field in projected[0].fields if field.value is not None)
     assert annual_activity.iae_epigrafe in values
     assert Decimal("1") in values

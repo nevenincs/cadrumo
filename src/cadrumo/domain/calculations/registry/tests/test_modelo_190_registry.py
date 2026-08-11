@@ -258,6 +258,8 @@ def test_modelo_190_calculation_aggregates_modelo_111_quarterly_observations() -
         date_context={"filing_period": date(2025, 12, 31)},
         binding_values=withholding_values,
         relation_values=relation_values,
+    m303_regimen_simplificado_scope=None,
+    m303_annual_orden=None,
     )
 
     entries = {entry.target_casilla_id: entry for entry in result.entries}

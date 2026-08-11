@@ -7,7 +7,12 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import ProrrataActivityRowType, ProrrataRegisterRegime
+from .....core import (
+    M303ProrrataActivityProjectionField,
+    M303ProrrataActivityProjectionRef,
+    ProrrataActivityRowType,
+    ProrrataRegisterRegime,
+)
 from .....core.resources import bundled_path
 from .....domain.prorrata_register import ProrrataActivityRow, ProrrataRegister, ProrrataRegisterEntry
 from .. import (
@@ -42,6 +47,18 @@ _FIELD_NAMES = (
 )
 _OFFICIAL_TYPE_CODES = ("An", "N", "N", "An", "Num")
 _CASILLA_TAG = re.compile(r"\[(5\d{2})\]")
+
+
+def _projection_refs() -> tuple[M303ProrrataActivityProjectionRef, ...]:
+    return tuple(
+        M303ProrrataActivityProjectionRef(
+            slot=slot,
+            field=field,
+            casilla_id=str(500 + (slot - 1) * 5 + field_index),
+        )
+        for slot in range(1, 6)
+        for field_index, field in enumerate(M303ProrrataActivityProjectionField)
+    )
 
 
 @pytest.mark.parametrize(
@@ -189,14 +206,6 @@ def test_projection_only_endpoints_reject_direct_input_and_are_not_zero_seeded()
 
 def test_typed_register_rows_project_to_only_their_deterministic_fixed_slots() -> None:
     """The canonical child collection is the sole value authority for 500-524."""
-    modelo, catalogues = _committed_modelo("303")
-    revision = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=2025,
-        period="4T",
-    ).revision
     rows = tuple(
         ProrrataActivityRow(
             ejercicio=2025,
@@ -216,11 +225,17 @@ def test_typed_register_rows_project_to_only_their_deterministic_fixed_slots() -
         activity_rows=rows,
     )
 
-    projection = project_m303_prorrata_activity_rows(revision, register=register, ejercicio=2025)
+    projection = project_m303_prorrata_activity_rows(
+        projection_refs=_projection_refs(),
+        register=register,
+        ejercicio=2025,
+    )
 
     assert tuple(item.slot for item in projection) == (1, 2, 3, 4, 5)
     assert tuple(
-        (str(endpoint.casilla_id), endpoint.value) for item in projection for endpoint in item.endpoint_values()
+        (str(endpoint.projection_ref.casilla_id), endpoint.value)
+        for item in projection
+        for endpoint in item.endpoint_values()
     ) == tuple(
         (str(500 + (slot - 1) * 5 + field_index), value)
         for slot in range(1, 6)

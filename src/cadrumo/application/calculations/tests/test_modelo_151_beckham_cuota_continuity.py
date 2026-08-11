@@ -119,6 +119,8 @@ def _calculate_151(*, filing_year: int) -> tuple[RegistryCalculationResult, int]
         },
         binding_values={},
         date_context={"filing_period": date(filing_year, 12, 31)},
+    m303_regimen_simplificado_scope=None,
+    m303_annual_orden=None,
     )
     return result, len(result.values)
 
