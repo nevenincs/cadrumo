@@ -42,7 +42,7 @@ from .identity import BucketId
 #: which is what actually refuses a foreign version at parse; a test asserts
 #: the two agree, so the constant cannot drift away from the constraint it
 #: describes.
-POINTER_SCHEMA_VERSION: Final[int] = 1
+POINTER_SCHEMA_VERSION: Final[Literal[1]] = 1
 
 
 class BucketPointer(BaseModel):
