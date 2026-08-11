@@ -21,7 +21,7 @@ See Also:
         Frozen verdict containing status, coverage, expectation ids, and
         classified discrepancies.
     :class:`ClassifiedDiscrepancy`
-        Per-casilla mismatch with :class:`DiscrepancyCause` classification.
+        Per-casilla mismatch with canonical discrepancy-cause classification.
     :class:`VerificationStatus`
         Closed operator-facing status returned by this verifier.
     :class:`domain.calculations.registry.ValidatedRegistryAuthority`
@@ -34,7 +34,6 @@ from __future__ import annotations
 from ._errors import VerificationError
 from ._schema import (
     ClassifiedDiscrepancy,
-    DiscrepancyCause,
     VerificationStatus,
     VerificationVerdict,
 )
@@ -42,7 +41,6 @@ from ._verify import verify_declaracion
 
 __all__ = [
     "ClassifiedDiscrepancy",
-    "DiscrepancyCause",
     "VerificationError",
     "VerificationStatus",
     "VerificationVerdict",

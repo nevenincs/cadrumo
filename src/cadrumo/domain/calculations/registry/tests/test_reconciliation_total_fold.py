@@ -23,7 +23,7 @@ import pytest
 from .....core import validated_casilla_id
 from .._errors import RegistryValidationError
 from .._schema_verification import (
-    VerificationDiscrepancyCause,
+    DiscrepancyCause,
     VerificationExpectationDefinition,
     fold_reconciliation_total_casilla_ids,
 )
@@ -51,7 +51,7 @@ def _expectation(
         tolerance="0.01",
         rounding="money-2",
         min_coverage="1",
-        discrepancy_causes=(VerificationDiscrepancyCause.ROUNDING,),
+        discrepancy_causes=(DiscrepancyCause.ROUNDING,),
         legal_refs=_LEGAL,
         source_refs=_SOURCE,
     )

@@ -2,7 +2,7 @@
 
 Defines the closed schema returned by
 :func:`cadrumo.application.verification.verify_declaracion`:
-:class:`DiscrepancyCause`, :class:`VerificationStatus`,
+:class:`~cadrumo.domain.calculations.registry.DiscrepancyCause`, :class:`VerificationStatus`,
 :class:`ClassifiedDiscrepancy`, and the top-level
 :class:`VerificationVerdict`. Every model is frozen, strict, and rejects
 extra keys so that the operator's UI and any persisted verdict survive an
@@ -15,7 +15,7 @@ serialising to ``{"filing_year": YYYY, "code": "1T"}`` in JSON.
 See Also:
     :class:`VerificationVerdict`,
     :class:`ClassifiedDiscrepancy`,
-    :class:`DiscrepancyCause`, and
+    :class:`~cadrumo.domain.calculations.registry.DiscrepancyCause`, and
     :class:`VerificationStatus`.
 """
 
@@ -29,31 +29,7 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import CasillaId, Period
-
-
-class DiscrepancyCause(StrEnum):
-    """Cause classification for a printed-vs-computed value mismatch.
-
-    The categories mirror the local verification classifier in
-    :func:`cadrumo.application.verification.verify_declaracion`; they are not
-    remote AEAT status values.
-
-    Attributes:
-        EXTRACTION_UNRELIABLE: The extractor warned about this casilla
-            (bbox fallback, ambiguous label, unparseable value, missing
-            casilla). The operator should re-check the source PDF.
-        ROUNDING: Small delta within ``10 * tolerance`` on a computed
-            casilla. Non-blocking.
-        UNMODELLED_RULE: The registry snapshot does not model this casilla.
-            Verification cannot be marked complete until the gap is reviewed.
-        CORRECTNESS_DIVERGENCE: Material disagreement — likely an
-            extractor bug or a formula bug. Requires operator review.
-    """
-
-    EXTRACTION_UNRELIABLE = "EXTRACTION_UNRELIABLE"
-    ROUNDING = "ROUNDING"
-    UNMODELLED_RULE = "UNMODELLED_RULE"
-    CORRECTNESS_DIVERGENCE = "CORRECTNESS_DIVERGENCE"
+from ...domain.calculations.registry import DiscrepancyCause
 
 
 class VerificationStatus(StrEnum):
