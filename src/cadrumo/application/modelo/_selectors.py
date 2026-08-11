@@ -44,6 +44,7 @@ from ...domain.modelos import (
     WorkUnitCatalogueRepositoryProtocol,
     WorkUnitState,
 )
+from ...domain.calculations.registry import RevisionId
 
 _BucketId = Annotated[
     str,
@@ -140,7 +141,7 @@ class ModeloWorkRevisionConflictError(ModeloWorkSelectorError):
     def __init__(
         self,
         *,
-        requested_revision_id: str,
+        requested_revision_id: RevisionId,
         existing: ModeloWorkUnitCandidate,
     ) -> None:
         self.requested_revision_id = requested_revision_id

@@ -704,7 +704,7 @@ def test_iva_wallet_blocked_exception_carries_translated_message_key() -> None:
         "modelo.work.calculate.iva_wallet.ready",
         "modelo.work.calculate.iva_wallet.blocked",
     )
-    assert exc.suggestion is None
+    assert not hasattr(exc, "suggestion")
 
 
 def test_iva_wallet_unsupported_decision_type_is_localised() -> None:

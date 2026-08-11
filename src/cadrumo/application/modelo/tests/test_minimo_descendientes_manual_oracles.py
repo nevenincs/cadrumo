@@ -150,7 +150,7 @@ def _asturias_children() -> dict[str, UserProfileFactValue]:
 
 def test_asturias_individual_matches_the_printed_prorated_total() -> None:
     """AEAT prints 4.550 for each spouse filing individually, each tranche at 50 %."""
-    estatal, autonomico = _aggregates({**_asturias_children(), "filing_export.declaration_type": "1"})
+    estatal, autonomico = _aggregates({**_asturias_children(), "renta_filing.declaration_type": "1"})
     assert estatal == _expected(_ASTURIAS_ORACLE, "0513")
     assert autonomico == _expected(_ASTURIAS_ORACLE, "0514")
 
@@ -162,7 +162,7 @@ def test_asturias_conjunta_matches_the_printed_full_total() -> None:
     sides: married spouses form one unidad familiar (LIRPF art. 82.1.1ª), so no
     second contribuyente remains to prorate with and the tranches are whole.
     """
-    facts = {**_asturias_children(), "filing_export.declaration_type": "2"}
+    facts = {**_asturias_children(), "renta_filing.declaration_type": "2"}
     estatal, autonomico = _aggregates(facts)
     assert estatal == Decimal("9100")
     assert autonomico == Decimal("9100")
@@ -199,7 +199,7 @@ def _valenciana_children(*, youngest_files_own_return: bool) -> dict[str, UserPr
         "renta_family.descendiente.2.birth_date": f"{_ORACLE_YEAR - 6}-01-01",
         "renta_family.descendiente.2.rentas_anuales": "4050",
         "renta_taxpayer.marital_status": RentaMaritalStatus.PAREJA_HECHO.value,
-        "filing_export.declaration_type": "1",
+        "renta_filing.declaration_type": "1",
     }
     if youngest_files_own_return:
         facts["renta_family.descendiente.2.declaracion_propia"] = "true"
@@ -246,7 +246,7 @@ def _valenciana_conjunta() -> dict[str, UserProfileFactValue]:
         "renta_family.descendiente.2.birth_date": f"{_ORACLE_YEAR - 6}-01-01",
         "renta_family.descendiente.2.rentas_anuales": "4050",
         "renta_taxpayer.marital_status": RentaMaritalStatus.PAREJA_HECHO.value,
-        "filing_export.declaration_type": "2",
+        "renta_filing.declaration_type": "2",
     }
 
 
@@ -368,8 +368,8 @@ def test_the_same_predicate_change_moves_both_aggregates_together() -> None:
     exactly — both when the prorrateo applies and when it does not. A predicate
     wired into only one of the two injectors fails this.
     """
-    individual = _aggregates({**_asturias_children(), "filing_export.declaration_type": "1"})
-    conjunta = _aggregates({**_asturias_children(), "filing_export.declaration_type": "2"})
+    individual = _aggregates({**_asturias_children(), "renta_filing.declaration_type": "1"})
+    conjunta = _aggregates({**_asturias_children(), "renta_filing.declaration_type": "2"})
     assert individual[0] == individual[1]
     assert conjunta[0] == conjunta[1]
     assert individual[0] != conjunta[0]

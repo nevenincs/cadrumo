@@ -230,7 +230,6 @@ def _evidence_invalid_refusal(
         f"reconciliation evidence {source_ref!r} could not be parsed",
         translated_message="errors.refused.reconciliation_evidence_invalid",
         context={"parse_failure": type(exc).__name__, "source_ref": source_ref},
-        suggestion="aeat app modelo reconcile file WORK_UNIT_ID --file PATH/TO/justificante.pdf",
     )
 
 

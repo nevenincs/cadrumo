@@ -70,6 +70,7 @@ from ._selectors import (
     resolve_modelo_work_unit,
 )
 from ._work_lifecycle import RevisionParentOperation, create_work_unit, rename_work_unit, require_revision_parent_active
+from ...domain.calculations.registry import RevisionId
 
 
 class ModeloRevisionPickError(ModeloError, ValueError):
@@ -88,7 +89,7 @@ class ModeloVisibleFilingTarget:
     modelo: str
     filing_year: int
     period: Period
-    registry_revision_id: str | None = None
+    registry_revision_id: RevisionId | None = None
     bucket_id: str | None = None
 
     def to_work_address(self) -> ModeloWorkAddress:
@@ -169,7 +170,7 @@ class ModeloResolvedWorkProjection:
     modelo: str
     filing_year: int
     period: Period
-    registry_revision_id: str
+    registry_revision_id: RevisionId
     state: str
     current_calculation_revision_id: CalculationRevisionId | None
     filed_calculation_revision_id: CalculationRevisionId | None
@@ -256,7 +257,7 @@ class ModeloWorkAddress:
     modelo: str | None = None
     filing_year: int | None = None
     period: Period | None = None
-    registry_revision_id: str | None = None
+    registry_revision_id: RevisionId | None = None
     bucket_id: str | None = None
 
     @classmethod
@@ -350,7 +351,7 @@ def modelo_work_address_from_operator_target(
     modelo: str | None,
     year: int | None,
     period: Period | None,
-    registry_revision_id: str | None,
+    registry_revision_id: RevisionId | None,
     bucket_id: str | None = None,
 ) -> ModeloWorkAddress:
     """Build a :class:`ModeloWorkAddress` from exact or visible operator input.
@@ -382,7 +383,7 @@ def resolve_modelo_work_unit_for_operator_target(
     modelo: str | None = None,
     year: int | None = None,
     period: Period | None = None,
-    registry_revision_id: str | None = None,
+    registry_revision_id: RevisionId | None = None,
     bucket_id: str | None = None,
 ) -> WorkUnit:
     """Resolve exact or visible operator input to one active :class:`~cadrumo.domain.modelos.WorkUnit`.
@@ -409,7 +410,7 @@ def resolve_modelo_revision_for_operator_target(
     modelo: str | None,
     year: int | None,
     period: Period | None,
-    registry_revision_id: str | None,
+    registry_revision_id: RevisionId | None,
     bucket_id: str | None = None,
     selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT,
     default_for: ModeloCalculationRevisionDefault | None = None,
@@ -667,7 +668,7 @@ def resolve_registry_revision_for_work_target(
     modelo: str,
     filing_year: int,
     period: Period,
-    registry_revision_id: str | None,
+    registry_revision_id: RevisionId | None,
 ) -> str:
     """Resolve and validate the registry revision for a visible filing target.
 
@@ -731,7 +732,7 @@ def ensure_modelo_work_unit_for_active_target(
     modelo: str,
     filing_year: int,
     period: Period,
-    registry_revision_id: str | None,
+    registry_revision_id: RevisionId | None,
     name: str | None = None,
     actor: str = "operator",
     causante_ccaa: CCAA | None = None,

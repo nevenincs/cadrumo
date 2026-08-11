@@ -57,7 +57,7 @@ def test_no_seed_no_override_303_calculate_blocks_missing_in_scope_prior_history
                 bucket_event_repository=event_repo,
                 clock=_DECIDED_AT,
             )
-        assert exc_info.value.suggestion is None
+        assert not hasattr(exc_info.value, "suggestion")
         assert exc_info.value.precondition_failure.scenario_id == "modelo.work.calculate.iva_wallet.blocked"
 
 

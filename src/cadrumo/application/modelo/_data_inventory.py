@@ -44,6 +44,7 @@ from ...domain.calculations.registry import (
 )
 from ._binding_readiness import profile_resolvable_binding_ids
 from ._registry_resources import authority_via_resources
+from ...domain.calculations.registry import RevisionId
 
 _log = get_logger(__name__)
 
@@ -80,7 +81,7 @@ class DataInventoryChecklist:
     """
 
     modelo: str
-    revision_id: str
+    revision_id: RevisionId
     filing_year: int
     period: str
     required_manual: tuple[DataInventoryCasilla, ...]

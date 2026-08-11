@@ -45,6 +45,7 @@ from ...domain.calculations.registry import (
 )
 from ..calculations import CalculationObservationRepository, ObservationSourceKind, observation_key
 from ._action_errors import ModeloLocalObservationError
+from ...domain.calculations.registry import RevisionId
 
 OPERATOR_MANUAL_OBSERVATION_SOURCE_KIND: Final = ObservationSourceKind.OPERATOR_MANUAL
 """Non-official source kind for operator-supplied local observations."""
@@ -60,7 +61,7 @@ class ModeloLocalObservationResult(BaseModel):
     modelo: str
     filing_year: int
     period: Period
-    revision_id: str
+    revision_id: RevisionId
     observation_key: str
     source_kind: ObservationSourceKind
     casilla_values: dict[CasillaId, Decimal]

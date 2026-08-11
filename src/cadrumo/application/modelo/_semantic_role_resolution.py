@@ -26,6 +26,7 @@ from typing import Protocol, runtime_checkable
 from ...core import CasillaId, validated_casilla_id
 from ...domain.calculations.registry import RegistrySnapshot
 from ...domain.modelos import ModeloError
+from ...domain.calculations.registry import RevisionId
 
 
 @runtime_checkable
@@ -51,7 +52,7 @@ class SemanticRoleCasillaAmbiguity:
 
     semantic_role: str
     modelo_id: str | None
-    revision_id: str | None
+    revision_id: RevisionId | None
     casilla_ids: tuple[CasillaId, ...]
 
     def context(self) -> dict[str, object]:

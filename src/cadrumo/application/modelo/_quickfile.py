@@ -49,6 +49,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import PaymentElection, Period, PriorDomiciliationElection, RefundElection
 from ...core.errors import CadrumoError
 from ...core.logging import get_logger
+from ...domain.calculations.registry import RevisionId
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.modelos import CalculationRevision, VerificationReport, WorkUnit
 from ._calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision
@@ -140,7 +141,7 @@ class QuickfileResult:
     modelo: str
     filing_year: int
     period: Period
-    registry_revision_id: str
+    registry_revision_id: RevisionId
     stages: tuple[QuickfileStageOutcome, ...]
     completed: bool
     stopped_at_stage: QuickfileStage | None
@@ -175,7 +176,7 @@ class QuickfileCommand(BaseModel):
     modelo: str
     filing_year: int
     period: Period
-    registry_revision_id: str | None = None
+    registry_revision_id: RevisionId | None = None
     output_path: Path
     actor: str
     refund_election: RefundElection = RefundElection.COMPENSAR
@@ -383,6 +384,7 @@ def run_modelo_quickfile(
                 refund_election=command.refund_election,
                 payment_election=command.payment_election,
                 prior_domiciliation_election=command.prior_domiciliation_election,
+                m303_applicability=None,
             ),
             workflow_profile=workflow_profile,
         )
@@ -427,7 +429,7 @@ def run_modelo_quickfile(
 def _halted(
     command: QuickfileCommand,
     *,
-    registry_revision_id: str,
+    registry_revision_id: RevisionId,
     stages: list[QuickfileStageOutcome],
     refusal: QuickfileStageOutcome,
     readiness: ProjectionModeloReadiness | None,
@@ -457,7 +459,7 @@ def _halted(
 def _resolve_readiness(
     command: QuickfileCommand,
     *,
-    registry_revision_id: str,
+    registry_revision_id: RevisionId,
 ) -> ProjectionModeloReadiness | None:
     """Run the readiness projection for the target, tolerating advisory failure.
 

@@ -26,6 +26,7 @@ from typing import TYPE_CHECKING
 
 from ...core import Period
 from ...domain.modelos import ModeloError
+from ...domain.calculations.registry import RevisionId
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry import ValidatedRegistryAuthority
@@ -55,7 +56,7 @@ def authority_via_resources() -> ValidatedRegistryAuthority:
     return resources().modelos.authority
 
 
-def reject_unknown_revision(*, modelo: str, revision_id: str) -> None:
+def reject_unknown_revision(*, modelo: str, revision_id: RevisionId) -> None:
     """Refuse a work-unit create that names an undeclared revision id.
 
     The central :class:`ValidatedRegistryAuthority` first resolves the modelo
@@ -77,7 +78,7 @@ def reject_unknown_revision(*, modelo: str, revision_id: str) -> None:
     )
 
 
-def reject_unknown_period_for_revision(*, modelo: str, revision_id: str, period: Period) -> None:
+def reject_unknown_period_for_revision(*, modelo: str, revision_id: RevisionId, period: Period) -> None:
     """Refuse a work-unit create whose :class:`Period` is absent from the revision schedules.
 
     The guard inspects the named revision's filing schedules and compares the

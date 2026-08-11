@@ -87,7 +87,7 @@ def _assert_missing_wallet_decision_error(exc: ModeloIvaWalletReconciliationBloc
         assert "requires a persisted IVA wallet" in str(exc)
         return
     assert exc.translated_message == "application.modelo.errors.iva_wallet_not_seeded"
-    assert exc.suggestion is None
+    assert not hasattr(exc, "suggestion")
     assert exc.precondition_failure.scenario_id == "modelo.work.calculate.iva_wallet.not_seeded"
 
 

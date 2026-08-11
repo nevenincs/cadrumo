@@ -150,7 +150,7 @@ def _active_profile(tmp_path: Path) -> Iterator[None]:
     # all. None of them touches the Art. 58 aggregate; they exist so the
     # calculation reaches casilla 0513 rather than refusing earlier.
     overrides["tax_residence.ccaa"] = "cataluna"
-    overrides["filing_export.declaration_type"] = "1"
+    overrides["renta_filing.declaration_type"] = "1"
     overrides["renta_taxpayer.birth_date"] = "1978-05-11"
     overrides["renta_taxpayer.marital_status"] = "1"
     overrides["renta_family.minor_children_in_unit"] = "false"

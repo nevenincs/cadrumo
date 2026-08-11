@@ -195,7 +195,7 @@ def test_missing_wallet_filed_history_decision_blocks_real_modelo_303_engine(tmp
                 bucket_event_repository=event_repo,
                 clock=_DECIDED_AT,
             )
-        assert exc_info.value.suggestion is None
+        assert not hasattr(exc_info.value, "suggestion")
         assert exc_info.value.precondition_failure.scenario_id == "modelo.work.calculate.iva_wallet.blocked"
         assert len(calc_repo.load()) == 0
 

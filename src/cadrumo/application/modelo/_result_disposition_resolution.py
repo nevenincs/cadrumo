@@ -77,6 +77,7 @@ from ._action_errors import (
 )
 from ._calculation_helpers import assert_snapshot_matches_work_unit_revision
 from ._registry_resources import registry_root
+from ...domain.calculations.registry import RevisionId
 
 #: Provisional fallback "Tipo de declaración" disposition for a modelo that
 #: declares the header but has no diseño-grounded result-disposition
@@ -280,7 +281,7 @@ def _result_disposition_values_for_revision(
 def _reject_non_revision_casilla_values(
     *,
     modelo: str,
-    revision_id: str,
+    revision_id: RevisionId,
     casilla_values: Mapping[CasillaId, Decimal],
     declared_ids: frozenset[CasillaId],
     registry_revision: ModeloRevision,

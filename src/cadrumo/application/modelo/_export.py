@@ -39,7 +39,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
-from datetime import date, datetime
+from datetime import datetime
 from pathlib import Path
 from typing import Annotated
 
@@ -54,13 +54,13 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import (
     ActionEvidenceProvenance,
     ExportLayoutFormat,
+    FilingProducerKey,
     Modelo,
     PaymentElection,
     Period,
     PriorDomiciliationElection,
     RefundElection,
     ResultDisposition,
-    result_disposition_is_refund,
 )
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, WorkUnitId
@@ -70,17 +70,14 @@ from ...domain import filing as filing_domain
 from ...domain.buckets import BucketEvent, BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
 from ...domain.calculations.registry import (
     DataBindingDefinition,
-    ExportHeaderKey,
     derive_modelo_202_modality,
     derive_taxpayer_files_economic_activity,
 )
-from ...domain.deadlines import ChargeAccount, RefundAccount, TaxpayerProfile
+from ...domain.deadlines import TaxpayerProfile
 from ...domain.filing import ModeloDraft
-from ...domain.iva import SepaMarca, derive_sepa_marca
 from ...domain.iva_compensation import IvaCompensationReconciliationDecision
 from ...domain.modelos import (
     CalculationRevision,
-    CalculationRevisionAmendmentKind,
     CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
     ModeloError,
@@ -89,11 +86,6 @@ from ...domain.modelos import (
     VerificationReportCatalogueRepositoryProtocol,
     WorkUnit,
 )
-from ...domain.period import (
-    PeriodValidationError,
-    period_end_date,
-    period_start_date,
-)
 from ..calculations import (
     CalculationObservationRepository,
     CrossPeriodExpectedMemberSet,
@@ -101,12 +93,22 @@ from ..calculations import (
     PriorDomiciliationElectionProjection,
 )
 from ..filing import (
+    AmendmentEvidence,
     DeclaracionExportResult,
+    FilingElectionFacts,
+    FilingProducerSnapshot,
+    FilingProducerSnapshotError,
+    GeneralFilingProfileFacts,
+    M303ExportApplicabilityEnvelope,
+    Modelo111ProfileFacts,
+    Modelo202ProducerProfile,
+    PresenterIdentity,
+    TaxpayerIdentityFacts,
     approve_draft,
     assert_export_artifact_matches_receipt,
     build_draft,
+    build_filing_producer_snapshot,
     build_runtime_schema_provider,
-    did_page_required,
     export_draft,
     export_layout_renderability_reason,
     filing_profile_from_taxpayer,
@@ -115,17 +117,15 @@ from ..filing.runtime import RegistrySchemaAccessor
 from ._action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
-    ModeloChargeAccountMissingError,
     ModeloPreconditionErrorMixin,
     ModeloPriorDomiciliationElectionRefusedError,
-    ModeloRefundAccountMissingError,
     WorkUnitNotFoundError,
 )
 from ._iva_wallet_gate import require_persisted_iva_compensation_decision_matches_revision
 from ._ledger_evidence_gate import deductible_vat_evidence_gap_transaction_ids
 from ._preconditions import build_modelo_precondition_failure
 from ._prior_domiciliation import resolve_prior_domiciliation_election
-from ._profile_export_binding import compose_legal_full_name, resolve_profile_export_values
+from ._profile_export_binding import resolve_profile_export_values
 from ._required_binding_gate import (
     require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
 )
@@ -173,12 +173,6 @@ _COMPLETENESS_UNVERIFIED_MESSAGE = (
     "be structurally thin. Review the exported casillas against the official Diseño de Registros before filing."
 )
 type _Sha256Ref = Annotated[str, Field(min_length=71, max_length=71, pattern=r"^sha256:[0-9a-f]{64}$")]
-
-
-#: Composing the operator's legal name is a profile-identity rule, not an
-#: export one, so it lives with the profile bindings that also write it. Both
-#: writers land on the same declaration; two joins could disagree on one file.
-_compose_legal_full_name = compose_legal_full_name
 
 
 class ModeloIvaWalletDecisionProvenance(BaseModel):
@@ -262,6 +256,10 @@ class ModeloExportCommand(BaseModel):
             ``INGRESO`` retains the standard declaration type, while a supported
             Modelo 303 ``DOMICILIACION`` resolves to ``U``. Unsupported or
             sign-incompatible elections are refused by the shared resolver.
+        m303_applicability: Typed authoritative arrival envelope required for
+            Modelo 303. Other modelos must leave it absent; callers without
+            these facts receive an instructive refusal and must not synthesize
+            applicability from the taxpayer profile.
     """
 
     model_config = _STRICT_FROZEN
@@ -269,9 +267,13 @@ class ModeloExportCommand(BaseModel):
     calculation_revision_id: CalculationRevisionId
     output_path: Path
     actor: str = Field(min_length=1, max_length=128)
+    presenter: PresenterIdentity | None = None
+    taxpayer_identity: TaxpayerIdentityFacts | None = None
+    amendment_evidence: AmendmentEvidence | None = None
     refund_election: RefundElection = RefundElection.COMPENSAR
     payment_election: PaymentElection = PaymentElection.INGRESO
     prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP
+    m303_applicability: M303ExportApplicabilityEnvelope | None = None
 
 
 class ModeloExportResult(BaseModel):
@@ -474,425 +476,24 @@ def _load_revision_for_export(
     return revision
 
 
-def _operator_name_facts(bucket_id: str, *, modelo: str) -> tuple[str, str, str]:
-    """Return identity export-header slots from the active profile.
-
-    The operator's legal name is not carried on the deadline-engine
-    :class:`~cadrumo.domain.deadlines.TaxpayerProfile` (which holds only
-    ``tax_id``); it lives in the schema-driven user-profile fact catalogue. Natural-person
-    exports populate the individual ``surnames`` / ``name`` slots. Legal
-    entities populate the official 60-character ``surnames`` slot with the
-    company/legal name. Layouts that also require the 20-character
-    individual-name slot consume the explicit ``identity.name`` fact; layouts
-    that reserve that slot for individual filers leave it blank.
-
-    Args:
-        bucket_id: The active profile bucket id whose persisted profile
-            facts are read for the operator name.
-        modelo: Modelo code whose export layout determines whether legal
-            entities need the individual ``name`` slot populated.
-
-    Returns:
-        A ``(surnames, name, full_name)`` tuple for the export header. ``name``
-        may be blank for legal entities whose official layout reserves that
-        slot for individual filers.
-
-    Raises:
-        ModeloExportError: When the active bucket has no persisted
-            profile, or the profile omits either name fact. The export
-            cannot fabricate a placeholder name — the operator must
-            populate the profile first.
-    """
-    from ...domain.user_profile import ProfileNotFoundError
-    from ..user_profile import UserProfileLifecycleRepository, record_to_path_values
-
-    try:
-        record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
-    except ProfileNotFoundError as exc:
-        raise ModeloExportError(
-            translated_message="application.modelo.errors.export_operator_profile_missing",
-            context={
-                "requirements": _grounded_identity_requirements(
-                    [_PROFILE_SURNAMES_PATH, _PROFILE_NAME_PATH],
-                ),
-            },
-        ) from exc
-    facts = record_to_path_values(record)
-    surnames = (facts.get(_PROFILE_SURNAMES_PATH) or "").strip()
-    name = (facts.get(_PROFILE_NAME_PATH) or "").strip()
-    legal_name = (facts.get(_PROFILE_LEGAL_NAME_PATH) or "").strip()
-    entity_type = (facts.get(_PROFILE_ENTITY_TYPE_PATH) or "").strip()
-    if entity_type == _LEGAL_ENTITY_TYPE:
-        if not legal_name:
-            raise ModeloExportError(
-                translated_message="application.modelo.errors.export_operator_name_missing",
-                context={"missing": _grounded_identity_requirements([_PROFILE_LEGAL_NAME_PATH])},
-            )
-        if modelo in _LEGAL_ENTITY_NAME_SLOT_MODELOS:
-            if not name:
-                raise ModeloExportError(
-                    translated_message="application.modelo.errors.export_operator_name_missing",
-                    context={"missing": _grounded_identity_requirements([_PROFILE_NAME_PATH])},
-                )
-            return legal_name, name, legal_name
-        return legal_name, "", legal_name
-
-    missing = [path for path, value in ((_PROFILE_SURNAMES_PATH, surnames), (_PROFILE_NAME_PATH, name)) if not value]
-    if missing:
-        raise ModeloExportError(
-            translated_message="application.modelo.errors.export_operator_name_missing",
-            context={"missing": _grounded_identity_requirements(missing)},
-        )
-    return surnames, name, _compose_legal_full_name(surnames=surnames, name=name)
-
-
-def _grounded_identity_requirements(paths: list[str]) -> str:
-    """Render declarant-identity paths as operator labels with legal grounding.
-
-    An export refusal is a filing-grade surface: the operator has to go and
-    fill these fields in, so it names them the way the profile editor does
-    rather than by the internal dotted path, using the same requirement
-    builder the modelo readiness gate uses for the same fields.
-
-    Kept as a rendered string rather than a list because the refusal's
-    translated message interpolates it directly, and a list would render with
-    Python's own bracket-and-quote punctuation.
-    """
-    from ...core.resources import resources
-    from ..user_profile import (
-        build_profile_preflight_requirement,
-        format_profile_preflight_requirement,
-    )
-
-    schema = resources().user_profile_schema.singleton
-    return ", ".join(
-        format_profile_preflight_requirement(
-            build_profile_preflight_requirement(path, schema=schema),
-        )
-        for path in paths
-    )
-
-
-def _ddmmaaaa(value: date) -> str:
-    """Render a date as the AEAT ``ddmmaaaa`` fixed-width header token."""
-    return f"{value.day:02d}{value.month:02d}{value.year:04d}"
-
-
-def _compose_charge_account_block(charge_account: ChargeAccount | None) -> dict[ExportHeaderKey, str]:
-    """Build the U DID block from the separately recorded debit authority.
-
-    ``Domiciliación/Devolución - IBAN`` is the one DID position shared by the
-    two filing dispositions. For ``U`` it carries the charge account, never the
-    refund account. All remaining DID fields are explicitly labelled
-    ``Devolución`` in AEAT's Diseño, so a charge block contains its IBAN and
-    nothing else: no SEPA mark, SWIFT-BIC, or foreign-bank data.
-    """
-    if charge_account is None:
-        raise ModeloChargeAccountMissingError(
-            "this modelo elects domiciliación del ingreso, so AEAT requires the account it will CHARGE, "
-            "but no charge account is on file; a refund account is an account AEAT pays into and is not "
-            "an authorisation to debit",
-            suggestion="Record the charge-account IBAN before exporting this domiciliación election.",
-        )
-    return {ExportHeaderKey.IBAN: charge_account.iban}
-
-
-def _compose_refund_account_block(refund_account: RefundAccount | None) -> dict[ExportHeaderKey, str]:
-    """Build the DR303 cuenta-devolución (DID) header fields for a refund.
-
-    Called only when the determined disposition is a refund (devolución). Reads
-    the transiently-loaded encrypted refund account, derives the ``Marca SEPA``
-    from the account country, and emits exactly the Diseño-declared DID
-    sub-fields for that marca:
-
-    * a SEPA account (marca ``1`` Cuenta España / ``2`` UE SEPA) emits the IBAN
-      and the marca only;
-    * a non-SEPA account (marca ``3`` Resto Países) additionally emits the
-      SWIFT-BIC and the foreign-bank block (name / address / city / country).
-
-    The IBAN and bank fields are sensitive financial identity data held in
-    memory only — they reach the header dict the serializer consumes and are
-    never logged or written to a plaintext side store.
-
-    Raises:
-        ModeloRefundAccountMissingError: When the disposition is a refund but
-            no payable refund account is on file — no account at all, or an
-            account carrying neither an IBAN (SEPA) nor a SWIFT-BIC (non-SEPA).
-            The export refuses rather than emitting an empty or partial DID
-            block — an empty refund block files a devolución AEAT cannot pay.
-    """
-    if refund_account is None or not (refund_account.iban or refund_account.swift_bic):
-        raise ModeloRefundAccountMissingError(
-            "a refund disposition requires a refund account on file, but none is configured",
-        )
-    marca = derive_sepa_marca(
-        iban=refund_account.iban,
-        bank_country_code=refund_account.bank_country_code,
-    )
-    # A SEPA marca (Cuenta España / UE SEPA) is identified by its IBAN; absent an
-    # IBAN the account is necessarily a non-SEPA SWIFT account (Resto Países), so
-    # the marca falls to 3 regardless of any bank-country hint. This keeps the DID
-    # block self-consistent: marca 1/2 always carries an IBAN, marca 3 the SWIFT
-    # plus foreign-bank block.
-    iban = refund_account.iban
-    if iban is None:
-        marca = SepaMarca.RESTO_PAISES
-    block: dict[ExportHeaderKey, str] = {ExportHeaderKey.SEPA_MARCA: marca.value}
-    if marca is SepaMarca.RESTO_PAISES:
-        # Non-SEPA (Resto Países): the account is identified by SWIFT-BIC plus
-        # the foreign-bank block; a non-SEPA account may carry no IBAN.
-        block.update(
-            {
-                ExportHeaderKey.SWIFT_BIC: refund_account.swift_bic,
-                ExportHeaderKey.BANK_NAME: refund_account.bank_name,
-                ExportHeaderKey.BANK_ADDRESS: refund_account.bank_address,
-                ExportHeaderKey.BANK_CITY: refund_account.bank_city,
-                ExportHeaderKey.BANK_COUNTRY_CODE: refund_account.bank_country_code,
-            },
-        )
-        if iban is not None:
-            block[ExportHeaderKey.IBAN] = iban
-    elif iban is not None:
-        # SEPA (Cuenta España / UE SEPA): identified by IBAN only.
-        block[ExportHeaderKey.IBAN] = iban
-    return block
-
-
-def _apply_nota_three_refund_account_block(
-    *,
-    draft: ModeloDraft,
-    headers: dict[ExportHeaderKey, str],
-    workflow_profile: TaxpayerProfile,
-    prior_domiciliation_election: PriorDomiciliationElection,
-) -> None:
-    """Add the refund destination for a Nota-3-only M303 DID page.
-
-    The shared DID predicate decides whether the page exists. Current refund
-    dispositions and ``U`` have already selected their own account type in the
-    regular header composer, so this fills only the additional Nota-3 path.
-    """
-    try:
-        disposition = ResultDisposition(headers[ExportHeaderKey.DECLARATION_TYPE])
-    except (KeyError, ValueError):
-        disposition = None
-    if disposition is ResultDisposition.DOMICILIACION or (
-        disposition is not None and result_disposition_is_refund(disposition)
-    ):
-        return
-    if did_page_required(
-        draft=draft,
-        headers=headers,
-        prior_domiciliation_election=prior_domiciliation_election,
-    ):
-        headers.update(_compose_refund_account_block(workflow_profile.iva.refund_account))
-
-
-def _compose_export_headers(
-    *,
-    work_unit: WorkUnit,
-    revision: CalculationRevision,
-    workflow_profile: TaxpayerProfile,
-    period: Period,
-    refund_election: RefundElection = RefundElection.COMPENSAR,
-    payment_election: PaymentElection = PaymentElection.INGRESO,
-    resolved_result_disposition: ResultDisposition | None = None,
-    prior_domiciliation_election: PriorDomiciliationElectionProjection | None = None,
-) -> dict[ExportHeaderKey, str]:
-    """Compose the full fichero-BOE export header dict for a revision.
-
-    Supplies every header key the modelo export layouts may declare as
-    required (``declaration_type``, ``surnames``, ``name``,
-    ``fecha_inicio_periodo``, ``fecha_fin_periodo``) plus the optional
-    keys export can source cleanly (``tax_id``, ``presenter_nif``,
-    ``program_version``, ``devengo_start_date``, and the complementaria
-    triple when the revision is an amendment).
-
-    ``_header_field_value`` only raises when a key is both declared
-    ``required`` by the layout and missing, so over-supplying optional
-    keys is safe — the renderer ignores headers a layout never reads.
-    """
-    surnames, name, full_name = _operator_name_facts(work_unit.bucket_id, modelo=str(work_unit.modelo))
-    try:
-        period_start = (
-            period.start_date
-            if period.has_date_span()
-            else period_start_date(
-                period.filing_year,
-                period.registry_token,
-            )
-        )
-        period_end = (
-            period.end_date
-            if period.has_date_span()
-            else period_end_date(
-                period.filing_year,
-                period.registry_token,
-            )
-        )
-    except PeriodValidationError as exc:
-        raise ModeloExportError(
-            translated_message="application.modelo.errors.export_period_unmappable",
-            context={"work_unit_id": work_unit.work_unit_id, "period": period.registry_token},
-        ) from exc
-    tax_id = str(workflow_profile.tax_id)
-
-    # "Tipo de declaración" is the RESULT disposition (a ingresar / a
-    # compensar / a devolver / sin actividad), grounded in the bundled AEAT
-    # diseño de registros — NOT the amendment type. For Modelo 303 it is
-    # derived from the computed final result (casilla 71); a credit must file
-    # as ``C`` (compensación), a zero result as ``N``, never silently ``I``.
-    # The amendment (complementaria/sustitutiva) is an orthogonal marker set
-    # below and does NOT change the result disposition.
-    #
-    # Both semantic election axes are applied by the SINGLE shared resolver.
-    # The public export path supplies its already-resolved value so its header,
-    # receipt, and event are one determination; direct header callers resolve
-    # through the same authority here.
-    if resolved_result_disposition is None:
-        resolved_result_disposition = resolve_modelo_result_disposition(
-            work_unit=work_unit,
-            revision=revision,
-            workflow_profile=workflow_profile,
-            period=period,
-            refund_election=refund_election,
-            payment_election=payment_election,
-        )
-    declaration_type = resolved_result_disposition.value
-    headers: dict[ExportHeaderKey, str] = {
-        ExportHeaderKey.DECLARATION_TYPE: declaration_type,
-        ExportHeaderKey.SURNAMES: surnames,
-        ExportHeaderKey.NAME: name,
-        ExportHeaderKey.FULL_NAME: full_name,
-        ExportHeaderKey.ENTITY_TYPE: (
-            workflow_profile.entity_type.value if workflow_profile.entity_type is not None else ""
-        ),
-        ExportHeaderKey.FECHA_INICIO_PERIODO: _ddmmaaaa(period_start),
-        ExportHeaderKey.FECHA_FIN_PERIODO: _ddmmaaaa(period_end),
-        ExportHeaderKey.DEVENGO_START_DATE: _ddmmaaaa(period_start),
-        ExportHeaderKey.TAX_ID: tax_id,
-        ExportHeaderKey.PROGRAM_VERSION: _PROGRAM_VERSION_CODE,
-    }
-
-    # REDEME indicator (DR303 page-1 position 110): "1" SI / "2" NO, written on
-    # EVERY filing (the Diseño asks for the indicator unconditionally, not only
-    # on refunds). Maps the standing ``redeme_enrolled`` profile fact — the same
-    # fact the disposition resolver reads to upgrade a monthly negative period to
-    # a refund.
-    headers[ExportHeaderKey.REDEME] = "1" if workflow_profile.iva.redeme_enrolled else "2"
-
-    # Bank-account (DID) block. Emitted for every disposition whose fichero must
-    # carry an account, which is NOT the same as "a refund": the three refund
-    # codes (D / V / X, AEAT pays in) AND U, domiciliación del ingreso, where AEAT
-    # CHARGES the account. Gating this on refund-ness alone emitted no account for
-    # a direct-debit election, and the render guard suppressed the page to match,
-    # so the filing went out with nothing for AEAT to debit.
-    #
-    # The DID record has a single dual-purpose IBAN position. Its input stays
-    # disposition-specific: ``U`` reads the separately recorded charge account;
-    # refund dispositions read the refund account. The common record position is
-    # not authority to reuse one account as the other.
-    #
-    # The account fields live in the encrypted secure-object store on the
-    # transiently-loaded profile; they are read into memory here and emitted into
-    # the header dict, never logged or written to a plaintext side store.
-    disposition = ResultDisposition(declaration_type)
-    if disposition is ResultDisposition.DOMICILIACION:
-        headers.update(_compose_charge_account_block(workflow_profile.iva.charge_account))
-    elif result_disposition_is_refund(disposition):
-        headers.update(_compose_refund_account_block(workflow_profile.iva.refund_account))
-
-    if revision.amendment_kind is CalculationRevisionAmendmentKind.RECTIFICATIVA:
-        # Autoliquidación rectificativa (LGT art. 120.4, RD 117/2024): the
-        # unified post-2024 amendment mechanism. On the Modelo 303 2025 diseño
-        # de registros the indicator sits at page-3 position 392 (header key
-        # ``autoliq_rectificativa``, a length-1 checkbox). "1" marks the
-        # rectificativa; the DID devolución block above already carries the
-        # refund IBAN when the rectificativa lowers the resultado to a refund
-        # disposition. The número de justificante of the rectified filing
-        # (``previous_receipt``, position 393) is the ORIGINAL AEAT 13-digit
-        # receipt carried on the baseline's external evidence — not the internal
-        # 64-char ``amends_filing_record_id`` — and is populated by the
-        # regime-aware rectificativa builder (deferred), so it is intentionally
-        # left unset here rather than overflowing the field with an internal id.
-        headers[ExportHeaderKey.AMENDMENT_RECTIFICATIVE] = "1"
-    elif revision.amendment_kind is not None:
-        headers[ExportHeaderKey.COMPLEMENTARIA] = (
-            "true" if revision.amendment_kind is CalculationRevisionAmendmentKind.COMPLEMENTARIA else "false"
-        )
-        headers[ExportHeaderKey.COMPLEMENTARIA_PAGE] = headers[ExportHeaderKey.COMPLEMENTARIA]
-        if revision.amends_filing_record_id is not None:
-            headers[ExportHeaderKey.JUSTIFICANTE_ANTERIOR] = revision.amends_filing_record_id
-            headers[ExportHeaderKey.PREVIOUS_JUSTIFICANTE] = revision.amends_filing_record_id
-
-    if prior_domiciliation_election is not None and (
-        prior_domiciliation_election.election is PriorDomiciliationElection.CANCEL_OR_MODIFY
-    ):
-        headers[ExportHeaderKey.PRIOR_DOMICILIATION_ACTION] = "X"
-
-    return headers
-
-
-compose_export_headers = _compose_export_headers
-
-
 def _compose_export_dictionary_values(
     *,
     draft: ModeloDraft,
-    headers: Mapping[ExportHeaderKey, str],
+    taxpayer_identity: TaxpayerIdentityFacts,
     bucket_id: str,
     profile_export_bindings: Sequence[DataBindingDefinition] = (),
 ) -> dict[str, object]:
-    """Compose the export values addressed by AEAT's own dictionary field ids.
-
-    A sibling channel to :func:`_compose_export_headers`, not a replacement for
-    it. The header dict is ``dict[str, str]`` by contract, and the
-    ``xml_dictionary`` renderer decides a row's rendering from the *Python type*
-    of the value it receives -- a ``bool`` becomes ``SI``/``NO`` or ``0``/``1``
-    depending on the row's declared type, a :class:`~datetime.date` becomes
-    ``d/m/yyyy``. A value that reaches the renderer as a string has already lost
-    the distinction the renderer needs, and is written through verbatim. So a
-    typed value needs a channel whose contract is not ``str``, and this is it.
-
-    Rendering here instead would be the other way to solve that, and is worse:
-    it would put a second formatting authority beside
-    ``_format_xml_dictionary_value``, and the two could disagree silently on a
-    filing artefact. This channel carries values; that function renders them.
-
-    Every row beyond the declarante's own name and NIF is resolved from the
-    registry's ``source = "profile"`` bindings rather than named here. A field
-    id written into this function is a second place the registry's declarations
-    would have to be kept in step with; reading the bindings means a revision
-    that declares a new identity slot populates it with no code change.
-
-    Args:
-        draft: The approved draft being exported, supplying the taxpayer
-            identity it was built against.
-        headers: The already-composed export headers, read for the operator
-            name parts so the profile is loaded once per export rather than
-            twice.
-        bucket_id: Active profile bucket whose facts the registry-declared
-            bindings resolve against.
-        profile_export_bindings: The revision's export-addressed profile
-            bindings, projected onto the schema subview.
-
-    Returns:
-        Values keyed by the dictionary field id AEAT declares for them.
-    """
+    """Resolve typed XML dictionary values from canonical profile bindings."""
     values: dict[str, object] = dict(
         resolve_profile_export_values(profile_export_bindings, bucket_id=bucket_id),
     )
-    # The declarante's own name and NIF keep their existing sources, and are
-    # applied AFTER the registry-driven pass so they win on conflict. Both are
-    # taken from the artefact being exported rather than re-read live: the
-    # draft was approved against one taxpayer identity, and a profile edited
-    # between approval and export must not silently file a different NIF than
-    # the figures were computed for. Holding them here also keeps the rendered
-    # bytes identical to what the retired renderer escapes produced.
+    if taxpayer_identity.full_name is None:
+        raise ModeloExportError(
+            translated_message="application.modelo.errors.export_draft_write_failed",
+            context={"cause": "XML dictionary export requires exact taxpayer full_name"},
+        )
     values["DPNIF_D"] = draft.profile_tax_id
-    values["DP_APENOM_D"] = compose_legal_full_name(
-        surnames=headers.get(ExportHeaderKey.SURNAMES, ""),
-        name=headers.get(ExportHeaderKey.NAME, ""),
-    )
+    values["DP_APENOM_D"] = taxpayer_identity.full_name
     return values
 
 
@@ -932,7 +533,6 @@ def _raise_if_export_layout_unsupported(*, work_unit: WorkUnit, schema_provider:
     raise ModeloExportUnsupportedError(
         translated_message="application.modelo.errors.export_unsupported",
         context=context,
-        suggestion=f"aeat app modelo describe {modelo}",
     )
 
 
@@ -945,10 +545,10 @@ def _require_prior_domiciliation_marker_layout(
     """Require the selected registry revision to own the rectificativa ``X`` field."""
     if prior_domiciliation_election.election is PriorDomiciliationElection.KEEP:
         return
-    marker_header_key = "prior_domiciliation_action"
+    marker_producer_key = FilingProducerKey.PRIOR_DOMICILIATION_ACTION
     layouts = schema_provider.get_subview(str(work_unit.modelo)).export_layouts
     if any(
-        field.header_key == marker_header_key
+        field.producer_key is marker_producer_key
         for layout in layouts
         for record in layout.records
         for field in record.fields
@@ -959,7 +559,7 @@ def _require_prior_domiciliation_marker_layout(
         context={
             "modelo": str(work_unit.modelo),
             "revision_id": work_unit.revision_id,
-            "header_key": marker_header_key,
+            "producer_key": marker_producer_key.value,
         },
     )
 
@@ -1010,6 +610,68 @@ def _approve_export_draft(
     return period, approved
 
 
+def _build_export_producer_snapshot(
+    *,
+    command: ModeloExportCommand,
+    work_unit: WorkUnit,
+    revision: CalculationRevision,
+    workflow_profile: TaxpayerProfile,
+    resolved_result_disposition: ResultDisposition,
+    prior_domiciliation_election: PriorDomiciliationElectionProjection,
+) -> FilingProducerSnapshot:
+    """Build the sole typed producer boundary or refuse before any write."""
+    evidence = command.amendment_evidence
+    if command.presenter is None or command.taxpayer_identity is None:
+        raise ModeloExportError(
+            translated_message="application.modelo.errors.export_draft_write_failed",
+            context={
+                "calculation_revision_id": command.calculation_revision_id,
+                "cause": "explicit presenter and taxpayer identity facts are required",
+            },
+        )
+    if (evidence is None) != (revision.amendment_kind is None) or (
+        evidence is not None and evidence.kind is not revision.amendment_kind
+    ):
+        raise ModeloExportError(
+            translated_message="application.modelo.errors.export_draft_write_failed",
+            context={
+                "calculation_revision_id": command.calculation_revision_id,
+                "cause": "typed amendment evidence does not match calculation revision",
+            },
+        )
+    try:
+        modelo = Modelo(str(work_unit.modelo))
+        if modelo is Modelo.M303:
+            model_profile = workflow_profile.iva
+        elif modelo is Modelo.M202:
+            model_profile = Modelo202ProducerProfile(taxpayer_profile=workflow_profile, activities=())
+        elif modelo is Modelo.M111:
+            model_profile = Modelo111ProfileFacts(colegio_concertado=None)
+        else:
+            model_profile = GeneralFilingProfileFacts()
+        return build_filing_producer_snapshot(
+            modelo=modelo,
+            taxpayer_tax_id=workflow_profile.tax_id,
+            taxpayer_identity=command.taxpayer_identity,
+            presenter=command.presenter,
+            model_profile=model_profile,
+            elections=FilingElectionFacts(
+                result_disposition=resolved_result_disposition,
+                payment=command.payment_election,
+                refund=command.refund_election,
+                prior_domiciliation=prior_domiciliation_election.election,
+            ),
+            amendment_evidence=evidence,
+            refund_account=workflow_profile.iva.refund_account,
+            charge_account=workflow_profile.iva.charge_account,
+        )
+    except (FilingProducerSnapshotError, ValueError) as exc:
+        raise ModeloExportError(
+            translated_message="application.modelo.errors.export_draft_write_failed",
+            context={"calculation_revision_id": command.calculation_revision_id, "cause": str(exc)},
+        ) from exc
+
+
 def _persist_exported_draft(
     *,
     command: ModeloExportCommand,
@@ -1032,32 +694,31 @@ def _persist_exported_draft(
         refund_election=command.refund_election,
         payment_election=command.payment_election,
     )
-    headers = _compose_export_headers(
+    producer_snapshot = _build_export_producer_snapshot(
+        command=command,
         work_unit=work_unit,
         revision=revision,
         workflow_profile=workflow_profile,
-        period=period,
-        refund_election=command.refund_election,
-        payment_election=command.payment_election,
         resolved_result_disposition=resolved_result_disposition,
         prior_domiciliation_election=prior_domiciliation_election,
     )
-    _apply_nota_three_refund_account_block(
-        draft=approved,
-        headers=headers,
-        workflow_profile=workflow_profile,
-        prior_domiciliation_election=prior_domiciliation_election.election,
+    export_subview = schema_provider.get_subview(str(work_unit.modelo))
+    export_layout = export_subview.export_layouts[0] if export_subview.export_layouts else None
+    dictionary_values = (
+        _compose_export_dictionary_values(
+            draft=approved,
+            taxpayer_identity=producer_snapshot.taxpayer_identity,
+            bucket_id=work_unit.bucket_id,
+            profile_export_bindings=export_subview.profile_export_bindings,
+        )
+        if export_layout is not None and export_layout.format is ExportLayoutFormat.XML_DICTIONARY
+        else {}
     )
     receipt = _write_export_tmp(
         command=command,
         approved=approved,
-        headers=headers,
-        dictionary_values=_compose_export_dictionary_values(
-            draft=approved,
-            headers=headers,
-            bucket_id=work_unit.bucket_id,
-            profile_export_bindings=schema_provider.get_subview(str(work_unit.modelo)).profile_export_bindings,
-        ),
+        producer_snapshot=producer_snapshot,
+        dictionary_values=dictionary_values,
         prior_domiciliation_election=prior_domiciliation_election.election,
         schema_provider=schema_provider,
     )
@@ -1160,7 +821,7 @@ def _write_export_tmp(
     *,
     command: ModeloExportCommand,
     approved: ModeloDraft,
-    headers: Mapping[str, str],
+    producer_snapshot: FilingProducerSnapshot,
     dictionary_values: Mapping[str, object],
     prior_domiciliation_election: PriorDomiciliationElection,
     schema_provider: RegistrySchemaAccessor,
@@ -1175,10 +836,11 @@ def _write_export_tmp(
         return export_draft(
             approved,
             output_path=tmp_output,
-            headers=headers,
+            producer_snapshot=producer_snapshot,
             dictionary_values=dictionary_values,
             prior_domiciliation_election=prior_domiciliation_election,
             schema_provider=schema_provider,
+            m303_applicability=command.m303_applicability,
         )
     except filing_domain.FilingExportError as exc:
         _discard_tmp_output_after_failure(tmp_output, stage="draft-write")
@@ -1319,8 +981,8 @@ def export_modelo_revision(
     writing any operator-visible file, the service validates the output path,
     export-layout renderability, profile readiness, ledger evidence, IVA wallet
     decision provenance, and cross-period clean state. It then rebuilds and
-    approves a transient :class:`~domain.filing.ModeloDraft`, composes
-    the fichero headers, serializes through
+    approves a transient :class:`~domain.filing.ModeloDraft`, builds one typed
+    filing producer snapshot, serializes through
     :func:`~cadrumo.application.filing.export_draft`, appends ``MODELO_EXPORTED`` to
     the bucket-event-history catalogue, and finally atomically renames the
     sibling ``.tmp`` file into place. Any write, event, or rename failure removes
@@ -1335,9 +997,8 @@ def export_modelo_revision(
         :class:`~cadrumo.application.modelo.ModeloExportCommand`:
             Strict input envelope for the revision id, output path, actor, and
             refund election.
-        :func:`~cadrumo.application.modelo._export._compose_export_headers`:
-            Builds required fichero-BOE header keys from the work unit, profile,
-            revision, period, amendment marker, and refund election.
+        :func:`~cadrumo.application.filing.build_filing_producer_snapshot`:
+            Builds the sole typed producer boundary consumed by the renderer.
         :func:`~cadrumo.application.modelo._export._validate_output_path`:
             Refuses unsafe destinations before fichero bytes are written.
     """
@@ -1398,6 +1059,22 @@ def export_modelo_revision(
         raise WorkUnitNotFoundError(
             translated_message="application.modelo.errors.work_unit_not_found",
             context={"work_unit_id": revision.work_unit_id},
+        )
+    if work_unit.modelo == Modelo.M303.value and command.m303_applicability is None:
+        raise ModeloExportError(
+            translated_message="application.modelo.errors.export_draft_write_failed",
+            context={
+                "calculation_revision_id": command.calculation_revision_id,
+                "cause": "modelo 303 export requires an explicit applicability envelope",
+            },
+        )
+    if work_unit.modelo != Modelo.M303.value and command.m303_applicability is not None:
+        raise ModeloExportError(
+            translated_message="application.modelo.errors.export_draft_write_failed",
+            context={
+                "calculation_revision_id": command.calculation_revision_id,
+                "cause": "modelo 303 applicability envelope is forbidden for non-303 exports",
+            },
         )
     if work_unit.bucket_id != active_bucket_id:
         raise ModeloExportCrossBucketRefusedError(
@@ -1491,7 +1168,6 @@ __all__ = [
     "ModeloExportUnsupportedError",
     "ModeloIvaWalletDecisionProvenance",
     "_raise_if_ledger_export_evidence_missing",
-    "compose_export_headers",
     "export_modelo_revision",
     "iva_wallet_decision_export_provenance",
 ]
