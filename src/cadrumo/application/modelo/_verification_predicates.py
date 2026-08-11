@@ -170,6 +170,15 @@ def _validated_predicate_casilla_id(token: str) -> CasillaId:
         raise ModeloError(f"verification predicate references non-canonical casilla.id {token!r}") from exc
 
 
+def _unique_predicate_casilla_id(predicate: VerificationPredicateDefinition) -> CasillaId | None:
+    """Return the predicate's sole casilla, preserving cross-casilla findings at record grain."""
+    parsed = parse_verification_predicate_expression(predicate.expression)
+    if parsed is None:
+        return None
+    casilla_ids = _predicate_casilla_ids(parsed)
+    return casilla_ids[0] if len(casilla_ids) == 1 else None
+
+
 def _parse_predicate_date(raw: str) -> _date | None:
     """Parse an operator-entered date string, or ``None`` when absent/unparseable.
 
@@ -459,7 +468,13 @@ def _m210_unresolved_outcome_findings(
         if outcome.reason not in _M210_UNRESOLVED_RATE_REASONS:
             continue
         resolved_tipo_renta = tipo_renta or outcome.context.get("tipo_renta", "")
-        _rate, obs_findings = _resolve_m210_rate(profile, resolved_tipo_renta, year, snapshot)
+        _rate, obs_findings = _resolve_m210_rate(
+            profile,
+            resolved_tipo_renta,
+            year,
+            snapshot,
+            casilla_id=outcome.casilla_id,
+        )
         findings.extend(obs_findings)
         if blocking_finding_observer is not None:
             for finding in obs_findings:
@@ -790,6 +805,7 @@ def _evaluate_verification_predicates(
                     ModeloVerificationFinding(
                         kind=ModeloVerificationFindingKind.ADVISORY,
                         severity=ModeloVerificationFindingSeverity.WARNING,
+                        casilla_id=_unique_predicate_casilla_id(predicate),
                         message_locale_key="application.modelo.findings.registry_advisory_predicate_fired",
                         message_facts={"predicate_id": predicate.predicate_id},
                         legal_refs=tuple(str(r) for r in predicate.legal_refs),
@@ -800,6 +816,7 @@ def _evaluate_verification_predicates(
                 finding = ModeloVerificationFinding(
                     kind=ModeloVerificationFindingKind.BLOCKING_RULE,
                     severity=ModeloVerificationFindingSeverity.BLOCKING,
+                    casilla_id=_unique_predicate_casilla_id(predicate),
                     message_locale_key="application.modelo.findings.cross_casilla_invariant_violated",
                     message_facts={"predicate_id": predicate.predicate_id},
                     legal_refs=tuple(str(r) for r in predicate.legal_refs),

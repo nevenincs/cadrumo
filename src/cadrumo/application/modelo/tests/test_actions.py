@@ -39,6 +39,7 @@ from ....domain.modelos import (
     derive_calculation_revision_id,
     derive_work_unit_id,
 )
+from ...calculations import M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA
 from ...workflow import WorkflowInputMismatchError
 from .. import ModeloAggregationBindingError
 from .._calculation_actions import (
@@ -59,6 +60,7 @@ from .._verification_actions import (
     _dt12_antiquity_advisory_finding,
     _dt12_reduccion_advisory_finding,
     _evaluate_verification_predicates,
+    _iva_wallet_error_verification_finding,
     _missing_required_casilla_finding,
 )
 from .._workflow_gate import (
@@ -408,6 +410,7 @@ def test_cross_casilla_invariant_finding_is_locale_neutral() -> None:
             _PREDICATE_REQUIRED_RIGHT_CASILLA: Decimal(0),
         },
     )
+    assert finding.casilla_id is None
     assert finding.message_locale_key == "application.modelo.findings.cross_casilla_invariant_violated"
     assert dict(finding.message_facts) == {"predicate_id": "test-cross-casilla-001"}
 
@@ -708,6 +711,7 @@ def test_iva_wallet_blocked_exception_carries_translated_message_key() -> None:
         "modelo.work.calculate.iva_wallet.ready",
         "modelo.work.calculate.iva_wallet.filed_history_requires_override",
     )
+    assert _iva_wallet_error_verification_finding(exc).casilla_id == M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA
     assert not hasattr(exc, "suggestion")
 
 

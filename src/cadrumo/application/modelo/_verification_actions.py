@@ -110,7 +110,12 @@ from ..aggregation import (
     compute_ledger_filing_snapshot,
     missing_evidence_advisory_observations,
 )
-from ..calculations import CalculationObservationRepository, CrossPeriodDependencyEvidence, CrossPeriodExpectedMemberSet
+from ..calculations import (
+    M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
+    CalculationObservationRepository,
+    CrossPeriodDependencyEvidence,
+    CrossPeriodExpectedMemberSet,
+)
 from ..workflow import WorkflowEngine, WorkflowPurpose, WorkflowRunRepository
 from ._action_errors import (
     WORKFLOW_GATE_LEGAL_REFS,
@@ -1667,6 +1672,7 @@ def _iva_wallet_error_verification_finding(error: ModeloIvaWalletReconciliationB
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.BLOCKING_RULE,
         severity=ModeloVerificationFindingSeverity.BLOCKING,
+        casilla_id=M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
         message_locale_key="application.modelo.findings.iva_wallet_precondition_failed",
         message_facts={
             "condition_id": error.precondition_failure.verdict.failed_condition_id,

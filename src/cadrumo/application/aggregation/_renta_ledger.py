@@ -492,11 +492,7 @@ def _classify_renta_transaction(
     issue with their dedicated reason code; the eligible path returns
     the constructed observation.
     """
-    transaction_id = transaction.transaction_id
-    purchase_invoice_evidence_id = transaction.purchase_invoice_evidence_id
-    category_id = transaction.category_id
-
-    direction = _renta_direction_for(transaction.direction, purchase_invoice_evidence_id)
+    direction = _renta_direction_for(transaction.direction, transaction.purchase_invoice_evidence_id)
     if direction is None:
         return _renta_transaction_issue(
             transaction,
@@ -509,41 +505,80 @@ def _classify_renta_transaction(
             RentaLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY,
             f"transaction currency {transaction.raw.currency!r} is not supported for Renta expenses",
         )
-    # Use the EUR-projected amount for the business gate so a non-EUR row
-    # that passed the is_non_eur_without_conversion check (because
-    # value_in_eur is set) contributes its pre-converted EUR equivalent
-    # rather than its raw foreign-currency amount.  EUR rows are unaffected:
-    # their value_in_eur is None and effective_eur_amount falls back to
-    # raw.amount.
+    # Use the EUR projection after rejecting unconverted non-EUR rows, so converted
+    # rows contribute their EUR equivalent while EUR rows retain their raw amount.
     eur_amount = effective_eur_amount(transaction)
-    # The annual declaration is the filing-grade projection, so it refuses the
-    # explicit actividad marker the quarterly M130 pago fraccionado accepts --
-    # through the SAME predicate, with the policy declared here rather than as
-    # a second implementation that could drift.
+    proportion = _renta_business_proportion_or_issue(transaction)
+    if isinstance(proportion, RentaLedgerAggregationIssue):
+        return proportion
+    category_profile = _renta_category_profile_or_issue(
+        transaction,
+        profiles=profiles,
+        region_overrides=region_overrides,
+        context=context,
+        profile_year=resolved_profile_year,
+    )
+    if isinstance(category_profile, RentaLedgerAggregationIssue):
+        return category_profile
+    category, profile = category_profile
+    fact = _renta_expense_fact_or_issue(
+        transaction,
+        invoices=invoices,
+        bucket_id=bucket_id,
+        direction=direction,
+        category=category,
+        activity_key=activity_key,
+        eur_amount=eur_amount,
+        proportion=proportion,
+    )
+    if isinstance(fact, RentaLedgerAggregationIssue):
+        return fact
+    return _renta_observation_or_issue(
+        transaction,
+        fact=fact,
+        profile=profile,
+        context=context,
+        period=resolved_period,
+    )
+
+
+def _renta_business_proportion_or_issue(
+    transaction: Transaction,
+) -> Decimal | RentaLedgerAggregationIssue:
+    """Return the annual filing business proportion or its precise refusal."""
+    # Annual filing deliberately refuses the actividad marker that quarterly M130
+    # accepts, through the shared predicate rather than a second policy copy.
     proportion = renta_expense_business_proportion(transaction, accept_activity_marker=False)
-    if proportion is None:
-        if relies_on_activity_marker(transaction):
-            # Distinct from a row carrying no classification signal at all: this
-            # row IS activity-marked and needs only the business-classification
-            # review, which is what the operator has to act on. Reporting it as
-            # a generic unclassified state hid that the quarterly pipeline had
-            # already accepted the same row.
-            return _renta_transaction_issue(
-                transaction,
-                RentaLedgerAggregationIssueReason.ACTIVITY_MARKED_PENDING_ANNUAL_REVIEW,
-                "actividad-marked expense needs business-classification review before the annual declaration",
-            )
-        reason = (
-            RentaLedgerAggregationIssueReason.PERSONAL_TRANSACTION
-            if transaction.business_classification is BusinessClassification.PERSONAL
-            else RentaLedgerAggregationIssueReason.UNCLASSIFIED_BUSINESS_STATE
-        )
+    if proportion is not None:
+        return proportion
+    if relies_on_activity_marker(transaction):
         return _renta_transaction_issue(
             transaction,
-            reason,
-            f"business classification {transaction.business_classification.value!r} cannot feed Renta expenses",
+            RentaLedgerAggregationIssueReason.ACTIVITY_MARKED_PENDING_ANNUAL_REVIEW,
+            "actividad-marked expense needs business-classification review before the annual declaration",
         )
-    business_amount = _business_fact_amount(eur_amount, proportion)
+    reason = (
+        RentaLedgerAggregationIssueReason.PERSONAL_TRANSACTION
+        if transaction.business_classification is BusinessClassification.PERSONAL
+        else RentaLedgerAggregationIssueReason.UNCLASSIFIED_BUSINESS_STATE
+    )
+    return _renta_transaction_issue(
+        transaction,
+        reason,
+        f"business classification {transaction.business_classification.value!r} cannot feed Renta expenses",
+    )
+
+
+def _renta_category_profile_or_issue(
+    transaction: Transaction,
+    *,
+    profiles: Mapping[SpendingCategory, CategoryProfile],
+    region_overrides: Mapping[CCAA, Mapping[SpendingCategory, CategoryProfile]],
+    context: RentaDeductibilityContext,
+    profile_year: int,
+) -> tuple[SpendingCategory, CategoryProfile] | RentaLedgerAggregationIssue:
+    """Resolve the first-slice category and the profile selected for residence."""
+    category_id = transaction.category_id
     if category_id is None:
         return _renta_transaction_issue(
             transaction,
@@ -572,7 +607,7 @@ def _classify_renta_transaction(
         return _renta_transaction_issue(
             transaction,
             RentaLedgerAggregationIssueReason.MISSING_CATEGORY_PROFILE,
-            f"category {category.value!r} has no profile for {resolved_profile_year}",
+            f"category {category.value!r} has no profile for {profile_year}",
         )
     category_region_overrides = {
         ccaa: overrides[category] for ccaa, overrides in region_overrides.items() if category in overrides
@@ -588,33 +623,45 @@ def _classify_renta_transaction(
             RentaLedgerAggregationIssueReason.REGION_UNDECLARED_FOR_OVERRIDE,
             (
                 f"category {category.value!r} carries a territorial-regime deductibility override for "
-                f"{resolved_profile_year} but the residence comunidad autonoma is undeclared"
+                f"{profile_year} but the residence comunidad autonoma is undeclared"
             ),
         )
-    profile = selected_profile
+    return category, selected_profile
+
+
+def _renta_expense_fact_or_issue(
+    transaction: Transaction,
+    *,
+    invoices: InvoiceCatalogue,
+    bucket_id: str,
+    direction: RentaExpenseDirection,
+    category: SpendingCategory,
+    activity_key: str,
+    eur_amount: Decimal,
+    proportion: Decimal,
+) -> RentaDeductibleExpenseFact | RentaLedgerAggregationIssue:
+    """Enrich a transaction with invoice evidence and construct its expense fact."""
     evidence_payload = _purchase_invoice_evidence_payload(
         invoices=invoices,
         bucket_id=bucket_id,
-        transaction_id=transaction_id,
-        purchase_invoice_evidence_id=purchase_invoice_evidence_id,
-        category_id=category_id,
+        transaction_id=transaction.transaction_id,
+        purchase_invoice_evidence_id=transaction.purchase_invoice_evidence_id,
+        category_id=transaction.category_id,
         transaction_amount=eur_amount,
     )
     if isinstance(evidence_payload, RentaLedgerAggregationIssue):
         return evidence_payload
-    taxable_base = _business_fact_amount(_taxable_base_for(transaction, evidence_payload), proportion)
-    iva_amount = _business_fact_amount(_iva_amount_for(transaction, evidence_payload), proportion)
     try:
-        fact = RentaDeductibleExpenseFact(
-            transaction_id=transaction_id,
-            invoice_id=purchase_invoice_evidence_id,
+        return RentaDeductibleExpenseFact(
+            transaction_id=transaction.transaction_id,
+            invoice_id=transaction.purchase_invoice_evidence_id,
             catalogue_id=_LEDGER_CATALOGUE_ID,
             operation_date=transaction.raw.value_date or transaction.raw.booked_date,
             invoice_issue_date=evidence_payload.invoice_issue_date,
             posting_date=transaction.raw.booked_date,
-            gross_amount=business_amount,
-            taxable_base=taxable_base,
-            iva_amount=iva_amount,
+            gross_amount=_business_fact_amount(eur_amount, proportion),
+            taxable_base=_business_fact_amount(_taxable_base_for(transaction, evidence_payload), proportion),
+            iva_amount=_business_fact_amount(_iva_amount_for(transaction, evidence_payload), proportion),
             direction=direction,
             category=category,
             activity_key=activity_key,
@@ -625,11 +672,22 @@ def _classify_renta_transaction(
             RentaLedgerAggregationIssueReason.INVALID_LEDGER_FACT,
             str(exc),
         )
-    if not resolved_period.contains(fact.filing_date):
+
+
+def _renta_observation_or_issue(
+    transaction: Transaction,
+    *,
+    fact: RentaDeductibleExpenseFact,
+    profile: CategoryProfile,
+    context: RentaDeductibilityContext,
+    period: Period,
+) -> RentaDeductibleExpenseObservation | RentaLedgerAggregationIssue:
+    """Apply filing-period and deductibility gates to one validated fact."""
+    if not period.contains(fact.filing_date):
         return _renta_transaction_issue(
             transaction,
             RentaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
-            f"filing date {fact.filing_date.isoformat()} is outside {resolved_period}",
+            f"filing date {fact.filing_date.isoformat()} is outside {period}",
         )
     result = evaluate_renta_deductibility(fact, profile, context)
     if result.status is not RentaDeductibilityStatus.ELIGIBLE:
@@ -639,11 +697,7 @@ def _classify_renta_transaction(
             result.reason,
         )
     try:
-        return build_renta_deductible_expense_observation(
-            fact,
-            result,
-            tax_year=resolved_period.filing_year,
-        )
+        return build_renta_deductible_expense_observation(fact, result, tax_year=period.filing_year)
     except ValueError as exc:
         return _renta_transaction_issue(
             transaction,

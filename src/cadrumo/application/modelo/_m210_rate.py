@@ -40,6 +40,7 @@ from ...domain.modelos import (
 )
 
 if TYPE_CHECKING:
+    from ...core import CasillaId
     from ...domain.calculations.registry import ParameterDefinition
 
 _ZERO = Decimal("0")
@@ -47,6 +48,7 @@ _ZERO = Decimal("0")
 
 def _m210_blocking_finding(
     *,
+    casilla_id: CasillaId | None,
     reason_code: str,
     message_facts: dict[str, str | int],
     legal_refs: tuple[LegalRefId, ...],
@@ -62,6 +64,7 @@ def _m210_blocking_finding(
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.BLOCKING_RULE,
         severity=ModeloVerificationFindingSeverity.BLOCKING,
+        casilla_id=casilla_id,
         message_locale_key="application.modelo.findings.m210_rate_unavailable",
         message_facts={"reason_code": reason_code, **message_facts},
         legal_refs=legal_refs,
@@ -102,6 +105,7 @@ def _resolve_convenio_override(
     tipo_renta: str,
     year: int,
     baseline_rate: Decimal | None,
+    casilla_id: CasillaId | None,
 ) -> tuple[Decimal | None, list[ModeloVerificationFinding]]:
     """Resolve the treaty override rate for a treaty-country profile.
 
@@ -127,6 +131,7 @@ def _resolve_convenio_override(
 
     if override is None:
         finding = _m210_blocking_finding(
+            casilla_id=casilla_id,
             reason_code="convenio_rate_missing",
             message_facts={
                 "country_code": country_code,
@@ -167,6 +172,8 @@ def resolve_m210_rate(
     tipo_renta: str,
     year: int,
     snapshot: RegistrySnapshot,
+    *,
+    casilla_id: CasillaId | None = None,
 ) -> tuple[Decimal | None, list[ModeloVerificationFinding]]:
     """Resolve the M210 rate for (profile, tipo_renta, year).
 
@@ -209,6 +216,7 @@ def resolve_m210_rate(
             if tipo_renta == TipoRentaIrnr.PENSION.value and _has_live_pension_tariff(snapshot, year):
                 return None, []
             finding = _m210_blocking_finding(
+                casilla_id=casilla_id,
                 reason_code="baseline_rate_unavailable",
                 message_facts={
                     "tipo_renta_code": tipo_renta,
@@ -227,4 +235,5 @@ def resolve_m210_rate(
         tipo_renta=tipo_renta,
         year=year,
         baseline_rate=baseline_rate,
+        casilla_id=casilla_id,
     )
