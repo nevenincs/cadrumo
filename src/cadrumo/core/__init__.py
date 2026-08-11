@@ -217,6 +217,7 @@ from ._notificacion_estado_servicio import (
 )
 from ._objeto_tributario import ObjetoTributario
 from ._observed_header_fact import ObservedHeaderFact
+from ._official_box_status import OfficialBoxStatus
 from ._operator_action_enums import (
     ActionArgumentSource,
     ActionArgumentStatus,
@@ -576,6 +577,7 @@ __all__: list[str] = [
     "NotificacionEstadoServicio",
     "ObjetoTributario",
     "ObservedHeaderFact",
+    "OfficialBoxStatus",
     "OfficialTipoRentaCode",
     "OperatorProgress",
     "OptionalExtra",
