@@ -57,6 +57,7 @@ import pytest
 from cadrumo.core.external_constants import OutputLanguage
 from dev.deploy.docs_static_site import (
     CANONICAL_DOCS_BASE_URL,
+    DEFAULT_SOURCE_LANGUAGE,
     DeploymentTarget,
     _language_build_command,
     _language_build_environment,
@@ -185,7 +186,11 @@ def test_deploy_environment_resolves_the_record_injector() -> None:
     """
     assert resolve_record_injector(_REPO_ROOT, _site_build_environment(base_environment={})) is not None
     for language in _localized_languages():
-        assert resolve_record_injector(_REPO_ROOT, _language_build_environment(language)) is not None, (
+        # The cli-sequence goldens gate is irrelevant to the injector decision
+        # and its verdict cannot vary by root, so these probes take the
+        # documented opt-out rather than paying for it once per language.
+        environment = _language_build_environment(language, check_sequences=False)
+        assert resolve_record_injector(_REPO_ROOT, environment) is not None, (
             f"localized root {language!r} would deploy without injected search records"
         )
 
@@ -289,10 +294,19 @@ def test_the_gate_reads_the_artefact_not_the_configuration(tmp_path: Path) -> No
 # Per-root parity: every published root's OWN loaded index carries the corpus
 # ---------------------------------------------------------------------------
 
-#: Every root the deployment publishes: the English default root at ``/`` plus
-#: each localized subroot. Derived from the deploy module's own language set so
-#: a new translation target joins this gate without a second hand-listed set.
-_ROOT_LANGUAGES: tuple[str, ...] = (OutputLanguage.EN.value, *_localized_languages())
+#: Every LANGUAGE the deployment publishes a root in: the English default root
+#: at ``/`` plus each localized subroot. Derived from the deploy module's own
+#: language set so a new translation target joins this gate without a second
+#: hand-listed set.
+#:
+#: Deduplicated, because that set already carries the source language: English
+#: is published twice, at ``/`` and at ``/en/``, and those two roots are
+#: distinct but carry the SAME language. These gates assert a per-language
+#: property, so asserting it twice only collides the shared per-language
+#: fixture; the two roots' distinct build commands are pinned separately below.
+_ROOT_LANGUAGES: tuple[str, ...] = tuple(
+    dict.fromkeys((OutputLanguage.EN.value, *_localized_languages())),
+)
 
 #: Pages per root fixture. Small on purpose (see the module docstring's cost
 #: note); the property under test is which index the records land in relative to
@@ -315,7 +329,13 @@ def _root_build_environment(language: str) -> Mapping[str, str]:
     """
     if language == OutputLanguage.EN.value:
         return _site_build_environment(base_environment={})
-    return {**_language_build_environment(language), "CADRUMO_DOCS_LANGUAGE": language}
+    # These probes assert search recall, not the cli-sequence goldens, whose
+    # verdict cannot vary by root; they take the documented opt-out so a recall
+    # probe does not re-run that gate once per language.
+    return {
+        **_language_build_environment(language, check_sequences=False),
+        "CADRUMO_DOCS_LANGUAGE": language,
+    }
 
 
 def _root_page_corpus(root: Path, language: str) -> Path:
@@ -598,7 +618,16 @@ def test_every_root_recalls_a_casilla_by_its_declared_localized_terms(
     )
 
 
-@pytest.mark.parametrize("language", _localized_languages())
+#: The translated roots only. The deploy language set carries the source
+#: language too, but English is the msgid source with no catalogue to select,
+#: so it is deliberately built WITHOUT ``--language`` -- asserting the flag for
+#: it would gate the opposite of the decided behaviour.
+_TRANSLATED_LANGUAGES: tuple[str, ...] = tuple(
+    language for language in _localized_languages() if language != DEFAULT_SOURCE_LANGUAGE
+)
+
+
+@pytest.mark.parametrize("language", _TRANSLATED_LANGUAGES)
 def test_localized_root_command_and_env_agree_on_the_language(language: str) -> None:
     """Pin the seam this gate composes: ``--language <lang>`` becomes the build language.
 
@@ -614,4 +643,20 @@ def test_localized_root_command_and_env_agree_on_the_language(language: str) -> 
     assert command[command.index("--language") + 1] == language
 
     assert docs_build_language({"CADRUMO_DOCS_LANGUAGE": language}) == OutputLanguage(language)
+    assert docs_build_language({}) == OutputLanguage.EN
+
+
+def test_the_source_language_root_is_built_without_a_language_flag() -> None:
+    """English is the msgid source, so its root carries no ``--language``.
+
+    The complement of the gate above, asserted rather than left as the silence
+    of an excluded parameter. Passing the flag for English would select a
+    catalogue that does not exist AND force the user scope, dropping the API
+    tree that only this root carries -- so the omission is load-bearing, not an
+    oversight, and a future edit that "fixes" it by adding the flag fails here.
+    """
+    command = _language_build_command(DEFAULT_SOURCE_LANGUAGE, Path("out"))
+
+    assert "--language" not in command, f"the source-language root must not select a catalogue: {command}"
+    assert "--scope" not in command, f"the source-language root must keep the full scope: {command}"
     assert docs_build_language({}) == OutputLanguage.EN
