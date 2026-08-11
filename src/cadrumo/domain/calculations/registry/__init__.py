@@ -458,6 +458,8 @@ from ._handoffs import (
     RelationHandoffRecord,
     audit_registry_relation_handoff_applicability,
     audit_registry_relation_handoffs,
+    relation_consumption_index,
+    relation_is_consumed,
 )
 from ._handoff_paths import (
     HandoffPathClassification,
@@ -1174,6 +1176,8 @@ __all__ = [
     "registry_snapshot_id",
     "registry_snapshot_id_for",
     "relation_aggregation_op",
+    "relation_consumption_index",
+    "relation_is_consumed",
     "relation_source_requirements",
     "relations_by_target_binding",
     "remote_state_policy_from_cross_reference",

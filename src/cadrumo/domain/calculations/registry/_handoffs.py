@@ -22,6 +22,7 @@ from ._errors import RegistryValidationError
 from ._ids import BindingId, LegalRefId, ModeloId, RelationId, RevisionId, SourceRefId
 from ._relation_aggregation import relation_aggregation_op
 from ._relations import RegistryFoldRequirement, relation_source_requirements
+from ._runtime_graph import expression_binding_refs, expression_relation_refs
 from ._schema import (
     DependencyClassificationDefinition,
     ModeloDefinition,
@@ -42,7 +43,33 @@ __all__ = [
     "RelationHandoffRecord",
     "audit_registry_relation_handoff_applicability",
     "audit_registry_relation_handoffs",
+    "relation_consumption_index",
+    "relation_is_consumed",
 ]
+
+_RelationConsumptionIndex = tuple[frozenset[BindingId], frozenset[RelationId], frozenset[BindingId]]
+
+
+def relation_consumption_index(revision: ModeloRevision) -> _RelationConsumptionIndex:
+    """Return the binding and formula channels that consume relation values."""
+    casilla_bindings: set[BindingId] = set()
+    for casilla in revision.casillas:
+        if casilla.binding is not None:
+            casilla_bindings.add(casilla.binding)
+        casilla_bindings.update(casilla.alternate_bindings)
+
+    formula_relations: set[RelationId] = set()
+    formula_bindings: set[BindingId] = set()
+    for formula in revision.formulas:
+        formula_relations.update(expression_relation_refs(formula.expression))
+        formula_bindings.update(expression_binding_refs(formula.expression))
+    return frozenset(casilla_bindings), frozenset(formula_relations), frozenset(formula_bindings)
+
+
+def relation_is_consumed(relation: RelationDefinition, index: _RelationConsumptionIndex) -> bool:
+    """Return whether a formula or bound casilla consumes ``relation``."""
+    casilla_bindings, formula_relations, formula_bindings = index
+    return relation.id in formula_relations or relation.target_binding in casilla_bindings | formula_bindings
 
 
 class RelationHandoffRecord(BaseModel):
