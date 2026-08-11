@@ -140,7 +140,6 @@ _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
     UserProfileFact(path="activities.description", value="professional services"),
     UserProfileFact(path="tax_residence.ccaa", value="madrid"),
     UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-    UserProfileFact(path="iva.regime", value="GENERAL"),
     UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
     UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
     UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
@@ -500,7 +499,7 @@ def test_sofia_q2_carry_forward_caps_to_positive_c14_and_verifies(repos: _Repos)
     blocking = [finding for finding in report.findings if finding.kind is ModeloVerificationFindingKind.BLOCKING_RULE]
     assert blocking == []
     assert report.granted_verificado_completo is True, [
-        (finding.kind, finding.casilla_id, finding.message) for finding in report.findings
+        (finding.kind, finding.casilla_id, finding.message_locale_key) for finding in report.findings
     ]
 
 
