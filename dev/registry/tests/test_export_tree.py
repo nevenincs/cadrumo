@@ -10,6 +10,7 @@ from shutil import copy2
 
 import pytest
 
+from cadrumo.core import FilingProducerKey
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import (
     ExportEncoding,
@@ -166,7 +167,7 @@ def _semantic_map() -> SemanticMap:
                     2,
                     "generated.period",
                     "header",
-                    header_key="period_code",
+                    producer_key=FilingProducerKey.PRESENTER_TAX_ID,
                 ),
                 _entry("Registro tipo 2", "registro-tipo-2", 20, 1, "generated.type", "literal", literal="2"),
                 _entry(
@@ -176,7 +177,7 @@ def _semantic_map() -> SemanticMap:
                     2,
                     "generated.amount",
                     "header",
-                    header_key="amount",
+                    producer_key=FilingProducerKey.FILING_RESULT_DISPOSITION,
                 ),
             ),
         },

@@ -16,8 +16,8 @@ formulas = [
     "modelo-123-total-liquidacion",
     "modelo-123-resultado-ingresar",
 ]
-export_layouts = ["modelo-123-fichero-boe"]
-extraction_profiles = ["modelo-123-export-record", "modelo-123-declaracion-pdf"]
+support_removal_decisions = ["modelo-123-fichero-boe-support-removal"]
+extraction_profiles = ["modelo-123-declaracion-pdf"]
 live_cross_references = ["modelo-123-static-official", "modelo-123-filed-declarations-read"]
 workbook_parity_refs = ["modelo-123-dr-xls-2024"]
 verification_expectations = ["modelo-123-calculation-verification"]

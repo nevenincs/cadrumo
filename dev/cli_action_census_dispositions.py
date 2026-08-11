@@ -11,15 +11,18 @@ primitive that makes that population auditable.
 from __future__ import annotations
 
 import argparse
+import ast
 import json
+import re
+import subprocess
 import tomllib
 from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import StrEnum
 from pathlib import Path
 from typing import Final, cast
 
-from dev.cli_action_census import CandidateRecord, census
+from dev.cli_action_census import REPO_ROOT, SOURCE_ROOT, CandidateRecord, census
 
 __all__ = [
     "DEFAULT_DISPOSITIONS_PATH",
@@ -27,16 +30,20 @@ __all__ = [
     "CandidateKey",
     "DispositionRole",
     "DispositionValidationError",
+    "ExceptionOverrideObservation",
+    "ExceptionOverrideRole",
     "ExclusionGrounding",
     "checked_in_dispositions",
+    "current_exception_override_observations",
     "load_dispositions",
     "render_dispositions",
     "validate_dispositions",
+    "validate_exception_override_owners",
 ]
 
 
 _UTF_8: Final[str] = "utf-8"
-_SCHEMA_VERSION: Final[int] = 1
+_SCHEMA_VERSION: Final[int] = 2
 _TOP_LEVEL_FIELDS: Final[frozenset[str]] = frozenset({"meta", "disposition"})
 _META_FIELDS: Final[frozenset[str]] = frozenset({"schema_version"})
 _ROW_FIELDS: Final[frozenset[str]] = frozenset(
@@ -50,8 +57,12 @@ _ROW_FIELDS: Final[frozenset[str]] = frozenset(
         "reason",
         "symbol",
         "enclosing_function",
+        "migration_step",
+        "exception_observations",
     },
 )
+_STEP_ID: Final[re.Pattern[str]] = re.compile(r"^S[0-9]+$")
+_PLAN_PATH: Final[Path] = REPO_ROOT / ".vault/plan/2026-08-09-cli-action-envelope-hardening-plan.md"
 
 DEFAULT_DISPOSITIONS_PATH: Final[Path] = Path(__file__).with_suffix(".toml")
 """The checked-in ledger path to be populated after the model is established."""
@@ -67,6 +78,14 @@ class DispositionRole(StrEnum):
     VALIDATOR = "validator"
     TEST = "test"
     EXCLUDED = "excluded"
+
+
+class ExceptionOverrideRole(StrEnum):
+    """Data-flow role of one live exception action override."""
+
+    SELECTOR = "selector"
+    FORWARDER = "forwarder"
+    MUTATOR = "mutator"
 
 
 @dataclass(frozen=True, slots=True)
@@ -104,6 +123,36 @@ class ExclusionGrounding:
 
 
 @dataclass(frozen=True, slots=True)
+class ExceptionOverrideObservation:
+    """One physical, current-tree write to the retired exception action field.
+
+    ``key`` intentionally remains the S01 location-independent identity.  The
+    fingerprint adds an occurrence ordinal, so a copied same-expression write
+    in one function cannot hide behind that stable key.
+    """
+
+    key: CandidateKey
+    role: ExceptionOverrideRole
+    form: str
+    action_field: str
+    expression: str
+    ordinal: int
+    line: int
+    column: int
+    mro_proven: bool = True
+
+    @property
+    def locator(self) -> str:
+        """Return the current source locator for diagnostics only."""
+        return f"{self.line}:{self.column}"
+
+    @property
+    def fingerprint(self) -> str:
+        """Return a stable physical-observation identity for the ledger."""
+        return "|".join((self.role.value, self.form, self.action_field, self.expression, str(self.ordinal)))
+
+
+@dataclass(frozen=True, slots=True)
 class CandidateDisposition:
     """One adjudication of one stable candidate identity."""
 
@@ -111,6 +160,8 @@ class CandidateDisposition:
     role: DispositionRole
     reason: str
     exclusion: ExclusionGrounding | None = None
+    migration_step: str | None = None
+    exception_observations: tuple[str, ...] = ()
 
 
 class DispositionValidationError(ValueError):
@@ -160,6 +211,37 @@ def _parse_role(table: dict[str, object], *, context: str, errors: list[str]) ->
         return None
 
 
+def _parse_exception_owner(
+    table: dict[str, object],
+    *,
+    context: str,
+    errors: list[str],
+) -> tuple[str | None, tuple[str, ...]]:
+    """Read optional current-tree ownership evidence without accepting half rows."""
+    raw_step = table.get("migration_step")
+    raw_observations = table.get("exception_observations")
+    if raw_step is None and raw_observations is None:
+        return None, ()
+    if not isinstance(raw_step, str) or not _STEP_ID.fullmatch(raw_step):
+        errors.append(f"{context}: migration_step must be a canonical S## identifier")
+        step = None
+    else:
+        step = raw_step
+    if not isinstance(raw_observations, list) or not raw_observations:
+        errors.append(f"{context}: exception_observations must be a non-empty string array")
+        observations: tuple[str, ...] = ()
+    else:
+        observation_values = cast(list[object], raw_observations)
+        if any(not isinstance(item, str) or not item for item in observation_values):
+            errors.append(f"{context}: exception_observations must contain non-empty strings")
+            observations = ()
+        else:
+            observations = tuple(cast(str, item) for item in observation_values)
+            if len(set(observations)) != len(observations):
+                errors.append(f"{context}: exception_observations must not contain duplicates")
+    return step, observations
+
+
 def _parse_disposition_row(
     row: dict[str, object],
     *,
@@ -183,6 +265,7 @@ def _parse_disposition_row(
     )
     role = _parse_role(row, context=context, errors=errors)
     reason = _require_reason(row, context=context, errors=errors)
+    migration_step, exception_observations = _parse_exception_owner(row, context=context, errors=errors)
 
     if (
         path is None
@@ -207,7 +290,13 @@ def _parse_disposition_row(
         if prohibited:
             errors.append(f"{context}: non-excluded disposition carries exclusion field(s): {', '.join(prohibited)}")
             return None
-        return CandidateDisposition(key=key, role=role, reason=reason)
+        return CandidateDisposition(
+            key=key,
+            role=role,
+            reason=reason,
+            migration_step=migration_step,
+            exception_observations=exception_observations,
+        )
 
     symbol = _require_identity_text(row, "symbol", context=context, errors=errors)
     enclosing_function = _require_identity_text(row, "enclosing_function", context=context, errors=errors)
@@ -218,6 +307,8 @@ def _parse_disposition_row(
         role=role,
         reason=reason,
         exclusion=ExclusionGrounding(symbol=symbol, enclosing_function=enclosing_function),
+        migration_step=migration_step,
+        exception_observations=exception_observations,
     )
 
 
@@ -273,6 +364,371 @@ def load_dispositions(path: Path) -> tuple[CandidateDisposition, ...]:
     return tuple(parsed)
 
 
+def _terminal_name(node: ast.expr) -> str | None:
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        return node.attr
+    return None
+
+
+def _source_expression(node: ast.expr) -> str:
+    """Preserve the syntactic value that selected or forwarded the action."""
+    return ast.unparse(node)
+
+
+def _is_error_name(name: str | None) -> bool:
+    return name is not None and (name.endswith("Error") or name.endswith("Exception"))
+
+
+def _class_bases(tree: ast.Module) -> dict[str, tuple[str, ...]]:
+    """Return local inheritance names for conservative static error/MRO proof."""
+    result: dict[str, tuple[str, ...]] = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ClassDef):
+            result[node.name] = tuple(name for base in node.bases if (name := _terminal_name(base)) is not None)
+    return result
+
+
+def _derives_error(name: str, bases: dict[str, tuple[str, ...]], seen: frozenset[str] = frozenset()) -> bool:
+    if name in seen:
+        return False
+    direct = bases.get(name, ())
+    return _is_error_name(name) or any(
+        _is_error_name(base) or _derives_error(base, bases, seen | {name}) for base in direct
+    )
+
+
+def _mro_dispatch_aliases(node: ast.FunctionDef | ast.AsyncFunctionDef) -> frozenset[str]:
+    """Find local ``cast(CadrumoError, super())`` aliases without executing code."""
+    aliases: set[str] = set()
+    for statement in node.body:
+        if not isinstance(statement, (ast.Assign, ast.AnnAssign)):
+            continue
+        if isinstance(statement, ast.Assign):
+            if len(statement.targets) != 1:
+                continue
+            target: ast.expr = statement.targets[0]
+        else:
+            target = statement.target
+        value: ast.expr | None = statement.value
+        if not isinstance(target, ast.Name) or not isinstance(value, ast.Call) or _terminal_name(value.func) != "cast":
+            continue
+        if len(value.args) != 2 or _terminal_name(value.args[0]) != "CadrumoError":
+            continue
+        if isinstance(value.args[1], ast.Call) and _terminal_name(value.args[1].func) == "super":
+            aliases.add(target.id)
+    return frozenset(aliases)
+
+
+class _ExceptionOverrideVisitor(ast.NodeVisitor):
+    """Extract the four static override shapes from one current source file."""
+
+    def __init__(self, path: str, bases: dict[str, tuple[str, ...]]) -> None:
+        self.path = path
+        self.bases = bases
+        self.symbols: list[str] = []
+        self.classes: list[str] = []
+        self.parameters: list[frozenset[str]] = []
+        self.mro_aliases: list[frozenset[str]] = []
+        self.exception_bindings: list[frozenset[str]] = []
+        self.records: list[ExceptionOverrideObservation] = []
+
+    @property
+    def symbol(self) -> str:
+        return ".".join(self.symbols) if self.symbols else "<module>"
+
+    def _add(
+        self,
+        node: ast.Call | ast.Assign,
+        value: ast.expr,
+        *,
+        role: ExceptionOverrideRole,
+        form: str,
+        candidate_role: str,
+        mro_proven: bool = True,
+    ) -> None:
+        identity = (
+            value.value
+            if isinstance(value, ast.Constant) and isinstance(value.value, str)
+            else _source_expression(value)
+        )
+        key = CandidateKey(self.path, self.symbol, candidate_role, "suggestion", identity)
+        self.records.append(
+            ExceptionOverrideObservation(
+                key=key,
+                role=role,
+                form=form,
+                action_field="suggestion",
+                expression=_source_expression(value),
+                ordinal=0,
+                line=node.lineno,
+                column=node.col_offset,
+                mro_proven=mro_proven,
+            ),
+        )
+
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        self.symbols.append(node.name)
+        self.classes.append(node.name)
+        self.generic_visit(node)
+        self.classes.pop()
+        self.symbols.pop()
+
+    def _visit_function(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> None:
+        parameters = frozenset(
+            argument.arg for argument in (*node.args.posonlyargs, *node.args.args, *node.args.kwonlyargs)
+        )
+        self.symbols.append(node.name)
+        self.parameters.append(parameters)
+        self.mro_aliases.append(_mro_dispatch_aliases(node))
+        self.generic_visit(node)
+        self.mro_aliases.pop()
+        self.parameters.pop()
+        self.symbols.pop()
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        self._visit_function(node)
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        self._visit_function(node)
+
+    def visit_ExceptHandler(self, node: ast.ExceptHandler) -> None:
+        names: frozenset[str] = (
+            frozenset((node.name,))
+            if node.name and node.type is not None and _is_error_name(_terminal_name(node.type))
+            else frozenset[str]()
+        )
+        self.exception_bindings.append(names)
+        self.generic_visit(node)
+        self.exception_bindings.pop()
+
+    def _is_forwarder(self, value: ast.expr) -> bool:
+        if isinstance(value, ast.Name):
+            return bool(self.parameters and value.id in self.parameters[-1])
+        return isinstance(value, ast.Attribute) and value.attr == "suggestion"
+
+    def visit_Call(self, node: ast.Call) -> None:
+        suggestion = next((keyword.value for keyword in node.keywords if keyword.arg == "suggestion"), None)
+        if suggestion is not None:
+            function = node.func
+            if _is_error_name(_terminal_name(function)):
+                self._add(
+                    node,
+                    suggestion,
+                    role=ExceptionOverrideRole.FORWARDER
+                    if self._is_forwarder(suggestion)
+                    else ExceptionOverrideRole.SELECTOR,
+                    form="constructor_keyword",
+                    candidate_role="producer",
+                )
+            elif (
+                isinstance(function, ast.Attribute)
+                and function.attr == "__init__"
+                and isinstance(function.value, ast.Call)
+                and _terminal_name(function.value.func) == "super"
+                and self.classes
+                and _derives_error(self.classes[-1], self.bases)
+            ):
+                self._add(
+                    node,
+                    suggestion,
+                    role=ExceptionOverrideRole.FORWARDER
+                    if self._is_forwarder(suggestion)
+                    else ExceptionOverrideRole.SELECTOR,
+                    form="super_init",
+                    candidate_role="producer",
+                )
+            elif (
+                isinstance(function, ast.Attribute)
+                and function.attr == "__init__"
+                and isinstance(function.value, ast.Name)
+                and self.mro_aliases
+                and function.value.id in self.mro_aliases[-1]
+            ):
+                self._add(
+                    node,
+                    suggestion,
+                    role=ExceptionOverrideRole.FORWARDER,
+                    form="cooperative_mro",
+                    candidate_role="producer",
+                    mro_proven=bool(self.classes and self._mro_proven(self.classes[-1])),
+                )
+        self.generic_visit(node)
+
+    def _mro_proven(self, mixin: str) -> bool:
+        return any(
+            mixin in direct_bases
+            and any(_derives_error(base, self.bases) for base in direct_bases[direct_bases.index(mixin) + 1 :])
+            for direct_bases in self.bases.values()
+        )
+
+    def visit_Assign(self, node: ast.Assign) -> None:
+        bound: frozenset[str] = frozenset(name for names in self.exception_bindings for name in names)
+        for target in node.targets:
+            if (
+                isinstance(target, ast.Attribute)
+                and target.attr == "suggestion"
+                and isinstance(target.value, ast.Name)
+                and target.value.id in bound
+            ):
+                self._add(
+                    node,
+                    node.value,
+                    role=ExceptionOverrideRole.MUTATOR,
+                    form="exception_attribute_mutation",
+                    candidate_role="assignment",
+                )
+        self.generic_visit(node)
+
+
+def current_exception_override_observations(
+    *,
+    root: Path = REPO_ROOT,
+) -> tuple[ExceptionOverrideObservation, ...]:
+    """Return live exception-action observations from the current worktree.
+
+    This intentionally reads the filesystem rather than a Git revision: S29 is
+    a drift gate over work in progress, while S01's revision census remains the
+    formatting-stable campaign baseline.
+    """
+    records: list[ExceptionOverrideObservation] = []
+    for source_path in sorted((root / SOURCE_ROOT).rglob("*.py")):
+        if "/tests/" in source_path.as_posix() or source_path.name.startswith("test_"):
+            continue
+        path = source_path.relative_to(root).as_posix()
+        try:
+            tree = ast.parse(source_path.read_text(encoding=_UTF_8), filename=path)
+        except OSError as error:
+            raise DispositionValidationError(
+                (f"current exception-override census cannot read {path}: {type(error).__name__}",),
+            ) from error
+        except UnicodeDecodeError as error:
+            raise DispositionValidationError(
+                (f"current exception-override census cannot decode {path}: {type(error).__name__}",),
+            ) from error
+        except SyntaxError as error:
+            raise DispositionValidationError(
+                (f"current exception-override census cannot parse {path}: {type(error).__name__}",),
+            ) from error
+        visitor = _ExceptionOverrideVisitor(path, _class_bases(tree))
+        visitor.visit(tree)
+        records.extend(visitor.records)
+    grouped: dict[CandidateKey, list[ExceptionOverrideObservation]] = {}
+    for record in records:
+        grouped.setdefault(record.key, []).append(record)
+    numbered: list[ExceptionOverrideObservation] = []
+    for group in grouped.values():
+        for ordinal, record in enumerate(sorted(group, key=lambda item: (item.line, item.column)), start=1):
+            numbered.append(replace(record, ordinal=ordinal))
+    return tuple(sorted(numbered, key=lambda item: (item.key.render(), item.line, item.column)))
+
+
+@dataclass(frozen=True, slots=True)
+class _PlanStep:
+    step_id: str
+    checked: bool
+    scope: tuple[str, ...]
+
+
+def _current_plan_steps(plan_path: Path = _PLAN_PATH) -> tuple[_PlanStep, ...]:
+    """Read accepted Step ownership from the plan CLI, never plan Markdown."""
+    completed = subprocess.run(  # noqa: S603 - fixed local command
+        ["uv", "run", "--no-sync", "vaultspec-core", "vault", "plan", "query", str(plan_path), "--json"],  # noqa: S607
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+        encoding=_UTF_8,
+    )
+    if completed.returncode != 0:
+        raise DispositionValidationError((f"cannot query accepted plan ownership: {completed.stderr.strip()}",))
+    try:
+        payload = cast(dict[str, object], json.loads(completed.stdout))
+        data = cast(dict[str, object], payload["data"])
+        rows = cast(list[object], data["steps"])
+    except (KeyError, TypeError, json.JSONDecodeError) as error:
+        raise DispositionValidationError((f"invalid canonical plan query response: {error}",)) from error
+    parsed: list[_PlanStep] = []
+    for row in rows:
+        if not isinstance(row, dict):
+            raise DispositionValidationError(("invalid canonical plan Step row",))
+        plan_row = cast(dict[str, object], row)
+        display_path = plan_row.get("display_path")
+        checked = plan_row.get("checked")
+        scope = plan_row.get("scope")
+        if not isinstance(display_path, str) or not isinstance(checked, bool) or not isinstance(scope, str):
+            raise DispositionValidationError(("invalid canonical plan Step fields",))
+        step_id = display_path.rsplit(".", maxsplit=1)[-1]
+        if not _STEP_ID.fullmatch(step_id):
+            raise DispositionValidationError((f"invalid canonical plan Step id: {display_path}",))
+        parsed.append(_PlanStep(step_id, checked, tuple(part.strip() for part in scope.split(";") if part.strip())))
+    return tuple(parsed)
+
+
+def _scope_covers(path: str, scope: tuple[str, ...]) -> bool:
+    return any(path == item or path.startswith(f"{item.rstrip('/')}/") for item in scope)
+
+
+def validate_exception_override_owners(
+    dispositions: Iterable[CandidateDisposition],
+    *,
+    root: Path = REPO_ROOT,
+    plan_path: Path = _PLAN_PATH,
+) -> tuple[ExceptionOverrideObservation, ...]:
+    """Fail on missing, stale, duplicate, closed, or out-of-scope override ownership."""
+    observations = current_exception_override_observations(root=root)
+    plan_rows = _current_plan_steps(plan_path)
+    plan_by_id: dict[str, list[_PlanStep]] = {}
+    for step in plan_rows:
+        plan_by_id.setdefault(step.step_id, []).append(step)
+    rows_by_key: dict[CandidateKey, list[CandidateDisposition]] = {}
+    for row in dispositions:
+        rows_by_key.setdefault(row.key, []).append(row)
+    observed_by_key: dict[CandidateKey, list[ExceptionOverrideObservation]] = {}
+    for observation in observations:
+        observed_by_key.setdefault(observation.key, []).append(observation)
+
+    errors: list[str] = []
+    for key, records in sorted(observed_by_key.items(), key=lambda item: item[0].render()):
+        owners = rows_by_key.get(key, [])
+        if len(owners) != 1:
+            errors.append(f"exception override has {len(owners)} adjudicated owners: {key.render()}")
+            continue
+        owner = owners[0]
+        expected = tuple(sorted(record.fingerprint for record in records))
+        if owner.role not in {DispositionRole.PRODUCER, DispositionRole.TRANSFORMER}:
+            errors.append(
+                f"exception override requires producer or transformer disposition role: {key.render()}",
+            )
+        if not owner.migration_step:
+            errors.append(f"exception override lacks migration_step: {key.render()}")
+        elif len(plan_by_id.get(owner.migration_step, [])) != 1:
+            errors.append(
+                f"exception override references unknown or ambiguous Step {owner.migration_step!r}: {key.render()}"
+            )
+        else:
+            step = plan_by_id[owner.migration_step][0]
+            if step.checked:
+                errors.append(
+                    f"exception override references closed migration Step {owner.migration_step!r}: {key.render()}"
+                )
+            if not _scope_covers(key.path, step.scope):
+                errors.append(
+                    f"migration Step {owner.migration_step!r} does not scope exception override: {key.render()}"
+                )
+        if tuple(sorted(owner.exception_observations)) != expected:
+            errors.append(f"exception override observation set drifted: {key.render()}")
+        if any(not record.mro_proven for record in records):
+            errors.append(f"exception override cooperative MRO is not proven: {key.render()}")
+    for key, owners in sorted(rows_by_key.items(), key=lambda item: item[0].render()):
+        if any(owner.migration_step or owner.exception_observations for owner in owners) and key not in observed_by_key:
+            errors.append(f"stale exception override owner has no current observation: {key.render()}")
+    if errors:
+        raise DispositionValidationError(errors)
+    return observations
+
+
 def _key_errors(key: CandidateKey, *, context: str) -> tuple[str, ...]:
     values = (
         ("path", cast(object, key.path)),
@@ -295,6 +751,12 @@ def _disposition_shape_errors(disposition: CandidateDisposition, *, context: str
     raw_reason = cast(object, disposition.reason)
     if not isinstance(raw_reason, str) or not raw_reason.strip():
         errors.append(f"{context}: missing or empty 'reason'")
+    if (disposition.migration_step is None) != (not disposition.exception_observations):
+        errors.append(f"{context}: migration_step and exception_observations must occur together")
+    if disposition.migration_step is not None and not _STEP_ID.fullmatch(disposition.migration_step):
+        errors.append(f"{context}: migration_step must be a canonical S## identifier")
+    if len(set(disposition.exception_observations)) != len(disposition.exception_observations):
+        errors.append(f"{context}: exception_observations must not contain duplicates")
 
     if raw_role is DispositionRole.EXCLUDED:
         exclusion = disposition.exclusion
@@ -397,6 +859,15 @@ def render_dispositions(dispositions: Iterable[CandidateDisposition]) -> str:
                 (
                     f"symbol = {_toml_string(disposition.exclusion.symbol)}",
                     f"enclosing_function = {_toml_string(disposition.exclusion.enclosing_function)}",
+                ),
+            )
+        if disposition.migration_step is not None:
+            lines.extend(
+                (
+                    f"migration_step = {_toml_string(disposition.migration_step)}",
+                    "exception_observations = ["
+                    + ", ".join(_toml_string(item) for item in disposition.exception_observations)
+                    + "]",
                 ),
             )
     return "\n".join(lines) + "\n"

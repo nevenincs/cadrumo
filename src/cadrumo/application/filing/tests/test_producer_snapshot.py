@@ -13,15 +13,25 @@ from cadrumo.application.filing import (
     ChargeAccountSelection,
     FilingElectionFacts,
     FilingProducerSnapshotError,
+    GeneralFilingProfileFacts,
     M202UnsupportedProducerId,
     Modelo111ProfileFacts,
     Modelo202ActivityFacts,
     Modelo202ProducerProfile,
     PresenterIdentity,
     RefundAccountSelection,
+    TaxpayerIdentityFacts,
     build_filing_producer_snapshot,
 )
-from cadrumo.core import Modelo, PaymentElection, PriorDomiciliationElection, RefundElection, ResultDisposition
+from cadrumo.application.filing._export import _filing_producer_values
+from cadrumo.core import (
+    FilingProducerKey,
+    Modelo,
+    PaymentElection,
+    PriorDomiciliationElection,
+    RefundElection,
+    ResultDisposition,
+)
 from cadrumo.domain.deadlines import ChargeAccount, IVARegime, ModeloIVAProfile, RefundAccount, TaxpayerProfile
 from cadrumo.domain.modelos import CalculationRevisionAmendmentKind
 
@@ -35,6 +45,15 @@ _REFUND_IBAN = "GB82WEST12345698765432"
 
 def _presenter() -> PresenterIdentity:
     return PresenterIdentity(tax_id=_PRESENTER_TAX_ID, full_name="Gestoría Ejemplo")
+
+
+def _taxpayer_identity() -> TaxpayerIdentityFacts:
+    return TaxpayerIdentityFacts(
+        legal_name=None,
+        given_name="María",
+        surnames="García López",
+        full_name="María García López",
+    )
 
 
 def _elections(disposition: ResultDisposition) -> FilingElectionFacts:
@@ -65,6 +84,7 @@ def test_presenter_is_required_and_never_derived_from_taxpayer() -> None:
         build_filing_producer_snapshot(  # type: ignore[call-arg]
             modelo=Modelo.M111,
             taxpayer_tax_id=_TAXPAYER_TAX_ID,
+            taxpayer_identity=_taxpayer_identity(),
             model_profile=Modelo111ProfileFacts(colegio_concertado=False),
             elections=_elections(ResultDisposition.NEGATIVA),
             amendment_evidence=None,
@@ -76,6 +96,7 @@ def test_presenter_is_required_and_never_derived_from_taxpayer() -> None:
     snapshot = build_filing_producer_snapshot(
         modelo=Modelo.M111,
         taxpayer_tax_id=_TAXPAYER_TAX_ID,
+        taxpayer_identity=_taxpayer_identity(),
         presenter=presenter,
         model_profile=Modelo111ProfileFacts(colegio_concertado=False),
         elections=_elections(ResultDisposition.NEGATIVA),
@@ -89,11 +110,40 @@ def test_presenter_is_required_and_never_derived_from_taxpayer() -> None:
         snapshot.presenter.full_name = "Mutated"  # type: ignore[misc]
 
 
+def test_taxpayer_name_facts_are_required_and_not_derived_from_presenter() -> None:
+    with pytest.raises(TypeError, match="taxpayer_identity"):
+        build_filing_producer_snapshot(  # type: ignore[call-arg]
+            modelo=Modelo.M111,
+            taxpayer_tax_id=_TAXPAYER_TAX_ID,
+            presenter=_presenter(),
+            model_profile=Modelo111ProfileFacts(colegio_concertado=False),
+            elections=_elections(ResultDisposition.NEGATIVA),
+            amendment_evidence=None,
+            refund_account=None,
+            charge_account=None,
+        )
+
+    snapshot = build_filing_producer_snapshot(
+        modelo=Modelo.M111,
+        taxpayer_tax_id=_TAXPAYER_TAX_ID,
+        taxpayer_identity=_taxpayer_identity(),
+        presenter=_presenter(),
+        model_profile=Modelo111ProfileFacts(colegio_concertado=False),
+        elections=_elections(ResultDisposition.NEGATIVA),
+        amendment_evidence=None,
+        refund_account=None,
+        charge_account=None,
+    )
+    assert snapshot.taxpayer_identity.full_name == "María García López"
+    assert snapshot.taxpayer_identity.full_name != snapshot.presenter.full_name
+
+
 def test_modelo_111_unknown_profile_fact_refuses_snapshot_but_false_is_valid() -> None:
     with pytest.raises(FilingProducerSnapshotError, match="colegio_concertado"):
         build_filing_producer_snapshot(
             modelo=Modelo.M111,
             taxpayer_tax_id=_TAXPAYER_TAX_ID,
+            taxpayer_identity=_taxpayer_identity(),
             presenter=_presenter(),
             model_profile=Modelo111ProfileFacts(colegio_concertado=None),
             elections=_elections(ResultDisposition.NEGATIVA),
@@ -146,6 +196,7 @@ def test_modelo_202_uses_canonical_taxpayer_profile_without_scalarising_repeatab
         build_filing_producer_snapshot(
             modelo=Modelo.M202,
             taxpayer_tax_id=_TAXPAYER_TAX_ID,
+            taxpayer_identity=_taxpayer_identity(),
             presenter=_presenter(),
             model_profile=facts,
             elections=_elections(ResultDisposition.INGRESO),
@@ -166,6 +217,7 @@ def test_modelo_303_uses_the_canonical_iva_profile_type() -> None:
     snapshot = build_filing_producer_snapshot(
         modelo=Modelo.M303,
         taxpayer_tax_id=_TAXPAYER_TAX_ID,
+        taxpayer_identity=_taxpayer_identity(),
         presenter=_presenter(),
         model_profile=_m303_profile(),
         elections=_elections(ResultDisposition.NEGATIVA),
@@ -176,6 +228,21 @@ def test_modelo_303_uses_the_canonical_iva_profile_type() -> None:
     assert type(snapshot.model_profile) is ModeloIVAProfile
 
 
+def test_modelo_without_specific_producers_requires_explicit_general_profile() -> None:
+    snapshot = build_filing_producer_snapshot(
+        modelo=Modelo.M131,
+        taxpayer_tax_id=_TAXPAYER_TAX_ID,
+        taxpayer_identity=_taxpayer_identity(),
+        presenter=_presenter(),
+        model_profile=GeneralFilingProfileFacts(),
+        elections=_elections(ResultDisposition.INGRESO),
+        amendment_evidence=None,
+        refund_account=None,
+        charge_account=None,
+    )
+    assert type(snapshot.model_profile) is GeneralFilingProfileFacts
+
+
 def test_disposition_selects_only_the_secure_account_with_the_matching_role() -> None:
     refund_account = RefundAccount(iban=_REFUND_IBAN)
     charge_account = ChargeAccount(iban=_CHARGE_IBAN)
@@ -183,6 +250,7 @@ def test_disposition_selects_only_the_secure_account_with_the_matching_role() ->
     refund_snapshot = build_filing_producer_snapshot(
         modelo=Modelo.M303,
         taxpayer_tax_id=_TAXPAYER_TAX_ID,
+        taxpayer_identity=_taxpayer_identity(),
         presenter=_presenter(),
         model_profile=source_profile,
         elections=_elections(ResultDisposition.DEVOLUCION),
@@ -196,10 +264,14 @@ def test_disposition_selects_only_the_secure_account_with_the_matching_role() ->
     assert refund_snapshot.model_profile.charge_account is None
     assert _REFUND_IBAN in refund_snapshot.model_dump_json()
     assert _CHARGE_IBAN not in refund_snapshot.model_dump_json()
+    refund_values = _filing_producer_values(refund_snapshot)
+    assert refund_values[FilingProducerKey.SELECTED_ACCOUNT_IBAN] == _REFUND_IBAN
+    assert refund_values[FilingProducerKey.SELECTED_ACCOUNT_SWIFT_BIC] == ""
 
     charge_snapshot = build_filing_producer_snapshot(
         modelo=Modelo.M303,
         taxpayer_tax_id=_TAXPAYER_TAX_ID,
+        taxpayer_identity=_taxpayer_identity(),
         presenter=_presenter(),
         model_profile=source_profile,
         elections=_elections(ResultDisposition.DOMICILIACION),
@@ -210,6 +282,9 @@ def test_disposition_selects_only_the_secure_account_with_the_matching_role() ->
     assert isinstance(charge_snapshot.selected_account, ChargeAccountSelection)
     assert _CHARGE_IBAN in charge_snapshot.model_dump_json()
     assert _REFUND_IBAN not in charge_snapshot.model_dump_json()
+    charge_values = _filing_producer_values(charge_snapshot)
+    assert charge_values[FilingProducerKey.SELECTED_ACCOUNT_IBAN] == _CHARGE_IBAN
+    assert charge_values[FilingProducerKey.SELECTED_ACCOUNT_SWIFT_BIC] is None
 
 
 def test_missing_required_account_refuses_and_unneeded_accounts_are_not_retained() -> None:
@@ -217,6 +292,7 @@ def test_missing_required_account_refuses_and_unneeded_accounts_are_not_retained
         build_filing_producer_snapshot(
             modelo=Modelo.M303,
             taxpayer_tax_id=_TAXPAYER_TAX_ID,
+            taxpayer_identity=_taxpayer_identity(),
             presenter=_presenter(),
             model_profile=_m303_profile(),
             elections=_elections(ResultDisposition.DOMICILIACION),
@@ -228,6 +304,7 @@ def test_missing_required_account_refuses_and_unneeded_accounts_are_not_retained
         build_filing_producer_snapshot(
             modelo=Modelo.M303,
             taxpayer_tax_id=_TAXPAYER_TAX_ID,
+            taxpayer_identity=_taxpayer_identity(),
             presenter=_presenter(),
             model_profile=_m303_profile(),
             elections=_elections(ResultDisposition.DEVOLUCION),
@@ -239,6 +316,7 @@ def test_missing_required_account_refuses_and_unneeded_accounts_are_not_retained
     snapshot = build_filing_producer_snapshot(
         modelo=Modelo.M303,
         taxpayer_tax_id=_TAXPAYER_TAX_ID,
+        taxpayer_identity=_taxpayer_identity(),
         presenter=_presenter(),
         model_profile=_m303_profile(),
         elections=_elections(ResultDisposition.NEGATIVA),
@@ -271,3 +349,19 @@ def test_amendment_flags_are_derived_from_one_typed_kind() -> None:
     assert not evidence.is_sustitutiva
     assert not evidence.is_rectificativa
     assert set(evidence.model_dump()) == {"kind", "motive", "original_aeat_receipt"}
+
+    snapshot = build_filing_producer_snapshot(
+        modelo=Modelo.M111,
+        taxpayer_tax_id=_TAXPAYER_TAX_ID,
+        taxpayer_identity=_taxpayer_identity(),
+        presenter=_presenter(),
+        model_profile=Modelo111ProfileFacts(colegio_concertado=False),
+        elections=_elections(ResultDisposition.NEGATIVA),
+        amendment_evidence=evidence,
+        refund_account=None,
+        charge_account=None,
+    )
+    values = _filing_producer_values(snapshot)
+    assert values[FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA] is True
+    assert values[FilingProducerKey.AMENDMENT_IS_RECTIFICATIVA] is False
+    assert values[FilingProducerKey.AMENDMENT_ORIGINAL_AEAT_RECEIPT] == "1234567890123"

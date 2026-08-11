@@ -60,12 +60,13 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from decimal import Decimal
 
 from ...core import (
     CasillaId,
     ExportLayoutFormat,
+    FilingProducerKey,
     PriorDomiciliationElection,
     ResultDisposition,
     result_disposition_requires_bank_account,
@@ -93,13 +94,13 @@ from .runtime import CasillaRecordMetadata, RegistrySchemaAccessor
 #: there filed a direct-debit election with no account for AEAT to charge.
 _DID_PAGE_RECORD_TYPE = "page_did"
 _M303_CASILLA_111: CasillaId = validated_casilla_id("111", surface="M303 Nota 3 DID predicate")
-_M303_RECTIFICATIVA_HEADER = "autoliq_rectificativa"
+_M303_RECTIFICATIVA_HEADER = FilingProducerKey.AMENDMENT_IS_RECTIFICATIVA
 
 
 def _m303_nota_three_requires_bank_account(
     *,
     draft: ModeloDraft,
-    headers: dict[str, str],
+    headers: Mapping[FilingProducerKey, object],
     prior_domiciliation_election: PriorDomiciliationElection,
 ) -> bool:
     """Return whether M303 Nota 3 independently requires the DID page.
@@ -110,7 +111,7 @@ def _m303_nota_three_requires_bank_account(
     """
     return (
         draft.modelo == "303"
-        and headers.get(_M303_RECTIFICATIVA_HEADER) == "1"
+        and headers.get(_M303_RECTIFICATIVA_HEADER) is True
         and prior_domiciliation_election is PriorDomiciliationElection.KEEP
         and any(value.casilla_id == _M303_CASILLA_111 and value.value is not None for value in draft.values)
     )
@@ -119,11 +120,11 @@ def _m303_nota_three_requires_bank_account(
 def _did_page_required(
     *,
     draft: ModeloDraft,
-    headers: dict[str, str],
+    headers: Mapping[FilingProducerKey, object],
     prior_domiciliation_election: PriorDomiciliationElection,
 ) -> bool:
     """Return whether this filing must include the DID bank-account page."""
-    declaration_type = headers.get("declaration_type", "")
+    declaration_type = headers.get(FilingProducerKey.FILING_RESULT_DISPOSITION, "")
     try:
         disposition = ResultDisposition(declaration_type)
     except ValueError:
@@ -141,7 +142,7 @@ def _did_page_suppressed(
     record: ExportRecordDefinition,
     *,
     draft: ModeloDraft,
-    headers: dict[str, str],
+    headers: Mapping[FilingProducerKey, object],
     prior_domiciliation_election: PriorDomiciliationElection,
 ) -> bool:
     """Return whether a DID (bank-account) page record must be suppressed.
@@ -168,7 +169,7 @@ def boe_representable_casilla_ids(
     layout: ExportLayoutDefinition,
     *,
     draft: ModeloDraft,
-    headers: dict[str, str],
+    headers: Mapping[FilingProducerKey, object],
     prior_domiciliation_election: PriorDomiciliationElection,
     schema_provider: RegistrySchemaAccessor,
 ) -> frozenset[CasillaId]:
@@ -202,7 +203,6 @@ def boe_representable_casilla_ids(
             sources=schema_provider.sources,
         )
         return frozenset(entry.casilla_id for entry in entries if entry.casilla_id is not None)
-    normalized_headers = {key.lower(): value for key, value in headers.items()}
     return fixed_width_record_casilla_ids(
         tuple(
             record
@@ -210,7 +210,7 @@ def boe_representable_casilla_ids(
             if not _did_page_suppressed(
                 record,
                 draft=draft,
-                headers=normalized_headers,
+                headers=headers,
                 prior_domiciliation_election=prior_domiciliation_election,
             )
         ),
@@ -221,7 +221,7 @@ def rendered_casilla_ids(
     layout: ExportLayoutDefinition,
     *,
     draft: ModeloDraft,
-    headers: dict[str, str],
+    headers: Mapping[FilingProducerKey, object],
     prior_domiciliation_election: PriorDomiciliationElection,
     schema_provider: RegistrySchemaAccessor,
 ) -> frozenset[CasillaId]:
@@ -312,7 +312,7 @@ def assert_export_mirrors_manifest(
     layout: ExportLayoutDefinition,
     *,
     draft: ModeloDraft,
-    headers: dict[str, str],
+    headers: Mapping[FilingProducerKey, object],
     prior_domiciliation_election: PriorDomiciliationElection,
     schema_provider: RegistrySchemaAccessor,
     manifest: CalculationCompletenessManifest,
@@ -491,7 +491,7 @@ def _assert_record_order_fidelity(
     modelo: str,
     layout: ExportLayoutDefinition,
     draft: ModeloDraft,
-    headers: dict[str, str],
+    headers: Mapping[FilingProducerKey, object],
     prior_domiciliation_election: PriorDomiciliationElection,
 ) -> None:
     """Panic if the rendered record order drifts from the registry declaration order.
@@ -508,14 +508,13 @@ def _assert_record_order_fidelity(
     :class:`FilingExportError` -- the ``.boe`` record/section sequence must mirror
     the official modelo-revision structure.
     """
-    normalized_headers = {key.lower(): value for key, value in headers.items()}
     declared = tuple(
         record
         for record in layout.records
         if not _did_page_suppressed(
             record,
             draft=draft,
-            headers=normalized_headers,
+            headers=headers,
             prior_domiciliation_election=prior_domiciliation_election,
         )
     )
