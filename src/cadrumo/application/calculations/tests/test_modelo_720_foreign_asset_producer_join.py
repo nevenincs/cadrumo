@@ -121,6 +121,30 @@ def _secure_backend(tmp_path: Path) -> Iterator[None]:
                     UserProfileFact(path="identity.tax_id", value="12345678Z"),
                     UserProfileFact(path="activities.description", value="Foreign asset holder"),
                     UserProfileFact(path="iva.regime", value="GENERAL"),
+                    # The filing-grade readiness gate refuses a profile whose
+                    # tax territory was never declared, and refuses it BEFORE
+                    # the producer runs -- so without this the module measured
+                    # a profile refusal rather than the join it exists to
+                    # observe. Declared common-regime: the foral territories
+                    # are explicitly unsupported, and a Modelo 720 filer under
+                    # one of them is a different product question than the
+                    # producer-to-projection shape under test here.
+                    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                    # The IVA block below is likewise a readiness precondition
+                    # rather than a fact this measurement turns on. It became
+                    # mandatory after this module was written, so the profile
+                    # here predates it and the gate refused before the producer
+                    # ran. Declared as an ordinary general-regime filer in no
+                    # special regime, which is the population a plain foreign
+                    # asset holder belongs to.
+                    UserProfileFact(path="iva.m303_regime_composition", value="general"),
+                    UserProfileFact(path="iva.redeme_enrolled", value=False),
+                    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+                    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+                    UserProfileFact(
+                        path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled",
+                        value=False,
+                    ),
                 ),
                 created_at=_CLOCK_N,
                 updated_at=_CLOCK_N,
