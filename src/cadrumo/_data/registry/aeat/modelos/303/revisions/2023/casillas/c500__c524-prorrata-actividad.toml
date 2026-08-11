@@ -1,0 +1,443 @@
+# Modelo 303 DP30305 per-activity prorrata projection endpoints.
+# The five fixed official rows are populated only from canonical encrypted
+# ProrrataRegister activity children. They are not independent casilla inputs,
+# formula targets, bindings, selector rows, or an export-layout reactivation.
+
+[[revisions."2023".casillas]]
+id = "500"
+number = "500"
+section = ["iva", "prorrata", "actividad", "fila_1", "cnae"]
+data_type = "text"
+semantic_role = "m303_prorrata_actividad_fila_1_cnae"
+continuidad_id = "m303-prorrata-actividad-fila-1-cnae"
+required = false
+input_kind = "projection_only"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+
+[revisions."2023".casillas.constraints]
+min_length = 3
+max_length = 3
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+[[revisions."2023".casillas]]
+id = "501"
+number = "501"
+section = ["iva", "prorrata", "actividad", "fila_1", "operaciones-total"]
+data_type = "money"
+semantic_role = "m303_prorrata_actividad_fila_1_operaciones_total"
+continuidad_id = "m303-prorrata-actividad-fila-1-operaciones-total"
+required = false
+input_kind = "projection_only"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+
+[revisions."2023".casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+
+[[revisions."2023".casillas]]
+id = "502"
+number = "502"
+section = ["iva", "prorrata", "actividad", "fila_1", "operaciones-con-derecho"]
+data_type = "money"
+semantic_role = "m303_prorrata_actividad_fila_1_operaciones_con_derecho"
+continuidad_id = "m303-prorrata-actividad-fila-1-operaciones-con-derecho"
+required = false
+input_kind = "projection_only"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+
+[revisions."2023".casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+
+[[revisions."2023".casillas]]
+id = "503"
+number = "503"
+section = ["iva", "prorrata", "actividad", "fila_1", "tipo"]
+data_type = "text"
+semantic_role = "m303_prorrata_actividad_fila_1_tipo"
+continuidad_id = "m303-prorrata-actividad-fila-1-tipo"
+required = false
+input_kind = "projection_only"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+
+[revisions."2023".casillas.constraints]
+enum = ["G", "E"]
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+
+[[revisions."2023".casillas]]
+id = "504"
+number = "504"
+section = ["iva", "prorrata", "actividad", "fila_1", "porcentaje"]
+data_type = "ratio"
+semantic_role = "m303_prorrata_actividad_fila_1_porcentaje"
+continuidad_id = "m303-prorrata-actividad-fila-1-porcentaje"
+required = false
+input_kind = "projection_only"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+
+[revisions."2023".casillas.constraints]
+sign = "non_negative"
+min_value = "0"
+max_value = "100"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+
+[[revisions."2023".casillas]]
+id = "505"
+number = "505"
+section = ["iva", "prorrata", "actividad", "fila_2", "cnae"]
+data_type = "text"
+semantic_role = "m303_prorrata_actividad_fila_2_cnae"
+continuidad_id = "m303-prorrata-actividad-fila-2-cnae"
+required = false
+input_kind = "projection_only"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+
+[revisions."2023".casillas.constraints]
+min_length = 3
+max_length = 3
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+
+[[revisions."2023".casillas]]
+id = "506"
+number = "506"
+section = ["iva", "prorrata", "actividad", "fila_2", "operaciones-total"]
+data_type = "money"
+semantic_role = "m303_prorrata_actividad_fila_2_operaciones_total"
+continuidad_id = "m303-prorrata-actividad-fila-2-operaciones-total"
+required = false
+input_kind = "projection_only"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+
+[revisions."2023".casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+
+[[revisions."2023".casillas]]
+id = "507"
+number = "507"
+section = ["iva", "prorrata", "actividad", "fila_2", "operaciones-con-derecho"]
+data_type = "money"
+semantic_role = "m303_prorrata_actividad_fila_2_operaciones_con_derecho"
+continuidad_id = "m303-prorrata-actividad-fila-2-operaciones-con-derecho"
+required = false
+input_kind = "projection_only"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+
+[revisions."2023".casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+
+[[revisions."2023".casillas]]
+id = "508"
+number = "508"
+section = ["iva", "prorrata", "actividad", "fila_2", "tipo"]
+data_type = "text"
+semantic_role = "m303_prorrata_actividad_fila_2_tipo"
+continuidad_id = "m303-prorrata-actividad-fila-2-tipo"
+required = false
+input_kind = "projection_only"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+
+[revisions."2023".casillas.constraints]
+enum = ["G", "E"]
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+
+[[revisions."2023".casillas]]
+id = "509"
+number = "509"
+section = ["iva", "prorrata", "actividad", "fila_2", "porcentaje"]
+data_type = "ratio"
+semantic_role = "m303_prorrata_actividad_fila_2_porcentaje"
+continuidad_id = "m303-prorrata-actividad-fila-2-porcentaje"
+required = false
+input_kind = "projection_only"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+
+[revisions."2023".casillas.constraints]
+sign = "non_negative"
+min_value = "0"
+max_value = "100"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+
+[[revisions."2023".casillas]]
+id = "510"
+number = "510"
+section = ["iva", "prorrata", "actividad", "fila_3", "cnae"]
+data_type = "text"
+semantic_role = "m303_prorrata_actividad_fila_3_cnae"
+continuidad_id = "m303-prorrata-actividad-fila-3-cnae"
+required = false
+input_kind = "projection_only"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+
+[revisions."2023".casillas.constraints]
+min_length = 3
+max_length = 3
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+
+[[revisions."2023".casillas]]
+id = "511"
+number = "511"
+section = ["iva", "prorrata", "actividad", "fila_3", "operaciones-total"]
+data_type = "money"
+semantic_role = "m303_prorrata_actividad_fila_3_operaciones_total"
+continuidad_id = "m303-prorrata-actividad-fila-3-operaciones-total"
+required = false
+input_kind = "projection_only"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+
+[revisions."2023".casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+
+[[revisions."2023".casillas]]
+id = "512"
+number = "512"
+section = ["iva", "prorrata", "actividad", "fila_3", "operaciones-con-derecho"]
+data_type = "money"
+semantic_role = "m303_prorrata_actividad_fila_3_operaciones_con_derecho"
+continuidad_id = "m303-prorrata-actividad-fila-3-operaciones-con-derecho"
+required = false
+input_kind = "projection_only"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+
+[revisions."2023".casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+
+[[revisions."2023".casillas]]
+id = "513"
+number = "513"
+section = ["iva", "prorrata", "actividad", "fila_3", "tipo"]
+data_type = "text"
+semantic_role = "m303_prorrata_actividad_fila_3_tipo"
+continuidad_id = "m303-prorrata-actividad-fila-3-tipo"
+required = false
+input_kind = "projection_only"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+
+[revisions."2023".casillas.constraints]
+enum = ["G", "E"]
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+
+[[revisions."2023".casillas]]
+id = "514"
+number = "514"
+section = ["iva", "prorrata", "actividad", "fila_3", "porcentaje"]
+data_type = "ratio"
+semantic_role = "m303_prorrata_actividad_fila_3_porcentaje"
+continuidad_id = "m303-prorrata-actividad-fila-3-porcentaje"
+required = false
+input_kind = "projection_only"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+
+[revisions."2023".casillas.constraints]
+sign = "non_negative"
+min_value = "0"
+max_value = "100"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+
+[[revisions."2023".casillas]]
+id = "515"
+number = "515"
+section = ["iva", "prorrata", "actividad", "fila_4", "cnae"]
+data_type = "text"
+semantic_role = "m303_prorrata_actividad_fila_4_cnae"
+continuidad_id = "m303-prorrata-actividad-fila-4-cnae"
+required = false
+input_kind = "projection_only"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+
+[revisions."2023".casillas.constraints]
+min_length = 3
+max_length = 3
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+
+[[revisions."2023".casillas]]
+id = "516"
+number = "516"
+section = ["iva", "prorrata", "actividad", "fila_4", "operaciones-total"]
+data_type = "money"
+semantic_role = "m303_prorrata_actividad_fila_4_operaciones_total"
+continuidad_id = "m303-prorrata-actividad-fila-4-operaciones-total"
+required = false
+input_kind = "projection_only"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+
+[revisions."2023".casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+
+[[revisions."2023".casillas]]
+id = "517"
+number = "517"
+section = ["iva", "prorrata", "actividad", "fila_4", "operaciones-con-derecho"]
+data_type = "money"
+semantic_role = "m303_prorrata_actividad_fila_4_operaciones_con_derecho"
+continuidad_id = "m303-prorrata-actividad-fila-4-operaciones-con-derecho"
+required = false
+input_kind = "projection_only"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+
+[revisions."2023".casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+
+[[revisions."2023".casillas]]
+id = "518"
+number = "518"
+section = ["iva", "prorrata", "actividad", "fila_4", "tipo"]
+data_type = "text"
+semantic_role = "m303_prorrata_actividad_fila_4_tipo"
+continuidad_id = "m303-prorrata-actividad-fila-4-tipo"
+required = false
+input_kind = "projection_only"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+
+[revisions."2023".casillas.constraints]
+enum = ["G", "E"]
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+
+[[revisions."2023".casillas]]
+id = "519"
+number = "519"
+section = ["iva", "prorrata", "actividad", "fila_4", "porcentaje"]
+data_type = "ratio"
+semantic_role = "m303_prorrata_actividad_fila_4_porcentaje"
+continuidad_id = "m303-prorrata-actividad-fila-4-porcentaje"
+required = false
+input_kind = "projection_only"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+
+[revisions."2023".casillas.constraints]
+sign = "non_negative"
+min_value = "0"
+max_value = "100"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+
+[[revisions."2023".casillas]]
+id = "520"
+number = "520"
+section = ["iva", "prorrata", "actividad", "fila_5", "cnae"]
+data_type = "text"
+semantic_role = "m303_prorrata_actividad_fila_5_cnae"
+continuidad_id = "m303-prorrata-actividad-fila-5-cnae"
+required = false
+input_kind = "projection_only"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+
+[revisions."2023".casillas.constraints]
+min_length = 3
+max_length = 3
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+
+[[revisions."2023".casillas]]
+id = "521"
+number = "521"
+section = ["iva", "prorrata", "actividad", "fila_5", "operaciones-total"]
+data_type = "money"
+semantic_role = "m303_prorrata_actividad_fila_5_operaciones_total"
+continuidad_id = "m303-prorrata-actividad-fila-5-operaciones-total"
+required = false
+input_kind = "projection_only"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+
+[revisions."2023".casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+
+[[revisions."2023".casillas]]
+id = "522"
+number = "522"
+section = ["iva", "prorrata", "actividad", "fila_5", "operaciones-con-derecho"]
+data_type = "money"
+semantic_role = "m303_prorrata_actividad_fila_5_operaciones_con_derecho"
+continuidad_id = "m303-prorrata-actividad-fila-5-operaciones-con-derecho"
+required = false
+input_kind = "projection_only"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+
+[revisions."2023".casillas.constraints]
+sign = "non_negative"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+
+[[revisions."2023".casillas]]
+id = "523"
+number = "523"
+section = ["iva", "prorrata", "actividad", "fila_5", "tipo"]
+data_type = "text"
+semantic_role = "m303_prorrata_actividad_fila_5_tipo"
+continuidad_id = "m303-prorrata-actividad-fila-5-tipo"
+required = false
+input_kind = "projection_only"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+
+[revisions."2023".casillas.constraints]
+enum = ["G", "E"]
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+
+[[revisions."2023".casillas]]
+id = "524"
+number = "524"
+section = ["iva", "prorrata", "actividad", "fila_5", "porcentaje"]
+data_type = "ratio"
+semantic_role = "m303_prorrata_actividad_fila_5_porcentaje"
+continuidad_id = "m303-prorrata-actividad-fila-5-porcentaje"
+required = false
+input_kind = "projection_only"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+
+[revisions."2023".casillas.constraints]
+sign = "non_negative"
+min_value = "0"
+max_value = "100"
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
