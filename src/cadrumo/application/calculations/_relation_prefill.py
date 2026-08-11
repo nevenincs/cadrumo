@@ -78,9 +78,11 @@ from ...domain.calculations.registry import (
     RelationDefinition,
     RelationId,
     SourceRefId,
-    expression_relation_refs,
     is_iva_wallet_owned_relation_target,
     materialize_relation_binding_values,
+    relation_consumption_channels,
+    relation_consumption_index,
+    relation_is_consumed,
     relation_source_requirements,
     relations_by_target_binding,
     resolve_observed_requirement_value,
@@ -806,14 +808,6 @@ def _absent_bound_carry_diagnostics(
     return tuple(diagnostics)
 
 
-def _formula_relation_ids(snapshot: RegistrySnapshot) -> frozenset[RelationId]:
-    return frozenset(
-        relation_id
-        for formula in snapshot.revision.formulas
-        for relation_id in expression_relation_refs(formula.expression)
-    )
-
-
 class _UnresolvedRelationIds(NamedTuple):
     """The three silences an unresolved relation can be, kept apart on purpose.
 
@@ -826,14 +820,14 @@ class _UnresolvedRelationIds(NamedTuple):
     """Unresolved and read by a formula: the value feeds a computed casilla."""
 
     orphaned: frozenset[RelationId]
-    """Unresolved, non-formula, and its ``target_binding`` is not declared.
+    """Unresolved and reaches no declared consumption channel.
 
     Produces no value, no slot and nothing observable, so its absence reaches
     nothing at all.
     """
 
     bound: frozenset[RelationId]
-    """Unresolved, non-formula, and its ``target_binding`` IS declared.
+    """Unresolved and consumed through a primary or alternate casilla binding.
 
     The subtle one, and the reason this set exists. It was once left silent as
     "intended cold-start behaviour", but cold start is not what that silence
@@ -875,8 +869,22 @@ def _unresolved_relation_ids(
       does not own. The check is the registry's own predicate rather than a
       binding-id comparison invented here.
     """
-    formula_relation_ids = _formula_relation_ids(snapshot)
-    declared_binding_ids = frozenset(binding.id for binding in snapshot.revision.bindings)
+    consumption_index = relation_consumption_index(snapshot.revision)
+    relations_by_id = {relation.id: relation for relation in snapshot.revision.relations}
+    consumption_channels = {
+        relation.id: relation_consumption_channels(relation, consumption_index)
+        for relation in snapshot.revision.relations
+    }
+    formula_relation_ids = frozenset(
+        relation_id
+        for relation_id, channels in consumption_channels.items()
+        if "formula_relation" in channels or "formula_binding" in channels
+    )
+    bound_relation_ids = frozenset(
+        relation_id
+        for relation_id, channels in consumption_channels.items()
+        if "primary_binding" in channels or "alternate_binding" in channels
+    )
     relation_target_binding = {relation.id: relation.target_binding for relation in snapshot.revision.relations}
     taxpayer_filed_source_modelos = frozenset(
         classification.source_modelo
@@ -893,8 +901,10 @@ def _unresolved_relation_ids(
             item.relation
             for item in relation_values.values
             if item.value is None
-            and item.relation not in formula_relation_ids
-            and relation_target_binding.get(item.relation) not in declared_binding_ids
+            and (
+                (relation := relations_by_id.get(item.relation)) is None
+                or not relation_is_consumed(relation, consumption_index)
+            )
         ),
         bound=frozenset(
             item.relation
@@ -904,7 +914,7 @@ def _unresolved_relation_ids(
             and item.relation in requirements_by_relation
             and requirements_by_relation[item.relation].source_modelo in taxpayer_filed_source_modelos
             and _requirement_periods_are_datable(requirements_by_relation[item.relation])
-            and relation_target_binding.get(item.relation) in declared_binding_ids
+            and item.relation in bound_relation_ids
             and not is_iva_wallet_owned_relation_target(
                 modelo_id=modelo_id,
                 revision_id=str(snapshot.revision.id),

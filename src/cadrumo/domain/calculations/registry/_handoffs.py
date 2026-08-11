@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Literal
+from typing import Literal, NamedTuple
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -43,33 +43,63 @@ __all__ = [
     "RelationHandoffRecord",
     "audit_registry_relation_handoff_applicability",
     "audit_registry_relation_handoffs",
+    "relation_consumption_channels",
     "relation_consumption_index",
     "relation_is_consumed",
 ]
 
-_RelationConsumptionIndex = tuple[frozenset[BindingId], frozenset[RelationId], frozenset[BindingId]]
+_RelationConsumptionChannel = Literal["primary_binding", "alternate_binding", "formula_relation", "formula_binding"]
+
+
+class _RelationConsumptionIndex(NamedTuple):
+    primary_bindings: frozenset[BindingId]
+    alternate_bindings: frozenset[BindingId]
+    formula_relations: frozenset[RelationId]
+    formula_bindings: frozenset[BindingId]
 
 
 def relation_consumption_index(revision: ModeloRevision) -> _RelationConsumptionIndex:
     """Return the binding and formula channels that consume relation values."""
-    casilla_bindings: set[BindingId] = set()
+    primary_bindings: set[BindingId] = set()
+    alternate_bindings: set[BindingId] = set()
     for casilla in revision.casillas:
         if casilla.binding is not None:
-            casilla_bindings.add(casilla.binding)
-        casilla_bindings.update(casilla.alternate_bindings)
+            primary_bindings.add(casilla.binding)
+        alternate_bindings.update(casilla.alternate_bindings)
 
     formula_relations: set[RelationId] = set()
     formula_bindings: set[BindingId] = set()
     for formula in revision.formulas:
         formula_relations.update(expression_relation_refs(formula.expression))
         formula_bindings.update(expression_binding_refs(formula.expression))
-    return frozenset(casilla_bindings), frozenset(formula_relations), frozenset(formula_bindings)
+    return _RelationConsumptionIndex(
+        primary_bindings=frozenset(primary_bindings),
+        alternate_bindings=frozenset(alternate_bindings),
+        formula_relations=frozenset(formula_relations),
+        formula_bindings=frozenset(formula_bindings),
+    )
+
+
+def relation_consumption_channels(
+    relation: RelationDefinition,
+    index: _RelationConsumptionIndex,
+) -> tuple[_RelationConsumptionChannel, ...]:
+    """Return every declared channel that consumes ``relation`` in stable order."""
+    channels: list[_RelationConsumptionChannel] = []
+    if relation.target_binding in index.primary_bindings:
+        channels.append("primary_binding")
+    if relation.target_binding in index.alternate_bindings:
+        channels.append("alternate_binding")
+    if relation.id in index.formula_relations:
+        channels.append("formula_relation")
+    if relation.target_binding in index.formula_bindings:
+        channels.append("formula_binding")
+    return tuple(channels)
 
 
 def relation_is_consumed(relation: RelationDefinition, index: _RelationConsumptionIndex) -> bool:
     """Return whether a formula or bound casilla consumes ``relation``."""
-    casilla_bindings, formula_relations, formula_bindings = index
-    return relation.id in formula_relations or relation.target_binding in casilla_bindings | formula_bindings
+    return bool(relation_consumption_channels(relation, index))
 
 
 class RelationHandoffRecord(BaseModel):
@@ -94,6 +124,7 @@ class RelationHandoffRecord(BaseModel):
     target_binding: BindingId
     target_binding_source: BindingSourceKind | None
     target_casilla_ids: tuple[CasillaId, ...]
+    consumption_channels: tuple[_RelationConsumptionChannel, ...]
     period_alignment: RelationPeriodAlignment
     source_periods: tuple[str, ...]
     target_periods: tuple[str, ...]
@@ -222,6 +253,7 @@ def audit_registry_relation_handoffs(
     for modelo in modelo_tuple:
         for revision in sorted(modelo.revisions.values(), key=lambda item: item.id):
             bindings_by_id = {binding.id: binding for binding in revision.bindings}
+            consumption_index = relation_consumption_index(revision)
             for relation in revision.relations:
                 target_binding = bindings_by_id.get(relation.target_binding)
                 if target_binding is None:
@@ -249,6 +281,7 @@ def audit_registry_relation_handoffs(
                         target_binding=relation.target_binding,
                         target_binding_source=target_binding.source,
                         target_casilla_ids=target_casilla_ids,
+                        consumption_channels=relation_consumption_channels(relation, consumption_index),
                         period_alignment=relation.period_alignment,
                         source_periods=relation.source_periods,
                         target_periods=relation.target_periods,
