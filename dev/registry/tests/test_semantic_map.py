@@ -5,7 +5,11 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.core import FilingProducerKey
+from cadrumo.core import (
+    FilingProducerKey,
+    M303ProrrataActivityProjectionField,
+    M303ProrrataActivityProjectionRef,
+)
 from cadrumo.domain.calculations.registry import (
     CasillaFieldKind,
     ExportComputedKey,
@@ -62,6 +66,22 @@ def _entry_payload(kind: str, **semantic_payload: object) -> dict[str, object]:
             "computed_key",
             ExportComputedKey.ENVELOPE_CLOSING_TAG,
         ),
+        (
+            "projection",
+            {
+                "projection_ref": M303ProrrataActivityProjectionRef(
+                    slot=1,
+                    field=M303ProrrataActivityProjectionField.CNAE,
+                    casilla_id="c500",
+                ),
+            },
+            "projection_ref",
+            M303ProrrataActivityProjectionRef(
+                slot=1,
+                field=M303ProrrataActivityProjectionField.CNAE,
+                casilla_id="c500",
+            ),
+        ),
         ("filler", {}, None, None),
         ("checksum", {}, None, None),
     ],
@@ -85,6 +105,7 @@ def test_semantic_entry_accepts_only_the_registry_meaning_for_each_field_kind(
         assert entry.producer_key is None
         assert entry.draft_attribute is None
         assert entry.computed_key is None
+        assert entry.projection_ref is None
 
 
 def test_semantic_map_retains_a_complete_workbook_anchor_and_canonical_grounding() -> None:
