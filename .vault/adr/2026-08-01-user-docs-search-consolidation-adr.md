@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#user-docs-search-consolidation'
 date: '2026-08-01'
-modified: '2026-08-06'
+modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:26f4ed577f0fff695e8fcb9f5bdd0cc11e507bf0ed7ffeca67fdfcb63de6325e'
+body_hash: 'sha256:f1edecc6d1911c9ce4b4c76f3f1efefeb54cab181adef32a6d0cffe9830567c2'
 related:
   - "[[2026-07-31-semantic-search-precompile-boundary-adr]]"
   - "[[2026-06-10-docs-terminology-search-adr]]"
@@ -353,3 +353,51 @@ Remeasurement MUST retain the existing held-out query and digest. A changed eval
 P02.S32 owns the strict loader/schema, deterministic ordering and anchoring checks, sweep union, combined-input parity, nested provenance binding, and the associated Python/browser contract tests. It does not change matrix rows, query-token pooling, semantic thresholds, D8 band-first lexical ordering, the legal/casilla record taxonomy, or the client runtime boundary. The browser remains lexical-authoritative and semantic-disabled until the existing Rung-2 acceptance gates pass.
 
 This amendment adds one reviewable build-time data authority and its provenance identity. It does not authorize held-out leakage, a fresh artifact release, deployment, or runtime RAG.
+
+## Update 12 (2026-08-11): Rung 2 is retired on measured evidence; documentation search stays lexical
+
+The operator has ruled that the removal of the Rung-2 implementation at `a3376362ef` was intended. This amendment records that ruling, states the evidence it rests on, and supersedes the parts of R5 and R10 that assumed delivery. It is the ruling the companion plan's P02.S36 and P02.S37 rows were explicitly gated on.
+
+### What the measurement showed
+
+R5 chose O1 (deliver rung 2) and rejected O3 (decline it) on the ground that no new evidence contradicted the fired D3 gate. That evidence now exists, and it is the gate's own instrument rather than a judgement call. `2026-08-07-user-docs-search-consolidation-ranking-measurement-audit` (RANK-005), together with the P02.S04 and P02.S06 artifact reviews, measured the compiled tier end to end:
+
+- held-out miss rate `0.3125`, against the ratified `0.10` line R10 makes a release precondition, and against the `0.1875` pre-rung-2 lexical baseline the tier was built to improve;
+- query-token coverage `0.748`, below the `0.8` floor;
+- 114 vocabulary rows against 8,507 injected records, so most queries never reach the matrix at all;
+- the composed ladder scoring **worse** than the lexical baseline it was meant to supplement.
+
+Rung 2 therefore fails its own ratified acceptance boundary in the direction that matters: enabling it would ship a recall regression. R10 already made that outcome fail-closed, so the tier was never eligible for release; this amendment stops carrying it as pending work.
+
+RANK-005 also established why, and the diagnosis is not a code defect. Term labels across the 49 approved concepts stand at es 49, en 17, ca 3, hu 3 — exactly three concepts carry a term in all four languages. Where the vocabulary exists the mechanism works: for `casilla` and `prorrata-especial` all four languages return the same record set. The gap is authoring coverage, not model quality, ladder composition or normalization. Closing it is an authoring programme of several hundred terms across four languages, with Catalan and Hungarian starting from three each.
+
+### D12 — Rung 2 is retired; the honest recall statement is lexical
+
+Rung 2 is **retired**, not deferred-in-code. R5's ruling that "rung 2 proceeds" is superseded to this extent only: the bounded term-level semantic tier is not part of this deliverable. R8, R9 and R10 — the pinned model, encoding, bridge and acceptance boundary — are superseded in full; they governed an artifact that will not be produced. Updates 6, 7, 8, 10 and the Rung-2 half of Update 11 are historical: they refined a contract whose subject no longer exists.
+
+The `0.1875` pre-rung-2 held-out miss rate stands as the project's standing, honest recall statement. No post-rung-2 baseline will be measured, because there is no post-rung-2 ladder.
+
+Everything R2 places on the shipped side is unchanged and remains the deliverable: the Pagefind index, the four injected record kinds plus the legal kind delivered in P05, the declared aliases, the ratified synonym rings, per-language stemming, the structured modelo-plus-casilla exact route, and the display-class ladder.
+
+### D13 — the retired surfaces are deleted, not preserved
+
+Under `no-legacy-compatibility` the retirement is executed by deletion, with no bridge, alias or read-tolerance for the removed contract:
+
+- The three orphaned build-time modules P02.S36 names — `dev/docs/terminology/_jcs.py`, `dev/docs/terminology/jcs_vectors/`, and `dev/docs/terminology/_content_manifest.py` — are deleted. The finding against them was unconditional: each redeclares a capability whose canonical home is in `core`, and the stricter-cross-runtime-bytes justification lost its subject when the browser validator was removed. The recovery branch that would have restored that consumer is now closed, so the remedy is unconditional too.
+- The query/alias authority P02.S37 names is **not** deleted. Its finding — zero entries, zero consumers — is falsified at HEAD: it carries two independently ratified entries and is consumed by the live sweep. It was never a Rung-2 artifact in substance; it is the rung-1 alias authority, and rung 1 ships. What retirement requires of it is narrower: its `rung2` path segment and `rung2` schema token name a retired tier and are re-homed to names that state what the artifact is, atomically with its loader and tests.
+
+### D14 — the licence exception stays open and unused
+
+`shipped-search-licence-clean`, as amended by R5 and annotated by P01.S38, is **not** re-narrowed. P01.S38 already ruled that a permission which oscillates is worse than one documented as unused, and this amendment is precisely the branch that ruling anticipated. The bounded-embedding-matrix exception remains a deliberately unlocked, presently unused door with no consumer at HEAD; a future record wanting to use it makes a first use that needs its own ruling.
+
+### Deferred carry-forward
+
+The multilingual authoring programme RANK-005 identifies is recorded here as a formally deferred carry-forward, not as silently dropped scope. Reviving a semantic tier requires, in this order: the term coverage (several hundred terms across four languages, Catalan and Hungarian effectively from zero), then a fresh ADR re-deciding the model, encoding and acceptance boundary against the licence exception, then a re-measurement clearing the `0.10` line. Nothing in this amendment prejudices that record; it removes only the standing claim that the work is in flight.
+
+The measured prose-recall gap RANK-003 and RANK-004 record is **not** carried forward to a semantic tier. RANK-004 established that the dominant cause is Pagefind term conjunction rather than semantics — dropping function words alone lifted `how do I file my quarterly VAT return` from 2 results to 36 and `what happens if I file late` from 2 to 41 — and that a corpus-frequency heuristic cannot separate the classes in this corpus. That is a lexical-tier fix under an explicit per-language function-word authority or progressive term relaxation, and it belongs to the lexical deliverable this record affirms.
+
+### Consequences
+
+- P02.S04 through P02.S07 are closed as retired: there is no matrix to compile, no client cosine tier to add, no matrix provenance for the licence gate to validate, and no post-rung-2 baseline to re-measure. The licence gate's existing oracle-output, NC/ND and heavy-index bars are untouched.
+- P02.S36 executes unconditionally; P02.S37 executes as a re-homing rather than a removal.
+- The campaign's completion criterion is not narrowed by this ruling. What the standing goal still asks for and this record excludes is open-vocabulary semantic recall for prose queries; what it delivers instead is the lexical ladder, the five record kinds, the exact structured route, and the recorded `0.1875` baseline. The gap is stated, not closed.
